@@ -1,0 +1,13 @@
+[package]
+name = "abstract_integers"
+version = "0.1.3"
+authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
+description = "Defining specification-friendly bounded natural integer types"
+repository = "https://github.com/denismerigoux/rust-abstract-integers"
+edition = "2018"
+keywords = ["integers", "specification"]
+license = "Apache-2.0"
+readme = "README.md"
+
+[dependencies]
+num = "0.2"

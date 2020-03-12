@@ -1,0 +1,14 @@
+{
+    "info": "Some info text etc.",
+    "tests":
+    [
+        {
+            "x": 5,
+            "s": "lalalala"
+        },
+        {
+            "x": 42,
+            "s": "blabla"
+        }
+    ]
+}

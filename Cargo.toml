@@ -1,0 +1,7 @@
+
+[workspace]
+members = [
+    "hacspec",
+    "secret-integers",
+    "abstract-integers",
+]

@@ -1,0 +1,19 @@
+[package]
+name = "secret_integers"
+version = "0.1.6"
+authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
+edition = "2018"
+description = "Wrapping around Rust's integers to allow only constant-time operations"
+license = "Apache-2.0"
+repository = "https://github.com/denismerigoux/rust-secret-integers"
+keywords = ["secret", "constant-time"]
+readme = "README.md"
+
+
+[[example]]
+name = "dalek"
+crate-type = ["staticlib"]
+
+[[example]]
+name = "chacha20"
+crate-type = ["staticlib"]
