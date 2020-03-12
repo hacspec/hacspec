@@ -2,7 +2,7 @@
 
 A new specification language for crypto primitives in Rust.
 
-*This is the predecessor of https://github.com/HACS-workshop/hacspec.*
+*This is the successor of https://github.com/HACS-workshop/hacspec.*
 
 Documentation and API reference can be found [here](https://hacspec.github.io/hacspec/).
 
