@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `hacspec` crate."><meta name="keywords" content="rust, rustlang, rust-lang, hacspec"><title>hacspec - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../hacspec/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate hacspec</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all hacspec's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'hacspec', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/hacspec/lib.rs.html#1-186' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>hacspec</a></span></h1><div class='docblock'><p>hacspec consists of three parts:</p>
+<ul>
+<li>hacspec library</li>
+<li>syntax checker</li>
+<li>compiler</li>
+</ul>
+<h1 id="the-hacspec-library" class="section-header"><a href="#the-hacspec-library">The hacspec library</a></h1>
+<p>The hacspec library implements a comprehensive set of functions to implement
+succinct cryptographic specs that can be compiled to formal languages such
+as <a href="https://www.fstar-lang.org/">F*</a>.</p>
+<h1 id="the-syntax-checker" class="section-header"><a href="#the-syntax-checker">The syntax checker</a></h1>
+<p>TODO:</p>
+<ul>
+<li>describe clippy extension</li>
+<li>add <code>cargo hacspec check</code> command</li>
+</ul>
+<h1 id="the-compiler" class="section-header"><a href="#the-compiler">The compiler</a></h1>
+<p>TODO:</p>
+<ul>
+<li>define compiler interface</li>
+<li>add <code>cargo hacspec fstar</code> command</li>
+</ul>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr class='module-item'><td><a class="mod" href="array/index.html" title='hacspec::array mod'>array</a></td><td class='docblock-short'><p>Arrays</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="poly/index.html" title='hacspec::poly mod'>poly</a></td><td class='docblock-short'><p>Polynomials</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="prelude/index.html" title='hacspec::prelude mod'>prelude</a></td><td class='docblock-short'><p>This module conveniently exports common subroutines necessary for hacspecs</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="seq/index.html" title='hacspec::seq mod'>seq</a></td><td class='docblock-short'><p>Sequences</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="test_vectors/index.html" title='hacspec::test_vectors mod'>test_vectors</a></td><td class='docblock-short'><p>Provide utilities to read test vectors from JSON files.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="util/index.html" title='hacspec::util mod'>util</a></td><td class='docblock-short'><p>Utility functions for hacspec internally.</p>
+</td></tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table><tr class='module-item'><td><a class="macro" href="macro._array_base.html" title='hacspec::_array_base macro'>_array_base</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro._public_array.html" title='hacspec::_public_array macro'>_public_array</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro._secret_array.html" title='hacspec::_secret_array macro'>_secret_array</a></td><td class='docblock-short'><p>This creates arrays for secret integers, i.e. <code>$t</code> is the secret integer
+type and <code>$tbase</code> is the according Rust type.</p>
+</td></tr><tr class='module-item'><td><a class="macro" href="macro.array.html" title='hacspec::array macro'>array</a></td><td class='docblock-short'><p>Create a new array with the given name, length, and type.</p>
+</td></tr><tr class='module-item'><td><a class="macro" href="macro.assert_bytes_eq.html" title='hacspec::assert_bytes_eq macro'>assert_bytes_eq</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.assert_secret_array_eq.html" title='hacspec::assert_secret_array_eq macro'>assert_secret_array_eq</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.both_arrays.html" title='hacspec::both_arrays macro'>both_arrays</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.both_bytes.html" title='hacspec::both_bytes macro'>both_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.bytes.html" title='hacspec::bytes macro'>bytes</a></td><td class='docblock-short'><p>Convenience function to create a new byte array (of type <code>U8</code>) with the given
+name and length.</p>
+</td></tr><tr class='module-item'><td><a class="macro" href="macro.create_test_vectors.html" title='hacspec::create_test_vectors macro'>create_test_vectors</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.field_integer.html" title='hacspec::field_integer macro'>field_integer</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.impl_unsigned_integer.html" title='hacspec::impl_unsigned_integer macro'>impl_unsigned_integer</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.poly.html" title='hacspec::poly macro'>poly</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.public_bytes.html" title='hacspec::public_bytes macro'>public_bytes</a></td><td class='docblock-short'><p>Convenience function to create a new public byte array (of type <code>u8</code>) with
+the given name and length.</p>
+</td></tr><tr class='module-item'><td><a class="macro" href="macro.secret_array.html" title='hacspec::secret_array macro'>secret_array</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.secret_bytes.html" title='hacspec::secret_bytes macro'>secret_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="macro" href="macro.unsigned_integer.html" title='hacspec::unsigned_integer macro'>unsigned_integer</a></td><td class='docblock-short'></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.Counter.html" title='hacspec::Counter struct'>Counter</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.DocPublicArray.html" title='hacspec::DocPublicArray struct'>DocPublicArray</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.DocPublicBytes.html" title='hacspec::DocPublicBytes struct'>DocPublicBytes</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.DocSecretArray.html" title='hacspec::DocSecretArray struct'>DocSecretArray</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.DocSecretBytes.html" title='hacspec::DocSecretBytes struct'>DocSecretBytes</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.U32Word.html" title='hacspec::U32Word struct'>U32Word</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.U64Word.html" title='hacspec::U64Word struct'>U64Word</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.U128Word.html" title='hacspec::U128Word struct'>U128Word</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.u32Word.html" title='hacspec::u32Word struct'>u32Word</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.u64Word.html" title='hacspec::u64Word struct'>u64Word</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.u128Word.html" title='hacspec::u128Word struct'>u128Word</a></td><td class='docblock-short'><p>Fixed length byte array.
+Because Rust requires fixed length arrays to have a known size at
+compile time there's no generic fixed length byte array here.
+Use this to define the fixed length byte arrays needed in your code.</p>
+</td></tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table><tr class='module-item'><td><a class="trait" href="trait.SeqTrait.html" title='hacspec::SeqTrait trait'>SeqTrait</a></td><td class='docblock-short'><p>Common trait for all byte arrays and sequences.</p>
+</td></tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table><tr class='module-item'><td><a class="fn" href="fn.div_ceil.html" title='hacspec::div_ceil fn'>div_ceil</a></td><td class='docblock-short'><p>Compute ceil(a/b), returning a u64.
+Note that float-uint conversion might be lossy.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.u32_to_le_bytes.html" title='hacspec::u32_to_le_bytes fn'>u32_to_le_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u32_from_be_bytes.html" title='hacspec::u32_from_be_bytes fn'>u32_from_be_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u32_from_le_bytes.html" title='hacspec::u32_from_le_bytes fn'>u32_from_le_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u32_to_be_bytes.html" title='hacspec::u32_to_be_bytes fn'>u32_to_be_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u64_to_be_bytes.html" title='hacspec::u64_to_be_bytes fn'>u64_to_be_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u64_to_le_bytes.html" title='hacspec::u64_to_le_bytes fn'>u64_to_le_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u128_from_le_bytes.html" title='hacspec::u128_from_le_bytes fn'>u128_from_le_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u128_from_be_bytes.html" title='hacspec::u128_from_be_bytes fn'>u128_from_be_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u128_to_be_bytes.html" title='hacspec::u128_to_be_bytes fn'>u128_to_be_bytes</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u32_from_le_bytes_u32.html" title='hacspec::u32_from_le_bytes_u32 fn'>u32_from_le_bytes_u32</a></td><td class='docblock-short'></td></tr><tr class='module-item'><td><a class="fn" href="fn.u64_to_be_bytes_u64.html" title='hacspec::u64_to_be_bytes_u64 fn'>u64_to_be_bytes_u64</a></td><td class='docblock-short'></td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "hacspec";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

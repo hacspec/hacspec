@@ -1,0 +1,1 @@
+initSidebarItems({"macro":[["define_abstract_integer_checked","Defines a bounded natural integer with regular arithmetic operations, checked for overflow and underflow."],["define_refined_modular_integer","Defines a bounded natural integer with modular arithmetic operations"]],"struct":[["SizeNatExample",""],["SizeNatFieldExample",""]]});
