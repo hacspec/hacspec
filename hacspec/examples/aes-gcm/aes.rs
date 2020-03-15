@@ -201,9 +201,7 @@ fn aes128_counter_mode(key: Key, nonce: Nonce, counter: U32, msg: ByteSeq) -> By
     for (block_len, msg_block) in msg.chunks(BLOCKSIZE) {
         if msg_block.len() == BLOCKSIZE {
             let key_block = aes128_ctr_keyblock(key, nonce, ctr);
-            blocks_out = blocks_out.push(
-                xor_block(Block::from(msg_block), key_block),
-            );
+            blocks_out = blocks_out.push(xor_block(Block::from(msg_block), key_block));
             ctr += U32(1);
         } else {
             // Last block that needs padding
