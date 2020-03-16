@@ -180,37 +180,21 @@ pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T
 #[inline]
 pub fn euclid_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
     let (x, y) = normalize(x, y);
-    let mut q = vec![T::default(); x.len()];
     let mut r = x.clone();
-    let (d, c) = leading_coefficient(&y);
-    let (mut r_d, mut r_c) = leading_coefficient(&r);
+    let mut q = vec![T::default(); x.len()];
+    
+    let (yd, c) = leading_coefficient(&y);
+    let cinv =  T::inv(c, n);
+    let dist = x.len() - yd; // length of x and degree of y are assumed to be public
 
-    let mut i = 0;
-
-    while r_d >= d && !is_zero(&r) {
-        let idx = r_d - d;
-
-        let c_idx = if n == T::default() {
-            // In ℤ we try this. It might not work.
-            r_c / c
-        } else {
-            // r_c / c in ℤn is r_c * 1/c.
-            r_c * T::inv(c, n)
-        };
-        if c_idx == T::default() {
-            panic!("c_idx is 0; can't divide these two polynomials");
-        }
-
-        let s = monomial(c_idx, idx);
-        q = poly_add(&q[..], &s[..], n);
+    for i in 0..dist {
+        let idx = r.len() - 1 - i;
+        let t = r[idx] * cinv;
+        let s = monomial(t, dist-i-1);
         let sy = poly_mul(&s[..], &y[..], n);
+        q = poly_add(&q[..], &s[..], n);
         r = poly_sub(&r, &sy, n);
-
-        let tmp = leading_coefficient(&r);
-        r_d = tmp.0;
-        r_c = tmp.1;
     }
-
     (q, r)
 }
 
