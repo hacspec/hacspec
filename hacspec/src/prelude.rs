@@ -18,5 +18,5 @@ pub use std::fs::File;
 pub use std::io::BufReader;
 pub use std::num::ParseIntError;
 pub use std::ops::*;
-pub use std::{cmp::min, cmp::PartialEq, fmt};
+pub use std::{cmp::min, cmp::PartialEq, cmp::PartialOrd, cmp::Ordering, fmt, fmt::Debug};
 pub use rand::Rng;

@@ -83,7 +83,7 @@ pub fn leading_coefficient<T: TRestrictions<T>>(x: &[T]) -> (usize, T) {
     let mut degree: usize = 0;
     let mut coefficient = T::default();
     for (i, &c) in x.iter().enumerate() {
-        if c != zero {
+        if !c.equal(zero) {
             degree = i;
             coefficient = c;
         }
@@ -148,13 +148,13 @@ pub fn poly_mul<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Vec<T> {
         .iter()
         .enumerate()
         .map(|(i, x)| (i, x))
-        .filter(|(_, &x)| x != T::default())
+        .filter(|(_, &x)| !x.equal(T::default()))
     {
         for bdx in y
             .iter()
             .enumerate()
             .map(|(i, x)| (i, x))
-            .filter(|(_, &x)| x != T::default())
+            .filter(|(_, &x)| !x.equal(T::default()))
         {
             out[adx.0 + bdx.0] = out[adx.0 + bdx.0].add_mod(adx.1.mul_mod(*bdx.1, n), n);
         }
@@ -190,14 +190,14 @@ pub fn euclid_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T
     while r_d >= d && !is_zero(&r) {
         let idx = r_d - d;
 
-        let c_idx = if n == T::default() {
+        let c_idx = if n.equal(T::default()) {
             // In ℤ we try this. It might not work.
-            r_c / c
+            r_c.div(c)
         } else {
             // r_c / c in ℤn is r_c * 1/c.
             r_c * T::inv(c, n)
         };
-        if c_idx == T::default() {
+        if c_idx.equal(T::default()) {
             panic!("c_idx is 0; can't divide these two polynomials");
         }
 
@@ -217,7 +217,7 @@ pub fn euclid_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T
 #[inline]
 fn is_zero<T: TRestrictions<T>>(v: &[T]) -> bool {
     for &x in v {
-        if x != T::default() {
+        if !x.equal(T::default()) {
             return false;
         }
     }
@@ -240,8 +240,8 @@ pub(crate) fn extended_euclid_invert<T: TRestrictions<T>>(x: T, n: T, signed: bo
     let mut new_t = T::from_literal(1);
     let mut new_r = x;
 
-    while new_r != T::default() {
-        let q: T = r / new_r;
+    while !new_r.equal(T::default()) {
+        let q: T = r.div(new_r);
 
         let tmp = new_r.clone();
         new_r = r.sub_lift(q * new_r, n);
@@ -252,11 +252,11 @@ pub(crate) fn extended_euclid_invert<T: TRestrictions<T>>(x: T, n: T, signed: bo
         t = tmp;
     }
 
-    if r > T::from_literal(1) && x != T::default() {
+    if r.greater_than(T::from_literal(1)) && !x.equal(T::default()) {
         panic!("{:x?} is not invertible in ℤ/{:x?}", x, n);
     }
     println!("xeucl: {:?}", t);
-    if t < T::default() {
+    if t.less_than(T::default()) {
         if signed {
             t = t.abs()
         } else {
@@ -342,30 +342,30 @@ macro_rules! poly {
                     n: $n,
                 }
             }
-            /// Generate a random polynomial with coefficients between 0 and $n.
-            fn random() -> $name {
-                let mut irr = [<$t>::default(); $l+1];
-                for c in $m.iter() {
-                    irr[c.0] = c.1;
-                }
-                let mut rng = rand::thread_rng();
-                let p_vec: Vec<$t> = (0..$l)
-                    .map(|_| rng.gen_range(0, $n))
-                    .collect();
-                let mut p = [<$t>::default(); $l];
-                for (a, b) in p.iter_mut().zip(p_vec.iter()) {
-                    *a = *b;
-                }
-                Self {
-                    poly: p,
-                    irr: irr,
-                    n: $n,
-                }
-            }
+            // /// Generate a random polynomial with coefficients between 0 and $n.
+            // fn random() -> $name {
+            //     let mut irr = [<$t>::default(); $l+1];
+            //     for c in $m.iter() {
+            //         irr[c.0] = c.1;
+            //     }
+            //     let mut rng = rand::thread_rng();
+            //     let p_vec: Vec<$t> = (0..$l)
+            //         .map(|_| rng.gen_range(0, $n))
+            //         .collect();
+            //     let mut p = [<$t>::default(); $l];
+            //     for (a, b) in p.iter_mut().zip(p_vec.iter()) {
+            //         *a = *b;
+            //     }
+            //     Self {
+            //         poly: p,
+            //         irr: irr,
+            //         n: $n,
+            //     }
+            // }
             /// Check if the two polynomials are defined over the same ring.
             /// **Note** This shouldn't work on secret integers.
             fn compatible(&self, other: &Self) -> bool {
-                if self.n != other.n {
+                if !self.n.equal(other.n) {
                     return false;
                 }
                 if self.irr.len() != other.irr.len() {
@@ -375,8 +375,8 @@ macro_rules! poly {
                     // This should be unreachable.
                     return false;
                 }
-                for (a, b) in self.irr.iter().zip(other.irr.iter()) {
-                    if a != b {
+                for (a, &b) in self.irr.iter().zip(other.irr.iter()) {
+                    if !a.equal(b) {
                         return false;
                     }
                 }
@@ -436,8 +436,8 @@ macro_rules! poly {
                 if !self.compatible(other) {
                     return false;
                 }
-                for (a, b) in self.poly.iter().zip(other.poly.iter()) {
-                    if a != b {
+                for (a, &b) in self.poly.iter().zip(other.poly.iter()) {
+                    if !a.equal(b) {
                         return false;
                     }
                 }
