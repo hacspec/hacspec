@@ -184,9 +184,7 @@ pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>)
     let mut q = vec![T::default(); x.len()];
     let (yd, c) = leading_coefficient(&y);
     let dist = x.len() - yd; // length of x and degree of y are assumed to be public
-
     let rlen = r.len();
-
     for i in 0..dist {
         let idx = rlen - 1 - i;
         let t = if n == T::default() {
@@ -199,7 +197,6 @@ pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>)
         if t == T::default() && r[idx] != T::default() {
             panic!("t is 0; can't divide these two polynomials");
         }
-            
         let s = monomial(t, dist-i-1);
         let sy = poly_mul(&s[..], &y[..], n);
         q = poly_add(&q[..], &s[..], n);
