@@ -178,18 +178,28 @@ pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T
 /// **Panics** when division isn't possible.
 ///
 #[inline]
-pub fn euclid_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
+pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
     let (x, y) = normalize(x, y);
     let mut r = x.clone();
     let mut q = vec![T::default(); x.len()];
-    
     let (yd, c) = leading_coefficient(&y);
-    let cinv =  T::inv(c, n);
     let dist = x.len() - yd; // length of x and degree of y are assumed to be public
 
+    let rlen = r.len();
+
     for i in 0..dist {
-        let idx = r.len() - 1 - i;
-        let t = r[idx] * cinv;
+        let idx = rlen - 1 - i;
+        let t = if n == T::default() {
+            // In ℤ we try this. It might not work.
+            r[idx] / c
+        } else {
+            // r_c / c in ℤn is r_c * 1/c.
+            r[idx] * T::inv(c, n)
+        };
+        if t == T::default() && r[idx] != T::default() {
+            panic!("t is 0; can't divide these two polynomials");
+        }
+            
         let s = monomial(t, dist-i-1);
         let sy = poly_mul(&s[..], &y[..], n);
         q = poly_add(&q[..], &s[..], n);
@@ -267,7 +277,7 @@ pub fn extended_euclid<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Result<Ve
 
     while !is_zero(&new_r) {
         println!("{:?} / {:?}", r, new_r);
-        let q = euclid_div(&r, &new_r, n).0;
+        let q = poly_div(&r, &new_r, n).0;
 
         let tmp = new_r.clone();
         new_r = poly_sub(&r, &poly_mul(&q, &new_r, n), n);
@@ -455,7 +465,7 @@ macro_rules! poly {
             fn mul(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
                 let tmp = poly_mul(&self.poly, &rhs.poly, self.n);
-                let r = euclid_div(&tmp, &self.irr, self.n).1;
+                let r = poly_div(&tmp, &self.irr, self.n).1;
                 Self::from(r)
             }
         }
@@ -465,7 +475,7 @@ macro_rules! poly {
             type Output = (Self, Self);
             fn div(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
-                let r = euclid_div(&self.poly, &rhs.poly, self.n);
+                let r = poly_div(&self.poly, &rhs.poly, self.n);
                 (Self::from(r.0), Self::from(r.1))
             }
         }
@@ -509,7 +519,7 @@ impl<T: TRestrictions<T>> Add for Seq<T> {
 impl<T: TRestrictions<T>> Div for Seq<T> {
     type Output = (Self, Self);
     fn div(self, rhs: Self) -> Self::Output {
-        let r = euclid_div(&self.b, &rhs.b, T::default());
+        let r = poly_div(&self.b, &rhs.b, T::default());
         (Self { b: r.0, idx: 0 }, Self { b: r.1, idx: 0 })
     }
 }
