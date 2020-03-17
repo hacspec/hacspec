@@ -180,29 +180,35 @@ pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T
 #[inline]
 pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
     let (x, y) = normalize(x, y);
-    let mut r = x.clone();
-    let mut q = vec![T::default(); x.len()];
+    let mut rem = x.clone();
+    let mut quo = vec![T::default(); x.len()];
+    let mut r   = vec![T::default(); y.len()];
     let (yd, c) = leading_coefficient(&y);
     let dist = x.len() - yd; // length of x and degree of y are assumed to be public
-    let rlen = r.len();
+    let rlen = rem.len();
     for i in 0..dist {
         let idx = rlen - 1 - i;
         let t = if n == T::default() {
             // In ℤ we try this. It might not work.
-            r[idx] / c
+            rem[idx] / c
         } else {
             // r_c / c in ℤn is r_c * 1/c.
-            r[idx] * T::inv(c, n)
+            rem[idx] * T::inv(c, n)
         };
-        if t == T::default() && r[idx] != T::default() {
+        if t == T::default() && rem[idx] != T::default() {
             panic!("t is 0; can't divide these two polynomials");
         }
         let s = monomial(t, dist-i-1);
         let sy = poly_mul(&s[..], &y[..], n);
-        q = poly_add(&q[..], &s[..], n);
-        r = poly_sub(&r, &sy, n);
+        quo = poly_add(&quo[..], &s[..], n);
+        rem = poly_sub(&rem, &sy, n);
     }
-    (q, r)
+    if rem.len() > r.len() {
+        for i in 0..r.len() {
+            r[i] = rem[i];
+        }
+    }
+    (quo, r)
 }
 
 #[inline]
