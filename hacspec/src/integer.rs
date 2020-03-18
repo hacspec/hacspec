@@ -1,4 +1,3 @@
-
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -51,7 +50,7 @@ macro_rules! impl_unsigned_integer {
                 if n == 0 {
                     return self - rhs;
                 }
-        
+
                 let mut lhs = self;
                 while lhs < rhs {
                     lhs += n;

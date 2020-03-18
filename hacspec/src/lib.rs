@@ -26,12 +26,14 @@ use std::convert::AsMut;
 use std::ops::{Index, IndexMut, Range, RangeFull};
 
 pub mod array;
+pub mod integer;
+pub mod machine_integers;
+pub mod numeric;
 pub mod poly;
 pub mod prelude;
 pub mod seq;
 pub mod test_vectors;
 pub mod util;
-mod integer;
 
 use crate::prelude::*;
 

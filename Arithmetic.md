@@ -23,6 +23,7 @@ pub trait Numeric:
     + ShlAssign
     + Shr<u32, Output = Self>
     + ShrAssign
+    + Not
     + Default
     + Copy
     + Debug
@@ -53,6 +54,7 @@ pub trait Numeric:
     fn less_than_or_equal(self, other: Self) -> bool;
 
     // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
+    fn not_equal_bm(self, other: Self) -> Self;
     fn equal_bm(self, other: Self) -> Self;
     fn greater_than_bm(self, other: Self) -> Self;
     fn greater_than_or_qual_bm(self, other: Self) -> Self;
