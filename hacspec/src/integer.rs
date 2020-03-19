@@ -161,7 +161,6 @@ pub trait TRestrictions<T>:
     + Clone
     + PartialEq
     + PartialOrd
-    + std::fmt::Display
     + Div<T, Output = T>
     + Add<T, Output = T>
     + Sub<T, Output = T>
@@ -176,7 +175,6 @@ impl<T> TRestrictions<T> for T where
         + Clone
         + PartialEq
         + PartialOrd
-        + std::fmt::Display
         + Div<T, Output = T>
         + Add<T, Output = T>
         + Sub<T, Output = T>
