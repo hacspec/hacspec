@@ -14,7 +14,7 @@ bytes!(Block, BLOCKSIZE);
 // These are actual types; fixed-length arrays.
 bytes!(Tag, BLOCKSIZE);
 
-unsigned_integer!(FieldCanvas, 272);
+unsigned_integer_old_public!(FieldCanvas, 272);
 
 field_integer!(
     FieldElement,

@@ -1,7 +1,7 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
 
-unsigned_integer!(FieldCanvas, 255);
+unsigned_integer_old_public!(FieldCanvas, 255);
 
 // Define field mod 2^255-19
 field_integer!(
@@ -10,7 +10,7 @@ field_integer!(
     FieldCanvas::from_hex("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed")
 );
 
-unsigned_integer!(ScalarCanvas, 256);
+unsigned_integer_old_public!(ScalarCanvas, 256);
 
 // Define 255-bit scalars
 field_integer!(Scalar, ScalarCanvas, ScalarCanvas::pow2(255));

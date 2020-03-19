@@ -1,7 +1,6 @@
 
-/// Defines a bounded natural integer with modular arithmetic operations
 #[macro_export]
-macro_rules! define_refined_modular_integer {
+macro_rules! modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
         pub struct $name($base);
@@ -20,6 +19,18 @@ macro_rules! define_refined_modular_integer {
             }
         }
 
+        impl From<$base> for $name {
+            fn from(x: $base) -> $name {
+                $name(x % $max)
+            }
+        }
+
+        impl Into<$base> for $name {
+            fn into(self) -> $base {
+                self.0
+            }
+        }
+
         impl $name {
             pub fn max() -> $base {
                 $max
@@ -28,25 +39,6 @@ macro_rules! define_refined_modular_integer {
             #[allow(dead_code)]
             pub fn from_hex(s: &str) -> Self {
                 $base::from_hex(s).into()
-            }
-
-            #[allow(dead_code)]
-            pub fn inv(self) -> Self {
-                let base: $base = self.into();
-                base.inv(Self::max()).into()
-            }
-
-            #[allow(dead_code)]
-            pub fn pow_felem(self, exp: Self) -> Self {
-                let base: $base = self.into();
-                base.pow_felem(exp.into(), Self::max()).into()
-            }
-            /// Returns self to the power of the argument.
-            /// The exponent is a u128.
-            #[allow(dead_code)]
-            pub fn pow(self, exp: u128) -> Self {
-                let base: $base = self.into();
-                base.pow(exp, Self::max()).into()
             }
 
             #[allow(dead_code)]
@@ -83,18 +75,20 @@ macro_rules! define_refined_modular_integer {
                 $name(big_x.into())
             }
         }
+    };
+}
 
-        impl From<$base> for $name {
-            fn from(x: $base) -> $name {
-                $name(x % $max)
-            }
-        }
+#[macro_export]
+macro_rules! secret_modular_integer {
+    ($name:ident, $base:ident, $max:expr) => {
+        modular_integer!($name, $base, $max);
+    };
+}
 
-        impl Into<$base> for $name {
-            fn into(self) -> $base {
-                self.0
-            }
-        }
+#[macro_export]
+macro_rules! public_modular_integer {
+    ($name:ident, $base:ident, $max:expr) => {
+        modular_integer!($name, $base, $max);
 
         /// **Warning**: wraps on overflow.
         impl Add for $name {
@@ -175,5 +169,34 @@ macro_rules! define_refined_modular_integer {
                 d.into()
             }
         }
+        
+        impl $name {
+            #[allow(dead_code)]
+            pub fn inv(self) -> Self {
+                let base: $base = self.into();
+                base.inv(Self::max()).into()
+            }
+
+            #[allow(dead_code)]
+            pub fn pow_felem(self, exp: Self) -> Self {
+                let base: $base = self.into();
+                base.pow_felem(exp.into(), Self::max()).into()
+            }
+            /// Returns self to the power of the argument.
+            /// The exponent is a u128.
+            #[allow(dead_code)]
+            pub fn pow(self, exp: u128) -> Self {
+                let base: $base = self.into();
+                base.pow(exp, Self::max()).into()
+            }
+        }
+    };
+}
+
+/// Defines a bounded natural integer with modular arithmetic operations
+#[macro_export]
+macro_rules! define_refined_modular_integer {
+    ($name:ident, $base:ident, $max:expr) => {
+        public_modular_integer!($name, $base, $max);
     };
 }

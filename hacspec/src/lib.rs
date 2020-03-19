@@ -145,7 +145,7 @@ macro_rules! assert_bytes_eq {
 }
 
 #[macro_export]
-macro_rules! unsigned_integer {
+macro_rules! unsigned_integer_old_public {
     ($name:ident, $bits:literal) => {
         define_abstract_integer_checked!($name, $bits);
     };

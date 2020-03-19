@@ -1,15 +1,4 @@
 
-
-use crate::prelude::*;
-use crate::numeric::Numeric;
-
-#[macro_export]
-macro_rules! nat_mod {
-    ($name:ident,$n:expr) => {
-        unimplemented!();
-    };
-}
-
 #[macro_export]
 macro_rules! unsigned_public_integer {
     ($name:ident,$n:literal) => {
@@ -110,7 +99,7 @@ macro_rules! signed_public_integer {
 }
 
 #[macro_export]
-macro_rules! unsigned_secret_integer {
+macro_rules! unsigned_integer {
     ($name:ident,$n:literal) => {
         abstract_unsigned_secret_integer!($name, $n);
 
@@ -202,8 +191,24 @@ macro_rules! unsigned_secret_integer {
 }
 
 #[macro_export]
-macro_rules! signed_secret_integer {
+macro_rules! signed_integer {
     ($name:ident,$n:literal) => {
         unimplemented!();
+    };
+}
+
+#[macro_export]
+macro_rules! nat_mod {
+    ($name:ident,$base:ident,$bits:literal,$n:literal) => {
+        unsigned_secret_integer!($base, $bits);
+        secret_modular_integer!($name, $base, $base::from_hex($n));
+    };
+}
+
+#[macro_export]
+macro_rules! public_nat_mod {
+    ($name:ident,$base:ident,$bits:literal,$n:literal) => {
+        unsigned_public_integer!($base, $bits);
+        public_modular_integer!($name, $base, $base::from_hex($n));
     };
 }
