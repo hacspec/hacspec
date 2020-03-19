@@ -1,4 +1,4 @@
-use crate::*;
+use abstract_integers::*;
 
 define_abstract_integer_checked!(BigBounded, 256);
 
