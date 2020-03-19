@@ -195,7 +195,7 @@ pub fn euclid_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T
             r_c / c
         } else {
             // r_c / c in ℤn is r_c * 1/c.
-            r_c * T::inv(c, n)
+            r_c * T::invert(c, n)
         };
         if c_idx == T::default() {
             panic!("c_idx is 0; can't divide these two polynomials");
@@ -226,7 +226,7 @@ fn is_zero<T: TRestrictions<T>>(v: &[T]) -> bool {
 
 #[inline]
 fn poly_z_inv<T: TRestrictions<T>>(v: &[T], n: T) -> Vec<T> {
-    v.iter().map(|&x| T::inv(x, n)).collect::<Vec<T>>()
+    v.iter().map(|&x| T::invert(x, n)).collect::<Vec<T>>()
 }
 
 /// Extended euclidean algorithm to compute the inverse of x in ℤ/n

@@ -1,5 +1,8 @@
 use abstract_integers::*;
 
+// TODO: Test
+// abstract_nsigned_public_integer!(BigBounded, 256);
+// abstract_igned_public_integer!(BigBounded, 256);
 define_abstract_integer_checked!(BigBounded, 256);
 
 #[test]

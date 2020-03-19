@@ -3,14 +3,14 @@ use hacspec::prelude::*;
 #[test]
 fn test_zn_inv() {
     let n = 65537;
-    assert_eq!(u128::inv(23647, n), 52791);
-    assert_eq!(u128::inv(37543865, n), 37686);
+    assert_eq!(u128::invert(23647, n), 52791);
+    assert_eq!(u128::invert(37543865, n), 37686);
     let n = 106103;
-    assert_eq!(u128::inv(8752725684352, n), 52673);
-    assert_eq!(u128::inv(123, n), 99202);
+    assert_eq!(u128::invert(8752725684352, n), 52673);
+    assert_eq!(u128::invert(123, n), 99202);
 
     let n = 106103i128;
-    assert_eq!(i128::inv(-123, n), 6901);
+    assert_eq!(i128::invert(-123, n), 6901);
 }
 
 #[test]

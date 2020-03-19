@@ -1,4 +1,3 @@
-#![allow(unused_macros)]
 
 #[macro_export]
 macro_rules! abstract_int {
@@ -18,25 +17,25 @@ macro_rules! abstract_int {
             }
         }
 
-        // impl Into<BigInt> for $name {
-        //     fn into(self) -> BigInt {
-        //         BigInt::from_bytes_be(self.sign, &self.b)
-        //     }
-        // }
+        impl Into<BigInt> for $name {
+            fn into(self) -> BigInt {
+                BigInt::from_bytes_be(self.sign, &self.b)
+            }
+        }
         impl std::fmt::Display for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                let uint: BigUint = (*self).into();
+                let uint: BigInt = (*self).into();
                 write!(f, "{}", uint)
             }
         }
 
         impl std::fmt::Debug for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                let uint: BigUint = (*self).into();
+                let uint: BigInt = (*self).into();
                 write!(f, "{}", uint)
             }
         }
-    }
+    };
 }
 
 #[macro_export]
@@ -67,15 +66,6 @@ macro_rules! abstract_unsigned {
                 BigUint::from_bytes_be(&self.b)
             }
         }
-    };
-}
-
-/// Defines a bounded natural integer with regular arithmetic operations, checked for overflow
-/// and underflow.
-#[macro_export]
-macro_rules! define_abstract_integer_checked {
-    ($name:ident, $bits:literal) => {
-        abstract_unsigned!($name, $bits);
 
         impl $name {
             fn max() -> BigUint {
@@ -124,6 +114,13 @@ macro_rules! define_abstract_integer_checked {
                 big_x.into()
             }
         }
+    };
+}
+
+#[macro_export]
+macro_rules! abstract_unsigned_public_integer {
+    ($name:ident, $bits:literal) => {
+        abstract_unsigned!($name, $bits);
 
         /// **Warning**: panics on overflow.
         impl Add for $name {
@@ -200,6 +197,48 @@ macro_rules! define_abstract_integer_checked {
             }
         }
 
+        impl Not for $name {
+            type Output = $name;
+            fn not(self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitOr for $name {
+            type Output = $name;
+            fn bitor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitXor for $name {
+            type Output = $name;
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitAnd for $name {
+            type Output = $name;
+            fn bitand(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shr<u32> for $name {
+            type Output = $name;
+            fn shr(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shl<u32> for $name {
+            type Output = $name;
+            fn shl(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
         impl PartialEq for $name {
             fn eq(&self, rhs: &$name) -> bool {
                 let a: BigUint = (*self).into();
@@ -268,5 +307,111 @@ macro_rules! define_abstract_integer_checked {
                 self.pow_felem(BigUint::from(exp).into(), modval)
             }
         }
+    };
+}
+
+// FIXME: Implement ct algorithms.
+#[macro_export]
+macro_rules! abstract_unsigned_secret_integer {
+    ($name:ident, $bits:literal) => {
+        abstract_unsigned!($name, $bits);
+
+        /// **Warning**: panics on overflow.
+        impl Add for $name {
+            type Output = $name;
+            fn add(self, rhs: $name) -> $name {
+                let a: BigUint = self.into();
+                let b: BigUint = rhs.into();
+                let c = a + b;
+                if c > $name::max() {
+                    panic!("bounded addition overflow for type {}", stringify!($name));
+                }
+                c.into()
+            }
+        }
+
+        /// **Warning**: panics on underflow.
+        impl Sub for $name {
+            type Output = $name;
+            fn sub(self, rhs: $name) -> $name {
+                let a: BigUint = self.into();
+                let b: BigUint = rhs.into();
+                let c = a.checked_sub(&b).unwrap_or_else(|| {
+                    panic!(
+                        "bounded substraction underflow for type {}",
+                        stringify!($name)
+                    )
+                });
+                c.into()
+            }
+        }
+
+        /// **Warning**: panics on overflow.
+        impl Mul for $name {
+            type Output = $name;
+            fn mul(self, rhs: $name) -> $name {
+                let a: BigUint = self.into();
+                let b: BigUint = rhs.into();
+                let c = a * b;
+                if c > $name::max() {
+                    panic!(
+                        "bounded multiplication overflow for type {}",
+                        stringify!($name)
+                    );
+                }
+                c.into()
+            }
+        }
+
+        impl Not for $name {
+            type Output = $name;
+            fn not(self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitOr for $name {
+            type Output = $name;
+            fn bitor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitXor for $name {
+            type Output = $name;
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitAnd for $name {
+            type Output = $name;
+            fn bitand(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shr<u32> for $name {
+            type Output = $name;
+            fn shr(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shl<u32> for $name {
+            type Output = $name;
+            fn shl(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
+    };
+}
+
+/// Defines a bounded natural integer with regular arithmetic operations, checked for overflow
+/// and underflow.
+#[macro_export]
+macro_rules! define_abstract_integer_checked {
+    ($name:ident, $bits:literal) => {
+        abstract_unsigned_public_integer!($name, $bits);
     };
 }

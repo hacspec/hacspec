@@ -9,6 +9,7 @@ pub use crate::integer::*;
 pub use crate::poly::*;
 pub use crate::seq::*;
 pub use crate::util::*;
+pub use crate::numeric::*;
 pub use crate::*;
 pub use abstract_integers::*;
 pub use num::{self, BigUint, CheckedSub, Num, Zero};
