@@ -28,6 +28,7 @@ use std::ops::{Index, IndexMut, Range, RangeFull};
 pub mod array;
 pub mod integer;
 pub mod machine_integers;
+pub mod math_integers;
 pub mod numeric;
 pub mod poly;
 pub mod prelude;

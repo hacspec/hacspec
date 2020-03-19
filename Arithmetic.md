@@ -30,13 +30,19 @@ pub trait Numeric:
 {
     /// Return largest value that can be represented.
     fn max() -> Self;
-    
+
+    /// `self ^ exp` where `exp` is a `u32`.
+    fn pow(self, exp: u32) -> Self;
+    /// `self ^ exp` where `exp` is a `Self`.
+    fn pow_self(self, exp: Self) -> Self;
     /// (self - rhs) % n.
     fn sub_mod(self, rhs: Self, n: Self) -> Self;
     /// `(self + rhs) % n`
     fn add_mod(self, rhs: Self, n: Self) -> Self;
     /// `(self * rhs) % n`
     fn mul_mod(self, rhs: Self, n: Self) -> Self;
+    /// `(self ^ exp) % n`
+    fn pow_mod(self, exp: Self, n: Self) -> Self;
     /// Division.
     fn div(self, rhs: Self) -> Self;
     /// `self % n`

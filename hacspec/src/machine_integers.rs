@@ -19,7 +19,15 @@ macro_rules! implement_public_mi {
             fn max() -> Self {
                 <$t>::max_value()
             }
-        
+
+            /// `self ^ exp` where `exp` is a `u32`.
+            fn pow(self, exp: u32) -> Self {
+                self.pow(exp)
+            }
+            /// `self ^ exp` where `exp` is a `Self`.
+            fn pow_self(self, exp: Self) -> Self {
+                unimplemented!();
+            }
             /// (self - rhs) % n.
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 (self - rhs) % n
@@ -31,6 +39,10 @@ macro_rules! implement_public_mi {
             /// `(self * rhs) % n`
             fn mul_mod(self, rhs: Self, n: Self) -> Self{
                 (self * rhs) % n
+            }
+            /// `(self ^ exp) % n`
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                unimplemented!();
             }
             /// Division.
             fn div(self, rhs: Self) -> Self {
@@ -136,6 +148,15 @@ macro_rules! implement_secret_mi {
                 Self::from(<$base>::max_value())
             }
         
+            /// `self ^ exp` where `exp` is a `u32`.
+            fn pow(self, exp: u32) -> Self {
+                let s = <$t>::declassify(self);
+                Self::from(self.pow(exp))
+            }
+            /// `self ^ exp` where `exp` is a `Self`.
+            fn pow_self(self, exp: Self) -> Self {
+                unimplemented!();
+            }
             /// (self - rhs) % n.
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 let s = <$t>::declassify(self);
@@ -156,6 +177,10 @@ macro_rules! implement_secret_mi {
                 let o = <$t>::declassify(rhs);
                 let n = <$t>::declassify(n);
                 Self::from((s * o) % n)
+            }
+            /// `(self ^ exp) % n`
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                unimplemented!();
             }
             /// Division.
             fn div(self, rhs: Self) -> Self {
