@@ -7,21 +7,13 @@ use crate::prelude::*;
 /// The `Numeric` trait has to be implemented by all numeric objects.
 pub trait Numeric:
     Add<Self, Output = Self>
-    // + AddAssign
     + Sub<Self, Output = Self>
-    // + SubAssign
     + Mul<Self, Output = Self>
-    // + MulAssign
     + BitXor<Self, Output = Self>
-    // + BitXorAssign
     + BitOr<Self, Output = Self>
-    // + BitOrAssign
     + BitAnd<Self, Output = Self>
-    // + BitAndAssign
     + Shl<u32, Output = Self>
-    // + ShlAssign<u32>
     + Shr<u32, Output = Self>
-    // + ShrAssign<u32>
     + Not
     + Default
     + Copy

@@ -8,21 +8,13 @@ Objects might leave functions unimplemented.
 ```Rust
 pub trait Numeric:
     Add<Self, Output = Self>
-    + AddAssign
     + Sub<Self, Output = Self>
-    + SubAssign
     + Mul<Self, Output = Self>
-    + MulAssign
     + BitXor<Self, Output = Self>
-    + BitXorAssign
     + BitOr<Self, Output = Self>
-    + BitOrAssign
     + BitAnd<Self, Output = Self>
-    + BitAndAssign
     + Shl<u32, Output = Self>
-    + ShlAssign
     + Shr<u32, Output = Self>
-    + ShrAssign
     + Not
     + Default
     + Copy
