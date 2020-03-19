@@ -85,17 +85,17 @@ Machine integers are either the public integers `u8, i8, u16, i16, u32, i32, u64
 These integers have arbitrary, but fixed size.
 
  ```Rust
+ // 256-bit unsigned secret integer
+ unsigned_integer!(Uint256, 256);
+
+ // 256-bit signed secret integer
+ signed_integer!(Int256, 256);
+
  // 256-bit unsigned public integer
  unsigned_public_integer!(PUint256, 256);
 
  // 256-bit signed public integer
  signed_public_integer!(PInt256, 256);
-
- // 256-bit unsigned secret integer
- unsigned_secret_integer!(Uint256, 256);
-
- // 256-bit signed secret integer
- signed_secret_integer!(Int256, 256);
  ```
 
 #### Natural Integers Modulo n
@@ -103,8 +103,11 @@ Natural integers that wraps modulo `n`.
 
  ```Rust
  // Natural integers modulo 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed
- nat_mod!(F25519, "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed");
+ // using an underlying integer canvas `FCanvas` with 256-bits.
+ nat_mod!(F25519, FCanvas, 256, "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed");
  ```
+
+ Public natural integers are defined by `public_nat_mod`.
 
 ## Vectors
 Vectors are ordered sets of numeric values.

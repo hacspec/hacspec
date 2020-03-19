@@ -200,7 +200,7 @@ macro_rules! signed_integer {
 #[macro_export]
 macro_rules! nat_mod {
     ($name:ident,$base:ident,$bits:literal,$n:literal) => {
-        unsigned_secret_integer!($base, $bits);
+        unsigned_integer!($base, $bits);
         secret_modular_integer!($name, $base, $base::from_hex($n));
     };
 }
