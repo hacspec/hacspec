@@ -1,3 +1,4 @@
+use crate::*;
 
 #[macro_export]
 macro_rules! modular_integer {
@@ -79,14 +80,14 @@ macro_rules! modular_integer {
 }
 
 #[macro_export]
-macro_rules! secret_modular_integer {
+macro_rules! abstract_secret_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         modular_integer!($name, $base, $max);
     };
 }
 
 #[macro_export]
-macro_rules! public_modular_integer {
+macro_rules! abstract_public_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         modular_integer!($name, $base, $max);
 
@@ -170,6 +171,48 @@ macro_rules! public_modular_integer {
             }
         }
         
+        impl Not for $name {
+            type Output = $name;
+            fn not(self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitOr for $name {
+            type Output = $name;
+            fn bitor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitXor for $name {
+            type Output = $name;
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitAnd for $name {
+            type Output = $name;
+            fn bitand(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shr<u32> for $name {
+            type Output = $name;
+            fn shr(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shl<u32> for $name {
+            type Output = $name;
+            fn shl(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
+        
         impl $name {
             #[allow(dead_code)]
             pub fn inv(self) -> Self {
@@ -193,10 +236,31 @@ macro_rules! public_modular_integer {
     };
 }
 
+#[macro_export]
+macro_rules! abstract_nat_mod {
+    ($name:ident,$base:ident,$bits:literal,$n:literal) => {
+        abstract_unsigned_integer!($base, $bits);
+        abstract_secret_modular_integer!($name, $base, $base::from_hex($n));
+    };
+}
+
+#[macro_export]
+macro_rules! abstract_public_nat_mod {
+    ($name:ident,$base:ident,$bits:literal,$n:literal) => {
+        abstract_unsigned_public_integer!($base, $bits);
+        abstract_public_modular_integer!($name, $base, $base::from_hex($n));
+    };
+}
+
+abstract_unsigned_public_integer!(BigBounded, 256);
+abstract_public_modular_integer!(SmallModular, BigBounded, BigBounded::from_literal(255));
+
+// ============ Legacy API ============
+
 /// Defines a bounded natural integer with modular arithmetic operations
 #[macro_export]
 macro_rules! define_refined_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
-        public_modular_integer!($name, $base, $max);
+        abstract_public_modular_integer!($name, $base, $max);
     };
 }

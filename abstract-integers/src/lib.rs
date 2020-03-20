@@ -45,13 +45,7 @@
 //! ```
 //! use abstract_integers::*;
 //! 
-//! define_abstract_integer_checked!(SizeNatExample, 64);
-//! 
-//! define_refined_modular_integer!(
-//!     SizeNatFieldExample,
-//!     SizeNatExample,
-//!     SizeNatExample::pow2(61) - SizeNatExample::from_literal(1)
-//! );
+//! abstract_public_nat_mod!(SizeNatFieldExample, SizeNatExample, 64, "1fffffffffffffff");
 //! 
 //! let x1 = SizeNatExample::from_literal(687165654266415);
 //! let x2 = SizeNatExample::from_literal(4298832000156);
@@ -68,7 +62,7 @@
 //!
 
 // Re-exports
-pub use num::{BigUint, BigInt, bigint::Sign, CheckedSub, Zero};
+pub use num::{BigUint, BigInt, bigint::Sign, CheckedSub, Zero, traits, traits::identities::*};
 pub use std::num::ParseIntError;
 pub use std::ops::*;
 

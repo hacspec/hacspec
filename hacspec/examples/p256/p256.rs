@@ -1,14 +1,7 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
 
-unsigned_integer_old_public!(FieldCanvas, 256);
-
-// Define field P256 (prime: 2**256 - 2**224 + 2**192 + 2**96 - 1)
-field_integer!(
-    FieldElement,
-    FieldCanvas,
-    FieldCanvas::from_hex("ffffffff00000001000000000000000000000000ffffffffffffffffffffffff")
-);
+public_nat_mod!(FieldElement, FieldCanvas, 256, "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff");
 
 unsigned_integer_old_public!(Scalar, 256);
 

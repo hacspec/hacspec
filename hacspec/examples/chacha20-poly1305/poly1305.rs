@@ -1,5 +1,6 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
+use hacspec::*;
 
 // Import chacha20
 use crate::chacha20;
@@ -14,13 +15,7 @@ bytes!(Block, BLOCKSIZE);
 // These are actual types; fixed-length arrays.
 bytes!(Tag, BLOCKSIZE);
 
-unsigned_integer_old_public!(FieldCanvas, 272);
-
-field_integer!(
-    FieldElement,
-    FieldCanvas,
-    FieldCanvas::from_hex("03fffffffffffffffffffffffffffffffb")
-);
+public_nat_mod!(FieldElement, FieldCanvas, 272, "03fffffffffffffffffffffffffffffffb");
 
 fn key_gen(key: Key, iv: IV) -> Key {
     let block = chacha20::block(key, U32(0), iv);
