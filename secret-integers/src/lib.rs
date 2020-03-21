@@ -252,6 +252,10 @@ macro_rules! define_secret_integer {
             pub fn to_be_bytes(&self) -> Vec<u8> {
                 $name::declassify(*self).to_be_bytes().to_vec()
             }
+
+            pub fn max_value() -> $name {
+                $name::classify(<$repr>::max_value())
+            }
         }
 
         impl From<$repr> for $name {

@@ -20,7 +20,7 @@ pub trait Numeric:
     + Debug
 {
     /// Return largest value that can be represented.
-    fn max() -> Self;
+    fn max_val() -> Self;
 
     /// `self ^ exp` where `exp` is a `u32`.
     fn pow(self, exp: u32) -> Self;

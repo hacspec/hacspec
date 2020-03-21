@@ -6,7 +6,7 @@ macro_rules! unsigned_public_integer {
 
         impl Numeric for $name {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 unimplemented!();
             }
         
@@ -98,7 +98,7 @@ macro_rules! signed_public_integer {
 
         impl Numeric for $name {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 unimplemented!();
             }
         
@@ -190,7 +190,7 @@ macro_rules! unsigned_integer {
 
         impl Numeric for $name {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 unimplemented!();
             }
         
@@ -282,7 +282,7 @@ macro_rules! signed_integer {
 
         impl Numeric for $name {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 unimplemented!();
             }
         
@@ -376,7 +376,7 @@ macro_rules! nat_mod {
 
         impl Numeric for $name {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 unimplemented!();
             }
         
@@ -494,7 +494,7 @@ macro_rules! public_nat_mod {
 
         impl Numeric for $name {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 unimplemented!();
             }
         

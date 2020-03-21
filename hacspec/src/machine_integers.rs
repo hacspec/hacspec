@@ -16,7 +16,7 @@ macro_rules! implement_public_mi {
     ($t:ty) => {
         impl Numeric for $t {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 <$t>::max_value()
             }
 
@@ -144,14 +144,14 @@ macro_rules! implement_secret_mi {
     ($t:ty,$base:ty) => {
         impl Numeric for $t {
             /// Return largest value that can be represented.
-            fn max() -> Self {
+            fn max_val() -> Self {
                 Self::from(<$base>::max_value())
             }
         
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 let s = <$t>::declassify(self);
-                Self::from(self.pow(exp))
+                Self::from(s.pow(exp))
             }
             /// `self ^ exp` where `exp` is a `Self`.
             fn pow_self(self, exp: Self) -> Self {
