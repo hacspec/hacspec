@@ -370,8 +370,9 @@ macro_rules! signed_integer {
 #[macro_export]
 macro_rules! nat_mod {
     ($name:ident,$base:ident,$bits:literal,$n:literal) => {
-        unsigned_integer!($base, $bits);
-        secret_modular_integer!($name, $base, $base::from_hex($n));
+        abstract_nat_mod!($name, $base, $bits, $n);
+        // unsigned_integer!($base, $bits);
+        // secret_modular_integer!($name, $base, $base::from_hex($n));
 
         impl Numeric for $name {
             /// Return largest value that can be represented.
