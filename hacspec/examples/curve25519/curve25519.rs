@@ -1,8 +1,18 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
 
-public_nat_mod!(FieldElement, FieldCanvas, 256, "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed");
-public_nat_mod!(Scalar, ScalarCanvas, 256, "8000000000000000000000000000000000000000000000000000000000000000");
+public_nat_mod!(
+    FieldElement,
+    FieldCanvas,
+    256,
+    "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
+);
+public_nat_mod!(
+    Scalar,
+    ScalarCanvas,
+    256,
+    "8000000000000000000000000000000000000000000000000000000000000000"
+);
 
 type Point = (FieldElement, FieldElement);
 bytes!(SerializedPoint, 32);

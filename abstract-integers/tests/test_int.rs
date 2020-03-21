@@ -1,6 +1,6 @@
 use abstract_integers::*;
 
-abstract_signed_public_integer!(BigBounded, 256);
+abstract_signed_secret_integer!(BigBounded, 256);
 
 #[test]
 #[should_panic]

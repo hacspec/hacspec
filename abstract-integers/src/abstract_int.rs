@@ -23,6 +23,44 @@ macro_rules! abstract_int {
                     .collect();
                 b.expect("Error parsing hex string")
             }
+
+            #[allow(dead_code)]
+            pub fn from_literal(x: u128) -> Self {
+                let big_x = BigInt::from(x);
+                if big_x > $name::max().into() {
+                    panic!("literal {} too big for type {}", x, stringify!($name));
+                }
+                big_x.into()
+            }
+
+            #[allow(dead_code)]
+            pub fn from_signed_literal(x: i128) -> Self {
+                let big_x = BigInt::from(x as u128);
+                if big_x > $name::max().into() {
+                    panic!("literal {} too big for type {}", x, stringify!($name));
+                }
+                big_x.into()
+            }
+
+            /// Returns 2 to the power of the argument
+            #[allow(dead_code)]
+            pub fn pow2(x: usize) -> $name {
+                BigInt::from(1u32).shl(x).into()
+            }
+
+            /// Gets the `i`-th least significant bit of this integer.
+            #[allow(dead_code)]
+            pub fn bit(self, i: usize) -> bool {
+                assert!(
+                    i < self.b.len() * 8,
+                    "the bit queried should be lower than the size of the integer representation: {} < {}",
+                    i,
+                    self.b.len() * 8
+                );
+                let bigint : BigInt = self.into();
+                let tmp: BigInt = bigint >> i;
+                (tmp & BigInt::one()).to_bytes_le().1[0] == 1
+            }
         }
 
         impl From<BigUint> for $name {
@@ -92,6 +130,35 @@ macro_rules! abstract_int {
 #[macro_export]
 macro_rules! abstract_public {
     ($name:ident) => {
+        impl $name {
+            #[allow(dead_code)]
+            pub fn inv(self, modval: Self) -> Self {
+                let biguintmodval : BigInt = modval.into();
+                let m = &biguintmodval - BigInt::from(2u32);
+                let s: BigInt = (self).into();
+                s.modpow(&m, &biguintmodval).into()
+            }
+
+            #[allow(dead_code)]
+            pub fn pow_felem(self, exp: Self, modval: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = exp.into();
+                let m: BigInt = modval.into();
+                let c: BigInt = a.modpow(&b, &m);
+                c.into()
+            }
+            /// Returns self to the power of the argument.
+            /// The exponent is a u128.
+            #[allow(dead_code)]
+            pub fn pow(self, exp: u128, modval: Self) -> Self {
+                self.pow_felem(BigInt::from(exp).into(), modval)
+            }
+
+            fn rem(self, n: Self) -> Self {
+                self % n
+            }
+        }
+
         /// **Warning**: panics on overflow.
         impl Add for $name {
             type Output = $name;
@@ -259,24 +326,6 @@ macro_rules! abstract_unsigned {
             pub fn to_bytes_le(self) -> Vec<u8> {
                 BigInt::to_bytes_le(&self.into()).1
             }
-
-            #[allow(dead_code)]
-            pub fn from_literal(x: u128) -> Self {
-                let big_x = BigInt::from(x);
-                if big_x > $name::max().into() {
-                    panic!("literal {} too big for type {}", x, stringify!($name));
-                }
-                big_x.into()
-            }
-
-            #[allow(dead_code)]
-            pub fn from_signed_literal(x: i128) -> Self {
-                let big_x = BigInt::from(x as u128);
-                if big_x > $name::max().into() {
-                    panic!("literal {} too big for type {}", x, stringify!($name));
-                }
-                big_x.into()
-            }
         }
     };
 }
@@ -307,51 +356,6 @@ macro_rules! abstract_unsigned_public_integer {
     ($name:ident, $bits:literal) => {
         abstract_unsigned!($name, $bits);
         abstract_public!($name);
-
-        impl $name {
-            /// Returns 2 to the power of the argument
-            #[allow(dead_code)]
-            pub fn pow2(x: usize) -> $name {
-                BigInt::from(1u32).shl(x).into()
-            }
-
-            /// Gets the `i`-th least significant bit of this integer.
-            #[allow(dead_code)]
-            pub fn bit(self, i: usize) -> bool {
-                assert!(
-                    i < self.b.len() * 8,
-                    "the bit queried should be lower than the size of the integer representation: {} < {}",
-                    i,
-                    self.b.len() * 8
-                );
-                let bigint : BigInt = self.into();
-                let tmp: BigInt = bigint >> i;
-                (tmp & BigInt::one()).to_bytes_le().1[0] == 1
-            }
-
-            #[allow(dead_code)]
-            pub fn inv(self, modval: Self) -> Self {
-                let biguintmodval : BigInt = modval.into();
-                let m = &biguintmodval - BigInt::from(2u32);
-                let s: BigInt = (self).into();
-                s.modpow(&m, &biguintmodval).into()
-            }
-
-            #[allow(dead_code)]
-            pub fn pow_felem(self, exp: Self, modval: Self) -> Self {
-                let a: BigInt = self.into();
-                let b: BigInt = exp.into();
-                let m: BigInt = modval.into();
-                let c: BigInt = a.modpow(&b, &m);
-                c.into()
-            }
-            /// Returns self to the power of the argument.
-            /// The exponent is a u128.
-            #[allow(dead_code)]
-            pub fn pow(self, exp: u128, modval: Self) -> Self {
-                self.pow_felem(BigInt::from(exp).into(), modval)
-            }
-        }
     };
 }
 
@@ -367,6 +371,18 @@ macro_rules! abstract_signed_public_integer {
 #[macro_export]
 macro_rules! abstract_secret {
     ($name:ident, $bits:literal) => {
+        impl $name {
+            fn rem(self, n: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = n.into();
+                if b == BigInt::zero() {
+                    panic!("dividing by zero in type {}", stringify!($name));
+                }
+                let c = a % b;
+                c.into()
+            }
+        }
+
         /// **Warning**: panics on overflow.
         impl Add for $name {
             type Output = $name;

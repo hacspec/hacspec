@@ -3,7 +3,7 @@ use crate::*;
 #[macro_export]
 macro_rules! modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
-        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
+        #[derive(Clone, Copy, Default)]
         pub struct $name($base);
 
         impl std::fmt::Display for $name {
@@ -22,7 +22,7 @@ macro_rules! modular_integer {
 
         impl From<$base> for $name {
             fn from(x: $base) -> $name {
-                $name(x % $max)
+                $name(x.rem($max))
             }
         }
 
@@ -79,10 +79,101 @@ macro_rules! modular_integer {
     };
 }
 
+// FIXME: Implement ct algorithms
 #[macro_export]
 macro_rules! abstract_secret_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         modular_integer!($name, $base, $max);
+
+        /// **Warning**: wraps on overflow.
+        impl Add for $name {
+            type Output = $name;
+            fn add(self, rhs: $name) -> $name {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let c: BigUint = a + b;
+                let max: BigUint = $max.into();
+                let d: BigUint = c % max;
+                let d: $base = d.into();
+                d.into()
+            }
+        }
+
+        /// **Warning**: wraps on underflow.
+        impl Sub for $name {
+            type Output = $name;
+            fn sub(self, rhs: $name) -> $name {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let max: BigUint = $max.into();
+                let c: BigUint = if b > a { max.clone() - b + a } else { a - b };
+                let d: BigUint = c % max;
+                let d: $base = d.into();
+                d.into()
+            }
+        }
+
+        /// **Warning**: wraps on overflow.
+        impl Mul for $name {
+            type Output = $name;
+            fn mul(self, rhs: $name) -> $name {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let c: BigUint = a * b;
+                let max: BigUint = $max.into();
+                let d: BigUint = c % max;
+                let d: $base = d.into();
+                d.into()
+            }
+        }
+
+        impl Not for $name {
+            type Output = $name;
+            fn not(self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitOr for $name {
+            type Output = $name;
+            fn bitor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitXor for $name {
+            type Output = $name;
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl BitAnd for $name {
+            type Output = $name;
+            fn bitand(self, rhs: Self) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shr<u32> for $name {
+            type Output = $name;
+            fn shr(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
+
+        impl Shl<u32> for $name {
+            type Output = $name;
+            fn shl(self, rhs: u32) -> Self::Output {
+                unimplemented!();
+            }
+        }
     };
 }
 
@@ -90,6 +181,24 @@ macro_rules! abstract_secret_modular_integer {
 macro_rules! abstract_public_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         modular_integer!($name, $base, $max);
+
+        // TODO: implement PartialEq, Eq, PartialOrd, Ord,
+        impl PartialOrd for $name {
+            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+        impl Ord for $name {
+            fn cmp(&self, other: &Self) -> Ordering {
+                self.0.cmp(&other.0)
+            }
+        }
+        impl PartialEq for $name {
+            fn eq(&self, other: &Self) -> bool {
+                self.0 == other.0
+            }
+        }
+        impl Eq for $name {}
 
         /// **Warning**: wraps on overflow.
         impl Add for $name {
@@ -170,7 +279,7 @@ macro_rules! abstract_public_modular_integer {
                 d.into()
             }
         }
-        
+
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {
@@ -239,7 +348,7 @@ macro_rules! abstract_public_modular_integer {
 #[macro_export]
 macro_rules! abstract_nat_mod {
     ($name:ident,$base:ident,$bits:literal,$n:literal) => {
-        abstract_unsigned_integer!($base, $bits);
+        abstract_unsigned_secret_integer!($base, $bits);
         abstract_secret_modular_integer!($name, $base, $base::from_hex($n));
     };
 }
@@ -251,9 +360,6 @@ macro_rules! abstract_public_nat_mod {
         abstract_public_modular_integer!($name, $base, $base::from_hex($n));
     };
 }
-
-abstract_unsigned_public_integer!(BigBounded, 256);
-abstract_public_modular_integer!(SmallModular, BigBounded, BigBounded::from_literal(255));
 
 // ============ Legacy API ============
 

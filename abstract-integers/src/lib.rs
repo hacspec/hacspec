@@ -65,6 +65,7 @@
 pub use num::{BigUint, BigInt, bigint::Sign, CheckedSub, Zero, traits, traits::identities::*};
 pub use std::num::ParseIntError;
 pub use std::ops::*;
+pub use std::cmp::Ordering;
 
 pub mod abstract_int;
 pub mod nat_mod;
