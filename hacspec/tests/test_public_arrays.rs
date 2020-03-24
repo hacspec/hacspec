@@ -1,8 +1,8 @@
 use hacspec::prelude::*;
 
 #[test]
-fn test_array_U32() {
-    array!(TestSeq, 64, U32);
+fn test_public_array_u32() {
+    array!(TestSeq, 64, u32);
 
     both_arrays!(PublicState, State, 73, U32, u32);
     let x = PublicState::new();
@@ -14,51 +14,55 @@ fn test_array_U32() {
 
 #[test]
 fn test_ops_u8() {
-    array!(Bytes55, 55, U8);
+    array!(Bytes55, 55, u8);
     let x = Bytes55::random();
     let y = Bytes55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    let _z = x / y;
 }
 
 #[test]
 fn test_ops_u16() {
-    array!(Array55, 55, U16);
+    array!(Array55, 55, u16);
     let x = Array55::random();
     let y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    let _z = x / y;
 }
 
 #[test]
 fn test_ops_u32() {
-    array!(Array55, 55, U32);
+    array!(Array55, 55, u32);
     let x = Array55::random();
     let y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    let _z = x / y;
 }
 
 #[test]
 fn test_ops_u64() {
-    array!(Array55, 55, U64);
+    array!(Array55, 55, u64);
     let x = Array55::random();
     let y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    let _z = x / y;
 }
 
 #[test]
 fn test_ops_u128() {
-    array!(Array55, 55, U128);
+    array!(Array55, 55, u128);
     let x = Array55::random();
     let y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    let _z = x / y;
 }
-
