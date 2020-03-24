@@ -27,6 +27,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crate::integer::*;
 use crate::seq::*;
+use crate::public_seq::*;
 
 ///! First we implement all functions on slices of T.
 ///! Note that this is equivalent to ℤn[x] (or ℤ[x] depending, depending on T).
@@ -580,10 +581,44 @@ impl<T: TRestrictions<T>> Add for Seq<T> {
 }
 
 /// Polynomial division on ℤ[x]
-impl<T: TRestrictions<T>> Div for Seq<T> {
+impl<T: TRestrictions<T>> Div for PublicSeq<T> {
     type Output = (Self, Self);
     fn div(self, rhs: Self) -> Self::Output {
         let r = poly_div(&self.b, &rhs.b, T::default());
         (Self { b: r.0, idx: 0 }, Self { b: r.1, idx: 0 })
+    }
+}
+
+
+/// Polynomial multiplication on ℤ[x]
+impl<T: TRestrictions<T>> Mul for PublicSeq<T> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            b: poly_mul(&self.b, &rhs.b, T::default()),
+            idx: 0,
+        }
+    }
+}
+
+/// Polynomial subtraction on ℤ[x]
+impl<T: TRestrictions<T>> Sub for PublicSeq<T> {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            b: poly_sub(&self.b, &rhs.b, T::default()),
+            idx: 0,
+        }
+    }
+}
+
+/// Polynomial addition on ℤ[x]
+impl<T: TRestrictions<T>> Add for PublicSeq<T> {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            b: poly_add(&self.b, &rhs.b, T::default()),
+            idx: 0,
+        }
     }
 }

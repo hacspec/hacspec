@@ -32,9 +32,11 @@ pub mod math_integers;
 pub mod numeric;
 pub mod poly;
 pub mod prelude;
+pub mod public_seq;
 pub mod seq;
 pub mod test_vectors;
 pub mod util;
+pub mod vec_integers;
 
 use crate::prelude::*;
 

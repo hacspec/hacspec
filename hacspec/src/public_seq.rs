@@ -2,23 +2,21 @@
 //! # Sequences
 //!
 //! This module implements variable-length sequences and utility functions for it.
-//! Seq only supports operations that are safe on secret values.
-//! For use with public values you can use `PublicSeq`.
 //!
 
 use crate::prelude::*;
 
 /// Variable length byte arrays.
 #[derive(Debug, Clone, Default)]
-pub struct Seq<T: Copy> {
+pub struct PublicSeq<T: Copy> {
     pub(crate) b: Vec<T>,
-    // Running index used when data is pushed into a Seq.
+    // Running index used when data is pushed into a PublicSeq.
     pub(crate) idx: usize,
 }
 
-pub type ByteSeq = Seq<U8>;
+pub type PublicByteSeq = PublicSeq<u8>;
 
-impl<T: Copy + Default> Seq<T> {
+impl<T: Copy + Default> PublicSeq<T> {
     /// Get a new sequence of capacity `l`.
     pub fn new(l: usize) -> Self {
         Self {
@@ -44,10 +42,10 @@ impl<T: Copy + Default> Seq<T> {
     /// ```
     /// use hacspec::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
-    /// let tmp = Seq::<u8>::from_array(&[2, 3]);
+    /// let mut s = PublicSeq::<u8>::new(5);
+    /// let tmp = PublicSeq::<u8>::from_array(&[2, 3]);
     /// s = s.update(2, tmp);
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
+    /// assert_eq!(s, PublicSeq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
     pub fn update<A: SeqTrait<T>>(self, start: usize, v: A) -> Self {
         println!("{:?} >= {:?} + {:?}", self.len(), start, v.len());
@@ -66,10 +64,10 @@ impl<T: Copy + Default> Seq<T> {
     /// ```
     /// use hacspec::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
-    /// let tmp = Seq::<u8>::from_array(&[2, 3]);
+    /// let mut s = PublicSeq::<u8>::new(5);
+    /// let tmp = PublicSeq::<u8>::from_array(&[2, 3]);
     /// s = s.update_sub(2, tmp, 1, 1);
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
+    /// assert_eq!(s, PublicSeq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
     pub fn update_sub<A: SeqTrait<T>>(
         self,
@@ -93,9 +91,9 @@ impl<T: Copy + Default> Seq<T> {
     /// ```
     /// use hacspec::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
+    /// let mut s = PublicSeq::<u8>::new(5);
     /// s = s.update_element(4, 7);
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 0, 7]));
+    /// assert_eq!(s, PublicSeq::<u8>::from_array(&[0, 0, 0, 0, 7]));
     /// ```
     pub fn update_element(mut self, start_out: usize, v: T) -> Self {
         debug_assert!(self.len() >= start_out + 1);
@@ -109,10 +107,10 @@ impl<T: Copy + Default> Seq<T> {
     /// ```
     /// use hacspec::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
+    /// let mut s = PublicSeq::<u8>::new(5);
     /// s = s.set_index(3);
-    /// s = s.push(Seq::<u8>::from_array(&[4, 5]));
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 4, 5]));
+    /// s = s.push(PublicSeq::<u8>::from_array(&[4, 5]));
+    /// assert_eq!(s, PublicSeq::<u8>::from_array(&[0, 0, 0, 4, 5]));
     /// ```
     pub fn set_index(self, i: usize) -> Self {
         Self {
@@ -127,10 +125,10 @@ impl<T: Copy + Default> Seq<T> {
     /// ```
     /// use hacspec::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
+    /// let mut s = PublicSeq::<u8>::new(5);
     /// s = s.set_index(3);
-    /// s = s.push(Seq::<u8>::from_array(&[4, 5]));
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 4, 5]));
+    /// s = s.push(PublicSeq::<u8>::from_array(&[4, 5]));
+    /// assert_eq!(s, PublicSeq::<u8>::from_array(&[0, 0, 0, 4, 5]));
     /// ```
     pub fn push<A: SeqTrait<T>>(self, v: A) -> Self {
         println!("{:?} >= {:?} + {:?}", self.len(), self.idx, v.len());
@@ -150,10 +148,10 @@ impl<T: Copy + Default> Seq<T> {
     /// ```
     /// use hacspec::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
+    /// let mut s = PublicSeq::<u8>::new(5);
     /// s = s.set_index(3);
-    /// s = s.push_sub(Seq::<u8>::from_array(&[4, 5]), 1, 1);
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 5, 0]));
+    /// s = s.push_sub(PublicSeq::<u8>::from_array(&[4, 5]), 1, 1);
+    /// assert_eq!(s, PublicSeq::<u8>::from_array(&[0, 0, 0, 5, 0]));
     /// ```
     pub fn push_sub<A: SeqTrait<T>>(self, v: A, start: usize, l: usize) -> Self {
         debug_assert!(self.len() >= self.idx + l);
@@ -188,14 +186,14 @@ impl<T: Copy + Default> Seq<T> {
         a
     }
 
-    pub fn chunks<'a>(&'a self, chunk_size: usize) -> impl Iterator<Item = (usize, Seq<T>)> + 'a {
+    pub fn chunks<'a>(&'a self, chunk_size: usize) -> impl Iterator<Item = (usize, PublicSeq<T>)> + 'a {
         self.b
             .chunks(chunk_size)
-            .map(|c| (c.len(), Seq::<T>::from(c)))
+            .map(|c| (c.len(), PublicSeq::<T>::from(c)))
     }
 }
 
-impl Seq<U8> {
+impl PublicSeq<U8> {
     fn get_random_vec(l: usize) -> Vec<U8> {
         (0..l)
             .map(|_| rand::random::<u8>())
@@ -205,7 +203,7 @@ impl Seq<U8> {
 
     pub fn random(l: usize) -> Self {
         Self {
-            b: Seq::get_random_vec(l),
+            b: PublicSeq::get_random_vec(l),
             idx: 0,
         }
     }
@@ -216,16 +214,16 @@ impl Seq<U8> {
     }
 }
 
-impl Seq<u8> {
+impl PublicSeq<u8> {
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
     }
 }
 
-impl<T: Copy> SeqTrait<T> for Seq<T> {
+impl<T: Copy> SeqTrait<T> for PublicSeq<T> {
     fn raw<'a>(&'a self) -> &'a [T] {
-        unimplemented!();
+        &self.b
     }
     fn len(&self) -> usize {
         self.b.len()
@@ -235,67 +233,67 @@ impl<T: Copy> SeqTrait<T> for Seq<T> {
     }
 }
 
-impl<T: Copy> Index<u8> for Seq<T> {
+impl<T: Copy> Index<u8> for PublicSeq<T> {
     type Output = T;
     fn index(&self, i: u8) -> &T {
         &self.b[i as usize]
     }
 }
 
-impl<T: Copy> IndexMut<u8> for Seq<T> {
+impl<T: Copy> IndexMut<u8> for PublicSeq<T> {
     fn index_mut(&mut self, i: u8) -> &mut T {
         &mut self.b[i as usize]
     }
 }
 
-impl<T: Copy> Index<u32> for Seq<T> {
+impl<T: Copy> Index<u32> for PublicSeq<T> {
     type Output = T;
     fn index(&self, i: u32) -> &T {
         &self.b[i as usize]
     }
 }
 
-impl<T: Copy> IndexMut<u32> for Seq<T> {
+impl<T: Copy> IndexMut<u32> for PublicSeq<T> {
     fn index_mut(&mut self, i: u32) -> &mut T {
         &mut self.b[i as usize]
     }
 }
 
-impl<T: Copy> Index<i32> for Seq<T> {
+impl<T: Copy> Index<i32> for PublicSeq<T> {
     type Output = T;
     fn index(&self, i: i32) -> &T {
         &self.b[i as usize]
     }
 }
 
-impl<T: Copy> IndexMut<i32> for Seq<T> {
+impl<T: Copy> IndexMut<i32> for PublicSeq<T> {
     fn index_mut(&mut self, i: i32) -> &mut T {
         &mut self.b[i as usize]
     }
 }
 
-impl<T: Copy> Index<usize> for Seq<T> {
+impl<T: Copy> Index<usize> for PublicSeq<T> {
     type Output = T;
     fn index(&self, i: usize) -> &T {
         &self.b[i]
     }
 }
 
-impl<T: Copy> IndexMut<usize> for Seq<T> {
+impl<T: Copy> IndexMut<usize> for PublicSeq<T> {
     fn index_mut(&mut self, i: usize) -> &mut T {
         &mut self.b[i]
     }
 }
 
-impl<T: Copy> Index<Range<usize>> for Seq<T> {
+impl<T: Copy> Index<Range<usize>> for PublicSeq<T> {
     type Output = [T];
     fn index(&self, r: Range<usize>) -> &[T] {
         &self.b[r]
     }
 }
 
-impl<T: Copy> From<Vec<T>> for Seq<T> {
-    fn from(x: Vec<T>) -> Seq<T> {
+impl<T: Copy> From<Vec<T>> for PublicSeq<T> {
+    fn from(x: Vec<T>) -> PublicSeq<T> {
         Self {
             b: x.clone(),
             idx: 0,
@@ -303,8 +301,8 @@ impl<T: Copy> From<Vec<T>> for Seq<T> {
     }
 }
 
-impl<T: Copy> From<&[T]> for Seq<T> {
-    fn from(x: &[T]) -> Seq<T> {
+impl<T: Copy> From<&[T]> for PublicSeq<T> {
+    fn from(x: &[T]) -> PublicSeq<T> {
         Self {
             b: x.to_vec(),
             idx: 0,
@@ -314,8 +312,8 @@ impl<T: Copy> From<&[T]> for Seq<T> {
 
 // macro_rules! from_int_vec {
 //     ($t:ty) => {
-//         impl<T: Copy> From<Vec<$t>> for Seq<T> {
-//             fn from(x: Vec<$t>) -> Seq<T> {
+//         impl<T: Copy> From<Vec<$t>> for PublicSeq<T> {
+//             fn from(x: Vec<$t>) -> PublicSeq<T> {
 //                 Self {
 //                     b: x.iter().map(|&x| T::from(x)).collect::<Vec<T>>(),
 //                     idx: 0,
@@ -332,9 +330,9 @@ impl<T: Copy> From<&[T]> for Seq<T> {
 // from_int_vec!(u128);
 
 /// Read hex string to Bytes.
-impl From<&str> for Seq<U8> {
-    fn from(s: &str) -> Seq<U8> {
-        Seq::from(
+impl From<&str> for PublicSeq<U8> {
+    fn from(s: &str) -> PublicSeq<U8> {
+        PublicSeq::from(
             hex_string_to_bytes(s)
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -342,9 +340,9 @@ impl From<&str> for Seq<U8> {
         )
     }
 }
-impl From<String> for Seq<U8> {
-    fn from(s: String) -> Seq<U8> {
-        Seq::<U8>::from(
+impl From<String> for PublicSeq<U8> {
+    fn from(s: String) -> PublicSeq<U8> {
+        PublicSeq::<U8>::from(
             hex_string_to_bytes(&s)
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -353,13 +351,21 @@ impl From<String> for Seq<U8> {
     }
 }
 // TODO: duplicate code...
-impl From<&str> for Seq<u8> {
-    fn from(s: &str) -> Seq<u8> {
-        Seq::<u8>::from(hex_string_to_bytes(s))
+impl From<&str> for PublicSeq<u8> {
+    fn from(s: &str) -> PublicSeq<u8> {
+        PublicSeq::<u8>::from(hex_string_to_bytes(s))
     }
 }
-impl From<String> for Seq<u8> {
-    fn from(s: String) -> Seq<u8> {
-        Seq::<u8>::from(hex_string_to_bytes(&s))
+impl From<String> for PublicSeq<u8> {
+    fn from(s: String) -> PublicSeq<u8> {
+        PublicSeq::<u8>::from(hex_string_to_bytes(&s))
+    }
+}
+
+/// Two sequences are equal if the underlying vector is equal.
+/// The idx field is ignored.
+impl<T: Copy + PartialEq> std::cmp::PartialEq<PublicSeq<T>> for PublicSeq<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.b == other.b
     }
 }
