@@ -1,8 +1,8 @@
 var N = null;var sourcesIndex = {};
-sourcesIndex["abstract_integers"] = {"name":"","files":["lib.rs","tests.rs"]};
+sourcesIndex["abstract_integers"] = {"name":"","files":["abstract_int.rs","lib.rs","nat_mod.rs"]};
 sourcesIndex["cfg_if"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["getrandom"] = {"name":"","files":["error.rs","error_impls.rs","lib.rs","linux_android.rs","use_file.rs","util.rs","util_libc.rs"]};
-sourcesIndex["hacspec"] = {"name":"","files":["array.rs","integer.rs","lib.rs","poly.rs","prelude.rs","seq.rs","test_vectors.rs","util.rs"]};
+sourcesIndex["hacspec"] = {"name":"","files":["array.rs","integer.rs","lib.rs","machine_integers.rs","math_integers.rs","numeric.rs","poly.rs","prelude.rs","seq.rs","test_vectors.rs","util.rs"]};
 sourcesIndex["itoa"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["libc"] = {"name":"","dirs":[{"name":"unix","dirs":[{"name":"linux_like","dirs":[{"name":"linux","dirs":[{"name":"gnu","dirs":[{"name":"b64","dirs":[{"name":"x86_64","files":["align.rs","mod.rs","not_x32.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["fixed_width_ints.rs","lib.rs","macros.rs"]};
 sourcesIndex["num"] = {"name":"","files":["lib.rs"]};

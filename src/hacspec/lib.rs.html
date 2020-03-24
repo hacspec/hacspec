@@ -184,6 +184,9 @@
 <span id="184">184</span>
 <span id="185">185</span>
 <span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! hacspec consists of three parts:</span>
@@ -213,12 +216,15 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>, <span class="ident">Range</span>, <span class="ident">RangeFull</span>};
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">array</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">integer</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">machine_integers</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">math_integers</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">numeric</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">poly</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">seq</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">test_vectors</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">util</span>;
-<span class="kw">mod</span> <span class="ident">integer</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
@@ -329,42 +335,42 @@
 }
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">unsigned_integer</span> {
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">unsigned_integer_old_public</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span>:<span class="ident">literal</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">define_abstract_integer_checked</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span>);
     };
 }
 
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">field_integer</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">max</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="macro">define_refined_modular_integer</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">max</span>);
+<span class="comment">// #[macro_export]</span>
+<span class="comment">// macro_rules! field_integer {</span>
+<span class="comment">//     ($name:ident, $base:ident, $max:expr) =&gt; {</span>
+<span class="comment">//         define_refined_modular_integer!($name, $base, $max);</span>
 
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_le</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_bytes_le</span>(
-                    <span class="ident">s</span>.<span class="ident">iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
-                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                        .<span class="ident">as_slice</span>(),
-                )
-            }
+<span class="comment">//         impl $name {</span>
+<span class="comment">//             pub fn from_byte_seq_le&lt;A: SeqTrait&lt;U8&gt;&gt;(s: A) -&gt; $name {</span>
+<span class="comment">//                 $name::from_bytes_le(</span>
+<span class="comment">//                     s.iter()</span>
+<span class="comment">//                         .map(|x| U8::declassify(*x))</span>
+<span class="comment">//                         .collect::&lt;Vec&lt;_&gt;&gt;()</span>
+<span class="comment">//                         .as_slice(),</span>
+<span class="comment">//                 )</span>
+<span class="comment">//             }</span>
 
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_byte_seq_le</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-                <span class="ident">Seq</span>::<span class="ident">from</span>(
-                    <span class="self">self</span>.<span class="ident">to_bytes_le</span>()
-                        .<span class="ident">iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
-                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
-                )
-            }
+<span class="comment">//             pub fn to_byte_seq_le(self) -&gt; Seq&lt;U8&gt; {</span>
+<span class="comment">//                 Seq::from(</span>
+<span class="comment">//                     self.to_bytes_le()</span>
+<span class="comment">//                         .iter()</span>
+<span class="comment">//                         .map(|x| U8::classify(*x))</span>
+<span class="comment">//                         .collect::&lt;Vec&lt;U8&gt;&gt;(),</span>
+<span class="comment">//                 )</span>
+<span class="comment">//             }</span>
 
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_secret_literal</span>(<span class="ident">x</span>: <span class="ident">U128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_literal</span>(<span class="ident">U128</span>::<span class="ident">declassify</span>(<span class="ident">x</span>))
-            }
-        }
-    };
-}
+<span class="comment">//             pub fn from_secret_literal(x: U128) -&gt; $name {</span>
+<span class="comment">//                 $name::from_literal(U128::declassify(x))</span>
+<span class="comment">//             }</span>
+<span class="comment">//         }</span>
+<span class="comment">//     };</span>
+<span class="comment">// }</span>
 
 <span class="doccomment">/// Compute ceil(a/b), returning a u64.</span>
 <span class="doccomment">/// Note that float-uint conversion might be lossy.</span>

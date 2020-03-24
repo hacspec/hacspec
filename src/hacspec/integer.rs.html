@@ -181,9 +181,7 @@
 <span id="181">181</span>
 <span id="182">182</span>
 <span id="183">183</span>
-<span id="184">184</span>
 </pre><div class="example-wrap"><pre class="rust ">
-
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Add</span>, <span class="ident">Div</span>, <span class="ident">Mul</span>, <span class="ident">Sub</span>};
 
@@ -194,7 +192,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Integer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">from_literal</span>(<span class="ident">x</span>: <span class="ident">u128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>;
     <span class="kw">fn</span> <span class="ident">from_signed_literal</span>(<span class="ident">x</span>: <span class="ident">i128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>;
-    <span class="kw">fn</span> <span class="ident">inv</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>;
+    <span class="kw">fn</span> <span class="ident">invert</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>;
     <span class="kw">fn</span> <span class="ident">max</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>;
     <span class="doccomment">/// Lift the possibly negative result back up mod n.</span>
     <span class="kw">fn</span> <span class="ident">sub_lift</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">T</span>, <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>;
@@ -224,7 +222,7 @@
             }
             <span class="doccomment">/// **Panics**</span>
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">inv</span>(<span class="ident">x</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">n</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+            <span class="kw">fn</span> <span class="ident">invert</span>(<span class="ident">x</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="ident">n</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="ident">extended_euclid_invert</span>(<span class="ident">x</span>, <span class="ident">n</span>, <span class="bool-val">false</span>)
             }
             <span class="attribute">#[<span class="ident">inline</span>]</span>
@@ -236,7 +234,7 @@
                 <span class="kw">if</span> <span class="ident">n</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                     <span class="kw">return</span> <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>;
                 }
-        
+
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lhs</span> <span class="op">=</span> <span class="self">self</span>;
                 <span class="kw">while</span> <span class="ident">lhs</span> <span class="op">&lt;</span> <span class="ident">rhs</span> {
                     <span class="ident">lhs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">n</span>;
@@ -293,7 +291,7 @@
         <span class="ident">x</span>
     }
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">inv</span>(<span class="ident">x</span>: <span class="ident">i128</span>, <span class="ident">n</span>: <span class="ident">i128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i128</span> {
+    <span class="kw">fn</span> <span class="ident">invert</span>(<span class="ident">x</span>: <span class="ident">i128</span>, <span class="ident">n</span>: <span class="ident">i128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i128</span> {
         <span class="ident">extended_euclid_invert</span>(<span class="ident">x</span>.<span class="ident">abs</span>(), <span class="ident">n</span>.<span class="ident">abs</span>(), <span class="bool-val">true</span>)
     }
     <span class="attribute">#[<span class="ident">inline</span>]</span>

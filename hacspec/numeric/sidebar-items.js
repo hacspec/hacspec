@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["Numeric","The `Numeric` trait has to be implemented by all numeric objects."]]});
