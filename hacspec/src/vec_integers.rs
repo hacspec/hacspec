@@ -107,7 +107,11 @@ macro_rules! _implement_numeric_unsigned_public {
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let mut out = Self::new();
+                for (a, (b, c)) in out.0.iter_mut().zip(self.0.iter().zip(rhs.0.iter())) {
+                    *a = *b ^ *c;
+                }
+                out
             }
         }
 
@@ -479,7 +483,11 @@ macro_rules! _implement_numeric_unsigned_secret {
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let mut out = Self::new();
+                for (a, (b, c)) in out.0.iter_mut().zip(self.0.iter().zip(rhs.0.iter())) {
+                    *a = *b ^ *c;
+                }
+                out
             }
         }
 
