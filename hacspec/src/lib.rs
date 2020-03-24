@@ -26,12 +26,15 @@ use std::convert::AsMut;
 use std::ops::{Index, IndexMut, Range, RangeFull};
 
 pub mod array;
+pub mod integer;
+pub mod machine_integers;
+pub mod math_integers;
+pub mod numeric;
 pub mod poly;
 pub mod prelude;
 pub mod seq;
 pub mod test_vectors;
 pub mod util;
-mod integer;
 
 use crate::prelude::*;
 
@@ -142,42 +145,42 @@ macro_rules! assert_bytes_eq {
 }
 
 #[macro_export]
-macro_rules! unsigned_integer {
+macro_rules! unsigned_integer_old_public {
     ($name:ident, $bits:literal) => {
         define_abstract_integer_checked!($name, $bits);
     };
 }
 
-#[macro_export]
-macro_rules! field_integer {
-    ($name:ident, $base:ident, $max:expr) => {
-        define_refined_modular_integer!($name, $base, $max);
+// #[macro_export]
+// macro_rules! field_integer {
+//     ($name:ident, $base:ident, $max:expr) => {
+//         define_refined_modular_integer!($name, $base, $max);
 
-        impl $name {
-            pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
-                $name::from_bytes_le(
-                    s.iter()
-                        .map(|x| U8::declassify(*x))
-                        .collect::<Vec<_>>()
-                        .as_slice(),
-                )
-            }
+//         impl $name {
+//             pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
+//                 $name::from_bytes_le(
+//                     s.iter()
+//                         .map(|x| U8::declassify(*x))
+//                         .collect::<Vec<_>>()
+//                         .as_slice(),
+//                 )
+//             }
 
-            pub fn to_byte_seq_le(self) -> Seq<U8> {
-                Seq::from(
-                    self.to_bytes_le()
-                        .iter()
-                        .map(|x| U8::classify(*x))
-                        .collect::<Vec<U8>>(),
-                )
-            }
+//             pub fn to_byte_seq_le(self) -> Seq<U8> {
+//                 Seq::from(
+//                     self.to_bytes_le()
+//                         .iter()
+//                         .map(|x| U8::classify(*x))
+//                         .collect::<Vec<U8>>(),
+//                 )
+//             }
 
-            pub fn from_secret_literal(x: U128) -> $name {
-                $name::from_literal(U128::declassify(x))
-            }
-        }
-    };
-}
+//             pub fn from_secret_literal(x: U128) -> $name {
+//                 $name::from_literal(U128::declassify(x))
+//             }
+//         }
+//     };
+// }
 
 /// Compute ceil(a/b), returning a u64.
 /// Note that float-uint conversion might be lossy.

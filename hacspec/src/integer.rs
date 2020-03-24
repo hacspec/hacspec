@@ -1,4 +1,3 @@
-
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -9,7 +8,7 @@ use crate::poly::*;
 pub trait Integer<T> {
     fn from_literal(x: u128) -> T;
     fn from_signed_literal(x: i128) -> T;
-    fn inv(x: T, n: T) -> T;
+    fn invert(x: T, n: T) -> T;
     fn max() -> T;
     /// Lift the possibly negative result back up mod n.
     fn sub_lift(self, rhs: T, n: T) -> T;
@@ -39,7 +38,7 @@ macro_rules! impl_unsigned_integer {
             }
             /// **Panics**
             #[inline]
-            fn inv(x: $t, n: $t) -> $t {
+            fn invert(x: $t, n: $t) -> $t {
                 extended_euclid_invert(x, n, false)
             }
             #[inline]
@@ -51,7 +50,7 @@ macro_rules! impl_unsigned_integer {
                 if n == 0 {
                     return self - rhs;
                 }
-        
+
                 let mut lhs = self;
                 while lhs < rhs {
                     lhs += n;
@@ -108,7 +107,7 @@ impl Integer<i128> for i128 {
         x
     }
     #[inline]
-    fn inv(x: i128, n: i128) -> i128 {
+    fn invert(x: i128, n: i128) -> i128 {
         extended_euclid_invert(x.abs(), n.abs(), true)
     }
     #[inline]

@@ -1,16 +1,7 @@
-use crate::*;
+use abstract_integers::*;
 
-define_abstract_integer_checked!(BigBounded, 256);
-
-#[test]
-#[should_panic]
-fn bounded() {
-    let y1 = (BigBounded::pow2(255) - BigBounded::from_literal(1)) * BigBounded::from_literal(2);
-    let y2 = BigBounded::from_literal(4);
-    let _y3 = y1 + y2;
-}
-
-define_refined_modular_integer!(Felem, BigBounded, BigBounded::pow2(255) - BigBounded::from_literal(19));
+abstract_unsigned_public_integer!(BigBounded, 256);
+abstract_public_modular_integer!(Felem, BigBounded, BigBounded::pow2(255) - BigBounded::from_literal(19));
 
 #[test]
 fn arith() {
@@ -20,7 +11,7 @@ fn arith() {
     assert_eq!(Felem::from_literal(116863084693014474u128), x3.into())
 }
 
-define_refined_modular_integer!(SmallModular, BigBounded, BigBounded::from_literal(255));
+abstract_public_modular_integer!(SmallModular, BigBounded, BigBounded::from_literal(255));
 
 #[test]
 fn wrapping() {
@@ -35,13 +26,7 @@ fn wrapping() {
     assert_eq!(SmallModular::from_literal(63), x6.into());
 }
 
-define_abstract_integer_checked!(Scalar, 512);
-
-define_refined_modular_integer!(
-    FieldElement,
-    Scalar,
-    Scalar::pow2(256) - Scalar::pow2(224) + Scalar::pow2(192) + Scalar::pow2(96) - Scalar::from_literal(1)
-);
+abstract_public_nat_mod!(FieldElement, Scalar, 256, "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff");
 
 #[test]
 fn conversion() {
