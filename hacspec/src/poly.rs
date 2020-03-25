@@ -57,7 +57,7 @@ fn make_fixed_length<T: TRestrictions<T>>(v: &[T], t: usize) -> Vec<T> {
     for (a, &b) in out.iter_mut().zip(v.iter()) {
         *a= b;
     }
-    out 
+    out
 }
 
 #[inline]
@@ -189,7 +189,7 @@ pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>)
         let idx = rlen - 1 - i;
         let t = if n == T::default() {
             // In ℤ we try this. It might not work.
-            rem[idx] / c // XXX: Update once we change to Numeric 
+            rem[idx] / c // XXX: Update once we change to Numeric
         } else {
             // divide by using inverse mod n
             rem[idx] * T::invert(c, n)
@@ -265,10 +265,10 @@ fn quot_sub<T: TRestrictions<T>>(an: &[T], ad: usize, bn: &[T], bd: usize, n: T)
     let mut a = an.to_vec();
     let mut b = bn.to_vec();
     for _ in 0..cd-ad {           //XXX: Any way to write this more nicely?
-        a = poly_mul(&a, &x, n); 
+        a = poly_mul(&a, &x, n);
     }
     for _ in 0..cd-bd {           //XXX: Any way to write this more nicely?
-        b = poly_mul(&b, &x, n); 
+        b = poly_mul(&b, &x, n);
     }
     (poly_sub(&a, &b, n), cd)
 }
@@ -279,7 +279,7 @@ fn poly_divx<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
     for(a, &b) in out.iter_mut().zip(v.iter().skip(1)) {
         *a = b;
     }
-    out 
+    out
 }
 
 /// Iterate division steps in the constant-time polynomial inversion algorithm
@@ -293,7 +293,7 @@ fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, fin: &[T], gin: &[T], n: 
 
     // Each of u,v,q,r in (f, i) represents quotient f/x^i
     // u,v,q,r = 1,0,0,1
-    let mut u = (vec![T::from_literal(1); 1], 0); 
+    let mut u = (vec![T::from_literal(1); 1], 0);
     let mut v = (vec![T::default(); 1], 0);
     let mut q = (vec![T::default(); 1], 0);
     let mut r = (vec![T::from_literal(1); 1], 0);
@@ -316,7 +316,7 @@ fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, fin: &[T], gin: &[T], n: 
             let t = q; q = u; u = t;
             let t = r; r = v; v = t;
         }
-        
+
         delta = delta+1;
         let f0 = monomial(f[0],0);
         let g0 = monomial(g[0],0);
@@ -326,7 +326,7 @@ fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, fin: &[T], gin: &[T], n: 
         let t1 = poly_mul(&g0, &f, n);
         g = poly_sub(&t0, &t1, n);
         g = poly_divx(&g);
-        
+
         // q = (f0*q-g0*u)/x
         let t0 = poly_mul(&f0, &q.0, n);
         let t1 = poly_mul(&g0, &u.0, n);
@@ -344,7 +344,7 @@ fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, fin: &[T], gin: &[T], n: 
 
 /// Constant-time extended euclidean algorithm to compute the inverse of x in yℤ[x]
 /// x.len() and degree of y are assumed to be public
-/// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266 
+/// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266
 #[inline]
 pub fn extended_euclid<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Result<Vec<T>, &'static str> {
     let (yd, _) = leading_coefficient(y);
@@ -360,7 +360,7 @@ pub fn extended_euclid<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Result<Ve
     if delta != 0 {
         return Err("Could not invert the polynomial");
     }
-    
+
     let t  = monomial(T::invert(f[0],n), 2*yd-2-v.1);
     let mut rr = poly_mul(&t, &v.0, n);
     rr = make_fixed_length(&rr, yd);

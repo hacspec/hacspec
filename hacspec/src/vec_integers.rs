@@ -3,6 +3,8 @@
 ///! Implement the `Numeric` trait for arrays.
 ///!
 
+use crate::prelude::*;
+
 #[macro_export]
 macro_rules! _implement_numeric_unsigned_public {
     ($name:ident) => {
@@ -136,7 +138,8 @@ macro_rules! _implement_numeric_unsigned_public {
             }
         }
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
@@ -320,7 +323,8 @@ macro_rules! _implement_numeric_signed_public {
             }
         }
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
@@ -512,7 +516,8 @@ macro_rules! _implement_numeric_unsigned_secret {
             }
         }
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
@@ -696,7 +701,8 @@ macro_rules! _implement_numeric_signed_secret {
             }
         }
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
@@ -782,3 +788,246 @@ macro_rules! _implement_numeric_signed_secret {
         }
     };
 }
+
+// ==== Numeric and NumericVec implementations for PublicSeq and Seq ==== //
+
+impl<T: Numeric> NumericBase for PublicSeq<T> {
+    /// Return largest value that can be represented.
+    fn max_val() -> Self {
+        unimplemented!();
+    }
+
+    /// `self ^ exp` where `exp` is a `u32`.
+    fn pow(self, exp: u32) -> Self {
+        unimplemented!();
+    }
+    /// `self ^ exp` where `exp` is a `Self`.
+    fn pow_self(self, exp: Self) -> Self {
+        unimplemented!();
+    }
+    /// (self - rhs) % n.
+    fn sub_mod(self, rhs: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `(self + rhs) % n`
+    fn add_mod(self, rhs: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `(self * rhs) % n`
+    fn mul_mod(self, rhs: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `(self ^ exp) % n`
+    fn pow_mod(self, exp: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// Division.
+    fn div(self, rhs: Self) -> Self {
+        unimplemented!();
+    }
+    /// `self % n`
+    fn rem(self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// Invert self modulo n.
+    fn inv(self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `|self|`
+    fn abs(self) -> Self {
+        unimplemented!();
+    }
+
+    // Comparison functions returning bool.
+    fn equal(self, other: Self) -> bool {
+        unimplemented!();
+    }
+    fn greater_than(self, other: Self) -> bool {
+        unimplemented!();
+    }
+    fn greater_than_or_qual(self, other: Self) -> bool {
+        unimplemented!();
+    }
+    fn less_than(self, other: Self) -> bool {
+        unimplemented!();
+    }
+    fn less_than_or_equal(self, other: Self) -> bool {
+        unimplemented!();
+    }
+
+    // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
+    fn not_equal_bm(self, other: Self) -> Self {
+        unimplemented!();
+    }
+    fn equal_bm(self, other: Self) -> Self {
+        unimplemented!();
+    }
+    fn greater_than_bm(self, other: Self) -> Self {
+        unimplemented!();
+    }
+    fn greater_than_or_qual_bm(self, other: Self) -> Self {
+        unimplemented!();
+    }
+    fn less_than_bm(self, other: Self) -> Self {
+        unimplemented!();
+    }
+    fn less_than_or_equal_bm(self, other: Self) -> Self {
+        unimplemented!();
+    }
+}
+
+#[inline]
+pub fn poly_mul<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
+    debug_assert!(x.len() == y.len());
+    let mut out = vec![T::default(); x.len() + y.len()];
+    for i in 0..x.len() {
+        for j in 0..y.len() {
+            if !n.equal(T::default()) {
+                out[i + j] = out[i + j].add_mod(x[i].mul_mod(y[j], n), n);
+            } else {
+                out[i + j] = out[i + j] + x[i] * y[j];
+            }
+        }
+    }
+    out
+}
+
+#[inline]
+pub fn poly_add<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
+    debug_assert!(x.len() == y.len());
+    let mut out = vec![T::default(); x.len()];
+    for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
+        if !n.equal(T::default()) {
+            *a = b.add_mod(c, n);
+        } else {
+            *a = b + c;
+        }
+    }
+    out
+}
+
+#[inline]
+pub fn poly_sub<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
+    debug_assert!(x.len() == y.len());
+    let mut out = vec![T::default(); x.len()];
+    for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
+        if !n.equal(T::default()) {
+            *a = b.sub_mod(c, n);
+        } else {
+            *a = b - c;
+        }
+    }
+    out
+}
+
+/// Polynomial multiplication on ℤ[x]
+impl<T: Numeric> Mul for PublicSeq<T> {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self {
+            b: poly_mul(&self.b, &rhs.b, T::default()),
+            idx: 0,
+        }
+    }
+}
+
+/// Polynomial subtraction on ℤ[x]
+impl<T: Numeric> Sub for PublicSeq<T> {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self {
+            b: poly_sub(&self.b, &rhs.b, T::default()),
+            idx: 0,
+        }
+    }
+}
+
+/// Polynomial addition on ℤ[x]
+impl<T: Numeric> Add for PublicSeq<T> {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            b: poly_add(&self.b, &rhs.b, T::default()),
+            idx: 0,
+        }
+    }
+}
+
+impl<T: Numeric> Not for PublicSeq<T> {
+    type Output = PublicSeq<T>;
+    fn not(self) -> Self::Output {
+        unimplemented!();
+    }
+}
+
+impl<T: Numeric> BitOr for PublicSeq<T> {
+    type Output = PublicSeq<T>;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        unimplemented!();
+    }
+}
+
+impl<T: Numeric> BitXor for PublicSeq<T> {
+    type Output = PublicSeq<T>;
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        let mut out = Self::default();
+        for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
+            *a = *b ^ *c;
+        }
+        out
+    }
+}
+
+impl<T: Numeric> BitAnd for PublicSeq<T> {
+    type Output = PublicSeq<T>;
+    fn bitand(self, rhs: Self) -> Self::Output {
+        unimplemented!();
+    }
+}
+
+impl<T: Numeric> Shr<u32> for PublicSeq<T> {
+    type Output = PublicSeq<T>;
+    fn shr(self, rhs: u32) -> Self::Output {
+        unimplemented!();
+    }
+}
+
+impl<T: Numeric> Shl<u32> for PublicSeq<T> {
+    type Output = PublicSeq<T>;
+    fn shl(self, rhs: u32) -> Self::Output {
+        unimplemented!();
+    }
+}
+
+// /// Polynomial multiplication on ℤ[x]
+// impl<T: Numeric> Mul for Seq<T> {
+//     type Output = Self;
+//     fn mul(self, rhs: Self) -> Self::Output {
+//         Self {
+//             b: poly_mul(&self.b, &rhs.b, T::default()),
+//             idx: 0,
+//         }
+//     }
+// }
+
+// /// Polynomial subtraction on ℤ[x]
+// impl<T: Numeric> Sub for Seq<T> {
+//     type Output = Self;
+//     fn sub(self, rhs: Self) -> Self::Output {
+//         Self {
+//             b: poly_sub(&self.b, &rhs.b, T::default()),
+//             idx: 0,
+//         }
+//     }
+// }
+
+// /// Polynomial addition on ℤ[x]
+// impl<T: Numeric> Add for Seq<T> {
+//     type Output = Self;
+//     fn add(self, rhs: Self) -> Self::Output {
+//         Self {
+//             b: poly_add(&self.b, &rhs.b, T::default()),
+//             idx: 0,
+//         }
+//     }
+// }

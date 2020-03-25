@@ -233,6 +233,9 @@ impl<T: Copy> SeqTrait<T> for Seq<T> {
     fn iter(&self) -> std::slice::Iter<T> {
         self.b.iter()
     }
+    fn iter_mut(&mut self) -> std::slice::IterMut<T> {
+        self.b.iter_mut()
+    }
 }
 
 impl<T: Copy> Index<u8> for Seq<T> {
