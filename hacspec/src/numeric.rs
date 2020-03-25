@@ -24,6 +24,11 @@ pub trait NumericBase:
     /// Return largest value that can be represented.
     fn max_val() -> Self;
 
+    fn wrap_add(self, rhs: Self) -> Self;
+    fn wrap_sub(self, rhs: Self) -> Self;
+    fn wrap_mul(self, rhs: Self) -> Self;
+    fn wrap_div(self, rhs: Self) -> Self;
+
     /// `self ^ exp` where `exp` is a `u32`.
     fn pow(self, exp: u32) -> Self;
     /// `self ^ exp` where `exp` is a `Self`.
