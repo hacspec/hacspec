@@ -21,7 +21,7 @@
 //! * add `cargo hacspec fstar` command
 //!
 
-use rand;
+pub use rand;
 use std::convert::AsMut;
 use std::ops::{Index, IndexMut, Range, RangeFull};
 

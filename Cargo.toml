@@ -4,4 +4,5 @@ members = [
     "hacspec",
     "secret-integers",
     "abstract-integers",
+    "spec-examples"
 ]

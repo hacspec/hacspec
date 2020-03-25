@@ -20,9 +20,9 @@
 macro_rules! _array_base {
     ($name:ident,$l:expr,$t:ty) => {
         /// Fixed length byte array.
-        /// Because Rust requires fixed length arrays to have a known size at
-        /// compile time there's no generic fixed length byte array here.
-        /// Use this to define the fixed length byte arrays needed in your code.
+        // Because Rust requires fixed length arrays to have a known size at
+        // compile time there's no generic fixed length byte array here.
+        // Use this to define the fixed length byte arrays needed in your code.
         #[allow(non_camel_case_types)]
         #[derive(Clone, Copy)]
         pub struct $name(pub [$t; $l]);

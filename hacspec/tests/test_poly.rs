@@ -58,9 +58,9 @@ fn test_poly_add() {
 
 #[test]
 fn test_poly_div() {
-    const L: usize = 3;
-    poly!(ZxN, u128, L, 3, &[(0, 2), (1, 2), (3, 1)]);
-    poly!(ZsN, i128, L, 3, &[(0, 2), (1, 2), (3, 1)]);
+    const _L: usize = 3;
+    poly!(ZxN, u128, _L, 3, &[(0, 2), (1, 2), (3, 1)]);
+    poly!(ZsN, i128, _L, 3, &[(0, 2), (1, 2), (3, 1)]);
 
     let x = ZxN::new(&[(0, 1), (2, 2)]);
     let y = ZxN::new(&[(1, 1), (2, 1)]);
@@ -85,9 +85,9 @@ fn test_poly_div() {
 
 #[test]
 fn test_poly_mul() {
-    const L: usize = 3;
-    poly!(ZxN, u128, L, 11, &[(0, 2), (1, 2), (3, 1)]);
-    poly!(ZsN, i128, L, 11, &[(0, 2), (1, 2), (3, 1)]);
+    const _L: usize = 3;
+    poly!(ZxN, u128, _L, 11, &[(0, 2), (1, 2), (3, 1)]);
+    poly!(ZsN, i128, _L, 11, &[(0, 2), (1, 2), (3, 1)]);
 
     let x = ZxN::new(&[(0, 1), (2, 2)]);
     let y = ZxN::new(&[(1, 1), (2, 1)]);
@@ -123,8 +123,8 @@ fn test_poly_mul() {
 
 #[test]
 fn test_poly_inversion() {
-    const L: usize = 3;
-    poly!(ZxN, u128, L, 3, &[(0, 2), (1, 2), (3, 1)]);
+    const _L: usize = 3;
+    poly!(ZxN, u128, _L, 3, &[(0, 2), (1, 2), (3, 1)]);
     // TODO: Signed inversion?
     let one_poly = ZxN::new(&[(0, 1)]);
 
@@ -132,12 +132,12 @@ fn test_poly_inversion() {
     let a_inv = a.inv();
     let test = a * a_inv;
     assert_eq!(test, one_poly);
-    
+
     let a = ZxN::new(&[(0, 1), (1, 2), (2, 2)]);
     let a_inv = a.inv();
     let test = a * a_inv;
     assert_eq!(test, one_poly);
-    
+
     let a = ZxN::new(&[(2, 1)]);
     let a_inv = a.inv();
     let test = a * a_inv;

@@ -7,7 +7,7 @@ abstract_secret_modular_integer!(Felem, BigBounded, BigBounded::pow2(255) - BigB
 fn arith() {
     let x1 = Felem::from_literal(24875808327634644);
     let x2 = Felem::from_literal(91987276365379830);
-    let x3 = x1 + x2;
+    let _x3 = x1 + x2;
     // natmods don't implement eq
     // assert_eq!(Felem::from_literal(116863084693014474u128), x3.into())
 }
@@ -18,11 +18,11 @@ abstract_secret_modular_integer!(SmallModular, BigBounded, BigBounded::from_lite
 fn wrapping() {
     let x1 = SmallModular::from_literal(254);
     let x2 = SmallModular::from_literal(3);
-    let x3 = x1 + x2;
+    let _x3 = x1 + x2;
     // natmods don't implement eq
     // assert_eq!(SmallModular::from_literal(2), x3.into());
     let x4 = SmallModular::from_literal(5);
-    let x5 = x3 - x4;
+    let _x5 = _x3 - x4;
     // natmods don't implement eq
     // assert_eq!(SmallModular::from_literal(252), x5.into());
 }

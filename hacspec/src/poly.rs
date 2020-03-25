@@ -3,7 +3,7 @@
 //!
 //! # Polynomials
 //!
-//! This module implements polynomials ℤn[x]/mℤ[x].
+//! This module implements polynomials ℤn\[x\]/mℤ\[x\].
 //! Polynomials are variable sized only for now.
 //!
 //! Coefficients are currently stored as u128 or i128.
