@@ -33,13 +33,13 @@ macro_rules! implement_public_mi {
             fn wrap_div(self, rhs: Self) -> Self {
                 self.wrapping_div(rhs)
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 self.pow(exp)
             }
             /// `self ^ exp` where `exp` is a `Self`.
-            fn pow_self(self, exp: Self) -> Self {
+            fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// (self - rhs) % n.
@@ -55,7 +55,7 @@ macro_rules! implement_public_mi {
                 (self * rhs) % n
             }
             /// `(self ^ exp) % n`
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
@@ -74,7 +74,7 @@ macro_rules! implement_public_mi {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 self == other
@@ -91,7 +91,7 @@ macro_rules! implement_public_mi {
             fn less_than_or_equal(self, other: Self) -> bool {
                 self <= other
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 if self != other {
@@ -162,7 +162,7 @@ macro_rules! implement_secret_mi {
             fn max_val() -> Self {
                 Self::from(<$base>::max_value())
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -182,7 +182,7 @@ macro_rules! implement_secret_mi {
                 Self::from(s.pow(exp))
             }
             /// `self ^ exp` where `exp` is a `Self`.
-            fn pow_self(self, exp: Self) -> Self {
+            fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// (self - rhs) % n.
@@ -207,7 +207,7 @@ macro_rules! implement_secret_mi {
                 Self::from((s * o) % n)
             }
             /// `(self ^ exp) % n`
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
@@ -230,7 +230,7 @@ macro_rules! implement_secret_mi {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 let s = <$t>::declassify(self);
@@ -257,7 +257,7 @@ macro_rules! implement_secret_mi {
                 let o = <$t>::declassify(other);
                 s <= o
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 self.comp_ne(other)

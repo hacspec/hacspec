@@ -114,7 +114,7 @@ pub fn poly_add<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Vec<T> {
 
 /// Polynomial multiplication using operand scanning without modulo.
 #[inline]
-pub(crate) fn poly_mul_plain<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub(crate) fn poly_mul_plain<T: TRestrictions<T>>(x: &[T], y: &[T], _n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
     for i in 0..x.len() {
         for j in 0..y.len() {

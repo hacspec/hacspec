@@ -1,5 +1,3 @@
-use crate::*;
-
 #[macro_export]
 macro_rules! abstract_int {
     ($name:ident, $bits:literal, $signed:literal) => {
@@ -68,7 +66,7 @@ macro_rules! abstract_int {
                 Self::from(BigInt::from(x))
             }
         }
-        
+
         impl From<BigInt> for $name {
             fn from(x: BigInt) -> $name {
                 let max_value = Self::max();
@@ -237,7 +235,7 @@ macro_rules! abstract_public {
                 c.into()
             }
         }
-        
+
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {

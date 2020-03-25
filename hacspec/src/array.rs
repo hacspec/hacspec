@@ -23,6 +23,7 @@ macro_rules! _array_base {
         /// Because Rust requires fixed length arrays to have a known size at
         /// compile time there's no generic fixed length byte array here.
         /// Use this to define the fixed length byte arrays needed in your code.
+        #[allow(non_camel_case_types)]
         #[derive(Clone, Copy)]
         pub struct $name(pub [$t; $l]);
 
@@ -406,6 +407,7 @@ macro_rules! array {
         _implement_numeric_unsigned_secret!($name);
 
         impl $name {
+            #[allow(non_snake_case)]
             pub fn to_U32s_be(&self) -> [U32; $l / 4] {
                 let mut out = [U32::default(); $l / 4];
                 for (i, block) in self.0.chunks(4).enumerate() {

@@ -407,7 +407,7 @@ macro_rules! define_secret_signed_integer {
         /// # Constant-time comparison operators
         impl $name {
             #[inline]
-            pub fn comp_eq(self, rhs: Self) -> Self {
+            pub fn comp_eq(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
 
@@ -417,28 +417,28 @@ macro_rules! define_secret_signed_integer {
             pub fn comp_ne(self, rhs: Self) -> Self {
                 !self.comp_eq(rhs)
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is greater than or
             /// equal to the second argument, and all zeroes otherwise. With inspiration from
             #[inline]
-            pub fn comp_gte(self, rhs: Self) -> Self {
+            pub fn comp_gte(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is strictly greater
             /// than the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_gt(self, rhs: Self) -> Self {
                 self.comp_gte(rhs) ^ self.comp_eq(rhs)
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is less than or
             /// equal to the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_lte(self, rhs: Self) -> Self {
                 !self.comp_gt(rhs)
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is strictly less than
             /// the second argument, and all zeroes otherwise.
             #[inline]

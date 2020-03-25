@@ -1,5 +1,3 @@
-use crate::*;
-
 #[macro_export]
 macro_rules! modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
@@ -321,7 +319,7 @@ macro_rules! abstract_public_modular_integer {
                 unimplemented!();
             }
         }
-        
+
         impl $name {
             #[allow(dead_code)]
             pub fn inv(self) -> Self {
