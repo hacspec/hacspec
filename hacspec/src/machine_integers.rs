@@ -21,6 +21,19 @@ macro_rules! implement_public_mi {
                 <$t>::max_value()
             }
 
+            fn wrap_add(self, rhs: Self) -> Self {
+                self.wrapping_add(rhs)
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self.wrapping_sub(rhs)
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self.wrapping_mul(rhs)
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                self.wrapping_div(rhs)
+            }
+        
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 self.pow(exp)
@@ -150,6 +163,19 @@ macro_rules! implement_secret_mi {
                 Self::from(<$base>::max_value())
             }
         
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 let s = <$t>::declassify(self);

@@ -9,6 +9,19 @@ macro_rules! unsigned_public_integer {
             fn max_val() -> Self {
                 unimplemented!();
             }
+        
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
 
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
@@ -100,6 +113,19 @@ macro_rules! signed_public_integer {
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
+                unimplemented!();
+            }
+
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
                 unimplemented!();
             }
 
@@ -195,6 +221,19 @@ macro_rules! unsigned_integer {
             fn max_val() -> Self {
                 unimplemented!();
             }
+        
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
 
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
@@ -286,6 +325,19 @@ macro_rules! signed_integer {
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
+                unimplemented!();
+            }
+        
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
                 unimplemented!();
             }
 
@@ -381,6 +433,19 @@ macro_rules! nat_mod {
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
+                unimplemented!();
+            }
+        
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
                 unimplemented!();
             }
 
@@ -500,6 +565,19 @@ macro_rules! public_nat_mod {
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
+                unimplemented!();
+            }
+        
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
                 unimplemented!();
             }
 

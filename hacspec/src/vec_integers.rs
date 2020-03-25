@@ -56,15 +56,16 @@ macro_rules! _implement_numeric_unsigned_public {
         impl Mul for $name {
             type Output = $name;
             fn mul(self, rhs: $name) -> $name {
-                debug_assert!(self.len() == rhs.len());
-                if self.len() != rhs.len() {
-                    panic!("Can't add two sequences that don't have the same length.");
-                }
-                let mut out = Self::new();
-                for (a, (&b, &c)) in out.iter_mut().zip(self.iter().zip(rhs.iter())) {
-                    *a = b.wrapping_mul(c);
-                }
-                out
+                $name::from(vec_poly_mul(&self.0, &rhs.0, 0))
+                // debug_assert!(self.len() == rhs.len());
+                // if self.len() != rhs.len() {
+                //     panic!("Can't add two sequences that don't have the same length.");
+                // }
+                // let mut out = Self::new();
+                // for (a, (&b, &c)) in out.iter_mut().zip(self.iter().zip(rhs.iter())) {
+                //     *a = b.wrapping_mul(c);
+                // }
+                // out
             }
         }
 
@@ -145,6 +146,19 @@ macro_rules! _implement_numeric_unsigned_public {
                 unimplemented!();
             }
         
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -330,6 +344,19 @@ macro_rules! _implement_numeric_signed_public {
                 unimplemented!();
             }
         
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -517,12 +544,25 @@ macro_rules! _implement_numeric_unsigned_secret {
         }
 
         impl Numeric for $name {}
-impl NumericBase for $name {
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
             }
         
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -702,9 +742,22 @@ macro_rules! _implement_numeric_signed_secret {
         }
 
         impl Numeric for $name {}
-impl NumericBase for $name {
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
+                unimplemented!();
+            }
+        
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
                 unimplemented!();
             }
         
@@ -796,6 +849,19 @@ impl<T: Numeric> NumericBase for PublicSeq<T> {
     fn max_val() -> Self {
         unimplemented!();
     }
+        
+    fn wrap_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+    fn wrap_sub(self, rhs: Self) -> Self {
+        self - rhs
+    }
+    fn wrap_mul(self, rhs: Self) -> Self {
+        self * rhs
+    }
+    fn wrap_div(self, rhs: Self) -> Self {
+        unimplemented!();
+    }
 
     /// `self ^ exp` where `exp` is a `u32`.
     fn pow(self, exp: u32) -> Self {
@@ -877,44 +943,42 @@ impl<T: Numeric> NumericBase for PublicSeq<T> {
 }
 
 #[inline]
-pub fn poly_mul<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn vec_poly_mul<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     debug_assert!(x.len() == y.len());
-    let mut out = vec![T::default(); x.len() + y.len()];
-    for i in 0..x.len() {
-        for j in 0..y.len() {
-            if !n.equal(T::default()) {
-                out[i + j] = out[i + j].add_mod(x[i].mul_mod(y[j], n), n);
-            } else {
-                out[i + j] = out[i + j] + x[i] * y[j];
-            }
+    let mut out = vec![T::default(); x.len()];
+    for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
+        if !n.equal(T::default()) {
+            *a = b.mul_mod(c, n);
+        } else {
+            *a = b.wrap_mul(c);
         }
     }
     out
 }
 
 #[inline]
-pub fn poly_add<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn vec_poly_add<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
     for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
         if !n.equal(T::default()) {
             *a = b.add_mod(c, n);
         } else {
-            *a = b + c;
+            *a = b.wrap_add(c);
         }
     }
     out
 }
 
 #[inline]
-pub fn poly_sub<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn vec_poly_sub<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
     for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
         if !n.equal(T::default()) {
             *a = b.sub_mod(c, n);
         } else {
-            *a = b - c;
+            *a = b.wrap_sub(c);
         }
     }
     out
@@ -925,7 +989,7 @@ impl<T: Numeric> Mul for PublicSeq<T> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
-            b: poly_mul(&self.b, &rhs.b, T::default()),
+            b: vec_poly_mul(&self.b, &rhs.b, T::default()),
             idx: 0,
         }
     }
@@ -936,7 +1000,7 @@ impl<T: Numeric> Sub for PublicSeq<T> {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
-            b: poly_sub(&self.b, &rhs.b, T::default()),
+            b: vec_poly_sub(&self.b, &rhs.b, T::default()),
             idx: 0,
         }
     }
@@ -947,7 +1011,7 @@ impl<T: Numeric> Add for PublicSeq<T> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         Self {
-            b: poly_add(&self.b, &rhs.b, T::default()),
+            b: vec_poly_add(&self.b, &rhs.b, T::default()),
             idx: 0,
         }
     }
@@ -1015,7 +1079,7 @@ impl<T: Numeric> Shl<u32> for PublicSeq<T> {
 //     type Output = Self;
 //     fn sub(self, rhs: Self) -> Self::Output {
 //         Self {
-//             b: poly_sub(&self.b, &rhs.b, T::default()),
+//             b: vec_poly_sub(&self.b, &rhs.b, T::default()),
 //             idx: 0,
 //         }
 //     }
@@ -1026,7 +1090,7 @@ impl<T: Numeric> Shl<u32> for PublicSeq<T> {
 //     type Output = Self;
 //     fn add(self, rhs: Self) -> Self::Output {
 //         Self {
-//             b: poly_add(&self.b, &rhs.b, T::default()),
+//             b: vec_poly_add(&self.b, &rhs.b, T::default()),
 //             idx: 0,
 //         }
 //     }
