@@ -14,7 +14,8 @@ use crate::numeric::Numeric;
 // Macro to implement the Numeric trait for built-in machine integers.
 macro_rules! implement_public_mi {
     ($t:ty) => {
-        impl Numeric for $t {
+        impl Numeric for $t {}
+        impl NumericBase for $t {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 <$t>::max_value()
@@ -142,7 +143,8 @@ implement_public_mi!(i128);
 // Macro to implement the Numeric trait for secret machine integers.
 macro_rules! implement_secret_mi {
     ($t:ty,$base:ty) => {
-        impl Numeric for $t {
+        impl Numeric for $t {}
+        impl NumericBase for $t {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 Self::from(<$base>::max_value())

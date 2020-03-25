@@ -51,6 +51,7 @@ pub trait SeqTrait<T: Copy> {
     fn raw<'a>(&'a self) -> &'a [T];
     fn len(&self) -> usize;
     fn iter(&self) -> std::slice::Iter<T>;
+    fn iter_mut(&mut self) -> std::slice::IterMut<T>;
 }
 
 bytes!(U32Word, 4);

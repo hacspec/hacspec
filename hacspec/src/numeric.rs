@@ -4,8 +4,10 @@
 
 use crate::prelude::*;
 
+pub trait Numeric: NumericBase + Copy {}
+
 /// The `Numeric` trait has to be implemented by all numeric objects.
-pub trait Numeric:
+pub trait NumericBase:
     Add<Self, Output = Self>
     + Sub<Self, Output = Self>
     + Mul<Self, Output = Self>
@@ -16,7 +18,7 @@ pub trait Numeric:
     + Shr<u32, Output = Self>
     + Not
     + Default
-    + Copy
+    + Clone
     + Debug
 {
     /// Return largest value that can be represented.

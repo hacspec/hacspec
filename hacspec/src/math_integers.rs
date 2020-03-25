@@ -1,15 +1,15 @@
-
 #[macro_export]
 macro_rules! unsigned_public_integer {
     ($name:ident,$n:literal) => {
         abstract_unsigned_public_integer!($name, $n);
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -50,7 +50,7 @@ macro_rules! unsigned_public_integer {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -67,7 +67,7 @@ macro_rules! unsigned_public_integer {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
@@ -96,12 +96,13 @@ macro_rules! signed_public_integer {
     ($name:ident,$n:literal) => {
         abstract_signed_public_integer!($name, $n);
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -142,7 +143,7 @@ macro_rules! signed_public_integer {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -159,7 +160,7 @@ macro_rules! signed_public_integer {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
@@ -188,12 +189,13 @@ macro_rules! unsigned_integer {
     ($name:ident,$n:literal) => {
         abstract_unsigned_secret_integer!($name, $n);
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -234,7 +236,7 @@ macro_rules! unsigned_integer {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -251,7 +253,7 @@ macro_rules! unsigned_integer {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
@@ -280,12 +282,13 @@ macro_rules! signed_integer {
     ($name:ident,$n:literal) => {
         abstract_signed_secret_integer!($name, $n);
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -326,7 +329,7 @@ macro_rules! signed_integer {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -343,7 +346,7 @@ macro_rules! signed_integer {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
@@ -374,12 +377,13 @@ macro_rules! nat_mod {
         // unsigned_integer!($base, $bits);
         // secret_modular_integer!($name, $base, $base::from_hex($n));
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -420,7 +424,7 @@ macro_rules! nat_mod {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -437,7 +441,7 @@ macro_rules! nat_mod {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
@@ -477,7 +481,7 @@ macro_rules! public_nat_mod {
                         .as_slice(),
                 )
             }
-    
+
             pub fn to_byte_seq_le(self) -> Seq<U8> {
                 Seq::from(
                     self.to_bytes_le()
@@ -486,18 +490,19 @@ macro_rules! public_nat_mod {
                         .collect::<Vec<U8>>(),
                 )
             }
-    
+
             pub fn from_secret_literal(x: U128) -> $name {
                 $name::from_literal(U128::declassify(x))
             }
         }
 
-        impl Numeric for $name {
+        impl Numeric for $name {}
+        impl NumericBase for $name {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -538,7 +543,7 @@ macro_rules! public_nat_mod {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -555,7 +560,7 @@ macro_rules! public_nat_mod {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();

@@ -181,6 +181,9 @@ macro_rules! _array_base {
             fn iter(&self) -> std::slice::Iter<$t> {
                 self.0.iter()
             }
+            fn iter_mut(&mut self) -> std::slice::IterMut<$t> {
+                self.0.iter_mut()
+            }
         }
 
         impl Index<usize> for $name {
