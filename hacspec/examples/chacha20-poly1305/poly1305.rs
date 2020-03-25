@@ -1,6 +1,5 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
-use hacspec::*;
 
 // Import chacha20
 use crate::chacha20;

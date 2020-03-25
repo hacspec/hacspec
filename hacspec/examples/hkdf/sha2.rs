@@ -2,10 +2,10 @@
 use hacspec::prelude::*;
 
 pub enum Variant {
-    SHA224 = 224,
+    // SHA224 = 224,
     SHA256 = 256,
-    SHA384 = 384,
-    SHA512 = 512,
+    // SHA384 = 384,
+    // SHA512 = 512,
 }
 
 const BLOCK_SIZE: usize = 64;
