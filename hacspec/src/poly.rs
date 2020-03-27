@@ -51,18 +51,7 @@ fn pad<T: TRestrictions<T>>(v: &[T], l: usize) -> Vec<T> {
 }
 
 #[inline]
-fn truncate<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
-    let (d, c) = leading_coefficient(v);
-    println!("d: {:?}, c: {:x?}", d, c);
-    let mut out = vec![T::default(); d + 1];
-    for (a, &b) in out.iter_mut().zip(v.iter()) {
-        *a = b;
-    }
-    out
-}
-
-#[inline]
-fn fixed_truncate<T: TRestrictions<T>>(v: &[T], t: usize) -> Vec<T> {
+fn make_fixed_length<T: TRestrictions<T>>(v: &[T], t: usize) -> Vec<T> {
     let mut out = vec![T::default(); t];
     for (a, &b) in out.iter_mut().zip(v.iter()) {
         *a= b;
@@ -181,6 +170,7 @@ pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T
 }
 
 /// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.
+/// The length of x and degree of y are assumed to be public
 ///
 /// Returns (quotient, remainder)
 ///
@@ -192,26 +182,26 @@ pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>)
     let mut rem = x.clone();
     let mut quo = vec![T::default(); x.len()];
     let (yd, c) = leading_coefficient(&y);
-    let dist = x.len() - yd; // length of x and degree of y are assumed to be public
+    let dist = x.len() - yd;
     let rlen = rem.len();
     for i in 0..dist {
         let idx = rlen - 1 - i;
         let t = if n == T::default() {
             // In ℤ we try this. It might not work.
-            rem[idx] / c
+            rem[idx] / c // XXX: Update once we change to Numeric 
         } else {
-            // r_c / c in ℤn is r_c * 1/c.
+            // divide by using inverse mod n
             rem[idx] * T::inv(c, n)
         };
         if t == T::default() && rem[idx] != T::default() {
-            panic!("t is 0; can't divide these two polynomials");
+            panic!("Can't divide these two polynomials");
         }
         let s = monomial(t, dist-i-1);
         let sy = poly_mul(&s[..], &y[..], n);
         quo = poly_add(&quo[..], &s[..], n);
         rem = poly_sub(&rem, &sy, n);
     }
-    (quo, fixed_truncate(&rem, yd))
+    (quo, make_fixed_length(&rem, yd))
 }
 
 #[inline]
@@ -267,26 +257,17 @@ pub(crate) fn extended_euclid_invert<T: TRestrictions<T>>(x: T, n: T, signed: bo
     t
 }
 
-// Pad to degree d and reverse coefficients
-fn reverse<T: TRestrictions<T>>(x: &[T], d: usize) -> Vec<T> {
-    let mut out = vec![T::default(); d+1];
-    for i in 0..std::cmp::min(x.len(), d+1) {
-        out[d-i] = x[i]; //XXX: this could probably be written more nicely with iterators?
-    }
-    out 
-}
-
 /// Subtract quotient (bn/x^bd) from (an/x^ad)
 fn quot_sub<T: TRestrictions<T>>(an: &[T], ad: usize, bn: &[T], bd: usize, n: T) -> (Vec<T>, usize){
     let cd = std::cmp::max(ad, bd);
     let x = monomial(T::from_literal(1),1);
     let mut a = an.to_vec();
     let mut b = bn.to_vec();
-    for _ in 0..cd-ad {
-        a = poly_mul(&a, &x, n);
+    for _ in 0..cd-ad {           //XXX: Any way to write this more nicely?
+        a = poly_mul(&a, &x, n); 
     }
-    for _ in 0..cd-bd {
-        b = poly_mul(&b, &x, n);
+    for _ in 0..cd-bd {           //XXX: Any way to write this more nicely?
+        b = poly_mul(&b, &x, n); 
     }
     (poly_sub(&a, &b, n), cd)
 }
@@ -294,8 +275,8 @@ fn quot_sub<T: TRestrictions<T>>(an: &[T], ad: usize, bn: &[T], bd: usize, n: T)
 /// Divide a by x assuming a is a multiple of x (shift right by one)
 fn poly_divx<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
     let mut out = vec![T::default(); v.len()-1];
-    for i in 0..out.len() {
-        out[i] = v[i+1]; //XXX: this could probably be written more nicely with iterators?
+    for(a, &b) in out.iter_mut().zip(v.iter().skip(1)) {
+        *a = b;
     }
     out 
 }
@@ -303,10 +284,11 @@ fn poly_divx<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
 /// Iterate division steps in the constant-time polynomial inversion algorithm
 /// See Figure 5.1 from https://eprint.iacr.org/2019/266
 /// Instead of returning M2kx((u,v,q,r)) in last component, only return v
-fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, mut delta: i128, fin: &[T], gin: &[T], n: T) -> (i128, Vec<T>, Vec<T>, (Vec<T>, usize)) {
+fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, fin: &[T], gin: &[T], n: T) -> (i128, Vec<T>, Vec<T>, (Vec<T>, usize)) {
     debug_assert!(t >= nn);
     let mut f = fin.to_vec();
     let mut g = gin.to_vec();
+    let mut delta = 1;
 
     // Each of u,v,q,r in (f, i) represents quotient f/x^i
     // u,v,q,r = 1,0,0,1
@@ -317,14 +299,14 @@ fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, mut delta: i128, fin: &[T
 
     for i in 0..nn {
         // Bring u,v,q,r back to fixed precision t
-        u.0 = fixed_truncate(&u.0, t);
-        v.0 = fixed_truncate(&v.0, t);
-        q.0 = fixed_truncate(&q.0, t);
-        r.0 = fixed_truncate(&r.0, t);
+        u.0 = make_fixed_length(&u.0, t);
+        v.0 = make_fixed_length(&v.0, t);
+        q.0 = make_fixed_length(&q.0, t);
+        r.0 = make_fixed_length(&r.0, t);
 
         // Decrease precision of f and g in each iteration
-        f = fixed_truncate(&f, nn-i);
-        g = fixed_truncate(&g, nn-i);
+        f = make_fixed_length(&f, nn-i);
+        g = make_fixed_length(&g, nn-i);
 
         // TODO: make swap constant time
         if delta > 0  && g[0] != T::default() {
@@ -368,17 +350,21 @@ pub fn extended_euclid<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Result<Ve
     debug_assert!(yd >= x.len());
     debug_assert!(yd > 0);
 
-    let f = reverse(y, yd);
-    let g = reverse(x, yd-1);
+    let mut f = make_fixed_length(y, yd+1);
+    f.reverse();
+    let mut g = make_fixed_length(x, yd);
+    g.reverse();
 
-    let (delta,f,g,v) = divstepsx(2*yd-1,2*yd-1,1,&f,&g, n);
+    let (delta,f,g,v) = divstepsx(2*yd-1,2*yd-1,&f,&g, n);
     if delta != 0 {
         return Err("Could not invert the polynomial");
     }
     
     let t  = monomial(T::inv(f[0],n), 2*yd-2-v.1);
-    let rr = poly_mul(&t, &v.0, n);
-    Ok(reverse(&rr, yd-1))
+    let mut rr = poly_mul(&t, &v.0, n);
+    rr = make_fixed_length(&rr, yd);
+    rr.reverse();
+    Ok(rr)
 }
 
 #[macro_export]
