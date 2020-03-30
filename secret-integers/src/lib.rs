@@ -252,6 +252,10 @@ macro_rules! define_secret_integer {
             pub fn to_be_bytes(&self) -> Vec<u8> {
                 $name::declassify(*self).to_be_bytes().to_vec()
             }
+
+            pub fn max_value() -> $name {
+                $name::classify(<$repr>::max_value())
+            }
         }
 
         impl From<$repr> for $name {
@@ -370,21 +374,21 @@ macro_rules! define_secret_unsigned_integer {
                 c
             }
 
-            /// Produces a new integer which is all ones if the first argumentis strictly greater
+            /// Produces a new integer which is all ones if the first argument is strictly greater
             /// than the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_gt(self, rhs: Self) -> Self {
                 self.comp_gte(rhs) ^ self.comp_eq(rhs)
             }
 
-            /// Produces a new integer which is all ones if the first argumentis less than or
+            /// Produces a new integer which is all ones if the first argument is less than or
             /// equal to the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_lte(self, rhs: Self) -> Self {
                 !self.comp_gt(rhs)
             }
 
-            /// Produces a new integer which is all ones if the first argumentis strictly less than
+            /// Produces a new integer which is all ones if the first argument is strictly less than
             /// the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_lt(self, rhs: Self) -> Self {
@@ -399,6 +403,49 @@ macro_rules! define_secret_signed_integer {
         /// Secret signed integer.
         define_secret_integer!($name, $repr, $bits);
         define_unary_op!($name, -, Neg, neg);
+
+        /// # Constant-time comparison operators
+        impl $name {
+            #[inline]
+            pub fn comp_eq(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
+
+            /// Produces a new integer which is all ones if the first argument is different from
+            /// the second argument, and all zeroes otherwise.
+            #[inline]
+            pub fn comp_ne(self, rhs: Self) -> Self {
+                !self.comp_eq(rhs)
+            }
+    
+            /// Produces a new integer which is all ones if the first argument is greater than or
+            /// equal to the second argument, and all zeroes otherwise. With inspiration from
+            #[inline]
+            pub fn comp_gte(self, rhs: Self) -> Self {
+                unimplemented!();
+            }
+    
+            /// Produces a new integer which is all ones if the first argument is strictly greater
+            /// than the second argument, and all zeroes otherwise.
+            #[inline]
+            pub fn comp_gt(self, rhs: Self) -> Self {
+                self.comp_gte(rhs) ^ self.comp_eq(rhs)
+            }
+    
+            /// Produces a new integer which is all ones if the first argument is less than or
+            /// equal to the second argument, and all zeroes otherwise.
+            #[inline]
+            pub fn comp_lte(self, rhs: Self) -> Self {
+                !self.comp_gt(rhs)
+            }
+    
+            /// Produces a new integer which is all ones if the first argument is strictly less than
+            /// the second argument, and all zeroes otherwise.
+            #[inline]
+            pub fn comp_lt(self, rhs: Self) -> Self {
+                !self.comp_gte(rhs)
+            }
+        }
     }
 }
 
@@ -594,66 +641,3 @@ define_signed_unsigned_casting!(U64, u64, I64, i64);
 define_signed_unsigned_casting!(U32, u32, I32, i32);
 define_signed_unsigned_casting!(U16, u16, I16, i16);
 define_signed_unsigned_casting!(U8, u8, I8, i8);
-
-macro_rules! define_tests {
-    // Note that the u8 here is necessary because the integers get interpreted
-    // as i32 on Linux otherwise.
-    ($modname:ident, $type:ident) => {
-        #[cfg(test)]
-        mod $modname {
-            use crate::*;
-
-            #[test]
-            fn test_comp_eq_ok() {
-                let a = $type::from(3u8);
-                let b = $type::from(3u8);
-                let eq = $type::comp_eq(a, b);
-                assert_eq!(eq.declassify(), $type::ones().declassify());
-            }
-
-            #[test]
-            fn test_comp_eq_fail() {
-                let a = $type::from(3u8);
-                let b = $type::from(42u8);
-                let eq = $type::comp_eq(a, b);
-                assert_eq!(eq.declassify(), $type::zero().declassify());
-            }
-
-            #[test]
-            fn test_comp_neq_ok() {
-                let a = $type::from(3u8);
-                let b = $type::from(42u8);
-                let eq = $type::comp_ne(a, b);
-                assert_eq!(eq.declassify(), $type::ones().declassify());
-            }
-
-            #[test]
-            fn test_comp_neq_fail() {
-                let a = $type::from(3u8);
-                let b = $type::from(3u8);
-                let eq = $type::comp_ne(a, b);
-                assert_eq!(eq.declassify(), $type::zero().declassify());
-            }
-
-            #[test]
-            fn test_comp_gte_ok() {
-                let a = $type::from(42u8);
-                let b = $type::from(3u8);
-                let eq = $type::comp_gte(a, b);
-                assert_eq!(eq.declassify(), $type::ones().declassify());
-            }
-
-            #[test]
-            fn test_comp_gte_fail() {
-                let a = $type::from(3u8);
-                let b = $type::from(42u8);
-                let eq = $type::comp_gte(a, b);
-                assert_eq!(eq.declassify(), $type::zero().declassify());
-            }
-        }
-    };
-}
-
-define_tests!(tests_u8, U8);
-define_tests!(tests_u32, U32);
-define_tests!(tests_u64, U64);

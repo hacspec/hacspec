@@ -21,12 +21,12 @@ The clippy checker for the hacspec language lives in a [separate repository](htt
 There's a set of example specs [here](hacspec/examples/).
 To run all examples one can either use `cargo test --example <name>` or the helper script `test-examples.sh` to run all examples.
 
-* [AES 128](hacspec/examples/aes/aes.rs)
-* [GF 128](hacspec/examples/aes/gf128.rs)
-* [AES-GCM 128](hacspec/examples/aes/aesgcm.rs)
-* [Chacha20](hacspec/examples/chacha/chacha20.rs)
-* [Poly1305](hacspec/examples/chacha/poly1305.rs)
-* [Chacha20Poly1305](hacspec/examples/chacha/chacha20poly1305.rs)
+* [AES 128](hacspec/examples/aes-gcm/aes.rs)
+* [GF 128](hacspec/examples/aes-gcm/gf128.rs)
+* [AES-GCM 128](hacspec/examples/aes-gcm/aesgcm.rs)
+* [Chacha20](hacspec/examples/chacha20-poly1305/chacha20.rs)
+* [Poly1305](hacspec/examples/chacha20-poly1305/poly1305.rs)
+* [Chacha20Poly1305](hacspec/examples/chacha20-poly1305/chacha20poly1305.rs)
 * [Blake2b](hacspec/examples/blake2/blake2b.rs)
 * [Curve25519](hacspec/examples/curve25519/curve25519.rs)
 * [Fips202](hacspec/examples/fips202/fips202.rs)

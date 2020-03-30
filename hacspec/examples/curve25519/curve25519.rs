@@ -1,19 +1,18 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
 
-unsigned_integer!(FieldCanvas, 255);
-
-// Define field mod 2^255-19
-field_integer!(
+public_nat_mod!(
     FieldElement,
     FieldCanvas,
-    FieldCanvas::from_hex("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed")
+    256,
+    "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
 );
-
-unsigned_integer!(ScalarCanvas, 256);
-
-// Define 255-bit scalars
-field_integer!(Scalar, ScalarCanvas, ScalarCanvas::pow2(255));
+public_nat_mod!(
+    Scalar,
+    ScalarCanvas,
+    256,
+    "8000000000000000000000000000000000000000000000000000000000000000"
+);
 
 type Point = (FieldElement, FieldElement);
 bytes!(SerializedPoint, 32);

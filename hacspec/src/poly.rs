@@ -22,11 +22,11 @@
 //! **Note:** This is currently only implemented for `Seq<u128>` and `Seq<i128>`.
 //!
 
-use std::ops::{Add, Div, Mul, Sub};
 use rand::Rng;
+use std::ops::{Add, Div, Mul, Sub};
 
-use crate::seq::*;
 use crate::integer::*;
+use crate::seq::*;
 
 ///! First we implement all functions on slices of T.
 ///! Note that this is equivalent to ℤn[x] (or ℤ[x] depending, depending on T).
@@ -216,7 +216,7 @@ fn is_zero<T: TRestrictions<T>>(v: &[T]) -> bool {
 
 #[inline]
 fn poly_z_inv<T: TRestrictions<T>>(v: &[T], n: T) -> Vec<T> {
-    v.iter().map(|&x| T::inv(x, n)).collect::<Vec<T>>()
+    v.iter().map(|&x| T::invert(x, n)).collect::<Vec<T>>()
 }
 
 /// Extended euclidean algorithm to compute the inverse of x in ℤ/n
@@ -375,7 +375,7 @@ macro_rules! poly {
         #[derive(Clone, Copy)]
         struct $name {
             poly: [$t; $l],
-            irr: [$t; $l+1],
+            irr: [$t; $l + 1],
             n: $t,
         }
         impl $name {
@@ -386,7 +386,7 @@ macro_rules! poly {
                 for c in p.iter() {
                     poly[c.0] = c.1;
                 }
-                let mut irr = [<$t>::default(); $l+1];
+                let mut irr = [<$t>::default(); $l + 1];
                 for c in $m.iter() {
                     irr[c.0] = c.1;
                 }
@@ -398,7 +398,7 @@ macro_rules! poly {
             }
             /// Get a new polynomial from a full array with coefficients.
             fn new_full(p: [$t; $l]) -> $name {
-                let mut irr = [<$t>::default(); $l+1];
+                let mut irr = [<$t>::default(); $l + 1];
                 for c in $m.iter() {
                     irr[c.0] = c.1;
                 }
@@ -410,14 +410,12 @@ macro_rules! poly {
             }
             /// Generate a random polynomial with coefficients between 0 and $n.
             fn random() -> $name {
-                let mut irr = [<$t>::default(); $l+1];
+                let mut irr = [<$t>::default(); $l + 1];
                 for c in $m.iter() {
                     irr[c.0] = c.1;
                 }
                 let mut rng = rand::thread_rng();
-                let p_vec: Vec<$t> = (0..$l)
-                    .map(|_| rng.gen_range(0, $n))
-                    .collect();
+                let p_vec: Vec<$t> = (0..$l).map(|_| rng.gen_range(0, $n)).collect();
                 let mut p = [<$t>::default(); $l];
                 for (a, b) in p.iter_mut().zip(p_vec.iter()) {
                     *a = *b;
@@ -467,14 +465,14 @@ macro_rules! poly {
                 for (a, b) in p.iter_mut().zip(v.iter()) {
                     *a = *b;
                 }
-                let mut irr = [<$t>::default(); $l+1];
+                let mut irr = [<$t>::default(); $l + 1];
                 for c in $m.iter() {
                     irr[c.0] = c.1;
                 }
                 $name {
                     poly: p,
                     irr: irr,
-                    n: $n
+                    n: $n,
                 }
             }
         }
@@ -483,15 +481,9 @@ macro_rules! poly {
             // TODO: ugh
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 "poly: ".fmt(f).unwrap();
-                self.poly
-                    .iter()
-                    .collect::<Vec<_>>()
-                    .fmt(f).unwrap();
+                self.poly.iter().collect::<Vec<_>>().fmt(f).unwrap();
                 ", irr: ".fmt(f).unwrap();
-                self.irr
-                    .iter()
-                    .collect::<Vec<_>>()
-                    .fmt(f).unwrap();
+                self.irr.iter().collect::<Vec<_>>().fmt(f).unwrap();
                 ", n: ".fmt(f).unwrap();
                 self.n.fmt(f)
             }
