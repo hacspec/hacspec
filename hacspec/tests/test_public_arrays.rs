@@ -12,57 +12,108 @@ fn test_public_array_u32() {
 
 // ==== Test Array Numeric Implementation ==== //
 
+
 #[test]
 fn test_ops_u8() {
     array!(Bytes55, 55, u8);
-    let x = Bytes55::random();
-    let y = Bytes55::random();
+    let mut x = Bytes55::random();
+    let mut y = Bytes55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    for e in x.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
+    for e in y.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
     let _z = x / y;
 }
 
 #[test]
 fn test_ops_u16() {
     array!(Array55, 55, u16);
-    let x = Array55::random();
-    let y = Array55::random();
+    let mut x = Array55::random();
+    let mut y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    for e in x.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
+    for e in y.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
     let _z = x / y;
 }
 
 #[test]
 fn test_ops_u32() {
     array!(Array55, 55, u32);
-    let x = Array55::random();
-    let y = Array55::random();
+    let mut x = Array55::random();
+    let mut y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    for e in x.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
+    for e in y.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
     let _z = x / y;
 }
 
 #[test]
 fn test_ops_u64() {
     array!(Array55, 55, u64);
-    let x = Array55::random();
-    let y = Array55::random();
+    let mut x = Array55::random();
+    let mut y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    for e in x.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
+    for e in y.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
     let _z = x / y;
 }
 
 #[test]
 fn test_ops_u128() {
     array!(Array55, 55, u128);
-    let x = Array55::random();
-    let y = Array55::random();
+    let mut x = Array55::random();
+    let mut y = Array55::random();
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+    for e in x.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
+    for e in y.iter_mut() {
+        if *e == 0 {
+            *e = 1
+        }
+    }
     let _z = x / y;
 }
