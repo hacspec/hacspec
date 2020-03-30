@@ -51,14 +51,12 @@ fn pad<T: TRestrictions<T>>(v: &[T], l: usize) -> Vec<T> {
 }
 
 #[inline]
-fn truncate<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
-    let (d, c) = leading_coefficient(v);
-    println!("d: {:?}, c: {:x?}", d, c);
-    let mut out = vec![T::default(); d + 1];
+fn make_fixed_length<T: TRestrictions<T>>(v: &[T], t: usize) -> Vec<T> {
+    let mut out = vec![T::default(); t];
     for (a, &b) in out.iter_mut().zip(v.iter()) {
-        *a = b;
+        *a= b;
     }
-    out
+    out 
 }
 
 #[inline]
@@ -172,46 +170,38 @@ pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T
 }
 
 /// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.
+/// The length of x and degree of y are assumed to be public
 ///
 /// Returns (quotient, remainder)
 ///
 /// **Panics** when division isn't possible.
 ///
 #[inline]
-pub fn euclid_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
+pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
     let (x, y) = normalize(x, y);
-    let mut q = vec![T::default(); x.len()];
-    let mut r = x.clone();
-    let (d, c) = leading_coefficient(&y);
-    let (mut r_d, mut r_c) = leading_coefficient(&r);
-
-    let mut i = 0;
-
-    while r_d >= d && !is_zero(&r) {
-        let idx = r_d - d;
-
-        let c_idx = if n == T::default() {
+    let mut rem = x.clone();
+    let mut quo = vec![T::default(); x.len()];
+    let (yd, c) = leading_coefficient(&y);
+    let dist = x.len() - yd;
+    let rlen = rem.len();
+    for i in 0..dist {
+        let idx = rlen - 1 - i;
+        let t = if n == T::default() {
             // In ℤ we try this. It might not work.
-            r_c / c
+            rem[idx] / c // XXX: Update once we change to Numeric 
         } else {
-            // r_c / c in ℤn is r_c * 1/c.
-            r_c * T::invert(c, n)
+            // divide by using inverse mod n
+            rem[idx] * T::invert(c, n)
         };
-        if c_idx == T::default() {
-            panic!("c_idx is 0; can't divide these two polynomials");
+        if t == T::default() && rem[idx] != T::default() {
+            panic!("Can't divide these two polynomials");
         }
-
-        let s = monomial(c_idx, idx);
-        q = poly_add(&q[..], &s[..], n);
+        let s = monomial(t, dist-i-1);
         let sy = poly_mul(&s[..], &y[..], n);
-        r = poly_sub(&r, &sy, n);
-
-        let tmp = leading_coefficient(&r);
-        r_d = tmp.0;
-        r_c = tmp.1;
+        quo = poly_add(&quo[..], &s[..], n);
+        rem = poly_sub(&rem, &sy, n);
     }
-
-    (q, r)
+    (quo, make_fixed_length(&rem, yd))
 }
 
 #[inline]
@@ -267,42 +257,114 @@ pub(crate) fn extended_euclid_invert<T: TRestrictions<T>>(x: T, n: T, signed: bo
     t
 }
 
-/// Extended euclidean algorithm to compute the inverse of x in yℤ[x]
-#[inline]
-pub fn extended_euclid<T: TRestrictions<T>>(
-    x: &[T],
-    y: &[T],
-    n: T,
-) -> Result<Vec<T>, &'static str> {
-    let (x, y) = normalize(x, y);
-    println!("euclid: {:?} / {:?}", x, y);
-
-    let mut new_t = vec![T::default(); x.len()];
-    new_t[0] = T::from_literal(1);
-
-    let mut new_r = x.clone();
-
-    let mut t = vec![T::default(); x.len()];
-    let mut r = y.clone();
-
-    while !is_zero(&new_r) {
-        println!("{:?} / {:?}", r, new_r);
-        let q = euclid_div(&r, &new_r, n).0;
-
-        let tmp = new_r.clone();
-        new_r = poly_sub(&r, &poly_mul(&q, &new_r, n), n);
-        r = tmp;
-
-        let tmp = new_t.clone();
-        new_t = poly_sub(&t, &poly_mul(&q, &new_t, n), n);
-        t = tmp;
+/// Subtract quotient (bn/x^bd) from (an/x^ad)
+fn quot_sub<T: TRestrictions<T>>(an: &[T], ad: usize, bn: &[T], bd: usize, n: T) -> (Vec<T>, usize){
+    let cd = std::cmp::max(ad, bd);
+    let x = monomial(T::from_literal(1),1);
+    let mut a = an.to_vec();
+    let mut b = bn.to_vec();
+    for _ in 0..cd-ad {           //XXX: Any way to write this more nicely?
+        a = poly_mul(&a, &x, n); 
     }
+    for _ in 0..cd-bd {           //XXX: Any way to write this more nicely?
+        b = poly_mul(&b, &x, n); 
+    }
+    (poly_sub(&a, &b, n), cd)
+}
 
-    if leading_coefficient(&r).0 > 0 {
+/// Divide a by x assuming a is a multiple of x (shift right by one)
+fn poly_divx<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
+    let mut out = vec![T::default(); v.len()-1];
+    for(a, &b) in out.iter_mut().zip(v.iter().skip(1)) {
+        *a = b;
+    }
+    out 
+}
+
+/// Iterate division steps in the constant-time polynomial inversion algorithm
+/// See Figure 5.1 from https://eprint.iacr.org/2019/266
+/// Instead of returning M2kx((u,v,q,r)) in last component, only return v
+fn divstepsx<T: TRestrictions<T>>(nn: usize, t: usize, fin: &[T], gin: &[T], n: T) -> (i128, Vec<T>, Vec<T>, (Vec<T>, usize)) {
+    debug_assert!(t >= nn);
+    let mut f = fin.to_vec();
+    let mut g = gin.to_vec();
+    let mut delta = 1;
+
+    // Each of u,v,q,r in (f, i) represents quotient f/x^i
+    // u,v,q,r = 1,0,0,1
+    let mut u = (vec![T::from_literal(1); 1], 0); 
+    let mut v = (vec![T::default(); 1], 0);
+    let mut q = (vec![T::default(); 1], 0);
+    let mut r = (vec![T::from_literal(1); 1], 0);
+
+    for i in 0..nn {
+        // Bring u,v,q,r back to fixed precision t
+        u.0 = make_fixed_length(&u.0, t);
+        v.0 = make_fixed_length(&v.0, t);
+        q.0 = make_fixed_length(&q.0, t);
+        r.0 = make_fixed_length(&r.0, t);
+
+        // Decrease precision of f and g in each iteration
+        f = make_fixed_length(&f, nn-i);
+        g = make_fixed_length(&g, nn-i);
+
+        // TODO: make swap constant time
+        if delta > 0  && g[0] != T::default() {
+            delta = -delta;
+            let t = f; f = g; g = t;
+            let t = q; q = u; u = t;
+            let t = r; r = v; v = t;
+        }
+        
+        delta = delta+1;
+        let f0 = monomial(f[0],0);
+        let g0 = monomial(g[0],0);
+
+        // g = (f0*g-g0*f)/x
+        let t0 = poly_mul(&f0, &g, n);
+        let t1 = poly_mul(&g0, &f, n);
+        g = poly_sub(&t0, &t1, n);
+        g = poly_divx(&g);
+        
+        // q = (f0*q-g0*u)/x
+        let t0 = poly_mul(&f0, &q.0, n);
+        let t1 = poly_mul(&g0, &u.0, n);
+        q = quot_sub(&t0, q.1, &t1, u.1, n);
+        q.1 += 1;
+
+        // r = (f0*r-g0*v)/x
+        let t0 = poly_mul(&f0, &r.0, n);
+        let t1 = poly_mul(&g0, &v.0, n);
+        r = quot_sub(&t0, r.1, &t1, v.1, n);
+        r.1 += 1;
+    }
+    (delta, f, g, v)
+}
+
+/// Constant-time extended euclidean algorithm to compute the inverse of x in yℤ[x]
+/// x.len() and degree of y are assumed to be public
+/// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266 
+#[inline]
+pub fn extended_euclid<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Result<Vec<T>, &'static str> {
+    let (yd, _) = leading_coefficient(y);
+    debug_assert!(yd >= x.len());
+    debug_assert!(yd > 0);
+
+    let mut f = make_fixed_length(y, yd+1);
+    f.reverse();
+    let mut g = make_fixed_length(x, yd);
+    g.reverse();
+
+    let (delta,f,g,v) = divstepsx(2*yd-1,2*yd-1,&f,&g, n);
+    if delta != 0 {
         return Err("Could not invert the polynomial");
     }
-
-    Ok(poly_mul(&t, &poly_z_inv(&r, n), n))
+    
+    let t  = monomial(T::invert(f[0],n), 2*yd-2-v.1);
+    let mut rr = poly_mul(&t, &v.0, n);
+    rr = make_fixed_length(&rr, yd);
+    rr.reverse();
+    Ok(rr)
 }
 
 #[macro_export]
@@ -467,7 +529,7 @@ macro_rules! poly {
             fn mul(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
                 let tmp = poly_mul(&self.poly, &rhs.poly, self.n);
-                let r = euclid_div(&tmp, &self.irr, self.n).1;
+                let r = poly_div(&tmp, &self.irr, self.n).1;
                 Self::from(r)
             }
         }
@@ -477,7 +539,7 @@ macro_rules! poly {
             type Output = (Self, Self);
             fn div(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
-                let r = euclid_div(&self.poly, &rhs.poly, self.n);
+                let r = poly_div(&self.poly, &rhs.poly, self.n);
                 (Self::from(r.0), Self::from(r.1))
             }
         }
@@ -521,7 +583,7 @@ impl<T: TRestrictions<T>> Add for Seq<T> {
 impl<T: TRestrictions<T>> Div for Seq<T> {
     type Output = (Self, Self);
     fn div(self, rhs: Self) -> Self::Output {
-        let r = euclid_div(&self.b, &rhs.b, T::default());
+        let r = poly_div(&self.b, &rhs.b, T::default());
         (Self { b: r.0, idx: 0 }, Self { b: r.1, idx: 0 })
     }
 }
