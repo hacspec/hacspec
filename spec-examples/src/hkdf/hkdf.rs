@@ -32,6 +32,13 @@ fn build_hmac_txt(t: ByteSeq, info: ByteSeq, iteration: U8) -> ByteSeq {
     out
 }
 
+// DM: determine if needed, this is impossible to formalize
+/// Compute ceil(a/b), returning a u64.
+/// Note that float-uint conversion might be lossy.
+fn div_ceil(a: usize, b: usize) -> u64 {
+    (f64::ceil((a as f64) / (b as f64))) as u64
+}
+
 /// Expand a key prk, using potentially empty info, and output length l.
 /// Key prk must be at least of length HASH_LEN.
 /// Output length l can be at most 255*HASH_LEN.
