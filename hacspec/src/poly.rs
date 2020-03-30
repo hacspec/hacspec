@@ -22,6 +22,7 @@
 //! **Note:** This is currently only implemented for `Seq<u128>` and `Seq<i128>`.
 //!
 
+use std::ops::{Add, Sub, Mul};
 use rand::Rng;
 
 use crate::integer::*;
@@ -354,7 +355,7 @@ pub fn extended_euclid<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Result<Ve
     let mut g = make_fixed_length(x, yd);
     g.reverse();
 
-    let (delta,f,g,v) = divstepsx(2*yd-1,2*yd-1,&f,&g, n);
+    let (delta,f,_g,v) = divstepsx(2*yd-1,2*yd-1,&f,&g, n);
     if delta != 0 {
         return Err("Could not invert the polynomial");
     }
@@ -569,49 +570,6 @@ impl<T: TRestrictions<T>> Sub for Seq<T> {
 
 /// Polynomial addition on ℤ[x]
 impl<T: TRestrictions<T>> Add for Seq<T> {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            b: poly_add(&self.b, &rhs.b, T::default()),
-            idx: 0,
-        }
-    }
-}
-
-/// Polynomial division on ℤ[x]
-impl<T: TRestrictions<T>> Div for PublicSeq<T> {
-    type Output = (Self, Self);
-    fn div(self, rhs: Self) -> Self::Output {
-        let r = poly_div(&self.b, &rhs.b, T::default());
-        (Self { b: r.0, idx: 0 }, Self { b: r.1, idx: 0 })
-    }
-}
-
-
-/// Polynomial multiplication on ℤ[x]
-impl<T: TRestrictions<T>> Mul for PublicSeq<T> {
-    type Output = Self;
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self {
-            b: poly_mul(&self.b, &rhs.b, T::default()),
-            idx: 0,
-        }
-    }
-}
-
-/// Polynomial subtraction on ℤ[x]
-impl<T: TRestrictions<T>> Sub for PublicSeq<T> {
-    type Output = Self;
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            b: poly_sub(&self.b, &rhs.b, T::default()),
-            idx: 0,
-        }
-    }
-}
-
-/// Polynomial addition on ℤ[x]
-impl<T: TRestrictions<T>> Add for PublicSeq<T> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         Self {
