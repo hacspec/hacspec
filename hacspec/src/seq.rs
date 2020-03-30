@@ -224,9 +224,6 @@ impl Seq<u8> {
 }
 
 impl<T: Copy> SeqTrait<T> for Seq<T> {
-    fn raw<'a>(&'a self) -> &'a [T] {
-        unimplemented!();
-    }
     fn len(&self) -> usize {
         self.b.len()
     }
@@ -315,24 +312,19 @@ impl<T: Copy> From<&[T]> for Seq<T> {
     }
 }
 
-// macro_rules! from_int_vec {
-//     ($t:ty) => {
-//         impl<T: Copy> From<Vec<$t>> for Seq<T> {
-//             fn from(x: Vec<$t>) -> Seq<T> {
-//                 Self {
-//                     b: x.iter().map(|&x| T::from(x)).collect::<Vec<T>>(),
-//                     idx: 0,
-//                 }
-//             }
-//         }
-//     };
-// }
 
-// from_int_vec!(u8);
-// from_int_vec!(u16);
-// from_int_vec!(u32);
-// from_int_vec!(u64);
-// from_int_vec!(u128);
+impl<T: Copy> Seq<T> {
+    pub fn from_seq<U : SeqTrait<T>>(x: U) -> Seq<T> {
+        let mut tmp : Vec<T> = Vec::new();
+        for e in x.iter() {
+            tmp.push(*e);
+        }
+        Self {
+            b: tmp,
+            idx: 0
+        }
+    }
+}
 
 /// Read hex string to Bytes.
 impl From<&str> for Seq<U8> {

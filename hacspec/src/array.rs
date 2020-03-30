@@ -169,9 +169,6 @@ macro_rules! _array_base {
             }
         }
         impl SeqTrait<$t> for $name {
-            fn raw<'a>(&'a self) -> &'a [$t] {
-                &self.0
-            }
             fn len(&self) -> usize {
                 $l
             }
@@ -244,8 +241,17 @@ macro_rules! _array_base {
                 $name(tmp.clone())
             }
         }
+
         impl From<Seq<$t>> for $name {
             fn from(x: Seq<$t>) -> $name {
+                $name::from_seq(x)
+            }
+        }
+
+        impl $name {
+            // We can't use the [From] trait here because otherwise it would conflict with
+            // the From<T> for T core implementation, as the array also implements the [SeqTrait].
+            pub fn from_seq<T : SeqTrait<$t>>(x: T) -> $name {
                 debug_assert!(x.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
                 for (i, e) in x.iter().enumerate() {

@@ -1,6 +1,7 @@
 use hacspec::prelude::*;
 
 #[test]
+#[allow(non_snake_case)]
 fn test_array_U32() {
     array!(TestSeq, 64, U32);
 
@@ -61,4 +62,3 @@ fn test_ops_u128() {
     let _z = x - y;
     let _z = x * y;
 }
-

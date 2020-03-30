@@ -21,7 +21,7 @@ pub fn extract(salt: ByteSeq, ikm: ByteSeq) -> PRK {
         // Use all zero salt if none given.
         ByteSeq::new(HASH_LEN)
     };
-    hmac(salt, ikm).raw().into()
+    PRK::from_seq(hmac(salt, ikm))
 }
 
 fn build_hmac_txt(t: ByteSeq, info: ByteSeq, iteration: U8) -> ByteSeq {
@@ -53,7 +53,7 @@ pub fn expand(prk: ByteSeq, info: ByteSeq, l: usize) -> ByteSeq {
         let hmac_txt_in = if i == 0 {
             build_hmac_txt(ByteSeq::new(0), info.clone(), U8(i + 1))
         } else {
-            build_hmac_txt(ByteSeq::from(t_i.raw()), info.clone(), U8(i + 1))
+            build_hmac_txt(ByteSeq::from_seq(t_i), info.clone(), U8(i + 1))
         };
         t_i = hmac(prk.clone(), hmac_txt_in);
         t = t.update(i as usize * t_i.len(), t_i);

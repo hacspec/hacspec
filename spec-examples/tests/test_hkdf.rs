@@ -45,7 +45,7 @@ fn test_kat() {
         let prk = extract(ByteSeq::from(kat.salt), ByteSeq::from(kat.ikm));
         assert_eq!(kat.prk, prk.to_hex());
 
-        let okm = expand(ByteSeq::from(prk.raw()), ByteSeq::from(kat.info), kat.l);
+        let okm = expand(ByteSeq::from_seq(prk), ByteSeq::from(kat.info), kat.l);
         assert_eq!(kat.okm, okm.to_hex());
     }
 }

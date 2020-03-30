@@ -222,9 +222,6 @@ impl PublicSeq<u8> {
 }
 
 impl<T: Copy> SeqTrait<T> for PublicSeq<T> {
-    fn raw<'a>(&'a self) -> &'a [T] {
-        &self.b
-    }
     fn len(&self) -> usize {
         self.b.len()
     }

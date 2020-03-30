@@ -48,7 +48,6 @@ array!(DocPublicArray, 64, u32);
 
 /// Common trait for all byte arrays and sequences.
 pub trait SeqTrait<T: Copy> {
-    fn raw<'a>(&'a self) -> &'a [T];
     fn len(&self) -> usize;
     fn iter(&self) -> std::slice::Iter<T>;
     fn iter_mut(&mut self) -> std::slice::IterMut<T>;
