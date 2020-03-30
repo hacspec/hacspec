@@ -191,7 +191,7 @@ pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>)
             rem[idx] / c // XXX: Update once we change to Numeric 
         } else {
             // divide by using inverse mod n
-            rem[idx] * T::inv(c, n)
+            rem[idx] * T::invert(c, n)
         };
         if t == T::default() && rem[idx] != T::default() {
             panic!("Can't divide these two polynomials");
@@ -360,7 +360,7 @@ pub fn extended_euclid<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Result<Ve
         return Err("Could not invert the polynomial");
     }
     
-    let t  = monomial(T::inv(f[0],n), 2*yd-2-v.1);
+    let t  = monomial(T::invert(f[0],n), 2*yd-2-v.1);
     let mut rr = poly_mul(&t, &v.0, n);
     rr = make_fixed_length(&rr, yd);
     rr.reverse();
