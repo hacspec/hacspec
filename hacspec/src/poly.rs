@@ -23,11 +23,9 @@
 //!
 
 use rand::Rng;
-use std::ops::{Add, Div, Mul, Sub};
 
 use crate::integer::*;
 use crate::seq::*;
-use crate::public_seq::*;
 
 ///! First we implement all functions on slices of T.
 ///! Note that this is equivalent to ℤn[x] (or ℤ[x] depending, depending on T).

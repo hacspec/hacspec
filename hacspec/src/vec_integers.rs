@@ -88,7 +88,7 @@ macro_rules! _implement_numeric_unsigned_public {
         /// **Warning**: panics on division by 0.
         impl Rem for $name {
             type Output = $name;
-            fn rem(self, rhs: $name) -> $name {
+            fn rem(self, _rhs: $name) -> $name {
                 unimplemented!();
             }
         }
@@ -102,7 +102,7 @@ macro_rules! _implement_numeric_unsigned_public {
 
         impl BitOr for $name {
             type Output = $name;
-            fn bitor(self, rhs: Self) -> Self::Output {
+            fn bitor(self, _rhs: Self) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -120,21 +120,21 @@ macro_rules! _implement_numeric_unsigned_public {
 
         impl BitAnd for $name {
             type Output = $name;
-            fn bitand(self, rhs: Self) -> Self::Output {
+            fn bitand(self, _rhs: Self) -> Self::Output {
                 unimplemented!();
             }
         }
 
         impl Shr<u32> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, _rhs: u32) -> Self::Output {
                 unimplemented!();
             }
         }
 
         impl Shl<u32> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, _rhs: u32) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -145,7 +145,7 @@ macro_rules! _implement_numeric_unsigned_public {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -155,85 +155,85 @@ macro_rules! _implement_numeric_unsigned_public {
             fn wrap_mul(self, rhs: Self) -> Self {
                 self * rhs
             }
-            fn wrap_div(self, rhs: Self) -> Self {
+            fn wrap_div(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
-            fn pow(self, exp: u32) -> Self {
+            fn pow(self, _exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
-            fn pow_self(self, exp: Self) -> Self {
+            fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// (self - rhs) % n.
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
+            fn sub_mod(self, _rhs: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `(self + rhs) % n`
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
+            fn add_mod(self, _rhs: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `(self * rhs) % n`
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
+            fn mul_mod(self, _rhs: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `(self ^ exp) % n`
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
-            fn div(self, rhs: Self) -> Self {
+            fn div(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            fn rem(self, n: Self) -> Self {
+            fn rem(self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
-            fn inv(self, n: Self) -> Self {
+            fn inv(self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `|self|`
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
-            fn equal(self, other: Self) -> bool {
+            fn equal(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn greater_than(self, other: Self) -> bool {
+            fn greater_than(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_qual(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn less_than(self, other: Self) -> bool {
+            fn less_than(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn less_than_or_equal(self, other: Self) -> bool {
+            fn less_than_or_equal(self, _other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-            fn not_equal_bm(self, other: Self) -> Self {
+            fn not_equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn equal_bm(self, other: Self) -> Self {
+            fn equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn greater_than_bm(self, other: Self) -> Self {
+            fn greater_than_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_qual_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn less_than_bm(self, other: Self) -> Self {
+            fn less_than_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn less_than_or_equal_bm(self, other: Self) -> Self {
+            fn less_than_or_equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
         }
@@ -343,7 +343,7 @@ macro_rules! _implement_numeric_signed_public {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -397,7 +397,7 @@ macro_rules! _implement_numeric_signed_public {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -414,7 +414,7 @@ macro_rules! _implement_numeric_signed_public {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
@@ -492,7 +492,7 @@ macro_rules! _implement_numeric_unsigned_secret {
         /// **Warning**: panics on division by 0.
         impl Rem for $name {
             type Output = $name;
-            fn rem(self, rhs: $name) -> $name {
+            fn rem(self, _rhs: $name) -> $name {
                 unimplemented!();
             }
         }
@@ -506,7 +506,7 @@ macro_rules! _implement_numeric_unsigned_secret {
 
         impl BitOr for $name {
             type Output = $name;
-            fn bitor(self, rhs: Self) -> Self::Output {
+            fn bitor(self, _rhs: Self) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -524,21 +524,21 @@ macro_rules! _implement_numeric_unsigned_secret {
 
         impl BitAnd for $name {
             type Output = $name;
-            fn bitand(self, rhs: Self) -> Self::Output {
+            fn bitand(self, _rhs: Self) -> Self::Output {
                 unimplemented!();
             }
         }
 
         impl Shr<u32> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, _rhs: u32) -> Self::Output {
                 unimplemented!();
             }
         }
 
         impl Shl<u32> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, _rhs: u32) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -549,7 +549,7 @@ macro_rules! _implement_numeric_unsigned_secret {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -559,85 +559,85 @@ macro_rules! _implement_numeric_unsigned_secret {
             fn wrap_mul(self, rhs: Self) -> Self {
                 self * rhs
             }
-            fn wrap_div(self, rhs: Self) -> Self {
+            fn wrap_div(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
-            fn pow(self, exp: u32) -> Self {
+            fn pow(self, _exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
-            fn pow_self(self, exp: Self) -> Self {
+            fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// (self - rhs) % n.
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
+            fn sub_mod(self, _rhs: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `(self + rhs) % n`
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
+            fn add_mod(self, _rhs: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `(self * rhs) % n`
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
+            fn mul_mod(self, _rhs: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `(self ^ exp) % n`
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
-            fn div(self, rhs: Self) -> Self {
+            fn div(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            fn rem(self, n: Self) -> Self {
+            fn rem(self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
-            fn inv(self, n: Self) -> Self {
+            fn inv(self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `|self|`
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
-            fn equal(self, other: Self) -> bool {
+            fn equal(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn greater_than(self, other: Self) -> bool {
+            fn greater_than(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_qual(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn less_than(self, other: Self) -> bool {
+            fn less_than(self, _other: Self) -> bool {
                 unimplemented!();
             }
-            fn less_than_or_equal(self, other: Self) -> bool {
+            fn less_than_or_equal(self, _other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-            fn not_equal_bm(self, other: Self) -> Self {
+            fn not_equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn equal_bm(self, other: Self) -> Self {
+            fn equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn greater_than_bm(self, other: Self) -> Self {
+            fn greater_than_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_qual_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn less_than_bm(self, other: Self) -> Self {
+            fn less_than_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
-            fn less_than_or_equal_bm(self, other: Self) -> Self {
+            fn less_than_or_equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
         }
@@ -747,7 +747,7 @@ macro_rules! _implement_numeric_signed_secret {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -760,7 +760,7 @@ macro_rules! _implement_numeric_signed_secret {
             fn wrap_div(self, rhs: Self) -> Self {
                 unimplemented!();
             }
-        
+
             /// `self ^ exp` where `exp` is a `u32`.
             fn pow(self, exp: u32) -> Self {
                 unimplemented!();
@@ -801,7 +801,7 @@ macro_rules! _implement_numeric_signed_secret {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 unimplemented!();
@@ -818,7 +818,7 @@ macro_rules! _implement_numeric_signed_secret {
             fn less_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
@@ -849,7 +849,7 @@ impl<T: Numeric> NumericBase for PublicSeq<T> {
     fn max_val() -> Self {
         unimplemented!();
     }
-        
+
     fn wrap_add(self, rhs: Self) -> Self {
         self + rhs
     }

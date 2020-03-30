@@ -172,7 +172,7 @@ macro_rules! implement_secret_mi {
             fn wrap_mul(self, rhs: Self) -> Self {
                 self * rhs
             }
-            fn wrap_div(self, rhs: Self) -> Self {
+            fn wrap_div(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
 

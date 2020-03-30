@@ -156,10 +156,6 @@ macro_rules! _array_base {
                     .chunks(chunk_size)
                     .map(|c| (c.len(), Seq::<$t>::from(c)))
             }
-
-            fn iter_mut(&mut self) -> std::slice::IterMut<$t> {
-                self.0.iter_mut()
-            }
         }
 
         impl Default for $name {
