@@ -2,7 +2,6 @@
 ///!
 ///! Implement the `Numeric` trait for arrays.
 ///!
-
 use crate::prelude::*;
 
 #[macro_export]
@@ -24,10 +23,10 @@ macro_rules! _implement_numeric_unsigned_public {
         impl Add for $name {
             type Output = $name;
             fn add(self, rhs: $name) -> $name {
-                debug_assert!(self.len() == rhs.len());
-                if self.len() != rhs.len() {
-                    panic!("Can't add two sequences that don't have the same length.");
-                }
+                debug_assert!(
+                    self.len() == rhs.len(),
+                    "Can't add two sequences that don't have the same length."
+                );
                 let mut out = Self::new();
                 for i in 0..self.len() {
                     out[i] = self[i].wrapping_add(rhs[i])
@@ -40,10 +39,10 @@ macro_rules! _implement_numeric_unsigned_public {
         impl Sub for $name {
             type Output = $name;
             fn sub(self, rhs: $name) -> $name {
-                debug_assert!(self.len() == rhs.len());
-                if self.len() != rhs.len() {
-                    panic!("Can't add two sequences that don't have the same length.");
-                }
+                debug_assert!(
+                    self.len() == rhs.len(),
+                    "Can't add two sequences that don't have the same length."
+                );
                 let mut out = Self::new();
                 for i in 0..self.len() {
                     out[i] = self[i].wrapping_sub(rhs[i])
@@ -73,10 +72,10 @@ macro_rules! _implement_numeric_unsigned_public {
         impl Div for $name {
             type Output = $name;
             fn div(self, rhs: $name) -> $name {
-                debug_assert!(self.len() == rhs.len());
-                if self.len() != rhs.len() {
-                    panic!("Can't add two sequences that don't have the same length.");
-                }
+                debug_assert!(
+                    self.len() == rhs.len(),
+                    "Can't add two sequences that don't have the same length."
+                );
                 let mut out = Self::new();
                 for i in 0..self.len() {
                     out[i] = self[i] / rhs[i]
@@ -110,9 +109,13 @@ macro_rules! _implement_numeric_unsigned_public {
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
+                debug_assert!(
+                    self.len() == rhs.len(),
+                    "Can't add two sequences that don't have the same length."
+                );
                 let mut out = Self::new();
-                for (a, (b, c)) in out.0.iter_mut().zip(self.0.iter().zip(rhs.0.iter())) {
-                    *a = *b ^ *c;
+                for i in 0..self.len() {
+                    out[i] = self[i] ^ rhs[i]
                 }
                 out
             }
@@ -445,10 +448,10 @@ macro_rules! _implement_numeric_unsigned_secret {
         impl Add for $name {
             type Output = $name;
             fn add(self, rhs: $name) -> $name {
-                debug_assert!(self.len() == rhs.len());
-                if self.len() != rhs.len() {
-                    panic!("Can't add two sequences that don't have the same length.");
-                }
+                debug_assert!(
+                    self.len() == rhs.len(),
+                    "Can't add two sequences that don't have the same length."
+                );
                 let mut out = Self::new();
                 for i in 0..self.len() {
                     out[i] = self[i] + rhs[i]
@@ -461,10 +464,10 @@ macro_rules! _implement_numeric_unsigned_secret {
         impl Sub for $name {
             type Output = $name;
             fn sub(self, rhs: $name) -> $name {
-                debug_assert!(self.len() == rhs.len());
-                if self.len() != rhs.len() {
-                    panic!("Can't add two sequences that don't have the same length.");
-                }
+                debug_assert!(
+                    self.len() == rhs.len(),
+                    "Can't add two sequences that don't have the same length."
+                );
                 let mut out = Self::new();
                 for i in 0..self.len() {
                     out[i] = self[i] - rhs[i]
@@ -477,10 +480,10 @@ macro_rules! _implement_numeric_unsigned_secret {
         impl Mul for $name {
             type Output = $name;
             fn mul(self, rhs: $name) -> $name {
-                debug_assert!(self.len() == rhs.len());
-                if self.len() != rhs.len() {
-                    panic!("Can't add two sequences that don't have the same length.");
-                }
+                debug_assert!(
+                    self.len() == rhs.len(),
+                    "Can't add two sequences that don't have the same length."
+                );
                 let mut out = Self::new();
                 for i in 0..self.len() {
                     out[i] = self[i] * rhs[i]

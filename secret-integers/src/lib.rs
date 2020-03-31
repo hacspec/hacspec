@@ -290,7 +290,7 @@ macro_rules! define_secret_integer {
         define_bitwise_op!($name, |, BitOr, bitor, BitOrAssign, bitor_assign);
         define_bitwise_op!($name, ^, BitXor, bitxor, BitXorAssign, bitxor_assign);
 
-        /// `Not` has bitwise semantics for integers
+        // `Not` has bitwise semantics for integers
         define_unary_op!($name, !, Not, not);
 
         // Printing integers.
@@ -322,7 +322,7 @@ macro_rules! define_secret_integer {
 
 macro_rules! define_secret_unsigned_integer {
     ($name:ident, $repr:ty, $bits:tt) => {
-        /// Secret unsigned integer.
+        // Secret unsigned integer.
         define_secret_integer!($name, $repr, $bits);
         impl Neg for $name {
             type Output = Self;
@@ -400,7 +400,7 @@ macro_rules! define_secret_unsigned_integer {
 
 macro_rules! define_secret_signed_integer {
     ($name:ident, $repr:ty, $bits:tt) => {
-        /// Secret signed integer.
+        // Secret signed integer.
         define_secret_integer!($name, $repr, $bits);
         define_unary_op!($name, -, Neg, neg);
 
