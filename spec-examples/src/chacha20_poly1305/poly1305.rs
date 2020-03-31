@@ -23,7 +23,7 @@ fn key_gen(key: Key, iv: IV) -> Key {
 fn encode_r(r: Block) -> FieldElement {
     let mut r_128 = U128Word::new();
     r_128 = r_128.update_sub(0, r, 0, BLOCKSIZE);
-    let r_uint = u128_from_le_bytes(r_128);
+    let r_uint = U128_from_le_bytes(r_128);
     let r_uint = r_uint & U128(0x0fff_fffc_0fff_fffc_0fff_fffc_0fff_ffff);
     FieldElement::from_secret_literal(r_uint)
 }
@@ -32,7 +32,7 @@ fn encode(block: ByteSeq) -> FieldElement {
     let mut block_as_u128 = U128Word::new();
     let block_len = block.len();
     block_as_u128 = block_as_u128.update_sub(0, block, 0, min(16, block_len));
-    let w_elem = FieldElement::from_secret_literal(u128_from_le_bytes(block_as_u128));
+    let w_elem = FieldElement::from_secret_literal(U128_from_le_bytes(block_as_u128));
     let l_elem = FieldCanvas::pow2(8 * block_len).into();
     w_elem + l_elem
 }
@@ -50,7 +50,7 @@ fn poly_inner(m: ByteSeq, r: FieldElement) -> FieldElement {
 }
 
 pub fn poly(m: ByteSeq, key: Key) -> Tag {
-    let s_elem = FieldElement::from_secret_literal(u128_from_le_bytes(U128Word::from_sub(
+    let s_elem = FieldElement::from_secret_literal(U128_from_le_bytes(U128Word::from_sub(
         key,
         BLOCKSIZE..2 * BLOCKSIZE,
     )));

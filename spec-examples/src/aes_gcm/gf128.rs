@@ -38,11 +38,11 @@ fn fmul(x: Element, y: Element) -> Element {
 
 // TODO: block is actually subblock
 fn encode(block: Block) -> Element {
-    u128_from_be_bytes(U128Word::copy(block))
+    U128_from_be_bytes(U128Word::from_seq(block))
 }
 
 fn decode(e: Element) -> Block {
-    Block::copy(u128_to_be_bytes(e))
+    Block::from_seq(U128_to_be_bytes(e))
 }
 
 // TODO: block is actually subblock

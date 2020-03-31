@@ -21,8 +21,8 @@ fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
     let mut padded_msg = ByteSeq::new(pad_aad + pad_msg + 16);
     padded_msg = padded_msg.update(0, aad);
     padded_msg = padded_msg.update(pad_aad, msg);
-    padded_msg = padded_msg.update(pad_aad + pad_msg, u64_to_le_bytes(U64(laad as u64)));
-    padded_msg = padded_msg.update(pad_aad + pad_msg + 8, u64_to_le_bytes(U64(lmsg as u64)));
+    padded_msg = padded_msg.update(pad_aad + pad_msg, U64_to_le_bytes(U64(laad as u64)));
+    padded_msg = padded_msg.update(pad_aad + pad_msg + 8, U64_to_le_bytes(U64(lmsg as u64)));
     padded_msg
 }
 

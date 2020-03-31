@@ -14,6 +14,7 @@ pub use crate::machine_integers::*;
 pub use crate::math_integers::*;
 pub use crate::numeric::*;
 pub use crate::vec_integers::*;
+pub use crate::transmute::*;
 pub use crate::*;
 pub use abstract_integers::*;
 pub use num::{self, BigUint, CheckedSub, Num, Zero};

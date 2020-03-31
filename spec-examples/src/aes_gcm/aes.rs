@@ -227,13 +227,13 @@ pub fn aes256_encrypt_block(k: Key256, input: Block, nk: usize, nr: usize) -> Bl
 pub(crate) fn aes128_ctr_keyblock(k: Key128, n: Nonce, c: U32, nk: usize, nr: usize) -> Block {
     let mut input = Block::new();
     input = input.update(0, n);
-    input = input.update(12, u32_to_be_bytes(c));
+    input = input.update(12, U32_to_be_bytes(c));
     aes128_encrypt_block(k, input, nk, nr)
 }
 pub(crate) fn aes256_ctr_keyblock(k: Key256, n: Nonce, c: U32, nk: usize, nr: usize) -> Block {
     let mut input = Block::new();
     input = input.update(0, n);
-    input = input.update(12, u32_to_be_bytes(c));
+    input = input.update(12, U32_to_be_bytes(c));
     aes256_encrypt_block(k, input, nk, nr)
 }
 

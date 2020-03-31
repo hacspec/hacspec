@@ -407,10 +407,62 @@ macro_rules! array {
 
         impl $name {
             #[allow(non_snake_case)]
-            pub fn to_U32s_be(&self) -> [U32; $l / 4] {
-                let mut out = [U32::default(); $l / 4];
+            // HACSPEC, PRIMITIVE
+            pub fn to_U32s_be(&self) -> Seq<U32> {
+                let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
-                    out[i] = u32_from_be_bytes(block.into());
+                    debug_assert!(block.len() == 4);
+                    out[i] = U32_from_be_bytes(block.into());
+                }
+                out
+            }
+            #[allow(non_snake_case)]
+            // HACSPEC, PRIMITIVE
+            pub fn to_U32s_le(&self) -> Seq<U32> {
+                let mut out = Seq::new($l / 4);
+                for (i, block) in self.0.chunks(4).enumerate() {
+                    debug_assert!(block.len() == 4);
+                    out[i] = U32_from_le_bytes(block.into());
+                }
+                out
+            }
+            #[allow(non_snake_case)]
+            // HACSPEC, PRIMITIVE
+            pub fn to_U64s_be(&self) -> Seq<U64> {
+                let mut out = Seq::new($l / 8);
+                for (i, block) in self.0.chunks(8).enumerate() {
+                    debug_assert!(block.len() == 8);
+                    out[i] = U64_from_be_bytes(block.into());
+                }
+                out
+            }
+            #[allow(non_snake_case)]
+            // HACSPEC, PRIMITIVE
+            pub fn to_U64s_le(&self) -> Seq<U64> {
+                let mut out = Seq::new($l / 8);
+                for (i, block) in self.0.chunks(8).enumerate() {
+                    debug_assert!(block.len() == 8);
+                    out[i] = U64_from_le_bytes(block.into());
+                }
+                out
+            }
+            #[allow(non_snake_case)]
+            // HACSPEC, PRIMITIVE
+            pub fn to_U128s_be(&self) -> Seq<U128> {
+                let mut out = Seq::new($l / 16);
+                for (i, block) in self.0.chunks(16).enumerate() {
+                    debug_assert!(block.len() == 16);
+                    out[i] = U128_from_be_bytes(block.into());
+                }
+                out
+            }
+            #[allow(non_snake_case)]
+            // HACSPEC, PRIMITIVE
+            pub fn to_U128s_le(&self) -> Seq<U128> {
+                let mut out = Seq::new($l / 16);
+                for (i, block) in self.0.chunks(16).enumerate() {
+                    debug_assert!(block.len() == 16);
+                    out[i] = U128_from_le_bytes(block.into());
                 }
                 out
             }
@@ -441,11 +493,57 @@ macro_rules! array {
         _implement_numeric_unsigned_public!($name);
 
         impl $name {
-            pub fn to_u32s_be(&self) -> [u32; $l / 4] {
-                let mut out = [0u32; $l / 4];
+            // HACSPEC, PRIMITIVE
+            pub fn to_u32s_be(&self) -> Seq<u32> {
+                let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
                     out[i] = u32::from_be_bytes(to_array(block));
+                }
+                out
+            }
+            // HACSPEC, PRIMITIVE
+            pub fn to_u32s_le(&self) -> Seq<u32> {
+                let mut out = Seq::new($l / 4);
+                for (i, block) in self.0.chunks(4).enumerate() {
+                    debug_assert!(block.len() == 4);
+                    out[i] = u32::from_le_bytes(to_array(block));
+                }
+                out
+            }
+            // HACSPEC, PRIMITIVE
+            pub fn to_u64s_be(&self) -> Seq<u64> {
+                let mut out = Seq::new($l / 8);
+                for (i, block) in self.0.chunks(8).enumerate() {
+                    debug_assert!(block.len() == 8);
+                    out[i] = u64::from_be_bytes(to_array(block));
+                }
+                out
+            }
+            // HACSPEC, PRIMITIVE
+            pub fn to_u64s_le(&self) -> Seq<u64> {
+                let mut out = Seq::new($l / 8);
+                for (i, block) in self.0.chunks(8).enumerate() {
+                    debug_assert!(block.len() == 8);
+                    out[i] = u64::from_le_bytes(to_array(block));
+                }
+                out
+            }
+            // HACSPEC, PRIMITIVE
+            pub fn to_u128s_be(&self) -> Seq<u128> {
+                let mut out = Seq::new($l / 16);
+                for (i, block) in self.0.chunks(16).enumerate() {
+                    debug_assert!(block.len() == 16);
+                    out[i] = u128::from_be_bytes(to_array(block));
+                }
+                out
+            }
+            // HACSPEC, PRIMITIVE
+            pub fn to_u128s_le(&self) -> Seq<u128> {
+                let mut out = Seq::new($l / 16);
+                for (i, block) in self.0.chunks(16).enumerate() {
+                    debug_assert!(block.len() == 16);
+                    out[i] = u128::from_le_bytes(to_array(block));
                 }
                 out
             }

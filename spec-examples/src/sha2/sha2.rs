@@ -174,11 +174,11 @@ pub fn hash(msg: ByteSeq) -> Digest {
             last_block[block_len] = U8(0x80);
             let len_bist: U64 = (msg.len() * 8).into();
             if block_len < BLOCK_SIZE - LEN_SIZE {
-                last_block = last_block.update(BLOCK_SIZE - LEN_SIZE, u64_to_be_bytes(len_bist));
+                last_block = last_block.update(BLOCK_SIZE - LEN_SIZE, U64_to_be_bytes(len_bist));
                 h = compress(last_block, h);
             } else {
                 let mut pad_block = Block::new();
-                pad_block = pad_block.update(BLOCK_SIZE - LEN_SIZE, u64_to_be_bytes(len_bist));
+                pad_block = pad_block.update(BLOCK_SIZE - LEN_SIZE, U64_to_be_bytes(len_bist));
                 h = compress(last_block, h);
                 h = compress(pad_block, h);
             }

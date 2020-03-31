@@ -37,6 +37,7 @@ pub mod seq;
 pub mod test_vectors;
 pub mod util;
 pub mod vec_integers;
+pub mod transmute;
 
 use crate::prelude::*;
 
@@ -61,54 +62,6 @@ array!(u32Word, 4, u8);
 array!(u64Word, 8, u8);
 array!(u128Word, 16, u8);
 
-pub fn u32_to_le_bytes(x: U32) -> U32Word {
-    U32Word([
-        U8::from((x & U32::classify(0xFF000000u32)) >> 24),
-        U8::from((x & U32::classify(0xFF0000u32)) >> 16),
-        U8::from((x & U32::classify(0xFF00u32)) >> 8),
-        U8::from(x & U32::classify(0xFFu32)),
-    ])
-}
-
-pub fn u32_from_be_bytes(s: U32Word) -> U32 {
-    U32::from_bytes_be(&s.0)[0]
-}
-
-pub fn u32_from_le_bytes(s: U32Word) -> U32 {
-    U32::from_bytes_le(&s.0)[0]
-}
-
-pub fn u32_from_le_bytes_u32(s: u32Word) -> u32 {
-    u32::from_le_bytes(s.0)
-}
-
-pub fn u32_to_be_bytes(x: U32) -> U32Word {
-    U32Word::from(U32::to_bytes_be(&[x]))
-}
-
-pub fn u128_from_le_bytes(s: U128Word) -> U128 {
-    U128::from_bytes_le(&s.0)[0]
-}
-
-pub fn u128_from_be_bytes(s: U128Word) -> U128 {
-    U128::from_bytes_be(&s.0)[0]
-}
-
-pub fn u128_to_be_bytes(x: U128) -> U128Word {
-    U128Word::from(U128::to_bytes_be(&[x]))
-}
-
-pub fn u64_to_be_bytes_u64(x: u64) -> u64Word {
-    u64Word::from(u64::to_be_bytes(x))
-}
-
-pub fn u64_to_be_bytes(x: U64) -> U64Word {
-    U64Word::from(U64::to_bytes_be(&[x]))
-}
-
-pub fn u64_to_le_bytes(x: U64) -> U64Word {
-    U64Word::from(U64::to_bytes_le(&[x]))
-}
 
 #[macro_export]
 macro_rules! secret_array {

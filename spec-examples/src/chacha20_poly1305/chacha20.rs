@@ -9,7 +9,7 @@ bytes!(Key, 32);
 pub fn state_to_bytes(x: State) -> StateBytes {
     let mut r = StateBytes::new();
     for i in 0..x.len() {
-        let bytes = u32_to_le_bytes(x[i]);
+        let bytes = U32_to_be_bytes(x[i]);
         r[i * 4] = bytes[3];
         r[i * 4 + 1] = bytes[2];
         r[i * 4 + 2] = bytes[1];
@@ -52,18 +52,18 @@ pub fn block_init(key: Key, ctr: U32, iv: IV) -> State {
         U32(0x3320_646e),
         U32(0x7962_2d32),
         U32(0x6b20_6574),
-        u32_from_le_bytes(U32Word::from_sub(key, 0..4)),
-        u32_from_le_bytes(U32Word::from_sub(key, 4..8)),
-        u32_from_le_bytes(U32Word::from_sub(key, 8..12)),
-        u32_from_le_bytes(U32Word::from_sub(key, 12..16)),
-        u32_from_le_bytes(U32Word::from_sub(key, 16..20)),
-        u32_from_le_bytes(U32Word::from_sub(key, 20..24)),
-        u32_from_le_bytes(U32Word::from_sub(key, 24..28)),
-        u32_from_le_bytes(U32Word::from_sub(key, 28..32)),
+        U32_from_le_bytes(U32Word::from_sub(key, 0..4)),
+        U32_from_le_bytes(U32Word::from_sub(key, 4..8)),
+        U32_from_le_bytes(U32Word::from_sub(key, 8..12)),
+        U32_from_le_bytes(U32Word::from_sub(key, 12..16)),
+        U32_from_le_bytes(U32Word::from_sub(key, 16..20)),
+        U32_from_le_bytes(U32Word::from_sub(key, 20..24)),
+        U32_from_le_bytes(U32Word::from_sub(key, 24..28)),
+        U32_from_le_bytes(U32Word::from_sub(key, 28..32)),
         ctr,
-        u32_from_le_bytes(U32Word::from_sub(iv, 0..4)),
-        u32_from_le_bytes(U32Word::from_sub(iv, 4..8)),
-        u32_from_le_bytes(U32Word::from_sub(iv, 8..12)),
+        U32_from_le_bytes(U32Word::from_sub(iv, 0..4)),
+        U32_from_le_bytes(U32Word::from_sub(iv, 4..8)),
+        U32_from_le_bytes(U32Word::from_sub(iv, 8..12)),
     ])
 }
 

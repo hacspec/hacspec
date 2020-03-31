@@ -27,11 +27,11 @@ fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
     padded_msg = padded_msg.update(pad_aad, msg);
     padded_msg = padded_msg.update(
         pad_aad + pad_msg,
-        u64_to_be_bytes(U64(laad as u64) * U64(8)),
+        U64_to_be_bytes(U64(laad as u64) * U64(8)),
     );
     padded_msg = padded_msg.update(
         pad_aad + pad_msg + 8,
-        u64_to_be_bytes(U64(lmsg as u64) * U64(8)),
+        U64_to_be_bytes(U64(lmsg as u64) * U64(8)),
     );
     padded_msg
 }
