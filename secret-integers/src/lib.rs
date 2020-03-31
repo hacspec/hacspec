@@ -518,12 +518,19 @@ macro_rules! define_unsafe_casting {
 }
 
 macro_rules! define_signed_unsigned_casting {
-    ($unsigned:ident, $unsiged_repr:ident, $signed:ident, $signed_repr:ident) => {
+    ($unsigned:ident, $unsigned_repr:ident, $signed:ident, $signed_repr:ident) => {
         /// **Warning:** wrapping semantics.
         impl From<$unsigned> for $signed {
             #[inline]
             fn from(x: $unsigned) -> $signed {
                 $signed(x.0 as $signed_repr)
+            }
+        }
+
+        impl From<$signed> for $unsigned {
+            #[inline]
+            fn from(x: $signed) -> $unsigned {
+                $unsigned(x.0 as $unsigned_repr)
             }
         }
     };
