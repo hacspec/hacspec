@@ -71,7 +71,10 @@ macro_rules! abstract_int {
             fn from(x: BigInt) -> $name {
                 let max_value = Self::max();
                 assert!(x < max_value, "{} is too large for type {}!", x, stringify!($name));
-                let repr = x.to_bytes_be().1;
+                let (sign, repr) = x.to_bytes_be();
+                if sign == Sign::Minus && (!$signed) {
+                    panic!("Trying to convert a negative number into an unsigned integer!")
+                }
                 if repr.len() > ($bits + 7) / 8 {
                     panic!("{} is too large for type {}", x, stringify!($name))
                 }
@@ -81,7 +84,7 @@ macro_rules! abstract_int {
                 out[lower..upper].copy_from_slice(&repr);
                 $name {
                     b: out,
-                    sign: Sign::Plus,
+                    sign: sign,
                     signed: $signed,
                 }
             }
