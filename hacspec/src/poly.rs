@@ -258,6 +258,7 @@ pub(crate) fn extended_euclid_invert<T: TRestrictions<T>>(x: T, n: T, signed: bo
 }
 
 /// Subtract quotient (bn/x^bd) from (an/x^ad)
+#[inline]
 fn quot_sub<T: TRestrictions<T>>(an: &[T], ad: usize, bn: &[T], bd: usize, n: T) -> (Vec<T>, usize){
     let cd = std::cmp::max(ad, bd);
     let x = monomial(T::from_literal(1),1);

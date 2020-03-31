@@ -149,11 +149,20 @@ macro_rules! implement_secret_mi {
             }
         
             /// `self ^ exp` where `exp` is a `u32`.
+            /// **Note:** the exponent `exp` MUST not be secret.
             fn pow(self, exp: u32) -> Self {
-                let s = <$t>::declassify(self);
-                Self::from(s.pow(exp))
+                let mut s = self;
+                if exp == 0 {
+                    return <$t>::from(1 as $base);
+                } else {
+                    for _ in 1..exp {
+                        s = s * self
+                    }
+                }
+                Self::from(s)
             }
             /// `self ^ exp` where `exp` is a `Self`.
+            /// Here both, base and exponent, are secret.
             fn pow_self(self, exp: Self) -> Self {
                 unimplemented!();
             }
