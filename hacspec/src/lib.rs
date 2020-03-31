@@ -50,7 +50,6 @@ array!(DocPublicArray, 64, u32);
 pub trait SeqTrait<T: Copy> {
     fn len(&self) -> usize;
     fn iter(&self) -> std::slice::Iter<T>;
-    fn iter_mut(&mut self) -> std::slice::IterMut<T>;
 }
 
 bytes!(U32Word, 4);

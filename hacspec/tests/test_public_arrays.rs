@@ -21,14 +21,14 @@ fn test_ops_u8() {
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
-    for e in x.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..x.len() {
+        if x[i] == 0 {
+            x[i] = 1
         }
     }
-    for e in y.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..y.len() {
+        if y[i] == 0 {
+            y[i] = 1
         }
     }
     let _z = x / y;
@@ -42,14 +42,14 @@ fn test_ops_u16() {
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
-    for e in x.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..x.len() {
+        if x[i] == 0 {
+            x[i] = 1
         }
     }
-    for e in y.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..y.len() {
+        if y[i] == 0 {
+            y[i] = 1
         }
     }
     let _z = x / y;
@@ -63,14 +63,14 @@ fn test_ops_u32() {
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
-    for e in x.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..x.len() {
+        if x[i] == 0 {
+            x[i] = 1
         }
     }
-    for e in y.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..y.len() {
+        if y[i] == 0 {
+            y[i] = 1
         }
     }
     let _z = x / y;
@@ -84,14 +84,14 @@ fn test_ops_u64() {
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
-    for e in x.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..x.len() {
+        if x[i] == 0 {
+            x[i] = 1
         }
     }
-    for e in y.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..y.len() {
+        if y[i] == 0 {
+            y[i] = 1
         }
     }
     let _z = x / y;
@@ -105,14 +105,14 @@ fn test_ops_u128() {
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
-    for e in x.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..x.len() {
+        if x[i] == 0 {
+            x[i] = 1
         }
     }
-    for e in y.iter_mut() {
-        if *e == 0 {
-            *e = 1
+    for i in 0..y.len() {
+        if y[i] == 0 {
+            y[i] = 1
         }
     }
     let _z = x / y;
