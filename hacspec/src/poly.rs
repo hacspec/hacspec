@@ -474,12 +474,10 @@ macro_rules! poly {
             /// **Panics** if the polynomial is not invertible.
             fn inv(self) -> Self {
                 println!("inv {:?}", self);
-                Self::from(extended_euclid(&self.poly, &self.irr, self.n).unwrap())
+                Self::from_vec(extended_euclid(&self.poly, &self.irr, self.n).unwrap())
             }
-        }
 
-        impl From<Vec<$t>> for $name {
-            fn from(v: Vec<$t>) -> $name {
+            pub fn from_vec(v: Vec<$t>) -> $name {
                 let (d, _) = leading_coefficient(&v);
                 debug_assert!(d <= $l);
                 if d > $l {
@@ -533,7 +531,7 @@ macro_rules! poly {
             fn sub(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
                 let r = poly_sub(&self.poly, &rhs.poly, self.n);
-                Self::from(r)
+                Self::from_vec(r)
             }
         }
 
@@ -543,7 +541,7 @@ macro_rules! poly {
             fn add(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
                 let r = poly_add(&self.poly, &rhs.poly, self.n);
-                Self::from(r)
+                Self::from_vec(r)
             }
         }
 
@@ -554,7 +552,7 @@ macro_rules! poly {
                 debug_assert!(self.compatible(&rhs));
                 let tmp = poly_mul(&self.poly, &rhs.poly, self.n);
                 let r = poly_div(&tmp, &self.irr, self.n).1;
-                Self::from(r)
+                Self::from_vec(r)
             }
         }
 
@@ -564,7 +562,7 @@ macro_rules! poly {
             fn div(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
                 let r = poly_div(&self.poly, &rhs.poly, self.n);
-                (Self::from(r.0), Self::from(r.1))
+                (Self::from_vec(r.0), Self::from_vec(r.1))
             }
         }
     };
