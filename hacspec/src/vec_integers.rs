@@ -55,7 +55,7 @@ macro_rules! _implement_numeric_unsigned_public {
         impl Mul for $name {
             type Output = $name;
             fn mul(self, rhs: $name) -> $name {
-                $name::from(vec_poly_mul(&self.0, &rhs.0, 0))
+                $name::from_vec(vec_poly_mul(&self.0, &rhs.0, 0))
                 // debug_assert!(self.len() == rhs.len());
                 // if self.len() != rhs.len() {
                 //     panic!("Can't add two sequences that don't have the same length.");

@@ -30,7 +30,7 @@ fn maj(x: WordT, y: WordT, z: WordT) -> WordT {
 }
 
 fn sigma(x: WordT, i: usize, op: usize) -> WordT {
-    let op_table = OpTableType::from([2u8, 13, 22, 6, 11, 25, 7, 18, 3, 17, 19, 10]);
+    let op_table = OpTableType::from_public_array([2u8, 13, 22, 6, 11, 25, 7, 18, 3, 17, 19, 10]);
     let tmp: WordT = if op == 0 {
         x >> op_table[3 * i + 2].into()
     } else {
@@ -59,7 +59,7 @@ fn schedule(block: Block) -> RoundConstantsTable {
 }
 
 fn shuffle(ws: RoundConstantsTable, hashi: Hash) -> Hash {
-    let k_table = RoundConstantsTable::from([
+    let k_table = RoundConstantsTable::from_public_array([
         0x428a_2f98,
         0x7137_4491,
         0xb5c0_fbcf,
@@ -162,7 +162,7 @@ fn compress(block: Block, h_in: Hash) -> Hash {
 }
 
 pub fn hash(msg: ByteSeq) -> Digest {
-    let mut h = Hash::from([
+    let mut h = Hash::from_public_array([
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
         0x5be0cd19,
     ]);
@@ -170,7 +170,7 @@ pub fn hash(msg: ByteSeq) -> Digest {
         if block_len < BLOCK_SIZE {
             // Add padding for last block
             let mut last_block = Block::new();
-            last_block = last_block.update(0, Block::from(block));
+            last_block = last_block.update(0, Block::from_seq(block));
             last_block[block_len] = U8(0x80);
             let len_bist: U64 = (msg.len() * 8).into();
             if block_len < BLOCK_SIZE - LEN_SIZE {
@@ -183,9 +183,9 @@ pub fn hash(msg: ByteSeq) -> Digest {
                 h = compress(pad_block, h);
             }
         } else {
-            h = compress(block.into(), h);
+            h = compress(Block::from_seq(block), h);
         }
     }
 
-    Digest::from(&h.to_bytes_be()[..])
+    Digest::from_public_slice(&h.to_bytes_be()[..])
 }

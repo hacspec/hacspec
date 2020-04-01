@@ -258,12 +258,12 @@ fn aes128_counter_mode(
     for (block_len, msg_block) in msg.chunks(BLOCKSIZE) {
         if msg_block.len() == BLOCKSIZE {
             let key_block = aes128_ctr_keyblock(key, nonce, ctr, nk, nr);
-            blocks_out = blocks_out.push(xor_block(Block::from(msg_block), key_block));
+            blocks_out = blocks_out.push(xor_block(Block::from_seq(msg_block), key_block));
             ctr += U32(1);
         } else {
             // Last block that needs padding
             let keyblock = aes128_ctr_keyblock(key, nonce, ctr, nk, nr);
-            let last_block = Block::from(msg_block);
+            let last_block = Block::from_seq(msg_block);
             blocks_out = blocks_out.push_sub(xor_block(last_block, keyblock), 0, block_len);
         }
     }
@@ -282,12 +282,12 @@ fn aes256_counter_mode(
     for (block_len, msg_block) in msg.chunks(BLOCKSIZE) {
         if msg_block.len() == BLOCKSIZE {
             let key_block = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
-            blocks_out = blocks_out.push(xor_block(Block::from(msg_block), key_block));
+            blocks_out = blocks_out.push(xor_block(Block::from_seq(msg_block), key_block));
             ctr += U32(1);
         } else {
             // Last block that needs padding
             let keyblock = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
-            let last_block = Block::from(msg_block);
+            let last_block = Block::from_seq(msg_block);
             blocks_out = blocks_out.push_sub(xor_block(last_block, keyblock), 0, block_len);
         }
     }

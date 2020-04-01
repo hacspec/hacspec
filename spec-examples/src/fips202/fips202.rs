@@ -156,22 +156,22 @@ fn keccak(rate: usize, data: ByteSeq, p: u8, outbytes: usize) -> ByteSeq {
 
 pub fn sha3224(data: ByteSeq) -> Digest224 {
     let t = keccak(SHA3224_RATE, data, 0x06, 28);
-    Digest224::from(t)
+    Digest224::from_seq(t)
 }
 
 pub fn sha3256(data: ByteSeq) -> Digest256 {
     let t = keccak(SHA3256_RATE, data, 0x06, 32);
-    Digest256::from(t)
+    Digest256::from_seq(t)
 }
 
 pub fn sha3384(data: ByteSeq) -> Digest384 {
     let t = keccak(SHA3384_RATE, data, 0x06, 48);
-    Digest384::from(t)
+    Digest384::from_seq(t)
 }
 
 pub fn sha3512(data: ByteSeq) -> Digest512 {
     let t = keccak(SHA3512_RATE, data, 0x06, 64);
-    Digest512::from(t)
+    Digest512::from_seq(t)
 }
 
 pub fn shake128(data: ByteSeq, outlen: usize) -> ByteSeq {

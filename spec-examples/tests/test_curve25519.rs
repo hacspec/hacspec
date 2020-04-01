@@ -59,9 +59,9 @@ const KAT: [(&str, &str, &str); 5] = [
 #[test]
 fn test_kat3() {
     for kat in KAT.iter() {
-        let s = SerializedScalar::from(kat.0);
-        let u = SerializedPoint::from(kat.1);
-        let expected = SerializedPoint::from(kat.2);
+        let s = SerializedScalar::from_hex(kat.0);
+        let u = SerializedPoint::from_hex(kat.1);
+        let expected = SerializedPoint::from_hex(kat.2);
 
         ecdh(s, u, expected);
     }

@@ -6,8 +6,8 @@ fn test_public_array_u32() {
 
     both_arrays!(PublicState, State, 73, U32, u32);
     let x = PublicState::new();
-    let y: State = x.into();
-    let _z: PublicState = y.into();
+    let y: State = State::from_public(x);
+    let _z: PublicState = PublicState::from_secret_declassify(y);
 }
 
 // ==== Test Array Numeric Implementation ==== //

@@ -89,7 +89,7 @@ pub fn chacha(key: Key, iv: IV, m: ByteSeq) -> Result<ByteSeq, String> {
     let mut blocks_out = ByteSeq::new(m.len());
     for (block_len, msg_block) in m.chunks(64) {
         let key_block = block(key, ctr, iv);
-        blocks_out = blocks_out.push_sub(StateBytes::from(msg_block) ^ key_block, 0, block_len);
+        blocks_out = blocks_out.push_sub(StateBytes::from_seq(msg_block) ^ key_block, 0, block_len);
         ctr += U32(1);
     }
     Ok(blocks_out)

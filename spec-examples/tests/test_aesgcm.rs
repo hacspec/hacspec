@@ -68,11 +68,11 @@ const KAT_256: [AeadTestVector; 2] = [
 #[test]
 fn kat_test() {
     for kat in KAT.iter() {
-        let k = aes::Key128::from(kat.key);
-        let nonce = aes::Nonce::from(kat.nonce);
-        let exp_mac = gf128::Tag::from(kat.exp_mac);
-        let msg = ByteSeq::from(kat.msg);
-        let aad = ByteSeq::from(kat.aad);
+        let k = aes::Key128::from_hex(kat.key);
+        let nonce = aes::Nonce::from_hex(kat.nonce);
+        let exp_mac = gf128::Tag::from_hex(kat.exp_mac);
+        let msg = ByteSeq::from_hex(kat.msg);
+        let aad = ByteSeq::from_hex(kat.aad);
         let exp_cipher = ByteSeq::from(kat.exp_cipher);
 
         let (cipher, mac) = encrypt_aes128(k, nonce, aad.clone(), msg.clone());
@@ -108,8 +108,8 @@ fn kat_test() {
 fn kat_test_256() {
     for kat in KAT_256.iter() {
         let k = aes::Key256::from(kat.key);
-        let nonce = aes::Nonce::from(kat.nonce);
-        let exp_mac = gf128::Tag::from(kat.exp_mac);
+        let nonce = aes::Nonce::from_hex(kat.nonce);
+        let exp_mac = gf128::Tag::from_hex(kat.exp_mac);
         let msg = ByteSeq::from(kat.msg);
         let aad = ByteSeq::from(kat.aad);
         let exp_cipher = ByteSeq::from(kat.exp_cipher);

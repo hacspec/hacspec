@@ -27,14 +27,12 @@ macro_rules! _array_base {
         #[derive(Clone, Copy)]
         pub struct $name(pub [$t; $l]);
 
-        impl From<[$t; $l]> for $name {
-            fn from(v: [$t; $l]) -> Self {
+        impl $name {
+            pub fn from_array(v: [$t; $l]) -> Self {
                 Self(v.clone())
             }
-        }
 
-        impl From<&[$t]> for $name {
-            fn from(v: &[$t]) -> Self {
+            pub fn from_slice(v: &[$t]) -> Self {
                 debug_assert!(v.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
                 for i in 0..v.len() {
@@ -131,7 +129,7 @@ macro_rules! _array_base {
             /// use hacspec::prelude::*;
             ///
             /// public_bytes!(Block, 5);
-            /// let a = Block::from([0, 1, 2, 3, 4]);
+            /// let a = Block::from_array([0, 1, 2, 3, 4]);
             /// let mut a_chunks = a.chunks(2);
             /// let a_chunk = a_chunks.next().unwrap();
             /// // assert_eq!(a_chunk.0, 2);
@@ -143,7 +141,7 @@ macro_rules! _array_base {
             /// // assert_eq!(a_chunk.0, 1);
             /// // assert_eq!(a_chunk.1, Seq::<u8>::from_array(&[4]));
             ///
-            /// let a = Block::from([0, 1, 2, 3, 4]);
+            /// let a = Block::from_array([0, 1, 2, 3, 4]);
             /// for (l, chunk) in a.chunks(2) {
             ///     println!("{:x?}", chunk); // prints [0, 1], [2, 3], [4]
             /// }
@@ -228,8 +226,8 @@ macro_rules! _array_base {
                 &self.0[r]
             }
         }
-        impl From<Vec<$t>> for $name {
-            fn from(x: Vec<$t>) -> $name {
+        impl $name {
+            pub fn from_vec(x: Vec<$t>) -> $name {
                 debug_assert!(x.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
                 for (i, e) in x.iter().enumerate() {
@@ -237,18 +235,10 @@ macro_rules! _array_base {
                 }
                 $name(tmp.clone())
             }
-        }
 
-        impl From<Seq<$t>> for $name {
-            fn from(x: Seq<$t>) -> $name {
-                $name::from_seq(x)
-            }
-        }
-
-        impl $name {
             // We can't use the [From] trait here because otherwise it would conflict with
             // the From<T> for T core implementation, as the array also implements the [SeqTrait].
-            pub fn from_seq<T : SeqTrait<$t>>(x: T) -> $name {
+            pub fn from_seq<T: SeqTrait<$t>>(x: T) -> $name {
                 debug_assert!(x.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
                 for (i, e) in x.iter().enumerate() {
@@ -272,11 +262,9 @@ macro_rules! _array_base {
                     .collect();
                 b.expect("Error parsing hex string")
             }
-        }
 
-        /// Read hex string to Bytes.
-        impl From<&str> for $name {
-            fn from(s: &str) -> $name {
+            /// Read hex string to Bytes.
+            pub fn from_hex(s: &str) -> $name {
                 let v = $name::hex_string_to_vec(s);
                 let mut o = $name::new();
                 debug_assert!(v.len() == $l);
@@ -338,31 +326,30 @@ macro_rules! _secret_array {
                     .collect()
             }
         }
-        impl From<&[$tbase]> for $name {
-            fn from(v: &[$tbase]) -> $name {
+        impl $name {
+            pub fn from_public_slice(v: &[$tbase]) -> $name {
                 debug_assert!(v.len() <= $l);
-                Self::from(
+                Self::from_vec(
                     v[..]
                         .iter()
                         .map(|x| <$t>::classify(*x))
                         .collect::<Vec<$t>>(),
                 )
             }
-        }
-        /// Create an array from a regular Rust array.
-        ///
-        /// # Examples
-        ///
-        /// ```
-        /// use hacspec::prelude::*;
-        ///
-        /// bytes!(Block, 5);
-        /// let b = Block::from([1, 2, 3, 4, 5]);
-        /// ```
-        impl From<[$tbase; $l]> for $name {
-            fn from(v: [$tbase; $l]) -> $name {
+
+            /// Create an array from a regular Rust array.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// use hacspec::prelude::*;
+            ///
+            /// bytes!(Block, 5);
+            /// let b = Block::from_public_array([1, 2, 3, 4, 5]);
+            /// ```
+            pub fn from_public_array(v: [$tbase; $l]) -> $name {
                 debug_assert!(v.len() == $l);
-                Self::from(
+                Self::from_vec(
                     v[..]
                         .iter()
                         .map(|x| <$t>::classify(*x))
@@ -412,7 +399,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
-                    out[i] = U32_from_be_bytes(block.into());
+                    out[i] = U32_from_be_bytes(U32Word::from_slice(block));
                 }
                 out
             }
@@ -422,7 +409,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
-                    out[i] = U32_from_le_bytes(block.into());
+                    out[i] = U32_from_le_bytes(U32Word::from_slice(block));
                 }
                 out
             }
@@ -432,7 +419,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
-                    out[i] = U64_from_be_bytes(block.into());
+                    out[i] = U64_from_be_bytes(U64Word::from_slice(block));
                 }
                 out
             }
@@ -442,7 +429,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
-                    out[i] = U64_from_le_bytes(block.into());
+                    out[i] = U64_from_le_bytes(U64Word::from_slice(block));
                 }
                 out
             }
@@ -452,7 +439,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
-                    out[i] = U128_from_be_bytes(block.into());
+                    out[i] = U128_from_be_bytes(U128Word::from_slice(block));
                 }
                 out
             }
@@ -462,7 +449,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
-                    out[i] = U128_from_le_bytes(block.into());
+                    out[i] = U128_from_le_bytes(U128Word::from_slice(block));
                 }
                 out
             }
@@ -598,10 +585,10 @@ macro_rules! both_arrays {
         _secret_array!($name, $l, $t, $tbase);
         _public_array!($public_name, $l, $tbase);
 
-        // Conversion function between public and secret array versions.
-        impl From<$public_name> for $name {
-            fn from(v: $public_name) -> $name {
-                Self::from(
+        impl $name {
+            /// Conversion function between public and secret array versions.
+            pub fn from_public(v: $public_name) -> $name {
+                Self::from_vec(
                     v[..]
                         .iter()
                         .map(|x| <$t>::classify(*x))
@@ -609,9 +596,11 @@ macro_rules! both_arrays {
                 )
             }
         }
-        impl From<$name> for $public_name {
-            fn from(v: $name) -> $public_name {
-                Self::from(
+
+        impl $public_name {
+            /// *Warning:* this function declassifies secret integers!
+            pub fn from_secret_declassify(v: $name) -> $public_name {
+                Self::from_vec(
                     v[..]
                         .iter()
                         .map(|x| <$t>::declassify(*x))

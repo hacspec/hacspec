@@ -143,11 +143,11 @@ pub fn blake2b(data: ByteSeq) -> Digest {
     for (block_len, block) in data.chunks(128) {
         if block_len == 128 {
             t = inc_counter(t, 128);
-            h = compress(h, Buffer::from(block), t, false);
+            h = compress(h, Buffer::from_seq(block), t, false);
         } else {
             // Pad last bits of data to a full block.
             t = inc_counter(t, block_len as u64);
-            h = compress(h, Buffer::from(block), t, true);
+            h = compress(h, Buffer::from_seq(block), t, true);
         }
     }
 
