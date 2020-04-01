@@ -28,10 +28,12 @@ macro_rules! _array_base {
         pub struct $name(pub [$t; $l]);
 
         impl $name {
+            #[primitive(hacspec)]
             pub fn from_array(v: [$t; $l]) -> Self {
                 Self(v.clone())
             }
 
+            #[forbidden(hacspec)]
             pub fn from_slice(v: &[$t]) -> Self {
                 debug_assert!(v.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
@@ -394,7 +396,7 @@ macro_rules! array {
 
         impl $name {
             #[allow(non_snake_case)]
-            // HACSPEC, PRIMITIVE
+            #[primitive(hacspec)]
             pub fn to_U32s_be(&self) -> Seq<U32> {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
