@@ -13,3 +13,9 @@ proc-macro = true
 [dependencies]
 syn = { version = "1.0.17", features= ["full", "visit"] }
 proc-macro2 = { version = "1.0.10", features = ["span-locations"] }
+ansi_term = "0.12.1"
+
+[features]
+default = []
+
+print_attributes = []

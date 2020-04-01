@@ -17,3 +17,6 @@ serde = {version = "1.0", features = ["derive"]}
 secret_integers = { path = "../secret-integers" }
 abstract_integers = { path = "../abstract-integers" }
 hacspec_attributes = { path = "../attributes" }
+
+[features]
+print_attributes = ["hacspec_attributes/print_attributes"]

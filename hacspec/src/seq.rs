@@ -37,6 +37,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> $name<T> {
             /// Get a new sequence of capacity `l`.
+            #[primitive(hacspec)]
             pub fn new(l: usize) -> Self {
                 Self {
                     b: vec![T::default(); l],
@@ -44,6 +45,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
             /// Get a new sequence from array `v`.
+            // TODO: rename from_slice
             pub fn from_array(v: &[T]) -> Self {
                 Self {
                     b: v.to_vec(),
@@ -51,6 +53,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
             /// Get the size of this sequence.
+            #[primitive(hacspec)]
             pub fn len(&self) -> usize {
                 self.b.len()
             }
@@ -66,6 +69,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             /// s = s.update(2, tmp);
             /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
             /// ```
+            #[primitive(hacspec)]
             pub fn update<A: SeqTrait<T>>(self, start: usize, v: A) -> Self {
                 println!("{:?} >= {:?} + {:?}", self.len(), start, v.len());
                 debug_assert!(self.len() >= start + v.len());
@@ -88,6 +92,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             /// s = s.update_sub(2, tmp, 1, 1);
             /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
             /// ```
+            #[primitive(hacspec)]
             pub fn update_sub<A: SeqTrait<T>>(
                 self,
                 start_out: usize,
@@ -114,6 +119,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             /// s = s.update_element(4, 7);
             /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 0, 7]));
             /// ```
+            #[to_remove(hacspec)]
             pub fn update_element(mut self, start_out: usize, v: T) -> Self {
                 debug_assert!(self.len() >= start_out + 1);
                 self[start_out] = v;
@@ -131,6 +137,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             /// s = s.push(Seq::<u8>::from_array(&[4, 5]));
             /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 4, 5]));
             /// ```
+            #[to_remove(hacspec)]
             pub fn set_index(self, i: usize) -> Self {
                 Self {
                     b: self.b.clone(),
@@ -149,6 +156,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             /// s = s.push(Seq::<u8>::from_array(&[4, 5]));
             /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 4, 5]));
             /// ```
+            #[to_remove(hacspec)]
             pub fn push<A: SeqTrait<T>>(self, v: A) -> Self {
                 println!("{:?} >= {:?} + {:?}", self.len(), self.idx, v.len());
                 debug_assert!(self.len() >= self.idx + v.len());
@@ -172,6 +180,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             /// s = s.push_sub(Seq::<u8>::from_array(&[4, 5]), 1, 1);
             /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 5, 0]));
             /// ```
+            #[to_remove(hacspec)]
             pub fn push_sub<A: SeqTrait<T>>(self, v: A, start: usize, l: usize) -> Self {
                 debug_assert!(self.len() >= self.idx + l);
                 debug_assert!(v.len() >= start + l);
@@ -183,6 +192,8 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self_copy.idx += l;
                 self_copy
             }
+
+            #[primitive(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Self {
                 Self::from_vec(
                     self.b
@@ -194,6 +205,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 )
             }
 
+            #[primitive(hacspec)]
             pub fn from_sub<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
                 let mut a = Self::default();
                 for (i, v) in r
@@ -205,6 +217,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 a
             }
 
+            #[to_remove(hacspec)]
             pub fn chunks<'a>(
                 &'a self,
                 chunk_size: usize,
@@ -216,9 +229,11 @@ macro_rules! declare_seq_with_contents_constraints_impl {
         }
 
         impl<T: $bound $(+ $others)*> SeqTrait<T> for $name<T> {
+            #[primitive(hacspec)]
             fn len(&self) -> usize {
                 self.b.len()
             }
+            #[primitive(hacspec)]
             fn iter(&self) -> std::slice::Iter<T> {
                 self.b.iter()
             }
@@ -226,12 +241,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<u8> for $name<T> {
             type Output = T;
+            #[primitive(hacspec)]
             fn index(&self, i: u8) -> &T {
                 &self.b[i as usize]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<u8> for $name<T> {
+            #[primitive(hacspec)]
             fn index_mut(&mut self, i: u8) -> &mut T {
                 &mut self.b[i as usize]
             }
@@ -239,12 +256,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<u32> for $name<T> {
             type Output = T;
+            #[primitive(hacspec)]
             fn index(&self, i: u32) -> &T {
                 &self.b[i as usize]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<u32> for $name<T> {
+            #[primitive(hacspec)]
             fn index_mut(&mut self, i: u32) -> &mut T {
                 &mut self.b[i as usize]
             }
@@ -252,12 +271,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<i32> for $name<T> {
             type Output = T;
+            #[primitive(hacspec)]
             fn index(&self, i: i32) -> &T {
                 &self.b[i as usize]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<i32> for $name<T> {
+            #[primitive(hacspec)]
             fn index_mut(&mut self, i: i32) -> &mut T {
                 &mut self.b[i as usize]
             }
@@ -265,12 +286,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<usize> for $name<T> {
             type Output = T;
+            #[primitive(hacspec)]
             fn index(&self, i: usize) -> &T {
                 &self.b[i]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<usize> for $name<T> {
+            #[primitive(hacspec)]
             fn index_mut(&mut self, i: usize) -> &mut T {
                 &mut self.b[i]
             }
@@ -278,6 +301,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<Range<usize>> for $name<T> {
             type Output = [T];
+            #[primitive(hacspec)]
             fn index(&self, r: Range<usize>) -> &[T] {
                 &self.b[r]
             }
@@ -298,6 +322,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
+            #[primitive(hacspec)]
             pub fn from_seq<U: SeqTrait<T>>(x: U) -> $name<T> {
                 let mut tmp: Vec<T> = Vec::new();
                 for e in x.iter() {
@@ -318,6 +343,7 @@ pub type ByteSeq = Seq<U8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {
+    #[primitive(hacspec)]
     pub fn from_hex(s: &str) -> Seq<U8> {
         Seq::from_vec(
             hex_string_to_bytes(s)
@@ -338,6 +364,7 @@ impl Seq<U8> {
 }
 
 impl PublicSeq<u8> {
+    #[primitive(hacspec)]
     pub fn from_hex(s: &str) -> PublicSeq<u8> {
         PublicSeq::from_vec(
             hex_string_to_bytes(s)
@@ -365,6 +392,7 @@ impl Seq<U8> {
             .collect()
     }
 
+    #[primitive(hacspec)]
     pub fn random(l: usize) -> Self {
         Self {
             b: Seq::get_random_vec(l),
