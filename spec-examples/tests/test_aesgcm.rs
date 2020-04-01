@@ -110,9 +110,9 @@ fn kat_test_256() {
         let k = aes::Key256::from(kat.key);
         let nonce = aes::Nonce::from_hex(kat.nonce);
         let exp_mac = gf128::Tag::from_hex(kat.exp_mac);
-        let msg = ByteSeq::from(kat.msg);
-        let aad = ByteSeq::from(kat.aad);
-        let exp_cipher = ByteSeq::from(kat.exp_cipher);
+        let msg = ByteSeq::from_hex(kat.msg);
+        let aad = ByteSeq::from_hex(kat.aad);
+        let exp_cipher = ByteSeq::from_hex(kat.exp_cipher);
 
         let (cipher, mac) = encrypt_aes256(k, nonce, aad.clone(), msg.clone());
         assert_eq!(

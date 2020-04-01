@@ -152,7 +152,7 @@ macro_rules! _array_base {
             ) -> impl Iterator<Item = (usize, Seq<$t>)> + 'a {
                 self.0
                     .chunks(chunk_size)
-                    .map(|c| (c.len(), Seq::<$t>::from(c)))
+                    .map(|c| (c.len(), Seq::<$t>::from_slice(c)))
             }
         }
 

@@ -2,7 +2,7 @@ use hacspec::prelude::*;
 
 #[test]
 fn test_byte_sequences() {
-    let msg = ByteSeq::from("0388dace60b6a392f328c2b971b2fe78");
+    let msg = ByteSeq::from_hex("0388dace60b6a392f328c2b971b2fe78");
     let msg_u32 = PublicSeq::<u32>::from_array(&[0x0388dace, 0x60b6a392, 0xf328c2b9, 0x71b2fe78]);
     for (i, (l, chunk)) in msg.chunks(4).enumerate() {
         assert_eq!(l, 4);

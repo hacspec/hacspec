@@ -9,7 +9,7 @@ macro_rules! unsigned_public_integer {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -221,7 +221,7 @@ macro_rules! unsigned_integer {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -327,7 +327,7 @@ macro_rules! signed_integer {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -435,7 +435,7 @@ macro_rules! nat_mod {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
@@ -548,7 +548,7 @@ macro_rules! public_nat_mod {
             }
 
             pub fn to_byte_seq_le(self) -> Seq<U8> {
-                Seq::from(
+                Seq::from_vec(
                     self.to_bytes_le()
                         .iter()
                         .map(|x| U8::classify(*x))
@@ -567,7 +567,7 @@ macro_rules! public_nat_mod {
             fn max_val() -> Self {
                 unimplemented!();
             }
-        
+
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }

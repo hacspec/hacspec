@@ -167,7 +167,7 @@ impl<T: Copy + Default> Seq<T> {
         self_copy
     }
     pub fn sub(self, start_out: usize, len: usize) -> Self {
-        Self::from(
+        Self::from_vec(
             self.b
                 .iter()
                 .skip(start_out)
@@ -191,7 +191,7 @@ impl<T: Copy + Default> Seq<T> {
     pub fn chunks<'a>(&'a self, chunk_size: usize) -> impl Iterator<Item = (usize, Seq<T>)> + 'a {
         self.b
             .chunks(chunk_size)
-            .map(|c| (c.len(), Seq::<T>::from(c)))
+            .map(|c| (c.len(), Seq::<T>::from_slice(c)))
     }
 }
 
@@ -291,26 +291,21 @@ impl<T: Copy> Index<Range<usize>> for Seq<T> {
     }
 }
 
-impl<T: Copy> From<Vec<T>> for Seq<T> {
-    fn from(x: Vec<T>) -> Seq<T> {
+impl<T: Copy> Seq<T> {
+    pub fn from_vec(x: Vec<T>) -> Seq<T> {
         Self {
             b: x.clone(),
             idx: 0,
         }
     }
-}
 
-impl<T: Copy> From<&[T]> for Seq<T> {
-    fn from(x: &[T]) -> Seq<T> {
+    pub fn from_slice(x: &[T]) -> Seq<T> {
         Self {
             b: x.to_vec(),
             idx: 0,
         }
     }
-}
 
-
-impl<T: Copy> Seq<T> {
     pub fn from_seq<U : SeqTrait<T>>(x: U) -> Seq<T> {
         let mut tmp : Vec<T> = Vec::new();
         for e in x.iter() {
@@ -324,34 +319,22 @@ impl<T: Copy> Seq<T> {
 }
 
 /// Read hex string to Bytes.
-impl From<&str> for Seq<U8> {
-    fn from(s: &str) -> Seq<U8> {
-        Seq::from(
+impl Seq<U8> {
+    pub fn from_hex(s: &str) -> Seq<U8> {
+        Seq::from_vec(
             hex_string_to_bytes(s)
                 .iter()
                 .map(|x| U8::classify(*x))
                 .collect::<Vec<_>>(),
         )
     }
-}
-impl From<String> for Seq<U8> {
-    fn from(s: String) -> Seq<U8> {
-        Seq::<U8>::from(
+
+    pub fn from_string(s: String) -> Seq<U8> {
+        Seq::<U8>::from_vec(
             hex_string_to_bytes(&s)
                 .iter()
                 .map(|x| U8::classify(*x))
                 .collect::<Vec<_>>(),
         )
-    }
-}
-// TODO: duplicate code...
-impl From<&str> for Seq<u8> {
-    fn from(s: &str) -> Seq<u8> {
-        Seq::<u8>::from(hex_string_to_bytes(s))
-    }
-}
-impl From<String> for Seq<u8> {
-    fn from(s: String) -> Seq<u8> {
-        Seq::<u8>::from(hex_string_to_bytes(&s))
     }
 }
