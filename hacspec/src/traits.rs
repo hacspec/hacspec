@@ -4,6 +4,34 @@
 
 use crate::prelude::*;
 
+/// Common trait for all byte arrays and sequences.
+pub trait SeqTrait<T: Copy> {
+    fn len(&self) -> usize;
+    fn iter(&self) -> std::slice::Iter<T>;
+}
+
+pub trait SecretInteger {}
+
+impl SecretInteger for U8 {}
+impl SecretInteger for U16 {}
+impl SecretInteger for U32 {}
+impl SecretInteger for U128 {}
+impl SecretInteger for I8 {}
+impl SecretInteger for I16 {}
+impl SecretInteger for I32 {}
+impl SecretInteger for I128 {}
+
+pub trait PublicInteger {}
+
+impl PublicInteger for u8 {}
+impl PublicInteger for u16 {}
+impl PublicInteger for u32 {}
+impl PublicInteger for u128 {}
+impl PublicInteger for i8 {}
+impl PublicInteger for i16 {}
+impl PublicInteger for i32 {}
+impl PublicInteger for i128 {}
+
 pub trait Numeric: NumericBase + Copy {}
 
 /// The `Numeric` trait has to be implemented by all numeric objects.

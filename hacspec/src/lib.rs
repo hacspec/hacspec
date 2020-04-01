@@ -29,10 +29,9 @@ pub mod array;
 pub mod integer;
 pub mod machine_integers;
 pub mod math_integers;
-pub mod numeric;
+pub mod traits;
 pub mod poly;
 pub mod prelude;
-pub mod public_seq;
 pub mod seq;
 pub mod test_vectors;
 pub mod util;
@@ -46,12 +45,6 @@ bytes!(DocSecretBytes, 64);
 public_bytes!(DocPublicBytes, 64);
 array!(DocSecretArray, 64, U32);
 array!(DocPublicArray, 64, u32);
-
-/// Common trait for all byte arrays and sequences.
-pub trait SeqTrait<T: Copy> {
-    fn len(&self) -> usize;
-    fn iter(&self) -> std::slice::Iter<T>;
-}
 
 bytes!(U32Word, 4);
 bytes!(U128Word, 16);

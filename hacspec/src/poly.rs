@@ -23,7 +23,6 @@
 //!
 
 use rand::Rng;
-use std::ops::{Add, Mul, Sub};
 
 use crate::integer::*;
 use crate::seq::*;
@@ -569,37 +568,4 @@ macro_rules! poly {
             }
         }
     };
-}
-
-/// Polynomial multiplication on ℤ[x]
-impl<T: TRestrictions<T>> Mul for Seq<T> {
-    type Output = Self;
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self {
-            b: poly_mul(&self.b, &rhs.b, T::default()),
-            idx: 0,
-        }
-    }
-}
-
-/// Polynomial subtraction on ℤ[x]
-impl<T: TRestrictions<T>> Sub for Seq<T> {
-    type Output = Self;
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            b: poly_sub(&self.b, &rhs.b, T::default()),
-            idx: 0,
-        }
-    }
-}
-
-/// Polynomial addition on ℤ[x]
-impl<T: TRestrictions<T>> Add for Seq<T> {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            b: poly_add(&self.b, &rhs.b, T::default()),
-            idx: 0,
-        }
-    }
 }

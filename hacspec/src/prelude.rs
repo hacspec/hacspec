@@ -7,12 +7,11 @@
 pub use crate::array::*;
 pub use crate::integer::*;
 pub use crate::poly::*;
-pub use crate::public_seq::*;
 pub use crate::seq::*;
 pub use crate::util::*;
 pub use crate::machine_integers::*;
 pub use crate::math_integers::*;
-pub use crate::numeric::*;
+pub use crate::traits::*;
 pub use crate::vec_integers::*;
 pub use crate::transmute::*;
 pub use crate::*;

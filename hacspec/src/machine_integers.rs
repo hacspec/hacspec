@@ -9,7 +9,6 @@
 //!
 
 use crate::prelude::*;
-use crate::numeric::Numeric;
 
 // Macro to implement the Numeric trait for built-in machine integers.
 macro_rules! implement_public_mi {

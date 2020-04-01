@@ -847,7 +847,7 @@ macro_rules! _implement_numeric_signed_secret {
 
 // ==== Numeric and NumericVec implementations for PublicSeq and Seq ==== //
 
-impl<T: Numeric> NumericBase for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
     /// Return largest value that can be represented.
     fn max_val() -> Self {
         unimplemented!();
@@ -988,7 +988,7 @@ pub fn vec_poly_sub<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
 }
 
 /// Polynomial multiplication on ℤ[x]
-impl<T: Numeric> Mul for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> Mul for PublicSeq<T> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
@@ -999,7 +999,7 @@ impl<T: Numeric> Mul for PublicSeq<T> {
 }
 
 /// Polynomial subtraction on ℤ[x]
-impl<T: Numeric> Sub for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> Sub for PublicSeq<T> {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
@@ -1010,7 +1010,7 @@ impl<T: Numeric> Sub for PublicSeq<T> {
 }
 
 /// Polynomial addition on ℤ[x]
-impl<T: Numeric> Add for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> Add for PublicSeq<T> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
         Self {
@@ -1020,21 +1020,21 @@ impl<T: Numeric> Add for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric> Not for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> Not for PublicSeq<T> {
     type Output = PublicSeq<T>;
     fn not(self) -> Self::Output {
         unimplemented!();
     }
 }
 
-impl<T: Numeric> BitOr for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> BitOr for PublicSeq<T> {
     type Output = PublicSeq<T>;
     fn bitor(self, rhs: Self) -> Self::Output {
         unimplemented!();
     }
 }
 
-impl<T: Numeric> BitXor for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> BitXor for PublicSeq<T> {
     type Output = PublicSeq<T>;
     fn bitxor(self, rhs: Self) -> Self::Output {
         let mut out = Self::default();
@@ -1045,21 +1045,21 @@ impl<T: Numeric> BitXor for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric> BitAnd for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> BitAnd for PublicSeq<T> {
     type Output = PublicSeq<T>;
     fn bitand(self, rhs: Self) -> Self::Output {
         unimplemented!();
     }
 }
 
-impl<T: Numeric> Shr<u32> for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> Shr<u32> for PublicSeq<T> {
     type Output = PublicSeq<T>;
     fn shr(self, rhs: u32) -> Self::Output {
         unimplemented!();
     }
 }
 
-impl<T: Numeric> Shl<u32> for PublicSeq<T> {
+impl<T: Numeric + PublicInteger> Shl<u32> for PublicSeq<T> {
     type Output = PublicSeq<T>;
     fn shl(self, rhs: u32) -> Self::Output {
         unimplemented!();
