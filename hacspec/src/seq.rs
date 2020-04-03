@@ -46,6 +46,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
             /// Get a new sequence from array `v`.
             // TODO: rename from_slice
+            #[external(hacspec)]
             pub fn from_array(v: &[T]) -> Self {
                 Self {
                     b: v.to_vec(),
@@ -308,6 +309,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
         }
 
         impl<T: $bound $(+ $others)*> $name<T> {
+            #[external(hacspec)]
             pub fn from_vec(x: Vec<T>) -> $name<T> {
                 Self {
                     b: x.clone(),
@@ -315,6 +317,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
+            #[external(hacspec)]
             pub fn from_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
@@ -353,6 +356,7 @@ impl Seq<U8> {
         )
     }
 
+    #[external(hacspec)]
     pub fn from_string(s: String) -> Seq<U8> {
         Seq::<U8>::from_vec(
             hex_string_to_bytes(&s)
@@ -374,6 +378,7 @@ impl PublicSeq<u8> {
         )
     }
 
+    #[external(hacspec)]
     pub fn from_string(s: String) -> PublicSeq<u8> {
         PublicSeq::<u8>::from_vec(
             hex_string_to_bytes(&s)
@@ -385,6 +390,7 @@ impl PublicSeq<u8> {
 }
 
 impl Seq<U8> {
+    #[external(hacspec)]
     fn get_random_vec(l: usize) -> Vec<U8> {
         (0..l)
             .map(|_| rand::random::<u8>())
@@ -400,6 +406,7 @@ impl Seq<U8> {
         }
     }
 
+    #[external(hacspec)]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
@@ -407,6 +414,8 @@ impl Seq<U8> {
 }
 
 impl PublicSeq<u8> {
+
+    #[external(hacspec)]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")

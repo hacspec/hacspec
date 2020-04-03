@@ -987,7 +987,7 @@ pub fn vec_poly_sub<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     out
 }
 
-/// Polynomial multiplication on ℤ[x]
+/// Polynomial multiplication on ℤ\[x\]
 impl<T: Numeric + PublicInteger> Mul for PublicSeq<T> {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -998,7 +998,7 @@ impl<T: Numeric + PublicInteger> Mul for PublicSeq<T> {
     }
 }
 
-/// Polynomial subtraction on ℤ[x]
+/// Polynomial subtraction on ℤ\[x\]
 impl<T: Numeric + PublicInteger> Sub for PublicSeq<T> {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
@@ -1009,7 +1009,7 @@ impl<T: Numeric + PublicInteger> Sub for PublicSeq<T> {
     }
 }
 
-/// Polynomial addition on ℤ[x]
+/// Polynomial addition on ℤ\[x\]
 impl<T: Numeric + PublicInteger> Add for PublicSeq<T> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {

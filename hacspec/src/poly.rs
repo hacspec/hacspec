@@ -361,7 +361,7 @@ fn divstepsx<T: TRestrictions<T>>(
     (delta, f, g, v)
 }
 
-/// Constant-time extended euclidean algorithm to compute the inverse of x in yℤ[x]
+/// Constant-time extended euclidean algorithm to compute the inverse of x in yℤ\[x\]
 /// x.len() and degree of y are assumed to be public
 /// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266
 #[inline]
@@ -395,7 +395,7 @@ pub fn extended_euclid<T: TRestrictions<T>>(
 macro_rules! poly {
     ($name:ident, $t:ty, $l:expr, $n:expr, $m:expr) => {
         /// The poly struct for fixed-length polynomials.
-        /// Every polynomial is over ℤn[x]/mℤ[x] and reduced by mℤ[x].
+        /// Every polynomial is over ℤn\[x\]/mℤ\[x\] and reduced by mℤ\[x\].
         #[derive(Clone, Copy)]
         struct $name {
             poly: [$t; $l],

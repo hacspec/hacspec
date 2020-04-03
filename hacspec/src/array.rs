@@ -49,6 +49,7 @@ macro_rules! _array_base {
                 Self([<$t>::default(); $l])
             }
 
+            #[external(hacspec)]
             pub fn capacity() -> usize {
                 $l
             }
@@ -175,11 +176,13 @@ macro_rules! _array_base {
         }
 
         impl Default for $name {
+            #[library(hacspec)]
             fn default() -> Self {
                 $name::new()
             }
         }
         impl AsMut<[$t]> for $name {
+            #[to_remove(hacspec)]
             fn as_mut(&mut self) -> &mut [$t] {
                 &mut self.0
             }
@@ -257,6 +260,7 @@ macro_rules! _array_base {
             }
         }
         impl $name {
+            #[external(hacspec)]
             pub fn from_vec(x: Vec<$t>) -> $name {
                 debug_assert!(x.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
@@ -280,6 +284,7 @@ macro_rules! _array_base {
         }
 
         impl $name {
+            #[external(hacspec)]
             pub fn random() -> $name {
                 let mut tmp = [<$t>::default(); $l];
                 tmp.copy_from_slice(&$name::get_random_vec($l)[..$l]);
@@ -330,6 +335,7 @@ macro_rules! _secret_array {
 
         /// **Warning:** declassifies secret integer types.
         impl fmt::Debug for $name {
+            #[external(hacspec)]
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 self.0[..]
                     .iter()
@@ -353,6 +359,7 @@ macro_rules! _secret_array {
             }
         }
         impl $name {
+            #[external(hacspec)]
             pub fn get_random_vec(l: usize) -> Vec<$t> {
                 (0..l)
                     .map(|_| <$t>::classify(rand::random::<$tbase>()))
@@ -360,6 +367,7 @@ macro_rules! _secret_array {
             }
         }
         impl $name {
+            #[external(hacspec)]
             pub fn from_public_slice(v: &[$tbase]) -> $name {
                 debug_assert!(v.len() <= $l);
                 Self::from_vec(
@@ -380,6 +388,7 @@ macro_rules! _secret_array {
             /// bytes!(Block, 5);
             /// let b = Block::from_public_array([1, 2, 3, 4, 5]);
             /// ```
+            #[external(hacspec)]
             pub fn from_public_array(v: [$tbase; $l]) -> $name {
                 debug_assert!(v.len() == $l);
                 Self::from_vec(
@@ -398,12 +407,14 @@ macro_rules! _public_array {
     ($name:ident,$l:expr,$t:ty) => {
         _array_base!($name, $l, $t);
         impl $name {
+            #[external(hacspec)]
             pub fn get_random_vec(l: usize) -> Vec<$t> {
                 (0..l).map(|_| rand::random::<$t>()).collect()
             }
         }
 
         impl fmt::Debug for $name {
+            #[external(hacspec)]
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 self.0[..].fmt(f)
             }
@@ -487,6 +498,7 @@ macro_rules! array {
                 }
                 out
             }
+            #[external(hacspec)]
             pub fn to_hex(&self) -> String {
                 let strs: Vec<String> = self.0.iter().map(|b| format!("{:02x}", b)).collect();
                 strs.join("")
@@ -568,6 +580,7 @@ macro_rules! array {
                 }
                 out
             }
+            #[external(hacspec)]
             pub fn to_hex(&self) -> String {
                 let strs: Vec<String> = self.0.iter().map(|b| format!("{:02x}", b)).collect();
                 strs.join("")
