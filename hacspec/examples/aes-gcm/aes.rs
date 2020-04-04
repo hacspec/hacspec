@@ -306,7 +306,7 @@ pub fn aes256_decrypt(key: Key256, nonce: Nonce, counter: U32, ctxt: ByteSeq) ->
 }
 
 // Testing some internal functions.
-
+/*
 #[test]
 #[should_panic]
 fn test_contract1() {
@@ -318,7 +318,7 @@ fn test_contract1() {
 fn test_contract2() {
     shift_row(2, 4, Block::new());
 }
-
+*/
 #[test]
 fn test_kat_block1() {
     let msg = Block(secret_bytes!([
