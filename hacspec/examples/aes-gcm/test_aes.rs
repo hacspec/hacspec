@@ -2,18 +2,17 @@ use hacspec::prelude::*;
 
 use crate::aes::*;
 
-fn enc_dec_test(m: ByteSeq, key: Key, iv: Nonce, ctr: U32, ctxt: Option<ByteSeq>) {
-    let c = aes128_encrypt(key, iv, ctr, m.clone());
+fn aes_128_enc_dec_test(m: ByteSeq, key: Key128, iv: Nonce, ctr: U32, ctxt: Option<ByteSeq>) {
+    let c = aes128_encrypt(key, iv, ctr, m.clone(),);
     let m_dec = aes128_decrypt(key, iv, ctr, c.clone());
     assert_bytes_eq!(m, m_dec);
     if ctxt.is_some() {
         assert_bytes_eq!(c, ctxt.unwrap());
     }
 }
-
 #[test]
 fn test_enc_dec() {
-    let key = Key::random();
+    let key = Key128::random();
     let iv = Nonce::random();
     let m = ByteSeq::random(40);
     enc_dec_test(m, key, iv, U32(0), None);
@@ -25,7 +24,7 @@ fn test_kat1() {
         0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17,
         0x2a
     ]));
-    let key = Key(secret_bytes!([
+    let key = Key128(secret_bytes!([
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f,
         0x3c
     ]));
@@ -37,7 +36,7 @@ fn test_kat1() {
         0x87, 0x4d, 0x61, 0x91, 0xb6, 0x20, 0xe3, 0x26, 0x1b, 0xef, 0x68, 0x64, 0x99, 0x0d, 0xb6,
         0xce
     ]));
-    enc_dec_test(msg, key, nonce, ctr, Some(ctxt));
+    aes128_enc_dec_test(msg, key, nonce, ctr, Some(ctxt));
 }
 
 #[test]
@@ -47,7 +46,7 @@ fn test_kat2() {
         0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D,
         0x1E, 0x1F
     ]));
-    let key = Key(secret_bytes!([
+    let key = Key128(secret_bytes!([
         0x7E, 0x24, 0x06, 0x78, 0x17, 0xFA, 0xE0, 0xD7, 0x43, 0xD6, 0xCE, 0x1F, 0x32, 0x53, 0x91,
         0x63
     ]));
@@ -60,5 +59,5 @@ fn test_kat2() {
         0x88, 0xEB, 0x2E, 0x1E, 0xFC, 0x46, 0xDA, 0x57, 0xC8, 0xFC, 0xE6, 0x30, 0xDF, 0x91, 0x41,
         0xBE, 0x28
     ]));
-    enc_dec_test(msg, key, nonce, U32(ctr), Some(ctxt));
+    aes128_enc_dec_test(msg, key, nonce, U32(ctr), Some(ctxt));
 }
