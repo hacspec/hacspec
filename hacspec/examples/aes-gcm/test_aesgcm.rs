@@ -1,87 +1,63 @@
 use hacspec::prelude::*;
 
-use crate::{aes, aesgcm::*, gf128};
+use crate::aes::*;
 
-struct AeadTestVector<'a> {
-    key: &'a str,
-    nonce: &'a str,
-    msg: &'a str,
-    aad: &'a str,
-    exp_cipher: &'a str,
-    exp_mac: &'a str,
+fn aes_128_enc_dec_test(m: ByteSeq, key: Key128, iv: Nonce, ctr: U32, ctxt: Option<ByteSeq>) {
+    let c = aes128_encrypt(key, iv, ctr, m.clone(),);
+    let m_dec = aes128_decrypt(key, iv, ctr, c.clone());
+    assert_bytes_eq!(m, m_dec);
+    if ctxt.is_some() {
+        assert_bytes_eq!(c, ctxt.unwrap());
+    }
+}
+#[test]
+fn test_enc_dec() {
+    let key = Key128::random();
+    let iv = Nonce::random();
+    let m = ByteSeq::random(40);
+    enc_dec_test(m, key, iv, U32(0), None);
 }
 
-const KAT: [AeadTestVector; 4] = [
-    AeadTestVector {
-        key: "00000000000000000000000000000000",
-        nonce: "000000000000000000000000",
-        msg: "",
-        aad: "",
-        exp_cipher: "",
-        exp_mac: "58e2fccefa7e3061367f1d57a4e7455a"
-    },
-    AeadTestVector {
-        key	: "00000000000000000000000000000000",
-        nonce	: "000000000000000000000000",
-        aad	: "",
-        msg	: "00000000000000000000000000000000",
-        exp_cipher : "0388dace60b6a392f328c2b971b2fe78",
-        exp_mac	: "ab6e47d42cec13bdf53a67b21257bddf",
-    },
-    AeadTestVector {
-        key	: "feffe9928665731c6d6a8f9467308308",
-        nonce	: "cafebabefacedbaddecaf888",
-        msg	: "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b391aafd255",
-        aad	: "",
-        exp_cipher : "42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a5aac84aa051ba30b396a0aac973d58e091473f5985",
-        exp_mac	: "4d5c2af327cd64a62cf35abd2ba6fab4",
-    },
-    AeadTestVector {
-        key	: "feffe9928665731c6d6a8f9467308308",
-        nonce	: "cafebabefacedbaddecaf888",
-        msg	: "d9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39",
-        aad	: "feedfacedeadbeeffeedfacedeadbeefabaddad2",
-        exp_cipher: "42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a5aac84aa051ba30b396a0aac973d58e091",
-        exp_mac	: "5bc94fbc3221a5db94fae95ae7121a47",
-    }
-];
+#[test]
+fn test_kat1() {
+    let msg = ByteSeq::from_array(&secret_bytes!([
+        0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17,
+        0x2a
+    ]));
+    let key = Key128(secret_bytes!([
+        0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f,
+        0x3c
+    ]));
+    let nonce = Nonce(secret_bytes!([
+        0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb
+    ]));
+    let ctr = U32(0xfcfdfeff);
+    let ctxt = ByteSeq::from_array(&secret_bytes!([
+        0x87, 0x4d, 0x61, 0x91, 0xb6, 0x20, 0xe3, 0x26, 0x1b, 0xef, 0x68, 0x64, 0x99, 0x0d, 0xb6,
+        0xce
+    ]));
+    aes128_enc_dec_test(msg, key, nonce, ctr, Some(ctxt));
+}
 
 #[test]
-fn kat_test() {
-    for kat in KAT.iter() {
-        let k = aes::Key::from(kat.key);
-        let nonce = aes::Nonce::from(kat.nonce);
-        let exp_mac = gf128::Tag::from(kat.exp_mac);
-        let msg = ByteSeq::from(kat.msg);
-        let aad = ByteSeq::from(kat.aad);
-        let exp_cipher = ByteSeq::from(kat.exp_cipher);
-
-        let (cipher, mac) = encrypt(k, nonce, aad.clone(), msg.clone());
-        assert_eq!(
-            exp_cipher
-                .iter()
-                .map(|x| U8::declassify(*x))
-                .collect::<Vec<_>>(),
-            cipher
-                .iter()
-                .map(|x| U8::declassify(*x))
-                .collect::<Vec<_>>()
-        );
-        assert_eq!(
-            exp_mac
-                .iter()
-                .map(|x| U8::declassify(*x))
-                .collect::<Vec<_>>(),
-            mac.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
-        );
-
-        let decrypted_msg = decrypt(k, nonce, aad, cipher, mac).unwrap();
-        assert_eq!(
-            msg.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
-            decrypted_msg
-                .iter()
-                .map(|x| U8::declassify(*x))
-                .collect::<Vec<_>>()
-        );
-    }
+fn test_kat2() {
+    let msg = ByteSeq::from_array(&secret_bytes!([
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
+        0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D,
+        0x1E, 0x1F
+    ]));
+    let key = Key128(secret_bytes!([
+        0x7E, 0x24, 0x06, 0x78, 0x17, 0xFA, 0xE0, 0xD7, 0x43, 0xD6, 0xCE, 0x1F, 0x32, 0x53, 0x91,
+        0x63
+    ]));
+    let nonce = Nonce(secret_bytes!([
+        0x00, 0x6C, 0xB6, 0xDB, 0xC0, 0x54, 0x3B, 0x59, 0xDA, 0x48, 0xD9, 0x0B
+    ]));
+    let ctr = 0x00000001;
+    let ctxt = ByteSeq::from_array(&secret_bytes!([
+        0x51, 0x04, 0xA1, 0x06, 0x16, 0x8A, 0x72, 0xD9, 0x79, 0x0D, 0x41, 0xEE, 0x8E, 0xDA, 0xD3,
+        0x88, 0xEB, 0x2E, 0x1E, 0xFC, 0x46, 0xDA, 0x57, 0xC8, 0xFC, 0xE6, 0x30, 0xDF, 0x91, 0x41,
+        0xBE, 0x28
+    ]));
+    aes128_enc_dec_test(msg, key, nonce, U32(ctr), Some(ctxt));
 }
