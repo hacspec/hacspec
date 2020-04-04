@@ -5,7 +5,7 @@ use hacspec::prelude::*;
 use crate::aes;
 use crate::aes::{aes128_ctr_keyblock, aes128_decrypt, aes128_encrypt, Block};
 
-use crate::gf128::{gmac, Key, Tag};
+use crate::gf128::{gmac,Key, Tag};
 
 fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
     let laad = aad.len();
@@ -34,11 +34,11 @@ fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
     padded_msg
 }
 
-pub fn encrypt(key: aes::Key, iv: aes::Nonce, aad: ByteSeq, msg: ByteSeq) -> (ByteSeq, Tag) {
+pub fn encrypt(key: aes::Key128, iv: aes::Nonce, aad: ByteSeq, msg: ByteSeq) -> (ByteSeq, Tag) {
     let iv0 = aes::Nonce::new();
 
-    let mac_key = aes128_ctr_keyblock(key, iv0, U32(0));
-    let tag_mix = aes128_ctr_keyblock(key, iv, U32(1));
+    let mac_key = aes128_ctr_keyblock(key, iv0, U32(0), 4, 10);
+    let tag_mix = aes128_ctr_keyblock(key, iv, U32(1), 4, 10);
 
     let cipher_text = aes128_encrypt(key, iv, U32(2), msg);
     let padded_msg = pad_aad_msg(aad, cipher_text.clone());
@@ -49,7 +49,7 @@ pub fn encrypt(key: aes::Key, iv: aes::Nonce, aad: ByteSeq, msg: ByteSeq) -> (By
 }
 
 pub fn decrypt(
-    key: aes::Key,
+    key: aes::Key128,
     iv: aes::Nonce,
     aad: ByteSeq,
     cipher_text: ByteSeq,
@@ -57,8 +57,8 @@ pub fn decrypt(
 ) -> Result<ByteSeq, String> {
     let iv0 = aes::Nonce::new();
 
-    let mac_key = aes128_ctr_keyblock(key, iv0, U32(0));
-    let tag_mix = aes128_ctr_keyblock(key, iv, U32(1));
+    let mac_key = aes128_ctr_keyblock(key, iv0, U32(0), 4, 10);
+    let tag_mix = aes128_ctr_keyblock(key, iv, U32(1), 4, 10);
 
     let padded_msg = pad_aad_msg(aad, cipher_text.clone());
     let my_tag = gmac(padded_msg, Key::copy(mac_key));
