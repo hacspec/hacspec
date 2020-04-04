@@ -15,7 +15,7 @@ fn test_enc_dec() {
     let key = Key128::random();
     let iv = Nonce::random();
     let m = ByteSeq::random(40);
-    enc_dec_test(m, key, iv, U32(0), None);
+    aes_128_enc_dec_test(m, key, iv, U32(0), None);
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn test_kat1() {
         0x87, 0x4d, 0x61, 0x91, 0xb6, 0x20, 0xe3, 0x26, 0x1b, 0xef, 0x68, 0x64, 0x99, 0x0d, 0xb6,
         0xce
     ]));
-    aes128_enc_dec_test(msg, key, nonce, ctr, Some(ctxt));
+    aes_128_enc_dec_test(msg, key, nonce, ctr, Some(ctxt));
 }
 
 #[test]
@@ -59,5 +59,5 @@ fn test_kat2() {
         0x88, 0xEB, 0x2E, 0x1E, 0xFC, 0x46, 0xDA, 0x57, 0xC8, 0xFC, 0xE6, 0x30, 0xDF, 0x91, 0x41,
         0xBE, 0x28
     ]));
-    aes128_enc_dec_test(msg, key, nonce, U32(ctr), Some(ctxt));
+    aes_128_enc_dec_test(msg, key, nonce, U32(ctr), Some(ctxt));
 }
