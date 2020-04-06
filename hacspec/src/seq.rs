@@ -71,11 +71,15 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[library(hacspec)]
-            pub fn from_sub<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
-                let out_len = r.end - r.start;
-                let mut a = Self::new(out_len);
-                a = a.update_sub(0, input, r.start, out_len);
+            pub fn from_sub<A: SeqTrait<T>>(input: A, start: usize, len: usize) -> Self {
+                let mut a = Self::new(len);
+                a = a.update_sub(0, input, start, len);
                 a
+            }
+
+            #[library(hacspec)]
+            pub fn from_subr<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
+                Self::from_sub(input, r.start, r.end - r.start)
             }
 
             #[library(hacspec)]

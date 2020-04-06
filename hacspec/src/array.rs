@@ -59,16 +59,21 @@ macro_rules! _array_base {
             }
 
             #[library(hacspec)]
-            pub fn from_sub<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
+            pub fn from_sub<A: SeqTrait<$t>>(input: A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
-                debug_assert!(a.len() == r.end - r.start);
-                a = a.update_sub(0, input, r.start, r.end - r.start);
+                debug_assert_eq!(len, a.len());
+                a = a.update_sub(0, input, start, len);
                 a
             }
 
             #[library(hacspec)]
+            pub fn from_subr<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
+                Self::from_sub(input, r.start, r.end - r.start)
+            }
+
+            #[library(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Seq<$t> {
-                Seq::from_sub(self, start_out..start_out + len)
+                Seq::from_sub(self, start_out, len)
             }
 
             #[library(hacspec)]

@@ -135,7 +135,7 @@ for i in 0..key.num_chunks(BLOCKSIZE) {
 fn block_cipher_aes128(input: Block, key: Bytes176, nr: usize) -> Block {
     let k0 = RoundKey::from_sub(key, 0..16);
     let k = Bytes144::from_sub(key, 16..nr * 16);
-    let kn = RoundKey::from_sub(key, nr * 16..(nr + 1) * 16);
+    let kn = RoundKey::from_sub(key, nr * 16..16);
     let state = add_round_key(input, k0);
     let state = rounds_aes128(state, k);
     aes_enc_last(state, kn)
@@ -189,8 +189,8 @@ fn key_expansion_aes128(key: Key128, nk: usize, nr: usize) -> Bytes176 {
     for j in 0..40 {
         i = j + 4;
         let word = key_expansion_word(
-            Word::from_sub(key_ex, 4 * i - 16..4 * i - 12),
-            Word::from_sub(key_ex, nk * i - 4..nk * i),
+            Word::from_sub(key_ex, 4 * i - 16, 4),
+            Word::from_sub(key_ex, nk * i - 4, 4),
             i,
             nk,
             nr,
@@ -200,13 +200,13 @@ fn key_expansion_aes128(key: Key128, nk: usize, nr: usize) -> Bytes176 {
     key_ex
 }
 fn key_expansion_aes256(key: Key256, nk: usize, nr: usize) -> Bytes240 {
-    let mut key_ex = Bytes240::from(key.raw());
+    let mut key_ex = Bytes240::new().update_start(key);
     let mut i: usize;
     for j in 0..52 {
         i = j + 8;
         let word = key_expansion_word(
-            Word::from_sub(key_ex, 4 * i - 32..4 * i - 28),
-            Word::from_sub(key_ex, 4 * i - 4..4 * i),
+            Word::from_sub(key_ex, 4 * i - 32, 4),
+            Word::from_sub(key_ex, 4 * i - 4, 4),
             i,
             nk,
             nr,
