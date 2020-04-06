@@ -223,16 +223,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 a
             }
 
-            #[to_remove(hacspec)]
-            pub fn chunks<'a>(
-                &'a self,
-                chunk_size: usize,
-            ) -> impl Iterator<Item = (usize, Seq<T>)> + 'a {
-                self.b
-                    .chunks(chunk_size)
-                    .map(|c| (c.len(), Seq::<T>::from_slice(c)))
-            }
-
             #[library(hacspec)]
             pub fn num_chunks(
                 &self,
@@ -273,6 +263,16 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 };
                 debug_assert!(input.len() == len, "the chunk length should match the input");
                 self.update_sub(idx_start, input, 0, len)
+            }
+
+            #[to_remove(hacspec)]
+            pub fn chunks<'a>(
+                &'a self,
+                chunk_size: usize,
+            ) -> impl Iterator<Item = (usize, Seq<T>)> + 'a {
+                self.b
+                .chunks(chunk_size)
+                .map(|c| (c.len(), Seq::<T>::from_slice(c)))
             }
         }
 
@@ -390,7 +390,6 @@ declare_seq!(Seq);
 
 pub type ByteSeq = Seq<U8>;
 
-
 /// Read hex string to Bytes.
 impl Seq<U8> {
     #[primitive(hacspec)]
@@ -461,7 +460,6 @@ impl Seq<U8> {
 }
 
 impl PublicSeq<u8> {
-
     #[external(hacspec)]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();

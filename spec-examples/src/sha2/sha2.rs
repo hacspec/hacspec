@@ -170,7 +170,8 @@ pub fn hash(msg: ByteSeq) -> Digest {
         if block_len < BLOCK_SIZE {
             // Add padding for last block
             let mut last_block = Block::new();
-            last_block = last_block.update(0, Block::from_seq(block));
+            let block = Block::new().copy_and_pad(block);
+            last_block = last_block.update(0, block);
             last_block[block_len] = U8(0x80);
             let len_bist: U64 = (msg.len() * 8).into();
             if block_len < BLOCK_SIZE - LEN_SIZE {
@@ -183,7 +184,8 @@ pub fn hash(msg: ByteSeq) -> Digest {
                 h = compress(pad_block, h);
             }
         } else {
-            h = compress(Block::from_seq(block), h);
+            let compress_input = Block::new().copy_and_pad(block);
+            h = compress(compress_input, h);
         }
     }
 

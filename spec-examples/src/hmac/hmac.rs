@@ -30,7 +30,7 @@ pub fn hmac(k: ByteSeq, txt: ByteSeq) -> PRK {
 
     // Applications that use keys longer than B bytes will first hash the key using H and then use the resultant L byte string as the actual key to HMAC
     let k_block = if k.len() > BLOCK_LEN {
-        Block::from_seq(sha2::hash(k))
+        Block::new().copy_and_pad(sha2::hash(k))
     } else {
         Block::copy_pad(k)
     };

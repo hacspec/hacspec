@@ -138,6 +138,15 @@ macro_rules! _array_base {
                 self
             }
 
+            #[library(hacspec)]
+            pub fn copy_and_pad<A: SeqTrait<$t>>(
+                self,
+                v: A
+            ) -> Self {
+                let len = v.len();
+                self.update_sub(0, v, 0, len)
+            }
+
             #[primitive(hacspec)]
             pub fn len(&self) -> usize {
                 $l
@@ -279,7 +288,7 @@ macro_rules! _array_base {
         impl $name {
             #[external(hacspec)]
             pub fn from_vec(x: Vec<$t>) -> $name {
-                debug_assert!(x.len() <= $l);
+                debug_assert!(x.len() == $l);
                 let mut tmp = [<$t>::default(); $l];
                 for (i, e) in x.iter().enumerate() {
                     tmp[i] = *e;
@@ -291,7 +300,7 @@ macro_rules! _array_base {
             // the From<T> for T core implementation, as the array also implements the [SeqTrait].
             #[primitive(hacspec)]
             pub fn from_seq<T: SeqTrait<$t>>(x: T) -> $name {
-                debug_assert!(x.len() <= $l);
+                debug_assert!(x.len() == $l);
                 let mut tmp = [<$t>::default(); $l];
                 for (i, e) in x.iter().enumerate() {
                     tmp[i] = *e;

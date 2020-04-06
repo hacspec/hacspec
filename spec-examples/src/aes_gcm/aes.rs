@@ -183,7 +183,7 @@ fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> Wor
 }
 
 fn key_expansion_aes128(key: Key128, nk: usize, nr: usize) -> Bytes176 {
-    let mut key_ex = Bytes176::from_seq(key);
+    let mut key_ex = Bytes176::new().copy_and_pad(key);
     let mut i: usize;
     for j in 0..40 {
         i = j + 4;
@@ -268,8 +268,13 @@ fn aes128_counter_mode(
         } else {
             // Last block that needs padding
             let keyblock = aes128_ctr_keyblock(key, nonce, ctr, nk, nr);
-            let last_block = Block::from_seq(msg_block);
-            blocks_out = blocks_out.push_sub(xor_block(last_block, keyblock), 0, block_len);
+            let last_block = Block::new();
+            let last_block = last_block.copy_and_pad(msg_block);
+            blocks_out = blocks_out.set_chunk(
+                BLOCKSIZE,
+                i,
+                xor_block(last_block, keyblock).subr(0..block_len),
+            );
         }
     }
     blocks_out
@@ -284,15 +289,21 @@ fn aes256_counter_mode(
 ) -> ByteSeq {
     let mut ctr = counter;
     let mut blocks_out = ByteSeq::new(msg.len());
-    for (block_len, msg_block) in msg.chunks(BLOCKSIZE) {
+    for i in 0..msg.num_chunks(BLOCKSIZE) {
+        let (block_len, msg_block) = msg.clone().get_chunk(BLOCKSIZE, i);
         if msg_block.len() == BLOCKSIZE {
             let key_block = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
-            blocks_out = blocks_out.push(xor_block(Block::from_seq(msg_block), key_block));
+            blocks_out = blocks_out.set_chunk(
+                BLOCKSIZE,
+                i,
+                xor_block(Block::from_seq(msg_block), key_block),
+            );
             ctr += U32(1);
         } else {
             // Last block that needs padding
             let keyblock = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
-            let last_block = Block::from_seq(msg_block);
+            let last_block = Block::new();
+            let last_block = last_block.copy_and_pad(msg_block);
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,
