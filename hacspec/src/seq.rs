@@ -109,23 +109,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
                 self_copy
             }
-            /// Update this sequence with `v` at position `start_out`.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// let mut s = Seq::<u8>::new(5);
-            /// s = s.update_element(4, 7);
-            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 0, 7]));
-            /// ```
-            #[to_remove(hacspec)]
-            pub fn update_element(mut self, start_out: usize, v: T) -> Self {
-                debug_assert!(self.len() >= start_out + 1);
-                self[start_out] = v;
-                self
-            }
+
             /// Reset the sequence index.
             ///
             /// # Examples

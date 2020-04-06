@@ -28,7 +28,7 @@ fn build_hmac_txt(t: ByteSeq, info: ByteSeq, iteration: U8) -> ByteSeq {
     let mut out = ByteSeq::new(t.len() + info.len() + 1);
     out = out.push(t.clone());
     out = out.update(t.len(), info.clone());
-    out = out.update_element(t.len() + info.len(), iteration);
+    out[t.len() + info.len()] = iteration;
     out
 }
 
