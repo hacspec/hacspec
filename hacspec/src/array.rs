@@ -81,14 +81,6 @@ macro_rules! _array_base {
                 self.sub(r.start, r.end - r.start)
             }
 
-            #[library(hacspec)]
-            pub fn copy<A: SeqTrait<$t>>(v: A) -> Self {
-                debug_assert!(v.len() == $l);
-                let mut out = Self::new();
-                out = out.update_start(v);
-                out
-            }
-
             #[to_remove(hacspec)]
             pub fn to_bytes_be(&self) -> [u8; $l * core::mem::size_of::<$t>()] {
                 const FACTOR: usize = core::mem::size_of::<$t>();

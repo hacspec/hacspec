@@ -72,7 +72,7 @@ fn poly(msg: ByteSeq, r: Element) -> Element {
 
 pub fn gmac(text: ByteSeq, k: Key) -> Tag {
     let s = Block::new();
-    let r = encode(Block::copy(k));
+    let r = encode(Block::from_seq(k));
     let a = poly(text, r);
-    Tag::copy(decode(fadd(a, encode(s))))
+    Tag::from_seq(decode(fadd(a, encode(s))))
 }
