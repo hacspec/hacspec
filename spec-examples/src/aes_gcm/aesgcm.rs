@@ -90,7 +90,7 @@ pub fn decrypt_aes128(
     let my_tag = gmac(padded_msg, Key::from_seq(mac_key));
     let my_tag = aes::xor_block(Block::from_seq(my_tag), tag_mix);
 
-    if my_tag == Block::from_seq(tag) {
+    if my_tag.declassify_eq(Block::from_seq(tag)) {
         Ok(aes128_decrypt(key, iv, U32(2), cipher_text))
     } else {
         Err("Mac verification failed".to_string())

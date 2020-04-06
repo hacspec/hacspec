@@ -52,7 +52,7 @@ pub fn decrypt(
     let mac_key = Key::from_subr(key_block, 0..32);
     let padded_msg = pad_aad_msg(aad, cipher_text.clone());
     let my_tag = poly(padded_msg, mac_key);
-    if my_tag == tag {
+    if my_tag.declassify_eq(tag) {
         match chacha(key, iv, cipher_text) {
             Ok(c) => Ok(c),
             Err(r) => {

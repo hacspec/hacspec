@@ -8,5 +8,5 @@ fn test_gmac() {
     let key = Key::from_hex("acbef20579b4b8ebce889bac8732dad7");
     let output = Tag::from_hex("cc9ae9175729a649936e890bd971a8bf");
     let tag = gmac(msg, key);
-    assert_eq!(output, tag);
+    assert!(output.declassify_eq(tag));
 }

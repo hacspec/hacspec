@@ -286,9 +286,9 @@ macro_rules! _secret_array {
             }
         }
         /// **Warning:** declassifies secret integer types.
-        impl PartialEq for $name {
-            #[to_remove(hacspec)]
-            fn eq(&self, other: &Self) -> bool {
+        impl $name {
+            #[primitive(hacspec)]
+            pub fn declassify_eq(self, other: Self) -> bool {
                 self.0[..]
                     .iter()
                     .map(|x| <$t>::declassify(*x))
