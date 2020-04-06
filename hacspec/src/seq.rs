@@ -206,6 +206,11 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 )
             }
 
+            #[library(hacspec)]
+            pub fn subr(self, r: Range<usize>) -> Self {
+                self.sub(r.start, r.end - r.start)
+            }
+
             #[primitive(hacspec)]
             pub fn from_sub<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
                 let mut a = Self::default();
@@ -226,6 +231,48 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self.b
                     .chunks(chunk_size)
                     .map(|c| (c.len(), Seq::<T>::from_slice(c)))
+            }
+
+            #[library(hacspec)]
+            pub fn num_chunks(
+                &self,
+                chunk_size: usize
+            ) -> usize {
+                (self.len() + chunk_size - 1) / chunk_size
+            }
+
+            #[library(hacspec)]
+            pub fn get_chunk(
+                self,
+                chunk_size: usize,
+                chunk_number: usize
+            ) -> (usize, Self) {
+                let idx_start = chunk_size * chunk_number;
+                let len = if idx_start + chunk_size > self.len() {
+                    self.len() - idx_start
+                } else {
+                    chunk_size
+                };
+                let out = self.sub(idx_start, len);
+                let out_len = out.len();
+                (out_len, out)
+            }
+
+            #[library(hacspec)]
+            pub fn set_chunk<A: SeqTrait<T>>(
+                self,
+                chunk_size: usize,
+                chunk_number: usize,
+                input: A,
+            ) -> Self {
+                let idx_start = chunk_size * chunk_number;
+                let len = if idx_start + chunk_size > self.len() {
+                    self.len() - idx_start
+                } else {
+                    chunk_size
+                };
+                debug_assert!(input.len() == len, "the chunk length should match the input");
+                self.update_sub(idx_start, input, 0, len)
             }
         }
 

@@ -67,6 +67,23 @@ macro_rules! _array_base {
             }
 
             #[primitive(hacspec)]
+            pub fn sub(self, start_out: usize, len: usize) -> Seq<$t> {
+                Seq::from_vec(
+                    self.0
+                        .iter()
+                        .skip(start_out)
+                        .map(|x| *x)
+                        .take(len)
+                        .collect::<Vec<$t>>(),
+                )
+            }
+
+            #[library(hacspec)]
+            pub fn subr(self, r: Range<usize>) -> Seq<$t> {
+                self.sub(r.start, r.end - r.start)
+            }
+
+            #[primitive(hacspec)]
             pub fn from_sub<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
                 debug_assert!(
                     $l == r.end - r.start,

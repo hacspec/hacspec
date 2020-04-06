@@ -255,10 +255,15 @@ fn aes128_counter_mode(
 ) -> ByteSeq {
     let mut ctr = counter;
     let mut blocks_out = ByteSeq::new(msg.len());
-    for (block_len, msg_block) in msg.chunks(BLOCKSIZE) {
+    for i in 0..msg.num_chunks(BLOCKSIZE) {
+        let (block_len, msg_block) = msg.clone().get_chunk(BLOCKSIZE, i);
         if msg_block.len() == BLOCKSIZE {
             let key_block = aes128_ctr_keyblock(key, nonce, ctr, nk, nr);
-            blocks_out = blocks_out.push(xor_block(Block::from_seq(msg_block), key_block));
+            blocks_out = blocks_out.set_chunk(
+                BLOCKSIZE,
+                i,
+                xor_block(Block::from_seq(msg_block), key_block),
+            );
             ctr += U32(1);
         } else {
             // Last block that needs padding
@@ -288,7 +293,11 @@ fn aes256_counter_mode(
             // Last block that needs padding
             let keyblock = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
             let last_block = Block::from_seq(msg_block);
-            blocks_out = blocks_out.push_sub(xor_block(last_block, keyblock), 0, block_len);
+            blocks_out = blocks_out.set_chunk(
+                BLOCKSIZE,
+                i,
+                xor_block(last_block, keyblock).subr(0..block_len),
+            );
         }
     }
     blocks_out
