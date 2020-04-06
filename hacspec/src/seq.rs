@@ -53,33 +53,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self.b.len()
             }
 
-            /// Update this sequence with `v` starting at `start`.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// let mut s = Seq::<u8>::new(5);
-            /// let tmp = Seq::<u8>::from_array(&[2, 3]);
-            /// s = s.update(2, tmp);
-            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
-            /// ```
-            #[library(hacspec)]
-            pub fn update<A: SeqTrait<T>>(self, start: usize, v: A) -> Self {
-                let len = v.len();
-                self.update_sub(start, v, 0, len)
-            }
-
-            #[library(hacspec)]
-            pub fn update_start<A: SeqTrait<T>>(
-                self,
-                v: A
-            ) -> Self {
-                let len = v.len();
-                self.update_sub(0, v, 0, len)
-            }
-
             #[primitive(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Self {
                 Self::from_vec(

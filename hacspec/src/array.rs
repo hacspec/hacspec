@@ -106,21 +106,6 @@ macro_rules! _array_base {
                 out
             }
 
-            #[library(hacspec)]
-            pub fn update<A: SeqTrait<$t>>(self, start: usize, v: A) -> Self {
-                let v_len = v.len();
-                self.update_sub(start, v, 0, v_len)
-            }
-
-            #[library(hacspec)]
-            pub fn update_start<A: SeqTrait<$t>>(
-                self,
-                v: A
-            ) -> Self {
-                let len = v.len();
-                self.update_sub(0, v, 0, len)
-            }
-
             #[to_remove(hacspec)]
             pub fn to_bytes_be(&self) -> [u8; $l * core::mem::size_of::<$t>()] {
                 const FACTOR: usize = core::mem::size_of::<$t>();

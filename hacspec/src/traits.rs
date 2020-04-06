@@ -35,6 +35,33 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
         }
         self
     }
+
+    /// Update this sequence with `v` starting at `start`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hacspec::prelude::*;
+    ///
+    /// let mut s = Seq::<u8>::new(5);
+    /// let tmp = Seq::<u8>::from_array(&[2, 3]);
+    /// s = s.update(2, tmp);
+    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
+    /// ```
+    #[library(hacspec)]
+    fn update<A: SeqTrait<T>>(self, start: usize, v: A) -> Self {
+        let len = v.len();
+        self.update_sub(start, v, 0, len)
+    }
+
+    #[library(hacspec)]
+    fn update_start<A: SeqTrait<T>>(
+        self,
+        v: A
+    ) -> Self {
+        let len = v.len();
+        self.update_sub(0, v, 0, len)
+    }
 }
 
 pub trait SecretInteger {}
