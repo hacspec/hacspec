@@ -129,12 +129,6 @@ macro_rules! _array_base {
                 $name::new()
             }
         }
-        impl AsMut<[$t]> for $name {
-            #[to_remove(hacspec)]
-            fn as_mut(&mut self) -> &mut [$t] {
-                &mut self.0
-            }
-        }
         impl SeqTrait<$t> for $name {
             #[primitive(hacspec)]
             fn len(&self) -> usize {
