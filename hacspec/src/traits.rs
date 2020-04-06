@@ -5,16 +5,36 @@
 use crate::prelude::*;
 
 /// Common trait for all byte arrays and sequences.
-pub trait SeqTrait<T: Copy> {
+pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T> + Sized {
     fn len(&self) -> usize;
     fn iter(&self) -> std::slice::Iter<T>;
+    /// Update this sequence with `l` elements of `v`, starting at `start_in`,
+    /// at `start_out`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use hacspec::prelude::*;
+    ///
+    /// let mut s = Seq::<u8>::new(5);
+    /// let tmp = Seq::<u8>::from_array(&[2, 3]);
+    /// s = s.update_sub(2, tmp, 1, 1);
+    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
+    /// ```
     fn update_sub<A: SeqTrait<T>>(
-        self,
+        mut self,
         start_out: usize,
         v: A,
         start_in: usize,
         len: usize,
-    ) -> Self;
+    ) -> Self {
+        debug_assert!(self.len() >= start_out + len);
+        debug_assert!(v.len() >= start_in + len);
+        for i in 0..len {
+            self[start_out + i] = v[start_in + i];
+        }
+        self
+    }
 }
 
 pub trait SecretInteger {}

@@ -52,6 +52,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn len(&self) -> usize {
                 self.b.len()
             }
+
             /// Update this sequence with `v` starting at `start`.
             ///
             /// # Examples
@@ -151,39 +152,9 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             fn len(&self) -> usize {
                 self.b.len()
             }
-            #[primitive(hacspec)]
+            #[external(hacspec)]
             fn iter(&self) -> std::slice::Iter<T> {
                 self.b.iter()
-            }
-
-            /// Update this sequence with `l` elements of `v`, starting at `start_in`,
-            /// at `start_out`.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// let mut s = Seq::<u8>::new(5);
-            /// let tmp = Seq::<u8>::from_array(&[2, 3]);
-            /// s = s.update_sub(2, tmp, 1, 1);
-            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
-            /// ```
-            #[primitive(hacspec)]
-            fn update_sub<A: SeqTrait<T>>(
-                self,
-                start_out: usize,
-                v: A,
-                start_in: usize,
-                len: usize,
-            ) -> Self {
-                debug_assert!(self.len() >= start_out + len);
-                debug_assert!(v.len() >= start_in + len);
-                let mut self_copy = self;
-                for (i, b) in v.iter().skip(start_in).take(len).enumerate() {
-                    self_copy[start_out + i] = *b;
-                }
-                self_copy
             }
         }
 
@@ -270,13 +241,13 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
-            #[primitive(hacspec)]
+            #[library(hacspec)]
             pub fn from_seq<U: SeqTrait<T>>(x: U) -> $name<T> {
-                let mut tmp: Vec<T> = Vec::new();
-                for e in x.iter() {
-                    tmp.push(*e);
+                let mut tmp = $name::new(x.len());
+                for i in 0..x.len() {
+                    tmp[i] = x[i];
                 }
-                Self { b: tmp }
+                tmp
             }
         }
     };

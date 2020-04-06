@@ -28,6 +28,10 @@ macro_rules! _array_base {
         pub struct $name(pub [$t; $l]);
 
         impl $name {
+            pub fn len(&self) -> usize {
+                self.0.len()
+            }
+
             #[primitive(hacspec)]
             pub fn from_array(v: [$t; $l]) -> Self {
                 Self(v.clone())
@@ -64,13 +68,8 @@ macro_rules! _array_base {
 
             #[to_remove(hacspec)]
             pub fn from_sub_pad<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
-                let mut a = Self::default();
-                for (i, v) in r
-                    .clone()
-                    .zip(input.iter().skip(r.start).take(r.end - r.start))
-                {
-                    a[i - r.start] = *v;
-                }
+                let mut a = Self::new();
+                a = a.update_sub(0, input, r.start, r.end - r.start);
                 a
             }
 
@@ -94,22 +93,17 @@ macro_rules! _array_base {
             #[to_remove(hacspec)]
             pub fn copy_pad<A: SeqTrait<$t>>(v: A) -> Self {
                 debug_assert!(v.len() <= $l);
-                let mut tmp = [<$t>::default(); $l];
-                for (i, x) in v.iter().enumerate() {
-                    tmp[i] = *x;
-                }
-                Self(tmp.clone())
+                let mut out = Self::new();
+                out = out.update_start(v);
+                out
             }
 
-            #[primitive(hacspec)]
-            // TODO: not make polymorphic?
+            #[library(hacspec)]
             pub fn copy<A: SeqTrait<$t>>(v: A) -> Self {
                 debug_assert!(v.len() == $l);
-                let mut tmp = [<$t>::default(); $l];
-                for (i, x) in v.iter().enumerate() {
-                    tmp[i] = *x;
-                }
-                Self(tmp.clone())
+                let mut out = Self::new();
+                out = out.update_start(v);
+                out
             }
 
             #[library(hacspec)]
@@ -199,26 +193,9 @@ macro_rules! _array_base {
             fn len(&self) -> usize {
                 $l
             }
-
-            #[primitive(hacspec)]
+            #[external(hacspec)]
             fn iter(&self) -> std::slice::Iter<$t> {
                 self.0.iter()
-            }
-
-            #[primitive(hacspec)]
-            fn update_sub<A: SeqTrait<$t>>(
-                mut self,
-                start_out: usize,
-                v: A,
-                start_in: usize,
-                len: usize,
-            ) -> Self {
-                debug_assert!(self.len() >= start_out + len);
-                debug_assert!(v.len() >= start_in + len);
-                for (i, b) in v.iter().skip(start_in).take(len).enumerate() {
-                    self[start_out + i] = *b;
-                }
-                self
             }
         }
 
@@ -295,14 +272,14 @@ macro_rules! _array_base {
 
             // We can't use the [From] trait here because otherwise it would conflict with
             // the From<T> for T core implementation, as the array also implements the [SeqTrait].
-            #[primitive(hacspec)]
+            #[library(hacspec)]
             pub fn from_seq<T: SeqTrait<$t>>(x: T) -> $name {
                 debug_assert!(x.len() == $l);
-                let mut tmp = [<$t>::default(); $l];
-                for (i, e) in x.iter().enumerate() {
-                    tmp[i] = *e;
+                let mut out = $name::new();
+                for i in 0..x.len() {
+                    out[i] = x[i];
                 }
-                $name(tmp.clone())
+                out
             }
         }
 
