@@ -138,6 +138,7 @@ fn squeeze(mut s: State, nbytes: usize, rate: usize) -> ByteSeq {
 
 fn keccak(rate: usize, data: ByteSeq, p: u8, outbytes: usize) -> ByteSeq {
     let mut buf = ByteSeq::new(rate);
+    let mut last_block_len = 0;
     let mut s = State::new();
 
     for i in 0..data.num_chunks(rate) {
@@ -145,11 +146,12 @@ fn keccak(rate: usize, data: ByteSeq, p: u8, outbytes: usize) -> ByteSeq {
         if block_len == rate {
             s = absorb_block(s, block);
         } else {
-            buf = buf.push(block);
+            buf = buf.copy_and_pad(block);
+            last_block_len = block_len;
         }
     }
-    buf = buf.push(ByteSeq::from_array(&[U8::classify(p)]));
-    buf[rate - 1] |= U8::classify(128);
+    buf[last_block_len] = U8(p);
+    buf[rate - 1] |= U8(128);
     s = absorb_block(s, buf);
 
     squeeze(s, outbytes, rate)

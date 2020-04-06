@@ -110,74 +110,15 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self_copy
             }
 
-            /// Reset the sequence index.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// let mut s = Seq::<u8>::new(5);
-            /// s = s.set_index(3);
-            /// s = s.push(Seq::<u8>::from_array(&[4, 5]));
-            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 4, 5]));
-            /// ```
-            #[to_remove(hacspec)]
-            pub fn set_index(self, i: usize) -> Self {
-                Self {
-                    b: self.b.clone(),
-                    idx: i,
-                }
+            #[library(hacspec)]
+            pub fn copy_and_pad<A: SeqTrait<T>>(
+                self,
+                v: A
+            ) -> Self {
+                let len = v.len();
+                self.update_sub(0, v, 0, len)
             }
-            /// Push `v` to this sequence and move `idx` according to `v.len()`.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// let mut s = Seq::<u8>::new(5);
-            /// s = s.set_index(3);
-            /// s = s.push(Seq::<u8>::from_array(&[4, 5]));
-            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 4, 5]));
-            /// ```
-            #[to_remove(hacspec)]
-            pub fn push<A: SeqTrait<T>>(self, v: A) -> Self {
-                println!("{:?} >= {:?} + {:?}", self.len(), self.idx, v.len());
-                debug_assert!(self.len() >= self.idx + v.len());
-                let idx = self.idx;
-                let mut self_copy = self;
-                for (i, b) in v.iter().enumerate() {
-                    self_copy[idx + i] = *b;
-                }
-                self_copy.idx += v.len();
-                self_copy
-            }
-            /// Push `l` elements from `v` to this sequence and move `idx` according to `l`.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// let mut s = Seq::<u8>::new(5);
-            /// s = s.set_index(3);
-            /// s = s.push_sub(Seq::<u8>::from_array(&[4, 5]), 1, 1);
-            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 0, 5, 0]));
-            /// ```
-            #[to_remove(hacspec)]
-            pub fn push_sub<A: SeqTrait<T>>(self, v: A, start: usize, l: usize) -> Self {
-                debug_assert!(self.len() >= self.idx + l);
-                debug_assert!(v.len() >= start + l);
-                let idx = self.idx;
-                let mut self_copy = self;
-                for (i, b) in v.iter().skip(start).take(l).enumerate() {
-                    self_copy[idx + i] = *b;
-                }
-                self_copy.idx += l;
-                self_copy
-            }
-
+            
             #[primitive(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Self {
                 Self::from_vec(

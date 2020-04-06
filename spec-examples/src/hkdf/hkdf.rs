@@ -26,7 +26,7 @@ pub fn extract(salt: ByteSeq, ikm: ByteSeq) -> PRK {
 
 fn build_hmac_txt(t: ByteSeq, info: ByteSeq, iteration: U8) -> ByteSeq {
     let mut out = ByteSeq::new(t.len() + info.len() + 1);
-    out = out.push(t.clone());
+    out = out.update(0, t.clone());
     out = out.update(t.len(), info.clone());
     out[t.len() + info.len()] = iteration;
     out
