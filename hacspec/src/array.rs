@@ -81,19 +81,6 @@ macro_rules! _array_base {
                 self.sub(r.start, r.end - r.start)
             }
 
-            #[to_remove(hacspec)]
-            pub fn to_bytes_be(&self) -> [u8; $l * core::mem::size_of::<$t>()] {
-                const FACTOR: usize = core::mem::size_of::<$t>();
-                let mut out = [0u8; $l * FACTOR];
-                for i in 0..$l {
-                    let tmp = <$t>::from(self[i]).to_be_bytes();
-                    for j in 0..FACTOR {
-                        out[i * FACTOR + j] = tmp[j];
-                    }
-                }
-                out
-            }
-
             #[library(hacspec)]
             pub fn num_chunks(
                 &self,
@@ -324,6 +311,20 @@ macro_rules! _secret_array {
                 (0..l)
                     .map(|_| <$t>::classify(rand::random::<$tbase>()))
                     .collect()
+            }
+
+            #[primitive(hacspec)]
+            pub fn to_bytes_be(self) -> Seq<U8> {
+               const FACTOR: usize = core::mem::size_of::<$t>();
+               let mut out : Seq<U8> = Seq::new($l * FACTOR);
+               for i in 0..$l {
+                   let tmp : $t = self[i];
+                   let tmp = <$t>::to_bytes_be(&[tmp]);
+                   for j in 0..FACTOR {
+                       out[i * FACTOR + j] = tmp[j];
+                   }
+               }
+               out
             }
         }
         impl $name {

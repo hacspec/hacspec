@@ -189,6 +189,5 @@ pub fn hash(msg: ByteSeq) -> Digest {
             h = compress(compress_input, h);
         }
     }
-
-    Digest::from_public_slice(&h.to_bytes_be()[..])
+    Digest::from_seq(h.to_bytes_be())
 }

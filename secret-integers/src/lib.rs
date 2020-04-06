@@ -249,10 +249,6 @@ macro_rules! define_secret_integer {
                 }).flatten().collect()
             }
 
-            pub fn to_be_bytes(&self) -> Vec<u8> {
-                $name::declassify(*self).to_be_bytes().to_vec()
-            }
-
             pub fn max_value() -> $name {
                 $name::classify(<$repr>::max_value())
             }
