@@ -140,7 +140,8 @@ fn keccak(rate: usize, data: ByteSeq, p: u8, outbytes: usize) -> ByteSeq {
     let mut buf = ByteSeq::new(rate);
     let mut s = State::new();
 
-    for (block_len, block) in data.chunks(rate) {
+    for i in 0..data.num_chunks(rate) {
+        let (block_len, block) = data.clone().get_chunk(rate, i);
         if block_len == rate {
             s = absorb_block(s, block);
         } else {

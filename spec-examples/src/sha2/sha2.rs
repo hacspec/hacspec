@@ -166,7 +166,8 @@ pub fn hash(msg: ByteSeq) -> Digest {
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
         0x5be0cd19,
     ]);
-    for (block_len, block) in msg.chunks(BLOCK_SIZE) {
+    for i in 0..msg.num_chunks(BLOCK_SIZE) {
+        let (block_len, block) = msg.clone().get_chunk(BLOCK_SIZE, i);
         if block_len < BLOCK_SIZE {
             // Add padding for last block
             let mut last_block = Block::new();

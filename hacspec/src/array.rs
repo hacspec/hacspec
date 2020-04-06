@@ -113,7 +113,7 @@ macro_rules! _array_base {
                 Self(tmp.clone())
             }
 
-            #[primitive(hacspec)]
+            #[to_remove(hacspec)]
             pub fn update<A: SeqTrait<$t>>(mut self, start: usize, v: A) -> Self {
                 debug_assert!(self.len() >= start + v.len());
                 for (i, b) in v.iter().enumerate() {
@@ -165,39 +165,45 @@ macro_rules! _array_base {
                 out
             }
 
-            /// Get an iterator over this array with chunks of size `chunk_size`.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// public_bytes!(Block, 5);
-            /// let a = Block::from_array([0, 1, 2, 3, 4]);
-            /// let mut a_chunks = a.chunks(2);
-            /// let a_chunk = a_chunks.next().unwrap();
-            /// // assert_eq!(a_chunk.0, 2);
-            /// // assert_eq!(a_chunk.1, Seq::<u8>::from_array(&[0, 1]));
-            /// let a_chunk = a_chunks.next().unwrap();
-            /// // assert_eq!(a_chunk.0, 2);
-            /// // assert_eq!(a_chunk.1, Seq::<u8>::from_array(&[2, 3]));
-            /// let a_chunk = a_chunks.next().unwrap();
-            /// // assert_eq!(a_chunk.0, 1);
-            /// // assert_eq!(a_chunk.1, Seq::<u8>::from_array(&[4]));
-            ///
-            /// let a = Block::from_array([0, 1, 2, 3, 4]);
-            /// for (l, chunk) in a.chunks(2) {
-            ///     println!("{:x?}", chunk); // prints [0, 1], [2, 3], [4]
-            /// }
-            /// ```
-            #[to_remove(hacspec)]
-            pub fn chunks<'a>(
-                &'a self,
+            #[library(hacspec)]
+            pub fn num_chunks(
+                &self,
+                chunk_size: usize
+            ) -> usize {
+                (self.len() + chunk_size - 1) / chunk_size
+            }
+
+            #[library(hacspec)]
+            pub fn get_chunk(
+                self,
                 chunk_size: usize,
-            ) -> impl Iterator<Item = (usize, Seq<$t>)> + 'a {
-                self.0
-                    .chunks(chunk_size)
-                    .map(|c| (c.len(), Seq::<$t>::from_slice(c)))
+                chunk_number: usize
+            ) -> (usize, Seq<$t>) {
+                let idx_start = chunk_size * chunk_number;
+                let len = if idx_start + chunk_size > self.len() {
+                    self.len() - idx_start
+                } else {
+                    chunk_size
+                };
+                let out = self.sub(idx_start, len);
+                (len, out)
+            }
+
+            #[library(hacspec)]
+            pub fn set_chunk<A: SeqTrait<$t>>(
+                self,
+                chunk_size: usize,
+                chunk_number: usize,
+                input: A,
+            ) -> Self {
+                let idx_start = chunk_size * chunk_number;
+                let len = if idx_start + chunk_size > self.len() {
+                    self.len() - idx_start
+                } else {
+                    chunk_size
+                };
+                debug_assert!(input.len() == len, "the chunk length should match the input");
+                self.update_sub(idx_start, input, 0, len)
             }
         }
 
@@ -395,7 +401,7 @@ macro_rules! _secret_array {
         impl $name {
             #[external(hacspec)]
             pub fn from_public_slice(v: &[$tbase]) -> $name {
-                debug_assert!(v.len() <= $l);
+                debug_assert!(v.len() == $l);
                 Self::from_vec(
                     v[..]
                         .iter()

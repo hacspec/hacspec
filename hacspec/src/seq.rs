@@ -244,8 +244,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                     chunk_size
                 };
                 let out = self.sub(idx_start, len);
-                let out_len = out.len();
-                (out_len, out)
+                (len, out)
             }
 
             #[library(hacspec)]
@@ -263,16 +262,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 };
                 debug_assert!(input.len() == len, "the chunk length should match the input");
                 self.update_sub(idx_start, input, 0, len)
-            }
-
-            #[to_remove(hacspec)]
-            pub fn chunks<'a>(
-                &'a self,
-                chunk_size: usize,
-            ) -> impl Iterator<Item = (usize, Seq<T>)> + 'a {
-                self.b
-                .chunks(chunk_size)
-                .map(|c| (c.len(), Seq::<T>::from_slice(c)))
             }
         }
 
@@ -410,6 +399,20 @@ impl Seq<U8> {
                 .map(|x| U8::classify(*x))
                 .collect::<Vec<_>>(),
         )
+    }
+}
+
+impl PartialEq for Seq<U8> {
+    #[external(hacspec)]
+    fn eq(&self, other: &Self) -> bool {
+        self.b[..]
+            .iter()
+            .map(|x| <U8>::declassify(*x))
+            .collect::<Vec<_>>()
+            == other.b[..]
+                .iter()
+                .map(|x| <U8>::declassify(*x))
+                .collect::<Vec<_>>()
     }
 }
 
