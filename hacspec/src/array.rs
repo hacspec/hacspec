@@ -81,14 +81,6 @@ macro_rules! _array_base {
                 self.sub(r.start, r.end - r.start)
             }
 
-            #[to_remove(hacspec)]
-            pub fn copy_pad<A: SeqTrait<$t>>(v: A) -> Self {
-                debug_assert!(v.len() <= $l);
-                let mut out = Self::new();
-                out = out.update_start(v);
-                out
-            }
-
             #[library(hacspec)]
             pub fn copy<A: SeqTrait<$t>>(v: A) -> Self {
                 debug_assert!(v.len() == $l);

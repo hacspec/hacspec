@@ -44,7 +44,7 @@ fn decode_point(u: SerializedPoint) -> Point {
 fn encode_point(p: Point) -> SerializedPoint {
     let (x, y) = p;
     let b = x * y.inv();
-    SerializedPoint::copy_pad(b.to_byte_seq_le())
+    SerializedPoint::new().update_start(b.to_byte_seq_le())
 }
 
 fn point_add_and_double(q: Point, (nq, nqp1): (Point, Point)) -> (Point, Point) {

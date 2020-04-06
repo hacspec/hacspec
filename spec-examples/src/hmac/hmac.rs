@@ -32,7 +32,7 @@ pub fn hmac(k: ByteSeq, txt: ByteSeq) -> PRK {
     let k_block = if k.len() > BLOCK_LEN {
         Block::new().update_start(sha2::hash(k))
     } else {
-        Block::copy_pad(k)
+        Block::new().update_start(k)
     };
 
     let k_ipad = k_block ^ i_pad;
