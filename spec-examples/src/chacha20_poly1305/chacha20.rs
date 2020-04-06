@@ -91,7 +91,7 @@ pub fn chacha(key: Key, iv: IV, m: ByteSeq) -> Result<ByteSeq, String> {
         let (block_len, msg_block) = m.clone().get_chunk(64, i);
         let key_block = block(key, ctr, iv);
         let msg_block_padded = StateBytes::new();
-        let msg_block_padded = msg_block_padded.copy_and_pad(msg_block);
+        let msg_block_padded = msg_block_padded.update_start(msg_block);
         blocks_out = blocks_out.set_chunk(64, i, (msg_block_padded ^ key_block).subr(0..block_len));
         ctr += U32(1);
     }

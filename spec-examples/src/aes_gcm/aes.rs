@@ -184,7 +184,7 @@ fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> Wor
 }
 
 fn key_expansion_aes128(key: Key128, nk: usize, nr: usize) -> Bytes176 {
-    let mut key_ex = Bytes176::new().copy_and_pad(key);
+    let mut key_ex = Bytes176::new().update_start(key);
     let mut i: usize;
     for j in 0..40 {
         i = j + 4;
@@ -304,7 +304,7 @@ fn aes256_counter_mode(
             // Last block that needs padding
             let keyblock = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
             let last_block = Block::new();
-            let last_block = last_block.copy_and_pad(msg_block);
+            let last_block = last_block.update_start(msg_block);
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,

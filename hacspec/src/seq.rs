@@ -14,8 +14,6 @@ macro_rules! declare_seq {
         #[derive(Debug, Clone, Default)]
         pub struct $name<T: Copy + Default + $constraint> {
             pub(crate) b: Vec<T>,
-            // Running index used when data is pushed into a Seq.
-            pub(crate) idx: usize,
         }
         declare_seq_with_contents_constraints_impl!($name, Copy + Default + $constraint);
     };
@@ -24,8 +22,6 @@ macro_rules! declare_seq {
         #[derive(Debug, Clone, Default)]
         pub struct $name<T: Copy + Default> {
             pub(crate) b: Vec<T>,
-            // Running index used when data is pushed into a Seq.
-            pub(crate) idx: usize,
         }
 
         declare_seq_with_contents_constraints_impl!($name, Copy + Default);
@@ -41,7 +37,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn new(l: usize) -> Self {
                 Self {
                     b: vec![T::default(); l],
-                    idx: 0,
                 }
             }
             /// Get a new sequence from array `v`.
@@ -50,7 +45,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn from_array(v: &[T]) -> Self {
                 Self {
                     b: v.to_vec(),
-                    idx: 0,
                 }
             }
             /// Get the size of this sequence.
@@ -70,55 +64,21 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             /// s = s.update(2, tmp);
             /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
             /// ```
-            #[primitive(hacspec)]
+            #[library(hacspec)]
             pub fn update<A: SeqTrait<T>>(self, start: usize, v: A) -> Self {
-                println!("{:?} >= {:?} + {:?}", self.len(), start, v.len());
-                debug_assert!(self.len() >= start + v.len());
-                let mut self_copy = self;
-                for (i, b) in v.iter().enumerate() {
-                    self_copy[start + i] = *b;
-                }
-                self_copy
-            }
-            /// Update this sequence with `l` elements of `v`, starting at `start_in`,
-            /// at `start_out`.
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// use hacspec::prelude::*;
-            ///
-            /// let mut s = Seq::<u8>::new(5);
-            /// let tmp = Seq::<u8>::from_array(&[2, 3]);
-            /// s = s.update_sub(2, tmp, 1, 1);
-            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
-            /// ```
-            #[primitive(hacspec)]
-            pub fn update_sub<A: SeqTrait<T>>(
-                self,
-                start_out: usize,
-                v: A,
-                start_in: usize,
-                len: usize,
-            ) -> Self {
-                debug_assert!(self.len() >= start_out + len);
-                debug_assert!(v.len() >= start_in + len);
-                let mut self_copy = self;
-                for (i, b) in v.iter().skip(start_in).take(len).enumerate() {
-                    self_copy[start_out + i] = *b;
-                }
-                self_copy
+                let len = v.len();
+                self.update_sub(start, v, 0, len)
             }
 
             #[library(hacspec)]
-            pub fn copy_and_pad<A: SeqTrait<T>>(
+            pub fn update_start<A: SeqTrait<T>>(
                 self,
                 v: A
             ) -> Self {
                 let len = v.len();
                 self.update_sub(0, v, 0, len)
             }
-            
+
             #[primitive(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Self {
                 Self::from_vec(
@@ -136,15 +96,11 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self.sub(r.start, r.end - r.start)
             }
 
-            #[primitive(hacspec)]
+            #[library(hacspec)]
             pub fn from_sub<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
-                let mut a = Self::default();
-                for (i, v) in r
-                    .clone()
-                    .zip(input.iter().skip(r.start).take(r.end - r.start))
-                {
-                    a[i] = *v;
-                }
+                let out_len = r.end - r.start;
+                let mut a = Self::new(out_len);
+                a = a.update_sub(0, input, r.start, out_len);
                 a
             }
 
@@ -198,6 +154,36 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             #[primitive(hacspec)]
             fn iter(&self) -> std::slice::Iter<T> {
                 self.b.iter()
+            }
+
+            /// Update this sequence with `l` elements of `v`, starting at `start_in`,
+            /// at `start_out`.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// use hacspec::prelude::*;
+            ///
+            /// let mut s = Seq::<u8>::new(5);
+            /// let tmp = Seq::<u8>::from_array(&[2, 3]);
+            /// s = s.update_sub(2, tmp, 1, 1);
+            /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
+            /// ```
+            #[primitive(hacspec)]
+            fn update_sub<A: SeqTrait<T>>(
+                self,
+                start_out: usize,
+                v: A,
+                start_in: usize,
+                len: usize,
+            ) -> Self {
+                debug_assert!(self.len() >= start_out + len);
+                debug_assert!(v.len() >= start_in + len);
+                let mut self_copy = self;
+                for (i, b) in v.iter().skip(start_in).take(len).enumerate() {
+                    self_copy[start_out + i] = *b;
+                }
+                self_copy
             }
         }
 
@@ -274,7 +260,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn from_vec(x: Vec<T>) -> $name<T> {
                 Self {
                     b: x.clone(),
-                    idx: 0,
                 }
             }
 
@@ -282,7 +267,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn from_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
-                    idx: 0,
                 }
             }
 
@@ -292,7 +276,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 for e in x.iter() {
                     tmp.push(*e);
                 }
-                Self { b: tmp, idx: 0 }
+                Self { b: tmp }
             }
         }
     };
@@ -376,7 +360,6 @@ impl Seq<U8> {
     pub fn random(l: usize) -> Self {
         Self {
             b: Seq::get_random_vec(l),
-            idx: 0,
         }
     }
 

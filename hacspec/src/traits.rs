@@ -8,6 +8,13 @@ use crate::prelude::*;
 pub trait SeqTrait<T: Copy> {
     fn len(&self) -> usize;
     fn iter(&self) -> std::slice::Iter<T>;
+    fn update_sub<A: SeqTrait<T>>(
+        self,
+        start_out: usize,
+        v: A,
+        start_in: usize,
+        len: usize,
+    ) -> Self;
 }
 
 pub trait SecretInteger {}

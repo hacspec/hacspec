@@ -148,7 +148,7 @@ pub fn blake2b(data: ByteSeq) -> Digest {
         } else {
             // Pad last bits of data to a full block.
             t = inc_counter(t, block_len as u64);
-            let compress_input = Buffer::new().copy_and_pad(block);
+            let compress_input = Buffer::new().update_start(block);
             h = compress(h, compress_input, t, true);
         }
     }

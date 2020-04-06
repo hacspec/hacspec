@@ -993,7 +993,6 @@ impl<T: Numeric + PublicInteger> Mul for PublicSeq<T> {
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
             b: vec_poly_mul(&self.b, &rhs.b, T::default()),
-            idx: 0,
         }
     }
 }
@@ -1004,7 +1003,6 @@ impl<T: Numeric + PublicInteger> Sub for PublicSeq<T> {
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
             b: vec_poly_sub(&self.b, &rhs.b, T::default()),
-            idx: 0,
         }
     }
 }
@@ -1015,7 +1013,6 @@ impl<T: Numeric + PublicInteger> Add for PublicSeq<T> {
     fn add(self, rhs: Self) -> Self::Output {
         Self {
             b: vec_poly_add(&self.b, &rhs.b, T::default()),
-            idx: 0,
         }
     }
 }

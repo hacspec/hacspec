@@ -54,6 +54,14 @@ macro_rules! _array_base {
                 $l
             }
 
+            #[library(hacspec)]
+            pub fn from_sub<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
+                let mut a = Self::new();
+                debug_assert!(a.len() == r.end - r.start);
+                a = a.update_sub(0, input, r.start, r.end - r.start);
+                a
+            }
+
             #[to_remove(hacspec)]
             pub fn from_sub_pad<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
                 let mut a = Self::default();
@@ -83,15 +91,6 @@ macro_rules! _array_base {
                 self.sub(r.start, r.end - r.start)
             }
 
-            #[primitive(hacspec)]
-            pub fn from_sub<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
-                debug_assert!(
-                    $l == r.end - r.start,
-                    "sub range is not the length of the output type "
-                );
-                $name::from_sub_pad(input, r)
-            }
-
             #[to_remove(hacspec)]
             pub fn copy_pad<A: SeqTrait<$t>>(v: A) -> Self {
                 debug_assert!(v.len() <= $l);
@@ -113,43 +112,19 @@ macro_rules! _array_base {
                 Self(tmp.clone())
             }
 
-            #[to_remove(hacspec)]
-            pub fn update<A: SeqTrait<$t>>(mut self, start: usize, v: A) -> Self {
-                debug_assert!(self.len() >= start + v.len());
-                for (i, b) in v.iter().enumerate() {
-                    self[start + i] = *b;
-                }
-                self
-            }
-
-            #[primitive(hacspec)]
-            pub fn update_sub<A: SeqTrait<$t>>(
-                mut self,
-                start_out: usize,
-                v: A,
-                start_in: usize,
-                len: usize,
-            ) -> Self {
-                debug_assert!(self.len() >= start_out + len);
-                debug_assert!(v.len() >= start_in + len);
-                for (i, b) in v.iter().skip(start_in).take(len).enumerate() {
-                    self[start_out + i] = *b;
-                }
-                self
+            #[library(hacspec)]
+            pub fn update<A: SeqTrait<$t>>(self, start: usize, v: A) -> Self {
+                let v_len = v.len();
+                self.update_sub(start, v, 0, v_len)
             }
 
             #[library(hacspec)]
-            pub fn copy_and_pad<A: SeqTrait<$t>>(
+            pub fn update_start<A: SeqTrait<$t>>(
                 self,
                 v: A
             ) -> Self {
                 let len = v.len();
                 self.update_sub(0, v, 0, len)
-            }
-
-            #[primitive(hacspec)]
-            pub fn len(&self) -> usize {
-                $l
             }
 
             #[to_remove(hacspec)]
@@ -228,6 +203,22 @@ macro_rules! _array_base {
             #[primitive(hacspec)]
             fn iter(&self) -> std::slice::Iter<$t> {
                 self.0.iter()
+            }
+
+            #[primitive(hacspec)]
+            fn update_sub<A: SeqTrait<$t>>(
+                mut self,
+                start_out: usize,
+                v: A,
+                start_in: usize,
+                len: usize,
+            ) -> Self {
+                debug_assert!(self.len() >= start_out + len);
+                debug_assert!(v.len() >= start_in + len);
+                for (i, b) in v.iter().skip(start_in).take(len).enumerate() {
+                    self[start_out + i] = *b;
+                }
+                self
             }
         }
 

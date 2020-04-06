@@ -146,7 +146,7 @@ fn keccak(rate: usize, data: ByteSeq, p: u8, outbytes: usize) -> ByteSeq {
         if block_len == rate {
             s = absorb_block(s, block);
         } else {
-            buf = buf.copy_and_pad(block);
+            buf = buf.update_start(block);
             last_block_len = block_len;
         }
     }
