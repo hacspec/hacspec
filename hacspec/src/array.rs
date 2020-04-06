@@ -66,13 +66,6 @@ macro_rules! _array_base {
                 a
             }
 
-            #[to_remove(hacspec)]
-            pub fn from_sub_pad<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
-                let mut a = Self::new();
-                a = a.update_sub(0, input, r.start, r.end - r.start);
-                a
-            }
-
             #[primitive(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Seq<$t> {
                 Seq::from_vec(

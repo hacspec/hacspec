@@ -57,7 +57,9 @@ fn poly(msg: ByteSeq, r: Element) -> Element {
     let mut acc = U128(0);
     for i in 0..n_blocks {
         let k = i * BLOCKSIZE;
-        acc = update(r, Block::from_sub_pad(msg.clone(), k..k + BLOCKSIZE), acc);
+        let mut block = Block::new();
+        block = block.update_start(msg.clone().subr(k..k + BLOCKSIZE));
+        acc = update(r, block, acc);
     }
     if rem != 0 {
         let k = n_blocks * BLOCKSIZE;
