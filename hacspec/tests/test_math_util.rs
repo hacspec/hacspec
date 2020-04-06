@@ -54,7 +54,28 @@ fn test_div() {
         assert!(r.equal(x.rem(y)));
     }
 
-    test(13u8, 234u8);
-    test(827629u32, 12);
-    test(16u64, 827629u64);
+    fn test_8(x: u8, y: u8) {
+        test(x, y);
+        test(U8(x), U8(y));
+    }
+    test_8(13, 234);
+
+    fn test_16(x: u16, y: u16) {
+        test(x, y);
+        test(U16(x), U16(y));
+    }
+    test_16(13, 234);
+
+    fn test_32(x: u32, y: u32) {
+        test(x, y);
+        test(U32(x), U32(y));
+    }
+    test_32(827629, 12);
+
+    fn test_64(x: u64, y: u64) {
+        test(x, y);
+        test(U64(x), U64(y));
+    }
+    test_64(827629, 12);
+    test_64(16, 827629);
 }

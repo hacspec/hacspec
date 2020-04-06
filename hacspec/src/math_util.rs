@@ -7,24 +7,43 @@ use crate::prelude::*;
 
 // FIXME: Add wrapping ops to Numeric
 pub trait TempNumeric : Numeric {
-    const NUM_BITS: usize;
+    const NUM_BITS: u32;
     const ZERO: Self;
     const ONE: Self;
     const TWO: Self;
+    fn from_literal(val: u128) -> Self;
     fn wrap_sub(self, y: Self) -> Self;
     fn wrap_add(self, y: Self) -> Self;
-    fn get_bit(self, i: usize) -> Self;
-    fn set_bit(self, b: Self, i: usize) -> Self;
-    fn set(self, pos: usize, val: Self, i: usize) -> Self;
+    #[inline]
+    fn get_bit(self, i: u32) -> Self {
+        (self >> i) & Self::ONE
+    }
+    #[inline]
+    fn set_bit(self, b: Self, i: u32) -> Self {
+        debug_assert!(b.equal(Self::ONE) || b.equal(Self::ZERO));
+        let tmp1 = Self::from_literal(!(1 << i));
+        let tmp2 = b << i;
+        (self & tmp1) | tmp2
+    }
+    #[inline]
+    fn set(self, pos: u32, y: Self, yi: u32) -> Self {
+        let b = y.get_bit(yi);
+        self.set_bit(b, pos)
+    }
 }
 
 macro_rules! implement_temp_numeric {
     ($t:ty, $bits:literal) => {
         impl TempNumeric for $t {
-            const NUM_BITS: usize = $bits;
+            const NUM_BITS: u32 = $bits;
             const ZERO: Self = 0;
             const ONE: Self = 1;
             const TWO: Self = 2;
+
+            #[inline]
+            fn from_literal(val: u128) -> Self {
+                val as $t
+            }
 
             #[inline]
             fn wrap_sub(self, y: Self) -> Self {
@@ -35,24 +54,31 @@ macro_rules! implement_temp_numeric {
             fn wrap_add(self, y: Self) -> Self {
                 self.wrapping_add(y)
             }
+        }
+    };
+}
+
+macro_rules! implement_temp_secret_numeric {
+    ($t:ident, $base:ty, $bits:literal) => {
+        impl TempNumeric for $t {
+            const NUM_BITS: u32 = $bits;
+            const ZERO: Self = $t(0);
+            const ONE: Self = $t(1);
+            const TWO: Self = $t(2);
 
             #[inline]
-            fn get_bit(self, i: usize) -> Self {
-                (self >> i) & 1
+            fn from_literal(val: u128) -> Self {
+                Self::classify(val as $base)
             }
-            
+
             #[inline]
-            fn set_bit(self, b: Self, i: usize) -> Self {
-                debug_assert!(b == 1 || b == 0);
-                let tmp1 = !(1 << i);
-                let tmp2 = b << i;
-                (self & tmp1) | tmp2
+            fn wrap_sub(self, y: Self) -> Self {
+                self - y
             }
-            
+
             #[inline]
-            fn set(self, pos: usize, y: Self, yi: usize) -> Self {
-                let b = y.get_bit(yi);
-                self.set_bit(b, pos)
+            fn wrap_add(self, y: Self) -> Self {
+                self + y
             }
         }
     };
@@ -63,6 +89,12 @@ implement_temp_numeric!(u16, 16);
 implement_temp_numeric!(u32, 32);
 implement_temp_numeric!(u64, 64);
 implement_temp_numeric!(u128, 128);
+
+implement_temp_secret_numeric!(U8, u8, 8);
+implement_temp_secret_numeric!(U16, u16, 16);
+implement_temp_secret_numeric!(U32, u32, 32);
+implement_temp_secret_numeric!(U64, u64, 64);
+implement_temp_secret_numeric!(U128, u128, 128);
 
 /// Conditional, constant-time swapping.
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == 1`.
@@ -83,7 +115,7 @@ pub fn cswap<T: TempNumeric>(x: T, y: T, c: T) -> (T, T) {
 /// Set bit at position `i` in `x` to `b` if `c` is all 1 and return the restult.
 /// Returns `x` if `c` is `0`.
 #[inline]
-pub fn cset_bit<T: TempNumeric>(x: T, b: T, i: usize, c: T) -> T {
+pub fn cset_bit<T: TempNumeric>(x: T, b: T, i: u32, c: T) -> T {
     let set = x.set_bit(b, i);
     let (out, _) = cswap(x, set, c);
     out
@@ -125,6 +157,7 @@ pub fn ct_div<T: TempNumeric>(a: T, d: T) -> (T, T) {
         //     q = q.set_bit(T::ONE, i);
         // }
         let geq = r.greater_than_or_qual_bm(d);
+        println!("geq: {:?}", geq);
         r = csub(r, d, geq);
         q = cset_bit(q, T::ONE, i, geq);
     }

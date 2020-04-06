@@ -63,6 +63,11 @@ macro_rules! define_tests {
                 let b = $type::from(42u8);
                 let eq = $type::comp_gte(a, b);
                 assert_eq!(eq.declassify(), $type::zero().declassify());
+
+                let a = $type::from(0u8);
+                let b = $type::from(3u8);
+                let eq = $type::comp_gte(a, b);
+                assert_eq!(eq.declassify(), $type::zero().declassify());
             }
         }
     };
@@ -71,3 +76,4 @@ macro_rules! define_tests {
 define_tests!(tests_u8, U8);
 define_tests!(tests_u32, U32);
 define_tests!(tests_u64, U64);
+define_tests!(tests_u128, U128);
