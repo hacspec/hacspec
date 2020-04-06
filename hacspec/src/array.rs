@@ -29,7 +29,7 @@ macro_rules! _array_base {
 
         impl $name {
             pub fn len(&self) -> usize {
-                self.0.len()
+                $l
             }
 
             #[primitive(hacspec)]
@@ -66,16 +66,9 @@ macro_rules! _array_base {
                 a
             }
 
-            #[primitive(hacspec)]
+            #[library(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Seq<$t> {
-                Seq::from_vec(
-                    self.0
-                        .iter()
-                        .skip(start_out)
-                        .map(|x| *x)
-                        .take(len)
-                        .collect::<Vec<$t>>(),
-                )
+                Seq::from_sub(self, start_out..start_out + len)
             }
 
             #[library(hacspec)]
@@ -240,7 +233,7 @@ macro_rules! _array_base {
         impl $name {
             #[external(hacspec)]
             pub fn from_vec(x: Vec<$t>) -> $name {
-                debug_assert!(x.len() == $l);
+                debug_assert_eq!(x.len(), $l);
                 let mut tmp = [<$t>::default(); $l];
                 for (i, e) in x.iter().enumerate() {
                     tmp[i] = *e;
@@ -252,7 +245,7 @@ macro_rules! _array_base {
             // the From<T> for T core implementation, as the array also implements the [SeqTrait].
             #[library(hacspec)]
             pub fn from_seq<T: SeqTrait<$t>>(x: T) -> $name {
-                debug_assert!(x.len() == $l);
+                debug_assert_eq!(x.len(), $l);
                 let mut out = $name::new();
                 for i in 0..x.len() {
                     out[i] = x[i];
