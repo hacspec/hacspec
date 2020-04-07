@@ -14,6 +14,7 @@ pub trait TempNumeric : Numeric {
     fn from_literal(val: u128) -> Self;
     fn wrap_sub(self, y: Self) -> Self;
     fn wrap_add(self, y: Self) -> Self;
+    fn wrap_mul(self, y: Self) -> Self;
     #[inline]
     fn get_bit(self, i: u32) -> Self {
         (self >> i) & Self::ONE
@@ -54,6 +55,11 @@ macro_rules! implement_temp_numeric {
             fn wrap_add(self, y: Self) -> Self {
                 self.wrapping_add(y)
             }
+
+            #[inline]
+            fn wrap_mul(self, y: Self) -> Self {
+                self.wrapping_mul(y)
+            }
         }
     };
 }
@@ -79,6 +85,11 @@ macro_rules! implement_temp_secret_numeric {
             #[inline]
             fn wrap_add(self, y: Self) -> Self {
                 self + y
+            }
+
+            #[inline]
+            fn wrap_mul(self, y: Self) -> Self {
+                self * y
             }
         }
     };
@@ -138,6 +149,16 @@ pub fn cadd<T: TempNumeric>(x: T, y: T, c: T) -> T {
 pub fn csub<T: TempNumeric>(x: T, y: T, c: T) -> T {
     let diff = x.wrap_sub(y);
     let (x, _) = cswap(x, diff, c);
+    x
+}
+
+/// Multiply two numerics if condition `c` is set (all bits 1).
+/// Returns `x` if condition `c` is `0`.
+/// Note: Multiplication is always wrapping.
+#[inline]
+pub fn cmul<T: TempNumeric>(x: T, y: T, c: T) -> T {
+    let prod = x.wrap_mul(y);
+    let (x, _) = cswap(x, prod, c);
     x
 }
 

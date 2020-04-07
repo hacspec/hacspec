@@ -47,6 +47,18 @@ fn test_cadd() {
 }
 
 #[test]
+fn test_cmul() {
+    fn test<T: TempNumeric>(x: T, y: T) {
+        let d = cmul(x, y, T::default());
+        assert!(d.equal(x));
+        let d = cmul(x, y, T::max_val());
+        assert!(d.equal(x.wrap_mul(y)));
+    }
+    test(13u8, 234u8);
+    test(827629u64, 16u64);
+}
+
+#[test]
 fn test_div() {
     fn test<T: TempNumeric>(x: T, y: T) {
         let (q, r) = ct_div(x, y);
