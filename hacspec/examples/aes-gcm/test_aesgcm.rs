@@ -46,6 +46,25 @@ const KAT: [AeadTestVector; 4] = [
     }
 ];
 
+const KAT_256: [AeadTestVector; 2] = [
+    AeadTestVector {
+        key: "E3C08A8F06C6E3AD95A70557B23F75483CE33021A9C72B7025666204C69C0B72",
+        nonce: "12153524C0895E81B2C28465",
+        msg: "",
+        aad: "D609B1F056637A0D46DF998D88E5222AB2C2846512153524C0895E8108000F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F30313233340001",
+        exp_cipher: "",
+        exp_mac: "2F0BC5AF409E06D609EA8B7D0FA5EA50"
+    },
+    AeadTestVector {
+        key: "E3C08A8F06C6E3AD95A70557B23F75483CE33021A9C72B7025666204C69C0B72",
+        nonce: "12153524C0895E81B2C28465",
+        msg: "08000F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F303132333435363738393A0002",
+        aad: "D609B1F056637A0D46DF998D88E52E00B2C2846512153524C0895E81",
+        exp_cipher: "E2006EB42F5277022D9B19925BC419D7A592666C925FE2EF718EB4E308EFEAA7C5273B394118860A5BE2A97F56AB7836",
+        exp_mac: "5CA597CDBB3EDB8D1A1151EA0AF7B436"
+    }
+    ];
+
 #[test]
 fn kat_test() {
     for kat in KAT.iter() {
@@ -56,7 +75,7 @@ fn kat_test() {
         let aad = ByteSeq::from(kat.aad);
         let exp_cipher = ByteSeq::from(kat.exp_cipher);
 
-        let (cipher, mac) = encrypt(k, nonce, aad.clone(), msg.clone());
+        let (cipher, mac) = encrypt_aes128(k, nonce, aad.clone(), msg.clone());
         assert_eq!(
             exp_cipher
                 .iter()
@@ -75,7 +94,46 @@ fn kat_test() {
             mac.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
         );
 
-        let decrypted_msg = decrypt(k, nonce, aad, cipher, mac).unwrap();
+        let decrypted_msg = decrypt_aes128(k, nonce, aad, cipher, mac).unwrap();
+        assert_eq!(
+            msg.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
+            decrypted_msg
+                .iter()
+                .map(|x| U8::declassify(*x))
+                .collect::<Vec<_>>()
+        );
+    }
+}
+#[test]
+fn kat_test_256() {
+    for kat in KAT_256.iter() {
+        let k = aes::Key256::from(kat.key);
+        let nonce = aes::Nonce::from(kat.nonce);
+        let exp_mac = gf128::Tag::from(kat.exp_mac);
+        let msg = ByteSeq::from(kat.msg);
+        let aad = ByteSeq::from(kat.aad);
+        let exp_cipher = ByteSeq::from(kat.exp_cipher);
+
+        let (cipher, mac) = encrypt_aes256(k, nonce, aad.clone(), msg.clone());
+        assert_eq!(
+            exp_cipher
+                .iter()
+                .map(|x| U8::declassify(*x))
+                .collect::<Vec<_>>(),
+            cipher
+                .iter()
+                .map(|x| U8::declassify(*x))
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            exp_mac
+                .iter()
+                .map(|x| U8::declassify(*x))
+                .collect::<Vec<_>>(),
+            mac.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
+        );
+
+        let decrypted_msg = decrypt_aes256(k, nonce, aad, cipher, mac).unwrap();
         assert_eq!(
             msg.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
             decrypted_msg
