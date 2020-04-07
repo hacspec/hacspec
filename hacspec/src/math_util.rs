@@ -178,10 +178,8 @@ pub fn ct_div<T: TempNumeric>(a: T, d: T) -> (T, T) {
         //     q = q.set_bit(T::ONE, i);
         // }
         let geq = r.greater_than_or_qual_bm(d);
-        println!("geq: {:?}", geq);
         r = csub(r, d, geq);
         q = cset_bit(q, T::ONE, i, geq);
     }
     (q, r)
 }
-
