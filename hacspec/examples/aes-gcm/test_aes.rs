@@ -3,13 +3,22 @@ use hacspec::prelude::*;
 use crate::aes::*;
 
 fn aes_128_enc_dec_test(m: ByteSeq, key: Key128, iv: Nonce, ctr: U32, ctxt: Option<ByteSeq>) {
-    let c = aes128_encrypt(key, iv, ctr, m.clone(),);
+    let c = aes128_encrypt(key, iv, ctr, m.clone());
     let m_dec = aes128_decrypt(key, iv, ctr, c.clone());
     assert_bytes_eq!(m, m_dec);
     if ctxt.is_some() {
         assert_bytes_eq!(c, ctxt.unwrap());
     }
 }
+fn aes_256_enc_dec_test(m: ByteSeq, key: Key256, iv: Nonce, ctr: U32, ctxt: Option<ByteSeq>) {
+    let c = aes256_encrypt(key, iv, ctr, m.clone());
+    let m_dec = aes256_decrypt(key, iv, ctr, c.clone());
+    assert_bytes_eq!(m, m_dec);
+    if ctxt.is_some() {
+        assert_bytes_eq!(c, ctxt.unwrap());
+    }
+}
+
 #[test]
 fn test_enc_dec() {
     let key = Key128::random();
@@ -60,4 +69,27 @@ fn test_kat2() {
         0xBE, 0x28
     ]));
     aes_128_enc_dec_test(msg, key, nonce, U32(ctr), Some(ctxt));
+}
+#[test]
+//https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/AES_CTR.pdf
+fn test_aes256_1() {
+    let msg = ByteSeq::from_array(&secret_bytes!([
+        0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17,
+        0x2a
+    ]));
+    let key = Key256(secret_bytes!([
+        0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe, 0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77,
+        0x81, 0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7, 0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14,
+        0xdf, 0xf4
+    ]));
+    let nonce = Nonce(secret_bytes!([
+        0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb
+    ]));
+    let ctr = U32(0xfcfdfeff);
+    let ctxt = ByteSeq::from_array(&secret_bytes!([
+        0x60, 0x1e, 0xc3, 0x13, 0x77, 0x57, 0x89, 0xa5, 0xb7, 0xa7, 0xf5, 0x04, 0xbb, 0xf3, 0xd2,
+        0x28
+    ]));
+
+    aes_256_enc_dec_test(msg, key, nonce, ctr, Some(ctxt));
 }
