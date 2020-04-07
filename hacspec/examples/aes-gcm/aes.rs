@@ -1,7 +1,5 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
-// TODO: move to hacspec_imports if we want to use it!
-
 
 const BLOCKSIZE: usize = 16;
 const IVSIZE: usize = 12;
@@ -52,7 +50,6 @@ fn sub_bytes(state: Block) -> Block {
     st
 }
 
-
 fn shift_row(i: usize, shift: usize, state: Block) -> Block {
     let mut out = state;
     out[i] = state[i + (4 * (shift % 4))];
@@ -75,7 +72,6 @@ fn xtime(x: U8) -> U8 {
     let x711b = x71 * U8(0x1b);
     x1 ^ x711b
 }
-
 
 fn mix_column(c: usize, state: Block) -> Block {
     let i0 = 4 * c;
@@ -249,7 +245,14 @@ pub(crate) fn xor_block(block: Block, keyblock: Block) -> Block {
     out
 }
 
-fn aes128_counter_mode(key: Key128,nonce: Nonce,counter: U32,msg: ByteSeq,nk: usize,nr: usize) -> ByteSeq {
+fn aes128_counter_mode(
+    key: Key128,
+    nonce: Nonce,
+    counter: U32,
+    msg: ByteSeq,
+    nk: usize,
+    nr: usize,
+) -> ByteSeq {
     let mut ctr = counter;
     let mut blocks_out = ByteSeq::new(msg.len());
     for (block_len, msg_block) in msg.chunks(BLOCKSIZE) {
@@ -266,7 +269,14 @@ fn aes128_counter_mode(key: Key128,nonce: Nonce,counter: U32,msg: ByteSeq,nk: us
     }
     blocks_out
 }
-fn aes256_counter_mode(key: Key256,nonce: Nonce,counter: U32,msg: ByteSeq,nk: usize,nr: usize) -> ByteSeq {
+fn aes256_counter_mode(
+    key: Key256,
+    nonce: Nonce,
+    counter: U32,
+    msg: ByteSeq,
+    nk: usize,
+    nr: usize,
+) -> ByteSeq {
     let mut ctr = counter;
     let mut blocks_out = ByteSeq::new(msg.len());
     for (block_len, msg_block) in msg.chunks(BLOCKSIZE) {
@@ -290,7 +300,6 @@ fn aes256_counter_mode(key: Key256,nonce: Nonce,counter: U32,msg: ByteSeq,nk: us
 Nk =    4  |      8
 Nr =    8  |     14
 */
-//
 pub fn aes128_encrypt(key: Key128, nonce: Nonce, counter: U32, msg: ByteSeq) -> ByteSeq {
     aes128_counter_mode(key, nonce, counter, msg, 4, 10)
 }
@@ -306,6 +315,18 @@ pub fn aes256_decrypt(key: Key256, nonce: Nonce, counter: U32, ctxt: ByteSeq) ->
 }
 
 // Testing some internal functions.
+/*
+#[test]
+#[should_panic]
+fn test_contract1() {
+    shift_row(4, 3, Block::new());
+}
+
+#[test]
+#[should_panic]
+fn test_contract2() {
+    shift_row(2, 4, Block::new());
+}*/
 
 #[test]
 fn test_kat_block1() {
@@ -344,20 +365,20 @@ fn test_kat_block2() {
     assert_bytes_eq!(ctxt, c);
 }
 #[test]
-fn test_kat_block1_aes256(){
+fn test_kat_block1_aes256() {
     let msg = Block(secret_bytes!([
         0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
         0xff
-        ]));
+    ]));
     let key = Key256(secret_bytes!([
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
         0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
-        0x1e,0x1f
-        ]));
+        0x1e, 0x1f
+    ]));
     let ctxt = ByteSeq::from_array(&secret_bytes!([
-            0x8e, 0xa2, 0xb7, 0xca, 0x51, 0x67, 0x45, 0xbf, 0xea, 0xfc, 0x49, 0x90, 0x4b, 0x49, 0x60,
-            0x89
-        ]));
+        0x8e, 0xa2, 0xb7, 0xca, 0x51, 0x67, 0x45, 0xbf, 0xea, 0xfc, 0x49, 0x90, 0x4b, 0x49, 0x60,
+        0x89
+    ]));
     let c = aes256_encrypt_block(key, msg, 8, 14);
     assert_bytes_eq!(ctxt, c);
 }
