@@ -367,7 +367,7 @@ macro_rules! define_secret_unsigned_integer {
                 let x_xor_y = x ^ y;
                 let x_sub_y = x - y;
                 let x_sub_y_xor_y = x_sub_y ^ y;
-                let q = x_xor_y ^ x_sub_y_xor_y;
+                let q = x_xor_y | x_sub_y_xor_y;
                 let x_xor_q = x ^ q;
                 let x_xor_q_ = x_xor_q >> ($bits - 1);
                 let c = x_xor_q_ - Self::one();
