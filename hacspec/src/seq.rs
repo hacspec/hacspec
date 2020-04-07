@@ -39,14 +39,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                     b: vec![T::default(); l],
                 }
             }
-            /// Get a new sequence from array `v`.
-            // TODO: rename from_slice
-            #[external(hacspec)]
-            pub fn from_array(v: &[T]) -> Self {
-                Self {
-                    b: v.to_vec(),
-                }
-            }
+
             /// Get the size of this sequence.
             #[primitive(hacspec)]
             pub fn len(&self) -> usize {

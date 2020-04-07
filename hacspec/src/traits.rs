@@ -17,7 +17,7 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     /// use hacspec::prelude::*;
     ///
     /// let mut s = Seq::<u8>::new(5);
-    /// let tmp = Seq::<u8>::from_array(&[2, 3]);
+    /// let tmp = Seq::<u8>::from_slice(&[2, 3]);
     /// s = s.update_sub(2, tmp, 1, 1);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
@@ -44,7 +44,7 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     /// use hacspec::prelude::*;
     ///
     /// let mut s = Seq::<u8>::new(5);
-    /// let tmp = Seq::<u8>::from_array(&[2, 3]);
+    /// let tmp = Seq::<u8>::from_slice(&[2, 3]);
     /// s = s.update(2, tmp);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
