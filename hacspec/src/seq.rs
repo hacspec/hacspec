@@ -46,16 +46,9 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self.b.len()
             }
 
-            #[primitive(hacspec)]
+            #[library(hacspec)]
             pub fn sub(self, start_out: usize, len: usize) -> Self {
-                Self::from_vec(
-                    self.b
-                        .iter()
-                        .skip(start_out)
-                        .map(|x| *x)
-                        .take(len)
-                        .collect::<Vec<T>>(),
-                )
+                Self::from_sub(self, start_out, len)
             }
 
             #[library(hacspec)]
