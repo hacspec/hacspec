@@ -3,9 +3,12 @@ use hacspec::prelude::*;
 
 // Import aes and gcm
 use crate::aes;
-use crate::aes::{aes128_ctr_keyblock, aes128_decrypt, aes128_encrypt, Block};
+use crate::aes::{
+    aes128_ctr_keyblock, aes128_decrypt, aes128_encrypt, aes256_ctr_keyblock, aes256_decrypt,
+    aes256_encrypt, Block,
+};
 
-use crate::gf128::{gmac,Key, Tag};
+use crate::gf128::{gmac, Key, Tag};
 
 fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
     let laad = aad.len();
@@ -34,7 +37,12 @@ fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
     padded_msg
 }
 
-pub fn encrypt(key: aes::Key128, iv: aes::Nonce, aad: ByteSeq, msg: ByteSeq) -> (ByteSeq, Tag) {
+pub fn encrypt_aes128(
+    key: aes::Key128,
+    iv: aes::Nonce,
+    aad: ByteSeq,
+    msg: ByteSeq,
+) -> (ByteSeq, Tag) {
     let iv0 = aes::Nonce::new();
 
     let mac_key = aes128_ctr_keyblock(key, iv0, U32(0), 4, 10);
@@ -48,7 +56,26 @@ pub fn encrypt(key: aes::Key128, iv: aes::Nonce, aad: ByteSeq, msg: ByteSeq) -> 
     (cipher_text, Tag::copy(tag))
 }
 
-pub fn decrypt(
+pub fn encrypt_aes256(
+    key: aes::Key256,
+    iv: aes::Nonce,
+    aad: ByteSeq,
+    msg: ByteSeq,
+) -> (ByteSeq, Tag) {
+    let iv0 = aes::Nonce::new();
+
+    let mac_key = aes256_ctr_keyblock(key, iv0, U32(0), 8, 14);
+    let tag_mix = aes256_ctr_keyblock(key, iv, U32(1), 8, 14);
+
+    let cipher_text = aes256_encrypt(key, iv, U32(2), msg);
+    let padded_msg = pad_aad_msg(aad, cipher_text.clone());
+    let tag = gmac(padded_msg, Key::copy(mac_key));
+    let tag = aes::xor_block(Block::copy(tag), tag_mix);
+
+    (cipher_text, Tag::copy(tag))
+}
+
+pub fn decrypt_aes128(
     key: aes::Key128,
     iv: aes::Nonce,
     aad: ByteSeq,
@@ -66,6 +93,29 @@ pub fn decrypt(
 
     if my_tag == Block::copy(tag) {
         Ok(aes128_decrypt(key, iv, U32(2), cipher_text))
+    } else {
+        Err("Mac verification failed".to_string())
+    }
+}
+
+pub fn decrypt_aes256(
+    key: aes::Key256,
+    iv: aes::Nonce,
+    aad: ByteSeq,
+    cipher_text: ByteSeq,
+    tag: Tag,
+) -> Result<ByteSeq, String> {
+    let iv0 = aes::Nonce::new();
+
+    let mac_key = aes256_ctr_keyblock(key, iv0, U32(0), 8, 14);
+    let tag_mix = aes256_ctr_keyblock(key, iv, U32(1), 8, 14);
+
+    let padded_msg = pad_aad_msg(aad, cipher_text.clone());
+    let my_tag = gmac(padded_msg, Key::copy(mac_key));
+    let my_tag = aes::xor_block(Block::copy(my_tag), tag_mix);
+
+    if my_tag == Block::copy(tag) {
+        Ok(aes256_decrypt(key, iv, U32(2), cipher_text))
     } else {
         Err("Mac verification failed".to_string())
     }
