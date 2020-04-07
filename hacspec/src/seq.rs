@@ -32,7 +32,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
     ($name:ident, $bound:tt $(+ $others:tt )*) => {
 
         impl<T: $bound $(+ $others)*> $name<T> {
-            /// Get a new sequence of capacity `l`.
             #[primitive(hacspec)]
             pub fn new(l: usize) -> Self {
                 Self {
@@ -111,6 +110,12 @@ macro_rules! declare_seq_with_contents_constraints_impl {
         }
 
         impl<T: $bound $(+ $others)*> SeqTrait<T> for $name<T> {
+            /// Get a new sequence of capacity `l`.
+            #[library(hacspec)]
+            fn create(l: usize) -> Self {
+                Self::new(l)
+            }
+
             #[primitive(hacspec)]
             fn len(&self) -> usize {
                 self.b.len()

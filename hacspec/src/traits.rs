@@ -8,6 +8,7 @@ use crate::prelude::*;
 pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T> + Sized {
     fn len(&self) -> usize;
     fn iter(&self) -> std::slice::Iter<T>;
+    fn create(len:usize) -> Self;
     /// Update this sequence with `l` elements of `v`, starting at `start_in`,
     /// at `start_out`.
     ///

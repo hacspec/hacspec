@@ -28,6 +28,11 @@ macro_rules! _array_base {
         pub struct $name(pub [$t; $l]);
 
         impl $name {
+            #[primitive(hacspec)]
+            pub fn new() -> Self {
+                Self([<$t>::default(); $l])
+            }
+
             pub fn len(&self) -> usize {
                 $l
             }
@@ -48,11 +53,6 @@ macro_rules! _array_base {
         }
 
         impl $name {
-            #[primitive(hacspec)]
-            pub fn new() -> Self {
-                Self([<$t>::default(); $l])
-            }
-
             #[external(hacspec)]
             pub fn capacity() -> usize {
                 $l
@@ -130,6 +130,12 @@ macro_rules! _array_base {
             }
         }
         impl SeqTrait<$t> for $name {
+            #[library(hacspec)]
+            fn create(x:usize) -> Self {
+                assert_eq!(x, $l);
+                Self::new()
+            }
+
             #[primitive(hacspec)]
             fn len(&self) -> usize {
                 $l
