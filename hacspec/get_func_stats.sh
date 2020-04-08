@@ -8,3 +8,5 @@ echo "Library functions:"
 cargo build --features="print_attributes" 2>&1 | grep --color=always "Library" | wc -l
 echo "To remove functions:"
 cargo build --features="print_attributes" 2>&1 | grep --color=always "To remove" | wc -l
+echo "Internal functions:"
+cargo build --features="print_attributes" 2>&1 | grep --color=always "Internal" | wc -l
