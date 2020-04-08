@@ -68,10 +68,10 @@ pub fn encrypt_aes256(
 
     let cipher_text = aes256_encrypt(key, iv, U32(2), msg);
     let padded_msg = pad_aad_msg(aad, cipher_text.clone());
-    let tag = gmac(padded_msg, Key::copy(mac_key));
-    let tag = aes::xor_block(Block::copy(tag), tag_mix);
+    let tag = gmac(padded_msg, Key::from_seq(mac_key));
+    let tag = aes::xor_block(Block::from_seq(tag), tag_mix);
 
-    (cipher_text, Tag::copy(tag))
+    (cipher_text, Tag::from_seq(tag))
 }
 
 pub fn decrypt_aes128(
@@ -110,10 +110,10 @@ pub fn decrypt_aes256(
     let tag_mix = aes256_ctr_keyblock(key, iv, U32(1), 8, 14);
 
     let padded_msg = pad_aad_msg(aad, cipher_text.clone());
-    let my_tag = gmac(padded_msg, Key::copy(mac_key));
-    let my_tag = aes::xor_block(Block::copy(my_tag), tag_mix);
+    let my_tag = gmac(padded_msg, Key::from_seq(mac_key));
+    let my_tag = aes::xor_block(Block::from_seq(my_tag), tag_mix);
 
-    if my_tag == Block::copy(tag) {
+    if my_tag.declassify_eq(Block::from_seq(tag)) {
         Ok(aes256_decrypt(key, iv, U32(2), cipher_text))
     } else {
         Err("Mac verification failed".to_string())

@@ -118,8 +118,9 @@ fn aes_enc_last(state: Block, round_key: RoundKey) -> Block {
 
 fn rounds_aes128(state: Block, key: Bytes144) -> Block {
     let mut out = state;
-    for (_, key_block) in key.chunks(BLOCKSIZE) {
-        out = aes_enc(out, RoundKey::from(key_block));
+    for i in 0..key.num_chunks(BLOCKSIZE) {
+        let (_, key_block) = key.get_chunk(BLOCKSIZE, i);
+        out = aes_enc(out, RoundKey::from_seq(key_block));
     }
     out
 }
@@ -133,17 +134,17 @@ for i in 0..key.num_chunks(BLOCKSIZE) {
 }
 
 fn block_cipher_aes128(input: Block, key: Bytes176, nr: usize) -> Block {
-    let k0 = RoundKey::from_sub(key, 0..16);
-    let k = Bytes144::from_sub(key, 16..nr * 16);
-    let kn = RoundKey::from_sub(key, nr * 16..16);
+    let k0 = RoundKey::from_subr(key, 0..16);
+    let k = Bytes144::from_subr(key, 16..nr * 16);
+    let kn = RoundKey::from_sub(key, nr * 16, 16);
     let state = add_round_key(input, k0);
     let state = rounds_aes128(state, k);
     aes_enc_last(state, kn)
 }
 fn block_cipher_aes256(input: Block, key: Bytes240, nr: usize) -> Block {
-    let k0 = RoundKey::from_sub(key, 0..16);
-    let k = Bytes208::from_sub(key, 16..nr * 16);
-    let kn = RoundKey::from_sub(key, nr * 16..(nr + 1) * 16);
+    let k0 = RoundKey::from_subr(key, 0..16);
+    let k = Bytes208::from_subr(key, 16..nr * 16);
+    let kn = RoundKey::from_sub(key, nr * 16, 16);
     let state = add_round_key(input, k0);
     let state = rounds_aes256(state, k);
     aes_enc_last(state, kn)
@@ -269,8 +270,7 @@ fn aes128_counter_mode(
         } else {
             // Last block that needs padding
             let keyblock = aes128_ctr_keyblock(key, nonce, ctr, nk, nr);
-            let last_block = Block::new();
-            let last_block = last_block.copy_and_pad(msg_block);
+            let last_block = Block::new().update_start(msg_block);
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,
@@ -396,7 +396,7 @@ fn test_kat_block1_aes256() {
         0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
         0x1e, 0x1f
     ]));
-    let ctxt = ByteSeq::from_array(&secret_bytes!([
+    let ctxt = ByteSeq::from_slice(&secret_bytes!([
         0x8e, 0xa2, 0xb7, 0xca, 0x51, 0x67, 0x45, 0xbf, 0xea, 0xfc, 0x49, 0x90, 0x4b, 0x49, 0x60,
         0x89
     ]));

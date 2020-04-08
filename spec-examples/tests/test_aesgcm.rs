@@ -73,7 +73,7 @@ fn kat_test() {
         let exp_mac = gf128::Tag::from_hex(kat.exp_mac);
         let msg = ByteSeq::from_hex(kat.msg);
         let aad = ByteSeq::from_hex(kat.aad);
-        let exp_cipher = ByteSeq::from(kat.exp_cipher);
+        let exp_cipher = ByteSeq::from_hex(kat.exp_cipher);
 
         let (cipher, mac) = encrypt_aes128(k, nonce, aad.clone(), msg.clone());
         assert_eq!(
@@ -107,7 +107,7 @@ fn kat_test() {
 #[test]
 fn kat_test_256() {
     for kat in KAT_256.iter() {
-        let k = aes::Key256::from(kat.key);
+        let k = aes::Key256::from_hex(kat.key);
         let nonce = aes::Nonce::from_hex(kat.nonce);
         let exp_mac = gf128::Tag::from_hex(kat.exp_mac);
         let msg = ByteSeq::from_hex(kat.msg);
