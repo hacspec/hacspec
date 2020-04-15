@@ -1,19 +1,24 @@
-#![feature(proc_macro_diagnostic)]
-#![feature(proc_macro_span)]
+#![cfg_attr(nightly, feature(proc_macro_diagnostic))]
+#![cfg_attr(nightly, feature(proc_macro_span))]
 
 extern crate ansi_term;
 extern crate quote;
 extern crate syn;
 
+#[cfg(nightly)]
 use ansi_term::Colour::{Blue, Cyan, Green, Purple, Red, Yellow};
+#[cfg(nightly)]
 use proc_macro::*;
+#[cfg(nightly)]
 use quote::quote;
+#[cfg(nightly)]
 use syn::{parse_macro_input, spanned::Spanned, ItemFn};
 
 macro_rules! declare_attribute {
     ($id:ident, $msg: expr, $doc:tt) => {
         #[proc_macro_attribute]
         #[doc=$doc]
+        #[cfg(nightly)]
         pub fn $id(attr: TokenStream, item: TokenStream) -> TokenStream {
             let item_copy = proc_macro2::TokenStream::from(item.clone());
             let func = parse_macro_input!(item as ItemFn);
