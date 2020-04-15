@@ -9,6 +9,7 @@ macro_rules! create_test_vectors {
         #[allow(non_snake_case)]
         struct $struct_name { $($element: $ty),+ }
         impl $struct_name {
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn new(file: &'static str) -> Self {
                 let file = match File::open(file) {
                     Ok(f) => f,
@@ -23,6 +24,7 @@ macro_rules! create_test_vectors {
                     },
                 }
             }
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn new_array(file: &'static str) -> Vec<Self> {
                 let file = match File::open(file) {
                     Ok(f) => f,

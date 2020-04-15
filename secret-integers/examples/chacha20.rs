@@ -45,9 +45,9 @@ const CONSTANTS: Constants = [0x61707865, 0x3320646e, 0x79622d32, 0x6b206574];
 fn chacha20_init(k:&Key, counter:U32, nonce:&Nonce) -> State {
     let mut st = [U32::classify(0u32);16];
     st[0..4].copy_from_slice(&classify_u32s(&CONSTANTS));
-    st[4..12].copy_from_slice(U32::from_bytes_le(k).as_slice());
+    st[4..12].copy_from_slice(U32::from_le_bytes(k).as_slice());
     st[12] = counter;
-    st[13..16].copy_from_slice(U32::from_bytes_le(nonce).as_slice());
+    st[13..16].copy_from_slice(U32::from_le_bytes(nonce).as_slice());
     st
 }
 
@@ -70,7 +70,7 @@ fn chacha20(k:&Key, counter:U32, nonce:&Nonce) -> State {
 fn chacha20_block(k:&Key, counter:U32, nonce:&Nonce) -> Block {
     let st = chacha20(k, counter, nonce);
     let mut block = [U8::classify(0u8);BLOCK_SIZE];
-    block.copy_from_slice(U32::to_bytes_le(&st).as_slice());
+    block.copy_from_slice(U32::to_le_bytes(&st).as_slice());
     block
 }
 

@@ -111,7 +111,7 @@ impl Integer<i128> for i128 {
         extended_euclid_invert(x.abs(), n.abs(), true)
     }
     #[inline]
-    fn sub_lift(self, rhs: i128, n: i128) -> i128 {
+    fn sub_lift(self, rhs: i128, _n: i128) -> i128 {
         self - rhs
     }
     #[inline]

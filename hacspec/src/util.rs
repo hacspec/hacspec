@@ -3,7 +3,10 @@
 //!
 
 use std::num::ParseIntError;
+#[cfg(feature = "use_attributes")]
+use crate::prelude::*;
 
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn hex_string_to_bytes(s: &str) -> Vec<u8> {
     debug_assert!(s.len() % 2 == 0);
     let b: Result<Vec<u8>, ParseIntError> = (0..s.len())
@@ -13,6 +16,7 @@ pub fn hex_string_to_bytes(s: &str) -> Vec<u8> {
     b.expect("Error parsing hex string")
 }
 
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn to_array<A, T>(slice: &[T]) -> A
 where
     A: Default + AsMut<[T]>,

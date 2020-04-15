@@ -1,5 +1,3 @@
-use crate::*;
-
 #[macro_export]
 macro_rules! modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
@@ -43,13 +41,13 @@ macro_rules! modular_integer {
             }
 
             #[allow(dead_code)]
-            pub fn from_bytes_le(v: &[u8]) -> Self {
-                $base::from_bytes_le(v).into()
+            pub fn from_le_bytes(v: &[u8]) -> Self {
+                $base::from_le_bytes(v).into()
             }
 
             #[allow(dead_code)]
-            pub fn to_bytes_le(self) -> Vec<u8> {
-                $base::to_bytes_le(self.into())
+            pub fn to_le_bytes(self) -> Vec<u8> {
+                $base::to_le_bytes(self.into())
             }
 
             /// Gets the `i`-th least significant bit of this integer.
@@ -321,7 +319,7 @@ macro_rules! abstract_public_modular_integer {
                 unimplemented!();
             }
         }
-        
+
         impl $name {
             #[allow(dead_code)]
             pub fn inv(self) -> Self {

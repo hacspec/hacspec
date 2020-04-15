@@ -1,5 +1,3 @@
-use crate::*;
-
 #[macro_export]
 macro_rules! abstract_int {
     ($name:ident, $bits:literal, $signed:literal) => {
@@ -68,12 +66,15 @@ macro_rules! abstract_int {
                 Self::from(BigInt::from(x))
             }
         }
-        
+
         impl From<BigInt> for $name {
             fn from(x: BigInt) -> $name {
                 let max_value = Self::max();
                 assert!(x < max_value, "{} is too large for type {}!", x, stringify!($name));
-                let repr = x.to_bytes_be().1;
+                let (sign, repr) = x.to_bytes_be();
+                if sign == Sign::Minus && (!$signed) {
+                    panic!("Trying to convert a negative number into an unsigned integer!")
+                }
                 if repr.len() > ($bits + 7) / 8 {
                     panic!("{} is too large for type {}", x, stringify!($name))
                 }
@@ -83,7 +84,7 @@ macro_rules! abstract_int {
                 out[lower..upper].copy_from_slice(&repr);
                 $name {
                     b: out,
-                    sign: Sign::Plus,
+                    sign: sign,
                     signed: $signed,
                 }
             }
@@ -237,7 +238,7 @@ macro_rules! abstract_public {
                 c.into()
             }
         }
-        
+
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {
@@ -318,12 +319,12 @@ macro_rules! abstract_unsigned {
             }
 
             #[allow(dead_code)]
-            pub fn from_bytes_le(v: &[u8]) -> Self {
+            pub fn from_le_bytes(v: &[u8]) -> Self {
                 BigInt::from_bytes_le(Sign::Plus, v).into()
             }
 
             #[allow(dead_code)]
-            pub fn to_bytes_le(self) -> Vec<u8> {
+            pub fn to_le_bytes(self) -> Vec<u8> {
                 BigInt::to_bytes_le(&self.into()).1
             }
         }
