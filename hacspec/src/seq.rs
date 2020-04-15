@@ -32,7 +32,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
     ($name:ident, $bound:tt $(+ $others:tt )*) => {
 
         impl<T: $bound $(+ $others)*> $name<T> {
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             pub fn new(l: usize) -> Self {
                 Self {
                     b: vec![T::default(); l],
@@ -40,34 +40,34 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             /// Get the size of this sequence.
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             pub fn len(&self) -> usize {
                 self.b.len()
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn sub(self, start_out: usize, len: usize) -> Self {
                 Self::from_sub(self, start_out, len)
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn subr(self, r: Range<usize>) -> Self {
                 self.sub(r.start, r.end - r.start)
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn from_sub<A: SeqTrait<T>>(input: A, start: usize, len: usize) -> Self {
                 let mut a = Self::new(len);
                 a = a.update_sub(0, input, start, len);
                 a
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn from_sub_range<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
                 Self::from_sub(input, r.start, r.end - r.start)
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn num_chunks(
                 &self,
                 chunk_size: usize
@@ -75,7 +75,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 (self.len() + chunk_size - 1) / chunk_size
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn get_chunk(
                 self,
                 chunk_size: usize,
@@ -91,7 +91,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 (len, out)
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn set_chunk<A: SeqTrait<T>>(
                 self,
                 chunk_size: usize,
@@ -111,16 +111,16 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> SeqTrait<T> for $name<T> {
             /// Get a new sequence of capacity `l`.
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn create(l: usize) -> Self {
                 Self::new(l)
             }
 
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn len(&self) -> usize {
                 self.b.len()
             }
-            #[external(hacspec)]
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
             fn iter(&self) -> std::slice::Iter<T> {
                 self.b.iter()
             }
@@ -128,14 +128,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<u8> for $name<T> {
             type Output = T;
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: u8) -> &T {
                 &self.b[i as usize]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<u8> for $name<T> {
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: u8) -> &mut T {
                 &mut self.b[i as usize]
             }
@@ -143,14 +143,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<u32> for $name<T> {
             type Output = T;
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: u32) -> &T {
                 &self.b[i as usize]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<u32> for $name<T> {
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: u32) -> &mut T {
                 &mut self.b[i as usize]
             }
@@ -158,14 +158,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<i32> for $name<T> {
             type Output = T;
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: i32) -> &T {
                 &self.b[i as usize]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<i32> for $name<T> {
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: i32) -> &mut T {
                 &mut self.b[i as usize]
             }
@@ -173,14 +173,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<usize> for $name<T> {
             type Output = T;
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: usize) -> &T {
                 &self.b[i]
             }
         }
 
         impl<T: $bound $(+ $others)*> IndexMut<usize> for $name<T> {
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: usize) -> &mut T {
                 &mut self.b[i]
             }
@@ -188,28 +188,28 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> Index<Range<usize>> for $name<T> {
             type Output = [T];
-            #[primitive(hacspec)]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, r: Range<usize>) -> &[T] {
                 &self.b[r]
             }
         }
 
         impl<T: $bound $(+ $others)*> $name<T> {
-            #[external(hacspec)]
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn from_vec(x: Vec<T>) -> $name<T> {
                 Self {
                     b: x.clone(),
                 }
             }
 
-            #[external(hacspec)]
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn from_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
                 }
             }
 
-            #[library(hacspec)]
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn from_seq<U: SeqTrait<T>>(x: U) -> $name<T> {
                 let mut tmp = $name::new(x.len());
                 for i in 0..x.len() {
@@ -229,7 +229,7 @@ pub type ByteSeq = Seq<U8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {
-    #[primitive(hacspec)]
+    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     pub fn from_hex(s: &str) -> Seq<U8> {
         Seq::from_vec(
             hex_string_to_bytes(s)
@@ -239,7 +239,7 @@ impl Seq<U8> {
         )
     }
 
-    #[external(hacspec)]
+    #[cfg_attr(feature="use_attributes", external(hacspec))]
     pub fn from_string(s: String) -> Seq<U8> {
         Seq::<U8>::from_vec(
             hex_string_to_bytes(&s)
@@ -251,7 +251,7 @@ impl Seq<U8> {
 }
 
 impl PartialEq for Seq<U8> {
-    #[external(hacspec)]
+    #[cfg_attr(feature="use_attributes", external(hacspec))]
     fn eq(&self, other: &Self) -> bool {
         self.b[..]
             .iter()
@@ -265,7 +265,7 @@ impl PartialEq for Seq<U8> {
 }
 
 impl PublicSeq<u8> {
-    #[primitive(hacspec)]
+    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     pub fn from_hex(s: &str) -> PublicSeq<u8> {
         PublicSeq::from_vec(
             hex_string_to_bytes(s)
@@ -275,7 +275,7 @@ impl PublicSeq<u8> {
         )
     }
 
-    #[external(hacspec)]
+    #[cfg_attr(feature="use_attributes", external(hacspec))]
     pub fn from_string(s: String) -> PublicSeq<u8> {
         PublicSeq::<u8>::from_vec(
             hex_string_to_bytes(&s)
@@ -287,7 +287,7 @@ impl PublicSeq<u8> {
 }
 
 impl Seq<U8> {
-    #[external(hacspec)]
+    #[cfg_attr(feature="use_attributes", external(hacspec))]
     fn get_random_vec(l: usize) -> Vec<U8> {
         (0..l)
             .map(|_| rand::random::<u8>())
@@ -295,20 +295,20 @@ impl Seq<U8> {
             .collect()
     }
 
-    #[primitive(hacspec)]
+    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     pub fn random(l: usize) -> Self {
         Self {
             b: Seq::get_random_vec(l),
         }
     }
 
-    #[external(hacspec)]
+    #[cfg_attr(feature="use_attributes", external(hacspec))]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
     }
 
-    #[external(hacspec)]
+    #[cfg_attr(feature="use_attributes", external(hacspec))]
     pub fn from_public_slice(v: &[u8]) -> Seq<U8> {
         Self::from_vec(
             v[..]
@@ -320,7 +320,7 @@ impl Seq<U8> {
 }
 
 impl PublicSeq<u8> {
-    #[external(hacspec)]
+    #[cfg_attr(feature="use_attributes", external(hacspec))]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")

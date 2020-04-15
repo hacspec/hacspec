@@ -17,6 +17,7 @@ pub use crate::transmute::*;
 pub use crate::*;
 pub use abstract_integers::*;
 pub use secret_integers::*;
+#[cfg(feature = "use_attributes")]
 pub use hacspec_attributes::*;
 pub use num::{self, BigUint, CheckedSub, Num, Zero};
 pub use rand::Rng;

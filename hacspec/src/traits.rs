@@ -49,13 +49,13 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     /// s = s.update(2, tmp);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
-    #[library(hacspec)]
+    #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn update<A: SeqTrait<T>>(self, start: usize, v: A) -> Self {
         let len = v.len();
         self.update_sub(start, v, 0, len)
     }
 
-    #[library(hacspec)]
+    #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn update_start<A: SeqTrait<T>>(
         self,
         v: A

@@ -16,7 +16,7 @@ serde = {version = "1.0", features = ["derive"]}
 # TODO: this need to change for releases
 secret_integers = { path = "../secret-integers" }
 abstract_integers = { path = "../abstract-integers" }
-hacspec_attributes = { path = "../attributes" }
+hacspec_attributes = { path = "../attributes",  optional = true }
 
 [features]
-print_attributes = ["hacspec_attributes/print_attributes"]
+use_attributes = ["hacspec_attributes", "hacspec_attributes/print_attributes"]
