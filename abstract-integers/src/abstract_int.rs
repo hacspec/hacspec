@@ -319,12 +319,12 @@ macro_rules! abstract_unsigned {
             }
 
             #[allow(dead_code)]
-            pub fn from_bytes_le(v: &[u8]) -> Self {
+            pub fn from_le_bytes(v: &[u8]) -> Self {
                 BigInt::from_bytes_le(Sign::Plus, v).into()
             }
 
             #[allow(dead_code)]
-            pub fn to_bytes_le(self) -> Vec<u8> {
+            pub fn to_le_bytes(self) -> Vec<u8> {
                 BigInt::to_bytes_le(&self.into()).1
             }
         }

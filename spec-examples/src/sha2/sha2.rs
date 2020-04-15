@@ -40,7 +40,7 @@ fn sigma(x: WordT, i: usize, op: usize) -> WordT {
 }
 
 fn schedule(block: Block) -> RoundConstantsTable {
-    let b = block.to_U32s_be();
+    let b = block.to_be_U32s();
     let mut s = RoundConstantsTable::new();
     for i in 0..K_SIZE {
         if i < 16 {
@@ -189,5 +189,5 @@ pub fn hash(msg: ByteSeq) -> Digest {
             h = compress(compress_input, h);
         }
     }
-    Digest::from_seq(h.to_bytes_be())
+    Digest::from_seq(h.to_be_bytes())
 }

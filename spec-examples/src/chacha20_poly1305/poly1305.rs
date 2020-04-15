@@ -11,7 +11,7 @@ const BLOCKSIZE: usize = 16;
 bytes!(Block, BLOCKSIZE);
 
 // These are actual types; fixed-length arrays.
-bytes!(Tag, BLOCKSIZE);
+public_bytes!(Tag, BLOCKSIZE);
 
 public_nat_mod!(
     FieldElement,
@@ -22,7 +22,7 @@ public_nat_mod!(
 
 fn key_gen(key: Key, iv: IV) -> Key {
     let block = chacha20::block(key, U32(0), iv);
-    Key::from_subr(block, 0..32)
+    Key::from_sub_range(block, 0..32)
 }
 
 fn encode_r(r: Block) -> FieldElement {
@@ -58,12 +58,12 @@ pub fn poly(m: ByteSeq, key: Key) -> Tag {
     let s_elem = FieldElement::from_secret_literal(U128_from_le_bytes(U128Word::from_sub(
         key, BLOCKSIZE, BLOCKSIZE,
     )));
-    let r_elem = encode_r(Block::from_subr(key, 0..BLOCKSIZE));
+    let r_elem = encode_r(Block::from_sub_range(key, 0..BLOCKSIZE));
     let a = poly_inner(m, r_elem);
     let n = a + s_elem;
     // Note that n might be less than 16 byte -> zero-pad; but might also be
     // larger than Tag::capacity().
-    let n_v = n.to_byte_seq_le();
+    let n_v = n.to_public_byte_seq_le();
     let mut tag = Tag::new();
     for i in 0..min(tag.len(), n_v.len()) {
         tag[i] = n_v[i];

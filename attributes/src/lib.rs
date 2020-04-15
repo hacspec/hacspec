@@ -5,7 +5,7 @@ extern crate ansi_term;
 extern crate quote;
 extern crate syn;
 
-use ansi_term::Colour::{Blue, Green, Purple, Red, Yellow, Cyan};
+use ansi_term::Colour::{Blue, Cyan, Green, Purple, Red, Yellow};
 use proc_macro::*;
 use quote::quote;
 use syn::{parse_macro_input, spanned::Spanned, ItemFn};
@@ -74,8 +74,9 @@ declare_attribute!(
 declare_attribute!(
     library,
     Blue.paint("Library function"),
-    "**Library** function that is part of the language but not its formalization, since it's built only \
-with primitives and other library functions."
+    "**Library** function that is part of the language but implemented only \
+with primitives and other library functions. As such, it does not need to be \
+formalized as a primitive."
 );
 declare_attribute!(
     internal,

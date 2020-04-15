@@ -63,7 +63,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[library(hacspec)]
-            pub fn from_subr<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
+            pub fn from_sub_range<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
                 Self::from_sub(input, r.start, r.end - r.start)
             }
 
@@ -306,6 +306,16 @@ impl Seq<U8> {
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
+    }
+
+    #[external(hacspec)]
+    pub fn from_public_slice(v: &[u8]) -> Seq<U8> {
+        Self::from_vec(
+            v[..]
+                .iter()
+                .map(|x| <U8>::classify(*x))
+                .collect::<Vec<U8>>(),
+        )
     }
 }
 

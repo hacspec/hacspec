@@ -197,7 +197,7 @@ macro_rules! define_secret_integer {
                 !Self::zero()
             }
 
-            pub fn from_bytes_le(bytes: &[U8]) -> Vec<$name> {
+            pub fn from_le_bytes(bytes: &[U8]) -> Vec<$name> {
                 assert!(bytes.len() % ($bits/8) == 0);
                 bytes.chunks($bits/8).map(|chunk| {
                     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
@@ -212,7 +212,7 @@ macro_rules! define_secret_integer {
                 }).collect::<Vec<$name>>()
             }
 
-            pub fn to_bytes_le(ints: &[$name]) -> Vec<U8> {
+            pub fn to_le_bytes(ints: &[$name]) -> Vec<U8> {
                 ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {
@@ -223,7 +223,7 @@ macro_rules! define_secret_integer {
                 }).flatten().collect()
             }
 
-            pub fn from_bytes_be(bytes: &[U8]) -> Vec<$name> {
+            pub fn from_be_bytes(bytes: &[U8]) -> Vec<$name> {
                 assert!(bytes.len() % ($bits/8) == 0);
                 bytes.chunks($bits/8).map(|chunk| {
                     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
@@ -238,7 +238,7 @@ macro_rules! define_secret_integer {
                 }).collect::<Vec<$name>>()
             }
 
-            pub fn to_bytes_be(ints: &[$name]) -> Vec<U8> {
+            pub fn to_be_bytes(ints: &[$name]) -> Vec<U8> {
                 ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {

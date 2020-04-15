@@ -126,24 +126,24 @@ fn rounds_aes128(state: Block, key: Bytes144) -> Block {
 }
 fn rounds_aes256(state: Block, key: Bytes208) -> Block {
     let mut out = state;
-for i in 0..key.num_chunks(BLOCKSIZE) {
-    let (_, key_block)  = key.clone().get_chunk(BLOCKSIZE, i);
+    for i in 0..key.num_chunks(BLOCKSIZE) {
+        let (_, key_block)  = key.clone().get_chunk(BLOCKSIZE, i);
         out = aes_enc(out, RoundKey::from_seq(key_block));
     }
     out
 }
 
 fn block_cipher_aes128(input: Block, key: Bytes176, nr: usize) -> Block {
-    let k0 = RoundKey::from_subr(key, 0..16);
-    let k = Bytes144::from_subr(key, 16..nr * 16);
+    let k0 = RoundKey::from_sub_range(key, 0..16);
+    let k = Bytes144::from_sub_range(key, 16..nr * 16);
     let kn = RoundKey::from_sub(key, nr * 16, 16);
     let state = add_round_key(input, k0);
     let state = rounds_aes128(state, k);
     aes_enc_last(state, kn)
 }
 fn block_cipher_aes256(input: Block, key: Bytes240, nr: usize) -> Block {
-    let k0 = RoundKey::from_subr(key, 0..16);
-    let k = Bytes208::from_subr(key, 16..nr * 16);
+    let k0 = RoundKey::from_sub_range(key, 0..16);
+    let k = Bytes208::from_sub_range(key, 16..nr * 16);
     let kn = RoundKey::from_sub(key, nr * 16, 16);
     let state = add_round_key(input, k0);
     let state = rounds_aes256(state, k);
@@ -370,36 +370,36 @@ fn test_kat_block1() {
 
 #[test]
 fn test_kat_block2() {
-    let msg = Block(secret_bytes!([
+    let msg = Block::from_public_slice(&[
         0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x6d, 0x73,
         0x67
-    ]));
-    let key = Key128(secret_bytes!([
+    ]);
+    let key = Key128::from_public_slice(&[
         0xae, 0x68, 0x52, 0xf8, 0x12, 0x10, 0x67, 0xcc, 0x4b, 0xf7, 0xa5, 0x76, 0x55, 0x77, 0xf3,
         0x9e
-    ]));
-    let ctxt = ByteSeq::from_slice(&secret_bytes!([
+    ]);
+    let ctxt = ByteSeq::from_public_slice(&[
         0x61, 0x5f, 0x09, 0xfb, 0x35, 0x3f, 0x61, 0x3b, 0xa2, 0x8f, 0xf3, 0xa3, 0x0c, 0x64, 0x75,
         0x2d
-    ]));
+    ]);
     let c = aes128_encrypt_block(key, msg, 4, 10);
     assert_bytes_eq!(ctxt, c);
 }
 #[test]
 fn test_kat_block1_aes256() {
-    let msg = Block(secret_bytes!([
+    let msg = Block::from_public_slice(&[
         0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
         0xff
-    ]));
-    let key = Key256(secret_bytes!([
+    ]);
+    let key = Key256::from_public_slice(&[
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
         0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
         0x1e, 0x1f
-    ]));
-    let ctxt = ByteSeq::from_slice(&secret_bytes!([
+    ]);
+    let ctxt = ByteSeq::from_public_slice(&[
         0x8e, 0xa2, 0xb7, 0xca, 0x51, 0x67, 0x45, 0xbf, 0xea, 0xfc, 0x49, 0x90, 0x4b, 0x49, 0x60,
         0x89
-    ]));
+    ]);
     let c = aes256_encrypt_block(key, msg, 8, 14);
     assert_bytes_eq!(ctxt, c);
 }

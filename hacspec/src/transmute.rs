@@ -1,69 +1,59 @@
+#![allow(non_snake_case)]
+
 use crate::prelude::*;
 
 // U32
 
-#[allow(non_snake_case)]
 pub fn U32_to_le_bytes(x: U32) -> U32Word {
-    U32Word::from_vec(U32::to_bytes_le(&[x]))
+    U32Word::from_vec(U32::to_le_bytes(&[x]))
 }
 
-#[allow(non_snake_case)]
 pub fn U32_to_be_bytes(x: U32) -> U32Word {
-    U32Word::from_vec(U32::to_bytes_be(&[x]))
+    U32Word::from_vec(U32::to_be_bytes(&[x]))
 }
 
-#[allow(non_snake_case)]
 pub fn U32_from_be_bytes(s: U32Word) -> U32 {
-    U32::from_bytes_be(&s.0)[0]
+    U32::from_be_bytes(&s.0)[0]
 }
 
-#[allow(non_snake_case)]
 pub fn U32_from_le_bytes(s: U32Word) -> U32 {
-    U32::from_bytes_le(&s.0)[0]
+    U32::from_le_bytes(&s.0)[0]
 }
 
 // U64
 
-#[allow(non_snake_case)]
 pub fn U64_to_le_bytes(x: U64) -> U64Word {
-    U64Word::from_vec(U64::to_bytes_le(&[x]))
+    U64Word::from_vec(U64::to_le_bytes(&[x]))
 }
 
-#[allow(non_snake_case)]
 pub fn U64_to_be_bytes(x: U64) -> U64Word {
-    U64Word::from_vec(U64::to_bytes_be(&[x]))
+    U64Word::from_vec(U64::to_be_bytes(&[x]))
 }
 
-#[allow(non_snake_case)]
 pub fn U64_from_be_bytes(s: U64Word) -> U64 {
-    U64::from_bytes_be(&s.0)[0]
+    U64::from_be_bytes(&s.0)[0]
 }
 
-#[allow(non_snake_case)]
 pub fn U64_from_le_bytes(s: U64Word) -> U64 {
-    U64::from_bytes_le(&s.0)[0]
+    U64::from_le_bytes(&s.0)[0]
 }
 
 // U128
 
-#[allow(non_snake_case)]
 pub fn U128_to_le_bytes(x: U128) -> U128Word {
-    U128Word::from_vec(U128::to_bytes_le(&[x]))
+    U128Word::from_vec(U128::to_le_bytes(&[x]))
 }
 
-#[allow(non_snake_case)]
 pub fn U128_to_be_bytes(x: U128) -> U128Word {
-    U128Word::from_vec(U128::to_bytes_be(&[x]))
+    U128Word::from_vec(U128::to_be_bytes(&[x]))
 }
 
-#[allow(non_snake_case)]
 pub fn U128_from_be_bytes(s: U128Word) -> U128 {
-    U128::from_bytes_be(&s.0)[0]
+    U128::from_be_bytes(&s.0)[0]
 }
 
-#[allow(non_snake_case)]
 pub fn U128_from_le_bytes(s: U128Word) -> U128 {
-    U128::from_bytes_le(&s.0)[0]
+    U128::from_le_bytes(&s.0)[0]
 }
 
 // u32

@@ -28,7 +28,7 @@ fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
 
 pub fn encrypt(key: Key, iv: IV, aad: ByteSeq, msg: ByteSeq) -> Result<(ByteSeq, Tag), String> {
     let key_block = block(key, U32(0), iv);
-    let mac_key = Key::from_subr(key_block, 0..32);
+    let mac_key = Key::from_sub_range(key_block, 0..32);
     let cipher_text = match chacha(key, iv, msg) {
         Ok(c) => c,
         Err(r) => {
@@ -49,10 +49,10 @@ pub fn decrypt(
     tag: Tag,
 ) -> Result<ByteSeq, String> {
     let key_block = block(key, U32(0), iv);
-    let mac_key = Key::from_subr(key_block, 0..32);
+    let mac_key = Key::from_sub_range(key_block, 0..32);
     let padded_msg = pad_aad_msg(aad, cipher_text.clone());
     let my_tag = poly(padded_msg, mac_key);
-    if my_tag.declassify_eq(tag) {
+    if my_tag == tag {
         match chacha(key, iv, cipher_text) {
             Ok(c) => Ok(c),
             Err(r) => {

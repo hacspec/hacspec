@@ -539,7 +539,7 @@ macro_rules! public_nat_mod {
         // FIXME: check if we really need this and maybe move this somewhere.
         impl $name {
             pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
-                $name::from_bytes_le(
+                $name::from_le_bytes(
                     s.iter()
                         .map(|x| U8::declassify(*x))
                         .collect::<Vec<_>>()
@@ -547,9 +547,15 @@ macro_rules! public_nat_mod {
                 )
             }
 
+            pub fn to_public_byte_seq_le(self) -> Seq<u8> {
+                Seq::from_vec(
+                    self.to_le_bytes()
+                )
+            }
+
             pub fn to_byte_seq_le(self) -> Seq<U8> {
                 Seq::from_vec(
-                    self.to_bytes_le()
+                    self.to_le_bytes()
                         .iter()
                         .map(|x| U8::classify(*x))
                         .collect::<Vec<U8>>(),

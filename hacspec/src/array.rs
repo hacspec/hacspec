@@ -33,6 +33,7 @@ macro_rules! _array_base {
                 Self([<$t>::default(); $l])
             }
 
+            #[primitive(hacspec)]
             pub fn len(&self) -> usize {
                 $l
             }
@@ -42,6 +43,7 @@ macro_rules! _array_base {
                 Self(v.clone())
             }
 
+            #[external(hacspec)]
             pub fn from_slice(v: &[$t]) -> Self {
                 debug_assert!(v.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
@@ -67,7 +69,7 @@ macro_rules! _array_base {
             }
 
             #[library(hacspec)]
-            pub fn from_subr<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
+            pub fn from_sub_range<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
                 Self::from_sub(input, r.start, r.end - r.start)
             }
 
@@ -90,17 +92,27 @@ macro_rules! _array_base {
             }
 
             #[library(hacspec)]
+            pub fn get_chunk_len(
+                &self,
+                chunk_size: usize,
+                chunk_number: usize
+            ) -> usize {
+                let idx_start = chunk_size * chunk_number;
+                if idx_start + chunk_size > self.len() {
+                    self.len() - idx_start
+                } else {
+                    chunk_size
+                }
+            }
+
+            #[library(hacspec)]
             pub fn get_chunk(
                 self,
                 chunk_size: usize,
                 chunk_number: usize
             ) -> (usize, Seq<$t>) {
                 let idx_start = chunk_size * chunk_number;
-                let len = if idx_start + chunk_size > self.len() {
-                    self.len() - idx_start
-                } else {
-                    chunk_size
-                };
+                let len = self.get_chunk_len(chunk_size, chunk_number);
                 let out = self.sub(idx_start, len);
                 (len, out)
             }
@@ -113,11 +125,7 @@ macro_rules! _array_base {
                 input: A,
             ) -> Self {
                 let idx_start = chunk_size * chunk_number;
-                let len = if idx_start + chunk_size > self.len() {
-                    self.len() - idx_start
-                } else {
-                    chunk_size
-                };
+                let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(input.len() == len, "the chunk length should match the input");
                 self.update_sub(idx_start, input, 0, len)
             }
@@ -258,18 +266,6 @@ macro_rules! _array_base {
                 o
             }
         }
-
-        // /// Element wise xor of two arrays
-        // impl std::ops::BitXor for $name {
-        //     type Output = Self;
-        //     fn bitxor(self, rhs: Self) -> Self::Output {
-        //         let mut out = Self::new();
-        //         for (a, (b, c)) in out.0.iter_mut().zip(self.0.iter().zip(rhs.0.iter())) {
-        //             *a = *b ^ *c;
-        //         }
-        //         out
-        //     }
-        // }
     };
 }
 
@@ -314,12 +310,12 @@ macro_rules! _secret_array {
             }
 
             #[primitive(hacspec)]
-            pub fn to_bytes_be(self) -> Seq<U8> {
+            pub fn to_be_bytes(self) -> Seq<U8> {
                const FACTOR: usize = core::mem::size_of::<$t>();
                let mut out : Seq<U8> = Seq::new($l * FACTOR);
                for i in 0..$l {
                    let tmp : $t = self[i];
-                   let tmp = <$t>::to_bytes_be(&[tmp]);
+                   let tmp = <$t>::to_be_bytes(&[tmp]);
                    for j in 0..FACTOR {
                        out[i * FACTOR + j] = tmp[j];
                    }
@@ -328,12 +324,12 @@ macro_rules! _secret_array {
             }
 
             #[primitive(hacspec)]
-            pub fn to_bytes_le(self) -> Seq<U8> {
+            pub fn to_le_bytes(self) -> Seq<U8> {
                const FACTOR: usize = core::mem::size_of::<$t>();
                let mut out : Seq<U8> = Seq::new($l * FACTOR);
                for i in 0..$l {
                    let tmp : $t = self[i];
-                   let tmp = <$t>::to_bytes_le(&[tmp]);
+                   let tmp = <$t>::to_le_bytes(&[tmp]);
                    for j in 0..FACTOR {
                        out[i * FACTOR + j] = tmp[j];
                    }
@@ -415,7 +411,7 @@ macro_rules! array {
         impl $name {
             #[allow(non_snake_case)]
             #[primitive(hacspec)]
-            pub fn to_U32s_be(&self) -> Seq<U32> {
+            pub fn to_be_U32s(&self) -> Seq<U32> {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
@@ -425,7 +421,7 @@ macro_rules! array {
             }
             #[allow(non_snake_case)]
             #[primitive(hacspec)]
-            pub fn to_U32s_le(&self) -> Seq<U32> {
+            pub fn to_le_U32s(&self) -> Seq<U32> {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
@@ -435,7 +431,7 @@ macro_rules! array {
             }
             #[allow(non_snake_case)]
             #[primitive(hacspec)]
-            pub fn to_U64s_be(&self) -> Seq<U64> {
+            pub fn to_be_U64s(&self) -> Seq<U64> {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
@@ -445,7 +441,7 @@ macro_rules! array {
             }
             #[allow(non_snake_case)]
             #[primitive(hacspec)]
-            pub fn to_U64s_le(&self) -> Seq<U64> {
+            pub fn to_le_U64s(&self) -> Seq<U64> {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
@@ -502,7 +498,7 @@ macro_rules! array {
 
         impl $name {
             #[primitive(hacspec)]
-            pub fn to_u32s_be(&self) -> Seq<u32> {
+            pub fn to_be_u32s(&self) -> Seq<u32> {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
@@ -511,7 +507,7 @@ macro_rules! array {
                 out
             }
             #[primitive(hacspec)]
-            pub fn to_u32s_le(&self) -> Seq<u32> {
+            pub fn to_le_u32s(&self) -> Seq<u32> {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
@@ -520,7 +516,7 @@ macro_rules! array {
                 out
             }
             #[primitive(hacspec)]
-            pub fn to_u64s_be(&self) -> Seq<u64> {
+            pub fn to_be_u64s(&self) -> Seq<u64> {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
@@ -529,7 +525,7 @@ macro_rules! array {
                 out
             }
             #[primitive(hacspec)]
-            pub fn to_u64s_le(&self) -> Seq<u64> {
+            pub fn to_le_u64s(&self) -> Seq<u64> {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
