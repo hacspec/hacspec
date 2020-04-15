@@ -58,7 +58,7 @@ optimiser can remove redundant references later.</p>
 and tuples (up to 12 elements), so long as all element types can be
 generated.</p>
 <p>For arrays of integers, especially for those with small element types
-(&lt; 64 bit), it will likely be faster to instead use [<code>Rng::fill</code>].</p>
+(&lt; 64 bit), it will likely be faster to instead use <a href="../../hacspec/prelude/trait.Rng.html#method.fill" title="`Rng::fill`"><code>Rng::fill</code></a>.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">thread_rng</span>, <span class="ident">Rng</span>};
@@ -132,7 +132,7 @@ and arrays over primitive integer types (<code>i8</code>, <code>i16</code>, <cod
 portability of results from reproducible generators.</p>
 <p>This uses <a href="RngCore::fill_bytes"><code>fill_bytes</code></a> internally which may handle some RNG errors
 implicitly (e.g. waiting if the OS generator is not ready), but panics
-on other errors. See also <a href="Rng::try_fill"><code>try_fill</code></a> which returns errors.</p>
+on other errors. See also <a href="../../hacspec/prelude/trait.Rng.html#method.try_fill"><code>try_fill</code></a> which returns errors.</p>
 <h1 id="example-4" class="section-header"><a href="#example-4">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">thread_rng</span>, <span class="ident">Rng</span>};
@@ -144,7 +144,7 @@ where <code>dest</code> is any type supporting [<code>AsByteSliceMut</code>], na
 and arrays over primitive integer types (<code>i8</code>, <code>i16</code>, <code>u32</code>, etc.).</p>
 <p>On big-endian platforms this performs byte-swapping to ensure
 portability of results from reproducible generators.</p>
-<p>This is identical to <a href="Rng::fill"><code>fill</code></a> except that it uses <a href="RngCore::try_fill_bytes"><code>try_fill_bytes</code></a>
+<p>This is identical to <a href="../../hacspec/prelude/trait.Rng.html#method.fill"><code>fill</code></a> except that it uses <a href="RngCore::try_fill_bytes"><code>try_fill_bytes</code></a>
 internally and forwards RNG errors.</p>
 <h1 id="example-5" class="section-header"><a href="#example-5">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">

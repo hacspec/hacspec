@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["Numeric",""],["NumericBase","The `Numeric` trait has to be implemented by all numeric objects."],["PublicInteger",""],["SecretInteger",""],["SeqTrait","Common trait for all byte arrays and sequences."]]});

@@ -326,399 +326,251 @@
 <span id="326">326</span>
 <span id="327">327</span>
 <span id="328">328</span>
-<span id="329">329</span>
-<span id="330">330</span>
-<span id="331">331</span>
-<span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
-<span id="345">345</span>
-<span id="346">346</span>
-<span id="347">347</span>
-<span id="348">348</span>
-<span id="349">349</span>
-<span id="350">350</span>
-<span id="351">351</span>
-<span id="352">352</span>
-<span id="353">353</span>
-<span id="354">354</span>
-<span id="355">355</span>
-<span id="356">356</span>
-<span id="357">357</span>
-<span id="358">358</span>
-<span id="359">359</span>
-<span id="360">360</span>
-<span id="361">361</span>
-<span id="362">362</span>
-<span id="363">363</span>
-<span id="364">364</span>
-<span id="365">365</span>
-<span id="366">366</span>
-<span id="367">367</span>
-<span id="368">368</span>
-<span id="369">369</span>
-<span id="370">370</span>
-<span id="371">371</span>
-<span id="372">372</span>
-<span id="373">373</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Sequences</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module implements variable-length sequences and utility functions for it.</span>
+<span class="doccomment">//! Seq only supports operations that are safe on secret values.</span>
+<span class="doccomment">//! For use with public values you can use `PublicSeq`.</span>
 <span class="doccomment">//!</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// Variable length byte arrays.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">b</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    <span class="comment">// Running index used when data is pushed into a Seq.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">idx</span>: <span class="ident">usize</span>,
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">declare_seq</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">constraint</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="doccomment">/// Variable length byte arrays.</span>
+        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
+        <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span> <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">constraint</span><span class="op">&gt;</span> {
+            <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">b</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        }
+        <span class="macro">declare_seq_with_contents_constraints_impl</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span> <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">constraint</span>);
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="doccomment">/// Variable length byte arrays.</span>
+        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
+        <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span> {
+            <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">b</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        }
+
+        <span class="macro">declare_seq_with_contents_constraints_impl</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span>);
+    };
 }
 
-<span class="comment">// TODO: Why ByteSeq with secret integers? Naming is odd</span>
+<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">declare_seq_with_contents_constraints_impl</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span>:<span class="ident">tt</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>:<span class="ident">tt</span> )<span class="kw-2">*</span>) <span class="op">=</span><span class="op">&gt;</span> {
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">Self</span> {
+                    <span class="ident">b</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">l</span>],
+                }
+            }
+
+            <span class="doccomment">/// Get the size of this sequence.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+                <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">len</span>()
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">start_out</span>: <span class="ident">usize</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">Self</span>::<span class="ident">from_sub</span>(<span class="self">self</span>, <span class="ident">start_out</span>, <span class="ident">len</span>)
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">subr</span>(<span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">r</span>.<span class="ident">start</span>, <span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>)
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">A</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">len</span>);
+                <span class="ident">a</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">update_sub</span>(<span class="number">0</span>, <span class="ident">input</span>, <span class="ident">start</span>, <span class="ident">len</span>);
+                <span class="ident">a</span>
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sub_range</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">A</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">Self</span>::<span class="ident">from_sub</span>(<span class="ident">input</span>, <span class="ident">r</span>.<span class="ident">start</span>, <span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>)
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">num_chunks</span>(
+                <span class="kw-2">&amp;</span><span class="self">self</span>,
+                <span class="ident">chunk_size</span>: <span class="ident">usize</span>
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+                (<span class="self">self</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">chunk_size</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">/</span> <span class="ident">chunk_size</span>
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_chunk</span>(
+                <span class="self">self</span>,
+                <span class="ident">chunk_size</span>: <span class="ident">usize</span>,
+                <span class="ident">chunk_number</span>: <span class="ident">usize</span>
+            ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="self">Self</span>) {
+                <span class="kw">let</span> <span class="ident">idx_start</span> <span class="op">=</span> <span class="ident">chunk_size</span> <span class="op">*</span> <span class="ident">chunk_number</span>;
+                <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">idx_start</span> <span class="op">+</span> <span class="ident">chunk_size</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">len</span>() {
+                    <span class="self">self</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">idx_start</span>
+                } <span class="kw">else</span> {
+                    <span class="ident">chunk_size</span>
+                };
+                <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">idx_start</span>, <span class="ident">len</span>);
+                (<span class="ident">len</span>, <span class="ident">out</span>)
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_chunk</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+                <span class="self">self</span>,
+                <span class="ident">chunk_size</span>: <span class="ident">usize</span>,
+                <span class="ident">chunk_number</span>: <span class="ident">usize</span>,
+                <span class="ident">input</span>: <span class="ident">A</span>,
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="kw">let</span> <span class="ident">idx_start</span> <span class="op">=</span> <span class="ident">chunk_size</span> <span class="op">*</span> <span class="ident">chunk_number</span>;
+                <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">idx_start</span> <span class="op">+</span> <span class="ident">chunk_size</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">len</span>() {
+                    <span class="self">self</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">idx_start</span>
+                } <span class="kw">else</span> {
+                    <span class="ident">chunk_size</span>
+                };
+                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">input</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">len</span>, <span class="string">&quot;the chunk length should match the input&quot;</span>);
+                <span class="self">self</span>.<span class="ident">update_sub</span>(<span class="ident">idx_start</span>, <span class="ident">input</span>, <span class="number">0</span>, <span class="ident">len</span>)
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="doccomment">/// Get a new sequence of capacity `l`.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">l</span>)
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+                <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">len</span>()
+            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">slice</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">iter</span>()
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> [<span class="ident">T</span>];
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">T</span>] {
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">r</span>]
+            }
+        }
+
+        <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bound</span> $(<span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">others</span>)<span class="kw-2">*</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_vec</span>(<span class="ident">x</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+                <span class="self">Self</span> {
+                    <span class="ident">b</span>: <span class="ident">x</span>.<span class="ident">clone</span>(),
+                }
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+                <span class="self">Self</span> {
+                    <span class="ident">b</span>: <span class="ident">x</span>.<span class="ident">to_vec</span>(),
+                }
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_seq</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">U</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">new</span>(<span class="ident">x</span>.<span class="ident">len</span>());
+                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">x</span>.<span class="ident">len</span>() {
+                    <span class="ident">tmp</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">x</span>[<span class="ident">i</span>];
+                }
+                <span class="ident">tmp</span>
+            }
+        }
+    };
+}
+
+<span class="macro">declare_seq</span><span class="macro">!</span>(<span class="ident">SecretSeq</span>, <span class="ident">SecretInteger</span>);
+<span class="macro">declare_seq</span><span class="macro">!</span>(<span class="ident">PublicSeq</span>, <span class="ident">PublicInteger</span>);
+<span class="macro">declare_seq</span><span class="macro">!</span>(<span class="ident">Seq</span>);
+
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ByteSeq</span> <span class="op">=</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">MyByteSeq</span> <span class="op">=</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>;
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Get a new sequence of capacity `l`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">l</span>],
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-    <span class="doccomment">/// Get a new sequence from array `v`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_array</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="ident">v</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-    <span class="doccomment">/// Get the size of this sequence.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">len</span>()
-    }
-    <span class="doccomment">/// Update this sequence with `v` starting at `start`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use hacspec::prelude::*;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
-    <span class="doccomment">/// let tmp = Seq::&lt;u8&gt;::from_array(&amp;[2, 3]);</span>
-    <span class="doccomment">/// s = s.update(2, tmp);</span>
-    <span class="doccomment">/// assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 2, 3, 0]));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?} &gt;= {:?} + {:?}&quot;</span>, <span class="self">self</span>.<span class="ident">len</span>(), <span class="ident">start</span>, <span class="ident">v</span>.<span class="ident">len</span>());
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start</span> <span class="op">+</span> <span class="ident">v</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">self_copy</span> <span class="op">=</span> <span class="self">self</span>;
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="ident">self_copy</span>[<span class="ident">start</span> <span class="op">+</span> <span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
-        }
-        <span class="ident">self_copy</span>
-    }
-    <span class="doccomment">/// Update this sequence with `l` elements of `v`, starting at `start_in`,</span>
-    <span class="doccomment">/// at `start_out`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use hacspec::prelude::*;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
-    <span class="doccomment">/// let tmp = Seq::&lt;u8&gt;::from_array(&amp;[2, 3]);</span>
-    <span class="doccomment">/// s = s.update_sub(2, tmp, 1, 1);</span>
-    <span class="doccomment">/// assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 3, 0, 0]));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="self">self</span>,
-        <span class="ident">start_out</span>: <span class="ident">usize</span>,
-        <span class="ident">v</span>: <span class="ident">A</span>,
-        <span class="ident">start_in</span>: <span class="ident">usize</span>,
-        <span class="ident">len</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_out</span> <span class="op">+</span> <span class="ident">len</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_in</span> <span class="op">+</span> <span class="ident">len</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">self_copy</span> <span class="op">=</span> <span class="self">self</span>;
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="ident">start_in</span>).<span class="ident">take</span>(<span class="ident">len</span>).<span class="ident">enumerate</span>() {
-            <span class="ident">self_copy</span>[<span class="ident">start_out</span> <span class="op">+</span> <span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
-        }
-        <span class="ident">self_copy</span>
-    }
-    <span class="doccomment">/// Update this sequence with `v` at position `start_out`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use hacspec::prelude::*;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
-    <span class="doccomment">/// s = s.update_element(4, 7);</span>
-    <span class="doccomment">/// assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 0, 0, 7]));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_element</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">start_out</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_out</span> <span class="op">+</span> <span class="number">1</span>);
-        <span class="self">self</span>[<span class="ident">start_out</span>] <span class="op">=</span> <span class="ident">v</span>;
-        <span class="self">self</span>
-    }
-    <span class="doccomment">/// Reset the sequence index.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use hacspec::prelude::*;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
-    <span class="doccomment">/// s = s.set_index(3);</span>
-    <span class="doccomment">/// s = s.push(Seq::&lt;u8&gt;::from_array(&amp;[4, 5]));</span>
-    <span class="doccomment">/// assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 0, 4, 5]));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_index</span>(<span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">clone</span>(),
-            <span class="ident">idx</span>: <span class="ident">i</span>,
-        }
-    }
-    <span class="doccomment">/// Push `v` to this sequence and move `idx` according to `v.len()`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use hacspec::prelude::*;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
-    <span class="doccomment">/// s = s.set_index(3);</span>
-    <span class="doccomment">/// s = s.push(Seq::&lt;u8&gt;::from_array(&amp;[4, 5]));</span>
-    <span class="doccomment">/// assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 0, 4, 5]));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">v</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?} &gt;= {:?} + {:?}&quot;</span>, <span class="self">self</span>.<span class="ident">len</span>(), <span class="self">self</span>.<span class="ident">idx</span>, <span class="ident">v</span>.<span class="ident">len</span>());
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">idx</span> <span class="op">+</span> <span class="ident">v</span>.<span class="ident">len</span>());
-        <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">idx</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">self_copy</span> <span class="op">=</span> <span class="self">self</span>;
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="ident">self_copy</span>[<span class="ident">idx</span> <span class="op">+</span> <span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
-        }
-        <span class="ident">self_copy</span>.<span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="ident">v</span>.<span class="ident">len</span>();
-        <span class="ident">self_copy</span>
-    }
-    <span class="doccomment">/// Push `l` elements from `v` to this sequence and move `idx` according to `l`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use hacspec::prelude::*;</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
-    <span class="doccomment">/// s = s.set_index(3);</span>
-    <span class="doccomment">/// s = s.push_sub(Seq::&lt;u8&gt;::from_array(&amp;[4, 5]), 1, 1);</span>
-    <span class="doccomment">/// assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 0, 5, 0]));</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">v</span>: <span class="ident">A</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">idx</span> <span class="op">+</span> <span class="ident">l</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start</span> <span class="op">+</span> <span class="ident">l</span>);
-        <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">idx</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">self_copy</span> <span class="op">=</span> <span class="self">self</span>;
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="ident">start</span>).<span class="ident">take</span>(<span class="ident">l</span>).<span class="ident">enumerate</span>() {
-            <span class="ident">self_copy</span>[<span class="ident">idx</span> <span class="op">+</span> <span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
-        }
-        <span class="ident">self_copy</span>.<span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="ident">l</span>;
-        <span class="ident">self_copy</span>
-    }
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">start_out</span>: <span class="ident">usize</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">from</span>(
-            <span class="self">self</span>.<span class="ident">b</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">skip</span>(<span class="ident">start_out</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>)
-                .<span class="ident">take</span>(<span class="ident">len</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
-        )
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">A</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">default</span>();
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="ident">r</span>
-            .<span class="ident">clone</span>()
-            .<span class="ident">zip</span>(<span class="ident">input</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="ident">r</span>.<span class="ident">start</span>).<span class="ident">take</span>(<span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>))
-        {
-            <span class="ident">a</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">v</span>;
-        }
-        <span class="ident">a</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chunks</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>, <span class="ident">chunk_size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">usize</span>, <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;a</span> {
-        <span class="self">self</span>.<span class="ident">b</span>
-            .<span class="ident">chunks</span>(<span class="ident">chunk_size</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> (<span class="ident">c</span>.<span class="ident">len</span>(), <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>::<span class="ident">from</span>(<span class="ident">c</span>)))
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">get_random_vec</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-        (<span class="number">0</span>..<span class="ident">l</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">rand</span>::<span class="ident">random</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>())
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="ident">x</span>))
-            .<span class="ident">collect</span>()
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="ident">Seq</span>::<span class="ident">get_random_vec</span>(<span class="ident">l</span>),
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_hex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="kw">let</span> <span class="ident">strs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:02x}&quot;</span>, <span class="ident">b</span>)).<span class="ident">collect</span>();
-        <span class="ident">strs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_hex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="kw">let</span> <span class="ident">strs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:02x}&quot;</span>, <span class="ident">b</span>)).<span class="ident">collect</span>();
-        <span class="ident">strs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">raw</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>
-    }
-    <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">len</span>()
-    }
-    <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">slice</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">iter</span>()
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span>;
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b</span>[<span class="ident">i</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> [<span class="ident">T</span>];
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">T</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>[<span class="ident">r</span>]
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="ident">x</span>.<span class="ident">clone</span>(),
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">T</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="ident">x</span>.<span class="ident">to_vec</span>(),
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-}
-
-<span class="comment">// macro_rules! from_int_vec {</span>
-<span class="comment">//     ($t:ty) =&gt; {</span>
-<span class="comment">//         impl&lt;T: Copy&gt; From&lt;Vec&lt;$t&gt;&gt; for Seq&lt;T&gt; {</span>
-<span class="comment">//             fn from(x: Vec&lt;$t&gt;) -&gt; Seq&lt;T&gt; {</span>
-<span class="comment">//                 Self {</span>
-<span class="comment">//                     b: x.iter().map(|&amp;x| T::from(x)).collect::&lt;Vec&lt;T&gt;&gt;(),</span>
-<span class="comment">//                     idx: 0,</span>
-<span class="comment">//                 }</span>
-<span class="comment">//             }</span>
-<span class="comment">//         }</span>
-<span class="comment">//     };</span>
-<span class="comment">// }</span>
-
-<span class="comment">// from_int_vec!(u8);</span>
-<span class="comment">// from_int_vec!(u16);</span>
-<span class="comment">// from_int_vec!(u32);</span>
-<span class="comment">// from_int_vec!(u64);</span>
-<span class="comment">// from_int_vec!(u128);</span>
 
 <span class="doccomment">/// Read hex string to Bytes.</span>
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-        <span class="ident">Seq</span>::<span class="ident">from</span>(
+<span class="kw">impl</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_hex</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+        <span class="ident">Seq</span>::<span class="ident">from_vec</span>(
             <span class="ident">hex_string_to_bytes</span>(<span class="ident">s</span>)
                 .<span class="ident">iter</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
                 .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
         )
     }
-}
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-        <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">from</span>(
+
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_string</span>(<span class="ident">s</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+        <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">from_vec</span>(
             <span class="ident">hex_string_to_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>)
                 .<span class="ident">iter</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
@@ -726,23 +578,81 @@
         )
     }
 }
-<span class="comment">// TODO: duplicate code...</span>
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>::<span class="ident">from</span>(<span class="ident">hex_string_to_bytes</span>(<span class="ident">s</span>))
-    }
-}
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-        <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>::<span class="ident">from</span>(<span class="ident">hex_string_to_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>))
+
+<span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">b</span>[..]
+            .<span class="ident">iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+            <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">b</span>[..]
+                .<span class="ident">iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
+                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
     }
 }
 
-<span class="doccomment">/// Two sequences are equal if the underlying vector is equal.</span>
-<span class="doccomment">/// The idx field is ignored.</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">PartialEq</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">PartialEq</span><span class="op">&lt;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">b</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">b</span>
+<span class="kw">impl</span> <span class="ident">PublicSeq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_hex</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PublicSeq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="ident">PublicSeq</span>::<span class="ident">from_vec</span>(
+            <span class="ident">hex_string_to_bytes</span>(<span class="ident">s</span>)
+                .<span class="ident">iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>)
+                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+        )
+    }
+
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_string</span>(<span class="ident">s</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PublicSeq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+        <span class="ident">PublicSeq</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>::<span class="ident">from_vec</span>(
+            <span class="ident">hex_string_to_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>)
+                .<span class="ident">iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>)
+                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+        )
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">fn</span> <span class="ident">get_random_vec</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+        (<span class="number">0</span>..<span class="ident">l</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">rand</span>::<span class="ident">random</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="ident">x</span>))
+            .<span class="ident">collect</span>()
+    }
+
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">b</span>: <span class="ident">Seq</span>::<span class="ident">get_random_vec</span>(<span class="ident">l</span>),
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_hex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+        <span class="kw">let</span> <span class="ident">strs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:02x}&quot;</span>, <span class="ident">b</span>)).<span class="ident">collect</span>();
+        <span class="ident">strs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
+    }
+
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_public_slice</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+        <span class="self">Self</span>::<span class="ident">from_vec</span>(
+            <span class="ident">v</span>[..]
+                .<span class="ident">iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
+                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+        )
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">PublicSeq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_hex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+        <span class="kw">let</span> <span class="ident">strs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:02x}&quot;</span>, <span class="ident">b</span>)).<span class="ident">collect</span>();
+        <span class="ident">strs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
     }
 }
 </pre></div>

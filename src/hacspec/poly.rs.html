@@ -567,33 +567,13 @@
 <span id="567">567</span>
 <span id="568">568</span>
 <span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
-<span id="589">589</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Polynomials</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! This module implements polynomials ℤn[x]/mℤ[x].</span>
+<span class="doccomment">//! This module implements polynomials ℤn\[x\]/mℤ\[x\].</span>
 <span class="doccomment">//! Polynomials are variable sized only for now.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Coefficients are currently stored as u128 or i128.</span>
@@ -613,7 +593,6 @@
 <span class="doccomment">//!</span>
 
 <span class="kw">use</span> <span class="ident">rand</span>::<span class="ident">Rng</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::{<span class="ident">Add</span>, <span class="ident">Div</span>, <span class="ident">Mul</span>, <span class="ident">Sub</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">integer</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">seq</span>::<span class="kw-2">*</span>;
@@ -644,9 +623,9 @@
 <span class="kw">fn</span> <span class="ident">make_fixed_length</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">t</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">t</span>];
     <span class="kw">for</span> (<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>) <span class="kw">in</span> <span class="ident">out</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="ident">v</span>.<span class="ident">iter</span>()) {
-        <span class="kw-2">*</span><span class="ident">a</span><span class="op">=</span> <span class="ident">b</span>;
+        <span class="kw-2">*</span><span class="ident">a</span> <span class="op">=</span> <span class="ident">b</span>;
     }
-    <span class="ident">out</span> 
+    <span class="ident">out</span>
 }
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
@@ -703,7 +682,7 @@
 
 <span class="doccomment">/// Polynomial multiplication using operand scanning without modulo.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">poly_mul_plain</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">poly_mul_plain</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">_n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">x</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">y</span>.<span class="ident">len</span>()];
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">x</span>.<span class="ident">len</span>() {
         <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">y</span>.<span class="ident">len</span>() {
@@ -753,10 +732,11 @@
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random_poly</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">l</span>: <span class="ident">usize</span>, <span class="ident">min</span>: <span class="ident">i128</span>, <span class="ident">max</span>: <span class="ident">i128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rand</span>::<span class="ident">thread_rng</span>();
-    (<span class="number">0</span>..<span class="ident">l</span>)
-        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T</span>::<span class="ident">from_signed_literal</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="ident">min</span>, <span class="ident">max</span>)))
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-        .<span class="ident">into</span>()
+    <span class="ident">Seq</span>::<span class="ident">from_vec</span>(
+        (<span class="number">0</span>..<span class="ident">l</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">T</span>::<span class="ident">from_signed_literal</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="ident">min</span>, <span class="ident">max</span>)))
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+    )
 }
 
 <span class="doccomment">/// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.</span>
@@ -778,7 +758,7 @@
         <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="ident">rlen</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">i</span>;
         <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">n</span> <span class="op">=</span><span class="op">=</span> <span class="ident">T</span>::<span class="ident">default</span>() {
             <span class="comment">// In ℤ we try this. It might not work.</span>
-            <span class="ident">rem</span>[<span class="ident">idx</span>] <span class="op">/</span> <span class="ident">c</span> <span class="comment">// XXX: Update once we change to Numeric </span>
+            <span class="ident">rem</span>[<span class="ident">idx</span>] <span class="op">/</span> <span class="ident">c</span> <span class="comment">// XXX: Update once we change to Numeric</span>
         } <span class="kw">else</span> {
             <span class="comment">// divide by using inverse mod n</span>
             <span class="ident">rem</span>[<span class="ident">idx</span>] <span class="op">*</span> <span class="ident">T</span>::<span class="ident">invert</span>(<span class="ident">c</span>, <span class="ident">n</span>)
@@ -786,7 +766,7 @@
         <span class="kw">if</span> <span class="ident">t</span> <span class="op">=</span><span class="op">=</span> <span class="ident">T</span>::<span class="ident">default</span>() <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">rem</span>[<span class="ident">idx</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">T</span>::<span class="ident">default</span>() {
             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can&#39;t divide these two polynomials&quot;</span>);
         }
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">t</span>, <span class="ident">dist</span><span class="op">-</span><span class="ident">i</span><span class="op">-</span><span class="number">1</span>);
+        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">t</span>, <span class="ident">dist</span> <span class="op">-</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">sy</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>[..], <span class="kw-2">&amp;</span><span class="ident">y</span>[..], <span class="ident">n</span>);
         <span class="ident">quo</span> <span class="op">=</span> <span class="ident">poly_add</span>(<span class="kw-2">&amp;</span><span class="ident">quo</span>[..], <span class="kw-2">&amp;</span><span class="ident">s</span>[..], <span class="ident">n</span>);
         <span class="ident">rem</span> <span class="op">=</span> <span class="ident">poly_sub</span>(<span class="kw-2">&amp;</span><span class="ident">rem</span>, <span class="kw-2">&amp;</span><span class="ident">sy</span>, <span class="ident">n</span>);
@@ -848,33 +828,47 @@
 }
 
 <span class="doccomment">/// Subtract quotient (bn/x^bd) from (an/x^ad)</span>
-<span class="kw">fn</span> <span class="ident">quot_sub</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">an</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">ad</span>: <span class="ident">usize</span>, <span class="ident">bn</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">bd</span>: <span class="ident">usize</span>, <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">usize</span>){
+<span class="kw">fn</span> <span class="ident">quot_sub</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+    <span class="ident">an</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
+    <span class="ident">ad</span>: <span class="ident">usize</span>,
+    <span class="ident">bn</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
+    <span class="ident">bd</span>: <span class="ident">usize</span>,
+    <span class="ident">n</span>: <span class="ident">T</span>,
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">usize</span>) {
     <span class="kw">let</span> <span class="ident">cd</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">max</span>(<span class="ident">ad</span>, <span class="ident">bd</span>);
-    <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">T</span>::<span class="ident">from_literal</span>(<span class="number">1</span>),<span class="number">1</span>);
+    <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">T</span>::<span class="ident">from_literal</span>(<span class="number">1</span>), <span class="number">1</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">an</span>.<span class="ident">to_vec</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">bn</span>.<span class="ident">to_vec</span>();
-    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">cd</span><span class="op">-</span><span class="ident">ad</span> {           <span class="comment">//XXX: Any way to write this more nicely?</span>
-        <span class="ident">a</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">x</span>, <span class="ident">n</span>); 
+    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">cd</span> <span class="op">-</span> <span class="ident">ad</span> {
+        <span class="comment">//XXX: Any way to write this more nicely?</span>
+        <span class="ident">a</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">x</span>, <span class="ident">n</span>);
     }
-    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">cd</span><span class="op">-</span><span class="ident">bd</span> {           <span class="comment">//XXX: Any way to write this more nicely?</span>
-        <span class="ident">b</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">x</span>, <span class="ident">n</span>); 
+    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">cd</span> <span class="op">-</span> <span class="ident">bd</span> {
+        <span class="comment">//XXX: Any way to write this more nicely?</span>
+        <span class="ident">b</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">x</span>, <span class="ident">n</span>);
     }
     (<span class="ident">poly_sub</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>, <span class="ident">n</span>), <span class="ident">cd</span>)
 }
 
 <span class="doccomment">/// Divide a by x assuming a is a multiple of x (shift right by one)</span>
 <span class="kw">fn</span> <span class="ident">poly_divx</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">v</span>.<span class="ident">len</span>()<span class="op">-</span><span class="number">1</span>];
-    <span class="kw">for</span>(<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>) <span class="kw">in</span> <span class="ident">out</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>)) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>];
+    <span class="kw">for</span> (<span class="ident">a</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>) <span class="kw">in</span> <span class="ident">out</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="number">1</span>)) {
         <span class="kw-2">*</span><span class="ident">a</span> <span class="op">=</span> <span class="ident">b</span>;
     }
-    <span class="ident">out</span> 
+    <span class="ident">out</span>
 }
 
 <span class="doccomment">/// Iterate division steps in the constant-time polynomial inversion algorithm</span>
 <span class="doccomment">/// See Figure 5.1 from https://eprint.iacr.org/2019/266</span>
 <span class="doccomment">/// Instead of returning M2kx((u,v,q,r)) in last component, only return v</span>
-<span class="kw">fn</span> <span class="ident">divstepsx</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">nn</span>: <span class="ident">usize</span>, <span class="ident">t</span>: <span class="ident">usize</span>, <span class="ident">fin</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">gin</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">i128</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">usize</span>)) {
+<span class="kw">fn</span> <span class="ident">divstepsx</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+    <span class="ident">nn</span>: <span class="ident">usize</span>,
+    <span class="ident">t</span>: <span class="ident">usize</span>,
+    <span class="ident">fin</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
+    <span class="ident">gin</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
+    <span class="ident">n</span>: <span class="ident">T</span>,
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">i128</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">usize</span>)) {
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">t</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">nn</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">fin</span>.<span class="ident">to_vec</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">gin</span>.<span class="ident">to_vec</span>();
@@ -882,7 +876,7 @@
 
     <span class="comment">// Each of u,v,q,r in (f, i) represents quotient f/x^i</span>
     <span class="comment">// u,v,q,r = 1,0,0,1</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">u</span> <span class="op">=</span> (<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">from_literal</span>(<span class="number">1</span>); <span class="number">1</span>], <span class="number">0</span>); 
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">u</span> <span class="op">=</span> (<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">from_literal</span>(<span class="number">1</span>); <span class="number">1</span>], <span class="number">0</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> (<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="number">1</span>], <span class="number">0</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q</span> <span class="op">=</span> (<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="number">1</span>], <span class="number">0</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> (<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">from_literal</span>(<span class="number">1</span>); <span class="number">1</span>], <span class="number">0</span>);
@@ -895,27 +889,33 @@
         <span class="ident">r</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="number">0</span>, <span class="ident">t</span>);
 
         <span class="comment">// Decrease precision of f and g in each iteration</span>
-        <span class="ident">f</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>, <span class="ident">nn</span><span class="op">-</span><span class="ident">i</span>);
-        <span class="ident">g</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="kw-2">&amp;</span><span class="ident">g</span>, <span class="ident">nn</span><span class="op">-</span><span class="ident">i</span>);
+        <span class="ident">f</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="kw-2">&amp;</span><span class="ident">f</span>, <span class="ident">nn</span> <span class="op">-</span> <span class="ident">i</span>);
+        <span class="ident">g</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="kw-2">&amp;</span><span class="ident">g</span>, <span class="ident">nn</span> <span class="op">-</span> <span class="ident">i</span>);
 
         <span class="comment">// TODO: make swap constant time</span>
-        <span class="kw">if</span> <span class="ident">delta</span> <span class="op">&gt;</span> <span class="number">0</span>  <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">g</span>[<span class="number">0</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">T</span>::<span class="ident">default</span>() {
+        <span class="kw">if</span> <span class="ident">delta</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">g</span>[<span class="number">0</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">T</span>::<span class="ident">default</span>() {
             <span class="ident">delta</span> <span class="op">=</span> <span class="op">-</span><span class="ident">delta</span>;
-            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">f</span>; <span class="ident">f</span> <span class="op">=</span> <span class="ident">g</span>; <span class="ident">g</span> <span class="op">=</span> <span class="ident">t</span>;
-            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">q</span>; <span class="ident">q</span> <span class="op">=</span> <span class="ident">u</span>; <span class="ident">u</span> <span class="op">=</span> <span class="ident">t</span>;
-            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">r</span>; <span class="ident">r</span> <span class="op">=</span> <span class="ident">v</span>; <span class="ident">v</span> <span class="op">=</span> <span class="ident">t</span>;
+            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">f</span>;
+            <span class="ident">f</span> <span class="op">=</span> <span class="ident">g</span>;
+            <span class="ident">g</span> <span class="op">=</span> <span class="ident">t</span>;
+            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">q</span>;
+            <span class="ident">q</span> <span class="op">=</span> <span class="ident">u</span>;
+            <span class="ident">u</span> <span class="op">=</span> <span class="ident">t</span>;
+            <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">r</span>;
+            <span class="ident">r</span> <span class="op">=</span> <span class="ident">v</span>;
+            <span class="ident">v</span> <span class="op">=</span> <span class="ident">t</span>;
         }
-        
-        <span class="ident">delta</span> <span class="op">=</span> <span class="ident">delta</span><span class="op">+</span><span class="number">1</span>;
-        <span class="kw">let</span> <span class="ident">f0</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">f</span>[<span class="number">0</span>],<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">g0</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">g</span>[<span class="number">0</span>],<span class="number">0</span>);
+
+        <span class="ident">delta</span> <span class="op">=</span> <span class="ident">delta</span> <span class="op">+</span> <span class="number">1</span>;
+        <span class="kw">let</span> <span class="ident">f0</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">f</span>[<span class="number">0</span>], <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">g0</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">g</span>[<span class="number">0</span>], <span class="number">0</span>);
 
         <span class="comment">// g = (f0*g-g0*f)/x</span>
         <span class="kw">let</span> <span class="ident">t0</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">f0</span>, <span class="kw-2">&amp;</span><span class="ident">g</span>, <span class="ident">n</span>);
         <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">g0</span>, <span class="kw-2">&amp;</span><span class="ident">f</span>, <span class="ident">n</span>);
         <span class="ident">g</span> <span class="op">=</span> <span class="ident">poly_sub</span>(<span class="kw-2">&amp;</span><span class="ident">t0</span>, <span class="kw-2">&amp;</span><span class="ident">t1</span>, <span class="ident">n</span>);
         <span class="ident">g</span> <span class="op">=</span> <span class="ident">poly_divx</span>(<span class="kw-2">&amp;</span><span class="ident">g</span>);
-        
+
         <span class="comment">// q = (f0*q-g0*u)/x</span>
         <span class="kw">let</span> <span class="ident">t0</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">f0</span>, <span class="kw-2">&amp;</span><span class="ident">q</span>.<span class="number">0</span>, <span class="ident">n</span>);
         <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">g0</span>, <span class="kw-2">&amp;</span><span class="ident">u</span>.<span class="number">0</span>, <span class="ident">n</span>);
@@ -931,26 +931,30 @@
     (<span class="ident">delta</span>, <span class="ident">f</span>, <span class="ident">g</span>, <span class="ident">v</span>)
 }
 
-<span class="doccomment">/// Constant-time extended euclidean algorithm to compute the inverse of x in yℤ[x]</span>
+<span class="doccomment">/// Constant-time extended euclidean algorithm to compute the inverse of x in yℤ\[x\]</span>
 <span class="doccomment">/// x.len() and degree of y are assumed to be public</span>
-<span class="doccomment">/// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266 </span>
+<span class="doccomment">/// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extended_euclid</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extended_euclid</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+    <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
+    <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
+    <span class="ident">n</span>: <span class="ident">T</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="ident">yd</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">leading_coefficient</span>(<span class="ident">y</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">yd</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">x</span>.<span class="ident">len</span>());
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">yd</span> <span class="op">&gt;</span> <span class="number">0</span>);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="ident">y</span>, <span class="ident">yd</span><span class="op">+</span><span class="number">1</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="ident">y</span>, <span class="ident">yd</span> <span class="op">+</span> <span class="number">1</span>);
     <span class="ident">f</span>.<span class="ident">reverse</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="ident">x</span>, <span class="ident">yd</span>);
     <span class="ident">g</span>.<span class="ident">reverse</span>();
 
-    <span class="kw">let</span> (<span class="ident">delta</span>,<span class="ident">f</span>,<span class="ident">g</span>,<span class="ident">v</span>) <span class="op">=</span> <span class="ident">divstepsx</span>(<span class="number">2</span><span class="kw-2">*</span><span class="ident">yd</span><span class="op">-</span><span class="number">1</span>,<span class="number">2</span><span class="kw-2">*</span><span class="ident">yd</span><span class="op">-</span><span class="number">1</span>,<span class="kw-2">&amp;</span><span class="ident">f</span>,<span class="kw-2">&amp;</span><span class="ident">g</span>, <span class="ident">n</span>);
+    <span class="kw">let</span> (<span class="ident">delta</span>, <span class="ident">f</span>, <span class="ident">_g</span>, <span class="ident">v</span>) <span class="op">=</span> <span class="ident">divstepsx</span>(<span class="number">2</span> <span class="op">*</span> <span class="ident">yd</span> <span class="op">-</span> <span class="number">1</span>, <span class="number">2</span> <span class="op">*</span> <span class="ident">yd</span> <span class="op">-</span> <span class="number">1</span>, <span class="kw-2">&amp;</span><span class="ident">f</span>, <span class="kw-2">&amp;</span><span class="ident">g</span>, <span class="ident">n</span>);
     <span class="kw">if</span> <span class="ident">delta</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Could not invert the polynomial&quot;</span>);
     }
-    
-    <span class="kw">let</span> <span class="ident">t</span>  <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">T</span>::<span class="ident">invert</span>(<span class="ident">f</span>[<span class="number">0</span>],<span class="ident">n</span>), <span class="number">2</span><span class="kw-2">*</span><span class="ident">yd</span><span class="op">-</span><span class="number">2</span><span class="op">-</span><span class="ident">v</span>.<span class="number">1</span>);
+
+    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">monomial</span>(<span class="ident">T</span>::<span class="ident">invert</span>(<span class="ident">f</span>[<span class="number">0</span>], <span class="ident">n</span>), <span class="number">2</span> <span class="op">*</span> <span class="ident">yd</span> <span class="op">-</span> <span class="number">2</span> <span class="op">-</span> <span class="ident">v</span>.<span class="number">1</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rr</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="ident">t</span>, <span class="kw-2">&amp;</span><span class="ident">v</span>.<span class="number">0</span>, <span class="ident">n</span>);
     <span class="ident">rr</span> <span class="op">=</span> <span class="ident">make_fixed_length</span>(<span class="kw-2">&amp;</span><span class="ident">rr</span>, <span class="ident">yd</span>);
     <span class="ident">rr</span>.<span class="ident">reverse</span>();
@@ -961,7 +965,7 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">poly</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">m</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="doccomment">/// The poly struct for fixed-length polynomials.</span>
-        <span class="doccomment">/// Every polynomial is over ℤn[x]/mℤ[x] and reduced by mℤ[x].</span>
+        <span class="doccomment">/// Every polynomial is over ℤn\[x\]/mℤ\[x\] and reduced by mℤ\[x\].</span>
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
         <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="ident">poly</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>],
@@ -1040,12 +1044,10 @@
             <span class="doccomment">/// **Panics** if the polynomial is not invertible.</span>
             <span class="kw">fn</span> <span class="ident">inv</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;inv {:?}&quot;</span>, <span class="self">self</span>);
-                <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">extended_euclid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">poly</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">irr</span>, <span class="self">self</span>.<span class="ident">n</span>).<span class="ident">unwrap</span>())
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(<span class="ident">extended_euclid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">poly</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">irr</span>, <span class="self">self</span>.<span class="ident">n</span>).<span class="ident">unwrap</span>())
             }
-        }
 
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_vec</span>(<span class="ident">v</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="kw">let</span> (<span class="ident">d</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">leading_coefficient</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>);
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">d</span> <span class="op">&lt;</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
                 <span class="kw">if</span> <span class="ident">d</span> <span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> {
@@ -1099,7 +1101,7 @@
             <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">compatible</span>(<span class="kw-2">&amp;</span><span class="ident">rhs</span>));
                 <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">poly_sub</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">poly</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">poly</span>, <span class="self">self</span>.<span class="ident">n</span>);
-                <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">r</span>)
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(<span class="ident">r</span>)
             }
         }
 
@@ -1109,7 +1111,7 @@
             <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">compatible</span>(<span class="kw-2">&amp;</span><span class="ident">rhs</span>));
                 <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">poly_add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">poly</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">poly</span>, <span class="self">self</span>.<span class="ident">n</span>);
-                <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">r</span>)
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(<span class="ident">r</span>)
             }
         }
 
@@ -1120,7 +1122,7 @@
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">compatible</span>(<span class="kw-2">&amp;</span><span class="ident">rhs</span>));
                 <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">poly</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">poly</span>, <span class="self">self</span>.<span class="ident">n</span>);
                 <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">poly_div</span>(<span class="kw-2">&amp;</span><span class="ident">tmp</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">irr</span>, <span class="self">self</span>.<span class="ident">n</span>).<span class="number">1</span>;
-                <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">r</span>)
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(<span class="ident">r</span>)
             }
         }
 
@@ -1130,52 +1132,10 @@
             <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">compatible</span>(<span class="kw-2">&amp;</span><span class="ident">rhs</span>));
                 <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">poly_div</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">poly</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">poly</span>, <span class="self">self</span>.<span class="ident">n</span>);
-                (<span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">r</span>.<span class="number">0</span>), <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">r</span>.<span class="number">1</span>))
+                (<span class="self">Self</span>::<span class="ident">from_vec</span>(<span class="ident">r</span>.<span class="number">0</span>), <span class="self">Self</span>::<span class="ident">from_vec</span>(<span class="ident">r</span>.<span class="number">1</span>))
             }
         }
     };
-}
-
-<span class="doccomment">/// Polynomial multiplication on ℤ[x]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">Mul</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="ident">poly_mul</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">b</span>, <span class="ident">T</span>::<span class="ident">default</span>()),
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-}
-
-<span class="doccomment">/// Polynomial subtraction on ℤ[x]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">Sub</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="ident">poly_sub</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">b</span>, <span class="ident">T</span>::<span class="ident">default</span>()),
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-}
-
-<span class="doccomment">/// Polynomial addition on ℤ[x]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">Add</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
-        <span class="self">Self</span> {
-            <span class="ident">b</span>: <span class="ident">poly_add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">b</span>, <span class="ident">T</span>::<span class="ident">default</span>()),
-            <span class="ident">idx</span>: <span class="number">0</span>,
-        }
-    }
-}
-
-<span class="doccomment">/// Polynomial division on ℤ[x]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">TRestrictions</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">Div</span> <span class="kw">for</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> (<span class="self">Self</span>, <span class="self">Self</span>);
-    <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">poly_div</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">rhs</span>.<span class="ident">b</span>, <span class="ident">T</span>::<span class="ident">default</span>());
-        (<span class="self">Self</span> { <span class="ident">b</span>: <span class="ident">r</span>.<span class="number">0</span>, <span class="ident">idx</span>: <span class="number">0</span> }, <span class="self">Self</span> { <span class="ident">b</span>: <span class="ident">r</span>.<span class="number">1</span>, <span class="ident">idx</span>: <span class="number">0</span> })
-    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "hacspec";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

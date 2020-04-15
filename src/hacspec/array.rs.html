@@ -498,6 +498,145 @@
 <span id="498">498</span>
 <span id="499">499</span>
 <span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Arrays</span>
@@ -521,20 +660,31 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">_array_base</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="doccomment">/// Fixed length byte array.</span>
-        <span class="doccomment">/// Because Rust requires fixed length arrays to have a known size at</span>
-        <span class="doccomment">/// compile time there&#39;s no generic fixed length byte array here.</span>
-        <span class="doccomment">/// Use this to define the fixed length byte arrays needed in your code.</span>
+        <span class="comment">// Because Rust requires fixed length arrays to have a known size at</span>
+        <span class="comment">// compile time there&#39;s no generic fixed length byte array here.</span>
+        <span class="comment">// Use this to define the fixed length byte arrays needed in your code.</span>
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
         <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
         <span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="kw">pub</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]);
 
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">Self</span>([<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>])
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_array</span>(<span class="ident">v</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">Self</span>(<span class="ident">v</span>.<span class="ident">clone</span>())
             }
-        }
 
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>];
                 <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">v</span>.<span class="ident">len</span>() {
@@ -545,136 +695,100 @@
         }
 
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="self">Self</span>([<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>])
-            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">capacity</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>
             }
 
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sub_pad</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">A</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">default</span>();
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="ident">r</span>
-                    .<span class="ident">clone</span>()
-                    .<span class="ident">zip</span>(<span class="ident">input</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="ident">r</span>.<span class="ident">start</span>).<span class="ident">take</span>(<span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>))
-                {
-                    <span class="ident">a</span>[<span class="ident">i</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">v</span>;
-                }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">A</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>();
+                <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">len</span>, <span class="ident">a</span>.<span class="ident">len</span>());
+                <span class="ident">a</span> <span class="op">=</span> <span class="ident">a</span>.<span class="ident">update_sub</span>(<span class="number">0</span>, <span class="ident">input</span>, <span class="ident">start</span>, <span class="ident">len</span>);
                 <span class="ident">a</span>
             }
 
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">A</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(
-                    <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">=</span><span class="op">=</span> <span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>,
-                    <span class="string">&quot;sub range is not the length of the output type &quot;</span>
-                );
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_sub_pad</span>(<span class="ident">input</span>, <span class="ident">r</span>)
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sub_range</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="ident">A</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">Self</span>::<span class="ident">from_sub</span>(<span class="ident">input</span>, <span class="ident">r</span>.<span class="ident">start</span>, <span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>)
             }
 
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copy_pad</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>];
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">x</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="ident">tmp</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">x</span>;
-                }
-                <span class="self">Self</span>(<span class="ident">tmp</span>.<span class="ident">clone</span>())
-            }
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copy</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>];
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">x</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="ident">tmp</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">x</span>;
-                }
-                <span class="self">Self</span>(<span class="ident">tmp</span>.<span class="ident">clone</span>())
-            }
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start</span> <span class="op">+</span> <span class="ident">v</span>.<span class="ident">len</span>());
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="self">self</span>[<span class="ident">start</span> <span class="op">+</span> <span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
-                }
-                <span class="self">self</span>
-            }
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-                <span class="kw-2">mut</span> <span class="self">self</span>,
-                <span class="ident">start_out</span>: <span class="ident">usize</span>,
-                <span class="ident">v</span>: <span class="ident">A</span>,
-                <span class="ident">start_in</span>: <span class="ident">usize</span>,
-                <span class="ident">len</span>: <span class="ident">usize</span>,
-            ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_out</span> <span class="op">+</span> <span class="ident">len</span>);
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">start_in</span> <span class="op">+</span> <span class="ident">len</span>);
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> <span class="ident">v</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="ident">start_in</span>).<span class="ident">take</span>(<span class="ident">len</span>).<span class="ident">enumerate</span>() {
-                    <span class="self">self</span>[<span class="ident">start_out</span> <span class="op">+</span> <span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
-                }
-                <span class="self">self</span>
-            }
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>
-            }
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_bytes_be</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">*</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>()] {
-                <span class="kw">const</span> <span class="ident">FACTOR</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">*</span> <span class="ident">FACTOR</span>];
-                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> {
-                    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">from</span>(<span class="self">self</span>[<span class="ident">i</span>]).<span class="ident">to_be_bytes</span>();
-                    <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">FACTOR</span> {
-                        <span class="ident">out</span>[<span class="ident">i</span> <span class="op">*</span> <span class="ident">FACTOR</span> <span class="op">+</span> <span class="ident">j</span>] <span class="op">=</span> <span class="ident">tmp</span>[<span class="ident">j</span>];
-                    }
-                }
-                <span class="ident">out</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">start_out</span>: <span class="ident">usize</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
+                <span class="ident">Seq</span>::<span class="ident">from_sub</span>(<span class="self">self</span>, <span class="ident">start_out</span>, <span class="ident">len</span>)
             }
 
-            <span class="doccomment">/// Get an iterator over this array with chunks of size `chunk_size`.</span>
-            <span class="doccomment">///</span>
-            <span class="doccomment">/// # Examples</span>
-            <span class="doccomment">///</span>
-            <span class="doccomment">/// ```</span>
-            <span class="doccomment">/// use hacspec::prelude::*;</span>
-            <span class="doccomment">///</span>
-            <span class="doccomment">/// public_bytes!(Block, 5);</span>
-            <span class="doccomment">/// let a = Block::from([0, 1, 2, 3, 4]);</span>
-            <span class="doccomment">/// let mut a_chunks = a.chunks(2);</span>
-            <span class="doccomment">/// let a_chunk = a_chunks.next().unwrap();</span>
-            <span class="doccomment">/// assert_eq!(a_chunk.0, 2);</span>
-            <span class="doccomment">/// assert_eq!(a_chunk.1, Seq::&lt;u8&gt;::from_array(&amp;[0, 1]));</span>
-            <span class="doccomment">/// let a_chunk = a_chunks.next().unwrap();</span>
-            <span class="doccomment">/// assert_eq!(a_chunk.0, 2);</span>
-            <span class="doccomment">/// assert_eq!(a_chunk.1, Seq::&lt;u8&gt;::from_array(&amp;[2, 3]));</span>
-            <span class="doccomment">/// let a_chunk = a_chunks.next().unwrap();</span>
-            <span class="doccomment">/// assert_eq!(a_chunk.0, 1);</span>
-            <span class="doccomment">/// assert_eq!(a_chunk.1, Seq::&lt;u8&gt;::from_array(&amp;[4]));</span>
-            <span class="doccomment">///</span>
-            <span class="doccomment">/// let a = Block::from([0, 1, 2, 3, 4]);</span>
-            <span class="doccomment">/// for (l, chunk) in a.chunks(2) {</span>
-            <span class="doccomment">///     println!(&quot;{:x?}&quot;, chunk); // prints [0, 1], [2, 3], [4]</span>
-            <span class="doccomment">/// }</span>
-            <span class="doccomment">/// ```</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chunks</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-                <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">subr</span>(<span class="self">self</span>, <span class="ident">r</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">r</span>.<span class="ident">start</span>, <span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>)
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">num_chunks</span>(
+                <span class="kw-2">&amp;</span><span class="self">self</span>,
+                <span class="ident">chunk_size</span>: <span class="ident">usize</span>
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+                (<span class="self">self</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">chunk_size</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">/</span> <span class="ident">chunk_size</span>
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_chunk_len</span>(
+                <span class="kw-2">&amp;</span><span class="self">self</span>,
                 <span class="ident">chunk_size</span>: <span class="ident">usize</span>,
-            ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">usize</span>, <span class="ident">Seq</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;a</span> {
-                <span class="self">self</span>.<span class="number">0</span>
-                    .<span class="ident">chunks</span>(<span class="ident">chunk_size</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> (<span class="ident">c</span>.<span class="ident">len</span>(), <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">from</span>(<span class="ident">c</span>)))
+                <span class="ident">chunk_number</span>: <span class="ident">usize</span>
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+                <span class="kw">let</span> <span class="ident">idx_start</span> <span class="op">=</span> <span class="ident">chunk_size</span> <span class="op">*</span> <span class="ident">chunk_number</span>;
+                <span class="kw">if</span> <span class="ident">idx_start</span> <span class="op">+</span> <span class="ident">chunk_size</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">len</span>() {
+                    <span class="self">self</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">idx_start</span>
+                } <span class="kw">else</span> {
+                    <span class="ident">chunk_size</span>
+                }
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_chunk</span>(
+                <span class="self">self</span>,
+                <span class="ident">chunk_size</span>: <span class="ident">usize</span>,
+                <span class="ident">chunk_number</span>: <span class="ident">usize</span>
+            ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="ident">Seq</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>) {
+                <span class="kw">let</span> <span class="ident">idx_start</span> <span class="op">=</span> <span class="ident">chunk_size</span> <span class="op">*</span> <span class="ident">chunk_number</span>;
+                <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_chunk_len</span>(<span class="ident">chunk_size</span>, <span class="ident">chunk_number</span>);
+                <span class="kw">let</span> <span class="ident">out</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sub</span>(<span class="ident">idx_start</span>, <span class="ident">len</span>);
+                (<span class="ident">len</span>, <span class="ident">out</span>)
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_chunk</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+                <span class="self">self</span>,
+                <span class="ident">chunk_size</span>: <span class="ident">usize</span>,
+                <span class="ident">chunk_number</span>: <span class="ident">usize</span>,
+                <span class="ident">input</span>: <span class="ident">A</span>,
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="kw">let</span> <span class="ident">idx_start</span> <span class="op">=</span> <span class="ident">chunk_size</span> <span class="op">*</span> <span class="ident">chunk_number</span>;
+                <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_chunk_len</span>(<span class="ident">chunk_size</span>, <span class="ident">chunk_number</span>);
+                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">input</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">len</span>, <span class="string">&quot;the chunk length should match the input&quot;</span>);
+                <span class="self">self</span>.<span class="ident">update_sub</span>(<span class="ident">idx_start</span>, <span class="ident">input</span>, <span class="number">0</span>, <span class="ident">len</span>)
             }
         }
 
         <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">new</span>()
             }
         }
-        <span class="kw">impl</span> <span class="ident">AsMut</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>] {
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>
-            }
-        }
         <span class="kw">impl</span> <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">raw</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>] {
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">create</span>(<span class="ident">x</span>:<span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">x</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
+                <span class="self">Self</span>::<span class="ident">new</span>()
             }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>
             }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">slice</span>::<span class="ident">Iter</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>()
             }
@@ -682,11 +796,13 @@
 
         <span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span>]
             }
         }
         <span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span>]
             }
@@ -694,65 +810,76 @@
 
         <span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
             }
         }
         <span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
             }
         }
         <span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
             }
         }
         <span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
             }
         }
         <span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>;
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">i</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
             }
         }
         <span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="number">0</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>]
             }
         }
         <span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">RangeFull</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>];
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">r</span>: <span class="ident">RangeFull</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>] {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="ident">r</span>]
             }
         }
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">x</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_vec</span>(<span class="ident">x</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">x</span>.<span class="ident">len</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>];
                 <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">e</span>) <span class="kw">in</span> <span class="ident">x</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
                     <span class="ident">tmp</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">e</span>;
                 }
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">tmp</span>.<span class="ident">clone</span>())
             }
-        }
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">Seq</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">x</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>];
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">e</span>) <span class="kw">in</span> <span class="ident">x</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="ident">tmp</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">e</span>;
+
+            <span class="comment">// We can&#39;t use the [From] trait here because otherwise it would conflict with</span>
+            <span class="comment">// the From&lt;T&gt; for T core implementation, as the array also implements the [SeqTrait].</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_seq</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">x</span>.<span class="ident">len</span>(), <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">new</span>();
+                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">x</span>.<span class="ident">len</span>() {
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">x</span>[<span class="ident">i</span>];
                 }
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">tmp</span>.<span class="ident">clone</span>())
+                <span class="ident">out</span>
             }
         }
 
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tmp</span> <span class="op">=</span> [<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>];
                 <span class="ident">tmp</span>.<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">get_random_vec</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>)[..<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]);
@@ -766,11 +893,10 @@
                     .<span class="ident">collect</span>();
                 <span class="ident">b</span>.<span class="ident">expect</span>(<span class="string">&quot;Error parsing hex string&quot;</span>)
             }
-        }
 
-        <span class="doccomment">/// Read hex string to Bytes.</span>
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="doccomment">/// Read hex string to Bytes.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_hex</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">hex_string_to_vec</span>(<span class="ident">s</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">o</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">new</span>();
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
@@ -778,18 +904,6 @@
                     <span class="ident">o</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">v</span>[<span class="ident">i</span>]
                 }
                 <span class="ident">o</span>
-            }
-        }
-
-        <span class="doccomment">/// Element wise xor of two arrays</span>
-        <span class="kw">impl</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">BitXor</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-            <span class="kw">fn</span> <span class="ident">bitxor</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>();
-                <span class="kw">for</span> (<span class="ident">a</span>, (<span class="ident">b</span>, <span class="ident">c</span>)) <span class="kw">in</span> <span class="ident">out</span>.<span class="number">0</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">rhs</span>.<span class="number">0</span>.<span class="ident">iter</span>())) {
-                    <span class="kw-2">*</span><span class="ident">a</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span> <span class="op">^</span> <span class="kw-2">*</span><span class="ident">c</span>;
-                }
-                <span class="ident">out</span>
             }
         }
     };
@@ -804,6 +918,7 @@
 
         <span class="doccomment">/// **Warning:** declassifies secret integer types.</span>
         <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
                 <span class="self">self</span>.<span class="number">0</span>[..]
                     .<span class="ident">iter</span>()
@@ -813,8 +928,9 @@
             }
         }
         <span class="doccomment">/// **Warning:** declassifies secret integer types.</span>
-        <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">declassify_eq</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="number">0</span>[..]
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
@@ -826,37 +942,67 @@
             }
         }
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_random_vec</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
                 (<span class="number">0</span>..<span class="ident">l</span>)
                     .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">classify</span>(<span class="ident">rand</span>::<span class="ident">random</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span><span class="op">&gt;</span>()))
                     .<span class="ident">collect</span>()
             }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_be_bytes</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+               <span class="kw">const</span> <span class="ident">FACTOR</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>();
+               <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> : <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">*</span> <span class="ident">FACTOR</span>);
+               <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> {
+                   <span class="kw">let</span> <span class="ident">tmp</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="self">self</span>[<span class="ident">i</span>];
+                   <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">to_be_bytes</span>(<span class="kw-2">&amp;</span>[<span class="ident">tmp</span>]);
+                   <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">FACTOR</span> {
+                       <span class="ident">out</span>[<span class="ident">i</span> <span class="op">*</span> <span class="ident">FACTOR</span> <span class="op">+</span> <span class="ident">j</span>] <span class="op">=</span> <span class="ident">tmp</span>[<span class="ident">j</span>];
+                   }
+               }
+               <span class="ident">out</span>
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_le_bytes</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+               <span class="kw">const</span> <span class="ident">FACTOR</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>();
+               <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> : <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">*</span> <span class="ident">FACTOR</span>);
+               <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> {
+                   <span class="kw">let</span> <span class="ident">tmp</span> : <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> <span class="op">=</span> <span class="self">self</span>[<span class="ident">i</span>];
+                   <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">to_le_bytes</span>(<span class="kw-2">&amp;</span>[<span class="ident">tmp</span>]);
+                   <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">FACTOR</span> {
+                       <span class="ident">out</span>[<span class="ident">i</span> <span class="op">*</span> <span class="ident">FACTOR</span> <span class="op">+</span> <span class="ident">j</span>] <span class="op">=</span> <span class="ident">tmp</span>[<span class="ident">j</span>];
+                   }
+               }
+               <span class="ident">out</span>
+            }
         }
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
-                <span class="self">Self</span>::<span class="ident">from</span>(
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_public_slice</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(
                     <span class="ident">v</span>[..]
                         .<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
                         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
                 )
             }
-        }
-        <span class="doccomment">/// Create an array from a regular Rust array.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// # Examples</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// ```</span>
-        <span class="doccomment">/// use hacspec::prelude::*;</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// bytes!(Block, 5);</span>
-        <span class="doccomment">/// let b = Block::from([1, 2, 3, 4, 5]);</span>
-        <span class="doccomment">/// ```</span>
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+
+            <span class="doccomment">/// Create an array from a regular Rust array.</span>
+            <span class="doccomment">///</span>
+            <span class="doccomment">/// # Examples</span>
+            <span class="doccomment">///</span>
+            <span class="doccomment">/// ```</span>
+            <span class="doccomment">/// use hacspec::prelude::*;</span>
+            <span class="doccomment">///</span>
+            <span class="doccomment">/// bytes!(Block, 5);</span>
+            <span class="doccomment">/// let b = Block::from_public_array([1, 2, 3, 4, 5]);</span>
+            <span class="doccomment">/// ```</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_public_array</span>(<span class="ident">v</span>: [<span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">v</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>);
-                <span class="self">Self</span>::<span class="ident">from</span>(
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(
                     <span class="ident">v</span>[..]
                         .<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
@@ -872,17 +1018,20 @@
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_array_base</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>);
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_random_vec</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span> {
                 (<span class="number">0</span>..<span class="ident">l</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">rand</span>::<span class="ident">random</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>()).<span class="ident">collect</span>()
             }
         }
 
         <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
                 <span class="self">self</span>.<span class="number">0</span>[..].<span class="ident">fmt</span>(<span class="ident">f</span>)
             }
         }
         <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span>.<span class="number">0</span>[..] <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="number">0</span>[..]
             }
@@ -897,14 +1046,70 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">array</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">U8</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_secret_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">U8</span>, <span class="ident">u8</span>);
+        <span class="macro">_implement_numeric_unsigned_secret</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
+
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_U32s_be</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">U32</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>] {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> [<span class="ident">U32</span>::<span class="ident">default</span>(); <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>];
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_be_U32s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U32</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>);
                 <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">4</span>).<span class="ident">enumerate</span>() {
-                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u32_from_be_bytes</span>(<span class="ident">block</span>.<span class="ident">into</span>());
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">4</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">U32_from_be_bytes</span>(<span class="ident">U32Word</span>::<span class="ident">from_slice</span>(<span class="ident">block</span>));
                 }
                 <span class="ident">out</span>
             }
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_le_U32s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U32</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">4</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">4</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">U32_from_le_bytes</span>(<span class="ident">U32Word</span>::<span class="ident">from_slice</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_be_U64s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U64</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">8</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">8</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">8</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">U64_from_be_bytes</span>(<span class="ident">U64Word</span>::<span class="ident">from_slice</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_le_U64s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U64</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">8</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">8</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">8</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">U64_from_le_bytes</span>(<span class="ident">U64Word</span>::<span class="ident">from_slice</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_U128s_be</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U128</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">16</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">16</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">16</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">U128_from_be_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_U128s_le</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U128</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">16</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">16</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">16</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_hex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
                 <span class="kw">let</span> <span class="ident">strs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:02x}&quot;</span>, <span class="ident">b</span>)).<span class="ident">collect</span>();
                 <span class="ident">strs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
@@ -913,32 +1118,101 @@
     };
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">U16</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_secret_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">U16</span>, <span class="ident">u16</span>);
+        <span class="macro">_implement_numeric_unsigned_secret</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
     };
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">U32</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_secret_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">U32</span>, <span class="ident">u32</span>);
+        <span class="macro">_implement_numeric_unsigned_secret</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
     };
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">U64</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_secret_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">U64</span>, <span class="ident">u64</span>);
+        <span class="macro">_implement_numeric_unsigned_secret</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
     };
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">U128</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_secret_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">U128</span>, <span class="ident">u128</span>);
+        <span class="macro">_implement_numeric_unsigned_secret</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
     };
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">u8</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_public_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">u8</span>);
+        <span class="macro">_implement_numeric_unsigned_public</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
+
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_u32s_be</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u32</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>] {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> [<span class="number">0u32</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>];
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_be_u32s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>);
                 <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">4</span>).<span class="ident">enumerate</span>() {
                     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">4</span>);
                     <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from_be_bytes</span>(<span class="ident">to_array</span>(<span class="ident">block</span>));
                 }
                 <span class="ident">out</span>
             }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_le_u32s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">4</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">4</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">4</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from_le_bytes</span>(<span class="ident">to_array</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_be_u64s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">8</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">8</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">8</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">from_be_bytes</span>(<span class="ident">to_array</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_le_u64s</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">8</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">8</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">8</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">from_le_bytes</span>(<span class="ident">to_array</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_u128s_be</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">16</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">16</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">16</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u128</span>::<span class="ident">from_be_bytes</span>(<span class="ident">to_array</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_u128s_le</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">new</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span> <span class="op">/</span> <span class="number">16</span>);
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">block</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">chunks</span>(<span class="number">16</span>).<span class="ident">enumerate</span>() {
+                    <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">16</span>);
+                    <span class="ident">out</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u128</span>::<span class="ident">from_le_bytes</span>(<span class="ident">to_array</span>(<span class="ident">block</span>));
+                }
+                <span class="ident">out</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">external</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_hex</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
                 <span class="kw">let</span> <span class="ident">strs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:02x}&quot;</span>, <span class="ident">b</span>)).<span class="ident">collect</span>();
                 <span class="ident">strs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>)
             }
         }
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">u16</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro">_public_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">u16</span>);
+        <span class="macro">_implement_numeric_unsigned_public</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">u32</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro">_public_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">u32</span>);
+        <span class="macro">_implement_numeric_unsigned_public</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">u64</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro">_public_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">u64</span>);
+        <span class="macro">_implement_numeric_unsigned_public</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
+    };
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="ident">u128</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="macro">_public_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="ident">u128</span>);
+        <span class="macro">_implement_numeric_unsigned_public</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>);
     };
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">_public_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>);
@@ -969,10 +1243,11 @@
         <span class="macro">_secret_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>);
         <span class="macro">_public_array</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">l</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">tbase</span>);
 
-        <span class="comment">// Conversion function between public and secret array versions.</span>
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="self">Self</span>::<span class="ident">from</span>(
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="doccomment">/// Conversion function between public and secret array versions.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_public</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(
                     <span class="ident">v</span>[..]
                         .<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
@@ -980,9 +1255,12 @@
                 )
             }
         }
-        <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span> {
-                <span class="self">Self</span>::<span class="ident">from</span>(
+
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span> {
+            <span class="doccomment">/// *Warning:* this function declassifies secret integers!</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_secret_declassify</span>(<span class="ident">v</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">public_name</span> {
+                <span class="self">Self</span>::<span class="ident">from_vec</span>(
                     <span class="ident">v</span>[..]
                         .<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))

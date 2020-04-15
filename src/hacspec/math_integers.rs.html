@@ -578,19 +578,121 @@
 <span id="578">578</span>
 <span id="579">579</span>
 <span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
 </pre><div class="example-wrap"><pre class="rust ">
-
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">unsigned_public_integer</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">literal</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">abstract_unsigned_public_integer</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>);
 
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
             <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -631,7 +733,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -648,7 +750,7 @@
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -677,12 +779,26 @@
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">literal</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">abstract_signed_public_integer</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>);
 
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
             <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -723,7 +839,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -740,7 +856,7 @@
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -769,12 +885,26 @@
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">literal</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">abstract_unsigned_secret_integer</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>);
 
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
             <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -815,7 +945,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -832,7 +962,7 @@
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -861,12 +991,26 @@
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">literal</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">abstract_signed_secret_integer</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>);
 
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
             <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -907,7 +1051,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -924,7 +1068,7 @@
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -955,12 +1099,26 @@
         <span class="comment">// unsigned_integer!($base, $bits);</span>
         <span class="comment">// secret_modular_integer!($name, $base, $base::from_hex($n));</span>
 
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
             <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -1001,7 +1159,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -1018,7 +1176,7 @@
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -1051,34 +1209,54 @@
         <span class="comment">// FIXME: check if we really need this and maybe move this somewhere.</span>
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_le</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_bytes_le</span>(
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_le_bytes</span>(
                     <span class="ident">s</span>.<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
                         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
                         .<span class="ident">as_slice</span>(),
                 )
             }
-    
+
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_public_byte_seq_le</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+                <span class="ident">Seq</span>::<span class="ident">from_vec</span>(
+                    <span class="self">self</span>.<span class="ident">to_le_bytes</span>()
+                )
+            }
+
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_byte_seq_le</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-                <span class="ident">Seq</span>::<span class="ident">from</span>(
-                    <span class="self">self</span>.<span class="ident">to_bytes_le</span>()
+                <span class="ident">Seq</span>::<span class="ident">from_vec</span>(
+                    <span class="self">self</span>.<span class="ident">to_le_bytes</span>()
                         .<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
                         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
                 )
             }
-    
+
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_secret_literal</span>(<span class="ident">x</span>: <span class="ident">U128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_literal</span>(<span class="ident">U128</span>::<span class="ident">declassify</span>(<span class="ident">x</span>))
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
             <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -1119,7 +1297,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
@@ -1136,7 +1314,7 @@
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();

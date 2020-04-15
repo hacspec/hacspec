@@ -265,6 +265,33 @@
 <span id="265">265</span>
 <span id="266">266</span>
 <span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module implements the `Numeric` trait for machine integers.</span>
@@ -277,15 +304,28 @@
 <span class="doccomment">//!</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">numeric</span>::<span class="ident">Numeric</span>;
 
 <span class="comment">// Macro to implement the Numeric trait for built-in machine integers.</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">implement_public_mi</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">max_value</span>()
+            }
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span>.<span class="ident">wrapping_add</span>(<span class="ident">rhs</span>)
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span>.<span class="ident">wrapping_sub</span>(<span class="ident">rhs</span>)
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span>.<span class="ident">wrapping_mul</span>(<span class="ident">rhs</span>)
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span>.<span class="ident">wrapping_div</span>(<span class="ident">rhs</span>)
             }
 
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
@@ -293,7 +333,7 @@
                 <span class="self">self</span>.<span class="ident">pow</span>(<span class="ident">exp</span>)
             }
             <span class="doccomment">/// `self ^ exp` where `exp` is a `Self`.</span>
-            <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// (self - rhs) % n.</span>
@@ -309,7 +349,7 @@
                 (<span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>) <span class="op">%</span> <span class="ident">n</span>
             }
             <span class="doccomment">/// `(self ^ exp) % n`</span>
-            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// Division.</span>
@@ -328,7 +368,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>
@@ -345,7 +385,7 @@
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">other</span>
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">if</span> <span class="self">self</span> <span class="op">!</span><span class="op">=</span> <span class="ident">other</span> {
@@ -410,19 +450,33 @@
 <span class="comment">// Macro to implement the Numeric trait for secret machine integers.</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">implement_secret_mi</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">ty</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
+        <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {}
+        <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">Self</span>::<span class="ident">from</span>(<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span><span class="op">&gt;</span>::<span class="ident">max_value</span>())
             }
-        
+
+            <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
+            }
+            <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
             <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">declassify</span>(<span class="self">self</span>);
                 <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">s</span>.<span class="ident">pow</span>(<span class="ident">exp</span>))
             }
             <span class="doccomment">/// `self ^ exp` where `exp` is a `Self`.</span>
-            <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// (self - rhs) % n.</span>
@@ -447,7 +501,7 @@
                 <span class="self">Self</span>::<span class="ident">from</span>((<span class="ident">s</span> <span class="op">*</span> <span class="ident">o</span>) <span class="op">%</span> <span class="ident">n</span>)
             }
             <span class="doccomment">/// `(self ^ exp) % n`</span>
-            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// Division.</span>
@@ -470,7 +524,7 @@
             <span class="kw">fn</span> <span class="ident">abs</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-        
+
             <span class="comment">// Comparison functions returning bool.</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">declassify</span>(<span class="self">self</span>);
@@ -497,7 +551,7 @@
                 <span class="kw">let</span> <span class="ident">o</span> <span class="op">=</span> <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span><span class="op">&gt;</span>::<span class="ident">declassify</span>(<span class="ident">other</span>);
                 <span class="ident">s</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">o</span>
             }
-        
+
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span>.<span class="ident">comp_ne</span>(<span class="ident">other</span>)
