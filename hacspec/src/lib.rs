@@ -32,7 +32,6 @@ pub mod traits;
 pub mod poly;
 pub mod prelude;
 pub mod seq;
-pub mod test_vectors;
 pub mod util;
 pub mod vec_integers;
 pub mod transmute;
