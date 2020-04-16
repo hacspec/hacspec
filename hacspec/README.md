@@ -1,4 +1,4 @@
-# Hacspec lib
+# hacspec lib
 
 ## Print attributes and statistics
 

@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_dev::*;
 
 #[test]
 fn test_create_test_vectors() {
