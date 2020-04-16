@@ -5,79 +5,10 @@
 
 use crate::prelude::*;
 
-// FIXME: Add wrapping ops to Numeric
-pub trait TempNumeric : Numeric {
-    const NUM_BITS: u32;
-    const ZERO: Self;
-    const ONE: Self;
-    const TWO: Self;
-    fn from_literal(val: u128) -> Self;
-    #[inline]
-    fn get_bit(self, i: u32) -> Self {
-        (self >> i) & Self::ONE
-    }
-    #[inline]
-    fn set_bit(self, b: Self, i: u32) -> Self {
-        debug_assert!(b.equal(Self::ONE) || b.equal(Self::ZERO));
-        let tmp1 = Self::from_literal(!(1 << i));
-        let tmp2 = b << i;
-        (self & tmp1) | tmp2
-    }
-    #[inline]
-    fn set(self, pos: u32, y: Self, yi: u32) -> Self {
-        let b = y.get_bit(yi);
-        self.set_bit(b, pos)
-    }
-}
-
-macro_rules! implement_temp_numeric {
-    ($t:ty, $bits:literal) => {
-        impl TempNumeric for $t {
-            const NUM_BITS: u32 = $bits;
-            const ZERO: Self = 0;
-            const ONE: Self = 1;
-            const TWO: Self = 2;
-
-            #[inline]
-            fn from_literal(val: u128) -> Self {
-                val as $t
-            }
-        }
-    };
-}
-
-macro_rules! implement_temp_secret_numeric {
-    ($t:ident, $base:ty, $bits:literal) => {
-        impl TempNumeric for $t {
-            const NUM_BITS: u32 = $bits;
-            const ZERO: Self = $t(0);
-            const ONE: Self = $t(1);
-            const TWO: Self = $t(2);
-
-            #[inline]
-            fn from_literal(val: u128) -> Self {
-                Self::classify(val as $base)
-            }
-        }
-    };
-}
-
-implement_temp_numeric!(u8, 8);
-implement_temp_numeric!(u16, 16);
-implement_temp_numeric!(u32, 32);
-implement_temp_numeric!(u64, 64);
-implement_temp_numeric!(u128, 128);
-
-implement_temp_secret_numeric!(U8, u8, 8);
-implement_temp_secret_numeric!(U16, u16, 16);
-implement_temp_secret_numeric!(U32, u32, 32);
-implement_temp_secret_numeric!(U64, u64, 64);
-implement_temp_secret_numeric!(U128, u128, 128);
-
 /// Conditional, constant-time swapping.
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == 1`.
 #[inline]
-pub fn cswap_bit<T: TempNumeric>(x: T, y: T, c: T) -> (T, T) {
+pub fn cswap_bit<T: IntegerRename>(x: T, y: T, c: T) -> (T, T) {
     cswap(x, y, T::default().wrap_sub(c))
 }
 
@@ -85,7 +16,7 @@ pub fn cswap_bit<T: TempNumeric>(x: T, y: T, c: T) -> (T, T) {
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == T::max`.
 /// The return value is undefined if `c` has any other value.
 #[inline]
-pub fn cswap<T: TempNumeric>(x: T, y: T, c: T) -> (T, T) {
+pub fn cswap<T: IntegerRename>(x: T, y: T, c: T) -> (T, T) {
     let mask = c & (x ^ y);
     (x ^ mask, y ^ mask)
 }
@@ -93,7 +24,7 @@ pub fn cswap<T: TempNumeric>(x: T, y: T, c: T) -> (T, T) {
 /// Set bit at position `i` in `x` to `b` if `c` is all 1 and return the restult.
 /// Returns `x` if `c` is `0`.
 #[inline]
-pub fn cset_bit<T: TempNumeric>(x: T, b: T, i: u32, c: T) -> T {
+pub fn cset_bit<T: IntegerRename>(x: T, b: T, i: u32, c: T) -> T {
     let set = x.set_bit(b, i);
     let (out, _) = cswap(x, set, c);
     out
@@ -103,7 +34,7 @@ pub fn cset_bit<T: TempNumeric>(x: T, b: T, i: u32, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-pub fn cadd<T: TempNumeric>(x: T, y: T, c: T) -> T {
+pub fn cadd<T: IntegerRename>(x: T, y: T, c: T) -> T {
     let sum = x.wrap_add(y);
     let (x, _) = cswap(x, sum, c);
     x
@@ -113,7 +44,7 @@ pub fn cadd<T: TempNumeric>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-pub fn csub<T: TempNumeric>(x: T, y: T, c: T) -> T {
+pub fn csub<T: IntegerRename>(x: T, y: T, c: T) -> T {
     let diff = x.wrap_sub(y);
     let (x, _) = cswap(x, diff, c);
     x
@@ -123,7 +54,7 @@ pub fn csub<T: TempNumeric>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Multiplication is always wrapping.
 #[inline]
-pub fn cmul<T: TempNumeric>(x: T, y: T, c: T) -> T {
+pub fn cmul<T: IntegerRename>(x: T, y: T, c: T) -> T {
     let prod = x.wrap_mul(y);
     let (x, _) = cswap(x, prod, c);
     x
@@ -133,7 +64,7 @@ pub fn cmul<T: TempNumeric>(x: T, y: T, c: T) -> T {
 /// Note that this function is only constant time if `T` is a secret integer and
 /// hence provides constant time implementations for the used functions.
 #[inline]
-pub fn ct_div<T: TempNumeric>(a: T, d: T) -> (T, T) {
+pub fn ct_div<T: IntegerRename>(a: T, d: T) -> (T, T) {
     let mut q = T::default();
     let mut r = T::default();
     for i in (0..T::NUM_BITS).rev() {

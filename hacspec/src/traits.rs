@@ -65,7 +65,44 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     }
 }
 
-pub trait SecretInteger {}
+// FIXME: rename
+/// This trait extends the `Numeric` trait and is implemented by all integer
+/// types. It offers bit manipulation, instantiation from literal, and convenient
+/// constants.
+pub trait IntegerRename: Numeric {
+    const NUM_BITS: u32;
+    const ZERO: Self;
+    const ONE: Self;
+    const TWO: Self;
+
+    /// Get an integer with value `val`.
+    fn from_literal(val: u128) -> Self;
+
+    /// Get bit `i` of this integer.
+    #[inline]
+    fn get_bit(self, i: u32) -> Self {
+        (self >> i) & Self::ONE
+    }
+
+    /// Set bit `i` of this integer to `b` and return the result.
+    /// Bit `b` has to be `0` or `1`.
+    #[inline]
+    fn set_bit(self, b: Self, i: u32) -> Self {
+        debug_assert!(b.equal(Self::ONE) || b.equal(Self::ZERO));
+        let tmp1 = Self::from_literal(!(1 << i));
+        let tmp2 = b << i;
+        (self & tmp1) | tmp2
+    }
+
+    /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+    #[inline]
+    fn set(self, pos: u32, y: Self, yi: u32) -> Self {
+        let b = y.get_bit(yi);
+        self.set_bit(b, pos)
+    }
+}
+
+pub trait SecretInteger: IntegerRename {}
 
 impl SecretInteger for U8 {}
 impl SecretInteger for U16 {}

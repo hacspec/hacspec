@@ -12,8 +12,19 @@ use crate::prelude::*;
 
 // Macro to implement the Numeric trait for built-in machine integers.
 macro_rules! implement_public_mi {
-    ($t:ty) => {
+    ($t:ty,$bits:literal) => {
         impl Numeric for $t {}
+        impl IntegerRename for $t {
+            const NUM_BITS: u32 = $bits;
+            const ZERO: Self = 0;
+            const ONE: Self = 1;
+            const TWO: Self = 2;
+
+            #[inline]
+            fn from_literal(val: u128) -> Self {
+                val as $t
+            }
+        }
         impl NumericBase for $t {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
@@ -138,24 +149,35 @@ macro_rules! implement_public_mi {
     };
 }
 
-implement_public_mi!(u8);
-implement_public_mi!(u16);
-implement_public_mi!(u32);
-implement_public_mi!(u64);
-implement_public_mi!(u128);
+implement_public_mi!(u8, 8);
+implement_public_mi!(u16, 16);
+implement_public_mi!(u32, 32);
+implement_public_mi!(u64, 64);
+implement_public_mi!(u128, 128);
 
-implement_public_mi!(i8);
-implement_public_mi!(i16);
-implement_public_mi!(i32);
-implement_public_mi!(i64);
-implement_public_mi!(i128);
+implement_public_mi!(i8, 8);
+implement_public_mi!(i16, 16);
+implement_public_mi!(i32, 32);
+implement_public_mi!(i64, 64);
+implement_public_mi!(i128, 128);
 
 
 // FIXME: This is currently NOT constant time! Implement the underlying algorithms in secret integer.
 // Macro to implement the Numeric trait for secret machine integers.
 macro_rules! implement_secret_mi {
-    ($t:ty,$base:ty) => {
+    ($t:ident,$base:ty,$bits:literal) => {
         impl Numeric for $t {}
+        impl IntegerRename for $t {
+            const NUM_BITS: u32 = $bits;
+            const ZERO: Self = $t(0);
+            const ONE: Self = $t(1);
+            const TWO: Self = $t(2);
+
+            #[inline]
+            fn from_literal(val: u128) -> Self {
+                Self::classify(val as $base)
+            }
+        }
         impl NumericBase for $t {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
@@ -289,15 +311,15 @@ macro_rules! implement_secret_mi {
     };
 }
 
-implement_secret_mi!(U8, u8);
-implement_secret_mi!(U16, u16);
-implement_secret_mi!(U32, u32);
-implement_secret_mi!(U64, u64);
-implement_secret_mi!(U128, u128);
+implement_secret_mi!(U8, u8, 8);
+implement_secret_mi!(U16, u16, 16);
+implement_secret_mi!(U32, u32, 32);
+implement_secret_mi!(U64, u64, 64);
+implement_secret_mi!(U128, u128, 128);
 
 // FIXME: requires code in secret integers for constant-time comparison
-implement_secret_mi!(I8, i8);
-implement_secret_mi!(I16, i16);
-implement_secret_mi!(I32, i32);
-implement_secret_mi!(I64, i64);
-implement_secret_mi!(I128, i128);
+implement_secret_mi!(I8, i8, 8);
+implement_secret_mi!(I16, i16, 16);
+implement_secret_mi!(I32, i32, 32);
+implement_secret_mi!(I64, i64, 64);
+implement_secret_mi!(I128, i128, 128);
