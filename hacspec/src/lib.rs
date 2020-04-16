@@ -21,9 +21,6 @@
 //! * add `cargo hacspec fstar` command
 //!
 
-pub use rand;
-use std::ops::{Index, IndexMut, Range, RangeFull};
-
 pub mod array;
 pub mod integer;
 pub mod machine_integers;
@@ -39,6 +36,7 @@ pub mod transmute;
 
 use crate::prelude::*;
 
+// XXX: How can we document these things nicely?
 // The following are only for documentation purposes.
 bytes!(DocSecretBytes, 64);
 public_bytes!(DocPublicBytes, 64);
@@ -48,51 +46,7 @@ array!(DocPublicArray, 64, u32);
 bytes!(U32Word, 4);
 bytes!(U128Word, 16);
 bytes!(U64Word, 8);
-array!(Counter, 2, usize);
 
-array!(u32Word, 4, u8);
-array!(u64Word, 8, u8);
-array!(u128Word, 16, u8);
-
-
-#[macro_export]
-macro_rules! secret_array {
-    ( $int_type: ident, [ $( $x:expr ),+ ] ) => {
-        [
-            $(
-                $int_type($x)
-            ),+
-        ]
-    }
-}
-
-#[macro_export]
-macro_rules! secret_bytes {
-    ([ $( $x:expr ),+ ] ) => {
-        secret_array!(U8, [$($x),+])
-    }
-}
-
-#[macro_export]
-macro_rules! assert_secret_array_eq {
-    ( $a1: expr, $a2: expr, $si: ident) => {
-        assert_eq!(
-            $a1.iter().map(|x| $si::declassify(*x)).collect::<Vec<_>>(),
-            $a2.iter().map(|x| $si::declassify(*x)).collect::<Vec<_>>()
-        );
-    };
-}
-
-#[macro_export]
-macro_rules! assert_bytes_eq {
-    ( $a1: expr, $a2: expr) => {
-        assert_secret_array_eq!($a1, $a2, U8)
-    };
-}
-
-#[macro_export]
-macro_rules! unsigned_integer_old_public {
-    ($name:ident, $bits:literal) => {
-        define_abstract_integer_checked!($name, $bits);
-    };
-}
+public_bytes!(u32Word, 4);
+public_bytes!(u64Word, 8);
+public_bytes!(u128Word, 16);

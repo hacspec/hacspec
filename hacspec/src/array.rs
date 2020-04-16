@@ -598,6 +598,41 @@ macro_rules! public_bytes {
 }
 
 #[macro_export]
+macro_rules! secret_array {
+    ( $int_type: ident, [ $( $x:expr ),+ ] ) => {
+        [
+            $(
+                $int_type($x)
+            ),+
+        ]
+    }
+}
+
+#[macro_export]
+macro_rules! secret_bytes {
+    ([ $( $x:expr ),+ ] ) => {
+        secret_array!(U8, [$($x),+])
+    }
+}
+
+#[macro_export]
+macro_rules! assert_secret_array_eq {
+    ( $a1: expr, $a2: expr, $si: ident) => {
+        assert_eq!(
+            $a1.iter().map(|x| $si::declassify(*x)).collect::<Vec<_>>(),
+            $a2.iter().map(|x| $si::declassify(*x)).collect::<Vec<_>>()
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! assert_bytes_eq {
+    ( $a1: expr, $a2: expr) => {
+        assert_secret_array_eq!($a1, $a2, U8)
+    };
+}
+
+#[macro_export]
 macro_rules! both_arrays {
     ($public_name:ident, $name:ident, $l:expr, $t:ty, $tbase:ty) => {
         _secret_array!($name, $l, $t, $tbase);

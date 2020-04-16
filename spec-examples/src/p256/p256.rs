@@ -3,7 +3,7 @@ use hacspec::prelude::*;
 
 public_nat_mod!(FieldElement, FieldCanvas, 256, "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff");
 
-unsigned_integer_old_public!(Scalar, 256);
+abstract_unsigned_public_integer!(Scalar, 256);
 
 // TODO: these two aren't cool
 type Jacobian = (FieldElement, FieldElement, FieldElement);

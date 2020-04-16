@@ -20,7 +20,7 @@ pub use secret_integers::*;
 #[cfg(feature = "use_attributes")]
 pub use hacspec_attributes::*;
 pub use num::{self, BigUint, CheckedSub, Num, Zero};
-pub use rand::Rng;
+pub use rand::{self, Rng};
 pub use serde::{Deserialize, Serialize};
 pub use std::fs::File;
 pub use std::io::BufReader;
