@@ -2,6 +2,7 @@
 [workspace]
 members = [
     "hacspec",
+    "hacspec-dev",
     "secret-integers",
     "abstract-integers",
     "spec-examples",
