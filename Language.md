@@ -1,5 +1,6 @@
 # hacspec language
 
+```
     Items i :=
       | use u; (* import modules *)
       | const x : tau = c; (* constant variables *)
@@ -10,21 +11,21 @@
       | fn f([x: tau,]+) -> tau' { e } (* function *)
       | enum y { [z(tau),]+ } (* enum type *)
       | struct y { [f: tau,]+ } (* struct type *)
-    
-    Use path u := 
+
+    Use path u :=
       | [m::]*m' (* sequence of nested modules*)
-    
+
     Type tau :=
       | bool | usize
-      | u8 | u16 | u32 | u64 | u128 | U8 | U16 | U32 | U64 | U128 
-      | i8 | i16 | i32 | i64 | i128 | I8 | I16 | I32 | I64 | I128 
+      | u8 | u16 | u32 | u64 | u128 | U8 | U16 | U32 | U64 | U128
+      | i8 | i16 | i32 | i64 | i128 | I8 | I16 | I32 | I64 | I128
       | Seq<tau> (* Unknown-length array *)
       | SeqSlice<tau> (* read-only unknown-length reference to array *)
       | [tau; c] (* fixed-length array *)
       | y (* type variable *)
       | ([tau,]+) (* tuples *)
       | Range
-    
+
     Statement s :=
       | let (mut) p (: tau) = e (* let binding *)
       | x = e (* mutable variable reassignment *)
@@ -32,10 +33,10 @@
       | for x in e1..e2 { s } (* for loop *)
       | s1; s2 (* sequencing *)
       | x[e1] = e2 (* array update *)
-    
+
     Expression e :=
       | l (* literal *) | (u::)x (* variable *)
-      | (u::)(y::)f([e]+) (* function call *) 
+      | (u::)(y::)f([e]+) (* function call *)
       | e.f([e']+)  (* method call *)
       | e1.e2 (* field access *)
       | e1..e2 (* range *)
@@ -44,14 +45,22 @@
       | match e {[| p -> e']+ }
       | z(e) (* enum constructors *)
       | e1 as e2 (* UNsafe integer casting *)
-    
-    Operator op := + | - | * | / | ^ | && | || | & | | | % | >> | << | 
+
+    Operator op := + | - | * | / | ^ | && | || | & | | | % | >> | << |
        | == | != | <= | >=
-    Unary operator unop := ~ | ! | - 
-    
+    Unary operator unop := ~ | ! | -
+
     Pattern p :=
-      | x 
+      | x
       | ([p,]*) (* tuple destructuring *)
       | z(p) (* enum destructuring *)
       | _ (* wildcard *)
+```
 
+## Print primitive/forbidden functions
+
+Inside `hacspec/`,
+
+```
+cargo build --features="print_attributes"
+```

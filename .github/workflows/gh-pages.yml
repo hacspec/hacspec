@@ -13,7 +13,8 @@ jobs:
       - uses: actions/checkout@master
       - name: Build docs
         run: |
-          cargo doc --all-features
+          rustup toolchain install nightly
+          cargo +nightly doc --all-features
           touch target/doc/.nojekyll
           cat > target/doc/index.html <<EOF
           <!doctype html>

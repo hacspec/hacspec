@@ -9,15 +9,28 @@
 //!
 
 use crate::prelude::*;
-use crate::numeric::Numeric;
 
 // Macro to implement the Numeric trait for built-in machine integers.
 macro_rules! implement_public_mi {
     ($t:ty) => {
-        impl Numeric for $t {
+        impl Numeric for $t {}
+        impl NumericBase for $t {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 <$t>::max_value()
+            }
+
+            fn wrap_add(self, rhs: Self) -> Self {
+                self.wrapping_add(rhs)
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self.wrapping_sub(rhs)
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self.wrapping_mul(rhs)
+            }
+            fn wrap_div(self, rhs: Self) -> Self {
+                self.wrapping_div(rhs)
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
@@ -25,7 +38,7 @@ macro_rules! implement_public_mi {
                 self.pow(exp)
             }
             /// `self ^ exp` where `exp` is a `Self`.
-            fn pow_self(self, exp: Self) -> Self {
+            fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// (self - rhs) % n.
@@ -41,7 +54,7 @@ macro_rules! implement_public_mi {
                 (self * rhs) % n
             }
             /// `(self ^ exp) % n`
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
@@ -60,7 +73,7 @@ macro_rules! implement_public_mi {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 self == other
@@ -77,7 +90,7 @@ macro_rules! implement_public_mi {
             fn less_than_or_equal(self, other: Self) -> bool {
                 self <= other
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 if self != other {
@@ -142,12 +155,26 @@ implement_public_mi!(i128);
 // Macro to implement the Numeric trait for secret machine integers.
 macro_rules! implement_secret_mi {
     ($t:ty,$base:ty) => {
-        impl Numeric for $t {
+        impl Numeric for $t {}
+        impl NumericBase for $t {
             /// Return largest value that can be represented.
             fn max_val() -> Self {
                 Self::from(<$base>::max_value())
             }
-        
+
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            fn wrap_div(self, _rhs: Self) -> Self {
+                unimplemented!();
+            }
+
             /// `self ^ exp` where `exp` is a `u32`.
             /// **Note:** the exponent `exp` MUST not be secret.
             fn pow(self, exp: u32) -> Self {
@@ -163,7 +190,7 @@ macro_rules! implement_secret_mi {
             }
             /// `self ^ exp` where `exp` is a `Self`.
             /// Here both, base and exponent, are secret.
-            fn pow_self(self, exp: Self) -> Self {
+            fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// (self - rhs) % n.
@@ -188,7 +215,7 @@ macro_rules! implement_secret_mi {
                 Self::from((s * o) % n)
             }
             /// `(self ^ exp) % n`
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
@@ -211,7 +238,7 @@ macro_rules! implement_secret_mi {
             fn abs(self) -> Self {
                 unimplemented!();
             }
-        
+
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 let s = <$t>::declassify(self);
@@ -238,7 +265,7 @@ macro_rules! implement_secret_mi {
                 let o = <$t>::declassify(other);
                 s <= o
             }
-        
+
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self {
                 self.comp_ne(other)

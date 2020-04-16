@@ -197,7 +197,7 @@ macro_rules! define_secret_integer {
                 !Self::zero()
             }
 
-            pub fn from_bytes_le(bytes: &[U8]) -> Vec<$name> {
+            pub fn from_le_bytes(bytes: &[U8]) -> Vec<$name> {
                 assert!(bytes.len() % ($bits/8) == 0);
                 bytes.chunks($bits/8).map(|chunk| {
                     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
@@ -212,7 +212,7 @@ macro_rules! define_secret_integer {
                 }).collect::<Vec<$name>>()
             }
 
-            pub fn to_bytes_le(ints: &[$name]) -> Vec<U8> {
+            pub fn to_le_bytes(ints: &[$name]) -> Vec<U8> {
                 ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {
@@ -223,7 +223,7 @@ macro_rules! define_secret_integer {
                 }).flatten().collect()
             }
 
-            pub fn from_bytes_be(bytes: &[U8]) -> Vec<$name> {
+            pub fn from_be_bytes(bytes: &[U8]) -> Vec<$name> {
                 assert!(bytes.len() % ($bits/8) == 0);
                 bytes.chunks($bits/8).map(|chunk| {
                     let mut chunk_raw : [u8; $bits/8] = [0u8; $bits/8];
@@ -238,7 +238,7 @@ macro_rules! define_secret_integer {
                 }).collect::<Vec<$name>>()
             }
 
-            pub fn to_bytes_be(ints: &[$name]) -> Vec<U8> {
+            pub fn to_be_bytes(ints: &[$name]) -> Vec<U8> {
                 ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {
@@ -247,10 +247,6 @@ macro_rules! define_secret_integer {
                     let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
                     secret_bytes
                 }).flatten().collect()
-            }
-
-            pub fn to_be_bytes(&self) -> Vec<u8> {
-                $name::declassify(*self).to_be_bytes().to_vec()
             }
 
             pub fn max_value() -> $name {
@@ -290,7 +286,7 @@ macro_rules! define_secret_integer {
         define_bitwise_op!($name, |, BitOr, bitor, BitOrAssign, bitor_assign);
         define_bitwise_op!($name, ^, BitXor, bitxor, BitXorAssign, bitxor_assign);
 
-        /// `Not` has bitwise semantics for integers
+        // `Not` has bitwise semantics for integers
         define_unary_op!($name, !, Not, not);
 
         // Printing integers.
@@ -322,7 +318,7 @@ macro_rules! define_secret_integer {
 
 macro_rules! define_secret_unsigned_integer {
     ($name:ident, $repr:ty, $bits:tt) => {
-        /// Secret unsigned integer.
+        // Secret unsigned integer.
         define_secret_integer!($name, $repr, $bits);
         impl Neg for $name {
             type Output = Self;
@@ -400,14 +396,14 @@ macro_rules! define_secret_unsigned_integer {
 
 macro_rules! define_secret_signed_integer {
     ($name:ident, $repr:ty, $bits:tt) => {
-        /// Secret signed integer.
+        // Secret signed integer.
         define_secret_integer!($name, $repr, $bits);
         define_unary_op!($name, -, Neg, neg);
 
         /// # Constant-time comparison operators
         impl $name {
             #[inline]
-            pub fn comp_eq(self, rhs: Self) -> Self {
+            pub fn comp_eq(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
 
@@ -417,28 +413,28 @@ macro_rules! define_secret_signed_integer {
             pub fn comp_ne(self, rhs: Self) -> Self {
                 !self.comp_eq(rhs)
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is greater than or
             /// equal to the second argument, and all zeroes otherwise. With inspiration from
             #[inline]
-            pub fn comp_gte(self, rhs: Self) -> Self {
+            pub fn comp_gte(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is strictly greater
             /// than the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_gt(self, rhs: Self) -> Self {
                 self.comp_gte(rhs) ^ self.comp_eq(rhs)
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is less than or
             /// equal to the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_lte(self, rhs: Self) -> Self {
                 !self.comp_gt(rhs)
             }
-    
+
             /// Produces a new integer which is all ones if the first argument is strictly less than
             /// the second argument, and all zeroes otherwise.
             #[inline]
@@ -518,12 +514,19 @@ macro_rules! define_unsafe_casting {
 }
 
 macro_rules! define_signed_unsigned_casting {
-    ($unsigned:ident, $unsiged_repr:ident, $signed:ident, $signed_repr:ident) => {
+    ($unsigned:ident, $unsigned_repr:ident, $signed:ident, $signed_repr:ident) => {
         /// **Warning:** wrapping semantics.
         impl From<$unsigned> for $signed {
             #[inline]
             fn from(x: $unsigned) -> $signed {
                 $signed(x.0 as $signed_repr)
+            }
+        }
+
+        impl From<$signed> for $unsigned {
+            #[inline]
+            fn from(x: $signed) -> $unsigned {
+                $unsigned(x.0 as $unsigned_repr)
             }
         }
     };

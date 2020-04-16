@@ -12,9 +12,6 @@ pub trait TempNumeric : Numeric {
     const ONE: Self;
     const TWO: Self;
     fn from_literal(val: u128) -> Self;
-    fn wrap_sub(self, y: Self) -> Self;
-    fn wrap_add(self, y: Self) -> Self;
-    fn wrap_mul(self, y: Self) -> Self;
     #[inline]
     fn get_bit(self, i: u32) -> Self {
         (self >> i) & Self::ONE
@@ -45,21 +42,6 @@ macro_rules! implement_temp_numeric {
             fn from_literal(val: u128) -> Self {
                 val as $t
             }
-
-            #[inline]
-            fn wrap_sub(self, y: Self) -> Self {
-                self.wrapping_sub(y)
-            }
-
-            #[inline]
-            fn wrap_add(self, y: Self) -> Self {
-                self.wrapping_add(y)
-            }
-
-            #[inline]
-            fn wrap_mul(self, y: Self) -> Self {
-                self.wrapping_mul(y)
-            }
         }
     };
 }
@@ -75,21 +57,6 @@ macro_rules! implement_temp_secret_numeric {
             #[inline]
             fn from_literal(val: u128) -> Self {
                 Self::classify(val as $base)
-            }
-
-            #[inline]
-            fn wrap_sub(self, y: Self) -> Self {
-                self - y
-            }
-
-            #[inline]
-            fn wrap_add(self, y: Self) -> Self {
-                self + y
-            }
-
-            #[inline]
-            fn wrap_mul(self, y: Self) -> Self {
-                self * y
             }
         }
     };
