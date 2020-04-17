@@ -21,7 +21,7 @@ The clippy checker for the hacspec language lives in a [separate repository](htt
 
 # Examples
 There's a set of example specs [here](spec-examples/).
-To run all examples one can either use `cargo test`.
+To run all examples one can use `cargo test -p hacspec-examples`.
 
 * [AES 128/256](hacspec/spec-examples/aes-gcm/aes.rs)
 * [GF 128](hacspec/spec-examples/aes-gcm/gf128.rs)
