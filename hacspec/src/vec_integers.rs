@@ -151,6 +151,33 @@ macro_rules! _implement_numeric_unsigned_public {
         }
 
         impl Numeric for $name {}
+        impl ModNumeric for $name {
+            /// (self - rhs) % n.
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn sub_mod(self, _rhs: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self + rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn add_mod(self, _rhs: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self * rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn mul_mod(self, _rhs: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self ^ exp) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `self % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn modulo(self, _n: Self) -> Self {
+                unimplemented!();
+            }
+        }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -189,34 +216,9 @@ macro_rules! _implement_numeric_unsigned_public {
             fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
-            /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn div(self, _rhs: Self) -> Self {
-                unimplemented!();
-            }
-            /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn rem(self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -392,6 +394,33 @@ macro_rules! _implement_numeric_signed_public {
         }
 
         impl Numeric for $name {}
+        impl ModNumeric for $name {
+            /// (self - rhs) % n.
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn sub_mod(self, rhs: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self + rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn add_mod(self, rhs: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self * rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn mul_mod(self, rhs: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self ^ exp) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `self % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn modulo(self, n: Self) -> Self {
+                unimplemented!();
+            }
+        }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -429,34 +458,9 @@ macro_rules! _implement_numeric_signed_public {
             fn pow_self(self, exp: Self) -> Self {
                 unimplemented!();
             }
-            /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
-                unimplemented!();
-            }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn div(self, rhs: Self) -> Self {
-                unimplemented!();
-            }
-            /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn rem(self, n: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -637,6 +641,33 @@ macro_rules! _implement_numeric_unsigned_secret {
         }
 
         impl Numeric for $name {}
+        impl ModNumeric for $name {
+            /// (self - rhs) % n.
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn sub_mod(self, _rhs: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self + rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn add_mod(self, _rhs: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self * rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn mul_mod(self, _rhs: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self ^ exp) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `self % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn modulo(self, _n: Self) -> Self {
+                unimplemented!();
+            }
+        }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -671,34 +702,9 @@ macro_rules! _implement_numeric_unsigned_secret {
             fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
-            /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn div(self, _rhs: Self) -> Self {
-                unimplemented!();
-            }
-            /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn rem(self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -874,6 +880,33 @@ macro_rules! _implement_numeric_signed_secret {
         }
 
         impl Numeric for $name {}
+        impl ModNumeric for $name {
+            /// (self - rhs) % n.
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn sub_mod(self, rhs: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self + rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn add_mod(self, rhs: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self * rhs) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn mul_mod(self, rhs: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `(self ^ exp) % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                unimplemented!();
+            }
+            /// `self % n`
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn modulo(self, n: Self) -> Self {
+                unimplemented!();
+            }
+        }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -911,34 +944,9 @@ macro_rules! _implement_numeric_signed_secret {
             fn pow_self(self, exp: Self) -> Self {
                 unimplemented!();
             }
-            /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
-                unimplemented!();
-            }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn div(self, rhs: Self) -> Self {
-                unimplemented!();
-            }
-            /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn rem(self, n: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -1005,6 +1013,29 @@ macro_rules! _implement_numeric_signed_secret {
 
 // ==== Numeric and NumericVec implementations for PublicSeq and Seq ==== //
 
+// TODO: this won't allow us to split between signed and unsigned.
+impl<T: Numeric + PublicInteger> ModNumeric for PublicSeq<T> {
+    /// (self - rhs) % n.
+    fn sub_mod(self, rhs: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `(self + rhs) % n`
+    fn add_mod(self, rhs: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `(self * rhs) % n`
+    fn mul_mod(self, rhs: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `(self ^ exp) % n`
+    fn pow_mod(self, exp: Self, n: Self) -> Self {
+        unimplemented!();
+    }
+    /// `self % n`
+    fn modulo(self, n: Self) -> Self {
+        unimplemented!();
+    }
+}
 impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
     /// Return largest value that can be represented.
     fn max_val() -> Self {
@@ -1032,28 +1063,8 @@ impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
     fn pow_self(self, exp: Self) -> Self {
         unimplemented!();
     }
-    /// (self - rhs) % n.
-    fn sub_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self + rhs) % n`
-    fn add_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self * rhs) % n`
-    fn mul_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self ^ exp) % n`
-    fn pow_mod(self, exp: Self, n: Self) -> Self {
-        unimplemented!();
-    }
     /// Division.
     fn div(self, rhs: Self) -> Self {
-        unimplemented!();
-    }
-    /// `self % n`
-    fn rem(self, n: Self) -> Self {
         unimplemented!();
     }
     /// Invert self modulo n.

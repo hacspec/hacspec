@@ -5,10 +5,73 @@
 
 use crate::prelude::*;
 
+/// Rust's built-in modulo (x % n) is signed. This lifts x into ℤn+.
+#[inline]
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub(crate) fn signed_mod(x: i128, n: i128) -> i128 {
+    let mut ret = x % n;
+    while ret < 0 {
+        ret += n;
+    }
+    ret
+}
+
+/// Extended euclidean algorithm to compute the inverse of x in ℤ/n
+///
+/// **Panics** if x is not invertible.
+///
+#[inline]
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub(crate) fn extended_euclid_invert<T: Integer>(x: T, n: T, signed: bool) -> T {
+    let mut t = T::ZERO;
+    let mut r = n;
+    let mut new_t = T::ONE;
+    let mut new_r = x;
+
+    println!("n: {:?}", n);
+    while !new_r.equal(T::ZERO) {
+        let q: T = r.div(new_r);
+
+        let tmp = new_r.clone();
+        // XXX: a little hacky
+        let tmp_prod = q * new_r;
+        let mut tmp_r = r;
+        while tmp_r.less_than(tmp_prod) {
+            tmp_r = tmp_r + n;
+        }
+        new_r = tmp_r - tmp_prod;
+        r = tmp;
+
+        let tmp = new_t.clone();
+        // XXX: a little hacky
+        let tmp_prod = q * new_t;
+        let mut tmp_t = t;
+        while tmp_t.less_than(tmp_prod) {
+            tmp_t = tmp_t + n;
+        }
+        new_t = tmp_t - tmp_prod;
+        t = tmp;
+    }
+
+    if r.greater_than(T::ONE) && !x.equal(T::ZERO) {
+        panic!("{:x?} is not invertible in ℤ/{:x?}", x, n);
+    }
+    if t.less_than(T::ZERO) {
+        if signed {
+            t = t.abs()
+        } else {
+            t = t + n
+        };
+    };
+
+    t
+}
+
 /// Conditional, constant-time swapping.
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == 1`.
 #[inline]
-pub fn cswap_bit<T: IntegerRename>(x: T, y: T, c: T) -> (T, T) {
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub fn cswap_bit<T: Integer>(x: T, y: T, c: T) -> (T, T) {
     cswap(x, y, T::default().wrap_sub(c))
 }
 
@@ -16,7 +79,8 @@ pub fn cswap_bit<T: IntegerRename>(x: T, y: T, c: T) -> (T, T) {
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == T::max`.
 /// The return value is undefined if `c` has any other value.
 #[inline]
-pub fn cswap<T: IntegerRename>(x: T, y: T, c: T) -> (T, T) {
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub fn cswap<T: Integer>(x: T, y: T, c: T) -> (T, T) {
     let mask = c & (x ^ y);
     (x ^ mask, y ^ mask)
 }
@@ -24,7 +88,8 @@ pub fn cswap<T: IntegerRename>(x: T, y: T, c: T) -> (T, T) {
 /// Set bit at position `i` in `x` to `b` if `c` is all 1 and return the restult.
 /// Returns `x` if `c` is `0`.
 #[inline]
-pub fn cset_bit<T: IntegerRename>(x: T, b: T, i: u32, c: T) -> T {
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub fn cset_bit<T: Integer>(x: T, b: T, i: u32, c: T) -> T {
     let set = x.set_bit(b, i);
     let (out, _) = cswap(x, set, c);
     out
@@ -34,7 +99,8 @@ pub fn cset_bit<T: IntegerRename>(x: T, b: T, i: u32, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-pub fn cadd<T: IntegerRename>(x: T, y: T, c: T) -> T {
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub fn cadd<T: Integer>(x: T, y: T, c: T) -> T {
     let sum = x.wrap_add(y);
     let (x, _) = cswap(x, sum, c);
     x
@@ -44,7 +110,8 @@ pub fn cadd<T: IntegerRename>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-pub fn csub<T: IntegerRename>(x: T, y: T, c: T) -> T {
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub fn csub<T: Integer>(x: T, y: T, c: T) -> T {
     let diff = x.wrap_sub(y);
     let (x, _) = cswap(x, diff, c);
     x
@@ -54,7 +121,8 @@ pub fn csub<T: IntegerRename>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Multiplication is always wrapping.
 #[inline]
-pub fn cmul<T: IntegerRename>(x: T, y: T, c: T) -> T {
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub fn cmul<T: Integer>(x: T, y: T, c: T) -> T {
     let prod = x.wrap_mul(y);
     let (x, _) = cswap(x, prod, c);
     x
@@ -64,7 +132,8 @@ pub fn cmul<T: IntegerRename>(x: T, y: T, c: T) -> T {
 /// Note that this function is only constant time if `T` is a secret integer and
 /// hence provides constant time implementations for the used functions.
 #[inline]
-pub fn ct_div<T: IntegerRename>(a: T, d: T) -> (T, T) {
+#[cfg_attr(feature="use_attributes", library(internal))]
+pub fn ct_div<T: Integer>(a: T, d: T) -> (T, T) {
     let mut q = T::default();
     let mut r = T::default();
     for i in (0..T::NUM_BITS).rev() {

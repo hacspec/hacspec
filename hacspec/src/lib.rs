@@ -22,7 +22,6 @@
 //!
 
 pub mod array;
-pub mod integer;
 pub mod machine_integers;
 pub mod math_integers;
 pub mod math_util;

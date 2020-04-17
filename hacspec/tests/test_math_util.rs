@@ -24,7 +24,7 @@ fn test_cswap() {
 
 #[test]
 fn test_csub() {
-    fn test<T: IntegerRename>(x: T, y: T) {
+    fn test<T: Integer>(x: T, y: T) {
         let d = csub(x, y, T::default());
         assert!(d.equal(x));
         let d = csub(x, y, T::max_val());
@@ -36,7 +36,7 @@ fn test_csub() {
 
 #[test]
 fn test_cadd() {
-    fn test<T: IntegerRename>(x: T, y: T) {
+    fn test<T: Integer>(x: T, y: T) {
         let d = cadd(x, y, T::default());
         assert!(d.equal(x));
         let d = cadd(x, y, T::max_val());
@@ -48,7 +48,7 @@ fn test_cadd() {
 
 #[test]
 fn test_cmul() {
-    fn test<T: IntegerRename>(x: T, y: T) {
+    fn test<T: Integer>(x: T, y: T) {
         let d = cmul(x, y, T::default());
         assert!(d.equal(x));
         let d = cmul(x, y, T::max_val());
@@ -60,10 +60,10 @@ fn test_cmul() {
 
 #[test]
 fn test_div() {
-    fn test<T: IntegerRename>(x: T, y: T) {
+    fn test<T: Integer>(x: T, y: T) {
         let (q, r) = ct_div(x, y);
         assert!(q.equal(x.div(y)));
-        assert!(r.equal(x.rem(y)));
+        assert!(r.equal(x.modulo(y)));
     }
 
     fn test_8(x: u8, y: u8) {
@@ -90,4 +90,17 @@ fn test_div() {
     }
     test_64(827629, 12);
     test_64(16, 827629);
+}
+
+#[test]
+fn test_zn_inv() {
+    let n = 65537;
+    // assert_eq!(u128::inv(23647, n), 52791);
+    assert_eq!(u128::inv(37543865, n), 37686);
+    // let n = 106103;
+    // assert_eq!(u128::inv(8752725684352, n), 52673);
+    // assert_eq!(u128::inv(123, n), 99202);
+
+    // let n = 106103i128;
+    // assert_eq!(i128::inv(-123, n), 6901);
 }
