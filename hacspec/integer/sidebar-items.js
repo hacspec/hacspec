@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Integer","Trait that needs to be implemented by all integers that are used as coefficients. This is done here for ℤn over `i128` and `u128`."],["TRestrictions","Traits that have to be implemented by the type used for coefficients."]]});

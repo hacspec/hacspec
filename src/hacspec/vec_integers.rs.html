@@ -1259,6 +1259,17 @@
 <span id="1259">1259</span>
 <span id="1260">1260</span>
 <span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
 <span class="doccomment">///!</span>
@@ -1413,6 +1424,33 @@
         }
 
         <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">ModNumeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="doccomment">/// (self - rhs) % n.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self + rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self * rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self ^ exp) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `self % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">modulo</span>(<span class="self">self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+        }
         <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
@@ -1451,34 +1489,9 @@
             <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-            <span class="doccomment">/// (self - rhs) % n.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self + rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self * rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self ^ exp) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
             <span class="doccomment">/// Division.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `self % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// Invert self modulo n.</span>
@@ -1654,6 +1667,33 @@
         }
 
         <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">ModNumeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="doccomment">/// (self - rhs) % n.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self + rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self * rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self ^ exp) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `self % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">modulo</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+        }
         <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
@@ -1691,34 +1731,9 @@
             <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-            <span class="doccomment">/// (self - rhs) % n.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self + rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self * rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self ^ exp) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
             <span class="doccomment">/// Division.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `self % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// Invert self modulo n.</span>
@@ -1899,6 +1914,33 @@
         }
 
         <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">ModNumeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="doccomment">/// (self - rhs) % n.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self + rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self * rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self ^ exp) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `self % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">modulo</span>(<span class="self">self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+        }
         <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
@@ -1933,34 +1975,9 @@
             <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-            <span class="doccomment">/// (self - rhs) % n.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self + rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self * rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self ^ exp) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">_exp</span>: <span class="self">Self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
             <span class="doccomment">/// Division.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">_rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `self % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">_n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// Invert self modulo n.</span>
@@ -2136,6 +2153,33 @@
         }
 
         <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
+        <span class="kw">impl</span> <span class="ident">ModNumeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="doccomment">/// (self - rhs) % n.</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self + rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self * rhs) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `(self ^ exp) % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+            <span class="doccomment">/// `self % n`</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+            <span class="kw">fn</span> <span class="ident">modulo</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="macro">unimplemented</span><span class="macro">!</span>();
+            }
+        }
         <span class="kw">impl</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
@@ -2173,34 +2217,9 @@
             <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
-            <span class="doccomment">/// (self - rhs) % n.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self + rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self * rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `(self ^ exp) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
             <span class="doccomment">/// Division.</span>
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
             <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-                <span class="macro">unimplemented</span><span class="macro">!</span>();
-            }
-            <span class="doccomment">/// `self % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-            <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">unimplemented</span><span class="macro">!</span>();
             }
             <span class="doccomment">/// Invert self modulo n.</span>
@@ -2267,6 +2286,29 @@
 
 <span class="comment">// ==== Numeric and NumericVec implementations for PublicSeq and Seq ==== //</span>
 
+<span class="comment">// TODO: this won&#39;t allow us to split between signed and unsigned.</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Numeric</span> <span class="op">+</span> <span class="ident">PublicInteger</span><span class="op">&gt;</span> <span class="ident">ModNumeric</span> <span class="kw">for</span> <span class="ident">PublicSeq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// (self - rhs) % n.</span>
+    <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>();
+    }
+    <span class="doccomment">/// `(self + rhs) % n`</span>
+    <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>();
+    }
+    <span class="doccomment">/// `(self * rhs) % n`</span>
+    <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>();
+    }
+    <span class="doccomment">/// `(self ^ exp) % n`</span>
+    <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>();
+    }
+    <span class="doccomment">/// `self % n`</span>
+    <span class="kw">fn</span> <span class="ident">modulo</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">unimplemented</span><span class="macro">!</span>();
+    }
+}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Numeric</span> <span class="op">+</span> <span class="ident">PublicInteger</span><span class="op">&gt;</span> <span class="ident">NumericBase</span> <span class="kw">for</span> <span class="ident">PublicSeq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Return largest value that can be represented.</span>
     <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -2294,28 +2336,8 @@
     <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>();
     }
-    <span class="doccomment">/// (self - rhs) % n.</span>
-    <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">unimplemented</span><span class="macro">!</span>();
-    }
-    <span class="doccomment">/// `(self + rhs) % n`</span>
-    <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">unimplemented</span><span class="macro">!</span>();
-    }
-    <span class="doccomment">/// `(self * rhs) % n`</span>
-    <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">unimplemented</span><span class="macro">!</span>();
-    }
-    <span class="doccomment">/// `(self ^ exp) % n`</span>
-    <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">unimplemented</span><span class="macro">!</span>();
-    }
     <span class="doccomment">/// Division.</span>
     <span class="kw">fn</span> <span class="ident">div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">unimplemented</span><span class="macro">!</span>();
-    }
-    <span class="doccomment">/// `self % n`</span>
-    <span class="kw">fn</span> <span class="ident">rem</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>();
     }
     <span class="doccomment">/// Invert self modulo n.</span>
