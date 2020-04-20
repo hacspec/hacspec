@@ -128,5 +128,5 @@ fn test_encode_decode_scalar() {
     assert_eq!(u_expected, u_);
 
     let u_encoded = encode_point(u_);
-    assert!(u.declassify_eq(u_encoded));
+    assert!(u.declassify_eq(&u_encoded));
 }

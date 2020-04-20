@@ -127,7 +127,7 @@ fn rounds_aes128(state: Block, key: Bytes144) -> Block {
 fn rounds_aes256(state: Block, key: Bytes208) -> Block {
     let mut out = state;
     for i in 0..key.num_chunks(BLOCKSIZE) {
-        let (_, key_block)  = key.clone().get_chunk(BLOCKSIZE, i);
+        let (_, key_block)  = key.get_chunk(BLOCKSIZE, i);
         out = aes_enc(out, RoundKey::from_seq(&key_block));
     }
     out

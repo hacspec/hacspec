@@ -290,7 +290,7 @@ macro_rules! _secret_array {
         /// **Warning:** declassifies secret integer types.
         impl $name {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn declassify_eq(self, other: Self) -> bool {
+            pub fn declassify_eq(&self, other: &Self) -> bool {
                 self.0[..]
                     .iter()
                     .map(|x| <$t>::declassify(*x))
@@ -310,7 +310,7 @@ macro_rules! _secret_array {
             }
 
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn to_be_bytes(self) -> Seq<U8> {
+            pub fn to_be_bytes(&self) -> Seq<U8> {
                const FACTOR: usize = core::mem::size_of::<$t>();
                let mut out : Seq<U8> = Seq::new($l * FACTOR);
                for i in 0..$l {
@@ -324,7 +324,7 @@ macro_rules! _secret_array {
             }
 
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn to_le_bytes(self) -> Seq<U8> {
+            pub fn to_le_bytes(&self) -> Seq<U8> {
                const FACTOR: usize = core::mem::size_of::<$t>();
                let mut out : Seq<U8> = Seq::new($l * FACTOR);
                for i in 0..$l {
