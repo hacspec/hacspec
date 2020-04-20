@@ -54,7 +54,7 @@ fn test_unsigned_secret() {
     test_unsigned_secret_macro!(U128);
 }
 
-macro_rules! test_signed_secert_macro {
+macro_rules! test_signed_secret_macro {
     ($t:ty) => {
         assert!(<$t>::max_val().equal(<$t>::max_value()));
         assert!(<$t>::from(2).pow(5).equal(<$t>::from(32)));
@@ -65,9 +65,9 @@ macro_rules! test_signed_secert_macro {
 
 #[test]
 fn test_signed_secret() {
-    test_signed_secert_macro!(I8);
-    test_signed_secert_macro!(I16);
-    test_signed_secert_macro!(I32);
-    test_signed_secert_macro!(I64);
-    test_signed_secert_macro!(I128);
+    test_signed_secret_macro!(I8);
+    test_signed_secret_macro!(I16);
+    test_signed_secret_macro!(I32);
+    test_signed_secret_macro!(I64);
+    test_signed_secret_macro!(I128);
 }

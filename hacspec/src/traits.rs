@@ -65,7 +65,45 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     }
 }
 
-pub trait SecretInteger {}
+// FIXME: rename
+/// This trait extends the `Numeric` trait and is implemented by all integer
+/// types. It offers bit manipulation, instantiation from literal, and convenient
+/// constants.
+pub trait Integer: Numeric {
+    const NUM_BITS: u32;
+    const ZERO: Self;
+    const ONE: Self;
+    const TWO: Self;
+
+    /// Get an integer with value `val`.
+    fn from_literal(val: u128) -> Self;
+
+    /// Get bit `i` of this integer.
+    #[inline]
+    fn get_bit(self, i: u32) -> Self {
+        (self >> i) & Self::ONE
+    }
+
+    /// Set bit `i` of this integer to `b` and return the result.
+    /// Bit `b` has to be `0` or `1`.
+    #[inline]
+    fn set_bit(self, b: Self, i: u32) -> Self {
+        debug_assert!(b.equal(Self::ONE) || b.equal(Self::ZERO));
+        let tmp1 = Self::from_literal(!(1 << i));
+        let tmp2 = b << i;
+        (self & tmp1) | tmp2
+    }
+
+    /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+    #[inline]
+    fn set(self, pos: u32, y: Self, yi: u32) -> Self {
+        let b = y.get_bit(yi);
+        self.set_bit(b, pos)
+    }
+}
+
+
+pub trait SecretInteger: Integer {}
 
 impl SecretInteger for U8 {}
 impl SecretInteger for U16 {}
@@ -87,11 +125,47 @@ impl PublicInteger for i16 {}
 impl PublicInteger for i32 {}
 impl PublicInteger for i128 {}
 
+pub trait UnsignedInteger: Integer {}
+
+impl UnsignedInteger for U8 {}
+impl UnsignedInteger for U16 {}
+impl UnsignedInteger for U32 {}
+impl UnsignedInteger for U128 {}
+impl UnsignedInteger for u8 {}
+impl UnsignedInteger for u16 {}
+impl UnsignedInteger for u32 {}
+impl UnsignedInteger for u128 {}
+
+pub trait SignedInteger: Integer {}
+
+impl SignedInteger for I8 {}
+impl SignedInteger for I16 {}
+impl SignedInteger for I32 {}
+impl SignedInteger for I128 {}
+impl SignedInteger for i8 {}
+impl SignedInteger for i16 {}
+impl SignedInteger for i32 {}
+impl SignedInteger for i128 {}
+
 pub trait Numeric: NumericBase + Copy {}
+
+pub trait ModNumeric {
+    /// (self - rhs) % n.
+    fn sub_mod(self, rhs: Self, n: Self) -> Self;
+    /// `(self + rhs) % n`
+    fn add_mod(self, rhs: Self, n: Self) -> Self;
+    /// `(self * rhs) % n`
+    fn mul_mod(self, rhs: Self, n: Self) -> Self;
+    /// `(self ^ exp) % n`
+    fn pow_mod(self, exp: Self, n: Self) -> Self;
+    /// `self % n`
+    fn modulo(self, n: Self) -> Self;
+}
 
 /// The `Numeric` trait has to be implemented by all numeric objects.
 pub trait NumericBase:
-    Add<Self, Output = Self>
+    ModNumeric
+    + Add<Self, Output = Self>
     + Sub<Self, Output = Self>
     + Mul<Self, Output = Self>
     + BitXor<Self, Output = Self>
@@ -116,18 +190,8 @@ pub trait NumericBase:
     fn pow(self, exp: u32) -> Self;
     /// `self ^ exp` where `exp` is a `Self`.
     fn pow_self(self, exp: Self) -> Self;
-    /// (self - rhs) % n.
-    fn sub_mod(self, rhs: Self, n: Self) -> Self;
-    /// `(self + rhs) % n`
-    fn add_mod(self, rhs: Self, n: Self) -> Self;
-    /// `(self * rhs) % n`
-    fn mul_mod(self, rhs: Self, n: Self) -> Self;
-    /// `(self ^ exp) % n`
-    fn pow_mod(self, exp: Self, n: Self) -> Self;
     /// Division.
     fn div(self, rhs: Self) -> Self;
-    /// `self % n`
-    fn rem(self, n: Self) -> Self;
     /// Invert self modulo n.
     fn inv(self, n: Self) -> Self;
     /// `|self|`

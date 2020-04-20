@@ -22,26 +22,13 @@
 //! **Note:** This is currently only implemented for `Seq<u128>` and `Seq<i128>`.
 //!
 
-use rand::Rng;
-
-use crate::integer::*;
-use crate::seq::*;
+use crate::prelude::*;
 
 ///! First we implement all functions on slices of T.
 ///! Note that this is equivalent to ℤn[x] (or ℤ[x] depending, depending on T).
 
-/// Rust's built-in modulo (x % n) is signed. This lifts x into ℤn+.
 #[inline]
-pub(crate) fn signed_mod(x: i128, n: i128) -> i128 {
-    let mut ret = x % n;
-    while ret < 0 {
-        ret += n;
-    }
-    ret
-}
-
-#[inline]
-fn pad<T: TRestrictions<T>>(v: &[T], l: usize) -> Vec<T> {
+fn pad<T: Numeric>(v: &[T], l: usize) -> Vec<T> {
     let mut out = v.to_vec();
     for _ in out.len()..l {
         out.push(T::default());
@@ -50,7 +37,7 @@ fn pad<T: TRestrictions<T>>(v: &[T], l: usize) -> Vec<T> {
 }
 
 #[inline]
-fn make_fixed_length<T: TRestrictions<T>>(v: &[T], t: usize) -> Vec<T> {
+fn make_fixed_length<T: Numeric>(v: &[T], t: usize) -> Vec<T> {
     let mut out = vec![T::default(); t];
     for (a, &b) in out.iter_mut().zip(v.iter()) {
         *a = b;
@@ -61,7 +48,7 @@ fn make_fixed_length<T: TRestrictions<T>>(v: &[T], t: usize) -> Vec<T> {
 #[inline]
 fn monomial<T>(c: T, d: usize) -> Vec<T>
 where
-    T: TRestrictions<T>,
+    T: Numeric,
 {
     let mut p = vec![T::default(); d + 1];
     p[d] = c;
@@ -69,18 +56,18 @@ where
 }
 
 #[inline]
-fn normalize<T: TRestrictions<T>>(x: &[T], y: &[T]) -> (Vec<T>, Vec<T>) {
+fn normalize<T: Numeric>(x: &[T], y: &[T]) -> (Vec<T>, Vec<T>) {
     let max_len = std::cmp::max(x.len(), y.len());
     (pad(x, max_len), pad(y, max_len))
 }
 
 #[inline]
-pub fn leading_coefficient<T: TRestrictions<T>>(x: &[T]) -> (usize, T) {
+pub fn leading_coefficient<T: Numeric>(x: &[T]) -> (usize, T) {
     let zero = T::default();
     let mut degree: usize = 0;
     let mut coefficient = T::default();
     for (i, &c) in x.iter().enumerate() {
-        if c != zero {
+        if !c.equal(zero) {
             degree = i;
             coefficient = c;
         }
@@ -89,30 +76,38 @@ pub fn leading_coefficient<T: TRestrictions<T>>(x: &[T]) -> (usize, T) {
 }
 
 #[inline]
-pub fn poly_sub<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn poly_sub<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
     for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
-        *a = b.sub_mod(c, n);
+        if n.equal(T::default()) {
+            *a = b - c;
+        } else {
+            *a = b.sub_mod(c, n);
+        }
     }
     out
 }
 
 #[inline]
-pub fn poly_add<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn poly_add<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
     for (a, (&b, &c)) in out.iter_mut().zip(x.iter().zip(y.iter())) {
-        *a = b.add_mod(c, n);
+        if n.equal(T::default()) {
+            *a = b + c;
+        } else {
+            *a = b.add_mod(c, n);
+        }
     }
     out
 }
 
 /// Polynomial multiplication using operand scanning without modulo.
 #[inline]
-pub(crate) fn poly_mul_plain<T: TRestrictions<T>>(x: &[T], y: &[T], _n: T) -> Vec<T> {
+pub(crate) fn poly_mul_plain<T: Numeric>(x: &[T], y: &[T], _n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
     for i in 0..x.len() {
         for j in 0..y.len() {
@@ -125,7 +120,7 @@ pub(crate) fn poly_mul_plain<T: TRestrictions<T>>(x: &[T], y: &[T], _n: T) -> Ve
 /// Polynomial multiplication using operand scanning.
 /// This is very inefficient and prone to side-channel attacks.
 #[inline]
-pub(crate) fn poly_mul_op_scanning<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub(crate) fn poly_mul_op_scanning<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
     for i in 0..x.len() {
         for j in 0..y.len() {
@@ -139,34 +134,24 @@ pub(crate) fn poly_mul_op_scanning<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) 
 /// This can be more efficient than operand scanning but also prone to side-channel
 /// attacks.
 #[inline]
-pub fn poly_mul<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn poly_mul<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
     for adx in x
         .iter()
         .enumerate()
         .map(|(i, x)| (i, x))
-        .filter(|(_, &x)| x != T::default())
+        .filter(|(_, &x)| !x.equal(T::default()))
     {
         for bdx in y
             .iter()
             .enumerate()
             .map(|(i, x)| (i, x))
-            .filter(|(_, &x)| x != T::default())
+            .filter(|(_, &x)| !x.equal(T::default()))
         {
             out[adx.0 + bdx.0] = out[adx.0 + bdx.0].add_mod(adx.1.mul_mod(*bdx.1, n), n);
         }
     }
     out
-}
-
-#[inline]
-pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T> {
-    let mut rng = rand::thread_rng();
-    Seq::from_vec(
-        (0..l)
-            .map(|_| T::from_signed_literal(rng.gen_range(min, max)))
-            .collect::<Vec<T>>(),
-    )
 }
 
 /// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.
@@ -177,7 +162,7 @@ pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T
 /// **Panics** when division isn't possible.
 ///
 #[inline]
-pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
+pub fn poly_div<T: Numeric>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
     let (x, y) = normalize(x, y);
     let mut rem = x.clone();
     let mut quo = vec![T::default(); x.len()];
@@ -186,14 +171,14 @@ pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>)
     let rlen = rem.len();
     for i in 0..dist {
         let idx = rlen - 1 - i;
-        let t = if n == T::default() {
+        let t = if n.equal(T::default()) {
             // In ℤ we try this. It might not work.
-            rem[idx] / c // XXX: Update once we change to Numeric
+            rem[idx].div(c) // XXX: Update once we change to Numeric
         } else {
             // divide by using inverse mod n
-            rem[idx] * T::invert(c, n)
+            rem[idx] * T::inv(c, n)
         };
-        if t == T::default() && rem[idx] != T::default() {
+        if t.equal(T::default()) && !rem[idx].equal(T::default()) {
             panic!("Can't divide these two polynomials");
         }
         let s = monomial(t, dist - i - 1);
@@ -205,9 +190,9 @@ pub fn poly_div<T: TRestrictions<T>>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>)
 }
 
 #[inline]
-fn is_zero<T: TRestrictions<T>>(v: &[T]) -> bool {
+fn is_zero<T: Numeric>(v: &[T]) -> bool {
     for &x in v {
-        if x != T::default() {
+        if !x.equal(T::default()) {
             return false;
         }
     }
@@ -215,50 +200,12 @@ fn is_zero<T: TRestrictions<T>>(v: &[T]) -> bool {
 }
 
 #[inline]
-fn poly_z_inv<T: TRestrictions<T>>(v: &[T], n: T) -> Vec<T> {
-    v.iter().map(|&x| T::invert(x, n)).collect::<Vec<T>>()
-}
-
-/// Extended euclidean algorithm to compute the inverse of x in ℤ/n
-///
-/// **Panics** if x is not invertible.
-///
-#[inline]
-pub(crate) fn extended_euclid_invert<T: TRestrictions<T>>(x: T, n: T, signed: bool) -> T {
-    let mut t = T::default();
-    let mut r = n;
-    let mut new_t = T::from_literal(1);
-    let mut new_r = x;
-
-    while new_r != T::default() {
-        let q: T = r / new_r;
-
-        let tmp = new_r.clone();
-        new_r = r.sub_lift(q * new_r, n);
-        r = tmp;
-
-        let tmp = new_t.clone();
-        new_t = t.sub_lift(q * new_t, n);
-        t = tmp;
-    }
-
-    if r > T::from_literal(1) && x != T::default() {
-        panic!("{:x?} is not invertible in ℤ/{:x?}", x, n);
-    }
-    println!("xeucl: {:?}", t);
-    if t < T::default() {
-        if signed {
-            t = t.abs()
-        } else {
-            t = t + n
-        };
-    };
-
-    t
+fn poly_z_inv<T: Numeric>(v: &[T], n: T) -> Vec<T> {
+    v.iter().map(|&x| T::inv(x, n)).collect::<Vec<T>>()
 }
 
 /// Subtract quotient (bn/x^bd) from (an/x^ad)
-fn quot_sub<T: TRestrictions<T>>(
+fn quot_sub<T: Integer>(
     an: &[T],
     ad: usize,
     bn: &[T],
@@ -266,7 +213,7 @@ fn quot_sub<T: TRestrictions<T>>(
     n: T,
 ) -> (Vec<T>, usize) {
     let cd = std::cmp::max(ad, bd);
-    let x = monomial(T::from_literal(1), 1);
+    let x = monomial(T::ONE, 1);
     let mut a = an.to_vec();
     let mut b = bn.to_vec();
     for _ in 0..cd - ad {
@@ -281,7 +228,7 @@ fn quot_sub<T: TRestrictions<T>>(
 }
 
 /// Divide a by x assuming a is a multiple of x (shift right by one)
-fn poly_divx<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
+fn poly_divx<T: Numeric>(v: &[T]) -> Vec<T> {
     let mut out = vec![T::default(); v.len() - 1];
     for (a, &b) in out.iter_mut().zip(v.iter().skip(1)) {
         *a = b;
@@ -292,7 +239,7 @@ fn poly_divx<T: TRestrictions<T>>(v: &[T]) -> Vec<T> {
 /// Iterate division steps in the constant-time polynomial inversion algorithm
 /// See Figure 5.1 from https://eprint.iacr.org/2019/266
 /// Instead of returning M2kx((u,v,q,r)) in last component, only return v
-fn divstepsx<T: TRestrictions<T>>(
+fn divstepsx<T: Integer>(
     nn: usize,
     t: usize,
     fin: &[T],
@@ -306,10 +253,10 @@ fn divstepsx<T: TRestrictions<T>>(
 
     // Each of u,v,q,r in (f, i) represents quotient f/x^i
     // u,v,q,r = 1,0,0,1
-    let mut u = (vec![T::from_literal(1); 1], 0);
-    let mut v = (vec![T::default(); 1], 0);
-    let mut q = (vec![T::default(); 1], 0);
-    let mut r = (vec![T::from_literal(1); 1], 0);
+    let mut u = (vec![T::ONE; 1], 0);
+    let mut v = (vec![T::ZERO; 1], 0);
+    let mut q = (vec![T::ZERO; 1], 0);
+    let mut r = (vec![T::ONE; 1], 0);
 
     for i in 0..nn {
         // Bring u,v,q,r back to fixed precision t
@@ -323,7 +270,7 @@ fn divstepsx<T: TRestrictions<T>>(
         g = make_fixed_length(&g, nn - i);
 
         // TODO: make swap constant time
-        if delta > 0 && g[0] != T::default() {
+        if delta > 0 && !g[0].equal(T::ZERO) {
             delta = -delta;
             let t = f;
             f = g;
@@ -365,7 +312,7 @@ fn divstepsx<T: TRestrictions<T>>(
 /// x.len() and degree of y are assumed to be public
 /// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266
 #[inline]
-pub fn extended_euclid<T: TRestrictions<T>>(
+pub fn extended_euclid<T: Integer>(
     x: &[T],
     y: &[T],
     n: T,
@@ -384,7 +331,7 @@ pub fn extended_euclid<T: TRestrictions<T>>(
         return Err("Could not invert the polynomial");
     }
 
-    let t = monomial(T::invert(f[0], n), 2 * yd - 2 - v.1);
+    let t = monomial(f[0].inv(n), 2 * yd - 2 - v.1);
     let mut rr = poly_mul(&t, &v.0, n);
     rr = make_fixed_length(&rr, yd);
     rr.reverse();
