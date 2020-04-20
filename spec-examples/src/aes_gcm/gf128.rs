@@ -38,11 +38,11 @@ fn fmul(x: Element, y: Element) -> Element {
 
 // TODO: block is actually subblock
 fn encode(block: Block) -> Element {
-    U128_from_be_bytes(U128Word::from_seq(block))
+    U128_from_be_bytes(U128Word::from_seq(&block))
 }
 
 fn decode(e: Element) -> Block {
-    Block::from_seq(U128_to_be_bytes(e))
+    Block::from_seq(&U128_to_be_bytes(e))
 }
 
 // TODO: block is actually subblock
@@ -50,7 +50,7 @@ fn update(r: Element, block: Block, acc: Element) -> Element {
     fmul(fadd(encode(block), acc), r)
 }
 
-fn poly(msg: ByteSeq, r: Element) -> Element {
+fn poly(msg: &ByteSeq, r: Element) -> Element {
     let l = msg.len();
     let n_blocks: usize = l / BLOCKSIZE;
     let rem = l % BLOCKSIZE;
@@ -58,21 +58,21 @@ fn poly(msg: ByteSeq, r: Element) -> Element {
     for i in 0..n_blocks {
         let k = i * BLOCKSIZE;
         let mut block = Block::new();
-        block = block.update_start(msg.clone().subr(k..k + BLOCKSIZE));
+        block = block.update_start(&msg.subr(k..k + BLOCKSIZE));
         acc = update(r, block, acc);
     }
     if rem != 0 {
         let k = n_blocks * BLOCKSIZE;
         let mut last_block = Block::new();
-        last_block = last_block.update_sub(0, msg.clone(), k, rem);
+        last_block = last_block.update_sub(0, msg, k, rem);
         acc = update(r, last_block, acc);
     }
     acc
 }
 
-pub fn gmac(text: ByteSeq, k: Key) -> Tag {
+pub fn gmac(text: &ByteSeq, k: Key) -> Tag {
     let s = Block::new();
-    let r = encode(Block::from_seq(k));
+    let r = encode(Block::from_seq(&k));
     let a = poly(text, r);
-    Tag::from_seq(decode(fadd(a, encode(s))))
+    Tag::from_seq(&decode(fadd(a, encode(s))))
 }

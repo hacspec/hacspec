@@ -5,7 +5,7 @@ use hacspec::prelude::*;
 use super::chacha20::*;
 use super::poly1305::*;
 
-fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
+fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
     let laad = aad.len();
     let lmsg = msg.len();
     let pad_aad = if laad % 16 == 0 {
@@ -21,14 +21,14 @@ fn pad_aad_msg(aad: ByteSeq, msg: ByteSeq) -> ByteSeq {
     let mut padded_msg = ByteSeq::new(pad_aad + pad_msg + 16);
     padded_msg = padded_msg.update(0, aad);
     padded_msg = padded_msg.update(pad_aad, msg);
-    padded_msg = padded_msg.update(pad_aad + pad_msg, U64_to_le_bytes(U64(laad as u64)));
-    padded_msg = padded_msg.update(pad_aad + pad_msg + 8, U64_to_le_bytes(U64(lmsg as u64)));
+    padded_msg = padded_msg.update(pad_aad + pad_msg, &U64_to_le_bytes(U64(laad as u64)));
+    padded_msg = padded_msg.update(pad_aad + pad_msg + 8,&U64_to_le_bytes(U64(lmsg as u64)));
     padded_msg
 }
 
-pub fn encrypt(key: Key, iv: IV, aad: ByteSeq, msg: ByteSeq) -> Result<(ByteSeq, Tag), String> {
+pub fn encrypt(key: Key, iv: IV, aad: &ByteSeq, msg: &ByteSeq) -> Result<(ByteSeq, Tag), String> {
     let key_block = block(key, U32(0), iv);
-    let mac_key = Key::from_sub_range(key_block, 0..32);
+    let mac_key = Key::from_sub_range(&key_block, 0..32);
     let cipher_text = match chacha(key, iv, msg) {
         Ok(c) => c,
         Err(r) => {
@@ -36,22 +36,22 @@ pub fn encrypt(key: Key, iv: IV, aad: ByteSeq, msg: ByteSeq) -> Result<(ByteSeq,
             return Err(r);
         }
     };
-    let padded_msg = pad_aad_msg(aad, cipher_text.clone());
-    let tag = poly(padded_msg, mac_key);
+    let padded_msg = pad_aad_msg(aad, &cipher_text);
+    let tag = poly(&padded_msg, mac_key);
     Ok((cipher_text, tag))
 }
 
 pub fn decrypt(
     key: Key,
     iv: IV,
-    aad: ByteSeq,
-    cipher_text: ByteSeq,
+    aad: &ByteSeq,
+    cipher_text: &ByteSeq,
     tag: Tag,
 ) -> Result<ByteSeq, String> {
     let key_block = block(key, U32(0), iv);
-    let mac_key = Key::from_sub_range(key_block, 0..32);
-    let padded_msg = pad_aad_msg(aad, cipher_text.clone());
-    let my_tag = poly(padded_msg, mac_key);
+    let mac_key = Key::from_sub_range(&key_block, 0..32);
+    let padded_msg = pad_aad_msg(aad, cipher_text);
+    let my_tag = poly(&padded_msg, mac_key);
     if my_tag == tag {
         match chacha(key, iv, cipher_text) {
             Ok(c) => Ok(c),

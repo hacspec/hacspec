@@ -42,10 +42,10 @@ const HKDF_KAT: [HKDFTestVectors; 3] = [
 #[test]
 fn test_kat() {
     for kat in HKDF_KAT.iter() {
-        let prk = extract(ByteSeq::from_hex(kat.salt), ByteSeq::from_hex(kat.ikm));
+        let prk = extract(&ByteSeq::from_hex(kat.salt), &ByteSeq::from_hex(kat.ikm));
         assert_eq!(kat.prk, prk.to_hex());
 
-        let okm = expand(ByteSeq::from_seq(prk), ByteSeq::from_hex(kat.info), kat.l);
+        let okm = expand(&ByteSeq::from_seq(&prk), &ByteSeq::from_hex(kat.info), kat.l);
         assert_eq!(kat.okm, okm.to_hex());
     }
 }

@@ -46,24 +46,24 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn sub(self, start_out: usize, len: usize) -> Self {
+            pub fn sub(&self, start_out: usize, len: usize) -> Self {
                 Self::from_sub(self, start_out, len)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn subr(self, r: Range<usize>) -> Self {
+            pub fn subr(&self, r: Range<usize>) -> Self {
                 self.sub(r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub<A: SeqTrait<T>>(input: A, start: usize, len: usize) -> Self {
+            pub fn from_sub<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new(len);
                 a = a.update_sub(0, input, start, len);
                 a
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub_range<A: SeqTrait<T>>(input: A, r: Range<usize>) -> Self {
+            pub fn from_sub_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
                 Self::from_sub(input, r.start, r.end - r.start)
             }
 
@@ -77,7 +77,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn get_chunk(
-                self,
+                &self,
                 chunk_size: usize,
                 chunk_number: usize
             ) -> (usize, Self) {
@@ -96,7 +96,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self,
                 chunk_size: usize,
                 chunk_number: usize,
-                input: A,
+                input: &A,
             ) -> Self {
                 let idx_start = chunk_size * chunk_number;
                 let len = if idx_start + chunk_size > self.len() {
@@ -210,7 +210,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_seq<U: SeqTrait<T>>(x: U) -> $name<T> {
+            pub fn from_seq<U: SeqTrait<T>>(x: &U) -> $name<T> {
                 let mut tmp = $name::new(x.len());
                 for i in 0..x.len() {
                     tmp[i] = x[i];

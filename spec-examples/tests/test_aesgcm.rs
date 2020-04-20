@@ -75,7 +75,7 @@ fn kat_test() {
         let aad = ByteSeq::from_hex(kat.aad);
         let exp_cipher = ByteSeq::from_hex(kat.exp_cipher);
 
-        let (cipher, mac) = encrypt_aes128(k, nonce, aad.clone(), msg.clone());
+        let (cipher, mac) = encrypt_aes128(k, nonce, &aad, &msg);
         assert_eq!(
             exp_cipher
                 .iter()
@@ -94,7 +94,7 @@ fn kat_test() {
             mac.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
         );
 
-        let decrypted_msg = decrypt_aes128(k, nonce, aad, cipher, mac).unwrap();
+        let decrypted_msg = decrypt_aes128(k, nonce, &aad, &cipher, mac).unwrap();
         assert_eq!(
             msg.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
             decrypted_msg
@@ -114,7 +114,7 @@ fn kat_test_256() {
         let aad = ByteSeq::from_hex(kat.aad);
         let exp_cipher = ByteSeq::from_hex(kat.exp_cipher);
 
-        let (cipher, mac) = encrypt_aes256(k, nonce, aad.clone(), msg.clone());
+        let (cipher, mac) = encrypt_aes256(k, nonce, &aad, &msg);
         assert_eq!(
             exp_cipher
                 .iter()
@@ -133,7 +133,7 @@ fn kat_test_256() {
             mac.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
         );
 
-        let decrypted_msg = decrypt_aes256(k, nonce, aad, cipher, mac).unwrap();
+        let decrypted_msg = decrypt_aes256(k, nonce, &aad, &cipher, mac).unwrap();
         assert_eq!(
             msg.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
             decrypted_msg
