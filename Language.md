@@ -8,7 +8,7 @@
       | array!(y, tau, c); (* fixed-length array declaration *)
       | poly!(y’, y, a); (* fixed-length polynomials *)    
       | field_integers!(y, c, c); (* abstract field integer declaration *)
-      | fn f([x: tau,]+) -> tau' { e } (* function *)
+      | fn f([x: (&)tau,]+) -> tau' { e } (* function *)
       | enum y { [z(tau),]+ } (* enum type *)
       | struct y { [f: tau,]+ } (* struct type *)
 
@@ -36,7 +36,7 @@
 
     Expression e :=
       | l (* literal *) | (u::)x (* variable *)
-      | (u::)(y::)f([e]+) (* function call *)
+      | (u::)(y::)f([(&)e]+); (* function call *)
       | e.f([e']+)  (* method call *)
       | e1.e2 (* field access *)
       | e1..e2 (* range *)

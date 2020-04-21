@@ -8,7 +8,7 @@ fn basic_test() {
     let key = Key::random();
     let iv = IV::random();
     let m = ByteSeq::random(40);
-    poly_mac(m, key, iv);
+    poly_mac(&m, key, iv);
 
     // RFC 7539 Test Vectors
     let msg = ByteSeq::from_public_slice(&[
@@ -25,6 +25,6 @@ fn basic_test() {
         0xa8, 0x06, 0x1d, 0xc1, 0x30, 0x51, 0x36, 0xc6, 0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27,
         0xa9
     ]);
-    let computed = poly(msg, k);
+    let computed = poly(&msg, k);
     assert_eq!(expected, computed)
 }
