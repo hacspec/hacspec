@@ -234,13 +234,13 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
     <span class="doccomment">/// let tmp = Seq::&lt;u8&gt;::from_slice(&amp;[2, 3]);</span>
-    <span class="doccomment">/// s = s.update_sub(2, tmp, 1, 1);</span>
+    <span class="doccomment">/// s = s.update_sub(2, &amp;tmp, 1, 1);</span>
     <span class="doccomment">/// // assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 3, 0, 0]));</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">fn</span> <span class="ident">update_sub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">start_out</span>: <span class="ident">usize</span>,
-        <span class="ident">v</span>: <span class="ident">A</span>,
+        <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">A</span>,
         <span class="ident">start_in</span>: <span class="ident">usize</span>,
         <span class="ident">len</span>: <span class="ident">usize</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -261,11 +261,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// let mut s = Seq::&lt;u8&gt;::new(5);</span>
     <span class="doccomment">/// let tmp = Seq::&lt;u8&gt;::from_slice(&amp;[2, 3]);</span>
-    <span class="doccomment">/// s = s.update(2, tmp);</span>
+    <span class="doccomment">/// s = s.update(2, &amp;tmp);</span>
     <span class="doccomment">/// // assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 2, 3, 0]));</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
-    <span class="kw">fn</span> <span class="ident">update</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">update</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">len</span>();
         <span class="self">self</span>.<span class="ident">update_sub</span>(<span class="ident">start</span>, <span class="ident">v</span>, <span class="number">0</span>, <span class="ident">len</span>)
     }
@@ -273,7 +273,7 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
     <span class="kw">fn</span> <span class="ident">update_start</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="self">self</span>,
-        <span class="ident">v</span>: <span class="ident">A</span>
+        <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">A</span>
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">len</span>();
         <span class="self">self</span>.<span class="ident">update_sub</span>(<span class="number">0</span>, <span class="ident">v</span>, <span class="number">0</span>, <span class="ident">len</span>)

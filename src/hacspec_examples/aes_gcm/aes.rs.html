@@ -526,31 +526,31 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">state</span>;
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">key</span>.<span class="ident">num_chunks</span>(<span class="ident">BLOCKSIZE</span>) {
         <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">key_block</span>) <span class="op">=</span> <span class="ident">key</span>.<span class="ident">get_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>);
-        <span class="ident">out</span> <span class="op">=</span> <span class="ident">aes_enc</span>(<span class="ident">out</span>, <span class="ident">RoundKey</span>::<span class="ident">from_seq</span>(<span class="ident">key_block</span>));
+        <span class="ident">out</span> <span class="op">=</span> <span class="ident">aes_enc</span>(<span class="ident">out</span>, <span class="ident">RoundKey</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">key_block</span>));
     }
     <span class="ident">out</span>
 }
 <span class="kw">fn</span> <span class="ident">rounds_aes256</span>(<span class="ident">state</span>: <span class="ident">Block</span>, <span class="ident">key</span>: <span class="ident">Bytes208</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">state</span>;
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">key</span>.<span class="ident">num_chunks</span>(<span class="ident">BLOCKSIZE</span>) {
-        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">key_block</span>)  <span class="op">=</span> <span class="ident">key</span>.<span class="ident">clone</span>().<span class="ident">get_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>);
-        <span class="ident">out</span> <span class="op">=</span> <span class="ident">aes_enc</span>(<span class="ident">out</span>, <span class="ident">RoundKey</span>::<span class="ident">from_seq</span>(<span class="ident">key_block</span>));
+        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">key_block</span>)  <span class="op">=</span> <span class="ident">key</span>.<span class="ident">get_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>);
+        <span class="ident">out</span> <span class="op">=</span> <span class="ident">aes_enc</span>(<span class="ident">out</span>, <span class="ident">RoundKey</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">key_block</span>));
     }
     <span class="ident">out</span>
 }
 
 <span class="kw">fn</span> <span class="ident">block_cipher_aes128</span>(<span class="ident">input</span>: <span class="ident">Block</span>, <span class="ident">key</span>: <span class="ident">Bytes176</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-    <span class="kw">let</span> <span class="ident">k0</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub_range</span>(<span class="ident">key</span>, <span class="number">0</span>..<span class="number">16</span>);
-    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Bytes144</span>::<span class="ident">from_sub_range</span>(<span class="ident">key</span>, <span class="number">16</span>..<span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>);
-    <span class="kw">let</span> <span class="ident">kn</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub</span>(<span class="ident">key</span>, <span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>, <span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">k0</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>..<span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Bytes144</span>::<span class="ident">from_sub_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">16</span>..<span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">kn</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>, <span class="number">16</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">add_round_key</span>(<span class="ident">input</span>, <span class="ident">k0</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">rounds_aes128</span>(<span class="ident">state</span>, <span class="ident">k</span>);
     <span class="ident">aes_enc_last</span>(<span class="ident">state</span>, <span class="ident">kn</span>)
 }
 <span class="kw">fn</span> <span class="ident">block_cipher_aes256</span>(<span class="ident">input</span>: <span class="ident">Block</span>, <span class="ident">key</span>: <span class="ident">Bytes240</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-    <span class="kw">let</span> <span class="ident">k0</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub_range</span>(<span class="ident">key</span>, <span class="number">0</span>..<span class="number">16</span>);
-    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Bytes208</span>::<span class="ident">from_sub_range</span>(<span class="ident">key</span>, <span class="number">16</span>..<span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>);
-    <span class="kw">let</span> <span class="ident">kn</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub</span>(<span class="ident">key</span>, <span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>, <span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">k0</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>..<span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Bytes208</span>::<span class="ident">from_sub_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">16</span>..<span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">kn</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>, <span class="number">16</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">add_round_key</span>(<span class="ident">input</span>, <span class="ident">k0</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">rounds_aes256</span>(<span class="ident">state</span>, <span class="ident">k</span>);
     <span class="ident">aes_enc_last</span>(<span class="ident">state</span>, <span class="ident">kn</span>)
@@ -591,34 +591,34 @@
 }
 
 <span class="kw">fn</span> <span class="ident">key_expansion_aes128</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nk</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Bytes176</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">Bytes176</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="ident">key</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">Bytes176</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span>: <span class="ident">usize</span>;
     <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">40</span> {
         <span class="ident">i</span> <span class="op">=</span> <span class="ident">j</span> <span class="op">+</span> <span class="number">4</span>;
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">key_expansion_word</span>(
-            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">16</span>, <span class="number">4</span>),
-            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="ident">key_ex</span>, <span class="ident">nk</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">4</span>, <span class="number">4</span>),
+            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">16</span>, <span class="number">4</span>),
+            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="ident">nk</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">4</span>, <span class="number">4</span>),
             <span class="ident">i</span>,
             <span class="ident">nk</span>,
             <span class="ident">nr</span>,
         );
-        <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">key_ex</span>.<span class="ident">update</span>(<span class="number">4</span> <span class="op">*</span> <span class="ident">i</span>, <span class="ident">word</span>);
+        <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">key_ex</span>.<span class="ident">update</span>(<span class="number">4</span> <span class="op">*</span> <span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">word</span>);
     }
     <span class="ident">key_ex</span>
 }
 <span class="kw">fn</span> <span class="ident">key_expansion_aes256</span>(<span class="ident">key</span>: <span class="ident">Key256</span>, <span class="ident">nk</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Bytes240</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">Bytes240</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="ident">key</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">Bytes240</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span>: <span class="ident">usize</span>;
     <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">52</span> {
         <span class="ident">i</span> <span class="op">=</span> <span class="ident">j</span> <span class="op">+</span> <span class="number">8</span>;
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">key_expansion_word</span>(
-            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">32</span>, <span class="number">4</span>),
-            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">4</span>, <span class="number">4</span>),
+            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">32</span>, <span class="number">4</span>),
+            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">4</span>, <span class="number">4</span>),
             <span class="ident">i</span>,
             <span class="ident">nk</span>,
             <span class="ident">nr</span>,
         );
-        <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">key_ex</span>.<span class="ident">update</span>(<span class="number">4</span> <span class="op">*</span> <span class="ident">i</span>, <span class="ident">word</span>);
+        <span class="ident">key_ex</span> <span class="op">=</span> <span class="ident">key_ex</span>.<span class="ident">update</span>(<span class="number">4</span> <span class="op">*</span> <span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">word</span>);
     }
     <span class="ident">key_ex</span>
 }
@@ -634,14 +634,14 @@
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aes128_ctr_keyblock</span>(<span class="ident">k</span>: <span class="ident">Key128</span>, <span class="ident">n</span>: <span class="ident">Nonce</span>, <span class="ident">c</span>: <span class="ident">U32</span>, <span class="ident">nk</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="ident">n</span>);
-    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">12</span>, <span class="ident">U32_to_be_bytes</span>(<span class="ident">c</span>));
+    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">n</span>);
+    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">12</span>, <span class="kw-2">&amp;</span><span class="ident">U32_to_be_bytes</span>(<span class="ident">c</span>));
     <span class="ident">aes128_encrypt_block</span>(<span class="ident">k</span>, <span class="ident">input</span>, <span class="ident">nk</span>, <span class="ident">nr</span>)
 }
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">aes256_ctr_keyblock</span>(<span class="ident">k</span>: <span class="ident">Key256</span>, <span class="ident">n</span>: <span class="ident">Nonce</span>, <span class="ident">c</span>: <span class="ident">U32</span>, <span class="ident">nk</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="ident">n</span>);
-    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">12</span>, <span class="ident">U32_to_be_bytes</span>(<span class="ident">c</span>));
+    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">n</span>);
+    <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">update</span>(<span class="number">12</span>, <span class="kw-2">&amp;</span><span class="ident">U32_to_be_bytes</span>(<span class="ident">c</span>));
     <span class="ident">aes256_encrypt_block</span>(<span class="ident">k</span>, <span class="ident">input</span>, <span class="ident">nk</span>, <span class="ident">nr</span>)
 }
 
@@ -657,30 +657,30 @@
     <span class="ident">key</span>: <span class="ident">Key128</span>,
     <span class="ident">nonce</span>: <span class="ident">Nonce</span>,
     <span class="ident">counter</span>: <span class="ident">U32</span>,
-    <span class="ident">msg</span>: <span class="ident">ByteSeq</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">nk</span>: <span class="ident">usize</span>,
     <span class="ident">nr</span>: <span class="ident">usize</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctr</span> <span class="op">=</span> <span class="ident">counter</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">blocks_out</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">msg</span>.<span class="ident">len</span>());
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">msg</span>.<span class="ident">num_chunks</span>(<span class="ident">BLOCKSIZE</span>) {
-        <span class="kw">let</span> (<span class="ident">block_len</span>, <span class="ident">msg_block</span>) <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">clone</span>().<span class="ident">get_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>);
+        <span class="kw">let</span> (<span class="ident">block_len</span>, <span class="ident">msg_block</span>) <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">get_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>);
         <span class="kw">if</span> <span class="ident">msg_block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">BLOCKSIZE</span> {
             <span class="kw">let</span> <span class="ident">key_block</span> <span class="op">=</span> <span class="ident">aes128_ctr_keyblock</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">ctr</span>, <span class="ident">nk</span>, <span class="ident">nr</span>);
             <span class="ident">blocks_out</span> <span class="op">=</span> <span class="ident">blocks_out</span>.<span class="ident">set_chunk</span>(
                 <span class="ident">BLOCKSIZE</span>,
                 <span class="ident">i</span>,
-                <span class="ident">xor_block</span>(<span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="ident">msg_block</span>), <span class="ident">key_block</span>),
+                <span class="kw-2">&amp;</span><span class="ident">xor_block</span>(<span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>), <span class="ident">key_block</span>),
             );
             <span class="ident">ctr</span> <span class="op">+</span><span class="op">=</span> <span class="ident">U32</span>(<span class="number">1</span>);
         } <span class="kw">else</span> {
             <span class="comment">// Last block that needs padding</span>
             <span class="kw">let</span> <span class="ident">keyblock</span> <span class="op">=</span> <span class="ident">aes128_ctr_keyblock</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">ctr</span>, <span class="ident">nk</span>, <span class="ident">nr</span>);
-            <span class="kw">let</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="ident">msg_block</span>);
+            <span class="kw">let</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>);
             <span class="ident">blocks_out</span> <span class="op">=</span> <span class="ident">blocks_out</span>.<span class="ident">set_chunk</span>(
                 <span class="ident">BLOCKSIZE</span>,
                 <span class="ident">i</span>,
-                <span class="ident">xor_block</span>(<span class="ident">last_block</span>, <span class="ident">keyblock</span>).<span class="ident">subr</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
+                <span class="kw-2">&amp;</span><span class="ident">xor_block</span>(<span class="ident">last_block</span>, <span class="ident">keyblock</span>).<span class="ident">subr</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
             );
         }
     }
@@ -690,31 +690,31 @@
     <span class="ident">key</span>: <span class="ident">Key256</span>,
     <span class="ident">nonce</span>: <span class="ident">Nonce</span>,
     <span class="ident">counter</span>: <span class="ident">U32</span>,
-    <span class="ident">msg</span>: <span class="ident">ByteSeq</span>,
+    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">nk</span>: <span class="ident">usize</span>,
     <span class="ident">nr</span>: <span class="ident">usize</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctr</span> <span class="op">=</span> <span class="ident">counter</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">blocks_out</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">msg</span>.<span class="ident">len</span>());
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">msg</span>.<span class="ident">num_chunks</span>(<span class="ident">BLOCKSIZE</span>) {
-        <span class="kw">let</span> (<span class="ident">block_len</span>, <span class="ident">msg_block</span>) <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">clone</span>().<span class="ident">get_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>);
+        <span class="kw">let</span> (<span class="ident">block_len</span>, <span class="ident">msg_block</span>) <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">get_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>);
         <span class="kw">if</span> <span class="ident">msg_block</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">BLOCKSIZE</span> {
             <span class="kw">let</span> <span class="ident">key_block</span> <span class="op">=</span> <span class="ident">aes256_ctr_keyblock</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">ctr</span>, <span class="ident">nk</span>, <span class="ident">nr</span>);
             <span class="ident">blocks_out</span> <span class="op">=</span> <span class="ident">blocks_out</span>.<span class="ident">set_chunk</span>(
                 <span class="ident">BLOCKSIZE</span>,
                 <span class="ident">i</span>,
-                <span class="ident">xor_block</span>(<span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="ident">msg_block</span>), <span class="ident">key_block</span>),
+                <span class="kw-2">&amp;</span><span class="ident">xor_block</span>(<span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>), <span class="ident">key_block</span>),
             );
             <span class="ident">ctr</span> <span class="op">+</span><span class="op">=</span> <span class="ident">U32</span>(<span class="number">1</span>);
         } <span class="kw">else</span> {
             <span class="comment">// Last block that needs padding</span>
             <span class="kw">let</span> <span class="ident">keyblock</span> <span class="op">=</span> <span class="ident">aes256_ctr_keyblock</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">ctr</span>, <span class="ident">nk</span>, <span class="ident">nr</span>);
             <span class="kw">let</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-            <span class="kw">let</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">last_block</span>.<span class="ident">update_start</span>(<span class="ident">msg_block</span>);
+            <span class="kw">let</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">last_block</span>.<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>);
             <span class="ident">blocks_out</span> <span class="op">=</span> <span class="ident">blocks_out</span>.<span class="ident">set_chunk</span>(
                 <span class="ident">BLOCKSIZE</span>,
                 <span class="ident">i</span>,
-                <span class="ident">xor_block</span>(<span class="ident">last_block</span>, <span class="ident">keyblock</span>).<span class="ident">subr</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
+                <span class="kw-2">&amp;</span><span class="ident">xor_block</span>(<span class="ident">last_block</span>, <span class="ident">keyblock</span>).<span class="ident">subr</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
             );
         }
     }
@@ -727,17 +727,17 @@
 Nk =    4  |      8
 Nr =    8  |     14
 */</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_encrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">msg</span>: <span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_encrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="ident">aes128_counter_mode</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">counter</span>, <span class="ident">msg</span>, <span class="number">4</span>, <span class="number">10</span>)
 }
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_decrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">ctxt</span>: <span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_decrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">ctxt</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="ident">aes128_counter_mode</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">counter</span>, <span class="ident">ctxt</span>, <span class="number">4</span>, <span class="number">10</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes256_encrypt</span>(<span class="ident">key</span>: <span class="ident">Key256</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">msg</span>: <span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes256_encrypt</span>(<span class="ident">key</span>: <span class="ident">Key256</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="ident">aes256_counter_mode</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">counter</span>, <span class="ident">msg</span>, <span class="number">8</span>, <span class="number">14</span>)
 }
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes256_decrypt</span>(<span class="ident">key</span>: <span class="ident">Key256</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">ctxt</span>: <span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes256_decrypt</span>(<span class="ident">key</span>: <span class="ident">Key256</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">ctxt</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="ident">aes256_counter_mode</span>(<span class="ident">key</span>, <span class="ident">nonce</span>, <span class="ident">counter</span>, <span class="ident">ctxt</span>, <span class="number">8</span>, <span class="number">14</span>)
 }
 

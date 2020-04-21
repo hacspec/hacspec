@@ -177,7 +177,7 @@
 <span class="kw">fn</span> <span class="ident">encode_point</span>(<span class="ident">p</span>: <span class="ident">Point</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SerializedPoint</span> {
     <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">p</span>;
     <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span>.<span class="ident">inv</span>();
-    <span class="ident">SerializedPoint</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="ident">b</span>.<span class="ident">to_byte_seq_le</span>())
+    <span class="ident">SerializedPoint</span>::<span class="ident">new</span>().<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">to_byte_seq_le</span>())
 }
 
 <span class="kw">fn</span> <span class="ident">point_add_and_double</span>(<span class="ident">q</span>: <span class="ident">Point</span>, (<span class="ident">nq</span>, <span class="ident">nqp1</span>): (<span class="ident">Point</span>, <span class="ident">Point</span>)) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Point</span>, <span class="ident">Point</span>) {
@@ -261,7 +261,7 @@
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">u_expected</span>, <span class="ident">u_</span>);
 
     <span class="kw">let</span> <span class="ident">u_encoded</span> <span class="op">=</span> <span class="ident">encode_point</span>(<span class="ident">u_</span>);
-    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">u</span>.<span class="ident">declassify_eq</span>(<span class="ident">u_encoded</span>));
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">u</span>.<span class="ident">declassify_eq</span>(<span class="kw-2">&amp;</span><span class="ident">u_encoded</span>));
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "hacspec_examples";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

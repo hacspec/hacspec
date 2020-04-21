@@ -58,8 +58,6 @@
 <span id="58">58</span>
 <span id="59">59</span>
 <span id="60">60</span>
-<span id="61">61</span>
-<span id="62">62</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Import hacspec and all needed definitions.</span>
 <span class="kw">use</span> <span class="ident">hacspec</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
@@ -77,20 +75,18 @@
 <span class="comment">// TODO: do we want to allow Option?</span>
 <span class="doccomment">/// Extract a pseudo-random key from input key material (IKM) and optionally a salt.</span>
 <span class="doccomment">/// Note that salt can be empty Bytes.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract</span>(<span class="ident">salt</span>: <span class="ident">ByteSeq</span>, <span class="ident">ikm</span>: <span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PRK</span> {
-    <span class="kw">let</span> <span class="ident">salt</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">salt</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> {
-        <span class="ident">salt</span>
-    } <span class="kw">else</span> {
-        <span class="comment">// Use all zero salt if none given.</span>
-        <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">HASH_LEN</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract</span>(<span class="ident">salt</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">ikm</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PRK</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">salt_or_zero</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">HASH_LEN</span>);
+    <span class="kw">if</span> <span class="ident">salt</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> {
+        <span class="ident">salt_or_zero</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="ident">salt</span>)
     };
-    <span class="ident">PRK</span>::<span class="ident">from_seq</span>(<span class="ident">hmac</span>(<span class="ident">salt</span>, <span class="ident">ikm</span>))
+    <span class="ident">PRK</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">hmac</span>(<span class="kw-2">&amp;</span><span class="ident">salt_or_zero</span>, <span class="ident">ikm</span>))
 }
 
-<span class="kw">fn</span> <span class="ident">build_hmac_txt</span>(<span class="ident">t</span>: <span class="ident">ByteSeq</span>, <span class="ident">info</span>: <span class="ident">ByteSeq</span>, <span class="ident">iteration</span>: <span class="ident">U8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">fn</span> <span class="ident">build_hmac_txt</span>(<span class="ident">t</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">iteration</span>: <span class="ident">U8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">t</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">info</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>);
-    <span class="ident">out</span> <span class="op">=</span> <span class="ident">out</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="ident">t</span>.<span class="ident">clone</span>());
-    <span class="ident">out</span> <span class="op">=</span> <span class="ident">out</span>.<span class="ident">update</span>(<span class="ident">t</span>.<span class="ident">len</span>(), <span class="ident">info</span>.<span class="ident">clone</span>());
+    <span class="ident">out</span> <span class="op">=</span> <span class="ident">out</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="ident">t</span>);
+    <span class="ident">out</span> <span class="op">=</span> <span class="ident">out</span>.<span class="ident">update</span>(<span class="ident">t</span>.<span class="ident">len</span>(), <span class="ident">info</span>);
     <span class="ident">out</span>[<span class="ident">t</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">info</span>.<span class="ident">len</span>()] <span class="op">=</span> <span class="ident">iteration</span>;
     <span class="ident">out</span>
 }
@@ -105,7 +101,7 @@
 <span class="doccomment">/// Expand a key prk, using potentially empty info, and output length l.</span>
 <span class="doccomment">/// Key prk must be at least of length HASH_LEN.</span>
 <span class="doccomment">/// Output length l can be at most 255*HASH_LEN.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">prk</span>: <span class="ident">ByteSeq</span>, <span class="ident">info</span>: <span class="ident">ByteSeq</span>, <span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">prk</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">div_ceil</span>(<span class="ident">l</span>, <span class="ident">HASH_LEN</span>);
     <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">n</span> <span class="op">&lt;</span> <span class="ident">u8</span>::<span class="ident">max_value</span>().<span class="ident">into</span>());
     <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u8</span>;
@@ -114,12 +110,12 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">PRK</span>::<span class="ident">capacity</span>());
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
         <span class="kw">let</span> <span class="ident">hmac_txt_in</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">build_hmac_txt</span>(<span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="number">0</span>), <span class="ident">info</span>.<span class="ident">clone</span>(), <span class="ident">U8</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>))
+            <span class="ident">build_hmac_txt</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="number">0</span>), <span class="ident">info</span>, <span class="ident">U8</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>))
         } <span class="kw">else</span> {
-            <span class="ident">build_hmac_txt</span>(<span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="ident">t_i</span>), <span class="ident">info</span>.<span class="ident">clone</span>(), <span class="ident">U8</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>))
+            <span class="ident">build_hmac_txt</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">t_i</span>), <span class="ident">info</span>, <span class="ident">U8</span>(<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>))
         };
-        <span class="ident">t_i</span> <span class="op">=</span> <span class="ident">hmac</span>(<span class="ident">prk</span>.<span class="ident">clone</span>(), <span class="ident">hmac_txt_in</span>);
-        <span class="ident">t</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">t_i</span>.<span class="ident">len</span>(), <span class="ident">t_i</span>);
+        <span class="ident">t_i</span> <span class="op">=</span> <span class="ident">hmac</span>(<span class="ident">prk</span>, <span class="kw-2">&amp;</span><span class="ident">hmac_txt_in</span>);
+        <span class="ident">t</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">t_i</span>.<span class="ident">len</span>(), <span class="kw-2">&amp;</span><span class="ident">t_i</span>);
     }
     <span class="ident">t</span>.<span class="ident">sub</span>(<span class="number">0</span>, <span class="ident">l</span>)
 }
