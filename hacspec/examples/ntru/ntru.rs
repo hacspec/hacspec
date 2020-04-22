@@ -3,10 +3,10 @@ use hacspec::prelude::*;
 
 
 /// Struct to decide NtruVersion
-struct NtruVersion{
-    p:i128,
-    q:i128,
-    w:i128,
+pub struct NtruVersion{
+    pub p:i128,
+    pub q:i128,
+    pub w:i128,
 }
 #[macro_export]
 macro_rules! ntru_v {
@@ -42,12 +42,13 @@ fn create_rand_poly(w: i128, h_deg: usize) -> Vec<(usize, i128)> {
             continue;
         }
         // if c_val = 0 -> polynom[pos] = -1, else 1
-        polynom.push((0, c_val * 2 - 1));
+        polynom.push((pos, c_val * 2 - 1));
         counter = counter + 1;
     }
 
     return polynom;
 }
+
 
 /// Creates a random polynom and its inverse element
 // [] wenn nicht invertierbar
@@ -114,28 +115,36 @@ fn create_rand_poly(w: i128, h_deg: usize) -> Vec<(usize, i128)> {
         return (f_vec,f_inv.to_vec());
     }
 }*/
-fn create_invertable_poly_2(n: NtruVersion, modulus: i128) -> ([(usize, i128); 288], Vec<i128>) /*-> Result<(),Box<dyn Error>>*/
+//TODO for tests pub
+
+pub fn create_invertable_poly_2(n: NtruVersion, modulus: i128) -> ([(usize, u128); 288], Vec<u128>) /*-> Result<(),Box<dyn Error>>*/
 {
+    poly!(ZxN, u128, 653, 3, &[(0, 2), (1, 2), (653, 1)]);
+    if n.q == modulus {
+        poly!(ZxN, u128, 653, 4621, &[(0, 4620), (1, 4620), (653, 1)]);
+
+    }
     let mut f_vec = create_rand_poly(n.w, 653);
-    let mut f_array: [(usize, i128); 288] = [(0, 0); 288];
+    let mut f_array: [(usize, u128); 288] = [(0, 0); 288];
     let mut index = 0;
     for tmp in f_vec.iter() {
-        f_array[index] = *tmp;
+        if tmp.1 < 0 {
+            f_array[index] = (tmp.0,(tmp.1 + modulus) as u128);
+            index = index + 1; 
+            continue;   
+        }
+        f_array[index] = (tmp.0,tmp.1 as u128);
         index = index + 1;
     }
-    poly!(ZxN, i128, 653, 3, &[(0, -1), (1, -1), (653, 1)]);
-    if n.q == modulus {
-        poly!(ZxN, i128, 653, 4621, &[(0, -1), (1, -1), (653, 1)]);
-    }
-    let m = ZxN::new(&f_vec);
+    
+    let m = ZxN::new(&f_array);
     return (
         f_array,
-        extended_euclid(&m.poly, &m.irr, modulus).unwrap_or_default(),
+        extended_euclid(&m.poly, &m.irr, modulus as u128).unwrap_or_default(),
     );
 }
 
-
-pub fn key_gen() -> (Vec<i128>, (Vec<i128>, Vec<i128>)) {
+pub fn key_gen() -> (Vec<u128>, (Vec<u128>, Vec<u128>)) {
     //TODO just for test
     let n_v = ntru_v!(1);
     let q = *(&n_v.q);
@@ -151,9 +160,9 @@ pub fn key_gen() -> (Vec<i128>, (Vec<i128>, Vec<i128>)) {
     }
     let n_v = ntru_v!(1);
     //if n_v.p == 653 {
-        poly!(ZxQ, i128, 653, 4621, [(0, -1), (1, -1), (653, 1)]);
+        poly!(ZxQ, u128, 653, 4621, [(0, 4620), (1, 4620), (653, 1)]);
         // TODO there may be an efficent alternativ
-        let mut f_array:[i128;653] = [0;653];
+        let mut f_array:[u128;653] = [0;653];
         let mut index = 0;
         while index < 653{
             f_array[index] = poly_f.1[index];
