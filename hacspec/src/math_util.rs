@@ -5,17 +5,6 @@
 
 use crate::prelude::*;
 
-/// Rust's built-in modulo (x % n) is signed. This lifts x into ℤn+.
-#[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
-pub(crate) fn signed_mod(x: i128, n: i128) -> i128 {
-    let mut ret = x % n;
-    while ret < 0 {
-        ret += n;
-    }
-    ret
-}
-
 /// Extended euclidean algorithm to compute the inverse of x in ℤ/n
 ///
 /// **Panics** if x is not invertible.

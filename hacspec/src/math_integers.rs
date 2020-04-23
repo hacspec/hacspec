@@ -30,6 +30,11 @@ macro_rules! unsigned_public_integer {
             fn modulo(self, n: Self) -> Self {
                 unimplemented!();
             }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                self.modulo(n)
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -163,6 +168,15 @@ macro_rules! signed_public_integer {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
                 unimplemented!();
+            }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                let mut ret = self.modulo(n);
+                while ret.less_than(Self::default()) {
+                    ret = ret + n;
+                }
+                ret
             }
         }
         impl NumericBase for $name {
@@ -298,6 +312,11 @@ macro_rules! unsigned_integer {
             fn modulo(self, n: Self) -> Self {
                 unimplemented!();
             }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                self.modulo(n)
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -406,6 +425,7 @@ macro_rules! signed_integer {
         abstract_signed_secret_integer!($name, $n);
 
         impl Numeric for $name {}
+        // TODO: impl Integer for $name
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -431,6 +451,15 @@ macro_rules! signed_integer {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
                 unimplemented!();
+            }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                let mut ret = self.modulo(n);
+                while ret.less_than(Self::default()) {
+                    ret = ret + n;
+                }
+                ret
             }
         }
         impl NumericBase for $name {
@@ -565,6 +594,11 @@ macro_rules! nat_mod {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
                 unimplemented!();
+            }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                self.modulo(n)
             }
         }
         impl NumericBase for $name {
@@ -735,6 +769,11 @@ macro_rules! public_nat_mod {
             #[cfg_attr(feature="use_attributes", library(library))]
             fn modulo(self, n: Self) -> Self {
                 unimplemented!();
+            }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                self.modulo(n)
             }
         }
         impl NumericBase for $name {

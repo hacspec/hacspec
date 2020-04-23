@@ -17,12 +17,10 @@ macro_rules! implement_public_unsigned_mi {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                println!("FOOOOOO {:?}, {:?}, {:?}", self, rhs, n);
                 let mut tmp = self;
                 while tmp < rhs {
                     tmp += n;
                 }
-                println!("{:?} = {:?} - {:?}", tmp, rhs, tmp-rhs);
                 (tmp - rhs) % n
             }
             /// `(self + rhs) % n`
@@ -45,6 +43,11 @@ macro_rules! implement_public_unsigned_mi {
             fn modulo(self, n: Self) -> Self {
                 self % n
             }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                self.modulo(n)
+            }
         }
     };
 }
@@ -56,17 +59,17 @@ macro_rules! implement_public_signed_mi {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                signed_mod(self as i128 - rhs as i128, n as i128) as $t
+                (self - rhs).signed_modulo(n)
             }
             /// `(self + rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                signed_mod(self as i128 + rhs as i128, n as i128) as $t
+                (self + rhs).signed_modulo(n)
             }
             /// `(self * rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn mul_mod(self, rhs: Self, n: Self) -> Self{
-                signed_mod(self as i128 * rhs as i128, n as i128) as $t
+                (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -76,7 +79,16 @@ macro_rules! implement_public_signed_mi {
             /// `self % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
-                signed_mod(self as i128, n as i128) as $t
+                self % n
+            }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                let mut ret = self.modulo(n);
+                while ret.less_than(Self::ZERO) {
+                    ret = ret + n;
+                }
+                ret
             }
         }
     };
@@ -277,6 +289,11 @@ macro_rules! implement_secret_unsigned_mi {
                 let n = <$t>::declassify(n);
                 Self::from(s % n)
             }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                self.modulo(n)
+            }
         }
     };
 }
@@ -320,6 +337,15 @@ macro_rules! implement_secret_signed_mi {
                 let s = <$t>::declassify(self);
                 let n = <$t>::declassify(n);
                 Self::from(s.modulo(n))
+            }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn signed_modulo(self, n: Self) -> Self {
+                let mut ret = self.modulo(n);
+                while ret.less_than(Self::ZERO) {
+                    ret = ret + n;
+                }
+                ret
             }
         }
     };

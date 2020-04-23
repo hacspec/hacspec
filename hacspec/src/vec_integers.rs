@@ -177,6 +177,9 @@ macro_rules! _implement_numeric_unsigned_public {
             fn modulo(self, _n: Self) -> Self {
                 unimplemented!();
             }
+            fn signed_modulo(self, _n: Self) -> Self {
+                unimplemented!();
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -418,6 +421,9 @@ macro_rules! _implement_numeric_signed_public {
             /// `self % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
+                unimplemented!();
+            }
+            fn signed_modulo(self, _n: Self) -> Self {
                 unimplemented!();
             }
         }
@@ -667,6 +673,9 @@ macro_rules! _implement_numeric_unsigned_secret {
             fn modulo(self, _n: Self) -> Self {
                 unimplemented!();
             }
+            fn signed_modulo(self, _n: Self) -> Self {
+                unimplemented!();
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -906,6 +915,9 @@ macro_rules! _implement_numeric_signed_secret {
             fn modulo(self, n: Self) -> Self {
                 unimplemented!();
             }
+            fn signed_modulo(self, _n: Self) -> Self {
+                unimplemented!();
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -1033,6 +1045,9 @@ impl<T: Numeric + PublicInteger> ModNumeric for PublicSeq<T> {
     }
     /// `self % n`
     fn modulo(self, n: Self) -> Self {
+        unimplemented!();
+    }
+    fn signed_modulo(self, _n: Self) -> Self {
         unimplemented!();
     }
 }

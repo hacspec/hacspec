@@ -119,10 +119,12 @@ pub trait PublicInteger {}
 impl PublicInteger for u8 {}
 impl PublicInteger for u16 {}
 impl PublicInteger for u32 {}
+impl PublicInteger for u64 {}
 impl PublicInteger for u128 {}
 impl PublicInteger for i8 {}
 impl PublicInteger for i16 {}
 impl PublicInteger for i32 {}
+impl PublicInteger for i64 {}
 impl PublicInteger for i128 {}
 
 pub trait UnsignedInteger: Integer {}
@@ -130,10 +132,12 @@ pub trait UnsignedInteger: Integer {}
 impl UnsignedInteger for U8 {}
 impl UnsignedInteger for U16 {}
 impl UnsignedInteger for U32 {}
+impl UnsignedInteger for U64 {}
 impl UnsignedInteger for U128 {}
 impl UnsignedInteger for u8 {}
 impl UnsignedInteger for u16 {}
 impl UnsignedInteger for u32 {}
+impl UnsignedInteger for u64 {}
 impl UnsignedInteger for u128 {}
 
 pub trait SignedInteger: Integer {}
@@ -141,10 +145,12 @@ pub trait SignedInteger: Integer {}
 impl SignedInteger for I8 {}
 impl SignedInteger for I16 {}
 impl SignedInteger for I32 {}
+impl SignedInteger for I64 {}
 impl SignedInteger for I128 {}
 impl SignedInteger for i8 {}
 impl SignedInteger for i16 {}
 impl SignedInteger for i32 {}
+impl SignedInteger for i64 {}
 impl SignedInteger for i128 {}
 
 pub trait Numeric: NumericBase + Copy {}
@@ -160,6 +166,8 @@ pub trait ModNumeric {
     fn pow_mod(self, exp: Self, n: Self) -> Self;
     /// `self % n`
     fn modulo(self, n: Self) -> Self;
+    /// `self % n` that always returns a positive integer
+    fn signed_modulo(self, n: Self) -> Self;
 }
 
 /// The `Numeric` trait has to be implemented by all numeric objects.
