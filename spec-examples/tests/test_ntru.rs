@@ -11,9 +11,9 @@ fn test_key_gen(){
 }
 #[test]
 fn test_create_inv(){
-    let mut poly = create_invertable_poly_2( NtruVersion{p:653,q:4621,w:288},3);
+    let mut poly = create_invertable_poly( NtruVersion{p:653,q:4621,w:288},3);
     while poly.1.len() == 0 {
-        poly = create_invertable_poly_2( NtruVersion{p:653,q:4621,w:288}, 3);
+        poly = create_invertable_poly( NtruVersion{p:653,q:4621,w:288}, 3);
     }
     // convert vec to array
     let mut f_array:[u128;653] = [0;653];
