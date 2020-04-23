@@ -116,29 +116,41 @@ fn test_poly_inversion() {
     let one_poly = ZxN::new(&[(0, 1)]);
 
     let a = ZxN::new(&[(0, 2), (1, 2)]);
-    let a_inv = a.inv();
+    let a_inv = match a.inv() {
+        Ok(v) => v,
+        Err(e) => panic!(e),
+    };
     let test = a * a_inv;
     assert_eq!(test, one_poly);
 
     let a = ZxN::new(&[(0, 1), (1, 2), (2, 2)]);
-    let a_inv = a.inv();
+    let a_inv = match a.inv() {
+        Ok(v) => v,
+        Err(e) => panic!(e),
+    };
     let test = a * a_inv;
     assert_eq!(test, one_poly);
 
     let a = ZxN::new(&[(2, 1)]);
-    let a_inv = a.inv();
+    let a_inv = match a.inv() {
+        Ok(v) => v,
+        Err(e) => panic!(e),
+    };
     let test = a * a_inv;
     assert_eq!(test, one_poly);
 }
 
 #[test]
-#[should_panic]
-fn test_poly_inversion_panic() {
+fn test_poly_not_invertible() {
     poly!(ZxN, u128, 11, 3, &[(0, 2), (1, 2), (2, 1), (3, 2), (4, 2), (5, 1), (6, 2), (8, 2), (10, 2), (11, 2)]);
     // Not invertible
     // let irr = [2, 2, 1, 2, 2, 1, 2, 0, 2, 0, 2, 2];
     let a = ZxN::new_full([0, 1, 2, 0, 2, 2, 0, 0, 2, 0, 0]);
-    let _ = a.inv();
+    let a_inv = match a.inv() {
+        Ok(v) => v,
+        Err(_) => ZxN::new(&[]),
+    };
+    assert_eq!(a_inv, ZxN::new(&[]));
 }
 
 // Rq = Z[X]/(3329, (X^256+1))

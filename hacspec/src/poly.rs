@@ -157,12 +157,10 @@ pub fn poly_mul<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
 /// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.
 /// The length of x and degree of y are assumed to be public
 ///
-/// Returns (quotient, remainder)
-///
-/// **Panics** when division isn't possible.
+/// Returns Ok(quotient, remainder) or Err("Can't divide these two polynomials")
 ///
 #[inline]
-pub fn poly_div<T: Numeric>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
+pub fn poly_div<T: Numeric>(x: &[T], y: &[T], n: T) -> Result<(Vec<T>, Vec<T>), &'static str> {
     let (x, y) = normalize(x, y);
     let mut rem = x.clone();
     let mut quo = vec![T::default(); x.len()];
@@ -179,14 +177,14 @@ pub fn poly_div<T: Numeric>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
             rem[idx] * T::inv(c, n)
         };
         if t.equal(T::default()) && !rem[idx].equal(T::default()) {
-            panic!("Can't divide these two polynomials");
+            return Err("Can't divide these two polynomials");
         }
         let s = monomial(t, dist - i - 1);
         let sy = poly_mul(&s[..], &y[..], n);
         quo = poly_add(&quo[..], &s[..], n);
         rem = poly_sub(&rem, &sy, n);
     }
-    (quo, make_fixed_length(&rem, yd))
+    Ok((quo, make_fixed_length(&rem, yd)))
 }
 
 #[inline]
@@ -418,10 +416,12 @@ macro_rules! poly {
                 return true;
             }
             /// Invert this polynomial.
-            /// **Panics** if the polynomial is not invertible.
-            fn inv(self) -> Self {
-                println!("inv {:?}", self);
-                Self::from_vec(extended_euclid(&self.poly, &self.irr, self.n).unwrap())
+            /// Returns an `Err` if the polynomial is not invertible.
+            fn inv(self) -> Result<Self, &'static str> {
+                match extended_euclid(&self.poly, &self.irr, self.n) {
+                    Ok(v) => Ok(Self::from_vec(v)),
+                    Err(e) => Err(e),
+                }
             }
 
             pub fn from_vec(v: Vec<$t>) -> $name {
@@ -498,7 +498,10 @@ macro_rules! poly {
             fn mul(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
                 let tmp = poly_mul(&self.poly, &rhs.poly, self.n);
-                let r = poly_div(&tmp, &self.irr, self.n).1;
+                let r = match poly_div(&tmp, &self.irr, self.n) {
+                    Ok(v) => v.1,
+                    Err(e) => panic!(e),
+                };
                 Self::from_vec(r)
             }
         }
@@ -508,7 +511,10 @@ macro_rules! poly {
             type Output = (Self, Self);
             fn div(self, rhs: Self) -> Self::Output {
                 debug_assert!(self.compatible(&rhs));
-                let r = poly_div(&self.poly, &rhs.poly, self.n);
+                let r = match poly_div(&self.poly, &rhs.poly, self.n) {
+                    Ok(v) => v,
+                    Err(e) => panic!(e),
+                };
                 (Self::from_vec(r.0), Self::from_vec(r.1))
             }
         }
