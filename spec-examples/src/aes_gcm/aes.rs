@@ -120,31 +120,31 @@ fn rounds_aes128(state: Block, key: Bytes144) -> Block {
     let mut out = state;
     for i in 0..key.num_chunks(BLOCKSIZE) {
         let (_, key_block) = key.get_chunk(BLOCKSIZE, i);
-        out = aes_enc(out, RoundKey::from_seq(key_block));
+        out = aes_enc(out, RoundKey::from_seq(&key_block));
     }
     out
 }
 fn rounds_aes256(state: Block, key: Bytes208) -> Block {
     let mut out = state;
     for i in 0..key.num_chunks(BLOCKSIZE) {
-        let (_, key_block)  = key.clone().get_chunk(BLOCKSIZE, i);
-        out = aes_enc(out, RoundKey::from_seq(key_block));
+        let (_, key_block)  = key.get_chunk(BLOCKSIZE, i);
+        out = aes_enc(out, RoundKey::from_seq(&key_block));
     }
     out
 }
 
 fn block_cipher_aes128(input: Block, key: Bytes176, nr: usize) -> Block {
-    let k0 = RoundKey::from_sub_range(key, 0..16);
-    let k = Bytes144::from_sub_range(key, 16..nr * 16);
-    let kn = RoundKey::from_sub(key, nr * 16, 16);
+    let k0 = RoundKey::from_sub_range(&key, 0..16);
+    let k = Bytes144::from_sub_range(&key, 16..nr * 16);
+    let kn = RoundKey::from_sub(&key, nr * 16, 16);
     let state = add_round_key(input, k0);
     let state = rounds_aes128(state, k);
     aes_enc_last(state, kn)
 }
 fn block_cipher_aes256(input: Block, key: Bytes240, nr: usize) -> Block {
-    let k0 = RoundKey::from_sub_range(key, 0..16);
-    let k = Bytes208::from_sub_range(key, 16..nr * 16);
-    let kn = RoundKey::from_sub(key, nr * 16, 16);
+    let k0 = RoundKey::from_sub_range(&key, 0..16);
+    let k = Bytes208::from_sub_range(&key, 16..nr * 16);
+    let kn = RoundKey::from_sub(&key, nr * 16, 16);
     let state = add_round_key(input, k0);
     let state = rounds_aes256(state, k);
     aes_enc_last(state, kn)
@@ -185,34 +185,34 @@ fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> Wor
 }
 
 fn key_expansion_aes128(key: Key128, nk: usize, nr: usize) -> Bytes176 {
-    let mut key_ex = Bytes176::new().update_start(key);
+    let mut key_ex = Bytes176::new().update_start(&key);
     let mut i: usize;
     for j in 0..40 {
         i = j + 4;
         let word = key_expansion_word(
-            Word::from_sub(key_ex, 4 * i - 16, 4),
-            Word::from_sub(key_ex, nk * i - 4, 4),
+            Word::from_sub(&key_ex, 4 * i - 16, 4),
+            Word::from_sub(&key_ex, nk * i - 4, 4),
             i,
             nk,
             nr,
         );
-        key_ex = key_ex.update(4 * i, word);
+        key_ex = key_ex.update(4 * i, &word);
     }
     key_ex
 }
 fn key_expansion_aes256(key: Key256, nk: usize, nr: usize) -> Bytes240 {
-    let mut key_ex = Bytes240::new().update_start(key);
+    let mut key_ex = Bytes240::new().update_start(&key);
     let mut i: usize;
     for j in 0..52 {
         i = j + 8;
         let word = key_expansion_word(
-            Word::from_sub(key_ex, 4 * i - 32, 4),
-            Word::from_sub(key_ex, 4 * i - 4, 4),
+            Word::from_sub(&key_ex, 4 * i - 32, 4),
+            Word::from_sub(&key_ex, 4 * i - 4, 4),
             i,
             nk,
             nr,
         );
-        key_ex = key_ex.update(4 * i, word);
+        key_ex = key_ex.update(4 * i, &word);
     }
     key_ex
 }
@@ -228,14 +228,14 @@ pub fn aes256_encrypt_block(k: Key256, input: Block, nk: usize, nr: usize) -> Bl
 
 pub(crate) fn aes128_ctr_keyblock(k: Key128, n: Nonce, c: U32, nk: usize, nr: usize) -> Block {
     let mut input = Block::new();
-    input = input.update(0, n);
-    input = input.update(12, U32_to_be_bytes(c));
+    input = input.update(0, &n);
+    input = input.update(12, &U32_to_be_bytes(c));
     aes128_encrypt_block(k, input, nk, nr)
 }
 pub(crate) fn aes256_ctr_keyblock(k: Key256, n: Nonce, c: U32, nk: usize, nr: usize) -> Block {
     let mut input = Block::new();
-    input = input.update(0, n);
-    input = input.update(12, U32_to_be_bytes(c));
+    input = input.update(0, &n);
+    input = input.update(12, &U32_to_be_bytes(c));
     aes256_encrypt_block(k, input, nk, nr)
 }
 
@@ -251,30 +251,30 @@ fn aes128_counter_mode(
     key: Key128,
     nonce: Nonce,
     counter: U32,
-    msg: ByteSeq,
+    msg: &ByteSeq,
     nk: usize,
     nr: usize,
 ) -> ByteSeq {
     let mut ctr = counter;
     let mut blocks_out = ByteSeq::new(msg.len());
     for i in 0..msg.num_chunks(BLOCKSIZE) {
-        let (block_len, msg_block) = msg.clone().get_chunk(BLOCKSIZE, i);
+        let (block_len, msg_block) = msg.get_chunk(BLOCKSIZE, i);
         if msg_block.len() == BLOCKSIZE {
             let key_block = aes128_ctr_keyblock(key, nonce, ctr, nk, nr);
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,
-                xor_block(Block::from_seq(msg_block), key_block),
+                &xor_block(Block::from_seq(&msg_block), key_block),
             );
             ctr += U32(1);
         } else {
             // Last block that needs padding
             let keyblock = aes128_ctr_keyblock(key, nonce, ctr, nk, nr);
-            let last_block = Block::new().update_start(msg_block);
+            let last_block = Block::new().update_start(&msg_block);
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,
-                xor_block(last_block, keyblock).subr(0..block_len),
+                &xor_block(last_block, keyblock).subr(0..block_len),
             );
         }
     }
@@ -284,31 +284,31 @@ fn aes256_counter_mode(
     key: Key256,
     nonce: Nonce,
     counter: U32,
-    msg: ByteSeq,
+    msg: &ByteSeq,
     nk: usize,
     nr: usize,
 ) -> ByteSeq {
     let mut ctr = counter;
     let mut blocks_out = ByteSeq::new(msg.len());
     for i in 0..msg.num_chunks(BLOCKSIZE) {
-        let (block_len, msg_block) = msg.clone().get_chunk(BLOCKSIZE, i);
+        let (block_len, msg_block) = msg.get_chunk(BLOCKSIZE, i);
         if msg_block.len() == BLOCKSIZE {
             let key_block = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,
-                xor_block(Block::from_seq(msg_block), key_block),
+                &xor_block(Block::from_seq(&msg_block), key_block),
             );
             ctr += U32(1);
         } else {
             // Last block that needs padding
             let keyblock = aes256_ctr_keyblock(key, nonce, ctr, nk, nr);
             let last_block = Block::new();
-            let last_block = last_block.update_start(msg_block);
+            let last_block = last_block.update_start(&msg_block);
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,
-                xor_block(last_block, keyblock).subr(0..block_len),
+                &xor_block(last_block, keyblock).subr(0..block_len),
             );
         }
     }
@@ -321,17 +321,17 @@ fn aes256_counter_mode(
 Nk =    4  |      8
 Nr =    8  |     14
 */
-pub fn aes128_encrypt(key: Key128, nonce: Nonce, counter: U32, msg: ByteSeq) -> ByteSeq {
+pub fn aes128_encrypt(key: Key128, nonce: Nonce, counter: U32, msg: &ByteSeq) -> ByteSeq {
     aes128_counter_mode(key, nonce, counter, msg, 4, 10)
 }
-pub fn aes128_decrypt(key: Key128, nonce: Nonce, counter: U32, ctxt: ByteSeq) -> ByteSeq {
+pub fn aes128_decrypt(key: Key128, nonce: Nonce, counter: U32, ctxt: &ByteSeq) -> ByteSeq {
     aes128_counter_mode(key, nonce, counter, ctxt, 4, 10)
 }
 
-pub fn aes256_encrypt(key: Key256, nonce: Nonce, counter: U32, msg: ByteSeq) -> ByteSeq {
+pub fn aes256_encrypt(key: Key256, nonce: Nonce, counter: U32, msg: &ByteSeq) -> ByteSeq {
     aes256_counter_mode(key, nonce, counter, msg, 8, 14)
 }
-pub fn aes256_decrypt(key: Key256, nonce: Nonce, counter: U32, ctxt: ByteSeq) -> ByteSeq {
+pub fn aes256_decrypt(key: Key256, nonce: Nonce, counter: U32, ctxt: &ByteSeq) -> ByteSeq {
     aes256_counter_mode(key, nonce, counter, ctxt, 8, 14)
 }
 

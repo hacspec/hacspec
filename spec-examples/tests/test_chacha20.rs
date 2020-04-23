@@ -94,8 +94,8 @@ fn test_block() {
 }
 
 fn enc_dec_test(m: ByteSeq, key: Key, iv: IV) {
-    let c = chacha(key, iv, m.clone()).unwrap();
-    let m_dec = chacha(key, iv, c).unwrap();
+    let c = chacha(key, iv, &m).unwrap();
+    let m_dec = chacha(key, iv, &c).unwrap();
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
@@ -103,7 +103,7 @@ fn enc_dec_test(m: ByteSeq, key: Key, iv: IV) {
 }
 
 fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq, valid: bool) {
-    let enc = chacha(key, iv, m.clone());
+    let enc = chacha(key, iv, &m);
     assert!(enc.is_ok() == valid);
     if !valid {
         return;
@@ -116,7 +116,7 @@ fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq, valid: bool) {
             .collect::<Vec<_>>(),
         c.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
     );
-    let m_dec = chacha(key, iv, c).unwrap();
+    let m_dec = chacha(key, iv, &c).unwrap();
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()

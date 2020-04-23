@@ -61,7 +61,7 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub<A: SeqTrait<$t>>(input: A, start: usize, len: usize) -> Self {
+            pub fn from_sub<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
                 debug_assert_eq!(len, a.len());
                 a = a.update_sub(0, input, start, len);
@@ -69,17 +69,17 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub_range<A: SeqTrait<$t>>(input: A, r: Range<usize>) -> Self {
+            pub fn from_sub_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
                 Self::from_sub(input, r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn sub(self, start_out: usize, len: usize) -> Seq<$t> {
+            pub fn sub(&self, start_out: usize, len: usize) -> Seq<$t> {
                 Seq::from_sub(self, start_out, len)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn subr(self, r: Range<usize>) -> Seq<$t> {
+            pub fn subr(&self, r: Range<usize>) -> Seq<$t> {
                 self.sub(r.start, r.end - r.start)
             }
 
@@ -107,7 +107,7 @@ macro_rules! _array_base {
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn get_chunk(
-                self,
+                &self,
                 chunk_size: usize,
                 chunk_number: usize
             ) -> (usize, Seq<$t>) {
@@ -122,7 +122,7 @@ macro_rules! _array_base {
                 self,
                 chunk_size: usize,
                 chunk_number: usize,
-                input: A,
+                input: &A,
             ) -> Self {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
@@ -228,7 +228,7 @@ macro_rules! _array_base {
             // We can't use the [From] trait here because otherwise it would conflict with
             // the From<T> for T core implementation, as the array also implements the [SeqTrait].
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_seq<T: SeqTrait<$t>>(x: T) -> $name {
+            pub fn from_seq<T: SeqTrait<$t>>(x: &T) -> $name {
                 debug_assert_eq!(x.len(), $l);
                 let mut out = $name::new();
                 for i in 0..x.len() {
@@ -290,7 +290,7 @@ macro_rules! _secret_array {
         /// **Warning:** declassifies secret integer types.
         impl $name {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn declassify_eq(self, other: Self) -> bool {
+            pub fn declassify_eq(&self, other: &Self) -> bool {
                 self.0[..]
                     .iter()
                     .map(|x| <$t>::declassify(*x))
@@ -310,7 +310,7 @@ macro_rules! _secret_array {
             }
 
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn to_be_bytes(self) -> Seq<U8> {
+            pub fn to_be_bytes(&self) -> Seq<U8> {
                const FACTOR: usize = core::mem::size_of::<$t>();
                let mut out : Seq<U8> = Seq::new($l * FACTOR);
                for i in 0..$l {
@@ -324,7 +324,7 @@ macro_rules! _secret_array {
             }
 
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn to_le_bytes(self) -> Seq<U8> {
+            pub fn to_le_bytes(&self) -> Seq<U8> {
                const FACTOR: usize = core::mem::size_of::<$t>();
                let mut out : Seq<U8> = Seq::new($l * FACTOR);
                for i in 0..$l {

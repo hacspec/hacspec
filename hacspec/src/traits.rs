@@ -19,13 +19,13 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     ///
     /// let mut s = Seq::<u8>::new(5);
     /// let tmp = Seq::<u8>::from_slice(&[2, 3]);
-    /// s = s.update_sub(2, tmp, 1, 1);
+    /// s = s.update_sub(2, &tmp, 1, 1);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
     fn update_sub<A: SeqTrait<T>>(
         mut self,
         start_out: usize,
-        v: A,
+        v: &A,
         start_in: usize,
         len: usize,
     ) -> Self {
@@ -46,11 +46,11 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     ///
     /// let mut s = Seq::<u8>::new(5);
     /// let tmp = Seq::<u8>::from_slice(&[2, 3]);
-    /// s = s.update(2, tmp);
+    /// s = s.update(2, &tmp);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
     #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn update<A: SeqTrait<T>>(self, start: usize, v: A) -> Self {
+    fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
         let len = v.len();
         self.update_sub(start, v, 0, len)
     }
@@ -58,7 +58,7 @@ pub trait SeqTrait<T: Copy> : Index<usize, Output=T> + IndexMut<usize, Output=T>
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn update_start<A: SeqTrait<T>>(
         self,
-        v: A
+        v: &A
     ) -> Self {
         let len = v.len();
         self.update_sub(0, v, 0, len)

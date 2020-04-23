@@ -12,7 +12,7 @@ const BLOCK_LEN: usize = sha2::K_SIZE;
 bytes!(Block, BLOCK_LEN);
 
 // H(K XOR opad, H(K XOR ipad, text))
-pub fn hmac(k: ByteSeq, txt: ByteSeq) -> PRK {
+pub fn hmac(k: &ByteSeq, txt: &ByteSeq) -> PRK {
     let i_pad: Block = Block::from_public_array([
         0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36,
         0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36, 0x36,
@@ -30,7 +30,7 @@ pub fn hmac(k: ByteSeq, txt: ByteSeq) -> PRK {
 
     // Applications that use keys longer than B bytes will first hash the key using H and then use the resultant L byte string as the actual key to HMAC
     let k_block = if k.len() > BLOCK_LEN {
-        Block::new().update_start(sha2::hash(k))
+        Block::new().update_start(&sha2::hash(k))
     } else {
         Block::new().update_start(k)
     };
@@ -40,12 +40,12 @@ pub fn hmac(k: ByteSeq, txt: ByteSeq) -> PRK {
 
     // TODO: we need something like append in the lib. Or do we want to stick with pre-allocation?
     let mut h_in = ByteSeq::new(BLOCK_LEN + txt.len());
-    h_in = h_in.update(0, k_ipad);
-    h_in = h_in.update(BLOCK_LEN, txt.clone());
-    let h_inner = sha2::hash(h_in);
+    h_in = h_in.update(0, &k_ipad);
+    h_in = h_in.update(BLOCK_LEN, txt);
+    let h_inner = sha2::hash(&h_in);
 
     let mut h_in = ByteSeq::new(BLOCK_LEN + h_inner.len());
-    h_in = h_in.update(0, k_opad);
-    h_in = h_in.update(BLOCK_LEN, h_inner);
-    PRK::from_seq(sha2::hash(h_in))
+    h_in = h_in.update(0, &k_opad);
+    h_in = h_in.update(BLOCK_LEN, &h_inner);
+    PRK::from_seq(&sha2::hash(&h_in))
 }

@@ -40,7 +40,7 @@ const HMAC_KAT: [HMACTestVectors; 5] = [
 #[test]
 fn test_hmac_kat() {
     for kat in HMAC_KAT.iter() {
-        let hmac = hmac(ByteSeq::from_hex(kat.key), ByteSeq::from_hex(kat.txt));
+        let hmac = hmac(&ByteSeq::from_hex(kat.key), &ByteSeq::from_hex(kat.txt));
         assert_eq!(kat.expected, hmac.to_hex());
     }
 }

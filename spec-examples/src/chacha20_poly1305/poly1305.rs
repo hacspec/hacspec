@@ -22,18 +22,18 @@ public_nat_mod!(
 
 fn key_gen(key: Key, iv: IV) -> Key {
     let block = chacha20::block(key, U32(0), iv);
-    Key::from_sub_range(block, 0..32)
+    Key::from_sub_range(&block, 0..32)
 }
 
 fn encode_r(r: Block) -> FieldElement {
     let mut r_128 = U128Word::new();
-    r_128 = r_128.update_sub(0, r, 0, BLOCKSIZE);
+    r_128 = r_128.update_sub(0, &r, 0, BLOCKSIZE);
     let r_uint = U128_from_le_bytes(r_128);
     let r_uint = r_uint & U128(0x0fff_fffc_0fff_fffc_0fff_fffc_0fff_ffff);
     FieldElement::from_secret_literal(r_uint)
 }
 
-fn encode(block: ByteSeq) -> FieldElement {
+fn encode(block: &ByteSeq) -> FieldElement {
     let mut block_as_u128 = U128Word::new();
     let block_len = block.len();
     block_as_u128 = block_as_u128.update_sub(0, block, 0, min(16, block_len));
@@ -42,23 +42,23 @@ fn encode(block: ByteSeq) -> FieldElement {
     w_elem + l_elem
 }
 
-fn poly_inner(m: ByteSeq, r: FieldElement) -> FieldElement {
+fn poly_inner(m: &ByteSeq, r: FieldElement) -> FieldElement {
     let mut acc = FieldElement::from_literal(0);
     let m_len = m.len();
     for i in (0..m_len).step_by(BLOCKSIZE) {
         let block_len = min(BLOCKSIZE, m_len - i);
         let mut b = Seq::new(block_len);
-        b = b.update_sub(0, m.clone(), i, block_len);
-        acc = (acc + encode(b)) * r;
+        b = b.update_sub(0, m, i, block_len);
+        acc = (acc + encode(&b)) * r;
     }
     acc
 }
 
-pub fn poly(m: ByteSeq, key: Key) -> Tag {
+pub fn poly(m: &ByteSeq, key: Key) -> Tag {
     let s_elem = FieldElement::from_secret_literal(U128_from_le_bytes(U128Word::from_sub(
-        key, BLOCKSIZE, BLOCKSIZE,
+        &key, BLOCKSIZE, BLOCKSIZE,
     )));
-    let r_elem = encode_r(Block::from_sub_range(key, 0..BLOCKSIZE));
+    let r_elem = encode_r(Block::from_sub_range(&key, 0..BLOCKSIZE));
     let a = poly_inner(m, r_elem);
     let n = a + s_elem;
     // Note that n might be less than 16 byte -> zero-pad; but might also be
@@ -71,7 +71,7 @@ pub fn poly(m: ByteSeq, key: Key) -> Tag {
     tag
 }
 
-pub fn poly_mac(m: ByteSeq, key: Key, iv: IV) -> Tag {
+pub fn poly_mac(m: &ByteSeq, key: Key, iv: IV) -> Tag {
     let mac_key = key_gen(key, iv);
     poly(m, mac_key)
 }

@@ -52,18 +52,18 @@ pub fn block_init(key: Key, ctr: U32, iv: IV) -> State {
         U32(0x3320_646e),
         U32(0x7962_2d32),
         U32(0x6b20_6574),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 0..4)),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 4..8)),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 8..12)),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 12..16)),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 16..20)),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 20..24)),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 24..28)),
-        U32_from_le_bytes(U32Word::from_sub_range(key, 28..32)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 0..4)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 4..8)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 8..12)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 12..16)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 16..20)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 20..24)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 24..28)),
+        U32_from_le_bytes(U32Word::from_sub_range(&key, 28..32)),
         ctr,
-        U32_from_le_bytes(U32Word::from_sub_range(iv, 0..4)),
-        U32_from_le_bytes(U32Word::from_sub_range(iv, 4..8)),
-        U32_from_le_bytes(U32Word::from_sub_range(iv, 8..12)),
+        U32_from_le_bytes(U32Word::from_sub_range(&iv, 0..4)),
+        U32_from_le_bytes(U32Word::from_sub_range(&iv, 4..8)),
+        U32_from_le_bytes(U32Word::from_sub_range(&iv, 8..12)),
     ])
 }
 
@@ -84,15 +84,15 @@ pub fn block(key: Key, ctr: U32, iv: IV) -> StateBytes {
     state_to_bytes(state)
 }
 
-pub fn chacha(key: Key, iv: IV, m: ByteSeq) -> Result<ByteSeq, String> {
+pub fn chacha(key: Key, iv: IV, m: &ByteSeq) -> Result<ByteSeq, String> {
     let mut ctr = U32(1);
     let mut blocks_out = ByteSeq::new(m.len());
     for i in 0..m.num_chunks(64) {
-        let (block_len, msg_block) = m.clone().get_chunk(64, i);
+        let (block_len, msg_block) = m.get_chunk(64, i);
         let key_block = block(key, ctr, iv);
         let msg_block_padded = StateBytes::new();
-        let msg_block_padded = msg_block_padded.update_start(msg_block);
-        blocks_out = blocks_out.set_chunk(64, i, (msg_block_padded ^ key_block).subr(0..block_len));
+        let msg_block_padded = msg_block_padded.update_start(&msg_block);
+        blocks_out = blocks_out.set_chunk(64, i, &(msg_block_padded ^ key_block).subr(0..block_len));
         ctr += U32(1);
     }
     Ok(blocks_out)

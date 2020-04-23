@@ -14,20 +14,18 @@ bytes!(PRK, HASH_LEN);
 // TODO: do we want to allow Option?
 /// Extract a pseudo-random key from input key material (IKM) and optionally a salt.
 /// Note that salt can be empty Bytes.
-pub fn extract(salt: ByteSeq, ikm: ByteSeq) -> PRK {
-    let salt = if salt.len() > 0 {
-        salt
-    } else {
-        // Use all zero salt if none given.
-        ByteSeq::new(HASH_LEN)
+pub fn extract(salt: &ByteSeq, ikm: &ByteSeq) -> PRK {
+    let mut salt_or_zero = ByteSeq::new(HASH_LEN);
+    if salt.len() > 0 {
+        salt_or_zero = ByteSeq::from_seq(salt)
     };
-    PRK::from_seq(hmac(salt, ikm))
+    PRK::from_seq(&hmac(&salt_or_zero, ikm))
 }
 
-fn build_hmac_txt(t: ByteSeq, info: ByteSeq, iteration: U8) -> ByteSeq {
+fn build_hmac_txt(t: &ByteSeq, info: &ByteSeq, iteration: U8) -> ByteSeq {
     let mut out = ByteSeq::new(t.len() + info.len() + 1);
-    out = out.update(0, t.clone());
-    out = out.update(t.len(), info.clone());
+    out = out.update(0, t);
+    out = out.update(t.len(), info);
     out[t.len() + info.len()] = iteration;
     out
 }
@@ -42,7 +40,7 @@ fn div_ceil(a: usize, b: usize) -> u64 {
 /// Expand a key prk, using potentially empty info, and output length l.
 /// Key prk must be at least of length HASH_LEN.
 /// Output length l can be at most 255*HASH_LEN.
-pub fn expand(prk: ByteSeq, info: ByteSeq, l: usize) -> ByteSeq {
+pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> ByteSeq {
     let n = div_ceil(l, HASH_LEN);
     debug_assert!(n < u8::max_value().into());
     let n = n as u8;
@@ -51,12 +49,12 @@ pub fn expand(prk: ByteSeq, info: ByteSeq, l: usize) -> ByteSeq {
     let mut t = ByteSeq::new(n as usize * PRK::capacity());
     for i in 0..n {
         let hmac_txt_in = if i == 0 {
-            build_hmac_txt(ByteSeq::new(0), info.clone(), U8(i + 1))
+            build_hmac_txt(&ByteSeq::new(0), info, U8(i + 1))
         } else {
-            build_hmac_txt(ByteSeq::from_seq(t_i), info.clone(), U8(i + 1))
+            build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8(i + 1))
         };
-        t_i = hmac(prk.clone(), hmac_txt_in);
-        t = t.update(i as usize * t_i.len(), t_i);
+        t_i = hmac(prk, &hmac_txt_in);
+        t = t.update(i as usize * t_i.len(), &t_i);
     }
     t.sub(0, l)
 }
