@@ -202,7 +202,7 @@ fn key_expansion_aes(key: &ByteSeq, nk: usize, nr: usize, alg: AesVariant) -> By
     key_ex
 }
 
-pub fn aes_encrypt_block(k: &ByteSeq, input: Block, nk: usize, nr: usize, alg: AesVariant) -> Block {
+pub(crate) fn aes_encrypt_block(k: &ByteSeq, input: Block, nk: usize, nr: usize, alg: AesVariant) -> Block {
     let key_ex = key_expansion_aes(k, nk, nr, alg);
     block_cipher_aes(input, key_ex, nr)
 }
@@ -219,13 +219,6 @@ pub(crate) fn aes_ctr_keyblock(k: &ByteSeq, n: Nonce, c: U32, nk: usize, nr: usi
     input = input.update(0, &n);
     input = input.update(12, &U32_to_be_bytes(c));
     aes_encrypt_block(k, input, nk, nr, alg)
-}
-
-pub(crate) fn aes128_ctr_keyblock(k: Key128, n: Nonce, c: U32, nk: usize, nr: usize) -> Block {
-    aes_ctr_keyblock(&ByteSeq::from_seq(&k), n,c, nk, nr, AesVariant::Aes128)
-}
-pub(crate) fn aes256_ctr_keyblock(k: Key256, n: Nonce, c: U32, nk: usize, nr: usize) -> Block {
-    aes_ctr_keyblock(&ByteSeq::from_seq(&k), n,c, nk, nr, AesVariant::Aes256)
 }
 
 pub(crate) fn xor_block(block: Block, keyblock: Block) -> Block {
@@ -277,25 +270,25 @@ Nk =    4  |      8
 Nr =   10  |     14
 */
 
-fn nk(alg: AesVariant) -> usize {
+pub(crate) fn nk(alg: AesVariant) -> usize {
     match alg {
         AesVariant::Aes128 => 4,
         AesVariant::Aes256 => 8
     }
 }
 
-fn nr(alg: AesVariant) -> usize {
+pub(crate) fn nr(alg: AesVariant) -> usize {
     match alg {
         AesVariant::Aes128 => 10,
         AesVariant::Aes256 => 14
     }
 }
 
-fn aes_encrypt(key: &ByteSeq, nonce: Nonce, counter: U32, msg: &ByteSeq, alg: AesVariant) -> ByteSeq {
+pub(crate) fn aes_encrypt(key: &ByteSeq, nonce: Nonce, counter: U32, msg: &ByteSeq, alg: AesVariant) -> ByteSeq {
     aes_counter_mode(key, nonce, counter, msg, nk(alg), nr(alg), alg)
 }
 
-fn aes_decrypt(key: &ByteSeq, nonce: Nonce, counter: U32, ctxt: &ByteSeq, alg: AesVariant) -> ByteSeq {
+pub(crate) fn aes_decrypt(key: &ByteSeq, nonce: Nonce, counter: U32, ctxt: &ByteSeq, alg: AesVariant) -> ByteSeq {
     aes_counter_mode(key, nonce, counter, ctxt, nk(alg), nr(alg), alg)
 }
 
