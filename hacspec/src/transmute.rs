@@ -4,6 +4,24 @@ use crate::prelude::*;
 
 // U32
 
+pub fn U16_to_le_bytes(x: U16) -> U16Word {
+    U16Word::from_vec(U16::to_le_bytes(&[x]))
+}
+
+pub fn U16_to_be_bytes(x: U16) -> U16Word {
+    U16Word::from_vec(U16::to_be_bytes(&[x]))
+}
+
+pub fn U16_from_be_bytes(s: U16Word) -> U16 {
+    U16::from_be_bytes(&s.0)[0]
+}
+
+pub fn U16_from_le_bytes(s: U16Word) -> U16 {
+    U16::from_le_bytes(&s.0)[0]
+}
+
+// U32
+
 pub fn U32_to_le_bytes(x: U32) -> U32Word {
     U32Word::from_vec(U32::to_le_bytes(&[x]))
 }
@@ -54,6 +72,24 @@ pub fn U128_from_be_bytes(s: U128Word) -> U128 {
 
 pub fn U128_from_le_bytes(s: U128Word) -> U128 {
     U128::from_le_bytes(&s.0)[0]
+}
+
+// u16
+
+pub fn u16_to_le_bytes(x: u16) -> u16Word {
+    u16Word::from_array(u16::to_le_bytes(x))
+}
+
+pub fn u16_to_be_bytes(x: u16) -> u16Word {
+    u16Word::from_array(u16::to_be_bytes(x))
+}
+
+pub fn u16_from_be_bytes(s: u16Word) -> u16 {
+    u16::from_be_bytes(s.0)
+}
+
+pub fn u16_from_le_bytes(s: u16Word) -> u16 {
+    u16::from_le_bytes(s.0)
 }
 
 // u32

@@ -1,14 +1,17 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
 
-array!(State, 8, U64);
-array!(DoubleState, 16, U64);
-array!(Counter, 2, u64);
-bytes!(Buffer, 128);
-bytes!(Digest, 64);
-array!(Sigma, 16 * 12, usize);
+array!(StateB, 8, U64);
+array!(DoubleStateB, 16, U64);
+array!(CounterB, 2, u64);
+bytes!(BufferB, 128);
+bytes!(DigestB, 64);
+array!(SigmaB, 16 * 12, usize);
 
-static SIGMA: Sigma = Sigma([
+generic_array!(DoubleState, 16);
+generic_array!(Counter, 2);
+
+static SIGMA: SigmaB = SigmaB([
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2,
     11, 7, 5, 3, 11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4, 7, 9, 3, 1, 13, 12, 11, 14,
     2, 6, 5, 10, 4, 0, 15, 8, 9, 0, 5, 7, 2, 4, 10, 15, 14, 1, 11, 12, 6, 8, 3, 13, 2, 12, 6, 10,
@@ -18,7 +21,7 @@ static SIGMA: Sigma = Sigma([
     9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3,
 ]);
 
-const IV: State = State(secret_array!(
+const IV: StateB = StateB(secret_array!(
     U64,
     [
         0x6a09_e667_f3bc_c908u64,
@@ -32,7 +35,7 @@ const IV: State = State(secret_array!(
     ]
 ));
 
-fn mix(v: DoubleState, a: usize, b: usize, c: usize, d: usize, x: U64, y: U64) -> DoubleState {
+fn mix<Word: SecretInteger>(v: DoubleState<Word>, a: usize, b: usize, c: usize, d: usize, x: Word, y: Word) -> DoubleState<Word> {
     let mut result = v;
     result[a] = result[a] + result[b] + x;
     result[d] = (result[d] ^ result[a]).rotate_right(32);
@@ -49,34 +52,55 @@ fn mix(v: DoubleState, a: usize, b: usize, c: usize, d: usize, x: U64, y: U64) -
     result
 }
 
+fn mix_b(v: DoubleStateB, a: usize, b: usize, c: usize, d: usize, x: U64, y: U64) -> DoubleStateB {
+    DoubleStateB::from_seq(&mix(DoubleState::from_seq(&v), a,b,c,d,x,y))
+}
+
+
+fn inc_counter<Word: PublicInteger>(t: Counter<Word>, x: Word) -> Counter<Word> {
+    let mut result: Counter<Word> = Counter([Word::ZERO; 2]);
+    let new_val: Word = t[0] + x;
+    result[0] = new_val;
+    if new_val.less_than(x) {
+        result[1] = t[1] + Word::ONE;
+    }
+    result
+}
+
 // TODO: add test case where counter wraps
-fn inc_counter(t: Counter, x: u64) -> Counter {
-    let mut result: Counter = Counter([0; 2]);
-    result[0] = t[0] + x;
-    if result[0] < x {
-        result[1] = t[1] + 1u64;
+fn inc_counter_b(t: CounterB, x: u64) -> CounterB {
+    CounterB::from_seq(&inc_counter(Counter::from_seq(&t), x))
+}
+
+fn make_array<Word: UnsignedSecretInteger>(h: &ByteSeq) -> DoubleState<Word> {
+    assert_eq!(h.len() / ((Word::NUM_BITS as usize) / 8), 16);
+    let mut result = DoubleState::new();
+    for i in 0..16 {
+        let (_, h_chunk) = h.get_chunk(Word::NUM_BITS as usize / 8, i);
+        result[i] = Word::from_le_bytes(&h_chunk)
     }
     result
 }
 
 // TODO: move to library
-fn make_u64array(h: Buffer) -> DoubleState {
-    let mut result = DoubleState::new();
-    for i in 0..16 {
-        result[i] = U64::from(h[8 * i])
-            | U64::from(h[1 + 8 * i]) << 8
-            | U64::from(h[2 + 8 * i]) << 16
-            | U64::from(h[3 + 8 * i]) << 24
-            | U64::from(h[4 + 8 * i]) << 32
-            | U64::from(h[5 + 8 * i]) << 40
-            | U64::from(h[6 + 8 * i]) << 48
-            | U64::from(h[7 + 8 * i]) << 56;
-    }
-    result
+fn make_u64array(h: BufferB) -> DoubleStateB {
+    // let mut result = DoubleStateB::new();
+    // for i in 0..16 {
+    //     result[i] = U64::from(h[8 * i])
+    //         | U64::from(h[1 + 8 * i]) << 8
+    //         | U64::from(h[2 + 8 * i]) << 16
+    //         | U64::from(h[3 + 8 * i]) << 24
+    //         | U64::from(h[4 + 8 * i]) << 32
+    //         | U64::from(h[5 + 8 * i]) << 40
+    //         | U64::from(h[6 + 8 * i]) << 48
+    //         | U64::from(h[7 + 8 * i]) << 56;
+    // }
+    // result
+    DoubleStateB::from_seq(&make_array(&Seq::from_seq(&h)))
 }
 
-fn compress(h: State, m: Buffer, t: Counter, last_block: bool) -> State {
-    let mut v = DoubleState::new();
+fn compress(h: StateB, m: BufferB, t: CounterB, last_block: bool) -> StateB {
+    let mut v = DoubleStateB::new();
 
     // Read u8 data to u64.
     let m = make_u64array(m);
@@ -94,12 +118,12 @@ fn compress(h: State, m: Buffer, t: Counter, last_block: bool) -> State {
 
     // Mixing.
     for i in 0..12 {
-        v = mix(v, 0, 4, 8, 12, m[SIGMA[i * 16 + 0]], m[SIGMA[i * 16 + 1]]);
-        v = mix(v, 1, 5, 9, 13, m[SIGMA[i * 16 + 2]], m[SIGMA[i * 16 + 3]]);
-        v = mix(v, 2, 6, 10, 14, m[SIGMA[i * 16 + 4]], m[SIGMA[i * 16 + 5]]);
-        v = mix(v, 3, 7, 11, 15, m[SIGMA[i * 16 + 6]], m[SIGMA[i * 16 + 7]]);
-        v = mix(v, 0, 5, 10, 15, m[SIGMA[i * 16 + 8]], m[SIGMA[i * 16 + 9]]);
-        v = mix(
+        v = mix_b(v, 0, 4, 8, 12, m[SIGMA[i * 16 + 0]], m[SIGMA[i * 16 + 1]]);
+        v = mix_b(v, 1, 5, 9, 13, m[SIGMA[i * 16 + 2]], m[SIGMA[i * 16 + 3]]);
+        v = mix_b(v, 2, 6, 10, 14, m[SIGMA[i * 16 + 4]], m[SIGMA[i * 16 + 5]]);
+        v = mix_b(v, 3, 7, 11, 15, m[SIGMA[i * 16 + 6]], m[SIGMA[i * 16 + 7]]);
+        v = mix_b(v, 0, 5, 10, 15, m[SIGMA[i * 16 + 8]], m[SIGMA[i * 16 + 9]]);
+        v = mix_b(
             v,
             1,
             6,
@@ -108,11 +132,11 @@ fn compress(h: State, m: Buffer, t: Counter, last_block: bool) -> State {
             m[SIGMA[i * 16 + 10]],
             m[SIGMA[i * 16 + 11]],
         );
-        v = mix(v, 2, 7, 8, 13, m[SIGMA[i * 16 + 12]], m[SIGMA[i * 16 + 13]]);
-        v = mix(v, 3, 4, 9, 14, m[SIGMA[i * 16 + 14]], m[SIGMA[i * 16 + 15]]);
+        v = mix_b(v, 2, 7, 8, 13, m[SIGMA[i * 16 + 12]], m[SIGMA[i * 16 + 13]]);
+        v = mix_b(v, 3, 4, 9, 14, m[SIGMA[i * 16 + 14]], m[SIGMA[i * 16 + 15]]);
     }
 
-    let mut compressed = State::new();
+    let mut compressed = StateB::new();
     for i in 0..8 {
         compressed[i] = h[i] ^ v[i] ^ v[i + 8];
     }
@@ -134,27 +158,27 @@ fn get_byte(x: U64, i: usize) -> U8 {
     }
 }
 
-pub fn blake2b(data: &ByteSeq) -> Digest {
+pub fn blake2b(data: &ByteSeq) -> DigestB {
     let mut h = IV;
     // This only supports the 512 version without key.
     h[0] = h[0] ^ U64(0x0101_0000) ^ U64(64);
 
-    let mut t = Counter([0; 2]);
+    let mut t = CounterB([0; 2]);
     for i in 0..data.num_chunks(128) {
         let (block_len, block) = data.get_chunk(128, i);
         if block_len == 128 {
-            t = inc_counter(t, 128);
-            h = compress(h, Buffer::from_seq(&block), t, false);
+            t = inc_counter_b(t, 128);
+            h = compress(h, BufferB::from_seq(&block), t, false);
         } else {
             // Pad last bits of data to a full block.
-            t = inc_counter(t, block_len as u64);
-            let compress_input = Buffer::new().update_start(&block);
+            t = inc_counter_b(t, block_len as u64);
+            let compress_input = BufferB::new().update_start(&block);
             h = compress(h, compress_input, t, true);
         }
     }
 
     // We transform 8*u64 into 64*u8
-    let mut d = Digest::new();
+    let mut d = DigestB::new();
     for i in 0..8 {
         for j in 0..8 {
             d[i * 8 + j] = get_byte(h[i], j);
