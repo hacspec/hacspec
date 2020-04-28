@@ -178,7 +178,8 @@ fn key_expansion_aes(key: &ByteSeq, nk: usize, nr: usize, alg: AesVariant) -> By
     let mut key_ex = ByteSeq::new(match alg {
         AesVariant::Aes128 => 176,
         AesVariant::Aes256 => 240
-    }).update_start(key);
+    });
+    key_ex = key_ex.update_start(key);
     let mut i: usize;
     let num_iters : usize = match alg {
         AesVariant::Aes128 => 40,
