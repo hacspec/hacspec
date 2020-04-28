@@ -62,7 +62,7 @@ fn test_cmul() {
 fn test_div() {
     fn test<T: Integer>(x: T, y: T) {
         let (q, r) = ct_div(x, y);
-        assert!(q.equal(x.div(y)));
+        assert!(q.equal(x.divide(y)));
         assert!(r.equal(x.modulo(y)));
     }
 

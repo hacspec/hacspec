@@ -195,11 +195,11 @@ pub trait NumericBase:
     fn wrap_div(self, rhs: Self) -> Self;
 
     /// `self ^ exp` where `exp` is a `u32`.
-    fn pow(self, exp: u32) -> Self;
+    fn exp(self, exp: u32) -> Self;
     /// `self ^ exp` where `exp` is a `Self`.
     fn pow_self(self, exp: Self) -> Self;
     /// Division.
-    fn div(self, rhs: Self) -> Self;
+    fn divide(self, rhs: Self) -> Self;
     /// Invert self modulo n.
     fn inv(self, n: Self) -> Self;
     /// `|self|`

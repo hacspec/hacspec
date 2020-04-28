@@ -136,7 +136,7 @@ macro_rules! implement_public_mi {
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 self.pow(exp)
             }
             /// `self ^ exp` where `exp` is a `Self`.
@@ -146,7 +146,7 @@ macro_rules! implement_public_mi {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 self / rhs
             }
             /// Invert self modulo n.
@@ -395,7 +395,7 @@ macro_rules! implement_secret_mi {
             /// `self ^ exp` where `exp` is a `u32`.
             /// **Note:** the exponent `exp` MUST not be secret.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 let mut s = self;
                 if exp == 0 {
                     return <$t>::from(1 as $base);
@@ -414,7 +414,7 @@ macro_rules! implement_secret_mi {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 let s = <$t>::declassify(self);
                 let o = <$t>::declassify(rhs);
                 Self::from(s / o)

@@ -31,6 +31,7 @@ pub mod prelude;
 pub mod seq;
 pub mod util;
 pub mod vec_integers;
+pub mod vec_util;
 pub mod transmute;
 
 use crate::prelude::*;

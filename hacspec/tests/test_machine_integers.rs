@@ -3,7 +3,7 @@ use hacspec::prelude::*;
 macro_rules! test_unsigned_public_macro {
     ($t:ty) => {
         assert_eq!(<$t>::max_val(), <$t>::max_value() as $t);
-        assert_eq!((3 as $t).pow(5), 243);
+        assert_eq!((3 as $t).exp(5), 243);
         // assert_eq!((3 as $t).pow_self(5), 243);
         // ...
     };
@@ -21,7 +21,7 @@ fn test_unsigned_public() {
 macro_rules! test_signed_public_macro {
     ($t:ty) => {
         assert_eq!(<$t>::max_val(), <$t>::max_value());
-        assert_eq!((2 as $t).pow(5), 32);
+        assert_eq!((2 as $t).exp(5), 32);
         // assert_eq!((2 as $t).pow_self(5), 32);
         // ...
     };
@@ -39,7 +39,7 @@ fn test_signed_public() {
 macro_rules! test_unsigned_secret_macro {
     ($t:ty) => {
         assert!(<$t>::max_val().equal(<$t>::max_value()));
-        assert!(<$t>::from(3u8).pow(5).equal(<$t>::from(243u8)));
+        assert!(<$t>::from(3u8).exp(5).equal(<$t>::from(243u8)));
         // assert_eq!((3 as $t).pow_self(5), 243);
         // ...
     };
@@ -57,7 +57,7 @@ fn test_unsigned_secret() {
 macro_rules! test_signed_secret_macro {
     ($t:ty) => {
         assert!(<$t>::max_val().equal(<$t>::max_value()));
-        assert!(<$t>::from(2).pow(5).equal(<$t>::from(32)));
+        assert!(<$t>::from(2).exp(5).equal(<$t>::from(32)));
         // assert_eq!((2 as $t).pow_self(5), 32);
         // ...
     };

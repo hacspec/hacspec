@@ -62,7 +62,7 @@ macro_rules! unsigned_public_integer {
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
@@ -72,7 +72,7 @@ macro_rules! unsigned_public_integer {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -205,7 +205,7 @@ macro_rules! signed_public_integer {
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
@@ -215,7 +215,7 @@ macro_rules! signed_public_integer {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -344,7 +344,7 @@ macro_rules! unsigned_integer {
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
@@ -354,7 +354,7 @@ macro_rules! unsigned_integer {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -488,7 +488,7 @@ macro_rules! signed_integer {
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
@@ -498,7 +498,7 @@ macro_rules! signed_integer {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -627,7 +627,7 @@ macro_rules! nat_mod {
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
@@ -637,7 +637,7 @@ macro_rules! nat_mod {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
@@ -802,7 +802,7 @@ macro_rules! public_nat_mod {
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(library))]
-            fn pow(self, exp: u32) -> Self {
+            fn exp(self, exp: u32) -> Self {
                 unimplemented!();
             }
             /// `self ^ exp` where `exp` is a `Self`.
@@ -812,7 +812,7 @@ macro_rules! public_nat_mod {
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(library))]
-            fn div(self, rhs: Self) -> Self {
+            fn divide(self, rhs: Self) -> Self {
                 unimplemented!();
             }
             /// Invert self modulo n.
