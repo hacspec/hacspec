@@ -491,6 +491,17 @@ macro_rules! generic_array {
                 out
             }
         }
+
+        /// **Warning:** declassifies secret integer types.
+        impl<T: Numeric> fmt::Debug for $name<T> {
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.0[..]
+                    .iter()
+                    .collect::<Vec<_>>()
+                    .fmt(f)
+            }
+        }
     };
 }
 

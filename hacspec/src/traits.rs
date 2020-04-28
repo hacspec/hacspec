@@ -113,31 +113,106 @@ pub trait Integer: Numeric {
     }
 }
 
-pub trait SecretInteger: Integer {}
+pub trait SecretInteger: Integer {
+    type PublicVersion : Integer;
+    fn classify(x: Self::PublicVersion) -> Self;
+}
 
-impl SecretInteger for U8 {}
-impl SecretInteger for U16 {}
-impl SecretInteger for U32 {}
-impl SecretInteger for U64 {}
-impl SecretInteger for U128 {}
-impl SecretInteger for I8 {}
-impl SecretInteger for I16 {}
-impl SecretInteger for I32 {}
-impl SecretInteger for I64 {}
-impl SecretInteger for I128 {}
+impl SecretInteger for U8 {
+    type PublicVersion = u8;
+    fn classify(x: Self::PublicVersion) -> Self {
+        U8(x)
+    }
+}
+impl SecretInteger for U16 {
+    type PublicVersion = u16;
+    fn classify(x: Self::PublicVersion) -> Self {
+        U16(x)
+    }
+}
+impl SecretInteger for U32 {
+    type PublicVersion = u32;
+    fn classify(x: Self::PublicVersion) -> Self {
+        U32(x)
+    }
+}
+impl SecretInteger for U64 {
+    type PublicVersion = u64;
+    fn classify(x: Self::PublicVersion) -> Self {
+        U64(x)
+    }
+}
+impl SecretInteger for U128 {
+    type PublicVersion = u128;
+    fn classify(x: Self::PublicVersion) -> Self {
+        U128(x)
+    }
+}
+impl SecretInteger for I8 {
+    type PublicVersion = i8;
+    fn classify(x: Self::PublicVersion) -> Self {
+        I8(x)
+    }
+}
+impl SecretInteger for I16 {
+    type PublicVersion = i16;
+    fn classify(x: Self::PublicVersion) -> Self {
+        I16(x)
+    }
+}
+impl SecretInteger for I32 {
+    type PublicVersion = i32;
+    fn classify(x: Self::PublicVersion) -> Self {
+        I32(x)
+    }
+}
+impl SecretInteger for I64 {
+    type PublicVersion = i64;
+    fn classify(x: Self::PublicVersion) -> Self {
+        I64(x)
+    }
+}
+impl SecretInteger for I128 {
+    type PublicVersion = i128;
+    fn classify(x: Self::PublicVersion) -> Self {
+        I128(x)
+    }
+}
 
-pub trait PublicInteger: Integer {}
+pub trait PublicInteger: Integer {
+    type SecretVersion : Integer;
+}
 
-impl PublicInteger for u8 {}
-impl PublicInteger for u16 {}
-impl PublicInteger for u32 {}
-impl PublicInteger for u64 {}
-impl PublicInteger for u128 {}
-impl PublicInteger for i8 {}
-impl PublicInteger for i16 {}
-impl PublicInteger for i32 {}
-impl PublicInteger for i64 {}
-impl PublicInteger for i128 {}
+impl PublicInteger for u8 {
+    type SecretVersion = U8;
+}
+impl PublicInteger for u16 {
+    type SecretVersion = U16;
+}
+impl PublicInteger for u32 {
+    type SecretVersion = U32;
+}
+impl PublicInteger for u64 {
+    type SecretVersion = U64;
+}
+impl PublicInteger for u128 {
+    type SecretVersion = U128;
+}
+impl PublicInteger for i8 {
+    type SecretVersion = I8;
+}
+impl PublicInteger for i16 {
+    type SecretVersion = I16;
+}
+impl PublicInteger for i32 {
+    type SecretVersion = I32;
+}
+impl PublicInteger for i64 {
+    type SecretVersion = I64;
+}
+impl PublicInteger for i128 {
+    type SecretVersion = I128;
+}
 
 pub trait UnsignedInteger: Integer {}
 
@@ -407,7 +482,7 @@ pub trait NumericBase:
     + BitAnd<Self, Output = Self>
     + Shl<u32, Output = Self>
     + Shr<u32, Output = Self>
-    + Not
+    + Not<Output = Self>
     + Default
     + Clone
     + Debug
