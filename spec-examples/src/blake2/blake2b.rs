@@ -30,7 +30,7 @@ const IVS: StateS = StateS(secret_array!(
         0x510E_527F,
         0x9B05_688C,
         0x1F83_D9AB,
-        0x5BE0_CD19,
+        0x5BE0_CD19
     ]
 ));
 
@@ -207,5 +207,5 @@ pub fn blake2<Word: UnsignedSecretInteger>(data: &ByteSeq, alg: BlakeVariant) ->
 }
 
 pub fn blake2b(data: &ByteSeq) -> DigestB {
-    DigestB::from_seq(&blake2(data, BlakeVariant::Blake2B))
+    DigestB::from_seq(&blake2::<U64>(data, BlakeVariant::Blake2B))
 }
