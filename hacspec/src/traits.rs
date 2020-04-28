@@ -114,7 +114,7 @@ pub trait Integer: Numeric {
 }
 
 pub trait SecretInteger: Integer {
-    type PublicVersion : Integer;
+    type PublicVersion : PublicInteger;
     fn classify(x: Self::PublicVersion) -> Self;
 }
 
@@ -245,6 +245,11 @@ pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
     fn to_be_bytes(self) -> Seq<U8>;
     fn from_le_bytes(x: &Seq<U8>) -> Self;
     fn from_be_bytes(x: &Seq<U8>) -> Self;
+    /// Get byte `i` of this integer.
+    #[inline]
+    fn get_byte(self, i: u32) -> Self {
+        (self >> (i * 8)) & ((Self::ONE << 8) - Self::ONE)
+    }
 }
 
 impl UnsignedSecretInteger for U8 {
