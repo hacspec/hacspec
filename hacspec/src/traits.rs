@@ -8,8 +8,11 @@ use crate::prelude::*;
 pub trait SeqTrait<T: Copy>:
     Index<usize, Output = T> + IndexMut<usize, Output = T> + Sized
 {
+    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     fn len(&self) -> usize;
+    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     fn iter(&self) -> std::slice::Iter<T>;
+    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     fn create(len: usize) -> Self;
     /// Update this sequence with `l` elements of `v`, starting at `start_in`,
     /// at `start_out`.
@@ -24,6 +27,7 @@ pub trait SeqTrait<T: Copy>:
     /// s = s.update_sub(2, &tmp, 1, 1);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
+    #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn update_sub<A: SeqTrait<T>>(
         mut self,
         start_out: usize,
@@ -75,10 +79,12 @@ pub trait Integer: Numeric {
     const TWO: Self;
 
     /// Get an integer with value `val`.
+    #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
     fn from_literal(val: u128) -> Self;
 
     /// Get bit `i` of this integer.
     #[inline]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn get_bit(self, i: u32) -> Self {
         (self >> i) & Self::ONE
     }
@@ -86,6 +92,7 @@ pub trait Integer: Numeric {
     /// Set bit `i` of this integer to `b` and return the result.
     /// Bit `b` has to be `0` or `1`.
     #[inline]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn set_bit(self, b: Self, i: u32) -> Self {
         debug_assert!(b.equal(Self::ONE) || b.equal(Self::ZERO));
         let tmp1 = Self::from_literal(!(1 << i));
@@ -95,17 +102,20 @@ pub trait Integer: Numeric {
 
     /// Set bit `pos` of this integer to bit `yi` of integer `y`.
     #[inline]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn set(self, pos: u32, y: Self, yi: u32) -> Self {
         let b = y.get_bit(yi);
         self.set_bit(b, pos)
     }
 
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn rotate_left(self, n: u32) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS);
         (self << n) | (self >> ((-(n as i32) as u32) & (Self::NUM_BITS - 1)))
     }
 
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn rotate_right(self, n: u32) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS);
@@ -115,65 +125,76 @@ pub trait Integer: Numeric {
 
 pub trait SecretInteger: Integer {
     type PublicVersion : PublicInteger;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self;
 }
 
 impl SecretInteger for U8 {
     type PublicVersion = u8;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         U8(x)
     }
 }
 impl SecretInteger for U16 {
     type PublicVersion = u16;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         U16(x)
     }
 }
 impl SecretInteger for U32 {
     type PublicVersion = u32;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         U32(x)
     }
 }
 impl SecretInteger for U64 {
     type PublicVersion = u64;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         U64(x)
     }
 }
 impl SecretInteger for U128 {
     type PublicVersion = u128;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         U128(x)
     }
 }
 impl SecretInteger for I8 {
     type PublicVersion = i8;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         I8(x)
     }
 }
 impl SecretInteger for I16 {
     type PublicVersion = i16;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         I16(x)
     }
 }
 impl SecretInteger for I32 {
     type PublicVersion = i32;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         I32(x)
     }
 }
 impl SecretInteger for I64 {
     type PublicVersion = i64;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         I64(x)
     }
 }
 impl SecretInteger for I128 {
     type PublicVersion = i128;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self {
         I128(x)
     }
@@ -241,12 +262,17 @@ impl SignedInteger for i64 {}
 impl SignedInteger for i128 {}
 
 pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<U8>;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<U8>;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<U8>) -> Self;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<U8>) -> Self;
     /// Get byte `i` of this integer.
     #[inline]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn get_byte(self, i: u32) -> Self {
         (self >> (i * 8)) & ((Self::ONE << 8) - Self::ONE)
     }
