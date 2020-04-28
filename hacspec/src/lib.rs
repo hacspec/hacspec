@@ -49,3 +49,5 @@ bytes!(U64Word, 8);
 public_bytes!(u32Word, 4);
 public_bytes!(u64Word, 8);
 public_bytes!(u128Word, 16);
+
+generic_array!(ParametricArray, 64);
