@@ -2,6 +2,7 @@
 use hacspec::prelude::*;
 
 array!(StateB, 8, U64);
+array!(StateS, 8, U32);
 bytes!(DigestB, 64);
 
 array!(Sigma, 16 * 12, usize);
@@ -18,6 +19,20 @@ static SIGMA: Sigma = Sigma([
     1, 4, 10, 5, 10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
     9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3,
 ]);
+
+const IVS: StateS = StateS(secret_array!(
+    U32,
+    [
+        0x6A09_E667,
+        0xBB67_AE85,
+        0x3C6E_F372,
+        0xA54F_F53A,
+        0x510E_527F,
+        0x9B05_688C,
+        0x1F83_D9AB,
+        0x5BE0_CD19,
+    ]
+));
 
 const IVB: StateB = StateB(secret_array!(
     U64,
@@ -84,6 +99,10 @@ pub trait HasIV<Word: UnsignedSecretInteger> {
 
 impl HasIV<U64> for State<U64> {
     fn iv() -> State<U64> { State::from_seq(&IVB) }
+}
+
+impl HasIV<U32> for State<U32> {
+    fn iv() -> State<U32> { State::from_seq(&IVS) }
 }
 
 #[derive(Clone, Copy)]
