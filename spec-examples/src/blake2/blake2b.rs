@@ -1,12 +1,12 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
 
-array!(State, 8, U64);
-array!(DoubleState, 16, U64);
-array!(Counter, 2, u64);
-bytes!(Buffer, 128);
-bytes!(Digest, 64);
+bytes!(DigestB, 64);
+
 array!(Sigma, 16 * 12, usize);
+generic_array!(State, 8);
+generic_array!(DoubleState, 16);
+generic_array!(Counter, 2);
 
 static SIGMA: Sigma = Sigma([
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2,
@@ -18,7 +18,21 @@ static SIGMA: Sigma = Sigma([
     9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3,
 ]);
 
-const IV: State = State(secret_array!(
+const IVS: State<U32> = State(secret_array!(
+    U32,
+    [
+        0x6A09_E667,
+        0xBB67_AE85,
+        0x3C6E_F372,
+        0xA54F_F53A,
+        0x510E_527F,
+        0x9B05_688C,
+        0x1F83_D9AB,
+        0x5BE0_CD19
+    ]
+));
+
+const IVB: State<U64> = State(secret_array!(
     U64,
     [
         0x6a09_e667_f3bc_c908u64,
@@ -32,7 +46,15 @@ const IV: State = State(secret_array!(
     ]
 ));
 
-fn mix(v: DoubleState, a: usize, b: usize, c: usize, d: usize, x: U64, y: U64) -> DoubleState {
+fn mix<Word: SecretInteger>(
+    v: DoubleState<Word>,
+    a: usize,
+    b: usize,
+    c: usize,
+    d: usize,
+    x: Word,
+    y: Word
+) -> DoubleState<Word> {
     let mut result = v;
     result[a] = result[a] + result[b] + x;
     result[d] = (result[d] ^ result[a]).rotate_right(32);
@@ -49,51 +71,75 @@ fn mix(v: DoubleState, a: usize, b: usize, c: usize, d: usize, x: U64, y: U64) -
     result
 }
 
-// TODO: add test case where counter wraps
-fn inc_counter(t: Counter, x: u64) -> Counter {
-    let mut result: Counter = Counter([0; 2]);
-    result[0] = t[0] + x;
-    if result[0] < x {
-        result[1] = t[1] + 1u64;
+fn inc_counter<Word: PublicInteger>(t: Counter<Word>, x: Word) -> Counter<Word> {
+    let mut result = Counter::new();
+    let new_val: Word = t[0] + x;
+    result[0] = new_val;
+    if new_val.less_than(x) {
+        result[1] = t[1] + Word::ONE;
     }
     result
 }
 
-// TODO: move to library
-fn make_u64array(h: Buffer) -> DoubleState {
+fn make_array<Word: UnsignedSecretInteger>(h: &ByteSeq) -> DoubleState<Word> {
+    assert_eq!(h.len() / ((Word::NUM_BITS as usize) / 8), 16);
     let mut result = DoubleState::new();
     for i in 0..16 {
-        result[i] = U64::from(h[8 * i])
-            | U64::from(h[1 + 8 * i]) << 8
-            | U64::from(h[2 + 8 * i]) << 16
-            | U64::from(h[3 + 8 * i]) << 24
-            | U64::from(h[4 + 8 * i]) << 32
-            | U64::from(h[5 + 8 * i]) << 40
-            | U64::from(h[6 + 8 * i]) << 48
-            | U64::from(h[7 + 8 * i]) << 56;
+        let (_, h_chunk) = h.get_chunk(Word::NUM_BITS as usize / 8, i);
+        result[i] = Word::from_le_bytes(&h_chunk)
     }
     result
 }
 
-fn compress(h: State, m: Buffer, t: Counter, last_block: bool) -> State {
+pub trait HasIV<Word: UnsignedSecretInteger> {
+    fn iv() -> State<Word>;
+}
+
+impl HasIV<U64> for State<U64> {
+    fn iv() -> State<U64> { IVB }
+}
+
+impl HasIV<U32> for State<U32> {
+    fn iv() -> State<U32> { IVS }
+}
+
+#[derive(Clone, Copy)]
+pub enum BlakeVariant {
+    Blake2S,
+    Blake2B,
+}
+
+fn compress<Word: UnsignedSecretInteger> (
+    h: State<Word>,
+    m: &ByteSeq,
+    t: Counter<Word::PublicVersion>,
+    last_block: bool,
+    alg: BlakeVariant,
+) -> State<Word> where State<Word>: HasIV<Word> {
     let mut v = DoubleState::new();
 
     // Read u8 data to u64.
-    let m = make_u64array(m);
+    let m = make_array(m);
 
     // Prepare.
     v = v.update_sub(0, &h, 0, 8);
-    v = v.update_sub(8, &IV, 0, 8);
-    v[12] ^= U64(t[0]);
-    v[13] ^= U64(t[1]);
+    v = v.update_sub(8, &State::iv(), 0, 8);
+    let old_v12: Word = v[12];
+    v[12] = old_v12 ^ Word::classify(t[0]);
+    let old_v13: Word = v[13];
+    v[13] = old_v13 ^ Word::classify(t[1]);
     if last_block {
         // TODO: why do we need the type here?
-        let old_v: U64 = v[14];
-        v[14] = !old_v;
+        let old_v14: Word = v[14];
+        v[14] = !old_v14;
     }
 
+    let num_rounds = match alg {
+        BlakeVariant::Blake2S => 10,
+        BlakeVariant::Blake2B => 12
+    };
     // Mixing.
-    for i in 0..12 {
+    for i in 0..num_rounds {
         v = mix(v, 0, 4, 8, 12, m[SIGMA[i * 16 + 0]], m[SIGMA[i * 16 + 1]]);
         v = mix(v, 1, 5, 9, 13, m[SIGMA[i * 16 + 2]], m[SIGMA[i * 16 + 3]]);
         v = mix(v, 2, 6, 10, 14, m[SIGMA[i * 16 + 4]], m[SIGMA[i * 16 + 5]]);
@@ -120,45 +166,44 @@ fn compress(h: State, m: Buffer, t: Counter, last_block: bool) -> State {
 }
 
 // TODO: move to library
-fn get_byte(x: U64, i: usize) -> U8 {
-    match i {
-        0 => U8::from(x & U64(0xFF)),
-        1 => U8::from((x & U64(0xFF00)) >> 8),
-        2 => U8::from((x & U64(0xFF0000)) >> 16),
-        3 => U8::from((x & U64(0xFF000000)) >> 24),
-        4 => U8::from((x & U64(0xFF00000000)) >> 32),
-        5 => U8::from((x & U64(0xFF0000000000)) >> 40),
-        6 => U8::from((x & U64(0xFF000000000000)) >> 48),
-        7 => U8::from((x & U64(0xFF00000000000000)) >> 56),
-        _ => U8(0),
-    }
+fn get_byte<Word: UnsignedSecretInteger>(x: Word, i: usize) -> U8 {
+    let bytes = x.get_byte(i as u32).to_le_bytes();
+    bytes[0]
 }
 
-pub fn blake2b(data: &ByteSeq) -> Digest {
-    let mut h = IV;
+pub fn blake2<Word: UnsignedSecretInteger>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq where State<Word> : HasIV<Word> {
+    let mut h = State::iv();
     // This only supports the 512 version without key.
-    h[0] = h[0] ^ U64(0x0101_0000) ^ U64(64);
+    h[0] = h[0] ^ Word::from_literal(0x0101_0000) ^ Word::from_literal(64);
 
-    let mut t = Counter([0; 2]);
+    let mut t : Counter<Word::PublicVersion> = Counter::new();
     for i in 0..data.num_chunks(128) {
         let (block_len, block) = data.get_chunk(128, i);
         if block_len == 128 {
-            t = inc_counter(t, 128);
-            h = compress(h, Buffer::from_seq(&block), t, false);
+            t = inc_counter(t, Word::PublicVersion::from_literal(128));
+            h = compress(h, &ByteSeq::from_seq(&block), t, false, alg);
         } else {
             // Pad last bits of data to a full block.
-            t = inc_counter(t, block_len as u64);
-            let compress_input = Buffer::new().update_start(&block);
-            h = compress(h, compress_input, t, true);
+            t = inc_counter(t, Word::PublicVersion::from_literal(block_len as u128));
+            let compress_input = ByteSeq::new(128).update_start(&block);
+            h = compress(h, &compress_input, t, true, alg);
         }
     }
 
+    let digest_size = match alg {
+        BlakeVariant::Blake2S => 32,
+        BlakeVariant::Blake2B => 64,
+    };
     // We transform 8*u64 into 64*u8
-    let mut d = Digest::new();
+    let mut d = ByteSeq::new(digest_size);
     for i in 0..8 {
         for j in 0..8 {
             d[i * 8 + j] = get_byte(h[i], j);
         }
     }
     d
+}
+
+pub fn blake2b(data: &ByteSeq) -> DigestB {
+    DigestB::from_seq(&blake2::<U64>(data, BlakeVariant::Blake2B))
 }

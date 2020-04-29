@@ -269,6 +269,242 @@ macro_rules! _array_base {
     };
 }
 
+
+#[macro_export]
+macro_rules! generic_array {
+    ($name:ident,$l:expr) => {
+        /// Fixed length byte array.
+        // Because Rust requires fixed length arrays to have a known size at
+        // compile time there's no generic fixed length byte array here.
+        // Use this to define the fixed length byte arrays needed in your code.
+        #[allow(non_camel_case_types)]
+        #[derive(Clone, Copy)]
+        pub struct $name<T>(pub [T; $l]);
+
+        impl<T: Numeric> $name<T> {
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            pub fn new() -> Self {
+                Self([<T>::default(); $l])
+            }
+
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            pub fn len(&self) -> usize {
+                $l
+            }
+
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            pub fn from_array(v: [T; $l]) -> Self {
+                Self(v.clone())
+            }
+
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
+            pub fn from_slice(v: &[T]) -> Self {
+                debug_assert!(v.len() <= $l);
+                let mut tmp = [<T>::default(); $l];
+                for i in 0..v.len() {
+                    tmp[i] = v[i];
+                }
+                Self(tmp.clone())
+            }
+        }
+
+        impl<T: Numeric> $name<T> {
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
+            pub fn capacity() -> usize {
+                $l
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn from_sub<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
+                let mut a = Self::new();
+                debug_assert_eq!(len, a.len());
+                a = a.update_sub(0, input, start, len);
+                a
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn from_sub_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
+                Self::from_sub(input, r.start, r.end - r.start)
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn sub(&self, start_out: usize, len: usize) -> Seq<T> {
+                Seq::from_sub(self, start_out, len)
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn subr(&self, r: Range<usize>) -> Seq<T> {
+                self.sub(r.start, r.end - r.start)
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn num_chunks(
+                &self,
+                chunk_size: usize
+            ) -> usize {
+                (self.len() + chunk_size - 1) / chunk_size
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn get_chunk_len(
+                &self,
+                chunk_size: usize,
+                chunk_number: usize
+            ) -> usize {
+                let idx_start = chunk_size * chunk_number;
+                if idx_start + chunk_size > self.len() {
+                    self.len() - idx_start
+                } else {
+                    chunk_size
+                }
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn get_chunk(
+                &self,
+                chunk_size: usize,
+                chunk_number: usize
+            ) -> (usize, Seq<T>) {
+                let idx_start = chunk_size * chunk_number;
+                let len = self.get_chunk_len(chunk_size, chunk_number);
+                let out = self.sub(idx_start, len);
+                (len, out)
+            }
+
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn set_chunk<A: SeqTrait<T>>(
+                self,
+                chunk_size: usize,
+                chunk_number: usize,
+                input: &A,
+            ) -> Self {
+                let idx_start = chunk_size * chunk_number;
+                let len = self.get_chunk_len(chunk_size, chunk_number);
+                debug_assert!(input.len() == len, "the chunk length should match the input");
+                self.update_sub(idx_start, input, 0, len)
+            }
+        }
+
+        impl<T: Numeric> Default for $name<T> {
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn default() -> Self {
+                $name::new()
+            }
+        }
+        impl<T: Numeric> SeqTrait<T> for $name<T> {
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn create(x:usize) -> Self {
+                assert_eq!(x, $l);
+                Self::new()
+            }
+
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn len(&self) -> usize {
+                $l
+            }
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
+            fn iter(&self) -> std::slice::Iter<T> {
+                self.0.iter()
+            }
+        }
+
+        impl<T: Numeric> Index<usize> for $name<T> {
+            type Output = T;
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index(&self, i: usize) -> &T {
+                &self.0[i]
+            }
+        }
+        impl<T: Numeric> IndexMut<usize> for $name<T> {
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index_mut(&mut self, i: usize) -> &mut T {
+                &mut self.0[i]
+            }
+        }
+
+        impl<T: Numeric> Index<u8> for $name<T> {
+            type Output = T;
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index(&self, i: u8) -> &T {
+                &self.0[i as usize]
+            }
+        }
+        impl<T: Numeric> IndexMut<u8> for $name<T> {
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index_mut(&mut self, i: u8) -> &mut T {
+                &mut self.0[i as usize]
+            }
+        }
+        impl<T: Numeric> Index<u32> for $name<T> {
+            type Output = T;
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index(&self, i: u32) -> &T {
+                &self.0[i as usize]
+            }
+        }
+        impl<T: Numeric> IndexMut<u32> for $name<T> {
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index_mut(&mut self, i: u32) -> &mut T {
+                &mut self.0[i as usize]
+            }
+        }
+        impl<T: Numeric> Index<i32> for $name<T> {
+            type Output = T;
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index(&self, i: i32) -> &T {
+                &self.0[i as usize]
+            }
+        }
+        impl<T: Numeric> IndexMut<i32> for $name<T> {
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index_mut(&mut self, i: i32) -> &mut T {
+                &mut self.0[i as usize]
+            }
+        }
+        impl<T: Numeric> Index<RangeFull> for $name<T> {
+            type Output = [T];
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+            fn index(&self, r: RangeFull) -> &[T] {
+                &self.0[r]
+            }
+        }
+        impl<T: Numeric> $name<T> {
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
+            pub fn from_vec(x: Vec<T>) -> $name<T> {
+                debug_assert_eq!(x.len(), $l);
+                let mut tmp = [<T>::default(); $l];
+                for (i, e) in x.iter().enumerate() {
+                    tmp[i] = *e;
+                }
+                $name(tmp.clone())
+            }
+
+            // We can't use the [From] trait here because otherwise it would conflict with
+            // the From<T> for T core implementation, as the array also implements the [SeqTrait].
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn from_seq<U: SeqTrait<T>>(x: &U) -> $name<T> {
+                debug_assert_eq!(x.len(), $l);
+                let mut out = $name::new();
+                for i in 0..x.len() {
+                    out[i] = x[i];
+                }
+                out
+            }
+        }
+
+        /// **Warning:** declassifies secret integer types.
+        impl<T: Numeric> fmt::Debug for $name<T> {
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.0[..]
+                    .iter()
+                    .collect::<Vec<_>>()
+                    .fmt(f)
+            }
+        }
+    };
+}
+
 #[macro_export]
 /// This creates arrays for secret integers, i.e. `$t` is the secret integer
 /// type and `$tbase` is the according Rust type.
