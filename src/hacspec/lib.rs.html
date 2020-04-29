@@ -49,6 +49,9 @@
 <span id="49">49</span>
 <span id="50">50</span>
 <span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! hacspec consists of three parts:</span>
@@ -93,11 +96,14 @@
 <span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">DocPublicBytes</span>, <span class="number">64</span>);
 <span class="macro">array</span><span class="macro">!</span>(<span class="ident">DocSecretArray</span>, <span class="number">64</span>, <span class="ident">U32</span>);
 <span class="macro">array</span><span class="macro">!</span>(<span class="ident">DocPublicArray</span>, <span class="number">64</span>, <span class="ident">u32</span>);
+<span class="macro">generic_array</span><span class="macro">!</span>(<span class="ident">DocParametricArray</span>, <span class="number">64</span>);
 
+<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">U16Word</span>, <span class="number">2</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">U32Word</span>, <span class="number">4</span>);
-<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">U128Word</span>, <span class="number">16</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">U64Word</span>, <span class="number">8</span>);
+<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">U128Word</span>, <span class="number">16</span>);
 
+<span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">u16Word</span>, <span class="number">2</span>);
 <span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">u32Word</span>, <span class="number">4</span>);
 <span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">u64Word</span>, <span class="number">8</span>);
 <span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">u128Word</span>, <span class="number">16</span>);
