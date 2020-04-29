@@ -8,11 +8,8 @@ use crate::prelude::*;
 pub trait SeqTrait<T: Copy>:
     Index<usize, Output = T> + IndexMut<usize, Output = T> + Sized
 {
-    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     fn len(&self) -> usize;
-    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     fn iter(&self) -> std::slice::Iter<T>;
-    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
     fn create(len: usize) -> Self;
     /// Update this sequence with `l` elements of `v`, starting at `start_in`,
     /// at `start_out`.
@@ -79,7 +76,6 @@ pub trait Integer: Numeric {
     const TWO: Self;
 
     /// Get an integer with value `val`.
-    #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
     fn from_literal(val: u128) -> Self;
 
     /// Get bit `i` of this integer.
@@ -125,7 +121,6 @@ pub trait Integer: Numeric {
 
 pub trait SecretInteger: Integer {
     type PublicVersion : PublicInteger;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn classify(x: Self::PublicVersion) -> Self;
 }
 
@@ -262,13 +257,9 @@ impl SignedInteger for i64 {}
 impl SignedInteger for i128 {}
 
 pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<U8>;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<U8>;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<U8>) -> Self;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<U8>) -> Self;
     /// Get byte `i` of this integer.
     #[inline]
