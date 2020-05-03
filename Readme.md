@@ -23,19 +23,19 @@ The clippy checker for the hacspec language lives in a [separate repository](htt
 There's a set of example specs [here](spec-examples/).
 To run all examples one can use `cargo test -p hacspec-examples`.
 
-* [AES 128/256](hacspec/spec-examples/aes-gcm/aes.rs)
-* [GF 128](hacspec/spec-examples/aes-gcm/gf128.rs)
-* [AES-GCM 128/256](hacspec/spec-examples/aes-gcm/aesgcm.rs)
-* [Chacha20](hacspec/spec-examples/chacha20-poly1305/chacha20.rs)
-* [Poly1305](hacspec/spec-examples/chacha20-poly1305/poly1305.rs)
-* [Chacha20Poly1305](hacspec/spec-examples/chacha20-poly1305/chacha20poly1305.rs)
-* [Blake2b](hacspec/spec-examples/blake2/blake2b.rs)
-* [Curve25519](hacspec/spec-examples/curve25519/curve25519.rs)
-* [Fips202](hacspec/spec-examples/fips202/fips202.rs)
-* [SHA256](hacspec/spec-examples/sha2/sha2.rs)
-* [HKDF-SHA256](hacspec/spec-examples/hkdf/hkdf.rs)
-* [HMAC-SHA256](hacspec/spec-examples/hkdf/hmac.rs)
-* [P256](hacspec/spec-examples/p256/p256.rs)
+* [AES 128/256](spec-examples/src/aes_gcm/aes.rs)
+* [GF 128](spec-examples/src/aes_gcm/gf128.rs)
+* [AES-GCM 128/256](spec-examples/src/aes_gcm/aesgcm.rs)
+* [Chacha20](spec-examples/src/chacha20_poly1305/chacha20.rs)
+* [Poly1305](spec-examples/src/chacha20_poly1305/poly1305.rs)
+* [Chacha20Poly1305](spec-examples/src/chacha20_poly1305/chacha20poly1305.rs)
+* [Blake2b](spec-examples/src/blake2/blake2b.rs)
+* [Curve25519](spec-examples/src/curve25519/curve25519.rs)
+* [Fips202](spec-examples/src/fips202/fips202.rs)
+* [SHA256](spec-examples/src/sha2/sha2.rs)
+* [HKDF-SHA256](spec-examples/src/hkdf/hkdf.rs)
+* [HMAC-SHA256](spec-examples/src/hmac/hmac.rs)
+* [P256](spec-examples/src/p256/p256.rs)
 
 [//]: # (badges)
 
