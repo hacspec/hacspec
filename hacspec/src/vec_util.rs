@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 ///!
 ///! This module holds utility functions for vector manipulation.
 ///! This includes sequences, arrays, and polynomials.

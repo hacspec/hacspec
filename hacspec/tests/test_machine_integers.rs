@@ -38,7 +38,7 @@ macro_rules! test_signed_public_macro {
         let res = std::panic::catch_unwind(|| a_t * b_t);
         match res {
             Ok(r) => {
-                let expected = get_expected("mul", &a, &b);
+                let expected = get_expected("*", &a, &b);
                 let res_s = format!("0x{:x}", r);
                 assert_eq!(res_s, expected);
             }
@@ -58,7 +58,7 @@ fn test_signed_public() {
     test_signed_public_macro!(i128);
 }
 
-macro_rules! test_unsigned_secret_macro {
+macro_rules! test_secret_macro {
     ($t:ty) => {
         assert!(<$t>::max_val().equal(<$t>::max_value()));
         assert!(<$t>::from(3u8).exp(5).equal(<$t>::from(243u8)));
@@ -68,22 +68,58 @@ macro_rules! test_unsigned_secret_macro {
         // mod
         if !b_t.equal(<$t>::ZERO) {
             let r = a_t.modulo(b_t);
-            let expected = get_expected("mod", &a, &b);
+            let expected = get_expected("%", &a, &b);
             assert_eq!(format!("0x{:x}", r), expected);
         }
 
-        // assert_eq!((3 as $t).pow_self(5), 243);
-        // ...
+        // Comparison functions returning bool.
+        assert_eq!(a_t.equal(b_t), a == b);
+        assert_eq!(a_t.greater_than(b_t), a > b);
+        assert_eq!(a_t.greater_than_or_qual(b_t), a >= b);
+        assert_eq!(a_t.less_than(b_t), a < b);
+        assert_eq!(a_t.less_than_or_equal(b_t), a <= b);
+
+        // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
+        let expected = if a == b {
+            <$t>::max_value().declassify()
+        } else {
+            0
+        };
+        assert_eq!(a_t.equal_bm(b_t).declassify(), expected);
+        let expected = if a > b {
+            <$t>::max_value().declassify()
+        } else {
+            0
+        };
+        assert_eq!(a_t.greater_than_bm(b_t).declassify(), expected);
+        let expected = if a >= b {
+            <$t>::max_value().declassify()
+        } else {
+            0
+        };
+        assert_eq!(a_t.greater_than_or_qual_bm(b_t).declassify(), expected);
+        let expected = if a < b {
+            <$t>::max_value().declassify()
+        } else {
+            0
+        };
+        assert_eq!(a_t.less_than_bm(b_t).declassify(), expected);
+        let expected = if a <= b {
+            <$t>::max_value().declassify()
+        } else {
+            0
+        };
+        assert_eq!(a_t.less_than_or_equal_bm(b_t).declassify(), expected);
     };
 }
 
 #[test]
 fn test_unsigned_secret() {
-    test_unsigned_secret_macro!(U8);
-    test_unsigned_secret_macro!(U16);
-    test_unsigned_secret_macro!(U32);
-    test_unsigned_secret_macro!(U64);
-    test_unsigned_secret_macro!(U128);
+    test_secret_macro!(U8);
+    test_secret_macro!(U16);
+    test_secret_macro!(U32);
+    test_secret_macro!(U64);
+    test_secret_macro!(U128);
 }
 
 macro_rules! test_signed_secret_macro {
@@ -96,7 +132,7 @@ macro_rules! test_signed_secret_macro {
         // mod
         if !b_t.equal(<$t>::ZERO) {
             let r = a_t.modulo(b_t);
-            let expected = get_expected("mod", &a, &b);
+            let expected = get_expected("%", &a, &b);
             assert_eq!(format!("0x{:x}", r), expected);
         }
 

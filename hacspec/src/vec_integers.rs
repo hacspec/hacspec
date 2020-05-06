@@ -268,7 +268,7 @@ macro_rules! _implement_numeric_unsigned_public {
             }
             /// **Not implemented**
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn inv(self, n: Self) -> Self {
+            fn inv(self, _n: Self) -> Self {
                 unimplemented!();
             }
 

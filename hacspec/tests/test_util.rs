@@ -1,8 +1,10 @@
+#![allow(dead_code)]
+
 use hacspec::prelude::*;
 
 pub(crate) fn get_expected(op: &'static str, a: &String, b: &String) -> String {
     let expected = std::process::Command::new("python")
-        .args(&["tests/math_helper.py", op, a, b])
+        .args(&["tests/math_helper.py", a, op, b])
         .output()
         .expect("failed to execute python test helper");
     let expected = String::from_utf8_lossy(&expected.stdout)
