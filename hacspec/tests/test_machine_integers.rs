@@ -62,6 +62,16 @@ macro_rules! test_unsigned_secret_macro {
     ($t:ty) => {
         assert!(<$t>::max_val().equal(<$t>::max_value()));
         assert!(<$t>::from(3u8).exp(5).equal(<$t>::from(243u8)));
+
+        let (a, a_t, b, b_t) = get_random_numbers::<$t>();
+
+        // mod
+        if !b_t.equal(<$t>::ZERO) {
+            let r = a_t.modulo(b_t);
+            let expected = get_expected("mod", &a, &b);
+            assert_eq!(format!("0x{:x}", r), expected);
+        }
+
         // assert_eq!((3 as $t).pow_self(5), 243);
         // ...
     };
@@ -80,6 +90,16 @@ macro_rules! test_signed_secret_macro {
     ($t:ty) => {
         assert!(<$t>::max_val().equal(<$t>::max_value()));
         assert!(<$t>::from(2).exp(5).equal(<$t>::from(32)));
+
+        let (a, a_t, b, b_t) = get_random_numbers::<$t>();
+
+        // mod
+        if !b_t.equal(<$t>::ZERO) {
+            let r = a_t.modulo(b_t);
+            let expected = get_expected("mod", &a, &b);
+            assert_eq!(format!("0x{:x}", r), expected);
+        }
+
         // assert_eq!((2 as $t).pow_self(5), 32);
         // ...
     };

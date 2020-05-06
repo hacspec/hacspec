@@ -1,6 +1,5 @@
 ///! 
 ///! A set of mathematical utility functions.
-///! TODO: T might be a signed integer! Everything in here only considers unsigned really.
 ///! 
 use crate::prelude::*;
 
@@ -46,7 +45,7 @@ pub(crate) fn extended_euclid_invert<T: Integer>(x: T, n: T, signed: bool) -> T 
     }
     if t.less_than(T::ZERO) {
         if signed {
-            t = t.abs()
+            t = t.absolute()
         } else {
             t = t + n
         };

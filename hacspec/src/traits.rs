@@ -496,6 +496,8 @@ pub trait ModNumeric {
     fn modulo(self, n: Self) -> Self;
     /// `self % n` that always returns a positive integer
     fn signed_modulo(self, n: Self) -> Self;
+    /// `|self|`
+    fn absolute(self) -> Self;
 }
 
 /// The `Numeric` trait has to be implemented by all numeric objects.
@@ -530,8 +532,6 @@ pub trait NumericBase:
     fn divide(self, rhs: Self) -> Self;
     /// Invert self modulo n.
     fn inv(self, n: Self) -> Self;
-    /// `|self|`
-    fn abs(self) -> Self;
 
     // Comparison functions returning bool.
     fn equal(self, other: Self) -> bool;

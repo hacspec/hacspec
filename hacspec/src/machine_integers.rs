@@ -48,6 +48,11 @@ macro_rules! implement_public_unsigned_mi {
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
+            /// `|self|`
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self
+            }
         }
     };
 }
@@ -89,6 +94,11 @@ macro_rules! implement_public_signed_mi {
                     ret = ret + n;
                 }
                 ret
+            }
+            /// `|self|`
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self.abs()
             }
         }
     };
@@ -160,11 +170,6 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
                 extended_euclid_invert(self, n, false)
-            }
-            /// `|self|`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
-                self
             }
 
             // Comparison functions returning bool.
@@ -291,6 +296,11 @@ macro_rules! implement_secret_unsigned_mi {
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
+            /// `|self|`
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self
+            }
         }
     };
 }
@@ -323,11 +333,10 @@ macro_rules! implement_secret_signed_mi {
             /// `self % n`
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
-                let s = <$t>::declassify(self);
-                let n = <$t>::declassify(n);
-                Self::from(s.modulo(n))
+                ct_div(self, n).1
             }
             /// `self % n` that always returns a positive integer
+            /// FIXME: not ct!
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
@@ -336,11 +345,16 @@ macro_rules! implement_secret_signed_mi {
                 }
                 ret
             }
+            /// `|self|`
+            /// TODO: Check if `abs` is ct
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                Self(self.declassify().abs())
+            }
         }
     };
 }
 
-// FIXME: This is currently NOT constant time! Implement the underlying algorithms in secret integer.
 // Macro to implement the Numeric trait for secret machine integers.
 macro_rules! implement_secret_mi {
     ($t:ident,$base:ty,$bits:literal) => {
@@ -388,7 +402,7 @@ macro_rules! implement_secret_mi {
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
-            /// **Note:** the exponent `exp` MUST not be secret.
+            /// **Note:** the exponent `exp` MUST NOT be secret.
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn exp(self, exp: u32) -> Self {
                 let mut s = self;
@@ -403,6 +417,7 @@ macro_rules! implement_secret_mi {
             }
             /// `self ^ exp` where `exp` is a `Self`.
             /// Here both, base and exponent, are secret.
+            /// TODO: implement
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
@@ -410,52 +425,40 @@ macro_rules! implement_secret_mi {
             /// Division.
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn divide(self, rhs: Self) -> Self {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(rhs);
-                Self::from(s / o)
+                ct_div(self, rhs).0
             }
             /// Invert self modulo n.
+            /// FIXME: make ct
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                // FIXME: this is not constant time
                 extended_euclid_invert(self, n, false)
             }
-            /// `|self|`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
-                unimplemented!();
-            }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             // Comparison functions returning bool.
+            /// **Declassifies**
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn equal(self, other: Self) -> bool {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(other);
-                s == o
+                self.equal_bm(other).declassify() != 0
             }
+            /// **Declassifies**
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than(self, other: Self) -> bool {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(other);
-                s > o
+                self.greater_than_bm(other).declassify() != 0
             }
+            /// **Declassifies**
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_or_qual(self, other: Self) -> bool {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(other);
-                s >= o
+                self.greater_than_or_qual_bm(other).declassify() != 0
             }
+            /// **Declassifies**
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than(self, other: Self) -> bool {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(other);
-                s < o
+                self.less_than_bm(other).declassify() != 0
             }
+            /// **Declassifies**
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_or_equal(self, other: Self) -> bool {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(other);
-                s <= o
+                self.less_than_or_equal_bm(other).declassify() != 0
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
@@ -493,7 +496,6 @@ implement_secret_unsigned_mi!(U32, u32, 32);
 implement_secret_unsigned_mi!(U64, u64, 64);
 implement_secret_unsigned_mi!(U128, u128, 128);
 
-// FIXME: requires code in secret integers for constant-time comparison
 implement_secret_signed_mi!(I8, i8, 8);
 implement_secret_signed_mi!(I16, i16, 16);
 implement_secret_signed_mi!(I32, i32, 32);

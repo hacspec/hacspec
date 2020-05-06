@@ -201,6 +201,11 @@ macro_rules! _implement_numeric_unsigned_public {
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
+            /// `|self|` (coefficient-wise)
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self
+            }
         }
         impl NumericBase for $name {
             // TODO: decide if we want this.
@@ -265,15 +270,6 @@ macro_rules! _implement_numeric_unsigned_public {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
                 unimplemented!();
-            }
-            /// `|self|` (coefficient-wise)
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
-                let mut out = Self::new();
-                for i in 0..self.len() {
-                    out[i] = self[i].abs();
-                }
-                out
             }
 
             // Comparison functions returning bool.
@@ -467,6 +463,15 @@ macro_rules! _implement_numeric_signed_public {
             fn signed_modulo(self, _n: Self) -> Self {
                 unimplemented!();
             }
+            /// `|self|` (coefficient-wise)
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                let mut out = Self::new();
+                for i in 0..self.len() {
+                    out[i] = self[i].absolute();
+                }
+                out
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -513,11 +518,6 @@ macro_rules! _implement_numeric_signed_public {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
@@ -717,6 +717,11 @@ macro_rules! _implement_numeric_unsigned_secret {
             fn signed_modulo(self, _n: Self) -> Self {
                 unimplemented!();
             }
+            /// `|self|` (coefficient-wise)
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -760,11 +765,6 @@ macro_rules! _implement_numeric_unsigned_secret {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
@@ -1009,7 +1009,7 @@ macro_rules! _implement_numeric_signed_secret {
             }
             /// `|self|`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
+            fn absolute(self) -> Self {
                 unimplemented!();
             }
 
@@ -1091,6 +1091,11 @@ impl<T: Numeric + PublicInteger> ModNumeric for PublicSeq<T> {
     fn signed_modulo(self, _n: Self) -> Self {
         unimplemented!();
     }
+    /// `|self|` (coefficient-wise)
+    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    fn absolute(self) -> Self {
+        unimplemented!();
+    }
 }
 impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
     /// Return largest value that can be represented.
@@ -1125,10 +1130,6 @@ impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
     }
     /// Invert self modulo n.
     fn inv(self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `|self|`
-    fn abs(self) -> Self {
         unimplemented!();
     }
 

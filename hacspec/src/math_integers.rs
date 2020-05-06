@@ -35,6 +35,11 @@ macro_rules! unsigned_public_integer {
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
+            /// `|self|`
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -78,11 +83,6 @@ macro_rules! unsigned_public_integer {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
@@ -178,6 +178,12 @@ macro_rules! signed_public_integer {
                 }
                 ret
             }
+            /// `|self|`
+            /// TODO: implement in abstract-integers
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                unimplemented!();
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -221,11 +227,6 @@ macro_rules! signed_public_integer {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
@@ -317,6 +318,11 @@ macro_rules! unsigned_integer {
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
+            /// `|self|`
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -360,11 +366,6 @@ macro_rules! unsigned_integer {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
@@ -461,6 +462,12 @@ macro_rules! signed_integer {
                 }
                 ret
             }
+            /// `|self|`
+            /// TODO: implement in abstract-integers
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                unimplemented!();
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -504,11 +511,6 @@ macro_rules! signed_integer {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
@@ -600,6 +602,12 @@ macro_rules! nat_mod {
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
+            /// `|self|`
+            /// TODO: implement in abstract-integers
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                unimplemented!();
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -643,11 +651,6 @@ macro_rules! nat_mod {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
@@ -775,6 +778,11 @@ macro_rules! public_nat_mod {
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
+            /// `|self|`
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn absolute(self) -> Self {
+                self
+            }
         }
         impl NumericBase for $name {
             /// Return largest value that can be represented.
@@ -818,11 +826,6 @@ macro_rules! public_nat_mod {
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(library))]
-            fn abs(self) -> Self {
                 unimplemented!();
             }
 
