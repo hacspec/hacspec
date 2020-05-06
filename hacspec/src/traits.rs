@@ -78,6 +78,9 @@ pub trait Integer: Numeric {
     /// Get an integer with value `val`.
     fn from_literal(val: u128) -> Self;
 
+    /// Read a hex string (starting with 0x) into an `Integer`.
+    fn from_hex_string(s: &String) -> Self;
+
     /// Get bit `i` of this integer.
     #[inline]
     #[cfg_attr(feature = "use_attributes", library(hacspec))]

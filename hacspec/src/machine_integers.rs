@@ -15,7 +15,7 @@ macro_rules! implement_public_unsigned_mi {
         implement_public_mi!($t, $bits);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 let mut tmp = self;
                 while tmp < rhs {
@@ -24,27 +24,27 @@ macro_rules! implement_public_unsigned_mi {
                 (tmp - rhs) % n
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
                 (self + rhs) % n
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self{
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn mul_mod(self, rhs: Self, n: Self) -> Self {
                 (self * rhs) % n
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
                 self % n
             }
             /// `self % n` that always returns a positive integer
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
@@ -57,32 +57,32 @@ macro_rules! implement_public_signed_mi {
         implement_public_mi!($t, $bits);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 (self - rhs).signed_modulo(n)
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
                 (self + rhs).signed_modulo(n)
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self{
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn mul_mod(self, rhs: Self, n: Self) -> Self {
                 (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
                 self % n
             }
             /// `self % n` that always returns a positive integer
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
                 while ret.less_than(Self::ZERO) {
@@ -105,85 +105,92 @@ macro_rules! implement_public_mi {
             const TWO: Self = 2;
 
             #[inline]
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn from_literal(val: u128) -> Self {
                 val as $t
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_hex_string(s: &String) -> Self {
+                <$t>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap()
             }
         }
         impl NumericBase for $t {
             /// Return largest value that can be represented.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn max_val() -> Self {
                 <$t>::max_value()
             }
 
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_add(self, rhs: Self) -> Self {
                 self.wrapping_add(rhs)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_sub(self, rhs: Self) -> Self {
                 self.wrapping_sub(rhs)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_mul(self, rhs: Self) -> Self {
                 self.wrapping_mul(rhs)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_div(self, rhs: Self) -> Self {
                 self.wrapping_div(rhs)
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn exp(self, exp: u32) -> Self {
                 self.pow(exp)
             }
             /// `self ^ exp` where `exp` is a `Self`.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            /// **XXX: Not implemented for public machine integers**
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn divide(self, rhs: Self) -> Self {
                 self / rhs
             }
             /// Invert self modulo n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
                 extended_euclid_invert(self, n, false)
             }
             /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn abs(self) -> Self {
-                unimplemented!();
+                self
             }
 
             // Comparison functions returning bool.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn equal(self, other: Self) -> bool {
                 self == other
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than(self, other: Self) -> bool {
                 self > other
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_or_qual(self, other: Self) -> bool {
                 self >= other
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than(self, other: Self) -> bool {
                 self < other
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_or_equal(self, other: Self) -> bool {
                 self <= other
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn not_equal_bm(self, other: Self) -> Self {
                 if self != other {
                     <$t>::max_value()
@@ -191,7 +198,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn equal_bm(self, other: Self) -> Self {
                 if self == other {
                     <$t>::max_value()
@@ -199,7 +206,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_bm(self, other: Self) -> Self {
                 if self > other {
                     <$t>::max_value()
@@ -207,7 +214,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_or_qual_bm(self, other: Self) -> Self {
                 if self >= other {
                     <$t>::max_value()
@@ -215,7 +222,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_bm(self, other: Self) -> Self {
                 if self < other {
                     <$t>::max_value()
@@ -223,7 +230,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
                 if self <= other {
                     <$t>::max_value()
@@ -254,43 +261,33 @@ macro_rules! implement_secret_unsigned_mi {
         implement_secret_mi!($t, $base, $bits);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(rhs);
-                let n = <$t>::declassify(n);
-                Self::from(s.sub_mod(o, n))
+                (self - rhs).modulo(n)
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(rhs);
-                let n = <$t>::declassify(n);
-                Self::from((s + o) % n)
+                (self + rhs).modulo(n)
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self{
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(rhs);
-                let n = <$t>::declassify(n);
-                Self::from((s * o) % n)
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn mul_mod(self, rhs: Self, n: Self) -> Self {
+                (self * rhs).modulo(n)
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            /// TODO: implement
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
-                let s = <$t>::declassify(self);
-                let n = <$t>::declassify(n);
-                Self::from(s % n)
+                ct_div(self, n).1
             }
             /// `self % n` that always returns a positive integer
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
@@ -303,43 +300,35 @@ macro_rules! implement_secret_signed_mi {
         implement_secret_mi!($t, $base, $bits);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(rhs);
-                let n = <$t>::declassify(n);
-                Self::from(s.sub_mod(o, n))
+                (self - rhs).signed_modulo(n)
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(rhs);
-                let n = <$t>::declassify(n);
-                Self::from(s.add_mod(o, n))
+                (self + rhs).signed_modulo(n)
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self{
-                let s = <$t>::declassify(self);
-                let o = <$t>::declassify(rhs);
-                let n = <$t>::declassify(n);
-                Self::from(s.mul_mod(o, n))
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn mul_mod(self, rhs: Self, n: Self) -> Self {
+                (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            /// TODO: implement
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
                 let s = <$t>::declassify(self);
                 let n = <$t>::declassify(n);
                 Self::from(s.modulo(n))
             }
             /// `self % n` that always returns a positive integer
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
                 while ret.less_than(Self::ZERO) {
@@ -363,38 +352,44 @@ macro_rules! implement_secret_mi {
             const TWO: Self = $t(2);
 
             #[inline]
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn from_literal(val: u128) -> Self {
                 Self::classify(val as $base)
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_hex_string(s: &String) -> Self {
+                Self::classify(<$base>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap())
             }
         }
         impl NumericBase for $t {
             /// Return largest value that can be represented.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn max_val() -> Self {
                 Self::from(<$base>::max_value())
             }
 
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_sub(self, rhs: Self) -> Self {
                 self - rhs
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_mul(self, rhs: Self) -> Self {
                 self * rhs
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn wrap_div(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
             /// **Note:** the exponent `exp` MUST not be secret.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn exp(self, exp: u32) -> Self {
                 let mut s = self;
                 if exp == 0 {
@@ -408,55 +403,55 @@ macro_rules! implement_secret_mi {
             }
             /// `self ^ exp` where `exp` is a `Self`.
             /// Here both, base and exponent, are secret.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn divide(self, rhs: Self) -> Self {
                 let s = <$t>::declassify(self);
                 let o = <$t>::declassify(rhs);
                 Self::from(s / o)
             }
             /// Invert self modulo n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
                 // FIXME: this is not constant time
                 extended_euclid_invert(self, n, false)
             }
             /// `|self|`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn abs(self) -> Self {
                 unimplemented!();
             }
 
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool {
                 let s = <$t>::declassify(self);
                 let o = <$t>::declassify(other);
                 s == o
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than(self, other: Self) -> bool {
                 let s = <$t>::declassify(self);
                 let o = <$t>::declassify(other);
                 s > o
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_or_qual(self, other: Self) -> bool {
                 let s = <$t>::declassify(self);
                 let o = <$t>::declassify(other);
                 s >= o
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than(self, other: Self) -> bool {
                 let s = <$t>::declassify(self);
                 let o = <$t>::declassify(other);
                 s < o
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_or_equal(self, other: Self) -> bool {
                 let s = <$t>::declassify(self);
                 let o = <$t>::declassify(other);
@@ -464,27 +459,27 @@ macro_rules! implement_secret_mi {
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn not_equal_bm(self, other: Self) -> Self {
                 self.comp_ne(other)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn equal_bm(self, other: Self) -> Self {
                 self.comp_eq(other)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_bm(self, other: Self) -> Self {
                 self.comp_gt(other)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_or_qual_bm(self, other: Self) -> Self {
                 self.comp_gte(other)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_bm(self, other: Self) -> Self {
                 self.comp_lt(other)
             }
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
                 self.comp_lte(other)
             }

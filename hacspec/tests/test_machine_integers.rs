@@ -1,4 +1,14 @@
 use hacspec::prelude::*;
+mod test_util;
+use test_util::*;
+
+fn get_random_numbers<T: Integer>() -> (String, T, String, T) {
+    let a = random_hex_string(T::NUM_BITS as usize >> 3);
+    let b = random_hex_string(T::NUM_BITS as usize >> 3);
+    let a_t = T::from_hex_string(&a);
+    let b_t = T::from_hex_string(&b);
+    (a, a_t, b, b_t)
+}
 
 macro_rules! test_unsigned_public_macro {
     ($t:ty) => {
@@ -21,7 +31,19 @@ fn test_unsigned_public() {
 macro_rules! test_signed_public_macro {
     ($t:ty) => {
         assert_eq!(<$t>::max_val(), <$t>::max_value());
-        assert_eq!((2 as $t).exp(5), 32);
+
+        let (a, a_t, b, b_t) = get_random_numbers::<$t>();
+
+        // multiplication operator might panic on overflow
+        let res = std::panic::catch_unwind(|| a_t * b_t);
+        match res {
+            Ok(r) => {
+                let expected = get_expected("mul", &a, &b);
+                let res_s = format!("0x{:x}", r);
+                assert_eq!(res_s, expected);
+            }
+            Err(_) => (),
+        }
         // assert_eq!((2 as $t).pow_self(5), 32);
         // ...
     };

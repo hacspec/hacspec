@@ -23,7 +23,7 @@ pub use secret_integers::*;
 pub use hacspec_attributes::*;
 
 pub use num::{self, BigUint, CheckedSub, Num, Zero};
-pub use rand::{self, Rng};
+pub use rand::{self, Rng, thread_rng};
 pub use std::num::ParseIntError;
 pub use std::ops::*;
 pub use std::{cmp::min, cmp::PartialEq, fmt, fmt::Debug};
