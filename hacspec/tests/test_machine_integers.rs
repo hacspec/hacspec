@@ -74,10 +74,14 @@ macro_rules! test_secret_macro {
 
         // Comparison functions returning bool.
         assert_eq!(a_t.equal(b_t), a == b);
-        assert_eq!(a_t.greater_than(b_t), a > b);
-        assert_eq!(a_t.greater_than_or_qual(b_t), a >= b);
-        assert_eq!(a_t.less_than(b_t), a < b);
-        assert_eq!(a_t.less_than_or_equal(b_t), a <= b);
+        let expected_gt = if get_expected(">", &a, &b) == "0x0" { false } else { true };
+        assert_eq!(a_t.greater_than(b_t), expected_gt);
+        let expected_gte = if get_expected(">=", &a, &b) == "0x0" { false } else { true };
+        assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
+        let expected_lt = if get_expected("<", &a, &b) == "0x0" { false } else { true };
+        assert_eq!(a_t.less_than(b_t), expected_lt);
+        let expected_lte = if get_expected("<=", &a, &b) == "0x0" { false } else { true };
+        assert_eq!(a_t.less_than_or_equal(b_t), expected_lte);
 
         // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
         let expected = if a == b {
@@ -86,25 +90,25 @@ macro_rules! test_secret_macro {
             0
         };
         assert_eq!(a_t.equal_bm(b_t).declassify(), expected);
-        let expected = if a > b {
+        let expected = if expected_gt {
             <$t>::max_value().declassify()
         } else {
             0
         };
         assert_eq!(a_t.greater_than_bm(b_t).declassify(), expected);
-        let expected = if a >= b {
+        let expected = if expected_gte {
             <$t>::max_value().declassify()
         } else {
             0
         };
         assert_eq!(a_t.greater_than_or_qual_bm(b_t).declassify(), expected);
-        let expected = if a < b {
+        let expected = if expected_lt {
             <$t>::max_value().declassify()
         } else {
             0
         };
         assert_eq!(a_t.less_than_bm(b_t).declassify(), expected);
-        let expected = if a <= b {
+        let expected = if expected_lte {
             <$t>::max_value().declassify()
         } else {
             0
@@ -120,6 +124,61 @@ fn test_unsigned_secret() {
     test_secret_macro!(U32);
     test_secret_macro!(U64);
     test_secret_macro!(U128);
+}
+
+#[test]
+fn test_unsigned_secret_testing() {
+    let (a, a_t, b, b_t) = get_random_numbers::<U32>();
+
+    // mod
+    if !b_t.equal(<U32>::ZERO) {
+        let r = a_t.modulo(b_t);
+        let expected = get_expected("%", &a, &b);
+        assert_eq!(format!("0x{:x}", r), expected);
+    }
+
+    // Comparison functions returning bool.
+    assert_eq!(a_t.equal(b_t), a == b);
+    let expected_gt = if get_expected(">", &a, &b) == "0x0" { false } else { true };
+    assert_eq!(a_t.greater_than(b_t), expected_gt);
+    let expected_gte = if get_expected(">=", &a, &b) == "0x0" { false } else { true };
+    assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
+    let expected_lt = if get_expected("<", &a, &b) == "0x0" { false } else { true };
+    assert_eq!(a_t.less_than(b_t), expected_lt);
+    let expected_lte = if get_expected("<=", &a, &b) == "0x0" { false } else { true };
+    assert_eq!(a_t.less_than_or_equal(b_t), expected_lte);
+
+    // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
+    let expected = if a == b {
+        <U32>::max_value().declassify()
+    } else {
+        0
+    };
+    assert_eq!(a_t.equal_bm(b_t).declassify(), expected);
+    let expected = if expected_gt {
+        <U32>::max_value().declassify()
+    } else {
+        0
+    };
+    assert_eq!(a_t.greater_than_bm(b_t).declassify(), expected);
+    let expected = if expected_gte {
+        <U32>::max_value().declassify()
+    } else {
+        0
+    };
+    assert_eq!(a_t.greater_than_or_qual_bm(b_t).declassify(), expected);
+    let expected = if expected_lt {
+        <U32>::max_value().declassify()
+    } else {
+        0
+    };
+    assert_eq!(a_t.less_than_bm(b_t).declassify(), expected);
+    let expected = if expected_lte {
+        <U32>::max_value().declassify()
+    } else {
+        0
+    };
+    assert_eq!(a_t.less_than_or_equal_bm(b_t).declassify(), expected);
 }
 
 macro_rules! test_signed_secret_macro {
