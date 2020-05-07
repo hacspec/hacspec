@@ -544,7 +544,7 @@ pub trait NumericBase:
     fn not_equal_bm(self, other: Self) -> Self;
     fn equal_bm(self, other: Self) -> Self;
     fn greater_than_bm(self, other: Self) -> Self;
-    fn greater_than_or_qual_bm(self, other: Self) -> Self;
+    fn greater_than_or_equal_bm(self, other: Self) -> Self;
     fn less_than_bm(self, other: Self) -> Self;
     fn less_than_or_equal_bm(self, other: Self) -> Self;
 }

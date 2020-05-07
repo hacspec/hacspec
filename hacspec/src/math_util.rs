@@ -265,7 +265,7 @@ pub fn ct_div<T: Integer>(a: T, d: T) -> (T, T) {
         //     r = r - d;
         //     q = q.set_bit(T::ONE, i);
         // }
-        let geq = r.greater_than_or_qual_bm(d);
+        let geq = r.greater_than_or_equal_bm(d);
         r = csub(r, d, geq);
         q = cset_bit(q, T::ONE, i, geq);
     }

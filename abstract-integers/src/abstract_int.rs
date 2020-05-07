@@ -13,6 +13,10 @@ macro_rules! abstract_int {
                 BigInt::from(1u32).shl($bits) - BigInt::one()
             }
 
+            pub fn max_value() -> Self {
+                Self::max().into()
+            }
+
             fn hex_string_to_bytes(s: &str) -> Vec<u8> {
                 assert!(s.len() % 2 == 0, "length of hex string {}: {}",s, s.len());
                 let b: Result<Vec<u8>, ParseIntError> = (0..s.len())

@@ -1,3 +1,5 @@
+// TODO: Can we implement Integer for math integers? Do we need to?
+
 #[macro_export]
 macro_rules! unsigned_public_integer {
     ($name:ident,$n:literal) => {
@@ -8,27 +10,27 @@ macro_rules! unsigned_public_integer {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self - rhs) % n
             }
             /// `(self + rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self + rhs) % n
             }
             /// `(self * rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self * rhs) % n
             }
             /// `(self ^ exp) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn pow_mod(self, exp: Self, n: Self) -> Self {
-                unimplemented!();
+                self.pow_felem(exp, n)
             }
             /// `self % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
-                unimplemented!();
+                self % n
             }
             /// `self % n` that always returns a positive integer
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -45,7 +47,7 @@ macro_rules! unsigned_public_integer {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
-                unimplemented!();
+                $name::max_value()
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -62,76 +64,100 @@ macro_rules! unsigned_public_integer {
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn wrap_div(self, rhs: Self) -> Self {
-                unimplemented!();
+                self / rhs
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn exp(self, exp: u32) -> Self {
-                unimplemented!();
+                self.pow(exp.into(), Self::max_val())
             }
             /// `self ^ exp` where `exp` is a `Self`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn pow_self(self, exp: Self) -> Self {
-                unimplemented!();
+                self.pow_felem(exp.into(), Self::max_val())
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn divide(self, rhs: Self) -> Self {
-                unimplemented!();
+                self / rhs
             }
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
+                $name::inv(self, n)
             }
 
             // Comparison functions returning bool.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn equal(self, other: Self) -> bool {
-                unimplemented!();
+                self == other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than(self, other: Self) -> bool {
-                unimplemented!();
+                self > other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than_or_qual(self, other: Self) -> bool {
-                unimplemented!();
+                self >= other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than(self, other: Self) -> bool {
-                unimplemented!();
+                self < other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_or_equal(self, other: Self) -> bool {
-                unimplemented!();
+                self >= other
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn not_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if !self.equal(other) {
+                    Self::max_val()
+                } else {
+                    Self::from_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.equal(other) {
+                    Self::max_val()
+                } else {
+                    Self::from_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.greater_than(other) {
+                    Self::max_val()
+                } else {
+                    Self::from_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
-                unimplemented!();
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
+                if self.greater_than_or_qual(other) {
+                    Self::max_val()
+                } else {
+                    Self::from_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.less_than(other) {
+                    Self::max_val()
+                } else {
+                    Self::from_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.less_than_or_equal(other) {
+                    Self::max_val()
+                } else {
+                    Self::from_literal(0)
+                }
             }
         }
     };
@@ -147,27 +173,27 @@ macro_rules! signed_public_integer {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self - rhs).signed_modulo(n)
             }
             /// `(self + rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self + rhs).signed_modulo(n)
             }
             /// `(self * rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn pow_mod(self, exp: Self, n: Self) -> Self {
-                unimplemented!();
+                self.pow_felem(exp, n).signed_modulo(n)
             }
             /// `self % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
-                unimplemented!();
+                self % n
             }
             /// `self % n` that always returns a positive integer
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -189,7 +215,7 @@ macro_rules! signed_public_integer {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
-                unimplemented!();
+                Self::max_value()
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -206,76 +232,100 @@ macro_rules! signed_public_integer {
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn wrap_div(self, rhs: Self) -> Self {
-                unimplemented!();
+                self / rhs
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn exp(self, exp: u32) -> Self {
-                unimplemented!();
+                self.pow(exp.into(), Self::max_val())
             }
             /// `self ^ exp` where `exp` is a `Self`.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn pow_self(self, exp: Self) -> Self {
-                unimplemented!();
+                self.pow_felem(exp, Self::max_val())
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn divide(self, rhs: Self) -> Self {
-                unimplemented!();
+                self / rhs
             }
             /// Invert self modulo n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
+                $name::inv(self, n)
             }
 
             // Comparison functions returning bool.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn equal(self, other: Self) -> bool {
-                unimplemented!();
+                self == other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than(self, other: Self) -> bool {
-                unimplemented!();
+                self > other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than_or_qual(self, other: Self) -> bool {
-                unimplemented!();
+                self >= other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than(self, other: Self) -> bool {
-                unimplemented!();
+                self < other
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_or_equal(self, other: Self) -> bool {
-                unimplemented!();
+                self <= other
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn not_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if !self.equal(other) {
+                    Self::from_signed_literal(-1)
+                } else {
+                    Self::from_signed_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.equal(other) {
+                    Self::from_signed_literal(-1)
+                } else {
+                    Self::from_signed_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.greater_than(other) {
+                    Self::from_signed_literal(-1)
+                } else {
+                    Self::from_signed_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
-                unimplemented!();
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
+                if self.greater_than_or_qual(other) {
+                    Self::from_signed_literal(-1)
+                } else {
+                    Self::from_signed_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.less_than(other) {
+                    Self::from_signed_literal(-1)
+                } else {
+                    Self::from_signed_literal(0)
+                }
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self.less_than_or_equal(other) {
+                    Self::from_signed_literal(-1)
+                } else {
+                    Self::from_signed_literal(0)
+                }
             }
         }
     };
@@ -405,7 +455,7 @@ macro_rules! unsigned_integer {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -550,7 +600,7 @@ macro_rules! signed_integer {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -690,7 +740,7 @@ macro_rules! nat_mod {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -865,7 +915,7 @@ macro_rules! public_nat_mod {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(library))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(library))]

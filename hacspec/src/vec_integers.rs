@@ -308,7 +308,7 @@ macro_rules! _implement_numeric_unsigned_public {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, _other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -557,7 +557,7 @@ macro_rules! _implement_numeric_signed_public {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -804,7 +804,7 @@ macro_rules! _implement_numeric_unsigned_secret {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, _other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, _other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -1049,7 +1049,7 @@ macro_rules! _implement_numeric_signed_secret {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -1160,7 +1160,7 @@ impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
     fn greater_than_bm(self, other: Self) -> Self {
         unimplemented!();
     }
-    fn greater_than_or_qual_bm(self, other: Self) -> Self {
+    fn greater_than_or_equal_bm(self, other: Self) -> Self {
         unimplemented!();
     }
     fn less_than_bm(self, other: Self) -> Self {

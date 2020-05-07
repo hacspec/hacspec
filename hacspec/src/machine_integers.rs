@@ -220,7 +220,7 @@ macro_rules! implement_public_mi {
                 }
             }
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 if self >= other {
                     <$t>::max_value()
                 } else {
@@ -448,7 +448,7 @@ macro_rules! implement_secret_mi {
             /// **Declassifies**
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_or_qual(self, other: Self) -> bool {
-                self.greater_than_or_qual_bm(other).declassify() != 0
+                self.greater_than_or_equal_bm(other).declassify() != 0
             }
             /// **Declassifies**
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
@@ -475,7 +475,7 @@ macro_rules! implement_secret_mi {
                 self.comp_gt(other)
             }
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn greater_than_or_qual_bm(self, other: Self) -> Self {
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 self.comp_gte(other)
             }
             #[cfg_attr(feature = "use_attributes", library(hacspec))]

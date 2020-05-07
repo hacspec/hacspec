@@ -100,7 +100,7 @@ macro_rules! test_secret_macro {
         } else {
             0
         };
-        assert_eq!(a_t.greater_than_or_qual_bm(b_t).declassify(), expected);
+        assert_eq!(a_t.greater_than_or_equal_bm(b_t).declassify(), expected);
         let expected = if expected_lt {
             $true_val
         } else {
@@ -174,7 +174,7 @@ fn test_secret_testing() {
     } else {
         0
     };
-    assert_eq!(a_t.greater_than_or_qual_bm(b_t).declassify(), expected);
+    assert_eq!(a_t.greater_than_or_equal_bm(b_t).declassify(), expected);
     let expected = if expected_lt {
         <U32>::max_value().declassify()
     } else {
