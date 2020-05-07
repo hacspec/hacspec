@@ -59,9 +59,8 @@ fn test_signed_public() {
 }
 
 macro_rules! test_secret_macro {
-    ($t:ty) => {
+    ($t:ty,$true_val:expr) => {
         assert!(<$t>::max_val().equal(<$t>::max_value()));
-        assert!(<$t>::from(3u8).exp(5).equal(<$t>::from(243u8)));
 
         let (a, a_t, b, b_t) = get_random_numbers::<$t>();
 
@@ -85,31 +84,31 @@ macro_rules! test_secret_macro {
 
         // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
         let expected = if a == b {
-            <$t>::max_value().declassify()
+            $true_val
         } else {
             0
         };
         assert_eq!(a_t.equal_bm(b_t).declassify(), expected);
         let expected = if expected_gt {
-            <$t>::max_value().declassify()
+            $true_val
         } else {
             0
         };
         assert_eq!(a_t.greater_than_bm(b_t).declassify(), expected);
         let expected = if expected_gte {
-            <$t>::max_value().declassify()
+            $true_val
         } else {
             0
         };
         assert_eq!(a_t.greater_than_or_qual_bm(b_t).declassify(), expected);
         let expected = if expected_lt {
-            <$t>::max_value().declassify()
+            $true_val
         } else {
             0
         };
         assert_eq!(a_t.less_than_bm(b_t).declassify(), expected);
         let expected = if expected_lte {
-            <$t>::max_value().declassify()
+            $true_val
         } else {
             0
         };
@@ -119,15 +118,24 @@ macro_rules! test_secret_macro {
 
 #[test]
 fn test_unsigned_secret() {
-    test_secret_macro!(U8);
-    test_secret_macro!(U16);
-    test_secret_macro!(U32);
-    test_secret_macro!(U64);
-    test_secret_macro!(U128);
+    test_secret_macro!(U8, U8::max_value().declassify());
+    test_secret_macro!(U16, U16::max_value().declassify());
+    test_secret_macro!(U32, U32::max_value().declassify());
+    test_secret_macro!(U64, U64::max_value().declassify());
+    test_secret_macro!(U128, U128::max_value().declassify());
 }
 
 #[test]
-fn test_unsigned_secret_testing() {
+fn test_signed_secret() {
+    test_secret_macro!(I8, -1);
+    test_secret_macro!(I16, -1);
+    test_secret_macro!(I32, -1);
+    test_secret_macro!(I64, -1);
+    test_secret_macro!(I128, -1);
+}
+
+#[test]
+fn test_secret_testing() {
     let (a, a_t, b, b_t) = get_random_numbers::<U32>();
 
     // mod
@@ -179,32 +187,4 @@ fn test_unsigned_secret_testing() {
         0
     };
     assert_eq!(a_t.less_than_or_equal_bm(b_t).declassify(), expected);
-}
-
-macro_rules! test_signed_secret_macro {
-    ($t:ty) => {
-        assert!(<$t>::max_val().equal(<$t>::max_value()));
-        assert!(<$t>::from(2).exp(5).equal(<$t>::from(32)));
-
-        let (a, a_t, b, b_t) = get_random_numbers::<$t>();
-
-        // mod
-        if !b_t.equal(<$t>::ZERO) {
-            let r = a_t.modulo(b_t);
-            let expected = get_expected("%", &a, &b);
-            assert_eq!(format!("0x{:x}", r), expected);
-        }
-
-        // assert_eq!((2 as $t).pow_self(5), 32);
-        // ...
-    };
-}
-
-#[test]
-fn test_signed_secret() {
-    test_signed_secret_macro!(I8);
-    test_signed_secret_macro!(I16);
-    test_signed_secret_macro!(I32);
-    test_signed_secret_macro!(I64);
-    test_signed_secret_macro!(I128);
 }
