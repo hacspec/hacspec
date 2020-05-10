@@ -481,7 +481,7 @@ macro_rules! signed_integer {
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn ZERO() -> Self {equal
+            fn ZERO() -> Self {
                 Self::from_literal(0)
             }
             #[inline]
@@ -503,27 +503,34 @@ macro_rules! signed_integer {
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            /// Read hex string to `Self`.
             fn from_hex_string(s: &String) -> Self {
-                Self::from_hex(&s.replace("0x", ""))
+                let sign_str = if s.starts_with("-") {
+                    "-"
+                } else {
+                    "+"
+                };
+                Self::from_hex(&sign_str, &s.replace("0x", "").replace("-", "").replace("+", ""))
             }
         }
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self - rhs).modulo(n)
             }
             /// `(self + rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self + rhs).modulo(n)
             }
             /// `(self * rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                (self * rhs).modulo(n)
             }
             /// `(self ^ exp) % n`
+            /// TODO: implement
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn pow_mod(self, exp: Self, n: Self) -> Self {
                 unimplemented!();
@@ -534,6 +541,7 @@ macro_rules! signed_integer {
                 unimplemented!();
             }
             /// `self % n` that always returns a positive integer
+            /// FIXME: implement ct
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);

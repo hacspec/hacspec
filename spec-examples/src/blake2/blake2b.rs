@@ -76,7 +76,7 @@ fn inc_counter<Word: PublicInteger>(t: Counter<Word>, x: Word) -> Counter<Word> 
     let new_val: Word = t[0] + x;
     result[0] = new_val;
     if new_val.less_than(x) {
-        result[1] = t[1] + Word::ONE;
+        result[1] = t[1] + Word::ONE();
     }
     result
 }
