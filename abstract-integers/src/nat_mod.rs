@@ -18,6 +18,13 @@ macro_rules! modular_integer {
             }
         }
 
+        impl std::fmt::LowerHex for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let val: $base = (*self).into();
+                std::fmt::LowerHex::fmt(&val, f)
+            }
+        }
+
         impl From<$base> for $name {
             fn from(x: $base) -> $name {
                 $name(x.rem($max))
@@ -281,42 +288,51 @@ macro_rules! abstract_public_modular_integer {
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                (!a).into()
             }
         }
 
         impl BitOr for $name {
             type Output = $name;
             fn bitor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a | b).into()
             }
         }
 
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a ^ b).into()
             }
         }
 
         impl BitAnd for $name {
             type Output = $name;
             fn bitand(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a & b).into()
             }
         }
 
         impl Shr<u32> for $name {
             type Output = $name;
             fn shr(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                (a >> rhs).into()
             }
         }
 
         impl Shl<u32> for $name {
             type Output = $name;
             fn shl(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                (a << rhs).into()
             }
         }
 

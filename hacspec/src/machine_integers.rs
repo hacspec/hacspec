@@ -12,7 +12,7 @@ use crate::prelude::*;
 
 macro_rules! implement_public_unsigned_mi {
     ($t:ty,$bits:literal) => {
-        implement_public_mi!($t, $bits);
+        implement_public_mi!($t, $bits, <$t>::max_val());
         impl ModNumeric for $t {
             /// (self - rhs) % n.
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
@@ -59,7 +59,7 @@ macro_rules! implement_public_unsigned_mi {
 
 macro_rules! implement_public_signed_mi {
     ($t:ty,$bits:literal) => {
-        implement_public_mi!($t, $bits);
+        implement_public_mi!($t, $bits, -1);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
@@ -90,7 +90,7 @@ macro_rules! implement_public_signed_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
-                while ret.less_than(Self::ZERO) {
+                while ret.less_than(Self::ZERO()) {
                     ret = ret + n;
                 }
                 ret
@@ -106,13 +106,26 @@ macro_rules! implement_public_signed_mi {
 
 // Macro to implement the Numeric trait for built-in machine integers.
 macro_rules! implement_public_mi {
-    ($t:ty,$bits:literal) => {
+    ($t:ty,$bits:literal,$true_val:expr) => {
         impl Numeric for $t {}
         impl Integer for $t {
             const NUM_BITS: u32 = $bits;
-            const ZERO: Self = 0;
-            const ONE: Self = 1;
-            const TWO: Self = 2;
+            
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ZERO() -> Self {
+                0
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ONE() -> Self {
+                1
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn TWO() -> Self {
+                2
+            }
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
@@ -198,7 +211,7 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn not_equal_bm(self, other: Self) -> Self {
                 if self != other {
-                    <$t>::max_value()
+                    $true_val
                 } else {
                     <$t>::default()
                 }
@@ -206,7 +219,7 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn equal_bm(self, other: Self) -> Self {
                 if self == other {
-                    <$t>::max_value()
+                    $true_val
                 } else {
                     <$t>::default()
                 }
@@ -214,7 +227,7 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_bm(self, other: Self) -> Self {
                 if self > other {
-                    <$t>::max_value()
+                    $true_val
                 } else {
                     <$t>::default()
                 }
@@ -222,7 +235,7 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 if self >= other {
-                    <$t>::max_value()
+                    $true_val
                 } else {
                     <$t>::default()
                 }
@@ -230,7 +243,7 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_bm(self, other: Self) -> Self {
                 if self < other {
-                    <$t>::max_value()
+                    $true_val
                 } else {
                     <$t>::default()
                 }
@@ -238,7 +251,7 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
                 if self <= other {
-                    <$t>::max_value()
+                    $true_val
                 } else {
                     <$t>::default()
                 }
@@ -340,7 +353,7 @@ macro_rules! implement_secret_signed_mi {
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
-                while ret.less_than(Self::ZERO) {
+                while ret.less_than(Self::ZERO()) {
                     ret = ret + n;
                 }
                 ret
@@ -361,9 +374,22 @@ macro_rules! implement_secret_mi {
         impl Numeric for $t {}
         impl Integer for $t {
             const NUM_BITS: u32 = $bits;
-            const ZERO: Self = $t(0);
-            const ONE: Self = $t(1);
-            const TWO: Self = $t(2);
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ZERO() -> Self {
+                $t(0)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ONE() -> Self {
+                $t(1)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn TWO() -> Self {
+                $t(2)
+            }
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]

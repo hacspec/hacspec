@@ -476,7 +476,37 @@ macro_rules! signed_integer {
         abstract_signed_secret_integer!($name, $n);
 
         impl Numeric for $name {}
-        // TODO: impl Integer for $name
+        impl Integer for $name {
+            const NUM_BITS: u32 = $n;
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ZERO() -> Self {equal
+                Self::from_literal(0)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ONE() -> Self {
+                Self::from_literal(1)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn TWO() -> Self {
+                Self::from_literal(2)
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_literal(val: u128) -> Self {
+                Self::from_literal(val)
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_hex_string(s: &String) -> Self {
+                Self::from_hex(&s.replace("0x", ""))
+            }
+        }
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -797,31 +827,62 @@ macro_rules! public_nat_mod {
         }
 
         impl Numeric for $name {}
+        impl Integer for $name {
+            const NUM_BITS: u32 = $bits;
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ZERO() -> Self {
+                Self::from_literal(0)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ONE() -> Self {
+                Self::from_literal(1)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn TWO() -> Self {
+                Self::from_literal(2)
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_literal(val: u128) -> Self {
+                Self::from_literal(val)
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_hex_string(s: &String) -> Self {
+                Self::from_hex(&s.replace("0x", ""))
+            }
+        }
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                self - rhs
             }
             /// `(self + rhs) % n`
             #[cfg_attr(feature="use_attributes", library(library))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                self + rhs
             }
             /// `(self * rhs) % n`
             #[cfg_attr(feature="use_attributes", library(library))]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                self * rhs
             }
             /// `(self ^ exp) % n`
             #[cfg_attr(feature="use_attributes", library(library))]
             fn pow_mod(self, exp: Self, n: Self) -> Self {
-                unimplemented!();
+                self.pow_felem(exp)
             }
             /// `self % n`
             #[cfg_attr(feature="use_attributes", library(library))]
             fn modulo(self, n: Self) -> Self {
-                unimplemented!();
+                self % n
             }
             /// `self % n` that always returns a positive integer
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -838,7 +899,7 @@ macro_rules! public_nat_mod {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn max_val() -> Self {
-                unimplemented!();
+                (Self::max() - $base::from_literal(1)).into()
             }
 
             #[cfg_attr(feature="use_attributes", library(library))]
@@ -855,76 +916,103 @@ macro_rules! public_nat_mod {
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn wrap_div(self, rhs: Self) -> Self {
-                unimplemented!();
+                self / rhs
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn exp(self, exp: u32) -> Self {
-                unimplemented!();
+                self.pow(exp.into())
             }
             /// `self ^ exp` where `exp` is a `Self`.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn pow_self(self, exp: Self) -> Self {
-                unimplemented!();
+                self.pow_felem(exp)
             }
             /// Division.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn divide(self, rhs: Self) -> Self {
-                unimplemented!();
+                self / rhs
             }
             /// Invert self modulo n.
+            /// **NOTE:** `n` is ignored and inversion is done with respect to
+            ///            the modulus.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn inv(self, n: Self) -> Self {
-                unimplemented!();
+                self.inv()
             }
 
             // Comparison functions returning bool.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn equal(self, other: Self) -> bool {
-                unimplemented!();
+                self == other
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn greater_than(self, other: Self) -> bool {
-                unimplemented!();
+                self > other
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn greater_than_or_qual(self, other: Self) -> bool {
-                unimplemented!();
+                self >= other
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn less_than(self, other: Self) -> bool {
-                unimplemented!();
+                self < other
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn less_than_or_equal(self, other: Self) -> bool {
-                unimplemented!();
+                self <= other
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
+            // Return $bits-1 1s as we can't represent 0xF..F.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn not_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self != other {
+                    (Self::ONE() << ($bits-1))-Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self == other {
+                    (Self::ONE() << ($bits-1))-Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn greater_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self > other {
+                    (Self::ONE() << ($bits-1))-Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self >= other {
+                    (Self::ONE() << ($bits-1))-Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn less_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self < other {
+                    (Self::ONE() << ($bits-1))-Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
             }
             #[cfg_attr(feature="use_attributes", library(library))]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                if self <= other {
+                    (Self::ONE() << ($bits-1))-Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
             }
         }
     };

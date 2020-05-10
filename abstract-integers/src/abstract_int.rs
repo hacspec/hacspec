@@ -18,6 +18,13 @@ macro_rules! abstract_int {
             }
 
             fn hex_string_to_bytes(s: &str) -> Vec<u8> {
+                let s = if s.len() % 2 != 0 {
+                    let mut x = "0".to_string();
+                    x.push_str(s);
+                    x
+                } else {
+                    s.to_string()
+                };
                 assert!(s.len() % 2 == 0, "length of hex string {}: {}",s, s.len());
                 let b: Result<Vec<u8>, ParseIntError> = (0..s.len())
                     .step_by(2)
@@ -127,6 +134,13 @@ macro_rules! abstract_int {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
                 let uint: BigInt = (*self).into();
                 write!(f, "{}", uint)
+            }
+        }
+
+        impl std::fmt::LowerHex for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let val: BigInt = (*self).into();
+                std::fmt::LowerHex::fmt(&val, f)
             }
         }
     };
@@ -246,42 +260,53 @@ macro_rules! abstract_public {
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                (!a).into()
             }
         }
 
         impl BitOr for $name {
             type Output = $name;
             fn bitor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a | b).into()
             }
         }
 
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a ^ b).into()
             }
         }
 
         impl BitAnd for $name {
             type Output = $name;
             fn bitand(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a & b).into()
             }
         }
 
         impl Shr<u32> for $name {
             type Output = $name;
             fn shr(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b = rhs as usize;
+                (a >> b).into()
             }
         }
 
         impl Shl<u32> for $name {
             type Output = $name;
             fn shl(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b = rhs as usize;
+                (a << b).into()
             }
         }
 

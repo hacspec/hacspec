@@ -71,9 +71,12 @@ pub trait SeqTrait<T: Copy>:
 /// constants.
 pub trait Integer: Numeric {
     const NUM_BITS: u32;
-    const ZERO: Self;
-    const ONE: Self;
-    const TWO: Self;
+
+    // Some useful values.
+    // Not constants because math integers can't do that.
+    fn ZERO() -> Self;
+    fn ONE() -> Self;
+    fn TWO() -> Self;
 
     /// Get an integer with value `val`.
     fn from_literal(val: u128) -> Self;
@@ -85,7 +88,7 @@ pub trait Integer: Numeric {
     #[inline]
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn get_bit(self, i: u32) -> Self {
-        (self >> i) & Self::ONE
+        (self >> i) & Self::ONE()
     }
 
     /// Set bit `i` of this integer to `b` and return the result.
@@ -93,7 +96,7 @@ pub trait Integer: Numeric {
     #[inline]
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn set_bit(self, b: Self, i: u32) -> Self {
-        debug_assert!(b.equal(Self::ONE) || b.equal(Self::ZERO));
+        debug_assert!(b.equal(Self::ONE()) || b.equal(Self::ZERO()));
         let tmp1 = Self::from_literal(!(1 << i));
         let tmp2 = b << i;
         (self & tmp1) | tmp2
@@ -268,7 +271,7 @@ pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
     #[inline]
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn get_byte(self, i: u32) -> Self {
-        (self >> (i * 8)) & ((Self::ONE << 8) - Self::ONE)
+        (self >> (i * 8)) & ((Self::ONE() << 8) - Self::ONE())
     }
 }
 

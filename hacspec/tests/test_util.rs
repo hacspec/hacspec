@@ -32,3 +32,11 @@ pub(crate) fn random_hex_string(len: usize) -> String {
     start.push_str(&res);
     start
 }
+
+pub(crate) fn get_random_numbers<T: Integer>() -> (String, T, String, T) {
+    let a = random_hex_string(T::NUM_BITS as usize >> 3);
+    let b = random_hex_string(T::NUM_BITS as usize >> 3);
+    let a_t = T::from_hex_string(&a);
+    let b_t = T::from_hex_string(&b);
+    (a, a_t, b, b_t)
+}

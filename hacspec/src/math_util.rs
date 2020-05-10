@@ -10,13 +10,13 @@ use crate::prelude::*;
 #[inline]
 #[cfg_attr(feature="use_attributes", library(internal))]
 pub(crate) fn extended_euclid_invert<T: Integer>(x: T, n: T, signed: bool) -> T {
-    let mut t = T::ZERO;
+    let mut t = T::ZERO();
     let mut r = n;
-    let mut new_t = T::ONE;
+    let mut new_t = T::ONE();
     let mut new_r = x;
 
     println!("n: {:?}", n);
-    while !new_r.equal(T::ZERO) {
+    while !new_r.equal(T::ZERO()) {
         let q: T = r.divide(new_r);
 
         let tmp = new_r.clone();
@@ -40,10 +40,10 @@ pub(crate) fn extended_euclid_invert<T: Integer>(x: T, n: T, signed: bool) -> T 
         t = tmp;
     }
 
-    if r.greater_than(T::ONE) && !x.equal(T::ZERO) {
+    if r.greater_than(T::ONE()) && !x.equal(T::ZERO()) {
         panic!("{:x?} is not invertible in ℤ/{:x?}", x, n);
     }
-    if t.less_than(T::ZERO) {
+    if t.less_than(T::ZERO()) {
         if signed {
             t = t.absolute()
         } else {
@@ -63,7 +63,7 @@ fn quot_sub<T: Integer>(
     n: T,
 ) -> (Vec<T>, usize) {
     let cd = std::cmp::max(ad, bd);
-    let x = monomial(T::ONE, 1);
+    let x = monomial(T::ONE(), 1);
     let mut a = an.to_vec();
     let mut b = bn.to_vec();
     for _ in 0..cd - ad {
@@ -103,10 +103,10 @@ fn divstepsx<T: Integer>(
 
     // Each of u,v,q,r in (f, i) represents quotient f/x^i
     // u,v,q,r = 1,0,0,1
-    let mut u = (vec![T::ONE; 1], 0);
-    let mut v = (vec![T::ZERO; 1], 0);
-    let mut q = (vec![T::ZERO; 1], 0);
-    let mut r = (vec![T::ONE; 1], 0);
+    let mut u = (vec![T::ONE(); 1], 0);
+    let mut v = (vec![T::ZERO(); 1], 0);
+    let mut q = (vec![T::ZERO(); 1], 0);
+    let mut r = (vec![T::ONE(); 1], 0);
 
     for i in 0..nn {
         // Bring u,v,q,r back to fixed precision t
@@ -120,7 +120,7 @@ fn divstepsx<T: Integer>(
         g = make_fixed_length(&g, nn - i);
 
         // TODO: make swap constant time
-        if delta > 0 && !g[0].equal(T::ZERO) {
+        if delta > 0 && !g[0].equal(T::ZERO()) {
             delta = -delta;
             let t = f;
             f = g;
@@ -263,11 +263,11 @@ pub fn ct_div<T: Integer>(a: T, d: T) -> (T, T) {
         // The code below is equivalent to the following.
         // if r.greater_than_or_qual(d) {
         //     r = r - d;
-        //     q = q.set_bit(T::ONE, i);
+        //     q = q.set_bit(T::ONE(), i);
         // }
         let geq = r.greater_than_or_equal_bm(d);
         r = csub(r, d, geq);
-        q = cset_bit(q, T::ONE, i, geq);
+        q = cset_bit(q, T::ONE(), i, geq);
     }
     (q, r)
 }

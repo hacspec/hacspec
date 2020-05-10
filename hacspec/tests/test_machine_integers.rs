@@ -2,14 +2,6 @@ use hacspec::prelude::*;
 mod test_util;
 use test_util::*;
 
-fn get_random_numbers<T: Integer>() -> (String, T, String, T) {
-    let a = random_hex_string(T::NUM_BITS as usize >> 3);
-    let b = random_hex_string(T::NUM_BITS as usize >> 3);
-    let a_t = T::from_hex_string(&a);
-    let b_t = T::from_hex_string(&b);
-    (a, a_t, b, b_t)
-}
-
 macro_rules! test_unsigned_public_macro {
     ($t:ty) => {
         assert_eq!(<$t>::max_val(), <$t>::max_value() as $t);
@@ -65,7 +57,7 @@ macro_rules! test_secret_macro {
         let (a, a_t, b, b_t) = get_random_numbers::<$t>();
 
         // mod
-        if !b_t.equal(<$t>::ZERO) {
+        if !b_t.equal(<$t>::ZERO()) {
             let r = a_t.modulo(b_t);
             let expected = get_expected("%", &a, &b);
             assert_eq!(format!("0x{:x}", r), expected);
@@ -139,7 +131,7 @@ fn test_secret_testing() {
     let (a, a_t, b, b_t) = get_random_numbers::<I8>();
 
     // mod
-    if !b_t.equal(<I8>::ZERO) {
+    if !b_t.equal(<I8>::ZERO()) {
         let r = a_t.modulo(b_t);
         let expected = get_expected("%", &a, &b);
         assert_eq!(format!("0x{:x}", r), expected);
