@@ -136,10 +136,10 @@ fn test_signed_secret() {
 
 #[test]
 fn test_secret_testing() {
-    let (a, a_t, b, b_t) = get_random_numbers::<U32>();
+    let (a, a_t, b, b_t) = get_random_numbers::<I8>();
 
     // mod
-    if !b_t.equal(<U32>::ZERO) {
+    if !b_t.equal(<I8>::ZERO) {
         let r = a_t.modulo(b_t);
         let expected = get_expected("%", &a, &b);
         assert_eq!(format!("0x{:x}", r), expected);
@@ -158,31 +158,31 @@ fn test_secret_testing() {
 
     // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
     let expected = if a == b {
-        <U32>::max_value().declassify()
+        -1
     } else {
         0
     };
     assert_eq!(a_t.equal_bm(b_t).declassify(), expected);
     let expected = if expected_gt {
-        <U32>::max_value().declassify()
+        -1
     } else {
         0
     };
     assert_eq!(a_t.greater_than_bm(b_t).declassify(), expected);
     let expected = if expected_gte {
-        <U32>::max_value().declassify()
+        -1
     } else {
         0
     };
     assert_eq!(a_t.greater_than_or_equal_bm(b_t).declassify(), expected);
     let expected = if expected_lt {
-        <U32>::max_value().declassify()
+        -1
     } else {
         0
     };
     assert_eq!(a_t.less_than_bm(b_t).declassify(), expected);
     let expected = if expected_lte {
-        <U32>::max_value().declassify()
+        -1
     } else {
         0
     };

@@ -426,7 +426,7 @@ macro_rules! define_secret_signed_integer {
             /// than the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_gt(self, rhs: Self) -> Self {
-                !self.comp_lt(rhs)
+                !self.comp_lt(rhs) & !self.comp_eq(rhs)
             }
 
             /// Produces a new integer which is all ones if the first argument is less than or
