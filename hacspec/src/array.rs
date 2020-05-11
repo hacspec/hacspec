@@ -281,7 +281,7 @@ macro_rules! generic_array {
         #[derive(Clone, Copy)]
         pub struct $name<T>(pub [T; $l]);
 
-        impl<T: Numeric> $name<T> {
+        impl<T: Numeric + Copy> $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             pub fn new() -> Self {
                 Self([<T>::default(); $l])
@@ -308,7 +308,7 @@ macro_rules! generic_array {
             }
         }
 
-        impl<T: Numeric> $name<T> {
+        impl<T: Numeric + Copy> $name<T> {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn capacity() -> usize {
                 $l
@@ -385,13 +385,13 @@ macro_rules! generic_array {
             }
         }
 
-        impl<T: Numeric> Default for $name<T> {
+        impl<T: Numeric + Copy> Default for $name<T> {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn default() -> Self {
                 $name::new()
             }
         }
-        impl<T: Numeric> SeqTrait<T> for $name<T> {
+        impl<T: Numeric + Copy> SeqTrait<T> for $name<T> {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn create(x:usize) -> Self {
                 assert_eq!(x, $l);
@@ -408,67 +408,67 @@ macro_rules! generic_array {
             }
         }
 
-        impl<T: Numeric> Index<usize> for $name<T> {
+        impl<T: Numeric + Copy> Index<usize> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: usize) -> &T {
                 &self.0[i]
             }
         }
-        impl<T: Numeric> IndexMut<usize> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<usize> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: usize) -> &mut T {
                 &mut self.0[i]
             }
         }
 
-        impl<T: Numeric> Index<u8> for $name<T> {
+        impl<T: Numeric + Copy> Index<u8> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: u8) -> &T {
                 &self.0[i as usize]
             }
         }
-        impl<T: Numeric> IndexMut<u8> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<u8> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: u8) -> &mut T {
                 &mut self.0[i as usize]
             }
         }
-        impl<T: Numeric> Index<u32> for $name<T> {
+        impl<T: Numeric + Copy> Index<u32> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: u32) -> &T {
                 &self.0[i as usize]
             }
         }
-        impl<T: Numeric> IndexMut<u32> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<u32> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: u32) -> &mut T {
                 &mut self.0[i as usize]
             }
         }
-        impl<T: Numeric> Index<i32> for $name<T> {
+        impl<T: Numeric + Copy> Index<i32> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: i32) -> &T {
                 &self.0[i as usize]
             }
         }
-        impl<T: Numeric> IndexMut<i32> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<i32> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: i32) -> &mut T {
                 &mut self.0[i as usize]
             }
         }
-        impl<T: Numeric> Index<RangeFull> for $name<T> {
+        impl<T: Numeric + Copy> Index<RangeFull> for $name<T> {
             type Output = [T];
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, r: RangeFull) -> &[T] {
                 &self.0[r]
             }
         }
-        impl<T: Numeric> $name<T> {
+        impl<T: Numeric + Copy> $name<T> {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn from_vec(x: Vec<T>) -> $name<T> {
                 debug_assert_eq!(x.len(), $l);
@@ -493,7 +493,7 @@ macro_rules! generic_array {
         }
 
         /// **Warning:** declassifies secret integer types.
-        impl<T: Numeric> fmt::Debug for $name<T> {
+        impl<T: Numeric + Copy> fmt::Debug for $name<T> {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 self.0[..]

@@ -26,7 +26,6 @@ pub mod machine_integers;
 pub mod math_integers;
 pub mod math_util;
 pub mod traits;
-pub mod poly;
 pub mod prelude;
 pub mod seq;
 pub mod util;

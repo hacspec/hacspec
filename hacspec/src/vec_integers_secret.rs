@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 // TODO: this won't allow us to split between signed and unsigned.
-impl<T: Numeric + SecretInteger> ModNumeric for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> ModNumeric for Seq<T> {
     /// (self - rhs) % n.
     fn sub_mod(self, rhs: Self, n: Self) -> Self {
         unimplemented!();
@@ -31,7 +31,7 @@ impl<T: Numeric + SecretInteger> ModNumeric for Seq<T> {
         unimplemented!();
     }
 }
-impl<T: Numeric + SecretInteger> NumericBase for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Numeric for Seq<T> {
     /// Return largest value that can be represented.
     fn max_val() -> Self {
         unimplemented!();
@@ -106,7 +106,7 @@ impl<T: Numeric + SecretInteger> NumericBase for Seq<T> {
 }
 
 /// Polynomial multiplication on ℤ\[x\]
-impl<T: Numeric + SecretInteger> Mul for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Mul for Seq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn mul(self, rhs: Self) -> Self::Output {
@@ -115,7 +115,7 @@ impl<T: Numeric + SecretInteger> Mul for Seq<T> {
 }
 
 /// Polynomial subtraction on ℤ\[x\]
-impl<T: Numeric + SecretInteger> Sub for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Sub for Seq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn sub(self, rhs: Self) -> Self::Output {
@@ -124,7 +124,7 @@ impl<T: Numeric + SecretInteger> Sub for Seq<T> {
 }
 
 /// Polynomial addition on ℤ\[x\]
-impl<T: Numeric + SecretInteger> Add for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Add for Seq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn add(self, rhs: Self) -> Self::Output {
@@ -132,7 +132,7 @@ impl<T: Numeric + SecretInteger> Add for Seq<T> {
     }
 }
 
-impl<T: Numeric + SecretInteger> Not for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Not for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn not(self) -> Self::Output {
@@ -140,7 +140,7 @@ impl<T: Numeric + SecretInteger> Not for Seq<T> {
     }
 }
 
-impl<T: Numeric + SecretInteger> BitOr for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> BitOr for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn bitor(self, rhs: Self) -> Self::Output {
@@ -148,7 +148,7 @@ impl<T: Numeric + SecretInteger> BitOr for Seq<T> {
     }
 }
 
-impl<T: Numeric + SecretInteger> BitXor for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> BitXor for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn bitxor(self, rhs: Self) -> Self::Output {
@@ -160,7 +160,7 @@ impl<T: Numeric + SecretInteger> BitXor for Seq<T> {
     }
 }
 
-impl<T: Numeric + SecretInteger> BitAnd for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> BitAnd for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn bitand(self, rhs: Self) -> Self::Output {
@@ -168,7 +168,7 @@ impl<T: Numeric + SecretInteger> BitAnd for Seq<T> {
     }
 }
 
-impl<T: Numeric + SecretInteger> Shr<u32> for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Shr<u32> for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn shr(self, rhs: u32) -> Self::Output {
@@ -176,7 +176,7 @@ impl<T: Numeric + SecretInteger> Shr<u32> for Seq<T> {
     }
 }
 
-impl<T: Numeric + SecretInteger> Shl<u32> for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Shl<u32> for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn shl(self, rhs: u32) -> Self::Output {

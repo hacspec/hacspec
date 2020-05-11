@@ -95,7 +95,7 @@ pub trait Integer: Numeric {
     #[inline]
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn set_bit(self, b: Self, i: u32) -> Self {
-        debug_assert!(b.equal(Self::ONE()) || b.equal(Self::ZERO()));
+        debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
         let tmp1 = Self::from_literal(!(1 << i));
         let tmp2 = b << i;
         (self & tmp1) | tmp2
@@ -113,14 +113,14 @@ pub trait Integer: Numeric {
     fn rotate_left(self, n: u32) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS);
-        (self << n) | (self >> ((-(n as i32) as u32) & (Self::NUM_BITS - 1)))
+        (self.clone() << n) | (self >> ((-(n as i32) as u32) & (Self::NUM_BITS - 1)))
     }
 
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn rotate_right(self, n: u32) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS);
-        (self >> n) | (self << ((-(n as i32) as u32) & (Self::NUM_BITS - 1)))
+        (self.clone() >> n) | (self << ((-(n as i32) as u32) & (Self::NUM_BITS - 1)))
     }
 }
 
@@ -483,8 +483,6 @@ impl UnsignedPublicInteger for u128 {
     }
 }
 
-pub trait Numeric: NumericBase + Copy {}
-
 pub trait ModNumeric {
     /// (self - rhs) % n.
     fn sub_mod(self, rhs: Self, n: Self) -> Self;
@@ -502,8 +500,10 @@ pub trait ModNumeric {
     fn absolute(self) -> Self;
 }
 
+pub trait NumericCopy : Copy {}
+
 /// The `Numeric` trait has to be implemented by all numeric objects.
-pub trait NumericBase:
+pub trait Numeric:
     ModNumeric
     + Add<Self, Output = Self>
     + Sub<Self, Output = Self>

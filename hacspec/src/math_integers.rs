@@ -5,7 +5,7 @@ macro_rules! unsigned_public_integer {
     ($name:ident,$n:literal) => {
         abstract_unsigned_public_integer!($name, $n);
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -43,7 +43,7 @@ macro_rules! unsigned_public_integer {
                 self
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -168,7 +168,7 @@ macro_rules! signed_public_integer {
     ($name:ident,$n:literal) => {
         abstract_signed_public_integer!($name, $n);
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -211,7 +211,7 @@ macro_rules! signed_public_integer {
                 unimplemented!();
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -336,7 +336,7 @@ macro_rules! unsigned_integer {
     ($name:ident,$n:literal) => {
         abstract_unsigned_secret_integer!($name, $n);
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -374,7 +374,7 @@ macro_rules! unsigned_integer {
                 self
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -475,7 +475,7 @@ macro_rules! signed_integer {
     ($name:ident,$n:literal) => {
         abstract_signed_secret_integer!($name, $n);
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: u32 = $n;
 
@@ -557,7 +557,7 @@ macro_rules! signed_integer {
                 unimplemented!();
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -658,7 +658,7 @@ macro_rules! nat_mod {
     ($name:ident,$base:ident,$bits:literal,$n:literal) => {
         abstract_nat_mod!($name, $base, $bits, $n);
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: u32 = $bits;
 
@@ -756,7 +756,7 @@ macro_rules! nat_mod {
                 unimplemented!();
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -893,7 +893,7 @@ macro_rules! public_nat_mod {
             }
         }
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: u32 = $bits;
 
@@ -962,7 +962,7 @@ macro_rules! public_nat_mod {
                 self
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(library))]
             fn max_val() -> Self {

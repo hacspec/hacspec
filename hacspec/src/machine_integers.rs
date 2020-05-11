@@ -107,7 +107,7 @@ macro_rules! implement_public_signed_mi {
 // Macro to implement the Numeric trait for built-in machine integers.
 macro_rules! implement_public_mi {
     ($t:ty,$bits:literal,$true_val:expr) => {
-        impl Numeric for $t {}
+        impl NumericCopy for $t {}
         impl Integer for $t {
             const NUM_BITS: u32 = $bits;
             
@@ -139,7 +139,7 @@ macro_rules! implement_public_mi {
                 <$t>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap()
             }
         }
-        impl NumericBase for $t {
+        impl Numeric for $t {
             /// Return largest value that can be represented.
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -371,7 +371,7 @@ macro_rules! implement_secret_signed_mi {
 // Macro to implement the Numeric trait for secret machine integers.
 macro_rules! implement_secret_mi {
     ($t:ident,$base:ty,$bits:literal) => {
-        impl Numeric for $t {}
+        impl NumericCopy for $t {}
         impl Integer for $t {
             const NUM_BITS: u32 = $bits;
 
@@ -403,7 +403,7 @@ macro_rules! implement_secret_mi {
                 Self::classify(<$base>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap())
             }
         }
-        impl NumericBase for $t {
+        impl Numeric for $t {
             /// Return largest value that can be represented.
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn max_val() -> Self {

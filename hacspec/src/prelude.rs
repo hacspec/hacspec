@@ -5,7 +5,6 @@
 //! ```
 
 pub use crate::array::*;
-pub use crate::poly::*;
 pub use crate::seq::*;
 pub use crate::util::*;
 pub use crate::machine_integers::*;

@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
+// TODO: drop the `Copy` requirement for matrices
 // TODO: this won't allow us to split between signed and unsigned.
-impl<T: Numeric + PublicInteger> ModNumeric for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> ModNumeric for PublicSeq<T> {
     /// (self - rhs) % n.
     fn sub_mod(self, rhs: Self, n: Self) -> Self {
         unimplemented!();
@@ -31,7 +32,7 @@ impl<T: Numeric + PublicInteger> ModNumeric for PublicSeq<T> {
         unimplemented!();
     }
 }
-impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Numeric for PublicSeq<T> {
     /// Return largest value that can be represented.
     fn max_val() -> Self {
         unimplemented!();
@@ -106,7 +107,7 @@ impl<T: Numeric + PublicInteger> NumericBase for PublicSeq<T> {
 }
 
 /// Polynomial multiplication on ℤ\[x\]
-impl<T: Numeric + PublicInteger> Mul for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Mul for PublicSeq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn mul(self, rhs: Self) -> Self::Output {
@@ -115,7 +116,7 @@ impl<T: Numeric + PublicInteger> Mul for PublicSeq<T> {
 }
 
 /// Polynomial subtraction on ℤ\[x\]
-impl<T: Numeric + PublicInteger> Sub for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Sub for PublicSeq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn sub(self, rhs: Self) -> Self::Output {
@@ -124,7 +125,7 @@ impl<T: Numeric + PublicInteger> Sub for PublicSeq<T> {
 }
 
 /// Polynomial addition on ℤ\[x\]
-impl<T: Numeric + PublicInteger> Add for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Add for PublicSeq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn add(self, rhs: Self) -> Self::Output {
@@ -132,7 +133,7 @@ impl<T: Numeric + PublicInteger> Add for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric + PublicInteger> Not for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Not for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn not(self) -> Self::Output {
@@ -140,7 +141,7 @@ impl<T: Numeric + PublicInteger> Not for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric + PublicInteger> BitOr for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> BitOr for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn bitor(self, rhs: Self) -> Self::Output {
@@ -148,7 +149,7 @@ impl<T: Numeric + PublicInteger> BitOr for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric + PublicInteger> BitXor for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> BitXor for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn bitxor(self, rhs: Self) -> Self::Output {
@@ -160,7 +161,7 @@ impl<T: Numeric + PublicInteger> BitXor for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric + PublicInteger> BitAnd for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> BitAnd for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn bitand(self, rhs: Self) -> Self::Output {
@@ -168,7 +169,7 @@ impl<T: Numeric + PublicInteger> BitAnd for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric + PublicInteger> Shr<u32> for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Shr<u32> for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn shr(self, rhs: u32) -> Self::Output {
@@ -176,7 +177,7 @@ impl<T: Numeric + PublicInteger> Shr<u32> for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric + PublicInteger> Shl<u32> for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Shl<u32> for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn shl(self, rhs: u32) -> Self::Output {

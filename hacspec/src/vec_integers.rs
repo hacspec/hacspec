@@ -163,7 +163,7 @@ macro_rules! _implement_numeric_unsigned_public {
             }
         }
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl ModNumeric for $name {
             /// `(self - rhs) % n` (coefficient-wise)
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -207,7 +207,7 @@ macro_rules! _implement_numeric_unsigned_public {
                 self
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             // TODO: decide if we want this.
             /// Return largest value that can be represented.
             /// **Not Implemented**
@@ -433,7 +433,7 @@ macro_rules! _implement_numeric_signed_public {
             }
         }
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -473,7 +473,7 @@ macro_rules! _implement_numeric_signed_public {
                 out
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -687,7 +687,7 @@ macro_rules! _implement_numeric_unsigned_secret {
             }
         }
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -723,7 +723,7 @@ macro_rules! _implement_numeric_unsigned_secret {
                 self
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -929,7 +929,7 @@ macro_rules! _implement_numeric_signed_secret {
             }
         }
 
-        impl Numeric for $name {}
+        impl NumericCopy for $name {}
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -960,7 +960,7 @@ macro_rules! _implement_numeric_signed_secret {
                 unimplemented!();
             }
         }
-        impl NumericBase for $name {
+        impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn max_val() -> Self {
@@ -1066,7 +1066,7 @@ macro_rules! _implement_numeric_signed_secret {
 
 #[inline]
 #[cfg_attr(feature="use_attributes", library(hacspec))]
-pub fn vec_poly_mul<T: Numeric, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
+pub fn vec_poly_mul<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
     debug_assert!(x.len() == y.len());
     let mut out = U::create(x.len());
     for i in 0..x.len() {
@@ -1081,7 +1081,7 @@ pub fn vec_poly_mul<T: Numeric, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
 
 #[inline]
 #[cfg_attr(feature="use_attributes", library(hacspec))]
-pub fn vec_poly_add<T: Numeric, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
+pub fn vec_poly_add<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
     debug_assert!(x.len() == y.len());
     let mut out = U::create(x.len());
     for i in 0..x.len() {
@@ -1096,7 +1096,7 @@ pub fn vec_poly_add<T: Numeric, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
 
 #[inline]
 #[cfg_attr(feature="use_attributes", library(hacspec))]
-pub fn vec_poly_sub<T: Numeric, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
+pub fn vec_poly_sub<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
     debug_assert!(x.len() == y.len());
     let mut out = U::create(x.len());
     for i in 0..x.len() {

@@ -24,7 +24,7 @@ fn test_cswap() {
 
 #[test]
 fn test_csub() {
-    fn test<T: Integer>(x: T, y: T) {
+    fn test<T: Integer + Copy>(x: T, y: T) {
         let d = csub(x, y, T::default());
         assert!(d.equal(x));
         let d = csub(x, y, T::max_val());
@@ -36,7 +36,7 @@ fn test_csub() {
 
 #[test]
 fn test_cadd() {
-    fn test<T: Integer>(x: T, y: T) {
+    fn test<T: Integer + Copy>(x: T, y: T) {
         let d = cadd(x, y, T::default());
         assert!(d.equal(x));
         let d = cadd(x, y, T::max_val());
@@ -48,7 +48,7 @@ fn test_cadd() {
 
 #[test]
 fn test_cmul() {
-    fn test<T: Integer>(x: T, y: T) {
+    fn test<T: Integer + Copy>(x: T, y: T) {
         let d = cmul(x, y, T::default());
         assert!(d.equal(x));
         let d = cmul(x, y, T::max_val());
@@ -60,7 +60,7 @@ fn test_cmul() {
 
 #[test]
 fn test_div() {
-    fn test<T: Integer>(x: T, y: T) {
+    fn test<T: Integer + Copy>(x: T, y: T) {
         let (q, r) = ct_div(x, y);
         assert!(q.equal(x.divide(y)));
         assert!(r.equal(x.modulo(y)));
