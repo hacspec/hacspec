@@ -42,6 +42,11 @@ macro_rules! modular_integer {
                 $max
             }
 
+            pub fn declassify(self) -> BigInt {
+                let a: $base = self.into();
+                a.into()
+            }
+
             #[allow(dead_code)]
             pub fn from_hex(s: &str) -> Self {
                 $base::from_hex(s).into()

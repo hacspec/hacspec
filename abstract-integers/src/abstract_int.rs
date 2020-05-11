@@ -402,6 +402,10 @@ macro_rules! abstract_signed_public_integer {
 macro_rules! abstract_secret {
     ($name:ident, $bits:literal) => {
         impl $name {
+            pub fn declassify(self) -> BigInt {
+                self.into()
+            }
+
             fn rem(self, n: Self) -> Self {
                 let a: BigInt = self.into();
                 let b: BigInt = n.into();

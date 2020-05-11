@@ -65,7 +65,6 @@ pub trait SeqTrait<T: Copy>:
     }
 }
 
-// FIXME: rename
 /// This trait extends the `Numeric` trait and is implemented by all integer
 /// types. It offers bit manipulation, instantiation from literal, and convenient
 /// constants.

@@ -659,6 +659,65 @@ macro_rules! nat_mod {
         abstract_nat_mod!($name, $base, $bits, $n);
 
         impl Numeric for $name {}
+        impl Integer for $name {
+            const NUM_BITS: u32 = $bits;
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ZERO() -> Self {
+                Self::from_literal(0)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn ONE() -> Self {
+                Self::from_literal(1)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn TWO() -> Self {
+                Self::from_literal(2)
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_literal(val: u128) -> Self {
+                Self::from_literal(val)
+            }
+
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn from_hex_string(s: &String) -> Self {
+                Self::from_hex(&s.replace("0x", ""))
+            }
+        }
+        // impl UnsignedInteger for $name {}
+        // // XXX: Note that this is not actually doing anything. There's no public
+        // //      version.
+        // impl SecretInteger for $name {
+        //     type PublicVersion = BigInt;
+        //     #[cfg_attr(feature = "use_attributes", library(hacspec))]
+        //     fn classify(x: Self::PublicVersion) -> Self {
+        //         unimplemented!();
+        //     }
+        // }
+        // // impl UnsignedSecretInteger for $name {
+        // //     #[cfg_attr(feature = "use_attributes", library(hacspec))]
+        // //     fn to_le_bytes(self) -> Seq<U8> {
+        // //         unimplemented!();
+        // //     }
+        // //     #[cfg_attr(feature = "use_attributes", library(hacspec))]
+        // //     fn to_be_bytes(self) -> Seq<U8> {
+        // //         unimplemented!();
+        // //     }
+        // //     #[cfg_attr(feature = "use_attributes", library(hacspec))]
+        // //     fn from_le_bytes(x: &Seq<U8>) -> Self {
+        // //         unimplemented!();
+        // //     }
+        // //     #[cfg_attr(feature = "use_attributes", library(hacspec))]
+        // //     fn from_be_bytes(x: &Seq<U8>) -> Self {
+        // //         unimplemented!();
+        // //     }
+        // // }
         impl ModNumeric for $name {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]

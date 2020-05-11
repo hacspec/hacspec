@@ -13,6 +13,8 @@ pub use crate::math_integers::*;
 pub use crate::math_util::*;
 pub use crate::traits::*;
 pub use crate::vec_integers::*;
+pub use crate::vec_integers_public::*;
+pub use crate::vec_integers_secret::*;
 pub use crate::vec_util::*;
 pub use crate::transmute::*;
 pub use crate::*;

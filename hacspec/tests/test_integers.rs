@@ -127,17 +127,32 @@ generate_test!(I128, test_I128_integer, -1, 0, compare_secret);
 
 // Math integers
 
-// Natural numbers modulo p
+// Public natural numbers modulo p
 public_nat_mod!(
+    PublicP256Elem,
+    PublicP256Canvas,
+    256,
+    "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+);
+generate_test!(
+    PublicP256Elem,
+    test_PublicNatMod_integer,
+    PublicP256Elem::from_hex_string(&"0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string()),
+    PublicP256Elem::ZERO(),
+    assert_eq
+);
+
+// Secret natural numbers modulo p
+nat_mod!(
     P256Elem,
     P256Canvas,
     256,
     "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
-generate_test!(
-    P256Elem,
-    test_NatMod_integer,
-    P256Elem::from_hex_string(&"0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string()),
-    P256Elem::ZERO(),
-    assert_eq
-);
+// generate_test!(
+//     P256Elem,
+//     test_NatMod_integer,
+//     P256Elem::from_hex_string(&"0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string()),
+//     P256Elem::ZERO(),
+//     compare_secret
+// );
