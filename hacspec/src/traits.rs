@@ -125,27 +125,25 @@ pub trait Integer: Numeric {
 }
 
 pub trait SecretInteger: Integer {
-    type PublicVersion : PublicInteger + Copy;
+    type PublicVersion : PublicInteger;
     fn classify(x: Self::PublicVersion) -> Self;
 }
-// impl SecretInteger for BigInt {
-//     type PublicVersion = BigInt;
-//     #[cfg_attr(feature = "use_attributes", library(hacspec))]
-//     fn classify(x: Self::PublicVersion) -> Self {
-//         x
-//     }
-// }
+pub trait SecretIntegerCopy: SecretInteger + Copy {
+    type PublicVersionCopy : PublicIntegerCopy;
+    fn classify(x: Self::PublicVersionCopy) -> Self;
+}
 
 pub trait PublicInteger: Integer {
-    type SecretVersion : Integer + Copy;
+    type SecretVersion : Integer;
 }
-// impl PublicInteger for BigInt {
-//     type SecretVersion = BigInt;
-// }
+pub trait PublicIntegerCopy: PublicInteger + Copy {
+    type SecretVersionCopy : Integer + Copy;}
 
 pub trait UnsignedInteger: Integer {}
+pub trait UnsignedIntegerCopy: UnsignedInteger + Copy {}
 
 pub trait SignedInteger: Integer {}
+pub trait SignedIntegerCopy: SignedInteger + Copy {}
 
 pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
     fn to_le_bytes(self) -> Seq<U8>;
@@ -159,6 +157,7 @@ pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
         (self >> (i * 8)) & ((Self::ONE() << 8) - Self::ONE())
     }
 }
+pub trait UnsignedSecretIntegerCopy: UnsignedSecretInteger + SecretIntegerCopy {}
 
 pub trait UnsignedPublicInteger : UnsignedInteger + PublicInteger {
     fn to_le_bytes(self) -> Seq<u8>;
@@ -166,6 +165,7 @@ pub trait UnsignedPublicInteger : UnsignedInteger + PublicInteger {
     fn from_le_bytes(x: &Seq<u8>) -> Self;
     fn from_be_bytes(x: &Seq<u8>) -> Self;
 }
+pub trait UnsignedPublicIntegerCopy: UnsignedPublicInteger + PublicIntegerCopy {}
 
 pub trait ModNumeric {
     /// (self - rhs) % n.

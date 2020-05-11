@@ -149,10 +149,10 @@ nat_mod!(
     256,
     "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
-// generate_test!(
-//     P256Elem,
-//     test_NatMod_integer,
-//     P256Elem::from_hex_string(&"0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string()),
-//     P256Elem::ZERO(),
-//     compare_secret
-// );
+generate_test!(
+    P256Elem,
+    test_NatMod_integer,
+    BigInt::from_str("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").unwrap(),
+    BigInt::from(0),
+    compare_secret
+);

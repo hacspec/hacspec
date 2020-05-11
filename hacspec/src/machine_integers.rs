@@ -640,6 +640,28 @@ impl UnsignedInteger for u32 {}
 impl UnsignedInteger for u64 {}
 impl UnsignedInteger for u128 {}
 
+impl UnsignedIntegerCopy for U8 {}
+impl UnsignedIntegerCopy for U16 {}
+impl UnsignedIntegerCopy for U32 {}
+impl UnsignedIntegerCopy for U64 {}
+impl UnsignedIntegerCopy for U128 {}
+impl UnsignedIntegerCopy for u8 {}
+impl UnsignedIntegerCopy for u16 {}
+impl UnsignedIntegerCopy for u32 {}
+impl UnsignedIntegerCopy for u64 {}
+impl UnsignedIntegerCopy for u128 {}
+
+impl UnsignedSecretIntegerCopy for U8 {}
+impl UnsignedSecretIntegerCopy for U16 {}
+impl UnsignedSecretIntegerCopy for U32 {}
+impl UnsignedSecretIntegerCopy for U64 {}
+impl UnsignedSecretIntegerCopy for U128 {}
+impl UnsignedPublicIntegerCopy for u8 {}
+impl UnsignedPublicIntegerCopy for u16 {}
+impl UnsignedPublicIntegerCopy for u32 {}
+impl UnsignedPublicIntegerCopy for u64 {}
+impl UnsignedPublicIntegerCopy for u128 {}
+
 impl SignedInteger for I8 {}
 impl SignedInteger for I16 {}
 impl SignedInteger for I32 {}
@@ -650,6 +672,111 @@ impl SignedInteger for i16 {}
 impl SignedInteger for i32 {}
 impl SignedInteger for i64 {}
 impl SignedInteger for i128 {}
+
+impl SignedIntegerCopy for I8 {}
+impl SignedIntegerCopy for I16 {}
+impl SignedIntegerCopy for I32 {}
+impl SignedIntegerCopy for I64 {}
+impl SignedIntegerCopy for I128 {}
+impl SignedIntegerCopy for i8 {}
+impl SignedIntegerCopy for i16 {}
+impl SignedIntegerCopy for i32 {}
+impl SignedIntegerCopy for i64 {}
+impl SignedIntegerCopy for i128 {}
+
+impl SecretIntegerCopy for I8 {
+    type PublicVersionCopy = i8;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for I16 {
+    type PublicVersionCopy = i16;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for I32 {
+    type PublicVersionCopy = i32;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for I64 {
+    type PublicVersionCopy = i64;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for I128 {
+    type PublicVersionCopy = i128;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+
+impl SecretIntegerCopy for U8 {
+    type PublicVersionCopy = u8;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for U16 {
+    type PublicVersionCopy = u16;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for U32 {
+    type PublicVersionCopy = u32;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for U64 {
+    type PublicVersionCopy = u64;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+impl SecretIntegerCopy for U128 {
+    type PublicVersionCopy = u128;
+    fn classify(x: Self::PublicVersionCopy) -> Self {
+        Self(x)
+    }
+}
+
+impl PublicIntegerCopy for i8 {
+    type SecretVersionCopy = I8;
+}
+impl PublicIntegerCopy for i16 {
+    type SecretVersionCopy = I16;
+}
+impl PublicIntegerCopy for i32 {
+    type SecretVersionCopy = I32;
+}
+impl PublicIntegerCopy for i64 {
+    type SecretVersionCopy = I64;
+}
+impl PublicIntegerCopy for i128 {
+    type SecretVersionCopy = I128;
+}
+
+impl PublicIntegerCopy for u8 {
+    type SecretVersionCopy = U8;
+}
+impl PublicIntegerCopy for u16 {
+    type SecretVersionCopy = U16;
+}
+impl PublicIntegerCopy for u32 {
+    type SecretVersionCopy = u32;
+}
+impl PublicIntegerCopy for u64 {
+    type SecretVersionCopy = I64;
+}
+impl PublicIntegerCopy for u128 {
+    type SecretVersionCopy = I128;
+}
 
 impl PublicInteger for u8 {
     type SecretVersion = U8;

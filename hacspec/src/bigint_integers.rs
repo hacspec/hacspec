@@ -143,3 +143,15 @@ impl ModNumeric for BigInt {
         self.abs()
     }
 }
+
+impl PublicInteger for BigInt {
+    type SecretVersion = BigInt;
+}
+
+impl SecretInteger for BigInt {
+    type PublicVersion = BigInt;
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn classify(x: Self::PublicVersion) -> Self {
+        x
+    }
+}

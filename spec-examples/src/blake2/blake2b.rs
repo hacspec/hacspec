@@ -46,7 +46,7 @@ const IVB: State<U64> = State(secret_array!(
     ]
 ));
 
-fn mix<Word: SecretInteger + Copy>(
+fn mix<Word: SecretIntegerCopy>(
     v: DoubleState<Word>,
     a: usize,
     b: usize,
@@ -71,7 +71,7 @@ fn mix<Word: SecretInteger + Copy>(
     result
 }
 
-fn inc_counter<Word: PublicInteger + Copy>(t: Counter<Word>, x: Word) -> Counter<Word> {
+fn inc_counter<Word: PublicIntegerCopy>(t: Counter<Word>, x: Word) -> Counter<Word> {
     let mut result = Counter::new();
     let new_val: Word = t[0] + x;
     result[0] = new_val;
@@ -81,7 +81,7 @@ fn inc_counter<Word: PublicInteger + Copy>(t: Counter<Word>, x: Word) -> Counter
     result
 }
 
-fn make_array<Word: UnsignedSecretInteger + Copy>(h: &ByteSeq) -> DoubleState<Word> {
+fn make_array<Word: UnsignedSecretIntegerCopy>(h: &ByteSeq) -> DoubleState<Word> {
     assert_eq!(h.len() / ((Word::NUM_BITS as usize) / 8), 16);
     let mut result = DoubleState::new();
     for i in 0..16 {
@@ -109,10 +109,10 @@ pub enum BlakeVariant {
     Blake2B,
 }
 
-fn compress<Word: UnsignedSecretInteger + Copy> (
+fn compress<Word: UnsignedSecretIntegerCopy> (
     h: State<Word>,
     m: &ByteSeq,
-    t: Counter<Word::PublicVersion>,
+    t: Counter<Word::PublicVersionCopy>,
     last_block: bool,
     alg: BlakeVariant,
 ) -> State<Word> where State<Word>: HasIV<Word> {
@@ -125,9 +125,9 @@ fn compress<Word: UnsignedSecretInteger + Copy> (
     v = v.update_sub(0, &h, 0, 8);
     v = v.update_sub(8, &State::iv(), 0, 8);
     let old_v12: Word = v[12];
-    v[12] = old_v12 ^ Word::classify(t[0]);
+    v[12] = old_v12 ^ SecretIntegerCopy::classify(t[0]);
     let old_v13: Word = v[13];
-    v[13] = old_v13 ^ Word::classify(t[1]);
+    v[13] = old_v13 ^ SecretIntegerCopy::classify(t[1]);
     if last_block {
         // TODO: why do we need the type here?
         let old_v14: Word = v[14];
@@ -166,25 +166,25 @@ fn compress<Word: UnsignedSecretInteger + Copy> (
 }
 
 // TODO: move to library
-fn get_byte<Word: UnsignedSecretInteger + Copy>(x: Word, i: usize) -> U8 {
+fn get_byte<Word: UnsignedSecretIntegerCopy>(x: Word, i: usize) -> U8 {
     let bytes = x.get_byte(i).to_le_bytes();
     bytes[0]
 }
 
-pub fn blake2<Word: UnsignedSecretInteger + Copy>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq where State<Word> : HasIV<Word> {
+pub fn blake2<Word: UnsignedSecretIntegerCopy>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq where State<Word> : HasIV<Word> {
     let mut h = State::iv();
     // This only supports the 512 version without key.
     h[0] = h[0] ^ Word::from_literal(0x0101_0000) ^ Word::from_literal(64);
 
-    let mut t : Counter<Word::PublicVersion> = Counter::new();
+    let mut t : Counter<Word::PublicVersionCopy> = Counter::new();
     for i in 0..data.num_chunks(128) {
         let (block_len, block) = data.get_chunk(128, i);
         if block_len == 128 {
-            t = inc_counter(t, Word::PublicVersion::from_literal(128));
+            t = inc_counter(t, Word::PublicVersionCopy::from_literal(128));
             h = compress(h, &ByteSeq::from_seq(&block), t, false, alg);
         } else {
             // Pad last bits of data to a full block.
-            t = inc_counter(t, Word::PublicVersion::from_literal(block_len as u128));
+            t = inc_counter(t, Word::PublicVersionCopy::from_literal(block_len as u128));
             let compress_input = ByteSeq::new(128).update_start(&block);
             h = compress(h, &compress_input, t, true, alg);
         }
