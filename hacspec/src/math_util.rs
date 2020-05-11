@@ -322,7 +322,7 @@ pub fn cswap<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
 /// Returns `x` if `c` is `0`.
 #[inline]
 #[cfg_attr(feature="use_attributes", library(internal))]
-pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: u32, c: T) -> T {
+pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: usize, c: T) -> T {
     let set = x.set_bit(b, i);
     let (out, _) = cswap(x, set, c);
     out

@@ -171,16 +171,16 @@ macro_rules! abstract_secret_modular_integer {
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -325,17 +325,17 @@ macro_rules! abstract_public_modular_integer {
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, rhs: usize) -> Self::Output {
                 let a: $base = self.into();
                 (a >> rhs).into()
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, rhs: usize) -> Self::Output {
                 let a: $base = self.into();
                 (a << rhs).into()
             }

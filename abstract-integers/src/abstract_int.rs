@@ -292,18 +292,18 @@ macro_rules! abstract_public {
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, rhs: usize) -> Self::Output {
                 let a: BigInt = self.into();
                 let b = rhs as usize;
                 (a >> b).into()
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, rhs: usize) -> Self::Output {
                 let a: BigInt = self.into();
                 let b = rhs as usize;
                 (a << b).into()
@@ -492,16 +492,16 @@ macro_rules! abstract_secret {
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }

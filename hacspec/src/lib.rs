@@ -22,6 +22,7 @@
 //!
 
 pub mod array;
+pub mod bigint_integers;
 pub mod machine_integers;
 pub mod math_integers;
 pub mod math_util;

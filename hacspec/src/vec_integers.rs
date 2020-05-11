@@ -145,20 +145,20 @@ macro_rules! _implement_numeric_unsigned_public {
 
         // TODO: is this a useful thing? Then implement it.
         /// **Unimplemented**
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shr(self, _rhs: u32) -> Self::Output {
+            fn shr(self, _rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
 
         // TODO: is this a useful thing? Then implement it.
         /// **Unimplemented**
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shl(self, _rhs: u32) -> Self::Output {
+            fn shl(self, _rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -417,18 +417,18 @@ macro_rules! _implement_numeric_signed_public {
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -671,18 +671,18 @@ macro_rules! _implement_numeric_unsigned_secret {
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shr(self, _rhs: u32) -> Self::Output {
+            fn shr(self, _rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shl(self, _rhs: u32) -> Self::Output {
+            fn shl(self, _rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
@@ -913,18 +913,18 @@ macro_rules! _implement_numeric_signed_secret {
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shr(self, rhs: u32) -> Self::Output {
+            fn shr(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn shl(self, rhs: u32) -> Self::Output {
+            fn shl(self, rhs: usize) -> Self::Output {
                 unimplemented!();
             }
         }

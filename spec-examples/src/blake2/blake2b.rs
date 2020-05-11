@@ -46,7 +46,7 @@ const IVB: State<U64> = State(secret_array!(
     ]
 ));
 
-fn mix<Word: SecretInteger>(
+fn mix<Word: SecretInteger + Copy>(
     v: DoubleState<Word>,
     a: usize,
     b: usize,
@@ -71,7 +71,7 @@ fn mix<Word: SecretInteger>(
     result
 }
 
-fn inc_counter<Word: PublicInteger>(t: Counter<Word>, x: Word) -> Counter<Word> {
+fn inc_counter<Word: PublicInteger + Copy>(t: Counter<Word>, x: Word) -> Counter<Word> {
     let mut result = Counter::new();
     let new_val: Word = t[0] + x;
     result[0] = new_val;
@@ -81,7 +81,7 @@ fn inc_counter<Word: PublicInteger>(t: Counter<Word>, x: Word) -> Counter<Word> 
     result
 }
 
-fn make_array<Word: UnsignedSecretInteger>(h: &ByteSeq) -> DoubleState<Word> {
+fn make_array<Word: UnsignedSecretInteger + Copy>(h: &ByteSeq) -> DoubleState<Word> {
     assert_eq!(h.len() / ((Word::NUM_BITS as usize) / 8), 16);
     let mut result = DoubleState::new();
     for i in 0..16 {
@@ -109,7 +109,7 @@ pub enum BlakeVariant {
     Blake2B,
 }
 
-fn compress<Word: UnsignedSecretInteger> (
+fn compress<Word: UnsignedSecretInteger + Copy> (
     h: State<Word>,
     m: &ByteSeq,
     t: Counter<Word::PublicVersion>,
@@ -166,12 +166,12 @@ fn compress<Word: UnsignedSecretInteger> (
 }
 
 // TODO: move to library
-fn get_byte<Word: UnsignedSecretInteger>(x: Word, i: usize) -> U8 {
-    let bytes = x.get_byte(i as u32).to_le_bytes();
+fn get_byte<Word: UnsignedSecretInteger + Copy>(x: Word, i: usize) -> U8 {
+    let bytes = x.get_byte(i).to_le_bytes();
     bytes[0]
 }
 
-pub fn blake2<Word: UnsignedSecretInteger>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq where State<Word> : HasIV<Word> {
+pub fn blake2<Word: UnsignedSecretInteger + Copy>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq where State<Word> : HasIV<Word> {
     let mut h = State::iv();
     // This only supports the 512 version without key.
     h[0] = h[0] ^ Word::from_literal(0x0101_0000) ^ Word::from_literal(64);

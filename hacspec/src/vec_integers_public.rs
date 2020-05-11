@@ -169,18 +169,18 @@ impl<T: Numeric + PublicInteger + Copy> BitAnd for PublicSeq<T> {
     }
 }
 
-impl<T: Numeric + PublicInteger + Copy> Shr<u32> for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Shr<usize> for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn shr(self, rhs: u32) -> Self::Output {
+    fn shr(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }
 }
 
-impl<T: Numeric + PublicInteger + Copy> Shl<u32> for PublicSeq<T> {
+impl<T: Numeric + PublicInteger + Copy> Shl<usize> for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn shl(self, rhs: u32) -> Self::Output {
+    fn shl(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }
 }

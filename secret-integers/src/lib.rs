@@ -147,18 +147,18 @@ macro_rules! define_unary_op {
 
 macro_rules! define_shift {
     ($name:ident, $op:tt, $wrapop:ident, $op_name:ident, $func_op:ident, $assign_name:ident, $assign_func:ident) => {
-        impl $op_name<u32> for $name {
+        impl $op_name<usize> for $name {
             type Output = Self;
             #[inline]
-            fn $func_op(self, rhs: u32) -> Self {
+            fn $func_op(self, rhs: usize) -> Self {
                 let $name(i1) = self;
-                $name(i1.$wrapop(rhs))
+                $name(i1.$wrapop(rhs as u32))
             }
         }
 
-        impl $assign_name<u32> for $name {
+        impl $assign_name<usize> for $name {
             #[inline]
-            fn $assign_func(&mut self, rhs: u32) {
+            fn $assign_func(&mut self, rhs: usize) {
                 *self = *self $op rhs
             }
         }

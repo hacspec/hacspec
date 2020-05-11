@@ -56,5 +56,6 @@ pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> ByteSeq {
         t_i = hmac(prk, &hmac_txt_in);
         t = t.update(i as usize * t_i.len(), &t_i);
     }
-    t.sub(0, l)
+    // TODO: sub is overloaded (impl Sub and sub). This should get fixed ...
+    ByteSeq::sub(&t, 0, l)
 }

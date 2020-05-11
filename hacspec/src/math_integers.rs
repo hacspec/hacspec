@@ -477,7 +477,7 @@ macro_rules! signed_integer {
 
         impl NumericCopy for $name {}
         impl Integer for $name {
-            const NUM_BITS: u32 = $n;
+            const NUM_BITS: usize = $n;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
@@ -660,7 +660,7 @@ macro_rules! nat_mod {
 
         impl NumericCopy for $name {}
         impl Integer for $name {
-            const NUM_BITS: u32 = $bits;
+            const NUM_BITS: usize = $bits;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
@@ -690,7 +690,7 @@ macro_rules! nat_mod {
                 Self::from_hex(&s.replace("0x", ""))
             }
         }
-        // impl UnsignedInteger for $name {}
+        impl UnsignedInteger for $name {}
         // // XXX: Note that this is not actually doing anything. There's no public
         // //      version.
         // impl SecretInteger for $name {
@@ -895,7 +895,7 @@ macro_rules! public_nat_mod {
 
         impl NumericCopy for $name {}
         impl Integer for $name {
-            const NUM_BITS: u32 = $bits;
+            const NUM_BITS: usize = $bits;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]

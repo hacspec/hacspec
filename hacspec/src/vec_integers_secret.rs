@@ -168,18 +168,18 @@ impl<T: Numeric + SecretInteger + Copy> BitAnd for Seq<T> {
     }
 }
 
-impl<T: Numeric + SecretInteger + Copy> Shr<u32> for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Shr<usize> for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn shr(self, rhs: u32) -> Self::Output {
+    fn shr(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }
 }
 
-impl<T: Numeric + SecretInteger + Copy> Shl<u32> for Seq<T> {
+impl<T: Numeric + SecretInteger + Copy> Shl<usize> for Seq<T> {
     type Output = Seq<T>;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn shl(self, rhs: u32) -> Self::Output {
+    fn shl(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }
 }
