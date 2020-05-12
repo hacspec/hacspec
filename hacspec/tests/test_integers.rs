@@ -13,6 +13,8 @@ macro_rules! compare_secret {
 macro_rules! test_integer_macro {
     ($t:ty,$true_val:expr,$false_val:expr,$check:ident) => {
         let (a, a_t, b, b_t) = get_random_numbers::<$t>();
+        println!("a:   {} | b:   {}", a, b);
+        println!("a_t: {:x} | b_t: {:x}", a_t, b_t);
 
         // mod
         if !b_t.equal(<$t>::default()) {
@@ -23,42 +25,62 @@ macro_rules! test_integer_macro {
 
         // Comparison functions returning bool.
         assert_eq!(a_t.equal(b_t), a == b);
+        assert!(a_t.equal(a_t));
+        assert!(b_t.equal(b_t));
         let expected_gt = if get_expected(">", &a, &b) == "0x0" {
             false
         } else {
             true
         };
         assert_eq!(a_t.greater_than(b_t), expected_gt);
+        assert_eq!(a_t.greater_than(a_t), false);
+        assert_eq!(b_t.greater_than(b_t), false);
         let expected_gte = if get_expected(">=", &a, &b) == "0x0" {
             false
         } else {
             true
         };
         assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
+        assert_eq!(a_t.greater_than_or_qual(a_t), true);
+        assert_eq!(b_t.greater_than_or_qual(b_t), true);
         let expected_lt = if get_expected("<", &a, &b) == "0x0" {
             false
         } else {
             true
         };
         assert_eq!(a_t.less_than(b_t), expected_lt);
+        assert_eq!(a_t.less_than(a_t), false);
+        assert_eq!(b_t.less_than(b_t), false);
         let expected_lte = if get_expected("<=", &a, &b) == "0x0" {
             false
         } else {
             true
         };
         assert_eq!(a_t.less_than_or_equal(b_t), expected_lte);
+        assert_eq!(a_t.less_than_or_equal(a_t), true);
+        assert_eq!(b_t.less_than_or_equal(b_t), true);
 
         // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
         let expected = if a == b { $true_val } else { $false_val };
         $check!(a_t.equal_bm(b_t), expected);
+        $check!(a_t.equal_bm(a_t), $true_val);
+        $check!(b_t.equal_bm(b_t), $true_val);
         let expected = if expected_gt { $true_val } else { $false_val };
         $check!(a_t.greater_than_bm(b_t), expected);
+        $check!(a_t.greater_than_bm(a_t), $false_val);
+        $check!(b_t.greater_than_bm(b_t), $false_val);
         let expected = if expected_gte { $true_val } else { $false_val };
         $check!(a_t.greater_than_or_equal_bm(b_t), expected);
+        $check!(a_t.greater_than_or_equal_bm(a_t), $true_val);
+        $check!(b_t.greater_than_or_equal_bm(b_t), $true_val);
         let expected = if expected_lt { $true_val } else { $false_val };
         $check!(a_t.less_than_bm(b_t), expected);
+        $check!(a_t.less_than_bm(a_t), $false_val);
+        $check!(b_t.less_than_bm(b_t), $false_val);
         let expected = if expected_lte { $true_val } else { $false_val };
         $check!(a_t.less_than_or_equal_bm(b_t), expected);
+        $check!(a_t.less_than_or_equal_bm(a_t), $true_val);
+        $check!(b_t.less_than_or_equal_bm(b_t), $true_val);
     };
 }
 
@@ -149,10 +171,10 @@ nat_mod!(
     256,
     "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
-generate_test!(
-    P256Elem,
-    test_NatMod_integer,
-    BigInt::from_str("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").unwrap(),
-    BigInt::from(0),
-    compare_secret
-);
+// generate_test!(
+//     P256Elem,
+//     test_NatMod_integer,
+//     BigInt::from_str("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").unwrap(),
+//     BigInt::from(0),
+//     compare_secret
+// );
