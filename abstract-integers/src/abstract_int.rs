@@ -260,8 +260,7 @@ macro_rules! abstract_public {
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {
-                let a: BigInt = self.into();
-                (!a).into()
+                unimplemented!();
             }
         }
 
@@ -355,6 +354,96 @@ macro_rules! abstract_unsigned {
             #[allow(dead_code)]
             pub fn to_le_bytes(self) -> Vec<u8> {
                 BigInt::to_bytes_le(&self.into()).1
+            }
+
+            /// Produces a new integer which is all ones if the two arguments are equal and
+            /// all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_eq(self, rhs: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                if a == b {
+                    let one = Self::from_literal(1);
+                    (one << ($bits-1)) - one
+                } else {
+                    Self::default()
+                }
+            }
+
+            /// Produces a new integer which is all ones if the first argument is different from
+            /// the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_ne(self, rhs: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                if a != b {
+                    let one = Self::from_literal(1);
+                    (one << ($bits-1)) - one
+                } else {
+                    Self::default()
+                }
+            }
+
+            /// Produces a new integer which is all ones if the first argument is greater than or
+            /// equal to the second argument, and all zeroes otherwise. 
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_gte(self, rhs: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                if a >= b {
+                    let one = Self::from_literal(1);
+                    (one << ($bits-1)) - one
+                } else {
+                    Self::default()
+                }
+            }
+
+            /// Produces a new integer which is all ones if the first argument is strictly greater
+            /// than the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_gt(self, rhs: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                if a > b {
+                    let one = Self::from_literal(1);
+                    (one << ($bits-1)) - one
+                } else {
+                    Self::default()
+                }
+            }
+
+            /// Produces a new integer which is all ones if the first argument is less than or
+            /// equal to the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_lte(self, rhs: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                if a <= b {
+                    let one = Self::from_literal(1);
+                    (one << ($bits-1)) - one
+                } else {
+                    Self::default()
+                }
+            }
+
+            /// Produces a new integer which is all ones if the first argument is strictly less than
+            /// the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_lt(self, rhs: Self) -> Self {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                if a < b {
+                    let one = Self::from_literal(1);
+                    (one << ($bits-1)) - one
+                } else {
+                    Self::default()
+                }
             }
         }
     };
@@ -474,35 +563,43 @@ macro_rules! abstract_secret {
         impl BitOr for $name {
             type Output = $name;
             fn bitor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a | b).into()
             }
         }
 
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a ^ b).into()
             }
         }
 
         impl BitAnd for $name {
             type Output = $name;
             fn bitand(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a & b).into()
             }
         }
 
         impl Shr<usize> for $name {
             type Output = $name;
             fn shr(self, rhs: usize) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                (a >> rhs).into()
             }
         }
 
         impl Shl<usize> for $name {
             type Output = $name;
             fn shl(self, rhs: usize) -> Self::Output {
-                unimplemented!();
+                let a: BigInt = self.into();
+                (a << rhs).into()
             }
         }
     };

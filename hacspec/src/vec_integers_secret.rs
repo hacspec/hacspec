@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use crate::prelude::*;
 
 // TODO: this won't allow us to split between signed and unsigned.

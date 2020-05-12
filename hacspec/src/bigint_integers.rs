@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use crate::prelude::*;
 
 impl Integer for BigInt {

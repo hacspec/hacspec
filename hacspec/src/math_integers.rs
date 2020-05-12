@@ -722,17 +722,17 @@ macro_rules! nat_mod {
             /// (self - rhs) % n.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                self - rhs
             }
             /// `(self + rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                self + rhs
             }
             /// `(self * rhs) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
+                self * rhs
             }
             /// `(self ^ exp) % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -742,7 +742,7 @@ macro_rules! nat_mod {
             /// `self % n`
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn modulo(self, n: Self) -> Self {
-                unimplemented!();
+                self.modulo(n)
             }
             /// `self % n` that always returns a positive integer
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -750,10 +750,9 @@ macro_rules! nat_mod {
                 self.modulo(n)
             }
             /// `|self|`
-            /// TODO: implement in abstract-integers
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn absolute(self) -> Self {
-                unimplemented!();
+                self
             }
         }
         impl Numeric for $name {
@@ -804,49 +803,59 @@ macro_rules! nat_mod {
             // Comparison functions returning bool.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn equal(self, other: Self) -> bool {
-                unimplemented!();
+                let bm = self.equal_bm(other);
+                let bm: BigInt = bm.declassify();
+                bm != BigInt::zero()
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than(self, other: Self) -> bool {
-                unimplemented!();
+                let bm = self.greater_than_bm(other);
+                let bm: BigInt = bm.declassify();
+                bm != BigInt::zero()
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than_or_qual(self, other: Self) -> bool {
-                unimplemented!();
+                let bm = self.greater_than_or_equal_bm(other);
+                let bm: BigInt = bm.declassify();
+                bm != BigInt::zero()
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than(self, other: Self) -> bool {
-                unimplemented!();
+                let bm = self.less_than_bm(other);
+                let bm: BigInt = bm.declassify();
+                bm != BigInt::zero()
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_or_equal(self, other: Self) -> bool {
-                unimplemented!();
+                let bm = self.less_than_or_equal_bm(other);
+                let bm: BigInt = bm.declassify();
+                bm != BigInt::zero()
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn not_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                self.comp_ne(other)
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                self.comp_eq(other)
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                self.comp_gt(other)
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                self.comp_gte(other)
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_bm(self, other: Self) -> Self {
-                unimplemented!();
+                self.comp_lt(other)
             }
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
-                unimplemented!();
+                self.comp_lte(other)
             }
         }
     };

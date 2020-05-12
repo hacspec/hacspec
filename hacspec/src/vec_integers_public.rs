@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use crate::prelude::*;
 
 // TODO: drop the `Copy` requirement for matrices
