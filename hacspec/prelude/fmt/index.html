@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `fmt` mod in crate `hacspec`."><meta name="keywords" content="rust, rustlang, rust-lang, fmt"><title>hacspec::prelude::fmt - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../hacspec/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a><p class='location'>Module fmt</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'><a href='../../index.html'>hacspec</a>::<wbr><a href='../index.html'>prelude</a></p><script>window.sidebarCurrent = {name: 'fmt', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span class='since' title='Stable since Rust version 1.0.0'>1.0.0</span><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='https://doc.rust-lang.org/nightly/src/alloc/lib.rs.html#157' title='goto source code'>[src]</a></span><span class='in-band'>Module <a href='../../index.html'>hacspec</a>::<wbr><a href='../index.html'>prelude</a>::<wbr><a class="mod" href=''>fmt</a></span></h1><div class='docblock'><p>Utilities for formatting and printing <code>String</code>s.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `fmt` mod in crate `hacspec`."><meta name="keywords" content="rust, rustlang, rust-lang, fmt"><title>hacspec::prelude::fmt - Rust</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../hacspec/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a><p class='location'>Module fmt</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'><a href='../../index.html'>hacspec</a>::<wbr><a href='../index.html'>prelude</a></p><script>window.sidebarCurrent = {name: 'fmt', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span class='since' title='Stable since Rust version 1.0.0'>1.0.0</span><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='https://doc.rust-lang.org/nightly/src/alloc/lib.rs.html#158' title='goto source code'>[src]</a></span><span class='in-band'>Module <a href='../../index.html'>hacspec</a>::<wbr><a href='../index.html'>prelude</a>::<wbr><a class="mod" href=''>fmt</a></span></h1><div class='docblock'><p>Utilities for formatting and printing <code>String</code>s.</p>
 <p>This module contains the runtime support for the <a href="../../std/macro.format.html"><code>format!</code></a> syntax extension.
 This macro is implemented in the compiler to emit calls to this module in
 order to format arguments at runtime into strings.</p>
@@ -38,14 +38,14 @@ the iterator advances. This leads to behavior like this:</p>
 <p>The internal iterator over the argument has not been advanced by the time
 the first <code>{}</code> is seen, so it prints the first argument. Then upon reaching
 the second <code>{}</code>, the iterator has advanced forward to the second argument.
-Essentially, parameters which explicitly name their argument do not affect
-parameters which do not name an argument in terms of positional specifiers.</p>
+Essentially, parameters that explicitly name their argument do not affect
+parameters that do not name an argument in terms of positional specifiers.</p>
 <p>A format string is required to use all of its arguments, otherwise it is a
 compile-time error. You may refer to the same argument more than once in the
 format string.</p>
 <h2 id="named-parameters" class="section-header"><a href="#named-parameters">Named parameters</a></h2>
 <p>Rust itself does not have a Python-like equivalent of named parameters to a
-function, but the <a href="../../std/macro.format.html"><code>format!</code></a> macro is a syntax extension which allows it to
+function, but the <a href="../../std/macro.format.html"><code>format!</code></a> macro is a syntax extension that allows it to
 leverage named parameters. Named parameters are listed at the end of the
 argument list and have the syntax:</p>
 <pre><code class="language-text">identifier '=' expression
@@ -57,7 +57,7 @@ argument list and have the syntax:</p>
 <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{name} {}&quot;</span>, <span class="number">1</span>, <span class="ident">name</span> <span class="op">=</span> <span class="number">2</span>);          <span class="comment">// =&gt; &quot;2 1&quot;</span>
 <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{a} {c} {b}&quot;</span>, <span class="ident">a</span><span class="op">=</span><span class="string">&quot;a&quot;</span>, <span class="ident">b</span><span class="op">=</span><span class="string">&#39;b&#39;</span>, <span class="ident">c</span><span class="op">=</span><span class="number">3</span>);  <span class="comment">// =&gt; &quot;a 3 b&quot;</span></pre></div>
 <p>It is not valid to put positional parameters (those without names) after
-arguments which have names. Like with positional parameters, it is not
+arguments that have names. Like with positional parameters, it is not
 valid to provide named parameters that are unused by the format string.</p>
 <h1 id="formatting-parameters" class="section-header"><a href="#formatting-parameters">Formatting Parameters</a></h1>
 <p>Each argument being formatted can be transformed by a number of formatting
@@ -98,7 +98,7 @@ Filling comes in the following variants for different alignments:</p>
 </ul>
 <p>The default <a href="#fillalignment">fill/alignment</a> for non-numerics is a space and
 left-aligned. The
-defaults for numeric formatters is also a space but with right-alignment. If
+default for numeric formatters is also a space character but with right-alignment. If
 the <code>0</code> flag (see below) is specified for numerics, then the implicit fill character is
 <code>0</code>.</p>
 <p>Note that alignment may not be implemented by some types. In particular, it
@@ -123,7 +123,7 @@ default, and the negative sign is only printed by default for the
 <code>Signed</code> trait. This flag indicates that the correct sign (<code>+</code> or <code>-</code>)
 should always be printed.</li>
 <li><code>-</code> - Currently not used</li>
-<li><code>#</code> - This flag is indicates that the &quot;alternate&quot; form of printing should
+<li><code>#</code> - This flag indicates that the &quot;alternate&quot; form of printing should
 be used. The alternate forms are:
 <ul>
 <li><code>#?</code> - pretty-print the <a href="trait.Debug.html"><code>Debug</code></a> formatting</li>
@@ -138,9 +138,9 @@ both be done with a <code>0</code> character as well as be sign-aware. A format
 like <code>{:08}</code> would yield <code>00000001</code> for the integer <code>1</code>, while the
 same format would yield <code>-0000001</code> for the integer <code>-1</code>. Notice that
 the negative version has one fewer zero than the positive version.
-Note that padding zeroes are always placed after the sign (if any)
+Note that padding zeros are always placed after the sign (if any)
 and before the digits. When used together with the <code>#</code> flag, a similar
-rule applies: padding zeroes are inserted after the prefix but before
+rule applies: padding zeros are inserted after the prefix but before
 the digits. The prefix is included in the total width.</li>
 </ul>
 <h2 id="precision" class="section-header"><a href="#precision">Precision</a></h2>
@@ -205,7 +205,7 @@ Hello, `     123` has 3 right-aligned characters
 <h2 id="localization" class="section-header"><a href="#localization">Localization</a></h2>
 <p>In some programming languages, the behavior of string formatting functions
 depends on the operating system's locale setting. The format functions
-provided by Rust's standard library do not have any concept of locale, and
+provided by Rust's standard library do not have any concept of locale and
 will produce the same results on all systems regardless of user
 configuration.</p>
 <p>For example, the following code will always print <code>1.5</code> even if the system
@@ -385,7 +385,7 @@ printing output. Example usage is:</p>
 <a href="../../std/macro.print.html"><code>print!</code></a> and <a href="../../std/macro.println.html"><code>println!</code></a>, respectively, except they emit their
 output to stderr.</p>
 <h3 id="format_args" class="section-header"><a href="#format_args"><code>format_args!</code></a></h3>
-<p>This is a curious macro which is used to safely pass around
+<p>This is a curious macro used to safely pass around
 an opaque object describing the format string. This object
 does not require any heap allocations to create, and it only
 references information on the stack. Under the hood, all of
@@ -407,7 +407,7 @@ off, some example usage is:</p>
 This structure can then be passed to the <a href="fn.write.html"><code>write</code></a> and <a href="fn.format.html"><code>format</code></a> functions
 inside this module in order to process the format string.
 The goal of this macro is to even further prevent intermediate allocations
-when dealing formatting strings.</p>
+when dealing with formatting strings.</p>
 <p>For example, a logging library could use the standard formatting syntax, but
 it would internally pass around this structure until it has been determined
 where output should go to.</p>
