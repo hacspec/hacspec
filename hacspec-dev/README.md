@@ -23,5 +23,8 @@ create_test_vectors!(
 );
 
 // Now we can read the JSON file into MyTestVectors
-let tests = MyTestVectors::new("test_vector.json");
+let tests = MyTestVectors::from_file("test_vector.json");
+
+// We can also write the test vectors to a JSON file.
+tests.write_file("tests/test_vector_out.json");
 ```
