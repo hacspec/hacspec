@@ -1,4 +1,5 @@
 use hacspec::prelude::*;
+use hacspec_dev::prelude::*;
 
 use hacspec_examples::aes_gcm::*;
 
@@ -63,7 +64,13 @@ const KAT_256: [AeadTestVector; 2] = [
         exp_cipher: "E2006EB42F5277022D9B19925BC419D7A592666C925FE2EF718EB4E308EFEAA7C5273B394118860A5BE2A97F56AB7836",
         exp_mac: "5CA597CDBB3EDB8D1A1151EA0AF7B436"
     }
-    ];
+];
+
+macro_rules! to_public_vec {
+    ($x:expr) => {
+        $x.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
+    };
+}
 
 #[test]
 fn kat_test() {
@@ -104,6 +111,7 @@ fn kat_test() {
         );
     }
 }
+
 #[test]
 fn kat_test_256() {
     for kat in KAT_256.iter() {
@@ -142,4 +150,106 @@ fn kat_test_256() {
                 .collect::<Vec<_>>()
         );
     }
+}
+
+create_test_vectors!(
+    AesGcmTestVector,
+    algorithm: String,
+    generatorVersion: String,
+    numberOfTests: usize,
+    notes: Option<Value>, // text notes (might not be present), keys correspond to flags
+    header: Vec<Value>,   // not used
+    testGroups: Vec<TestGroup>
+);
+
+create_test_vectors!(
+    TestGroup,
+    ivSize: usize,
+    keySize: usize,
+    tagSize: usize,
+    r#type: String,
+    tests: Vec<Test>
+);
+
+create_test_vectors!(
+    Test,
+    tcId: usize,
+    comment: String,
+    key: String,
+    iv: String,
+    aad: String,
+    msg: String,
+    ct: String,
+    tag: String,
+    result: String,
+    flags: Vec<String>
+);
+
+#[allow(non_snake_case)]
+#[test]
+fn test_wycheproof() {
+    let tests = AesGcmTestVector::from_file("tests/aes_gcm_test_wycheproof.json");
+
+    let num_tests = tests.numberOfTests;
+    let mut skipped_tests = 0;
+    let mut tests_run = 0;
+    match tests.algorithm.as_ref() {
+        "AES-GCM" => (),
+        _ => panic!("This is not an AES-GCM test vector."),
+    };
+    for testGroup in tests.testGroups.iter() {
+        assert_eq!(testGroup.r#type, "AeadTest");
+        let algorithm = match testGroup.keySize {
+            128 => aes::AesVariant::Aes128,
+            256 => aes::AesVariant::Aes256,
+            _ => {
+                // not implemented
+                println!("Only AES 128 and 256 are implemented.");
+                skipped_tests += testGroup.tests.len();
+                continue;
+            }
+        };
+        if testGroup.ivSize != 96 {
+            // not implemented
+            println!("Nonce sizes != 96 are not supported for AES GCM.");
+            skipped_tests += testGroup.tests.len();
+            continue;
+        }
+        for test in testGroup.tests.iter() {
+            let valid = test.result.eq("valid");
+            if test.comment == "invalid nonce size" {
+                // not implemented
+                println!("Invalid nonce sizes are not supported.");
+                skipped_tests += 1;
+                break;
+            }
+            println!("Test {:?}: {:?}", test.tcId, test.comment);
+            let nonce = aes::Nonce::from_hex(&test.iv);
+            let msg = ByteSeq::from_hex(&test.msg);
+            let aad = ByteSeq::from_hex(&test.aad);
+            let exp_cipher = ByteSeq::from_hex(&test.ct);
+            let exp_tag = gf128::Tag::from_hex(&test.tag);
+            let (cipher, tag) = match algorithm {
+                aes::AesVariant::Aes128 => {
+                    // let r = test_ring_aead(&key, &iv, &aad, &m, algorithm);
+                    let k = aes::Key128::from_hex(&test.key);
+                    encrypt_aes128(k, nonce, &aad, &msg)
+                }
+                aes::AesVariant::Aes256 => {
+                    let k = aes::Key256::from_hex(&test.key);
+                    encrypt_aes256(k, nonce, &aad, &msg)
+                }
+            };
+            if valid {
+                assert_eq!(to_public_vec!(tag), to_public_vec!(exp_tag));
+            } else {
+                assert_ne!(to_public_vec!(tag), to_public_vec!(exp_tag));
+            }
+            assert_eq!(to_public_vec!(cipher), to_public_vec!(exp_cipher));
+            tests_run += 1;
+        }
+    }
+    // Check that we ran all tests.
+    println!("Ran {} out of {} tests and skipped {}.", tests_run, num_tests, skipped_tests);
+    assert_eq!(num_tests-skipped_tests, tests_run);
 }

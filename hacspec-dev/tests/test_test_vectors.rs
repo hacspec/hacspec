@@ -1,4 +1,4 @@
-use hacspec_dev::*;
+use hacspec_dev::prelude::*;
 
 #[test]
 fn test_read_test_vectors() {
@@ -62,5 +62,5 @@ fn test_write_test_vectors() {
     }
 
     let test_vecs = generate_test_vecs();
-    let tests = test_vecs.write_file("tests/test_vector_write.json");
+    test_vecs.write_file("tests/test_vector_write.json");
 }

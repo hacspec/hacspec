@@ -33,7 +33,7 @@ macro_rules! create_test_vectors {
                 let json = match serde_json::to_string_pretty(&self) {
                     Ok(j) => j,
                     Err(_) => panic!("Couldn't serialize this object."),
-                };;
+                };
                 match file.write_all(&json.into_bytes()) {
                     Ok(_) => (),
                     Err(_) => panic!("Error writing to file."),

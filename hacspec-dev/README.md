@@ -26,5 +26,5 @@ create_test_vectors!(
 let tests = MyTestVectors::from_file("test_vector.json");
 
 // We can also write the test vectors to a JSON file.
-tests.write_file("tests/test_vector_out.json");
+tests.write_file("test_vector_out.json");
 ```
