@@ -10,10 +10,10 @@ macro_rules! create_test_vectors {
         struct $struct_name { $($element: $ty),+ }
         impl $struct_name {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
-            pub fn new(file: &'static str) -> Self {
+            pub fn from_file(file: &'static str) -> Self {
                 let file = match File::open(file) {
                     Ok(f) => f,
-                    Err(_) => panic!("Couldn't open file."),
+                    Err(_) => panic!("Couldn't open file {}.", file),
                 };
                 let reader = BufReader::new(file);
                 match serde_json::from_reader(reader) {
@@ -22,6 +22,21 @@ macro_rules! create_test_vectors {
                         println!("{:?}", e);
                         panic!("Error reading file.")
                     },
+                }
+            }
+            #[cfg_attr(feature="use_attributes", external(hacspec))]
+            pub fn write_file(&self, file: &'static str) {
+                let mut file = match File::create(file) {
+                    Ok(f) => f,
+                    Err(_) => panic!("Couldn't open file {}.", file),
+                };
+                let json = match serde_json::to_string_pretty(&self) {
+                    Ok(j) => j,
+                    Err(_) => panic!("Couldn't serialize this object."),
+                };
+                match file.write_all(&json.into_bytes()) {
+                    Ok(_) => (),
+                    Err(_) => panic!("Error writing to file."),
                 }
             }
             #[cfg_attr(feature="use_attributes", external(hacspec))]
