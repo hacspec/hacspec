@@ -2,9 +2,9 @@ use hacspec::prelude::*;
 
 /// Struct to decide NtruVersion
 pub struct NtruVersion {
-    p: usize,
-    q: u128,
-    w: u128,
+    pub p: usize,
+    pub q: u128,
+    pub w: u128,
 }
 #[macro_export]
 macro_rules! ntru_v {
@@ -56,8 +56,8 @@ fn create_rand_poly(w: u128, h_deg: usize, modulo: u128) -> Seq<u128> {
     }
     polynom
 }
-
-fn create_invertable_poly(
+// TODO remove pub is just for test cases
+pub fn create_invertable_poly(
     n: &NtruVersion,
     modulus: u128,
 ) -> (Seq<u128>, Result<Seq<u128>, &'static str>) {
