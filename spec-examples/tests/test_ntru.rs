@@ -1,13 +1,9 @@
 use hacspec::prelude::*;
 
 use hacspec_examples::ntru_prime::*;
-/*
-#[test]
-fn test_key_gen(){
-    ntru_prime::key_gen();
-    //assert_eq!(p,5);
-    //assert_eq!(g,g_inv);
-}*/
+#[macro_use] extern crate hacspec_examples;
+
+
 #[test]
 fn test_create_inv(){
     let mut poly = create_invertable_poly(&ntru_v!(1), ntru_v!(1).q);
