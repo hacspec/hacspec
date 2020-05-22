@@ -7,4 +7,4 @@ pub mod sha2;
 pub mod hkdf;
 pub mod hmac;
 pub mod p256;
-üub mod ntru_prime;
+pub mod ntru_prime;
