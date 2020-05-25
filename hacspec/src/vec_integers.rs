@@ -25,7 +25,7 @@ macro_rules! _implement_numeric_unsigned_public {
             /// Check if the two sequences are compatible, i.e. have the same
             /// length.
             fn compatible(&self, other: &Self) -> bool {
-                debug_assert!(
+                assert!(
                     self.len() == other.len(),
                     "Can't combine two sequences that don't have the same length."
                 );
