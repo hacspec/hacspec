@@ -21,11 +21,11 @@ pub trait SeqTrait<T: Copy>:
     ///
     /// let mut s = Seq::<u8>::new(5);
     /// let tmp = Seq::<u8>::from_native_slice(&[2, 3]);
-    /// s = s.update_sub(2, &tmp, 1, 1);
+    /// s = s.update_slice(2, &tmp, 1, 1);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
     #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn update_sub<A: SeqTrait<T>>(
+    fn update_slice<A: SeqTrait<T>>(
         mut self,
         start_out: usize,
         v: &A,
@@ -55,13 +55,13 @@ pub trait SeqTrait<T: Copy>:
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
         let len = v.len();
-        self.update_sub(start, v, 0, len)
+        self.update_slice(start, v, 0, len)
     }
 
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
         let len = v.len();
-        self.update_sub(0, v, 0, len)
+        self.update_slice(0, v, 0, len)
     }
 }
 

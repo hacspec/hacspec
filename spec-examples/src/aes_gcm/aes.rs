@@ -42,7 +42,7 @@ const RCON: RCon = RCon(secret_bytes!([
     0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d
 ]));
 
-fn sub_bytes(state: Block) -> Block {
+fn slice_bytes(state: Block) -> Block {
     let mut st = state;
     for i in 0..BLOCKSIZE {
         st[i] = SBOX[U8::declassify(state[i])];
@@ -104,14 +104,14 @@ fn add_round_key(state: Block, key: RoundKey) -> Block {
 }
 
 fn aes_enc(state: Block, round_key: RoundKey) -> Block {
-    let state = sub_bytes(state);
+    let state = slice_bytes(state);
     let state = shift_rows(state);
     let state = mix_columns(state);
     add_round_key(state, round_key)
 }
 
 fn aes_enc_last(state: Block, round_key: RoundKey) -> Block {
-    let state = sub_bytes(state);
+    let state = slice_bytes(state);
     let state = shift_rows(state);
     add_round_key(state, round_key)
 }
@@ -126,9 +126,9 @@ fn rounds_aes(state: Block, key: ByteSeq) -> Block {
 }
 
 fn block_cipher_aes(input : Block, key: ByteSeq, nr: usize) -> Block {
-    let k0 = RoundKey::from_sub_range(&key, 0..16);
-    let k = ByteSeq::from_sub_range(&key, 16..nr * 16);
-    let kn = RoundKey::from_sub(&key, nr * 16, 16);
+    let k0 = RoundKey::from_slice_range(&key, 0..16);
+    let k = ByteSeq::from_slice_range(&key, 16..nr * 16);
+    let kn = RoundKey::from_slice(&key, nr * 16, 16);
     let state = add_round_key(input, k0);
     let state = rounds_aes(state, k);
     aes_enc_last(state, kn)
@@ -138,7 +138,7 @@ fn rotate_word(w: Word) -> Word {
     Word([w[1], w[2], w[3], w[0]])
 }
 
-fn sub_word(w: Word) -> Word {
+fn slice_word(w: Word) -> Word {
     Word([
         SBOX[usize::from(w[0])],
         SBOX[usize::from(w[1])],
@@ -149,7 +149,7 @@ fn sub_word(w: Word) -> Word {
 
 fn aes_keygen_assist(w: Word, rcon: U8) -> Word {
     let mut k = rotate_word(w);
-    k = sub_word(k);
+    k = slice_word(k);
     k[0] ^= rcon;
     k
 }
@@ -160,7 +160,7 @@ fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> Wor
     if i % nk == 0 {
         k = aes_keygen_assist(k, RCON[i / nk]);
     } else if nk > 6 && i % nk == 4 {
-        k = sub_word(k);
+        k = slice_word(k);
     }
     for i in 0..4 {
         k[i] ^= w0[i];
@@ -192,8 +192,8 @@ fn key_expansion_aes(key: &ByteSeq, nk: usize, nr: usize, alg: AesVariant) -> By
     for j in 0..num_iters {
         i = j + word_size;
         let word = key_expansion_word(
-            Word::from_sub(&key_ex, 4 * (i -  word_size), 4),
-            Word::from_sub(&key_ex, 4 * i - 4, 4),
+            Word::from_slice(&key_ex, 4 * (i -  word_size), 4),
+            Word::from_slice(&key_ex, 4 * i - 4, 4),
             i,
             nk,
             nr,
@@ -257,7 +257,7 @@ fn aes_counter_mode(
             blocks_out = blocks_out.set_chunk(
                 BLOCKSIZE,
                 i,
-                &xor_block(last_block, key_block).subr(0..block_len),
+                &xor_block(last_block, key_block).slice_range(0..block_len),
             );
         }
     }

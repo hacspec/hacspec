@@ -122,8 +122,8 @@ fn compress<Word: UnsignedSecretIntegerCopy> (
     let m = make_array(m);
 
     // Prepare.
-    v = v.update_sub(0, &h, 0, 8);
-    v = v.update_sub(8, &State::iv(), 0, 8);
+    v = v.update_slice(0, &h, 0, 8);
+    v = v.update_slice(8, &State::iv(), 0, 8);
     let old_v12: Word = v[12];
     v[12] = old_v12 ^ SecretIntegerCopy::classify(t[0]);
     let old_v13: Word = v[13];

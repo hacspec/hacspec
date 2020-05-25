@@ -61,26 +61,26 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
+            pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
                 debug_assert_eq!(len, a.len());
-                a = a.update_sub(0, input, start, len);
+                a = a.update_slice(0, input, start, len);
                 a
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
-                Self::from_sub(input, r.start, r.end - r.start)
+            pub fn from_slice_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
+                Self::from_slice(input, r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn sub(&self, start_out: usize, len: usize) -> Seq<$t> {
-                Seq::from_sub(self, start_out, len)
+            pub fn slice(&self, start_out: usize, len: usize) -> Seq<$t> {
+                Seq::from_slice(self, start_out, len)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn subr(&self, r: Range<usize>) -> Seq<$t> {
-                self.sub(r.start, r.end - r.start)
+            pub fn slice_range(&self, r: Range<usize>) -> Seq<$t> {
+                self.slice(r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -113,7 +113,7 @@ macro_rules! _array_base {
             ) -> (usize, Seq<$t>) {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
-                let out = self.sub(idx_start, len);
+                let out = self.slice(idx_start, len);
                 (len, out)
             }
 
@@ -127,7 +127,7 @@ macro_rules! _array_base {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(input.len() == len, "the chunk length should match the input");
-                self.update_sub(idx_start, input, 0, len)
+                self.update_slice(idx_start, input, 0, len)
             }
         }
 
@@ -315,26 +315,26 @@ macro_rules! generic_array {
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
+            pub fn from_slice<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
                 debug_assert_eq!(len, a.len());
-                a = a.update_sub(0, input, start, len);
+                a = a.update_slice(0, input, start, len);
                 a
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
-                Self::from_sub(input, r.start, r.end - r.start)
+            pub fn from_slice_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
+                Self::from_slice(input, r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn sub(&self, start_out: usize, len: usize) -> Seq<T> {
-                Seq::from_sub(self, start_out, len)
+            pub fn slice(&self, start_out: usize, len: usize) -> Seq<T> {
+                Seq::from_slice(self, start_out, len)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn subr(&self, r: Range<usize>) -> Seq<T> {
-                self.sub(r.start, r.end - r.start)
+            pub fn slice_range(&self, r: Range<usize>) -> Seq<T> {
+                self.slice(r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -367,7 +367,7 @@ macro_rules! generic_array {
             ) -> (usize, Seq<T>) {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
-                let out = self.sub(idx_start, len);
+                let out = self.slice(idx_start, len);
                 (len, out)
             }
 
@@ -381,7 +381,7 @@ macro_rules! generic_array {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(input.len() == len, "the chunk length should match the input");
-                self.update_sub(idx_start, input, 0, len)
+                self.update_slice(idx_start, input, 0, len)
             }
         }
 

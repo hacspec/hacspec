@@ -36,7 +36,7 @@ fn fmul(x: Element, y: Element) -> Element {
 
 // GMAC
 
-// TODO: block is actually subblock
+// TODO: block is actually sliceblock
 fn encode(block: Block) -> Element {
     U128_from_be_bytes(U128Word::from_seq(&block))
 }
@@ -45,7 +45,7 @@ fn decode(e: Element) -> Block {
     Block::from_seq(&U128_to_be_bytes(e))
 }
 
-// TODO: block is actually subblock
+// TODO: block is actually sliceblock
 fn update(r: Element, block: Block, acc: Element) -> Element {
     fmul(fadd(encode(block), acc), r)
 }
@@ -58,13 +58,13 @@ fn poly(msg: &ByteSeq, r: Element) -> Element {
     for i in 0..n_blocks {
         let k = i * BLOCKSIZE;
         let mut block = Block::new();
-        block = block.update_start(&msg.subr(k..k + BLOCKSIZE));
+        block = block.update_start(&msg.slice_range(k..k + BLOCKSIZE));
         acc = update(r, block, acc);
     }
     if rem != 0 {
         let k = n_blocks * BLOCKSIZE;
         let mut last_block = Block::new();
-        last_block = last_block.update_sub(0, msg, k, rem);
+        last_block = last_block.update_slice(0, msg, k, rem);
         acc = update(r, last_block, acc);
     }
     acc
