@@ -44,7 +44,7 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature="use_attributes", external(hacspec))]
-            pub fn from_slice(v: &[$t]) -> Self {
+            pub fn from_native_slice(v: &[$t]) -> Self {
                 debug_assert!(v.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
                 for i in 0..v.len() {
@@ -298,7 +298,7 @@ macro_rules! generic_array {
             }
 
             #[cfg_attr(feature="use_attributes", external(hacspec))]
-            pub fn from_slice(v: &[T]) -> Self {
+            pub fn from_native_slice(v: &[T]) -> Self {
                 debug_assert!(v.len() <= $l);
                 let mut tmp = [<T>::default(); $l];
                 for i in 0..v.len() {
@@ -651,7 +651,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
-                    out[i] = U32_from_be_bytes(U32Word::from_slice(block));
+                    out[i] = U32_from_be_bytes(U32Word::from_native_slice(block));
                 }
                 out
             }
@@ -661,7 +661,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
-                    out[i] = U32_from_le_bytes(U32Word::from_slice(block));
+                    out[i] = U32_from_le_bytes(U32Word::from_native_slice(block));
                 }
                 out
             }
@@ -671,7 +671,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
-                    out[i] = U64_from_be_bytes(U64Word::from_slice(block));
+                    out[i] = U64_from_be_bytes(U64Word::from_native_slice(block));
                 }
                 out
             }
@@ -681,7 +681,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
-                    out[i] = U64_from_le_bytes(U64Word::from_slice(block));
+                    out[i] = U64_from_le_bytes(U64Word::from_native_slice(block));
                 }
                 out
             }
@@ -691,7 +691,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
-                    out[i] = U128_from_be_bytes(U128Word::from_slice(block));
+                    out[i] = U128_from_be_bytes(U128Word::from_native_slice(block));
                 }
                 out
             }
@@ -701,7 +701,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
-                    out[i] = U128_from_le_bytes(U128Word::from_slice(block));
+                    out[i] = U128_from_le_bytes(U128Word::from_native_slice(block));
                 }
                 out
             }

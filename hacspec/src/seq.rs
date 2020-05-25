@@ -203,7 +203,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[cfg_attr(feature="use_attributes", external(hacspec))]
-            pub fn from_slice(x: &[T]) -> $name<T> {
+            pub fn from_native_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
                 }
