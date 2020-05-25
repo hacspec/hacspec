@@ -42,7 +42,7 @@ const RCON: RCon = RCon(secret_bytes!([
     0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d
 ]));
 
-fn slice_bytes(state: Block) -> Block {
+fn sub_bytes(state: Block) -> Block {
     let mut st = state;
     for i in 0..BLOCKSIZE {
         st[i] = SBOX[U8::declassify(state[i])];
@@ -104,14 +104,14 @@ fn add_round_key(state: Block, key: RoundKey) -> Block {
 }
 
 fn aes_enc(state: Block, round_key: RoundKey) -> Block {
-    let state = slice_bytes(state);
+    let state = sub_bytes(state);
     let state = shift_rows(state);
     let state = mix_columns(state);
     add_round_key(state, round_key)
 }
 
 fn aes_enc_last(state: Block, round_key: RoundKey) -> Block {
-    let state = slice_bytes(state);
+    let state = sub_bytes(state);
     let state = shift_rows(state);
     add_round_key(state, round_key)
 }

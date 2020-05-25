@@ -36,7 +36,7 @@ fn fmul(x: Element, y: Element) -> Element {
 
 // GMAC
 
-// TODO: block is actually sliceblock
+// TODO: block is actually subblock
 fn encode(block: Block) -> Element {
     U128_from_be_bytes(U128Word::from_seq(&block))
 }
@@ -45,7 +45,7 @@ fn decode(e: Element) -> Block {
     Block::from_seq(&U128_to_be_bytes(e))
 }
 
-// TODO: block is actually sliceblock
+// TODO: block is actually subblock
 fn update(r: Element, block: Block, acc: Element) -> Element {
     fmul(fadd(encode(block), acc), r)
 }
