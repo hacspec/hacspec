@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Prepare
-      run: rustup toolchain install nightly
+      run: rustup toolchain install nightly && cargo +nightly update -p proc-macro-hack
     - name: Build
       run: cargo build --verbose
     - name: Run tests
