@@ -34,7 +34,7 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn len(&self) -> usize {
+            pub fn length() -> usize {
                 $l
             }
 
@@ -288,7 +288,7 @@ macro_rules! generic_array {
             }
 
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn len(&self) -> usize {
+            pub fn length() -> usize {
                 $l
             }
 
