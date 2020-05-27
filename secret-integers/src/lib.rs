@@ -146,19 +146,19 @@ macro_rules! define_unary_op {
 }
 
 macro_rules! define_shift {
-    ($name:ident, $op:tt, $op_name:ident, $func_op:ident, $assign_name:ident, $assign_func:ident) => {
-        impl $op_name<u32> for $name {
+    ($name:ident, $op:tt, $wrapop:ident, $op_name:ident, $func_op:ident, $assign_name:ident, $assign_func:ident) => {
+        impl $op_name<usize> for $name {
             type Output = Self;
             #[inline]
-            fn $func_op(self, rhs: u32) -> Self {
+            fn $func_op(self, rhs: usize) -> Self {
                 let $name(i1) = self;
-                $name(i1 $op rhs)
+                $name(i1.$wrapop(rhs as u32))
             }
         }
 
-        impl $assign_name<u32> for $name {
+        impl $assign_name<usize> for $name {
             #[inline]
-            fn $assign_func(&mut self, rhs: u32) {
+            fn $assign_func(&mut self, rhs: usize) {
                 *self = *self $op rhs
             }
         }
@@ -265,8 +265,8 @@ macro_rules! define_secret_integer {
         define_wrapping_op!($name, -, Sub, sub, SubAssign, sub_assign, checked_sub);
         define_wrapping_op!($name, *, Mul, mul, MulAssign, mul_assign, checked_mul);
 
-        define_shift!($name, <<, Shl, shl, ShlAssign, shl_assign);
-        define_shift!($name, >>, Shr, shr, ShrAssign, shr_assign);
+        define_shift!($name, <<, wrapping_shl, Shl, shl, ShlAssign, shl_assign);
+        define_shift!($name, >>, wrapping_shr, Shr, shr, ShrAssign, shr_assign);
 
         impl $name {
             #[inline]
@@ -403,43 +403,46 @@ macro_rules! define_secret_signed_integer {
         /// # Constant-time comparison operators
         impl $name {
             #[inline]
-            pub fn comp_eq(self, _rhs: Self) -> Self {
-                unimplemented!();
+            pub fn comp_eq(self, rhs: Self) -> Self {
+                !self.comp_ne(rhs)
             }
 
             /// Produces a new integer which is all ones if the first argument is different from
             /// the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_ne(self, rhs: Self) -> Self {
-                !self.comp_eq(rhs)
+                let x = (self - rhs) | (rhs - self);
+                x >> ($bits - 1)
             }
 
             /// Produces a new integer which is all ones if the first argument is greater than or
             /// equal to the second argument, and all zeroes otherwise. With inspiration from
             #[inline]
-            pub fn comp_gte(self, _rhs: Self) -> Self {
-                unimplemented!();
+            pub fn comp_gte(self, rhs: Self) -> Self {
+                self.comp_gt(rhs) | self.comp_eq(rhs)
             }
 
             /// Produces a new integer which is all ones if the first argument is strictly greater
             /// than the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_gt(self, rhs: Self) -> Self {
-                self.comp_gte(rhs) ^ self.comp_eq(rhs)
+                !self.comp_lt(rhs) & !self.comp_eq(rhs)
             }
 
             /// Produces a new integer which is all ones if the first argument is less than or
             /// equal to the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_lte(self, rhs: Self) -> Self {
-                !self.comp_gt(rhs)
+                self.comp_lt(rhs) | self.comp_eq(rhs)
             }
 
             /// Produces a new integer which is all ones if the first argument is strictly less than
             /// the second argument, and all zeroes otherwise.
             #[inline]
             pub fn comp_lt(self, rhs: Self) -> Self {
-                !self.comp_gte(rhs)
+                let d = self - rhs;
+                let x = self ^ ((self ^ d) & (rhs ^ d));
+                x >> ($bits - 1)
             }
         }
     }
@@ -604,7 +607,6 @@ define_uU_casting!(u16, U128, u128);
 define_uU_casting!(u32, U128, u128);
 define_uU_casting!(u64, U128, u128);
 define_usize_casting!(usize, U128, u128);
-
 
 // U16 <-> Un{n < 16}
 define_safe_casting!(U8, U16, u16);
