@@ -73,8 +73,11 @@ pub trait Integer: Numeric {
 
     // Some useful values.
     // Not constants because math integers can't do that.
+    #[allow(non_snake_case)]
     fn ZERO() -> Self;
+    #[allow(non_snake_case)]
     fn ONE() -> Self;
+    #[allow(non_snake_case)]
     fn TWO() -> Self;
 
     /// Get an integer with value `val`.
