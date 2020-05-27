@@ -7,3 +7,13 @@ pub mod sha2;
 pub mod hkdf;
 pub mod hmac;
 pub mod p256;
+
+use hacspec::prelude::*;
+use hacspec_derive::*;
+
+#[allow(dead_code)]
+#[derive(Default, Clone, Debug, Numeric)]
+struct NumericPair {
+    fst: ByteSeq,
+    snd: ByteSeq
+}
