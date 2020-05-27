@@ -504,9 +504,9 @@
 }
 
 <span class="kw">fn</span> <span class="ident">block_cipher_aes</span>(<span class="ident">input</span> : <span class="ident">Block</span>, <span class="ident">key</span>: <span class="ident">ByteSeq</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Block</span> {
-    <span class="kw">let</span> <span class="ident">k0</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>..<span class="number">16</span>);
-    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">from_sub_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">16</span>..<span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>);
-    <span class="kw">let</span> <span class="ident">kn</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>, <span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">k0</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_slice_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">0</span>..<span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">from_slice_range</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="number">16</span>..<span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>);
+    <span class="kw">let</span> <span class="ident">kn</span> <span class="op">=</span> <span class="ident">RoundKey</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">nr</span> <span class="op">*</span> <span class="number">16</span>, <span class="number">16</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">add_round_key</span>(<span class="ident">input</span>, <span class="ident">k0</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">rounds_aes</span>(<span class="ident">state</span>, <span class="ident">k</span>);
     <span class="ident">aes_enc_last</span>(<span class="ident">state</span>, <span class="ident">kn</span>)
@@ -516,7 +516,7 @@
     <span class="ident">Word</span>([<span class="ident">w</span>[<span class="number">1</span>], <span class="ident">w</span>[<span class="number">2</span>], <span class="ident">w</span>[<span class="number">3</span>], <span class="ident">w</span>[<span class="number">0</span>]])
 }
 
-<span class="kw">fn</span> <span class="ident">sub_word</span>(<span class="ident">w</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+<span class="kw">fn</span> <span class="ident">slice_word</span>(<span class="ident">w</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="ident">Word</span>([
         <span class="ident">SBOX</span>[<span class="ident">usize</span>::<span class="ident">from</span>(<span class="ident">w</span>[<span class="number">0</span>])],
         <span class="ident">SBOX</span>[<span class="ident">usize</span>::<span class="ident">from</span>(<span class="ident">w</span>[<span class="number">1</span>])],
@@ -527,7 +527,7 @@
 
 <span class="kw">fn</span> <span class="ident">aes_keygen_assist</span>(<span class="ident">w</span>: <span class="ident">Word</span>, <span class="ident">rcon</span>: <span class="ident">U8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">rotate_word</span>(<span class="ident">w</span>);
-    <span class="ident">k</span> <span class="op">=</span> <span class="ident">sub_word</span>(<span class="ident">k</span>);
+    <span class="ident">k</span> <span class="op">=</span> <span class="ident">slice_word</span>(<span class="ident">k</span>);
     <span class="ident">k</span>[<span class="number">0</span>] <span class="op">^</span><span class="op">=</span> <span class="ident">rcon</span>;
     <span class="ident">k</span>
 }
@@ -538,7 +538,7 @@
     <span class="kw">if</span> <span class="ident">i</span> <span class="op">%</span> <span class="ident">nk</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
         <span class="ident">k</span> <span class="op">=</span> <span class="ident">aes_keygen_assist</span>(<span class="ident">k</span>, <span class="ident">RCON</span>[<span class="ident">i</span> <span class="op">/</span> <span class="ident">nk</span>]);
     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">nk</span> <span class="op">&gt;</span> <span class="number">6</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">i</span> <span class="op">%</span> <span class="ident">nk</span> <span class="op">=</span><span class="op">=</span> <span class="number">4</span> {
-        <span class="ident">k</span> <span class="op">=</span> <span class="ident">sub_word</span>(<span class="ident">k</span>);
+        <span class="ident">k</span> <span class="op">=</span> <span class="ident">slice_word</span>(<span class="ident">k</span>);
     }
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">4</span> {
         <span class="ident">k</span>[<span class="ident">i</span>] <span class="op">^</span><span class="op">=</span> <span class="ident">w0</span>[<span class="ident">i</span>];
@@ -570,8 +570,8 @@
     <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_iters</span> {
         <span class="ident">i</span> <span class="op">=</span> <span class="ident">j</span> <span class="op">+</span> <span class="ident">word_size</span>;
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="ident">key_expansion_word</span>(
-            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> (<span class="ident">i</span> <span class="op">-</span>  <span class="ident">word_size</span>), <span class="number">4</span>),
-            <span class="ident">Word</span>::<span class="ident">from_sub</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">4</span>, <span class="number">4</span>),
+            <span class="ident">Word</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> (<span class="ident">i</span> <span class="op">-</span>  <span class="ident">word_size</span>), <span class="number">4</span>),
+            <span class="ident">Word</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">key_ex</span>, <span class="number">4</span> <span class="op">*</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">4</span>, <span class="number">4</span>),
             <span class="ident">i</span>,
             <span class="ident">nk</span>,
             <span class="ident">nr</span>,
@@ -635,7 +635,7 @@
             <span class="ident">blocks_out</span> <span class="op">=</span> <span class="ident">blocks_out</span>.<span class="ident">set_chunk</span>(
                 <span class="ident">BLOCKSIZE</span>,
                 <span class="ident">i</span>,
-                <span class="kw-2">&amp;</span><span class="ident">xor_block</span>(<span class="ident">last_block</span>, <span class="ident">key_block</span>).<span class="ident">subr</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
+                <span class="kw-2">&amp;</span><span class="ident">xor_block</span>(<span class="ident">last_block</span>, <span class="ident">key_block</span>).<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
             );
         }
     }
