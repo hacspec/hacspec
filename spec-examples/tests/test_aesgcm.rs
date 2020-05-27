@@ -250,6 +250,111 @@ fn test_wycheproof() {
         }
     }
     // Check that we ran all tests.
-    println!("Ran {} out of {} tests and skipped {}.", tests_run, num_tests, skipped_tests);
-    assert_eq!(num_tests-skipped_tests, tests_run);
+    println!(
+        "Ran {} out of {} tests and skipped {}.",
+        tests_run, num_tests, skipped_tests
+    );
+    assert_eq!(num_tests - skipped_tests, tests_run);
+}
+
+#[allow(non_snake_case)]
+#[test]
+fn generate_test_vectors() {
+    const NUM_TESTS_EACH: usize = 100;
+    let mut tests_128 = Vec::new();
+    let mut tests_256 = Vec::new();
+
+    for i in 0..NUM_TESTS_EACH {
+        let msg_l = 123 + i;
+        let aad_l = 13 + i;
+
+        // Generate random key, nonce, message, and aad for AES 256.
+        let k = aes::Key256::random();
+        let nonce = aes::Nonce::random();
+        let msg = ByteSeq::random(msg_l);
+        let aad = ByteSeq::random(aad_l);
+
+        // Generate random key, nonce, message, and aad for AES 128.
+        let k128 = aes::Key128::random();
+        let nonce128 = aes::Nonce::random();
+        let msg128 = ByteSeq::random(msg_l);
+        let aad128 = ByteSeq::random(aad_l);
+
+        // Generate ciphertext and mac
+        let (cipher, mac) = encrypt_aes256(k, nonce, &aad, &msg);
+        let (cipher128, mac128) = encrypt_aes128(k128, nonce128, &aad128, &msg128);
+
+        // self-test
+        let decrypted_msg = decrypt_aes256(k, nonce, &aad, &cipher, mac).unwrap();
+        assert_eq!(
+            msg.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
+            decrypted_msg
+                .iter()
+                .map(|x| U8::declassify(*x))
+                .collect::<Vec<_>>()
+        );
+        let decrypted_msg128 = decrypt_aes128(k128, nonce128, &aad128, &cipher128, mac128).unwrap();
+        assert_eq!(
+            msg128
+                .iter()
+                .map(|x| U8::declassify(*x))
+                .collect::<Vec<_>>(),
+            decrypted_msg128
+                .iter()
+                .map(|x| U8::declassify(*x))
+                .collect::<Vec<_>>()
+        );
+
+        // Store result.
+        tests_256.push(Test {
+            tcId: i,
+            comment: String::default(),
+            key: k.to_hex(),
+            iv: nonce.to_hex(),
+            aad: aad.to_hex(),
+            msg: msg.to_hex(),
+            ct: cipher.to_hex(),
+            tag: mac.to_hex(),
+            result: "valid".to_string(),
+            flags: vec![],
+        });
+        tests_128.push(Test {
+            tcId: i + NUM_TESTS_EACH,
+            comment: String::default(),
+            key: k128.to_hex(),
+            iv: nonce128.to_hex(),
+            aad: aad128.to_hex(),
+            msg: msg128.to_hex(),
+            ct: cipher128.to_hex(),
+            tag: mac128.to_hex(),
+            result: "valid".to_string(),
+            flags: vec![],
+        });
+    }
+
+    let test_group_256 = TestGroup {
+        ivSize: aes::Nonce::length(),
+        keySize: aes::Key256::length(),
+        tagSize: gf128::Tag::length(),
+        r#type: "AeadTest".to_string(),
+        tests: tests_256,
+    };
+    let test_group_128 = TestGroup {
+        ivSize: aes::Nonce::length(),
+        keySize: aes::Key128::length(),
+        tagSize: gf128::Tag::length(),
+        r#type: "AeadTest".to_string(),
+        tests: tests_128,
+    };
+    let test_vector = AesGcmTestVector {
+        algorithm: "AES-GCM".to_string(),
+        generatorVersion: "0.0.1".to_string(),
+        numberOfTests: 1,
+        notes: None,
+        header: vec![],
+        testGroups: vec![test_group_128, test_group_256],
+    };
+
+    // Write out test vectors.
+    test_vector.write_file("tests/aes_gcm_test_vector_out.json");
 }

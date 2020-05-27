@@ -33,8 +33,8 @@ macro_rules! _array_base {
                 Self([<$t>::default(); $l])
             }
 
-            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn len(&self) -> usize {
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn length() -> usize {
                 $l
             }
 
@@ -287,8 +287,8 @@ macro_rules! generic_array {
                 Self([<T>::default(); $l])
             }
 
-            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn len(&self) -> usize {
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn length() -> usize {
                 $l
             }
 
