@@ -6,36 +6,40 @@ extern crate syn;
 
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
-use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident};
 use syn::spanned::Spanned;
+use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident, Index};
 
-
-fn struct_add(name: &Ident, data: &Data) -> TokenStream {
-      match *data {
-        Data::Struct(ref data) => {
-            match data.fields {
-                Fields::Named(ref fields) => {
-                    let recurse = fields.named.iter().map(|f| {
-                        let name = &f.ident;
-                        quote_spanned! {f.span() =>
-                            #name: self.#name + rhs.#name
-                        }
-                    });
-                    let expanded =
-                    quote! {
-                        #name { #(#recurse),* }
-                    };
-                    println!("Expanded: {}", expanded);
-                    expanded
-                }
-                Fields::Unnamed(_) |
-                Fields::Unit => {
-                    unimplemented!()
+fn make_binop(name: &Ident, data: &Data, op: TokenStream) -> TokenStream {
+    match *data {
+        Data::Struct(ref data) => match data.fields {
+            Fields::Named(ref fields) => {
+                let recurse = fields.named.iter().map(|f| {
+                    let name = &f.ident;
+                    quote_spanned! {f.span() =>
+                        #name: self.#name #op rhs.#name
+                    }
+                });
+                let expanded = quote! {
+                    #name { #(#recurse),* }
+                };
+                expanded
+            }
+            Fields::Unnamed(ref fields) => {
+                let recurse = fields.unnamed.iter().enumerate().map(|(i, f)| {
+                    let index = Index::from(i);
+                    quote_spanned! {f.span() =>
+                       self.#index #op rhs.#index
+                    }
+                });
+                quote! {
+                    #name ( #(#recurse),* )
                 }
             }
-        }
-        Data::Enum(_) | Data::Union(_) => unimplemented!(),
-}
+            Fields::Unit => quote! { #name {} },
+        },
+        | Data::Enum(_)
+        | Data::Union(_) => panic!("Deriving the Numeric trait is impossible for enums or unions"),
+    }
 }
 
 #[proc_macro_derive(Numeric)]
@@ -47,7 +51,12 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
     let generics = input_ast.generics;
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
-    let sum = struct_add(&name, &input_ast.data);
+    let sum = make_binop(&name, &input_ast.data, quote! { + });
+    let difference = make_binop(&name, &input_ast.data, quote! { - });
+    let mul = make_binop(&name, &input_ast.data, quote! { * });
+    let xor = make_binop(&name, &input_ast.data, quote! { ^ });
+    let or = make_binop(&name, &input_ast.data, quote! { | });
+    let and = make_binop(&name, &input_ast.data, quote! { & });
 
     let expanded = quote! {
         impl #impl_generics Add for #name #ty_generics #where_clause {
@@ -62,7 +71,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn sub(self, rhs: Self) -> Self {
-                todo!();
+                #difference
             }
         }
 
@@ -70,7 +79,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn mul(self, rhs: Self) -> Self {
-                todo!();
+                #mul
             }
         }
 
@@ -78,7 +87,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn bitxor(self, rhs: Self) -> Self {
-                todo!();
+                #xor
             }
         }
 
@@ -86,7 +95,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn bitor(self, rhs: Self) -> Self {
-                todo!();
+                #or
             }
         }
 
@@ -94,7 +103,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn bitand(self, rhs: Self) -> Self {
-                todo!();
+                #and
             }
         }
 
