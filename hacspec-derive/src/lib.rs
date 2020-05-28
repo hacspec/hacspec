@@ -9,14 +9,44 @@ use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident, Index};
 
-fn make_binop(name: &Ident, data: &Data, op: TokenStream) -> TokenStream {
+enum Expression {
+    Binop(TokenStream, TokenStream, TokenStream),
+    Shift(TokenStream, TokenStream, TokenStream),
+    Unop(TokenStream, TokenStream),
+    TwoArgsMethod(TokenStream, TokenStream, TokenStream),
+    OneArgsMethod(TokenStream, TokenStream),
+    OneArgsMethodWithBaseTypeArg(TokenStream, TokenStream),
+    ZeroArgsMethod(TokenStream)
+}
+
+fn make_impl_body(name: &Ident, data: &Data, inner_expression: Expression) -> TokenStream {
     match *data {
         Data::Struct(ref data) => match data.fields {
             Fields::Named(ref fields) => {
                 let recurse = fields.named.iter().map(|f| {
                     let name = &f.ident;
-                    quote_spanned! {f.span() =>
-                        #name: self.#name #op rhs.#name
+                    match &inner_expression {
+                        Expression::Binop(e1, op, e2) => quote_spanned! {f.span() =>
+                            #name: #e1.#name #op #e2.#name
+                        },
+                        Expression::Shift(e1, op, e2) => quote_spanned! {f.span() =>
+                            #name: #e1.#name #op #e2
+                        },
+                        Expression::Unop(op, e) => quote_spanned! {f.span() =>
+                            #name: #op #e.#name
+                        },
+                        Expression::TwoArgsMethod(func, e1, e2) => quote_spanned! {f.span() =>
+                            #name: self.#name.#func(#e1.#name, #e2.#name)
+                        },
+                        Expression::OneArgsMethod(func, e1) => quote_spanned! {f.span() =>
+                            #name: self.#name.#func(#e1.#name)
+                        },
+                        Expression::OneArgsMethodWithBaseTypeArg(func, e1) => quote_spanned! {f.span() =>
+                            #name: self.#name.#func(#e1)
+                        },
+                        Expression::ZeroArgsMethod(func) => quote_spanned! {f.span() =>
+                            #name: self.#name.#func()
+                        }
                     }
                 });
                 let expanded = quote! {
@@ -27,8 +57,28 @@ fn make_binop(name: &Ident, data: &Data, op: TokenStream) -> TokenStream {
             Fields::Unnamed(ref fields) => {
                 let recurse = fields.unnamed.iter().enumerate().map(|(i, f)| {
                     let index = Index::from(i);
-                    quote_spanned! {f.span() =>
-                       self.#index #op rhs.#index
+                    match &inner_expression {
+                        Expression::Binop(e1, op, e2) => quote_spanned! {f.span() =>
+                            #e1.#index #op #e2.#index
+                        },
+                        Expression::Shift(e1, op, e2) => quote_spanned! {f.span() =>
+                            #e1.#index #op #e2
+                        },
+                        Expression::Unop(op, e) => quote_spanned! {f.span() =>
+                            #op #e.#index
+                        },
+                        Expression::TwoArgsMethod(func, e1, e2) => quote_spanned! {f.span() =>
+                            self.#index.#func(#e1.#index, #e2.#index)
+                        },
+                        Expression::OneArgsMethod(func, e1) => quote_spanned! {f.span() =>
+                            self.#index.#func(#e1.#index)
+                        },
+                        Expression::OneArgsMethodWithBaseTypeArg(func, e1) => quote_spanned! {f.span() =>
+                            self.#index.#func(#e1)
+                        },
+                        Expression::ZeroArgsMethod(func) => quote_spanned! {f.span() =>
+                            self.#index.#func()
+                        }
                     }
                 });
                 quote! {
@@ -37,8 +87,9 @@ fn make_binop(name: &Ident, data: &Data, op: TokenStream) -> TokenStream {
             }
             Fields::Unit => quote! { #name {} },
         },
-        | Data::Enum(_)
-        | Data::Union(_) => panic!("Deriving the Numeric trait is impossible for enums or unions"),
+        Data::Enum(_) | Data::Union(_) => {
+            panic!("Deriving the Numeric trait is impossible for enums or unions")
+        }
     }
 }
 
@@ -51,12 +102,127 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
     let generics = input_ast.generics;
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
-    let sum = make_binop(&name, &input_ast.data, quote! { + });
-    let difference = make_binop(&name, &input_ast.data, quote! { - });
-    let mul = make_binop(&name, &input_ast.data, quote! { * });
-    let xor = make_binop(&name, &input_ast.data, quote! { ^ });
-    let or = make_binop(&name, &input_ast.data, quote! { | });
-    let and = make_binop(&name, &input_ast.data, quote! { & });
+    let sum = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Binop(quote! { self }, quote! { + }, quote! { rhs }),
+    );
+    let difference = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Binop(quote! { self }, quote! { - }, quote! { rhs }),
+    );
+    let mul = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Binop(quote! { self }, quote! { * }, quote! { rhs }),
+    );
+    let xor = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Binop(quote! { self }, quote! { ^ }, quote! { rhs }),
+    );
+    let or = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Binop(quote! { self }, quote! { | }, quote! { rhs }),
+    );
+    let and = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Binop(quote! { self }, quote! { & }, quote! { rhs }),
+    );
+    let shl = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Shift(quote! { self }, quote! { << }, quote! { v }),
+    );
+    let shr = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Shift(quote! { self }, quote! { >> }, quote! { v }),
+    );
+    let not = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::Unop(quote!{ ! }, quote! { self} )
+    );
+    let sub_mod = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::TwoArgsMethod(quote!{ sub_mod }, quote! { rhs }, quote! { n })
+    );
+    let add_mod = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::TwoArgsMethod(quote!{ add_mod }, quote! { rhs }, quote! { n })
+    );
+    let mul_mod = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::TwoArgsMethod(quote!{ mul_mod }, quote! { rhs }, quote! { n })
+    );
+    let pow_mod = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::TwoArgsMethod(quote!{ pow_mod }, quote! { exp }, quote! { n })
+    );
+    let modulo = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ modulo }, quote! { n })
+    );
+    let signed_modulo = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ signed_modulo }, quote! { n })
+    );
+    let wrap_add = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ wrap_add }, quote! { rhs })
+    );
+    let wrap_sub = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ wrap_sub }, quote! { rhs })
+    );
+    let wrap_mul = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ wrap_mul }, quote! { rhs })
+    );
+    let wrap_div = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ wrap_div }, quote! { rhs })
+    );
+    let pow_self = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ pow_self }, quote! { exp })
+    );
+    let divide = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ divide }, quote! { rhs })
+    );
+    let inv = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethod(quote!{ inv }, quote! { n })
+    );
+    let absolute = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::ZeroArgsMethod(quote!{ absolute })
+    );
+    let exp = make_impl_body(
+        &name,
+        &input_ast.data,
+        Expression::OneArgsMethodWithBaseTypeArg(quote!{ exp }, quote! { exp })
+    );
+
 
     let expanded = quote! {
         impl #impl_generics Add for #name #ty_generics #where_clause {
@@ -111,7 +277,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn shl(self, v: usize) -> Self {
-                todo!();
+                #shl
             }
         }
 
@@ -119,7 +285,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn shr(self, v: usize) -> Self {
-                todo!();
+                #shr
             }
         }
 
@@ -127,112 +293,112 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             type Output = Self;
 
             fn not(self) -> Self {
-                todo!();
+                #not
             }
         }
 
         impl #impl_generics ModNumeric for #name #ty_generics #where_clause  {
             /// (self - rhs) % n.
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                todo!();
+                #sub_mod
             }
             /// `(self + rhs) % n`
             fn add_mod(self, rhs: Self, n: Self) -> Self {
-                todo!();
+                #add_mod
             }
             /// `(self * rhs) % n`
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                todo!();
+                #mul_mod
             }
             /// `(self ^ exp) % n`
             fn pow_mod(self, exp: Self, n: Self) -> Self {
-                todo!();
+                #pow_mod
             }
             /// `self % n`
             fn modulo(self, n: Self) -> Self {
-                todo!();
+                #modulo
             }
             /// `self % n` that always returns a positive integer
             fn signed_modulo(self, n: Self) -> Self {
-                todo!();
+                #signed_modulo
             }
             /// `|self|`
             fn absolute(self) -> Self {
-                todo!();
+                #absolute
             }
         }
 
         impl #impl_generics Numeric for #name #ty_generics #where_clause {
             /// Return largest value that can be represented.
             fn max_val() -> Self  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
 
             fn wrap_add(self, rhs: Self) -> Self  {
-                todo!();
+                #wrap_add
             }
             fn wrap_sub(self, rhs: Self) -> Self  {
-                todo!();
+                #wrap_sub
             }
             fn wrap_mul(self, rhs: Self) -> Self  {
-                todo!();
+                #wrap_mul
             }
             fn wrap_div(self, rhs: Self) -> Self  {
-                todo!();
+                #wrap_div
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
             fn exp(self, exp: u32) -> Self  {
-                todo!();
+                #exp
             }
             /// `self ^ exp` where `exp` is a `Self`.
             fn pow_self(self, exp: Self) -> Self  {
-                todo!();
+                #pow_self
             }
             /// Division.
             fn divide(self, rhs: Self) -> Self  {
-                todo!();
+                #divide
             }
             /// Invert self modulo n.
             fn inv(self, n: Self) -> Self  {
-                todo!();
+                #inv
             }
 
             // Comparison functions returning bool.
             fn equal(self, other: Self) -> bool  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn greater_than(self, other: Self) -> bool  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn greater_than_or_qual(self, other: Self) -> bool  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn less_than(self, other: Self) -> bool  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn less_than_or_equal(self, other: Self) -> bool  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
             fn not_equal_bm(self, other: Self) -> Self  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn equal_bm(self, other: Self) -> Self  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn greater_than_bm(self, other: Self) -> Self  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn less_than_bm(self, other: Self) -> Self  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
             fn less_than_or_equal_bm(self, other: Self) -> Self  {
-                todo!();
+                panic!("Function not implemented by auto-deriving...")
             }
         };
     };
