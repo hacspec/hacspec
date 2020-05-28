@@ -1,14 +1,45 @@
 extern crate hacspec;
 extern crate proc_macro;
+extern crate proc_macro2;
 extern crate quote;
 extern crate syn;
 
-use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use proc_macro2::TokenStream;
+use quote::{quote, quote_spanned};
+use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident};
+use syn::spanned::Spanned;
+
+
+fn struct_add(name: &Ident, data: &Data) -> TokenStream {
+      match *data {
+        Data::Struct(ref data) => {
+            match data.fields {
+                Fields::Named(ref fields) => {
+                    let recurse = fields.named.iter().map(|f| {
+                        let name = &f.ident;
+                        quote_spanned! {f.span() =>
+                            #name: self.#name + rhs.#name
+                        }
+                    });
+                    let expanded =
+                    quote! {
+                        #name { #(#recurse),* }
+                    };
+                    println!("Expanded: {}", expanded);
+                    expanded
+                }
+                Fields::Unnamed(_) |
+                Fields::Unit => {
+                    unimplemented!()
+                }
+            }
+        }
+        Data::Enum(_) | Data::Union(_) => unimplemented!(),
+}
+}
 
 #[proc_macro_derive(Numeric)]
-pub fn derive_numeric_impl(input_struct: TokenStream) -> TokenStream {
+pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input_ast = parse_macro_input!(input_struct as DeriveInput);
 
     // Used in the quasi-quotation below as `#name`.
@@ -16,12 +47,14 @@ pub fn derive_numeric_impl(input_struct: TokenStream) -> TokenStream {
     let generics = input_ast.generics;
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
+    let sum = struct_add(&name, &input_ast.data);
+
     let expanded = quote! {
         impl #impl_generics Add for #name #ty_generics #where_clause {
             type Output = Self;
 
             fn add(self, rhs: Self) -> Self {
-                todo!();
+                #sum
             }
         }
 
@@ -192,8 +225,7 @@ pub fn derive_numeric_impl(input_struct: TokenStream) -> TokenStream {
             fn less_than_or_equal_bm(self, other: Self) -> Self  {
                 todo!();
             }
-        }
-
+        };
     };
 
     proc_macro::TokenStream::from(expanded)
