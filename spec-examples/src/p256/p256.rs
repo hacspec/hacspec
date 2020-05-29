@@ -1,11 +1,15 @@
 // Import hacspec and all needed definitions.
 use hacspec::prelude::*;
 
-public_nat_mod!(FieldElement, FieldCanvas, 256, "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff");
+public_nat_mod!(
+    FieldElement,
+    FieldCanvas,
+    256,
+    "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+);
 
 abstract_unsigned_public_integer!(Scalar, 256);
 
-// TODO: these two aren't cool
 type Jacobian = (FieldElement, FieldElement, FieldElement);
 type Affine = (FieldElement, FieldElement);
 
@@ -18,6 +22,10 @@ fn jacobian_to_affine(p: Jacobian) -> Affine {
     let x = x * z2i;
     let y = y * z3i;
     (x, y)
+}
+
+fn affine_to_jacobian(p: Affine) -> Jacobian {
+    (p.0, p.1, FieldElement::from_literal(1))
 }
 
 fn point_double(p: Jacobian) -> Jacobian {
@@ -90,6 +98,7 @@ fn point_add(p: Jacobian, q: Jacobian) -> Jacobian {
     (x3, y3, z3)
 }
 
+#[allow(dead_code)]
 fn montgomery_ladder(k: Scalar, init: Jacobian) -> Jacobian {
     let mut p_working = (
         (
@@ -114,12 +123,32 @@ fn montgomery_ladder(k: Scalar, init: Jacobian) -> Jacobian {
     p_working.0
 }
 
-pub fn point_mul(k: Scalar) -> Affine {
+fn ltr_mul(k: Scalar, p: Jacobian) -> Jacobian {
+    let mut q = (
+        FieldElement::from_literal(0),
+        FieldElement::from_literal(1),
+        FieldElement::from_literal(0),
+    );
+    for i in 0..256 {
+        q = point_double(q);
+        if k.bit(255 - i) {
+            q = point_add(q, p);
+        }
+    }
+    q
+}
+
+pub fn point_mul_base(k: Scalar) -> Affine {
     let base_point = (
         FieldElement::from_hex("6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296"),
         FieldElement::from_hex("4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5"),
         FieldElement::from_literal(1),
     );
-    let jac = montgomery_ladder(k, base_point);
+    let jac = ltr_mul(k, base_point);
+    jacobian_to_affine(jac)
+}
+
+pub fn point_mul(k: Scalar, p: Affine) -> Affine {
+    let jac = ltr_mul(k, affine_to_jacobian(p));
     jacobian_to_affine(jac)
 }
