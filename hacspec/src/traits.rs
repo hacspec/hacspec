@@ -140,7 +140,8 @@ pub trait PublicInteger: Integer {
     type SecretVersion : Integer;
 }
 pub trait PublicIntegerCopy: PublicInteger + Copy {
-    type SecretVersionCopy : Integer + Copy;}
+    type SecretVersionCopy : Integer + Copy;
+}
 
 pub trait UnsignedInteger: Integer {}
 pub trait UnsignedIntegerCopy: UnsignedInteger + Copy {}
