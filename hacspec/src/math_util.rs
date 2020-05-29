@@ -1,6 +1,6 @@
-///! 
+///!
 ///! A set of mathematical utility functions.
-///! 
+///!
 use crate::prelude::*;
 
 #[inline]
@@ -34,6 +34,7 @@ pub fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
 }
 
 /// Polynomial multiplication using operand scanning without modulo.
+#[allow(dead_code)]
 #[inline]
 pub(crate) fn poly_mul_plain<T: Numeric + Copy>(x: &[T], y: &[T], _n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
@@ -47,6 +48,7 @@ pub(crate) fn poly_mul_plain<T: Numeric + Copy>(x: &[T], y: &[T], _n: T) -> Vec<
 
 /// Polynomial multiplication using operand scanning.
 /// This is very inefficient and prone to side-channel attacks.
+#[allow(dead_code)]
 #[inline]
 pub(crate) fn poly_mul_op_scanning<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];

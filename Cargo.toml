@@ -3,6 +3,7 @@
 members = [
     "hacspec",
     "hacspec-dev",
+    "hacspec-derive",
     "secret-integers",
     "abstract-integers",
     "spec-examples",
