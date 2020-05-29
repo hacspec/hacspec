@@ -26,17 +26,15 @@ fn key_gen(key: Key, iv: IV) -> Key {
 }
 
 fn encode_r(r: Block) -> FieldElement {
-    let mut r_128 = U128Word::new();
-    r_128 = r_128.update_slice(0, &r, 0, BLOCKSIZE);
+    let r_128 = U128Word::from_slice(&r, 0, BLOCKSIZE);
     let r_uint = U128_from_le_bytes(r_128);
     let r_uint = r_uint & U128(0x0fff_fffc_0fff_fffc_0fff_fffc_0fff_ffff);
     FieldElement::from_secret_literal(r_uint)
 }
 
 fn encode(block: &ByteSeq) -> FieldElement {
-    let mut block_as_u128 = U128Word::new();
     let block_len = block.len();
-    block_as_u128 = block_as_u128.update_slice(0, block, 0, min(16, block_len));
+    let block_as_u128 = U128Word::from_slice(block, 0, min(16, block_len));
     let w_elem = FieldElement::from_secret_literal(U128_from_le_bytes(block_as_u128));
     let l_elem = FieldCanvas::pow2(8 * block_len).into();
     w_elem + l_elem
@@ -44,12 +42,9 @@ fn encode(block: &ByteSeq) -> FieldElement {
 
 fn poly_inner(m: &ByteSeq, r: FieldElement) -> FieldElement {
     let mut acc = FieldElement::from_literal(0);
-    let m_len = m.len();
-    for i in (0..m_len).step_by(BLOCKSIZE) {
-        let block_len = min(BLOCKSIZE, m_len - i);
-        let mut b = Seq::new(block_len);
-        b = b.update_slice(0, m, i, block_len);
-        acc = (acc + encode(&b)) * r;
+    for i in 0..m.num_chunks(BLOCKSIZE) {
+        let (_, block) = m.get_chunk(BLOCKSIZE, i);
+        acc = (acc + encode(&block)) * r;
     }
     acc
 }

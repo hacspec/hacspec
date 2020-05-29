@@ -63,7 +63,7 @@ macro_rules! _array_base {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
-                debug_assert_eq!(len, a.len());
+                debug_assert!(len <= a.len());
                 a = a.update_slice(0, input, start, len);
                 a
             }
@@ -317,7 +317,7 @@ macro_rules! generic_array {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             pub fn from_slice<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
-                debug_assert_eq!(len, a.len());
+                debug_assert!(len <= a.len());
                 a = a.update_slice(0, input, start, len);
                 a
             }
