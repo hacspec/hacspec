@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["point_mul",""]],"struct":[["FieldCanvas",""],["FieldElement",""],["Scalar",""]]});
+initSidebarItems({"fn":[["point_mul",""],["point_mul_base",""]],"struct":[["FieldCanvas",""],["FieldElement",""],["Scalar",""]]});
