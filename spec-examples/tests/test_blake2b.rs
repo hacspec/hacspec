@@ -1,4 +1,5 @@
 use hacspec::prelude::*;
+use hacspec_dev::prelude::*;
 
 use hacspec_examples::blake2::blake2b::*;
 
@@ -78,4 +79,28 @@ fn test_multi_block_string_longer() {
         expected.iter().map(|x| *x).collect::<Vec<_>>(),
         h.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
     );
+}
+
+create_test_vectors!(
+    OfficialKat,
+    hash: String,
+    r#in: String,
+    key: String,
+    out: String
+);
+
+#[test]
+fn test_official_kat() {
+    let kat: Vec<OfficialKat> = OfficialKat::from_file("tests/blake2-kat.json");
+
+    for test in kat.iter() {
+        if test.hash == "blake2b" && test.key == "" {
+            println!("expected: {}", test.out);
+            let h = blake2b(&ByteSeq::from_hex(&test.r#in));
+            assert_eq!(
+                ByteSeq::from_hex(&test.out),
+                ByteSeq::from_slice(&h, 0, h.len())
+            );
+        }
+    }
 }

@@ -226,6 +226,7 @@ declare_seq!(PublicSeq, PublicInteger);
 declare_seq!(Seq);
 
 pub type ByteSeq = Seq<U8>;
+pub type PublicByteSeq = PublicSeq<u8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {

@@ -56,6 +56,5 @@ pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> ByteSeq {
         t_i = hmac(prk, &hmac_txt_in);
         t = t.update(i as usize * t_i.len(), &t_i);
     }
-    // TODO: slice is overloaded (impl Sub and slice). This should get fixed ...
     t.slice(0, l)
 }
