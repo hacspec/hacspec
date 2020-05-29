@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 hacspec = { path = "../hacspec" }
+hacspec-derive = { path = "../hacspec-derive" }
 secret_integers = { path = "../secret-integers" }
 abstract_integers = { path = "../abstract-integers" }
 
