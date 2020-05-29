@@ -188,7 +188,7 @@ create_test_vectors!(
 #[allow(non_snake_case)]
 #[test]
 fn test_wycheproof() {
-    let tests = AesGcmTestVector::from_file("tests/aes_gcm_test_wycheproof.json");
+    let tests: AesGcmTestVector = AesGcmTestVector::from_file("tests/aes_gcm_test_wycheproof.json");
 
     let num_tests = tests.numberOfTests;
     let mut skipped_tests = 0;

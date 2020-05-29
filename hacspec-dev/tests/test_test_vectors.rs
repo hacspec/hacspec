@@ -13,7 +13,7 @@ fn test_read_test_vectors() {
         s: String
     );
 
-    let tests = MyTestVectors::from_file("tests/sample_test_vector.json");
+    let tests: MyTestVectors = MyTestVectors::from_file("tests/sample_test_vector.json");
     
     assert_eq!(tests.info, "Some info text etc.");
 
