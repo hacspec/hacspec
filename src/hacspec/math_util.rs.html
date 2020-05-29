@@ -383,10 +383,12 @@
 <span id="383">383</span>
 <span id="384">384</span>
 <span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">///! </span>
+<span class="doccomment">///!</span>
 <span class="doccomment">///! A set of mathematical utility functions.</span>
-<span class="doccomment">///! </span>
+<span class="doccomment">///!</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 
 <span class="attribute">#[<span class="ident">inline</span>]</span>
@@ -420,6 +422,7 @@
 }
 
 <span class="doccomment">/// Polynomial multiplication using operand scanning without modulo.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">poly_mul_plain</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Numeric</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">_n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">x</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">y</span>.<span class="ident">len</span>()];
@@ -433,6 +436,7 @@
 
 <span class="doccomment">/// Polynomial multiplication using operand scanning.</span>
 <span class="doccomment">/// This is very inefficient and prone to side-channel attacks.</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">poly_mul_op_scanning</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Numeric</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">n</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">T</span>::<span class="ident">default</span>(); <span class="ident">x</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="ident">y</span>.<span class="ident">len</span>()];
