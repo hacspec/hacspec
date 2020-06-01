@@ -3,6 +3,8 @@ use hacspec_examples::ec::{arithmetic, p256, p384, Affine};
 use hacspec::prelude::*;
 use hacspec_dev::prelude::*;
 
+use rayon::prelude::*;
+
 create_test_vectors!(
     TestVector,
     algorithm: String,
@@ -38,9 +40,6 @@ fn run_test<Scalar: UnsignedIntegerCopy, FieldElement: UnsignedIntegerCopy>(
     tests: TestVector,
     curve: &'static str,
 ) {
-    let num_tests = tests.numberOfTests;
-    let mut skipped_tests = 0;
-    let mut tests_run = 0;
     match tests.algorithm.as_ref() {
         "ECDH" => (),
         _ => panic!("This is not an ECDH test vector."),
@@ -54,18 +53,16 @@ fn run_test<Scalar: UnsignedIntegerCopy, FieldElement: UnsignedIntegerCopy>(
             "secp384r1" => 96,
             _ => panic!("I don't know that curve"),
         };
-        for test in testGroup.tests.iter() {
+        testGroup.tests.par_iter().for_each(|test| {
             println!("Test {:?}: {:?}", test.tcId, test.comment);
             if !test.result.eq("valid") {
                 println!("We're only doing valid tests for now.");
-                skipped_tests += 1;
-                continue;
+                return;
             }
             if test.comment == "compressed public key" {
                 // not implemented
                 println!("Compressed public keys are not supported.");
-                skipped_tests += 1;
-                continue;
+                return;
             }
             assert_eq!(&test.public[0..2], "04");
             let k = Scalar::from_hex_string(&test.private);
@@ -80,15 +77,8 @@ fn run_test<Scalar: UnsignedIntegerCopy, FieldElement: UnsignedIntegerCopy>(
             let shared = arithmetic::point_mul(k, p);
             // println!("computed: {:?}", shared);
             assert!(shared.0.equal(expected));
-            tests_run += 1;
-        }
+        });
     }
-    // Check that we ran all tests.
-    println!(
-        "Ran {} out of {} tests and skipped {}.",
-        tests_run, num_tests, skipped_tests
-    );
-    assert_eq!(num_tests - skipped_tests, tests_run);
 }
 
 #[test]
