@@ -237,6 +237,7 @@
 <span id="237">237</span>
 <span id="238">238</span>
 <span id="239">239</span>
+<span id="240">240</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module specifies the `Numeric` trait.</span>
@@ -380,7 +381,8 @@
     <span class="kw">type</span> <span class="ident">SecretVersion</span> : <span class="ident">Integer</span>;
 }
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PublicIntegerCopy</span>: <span class="ident">PublicInteger</span> <span class="op">+</span> <span class="ident">Copy</span> {
-    <span class="kw">type</span> <span class="ident">SecretVersionCopy</span> : <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span>;}
+    <span class="kw">type</span> <span class="ident">SecretVersionCopy</span> : <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span>;
+}
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">UnsignedInteger</span>: <span class="ident">Integer</span> {}
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">UnsignedIntegerCopy</span>: <span class="ident">UnsignedInteger</span> <span class="op">+</span> <span class="ident">Copy</span> {}
