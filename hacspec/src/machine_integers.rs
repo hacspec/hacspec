@@ -134,7 +134,7 @@ macro_rules! implement_public_mi {
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn from_hex_string(s: &String) -> Self {
                 <$t>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap()
             }
@@ -398,7 +398,7 @@ macro_rules! implement_secret_mi {
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn from_hex_string(s: &String) -> Self {
                 Self::classify(<$base>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap())
             }

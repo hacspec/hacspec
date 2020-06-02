@@ -16,4 +16,5 @@ abstract_integers = { path = "../abstract-integers" }
 # FIXME: Why?
 serde_json = "1.0"
 serde = {version = "1.0", features = ["derive"]}
+rayon = "1.3.0"
 hacspec-dev = { path = "../hacspec-dev" }
