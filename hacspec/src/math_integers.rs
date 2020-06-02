@@ -34,7 +34,7 @@ macro_rules! unsigned_public_integer {
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn from_hex_string(s: &String) -> Self {
                 Self::from_hex(&s.replace("0x", ""))
             }
@@ -535,7 +535,7 @@ macro_rules! signed_integer {
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             /// Read hex string to `Self`.
             fn from_hex_string(s: &String) -> Self {
                 let sign_str = if s.starts_with("-") { "-" } else { "+" };
@@ -717,7 +717,7 @@ macro_rules! nat_mod {
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn from_hex_string(s: &String) -> Self {
                 Self::from_hex(&s.replace("0x", ""))
             }
@@ -961,7 +961,7 @@ macro_rules! public_nat_mod {
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn from_hex_string(s: &String) -> Self {
                 Self::from_hex(&s.replace("0x", ""))
             }
