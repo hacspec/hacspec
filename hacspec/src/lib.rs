@@ -22,15 +22,18 @@
 //!
 
 pub mod array;
+pub mod bigint_integers;
 pub mod machine_integers;
 pub mod math_integers;
 pub mod math_util;
 pub mod traits;
-pub mod poly;
 pub mod prelude;
 pub mod seq;
 pub mod util;
 pub mod vec_integers;
+pub mod vec_integers_secret;
+pub mod vec_integers_public;
+pub mod vec_util;
 pub mod transmute;
 
 use crate::prelude::*;

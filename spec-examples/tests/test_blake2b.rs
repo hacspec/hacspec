@@ -1,4 +1,5 @@
 use hacspec::prelude::*;
+use hacspec_dev::prelude::*;
 
 use hacspec_examples::blake2::blake2b::*;
 
@@ -11,7 +12,7 @@ static EXPECTED_ABC: [u8; 64] = [
 
 #[test]
 fn test_single_block() {
-    let m = ByteSeq::from_slice(&[U8(0x61), U8(0x62), U8(0x63)]);
+    let m = ByteSeq::from_native_slice(&[U8(0x61), U8(0x62), U8(0x63)]);
     let h = blake2b(&m);
     assert_eq!(
         EXPECTED_ABC.iter().map(|x| *x).collect::<Vec<_>>(),
@@ -22,7 +23,7 @@ fn test_single_block() {
 #[test]
 fn test_single_block_string() {
     let m = String::from("abc");
-    let h = blake2b(&ByteSeq::from_slice(
+    let h = blake2b(&ByteSeq::from_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -37,7 +38,7 @@ fn test_single_block_string() {
 #[test]
 fn test_multi_block_string() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = blake2b(&ByteSeq::from_slice(
+    let h = blake2b(&ByteSeq::from_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -60,7 +61,7 @@ fn test_multi_block_string() {
 #[test]
 fn test_multi_block_string_longer() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = blake2b(&ByteSeq::from_slice(
+    let h = blake2b(&ByteSeq::from_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -78,4 +79,28 @@ fn test_multi_block_string_longer() {
         expected.iter().map(|x| *x).collect::<Vec<_>>(),
         h.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
     );
+}
+
+create_test_vectors!(
+    OfficialKat,
+    hash: String,
+    r#in: String,
+    key: String,
+    out: String
+);
+
+#[test]
+fn test_official_kat() {
+    let kat: Vec<OfficialKat> = OfficialKat::from_file("tests/blake2-kat.json");
+
+    for test in kat.iter() {
+        if test.hash == "blake2b" && test.key == "" {
+            println!("expected: {}", test.out);
+            let h = blake2b(&ByteSeq::from_hex(&test.r#in));
+            assert_eq!(
+                ByteSeq::from_hex(&test.out),
+                ByteSeq::from_slice(&h, 0, h.len())
+            );
+        }
+    }
 }

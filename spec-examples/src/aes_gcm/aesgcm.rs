@@ -2,9 +2,7 @@
 use hacspec::prelude::*;
 
 // Import aes and gcm
-use super::aes::{
-    self, aes_ctr_keyblock, aes_encrypt, Block
-};
+use super::aes::{self, aes_ctr_keyblock, aes_encrypt, Block};
 
 use super::gf128::{gmac, Key, Tag};
 
@@ -44,8 +42,15 @@ pub(crate) fn encrypt_aes(
 ) -> (ByteSeq, Tag) {
     let iv0 = aes::Nonce::new();
 
-    let mac_key = aes_ctr_keyblock(key, iv0, U32(0), aes::nk(alg), aes::nr(alg), alg);
-    let tag_mix = aes_ctr_keyblock(key, iv, U32(1), aes::nk(alg), aes::nr(alg), alg);
+    let mac_key = aes_ctr_keyblock(
+        key,
+        iv0,
+        U32(0),
+        aes::key_length(alg),
+        aes::rounds(alg),
+        alg,
+    );
+    let tag_mix = aes_ctr_keyblock(key, iv, U32(1), aes::key_length(alg), aes::rounds(alg), alg);
 
     let cipher_text = aes_encrypt(key, iv, U32(2), msg, alg);
     let padded_msg = pad_aad_msg(aad, &cipher_text);
@@ -61,7 +66,13 @@ pub fn encrypt_aes128(
     aad: &ByteSeq,
     msg: &ByteSeq,
 ) -> (ByteSeq, Tag) {
-    encrypt_aes(&ByteSeq::from_seq(&key), iv, aad, msg, aes::AesVariant::Aes128)
+    encrypt_aes(
+        &ByteSeq::from_seq(&key),
+        iv,
+        aad,
+        msg,
+        aes::AesVariant::Aes128,
+    )
 }
 
 pub fn encrypt_aes256(
@@ -70,7 +81,13 @@ pub fn encrypt_aes256(
     aad: &ByteSeq,
     msg: &ByteSeq,
 ) -> (ByteSeq, Tag) {
-    encrypt_aes(&ByteSeq::from_seq(&key), iv, aad, msg, aes::AesVariant::Aes256)
+    encrypt_aes(
+        &ByteSeq::from_seq(&key),
+        iv,
+        aad,
+        msg,
+        aes::AesVariant::Aes256,
+    )
 }
 
 pub(crate) fn decrypt_aes(
@@ -83,8 +100,15 @@ pub(crate) fn decrypt_aes(
 ) -> Result<ByteSeq, String> {
     let iv0 = aes::Nonce::new();
 
-    let mac_key = aes_ctr_keyblock(key, iv0, U32(0), aes::nk(alg), aes::nr(alg), alg);
-    let tag_mix = aes_ctr_keyblock(key, iv, U32(1), aes::nk(alg), aes::nr(alg), alg);
+    let mac_key = aes_ctr_keyblock(
+        key,
+        iv0,
+        U32(0),
+        aes::key_length(alg),
+        aes::rounds(alg),
+        alg,
+    );
+    let tag_mix = aes_ctr_keyblock(key, iv, U32(1), aes::key_length(alg), aes::rounds(alg), alg);
 
     let padded_msg = pad_aad_msg(aad, cipher_text);
     let my_tag = gmac(&padded_msg, Key::from_seq(&mac_key));
@@ -104,7 +128,14 @@ pub fn decrypt_aes128(
     cipher_text: &ByteSeq,
     tag: Tag,
 ) -> Result<ByteSeq, String> {
-    decrypt_aes(&ByteSeq::from_seq(&key), iv, aad, cipher_text, tag, aes::AesVariant::Aes128)
+    decrypt_aes(
+        &ByteSeq::from_seq(&key),
+        iv,
+        aad,
+        cipher_text,
+        tag,
+        aes::AesVariant::Aes128,
+    )
 }
 
 pub fn decrypt_aes256(
@@ -114,5 +145,12 @@ pub fn decrypt_aes256(
     cipher_text: &ByteSeq,
     tag: Tag,
 ) -> Result<ByteSeq, String> {
-    decrypt_aes(&ByteSeq::from_seq(&key), iv, aad, cipher_text, tag, aes::AesVariant::Aes256)
+    decrypt_aes(
+        &ByteSeq::from_seq(&key),
+        iv,
+        aad,
+        cipher_text,
+        tag,
+        aes::AesVariant::Aes256,
+    )
 }
