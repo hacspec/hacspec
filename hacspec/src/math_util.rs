@@ -167,6 +167,7 @@ pub fn mul_poly_irr(a:&Seq<u128>,b:&Seq<u128>, irr:&Seq<u128>,modulo:u128) -> Se
 
             if i + j > a.len() - 2 {
                 // modulo irr
+                // factor is the coeff
                 let factor = a[i] * b[j];
                 result[1+((i + j) % (a.len() -1))] = (result[1 + (i + j) % (a.len() - 1)] + modulo -(factor * irr[1] % modulo)) % modulo;
                 result[(i + j) % (a.len() -1)] = (result[(i + j) % (a.len() - 1)] + modulo -(factor * irr[0] % modulo)) % modulo;
@@ -207,7 +208,8 @@ fn is_empty(poly:&Seq<u128>)->bool{
     }
     result
 }
-fn deg(poly:&Seq<u128>) -> usize{
+
+pub fn deg(poly:&Seq<u128>) -> usize{
     let mut deg = 0;
     for i in 0..poly.len()-1{
         if poly[poly.len() - 1 - i] != 0{
@@ -218,9 +220,55 @@ fn deg(poly:&Seq<u128>) -> usize{
     deg
 }
 
-fn leading_coef(poly:&Seq<u128>) -> u128{
+pub fn weight(poly:&Seq<u128>)->usize{
+    let tmp = Seq::from_seq(poly);
+    let mut weight = 0;
+    for i in 0..tmp.len(){
+        if tmp[i] != 0{
+            weight = weight + 1;
+        }
+    }
+    weight
+}
+
+
+pub fn leading_coef(poly:&Seq<u128>) -> u128{
     poly[deg(poly)]
 }
+
+pub fn round(poly:&Seq<u128>, round_to:u128)->Seq<u128>{
+    let mut result = Seq::from_seq(poly);
+    for i in 0..poly.len(){
+        let r = poly[i] % round_to;
+        result[i] = poly[i] - r;
+    }
+    result
+}
+
+pub fn lift(a:&Seq<u128>,b:&Seq<u128>,irr:&Seq<i128>) -> Seq<i128>{
+    let mut result:Seq<i128> = Seq::new(a.len());
+    for i in 0..a.len(){
+        if a[i] == 0{
+            continue;
+        }
+        for j in 0..b.len(){
+            if b[j] == 0 {
+                continue;
+            }
+
+            if i + j > a.len() - 2 {
+                // modulo x^p - x - 1
+                let factor = (a[i] * b[j]) as i128;
+                result[1+((i + j) % (a.len() -1))] = result[1 + (i + j) % (a.len() - 1)] - ((factor * irr[1]));
+                result[(i + j) % (a.len() -1)] = result[(i + j) % (a.len() - 1)] - ((factor * irr[0]));
+                continue;
+            }
+            result[i + j] = result[i + j] + ((a[i] as i128 * irr[j]));
+        }
+    }
+    result
+}
+
 
 
 pub fn add_poly(a:&Seq<u128>, b:&Seq<u128>, modulo:u128)->Seq<u128>{
