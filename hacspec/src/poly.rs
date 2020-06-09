@@ -154,6 +154,19 @@ pub fn poly_mul<T: Numeric>(x: &[T], y: &[T], n: T) -> Vec<T> {
     out
 }
 
+<<<<<<< HEAD
+=======
+
+#[inline]
+pub fn random_poly<T: TRestrictions<T>>(l: usize, min: i128, max: i128) -> Seq<T> {
+    let mut rng = rand::thread_rng();
+    (0..l)
+        .map(|_| T::from_signed_literal(rng.gen_range(min, max)))
+        .collect::<Vec<T>>()
+        .into()
+}
+
+>>>>>>> dbe728d273b91de0205775ac7c0c55a857cd0922
 /// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.
 /// The length of x and degree of y are assumed to be public
 ///
@@ -173,7 +186,11 @@ pub fn poly_div<T: Numeric>(x: &[T], y: &[T], n: T) -> (Vec<T>, Vec<T>) {
         let idx = rlen - 1 - i;
         let t = if n.equal(T::default()) {
             // In ℤ we try this. It might not work.
+<<<<<<< HEAD
             rem[idx].div(c) // XXX: Update once we change to Numeric
+=======
+            rem[idx] / c // XXX: Update once we change to Numeric
+>>>>>>> dbe728d273b91de0205775ac7c0c55a857cd0922
         } else {
             // divide by using inverse mod n
             rem[idx] * T::inv(c, n)
@@ -204,6 +221,9 @@ fn poly_z_inv<T: Numeric>(v: &[T], n: T) -> Vec<T> {
     v.iter().map(|&x| T::inv(x, n)).collect::<Vec<T>>()
 }
 
+
+
+
 /// Subtract quotient (bn/x^bd) from (an/x^ad)
 fn quot_sub<T: Integer>(
     an: &[T],
@@ -216,12 +236,19 @@ fn quot_sub<T: Integer>(
     let x = monomial(T::ONE, 1);
     let mut a = an.to_vec();
     let mut b = bn.to_vec();
+<<<<<<< HEAD
     for _ in 0..cd - ad {
         //XXX: Any way to write this more nicely?
         a = poly_mul(&a, &x, n);
     }
     for _ in 0..cd - bd {
         //XXX: Any way to write this more nicely?
+=======
+    for _ in 0..cd-ad {           //XXX: Any way to write this more nicely?
+        a = poly_mul(&a, &x, n);
+    }
+    for _ in 0..cd-bd {           //XXX: Any way to write this more nicely?
+>>>>>>> dbe728d273b91de0205775ac7c0c55a857cd0922
         b = poly_mul(&b, &x, n);
     }
     (poly_sub(&a, &b, n), cd)
@@ -253,10 +280,17 @@ fn divstepsx<T: Integer>(
 
     // Each of u,v,q,r in (f, i) represents quotient f/x^i
     // u,v,q,r = 1,0,0,1
+<<<<<<< HEAD
     let mut u = (vec![T::ONE; 1], 0);
     let mut v = (vec![T::ZERO; 1], 0);
     let mut q = (vec![T::ZERO; 1], 0);
     let mut r = (vec![T::ONE; 1], 0);
+=======
+    let mut u = (vec![T::from_literal(1); 1], 0);
+    let mut v = (vec![T::default(); 1], 0);
+    let mut q = (vec![T::default(); 1], 0);
+    let mut r = (vec![T::from_literal(1); 1], 0);
+>>>>>>> dbe728d273b91de0205775ac7c0c55a857cd0922
 
     for i in 0..nn {
         // Bring u,v,q,r back to fixed precision t
@@ -283,9 +317,15 @@ fn divstepsx<T: Integer>(
             v = t;
         }
 
+<<<<<<< HEAD
         delta = delta + 1;
         let f0 = monomial(f[0], 0);
         let g0 = monomial(g[0], 0);
+=======
+        delta = delta+1;
+        let f0 = monomial(f[0],0);
+        let g0 = monomial(g[0],0);
+>>>>>>> dbe728d273b91de0205775ac7c0c55a857cd0922
 
         // g = (f0*g-g0*f)/x
         let t0 = poly_mul(&f0, &g, n);
@@ -297,7 +337,7 @@ fn divstepsx<T: Integer>(
         let t0 = poly_mul(&f0, &q.0, n);
         let t1 = poly_mul(&g0, &u.0, n);
         q = quot_sub(&t0, q.1, &t1, u.1, n);
-        q.1 += 1;
+        q   .1 += 1;
 
         // r = (f0*r-g0*v)/x
         let t0 = poly_mul(&f0, &r.0, n);
@@ -318,6 +358,7 @@ pub fn extended_euclid<T: Integer>(
     n: T,
 ) -> Result<Vec<T>, &'static str> {
     let (yd, _) = leading_coefficient(y);
+    println!("highes deg: {:?}, x.len()= {:?}",&yd, &x.len());
     debug_assert!(yd >= x.len());
     debug_assert!(yd > 0);
 
@@ -331,7 +372,11 @@ pub fn extended_euclid<T: Integer>(
         return Err("Could not invert the polynomial");
     }
 
+<<<<<<< HEAD
     let t = monomial(f[0].inv(n), 2 * yd - 2 - v.1);
+=======
+    let t  = monomial(T::invert(f[0],n), 2*yd-2-v.1);
+>>>>>>> dbe728d273b91de0205775ac7c0c55a857cd0922
     let mut rr = poly_mul(&t, &v.0, n);
     rr = make_fixed_length(&rr, yd);
     rr.reverse();
@@ -420,8 +465,13 @@ macro_rules! poly {
             /// Invert this polynomial.
             /// **Panics** if the polynomial is not invertible.
             fn inv(self) -> Self {
+<<<<<<< HEAD
                 println!("inv {:?}", self);
                 Self::from_vec(extended_euclid(&self.poly, &self.irr, self.n).unwrap())
+=======
+                //println!("inv {:?}", self);
+                Self::from(extended_euclid(&self.poly, &self.irr, self.n).unwrap())
+>>>>>>> dbe728d273b91de0205775ac7c0c55a857cd0922
             }
 
             pub fn from_vec(v: Vec<$t>) -> $name {
