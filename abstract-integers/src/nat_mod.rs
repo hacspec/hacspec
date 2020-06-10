@@ -18,6 +18,13 @@ macro_rules! modular_integer {
             }
         }
 
+        impl std::fmt::LowerHex for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let val: $base = (*self).into();
+                std::fmt::LowerHex::fmt(&val, f)
+            }
+        }
+
         impl From<$base> for $name {
             fn from(x: $base) -> $name {
                 $name(x.rem($max))
@@ -33,6 +40,11 @@ macro_rules! modular_integer {
         impl $name {
             pub fn max() -> $base {
                 $max
+            }
+
+            pub fn declassify(self) -> BigInt {
+                let a: $base = self.into();
+                a.into()
             }
 
             #[allow(dead_code)]
@@ -73,6 +85,42 @@ macro_rules! modular_integer {
                 }
                 $name(big_x.into())
             }
+
+            #[inline]
+            pub fn comp_eq(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_eq(rhs.into()).into()
+            }
+
+            #[inline]
+            pub fn comp_ne(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_ne(rhs.into()).into()
+            }
+
+            #[inline]
+            pub fn comp_gte(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_gte(rhs.into()).into()
+            }
+
+            #[inline]
+            pub fn comp_gt(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_gt(rhs.into()).into()
+            }
+
+            #[inline]
+            pub fn comp_lte(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_lte(rhs.into()).into()
+            }
+
+            #[inline]
+            pub fn comp_lt(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_lt(rhs.into()).into()
+            }
         }
     };
 }
@@ -82,6 +130,17 @@ macro_rules! modular_integer {
 macro_rules! abstract_secret_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         modular_integer!($name, $base, $max);
+
+        impl $name {
+            fn modulo(self, n: Self) -> Self {
+                let a: $base = self.into();
+                let b: $base = n.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let r: $base = (a % b).into();
+                r.into()
+            }
+        }
 
         /// **Warning**: wraps on overflow.
         impl Add for $name {
@@ -134,42 +193,52 @@ macro_rules! abstract_secret_modular_integer {
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let not_a = !a;
+                not_a.rem($max).into()
             }
         }
 
         impl BitOr for $name {
             type Output = $name;
             fn bitor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a | b).into()
             }
         }
 
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a ^ b).into()
             }
         }
 
         impl BitAnd for $name {
             type Output = $name;
             fn bitand(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a & b).into()
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+            fn shr(self, rhs: usize) -> Self::Output {
+                let a: $base = self.into();
+                (a >> rhs).into()
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+            fn shl(self, rhs: usize) -> Self::Output {
+                let a: $base = self.into();
+                (a << rhs).into()
             }
         }
     };
@@ -281,42 +350,51 @@ macro_rules! abstract_public_modular_integer {
         impl Not for $name {
             type Output = $name;
             fn not(self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                (!a).into()
             }
         }
 
         impl BitOr for $name {
             type Output = $name;
             fn bitor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a | b).into()
             }
         }
 
         impl BitXor for $name {
             type Output = $name;
             fn bitxor(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a ^ b).into()
             }
         }
 
         impl BitAnd for $name {
             type Output = $name;
             fn bitand(self, rhs: Self) -> Self::Output {
-                unimplemented!();
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a & b).into()
             }
         }
 
-        impl Shr<u32> for $name {
+        impl Shr<usize> for $name {
             type Output = $name;
-            fn shr(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+            fn shr(self, rhs: usize) -> Self::Output {
+                let a: $base = self.into();
+                (a >> rhs).into()
             }
         }
 
-        impl Shl<u32> for $name {
+        impl Shl<usize> for $name {
             type Output = $name;
-            fn shl(self, rhs: u32) -> Self::Output {
-                unimplemented!();
+            fn shl(self, rhs: usize) -> Self::Output {
+                let a: $base = self.into();
+                (a << rhs).into()
             }
         }
 

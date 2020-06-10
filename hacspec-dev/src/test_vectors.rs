@@ -10,7 +10,7 @@ macro_rules! create_test_vectors {
         struct $struct_name { $($element: $ty),+ }
         impl $struct_name {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
-            pub fn from_file(file: &'static str) -> Self {
+            pub fn from_file<T: DeserializeOwned>(file: &'static str) -> T {
                 let file = match File::open(file) {
                     Ok(f) => f,
                     Err(_) => panic!("Couldn't open file {}.", file),

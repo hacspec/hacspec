@@ -33,8 +33,8 @@ macro_rules! _array_base {
                 Self([<$t>::default(); $l])
             }
 
-            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn len(&self) -> usize {
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn length() -> usize {
                 $l
             }
 
@@ -44,7 +44,7 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature="use_attributes", external(hacspec))]
-            pub fn from_slice(v: &[$t]) -> Self {
+            pub fn from_native_slice(v: &[$t]) -> Self {
                 debug_assert!(v.len() <= $l);
                 let mut tmp = [<$t>::default(); $l];
                 for i in 0..v.len() {
@@ -61,26 +61,26 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
+            pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
-                debug_assert_eq!(len, a.len());
-                a = a.update_sub(0, input, start, len);
+                debug_assert!(len <= a.len());
+                a = a.update_slice(0, input, start, len);
                 a
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
-                Self::from_sub(input, r.start, r.end - r.start)
+            pub fn from_slice_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
+                Self::from_slice(input, r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn sub(&self, start_out: usize, len: usize) -> Seq<$t> {
-                Seq::from_sub(self, start_out, len)
+            pub fn slice(&self, start_out: usize, len: usize) -> Seq<$t> {
+                Seq::from_slice(self, start_out, len)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn subr(&self, r: Range<usize>) -> Seq<$t> {
-                self.sub(r.start, r.end - r.start)
+            pub fn slice_range(&self, r: Range<usize>) -> Seq<$t> {
+                self.slice(r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -113,7 +113,7 @@ macro_rules! _array_base {
             ) -> (usize, Seq<$t>) {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
-                let out = self.sub(idx_start, len);
+                let out = self.slice(idx_start, len);
                 (len, out)
             }
 
@@ -127,7 +127,7 @@ macro_rules! _array_base {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(input.len() == len, "the chunk length should match the input");
-                self.update_sub(idx_start, input, 0, len)
+                self.update_slice(idx_start, input, 0, len)
             }
         }
 
@@ -281,14 +281,14 @@ macro_rules! generic_array {
         #[derive(Clone, Copy)]
         pub struct $name<T>(pub [T; $l]);
 
-        impl<T: Numeric> $name<T> {
+        impl<T: Numeric + Copy> $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             pub fn new() -> Self {
                 Self([<T>::default(); $l])
             }
 
-            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-            pub fn len(&self) -> usize {
+            #[cfg_attr(feature="use_attributes", library(hacspec))]
+            pub fn length() -> usize {
                 $l
             }
 
@@ -298,7 +298,7 @@ macro_rules! generic_array {
             }
 
             #[cfg_attr(feature="use_attributes", external(hacspec))]
-            pub fn from_slice(v: &[T]) -> Self {
+            pub fn from_native_slice(v: &[T]) -> Self {
                 debug_assert!(v.len() <= $l);
                 let mut tmp = [<T>::default(); $l];
                 for i in 0..v.len() {
@@ -308,33 +308,33 @@ macro_rules! generic_array {
             }
         }
 
-        impl<T: Numeric> $name<T> {
+        impl<T: Numeric + Copy> $name<T> {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn capacity() -> usize {
                 $l
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
+            pub fn from_slice<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
-                debug_assert_eq!(len, a.len());
-                a = a.update_sub(0, input, start, len);
+                debug_assert!(len <= a.len());
+                a = a.update_slice(0, input, start, len);
                 a
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn from_sub_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
-                Self::from_sub(input, r.start, r.end - r.start)
+            pub fn from_slice_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
+                Self::from_slice(input, r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn sub(&self, start_out: usize, len: usize) -> Seq<T> {
-                Seq::from_sub(self, start_out, len)
+            pub fn slice(&self, start_out: usize, len: usize) -> Seq<T> {
+                Seq::from_slice(self, start_out, len)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
-            pub fn subr(&self, r: Range<usize>) -> Seq<T> {
-                self.sub(r.start, r.end - r.start)
+            pub fn slice_range(&self, r: Range<usize>) -> Seq<T> {
+                self.slice(r.start, r.end - r.start)
             }
 
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -367,7 +367,7 @@ macro_rules! generic_array {
             ) -> (usize, Seq<T>) {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
-                let out = self.sub(idx_start, len);
+                let out = self.slice(idx_start, len);
                 (len, out)
             }
 
@@ -381,17 +381,17 @@ macro_rules! generic_array {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(input.len() == len, "the chunk length should match the input");
-                self.update_sub(idx_start, input, 0, len)
+                self.update_slice(idx_start, input, 0, len)
             }
         }
 
-        impl<T: Numeric> Default for $name<T> {
+        impl<T: Numeric + Copy> Default for $name<T> {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn default() -> Self {
                 $name::new()
             }
         }
-        impl<T: Numeric> SeqTrait<T> for $name<T> {
+        impl<T: Numeric + Copy> SeqTrait<T> for $name<T> {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn create(x:usize) -> Self {
                 assert_eq!(x, $l);
@@ -408,67 +408,67 @@ macro_rules! generic_array {
             }
         }
 
-        impl<T: Numeric> Index<usize> for $name<T> {
+        impl<T: Numeric + Copy> Index<usize> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: usize) -> &T {
                 &self.0[i]
             }
         }
-        impl<T: Numeric> IndexMut<usize> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<usize> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: usize) -> &mut T {
                 &mut self.0[i]
             }
         }
 
-        impl<T: Numeric> Index<u8> for $name<T> {
+        impl<T: Numeric + Copy> Index<u8> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: u8) -> &T {
                 &self.0[i as usize]
             }
         }
-        impl<T: Numeric> IndexMut<u8> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<u8> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: u8) -> &mut T {
                 &mut self.0[i as usize]
             }
         }
-        impl<T: Numeric> Index<u32> for $name<T> {
+        impl<T: Numeric + Copy> Index<u32> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: u32) -> &T {
                 &self.0[i as usize]
             }
         }
-        impl<T: Numeric> IndexMut<u32> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<u32> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: u32) -> &mut T {
                 &mut self.0[i as usize]
             }
         }
-        impl<T: Numeric> Index<i32> for $name<T> {
+        impl<T: Numeric + Copy> Index<i32> for $name<T> {
             type Output = T;
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, i: i32) -> &T {
                 &self.0[i as usize]
             }
         }
-        impl<T: Numeric> IndexMut<i32> for $name<T> {
+        impl<T: Numeric + Copy> IndexMut<i32> for $name<T> {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index_mut(&mut self, i: i32) -> &mut T {
                 &mut self.0[i as usize]
             }
         }
-        impl<T: Numeric> Index<RangeFull> for $name<T> {
+        impl<T: Numeric + Copy> Index<RangeFull> for $name<T> {
             type Output = [T];
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             fn index(&self, r: RangeFull) -> &[T] {
                 &self.0[r]
             }
         }
-        impl<T: Numeric> $name<T> {
+        impl<T: Numeric + Copy> $name<T> {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
             pub fn from_vec(x: Vec<T>) -> $name<T> {
                 debug_assert_eq!(x.len(), $l);
@@ -493,7 +493,7 @@ macro_rules! generic_array {
         }
 
         /// **Warning:** declassifies secret integer types.
-        impl<T: Numeric> fmt::Debug for $name<T> {
+        impl<T: Numeric + Copy> fmt::Debug for $name<T> {
             #[cfg_attr(feature="use_attributes", external(hacspec))]
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 self.0[..]
@@ -651,7 +651,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
-                    out[i] = U32_from_be_bytes(U32Word::from_slice(block));
+                    out[i] = U32_from_be_bytes(U32Word::from_native_slice(block));
                 }
                 out
             }
@@ -661,7 +661,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
-                    out[i] = U32_from_le_bytes(U32Word::from_slice(block));
+                    out[i] = U32_from_le_bytes(U32Word::from_native_slice(block));
                 }
                 out
             }
@@ -671,7 +671,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
-                    out[i] = U64_from_be_bytes(U64Word::from_slice(block));
+                    out[i] = U64_from_be_bytes(U64Word::from_native_slice(block));
                 }
                 out
             }
@@ -681,7 +681,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
-                    out[i] = U64_from_le_bytes(U64Word::from_slice(block));
+                    out[i] = U64_from_le_bytes(U64Word::from_native_slice(block));
                 }
                 out
             }
@@ -691,7 +691,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
-                    out[i] = U128_from_be_bytes(U128Word::from_slice(block));
+                    out[i] = U128_from_be_bytes(U128Word::from_native_slice(block));
                 }
                 out
             }
@@ -701,7 +701,7 @@ macro_rules! array {
                 let mut out = Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
-                    out[i] = U128_from_le_bytes(U128Word::from_slice(block));
+                    out[i] = U128_from_le_bytes(U128Word::from_native_slice(block));
                 }
                 out
             }
