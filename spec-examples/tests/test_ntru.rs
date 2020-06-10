@@ -75,12 +75,12 @@ fn test_encryption_decryption() {
 #[test]
 fn test_encryption_decryption_fixed_key(){
     let n_v = ntru_v!(-1);
-    let pk:Seq<u128> = Seq::from_slice(&[26, 39, 52, 91, 13, 39, 52, 0]);
-    let sk:(Seq<u128>,Seq<u128>) = (Seq::from_slice(&[0, 1, 2, 1, 2, 0, 0, 0]),Seq::from_slice(&[0, 0, 0, 1, 0, 0, 2, 0]));
+    let pk:Seq<u128> = Seq::from_native_slice(&[26, 39, 52, 91, 13, 39, 52, 0]);
+    let sk:(Seq<u128>,Seq<u128>) = (Seq::from_native_slice(&[0, 1, 2, 1, 2, 0, 0, 0]),Seq::from_native_slice(&[0, 0, 0, 1, 0, 0, 2, 0]));
     println!("h is invertable? {:?}",test_h_invertable(&pk, n_v.q) );
     assert_eq!(test_h_invertable(&pk, n_v.q),true);
     // message
-    let m:Seq<u128> = Seq::from_slice(&[2, 2, 1, 0, 0, 2, 0, 0]);
+    let m:Seq<u128> = Seq::from_native_slice(&[2, 2, 1, 0, 0, 2, 0, 0]);
     // encryption
     let c = encryption(&m, pk, &n_v);
     println!("c is {:?}",c);
