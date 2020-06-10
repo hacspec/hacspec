@@ -7,5 +7,6 @@ members = [
     "secret-integers",
     "abstract-integers",
     "spec-examples",
-    "attributes"
+    "attributes",
+    "ntru_tester"
 ]
