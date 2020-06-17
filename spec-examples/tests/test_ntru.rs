@@ -7,7 +7,7 @@ extern crate hacspec_examples;
 #[test]
 fn test_create_inv() {
     let mut poly = create_invertable_poly(&ntru_v!(1), ntru_v!(1).q);
-    let mut f_inv: Seq<u128> = Seq::new(ntru_v!(1).p + 1);
+    let mut f_inv: Seq<i128> = Seq::new(ntru_v!(1).p + 1);
     for _ in 0..4 {
         match poly.1 {
             Ok(v) => {
@@ -17,10 +17,10 @@ fn test_create_inv() {
             Err(_) => poly = create_invertable_poly(&ntru_v!(1), ntru_v!(1).q),
         }
     }
-    let mut irr: Seq<u128> = Seq::new(f_inv.len());
-    irr[0] = ntru_v!(1).q - 1;
-    irr[1] = ntru_v!(1).q - 1;
-    irr[f_inv.len() - 1] = 1 as u128;
+    let mut irr: Seq<i128> = Seq::new(f_inv.len());
+    irr[0]= - 1 as i128;
+    irr[1] = - 1 as i128;
+    irr[f_inv.len() - 1] = 1 as i128;
 
     //TODO assert_eq
     println!(
@@ -30,15 +30,15 @@ fn test_create_inv() {
     assert_eq!(true,true);
 }
 
-fn test_h_invertable(h:&Seq<u128>,q:u128)-> bool{
-    let mut irr:Seq<u128> = Seq::new(h.len());
-    irr[0] = q-1;
-    irr[1] = q-1;
-    irr[h.len() -1] = 1 as u128;
+fn test_h_invertable(h:&Seq<i128>,q:i128)-> bool{
+    let mut irr:Seq<i128> = Seq::new(h.len());
+    irr[0]= - 1 as i128;
+    irr[1] = - 1 as i128;
+    irr[f_inv.len() - 1] = 1 as i128;
 
 
     let h_pre_inv = eea(&h,&irr,q);
-    let mut h_inv:Seq<u128> = Seq::new(h.len());
+    let mut h_inv:Seq<i128> = Seq::new(h.len());
     match h_pre_inv {
         Ok(v) => {
             h_inv = v;
@@ -75,12 +75,12 @@ fn test_encryption_decryption() {
 #[test]
 fn test_encryption_decryption_fixed_key(){
     let n_v = ntru_v!(-1);
-    let pk:Seq<u128> = Seq::from_native_slice(&[26, 39, 52, 91, 13, 39, 52, 0]);
-    let sk:(Seq<u128>,Seq<u128>) = (Seq::from_native_slice(&[0, 1, 2, 1, 2, 0, 0, 0]),Seq::from_native_slice(&[0, 0, 0, 1, 0, 0, 2, 0]));
+    let pk:Seq<i128> = Seq::from_native_slice(&[26, 39, 52, 91, 13, 39, 52, 0]);
+    let sk:(Seq<i128>,Seq<i128>) = (Seq::from_native_slice(&[0, 1, 2, 1, 2, 0, 0, 0]),Seq::from_native_slice(&[0, 0, 0, 1, 0, 0, 2, 0]));
     println!("h is invertable? {:?}",test_h_invertable(&pk, n_v.q) );
     assert_eq!(test_h_invertable(&pk, n_v.q),true);
     // message
-    let m:Seq<u128> = Seq::from_native_slice(&[2, 2, 1, 0, 0, 2, 0, 0]);
+    let m:Seq<i128> = Seq::from_native_slice(&[2, 2, 1, 0, 0, 2, 0, 0]);
     // encryption
     let c = encryption(&m, pk, &n_v);
     println!("c is {:?}",c);
