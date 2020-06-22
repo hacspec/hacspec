@@ -104,3 +104,87 @@ fn test_zn_inv() {
     // let n = 106103i128;
     // assert_eq!(i128::inv(-123, n), 6901);
 }
+#[test]
+fn test_poly_div() {
+    // x³ + 3
+    let a: Seq<i128> = Seq::from_native_slice(&[3, 3]);
+    // x + 1
+    let b: Seq<i128> = Seq::from_native_slice(&[1, 1]);
+    // 3x +3 / x + 1  (mod 4) = 3
+    let mut quotient = division(&a, &b, 4);
+    // q = 3 and r = 0
+    let r: Seq<i128> = Seq::from_native_slice(&[0, 0]);
+    let q: Seq<i128> = Seq::from_native_slice(&[3, 0]);
+
+    assert_eq!(deg(&quotient.0), 0);
+    assert_eq!(quotient.0[0], q[0]);
+    assert_eq!(deg(&quotient.1), 0);
+    assert_eq!(quotient.1[0], r[0]);
+
+    //x¹² + x
+    let a_2: Seq<i128> = Seq::from_native_slice(&[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+    //x - 1
+    let b_2: Seq<i128> = Seq::from_native_slice(&[-1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    // (x¹² + x )/ (x-1) mod 4 = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
+    quotient = division(&a_2, &b_2, 4);
+    // q = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
+    assert_eq!(deg(&quotient.0), 11);
+    for i in 1..12 {
+        assert_eq!(quotient.0[i], 1 as i128);
+    }
+    assert_eq!(quotient.0[0], 2 as i128);
+    // r = 2
+    assert_eq!(deg(&quotient.1), 0);
+    assert_eq!(quotient.1[0], 2 as i128);
+}
+
+#[test]
+fn test_mul_poly() {
+    //-2x + 1
+    let a: Seq<i128> = Seq::from_native_slice(&[1, -2, 0, 0, 0, 0]);
+    // 2x³ + x -1
+    let b: Seq<i128> = Seq::from_native_slice(&[-1, 1, 0, 2, 0, 0]);
+    //(-2x + 1)(2x³ + x -1) = -4 x^4 + 2 x^3 - 2 x^2 + 3 x - 1
+    let product = mul_poly(&a, &b, 5);
+    //-4 x^4 + 2 x^3 - 2 x^2 + 3 x - 1
+    let p: Seq<i128> = Seq::from_native_slice(&[-1, 3, -2, 2, -4, 0]);
+    for i in 0..6 {
+        assert_eq!(product[i], p[i]);
+    }
+}
+#[test]
+#[should_panic]
+fn test_mul_poly_with_unequal_sized_poly() {
+    //x¹² + x
+    let a: Seq<i128> = Seq::from_native_slice(&[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
+    //x - 1
+    let b: Seq<i128> = Seq::from_native_slice(&[-1, 1]);
+    mul_poly(&a, &b, 3);
+}
+
+#[test]
+fn test_poly_eea() {
+    let h: Seq<i128> = Seq::from_native_slice(&[1, 0, 1, 0]);
+    // x^3 + 2x + 1
+    let irr: Seq<i128> = Seq::from_native_slice(&[1, 2, 0, 1]);
+
+    let h_pre_inv = eea(&h, &irr, 3);
+    let mut h_inv: Seq<i128> = Seq::new(h.len());
+    match h_pre_inv {
+        Ok(v) => {
+            h_inv = v;
+        }
+        Err(_) => panic!("test, failed!"),
+    }
+    //2x^2 -2x + 2
+    let expected: Seq<i128> = Seq::from_native_slice(&[2, -2, 2, 0]);
+
+    for i in 0..4 {
+        assert_eq!(h_inv[i], expected[i]);
+    }
+    let scalar = mul_poly_irr(&h, &h_inv, &irr, 3);
+    let one: Seq<i128> = Seq::from_native_slice(&[1, 0, 0, 0]);
+    for i in 0..4 {
+        assert_eq!(one[i], scalar[i]);
+    }
+}
