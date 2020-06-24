@@ -95,7 +95,7 @@
 
 \begin{center}
 \begin{tabular}{lrrll}
-Items&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\tau}\syncomma\synvar{e}\synrparen\synsc&array declaration\\
+Items&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\tau}\syncomma\synvar{e}\synrparen\synsc&array type declaration\\
 &&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{d}$]^+$\synrparen\synarrow\synvar{\tau}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&function declaration\\
 Argument declaration&\synvar{d}&\syndef&\synvar{x}\syntyped\synref\synvar{\tau}&linear argument\\
 &&\synalt&\synvar{x}\syntyped\synvar{\tau}&duplicable argument\\
@@ -134,7 +134,7 @@ Qualified type&\typctx{\mu}&\syndef&\typctx{T}&linear type\\
 &&\synalt&\typref\typctx{T}&duplicable type\\
 Typing context&\typctx{\Gamma}&\syndef&\typempty&empty context\\
 &&\synalt& \synvar{x}\typtyped\typctx{\mu}\typcomma\typctx{\Gamma}&variable\\
-&&\synalt& \synvar{f}\typtyped\typlparen$[$\typctx{\mu}$]^+$\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma}&function\\
+&&\synalt& \synvar{f}\typtyped\typlparen$[$\typctx{\mu}$]^+$\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma}&function\\
 \end{tabular}
 \end{center}
 
