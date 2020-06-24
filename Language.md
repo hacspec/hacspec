@@ -20,11 +20,9 @@
       | u8 | u16 | u32 | u64 | u128 | U8 | U16 | U32 | U64 | U128
       | i8 | i16 | i32 | i64 | i128 | I8 | I16 | I32 | I64 | I128
       | Seq<tau> (* Unknown-length array *)
-      | SeqSlice<tau> (* read-only unknown-length reference to array *)
       | [tau; c] (* fixed-length array *)
       | y (* type variable *)
       | ([tau,]+) (* tuples *)
-      | Range
 
     Statement s :=
       | let (mut) p (: tau) = e (* let binding *)

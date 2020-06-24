@@ -1,0 +1,212 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{fullpage}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{mathpartir}
+\usepackage{xcolor}
+\usepackage{booktabs}
+
+\title{Rustspec formalization}
+
+\author{Denis Merigoux}
+
+\begin{document}
+\maketitle
+
+\section{Syntax}
+
+%%%%%%%%%%%%%%%%%%% Syntax
+\newcommand{\synvar}[1]{\ensuremath{#1}}
+\newcommand{\synkeyword}[1]{\textcolor{red!60!black}{\texttt{#1}}}
+\newcommand{\synpunct}[1]{\textcolor{black!40!white}{\texttt{#1}}}
+
+%% Keywords
+\newcommand{\synuse}{\synkeyword{use}\;}
+\newcommand{\synconst}{\synkeyword{const}\;}
+\newcommand{\syntypalias}{\synkeyword{type}\;}
+\newcommand{\synfn}{\synkeyword{fn}\;}
+\newcommand{\synbool}{\synkeyword{bool}}
+\newcommand{\synint}{\synkeyword{int}}
+\newcommand{\synseq}{\synkeyword{Seq}}
+\newcommand{\synlet}{\synkeyword{let}\;}
+\newcommand{\synmut}{\synkeyword{mut}}
+\newcommand{\synif}{\synkeyword{if}\;}
+\newcommand{\synthen}{\;\synkeyword{then}\;}
+\newcommand{\synelse}{\;\synkeyword{else}\;}
+\newcommand{\synfor}{\synkeyword{for}\;}
+\newcommand{\synin}{\;\synkeyword{in}\;}
+\newcommand{\syntrue}{\synkeyword{true}}
+\newcommand{\synfalse}{\synkeyword{false}}
+
+%%Macros
+\newcommand{\synarraymacro}{\synkeyword{array!}}
+\newcommand{\synpolymacro}{\synkeyword{poly!}}
+
+%% Punctucation
+\newcommand{\synsc}{\synpunct{;}}
+\newcommand{\syntyped}{\;\synpunct{:}\;}
+\newcommand{\syneq}{\;\synpunct{=}\;}
+\newcommand{\synlparen}{\synpunct{(}\;}
+\newcommand{\synrparen}{\;\synpunct{)}}
+\newcommand{\syncomma}{\synpunct{,}\;}
+\newcommand{\synref}{\synpunct{\&}}
+\newcommand{\synlangle}{\synpunct{<}\;}
+\newcommand{\synrangle}{\;\synpunct{>}}
+\newcommand{\synlbracket}{\synpunct{\{}\;}
+\newcommand{\synrbracket}{\;\synpunct{\}}}
+\newcommand{\synarrow}{\;\synpunct{->}\;}
+\newcommand{\synrange}{\;\synpunct{..}\;}
+\newcommand{\synlsquare}{\synpunct{[}\;}
+\newcommand{\synrsquare}{\;\synpunct{]}}
+
+%% BNF
+\newcommand{\syndef}{$::=$}
+\newcommand{\synalt}{\;$|$\;}
+
+%%%%%%%%%%%%%%%%%%%% Typing
+
+\newcommand{\typctx}[1]{\textcolor{green!50!black}{\ensuremath{#1}}}
+
+\newcommand{\typempty}{\typctx{\varnothing}}
+\newcommand{\typtyped}{\;\typctx{:}\;}
+\newcommand{\typsc}{\typctx{;}\;}
+\newcommand{\typcomma}{\typctx{,}\;}
+\newcommand{\typarrow}{\typctx{\;\rightarrow}\;}
+\newcommand{\typlparen}{\typctx{(}\;}
+\newcommand{\typrparen}{\;\typctx{)}}
+\newcommand{\typlsquare}{\typctx{[}\;}
+\newcommand{\typrsquare}{\;\typctx{]}}
+\newcommand{\typlangle}{\typctx{<}\;}
+\newcommand{\typrangle}{\;\typctx{>}}
+\newcommand{\typeq}{\;\typctx{=}\;}
+\newcommand{\typcomp}{\;\typctx{\circ}\;}
+\newcommand{\typref}{\typctx{\&}}
+\newcommand{\typellipsis}{\typctx{,\ldots,}\;}
+\newcommand{\typderive}{\;\typctx{\vdash}\;}
+
+\begin{center}
+\begin{tabular}{lrrll}
+Items&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\tau}\syncomma\synvar{e}\synrparen\synsc&array declaration\\
+&&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{x}\syntyped$($\synref$)$\synvar{\tau}$]^+$\synrparen\synarrow\synvar{\tau}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&function declaration\\
+Type&\synvar{\tau}&\syndef&\synbool\synalt\synint&base types\\
+&&\synalt&\synseq\synlangle\synvar{\tau}\synrangle&sequence\\
+&&\synalt&\synvar{t}&type variable\\
+&&\synalt&\synlparen$[$\synvar{\tau}$]^+$\synrparen&tuple\\
+Statement&\synvar{s}&\syndef&\synlet$($\synmut$)$\;\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\synsc&let binding\\
+&&\synalt&\synvar{x}\syneq\synvar{e}\synsc&mutable variable reassignment\\
+&&\synalt&\synif\synvar{e}\synthen\synlbracket$[$\synvar{s}$]^+$\synrbracket\;$($\synelse\synlbracket$[$\synvar{s}$]^+$\synrbracket$)$\synsc&conditional statements\\
+&&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket\synsc&for loop (integers only)\\
+&&\synalt&\synvar{e}\synlsquare\synvar{e}\synrsquare\syneq\synvar{e}\synsc&array update\\
+Expression&\synvar{e}&\syndef&\syntrue\synalt\synfalse&boolean literals\\
+&&\synalt&$[$0$-$9$]^+$&integer literal\\
+&&\synalt&\synvar{x}&variable\\
+&&\synalt&\synvar{f}\synlparen$[$$($\synref$)$\synvar{e}$]^+$\synrparen&function call\\
+&&\synalt&\synvar{e}\;\synvar{\odot}\;\synvar{e}&binary operations\\
+&&\synalt&\synvar{\oslash}\;\synvar{e}&unary operations\\
+Binary operators&\synvar{\odot}&\syndef&$+$\synalt$-$\synalt$\times$\synalt$\div$\\
+Unary operators&\synvar{\oslash}&\syndef&$-$&
+\end{tabular}
+\end{center}
+
+\section{Typing}
+
+\begin{center}
+\begin{tabular}{lrrll}
+Structural type&\typctx{T}&\syndef&\synbool\synalt\synint&base types\\
+&&\synalt&\synseq\typlangle\typctx{T}\typrangle&sequence\\
+&&\synalt&\typlsquare\typctx{T}\typsc$[$0$-$9$]^+$\typrsquare&array\\
+&&\synalt&\typlparen$[$\typctx{T}$]^+$\typrparen&tuple\\
+Qualified type&\typctx{\mu}&\syndef&\typctx{T}&linear type\\
+&&\synalt&\typref\typctx{T}&duplicable type\\
+Typing context&\typctx{\Gamma}&\syndef&\typempty&empty context\\
+&&\synalt& \synvar{x}\typtyped\typctx{\mu}\typcomma\typctx{\Gamma}&variable\\
+&&\synalt& \synvar{f}\typtyped\typlparen$[$\typctx{\mu}$]^+$\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma}&function\\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lc}\toprule
+Context splitting&\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+\\\bottomrule
+\end{tabular}
+\begin{mathpar}
+\inferrule[SplitEmpty]{
+{}
+}{
+\typempty\typeq\typempty\typcomp\typempty
+}
+
+\inferrule[SplitLinear1]{
+\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typctx{\Gamma_2}
+}
+
+\inferrule[SplitLinear2]{
+\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma}\typeq
+\typctx{\Gamma_1}\typcomp
+\typlparen\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma_2}\typrparen
+}
+
+\inferrule[SplitDuplicable]{
+\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma_2}\typrparen
+}
+
+\inferrule[SplitFunction]{
+\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma_2}\typrparen
+}
+\end{mathpar}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lc}\toprule
+Expression typing&\typctx{\Gamma}\typderive\synvar{e}\typtyped\typctx{T}
+\\\bottomrule
+\end{tabular}
+\begin{mathpar}
+\inferrule[TypTrue]{
+{}
+}{
+\typctx{\Gamma}\typderive\syntrue\typtyped\synbool
+}
+
+\inferrule[TypFalse]{
+{}
+}{
+\typctx{\Gamma}\typderive\synfalse\typtyped\synbool
+}
+
+\inferrule[TypInt]{n\in\mathbb{N}}{
+\typctx{\Gamma}\typderive n\typtyped\synint
+}
+
+\inferrule[TypVarLinear]{
+{}
+}{
+\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma}\typderive\synvar{x}\typtyped\typctx{T}
+}
+
+\inferrule[TypVarDuplicable]{
+{}
+}{
+\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma}\typderive\synvar{x}\typtyped\typctx{T}
+}
+\end{mathpar}
+\end{center}
+\end{document}
