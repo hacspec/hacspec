@@ -3,3 +3,5 @@
 *.fls
 *.log
 *.pdf
+*.bbl
+*.blg

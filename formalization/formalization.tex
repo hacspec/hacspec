@@ -17,6 +17,8 @@
 \begin{document}
 \maketitle
 
+The formalization is close to \cite{radanne2019kindly}.
+
 \section{Syntax}
 
 %%%%%%%%%%%%%%%%%%% Syntax
@@ -58,6 +60,11 @@
 \newcommand{\synref}{\synpunct{\&}}
 \newcommand{\synand}{\;\synpunct{\&\&}\;}
 \newcommand{\synor}{\;\synpunct{||}\;}
+\newcommand{\synxor}{\;\synpunct{\^}\;}
+\newcommand{\synadd}{\;\synpunct{+}\;}
+\newcommand{\synminus}{\;\synpunct{-}\;}
+\newcommand{\synmult}{\;\synpunct{*}\;}
+\newcommand{\syndiv}{\;\synpunct{/}\;}
 \newcommand{\synnot}{\synpunct{\~}\;}
 \newcommand{\synlangle}{\synpunct{<}\;}
 \newcommand{\synrangle}{\;\synpunct{>}}
@@ -94,6 +101,7 @@
 \newcommand{\typellipsis}{\typctx{,\ldots,}\;}
 \newcommand{\typderive}{\;\typctx{\vdash}\;}
 \newcommand{\typsym}{\;\typctx{\sim}\;}
+\newcommand{\typproduce}{\;\typctx{\Rrightarrow}\;}
 
 \begin{center}
 \begin{tabular}{lrrll}
@@ -120,9 +128,8 @@ Expression&\synvar{e}&\syndef&\syntrue\synalt\synfalse&boolean literals\\
 &&\synalt&\synvar{e}\syndot$(n\in\mathbb{N})$&tuple field access\\
 Function argument&\synvar{a}&\syndef&\synvar{e}&linear argument\\
 &&\synalt&\synref\synvar{e}&duplicable argument\\
-Binary operators&\synvar{\odot}&\syndef&$+$\synalt$-$\synalt$\times$\synalt$\div$\\
-&&\synalt&\synand\synalt\synor\\
-Unary operators&\synvar{\oslash}&\syndef&$-$\synalt\synnot&
+Binary operators&\synvar{\odot}&\syndef&\synadd\synalt\synminus\synalt\synmult\synalt\syndiv\synalt\synand\synalt\synor\\
+Unary operators&\synvar{\oslash}&\syndef&\synminus\synalt\synnot&
 \end{tabular}
 \end{center}
 
@@ -284,17 +291,34 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\typref\synvar{\tau}
 }
 
-\inferrule[TypBinop]{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\tau}\\
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\tau}\\
+\inferrule[TypBinopInt]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\synint}\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\synint}\\
+\synvar{\odot}\in\{\synadd,\synminus,\synmult,\syndiv\}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\synvar{\synint}
 }
 
-\inferrule[TypUnop]{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\\
+\inferrule[TypBinopBool]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\synbool}\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\synbool}\\
+\synvar{\odot}\in\{\synand,\synor\}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\synvar{\synbool}
+}
+
+\inferrule[TypUnopInt]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synint\\
+\oslash\in\{\synminus\}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synint
+}
+
+\inferrule[TypUnopBool]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synbool\\
+\oslash\in\{\text{\synnot}\}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synbool
 }
 
 \inferrule[TypTupleCons]{
@@ -310,7 +334,17 @@ i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syndot i\typtyped \synvar{\tau_i}
 }
-
 \end{mathpar}
 \end{center}
+
+\begin{center}
+\begin{tabular}{lc}\toprule
+Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typproduce\typctx{\Gamma'}
+\\\bottomrule
+\end{tabular}
+\end{center}
+
+\bibliographystyle{plain}
+\bibliography{rustspec.bib}
+
 \end{document}
