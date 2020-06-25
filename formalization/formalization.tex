@@ -54,6 +54,7 @@
 \newcommand{\synlparen}{\synpunct{(}\;}
 \newcommand{\synrparen}{\;\synpunct{)}}
 \newcommand{\syncomma}{\synpunct{,}\;}
+\newcommand{\syndot}{\synpunct{.}}
 \newcommand{\synref}{\synpunct{\&}}
 \newcommand{\synand}{\;\synpunct{\&\&}\;}
 \newcommand{\synor}{\;\synpunct{||}\;}
@@ -66,6 +67,7 @@
 \newcommand{\synrange}{\;\synpunct{..}\;}
 \newcommand{\synlsquare}{\synpunct{[}\;}
 \newcommand{\synrsquare}{\;\synpunct{]}}
+\newcommand{\synellipsis}{\synpunct{,\ldots,}\;}
 
 %% BNF
 \newcommand{\syndef}{$::=$}
@@ -109,11 +111,13 @@ Statement&\synvar{s}&\syndef&\synlet$($\synmut$)$\;\synvar{x}\syntyped\synvar{\t
 &&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket\synsc&for loop (integers only)\\
 &&\synalt&\synvar{e}\synlsquare\synvar{e}\synrsquare\syneq\synvar{e}\synsc&array update\\
 Expression&\synvar{e}&\syndef&\syntrue\synalt\synfalse&boolean literals\\
-&&\synalt&$[$0$-$9$]^+$&integer literal\\
+&&\synalt&$n\in\mathbb{N}$&integer literal\\
 &&\synalt&\synvar{x}&variable\\
 &&\synalt&\synvar{f}\synlparen$[$\synvar{a}$]^+$\synrparen&function call\\
 &&\synalt&\synvar{e}\;\synvar{\odot}\;\synvar{e}&binary operations\\
 &&\synalt&\synvar{\oslash}\;\synvar{e}&unary operations\\
+&&\synalt&\synlparen $[$\synvar{e}$]^+$\synrparen&tuple constructor\\
+&&\synalt&\synvar{e}\syndot$(n\in\mathbb{N})$&tuple field access\\
 Function argument&\synvar{a}&\syndef&\synvar{e}&linear argument\\
 &&\synalt&\synref\synvar{e}&duplicable argument\\
 Binary operators&\synvar{\odot}&\syndef&$+$\synalt$-$\synalt$\times$\synalt$\div$\\
@@ -126,180 +130,185 @@ Unary operators&\synvar{\oslash}&\syndef&$-$\synalt\synnot&
 
 \begin{center}
 \begin{tabular}{lrrll}
-Structural type&\typctx{T}&\syndef&\synbool\synalt\synint&base types\\
-&&\synalt&\synseq\typlangle\typctx{T}\typrangle&sequence\\
-&&\synalt&\typlsquare\typctx{T}\typsc$[$0$-$9$]^+$\typrsquare&array\\
-&&\synalt&\typlparen$[$\typctx{T}$]^+$\typrparen&tuple\\
-Qualified type&\typctx{\mu}&\syndef&\typctx{T}&linear type\\
-&&\synalt&\typref\typctx{T}&duplicable type\\
+Qualified type&\typctx{\mu}&\syndef&\synvar{\tau}&linear type\\
+&&\synalt&\typref\synvar{\tau}&duplicable type\\
 Typing context&\typctx{\Gamma}&\syndef&\typempty&empty context\\
 &&\synalt& \synvar{x}\typtyped\typctx{\mu}\typcomma\typctx{\Gamma}&variable\\
-&&\synalt& \synvar{f}\typtyped\typlparen$[$\typctx{\mu}$]^+$\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma}&function\\
+&&\synalt& \synvar{f}\typtyped\typlparen$[$\typctx{\mu}$]^+$\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma}&function\\
+Type dictionnary&\typctx{\Delta}&\syndef&\typempty&empty dictionnary\\
+&&\synalt&\synvar{t}\typarrow\typlsquare\synvar{\tau}\typsc $n\in\mathbb{N}$\typrsquare\typcomma\typctx{\Delta}&array type\\
 \end{tabular}
 \end{center}
 
 \begin{center}
 \begin{tabular}{lc}\toprule
-Implementing the \syncopy{} trait&\typctx{T}\typtyped\syncopy
+Implementing the \syncopy{} trait&\typctx{\Delta}\typderive\synvar{\tau}\typtyped\syncopy
 \\\bottomrule
 \end{tabular}
 \begin{mathpar}
 \inferrule[CopyBool]{
 {}
 }{
-\synbool\typtyped\syncopy
+\typctx{\Delta}\typderive\synbool\typtyped\syncopy
 }
 
 \inferrule[CopyInt]{
 {}
 }{
-\synint\typtyped\syncopy
+\typctx{\Delta}\typderive\synint\typtyped\syncopy
 }
 
 \inferrule[CopyTuple]{
-\typctx{T_1}\typtyped\syncopy\\
+\typctx{\Delta}\typderive\synvar{\tau_1}\typtyped\syncopy\\
 \cdots\\
-\typctx{T_n}\typtyped\syncopy
+\typctx{\Delta}\typderive\synvar{\tau_n}\typtyped\syncopy
 }{
-\typlparen\typctx{T_1}\typellipsis\typctx{T_n}\typrparen\typtyped\syncopy
+\typctx{\Delta}\typderive\typlparen\synvar{\tau_1}\typellipsis\synvar{\tau_n}\typrparen\typtyped\syncopy
 }
 
 \inferrule[CopyArray]{
-n\in\mathbb{N}\\
-\typctx{T}\typtyped\syncopy
+\typctx{\Delta}\typderive\synvar{\tau}\typtyped\syncopy
 }{
-\typlsquare\typctx{T}\typsc n\typrsquare\typtyped\syncopy
+\synvar{t}\typarrow\typlsquare\synvar{\tau}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{t}\typtyped\syncopy
 }
 \end{mathpar}
 \end{center}
 
 \begin{center}
 \begin{tabular}{lc}\toprule
-Context splitting&\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
 \\\bottomrule
 \end{tabular}
 \begin{mathpar}
 \inferrule[SplitEmpty]{
 {}
 }{
-\typempty\typeq\typempty\typcomp\typempty
+\typctx{\Delta}\typderive\typempty\typeq\typempty\typcomp\typempty
 }
 
 \inferrule[SplitLinear1]{
-\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
 }{
-\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma}\typeq
-\typlparen\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
 \typctx{\Gamma_2}
 }
 
 \inferrule[SplitLinear2]{
-\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
 }{
-\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma}\typeq
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
 \typctx{\Gamma_1}\typcomp
-\typlparen\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma_2}\typrparen
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
 }
 
 \inferrule[SplitDuplicable]{
-\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
 }{
-\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma}\typeq
-\typlparen\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
-\typlparen\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma_2}\typrparen
+\typctx{\Delta}\typderive\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
 }
 
 \inferrule[SplitCopy]{
-\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}\\
-\typctx{T}\typtyped\syncopy
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}\\
+\typctx{\Delta}\typderive\synvar{\tau}\typtyped\syncopy
 }{
-\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma}\typeq
-\typlparen\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
-\typlparen\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma_2}\typrparen
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
 }
 
 \inferrule[SplitFunction]{
-\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
 }{
-\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma}\typeq
-\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
-\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma_2}\typrparen
+\typctx{\Delta}\typderive\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
 }
 \end{mathpar}
 \end{center}
 
 \begin{center}
 \begin{tabular}{lc}\toprule
-Expression typing&\typctx{\Gamma}\typderive\synvar{e}\typtyped\typctx{T}\\
-Function argument typing&\typctx{\Gamma}\typderive\synvar{a}\typsym\typctx{\mu}
+Expression typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\\
+Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a}\typsym\typctx{\mu}
 \\\bottomrule
 \end{tabular}
 \begin{mathpar}
 \inferrule[TypTrue]{
 {}
 }{
-\typctx{\Gamma}\typderive\syntrue\typtyped\synbool
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\syntrue\typtyped\synbool
 }
 
 \inferrule[TypFalse]{
 {}
 }{
-\typctx{\Gamma}\typderive\synfalse\typtyped\synbool
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synfalse\typtyped\synbool
 }
 
 \inferrule[TypInt]{n\in\mathbb{N}}{
-\typctx{\Gamma}\typderive n\typtyped\synint
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive n\typtyped\synint
 }
 
 \inferrule[TypVarLinear]{
 {}
 }{
-\synvar{x}\typtyped\typctx{T}\typcomma\typctx{\Gamma}\typderive\synvar{x}\typtyped\typctx{T}
+\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}
 }
 
 \inferrule[TypVarDup]{
 {}
 }{
-\synvar{x}\typtyped\typref\typctx{T}\typcomma\typctx{\Gamma}\typderive\synvar{x}\typtyped\typctx{T}
+\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}
 }
 
 \inferrule[TypFuncCall]{
-\typctx{\Gamma}\typeq\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\typctx{T}\typcomma\typctx{\Gamma'}\\
-\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_{2'}}\quad
-\typctx{\Gamma_1}\typderive\synvar{a_1}\typsym\typctx{\mu_1}\\
-\typctx{\Gamma_{2'}}\typeq\typctx{\Gamma_2}\typcomp\typctx{\Gamma_{3'}}\quad
-\typctx{\Gamma_2}\typderive\synvar{a_2}\typsym\typctx{\mu_2}
-\\
-\cdots\\
-\typctx{\Gamma_{n-1}}\typeq\typctx{\Gamma_{(n-1)'}}\typcomp\typempty\quad
-\typctx{\Gamma_{n-1}}\typderive\synvar{a_n}\typsym\typctx{\mu_n}
+\typctx{\Gamma}\typeq\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma'}\\
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma_i}\typsc\typctx{\Delta}\typderive\synvar{a_i}\typsym\typctx{\mu_i}\\
 }{
-\typctx{\Gamma}\typderive\synvar{f}\synlparen\synvar{a_1}\typellipsis\synvar{a_n}\synrparen\typtyped\typctx{T}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{f}\synlparen\synvar{a_1}\synellipsis\synvar{a_n}\synrparen\typtyped\synvar{\tau}
 }
 
 \inferrule[TypFunArgLin]{
-\typctx{\Gamma}\typderive\synvar{e}\typtyped\typctx{T}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typderive\synvar{e}\typsym\typctx{T}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typsym\synvar{\tau}
 }
 
 \inferrule[TypFunArgDup]{
-\typctx{\Gamma}\typderive\synvar{e}\typtyped\typctx{T}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typderive\synref\synvar{e}\typsym\typref\typctx{T}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\typref\synvar{\tau}
 }
 
 \inferrule[TypBinop]{
-\typctx{\Gamma}\typderive\synvar{e_1}\typtyped\typctx{T}\\
-\typctx{\Gamma}\typderive\synvar{e_2}\typtyped\typctx{T}\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\tau}\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\tau}\\
 }{
-\typctx{\Gamma}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\typctx{T}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\synvar{\tau}
 }
 
 \inferrule[TypUnop]{
-\typctx{\Gamma}\typderive\synvar{e}\typtyped\typctx{T}\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\\
 }{
-\typctx{\Gamma}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\typctx{T}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synvar{\tau}
+}
+
+\inferrule[TypTupleCons]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_i}\typtyped\synvar{\tau_i}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synlparen \synvar{e_1}\synellipsis\synvar{e_n}\synrparen\typtyped\synlparen\synvar{\tau_1}\synellipsis\synvar{\tau_n}\synrparen
+}
+
+\inferrule[TypTupleAccess]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synlparen\synvar{\tau_1}\synellipsis\synvar{\tau_n}\synrparen\\
+i\in[\![1,n]\!]
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syndot i\typtyped \synvar{\tau_i}
 }
 
 \end{mathpar}
