@@ -41,7 +41,7 @@ The formalization is close to \cite{radanne2019kindly}.
 \newcommand{\syncopy}{\syntext{Copy}}
 \newcommand{\synclone}{\syntext{clone()}}
 \newcommand{\synlet}{\synkeyword{let}\;}
-\newcommand{\synmut}{\synkeyword{mut}}
+\newcommand{\synmut}{\synkeyword{mut}\;}
 \newcommand{\synif}{\synkeyword{if}\;}
 \newcommand{\synthen}{\;\synkeyword{then}\;}
 \newcommand{\synelse}{\;\synkeyword{else}\;}
@@ -80,6 +80,7 @@ The formalization is close to \cite{radanne2019kindly}.
 \newcommand{\synlsquare}{\synpunct{[}\;}
 \newcommand{\synrsquare}{\;\synpunct{]}}
 \newcommand{\synellipsis}{\synpunct{,\ldots,}\;}
+\newcommand{\synscellipsis}{\synpunct{;\ldots;}\;}
 
 %% BNF
 \newcommand{\syndef}{$::=$}
@@ -127,11 +128,11 @@ Reference-free type&\synvar{\mu}&\syndef&\synbool\synalt\synint&base types\\
 &&\synalt&\synlparen$[$\synvar{\mu}$]^+$\synrparen&tuple\\
 Type&\synvar{\tau}&\syndef&\synvar{\mu}&base types\\
 &&\synalt&\synref\synvar{\mu}&immutable reference\\
-Statement&\synvar{s}&\syndef&\synlet$($\synmut$)$\;\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\synsc&let binding\\
-&&\synalt&\synvar{x}\syneq\synvar{e}\synsc&mutable variable reassignment\\
-&&\synalt&\synif\synvar{e}\synthen\synlbracket$[$\synvar{s}$]^+$\synrbracket\;$($\synelse\synlbracket$[$\synvar{s}$]^+$\synrbracket$)$\synsc&conditional statements\\
-&&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket\synsc&for loop (integers only)\\
-&&\synalt&\synvar{e}\synlsquare\synvar{e}\synrsquare\syneq\synvar{e}\synsc&array update\\
+Statement&\synvar{s}&\syndef&\synlet$($\synmut$)$\;\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}&let binding\\
+&&\synalt&\synvar{x}\syneq\synvar{e}&mutable variable reassignment\\
+&&\synalt&\synif\synvar{e}\synthen\synlbracket$[$\synvar{s}$]^+$\synrbracket\;$($\synelse\synlbracket$[$\synvar{s}$]^+$\synrbracket$)$&conditional statements\\
+&&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&for loop (integers only)\\
+&&\synalt&\synvar{e}\synlsquare\synvar{e}\synrsquare\syneq\synvar{e}&array update\\
 Expression&\synvar{e}&\syndef&\syntrue\synalt\synfalse&boolean literals\\
 &&\synalt&$n\in\mathbb{N}$&integer literal\\
 &&\synalt&\synvar{x}&variable\\
@@ -140,6 +141,7 @@ Expression&\synvar{e}&\syndef&\syntrue\synalt\synfalse&boolean literals\\
 &&\synalt&\synvar{\oslash}\;\synvar{e}&unary operations\\
 &&\synalt&\synlparen $[$\synvar{e}$]^+$\synrparen&tuple constructor\\
 &&\synalt&\synvar{e}\syndot$(n\in\mathbb{N})$&tuple field access\\
+&&\synalt&\synvar{e}\synlsquare\synvar{e}\synrsquare&array or seq index\\
 Function argument&\synvar{a}&\syndef&\synvar{e}&linear argument\\
 &&\synalt&\synref\synvar{e}&call-site borrowing\\
 Binary operators&\synvar{\odot}&\syndef&\synadd\synalt\synminus\synalt\synmult\synalt\syndiv\synalt\synand\synalt\synor\\
@@ -158,7 +160,7 @@ Typing context&\typctx{\Gamma}&\syndef&\typempty&empty context\\
 &&\synalt& \synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}&variable\\
 &&\synalt& \synvar{f}\typtyped\typlparen$[$\synvar{\tau}$]^+$\typrparen\typarrow\synvar{\mu}\typcomma\typctx{\Gamma}&function\\
 Type dictionary&\typctx{\Delta}&\syndef&\typempty&empty dictionnary\\
-&&\synalt&\synvar{t}\typarrow\typlsquare\synvar{\tau}\typsc $n\in\mathbb{N}$\typrsquare\typcomma\typctx{\Delta}&array type\\
+&&\synalt&\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc $n\in\mathbb{N}$\typrsquare\typcomma\typctx{\Delta}&array type\\
 \end{tabular}
 \end{center}
 
@@ -199,9 +201,9 @@ Implementing the \syncopy{} trait&\typctx{\Delta}\typderive\synvar{\tau}\typtype
 }
 
 \inferrule[CopyArray]{
-\typctx{\Delta}\typderive\synvar{\tau}\typtyped\syncopy
+\typctx{\Delta}\typderive\synvar{\mu}\typtyped\syncopy
 }{
-\synvar{t}\typarrow\typlsquare\synvar{\tau}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{t}\typtyped\syncopy
+\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{t}\typtyped\syncopy
 }
 \end{mathpar}
 \end{center}
@@ -269,7 +271,7 @@ Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1
 \end{mathpar}
 \end{center}
 
-We can now proceed to the main typing judgments. Let us start with expressions.*
+We can now proceed to the main typing judgments. Let us start with expressions.
 \TirName{TypVarLinear} and \TirName{TypVarDup} reflect the variable typing present in the context.
 \TirName{TypTupleCons} only allows non-reference values inside a tuple, with a linear context
 splitting to check each term of the tuple..
@@ -321,6 +323,27 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syndot i\typtyped \synvar{\mu_i}
+}
+
+\inferrule[TypArrayAccess]{
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{t}\\
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint
+}{
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\typtyped\synvar{\mu}
+}
+
+\inferrule[TypSeqAccess]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synseq\synlangle\synvar{\mu}\synrangle\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\typtyped\synvar{\mu}
+}
+
+\inferrule[TypSeqRefAccess]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synref\synseq\synlangle\synvar{\mu}\synrangle\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\typtyped\synvar{\mu}
 }
 
 \inferrule[TypFuncCall]{
@@ -377,9 +400,45 @@ i\in[\![1,n]\!]
 
 \begin{center}
 \begin{tabular}{lc}\toprule
-Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typproduce\typctx{\Gamma'}
+Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typproduce\typctx{\Gamma'}\\
+Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typproduce\typctx{\Gamma'}
 \\\bottomrule
 \end{tabular}
+\begin{mathpar}
+\inferrule[TypLet]{
+\typctx{\Gamma}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
+}
+
+\inferrule[TypLetMut]{
+\typctx{\Gamma}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synmut\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
+}
+
+\inferrule[TypReassign]{
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc{\Delta}\typderive\synvar{x}\syneq\synvar{e}\typproduce\typctx{\Gamma}
+}
+
+\inferrule[TypArrayAssign]{
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{t}\\
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_3}\typtyped\synvar{\mu}\\
+}{
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive \synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\syneq\synvar{e_3}\typproduce\typctx{\Gamma}
+}
+
+\inferrule[TypSeqAssign]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synseq\synlangle\synvar{\mu}\synrangle\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_3}\typtyped\synvar{\mu}\\
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\syneq\synvar{e_3}\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
 \end{center}
 
 \bibliographystyle{plain}
