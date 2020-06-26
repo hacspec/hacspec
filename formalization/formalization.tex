@@ -11,7 +11,9 @@
 \usepackage{booktabs,longtable}
 \usepackage{csquotes}
 
-\newcommand{\rustspec}{Rustspec}
+\newcommand{\todo}[2]{\textcolor{purple!50!orange}{[#1]: #2}}
+
+\newcommand{\rustspec}{\textsf{Rustspec}}
 
 \title{\rustspec{} formalization}
 
@@ -20,7 +22,7 @@
 \begin{document}
 \maketitle
 
-The formalization is close to \cite{radanne2019kindly}.
+\todo{DM}{Cite \cite{radanne2019kindly} whose formalization has similarities apparently.}
 
 \section{Syntax}
 
@@ -116,8 +118,9 @@ the language operates on arrays of fixed size, known at compilation (\synarrayma
 (\synseq). The biggest limitation compared to the full Rust language is the borrowing patterns
 that we allow. Indeed, we restrict borrowing to only immutable borrowing (\synref{}),
 and we also restrict where this borrowing can happen: only in function arguments or at function call
-sites. Coupled to the fact that functions cannot return types containing immutable references,
-this gives severely restrict the manipulation of linear types in the language.
+sites. Additionally, functions cannot return types containing references. Because of these restrictions,
+there is not much you can do with types subject to linearity in \rustspec, compared to what you
+can do in Rust. However, we argue that it is enough for our usage.
 
 \begin{center}
 \begin{longtable}{lrrll}
@@ -168,14 +171,22 @@ Type dictionary&\typctx{\Delta}&\syndef&\typempty&empty dictionnary\\
 \end{center}
 
 The restrictions on borrowing lead to severe limitations on how we can manipulate values
-of linear type in our language, rendering it quite useless at first sight. However, in the spirit
-of Rust, we introduce an escape hatch from linearity under the form of the \syncopy{} trait
+of linear type in our language, rendering it quite useless at first sight. Indeed, when you receive
+a reference as a function argument, you can only use it in expressions and perform identity let
+bindings with it. You cannot store it in memory or in a tuple and pass it around indirectly
+in your program. This behavior is well-suited for input and output buffers in cryptographic code.
+
+However, in the spirit of Rust, we introduce an escape hatch from linearity under the form of the \syncopy{} trait
 implementation. This trait, that is primitive to the Rust language, is used to distinguish the values
 that are \enquote{cheap} to copy. This concerns all the reference-free \synvar{\mu} types except \synseq, whose size is not known at compilation time (and thus can be arbitrarily large).
 Paradoxically, \synarraymacro{} types that can be as large as their \synseq{} counterparts do benefit
-from the \syncopy{} trait; we replicate here the behavior of Rust. The reason for that is that size
+from the \syncopy{} trait; we replicate here the behavior of Rust. Indeed, because
 the lenght is known at compilation time, the code generation backend of Rust (LLVM) can optimize the
 representation of the array in memory, especially if the size is small.
+
+With this setup, both \synarraymacro{} and \synseq{} represent a table of data. The moral difference between
+them is that \synarraymacro{} is a table passed by value, whereas \synseq{} is a tabled passed by
+reference (immutable).
 
 \begin{center}
 \begin{longtable}{lc}\toprule
@@ -280,10 +291,22 @@ Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1
 \end{mathpar}
 \end{center}
 
-We can now proceed to the main typing judgments. Let us start with expressions.
+We can now proceed to the main typing judgments.
 \TirName{TypVarLinear} and \TirName{TypVarDup} reflect the variable typing present in the context.
 \TirName{TypTupleCons} only allows non-reference values inside a tuple, with a linear context
-splitting to check each term of the tuple..
+splitting to check each term of the tuple. \TirName{TypArrayAccess}, \TirName{TypSeqAccess} and
+\TirName{TypSeqRefAccess} specify the array indexing syntax, which is overloaded to work with
+both \synarraymacro{}, \synseq{} and \synref\synseq{}. This corresponds to the implementing of
+the \syntext{Index} trait in Rust.
+
+The function call rule, \TirName{TypFuncCall}, is the most complex rule of the typing judgment,
+because it contains the
+restricted borrowing form allowed in \rustspec{}. First, note that the context is split for
+typechecking the arguments of the function, because a linear value cannot be used in two arguments.
+Next, \TirName{TypFunArgLin} ensures that the arguments are well-typed. However, if an argument
+is borrowed at call-site, then \TirName{TypFunArgDup} checks the value that is being borrowed
+under the reference. In our degenerate pattern of borrowing, \TirName{TypFunArgDup} is doing the
+work of the Rust borrow checker. The last rules for binary and unary operations are standard.
 
 \begin{center}
 \begin{longtable}{lc}\toprule
@@ -382,9 +405,9 @@ i\in[\![1,n]\!]
 }
 
 \inferrule[TypFunArgDup]{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\mu}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\synref\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\synref\synvar{\mu}
 }
 \end{mathpar}
 \begin{mathpar}
@@ -422,6 +445,28 @@ i\in[\![1,n]\!]
 \end{mathpar}
 \end{center}
 
+
+Let's now move to the statement typing. We've chosen statements here rather than nested expressions
+because of the Rust behavior of the \synif statement and the \synfor loop. A list of statement corresponds
+to a block, introduced in Rust by \synlbracket $\cdots\!$ \synrbracket.
+The single statement typing judgment produces a new \typctx{\Gamma'} because of variable
+definitions inside a block. Single statements also yield back a type, which is \synunitt most of the
+time. This statement type is used because the last statement of the function is also the return
+value of the function.
+
+While \TirName{TypLet} is very classic, \TirName{TypLetMut} introduces a new mutable local variable,
+that can later be reassigned (\TirName{TypReassign}) in the program.
+The main use of this feature is for variables that are
+mutated inside a \synfor loop. Indeed, because \synfor loops are restricted to integer range iteration,
+we cannot express what would normally be a fold without these mutable variables. Because the mutable
+variables are local to a block, we do not need to formalize a full-fledged heap for the operational
+semantics. Rather, we will model them as a limited piece of state that gets passed around during
+execution.
+
+Next, \TirName{TypArrayAssign} and \TirName{TypSeqAssign} define the overloading of the array
+update syntax that works for both \synarraymacro{} and \synseq{}. Note that \TirName{TypIfThenElse}
+use the same context \typctx{\Gamma} for the two branches of the conditional.
+
 \begin{center}
 \begin{longtable}{lc}\toprule
 Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma'}\\
@@ -445,7 +490,7 @@ Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{
 \inferrule[TypReassign]{
 \typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc\typctx{\Delta}\typderive\synvar{x}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc\typctx{\Delta}\typderive\synvar{x}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
 }
 \end{mathpar}
 \begin{mathpar}
@@ -487,6 +532,7 @@ Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{
 \inferrule[TypForLoop]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synint\\
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synint\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synunitt
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synunitt\typproduce\typctx{\Gamma}
 }
@@ -512,6 +558,10 @@ Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{
 }
 \end{mathpar}
 \end{center}
+
+A \rustspec{} program is a list of items \synvar{i}. Their typing judgment produces both a new \typctx{\Gamma} and \typctx{\Delta}, because an item introduces either a new function or a new
+named type. Please note, as mentionned before, that the return type of functions is restricted to
+\synvar{\mu}, as returning a reference is forbidden.
 
 \begin{center}
 \begin{longtable}{lc}\toprule
