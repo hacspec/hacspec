@@ -8,7 +8,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{mathpartir}
 \usepackage{xcolor}
-\usepackage{booktabs}
+\usepackage{booktabs,longtable}
 \usepackage{csquotes}
 
 \newcommand{\rustspec}{Rustspec}
@@ -37,6 +37,7 @@ The formalization is close to \cite{radanne2019kindly}.
 \newcommand{\synfn}{\synkeyword{fn}\;}
 \newcommand{\synbool}{\synkeyword{bool}}
 \newcommand{\synint}{\synkeyword{int}}
+\newcommand{\synunitt}{\synkeyword{unit}}
 \newcommand{\synseq}{\syntext{Seq}}
 \newcommand{\syncopy}{\syntext{Copy}}
 \newcommand{\synclone}{\syntext{clone()}}
@@ -81,6 +82,7 @@ The formalization is close to \cite{radanne2019kindly}.
 \newcommand{\synrsquare}{\;\synpunct{]}}
 \newcommand{\synellipsis}{\synpunct{,\ldots,}\;}
 \newcommand{\synscellipsis}{\synpunct{;\ldots;}\;}
+\newcommand{\synunit}{\synpunct{()}}
 
 %% BNF
 \newcommand{\syndef}{$::=$}
@@ -118,11 +120,11 @@ sites. Coupled to the fact that functions cannot return types containing immutab
 this gives severely restrict the manipulation of linear types in the language.
 
 \begin{center}
-\begin{tabular}{lrrll}
+\begin{longtable}{lrrll}
 Items&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\mu}\syncomma $n\in\mathbb{N}$\synrparen\synsc&array type declaration\\
 &&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{d}$]^+$\synrparen\synarrow\synvar{\mu}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&function declaration\\
 Argument declaration&\synvar{d}&\syndef&\synvar{x}\syntyped\synvar{\tau}&\\
-Reference-free type&\synvar{\mu}&\syndef&\synbool\synalt\synint&base types\\
+Reference-free type&\synvar{\mu}&\syndef&\synunitt\synalt\synbool\synalt\synint&base types\\
 &&\synalt&\synseq\synlangle\synvar{\mu}\synrangle&sequence\\
 &&\synalt&\synvar{t}&type variable\\
 &&\synalt&\synlparen$[$\synvar{\mu}$]^+$\synrparen&tuple\\
@@ -133,7 +135,8 @@ Statement&\synvar{s}&\syndef&\synlet$($\synmut$)$\;\synvar{x}\syntyped\synvar{\t
 &&\synalt&\synif\synvar{e}\synthen\synlbracket$[$\synvar{s}$]^+$\synrbracket\;$($\synelse\synlbracket$[$\synvar{s}$]^+$\synrbracket$)$&conditional statements\\
 &&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&for loop (integers only)\\
 &&\synalt&\synvar{e}\synlsquare\synvar{e}\synrsquare\syneq\synvar{e}&array update\\
-Expression&\synvar{e}&\syndef&\syntrue\synalt\synfalse&boolean literals\\
+&&\synalt&\synvar{e}&return expression\\
+Expression&\synvar{e}&\syndef&\synunit\synalt\syntrue\synalt\synfalse&unit and boolean literals\\
 &&\synalt&$n\in\mathbb{N}$&integer literal\\
 &&\synalt&\synvar{x}&variable\\
 &&\synalt&\synvar{f}\synlparen$[$\synvar{a}$]^+$\synrparen&function call\\
@@ -146,7 +149,7 @@ Function argument&\synvar{a}&\syndef&\synvar{e}&linear argument\\
 &&\synalt&\synref\synvar{e}&call-site borrowing\\
 Binary operators&\synvar{\odot}&\syndef&\synadd\synalt\synminus\synalt\synmult\synalt\syndiv\synalt\synand\synalt\synor\\
 Unary operators&\synvar{\oslash}&\syndef&\synminus\synalt\synnot&
-\end{tabular}
+\end{longtable}
 \end{center}
 
 \section{Typing}
@@ -155,13 +158,13 @@ The typing environnement of \rustspec{} is fairly standard. We need a type dicti
 the named type discipline of Rust that covers the types declared by the \synarraymacro{} macro.
 
 \begin{center}
-\begin{tabular}{lrrll}
+\begin{longtable}{lrrll}
 Typing context&\typctx{\Gamma}&\syndef&\typempty&empty context\\
 &&\synalt& \synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}&variable\\
 &&\synalt& \synvar{f}\typtyped\typlparen$[$\synvar{\tau}$]^+$\typrparen\typarrow\synvar{\mu}\typcomma\typctx{\Gamma}&function\\
 Type dictionary&\typctx{\Delta}&\syndef&\typempty&empty dictionnary\\
 &&\synalt&\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc $n\in\mathbb{N}$\typrsquare\typcomma\typctx{\Delta}&array type\\
-\end{tabular}
+\end{longtable}
 \end{center}
 
 The restrictions on borrowing lead to severe limitations on how we can manipulate values
@@ -175,11 +178,17 @@ the lenght is known at compilation time, the code generation backend of Rust (LL
 representation of the array in memory, especially if the size is small.
 
 \begin{center}
-\begin{tabular}{lc}\toprule
+\begin{longtable}{lc}\toprule
 Implementing the \syncopy{} trait&\typctx{\Delta}\typderive\synvar{\tau}\typtyped\syncopy
 \\\bottomrule
-\end{tabular}
+\end{longtable}
 \begin{mathpar}
+\inferrule[CopyUnit]{
+{}
+}{
+\typctx{\Delta}\typderive\synunitt\typtyped\syncopy
+}
+
 \inferrule[CopyBool]{
 {}
 }{
@@ -217,10 +226,10 @@ be made. We formalize this behavior here by allowing \syncopy{} types duplicatio
 context, like immutable references (\TirName{SplitCopy}). Lastly, functions are always duplicable in the context (\TirName{SplitFunction}).
 
 \begin{center}
-\begin{tabular}{lc}\toprule
+\begin{longtable}{lc}\toprule
 Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
 \\\bottomrule
-\end{tabular}
+\end{longtable}
 \begin{mathpar}
 \inferrule[SplitEmpty]{
 {}
@@ -277,12 +286,18 @@ We can now proceed to the main typing judgments. Let us start with expressions.
 splitting to check each term of the tuple..
 
 \begin{center}
-\begin{tabular}{lc}\toprule
+\begin{longtable}{lc}\toprule
 Expression typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\\
 Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a}\typsym\synvar{\tau}
 \\\bottomrule
-\end{tabular}
+\end{longtable}
 \begin{mathpar}
+\inferrule[TypUnit]{
+{}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synunit\typtyped\synunitt
+}
+
 \inferrule[TypTrue]{
 {}
 }{
@@ -298,7 +313,8 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 \inferrule[TypInt]{n\in\mathbb{N}}{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive n\typtyped\synint
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypVarLinear]{
 {}
 }{
@@ -310,21 +326,24 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 }{
 \synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{x}\typtyped\synref\synvar{\tau}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypTupleCons]{
 \typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
 \forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_i}\typtyped\synvar{\mu_i}
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synlparen \synvar{e_1}\synellipsis\synvar{e_n}\synrparen\typtyped\synlparen\synvar{\mu_1}\synellipsis\synvar{\mu_n}\synrparen
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypTupleAccess]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synlparen\synvar{\mu_1}\synellipsis\synvar{\mu_n}\synrparen\\
 i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syndot i\typtyped \synvar{\mu_i}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypArrayAccess]{
 \typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{t}\\
 \typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint
@@ -345,7 +364,8 @@ i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\typtyped\synvar{\mu}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypFuncCall]{
 \typctx{\Gamma}\typeq\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma'}\\
 \typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
@@ -353,7 +373,8 @@ i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{f}\synlparen\synvar{a_1}\synellipsis\synvar{a_n}\synrparen\typtyped\synvar{\tau}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypFunArgLin]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
@@ -365,7 +386,8 @@ i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\synref\synvar{\tau}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypBinopInt]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\synint}\\
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\synint}\\
@@ -373,7 +395,8 @@ i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\synvar{\synint}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypBinopBool]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\synbool}\\
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\synbool}\\
@@ -388,7 +411,8 @@ i\in[\![1,n]\!]
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synint
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypUnopBool]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synbool\\
 \oslash\in\{\text{\synnot}\}
@@ -399,44 +423,115 @@ i\in[\![1,n]\!]
 \end{center}
 
 \begin{center}
-\begin{tabular}{lc}\toprule
-Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typproduce\typctx{\Gamma'}\\
-Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typproduce\typctx{\Gamma'}
+\begin{longtable}{lc}\toprule
+Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma'}\\
+Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synvar{\tau}
 \\\bottomrule
-\end{tabular}
+\end{longtable}
 \begin{mathpar}
 \inferrule[TypLet]{
 \typctx{\Gamma}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
 }
 
 \inferrule[TypLetMut]{
 \typctx{\Gamma}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synmut\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synmut\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypReassign]{
-\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc{\Delta}\typderive\synvar{x}\syneq\synvar{e}\typproduce\typctx{\Gamma}
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc\typctx{\Delta}\typderive\synvar{x}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypArrayAssign]{
 \typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{t}\\
 \typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
 \typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_3}\typtyped\synvar{\mu}\\
 }{
-\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive \synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\syneq\synvar{e_3}\typproduce\typctx{\Gamma}
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive \synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\syneq\synvar{e_3}\typtyped\synunitt\typproduce\typctx{\Gamma}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[TypSeqAssign]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synseq\synlangle\synvar{\mu}\synrangle\\
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_3}\typtyped\synvar{\mu}\\
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\syneq\synvar{e_3}\typproduce\typctx{\Gamma}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\syneq\synvar{e_3}\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypIfThen]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\syntyped\synbool\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synunitt
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e_1}\synthen\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypIfThenElse]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\syntyped\synbool\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synunitt\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s'_1}\synscellipsis\synvar{s'_n}\typtyped\synunitt
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e_1}\synthen\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\synelse\synlbracket\synvar{s'_1}\synscellipsis\synvar{s'_n}\synrbracket\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypForLoop]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synint\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+
+\inferrule[TypExpToStmt]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypSequence]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synvar{\tau'}\typproduce\typctx{\Gamma'}\\
+\typctx{\Gamma'}\typsc\typctx{\Delta}\typderive\synvar{s_2}\synscellipsis\synvar{s_n}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synvar{\tau}
+}
+
+\inferrule[TypSequenceOne]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma'}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synvar{\tau}
+}
+\end{mathpar}
+\end{center}
+
+\begin{center}
+\begin{longtable}{lc}\toprule
+Item typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{i}\typproduce\typctx{\Gamma'}\typsc\typctx{\Delta'}
+\\\bottomrule
+\end{longtable}
+\begin{mathpar}
+\inferrule[TypArrayDecl]{
+{}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\mu}\syncomma n\synrparen\typproduce\typctx{\Gamma}\typsc\typctx{\Delta}\typcomma\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypFnDecl]{
+\typctx{\Gamma}\typcomma\synvar{x_1}\typtyped\synvar{\tau_1}\typellipsis\synvar{x_n}\typtyped\synvar{\tau_n}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synellipsis\synvar{s_m}\typtyped\synvar{\mu}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive
+\synfn\synvar{f}\synlparen\synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n} \synrparen\synarrow\synvar{\mu}\;\synlbracket\synvar{s_1}\synellipsis\synvar{s_m}\synrbracket\typproduce
+\typctx{\Gamma}\typcomma\synvar{f}\typtyped\typlparen\synvar{\tau_1}\typellipsis\synvar{\tau_n}\typrparen\typarrow\synvar{\mu}\typsc\typctx{\Delta}
 }
 \end{mathpar}
 \end{center}
