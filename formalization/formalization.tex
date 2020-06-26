@@ -9,8 +9,11 @@
 \usepackage{mathpartir}
 \usepackage{xcolor}
 \usepackage{booktabs}
+\usepackage{csquotes}
 
-\title{Rustspec formalization}
+\newcommand{\rustspec}{Rustspec}
+
+\title{\rustspec{} formalization}
 
 \author{Denis Merigoux}
 
@@ -23,7 +26,8 @@ The formalization is close to \cite{radanne2019kindly}.
 
 %%%%%%%%%%%%%%%%%%% Syntax
 \newcommand{\synvar}[1]{\ensuremath{#1}}
-\newcommand{\synkeyword}[1]{\textcolor{red!60!black}{\texttt{#1}}}
+\newcommand{\syntext}[1]{\texttt{#1}}
+\newcommand{\synkeyword}[1]{\textcolor{red!60!black}{\syntext{#1}}}
 \newcommand{\synpunct}[1]{\textcolor{black!40!white}{\texttt{#1}}}
 
 %% Keywords
@@ -33,8 +37,9 @@ The formalization is close to \cite{radanne2019kindly}.
 \newcommand{\synfn}{\synkeyword{fn}\;}
 \newcommand{\synbool}{\synkeyword{bool}}
 \newcommand{\synint}{\synkeyword{int}}
-\newcommand{\synseq}{\synkeyword{Seq}}
-\newcommand{\syncopy}{\synkeyword{Copy}}
+\newcommand{\synseq}{\syntext{Seq}}
+\newcommand{\syncopy}{\syntext{Copy}}
+\newcommand{\synclone}{\syntext{clone()}}
 \newcommand{\synlet}{\synkeyword{let}\;}
 \newcommand{\synmut}{\synkeyword{mut}}
 \newcommand{\synif}{\synkeyword{if}\;}
@@ -97,22 +102,31 @@ The formalization is close to \cite{radanne2019kindly}.
 \newcommand{\typrangle}{\;\typctx{>}}
 \newcommand{\typeq}{\;\typctx{=}\;}
 \newcommand{\typcomp}{\;\typctx{\circ}\;}
-\newcommand{\typref}{\typctx{\&}}
 \newcommand{\typellipsis}{\typctx{,\ldots,}\;}
 \newcommand{\typderive}{\;\typctx{\vdash}\;}
 \newcommand{\typsym}{\;\typctx{\sim}\;}
 \newcommand{\typproduce}{\;\typctx{\Rrightarrow}\;}
 
+
+The \rustspec{} language is a subset of Rust. Apart from the basic \synint{} and \synbool{} types,
+the language operates on arrays of fixed size, known at compilation (\synarraymacro{}) or not
+(\synseq). The biggest limitation compared to the full Rust language is the borrowing patterns
+that we allow. Indeed, we restrict borrowing to only immutable borrowing (\synref{}),
+and we also restrict where this borrowing can happen: only in function arguments or at function call
+sites. Coupled to the fact that functions cannot return types containing immutable references,
+this gives severely restrict the manipulation of linear types in the language.
+
 \begin{center}
 \begin{tabular}{lrrll}
-Items&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\tau}\syncomma\synvar{e}\synrparen\synsc&array type declaration\\
-&&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{d}$]^+$\synrparen\synarrow\synvar{\tau}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&function declaration\\
-Argument declaration&\synvar{d}&\syndef&\synvar{x}\syntyped\synref\synvar{\tau}&linear argument\\
-&&\synalt&\synvar{x}\syntyped\synvar{\tau}&duplicable argument\\
-Type&\synvar{\tau}&\syndef&\synbool\synalt\synint&base types\\
-&&\synalt&\synseq\synlangle\synvar{\tau}\synrangle&sequence\\
+Items&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\mu}\syncomma $n\in\mathbb{N}$\synrparen\synsc&array type declaration\\
+&&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{d}$]^+$\synrparen\synarrow\synvar{\mu}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&function declaration\\
+Argument declaration&\synvar{d}&\syndef&\synvar{x}\syntyped\synvar{\tau}&\\
+Reference-free type&\synvar{\mu}&\syndef&\synbool\synalt\synint&base types\\
+&&\synalt&\synseq\synlangle\synvar{\mu}\synrangle&sequence\\
 &&\synalt&\synvar{t}&type variable\\
-&&\synalt&\synlparen$[$\synvar{\tau}$]^+$\synrparen&tuple\\
+&&\synalt&\synlparen$[$\synvar{\mu}$]^+$\synrparen&tuple\\
+Type&\synvar{\tau}&\syndef&\synvar{\mu}&base types\\
+&&\synalt&\synref\synvar{\mu}&immutable reference\\
 Statement&\synvar{s}&\syndef&\synlet$($\synmut$)$\;\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\synsc&let binding\\
 &&\synalt&\synvar{x}\syneq\synvar{e}\synsc&mutable variable reassignment\\
 &&\synalt&\synif\synvar{e}\synthen\synlbracket$[$\synvar{s}$]^+$\synrbracket\;$($\synelse\synlbracket$[$\synvar{s}$]^+$\synrbracket$)$\synsc&conditional statements\\
@@ -127,7 +141,7 @@ Expression&\synvar{e}&\syndef&\syntrue\synalt\synfalse&boolean literals\\
 &&\synalt&\synlparen $[$\synvar{e}$]^+$\synrparen&tuple constructor\\
 &&\synalt&\synvar{e}\syndot$(n\in\mathbb{N})$&tuple field access\\
 Function argument&\synvar{a}&\syndef&\synvar{e}&linear argument\\
-&&\synalt&\synref\synvar{e}&duplicable argument\\
+&&\synalt&\synref\synvar{e}&call-site borrowing\\
 Binary operators&\synvar{\odot}&\syndef&\synadd\synalt\synminus\synalt\synmult\synalt\syndiv\synalt\synand\synalt\synor\\
 Unary operators&\synvar{\oslash}&\syndef&\synminus\synalt\synnot&
 \end{tabular}
@@ -135,17 +149,28 @@ Unary operators&\synvar{\oslash}&\syndef&\synminus\synalt\synnot&
 
 \section{Typing}
 
+The typing environnement of \rustspec{} is fairly standard. We need a type dictionary to enforce
+the named type discipline of Rust that covers the types declared by the \synarraymacro{} macro.
+
 \begin{center}
 \begin{tabular}{lrrll}
-Qualified type&\typctx{\mu}&\syndef&\synvar{\tau}&linear type\\
-&&\synalt&\typref\synvar{\tau}&duplicable type\\
 Typing context&\typctx{\Gamma}&\syndef&\typempty&empty context\\
-&&\synalt& \synvar{x}\typtyped\typctx{\mu}\typcomma\typctx{\Gamma}&variable\\
-&&\synalt& \synvar{f}\typtyped\typlparen$[$\typctx{\mu}$]^+$\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma}&function\\
-Type dictionnary&\typctx{\Delta}&\syndef&\typempty&empty dictionnary\\
+&&\synalt& \synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}&variable\\
+&&\synalt& \synvar{f}\typtyped\typlparen$[$\synvar{\tau}$]^+$\typrparen\typarrow\synvar{\mu}\typcomma\typctx{\Gamma}&function\\
+Type dictionary&\typctx{\Delta}&\syndef&\typempty&empty dictionnary\\
 &&\synalt&\synvar{t}\typarrow\typlsquare\synvar{\tau}\typsc $n\in\mathbb{N}$\typrsquare\typcomma\typctx{\Delta}&array type\\
 \end{tabular}
 \end{center}
+
+The restrictions on borrowing lead to severe limitations on how we can manipulate values
+of linear type in our language, rendering it quite useless at first sight. However, in the spirit
+of Rust, we introduce an escape hatch from linearity under the form of the \syncopy{} trait
+implementation. This trait, that is primitive to the Rust language, is used to distinguish the values
+that are \enquote{cheap} to copy. This concerns all the reference-free \synvar{\mu} types except \synseq, whose size is not known at compilation time (and thus can be arbitrarily large).
+Paradoxically, \synarraymacro{} types that can be as large as their \synseq{} counterparts do benefit
+from the \syncopy{} trait; we replicate here the behavior of Rust. The reason for that is that size
+the lenght is known at compilation time, the code generation backend of Rust (LLVM) can optimize the
+representation of the array in memory, especially if the size is small.
 
 \begin{center}
 \begin{tabular}{lc}\toprule
@@ -181,6 +206,14 @@ Implementing the \syncopy{} trait&\typctx{\Delta}\typderive\synvar{\tau}\typtype
 \end{mathpar}
 \end{center}
 
+Because Rust has an affine type system, \rustspec{} also enjoys an affine typing context with
+associated splitting rules (\TirName{SplitLinear}). Please note that immutable references values can be duplicated freely
+in the context (\TirName{SplitDuplicable}). During an elaboration phase inside the Rust compiler, the linearity
+of the type system gets circumvented for \syncopy{} values with the insertion of \synclone{} functions
+call that perform a copy of the value wherever the linear type system forces a copy of the value to
+be made. We formalize this behavior here by allowing \syncopy{} types duplication in the typing
+context, like immutable references (\TirName{SplitCopy}). Lastly, functions are always duplicable in the context (\TirName{SplitFunction}).
+
 \begin{center}
 \begin{tabular}{lc}\toprule
 Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
@@ -212,9 +245,9 @@ Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1
 \inferrule[SplitDuplicable]{
 \typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
 }{
-\typctx{\Delta}\typderive\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
-\typlparen\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
-\typlparen\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
 }
 
 \inferrule[SplitCopy]{
@@ -236,10 +269,15 @@ Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1
 \end{mathpar}
 \end{center}
 
+We can now proceed to the main typing judgments. Let us start with expressions.*
+\TirName{TypVarLinear} and \TirName{TypVarDup} reflect the variable typing present in the context.
+\TirName{TypTupleCons} only allows non-reference values inside a tuple, with a linear context
+splitting to check each term of the tuple..
+
 \begin{center}
 \begin{tabular}{lc}\toprule
 Expression typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\\
-Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a}\typsym\typctx{\mu}
+Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a}\typsym\synvar{\tau}
 \\\bottomrule
 \end{tabular}
 \begin{mathpar}
@@ -268,7 +306,21 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 \inferrule[TypVarDup]{
 {}
 }{
-\synvar{x}\typtyped\typref\synvar{\tau}\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}
+\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{x}\typtyped\synref\synvar{\tau}
+}
+
+\inferrule[TypTupleCons]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_i}\typtyped\synvar{\mu_i}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synlparen \synvar{e_1}\synellipsis\synvar{e_n}\synrparen\typtyped\synlparen\synvar{\mu_1}\synellipsis\synvar{\mu_n}\synrparen
+}
+
+\inferrule[TypTupleAccess]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synlparen\synvar{\mu_1}\synellipsis\synvar{\mu_n}\synrparen\\
+i\in[\![1,n]\!]
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syndot i\typtyped \synvar{\mu_i}
 }
 
 \inferrule[TypFuncCall]{
@@ -288,7 +340,7 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 \inferrule[TypFunArgDup]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\typref\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\synref\synvar{\tau}
 }
 
 \inferrule[TypBinopInt]{
@@ -319,20 +371,6 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 \oslash\in\{\text{\synnot}\}
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synbool
-}
-
-\inferrule[TypTupleCons]{
-\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
-\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_i}\typtyped\synvar{\tau_i}
-}{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synlparen \synvar{e_1}\synellipsis\synvar{e_n}\synrparen\typtyped\synlparen\synvar{\tau_1}\synellipsis\synvar{\tau_n}\synrparen
-}
-
-\inferrule[TypTupleAccess]{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synlparen\synvar{\tau_1}\synellipsis\synvar{\tau_n}\synrparen\\
-i\in[\![1,n]\!]
-}{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syndot i\typtyped \synvar{\tau_i}
 }
 \end{mathpar}
 \end{center}
