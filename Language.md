@@ -60,5 +60,5 @@
 Inside `hacspec/`,
 
 ```
-cargo build --features="print_attributes"
+cargo +nightly build --features="print_attributes"
 ```
