@@ -19,12 +19,7 @@
 
 \author{Denis Merigoux}
 
-\begin{document}
-\maketitle
 
-\todo{DM}{Cite \cite{radanne2019kindly} whose formalization has similarities apparently.}
-
-\section{Syntax}
 
 %%%%%%%%%%%%%%%%%%% Syntax
 \newcommand{\synvar}[1]{\ensuremath{#1}}
@@ -113,6 +108,45 @@
 \newcommand{\typproduce}{\;\typctx{\Rrightarrow}\;}
 
 
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\rustspec{} is a subset of Rust designed for cryptographic specification. It is the successor of
+Hacspec \cite{karthik2018hacspec}. Indeed, the strong typing environment of Rust and its low-level
+focus are more suitable to cryptographic specification than the subset of Python that was used for
+Hacspec. The main features of \rustspec{} are :
+\begin{description}
+  \item[Pure functions] By restricting borrowing and making full use of the \syntext{Copy} trait, \rustspec{} feels like functional programming.
+  \item[Primitive array support] Array manipulation is the cornerstone of cryptographic code, hence
+  \rustspec{} arrays have primitive support in the language and a dedicated manipulation library.
+  \item[Integers] \rustspec{} supports all kinds of integers : word-sized integers (\synkeyword{u8}, \synkeyword{u32}, etc.), secret integers (constant-time by type abstraction design),
+  natural integers (for field arithmetic).
+\end{description}
+
+\rustspec{} is concretely implemented as a Rust crate containing the types and functions of the
+language. However, \rustspec{} programs should also fall into a strict subset of Rust, that this
+document formalizes.
+
+The \rustspec{} language, being embedded in Rust, shares with it some linearity properties of its
+type system. However, we severely restrict the borrowing feature: while retaining enough expressive
+power to write cryptographic specifications, the language behaves much simpler. The approach is conceptually similar to \cite{radanne2019kindly}, although \rustspec{} is less expressive.
+
+The formalization presented here does not cover all the features of the \rustspec{} library. It
+focuses on the core of the language, its interesting type system and execution semantics. More
+precisely, we did not include the following elements :
+\begin{itemize}
+  \item anything that can easily be desugared like assignment operators (\synpunct{+=}, etc);
+  \item the \synif{} expression, that coexists with the \synif{} statement;
+  \item all the various types of integers, the casts between them and all the operators to
+  manipulate them (we only have basic \synint{} type with arithmetic);
+  \item polymorphism and traits, as we assume that the Rust compiler does the job of monomorphizing
+  everything for us.
+\end{itemize}
+
+\section{Syntax}
+
 The \rustspec{} language is a subset of Rust. Apart from the basic \synint{} and \synbool{} types,
 the language operates on arrays of fixed size, known at compilation (\synarraymacro{}) or not
 (\synseq). The biggest limitation compared to the full Rust language is the borrowing patterns
@@ -120,7 +154,7 @@ that we allow. Indeed, we restrict borrowing to only immutable borrowing (\synre
 and we also restrict where this borrowing can happen: only in function arguments or at function call
 sites. Additionally, functions cannot return types containing references. Because of these restrictions,
 there is not much you can do with types subject to linearity in \rustspec, compared to what you
-can do in Rust. However, we argue that it is enough for our usage.
+can do in Rust. However, we argue that it is enough for cryptographic specifications.
 
 \begin{center}
 \begin{longtable}{lrrll}
@@ -186,7 +220,9 @@ representation of the array in memory, especially if the size is small.
 
 With this setup, both \synarraymacro{} and \synseq{} represent a table of data. The moral difference between
 them is that \synarraymacro{} is a table passed by value, whereas \synseq{} is a tabled passed by
-reference (immutable).
+reference (immutable). In the cryptographic specifications, \synseq{} is mostly used for input
+and output messages, whose length is known only at runtime. Fixed-size chunks or blocks of data
+are rather implemented using \synarraymacro{}.
 
 \begin{center}
 \begin{longtable}{lc}\toprule
