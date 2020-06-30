@@ -151,7 +151,7 @@ type system. However, we severely restrict the borrowing feature: while retainin
 power to write cryptographic specifications, the language behaves much simpler. The approach is conceptually similar to \cite{radanne2019kindly}, although \rustspec{} is less expressive. Another inspiring attempt at formalizing a subset of Rust is \cite{oxide}.
 
 The formalization presented here does not cover all the features of the \rustspec{} library. It
-focuses on the core of the language, its interesting type system and execution semantics. More
+focuses on the core of the languagestatement, its interesting type system and execution semantics. More
 precisely, we did not include the following elements :
 \begin{itemize}
   \item anything that can easily be desugared like assignment operators (\synpunct{+=}, etc);
@@ -178,7 +178,7 @@ can do in Rust. However, we argue that it is enough for cryptographic specificat
 \begin{longtable}{lrrll}
 Program&\synvar{p}&\syndef&$[$\synvar{i}$]^*$&list of items\\
 Item&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\mu}\syncomma $n\in\mathbb{N}$\synrparen\synsc&array type declaration\\
-&&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{d}$]^+$\synrparen\synarrow\synvar{\mu}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&function declaration\\
+&&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{d}$]^+$\synrparen\synarrow\synvar{\mu}\;\synvar{b}&function declaration\\
 Argument declaration&\synvar{d}&\syndef&\synvar{x}\syntyped\synvar{\tau}&\\
 Reference-free type&\synvar{\mu}&\syndef&\synunitt\synalt\synbool\synalt\synint&base types\\
 &&\synalt&\synseq\synlangle\synvar{\mu}\synrangle&sequence\\
@@ -186,12 +186,14 @@ Reference-free type&\synvar{\mu}&\syndef&\synunitt\synalt\synbool\synalt\synint&
 &&\synalt&\synlparen$[$\synvar{\mu}$]^+$\synrparen&tuple\\
 Type&\synvar{\tau}&\syndef&\synvar{\mu}&base types\\
 &&\synalt&\synref\synvar{\mu}&immutable reference\\
+Block&\synvar{b}&\syndef&\synlbracket$[$\synvar{s}\synsc$]^+$\synrbracket&\\
 Statement&\synvar{s}&\syndef&\synlet\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}&let binding\\
 &&\synalt&\synvar{x}\syneq\synvar{e}&variable reassignment\\
-&&\synalt&\synif\synvar{e}\synthen\synlbracket$[$\synvar{s}$]^+$\synrbracket\;$($\synelse\synlbracket$[$\synvar{s}$]^+$\synrbracket$)$&conditional statements\\
-&&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synlbracket$[$\synvar{s}$]^+$\synrbracket&for loop (integers only)\\
+&&\synalt&\synif\synvar{e}\synthen\synvar{b}\;$($\synelse\synvar{b}$)$&conditional statements\\
+&&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synvar{b}&for loop (integers only)\\
 &&\synalt&\synvar{x}\synlsquare\synvar{e}\synrsquare\syneq\synvar{e}&array update\\
 &&\synalt&\synvar{e}&return expression\\
+&&\synalt&\synvar{b}&statement block\\
 Expression&\synvar{e}&\syndef&\synunit\synalt\syntrue\synalt\synfalse&unit and boolean literals\\
 &&\synalt&$n\in\mathbb{N}$&integer literal\\
 &&\synalt&\synvar{x}&variable\\
@@ -376,16 +378,10 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synunit\typtyped\synunitt
 }
 
-\inferrule[TypTrue]{
-{}
+\inferrule[TypBool]{
+\synvar{b}\in\{\syntrue,\;\synfalse\}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\syntrue\typtyped\synbool
-}
-
-\inferrule[TypFalse]{
-{}
-}{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synfalse\typtyped\synbool
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synbool
 }
 
 \inferrule[TypInt]{n\in\mathbb{N}}{
@@ -505,13 +501,14 @@ Let's now move to the statement typing. We've chosen statements here rather than
 because of the Rust behavior of the \synif statement and the \synfor loop. A list of statement corresponds
 to a block, introduced in Rust by \synlbracket $\cdots\!$ \synrbracket.
 The single statement typing judgment produces a new \typctx{\Gamma'} because of variable
-definitions inside a block. Single statements also yield back a type, which is \synunitt most of the
-time. This statement type is used because the last statement of the function is also the return
-value of the function.
+definitions inside a block. Single statements also yield back a type, because the last statement
+of the function is also the return
+value of the function. All statement type except the last one should be \synunitt.
 
-\TirName{TypLetMut} introduces a new mutable local variable,
+The rule \TirName{TypLet} introduces a new mutable local variable,
 that can later be reassigned (\TirName{TypReassign}) in the program. In Rust, the \synkeyword{mut}
 indicates that the local variable is mutable, in its absence, variable reassignments are prohibited.
+In this formalization, all variables are mutable for simplification.
 The main use of mutable local variables is for variables that are
 mutated inside a \synfor loop. Indeed, because \synfor loops are restricted to integer range iteration,
 we cannot express what would normally be a fold without these mutable variables. Because the mutable
@@ -526,7 +523,7 @@ use the same context \typctx{\Gamma} for the two branches of the conditional.
 \begin{center}
 \begin{longtable}{lc}\toprule
 Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma'}\\
-Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synvar{\tau}
+Block typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\tau}
 \\\bottomrule
 \end{longtable}
 \begin{mathpar}
@@ -562,27 +559,27 @@ Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{
 \begin{mathpar}
 \inferrule[TypIfThen]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syntyped\synbool\\
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synunitt
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synunitt
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e}\synthen\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synunitt\typproduce\typctx{\Gamma}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e}\synthen\synvar{b}\typtyped\synunitt\typproduce\typctx{\Gamma}
 }
 \end{mathpar}
 \begin{mathpar}
 \inferrule[TypIfThenElse]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syntyped\synbool\\
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synunitt\\
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s'_1}\synscellipsis\synvar{s'_n}\typtyped\synunitt
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synunitt\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b'}\typtyped\synunitt
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e}\synthen\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\synelse\synlbracket\synvar{s'_1}\synscellipsis\synvar{s'_n}\synrbracket\typtyped\synunitt\typproduce\typctx{\Gamma}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e}\synthen\synvar{b}\synelse\synvar{b'}\typtyped\synunitt\typproduce\typctx{\Gamma}
 }
 \end{mathpar}
 \begin{mathpar}
 \inferrule[TypForLoop]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synint\\
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
-\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synint\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synunitt
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synint\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synunitt
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synunitt\typproduce\typctx{\Gamma}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synvar{b}\typtyped\synunitt\typproduce\typctx{\Gamma}
 }
 
 \inferrule[TypExpToStmt]{
@@ -592,17 +589,24 @@ Statement sequence typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{
 }
 \end{mathpar}
 \begin{mathpar}
-\inferrule[TypSequence]{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synvar{\tau'}\typproduce\typctx{\Gamma'}\\
-\typctx{\Gamma'}\typsc\typctx{\Delta}\typderive\synvar{s_2}\synscellipsis\synvar{s_n}\typtyped\synvar{\tau}
+\inferrule[TypBlock]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synunitt\typproduce\typctx{\Gamma'}\\
+\typctx{\Gamma'}\typsc\typctx{\Delta}\typderive\synlbracket\synvar{s_2}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synvar{\tau}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synscellipsis\synvar{s_n}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synvar{\tau}
 }
 
-\inferrule[TypSequenceOne]{
+\inferrule[TypBlockOne]{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma'}
 }{
-\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlbracket\synvar{s_1}\synrbracket\typtyped\synvar{\tau}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypBlockAsStatement]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma}
 }
 \end{mathpar}
 \end{center}
@@ -627,10 +631,10 @@ Item typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{i}\typproduce\
 \end{mathpar}
 \begin{mathpar}
 \inferrule[TypFnDecl]{
-\typctx{\Gamma}\typcomma\synvar{x_1}\typtyped\synvar{\tau_1}\typellipsis\synvar{x_n}\typtyped\synvar{\tau_n}\typsc\typctx{\Delta}\typderive\synvar{s_1}\synellipsis\synvar{s_m}\typtyped\synvar{\mu}
+\typctx{\Gamma}\typcomma\synvar{x_1}\typtyped\synvar{\tau_1}\typellipsis\synvar{x_n}\typtyped\synvar{\tau_n}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\mu}
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive
-\synfn\synvar{f}\synlparen\synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n} \synrparen\synarrow\synvar{\mu}\;\synlbracket\synvar{s_1}\synellipsis\synvar{s_m}\synrbracket\typproduce
+\synfn\synvar{f}\synlparen\synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n} \synrparen\synarrow\synvar{\mu}\;\synvar{b}\typproduce
 \typctx{\Gamma}\typcomma\synvar{f}\typtyped\typlparen\synvar{\tau_1}\typellipsis\synvar{\tau_n}\typrparen\typarrow\synvar{\mu}\typsc\typctx{\Delta}
 }
 \end{mathpar}
@@ -655,7 +659,7 @@ Evaluation context&\evactx{\Omega}&\syndef&\evaempty&empty context\\
 Expression evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\\
 Function argument evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a}\evaeval\synvar{v}\\
 Statement evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega}\\
-Statements evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s_1}\synellipsis\synvar{s_n}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
+Block evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
 \\\bottomrule
 \end{tabular}
 \begin{mathpar}
@@ -682,7 +686,8 @@ n\in\mathbb{N}
 }{
 \synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\evaeval\synvar{v}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[EvalFuncArg]{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
 }{
@@ -690,13 +695,14 @@ n\in\mathbb{N}
 }
 
 \inferrule[EvalFuncCall]{
-\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\synlbracket \synvar{s_1}\synellipsis\synvar{s_m}\synrbracket\in\synvar{p}\\
+\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
 \forall i\in[\![1,n]\!],\; \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a_i}\evaeval\synvar{v_i}\\
-\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evasc\evaempty\evaderive\synvar{s_1}\synellipsis\synvar{s_m}\evaeval\synvar{v}
+\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
 }{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{f}\synlparen\synvar{a_1}\synellipsis\synvar{a_n}\synrparen\evaeval\synvar{v}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[EvalBinaryOp]{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synvar{v_1}\\
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval\synvar{v_2}
@@ -735,49 +741,96 @@ n\in[\![1,m]\!]
 }{
 \synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\syneq\synvar{e}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\synvar{v'}\evacomma\evactx{\Omega}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[EvalIfThenTrue]{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s_1}\synellipsis\synvar{s_n}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
 }{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synlbracket\synvar{s_1}\synellipsis\synvar{s_n}\synrbracket\evaeval\synunit\evaproduce\evactx{\Gamma'}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
 }
 
 \inferrule[EvalIfThenFalse]{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
 }{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synlbracket\synvar{s_1}\synellipsis\synvar{s_n}\synrbracket\evaeval\synunit\evaproduce\evactx{\Gamma}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[EvalIfThenElseTrue]{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s_1}\synellipsis\synvar{s_n}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
 }{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synlbracket\synvar{s_1}\synellipsis\synvar{s_n}\synrbracket\synelse\synlbracket\synvar{s'_1}\synellipsis\synvar{s'_n}\synrbracket\evaeval\synunit\evaproduce\evactx{\Gamma'}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[EvalIfThenElseFalse]{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s'_1}\synellipsis\synvar{s'_n}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
 }{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synlbracket\synvar{s_1}\synellipsis\synvar{s_n}\synrbracket\synelse\synlbracket\synvar{s'_1}\synellipsis\synvar{s'_n}\synrbracket\evaeval\synunit\evaproduce\evactx{\Gamma'}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[EvalForLoop]{
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval n\quad
 \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval m\\
 \evactx{\Omega_n}\evaeq\evactx{\Omega}\quad
-\forall i\in[\![n,m-1]\!],\;\synvar{p}\evasc\evactx{\Omega_i}\evaderive\synvar{s_1}\synellipsis\synvar{s_n}\evaeval \synunit\evaproduce\evactx{\Omega_{i+1}}\\
+\forall i\in[\![n,m-1]\!],\;\synvar{p}\evasc\evactx{\Omega_i}\evaderive\synvar{b}\evaeval \synunit\evaproduce\evactx{\Omega_{i+1}}\\
 }{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synlbracket\synvar{s_1}\synellipsis\synvar{s_n}\synrbracket\evaeval\synunit\evaproduce\evactx{\Omega_m}
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Omega_m}
 }
-
+\end{mathpar}
+\begin{mathpar}
 \inferrule[EvalArrayUpd]{
 \synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_1}\evaeval m\\
 m\in[\![0,n]\!]\\
 \synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_2}\evaeval \synvar{v}\\
 }{
 \synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{x}\synlsquare\synvar{e_1}\synrsquare\syneq\synvar{e_2}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_{m-1}}\evacomma\synvar{v}\evacomma\synvar{v_{m+1}}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalExprStmt]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
+}
+
+\inferrule[EvalBlock]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s_1}\evaeval\synunit\evaproduce\evactx{\Omega'}\\
+\synvar{p}\evasc\evactx{\Omega'}\evaderive\synlbracket\synvar{s_2}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
+}
+
+\inferrule[EvalBlockOne]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}
+
+\inferrule[EvalBlockAsStatement]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}
+\end{mathpar}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Function evaluation&\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}\\
+\bottomrule
+\end{tabular}
+\begin{mathpar}
+\inferrule[EvalFunc]{
+\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
+\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
+}{
+\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}
 }
 \end{mathpar}
 \end{center}
