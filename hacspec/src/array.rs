@@ -730,7 +730,7 @@ macro_rules! array {
     };
     ($name:ident, $l:expr, u8) => {
         _public_array!($name, $l, u8);
-        _implement_numeric_unsigned_public!($name);
+        _implement_numeric_unsigned_public!($name, u8);
 
         impl $name {
             #[cfg_attr(feature="use_attributes", primitive(hacspec))]
@@ -796,19 +796,19 @@ macro_rules! array {
     };
     ($name:ident, $l:expr, u16) => {
         _public_array!($name, $l, u16);
-        _implement_numeric_unsigned_public!($name);
+        _implement_numeric_unsigned_public!($name, u16);
     };
     ($name:ident, $l:expr, u32) => {
         _public_array!($name, $l, u32);
-        _implement_numeric_unsigned_public!($name);
+        _implement_numeric_unsigned_public!($name, u32);
     };
     ($name:ident, $l:expr, u64) => {
         _public_array!($name, $l, u64);
-        _implement_numeric_unsigned_public!($name);
+        _implement_numeric_unsigned_public!($name, u64);
     };
     ($name:ident, $l:expr, u128) => {
         _public_array!($name, $l, u128);
-        _implement_numeric_unsigned_public!($name);
+        _implement_numeric_unsigned_public!($name, u128);
     };
     ($name:ident, $l:expr, $t:ty) => {
         _public_array!($name, $l, $t);

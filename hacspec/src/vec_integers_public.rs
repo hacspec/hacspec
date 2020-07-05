@@ -1,38 +1,8 @@
 #![allow(unused_variables)]
 use crate::prelude::*;
 
-// TODO: drop the `Copy` requirement for matrices
+// Note: Matrices are currently not supported.
 // TODO: this won't allow us to split between signed and unsigned.
-impl<T: Numeric + PublicInteger + Copy> ModNumeric for PublicSeq<T> {
-    /// (self - rhs) % n.
-    fn sub_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self + rhs) % n`
-    fn add_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self * rhs) % n`
-    fn mul_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self ^ exp) % n`
-    fn pow_mod(self, exp: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `self % n`
-    fn modulo(self, n: Self) -> Self {
-        unimplemented!();
-    }
-    fn signed_modulo(self, _n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `|self|` (coefficient-wise)
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn absolute(self) -> Self {
-        unimplemented!();
-    }
-}
 impl<T: Numeric + PublicInteger + Copy> Numeric for PublicSeq<T> {
     /// Return largest value that can be represented.
     fn max_val() -> Self {
@@ -112,7 +82,7 @@ impl<T: Numeric + PublicInteger + Copy> Mul for PublicSeq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn mul(self, rhs: Self) -> Self::Output {
-        vec_poly_mul(self, rhs, T::default())
+        vec_mul(self, rhs, T::default())
     }
 }
 
@@ -121,7 +91,7 @@ impl<T: Numeric + PublicInteger + Copy> Sub for PublicSeq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn sub(self, rhs: Self) -> Self::Output {
-        vec_poly_sub(self, rhs, T::default())
+        vec_sub(self, rhs, T::default())
     }
 }
 
@@ -130,7 +100,7 @@ impl<T: Numeric + PublicInteger + Copy> Add for PublicSeq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn add(self, rhs: Self) -> Self::Output {
-        vec_poly_add(self, rhs, T::default())
+        vec_add(self, rhs, T::default())
     }
 }
 

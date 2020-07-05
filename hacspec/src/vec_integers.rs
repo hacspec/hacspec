@@ -2,11 +2,10 @@
 ///!
 ///! Implement the `Numeric` trait for arrays.
 ///!
-use crate::prelude::*;
 
 #[macro_export]
 macro_rules! _implement_numeric_unsigned_public {
-    ($name:ident) => {
+    ($name:ident, $elements:ty) => {
         impl PartialOrd for $name {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -70,7 +69,7 @@ macro_rules! _implement_numeric_unsigned_public {
             #[cfg_attr(feature="use_attributes", library(hacspec))]
             fn mul(self, rhs: $name) -> $name {
                 self.compatible(&rhs);
-                vec_poly_mul(self, rhs, 0)
+                vec_mul(self, rhs, 0)
             }
         }
 
@@ -164,49 +163,6 @@ macro_rules! _implement_numeric_unsigned_public {
         }
 
         impl NumericCopy for $name {}
-        impl ModNumeric for $name {
-            /// `(self - rhs) % n` (coefficient-wise)
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                (self - rhs).modulo(n)
-            }
-            /// `(self + rhs) % n` (coefficient-wise)
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
-                (self + rhs).modulo(n)
-            }
-            /// `(self * rhs) % n` (coefficient-wise)
-            /// Note that the multiplication is wrapping.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                (self * rhs).modulo(n)
-            }
-            /// `(self ^ exp) % n` (coefficient-wise)
-            /// Note that the exponentiation is wrapping.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
-                self.pow_self(exp).modulo(n)
-            }
-            /// `self % n` (coefficient-wise)
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn modulo(self, n: Self) -> Self {
-                self.compatible(&n);
-                let mut out = Self::new();
-                for i in 0..self.len() {
-                    out[i] = self[i].modulo(n[i])
-                }
-                out
-            }
-            /// `self % n` (coefficient-wise)
-            fn signed_modulo(self, n: Self) -> Self {
-                self.modulo(n)
-            }
-            /// `|self|` (coefficient-wise)
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn absolute(self) -> Self {
-                self
-            }
-        }
         impl Numeric for $name {
             // TODO: decide if we want this.
             /// Return largest value that can be represented.
@@ -434,45 +390,6 @@ macro_rules! _implement_numeric_signed_public {
         }
 
         impl NumericCopy for $name {}
-        impl ModNumeric for $name {
-            /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn modulo(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            fn signed_modulo(self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|` (coefficient-wise)
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn absolute(self) -> Self {
-                let mut out = Self::new();
-                for i in 0..self.len() {
-                    out[i] = self[i].absolute();
-                }
-                out
-            }
-        }
         impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -688,41 +605,6 @@ macro_rules! _implement_numeric_unsigned_secret {
         }
 
         impl NumericCopy for $name {}
-        impl ModNumeric for $name {
-            /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, _rhs: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn modulo(self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            fn signed_modulo(self, _n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `|self|` (coefficient-wise)
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn absolute(self) -> Self {
-                self
-            }
-        }
         impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -930,36 +812,6 @@ macro_rules! _implement_numeric_signed_secret {
         }
 
         impl NumericCopy for $name {}
-        impl ModNumeric for $name {
-            /// (self - rhs) % n.
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self + rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self * rhs) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `(self ^ exp) % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
-                unimplemented!();
-            }
-            /// `self % n`
-            #[cfg_attr(feature="use_attributes", library(hacspec))]
-            fn modulo(self, n: Self) -> Self {
-                unimplemented!();
-            }
-            fn signed_modulo(self, _n: Self) -> Self {
-                unimplemented!();
-            }
-        }
         impl Numeric for $name {
             /// Return largest value that can be represented.
             #[cfg_attr(feature="use_attributes", library(hacspec))]
@@ -1063,81 +915,3 @@ macro_rules! _implement_numeric_signed_secret {
         }
     };
 }
-
-#[inline]
-#[cfg_attr(feature="use_attributes", library(hacspec))]
-pub fn vec_poly_mul<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
-    debug_assert!(x.len() == y.len());
-    let mut out = U::create(x.len());
-    for i in 0..x.len() {
-        if !n.equal(T::default()) {
-            out[i] = x[i].mul_mod(y[i], n);
-        } else {
-            out[i] = x[i].wrap_mul(y[i]);
-        }
-    }
-    out
-}
-
-#[inline]
-#[cfg_attr(feature="use_attributes", library(hacspec))]
-pub fn vec_poly_add<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
-    debug_assert!(x.len() == y.len());
-    let mut out = U::create(x.len());
-    for i in 0..x.len() {
-        if !n.equal(T::default()) {
-            out[i] = x[i].add_mod(y[i], n);
-        } else {
-            out[i] = x[i].wrap_add(y[i]);
-        }
-    }
-    out
-}
-
-#[inline]
-#[cfg_attr(feature="use_attributes", library(hacspec))]
-pub fn vec_poly_sub<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
-    debug_assert!(x.len() == y.len());
-    let mut out = U::create(x.len());
-    for i in 0..x.len() {
-        if !n.equal(T::default()) {
-            out[i] = x[i].sub_mod(y[i], n);
-        } else {
-            out[i] = x[i].wrap_sub(y[i]);
-        }
-    }
-    out
-}
-
-// /// Polynomial multiplication on ℤ[x]
-// impl<T: Numeric> Mul for Seq<T> {
-//     type Output = Self;
-//     fn mul(self, rhs: Self) -> Self::Output {
-//         Self {
-//             b: poly_mul(&self.b, &rhs.b, T::default()),
-//             idx: 0,
-//         }
-//     }
-// }
-
-// /// Polynomial subtraction on ℤ[x]
-// impl<T: Numeric> Sub for Seq<T> {
-//     type Output = Self;
-//     fn sub(self, rhs: Self) -> Self::Output {
-//         Self {
-//             b: vec_poly_sub(&self.b, &rhs.b, T::default()),
-//             idx: 0,
-//         }
-//     }
-// }
-
-// /// Polynomial addition on ℤ[x]
-// impl<T: Numeric> Add for Seq<T> {
-//     type Output = Self;
-//     fn add(self, rhs: Self) -> Self::Output {
-//         Self {
-//             b: vec_poly_add(&self.b, &rhs.b, T::default()),
-//             idx: 0,
-//         }
-//     }
-// }

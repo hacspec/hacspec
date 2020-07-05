@@ -1,37 +1,8 @@
 #![allow(unused_variables)]
 use crate::prelude::*;
 
+// Note: Matrices are currently not supported.
 // TODO: this won't allow us to split between signed and unsigned.
-impl<T: Numeric + SecretInteger + Copy> ModNumeric for Seq<T> {
-    /// (self - rhs) % n.
-    fn sub_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self + rhs) % n`
-    fn add_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self * rhs) % n`
-    fn mul_mod(self, rhs: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `(self ^ exp) % n`
-    fn pow_mod(self, exp: Self, n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `self % n`
-    fn modulo(self, n: Self) -> Self {
-        unimplemented!();
-    }
-    fn signed_modulo(self, _n: Self) -> Self {
-        unimplemented!();
-    }
-    /// `|self|` (coefficient-wise)
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn absolute(self) -> Self {
-        unimplemented!();
-    }
-}
 impl<T: Numeric + SecretInteger + Copy> Numeric for Seq<T> {
     /// Return largest value that can be represented.
     fn max_val() -> Self {
@@ -111,7 +82,7 @@ impl<T: Numeric + SecretInteger + Copy> Mul for Seq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn mul(self, rhs: Self) -> Self::Output {
-        vec_poly_mul(self, rhs, T::default())
+        vec_mul(self, rhs, T::default())
     }
 }
 
@@ -120,7 +91,7 @@ impl<T: Numeric + SecretInteger + Copy> Sub for Seq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn sub(self, rhs: Self) -> Self::Output {
-        vec_poly_sub(self, rhs, T::default())
+        vec_sub(self, rhs, T::default())
     }
 }
 
@@ -129,7 +100,7 @@ impl<T: Numeric + SecretInteger + Copy> Add for Seq<T> {
     type Output = Self;
     #[cfg_attr(feature="use_attributes", library(hacspec))]
     fn add(self, rhs: Self) -> Self::Output {
-        vec_poly_add(self, rhs, T::default())
+        vec_add(self, rhs, T::default())
     }
 }
 

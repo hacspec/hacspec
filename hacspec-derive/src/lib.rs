@@ -297,36 +297,36 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             }
         }
 
-        impl #impl_generics ModNumeric for #name #ty_generics #where_clause  {
-            /// (self - rhs) % n.
-            fn sub_mod(self, rhs: Self, n: Self) -> Self {
-                #sub_mod
-            }
-            /// `(self + rhs) % n`
-            fn add_mod(self, rhs: Self, n: Self) -> Self {
-                #add_mod
-            }
-            /// `(self * rhs) % n`
-            fn mul_mod(self, rhs: Self, n: Self) -> Self {
-                #mul_mod
-            }
-            /// `(self ^ exp) % n`
-            fn pow_mod(self, exp: Self, n: Self) -> Self {
-                #pow_mod
-            }
-            /// `self % n`
-            fn modulo(self, n: Self) -> Self {
-                #modulo
-            }
-            /// `self % n` that always returns a positive integer
-            fn signed_modulo(self, n: Self) -> Self {
-                #signed_modulo
-            }
-            /// `|self|`
-            fn absolute(self) -> Self {
-                #absolute
-            }
-        }
+        // impl #impl_generics ModNumeric for #name #ty_generics #where_clause  {
+        //     /// (self - rhs) % n.
+        //     fn sub_mod(self, rhs: Self, n: Self) -> Self {
+        //         #sub_mod
+        //     }
+        //     /// `(self + rhs) % n`
+        //     fn add_mod(self, rhs: Self, n: Self) -> Self {
+        //         #add_mod
+        //     }
+        //     /// `(self * rhs) % n`
+        //     fn mul_mod(self, rhs: Self, n: Self) -> Self {
+        //         #mul_mod
+        //     }
+        //     /// `(self ^ exp) % n`
+        //     fn pow_mod(self, exp: Self, n: Self) -> Self {
+        //         #pow_mod
+        //     }
+        //     /// `self % n`
+        //     fn modulo(self, n: Self) -> Self {
+        //         #modulo
+        //     }
+        //     /// `self % n` that always returns a positive integer
+        //     fn signed_modulo(self, n: Self) -> Self {
+        //         #signed_modulo
+        //     }
+        //     /// `|self|`
+        //     fn absolute(self) -> Self {
+        //         #absolute
+        //     }
+        // }
 
         impl #impl_generics Numeric for #name #ty_generics #where_clause {
             /// Return largest value that can be represented.

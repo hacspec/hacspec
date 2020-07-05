@@ -68,7 +68,7 @@ pub trait SeqTrait<T: Copy>:
 /// This trait extends the `Numeric` trait and is implemented by all integer
 /// types. It offers bit manipulation, instantiation from literal, and convenient
 /// constants.
-pub trait Integer: Numeric {
+pub trait Integer: Numeric +  ModNumeric {
     const NUM_BITS: usize;
 
     // Some useful values.
@@ -192,8 +192,7 @@ pub trait NumericCopy : Copy {}
 
 /// The `Numeric` trait has to be implemented by all numeric objects.
 pub trait Numeric:
-    ModNumeric
-    + Add<Self, Output = Self>
+    Add<Self, Output = Self>
     + Sub<Self, Output = Self>
     + Mul<Self, Output = Self>
     + BitXor<Self, Output = Self>

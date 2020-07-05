@@ -3,8 +3,62 @@
 ///!
 use crate::prelude::*;
 
+/// Multiply the coefficients of the two numeric vectors `x` and `y`.
+/// If `n` is given (non-zero), the multiplication must not overflow. The result is reduced modulo `n`.
+/// If `n` is not given (zero), the multiplicatin is wrapping.
 #[inline]
-pub fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
+#[cfg_attr(feature="use_attributes", library(hacspec))]
+pub fn vec_mul<T: Integer + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
+    debug_assert!(x.len() == y.len());
+    let mut out = U::create(x.len());
+    for i in 0..x.len() {
+        if !n.equal(T::default()) {
+            out[i] = x[i].mul_mod(y[i], n);
+        } else {
+            out[i] = x[i].wrap_mul(y[i]);
+        }
+    }
+    out
+}
+
+/// Add the coefficients of the two numeric vectors `x` and `y`.
+/// If `n` is given (non-zero), the addition must not overflow. The result is reduced modulo `n`.
+/// If `n` is not given (zero), the addition is wrapping.
+#[inline]
+#[cfg_attr(feature="use_attributes", library(hacspec))]
+pub fn vec_add<T: Integer + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
+    debug_assert!(x.len() == y.len());
+    let mut out = U::create(x.len());
+    for i in 0..x.len() {
+        if !n.equal(T::default()) {
+            out[i] = x[i].add_mod(y[i], n);
+        } else {
+            out[i] = x[i].wrap_add(y[i]);
+        }
+    }
+    out
+}
+
+/// Subtract the coefficients of the two numeric vectors `x` and `y`.
+/// If `n` is given (non-zero), the subtraction must not overflow. The result is reduced modulo `n`.
+/// If `n` is not given (zero), the subtraction is wrapping.
+#[inline]
+#[cfg_attr(feature="use_attributes", library(hacspec))]
+pub fn vec_sub<T: Integer + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
+    debug_assert!(x.len() == y.len());
+    let mut out = U::create(x.len());
+    for i in 0..x.len() {
+        if !n.equal(T::default()) {
+            out[i] = x[i].sub_mod(y[i], n);
+        } else {
+            out[i] = x[i].wrap_sub(y[i]);
+        }
+    }
+    out
+}
+
+#[inline]
+pub fn poly_sub<T: Numeric + ModNumeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
@@ -19,7 +73,7 @@ pub fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
 }
 
 #[inline]
-pub fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn poly_add<T: Numeric + ModNumeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
@@ -36,7 +90,7 @@ pub fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
 /// Polynomial multiplication using operand scanning without modulo.
 #[allow(dead_code)]
 #[inline]
-pub(crate) fn poly_mul_plain<T: Numeric + Copy>(x: &[T], y: &[T], _n: T) -> Vec<T> {
+pub(crate) fn poly_mul_plain<T: Numeric + ModNumeric + Copy>(x: &[T], y: &[T], _n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
     for i in 0..x.len() {
         for j in 0..y.len() {
@@ -50,7 +104,7 @@ pub(crate) fn poly_mul_plain<T: Numeric + Copy>(x: &[T], y: &[T], _n: T) -> Vec<
 /// This is very inefficient and prone to side-channel attacks.
 #[allow(dead_code)]
 #[inline]
-pub(crate) fn poly_mul_op_scanning<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub(crate) fn poly_mul_op_scanning<T: Numeric + ModNumeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
     for i in 0..x.len() {
         for j in 0..y.len() {
@@ -64,7 +118,7 @@ pub(crate) fn poly_mul_op_scanning<T: Numeric + Copy>(x: &[T], y: &[T], n: T) ->
 /// This can be more efficient than operand scanning but also prone to side-channel
 /// attacks.
 #[inline]
-pub fn poly_mul<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
+pub fn poly_mul<T: Numeric + ModNumeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let mut out = vec![T::default(); x.len() + y.len()];
     for adx in x
         .iter()
@@ -84,13 +138,23 @@ pub fn poly_mul<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     out
 }
 
+/// Polynomial multiplication modulo `n` reducing the result by `irr`.
+#[inline]
+pub fn poly_mul_reduce<T: Numeric + ModNumeric + Copy>(x: &[T], y: &[T], irr: &[T], n: T) -> Vec<T> {
+    let tmp = poly_mul(x, y, n);
+    match poly_div(&tmp, irr, n) {
+        Ok(v) => v.1,
+        Err(e) => panic!(e),
+    }
+}
+
 /// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.
 /// The length of x and degree of y are assumed to be public
 ///
 /// Returns Ok(quotient, remainder) or Err("Can't divide these two polynomials")
 ///
 #[inline]
-pub fn poly_div<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Result<(Vec<T>, Vec<T>), &'static str> {
+pub fn poly_div<T: Numeric + ModNumeric + Copy>(x: &[T], y: &[T], n: T) -> Result<(Vec<T>, Vec<T>), &'static str> {
     let (x, y) = normalize(x, y);
     let mut rem = x.clone();
     let mut quo = vec![T::default(); x.len()];

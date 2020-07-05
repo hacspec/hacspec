@@ -31,6 +31,7 @@ macro_rules! implement_public_unsigned_mi {
             /// `(self * rhs) % n`
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
+                println!("{} * {}", self, rhs);
                 (self * rhs) % n
             }
             /// `(self ^ exp) % n`
