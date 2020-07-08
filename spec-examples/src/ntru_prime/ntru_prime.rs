@@ -107,9 +107,6 @@ pub fn key_gen(n_v: &NtruVersion) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
     }
     let h = mul_poly_mod(&poly_g.0, &f_inv_3times,n_v.q);
 
-    // test h is invertable
-    assert_eq!(test_h_invertable(&h,n_v.q),true);
-
     (h, (f, g_inv))
 }
 
