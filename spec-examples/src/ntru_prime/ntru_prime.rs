@@ -89,14 +89,14 @@ pub fn key_gen(n_v: &NtruVersion) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
             Err(_) => poly_g = create_invertable_poly(n_v, 3),
         }
     }
-    //create f
-    let f = create_rand_poly(n_v.w, n_v.p);
-    let f_3times = add_poly(&f, &add_poly(&f, &f, n_v.q), n_v.q);
     let mut irr: Seq<i128> = Seq::new(n_v.p + 1);
     irr[0] = - 1 as i128;
     irr[1] = - 1 as i128;
     irr[n_v.p] = 1 as i128;
 
+    //create f
+    let f = create_rand_poly(n_v.w, n_v.p);
+    let f_3times = add_poly(&f, &add_poly(&f, &f, n_v.q), n_v.q);
     let f_3times_pre_inv = eea(&f_3times,&irr,n_v.q);
     let mut f_inv_3times:Seq<i128> = Seq::new(n_v.p + 1);
     match f_3times_pre_inv {
@@ -105,7 +105,8 @@ pub fn key_gen(n_v: &NtruVersion) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
         }
         Err(_) => println!("Key generating, failed")
     }
-    let h = mul_poly_irr(&poly_g.0, &f_inv_3times, &irr,n_v.q);
+    let h = mul_poly_mod(&poly_g.0, &f_inv_3times,n_v.q);
+
     // test h is invertable
     assert_eq!(test_h_invertable(&h,n_v.q),true);
 
@@ -118,15 +119,15 @@ fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &NtruVersion) -> Seq<i128> {
     irr[0] = - 1 as i128;
     irr[1] = - 1 as i128;
     irr[n_v.p] = 1 as i128;
-    let pre = &mul_poly_irr(r, &h, &irr, n_v.q);
-    println!("{:?} * {:?} =  {:?}",r,&h,pre);
-    round(pre,3)
+
+    let pre = mul_poly_mod(r, &h, n_v.q);
+    round(&pre,3,n_v.q)
 }
 
 fn decryption(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &NtruVersion) -> Seq<i128> {
     let f = key.0;
     let v = key.1;
-
+    let cipher = make_positive(&c, n_v.q);
     // irr Konstant machen!
     let mut irr: Seq<i128> = Seq::new(n_v.p + 1);
     irr[0] = -1 as i128;
@@ -134,16 +135,39 @@ fn decryption(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &NtruVersion) -> S
     irr[n_v.p] = 1 as i128;
 
     // calculate 3*f and 3*f*c
-    let f_3 = add_poly(&f, &add_poly(&f, &f, n_v.q), n_v.q);
-    let f_3_c = mul_poly_irr(&f_3, &c, &irr, n_v.q);
+    let  f_c = mul_poly_mod(&f, &cipher, n_v.q);
 
+    let mut f_3_c = R(&irr,&add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q), n_v.q),n_v.q);
+    f_3_c = make_positive(&f_3_c, n_v.q);
+    // view coefficet as value between -(q-1/2) and (q-1/2)
+
+    let q_12 = (n_v.q-1)/2;
+    for i in 0..f_3_c.len(){
+        if f_3_c[i] > q_12{
+            f_3_c[i] = f_3_c[i] - n_v.q;
+        }
+        if f_3_c[i] == q_12{
+            f_3_c[i] = q_12;
+            continue;
+        }
+        f_3_c[i] = f_3_c[i] % q_12;
+    }
     // lift f_3_c to R_3
     let mut e = Seq::from_seq(&f_3_c);
-    //identity
-    let mut identity:Seq<i128> = Seq::new(n_v.p +1);
-    identity[0] = 1 as i128;
-    e = mul_poly_irr(&e, &identity, &irr, 3);
-    //lift to R TODO ändere modulo
-    let v_e = mul_poly_irr(&v, &e, &irr,3);
-    mul_poly_irr(&v_e,&identity , &irr, 0)
+    for i in 0..e.len(){
+        e[i] = e[i] % 3;
+    }
+    // calculate e * v in R
+    let mut r = mul_poly_mod(&e,&v , 3);
+    // to R_short
+    for i in 0..r.len(){
+        if r[i] == -2{
+            r[i] = 1 as i128;
+        }
+        if r[i] == 2{
+            r[i] = -1 as i128;
+        }
+
+    }
+    r
 }
