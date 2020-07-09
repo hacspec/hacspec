@@ -210,10 +210,230 @@ Unary operators&\synvar{\oslash}&\syndef&\synminus\synalt\synnot&
 \end{longtable}
 \end{center}
 
+
+\section{Operational semantics}
+
+The operational semantics for this language are standard, using big-step evaluation. Indeed, the
+order of evaluation of tuple elements or function arguments does not matter, since expressions of
+the language are pure. The borrowing does not have any effect on the operational semantics, but it
+will affect the typing judgment later.
+
+Please note that the contexts \evactx{\Omega} is considered as an unordered set rather
+than an ordered list. As such, the rules have the relevant elements appear at the end or the beginning
+of the context without loss of generality.
+
+\begin{center}
+\begin{tabular}{lrcll}
+Value&\synvar{v}&\syndef&\syntrue\synalt\synfalse&boolean\\
+&&\synalt&$n\in\mathbb{N}$&integer\\
+&&\synalt&\evalsquare$[$\synvar{v}$]^*$\evarsquare&array or sequence\\
+&&\synalt&\synlparen$[$\synvar{v}$]^*$\synrparen&tuple\\
+Evaluation context&\evactx{\Omega}&\syndef&\evaempty&empty context\\
+&&\synalt&\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}&variable value\\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Expression evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\\
+Function argument evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a}\evaeval\synvar{v}\\
+Statement evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega}\\
+Block evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
+\\\bottomrule
+\end{tabular}
+\begin{mathpar}
+\inferrule[EvalUnit]{
+{}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synunit\evaeval\synunit
+}
+
+\inferrule[EvalBool]{
+\synvar{b}\in\{\syntrue,\;\synfalse\}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{b}
+}
+
+\inferrule[EvalInt]{
+n\in\mathbb{N}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive n\evaeval n
+}
+
+\inferrule[EvalVar]{
+{}
+}{
+\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\evaeval\synvar{v}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalFuncArg]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synref\synvar{e}\evaeval\synvar{v}
+}
+
+\inferrule[EvalFuncCall]{
+\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
+\forall i\in[\![1,n]\!],\; \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a_i}\evaeval\synvar{v_i}\\
+\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{f}\synlparen\synvar{a_1}\synellipsis\synvar{a_n}\synrparen\evaeval\synvar{v}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalBinaryOp]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synvar{v_1}\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval\synvar{v_2}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\synvar{\odot}\synvar{e_2}\evaeval\synvar{v_1}\synvar{\odot}\synvar{v_2}
+}
+
+\inferrule[EvalUnaryOp]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{\oslash}\synvar{e}\evaeval\synvar{\oslash}\synvar{v}
+}
+
+\inferrule[EvalTuple]{
+\forall i\in[\![1,n]\!],\;\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_i}\evaeval\synvar{v_i}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlparen\synvar{e_1}\synellipsis\synvar{e_n}\synrparen\evaeval\synlparen\synvar{v_1}\synellipsis\synvar{v_n}\synrparen
+}
+
+\inferrule[EvalTupleAccess]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synlparen\synvar{v_1}\synellipsis\synvar{v_m}\synrparen\\
+n\in[\![1,m]\!]
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\syndot n\evaeval\synvar{v_n}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalArrayAccess]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\evalsquare\synvar{v_0}\evaellipsis\synvar{v_m}\evarsquare\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval \synvar{n}\\
+n\in[\![0,m]\!]
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\evaeval\synvar{v_n}\evaproduce\evactx{\Omega}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalLet]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlet\synvar{x}\syntyped{\tau}\syneq\synvar{e}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}
+}
+
+\inferrule[EvalReassign]{
+\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v'}
+}{
+\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\syneq\synvar{e}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\synvar{v'}\evacomma\evactx{\Omega}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalIfThenTrue]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}
+
+\inferrule[EvalIfThenFalse]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalIfThenElseTrue]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalIfThenElseFalse]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalForLoop]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval n\quad
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval m\\
+\evactx{\Omega_n}\evaeq\evactx{\Omega}\quad
+\forall i\in[\![n,m-1]\!],\;\synvar{p}\evasc\evactx{\Omega_i}\evaderive\synvar{b}\evaeval \synunit\evaproduce\evactx{\Omega_{i+1}}\\
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Omega_m}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalArrayUpd]{
+\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_1}\evaeval m\\
+m\in[\![0,n]\!]\\
+\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_2}\evaeval \synvar{v}\\
+}{
+\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{x}\synlsquare\synvar{e_1}\synrsquare\syneq\synvar{e_2}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_{m-1}}\evacomma\synvar{v}\evacomma\synvar{v_{m+1}}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalExprStmt]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
+}
+
+\inferrule[EvalBlock]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s_1}\evaeval\synunit\evaproduce\evactx{\Omega'}\\
+\synvar{p}\evasc\evactx{\Omega'}\evaderive\synlbracket\synvar{s_2}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
+}
+
+\inferrule[EvalBlockOne]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}
+
+\inferrule[EvalBlockAsStatement]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}
+\end{mathpar}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Function evaluation&\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}\\
+\bottomrule
+\end{tabular}
+\begin{mathpar}
+\inferrule[EvalFunc]{
+\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
+\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
+}{
+\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}
+}
+\end{mathpar}
+\end{center}
+
 \section{Typing}
 
+Contrasting with the operational semantics, the typing rules are fairly complex and restrictive. The
+reason for this complexity is our objective to stick to Rust behavior.
+
 The typing environnement of \rustspec{} is fairly standard. We need a type dictionary to enforce
-the named type discipline of Rust that covers the types declared by the \synarraymacro{} macro.
+the named type discipline of Rust that covers the types declared by the \synarraymacro{} macro. Please
+note that the contexts \typctx{\Gamma} and \typctx{\Delta} are considered as unordered sets rather
+than ordered lists. As such, the rules have the relevant elements appear at the end or the beginning
+of those contexts without loss of generality.
 
 \begin{center}
 \begin{longtable}{lrrll}
@@ -367,6 +587,7 @@ work of the Rust borrow checker. The last rules for binary and unary operations 
 
 \begin{center}
 \begin{longtable}{lc}\toprule
+Value typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{v}\typtyped\synvar{\tau}\\
 Expression typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\\
 Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a}\typsym\synvar{\tau}
 \\\bottomrule
@@ -387,8 +608,20 @@ Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a
 \inferrule[TypInt]{n\in\mathbb{N}}{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive n\typtyped\synint
 }
+
+\inferrule[TypSeqValue]{
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{v_i}\typtyped\synvar{\mu}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \evalsquare\synvar{v_1}\evaellipsis\synvar{v_n}\evarsquare\typtyped\synseq\synlangle\synvar{\mu}\synrangle
+}
 \end{mathpar}
 \begin{mathpar}
+\inferrule[TypArrayValue]{
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{v_i}\typtyped\synvar{\mu}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \evalsquare\synvar{v_1}\evaellipsis\synvar{v_n}\evarsquare\typtyped\typlsquare\synvar{\mu}\typsc n\typrsquare
+}
+
 \inferrule[TypVarLinear]{
 {}
 }{
@@ -528,7 +761,8 @@ Block typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\s
 \end{longtable}
 \begin{mathpar}
 \inferrule[TypLet]{
-\typctx{\Gamma}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}
+\typctx{\Gamma}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}\\
+x\notin\typctx{\Gamma}
 }{
 \typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
 }
@@ -640,200 +874,6 @@ Item typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{i}\typproduce\
 \end{mathpar}
 \end{center}
 
-\section{Operational semantics}
-
-\begin{center}
-\begin{tabular}{lrcll}
-Value&\synvar{v}&\syndef&\syntrue\synalt\synfalse&boolean\\
-&&\synalt&$n\in\mathbb{N}$&integer\\
-&&\synalt&\evalsquare$[$\synvar{v}$]^*$\evarsquare&array or sequence\\
-&&\synalt&\synlparen$[$\synvar{v}$]^*$\synrparen&tuple\\
-Evaluation context&\evactx{\Omega}&\syndef&\evaempty&empty context\\
-&&\synalt&\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}&variable value\\
-\end{tabular}
-\end{center}
-
-\begin{center}
-\begin{tabular}{lc}
-\toprule
-Expression evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\\
-Function argument evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a}\evaeval\synvar{v}\\
-Statement evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega}\\
-Block evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
-\\\bottomrule
-\end{tabular}
-\begin{mathpar}
-\inferrule[EvalUnit]{
-{}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synunit\evaeval\synunit
-}
-
-\inferrule[EvalBool]{
-\synvar{b}\in\{\syntrue,\;\synfalse\}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{b}
-}
-
-\inferrule[EvalInt]{
-n\in\mathbb{N}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive n\evaeval n
-}
-
-\inferrule[EvalVar]{
-{}
-}{
-\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\evaeval\synvar{v}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalFuncArg]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synref\synvar{e}\evaeval\synvar{v}
-}
-
-\inferrule[EvalFuncCall]{
-\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
-\forall i\in[\![1,n]\!],\; \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a_i}\evaeval\synvar{v_i}\\
-\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{f}\synlparen\synvar{a_1}\synellipsis\synvar{a_n}\synrparen\evaeval\synvar{v}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalBinaryOp]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synvar{v_1}\\
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval\synvar{v_2}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\synvar{\odot}\synvar{e_2}\evaeval\synvar{v_1}\synvar{\odot}\synvar{v_2}
-}
-
-\inferrule[EvalUnaryOp]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{\oslash}\synvar{e}\evaeval\synvar{\oslash}\synvar{v}
-}
-
-\inferrule[EvalTuple]{
-\forall i\in[\![1,n]\!],\;\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_i}\evaeval\synvar{v_i}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synlparen\synvar{e_1}\synellipsis\synvar{e_n}\synrparen\evaeval\synlparen\synvar{v_1}\synellipsis\synvar{v_n}\synrparen
-}
-
-\inferrule[EvalTupleAccess]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synlparen\synvar{v_1}\synellipsis\synvar{v_m}\synrparen\\
-n\in[\![1,m]\!]
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\syndot n\evaeval\synvar{v_n}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalLet]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synlet\synvar{x}\syntyped{\tau}\syneq\synvar{e}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}
-}
-
-\inferrule[EvalReassign]{
-\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v'}
-}{
-\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\syneq\synvar{e}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\synvar{v'}\evacomma\evactx{\Omega}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalIfThenTrue]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
-}
-
-\inferrule[EvalIfThenFalse]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalIfThenElseTrue]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalIfThenElseFalse]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalForLoop]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval n\quad
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval m\\
-\evactx{\Omega_n}\evaeq\evactx{\Omega}\quad
-\forall i\in[\![n,m-1]\!],\;\synvar{p}\evasc\evactx{\Omega_i}\evaderive\synvar{b}\evaeval \synunit\evaproduce\evactx{\Omega_{i+1}}\\
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Omega_m}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalArrayUpd]{
-\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_1}\evaeval m\\
-m\in[\![0,n]\!]\\
-\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_2}\evaeval \synvar{v}\\
-}{
-\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{x}\synlsquare\synvar{e_1}\synrsquare\syneq\synvar{e_2}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_{m-1}}\evacomma\synvar{v}\evacomma\synvar{v_{m+1}}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}
-}
-\end{mathpar}
-\begin{mathpar}
-\inferrule[EvalExprStmt]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
-}
-
-\inferrule[EvalBlock]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s_1}\evaeval\synunit\evaproduce\evactx{\Omega'}\\
-\synvar{p}\evasc\evactx{\Omega'}\evaderive\synlbracket\synvar{s_2}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
-}
-
-\inferrule[EvalBlockOne]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
-}
-
-\inferrule[EvalBlockAsStatement]{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
-}{
-\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
-}
-\end{mathpar}
-\end{center}
-
-\begin{center}
-\begin{tabular}{lc}
-\toprule
-Function evaluation&\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}\\
-\bottomrule
-\end{tabular}
-\begin{mathpar}
-\inferrule[EvalFunc]{
-\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
-\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
-}{
-\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}
-}
-\end{mathpar}
-\end{center}
 
 \bibliographystyle{plain}
 \bibliography{rustspec.bib}
