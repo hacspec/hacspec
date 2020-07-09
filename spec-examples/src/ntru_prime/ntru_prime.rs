@@ -2,9 +2,9 @@ use hacspec::prelude::*;
 
 /// Struct to decide NtruVersion
 pub struct NtruVersion {
-    p: usize,
-    q: i128,
-    w: i128,
+    pub p: usize,
+    pub q: i128,
+    pub w: i128,
 }
 #[macro_export]
 macro_rules! ntru_v {
@@ -39,7 +39,7 @@ macro_rules! ntru_v {
 }
 
 ///This function creates a random polynom with w many -1 or 1 and with the highes degree of h_deg.
-fn create_rand_poly(w: i128, h_deg: usize) -> Seq<i128> {
+pub fn create_rand_poly(w: i128, h_deg: usize) -> Seq<i128> {
     let mut counter: usize = 0;
     let mut pos;
     let mut polynom: Seq<i128> = Seq::new(h_deg + 1);
@@ -63,7 +63,7 @@ fn create_rand_poly(w: i128, h_deg: usize) -> Seq<i128> {
     polynom
 }
 
-fn create_invertable_poly(
+pub fn create_invertable_poly(
     n: &NtruVersion,
     modulus: i128,
 ) -> (Seq<i128>, Result<Seq<i128>, &'static str>) {
@@ -111,7 +111,7 @@ pub fn key_gen(n_v: &NtruVersion) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
 }
 
 // r is the plaintext, h is the public key
-fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &NtruVersion) -> Seq<i128> {
+pub fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &NtruVersion) -> Seq<i128> {
     let mut irr: Seq<i128> = Seq::new(n_v.p + 1);
     irr[0] = - 1 as i128;
     irr[1] = - 1 as i128;
@@ -121,7 +121,7 @@ fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &NtruVersion) -> Seq<i128> {
     round(&pre,3,n_v.q)
 }
 
-fn decryption(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &NtruVersion) -> Seq<i128> {
+pub fn decryption(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &NtruVersion) -> Seq<i128> {
     let f = key.0;
     let v = key.1;
     let cipher = make_positive(&c, n_v.q);
