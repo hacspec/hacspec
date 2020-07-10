@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Prepare
-      run: rustup toolchain install nightly && rustup toolchain install nightly && rustup component install rustc
+      run: rustup toolchain install nightly && rustup toolchain install nightly && rustup component add rustc
     - name: Build
       run: cargo +nightly build --verbose
     - name: Run tests
