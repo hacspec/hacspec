@@ -15,9 +15,9 @@ jobs:
     - name: Prepare
       run: rustup toolchain install nightly && rustup toolchain install nightly
     - name: Build
-      run: cargo build +nightly --verbose
+      run: cargo +nightly build --verbose
     - name: Run tests
-      run: cargo test +nightly --verbose
+      run: cargo +nightly test --verbose
     - name: Get hacspec function stats
       run: bash hacspec/get_func_stats.sh
       env:
