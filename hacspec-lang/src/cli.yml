@@ -1,0 +1,14 @@
+name: hacspec-lang
+version: "1.0"
+author: Denis Merigoux <denis.merigoux@inria.fr>
+about: Typechecker and compiler for the Hacspec subset of Rust
+args:
+    - INPUT:
+        help: Sets the input file to use
+        required: true
+        index: 1
+    - verbose:
+        short: v
+        multiple: true
+        number_of_values: 1
+        help: Sets the level of verbosity
