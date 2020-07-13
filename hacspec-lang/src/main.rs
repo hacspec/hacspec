@@ -4,10 +4,12 @@ extern crate rustc_errors;
 extern crate rustc_ast;
 extern crate rustc_interface;
 extern crate rustc_session;
+extern crate rustc_span;
 #[macro_use]
 extern crate clap;
 
-mod typechecker;
+mod rustspec;
+mod ast_to_rustspec;
 
 use clap::App;
 use rustc_driver::{run_compiler, Callbacks, Compilation};
@@ -39,11 +41,11 @@ impl Callbacks for HacspecCallbacks {
 
     fn after_parsing<'tcx>(
         &mut self,
-        _compiler: &Compiler,
+        compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
         let krate = queries.parse().unwrap().take();
-        typechecker::typecheck(&krate);
+        let rustspec_krate = ast_to_rustspec::translate(&compiler.session(), &krate);
         Compilation::Stop
     }
 }
