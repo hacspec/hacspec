@@ -1,7 +1,8 @@
 use rustc_ast;
 use rustc_ast::ast::{
-    self, AngleBracketedArg, Async, BindingMode, Const, Crate, Defaultness, Extern, FnRetTy,
-    GenericArg, GenericArgs, ItemKind, Mutability, PatKind, Ty, TyKind, Unsafe,
+    self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness, Expr,
+    Extern, FnRetTy, GenericArg, GenericArgs, ItemKind, Mutability, PatKind, Stmt, StmtKind, Ty,
+    TyKind, Unsafe,
 };
 use rustc_session::Session;
 use rustc_span::symbol::Ident;
@@ -18,6 +19,7 @@ fn check_vec<T>(v: Vec<TranslationResult<T>>) -> TranslationResult<Vec<T>> {
     }
 }
 
+// TODO: translate paths into base types
 fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
     let location: Vec<TranslationResult<Ident>> = path
         .segments
@@ -78,11 +80,17 @@ fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
                                 Ok(Some(Box::new(typ_arg?)))
                             }
                             Some(AngleBracketedArg::Arg(GenericArg::Lifetime(_))) => {
-                                sess.span_err(args.span, "lifetime type parameters are not allowed in Rustspect");
+                                sess.span_err(
+                                    args.span,
+                                    "lifetime type parameters are not allowed in Rustspect",
+                                );
                                 Err(())
                             }
                             Some(AngleBracketedArg::Arg(GenericArg::Const(_))) => {
-                                sess.span_err(args.span, "const generics are not allowed in Rustspec");
+                                sess.span_err(
+                                    args.span,
+                                    "const generics are not allowed in Rustspec",
+                                );
                                 Err(())
                             }
                         }
@@ -91,7 +99,10 @@ fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
             },
         },
     };
-    Ok(Path {location, arg: arg?})
+    Ok(Path {
+        location,
+        arg: arg?,
+    })
 }
 
 fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<BaseTyp>> {
@@ -138,8 +149,108 @@ fn translate_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Typ>> {
     }
 }
 
+enum ExprTranslationResult {
+    TransExpr(Expression),
+    TransStmt(Statement),
+}
+
+fn translate_expr(sess: &Session, s: &Expr) -> TranslationResult<Spanned<ExprTranslationResult>> {
+    panic!()
+}
+
+fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanned<Statement>>> {
+    match &s.kind {
+        StmtKind::Item(_) => {
+            sess.span_err(s.span, "block-local items are not allowed in Rustspec");
+            Err(())
+        }
+        StmtKind::MacCall(_) => {
+            sess.span_err(
+                s.span,
+                "macro calls inside code blocks are not allowed inside Rustspec",
+            );
+            Err(())
+        }
+        StmtKind::Empty => {
+            sess.span_err(s.span, "empty blocks are not allowed in Rustspec");
+            Err(())
+        }
+        StmtKind::Local(local) => {
+            let (id, mutab) = match local.pat.kind {
+                PatKind::Ident(BindingMode::ByValue(mutab), id, None) => Ok((id, mutab)),
+                _ => {
+                    sess.span_err(local.pat.span, "only plain identifier left-hand-side patterns are allowed in Rustspec let bindings");
+                    Err(())
+                }
+            }?;
+            let ty: Option<Spanned<Typ>> = match local.ty.clone() {
+                None => None,
+                Some(ty) => Some(translate_typ(sess, &ty)?),
+            };
+            let init = match &local.init {
+                None => {
+                    sess.span_err(
+                        local.span,
+                        "let-bindings without initialization are not allowed in Rustspec",
+                    );
+                    Err(())
+                }
+                Some(e) => match translate_expr(sess, &e)? {
+                    (ExprTranslationResult::TransStmt(_), _) => {
+                        sess.span_err(
+                            e.span,
+                            "let binding expression should not contain statements in Rustspec",
+                        );
+                        Err(())
+                    }
+                    (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
+                },
+            }?;
+            Ok(vec![(
+                Statement::LetBinding(Pattern::IdentPat(id), mutab, ty, init),
+                s.span,
+            )])
+        }
+        StmtKind::Expr(e) => {
+            let t_s = match translate_expr(sess, &e)? {
+                (ExprTranslationResult::TransExpr(e), _) => Ok(Statement::ReturnExp(e)),
+                (ExprTranslationResult::TransStmt(_), span) => {
+                    sess.span_err(
+                        span,
+                        "the last expression of a block has to return a value in Rustspec",
+                    );
+                    Err(())
+                }
+            };
+            Ok(vec![(t_s?, s.span)])
+        }
+        StmtKind::Semi(e) => {
+            let t_s = match translate_expr(sess, &e)? {
+                (ExprTranslationResult::TransExpr(e), span) => {
+                    Statement::LetBinding(Pattern::WildCard, Mutability::Not, None, (e, span))
+                }
+                (ExprTranslationResult::TransStmt(s), _) => s,
+            };
+            Ok(vec![(t_s, s.span)])
+        }
+    }
+}
+
 fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<Block>> {
-    Ok((Vec::new(), b.span))
+    match b.rules {
+        BlockCheckMode::Unsafe(_) => {
+            sess.span_err(b.span, "unsafe blocks are not allowed in Rustspec");
+            return Err(());
+        }
+        BlockCheckMode::Default => (),
+    };
+    let stmts = b
+        .stmts
+        .iter()
+        .map(|s| translate_statement(sess, &s))
+        .collect();
+    let stmts = check_vec(stmts)?.into_iter().flatten().collect();
+    Ok((stmts, b.span))
 }
 
 fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
