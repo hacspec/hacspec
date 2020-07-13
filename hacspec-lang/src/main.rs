@@ -45,8 +45,13 @@ impl Callbacks for HacspecCallbacks {
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
         let krate = queries.parse().unwrap().take();
-        let rustspec_krate = ast_to_rustspec::translate(&compiler.session(), &krate);
-        Compilation::Stop
+        match ast_to_rustspec::translate(&compiler.session(), &krate) {
+            Ok(_krate) => Compilation::Stop,
+            Err(_) => {
+                &compiler.session().err("unable to translate to Rustspec due to previous errors");
+                Compilation::Stop
+            }
+        }
     }
 }
 

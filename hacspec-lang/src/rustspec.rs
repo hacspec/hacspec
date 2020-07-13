@@ -7,13 +7,14 @@ pub enum Borrowing {
     Consumed,
 }
 
+pub struct Path {
+    pub location: Vec<Ident>,
+    pub arg: Option<Box<BaseTyp>>
+}
+
 pub enum BaseTyp {
-    Unit,
-    Bool,
-    Int,
-    Seq(Box<Spanned<BaseTyp>>),
-    Named(Ident),
-    Tuple(Vec<Box<Spanned<BaseTyp>>>),
+    Named(Path),
+    Tuple(Vec<Spanned<BaseTyp>>),
 }
 
 pub enum Statement {}
@@ -27,9 +28,8 @@ pub struct FuncSig {
     pub ret: Spanned<BaseTyp>,
 }
 
-
 pub enum Item {
-    FnDecl((Ident, FuncSig, Spanned<Block>))
+    FnDecl((Ident, FuncSig, Spanned<Block>)),
 }
 
 pub type Program = Vec<Spanned<Item>>;
