@@ -1,5 +1,5 @@
 use rustc_span::{symbol::Ident, Span};
-use rustc_ast::ast::Mutability;
+use rustc_ast::ast::{Mutability, BinOpKind};
 
 pub type Spanned<T> = (T, Span);
 
@@ -24,7 +24,18 @@ pub enum BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
-pub enum Expression {}
+pub enum Literal {
+    Bool(bool),
+    Int32(i32),
+    UnspecifiedInt(u128),
+}
+
+pub enum Expression {
+    Binary(Spanned<BinOpKind>, Box<Spanned<Expression>>, Box<Spanned<Expression>>),
+    Named(Path),
+    FuncCall(Spanned<Path>, Vec<Spanned<Expression>>),
+    Lit(Literal)
+}
 
 pub enum Pattern {
     IdentPat(Ident),

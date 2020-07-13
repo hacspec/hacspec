@@ -1,8 +1,8 @@
 use rustc_ast;
 use rustc_ast::ast::{
     self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness, Expr,
-    Extern, FnRetTy, GenericArg, GenericArgs, ItemKind, Mutability, PatKind, Stmt, StmtKind, Ty,
-    TyKind, Unsafe,
+    ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, ItemKind, LitKind, Mutability, PatKind,
+    Stmt, StmtKind, Ty, TyKind, Unsafe, LitIntType, IntTy
 };
 use rustc_session::Session;
 use rustc_span::symbol::Ident;
@@ -154,8 +154,82 @@ enum ExprTranslationResult {
     TransStmt(Statement),
 }
 
-fn translate_expr(sess: &Session, s: &Expr) -> TranslationResult<Spanned<ExprTranslationResult>> {
-    panic!()
+fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTranslationResult>> {
+    let translate_expr_expects_exp = |e| match translate_expr(sess, e)? {
+        (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
+        (ExprTranslationResult::TransStmt(_), span) => {
+            sess.span_err(
+                span,
+                "statements inside expressions are not allowed in Rustspec",
+            );
+            Err(())
+        }
+    };
+    match &e.kind {
+        ExprKind::Binary(op, e1, e2) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Binary(
+                (op.clone().node, op.clone().span),
+                Box::new(translate_expr_expects_exp(e1)?),
+                Box::new(translate_expr_expects_exp(e2)?),
+            )),
+            e.span,
+        )),
+        ExprKind::Path(Some(_), _) => {
+            sess.span_err(e.span, "trait associated values not allowed in Rustspec");
+            Err(())
+        }
+        ExprKind::Path(None, path) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Named(translate_path(sess, path)?)),
+            e.span,
+        )),
+        ExprKind::Call(func, args) => {
+            let func_path = match &func.kind {
+                ExprKind::Path(None, path) => Ok((translate_path(sess, &path)?, path.span)),
+                _ => {
+                    sess.span_err(
+                        func.span,
+                        "function expressions are restricted to names only in Rustspec",
+                    );
+                    Err(())
+                }
+            };
+            let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
+                .iter()
+                .map(|arg| translate_expr_expects_exp(&arg))
+                .collect();
+            let func_args = check_vec(func_args);
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::FuncCall(func_path?, func_args?)),
+                e.span,
+            ))
+        }
+        ExprKind::Lit(lit) => match &lit.kind {
+            LitKind::Bool(b) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => {
+                Ok((
+                    ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
+                    e.span,
+                ))
+            }
+            LitKind::Int(x, LitIntType::Unsuffixed) => {
+                Ok((
+                    ExprTranslationResult::TransExpr(Expression::Lit(Literal::UnspecifiedInt(*x))),
+                    e.span,
+                ))
+            }
+            _ => {
+                sess.span_err(lit.span, "literal not allowed in Rustspec");
+                Err(())
+            }
+        },
+        _ => {
+            sess.span_err(e.span, "this expression is not allowed in Rustspec");
+            Err(())
+        }
+    }
 }
 
 fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanned<Statement>>> {
