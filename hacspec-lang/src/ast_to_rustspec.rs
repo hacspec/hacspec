@@ -1,11 +1,11 @@
 use rustc_ast;
 use rustc_ast::ast::{
     self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness, Expr,
-    ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, ItemKind, LitKind, Mutability, PatKind,
-    Stmt, StmtKind, Ty, TyKind, Unsafe, LitIntType, IntTy
+    ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind, LitIntType, LitKind,
+    Mutability, PatKind, Stmt, StmtKind, Ty, TyKind, Unsafe,
 };
 use rustc_session::Session;
-use rustc_span::symbol::Ident;
+use rustc_span::{symbol::Ident, Span};
 
 use crate::rustspec::*;
 
@@ -16,6 +16,60 @@ fn check_vec<T>(v: Vec<TranslationResult<T>>) -> TranslationResult<Vec<T>> {
         Ok(v.into_iter().map(|t| t.unwrap()).collect())
     } else {
         Err(())
+    }
+}
+
+fn translate_type_arg(
+    sess: &Session,
+    args: &GenericArgs,
+    span: &Span,
+) -> TranslationResult<Spanned<BaseTyp>> {
+    match args {
+        GenericArgs::Parenthesized(_) => {
+            sess.span_err(
+                *span,
+                "parenthesized path arguments are not allowed in Rustspec",
+            );
+            Err(())
+        }
+        GenericArgs::AngleBracketed(args) => {
+            if args.args.len() != 1 {
+                sess.span_err(args.span, "only one type argument is allowed in Rustspec");
+                Err(())
+            } else {
+                match args.args.iter().next() {
+                    None => {
+                        sess.span_err(
+                            args.span,
+                            "empty type arguments are not allowed in Rustspec",
+                        );
+                        Err(())
+                    }
+                    Some(AngleBracketedArg::Constraint(_)) => {
+                        sess.span_err(
+                            args.span,
+                            "contraint type arguments are not allowed in Rustspec",
+                        );
+                        Err(())
+                    }
+                    Some(AngleBracketedArg::Arg(GenericArg::Type(ty))) => {
+                        let typ_arg = translate_base_typ(sess, ty).map(|(t, _)| t);
+                        Ok((typ_arg?, ty.span))
+                    }
+                    Some(AngleBracketedArg::Arg(GenericArg::Lifetime(_))) => {
+                        sess.span_err(
+                            args.span,
+                            "lifetime type parameters are not allowed in Rustspect",
+                        );
+                        Err(())
+                    }
+                    Some(AngleBracketedArg::Arg(GenericArg::Const(_))) => {
+                        sess.span_err(args.span, "const generics are not allowed in Rustspec");
+                        Err(())
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -47,56 +101,11 @@ fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
         }
         Some(segment) => match &segment.args {
             None => Ok(None),
-            Some(generic_args) => match generic_args.clone().into_inner() {
-                GenericArgs::Parenthesized(_) => {
-                    sess.span_err(
-                        path.span,
-                        "parenthesized path arguments are not allowed in Rustspec",
-                    );
-                    Err(())
-                }
-                GenericArgs::AngleBracketed(args) => {
-                    if args.args.len() != 1 {
-                        sess.span_err(args.span, "only one type argument is allowed in Rustspec");
-                        Err(())
-                    } else {
-                        match args.args.iter().next() {
-                            None => {
-                                sess.span_err(
-                                    args.span,
-                                    "empty type arguments are not allowed in Rustspec",
-                                );
-                                Err(())
-                            }
-                            Some(AngleBracketedArg::Constraint(_)) => {
-                                sess.span_err(
-                                    args.span,
-                                    "contraint type arguments are not allowed in Rustspec",
-                                );
-                                Err(())
-                            }
-                            Some(AngleBracketedArg::Arg(GenericArg::Type(ty))) => {
-                                let typ_arg = translate_base_typ(sess, ty).map(|(t, _)| t);
-                                Ok(Some(Box::new(typ_arg?)))
-                            }
-                            Some(AngleBracketedArg::Arg(GenericArg::Lifetime(_))) => {
-                                sess.span_err(
-                                    args.span,
-                                    "lifetime type parameters are not allowed in Rustspect",
-                                );
-                                Err(())
-                            }
-                            Some(AngleBracketedArg::Arg(GenericArg::Const(_))) => {
-                                sess.span_err(
-                                    args.span,
-                                    "const generics are not allowed in Rustspec",
-                                );
-                                Err(())
-                            }
-                        }
-                    }
-                }
-            },
+            Some(generic_args) => Ok(Some(Box::new(translate_type_arg(
+                sess,
+                generic_args,
+                &path.span,
+            )?.0))),
         },
     };
     Ok(Path {
@@ -107,7 +116,36 @@ fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
 
 fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<BaseTyp>> {
     match &ty.kind {
-        TyKind::Path(None, path) => Ok((BaseTyp::Named(translate_path(sess, path)?), ty.span)),
+        TyKind::Path(None, path) => {
+            match &path.segments.as_slice() {
+                [t] => match &t.args {
+                    None => match t.ident.name.to_ident_string().as_str() {
+                        "u32" => return Ok((BaseTyp::UInt32, ty.span)),
+                        "i32" => return Ok((BaseTyp::Int32, ty.span)),
+                        "u8" => return Ok((BaseTyp::UInt8, ty.span)),
+                        "i8" => return Ok((BaseTyp::Int8, ty.span)),
+                        "u16" => return Ok((BaseTyp::UInt16, ty.span)),
+                        "i16" => return Ok((BaseTyp::Int16, ty.span)),
+                        "u64" => return Ok((BaseTyp::UInt64, ty.span)),
+                        "i64" => return Ok((BaseTyp::Int64, ty.span)),
+                        "u128" => return Ok((BaseTyp::UInt128, ty.span)),
+                        "i128" => return Ok((BaseTyp::Int128, ty.span)),
+                        "bool" => return Ok((BaseTyp::Bool, ty.span)),
+                        _ => (),
+                    },
+                    Some(args) => match t.ident.name.to_ident_string().as_str() {
+                        "Seq" => {
+                            let arg = translate_type_arg(sess, args, &path.span)?;
+                            return Ok((BaseTyp::Seq(Box::new(arg)), path.span))
+                        }
+                        ,
+                        _ => (),
+                    },
+                },
+                _ => (),
+            };
+            Ok((BaseTyp::Named(translate_path(sess, path)?), ty.span))
+        }
         TyKind::Tup(tys) => {
             let rtys: Vec<TranslationResult<Spanned<BaseTyp>>> = tys
                 .into_iter()
@@ -208,18 +246,14 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),
                 e.span,
             )),
-            LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => {
-                Ok((
-                    ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
-                    e.span,
-                ))
-            }
-            LitKind::Int(x, LitIntType::Unsuffixed) => {
-                Ok((
-                    ExprTranslationResult::TransExpr(Expression::Lit(Literal::UnspecifiedInt(*x))),
-                    e.span,
-                ))
-            }
+            LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UnspecifiedInt(*x))),
+                e.span,
+            )),
             _ => {
                 sess.span_err(lit.span, "literal not allowed in Rustspec");
                 Err(())
