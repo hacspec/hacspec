@@ -1,5 +1,5 @@
 use rustc_span::{symbol::Ident, Span};
-use rustc_ast::ast::{Mutability, BinOpKind};
+use rustc_ast::ast::{Mutability, BinOpKind, UnOp};
 
 pub type Spanned<T> = (T, Span);
 
@@ -40,6 +40,7 @@ pub enum Literal {
 }
 
 pub enum Expression {
+    Unary(UnOp, Box<Spanned<Expression>>),
     Binary(Spanned<BinOpKind>, Box<Spanned<Expression>>, Box<Spanned<Expression>>),
     Named(Path),
     FuncCall(Spanned<Path>, Vec<Spanned<Expression>>),
@@ -58,7 +59,6 @@ pub enum Statement {
     ForLoop(Pattern, Spanned<Expression>, Spanned<Expression>, Spanned<Block>),
     ArrayUpdate(Ident, Spanned<Expression>, Spanned<Expression>),
     ReturnExp(Expression),
-    SubBlock(Block)
 }
 
 pub type Block = Vec<Spanned<Statement>>;

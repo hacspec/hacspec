@@ -101,11 +101,9 @@ fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
         }
         Some(segment) => match &segment.args {
             None => Ok(None),
-            Some(generic_args) => Ok(Some(Box::new(translate_type_arg(
-                sess,
-                generic_args,
-                &path.span,
-            )?.0))),
+            Some(generic_args) => Ok(Some(Box::new(
+                translate_type_arg(sess, generic_args, &path.span)?.0,
+            ))),
         },
     };
     Ok(Path {
@@ -136,9 +134,8 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                     Some(args) => match t.ident.name.to_ident_string().as_str() {
                         "Seq" => {
                             let arg = translate_type_arg(sess, args, &path.span)?;
-                            return Ok((BaseTyp::Seq(Box::new(arg)), path.span))
+                            return Ok((BaseTyp::Seq(Box::new(arg)), path.span));
                         }
-                        ,
                         _ => (),
                     },
                 },
@@ -212,6 +209,13 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             )),
             e.span,
         )),
+        ExprKind::Unary(op, e1) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Unary(
+                *op,
+                Box::new(translate_expr_expects_exp(e1)?),
+            )),
+            e.span,
+        )),
         ExprKind::Path(Some(_), _) => {
             sess.span_err(e.span, "trait associated values not allowed in Rustspec");
             Err(())
@@ -256,6 +260,44 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             )),
             _ => {
                 sess.span_err(lit.span, "literal not allowed in Rustspec");
+                Err(())
+            }
+        },
+        ExprKind::Assign(lhs, rhs_e, _) => match &lhs.kind {
+            ExprKind::Path(None, path) => match &path.segments.as_slice() {
+                [var] => match &var.args {
+                    None => {
+                        let id = var.ident;
+                        let r_e = translate_expr(sess, rhs_e)?;
+                        match r_e {
+                            (ExprTranslationResult::TransStmt(_), span) => {
+                                sess.span_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
+                                Err(())
+                            }
+                            (ExprTranslationResult::TransExpr(r_e), span) => Ok((
+                                ExprTranslationResult::TransStmt(Statement::Reassignment(
+                                    id,
+                                    (r_e, span),
+                                )),
+                                e.span,
+                            )),
+                        }
+                    }
+                    Some(_) => {
+                        sess.span_err(path.span, "no arguments expected in Rustspec");
+                        Err(())
+                    }
+                },
+                _ => {
+                    sess.span_err(path.span, "wrong assignment left-hand-side variable");
+                    Err(())
+                }
+            },
+            _ => {
+                sess.span_err(
+                    lhs.span,
+                    "left-hand side of the assignment must be variables in Rustspec",
+                );
                 Err(())
             }
         },
