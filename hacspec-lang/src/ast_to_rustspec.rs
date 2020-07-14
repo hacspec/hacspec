@@ -301,6 +301,36 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 Err(())
             }
         },
+        ExprKind::If(cond, t_e, f_e) => {
+            let r_cond = match translate_expr(sess, cond)? {
+                (ExprTranslationResult::TransStmt(_), span) => {
+                    sess.span_err(span, "statements not allowed inside conditions in Rustspec");
+                    Err(())
+                }
+                (ExprTranslationResult::TransExpr(r_cond), span) => Ok((r_cond, span)),
+            };
+            let r_t_e = translate_block(sess, t_e)?;
+            let r_f_e: TranslationResult<Option<Spanned<Block>>> = match f_e {
+                None => Ok(None),
+                Some(f_e) => match &f_e.kind {
+                    ExprKind::Block(f_e, _) => {
+                        let r_f_e = translate_block(sess, f_e)?;
+                        Ok(Some(r_f_e))
+                    }
+                    _ => {
+                        sess.span_err(
+                            f_e.span,
+                            "block of statements expected in the else branch in Rustspec",
+                        );
+                        Err(())
+                    }
+                },
+            };
+            Ok((
+                ExprTranslationResult::TransStmt(Statement::Conditional(r_cond?, r_t_e, r_f_e?)),
+                e.span,
+            ))
+        }
         _ => {
             sess.span_err(e.span, "this expression is not allowed in Rustspec");
             Err(())
@@ -409,7 +439,8 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
             // First, checking that no fancy function qualifier is here
             match defaultness {
                 Defaultness::Default(span) => {
-                    sess.span_err(span, "\"default\" keyword not allowed in Rustspec")
+                    sess.span_err(span, "\"default\" keyword not allowed in Rustspec");
+                    return Err(());
                 }
                 _ => (),
             }
@@ -417,24 +448,28 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                 Unsafe::No => (),
                 Unsafe::Yes(span) => {
                     sess.span_err(span, "unsafe functions not allowed in Rustspec");
+                    return Err(());
                 }
             }
             match sig.header.asyncness {
                 Async::No => (),
                 Async::Yes { span, .. } => {
                     sess.span_err(span, "async functions not allowed in Rustspec");
+                    return Err(());
                 }
             }
             match sig.header.constness {
                 Const::No => (),
                 Const::Yes(span) => {
                     sess.span_err(span, "const functions not allowed in Rustspec");
+                    return Err(());
                 }
             }
             match sig.header.ext {
                 Extern::None => (),
                 _ => {
                     sess.span_err(i.span, "extern functions not allowed in Rustspec");
+                    return Err(());
                 }
             }
             // Then, translating the signature
@@ -465,6 +500,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                 .collect();
             if generics.params.len() != 0 {
                 sess.span_err(generics.span, "generics are not allowed in Rustspec");
+                return Err(());
             };
             let fn_inputs = check_vec(fn_inputs)?;
             let fn_output = match &sig.decl.output {
