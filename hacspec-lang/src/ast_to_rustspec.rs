@@ -2,7 +2,7 @@ use rustc_ast;
 use rustc_ast::ast::{
     self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness, Expr,
     ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind, LitIntType, LitKind,
-    Mutability, PatKind, RangeLimits, Stmt, StmtKind, Ty, TyKind, Unsafe,
+    Mutability, Pat, PatKind, RangeLimits, Stmt, StmtKind, Ty, TyKind, UintTy, Unsafe,
 };
 use rustc_session::Session;
 use rustc_span::{symbol::Ident, Span};
@@ -129,6 +129,8 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                         "u128" => return Ok((BaseTyp::UInt128, ty.span)),
                         "i128" => return Ok((BaseTyp::Int128, ty.span)),
                         "bool" => return Ok((BaseTyp::Bool, ty.span)),
+                        "usize" => return Ok((BaseTyp::Usize, ty.span)),
+                        "isize" => return Ok((BaseTyp::Isize, ty.span)),
                         _ => (),
                     },
                     Some(args) => match t.ident.name.to_ident_string().as_str() {
@@ -250,57 +252,154 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),
                 e.span,
             )),
+            //TODO: check that the casting is safe each time!
+            LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int128(*x as i128))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt128(*x as u128))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int64(*x as i64))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt64(*x as u64))),
+                e.span,
+            )),
             LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok((
                 ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
                 e.span,
             )),
-            LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UnspecifiedInt(*x))),
+            LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt32(*x as u32))),
                 e.span,
             )),
+            LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int16(*x as i16))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt16(*x as u16))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int8(*x as i8))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt8(*x as u8))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Isize(*x as isize))),
+                e.span,
+            )),
+            LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
+                e.span,
+            )),
+            LitKind::Int(_, LitIntType::Unsuffixed) => {
+                sess.span_err(
+                    lit.span,
+                    "integers literal of unspecified type are not allowed in Rustspec",
+                );
+                Err(())
+            }
             _ => {
                 sess.span_err(lit.span, "literal not allowed in Rustspec");
                 Err(())
             }
         },
-        ExprKind::Assign(lhs, rhs_e, _) => match &lhs.kind {
-            ExprKind::Path(None, path) => match &path.segments.as_slice() {
-                [var] => match &var.args {
-                    None => {
-                        let id = var.ident;
-                        let r_e = translate_expr(sess, rhs_e)?;
-                        match r_e {
-                            (ExprTranslationResult::TransStmt(_), span) => {
-                                sess.span_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
-                                Err(())
-                            }
-                            (ExprTranslationResult::TransExpr(r_e), span) => Ok((
-                                ExprTranslationResult::TransStmt(Statement::Reassignment(
-                                    id,
-                                    (r_e, span),
+        ExprKind::Assign(lhs, rhs_e, _) => {
+            let r_e = translate_expr(sess, rhs_e)?;
+            match &lhs.kind {
+                ExprKind::Path(None, path) => match &path.segments.as_slice() {
+                    [var] => match &var.args {
+                        None => {
+                            let id = var.ident;
+
+                            match r_e {
+                                (ExprTranslationResult::TransStmt(_), span) => {
+                                    sess.span_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
+                                    Err(())
+                                }
+                                (ExprTranslationResult::TransExpr(r_e), span) => Ok((
+                                    ExprTranslationResult::TransStmt(Statement::Reassignment(
+                                        id,
+                                        (r_e, span),
+                                    )),
+                                    e.span,
                                 )),
-                                e.span,
-                            )),
+                            }
                         }
-                    }
-                    Some(_) => {
-                        sess.span_err(path.span, "no arguments expected in Rustspec");
+                        Some(_) => {
+                            sess.span_err(path.span, "no arguments expected in Rustspec");
+                            Err(())
+                        }
+                    },
+                    _ => {
+                        sess.span_err(path.span, "wrong assignment left-hand-side variable");
                         Err(())
                     }
                 },
+                ExprKind::Index(a, index) => {
+                    let r_index = translate_expr(sess, index)?;
+                    let r_index = match r_index {
+                        (ExprTranslationResult::TransStmt(_), span) => {
+                            sess.span_err(span, "statements not allowed in Rustspec for assignments left-hand-sides");
+                            Err(())
+                        }
+                        (ExprTranslationResult::TransExpr(r_index), span) => Ok((r_index, span)),
+                    };
+                    match &a.kind {
+                        ExprKind::Path(None, path) => match path.segments.as_slice() {
+                            [var] => match &var.args {
+                                None => {
+                                    let id = var.ident;
+                                    match r_e {
+                                        (ExprTranslationResult::TransStmt(_), span) => {
+                                            sess.span_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
+                                            Err(())
+                                        }
+                                        (ExprTranslationResult::TransExpr(r_e), span) => Ok((
+                                            ExprTranslationResult::TransStmt(
+                                                Statement::ArrayUpdate(id, r_index?, (r_e, span)),
+                                            ),
+                                            e.span,
+                                        )),
+                                    }
+                                }
+                                Some(_) => {
+                                    sess.span_err(path.span, "no arguments expected in Rustspec");
+                                    Err(())
+                                }
+                            },
+                            _ => {
+                                sess.span_err(
+                                    path.span,
+                                    "wrong assignment left-hand-side array update variable",
+                                );
+                                Err(())
+                            }
+                        },
+                        _ => {
+                            sess.span_err(a.span, "Rustspect only allows array updates on arrays that are explicitely let-binded in a variable");
+                            Err(())
+                        }
+                    }
+                }
                 _ => {
-                    sess.span_err(path.span, "wrong assignment left-hand-side variable");
+                    sess.span_err(
+                        lhs.span,
+                        "left-hand side of the assignment must be variables in Rustspec",
+                    );
                     Err(())
                 }
-            },
-            _ => {
-                sess.span_err(
-                    lhs.span,
-                    "left-hand side of the assignment must be variables in Rustspec",
-                );
-                Err(())
             }
-        },
+        }
         ExprKind::If(cond, t_e, f_e) => {
             let r_cond = match translate_expr(sess, cond)? {
                 (ExprTranslationResult::TransStmt(_), span) => {
@@ -425,6 +524,26 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
     }
 }
 
+fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pattern>> {
+    match &pat.kind {
+        PatKind::Ident(BindingMode::ByValue(mutab), id, None) => {
+            Ok((Pattern::IdentPat(*id, *mutab), pat.span))
+        }
+        PatKind::Tuple(pats) => {
+            let pats = pats
+                .into_iter()
+                .map(|pat| translate_pattern(sess, pat))
+                .collect();
+            let pats = check_vec(pats)?;
+            Ok((Pattern::Tuple(pats), pat.span))
+        }
+        _ => {
+            sess.span_err(pat.span, "pattern not allowed in Rustspec let bindings");
+            Err(())
+        }
+    }
+}
+
 fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanned<Statement>>> {
     match &s.kind {
         StmtKind::Item(_) => {
@@ -443,13 +562,7 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
             Err(())
         }
         StmtKind::Local(local) => {
-            let (id, mutab) = match local.pat.kind {
-                PatKind::Ident(BindingMode::ByValue(mutab), id, None) => Ok((id, mutab)),
-                _ => {
-                    sess.span_err(local.pat.span, "only plain identifier left-hand-side patterns are allowed in Rustspec let bindings");
-                    Err(())
-                }
-            }?;
+            let pat = translate_pattern(sess, &local.pat)?;
             let ty: Option<Spanned<Typ>> = match local.ty.clone() {
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
@@ -473,10 +586,7 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
                     (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
                 },
             }?;
-            Ok(vec![(
-                Statement::LetBinding(Pattern::IdentPat(id), mutab, ty, init),
-                s.span,
-            )])
+            Ok(vec![(Statement::LetBinding(pat, ty, init), s.span)])
         }
         StmtKind::Expr(e) => {
             let t_s = match translate_expr(sess, &e)? {
@@ -494,7 +604,7 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
         StmtKind::Semi(e) => {
             let t_s = match translate_expr(sess, &e)? {
                 (ExprTranslationResult::TransExpr(e), span) => {
-                    Statement::LetBinding(Pattern::WildCard, Mutability::Not, None, (e, span))
+                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span))
                 }
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
@@ -604,7 +714,10 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
             };
             Ok(Item::FnDecl((i.ident, fn_sig, fn_body)))
         }
-        _ => panic!(),
+        _ => {
+            sess.span_err(i.span, "item not allowed in Rustspec");
+            Err(())
+        }
     }
 }
 
