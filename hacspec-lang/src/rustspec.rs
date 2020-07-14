@@ -44,7 +44,9 @@ pub enum Expression {
     Binary(Spanned<BinOpKind>, Box<Spanned<Expression>>, Box<Spanned<Expression>>),
     Named(Path),
     FuncCall(Spanned<Path>, Vec<Spanned<Expression>>),
-    Lit(Literal)
+    Lit(Literal),
+    ArrayIndex(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
+    Tuple(Vec<Spanned<Expression>>)
 }
 
 pub enum Pattern {

@@ -375,6 +375,49 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 e.span,
             ))
         }
+        ExprKind::Index(e1, e2) => {
+            let r_e1 = translate_expr(sess, e1)?;
+            let r_e2 = translate_expr(sess, e2)?;
+            match (r_e1, r_e2) {
+                (
+                    (ExprTranslationResult::TransExpr(r_e1), r_e1_span),
+                    (ExprTranslationResult::TransExpr(r_e2), r_e2_span),
+                ) => Ok((
+                    ExprTranslationResult::TransExpr(Expression::ArrayIndex(
+                        Box::new((r_e1, r_e1_span)),
+                        Box::new((r_e2, r_e2_span)),
+                    )),
+                    e.span,
+                )),
+                _ => {
+                    sess.span_err(
+                        e.span,
+                        "statements not allowed in Rustspec inside array indexing expression",
+                    );
+                    Err(())
+                }
+            }
+        }
+        ExprKind::Tup(args) => {
+            let r_args = args
+                .into_iter()
+                .map(|arg| match translate_expr(sess, arg)? {
+                    (ExprTranslationResult::TransExpr(r_arg), r_span) => Ok((r_arg, r_span)),
+                    (ExprTranslationResult::TransStmt(_), r_span) => {
+                        sess.span_err(
+                            r_span,
+                            "statements forbidden in tuple expressions in Rustspec",
+                        );
+                        Err(())
+                    }
+                })
+                .collect();
+            let r_args = check_vec(r_args)?;
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::Tuple(r_args)),
+                e.span,
+            ))
+        }
         _ => {
             sess.span_err(e.span, "this expression is not allowed in Rustspec");
             Err(())
