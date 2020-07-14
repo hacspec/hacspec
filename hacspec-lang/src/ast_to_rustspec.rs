@@ -2,7 +2,7 @@ use rustc_ast;
 use rustc_ast::ast::{
     self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness, Expr,
     ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind, LitIntType, LitKind,
-    Mutability, PatKind, Stmt, StmtKind, Ty, TyKind, Unsafe,
+    Mutability, PatKind, RangeLimits, Stmt, StmtKind, Ty, TyKind, Unsafe,
 };
 use rustc_session::Session;
 use rustc_span::{symbol::Ident, Span};
@@ -328,6 +328,50 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             };
             Ok((
                 ExprTranslationResult::TransStmt(Statement::Conditional(r_cond?, r_t_e, r_f_e?)),
+                e.span,
+            ))
+        }
+        ExprKind::ForLoop(pat, range, b, _) => {
+            let id = match &pat.kind {
+                PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => Ok(*id),
+                _ => {
+                    sess.span_err(
+                        pat.span,
+                        "only single-variable-binding patterns are allowed for loops in Rustspec",
+                    );
+                    Err(())
+                }
+            };
+            let e_begin_end = match &range.kind {
+                ExprKind::Range(Some(r_begin), Some(r_end), RangeLimits::HalfOpen) => {
+                    let e_begin = translate_expr(sess, r_begin)?;
+                    let e_end = translate_expr(sess, r_end)?;
+                    match (e_begin, e_end) {
+                        (
+                            (ExprTranslationResult::TransExpr(e_begin), span_begin),
+                            (ExprTranslationResult::TransExpr(e_end), span_end),
+                        ) => Ok(((e_begin, span_begin), (e_end, span_end))),
+                        _ => {
+                            sess.span_err(
+                                range.span,
+                                "range expressions cannot contain statements in Rustspec",
+                            );
+                            Err(())
+                        }
+                    }
+                }
+                _ => {
+                    sess.span_err(
+                        range.span,
+                        "expected a non-inclusive range expression here in Rustspec",
+                    );
+                    Err(())
+                }
+            };
+            let (e_begin, e_end) = e_begin_end?;
+            let r_b = translate_block(sess, b)?;
+            Ok((
+                ExprTranslationResult::TransStmt(Statement::ForLoop(id?, e_begin, e_end, r_b)),
                 e.span,
             ))
         }

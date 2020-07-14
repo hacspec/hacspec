@@ -56,7 +56,7 @@ pub enum Statement {
     LetBinding(Pattern, Mutability, Option<Spanned<Typ>>, Spanned<Expression>),
     Reassignment(Ident, Spanned<Expression>),
     Conditional(Spanned<Expression>, Spanned<Block>, Option<Spanned<Block>>),
-    ForLoop(Pattern, Spanned<Expression>, Spanned<Expression>, Spanned<Block>),
+    ForLoop(Ident, Spanned<Expression>, Spanned<Expression>, Spanned<Block>),
     ArrayUpdate(Ident, Spanned<Expression>, Spanned<Expression>),
     ReturnExp(Expression),
 }
