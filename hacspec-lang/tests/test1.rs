@@ -1,6 +1,5 @@
-type Seq<T> = Vec<T>;
 
-fn dummy_hacspec_func(x: u32, y: u32, a: Seq<u32>) -> u32 {
+fn dummy_hacspec_func(x: u32, y: u32, a: Vec<u32>) -> u32 {
     let mut z = x - y;
     let (c, d) = (z + 1u32, z - 1u32);
     let mut a = a;
@@ -10,5 +9,6 @@ fn dummy_hacspec_func(x: u32, y: u32, a: Seq<u32>) -> u32 {
 }
 
 fn main() {
-    dummy_hacspec_func(2u32, 3u32, vec![0u32,1u32,2u32]);
+    let v = Vec::new();
+    dummy_hacspec_func(2u32, 3u32, v);
 }

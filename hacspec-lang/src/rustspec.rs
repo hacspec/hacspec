@@ -48,7 +48,7 @@ pub enum Literal {
     Int8(i8),
     UInt8(u8),
     Usize(usize),
-    Isize(isize)
+    Isize(isize),
 }
 
 pub enum Expression {
