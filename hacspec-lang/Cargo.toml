@@ -11,3 +11,4 @@ clap = {version = "~2.33.1", features = ["yaml"]}
 
 [dev-dependencies]
 assert_cmd = "1.0.1"
+hacspec = { path = '../hacspec' } 
