@@ -247,6 +247,32 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 e.span,
             ))
         }
+        ExprKind::MethodCall(method_name, args, span) => {
+            let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
+                .iter()
+                .map(|arg| translate_expr_expects_exp(&arg))
+                .collect();
+            let func_args = check_vec(func_args)?;
+            let (method_arg, rest_args) = func_args.split_at(1);
+            let method_arg = method_arg.first().map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
+            let method_name = match method_name.args {
+                None => Ok(method_name.ident),
+                Some(_) => {
+                    sess.span_err(*span, "method type arguments not allowed in Rustspec");
+                    Err(())
+                }
+            }?;
+            let mut rest_args_final = Vec::new();
+            rest_args_final.extend_from_slice(rest_args);
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::MethodCall(
+                    method_arg,
+                    (method_name, *span),
+                    rest_args_final,
+                )),
+                e.span,
+            ))
+        }
         ExprKind::Lit(lit) => match &lit.kind {
             LitKind::Bool(b) => Ok((
                 ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),

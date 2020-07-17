@@ -3,16 +3,19 @@ use rustc_span::{symbol::Ident, Span};
 
 pub type Spanned<T> = (T, Span);
 
+#[derive(Clone)]
 pub enum Borrowing {
     Borrowed,
     Consumed,
 }
 
+#[derive(Clone)]
 pub struct Path {
     pub location: Vec<Ident>,
     pub arg: Option<Box<BaseTyp>>,
 }
 
+#[derive(Clone)]
 pub enum BaseTyp {
     Unit,
     Bool,
@@ -35,6 +38,7 @@ pub enum BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
+#[derive(Clone)]
 pub enum Literal {
     Bool(bool),
     Int128(i128),
@@ -51,6 +55,7 @@ pub enum Literal {
     Isize(isize),
 }
 
+#[derive(Clone)]
 pub enum Expression {
     Unary(UnOp, Box<Spanned<Expression>>),
     Binary(
@@ -60,11 +65,13 @@ pub enum Expression {
     ),
     Named(Path),
     FuncCall(Spanned<Path>, Vec<Spanned<Expression>>),
+    MethodCall(Box<Spanned<Expression>>, Spanned<Ident>, Vec<Spanned<Expression>>),
     Lit(Literal),
     ArrayIndex(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
     Tuple(Vec<Spanned<Expression>>),
 }
 
+#[derive(Clone)]
 pub enum Pattern {
     IdentPat(Ident, Mutability),
     WildCard,
