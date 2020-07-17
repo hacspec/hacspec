@@ -12,3 +12,8 @@ args:
         multiple: true
         number_of_values: 1
         help: Sets the level of verbosity
+    - output:
+        short: o
+        multiple: false
+        number_of_values: 1
+        help: Name of the F* output file
