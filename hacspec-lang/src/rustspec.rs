@@ -100,7 +100,7 @@ pub struct FuncSig {
 }
 
 pub enum Item {
-    FnDecl((Ident, FuncSig, Spanned<Block>)),
+    FnDecl(Ident, FuncSig, Spanned<Block>),
 }
 
 pub type Program = Vec<Spanned<Item>>;

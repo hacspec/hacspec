@@ -738,7 +738,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                 args: fn_inputs,
                 ret: fn_output,
             };
-            Ok(Item::FnDecl((i.ident, fn_sig, fn_body)))
+            Ok(Item::FnDecl(i.ident, fn_sig, fn_body))
         }
         _ => {
             sess.span_err(i.span, "item not allowed in Rustspec");

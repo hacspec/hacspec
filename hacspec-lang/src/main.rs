@@ -7,6 +7,7 @@ extern crate rustc_session;
 extern crate rustc_span;
 #[macro_use]
 extern crate clap;
+extern crate pretty;
 
 mod rustspec;
 mod ast_to_rustspec;
@@ -57,7 +58,7 @@ impl Callbacks for HacspecCallbacks {
         };
         match &self.output_file {
             None => (),
-            Some(file) => rustspec_to_fstar::translate_and_write_to_file(&krate, &file)
+            Some(file) => rustspec_to_fstar::translate_and_write_to_file(&compiler.session(), &krate, &file)
         }
         Compilation::Stop
     }
