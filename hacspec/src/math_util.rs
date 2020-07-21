@@ -389,46 +389,13 @@ pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
 }
 /// makes poly to an element of R_modulo \ irr
 pub fn R(irr:&Seq<i128>,poly:&Seq<i128>,modulo:i128) -> Seq<i128>{
-    let mut result = Seq::from_seq(irr);
-    let pre = division(&poly, &irr, modulo).1;
-    /*for i in 0..irr.len(){
-        result[i] = pre[i];
-    }*/
+    let pre = euclidean_division(&poly, &irr, modulo, irr.len()-1).1;
     make_positive(&pre,modulo)
-    //result
+
 }
-
-
-
-pub fn mul_poly_mod(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128> {
-    let mut out:Seq<i128> = Seq::new(a.len()+b.len());
-    for i in 0..a.len() {
-        if a[i] == 0{
-            continue;
-        }
-        for j in 0..b.len() {
-            out[i + j] = a[i] * b[j] + out[i + j];
-        }
-    }
-    let mut irr:Seq<i128> = Seq::new(a.len()+b.len());
-    irr[0] = -1 as i128;
-    irr[1] = -1 as i128;
-    irr[a.len()-1] = 1 as i128;
-    let pre_result = division(&out,&irr,modulo).1;
-    let mut result = Seq::new(a.len());
-    for i in 0..result.len(){
-        result[i] = pre_result[i];
-    }
-    make_positive(&result,modulo)
-}
-
 
 /// simple sparse multiplication with modulo irr. For None Modulus value = 0 TODO optional
-pub fn mul_poly_irr(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
-    let mut irr:Seq<i128> = Seq::new(a.len());
-    irr[0] = -1 as i128;
-    irr[1] = -1 as i128;
-    irr[a.len()-1] = 1 as i128;
+pub fn mul_poly_irr(a:&Seq<i128>,b:&Seq<i128>,irr:&Seq<i128>,modulo:i128) -> Seq<i128>{
     assert!(a.len()==b.len(),true);
     let mut result:Seq<i128> = Seq::new(a.len());
     for i in 0..a.len(){
@@ -457,7 +424,7 @@ pub fn mul_poly_irr(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
 
         }
     }
-    result
+    make_positive(&result,modulo)
 }
 
 pub fn mul_poly_native(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
@@ -484,8 +451,13 @@ pub fn mul_poly(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
             continue;
         }
         for j in 0..b.len(){
+            if b[j] == 0{
+                continue;
+            }
             if i + j > a.len() -1 {
                 result[(i + j) % (a.len())] = (result[(i + j) % (a.len())] + (a[i] * b[j])) % modulo;
+                println!("Overflow of {:?} < {:?}",a.len()-1,i+j);
+                println!("beide Seqs sind {:?} * {:?}",a,b);
                 continue;
             }
             result[i + j] = (result[i + j] + (a[i] * b[j])) % modulo;
@@ -558,11 +530,6 @@ pub fn round(poly:&Seq<i128>, round_to:i128, q:i128)->Seq<i128>{
         if poly[i] > q_12{
             result[i] = poly[i] - q;
         }
-        result[i] = result[i] % q_12;
-        if poly[i] == q_12{
-            result[i] = q_12;
-        }
-
     }
 
     for i in 0..result.len(){
@@ -577,14 +544,14 @@ pub fn round(poly:&Seq<i128>, round_to:i128, q:i128)->Seq<i128>{
     result
 }
 
-pub fn add_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128)->Seq<i128>{
-    let x = Seq::from_seq(a);
-    let  y = Seq::from_seq(b);
-    /*if a.len() < b.len(){
+pub fn add_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128,mono:bool)->Seq<i128>{
+    let mut x = Seq::from_seq(a);
+    let  mut y = Seq::from_seq(b);
+    if mono && a.len() < b.len() {
         x = monomial_poly(a,b.len());
-    }else {
+    }else if mono{
         y = monomial_poly(b,a.len());
-    }*/
+    }
     let mut result = Seq::from_seq(&x);
     for i in 0..result.len(){
         result[i] = (result[i] + y[i]) % modulo;
@@ -593,14 +560,14 @@ pub fn add_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128)->Seq<i128>{
 
 }
 
-pub fn sub_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128)->Seq<i128>{
+pub fn sub_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128,mono:bool)->Seq<i128>{
     let mut x = Seq::from_seq(a);
     let mut y = Seq::from_seq(b);
-    /*if a.len() < b.len(){
+    if mono && a.len() < b.len(){
         x = monomial_poly(a,b.len());
-    }else {
+    }else if mono{
         y = monomial_poly(b,a.len());
-    }*/
+    }
     let mut result = Seq::from_seq(&x);
     for i in 0..result.len(){
         result[i] = (result[i] - y[i]) % modulo ;
@@ -648,88 +615,65 @@ fn scalar_div(a:&Seq<i128>,scalar:i128,p: i128)->Seq<i128>{
     result
 }
 
-
-
-pub fn division(a:&Seq<i128>, b: &Seq<i128>, p : i128) -> (Seq<i128>,Seq<i128>){
-
+pub fn euclidean_division(a:&Seq<i128>, b: &Seq<i128>, modulo : i128, p : usize) -> (Seq<i128>,Seq<i128>){
     let mut r:Seq<i128> = Seq::from_seq(a);
-    let mut q:Seq<i128> = Seq::new(b.len());
+    let mut q:Seq<i128> = Seq::new(p+1);
     if deg(&b) == 0{
-        return (scalar_div(&r,b[0], p),q);
+        return (scalar_div(&r,b[0], modulo),q);
     }
-    let u = invert_fermat(leading_coef(b),p);
-    while deg(&r) >= deg(&b){
-        let d = deg(&r);
-        let mut v:Seq<i128> = Seq::new(a.len());
-        v[d - deg(b)] = 1;
-        v[d - deg(b)] = u * r[d];
-        r = sub_poly(&r, &mul_poly(&v, &b, p,), p);
-        q = add_poly(&q, &v, p);
-    }
-    //Remove just for tests
-    r = make_positive(&r,p);
-    q = make_positive(&q,p);
-
-    (q,r)
-}
-
-pub fn euclidean_division(a:&Seq<i128>, b: &Seq<i128>, p : i128) -> (Seq<i128>,Seq<i128>){
-    let mut r:Seq<i128> = Seq::from_seq(a);
-    let mut q:Seq<i128> = Seq::new(b.len());
-    if deg(&b) == 0{
-        return (scalar_div(&r,b[0], p),q);
-    }
-    let u = invert_fermat(leading_coef(b),p);
+    let u = invert_fermat(leading_coef(b),modulo);
     let d = deg(&b);
     while deg(&r) >= d {
         let mut s:Seq<i128> = Seq::new(deg(&r)-d +1);
         s[deg(&r) - d] = leading_coef(&r) * u;
-        q = add_poly(&q,&s,p);
-        r = sub_poly(&r,&mul_poly(&s,&b,p),p);
+        q = add_poly(&q,&s,modulo,true);
+        r = sub_poly(&r,&mul_poly_native(&s,&b,modulo),modulo,true);
     }
-    r = make_positive(&r,p);
-    q = make_positive(&q,p);
+    r = make_positive(&r,modulo);
+    q = make_positive(&q,modulo);
 
-    let a_1 = make_positive(&add_poly(&mul_poly(&b,&q,p),&r,p),p);
-    //Remove just for test
-    let a_2 = make_positive(&a,p);
-    for i in 0..a.len(){
-        if a_1[i] != a_2[i]{
-            println!("at index: {:?}, {:?} != {:?}",i,a_1[i],a[i]);
-            //panic!("Ohhh nooo! Division failed!");
-        }
+    // back to right len
+    let mut q_right:Seq<i128> = Seq::new(b.len());
+    let mut r_right = Seq::from_seq(&q_right);
+    if deg(&q) > p || deg(&r) > p {
+        panic!("Division failed");
     }
-    (q,r)
+    for i in 0..p+1{
+        q_right[i] = q[i];
+        r_right[i] = r[i];
+    }
+    (q_right,r_right)
 
 }
 
 
 
-pub fn eea(a:&Seq<i128>, b:&Seq<i128>, p:i128) -> Result<Seq<i128>,&'static str>{
+pub fn eea(a:&Seq<i128>, irr:&Seq<i128>, modulo:i128) -> Result<Seq<i128>,&'static str>{
     let mut t:Seq<i128> = Seq::new(a.len());
-    let mut r = Seq::from_seq(b);
+    let mut r = Seq::from_seq(irr);
     let mut new_t =  Seq::new(a.len());
     new_t[0] = 1 as i128;
     let mut new_r = Seq::from_seq(a);
-    //new_r = R(&new_r,&r,p);
+    new_r = make_positive(&new_r,modulo);
+    let p = irr.len()-1;
     while !is_empty(&new_r){
-        let q = division(&r,&new_r,p).0;
+        let q = euclidean_division(&r,&new_r,modulo,p).0;
 
         let tmp_t = Seq::from_seq(&new_t);
-        new_t = sub_poly(&t,&mul_poly(&q, &new_t, p),p);
+        new_t = sub_poly(&t,&mul_poly(&q, &new_t, modulo),modulo,false);
         t = Seq::from_seq(&tmp_t);
 
         let tmp_r = Seq::from_seq(&new_r);
-        new_r = sub_poly(&r,&mul_poly(&q, &new_r, p),p);
+        new_r = sub_poly(&r,&mul_poly(&q, &new_r, modulo),modulo,false);
         r = Seq::from_seq(&tmp_r);
 
     }
     if deg(&r) > 0 {
         return Err("Not invertable");
     }
-    let pre = scalar_div(&t,r[0],p);
-    let mut result = Seq::from_seq(b);
-    for i in 0..b.len(){
+    let pre = scalar_div(&t,r[0],modulo);
+    let mut result = Seq::from_seq(irr);
+    for i in 0..irr.len(){
         result[i] = pre[i];
     }
     Ok(result)
