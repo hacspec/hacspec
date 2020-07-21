@@ -1,0 +1,881 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{fullpage}
+\usepackage{lmodern, microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{mathpartir}
+\usepackage{xcolor}
+\usepackage{booktabs,longtable}
+\usepackage{csquotes}
+
+\newcommand{\todo}[2]{\textcolor{purple!50!orange}{[#1]: #2}}
+
+\newcommand{\rustspec}{\textsf{Rustspec}}
+
+\title{\rustspec{} formalization}
+
+\author{Denis Merigoux}
+
+
+
+%%%%%%%%%%%%%%%%%%% Syntax
+\newcommand{\synvar}[1]{\ensuremath{#1}}
+\newcommand{\syntext}[1]{\texttt{#1}}
+\newcommand{\synkeyword}[1]{\textcolor{red!60!black}{\syntext{#1}}}
+\newcommand{\synpunct}[1]{\textcolor{black!40!white}{\texttt{#1}}}
+
+%% Keywords
+\newcommand{\synuse}{\synkeyword{use}\;}
+\newcommand{\synconst}{\synkeyword{const}\;}
+\newcommand{\syntypalias}{\synkeyword{type}\;}
+\newcommand{\synfn}{\synkeyword{fn}\;}
+\newcommand{\synbool}{\synkeyword{bool}}
+\newcommand{\synint}{\synkeyword{int}}
+\newcommand{\synunitt}{\synkeyword{unit}}
+\newcommand{\synseq}{\syntext{Seq}}
+\newcommand{\syncopy}{\syntext{Copy}}
+\newcommand{\synclone}{\syntext{clone()}}
+\newcommand{\synlet}{\synkeyword{let}\;}
+\newcommand{\synif}{\synkeyword{if}\;}
+\newcommand{\synthen}{\;\synkeyword{then}\;}
+\newcommand{\synelse}{\;\synkeyword{else}\;}
+\newcommand{\synfor}{\synkeyword{for}\;}
+\newcommand{\synin}{\;\synkeyword{in}\;}
+\newcommand{\syntrue}{\synkeyword{true}}
+\newcommand{\synfalse}{\synkeyword{false}}
+
+%%Macros
+\newcommand{\synarraymacro}{\synkeyword{array!}}
+\newcommand{\synpolymacro}{\synkeyword{poly!}}
+
+%% Punctucation
+\newcommand{\synsc}{\synpunct{;}}
+\newcommand{\syntyped}{\;\synpunct{:}\;}
+\newcommand{\syneq}{\;\synpunct{=}\;}
+\newcommand{\synlparen}{\synpunct{(}\;}
+\newcommand{\synrparen}{\;\synpunct{)}}
+\newcommand{\syncomma}{\synpunct{,}\;}
+\newcommand{\syndot}{\synpunct{.}}
+\newcommand{\synref}{\synpunct{\&}}
+\newcommand{\synand}{\;\synpunct{\&\&}\;}
+\newcommand{\synor}{\;\synpunct{||}\;}
+\newcommand{\synxor}{\;\synpunct{\^}\;}
+\newcommand{\synadd}{\;\synpunct{+}\;}
+\newcommand{\synminus}{\;\synpunct{-}\;}
+\newcommand{\synmult}{\;\synpunct{*}\;}
+\newcommand{\syndiv}{\;\synpunct{/}\;}
+\newcommand{\synnot}{\synpunct{\~}\;}
+\newcommand{\synlangle}{\synpunct{<}\;}
+\newcommand{\synrangle}{\;\synpunct{>}}
+\newcommand{\synlbracket}{\synpunct{\{}\;}
+\newcommand{\synrbracket}{\;\synpunct{\}}}
+\newcommand{\synarrow}{\;\synpunct{->}\;}
+\newcommand{\synrange}{\;\synpunct{..}\;}
+\newcommand{\synlsquare}{\synpunct{[}\;}
+\newcommand{\synrsquare}{\;\synpunct{]}}
+\newcommand{\synellipsis}{\synpunct{,\ldots,}\;}
+\newcommand{\synscellipsis}{\synpunct{;\ldots;}\;}
+\newcommand{\synunit}{\synpunct{()}}
+
+%% BNF
+\newcommand{\syndef}{$::=$}
+\newcommand{\synalt}{\;$|$\;}
+
+%%%%%%%%%%%%%%%%%%%% Typing
+
+\newcommand{\typctx}[1]{\textcolor{green!50!black}{\ensuremath{#1}}}
+
+\newcommand{\typempty}{\typctx{\varnothing}}
+\newcommand{\typtyped}{\;\typctx{:}\;}
+\newcommand{\typsc}{\typctx{;}\;}
+\newcommand{\typcomma}{\typctx{,}\;}
+\newcommand{\typarrow}{\typctx{\;\rightarrow}\;}
+\newcommand{\typlparen}{\typctx{(}\;}
+\newcommand{\typrparen}{\;\typctx{)}}
+\newcommand{\typlsquare}{\typctx{[}\;}
+\newcommand{\typrsquare}{\;\typctx{]}}
+\newcommand{\typlangle}{\typctx{<}\;}
+\newcommand{\typrangle}{\;\typctx{>}}
+\newcommand{\typeq}{\;\typctx{=}\;}
+\newcommand{\typcomp}{\;\typctx{\circ}\;}
+\newcommand{\typellipsis}{\typctx{,\ldots,}\;}
+\newcommand{\typderive}{\;\typctx{\vdash}\;}
+\newcommand{\typsym}{\;\typctx{\sim}\;}
+\newcommand{\typproduce}{\;\typctx{\Rrightarrow}\;}
+
+\newcommand{\evactx}[1]{\textcolor{blue!50!black}{\ensuremath{#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Operational semantics
+
+\newcommand{\evaempty}{\evactx{\varnothing}}
+\newcommand{\evamapsto}{\evactx{\;\mapsto\;}}
+\newcommand{\evacomma}{\evactx{,\;}}
+\newcommand{\evalparen}{\evactx{(}\;}
+\newcommand{\evarparen}{\;\evactx{)}}
+\newcommand{\evalsquare}{\evactx{[}\;}
+\newcommand{\evarsquare}{\;\evactx{]}}
+\newcommand{\evasc}{\evactx{;}\;}
+\newcommand{\evaderive}{\;\evactx{\vdash}\;}
+\newcommand{\evaeval}{\;\evactx{\Downarrow}\;}
+\newcommand{\evaproduce}{\;\evactx{\Rrightarrow}\;}
+\newcommand{\evaellipsis}{\evactx{,\ldots,}\;}
+\newcommand{\evaeq}{\;\evactx{=}\;}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\rustspec{} is a subset of Rust designed for cryptographic specification. It is the successor of
+Hacspec \cite{karthik2018hacspec}. Indeed, the strong typing environment of Rust and its low-level
+focus are more suitable to cryptographic specification than the subset of Python that was used for
+Hacspec. The main features of \rustspec{} are :
+\begin{description}
+  \item[Pure functions] By restricting borrowing and making full use of the \syntext{Copy} trait, \rustspec{} feels like functional programming.
+  \item[Primitive array support] Array manipulation is the cornerstone of cryptographic code, hence
+  \rustspec{} arrays have primitive support in the language and a dedicated manipulation library.
+  \item[Integers] \rustspec{} supports all kinds of integers : word-sized integers (\synkeyword{u8}, \synkeyword{u32}, etc.), secret integers (constant-time by type abstraction design),
+  natural integers (for field arithmetic).
+\end{description}
+
+\rustspec{} is concretely implemented as a Rust crate containing the types and functions of the
+language. However, \rustspec{} programs should also fall into a strict subset of Rust, that this
+document formalizes.
+
+The \rustspec{} language, being embedded in Rust, shares with it some linearity properties of its
+type system. However, we severely restrict the borrowing feature: while retaining enough expressive
+power to write cryptographic specifications, the language behaves much simpler. The approach is conceptually similar to \cite{radanne2019kindly}, although \rustspec{} is less expressive. Another inspiring attempt at formalizing a subset of Rust is \cite{oxide}.
+
+The formalization presented here does not cover all the features of the \rustspec{} library. It
+focuses on the core of the languagestatement, its interesting type system and execution semantics. More
+precisely, we did not include the following elements :
+\begin{itemize}
+  \item anything that can easily be desugared like assignment operators (\synpunct{+=}, etc);
+  \item the \synif{} expression, that coexists with the \synif{} statement;
+  \item all the various types of integers, the casts between them and all the operators to
+  manipulate them (we only have basic \synint{} type with arithmetic);
+  \item type inference
+  \item polymorphism and traits, as we assume that the Rust compiler does the job of monomorphizing
+  everything for us.
+\end{itemize}
+
+\section{Syntax}
+
+The \rustspec{} language is a subset of Rust. Apart from the basic \synint{} and \synbool{} types,
+the language operates on arrays of fixed size, known at compilation (\synarraymacro{}) or not
+(\synseq). The biggest limitation compared to the full Rust language is the borrowing patterns
+that we allow. Indeed, we restrict borrowing to only immutable borrowing (\synref{}),
+and we also restrict where this borrowing can happen: only in function arguments or at function call
+sites. Additionally, functions cannot return types containing references. Because of these restrictions,
+there is not much you can do with types subject to linearity in \rustspec, compared to what you
+can do in Rust. However, we argue that it is enough for cryptographic specifications.
+
+\begin{center}
+\begin{longtable}{lrrll}
+Program&\synvar{p}&\syndef&$[$\synvar{i}$]^*$&list of items\\
+Item&\synvar{i}&\syndef&\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\mu}\syncomma $n\in\mathbb{N}$\synrparen\synsc&array type declaration\\
+&&\synalt&\synfn\synvar{f}\synlparen$[$\synvar{d}$]^+$\synrparen\synarrow\synvar{\mu}\;\synvar{b}&function declaration\\
+Argument declaration&\synvar{d}&\syndef&\synvar{x}\syntyped\synvar{\tau}&\\
+Reference-free type&\synvar{\mu}&\syndef&\synunitt\synalt\synbool\synalt\synint&base types\\
+&&\synalt&\synseq\synlangle\synvar{\mu}\synrangle&sequence\\
+&&\synalt&\synvar{t}&type variable\\
+&&\synalt&\synlparen$[$\synvar{\mu}$]^+$\synrparen&tuple\\
+Type&\synvar{\tau}&\syndef&\synvar{\mu}&base types\\
+&&\synalt&\synref\synvar{\mu}&immutable reference\\
+Block&\synvar{b}&\syndef&\synlbracket$[$\synvar{s}\synsc$]^+$\synrbracket&\\
+Statement&\synvar{s}&\syndef&\synlet\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}&let binding\\
+&&\synalt&\synvar{x}\syneq\synvar{e}&variable reassignment\\
+&&\synalt&\synif\synvar{e}\synthen\synvar{b}\;$($\synelse\synvar{b}$)$&conditional statements\\
+&&\synalt&\synfor\synvar{x}\synin\synvar{e}\synrange\synvar{e}\;\synvar{b}&for loop (integers only)\\
+&&\synalt&\synvar{x}\synlsquare\synvar{e}\synrsquare\syneq\synvar{e}&array update\\
+&&\synalt&\synvar{e}&return expression\\
+&&\synalt&\synvar{b}&statement block\\
+Expression&\synvar{e}&\syndef&\synunit\synalt\syntrue\synalt\synfalse&unit and boolean literals\\
+&&\synalt&$n\in\mathbb{N}$&integer literal\\
+&&\synalt&\synvar{x}&variable\\
+&&\synalt&\synvar{f}\synlparen$[$\synvar{a}$]^+$\synrparen&function call\\
+&&\synalt&\synvar{e}\;\synvar{\odot}\;\synvar{e}&binary operations\\
+&&\synalt&\synvar{\oslash}\;\synvar{e}&unary operations\\
+&&\synalt&\synlparen $[$\synvar{e}$]^+$\synrparen&tuple constructor\\
+&&\synalt&\synvar{e}\syndot$(n\in\mathbb{N})$&tuple field access\\
+&&\synalt&\synvar{e}\synlsquare\synvar{e}\synrsquare&array or seq index\\
+Function argument&\synvar{a}&\syndef&\synvar{e}&linear argument\\
+&&\synalt&\synref\synvar{e}&call-site borrowing\\
+Binary operators&\synvar{\odot}&\syndef&\synadd\synalt\synminus\synalt\synmult\synalt\syndiv\synalt\synand\synalt\synor\\
+Unary operators&\synvar{\oslash}&\syndef&\synminus\synalt\synnot&
+\end{longtable}
+\end{center}
+
+
+\section{Operational semantics}
+
+The operational semantics for this language are standard, using big-step evaluation. Indeed, the
+order of evaluation of tuple elements or function arguments does not matter, since expressions of
+the language are pure. The borrowing does not have any effect on the operational semantics, but it
+will affect the typing judgment later.
+
+Please note that the contexts \evactx{\Omega} is considered as an unordered set rather
+than an ordered list. As such, the rules have the relevant elements appear at the end or the beginning
+of the context without loss of generality.
+
+\begin{center}
+\begin{tabular}{lrcll}
+Value&\synvar{v}&\syndef&\syntrue\synalt\synfalse&boolean\\
+&&\synalt&$n\in\mathbb{N}$&integer\\
+&&\synalt&\evalsquare$[$\synvar{v}$]^*$\evarsquare&array or sequence\\
+&&\synalt&\synlparen$[$\synvar{v}$]^*$\synrparen&tuple\\
+Evaluation context&\evactx{\Omega}&\syndef&\evaempty&empty context\\
+&&\synalt&\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}&variable value\\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Expression evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\\
+Function argument evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a}\evaeval\synvar{v}\\
+Statement evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega}\\
+Block evaluation&\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
+\\\bottomrule
+\end{tabular}
+\begin{mathpar}
+\inferrule[EvalUnit]{
+{}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synunit\evaeval\synunit
+}
+
+\inferrule[EvalBool]{
+\synvar{b}\in\{\syntrue,\;\synfalse\}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{b}
+}
+
+\inferrule[EvalInt]{
+n\in\mathbb{N}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive n\evaeval n
+}
+
+\inferrule[EvalVar]{
+{}
+}{
+\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\evaeval\synvar{v}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalFuncArg]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synref\synvar{e}\evaeval\synvar{v}
+}
+
+\inferrule[EvalFuncCall]{
+\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
+\forall i\in[\![1,n]\!],\; \synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{a_i}\evaeval\synvar{v_i}\\
+\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{f}\synlparen\synvar{a_1}\synellipsis\synvar{a_n}\synrparen\evaeval\synvar{v}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalBinaryOp]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synvar{v_1}\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval\synvar{v_2}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\synvar{\odot}\synvar{e_2}\evaeval\synvar{v_1}\synvar{\odot}\synvar{v_2}
+}
+
+\inferrule[EvalUnaryOp]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{\oslash}\synvar{e}\evaeval\synvar{\oslash}\synvar{v}
+}
+
+\inferrule[EvalTuple]{
+\forall i\in[\![1,n]\!],\;\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_i}\evaeval\synvar{v_i}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlparen\synvar{e_1}\synellipsis\synvar{e_n}\synrparen\evaeval\synlparen\synvar{v_1}\synellipsis\synvar{v_n}\synrparen
+}
+
+\inferrule[EvalTupleAccess]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synlparen\synvar{v_1}\synellipsis\synvar{v_m}\synrparen\\
+n\in[\![1,m]\!]
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\syndot n\evaeval\synvar{v_n}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalArrayAccess]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\evalsquare\synvar{v_0}\evaellipsis\synvar{v_m}\evarsquare\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval \synvar{n}\\
+n\in[\![0,m]\!]
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\evaeval\synvar{v_n}\evaproduce\evactx{\Omega}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalLet]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlet\synvar{x}\syntyped{\tau}\syneq\synvar{e}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}
+}
+
+\inferrule[EvalReassign]{
+\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v'}
+}{
+\synvar{p}\evasc\synvar{x}\evamapsto\synvar{v}\evacomma\evactx{\Omega}\evaderive\synvar{x}\syneq\synvar{e}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\synvar{v'}\evacomma\evactx{\Omega}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalIfThenTrue]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}
+
+\inferrule[EvalIfThenFalse]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalIfThenElseTrue]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\syntrue\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalIfThenElseFalse]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval\synfalse\\
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synif\synvar{e_1}\;\synvar{b}\synelse\synvar{b'}\evaeval\synunit\evaproduce\evactx{\Gamma'}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalForLoop]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_1}\evaeval n\quad
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e_2}\evaeval m\\
+\evactx{\Omega_n}\evaeq\evactx{\Omega}\quad
+\forall i\in[\![n,m-1]\!],\;\synvar{p}\evasc\evactx{\Omega_i}\evaderive\synvar{b}\evaeval \synunit\evaproduce\evactx{\Omega_{i+1}}\\
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synvar{b}\evaeval\synunit\evaproduce\evactx{\Omega_m}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalArrayUpd]{
+\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_1}\evaeval m\\
+m\in[\![0,n]\!]\\
+\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{e_2}\evaeval \synvar{v}\\
+}{
+\synvar{p}\evasc\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}\evaderive\synvar{x}\synlsquare\synvar{e_1}\synrsquare\syneq\synvar{e_2}\evaeval\synunit\evaproduce\synvar{x}\evamapsto\evalsquare\synvar{v_0}\evaellipsis\synvar{v_{m-1}}\evacomma\synvar{v}\evacomma\synvar{v_{m+1}}\evaellipsis\synvar{v_n}\evarsquare\evacomma\evactx{\Omega}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[EvalExprStmt]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{e}\evaeval\synvar{v}\evaproduce\evactx{\Omega}
+}
+
+\inferrule[EvalBlock]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s_1}\evaeval\synunit\evaproduce\evactx{\Omega'}\\
+\synvar{p}\evasc\evactx{\Omega'}\evaderive\synlbracket\synvar{s_2}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega''}
+}
+
+\inferrule[EvalBlockOne]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{s}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synlbracket\synvar{s}\synrbracket\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}
+
+\inferrule[EvalBlockAsStatement]{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}{
+\synvar{p}\evasc\evactx{\Omega}\evaderive\synvar{b}\evaeval\synvar{v}\evaproduce\evactx{\Omega'}
+}
+\end{mathpar}
+\end{center}
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Function evaluation&\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}\\
+\bottomrule
+\end{tabular}
+\begin{mathpar}
+\inferrule[EvalFunc]{
+\synfn\synvar{f}\synlparen \synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n}\synrparen\synarrow\synvar{\mu}\;\synvar{b}\in\synvar{p}\\
+\synvar{p}\evasc\synvar{x_1}\evamapsto\synvar{v_1}\evaellipsis\synvar{x_n}\evamapsto\synvar{v_n}\evaderive\synvar{b}\evaeval\synvar{v}
+}{
+\synvar{p}\evaderive\synvar{f}\synlparen \synvar{v_1}\synellipsis\synvar{v_n}\synrparen\evaeval\synvar{v}
+}
+\end{mathpar}
+\end{center}
+
+\section{Typing}
+
+Contrasting with the operational semantics, the typing rules are fairly complex and restrictive. The
+reason for this complexity is our objective to stick to Rust behavior.
+
+The typing environnement of \rustspec{} is fairly standard. We need a type dictionary to enforce
+the named type discipline of Rust that covers the types declared by the \synarraymacro{} macro. Please
+note that the contexts \typctx{\Gamma} and \typctx{\Delta} are considered as unordered sets rather
+than ordered lists. As such, the rules have the relevant elements appear at the end or the beginning
+of those contexts without loss of generality.
+
+\begin{center}
+\begin{longtable}{lrrll}
+Typing context&\typctx{\Gamma}&\syndef&\typempty&empty context\\
+&&\synalt& \synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}&variable\\
+&&\synalt& \synvar{f}\typtyped\typlparen$[$\synvar{\tau}$]^+$\typrparen\typarrow\synvar{\mu}\typcomma\typctx{\Gamma}&function\\
+Type dictionary&\typctx{\Delta}&\syndef&\typempty&empty dictionnary\\
+&&\synalt&\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc $n\in\mathbb{N}$\typrsquare\typcomma\typctx{\Delta}&array type\\
+\end{longtable}
+\end{center}
+
+The restrictions on borrowing lead to severe limitations on how we can manipulate values
+of linear type in our language, rendering it quite useless at first sight. Indeed, when you receive
+a reference as a function argument, you can only use it in expressions and perform identity let
+bindings with it. You cannot store it in memory or in a tuple and pass it around indirectly
+in your program. This behavior is well-suited for input and output buffers in cryptographic code.
+
+However, in the spirit of Rust, we introduce an escape hatch from linearity under the form of the \syncopy{} trait
+implementation. This trait, that is primitive to the Rust language, is used to distinguish the values
+that are \enquote{cheap} to copy. This concerns all the reference-free \synvar{\mu} types except \synseq, whose size is not known at compilation time (and thus can be arbitrarily large).
+Paradoxically, \synarraymacro{} types that can be as large as their \synseq{} counterparts do benefit
+from the \syncopy{} trait; we replicate here the behavior of Rust. Indeed, because
+the lenght is known at compilation time, the code generation backend of Rust (LLVM) can optimize the
+representation of the array in memory, especially if the size is small.
+
+With this setup, both \synarraymacro{} and \synseq{} represent a table of data. The moral difference between
+them is that \synarraymacro{} is a table passed by value, whereas \synseq{} is a tabled passed by
+reference (immutable). In the cryptographic specifications, \synseq{} is mostly used for input
+and output messages, whose length is known only at runtime. Fixed-size chunks or blocks of data
+are rather implemented using \synarraymacro{}.
+
+\begin{center}
+\begin{longtable}{lc}\toprule
+Implementing the \syncopy{} trait&\typctx{\Delta}\typderive\synvar{\tau}\typtyped\syncopy
+\\\bottomrule
+\end{longtable}
+\begin{mathpar}
+\inferrule[CopyUnit]{
+{}
+}{
+\typctx{\Delta}\typderive\synunitt\typtyped\syncopy
+}
+
+\inferrule[CopyBool]{
+{}
+}{
+\typctx{\Delta}\typderive\synbool\typtyped\syncopy
+}
+
+\inferrule[CopyInt]{
+{}
+}{
+\typctx{\Delta}\typderive\synint\typtyped\syncopy
+}
+
+\inferrule[CopyTuple]{
+\typctx{\Delta}\typderive\synvar{\tau_1}\typtyped\syncopy\\
+\cdots\\
+\typctx{\Delta}\typderive\synvar{\tau_n}\typtyped\syncopy
+}{
+\typctx{\Delta}\typderive\typlparen\synvar{\tau_1}\typellipsis\synvar{\tau_n}\typrparen\typtyped\syncopy
+}
+
+\inferrule[CopyArray]{
+\typctx{\Delta}\typderive\synvar{\mu}\typtyped\syncopy
+}{
+\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{t}\typtyped\syncopy
+}
+\end{mathpar}
+\end{center}
+
+Because Rust has an affine type system, \rustspec{} also enjoys an affine typing context with
+associated splitting rules (\TirName{SplitLinear}). Please note that immutable references values can be duplicated freely
+in the context (\TirName{SplitDuplicable}). During an elaboration phase inside the Rust compiler, the linearity
+of the type system gets circumvented for \syncopy{} values with the insertion of \synclone{} functions
+call that perform a copy of the value wherever the linear type system forces a copy of the value to
+be made. We formalize this behavior here by allowing \syncopy{} types duplication in the typing
+context, like immutable references (\TirName{SplitCopy}). Lastly, functions are always duplicable in the context (\TirName{SplitFunction}).
+
+\begin{center}
+\begin{longtable}{lc}\toprule
+Context splitting&\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+\\\bottomrule
+\end{longtable}
+\begin{mathpar}
+\inferrule[SplitEmpty]{
+{}
+}{
+\typctx{\Delta}\typderive\typempty\typeq\typempty\typcomp\typempty
+}
+
+\inferrule[SplitLinear1]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typctx{\Gamma_2}
+}
+
+\inferrule[SplitLinear2]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typctx{\Gamma_1}\typcomp
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
+}
+
+\inferrule[SplitDuplicable]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
+}
+
+\inferrule[SplitCopy]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}\\
+\typctx{\Delta}\typderive\synvar{\tau}\typtyped\syncopy
+}{
+\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
+}
+
+\inferrule[SplitFunction]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\typctx{\Gamma_2}
+}{
+\typctx{\Delta}\typderive\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma}\typeq
+\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma_1}\typrparen\typcomp
+\typlparen\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma_2}\typrparen
+}
+\end{mathpar}
+\end{center}
+
+We can now proceed to the main typing judgments.
+\TirName{TypVarLinear} and \TirName{TypVarDup} reflect the variable typing present in the context.
+\TirName{TypTupleCons} only allows non-reference values inside a tuple, with a linear context
+splitting to check each term of the tuple. \TirName{TypArrayAccess}, \TirName{TypSeqAccess} and
+\TirName{TypSeqRefAccess} specify the array indexing syntax, which is overloaded to work with
+both \synarraymacro{}, \synseq{} and \synref\synseq{}. This corresponds to the implementing of
+the \syntext{Index} trait in Rust.
+
+The function call rule, \TirName{TypFuncCall}, is the most complex rule of the typing judgment,
+because it contains the
+restricted borrowing form allowed in \rustspec{}. First, note that the context is split for
+typechecking the arguments of the function, because a linear value cannot be used in two arguments.
+Next, \TirName{TypFunArgLin} ensures that the arguments are well-typed. However, if an argument
+is borrowed at call-site, then \TirName{TypFunArgDup} checks the value that is being borrowed
+under the reference. In our degenerate pattern of borrowing, \TirName{TypFunArgDup} is doing the
+work of the Rust borrow checker. The last rules for binary and unary operations are standard.
+
+\begin{center}
+\begin{longtable}{lc}\toprule
+Value typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{v}\typtyped\synvar{\tau}\\
+Expression typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\\
+Function argument typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{a}\typsym\synvar{\tau}
+\\\bottomrule
+\end{longtable}
+\begin{mathpar}
+\inferrule[TypUnit]{
+{}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synunit\typtyped\synunitt
+}
+
+\inferrule[TypBool]{
+\synvar{b}\in\{\syntrue,\;\synfalse\}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synbool
+}
+
+\inferrule[TypInt]{n\in\mathbb{N}}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive n\typtyped\synint
+}
+
+\inferrule[TypSeqValue]{
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{v_i}\typtyped\synvar{\mu}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \evalsquare\synvar{v_1}\evaellipsis\synvar{v_n}\evarsquare\typtyped\synseq\synlangle\synvar{\mu}\synrangle
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypArrayValue]{
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{v_i}\typtyped\synvar{\mu}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \evalsquare\synvar{v_1}\evaellipsis\synvar{v_n}\evarsquare\typtyped\typlsquare\synvar{\mu}\typsc n\typrsquare
+}
+
+\inferrule[TypVarLinear]{
+{}
+}{
+\synvar{x}\typtyped\synvar{\tau}\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{x}\typtyped\synvar{\tau}
+}
+
+\inferrule[TypVarDup]{
+{}
+}{
+\synvar{x}\typtyped\synref\synvar{\tau}\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{x}\typtyped\synref\synvar{\tau}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypTupleCons]{
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_i}\typtyped\synvar{\mu_i}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synlparen \synvar{e_1}\synellipsis\synvar{e_n}\synrparen\typtyped\synlparen\synvar{\mu_1}\synellipsis\synvar{\mu_n}\synrparen
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypTupleAccess]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synlparen\synvar{\mu_1}\synellipsis\synvar{\mu_m}\synrparen\\
+n\in[\![1,m]\!]
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syndot n\typtyped \synvar{\mu_n}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypArrayAccess]{
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{t}\\
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint
+}{
+\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\typtyped\synvar{\mu}
+}
+
+\inferrule[TypSeqAccess]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synseq\synlangle\synvar{\mu}\synrangle\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\typtyped\synvar{\mu}
+}
+
+\inferrule[TypSeqRefAccess]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synref\synseq\synlangle\synvar{\mu}\synrangle\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\synlsquare\synvar{e_2}\synrsquare\typtyped\synvar{\mu}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypFuncCall]{
+\typctx{\Gamma}\typeq\synvar{f}\typtyped\typlparen\typctx{\mu_1}\typellipsis\typctx{\mu_n}\typrparen\typarrow\synvar{\tau}\typcomma\typctx{\Gamma'}\\
+\typctx{\Delta}\typderive\typctx{\Gamma}\typeq\typctx{\Gamma_1}\typcomp\cdots\typcomp\typctx{\Gamma_{n}}\\
+\forall i\in[\![1,n]\!],\;\typctx{\Gamma_i}\typsc\typctx{\Delta}\typderive\synvar{a_i}\typsym\typctx{\mu_i}\\
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{f}\synlparen\synvar{a_1}\synellipsis\synvar{a_n}\synrparen\typtyped\synvar{\tau}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypFunArgLin]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typsym\synvar{\tau}
+}
+
+\inferrule[TypFunArgDup]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\mu}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synref\synvar{e}\typsym\synref\synvar{\mu}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypBinopInt]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\synint}\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\synint}\\
+\synvar{\odot}\in\{\synadd,\synminus,\synmult,\syndiv\}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\synvar{\synint}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypBinopBool]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synvar{\synbool}\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\synbool}\\
+\synvar{\odot}\in\{\synand,\synor\}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\;\synvar{\odot}\;\synvar{e_2}\typtyped\synvar{\synbool}
+}
+
+\inferrule[TypUnopInt]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synint\\
+\oslash\in\{\synminus\}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synint
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypUnopBool]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synbool\\
+\oslash\in\{\text{\synnot}\}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{\oslash}\;\synvar{e}\typtyped\synbool
+}
+\end{mathpar}
+\end{center}
+
+
+Let's now move to the statement typing. We've chosen statements here rather than nested expressions
+because of the Rust behavior of the \synif statement and the \synfor loop. A list of statement corresponds
+to a block, introduced in Rust by \synlbracket $\cdots\!$ \synrbracket.
+The single statement typing judgment produces a new \typctx{\Gamma'} because of variable
+definitions inside a block. Single statements also yield back a type, because the last statement
+of the function is also the return
+value of the function. All statement type except the last one should be \synunitt.
+
+The rule \TirName{TypLet} introduces a new mutable local variable,
+that can later be reassigned (\TirName{TypReassign}) in the program. In Rust, the \synkeyword{mut}
+indicates that the local variable is mutable, in its absence, variable reassignments are prohibited.
+In this formalization, all variables are mutable for simplification.
+The main use of mutable local variables is for variables that are
+mutated inside a \synfor loop. Indeed, because \synfor loops are restricted to integer range iteration,
+we cannot express what would normally be a fold without these mutable variables. Because the mutable
+variables are local to a block, we do not need to formalize a full-fledged heap for the operational
+semantics. Rather, we will model them as a limited piece of state that gets passed around during
+execution.
+
+Next, \TirName{TypArrayAssign} and \TirName{TypSeqAssign} define the overloading of the array
+update syntax that works for both \synarraymacro{} and \synseq{}. Note that \TirName{TypIfThenElse}
+use the same context \typctx{\Gamma} for the two branches of the conditional.
+
+\begin{center}
+\begin{longtable}{lc}\toprule
+Statement typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma'}\\
+Block typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\tau}
+\\\bottomrule
+\end{longtable}
+\begin{mathpar}
+\inferrule[TypLet]{
+\typctx{\Gamma}\typsc{\typctx{\Delta}}\typderive\synvar{e}\typtyped\synvar{\tau}\\
+x\notin\typctx{\Gamma}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlet\synvar{x}\syntyped\synvar{\tau}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypReassign]{
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}\typsc\typctx{\Delta}\typderive\synvar{x}\syneq\synvar{e}\typtyped\synunitt\typproduce\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synvar{\tau}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypArrayAssign]{
+\synvar{x}\typtyped\synvar{t}\typcomma\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synint\\
+\synvar{x}\typtyped\synvar{t}\typcomma\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\mu}\\
+}{
+\synvar{x}\typtyped\synvar{t}\typcomma\typctx{\Gamma}\typsc\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare\typcomma\typctx{\Delta}\typderive \synvar{x}\synlsquare\synvar{e_1}\synrsquare\syneq\synvar{e_2}\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypSeqAssign]{
+\synvar{x}\typtyped\synseq\synlangle\synvar{\mu}\synrangle\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synint\\
+\synvar{x}\typtyped\synseq\synlangle\synvar{\mu}\synrangle\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synvar{\mu}\\
+}{
+\synvar{x}\typtyped\synseq\synlangle\synvar{\mu}\synrangle\typcomma\typctx{\Gamma}\typsc\typctx{\Delta}\typderive \synvar{x}\synlsquare\synvar{e_1}\synrsquare\syneq\synvar{e_2}\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypIfThen]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syntyped\synbool\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synunitt
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e}\synthen\synvar{b}\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypIfThenElse]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\syntyped\synbool\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synunitt\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b'}\typtyped\synunitt
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synif\synvar{e}\synthen\synvar{b}\synelse\synvar{b'}\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypForLoop]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_1}\typtyped\synint\\
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e_2}\typtyped\synint\\
+\typctx{\Gamma}\typcomma\synvar{x}\typtyped\synint\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synunitt
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synfor\synvar{x}\synin\synvar{e_1}\synrange\synvar{e_2}\;\synvar{b}\typtyped\synunitt\typproduce\typctx{\Gamma}
+}
+
+\inferrule[TypExpToStmt]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{e}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypBlock]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synunitt\typproduce\typctx{\Gamma'}\\
+\typctx{\Gamma'}\typsc\typctx{\Delta}\typderive\synlbracket\synvar{s_2}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlbracket\synvar{s_1}\synscellipsis\synvar{s_n}\synrbracket\typtyped\synvar{\tau}
+}
+
+\inferrule[TypBlockOne]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{s_1}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma'}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synlbracket\synvar{s_1}\synrbracket\typtyped\synvar{\tau}
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypBlockAsStatement]{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\tau}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\tau}\typproduce\typctx{\Gamma}
+}
+\end{mathpar}
+\end{center}
+
+A \rustspec{} program is a list of items \synvar{i}. Their typing judgment produces both a new \typctx{\Gamma} and \typctx{\Delta}, because an item introduces either a new function or a new
+named type. Please note, as mentionned before, that the return type of functions is restricted to
+\synvar{\mu}, as returning a reference is forbidden. The \TirName{TypFnDecl} also means that recursion is
+forbidden in \rustspec{}, since \synvar{f} is not
+passed in its typing context.
+
+\begin{center}
+\begin{longtable}{lc}\toprule
+Item typing&\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synvar{i}\typproduce\typctx{\Gamma'}\typsc\typctx{\Delta'}
+\\\bottomrule
+\end{longtable}
+\begin{mathpar}
+\inferrule[TypArrayDecl]{
+{}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive\synarraymacro\synlparen\synvar{t}\syncomma\synvar{\mu}\syncomma n\synrparen\typproduce\typctx{\Gamma}\typsc\typctx{\Delta}\typcomma\synvar{t}\typarrow\typlsquare\synvar{\mu}\typsc n\typrsquare
+}
+\end{mathpar}
+\begin{mathpar}
+\inferrule[TypFnDecl]{
+\typctx{\Gamma}\typcomma\synvar{x_1}\typtyped\synvar{\tau_1}\typellipsis\synvar{x_n}\typtyped\synvar{\tau_n}\typsc\typctx{\Delta}\typderive\synvar{b}\typtyped\synvar{\mu}
+}{
+\typctx{\Gamma}\typsc\typctx{\Delta}\typderive
+\synfn\synvar{f}\synlparen\synvar{x_1}\syntyped\synvar{\tau_1}\synellipsis\synvar{x_n}\syntyped\synvar{\tau_n} \synrparen\synarrow\synvar{\mu}\;\synvar{b}\typproduce
+\typctx{\Gamma}\typcomma\synvar{f}\typtyped\typlparen\synvar{\tau_1}\typellipsis\synvar{\tau_n}\typrparen\typarrow\synvar{\mu}\typsc\typctx{\Delta}
+}
+\end{mathpar}
+\end{center}
+
+
+\bibliographystyle{plain}
+\bibliography{rustspec.bib}
+
+\end{document}
