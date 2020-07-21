@@ -111,7 +111,7 @@ fn test_poly_div() {
     // x + 1
     let b: Seq<i128> = Seq::from_native_slice(&[1, 1]);
     // 3x +3 / x + 1  (mod 4) = 3
-    let mut quotient = euclidean_division(&a, &b, 4, 2);
+    let mut quotient = euclidean_division(&a, &b, 4, 1);
     // q = 3 and r = 0
     let r: Seq<i128> = Seq::from_native_slice(&[0, 0]);
     let q: Seq<i128> = Seq::from_native_slice(&[3, 0]);
@@ -126,7 +126,7 @@ fn test_poly_div() {
     //x - 1
     let b_2: Seq<i128> = Seq::from_native_slice(&[-1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     // (x¹² + x )/ (x-1) mod 4 = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
-    quotient = euclidean_division(&a_2, &b_2, 4, 12);
+    quotient = euclidean_division(&a_2, &b_2, 4, 11);
     // q = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
     assert_eq!(deg(&quotient.0), 11);
     for i in 1..12 {
@@ -177,7 +177,7 @@ fn test_poly_eea() {
         Err(_) => panic!("test, failed!"),
     }
     //2x^2 -2x + 2
-    let expected: Seq<i128> = Seq::from_native_slice(&[2, -2, 2, 0]);
+    let expected: Seq<i128> = Seq::from_native_slice(&[2, 1, 2, 0]);
 
     for i in 0..4 {
         assert_eq!(h_inv[i], expected[i]);
