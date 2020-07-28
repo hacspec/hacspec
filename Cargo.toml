@@ -8,4 +8,5 @@ members = [
     "abstract-integers",
     "spec-examples",
     "attributes",
+    "key-gen",
 ]

@@ -1,8 +1,7 @@
 use hacspec::prelude::*;
 
 use hacspec_examples::ntru_prime::*;
-#[macro_use]
-extern crate hacspec_examples;
+use key_gen::*;
 
 #[test]
 fn test_create_inv() {

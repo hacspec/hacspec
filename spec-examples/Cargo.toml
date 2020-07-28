@@ -11,6 +11,7 @@ hacspec = { path = "../hacspec" }
 hacspec-derive = { path = "../hacspec-derive" }
 secret_integers = { path = "../secret-integers" }
 abstract_integers = { path = "../abstract-integers" }
+key_gen = { path = "../key-gen"}
 
 [dev-dependencies]
 # FIXME: Why?

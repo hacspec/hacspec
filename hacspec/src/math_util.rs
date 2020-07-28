@@ -387,14 +387,23 @@ pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
     }
     (q, r)
 }
+/// Convert Seq<u128> to Seq<i128>
+pub fn convert_u128_to_i128(sequence: Seq<u128> )-> Seq<i128>{
+    let mut result:Seq<i128> = Seq::new(sequence.len());
+    for i in 0..sequence.len(){
+        result[i] = sequence[i] as i128;
+    }
+    result
+}
+
 /// makes poly to an element of R_modulo \ irr
-pub fn R(irr:&Seq<i128>,poly:&Seq<i128>,modulo:i128) -> Seq<i128>{
+pub fn R(irr:&Seq<i128>,poly:&Seq<i128>,modulo:i128) -> Seq<u128>{
     let pre = euclidean_division(&poly, &irr, modulo, irr.len()-1).1;
     make_positive(&pre,modulo)
 
 }
 
-/// simple sparse multiplication with modulo irr. For None Modulus value = 0 TODO optional
+/// polynomial multiplication of two size fixed polynomials in R_modulo \ irr
 pub fn mul_poly_irr(a:&Seq<i128>,b:&Seq<i128>,irr:&Seq<i128>,modulo:i128) -> Seq<i128>{
     assert!(a.len()==b.len(),true);
     let mut result:Seq<i128> = Seq::new(a.len());
@@ -424,10 +433,11 @@ pub fn mul_poly_irr(a:&Seq<i128>,b:&Seq<i128>,irr:&Seq<i128>,modulo:i128) -> Seq
 
         }
     }
-    make_positive(&result,modulo)
+    convert_u128_to_i128(make_positive(&result,modulo))
 }
 
-pub fn mul_poly_native(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
+/// simple schoolbook polynomial multiplication with sparse and all coefficients mod modulo
+pub fn mul_poly_naive(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
     let mut out:Seq<i128> = Seq::new(a.len()+b.len());
     for i in 0..a.len() {
         if a[i] == 0{
@@ -437,12 +447,13 @@ pub fn mul_poly_native(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
             out[i + j] = (a[i] * b[j] + out[i + j]) % modulo;
         }
     }
-    make_positive(&out,modulo)
+    convert_u128_to_i128(make_positive(&out,modulo))
 }
 
 
 
-///simple poly multiplication (schoolbook with sparse) O(n²)
+/// simple polynomial multiplication for two fixed size polynomials O(n²) with a * b mod modulo
+/// Assumption: Degree of a * b < Size of a
 pub fn mul_poly(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
     assert!(a.len()==b.len(),true);
     let mut result:Seq<i128> = Seq::new(a.len());
@@ -462,6 +473,8 @@ pub fn mul_poly(a:&Seq<i128>,b:&Seq<i128>,modulo:i128) -> Seq<i128>{
     }
     result
 }
+
+/// increases size of poly (Seq<i128>) to p
 fn monomial_poly(poly:&Seq<i128>,size:usize) ->Seq<i128>{
     let mut result:Seq<i128> = Seq::new(size);
     for i in 0..poly.len(){
@@ -470,6 +483,8 @@ fn monomial_poly(poly:&Seq<i128>,size:usize) ->Seq<i128>{
     result
 }
 
+/// if all coefficients of a polynomial are 0, returns True
+/// else false
 fn is_empty(poly:&Seq<i128>)->bool{
     let mut result = true;
     for i in 0..poly.len(){
@@ -480,7 +495,7 @@ fn is_empty(poly:&Seq<i128>)->bool{
     }
     result
 }
-
+/// returns highes degree of polynomial, e.g. for  3x² + 2x + 1 -> 2
 pub fn deg(poly:&Seq<i128>) -> usize{
     let mut deg = 0;
     for i in 0..poly.len()-1{
@@ -491,7 +506,7 @@ pub fn deg(poly:&Seq<i128>) -> usize{
     }
     deg
 }
-
+/// returns number of coefficient != 0, e.g. for  -3x⁵ + 3x² + 2x + 1 -> 4
 pub fn weight(poly:&Seq<i128>)->usize{
     let tmp = Seq::from_seq(poly);
     let mut weight = 0;
@@ -503,44 +518,26 @@ pub fn weight(poly:&Seq<i128>)->usize{
     weight
 }
 
-
+/// returns coefficient of the highest degree, e.g. for  3x² + 2x + 1 -> 3
 pub fn leading_coef(poly:&Seq<i128>) -> i128{
     poly[deg(poly)]
 }
 
-pub fn make_positive(poly:&Seq<i128>, q:i128)-> Seq<i128>{
-    let mut result = Seq::from_seq(poly);
+/// makes coefficients positiv, e.g. -3 mod 4 = 1
+pub fn make_positive(poly:&Seq<i128>, q:i128)-> Seq<u128>{
+    let mut result = Seq::new(poly.len());
     for i in 0..poly.len(){
-        if result[i] < 0 {
-            result[i] = poly[i] + q;
+        if poly[i] < 0 {
+        result[i] = (poly[i] + q) as u128;
+        }else {
+        result[i] = poly[i] as u128;
         }
     }
     result
 }
 
-
-pub fn round(poly:&Seq<i128>, round_to:i128, q:i128)->Seq<i128>{
-    // viewed as integers between−(q−1)/2 and(q−1)/2
-    let mut result = Seq::from_seq(poly);
-    let q_12 = (q-1)/2;
-    for i in 0..poly.len(){
-        if poly[i] > q_12{
-            result[i] = poly[i] - q;
-        }
-    }
-
-    for i in 0..result.len(){
-        if result[i] % 3 == 0{
-            continue;
-        }
-        result[i] = result[i] - 1;
-        if result[i] % 3 != 0{
-            result[i] = result[i] + 2;
-        }
-    }
-    result
-}
-
+/// Polynomial Addition, calculates a + b mod modulo
+/// if mono=True it add two polynomials/ Seq<i128> which haven't the same size
 pub fn add_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128,mono:bool)->Seq<i128>{
     let mut x = Seq::from_seq(a);
     let  mut y = Seq::from_seq(b);
@@ -553,10 +550,11 @@ pub fn add_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128,mono:bool)->Seq<i128>{
     for i in 0..result.len(){
         result[i] = (result[i] + y[i]) % modulo;
     }
-    make_positive(&result,modulo)
+    convert_u128_to_i128(make_positive(&result,modulo))
 
 }
-
+/// polynomial subtraction, calculates a - b mod modulo
+/// if mono=True it subtract two polynomials/ Seq<i128> which haven't the same size
 pub fn sub_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128,mono:bool)->Seq<i128>{
     let mut x = Seq::from_seq(a);
     let mut y = Seq::from_seq(b);
@@ -569,7 +567,7 @@ pub fn sub_poly(a:&Seq<i128>, b:&Seq<i128>, modulo:i128,mono:bool)->Seq<i128>{
     for i in 0..result.len(){
         result[i] = (result[i] - y[i]) % modulo ;
     }
-    make_positive(&result,modulo)
+    convert_u128_to_i128(make_positive(&result,modulo))
 }
 
 
@@ -584,11 +582,12 @@ fn div(a:i128,b:i128)->i128{
     result
 }
 
-// Some cases are ignored since ntru-prime always use m prime and m >= 2
+/// return the inverse of a mod m, Fermat's little theorem
+/// Necessary Assumption m is prime and a < m
 fn invert_fermat(a:i128, m:i128)->i128{
     power(a, m-2,m)
 }
-
+/// calculates x^y mod m
 fn power(x:i128,y:i128,m:i128)->i128{
     if y == 0{
         return 1;
@@ -602,16 +601,17 @@ fn power(x:i128,y:i128,m:i128)->i128{
 
     return (x * p) % m
 }
+/// scalar division in R_p, calculates a / scalar mod p
 fn scalar_div(a:&Seq<i128>,scalar:i128,p: i128)->Seq<i128>{
     let mut result = Seq::from_seq(a);
     let inv = invert_fermat(scalar, p);
     for i in 0..a.len(){
-
-            result[i] = (result[i] * inv) % p;
+        result[i] = (result[i] * inv) % p;
     }
     result
 }
-
+/// euclidean polynomial division, calculates a/ b in R_modulo
+/// returns fixed size polynomial ( size is p)
 pub fn euclidean_division(a:&Seq<i128>, b: &Seq<i128>, modulo : i128, p : usize) -> (Seq<i128>,Seq<i128>){
     let mut r:Seq<i128> = Seq::from_seq(a);
     let mut q:Seq<i128> = Seq::new(p+1);
@@ -624,10 +624,10 @@ pub fn euclidean_division(a:&Seq<i128>, b: &Seq<i128>, modulo : i128, p : usize)
         let mut s:Seq<i128> = Seq::new(deg(&r)-d +1);
         s[deg(&r) - d] = leading_coef(&r) * u;
         q = add_poly(&q,&s,modulo,true);
-        r = sub_poly(&r,&mul_poly_native(&s,&b,modulo),modulo,true);
+        r = sub_poly(&r,&mul_poly_naive(&s,&b,modulo),modulo,true);
     }
-    r = make_positive(&r,modulo);
-    q = make_positive(&q,modulo);
+    r = convert_u128_to_i128(make_positive(&r,modulo));
+    q = convert_u128_to_i128(make_positive(&q,modulo));
 
     // back to right len
     let mut q_right:Seq<i128> = Seq::new(b.len());
@@ -644,14 +644,15 @@ pub fn euclidean_division(a:&Seq<i128>, b: &Seq<i128>, modulo : i128, p : usize)
 }
 
 
-
+/// Extended Euclidean Algorithm on Seq<i128> which returns the inverse of a in R_modulo \ irr.
+/// if a has no inverse in R_modulo \ irr, returns Err(string)
 pub fn eea(a:&Seq<i128>, irr:&Seq<i128>, modulo:i128) -> Result<Seq<i128>,&'static str>{
     let mut t:Seq<i128> = Seq::new(a.len());
     let mut r = Seq::from_seq(irr);
     let mut new_t =  Seq::new(a.len());
     new_t[0] = 1 as i128;
     let mut new_r = Seq::from_seq(a);
-    new_r = make_positive(&new_r,modulo);
+    new_r = convert_u128_to_i128(make_positive(&new_r,modulo));
     let p = irr.len()-1;
     while !is_empty(&new_r){
         let q = euclidean_division(&r,&new_r,modulo,p).0;
