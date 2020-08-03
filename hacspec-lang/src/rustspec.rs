@@ -1,4 +1,4 @@
-use rustc_ast::ast::{BinOpKind, Mutability, UnOp};
+use rustc_ast::ast::{BinOpKind, Mutability};
 use rustc_span::{symbol::Ident, Span};
 
 pub type Spanned<T> = (T, Span);
@@ -8,6 +8,7 @@ pub enum Borrowing {
     Borrowed,
     Consumed,
 }
+
 
 #[derive(Clone)]
 pub struct Path {
@@ -56,8 +57,14 @@ pub enum Literal {
 }
 
 #[derive(Clone)]
+pub enum UnOpKind {
+    Not,
+    Neg
+}
+
+#[derive(Clone)]
 pub enum Expression {
-    Unary(UnOp, Box<Spanned<Expression>>),
+    Unary(UnOpKind, Box<Spanned<Expression>>),
     Binary(
         Spanned<BinOpKind>,
         Box<Spanned<Expression>>,

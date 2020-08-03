@@ -2,7 +2,7 @@ use rustc_ast;
 use rustc_ast::ast::{
     self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness, Expr,
     ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind, LitIntType, LitKind,
-    Mutability, Pat, PatKind, RangeLimits, Stmt, StmtKind, Ty, TyKind, UintTy, Unsafe,
+    Mutability, Pat, PatKind, RangeLimits, Stmt, StmtKind, Ty, TyKind, UintTy, UnOp, Unsafe,
 };
 use rustc_session::Session;
 use rustc_span::{symbol::Ident, Span};
@@ -213,7 +213,14 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
         )),
         ExprKind::Unary(op, e1) => Ok((
             ExprTranslationResult::TransExpr(Expression::Unary(
-                *op,
+                match *op {
+                    UnOp::Not => UnOpKind::Not,
+                    UnOp::Neg => UnOpKind::Neg,
+                    UnOp::Deref => {
+                        sess.span_err(e.span, "dereferences not allowed in Rustspec");
+                        return Err(());
+                    }
+                },
                 Box::new(translate_expr_expects_exp(e1)?),
             )),
             e.span,
@@ -254,7 +261,9 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 .collect();
             let func_args = check_vec(func_args)?;
             let (method_arg, rest_args) = func_args.split_at(1);
-            let method_arg = method_arg.first().map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
+            let method_arg = method_arg
+                .first()
+                .map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
             let method_name = match method_name.args {
                 None => Ok(method_name.ident),
                 Some(_) => {
