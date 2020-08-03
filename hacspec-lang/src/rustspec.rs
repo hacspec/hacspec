@@ -1,22 +1,40 @@
+use itertools::Itertools;
 use rustc_ast::ast::{BinOpKind, Mutability};
 use rustc_span::{symbol::Ident, Span};
+use std::fmt;
 
 pub type Spanned<T> = (T, Span);
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Borrowing {
     Borrowed,
     Consumed,
 }
 
-
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Path {
     pub location: Vec<Ident>,
     pub arg: Option<Box<BaseTyp>>,
 }
 
-#[derive(Clone)]
+impl fmt::Display for Path {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            self.location
+                .iter()
+                .map(|loc| format!("{}", loc))
+                .format("."),
+            match &self.arg {
+                None => String::new(),
+                Some(arg) => format!("<{}>", arg),
+            }
+        )
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
 pub enum BaseTyp {
     Unit,
     Bool,
@@ -35,6 +53,37 @@ pub enum BaseTyp {
     Seq(Box<Spanned<BaseTyp>>),
     Named(Path),
     Tuple(Vec<Spanned<BaseTyp>>),
+}
+
+impl fmt::Display for BaseTyp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BaseTyp::Unit => write!(f, "unit"),
+            BaseTyp::Bool => write!(f, "bool"),
+            BaseTyp::UInt128 => write!(f, "u128"),
+            BaseTyp::Int128 => write!(f, "i128"),
+            BaseTyp::UInt64 => write!(f, "u64"),
+            BaseTyp::Int64 => write!(f, "i64"),
+            BaseTyp::UInt32 => write!(f, "u32"),
+            BaseTyp::Int32 => write!(f, "i32"),
+            BaseTyp::UInt16 => write!(f, "u16"),
+            BaseTyp::Int16 => write!(f, "i16"),
+            BaseTyp::UInt8 => write!(f, "u8"),
+            BaseTyp::Int8 => write!(f, "i8"),
+            BaseTyp::Usize => write!(f, "usize"),
+            BaseTyp::Isize => write!(f, "isize"),
+            BaseTyp::Seq(mu) => {
+                let mu = &mu.0;
+                write!(f, "Seq<{}>", mu)
+            }
+            BaseTyp::Named(path) => write!(f, "{}", path),
+            BaseTyp::Tuple(args) => write!(
+                f,
+                "({})",
+                args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
+            ),
+        }
+    }
 }
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
@@ -59,7 +108,7 @@ pub enum Literal {
 #[derive(Clone)]
 pub enum UnOpKind {
     Not,
-    Neg
+    Neg,
 }
 
 #[derive(Clone)]
@@ -72,7 +121,12 @@ pub enum Expression {
     ),
     Named(Path),
     FuncCall(Spanned<Path>, Vec<Spanned<Expression>>),
-    MethodCall(Box<Spanned<Expression>>, Spanned<Ident>, Vec<Spanned<Expression>>),
+    MethodCall(
+        Box<Spanned<Expression>>,
+        Option<Typ>, // Type of self, to be filled by the typechecker
+        Spanned<Ident>,
+        Vec<Spanned<Expression>>,
+    ),
     Lit(Literal),
     ArrayIndex(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
     Tuple(Vec<Spanned<Expression>>),
@@ -85,6 +139,7 @@ pub enum Pattern {
     Tuple(Vec<Spanned<Pattern>>),
 }
 
+#[derive(Clone)]
 pub enum Statement {
     LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
     Reassignment(Ident, Spanned<Expression>),
@@ -99,13 +154,20 @@ pub enum Statement {
     ReturnExp(Expression),
 }
 
-pub type Block = Vec<Spanned<Statement>>;
+#[derive(Clone)]
+pub struct Block {
+    pub stmts: Vec<Spanned<Statement>>,
+    pub mutated_vars: Option<Vec<Ident>>,
+    pub return_typ: Option<Typ>,
+}
 
+#[derive(Clone)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
 }
 
+#[derive(Clone)]
 pub enum Item {
     FnDecl(Ident, FuncSig, Spanned<Block>),
 }

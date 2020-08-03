@@ -154,7 +154,7 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
         } else {
             RcDoc::space().append(RcDoc::as_string("()"))
         }),
-        Expression::MethodCall(sel, (f, _), args) => translate_ident(f)
+        Expression::MethodCall(sel, _, (f, _), args) => translate_ident(f)
             .append(RcDoc::space())
             .append({
                 let sel = &sel.0;
@@ -263,7 +263,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
 
 fn translate_block(b: &Block) -> RcDoc<()> {
     RcDoc::intersperse(
-        b.iter().map(|(i, _)| translate_statement(i).group()),
+        b.stmts.iter().map(|(i, _)| translate_statement(i).group()),
         RcDoc::hardline(),
     )
 }

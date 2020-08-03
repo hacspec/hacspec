@@ -276,6 +276,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             Ok((
                 ExprTranslationResult::TransExpr(Expression::MethodCall(
                     method_arg,
+                    None,
                     (method_name, *span),
                     rest_args_final,
                 )),
@@ -662,7 +663,16 @@ fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<
         .map(|s| translate_statement(sess, &s))
         .collect();
     let stmts = check_vec(stmts)?.into_iter().flatten().collect();
-    Ok((stmts, b.span))
+    Ok((
+        Block {
+            stmts,
+            return_typ: None,
+            // We initialize these fields to None as they are
+            // to be filled by the typechecker
+            mutated_vars: None,
+        },
+        b.span,
+    ))
 }
 
 fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
@@ -740,7 +750,14 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                 FnRetTy::Ty(ty) => translate_base_typ(sess, ty)?,
             };
             let fn_body: Spanned<Block> = match body {
-                None => (Vec::new(), i.span),
+                None => (
+                    Block {
+                        stmts: Vec::new(),
+                        return_typ: None,
+                        mutated_vars: None,
+                    },
+                    i.span,
+                ),
                 Some(b) => translate_block(sess, &b)?,
             };
             let fn_sig = FuncSig {
