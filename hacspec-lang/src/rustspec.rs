@@ -11,6 +11,19 @@ pub enum Borrowing {
     Consumed,
 }
 
+impl fmt::Display for Borrowing {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Borrowing::Consumed => "",
+                Borrowing::Borrowed => "& ",
+            },
+        )
+    }
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub struct Path {
     pub location: Vec<Ident>,
