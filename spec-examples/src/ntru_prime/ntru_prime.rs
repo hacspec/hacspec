@@ -1,5 +1,45 @@
 use hacspec::prelude::*;
-use key_gen::*;
+/// Struct to decide NtruVersion
+pub struct NtruVersion {
+    pub p: usize,
+    pub q: i128,
+    pub w: usize,
+    pub irr: Seq<i128>,
+}
+pub fn set_irr(p: usize) -> Seq<i128> {
+    let mut irr: Seq<i128> = Seq::new(p + 1);
+    irr[0] = -1i128;
+    irr[1] = -1i128;
+    irr[p] = 1i128;
+    irr
+}
+#[macro_export]
+macro_rules! ntru_v {
+    ($t:expr) => {{
+        if $t == 0 {
+            NtruVersion {
+                p: 761,
+                q: 4591,
+                w: 286,
+                irr: set_irr(761),
+            }
+        } else if $t == 1 {
+            NtruVersion {
+                p: 653,
+                q: 4621,
+                w: 288,
+                irr: set_irr(653),
+            }
+        } else {
+            NtruVersion {
+                p: 857,
+                q: 5167,
+                w: 322,
+                irr: set_irr(857),
+            }
+        }
+    }};
+}
 /// First transform each coefficients to a value between −(q−1)/2 and (q−1)/2
 /// then round it to the nearest multiple of 3
 pub fn round_to_3(poly:&Seq<i128>, q:i128)->Seq<i128>{
