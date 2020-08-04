@@ -303,6 +303,7 @@ fn translate_item(i: &Item) -> RcDoc<()> {
             })
             .nest(2)
             .group(),
+        Item::Use(_) => RcDoc::nil(),
     }
 }
 

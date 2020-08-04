@@ -3,6 +3,7 @@ use rustc_ast::ast::{
     self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness, Expr,
     ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind, LitIntType, LitKind,
     Mutability, Pat, PatKind, RangeLimits, Stmt, StmtKind, Ty, TyKind, UintTy, UnOp, Unsafe,
+    UseTreeKind,
 };
 use rustc_session::Session;
 use rustc_span::{symbol::Ident, Span};
@@ -766,6 +767,13 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
             };
             Ok(Item::FnDecl(i.ident, fn_sig, fn_body))
         }
+        ItemKind::Use(ref tree) => match tree.kind {
+            UseTreeKind::Glob => Ok(Item::Use(translate_path(sess, &tree.prefix)?)),
+            _ => {
+                sess.span_err(tree.span, "only ::* uses are allowed in Rustspec");
+                Err(())
+            }
+        },
         _ => {
             sess.span_err(i.span, "item not allowed in Rustspec");
             Err(())

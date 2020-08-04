@@ -5,7 +5,7 @@ use std::fmt;
 
 pub type Spanned<T> = (T, Span);
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Hash)]
 pub enum Borrowing {
     Borrowed,
     Consumed,
@@ -24,7 +24,7 @@ impl fmt::Display for Borrowing {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Path {
     pub location: Vec<Ident>,
     pub arg: Option<Box<BaseTyp>>,
@@ -47,7 +47,7 @@ impl fmt::Display for Path {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub enum BaseTyp {
     Unit,
     Bool,
@@ -183,6 +183,7 @@ pub struct FuncSig {
 #[derive(Clone)]
 pub enum Item {
     FnDecl(Ident, FuncSig, Spanned<Block>),
+    Use(Path),
 }
 
 pub type Program = Vec<Spanned<Item>>;
