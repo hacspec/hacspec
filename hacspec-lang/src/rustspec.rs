@@ -5,7 +5,7 @@ use std::fmt;
 
 pub type Spanned<T> = (T, Span);
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Borrowing {
     Borrowed,
     Consumed,
@@ -24,7 +24,7 @@ impl fmt::Display for Borrowing {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Path {
     pub location: Vec<Ident>,
     pub arg: Option<Box<BaseTyp>>,
@@ -47,7 +47,7 @@ impl fmt::Display for Path {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum BaseTyp {
     Unit,
     Bool,

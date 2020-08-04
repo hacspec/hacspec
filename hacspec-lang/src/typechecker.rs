@@ -6,7 +6,7 @@ use itertools::Itertools;
 use rustc_span::symbol::Ident;
 use std::fmt;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum ComputedBaseTyp {
     Unit,
     Bool,
@@ -109,7 +109,13 @@ impl fmt::Display for ComputedBaseTyp {
 
 type ComputedTyp = (Borrowing, ComputedBaseTyp);
 
-type FnContext = HashMap<Ident, FuncSig>;
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum FnKey {
+    Static(Ident),
+    Method(ComputedTyp, Ident)
+}
+
+type FnContext = HashMap<FnKey, FuncSig>;
 
 type VarContext = HashMap<Ident, ComputedTyp>;
 
@@ -310,7 +316,7 @@ fn typecheck_expression(
         Expression::FuncCall((f, f_span), args) => match (f.arg.as_ref(), f.location.len()) {
             (None, 1) => {
                 let id = f.location[0];
-                let f_sig = match fn_context.get(&id) {
+                let f_sig = match fn_context.get(&FnKey::Static(id)) {
                     None => {
                         sess.span_err(*f_span, format!("unknown function {}", f).as_str());
                         return Err(());
@@ -371,7 +377,64 @@ fn typecheck_expression(
                 Err(())
             }
         },
-        _ => unimplemented!(),
+        Expression::MethodCall(sel, _, (f, f_span), args) => {
+            let mut var_context = var_context.clone();
+            let (sel_typ, new_var_context) = typecheck_expression(sess, &sel, fn_context, &var_context)?;
+            var_context = new_var_context;
+            let f_sig = match fn_context.get(&FnKey::Method(sel_typ.clone(), *f)) {
+                None => {
+                    sess.span_err(*f_span, format!("unknown method {}::{}", sel_typ.1, f).as_str());
+                    return Err(());
+                }
+                Some(sig) => sig,
+            };
+            let mut args = args.clone();
+            args.push(*sel.clone());
+            if f_sig.args.len() != args.len() {
+                sess.span_err(
+                    *span,
+                    format!(
+                        "method {}::{} was expecting {} arguments but got {}",
+                        sel_typ.1, f,
+                        f_sig.args.len(),
+                        args.len()
+                    )
+                    .as_str(),
+                )
+            }
+            for ((_, (sig_t, _)), (ref arg, arg_span)) in f_sig.args.iter().zip(args) {
+                let (arg_t, new_var_context) = typecheck_expression(
+                    sess,
+                    &(arg.clone(), arg_span.clone()),
+                    fn_context,
+                    &var_context,
+                )?;
+                var_context = new_var_context;
+                match (arg_t.0, &sig_t.0) {
+                    (Borrowing::Consumed, &(Borrowing::Borrowed, _)) => {
+                        sess.span_err(arg_span, "expected a borrow here but didn't find one");
+                        return Err(());
+                    }
+                    (Borrowing::Borrowed, &(Borrowing::Consumed, _)) => {
+                        sess.span_err(
+                            arg_span,
+                            "superflous borrow here, argument is consumed",
+                        );
+                        return Err(());
+                    }
+                    _ => (),
+                }
+                if arg_t.1 != base_typ_to_computed(&sig_t.1.0) {
+                    sess.span_err(arg_span,
+                        format!("expected type {}, got {}",
+                            base_typ_to_computed(&sig_t.1.0), arg_t.1
+                        ).as_str()
+                    );
+                    return Err(());
+                }
+            }
+            Ok(((Borrowing::Consumed, base_typ_to_computed(&f_sig.ret.0)), var_context))
+        }
     }
 }
 
@@ -500,7 +563,7 @@ fn typecheck_item(
                 sig.clone(),
                 (typecheck_block(sess, b, fn_context, &var_context)?, b_span),
             );
-            let fn_context = fn_context.update(f, sig);
+            let fn_context = fn_context.update(FnKey::Static(f), sig);
             Ok((out, fn_context))
         }
     }
