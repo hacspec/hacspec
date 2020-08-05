@@ -6,56 +6,22 @@ pub struct NtruVersion {
     pub w: usize,
     pub irr: Seq<i128>,
 }
-pub fn set_irr(p: usize) -> Seq<i128> {
-    let mut irr: Seq<i128> = Seq::new(p + 1);
-    irr[0] = -1i128;
-    irr[1] = -1i128;
-    irr[p] = 1i128;
-    irr
-}
-#[macro_export]
-macro_rules! ntru_v {
-    ($t:expr) => {{
-        if $t == 0 {
-            NtruVersion {
-                p: 761,
-                q: 4591,
-                w: 286,
-                irr: set_irr(761),
-            }
-        } else if $t == 1 {
-            NtruVersion {
-                p: 653,
-                q: 4621,
-                w: 288,
-                irr: set_irr(653),
-            }
-        } else {
-            NtruVersion {
-                p: 857,
-                q: 5167,
-                w: 322,
-                irr: set_irr(857),
-            }
-        }
-    }};
-}
 /// First transform each coefficients to a value between −(q−1)/2 and (q−1)/2
 /// then round it to the nearest multiple of 3
-pub fn round_to_3(poly:&Seq<i128>, q:i128)->Seq<i128>{
+pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
     let mut result = Seq::from_seq(poly);
-    let q_12 = (q-1)/2;
-    for i in 0..poly.len(){
-        if poly[i] > q_12{
+    let q_12 = (q - 1) / 2;
+    for i in 0..poly.len() {
+        if poly[i] > q_12 {
             result[i] = poly[i] - q;
         }
     }
-    for i in 0..result.len(){
-        if result[i] % 3 == 0{
+    for i in 0..result.len() {
+        if result[i] % 3 == 0 {
             continue;
         }
         result[i] = result[i] - 1;
-        if result[i] % 3 != 0{
+        if result[i] % 3 != 0 {
             result[i] = result[i] + 2;
         }
     }
@@ -75,7 +41,7 @@ pub fn decryption(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &NtruVersion) 
     let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q);
     let mut f_3_c = convert_u128_to_i128(R(
         &n_v.irr,
-        &add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q, false), n_v.q, false),
+        &add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q), n_v.q),
         n_v.q,
     ));
     // view coefficients as values between -(q-1/2) and (q-1/2)
