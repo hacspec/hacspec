@@ -763,7 +763,58 @@ fn typecheck_statement(
                 new_mutated,
             ))
         }
-        _ => unimplemented!(),
+        Statement::ForLoop((x, x_span), e1, e2, (b, b_span)) => {
+            let original_var_context = var_context;
+            let (t_e1, var_context) = typecheck_expression(sess, e1, fn_context, var_context)?;
+            let (t_e2, var_context) = typecheck_expression(sess, e2, fn_context, &var_context)?;
+            match &t_e1 {
+                ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
+                _ => {
+                    sess.span_err(
+                        e1.1,
+                        format!(
+                            "loop range bound should be an integer but has type {}{}",
+                            (t_e1.0).0,
+                            (t_e1.1).0
+                        )
+                        .as_str(),
+                    );
+                    return Err(());
+                }
+            };
+            match &t_e2 {
+                ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
+                _ => {
+                    sess.span_err(
+                        e2.1,
+                        format!(
+                            "loop range bound should be an integer but has type {}{}",
+                            (t_e2.0).0,
+                            (t_e2.1).0
+                        )
+                        .as_str(),
+                    );
+                    return Err(());
+                }
+            };
+            let var_context = var_context.update(
+                x.clone(),
+                ((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
+            );
+            let (new_b, var_context) = typecheck_block(sess, b.clone(), fn_context, &var_context)?;
+            let mutated_vars = new_b.mutated_vars.clone().unwrap();
+            Ok((
+                Statement::ForLoop(
+                    (x.clone(), *x_span),
+                    e1.clone(),
+                    e2.clone(),
+                    (new_b, *b_span),
+                ),
+                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
+                original_var_context.clone().intersection(var_context),
+                mutated_vars,
+            ))
+        }
     }
 }
 

@@ -654,16 +654,10 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
         }
         StmtKind::Expr(e) => {
             let t_s = match translate_expr(sess, &e)? {
-                (ExprTranslationResult::TransExpr(e), _) => Ok(Statement::ReturnExp(e)),
-                (ExprTranslationResult::TransStmt(_), span) => {
-                    sess.span_err(
-                        span,
-                        "the last expression of a block has to return a value in Rustspec",
-                    );
-                    Err(())
-                }
+                (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e),
+                (ExprTranslationResult::TransStmt(s), _) => s,
             };
-            Ok(vec![(t_s?, s.span)])
+            Ok(vec![(t_s, s.span)])
         }
         StmtKind::Semi(e) => {
             let t_s = match translate_expr(sess, &e)? {

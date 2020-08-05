@@ -8,6 +8,9 @@ fn dummy_hacspec_func(x: u32, y: u32, a: Seq<u32>) -> u32 {
     if a[1usize] == 0u32 {
         z = z + 2u32 * y + a[0usize];
     };
+    for u in 0usize..2usize {
+        a[u] = a[u] + 1u32;
+    }
     z
 }
 
