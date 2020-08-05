@@ -1,6 +1,6 @@
 use hacspec::prelude::*;
-/// Struct to decide NtruVersion
-pub struct NtruVersion {
+/// Struct to decide Ntru_prime_version
+pub struct Ntru_prime_version {
     pub p: usize,
     pub q: i128,
     pub w: usize,
@@ -29,12 +29,16 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
 }
 
 /// r is the plaintext, h is the public key
-pub fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &NtruVersion) -> Seq<i128> {
+pub fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &Ntru_prime_version) -> Seq<i128> {
     let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q);
     round_to_3(&pre, n_v.q)
 }
 
-pub fn decryption(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &NtruVersion) -> Seq<i128> {
+pub fn decryption(
+    c: Seq<i128>,
+    key: (Seq<i128>, Seq<i128>),
+    n_v: &Ntru_prime_version,
+) -> Seq<i128> {
     let f = key.0;
     let v = key.1;
     // calculate 3*f and 3*f*c
