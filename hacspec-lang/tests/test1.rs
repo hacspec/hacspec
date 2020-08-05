@@ -10,11 +10,7 @@ fn dummy_hacspec_func(x: u32, y: u32, a: Seq<u32>) -> u32 {
     };
     for u in 0usize..2usize {
         a[u] = a[u] + 1u32;
+        z = a[u + 1usize];
     }
     z
-}
-
-fn main() {
-    let v = Seq::new(2usize);
-    dummy_hacspec_func(2u32, 3u32, v);
 }
