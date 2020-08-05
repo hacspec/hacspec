@@ -25,6 +25,32 @@ fn is_copy(t: &BaseTyp) -> bool {
     }
 }
 
+fn is_array(t: &BaseTyp) -> Option<&Spanned<BaseTyp>> {
+    match t {
+        BaseTyp::Seq(t1) => Some(&t1),
+        //TODO: add named array types
+        _ => None,
+    }
+}
+
+fn is_index(t: &BaseTyp) -> bool {
+    match t {
+        BaseTyp::UInt128 => true,
+        BaseTyp::Int128 => true,
+        BaseTyp::UInt64 => true,
+        BaseTyp::Int64 => true,
+        BaseTyp::UInt32 => true,
+        BaseTyp::Int32 => true,
+        BaseTyp::UInt16 => true,
+        BaseTyp::Int16 => true,
+        BaseTyp::UInt8 => true,
+        BaseTyp::Int8 => true,
+        BaseTyp::Usize => true,
+        BaseTyp::Isize => true,
+        _ => false,
+    }
+}
+
 fn equal_types(t1: &Typ, t2: &Typ) -> bool {
     match (&(t1.0).0, &(t2.0).0) {
         (Borrowing::Consumed, Borrowing::Consumed) | (Borrowing::Borrowed, Borrowing::Borrowed) => {
@@ -543,6 +569,87 @@ fn typecheck_statement(
                 ((Borrowing::Consumed, *s_span), (BaseTyp::Unit, *s_span)),
                 new_var_context.clone().union(pat_var_context),
                 HashSet::new(),
+            ))
+        }
+        Statement::Reassignment((x, x_span), e) => {
+            let (e_typ, new_var_context) = typecheck_expression(sess, e, fn_context, var_context)?;
+            let x_typ = var_context.get(&x);
+            let x_typ = match x_typ {
+                Some(t) => t,
+                None => {
+                    sess.span_err(*x_span, "trying to reassign to an inexisting variable");
+                    return Err(());
+                }
+            };
+            if !equal_types(&e_typ, &x_typ) {
+                sess.span_err(
+                    e.1,
+                    format!(
+                        "variable {} has type {}{} but tried to reassign with an expression of type {}{}",
+                        x, (x_typ.0).0, (x_typ.1).0, (e_typ.0).0, (e_typ.1).0
+                    ).as_str(),
+                );
+                return Err(());
+            };
+            Ok((
+                ((Borrowing::Consumed, *s_span), (BaseTyp::Unit, *s_span)),
+                new_var_context.clone().update(x.clone(), x_typ.clone()),
+                HashSet::unit(x.clone()),
+            ))
+        }
+        Statement::ArrayUpdate((x, x_span), e1, e2) => {
+            let (e1_t, var_context) = typecheck_expression(sess, e1, fn_context, var_context)?;
+            let (e2_t, var_context) = typecheck_expression(sess, e2, fn_context, &var_context)?;
+            if !is_index(&(e1_t.1).0) {
+                sess.span_err(
+                    e1.1,
+                    format!(
+                        "index should have an integer type but instead has {}{}",
+                        (e1_t.0).0,
+                        (e1_t.1).0,
+                    )
+                    .as_str(),
+                );
+                return Err(());
+            };
+            let x_typ = var_context.get(&x);
+            let x_typ = match x_typ {
+                Some(t) => t,
+                None => {
+                    sess.span_err(*x_span, "trying to updated an inexisting array");
+                    return Err(());
+                }
+            };
+            let cell_t = match is_array(&(x_typ.1).0) {
+                Some(cell_t) => cell_t,
+                None => {
+                    sess.span_err(
+                        *x_span,
+                        format!(
+                            "{} should be an array but has type {}{}",
+                            x,
+                            (x_typ.0).0,
+                            (x_typ.1).0
+                        )
+                        .as_str(),
+                    );
+                    return Err(());
+                }
+            };
+            if !equal_types(&e2_t, &((Borrowing::Consumed, x_span.clone()), cell_t.clone())) {
+                sess.span_err(
+                    e2.1,
+                    format!(
+                        "array {} has type {}{} but tried to reassign cell with an expression of type {}{}",
+                        x, (x_typ.0).0, (x_typ.1).0, (e2_t.0).0, (e2_t.1).0
+                    ).as_str(),
+                );
+                return Err(());
+            };
+            Ok((
+                ((Borrowing::Consumed, *s_span), (BaseTyp::Unit, *s_span)),
+                var_context,
+                HashSet::unit(x.clone()),
             ))
         }
         _ => unimplemented!(),
