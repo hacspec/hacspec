@@ -536,12 +536,12 @@ fn typecheck_pattern(
 
 fn typecheck_statement(
     sess: &Session,
-    (s, s_span): &Spanned<Statement>,
+    (s, s_span): Spanned<Statement>,
     fn_context: &FnContext,
     var_context: &VarContext,
-) -> TypecheckingResult<(Typ, VarContext, VarSet)> {
-    match s {
-        Statement::LetBinding((pat, pat_span), typ, expr) => {
+) -> TypecheckingResult<(Statement, Typ, VarContext, VarSet)> {
+    match &s {
+        Statement::LetBinding((pat, pat_span), typ, ref expr) => {
             let (expr_typ, new_var_context) =
                 typecheck_expression(sess, expr, fn_context, var_context)?;
             match typ {
@@ -566,13 +566,14 @@ fn typecheck_statement(
             let pat_var_context =
                 typecheck_pattern(sess, &(pat.clone(), pat_span.clone()), &expr_typ)?;
             Ok((
-                ((Borrowing::Consumed, *s_span), (BaseTyp::Unit, *s_span)),
+                s.clone(),
+                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 new_var_context.clone().union(pat_var_context),
                 HashSet::new(),
             ))
         }
         Statement::Reassignment((x, x_span), e) => {
-            let (e_typ, new_var_context) = typecheck_expression(sess, e, fn_context, var_context)?;
+            let (e_typ, new_var_context) = typecheck_expression(sess, &e, fn_context, var_context)?;
             let x_typ = var_context.get(&x);
             let x_typ = match x_typ {
                 Some(t) => t,
@@ -592,14 +593,15 @@ fn typecheck_statement(
                 return Err(());
             };
             Ok((
-                ((Borrowing::Consumed, *s_span), (BaseTyp::Unit, *s_span)),
+                s.clone(),
+                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 new_var_context.clone().update(x.clone(), x_typ.clone()),
                 HashSet::unit(x.clone()),
             ))
         }
         Statement::ArrayUpdate((x, x_span), e1, e2) => {
-            let (e1_t, var_context) = typecheck_expression(sess, e1, fn_context, var_context)?;
-            let (e2_t, var_context) = typecheck_expression(sess, e2, fn_context, &var_context)?;
+            let (e1_t, var_context) = typecheck_expression(sess, &e1, fn_context, var_context)?;
+            let (e2_t, var_context) = typecheck_expression(sess, &e2, fn_context, &var_context)?;
             if !is_index(&(e1_t.1).0) {
                 sess.span_err(
                     e1.1,
@@ -636,7 +638,10 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            if !equal_types(&e2_t, &((Borrowing::Consumed, x_span.clone()), cell_t.clone())) {
+            if !equal_types(
+                &e2_t,
+                &((Borrowing::Consumed, x_span.clone()), cell_t.clone()),
+            ) {
                 sess.span_err(
                     e2.1,
                     format!(
@@ -647,10 +652,22 @@ fn typecheck_statement(
                 return Err(());
             };
             Ok((
-                ((Borrowing::Consumed, *s_span), (BaseTyp::Unit, *s_span)),
+                s.clone(),
+                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 var_context,
                 HashSet::unit(x.clone()),
             ))
+        }
+        Statement::ReturnExp(e) => {
+            let (e_t, var_context) =
+                typecheck_expression(sess, &(e.clone(), s_span), fn_context, var_context)?;
+            Ok((s.clone(), e_t, var_context, HashSet::new()))
+        }
+        Statement::Conditional(cond, (b1, b1_span), b2) => {
+            let (cond_t, var_context) = typecheck_expression(sess, &cond, fn_context, var_context)?;
+            let (new_b1, var_context_b1) =
+                typecheck_block(sess, b1.clone(), fn_context, &var_context)?;
+            panic!()
         }
         _ => unimplemented!(),
     }
@@ -660,22 +677,26 @@ fn typecheck_block(
     sess: &Session,
     b: Block,
     fn_context: &FnContext,
-    var_context: &VarContext,
-) -> TypecheckingResult<Block> {
-    let mut var_context = var_context.clone();
+    original_var_context: &VarContext,
+) -> TypecheckingResult<(Block, VarContext)> {
+    let mut var_context = original_var_context.clone();
     let mut mutated_vars = HashSet::new();
     let mut return_typ = None;
-    for (i, s) in b.stmts.iter().enumerate() {
-        let (stmt_typ, new_var_context, new_mutated_vars) =
+    let mut new_stmts = Vec::new();
+    let n_stmts = b.stmts.len();
+    for (i, s) in b.stmts.into_iter().enumerate() {
+        let s_span = s.1.clone();
+        let (new_stmt, stmt_typ, new_var_context, new_mutated_vars) =
             typecheck_statement(sess, s, fn_context, &var_context)?;
+        new_stmts.push((new_stmt, s_span));
         var_context = new_var_context;
         mutated_vars = mutated_vars.clone().union(new_mutated_vars);
-        if i + 1 < b.stmts.len() {
+        if i + 1 < n_stmts {
             // Statement return types should be unit except for the last one
             match stmt_typ {
                 ((Borrowing::Consumed, _), (BaseTyp::Unit, _)) => (),
                 _ => {
-                    sess.span_err(s.1, "statement shoud have an unit type here");
+                    sess.span_err(s_span, "statement shoud have an unit type here");
                     return Err(());
                 }
             }
@@ -683,13 +704,14 @@ fn typecheck_block(
             return_typ = Some(stmt_typ)
         }
     }
-    // We don't return a new VarContext because the block is the scope of the variables
-    // defined inside it.
-    Ok(Block {
-        stmts: b.stmts,
-        mutated_vars: Some(mutated_vars.into_iter().collect()),
-        return_typ,
-    })
+    Ok((
+        Block {
+            stmts: new_stmts,
+            mutated_vars: Some(mutated_vars.into_iter().collect()),
+            return_typ,
+        },
+        var_context.intersection(original_var_context.clone()),
+    ))
 }
 
 fn typecheck_item(
@@ -709,7 +731,10 @@ fn typecheck_item(
             let out = Item::FnDecl(
                 (f.clone(), f_span),
                 sig.clone(),
-                (typecheck_block(sess, b, fn_context, &var_context)?, b_span),
+                (
+                    typecheck_block(sess, b, fn_context, &var_context)?.0,
+                    b_span,
+                ),
             );
             let fn_context = fn_context.update(FnKey::Static(f), sig);
             Ok((out, fn_context))
