@@ -1,5 +1,6 @@
 use crate::rustspec::*;
 use im::{HashMap, HashSet};
+use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 
 fn is_copy(t: &BaseTyp) -> bool {
@@ -115,8 +116,6 @@ type FnContext = HashMap<FnKey, FuncSig>;
 
 type VarContext = HashMap<Ident, Typ>;
 
-type VarSet = HashSet<Ident>;
-
 pub type TypecheckingResult<T> = Result<T, ()>;
 
 fn check_vec<T>(v: Vec<TypecheckingResult<T>>) -> TypecheckingResult<Vec<T>> {
@@ -192,9 +191,10 @@ fn typecheck_expression(
                 Err(())
             }
         },
-        Expression::Binary(_, e1, e2) => {
+        Expression::Binary((op, _), e1, e2) => {
             let (t1, var_context) = typecheck_expression(sess, e1, fn_context, var_context)?;
             let (t2, var_context) = typecheck_expression(sess, e2, fn_context, &var_context)?;
+            // TODO: do special thing for shift
             if !equal_types(&t1, &t2) {
                 sess.span_err(
                     *span,
@@ -206,7 +206,20 @@ fn typecheck_expression(
                 );
                 Err(())
             } else {
-                Ok((t1, var_context))
+                Ok((
+                    match op {
+                        BinOpKind::Eq
+                        | BinOpKind::Lt
+                        | BinOpKind::Le
+                        | BinOpKind::Ne
+                        | BinOpKind::Ge
+                        | BinOpKind::Gt => {
+                            ((Borrowing::Consumed, (t1.0).1), (BaseTyp::Bool, (t1.1).1))
+                        }
+                        _ => t1,
+                    },
+                    var_context,
+                ))
             }
         }
         Expression::Unary(_, e1) => typecheck_expression(sess, e1, fn_context, var_context),
@@ -303,13 +316,19 @@ fn typecheck_expression(
                 var_context.clone(),
             )),
         },
-        Expression::ArrayIndex(e1, e2) => {
-            let (t1, var_context) = typecheck_expression(sess, e1, fn_context, var_context)?;
+        Expression::ArrayIndex((x, x_span), e2) => {
+            let t1 = match var_context.get(&x) {
+                None => {
+                    sess.span_err(*x_span, format!("the variable {} is unknown", x).as_str());
+                    return Err(());
+                }
+                Some(t) => t,
+            };
             let (t2, var_context) = typecheck_expression(sess, e2, fn_context, &var_context)?;
             // We ignore t1.0 because we can read from both consumed and borrowed array types
-            match (t1.1).0 {
+            match &(t1.1).0 {
                 BaseTyp::Seq(seq_t) => {
-                    let (cell_t, cell_t_span) = *seq_t;
+                    let (cell_t, cell_t_span) = (&seq_t.0, &seq_t.1);
                     if let Borrowing::Borrowed = (t2.0).0 {
                         sess.span_err(e2.1, "cannot index array with a borrowed type");
                         return Err(());
@@ -327,7 +346,10 @@ fn typecheck_expression(
                         | BaseTyp::Int8
                         | BaseTyp::Usize
                         | BaseTyp::Isize => Ok((
-                            ((Borrowing::Consumed, (t1.0).1), (cell_t, cell_t_span)),
+                            (
+                                (Borrowing::Consumed, (t1.0).1),
+                                (cell_t.clone(), cell_t_span.clone()),
+                            ),
                             var_context,
                         )),
                         _ => {
@@ -347,7 +369,7 @@ fn typecheck_expression(
                 //TODO: add named arrays
                 _ => {
                     sess.span_err(
-                        e1.1,
+                        *x_span,
                         format!(
                         "this expression should be an array or a sequence but instead has type {}{}",
                         (t1.0).0, (t1.1).0
@@ -664,10 +686,82 @@ fn typecheck_statement(
             Ok((s.clone(), e_t, var_context, HashSet::new()))
         }
         Statement::Conditional(cond, (b1, b1_span), b2) => {
+            let original_var_context = var_context;
             let (cond_t, var_context) = typecheck_expression(sess, &cond, fn_context, var_context)?;
+            match cond_t {
+                ((Borrowing::Consumed, _), (BaseTyp::Bool, _)) => (),
+                _ => sess.span_err(
+                    cond.1,
+                    format!(
+                        "if condition should have type bool but has type {}{}",
+                        (cond_t.0).0,
+                        (cond_t.1).0
+                    )
+                    .as_str(),
+                ),
+            }
             let (new_b1, var_context_b1) =
                 typecheck_block(sess, b1.clone(), fn_context, &var_context)?;
-            panic!()
+            let (new_b2, var_context_b2) = match b2 {
+                None => (None, var_context.clone()),
+                Some((b2, b2_span)) => {
+                    let (new_b2, var_context_b2) =
+                        typecheck_block(sess, b2.clone(), fn_context, &var_context)?;
+                    (Some((new_b2, *b2_span)), var_context_b2)
+                }
+            };
+            match &new_b1.return_typ {
+                None => panic!(), // should not happen
+                Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
+                Some(((b_t, _), (t, _))) => {
+                    sess.span_err(
+                        *b1_span,
+                        format!("block has return type {}{} but was expecting unit", b_t, t)
+                            .as_str(),
+                    );
+                    return Err(());
+                }
+            };
+            match &new_b2 {
+                None => (),
+                Some((new_b2, _)) => {
+                    match &new_b2.return_typ {
+                        None => panic!(), // should not happen
+                        Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
+                        Some(((b_t, _), (t, _))) => {
+                            sess.span_err(
+                                *b1_span,
+                                format!(
+                                    "block has return type {}{} but was expecting unit",
+                                    b_t, t
+                                )
+                                .as_str(),
+                            );
+                            return Err(());
+                        }
+                    };
+                }
+            }
+            let new_mutated = match &new_b1.mutated_vars {
+                None => HashSet::new(),
+                Some(m) => m.clone(),
+            }
+            .union(match &new_b2 {
+                None => HashSet::new(),
+                Some((new_b2, _)) => match &new_b2.mutated_vars {
+                    None => HashSet::new(),
+                    Some(m) => m.clone(),
+                },
+            });
+            Ok((
+                Statement::Conditional(cond.clone(), (new_b1, *b1_span), new_b2),
+                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
+                original_var_context
+                    .clone()
+                    .intersection(var_context_b1)
+                    .intersection(var_context_b2),
+                new_mutated,
+            ))
         }
         _ => unimplemented!(),
     }

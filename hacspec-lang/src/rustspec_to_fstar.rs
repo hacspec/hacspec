@@ -160,13 +160,12 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
                     .append(translate_expression(arg))
                     .append(RcDoc::as_string(")"))
             }))),
-        Expression::ArrayIndex(e1, e2) => {
-            let e1 = &e1.0;
+        Expression::ArrayIndex(x, e2) => {
             let e2 = &e2.0;
             RcDoc::as_string("array_index")
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("("))
-                .append(translate_expression(e1))
+                .append(translate_ident(&x.0))
                 .append(RcDoc::as_string(")"))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("("))

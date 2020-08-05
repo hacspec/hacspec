@@ -523,29 +523,44 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 e.span,
             ))
         }
-        ExprKind::Index(e1, e2) => {
-            let r_e1 = translate_expr(sess, e1)?;
-            let r_e2 = translate_expr(sess, e2)?;
-            match (r_e1, r_e2) {
-                (
-                    (ExprTranslationResult::TransExpr(r_e1), r_e1_span),
-                    (ExprTranslationResult::TransExpr(r_e2), r_e2_span),
-                ) => Ok((
-                    ExprTranslationResult::TransExpr(Expression::ArrayIndex(
-                        Box::new((r_e1, r_e1_span)),
-                        Box::new((r_e2, r_e2_span)),
-                    )),
-                    e.span,
-                )),
+        ExprKind::Index(a, e2) => match &a.kind {
+            ExprKind::Path(None, path) => match path.segments.as_slice() {
+                [var] => match &var.args {
+                    None => {
+                        let id = translate_ident(&var.ident);
+                        let r_e2 = translate_expr(sess, e2)?;
+                        match r_e2 {
+                            (ExprTranslationResult::TransExpr(r_e2), r_e2_span) => Ok((
+                                ExprTranslationResult::TransExpr(Expression::ArrayIndex(
+                                    id,
+                                    Box::new((r_e2, r_e2_span)),
+                                )),
+                                e.span,
+                            )),
+                            _ => {
+                                sess.span_err(
+                                        e.span,
+                                        "statements not allowed in Rustspec inside array indexing expression",
+                                    );
+                                Err(())
+                            }
+                        }
+                    }
+                    Some(_) => {
+                        sess.span_err(path.span, "no arguments expected in Rustspec");
+                        Err(())
+                    }
+                },
                 _ => {
-                    sess.span_err(
-                        e.span,
-                        "statements not allowed in Rustspec inside array indexing expression",
-                    );
+                    sess.span_err(path.span, "can only index local arrays");
                     Err(())
                 }
+            },
+            _ => {
+                sess.span_err(a.span, "Rustspect only allows array indexing on arrays that are explicitely let-binded in a variable");
+                Err(())
             }
-        }
+        },
         ExprKind::Tup(args) => {
             let r_args = args
                 .into_iter()

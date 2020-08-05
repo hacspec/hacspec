@@ -2,6 +2,7 @@ use assert_cmd::prelude::*; // Add methods on commands
 use std::process::Command; // Run programs
 
 #[test]
+#[ignore]
 fn run_test1() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("hacspec-lang")?;
     cmd.arg("-o tests/Test1.fst");

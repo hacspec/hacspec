@@ -1,5 +1,6 @@
 use core::cmp::PartialEq;
 use core::hash::{Hash, Hasher};
+use im::HashSet;
 use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
 use rustc_span::Span;
@@ -38,6 +39,8 @@ impl fmt::Debug for Ident {
         write!(f, "{}[{}]", self.name, self.id)
     }
 }
+
+pub type VarSet = HashSet<Ident>;
 
 #[derive(Clone, Hash)]
 pub enum Borrowing {
@@ -145,7 +148,6 @@ impl fmt::Display for BaseTyp {
     }
 }
 
-
 impl fmt::Debug for BaseTyp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
@@ -194,7 +196,7 @@ pub enum Expression {
         Vec<Spanned<Expression>>,
     ),
     Lit(Literal),
-    ArrayIndex(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
+    ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
     Tuple(Vec<Spanned<Expression>>),
 }
 
@@ -223,7 +225,7 @@ pub enum Statement {
 #[derive(Clone)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
-    pub mutated_vars: Option<Vec<Ident>>,
+    pub mutated_vars: Option<VarSet>,
     pub return_typ: Option<Typ>,
 }
 
