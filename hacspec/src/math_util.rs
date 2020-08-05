@@ -528,7 +528,7 @@ pub fn add_poly(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
     let mut y = Seq::from_seq(b);
     if a.len() < b.len() {
         x = normalize_poly(a, b.len());
-    } else if b.len() > a.len() {
+    } else if b.len() < a.len() {
         y = normalize_poly(b, a.len());
     }
     let mut result = Seq::from_seq(&x);
@@ -543,7 +543,7 @@ pub fn sub_poly(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
     let mut y = Seq::from_seq(b);
     if a.len() < b.len() {
         x = normalize_poly(a, b.len());
-    } else if b.len() > a.len() {
+    } else if b.len() < a.len() {
         y = normalize_poly(b, a.len());
     }
     let mut result = Seq::from_seq(&x);
