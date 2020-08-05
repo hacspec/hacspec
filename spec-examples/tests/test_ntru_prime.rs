@@ -1,13 +1,7 @@
 use hacspec::prelude::*;
+use hacspec_dev::prelude::*;
 use hacspec_examples::ntru_prime::*;
 
-
-
-/// Random byte array
-fn random_byte() -> usize {
-    let random_byte = rand::thread_rng().gen::<usize>();
-    random_byte
-}
 ///This function creates a random polynom with w many -1 or 1 and with the highes degree of h_deg.
 fn create_rand_poly(w: usize, h_deg: usize) -> Seq<i128> {
     let mut counter: usize = 0;
@@ -15,8 +9,8 @@ fn create_rand_poly(w: usize, h_deg: usize) -> Seq<i128> {
     let mut polynom: Seq<i128> = Seq::new(h_deg + 1);
 
     for _ in 0..h_deg * h_deg * h_deg * h_deg *h_deg *h_deg {
-        pos = random_byte() % h_deg;
-        let c_val = (random_byte() % 2) as i128;
+        pos = random_public_byte() as usize % h_deg;
+        let c_val = (random_public_byte() % 2) as i128;
         //check if value already contained
         if polynom[pos] == 0 {
             polynom[pos] =  2 * c_val - 1;

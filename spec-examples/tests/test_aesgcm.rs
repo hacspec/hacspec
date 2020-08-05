@@ -269,16 +269,16 @@ fn generate_test_vectors() {
         let aad_l = 13 + i;
 
         // Generate random key, nonce, message, and aad for AES 256.
-        let k = aes::Key256::random();
-        let nonce = aes::Nonce::random();
-        let msg = ByteSeq::random(msg_l);
-        let aad = ByteSeq::random(aad_l);
+        let k = aes::Key256::from_public_slice(&random_byte_vec(aes::Key256::length()));
+        let nonce = aes::Nonce::from_public_slice(&random_byte_vec(aes::Nonce::length()));
+        let msg = ByteSeq::from_public_slice(&random_byte_vec(msg_l));
+        let aad = ByteSeq::from_public_slice(&random_byte_vec(aad_l));
 
         // Generate random key, nonce, message, and aad for AES 128.
-        let k128 = aes::Key128::random();
-        let nonce128 = aes::Nonce::random();
-        let msg128 = ByteSeq::random(msg_l);
-        let aad128 = ByteSeq::random(aad_l);
+        let k128 = aes::Key128::from_public_slice(&random_byte_vec(aes::Key128::length()));
+        let nonce128 = aes::Nonce::from_public_slice(&random_byte_vec(aes::Nonce::length()));
+        let msg128 = ByteSeq::from_public_slice(&random_byte_vec(msg_l));
+        let aad128 = ByteSeq::from_public_slice(&random_byte_vec(aad_l));
 
         // Generate ciphertext and mac
         let (cipher, mac) = encrypt_aes256(k, nonce, &aad, &msg);

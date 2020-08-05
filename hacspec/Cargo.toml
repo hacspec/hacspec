@@ -7,12 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rand = "0.7"
 num = "0.2"
 
 secret_integers = { path = "../secret-integers" }
 abstract_integers = { path = "../abstract-integers" }
 hacspec_attributes = { path = "../attributes",  optional = true }
+
+[dev-dependencies]
+rand = "0.7"
 
 [features]
 use_attributes = ["hacspec_attributes", "hacspec_attributes/print_attributes"]
