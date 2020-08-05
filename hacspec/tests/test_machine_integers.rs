@@ -36,6 +36,8 @@ macro_rules! test_signed_public_macro {
             }
             Err(_) => (),
         }
+        assert_eq!((6 as $t).pow_mod(8, 127), 41);
+
         // assert_eq!((2 as $t).pow_self(5), 32);
         // ...
     };
@@ -65,45 +67,41 @@ macro_rules! test_secret_macro {
 
         // Comparison functions returning bool.
         assert_eq!(a_t.equal(b_t), a == b);
-        let expected_gt = if get_expected(">", &a, &b) == "0x0" { false } else { true };
+        let expected_gt = if get_expected(">", &a, &b) == "0x0" {
+            false
+        } else {
+            true
+        };
         assert_eq!(a_t.greater_than(b_t), expected_gt);
-        let expected_gte = if get_expected(">=", &a, &b) == "0x0" { false } else { true };
+        let expected_gte = if get_expected(">=", &a, &b) == "0x0" {
+            false
+        } else {
+            true
+        };
         assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
-        let expected_lt = if get_expected("<", &a, &b) == "0x0" { false } else { true };
+        let expected_lt = if get_expected("<", &a, &b) == "0x0" {
+            false
+        } else {
+            true
+        };
         assert_eq!(a_t.less_than(b_t), expected_lt);
-        let expected_lte = if get_expected("<=", &a, &b) == "0x0" { false } else { true };
+        let expected_lte = if get_expected("<=", &a, &b) == "0x0" {
+            false
+        } else {
+            true
+        };
         assert_eq!(a_t.less_than_or_equal(b_t), expected_lte);
 
         // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-        let expected = if a == b {
-            $true_val
-        } else {
-            0
-        };
+        let expected = if a == b { $true_val } else { 0 };
         assert_eq!(a_t.equal_bm(b_t).declassify(), expected);
-        let expected = if expected_gt {
-            $true_val
-        } else {
-            0
-        };
+        let expected = if expected_gt { $true_val } else { 0 };
         assert_eq!(a_t.greater_than_bm(b_t).declassify(), expected);
-        let expected = if expected_gte {
-            $true_val
-        } else {
-            0
-        };
+        let expected = if expected_gte { $true_val } else { 0 };
         assert_eq!(a_t.greater_than_or_equal_bm(b_t).declassify(), expected);
-        let expected = if expected_lt {
-            $true_val
-        } else {
-            0
-        };
+        let expected = if expected_lt { $true_val } else { 0 };
         assert_eq!(a_t.less_than_bm(b_t).declassify(), expected);
-        let expected = if expected_lte {
-            $true_val
-        } else {
-            0
-        };
+        let expected = if expected_lte { $true_val } else { 0 };
         assert_eq!(a_t.less_than_or_equal_bm(b_t).declassify(), expected);
     };
 }
@@ -139,44 +137,40 @@ fn test_secret_testing() {
 
     // Comparison functions returning bool.
     assert_eq!(a_t.equal(b_t), a == b);
-    let expected_gt = if get_expected(">", &a, &b) == "0x0" { false } else { true };
+    let expected_gt = if get_expected(">", &a, &b) == "0x0" {
+        false
+    } else {
+        true
+    };
     assert_eq!(a_t.greater_than(b_t), expected_gt);
-    let expected_gte = if get_expected(">=", &a, &b) == "0x0" { false } else { true };
+    let expected_gte = if get_expected(">=", &a, &b) == "0x0" {
+        false
+    } else {
+        true
+    };
     assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
-    let expected_lt = if get_expected("<", &a, &b) == "0x0" { false } else { true };
+    let expected_lt = if get_expected("<", &a, &b) == "0x0" {
+        false
+    } else {
+        true
+    };
     assert_eq!(a_t.less_than(b_t), expected_lt);
-    let expected_lte = if get_expected("<=", &a, &b) == "0x0" { false } else { true };
+    let expected_lte = if get_expected("<=", &a, &b) == "0x0" {
+        false
+    } else {
+        true
+    };
     assert_eq!(a_t.less_than_or_equal(b_t), expected_lte);
 
     // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-    let expected = if a == b {
-        -1
-    } else {
-        0
-    };
+    let expected = if a == b { -1 } else { 0 };
     assert_eq!(a_t.equal_bm(b_t).declassify(), expected);
-    let expected = if expected_gt {
-        -1
-    } else {
-        0
-    };
+    let expected = if expected_gt { -1 } else { 0 };
     assert_eq!(a_t.greater_than_bm(b_t).declassify(), expected);
-    let expected = if expected_gte {
-        -1
-    } else {
-        0
-    };
+    let expected = if expected_gte { -1 } else { 0 };
     assert_eq!(a_t.greater_than_or_equal_bm(b_t).declassify(), expected);
-    let expected = if expected_lt {
-        -1
-    } else {
-        0
-    };
+    let expected = if expected_lt { -1 } else { 0 };
     assert_eq!(a_t.less_than_bm(b_t).declassify(), expected);
-    let expected = if expected_lte {
-        -1
-    } else {
-        0
-    };
+    let expected = if expected_lte { -1 } else { 0 };
     assert_eq!(a_t.less_than_or_equal_bm(b_t).declassify(), expected);
 }

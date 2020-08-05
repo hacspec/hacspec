@@ -1,6 +1,6 @@
 use hacspec::prelude::*;
-/// Struct to decide Ntru_prime_version
-pub struct Ntru_prime_version {
+/// Struct to decide Ntru prime version
+pub struct NtruPrimeVersion {
     pub p: usize,
     pub q: i128,
     pub w: usize,
@@ -29,7 +29,7 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
 }
 
 /// r is the plaintext, h is the public key
-pub fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &Ntru_prime_version) -> Seq<i128> {
+pub fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &NtruPrimeVersion) -> Seq<i128> {
     let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q);
     round_to_3(&pre, n_v.q)
 }
@@ -37,17 +37,17 @@ pub fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &Ntru_prime_version) -> Seq<
 pub fn decryption(
     c: Seq<i128>,
     key: (Seq<i128>, Seq<i128>),
-    n_v: &Ntru_prime_version,
+    n_v: &NtruPrimeVersion,
 ) -> Seq<i128> {
     let f = key.0;
     let v = key.1;
     // calculate 3*f and 3*f*c
     let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q);
-    let mut f_3_c = convert_u128_to_i128(R(
+    let mut f_3_c = poly_to_ring(
         &n_v.irr,
         &add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q), n_v.q),
         n_v.q,
-    ));
+    );
     // view coefficients as values between -(q-1/2) and (q-1/2)
 
     let q_12 = (n_v.q - 1) / 2;
@@ -61,7 +61,7 @@ pub fn decryption(
     for i in 0..e.len() {
         e[i] = f_3_c[i] % 3;
     }
-    e = convert_u128_to_i128(make_positive(&e, 3));
+    e = make_positive(&e, 3);
     // calculate e * v in R
     let mut r = mul_poly_irr(&e, &v, &n_v.irr, 3);
     // to R_short

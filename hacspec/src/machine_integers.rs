@@ -78,18 +78,11 @@ macro_rules! implement_public_signed_mi {
             }
             /// `(self ^ exp) % n`
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
-                if _exp == 0 {
-                    return 1;
-                }
-                let mut p = self.pow_mod((_exp / 2), _n) % _n;
-                p = (p * p) % _n;
-
-                if _exp % 2 == 0 {
-                    return p;
-                }
-
-                return (p * self) % _n;
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                let r_big = BigInt::from(self).modpow(&BigInt::from(exp), &BigInt::from(n));
+                debug_assert!(r_big <= BigInt::from(Self::max_val()));
+                let r_string = r_big.to_string();
+                r_string.parse().unwrap()
             }
             /// `self % n`
             #[cfg_attr(feature = "use_attributes", library(hacspec))]

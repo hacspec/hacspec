@@ -13,21 +13,21 @@ pub fn set_irr(p: usize) -> Seq<i128> {
 macro_rules! ntru_v {
     ($t:expr) => {{
         if $t == 0 {
-            Ntru_prime_version {
+            NtruPrimeVersion {
                 p: 761,
                 q: 4591,
                 w: 286,
                 irr: set_irr(761),
             }
         } else if $t == 1 {
-            Ntru_prime_version {
+            NtruPrimeVersion {
                 p: 653,
                 q: 4621,
                 w: 288,
                 irr: set_irr(653),
             }
         } else {
-            Ntru_prime_version {
+            NtruPrimeVersion {
                 p: 857,
                 q: 5167,
                 w: 322,
@@ -63,7 +63,7 @@ fn create_rand_poly(w: usize, h_deg: usize) -> Seq<i128> {
 }
 
 fn create_invertable_poly(
-    n: &Ntru_prime_version,
+    n: &NtruPrimeVersion,
     modulus: i128,
 ) -> (Seq<i128>, Result<Seq<i128>, &'static str>) {
     let f: Seq<i128> = create_rand_poly(n.w, n.p);
@@ -71,7 +71,7 @@ fn create_invertable_poly(
     (f, x)
 }
 
-fn key_gen(n_v: &Ntru_prime_version) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
+fn key_gen(n_v: &NtruPrimeVersion) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
     let mut poly_g = create_invertable_poly(n_v, 3);
     // Nearly a probability of 1 to find an invertable polynom
     let mut g_inv: Seq<i128> = Seq::new(n_v.p);
@@ -214,7 +214,7 @@ fn test_round() {
 }
 #[test]
 fn test_encryption_decryption() {
-    let n_v = Ntru_prime_version {
+    let n_v = NtruPrimeVersion {
         p: 761,
         q: 4591,
         w: 286,
