@@ -700,13 +700,21 @@ fn typecheck_statement(
                     .as_str(),
                 ),
             }
-            let (new_b1, var_context_b1) =
-                typecheck_block(sess, b1.clone(), fn_context, &var_context)?;
+            let (new_b1, var_context_b1) = typecheck_block(
+                sess,
+                (b1.clone(), b1_span.clone()),
+                fn_context,
+                &var_context,
+            )?;
             let (new_b2, var_context_b2) = match b2 {
                 None => (None, var_context.clone()),
                 Some((b2, b2_span)) => {
-                    let (new_b2, var_context_b2) =
-                        typecheck_block(sess, b2.clone(), fn_context, &var_context)?;
+                    let (new_b2, var_context_b2) = typecheck_block(
+                        sess,
+                        (b2.clone(), b2_span.clone()),
+                        fn_context,
+                        &var_context,
+                    )?;
                     (Some((new_b2, *b2_span)), var_context_b2)
                 }
             };
@@ -801,7 +809,8 @@ fn typecheck_statement(
                 x.clone(),
                 ((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
             );
-            let (new_b, var_context) = typecheck_block(sess, b.clone(), fn_context, &var_context)?;
+            let (new_b, var_context) =
+                typecheck_block(sess, (b.clone(), b_span.clone()), fn_context, &var_context)?;
             let mutated_vars = new_b.mutated_vars.clone().unwrap();
             Ok((
                 Statement::ForLoop(
@@ -820,7 +829,7 @@ fn typecheck_statement(
 
 fn typecheck_block(
     sess: &Session,
-    b: Block,
+    (b, b_span): Spanned<Block>,
     fn_context: &FnContext,
     original_var_context: &VarContext,
 ) -> TypecheckingResult<(Block, VarContext)> {
@@ -849,10 +858,25 @@ fn typecheck_block(
             return_typ = Some(stmt_typ)
         }
     }
+    let mut_tuple = Some(Box::new(Statement::ReturnExp(Expression::Tuple(
+        mutated_vars
+            .iter()
+            .map(|i| {
+                (
+                    Expression::Named(Path {
+                        location: vec![(i.clone(), b_span.clone())],
+                        arg: None,
+                    }),
+                    b_span.clone(),
+                )
+            })
+            .collect(),
+    ))));
     Ok((
         Block {
             stmts: new_stmts,
-            mutated_vars: Some(mutated_vars.into_iter().collect()),
+            mutated_vars: Some(mutated_vars),
+            mutated_vars_tuple: mut_tuple,
             return_typ,
         },
         var_context.intersection(original_var_context.clone()),
@@ -877,7 +901,7 @@ fn typecheck_item(
                 (f.clone(), f_span),
                 sig.clone(),
                 (
-                    typecheck_block(sess, b, fn_context, &var_context)?.0,
+                    typecheck_block(sess, (b, b_span), fn_context, &var_context)?.0,
                     b_span,
                 ),
             );

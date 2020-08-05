@@ -236,7 +236,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .append(RcDoc::as_string("begin"))
             .append(RcDoc::line())
             .group()
-            .append(translate_block(b1))
+            .append(translate_block(b1, false))
             .group()
             .nest(2)
             .append(RcDoc::line())
@@ -247,7 +247,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .append(RcDoc::as_string("else"))
                     .append(RcDoc::as_string("begin"))
                     .append(RcDoc::line())
-                    .append(translate_block(b2))
+                    .append(translate_block(b2, false))
                     .group()
                     .nest(2)
                     .append(RcDoc::line())
@@ -255,6 +255,11 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             })
             .append(RcDoc::as_string(";")),
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
+            let b_orig = b;
+            let added_stmt = match &b_orig.mutated_vars_tuple {
+                Some(s) => s.as_ref(),
+                None => panic!(), //should not happen
+            };
             let no_mut_vars = b.mutated_vars.as_ref().unwrap().len() == 0;
             (if no_mut_vars {
                 RcDoc::nil()
@@ -263,7 +268,8 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .append(RcDoc::space())
                     .append(RcDoc::as_string("("))
                     .append(RcDoc::intersperse(
-                        b.mutated_vars
+                        b_orig
+                            .mutated_vars
                             .as_ref()
                             .unwrap()
                             .iter()
@@ -295,7 +301,8 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                 RcDoc::as_string(",")
                     .append(RcDoc::space())
                     .append(RcDoc::intersperse(
-                        b.mutated_vars
+                        b_orig
+                            .mutated_vars
                             .as_ref()
                             .unwrap()
                             .iter()
@@ -307,7 +314,9 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .append(RcDoc::space())
             .append(RcDoc::as_string("->"))
             .append(RcDoc::line_())
-            .append(translate_block(b))
+            .append(translate_block(b_orig, true))
+            .append(RcDoc::hardline())
+            .append(translate_statement(added_stmt))
             .append(RcDoc::as_string(")"))
             .group()
             .nest(2)
@@ -317,7 +326,8 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                 RcDoc::space()
                     .append(RcDoc::as_string("("))
                     .append(RcDoc::intersperse(
-                        b.mutated_vars
+                        b_orig
+                            .mutated_vars
                             .as_ref()
                             .unwrap()
                             .iter()
@@ -333,17 +343,17 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
     .group()
 }
 
-fn translate_block(b: &Block) -> RcDoc<()> {
+fn translate_block(b: &Block, omit_extra_unit: bool) -> RcDoc<()> {
     RcDoc::intersperse(
         b.stmts.iter().map(|(i, _)| translate_statement(i).group()),
         RcDoc::hardline(),
     )
-    .append(match b.return_typ {
-        None => panic!(), // should not happen,
-        Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => {
+    .append(match (&b.return_typ, omit_extra_unit) {
+        (None, _) => panic!(), // should not happen,
+        (Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))), false) => {
             RcDoc::hardline().append(RcDoc::as_string("()"))
         }
-        Some(_) => RcDoc::nil(),
+        (Some(_), _) => RcDoc::nil(),
     })
 }
 
@@ -374,7 +384,7 @@ fn translate_item(i: &Item) -> RcDoc<()> {
             .append(RcDoc::as_string("="))
             .group()
             .append(RcDoc::line())
-            .append(translate_block(b))
+            .append(translate_block(b, false))
             .append(if let BaseTyp::Unit = sig.ret.0 {
                 RcDoc::hardline().append(RcDoc::as_string("()"))
             } else {

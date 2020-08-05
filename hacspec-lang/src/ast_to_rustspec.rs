@@ -692,6 +692,7 @@ fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<
             // We initialize these fields to None as they are
             // to be filled by the typechecker
             mutated_vars: None,
+            mutated_vars_tuple: None,
         },
         b.span,
     ))
@@ -777,6 +778,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                         stmts: Vec::new(),
                         return_typ: None,
                         mutated_vars: None,
+                        mutated_vars_tuple: None,
                     },
                     i.span,
                 ),

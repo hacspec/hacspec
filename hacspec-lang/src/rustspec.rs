@@ -226,6 +226,7 @@ pub enum Statement {
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated_vars: Option<VarSet>,
+    pub mutated_vars_tuple: Option<Box<Statement>>,
     pub return_typ: Option<Typ>,
 }
 
