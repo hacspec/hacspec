@@ -1,9 +1,43 @@
+use core::cmp::PartialEq;
+use core::hash::{Hash, Hasher};
 use itertools::Itertools;
-use rustc_ast::ast::{BinOpKind, Mutability};
-use rustc_span::{symbol::Ident, Span};
+use rustc_ast::ast::BinOpKind;
+use rustc_span::Span;
 use std::fmt;
 
 pub type Spanned<T> = (T, Span);
+
+#[derive(Clone)]
+pub struct Ident {
+    pub id: u32,
+    pub name: String,
+}
+
+impl Hash for Ident {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
+impl PartialEq for Ident {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for Ident {}
+
+impl fmt::Display for Ident {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+impl fmt::Debug for Ident {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}[{}]", self.name, self.id)
+    }
+}
 
 #[derive(Clone, Hash)]
 pub enum Borrowing {
@@ -24,9 +58,15 @@ impl fmt::Display for Borrowing {
     }
 }
 
+impl fmt::Debug for Borrowing {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Path {
-    pub location: Vec<Ident>,
+    pub location: Vec<Spanned<Ident>>,
     pub arg: Option<Box<BaseTyp>>,
 }
 
@@ -37,13 +77,19 @@ impl fmt::Display for Path {
             "{}{}",
             self.location
                 .iter()
-                .map(|loc| format!("{}", loc))
+                .map(|(loc, _)| format!("{}", loc))
                 .format("."),
             match &self.arg {
                 None => String::new(),
                 Some(arg) => format!("<{}>", arg),
             }
         )
+    }
+}
+
+impl fmt::Debug for Path {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
     }
 }
 
@@ -99,6 +145,13 @@ impl fmt::Display for BaseTyp {
     }
 }
 
+
+impl fmt::Debug for BaseTyp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
 #[derive(Clone)]
@@ -147,7 +200,7 @@ pub enum Expression {
 
 #[derive(Clone)]
 pub enum Pattern {
-    IdentPat(Ident, Mutability),
+    IdentPat(Ident),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
 }
@@ -155,15 +208,15 @@ pub enum Pattern {
 #[derive(Clone)]
 pub enum Statement {
     LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
-    Reassignment(Ident, Spanned<Expression>),
+    Reassignment(Spanned<Ident>, Spanned<Expression>),
     Conditional(Spanned<Expression>, Spanned<Block>, Option<Spanned<Block>>),
     ForLoop(
-        Ident,
+        Spanned<Ident>,
         Spanned<Expression>,
         Spanned<Expression>,
         Spanned<Block>,
     ),
-    ArrayUpdate(Ident, Spanned<Expression>, Spanned<Expression>),
+    ArrayUpdate(Spanned<Ident>, Spanned<Expression>, Spanned<Expression>),
     ReturnExp(Expression),
 }
 
@@ -182,7 +235,7 @@ pub struct FuncSig {
 
 #[derive(Clone)]
 pub enum Item {
-    FnDecl(Ident, FuncSig, Spanned<Block>),
+    FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
     Use(Path),
 }
 

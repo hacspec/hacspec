@@ -2,25 +2,22 @@ use crate::rustspec::*;
 use pretty::RcDoc;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
-use rustc_span::symbol::Ident;
 use std::fs::File;
 use std::io::Write;
 use std::path;
 
 fn translate_ident(x: &Ident) -> RcDoc<()> {
-    RcDoc::as_string(x.name.to_ident_string())
+    RcDoc::as_string(x.name.clone())
 }
 
 fn translate_path(p: &Path) -> RcDoc<()> {
     RcDoc::intersperse(
-        p.location.iter().map(|x| translate_ident(x)),
+        p.location.iter().map(|(x, _)| translate_ident(x)),
         RcDoc::as_string("_"),
-    )
-    .append(match &p.arg {
+    ).append(match &p.arg {
         None => RcDoc::nil(),
         Some(arg) => RcDoc::space().append(translate_base_typ(&arg)),
-    })
-    .group()
+    }).group()
 }
 
 fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
@@ -76,14 +73,13 @@ fn translate_literal(lit: &Literal) -> RcDoc<()> {
 
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
-        Pattern::IdentPat(x, _) => translate_ident(x),
+        Pattern::IdentPat(x) => translate_ident(x),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => RcDoc::as_string("(")
             .append(RcDoc::intersperse(
                 pats.iter().map(|(pat, _)| translate_pattern(pat)),
                 RcDoc::as_string(",").append(RcDoc::space()),
-            ))
-            .append(RcDoc::as_string(")")),
+            )).append(RcDoc::as_string(")")),
     }
 }
 
@@ -141,8 +137,7 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
             .append(RcDoc::intersperse(
                 es.iter().map(|(e, _)| translate_expression(e)),
                 RcDoc::as_string(",").append(RcDoc::space()),
-            ))
-            .append(RcDoc::as_string(")")),
+            )).append(RcDoc::as_string(")")),
         Expression::Named(p) => translate_path(p),
         Expression::FuncCall((f, _), args) => translate_path(f).append(if args.len() > 0 {
             RcDoc::concat(args.iter().map(|(arg, _)| {
@@ -159,8 +154,7 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
             .append({
                 let sel = &sel.0;
                 translate_expression(sel)
-            })
-            .append(RcDoc::concat(args.iter().map(|(arg, _)| {
+            }).append(RcDoc::concat(args.iter().map(|(arg, _)| {
                 RcDoc::space()
                     .append(RcDoc::as_string("("))
                     .append(translate_expression(arg))
@@ -193,14 +187,13 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .append(RcDoc::as_string(":"))
                     .append(RcDoc::space())
                     .append(translate_typ(tau)),
-            })
-            .append(RcDoc::space())
+            }).append(RcDoc::space())
             .append(RcDoc::as_string("="))
             .append(RcDoc::space())
             .append(translate_expression(expr).group())
             .append(RcDoc::space())
             .append(RcDoc::as_string("in")),
-        Statement::Reassignment(x, (e1, _)) => RcDoc::as_string("let")
+        Statement::Reassignment((x, _), (e1, _)) => RcDoc::as_string("let")
             .append(RcDoc::space())
             .append(translate_ident(x))
             .append(RcDoc::space())
@@ -209,7 +202,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .append(translate_expression(e1))
             .append(RcDoc::space())
             .append(RcDoc::as_string("in")),
-        Statement::ArrayUpdate(x, (e1, _), (e2, _)) => RcDoc::as_string("let")
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _)) => RcDoc::as_string("let")
             .append(RcDoc::space())
             .append(translate_ident(x))
             .append(RcDoc::space())
@@ -254,11 +247,9 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .nest(2)
                     .append(RcDoc::line())
                     .append(RcDoc::as_string("end")),
-            })
-            .append(RcDoc::as_string(";")),
+            }).append(RcDoc::as_string(";")),
         Statement::ForLoop(_, _, _, _) => unimplemented!(),
-    }
-    .group()
+    }.group()
 }
 
 fn translate_block(b: &Block) -> RcDoc<()> {
@@ -270,7 +261,7 @@ fn translate_block(b: &Block) -> RcDoc<()> {
 
 fn translate_item(i: &Item) -> RcDoc<()> {
     match i {
-        Item::FnDecl(f, sig, (b, _)) => RcDoc::as_string("let")
+        Item::FnDecl((f, _), sig, (b, _)) => RcDoc::as_string("let")
             .append(RcDoc::space())
             .append(translate_ident(f))
             .append(RcDoc::line())
@@ -290,8 +281,7 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                 )
             } else {
                 RcDoc::as_string("()")
-            })
-            .append(RcDoc::space())
+            }).append(RcDoc::space())
             .append(RcDoc::as_string("="))
             .group()
             .append(RcDoc::line())
@@ -300,8 +290,7 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                 RcDoc::hardline().append(RcDoc::as_string("()"))
             } else {
                 RcDoc::nil()
-            })
-            .nest(2)
+            }).nest(2)
             .group(),
         Item::Use(_) => RcDoc::nil(),
     }

@@ -6,7 +6,7 @@ use rustc_ast::ast::{
     UseTreeKind,
 };
 use rustc_session::Session;
-use rustc_span::{symbol::Ident, Span};
+use rustc_span::{symbol, Span};
 
 use crate::rustspec::*;
 
@@ -18,6 +18,16 @@ fn check_vec<T>(v: Vec<TranslationResult<T>>) -> TranslationResult<Vec<T>> {
     } else {
         Err(())
     }
+}
+
+fn translate_ident(i: &symbol::Ident) -> Spanned<Ident> {
+    (
+        Ident {
+            id: i.name.as_u32(),
+            name: i.name.to_ident_string(),
+        },
+        i.span,
+    )
 }
 
 fn translate_type_arg(
@@ -76,7 +86,7 @@ fn translate_type_arg(
 
 // TODO: translate paths into base types
 fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
-    let location: Vec<TranslationResult<Ident>> = path
+    let location: Vec<TranslationResult<Spanned<Ident>>> = path
         .segments
         .iter()
         .enumerate()
@@ -91,7 +101,7 @@ fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
                     return Err(());
                 }
             };
-            Ok(segment.ident)
+            Ok(translate_ident(&segment.ident))
         })
         .collect();
     let location = check_vec(location)?;
@@ -266,7 +276,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 .first()
                 .map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
             let method_name = match method_name.args {
-                None => Ok(method_name.ident),
+                None => Ok(translate_ident(&method_name.ident)),
                 Some(_) => {
                     sess.span_err(*span, "method type arguments not allowed in Rustspec");
                     Err(())
@@ -278,7 +288,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 ExprTranslationResult::TransExpr(Expression::MethodCall(
                     method_arg,
                     None,
-                    (method_name, *span),
+                    method_name,
                     rest_args_final,
                 )),
                 e.span,
@@ -356,7 +366,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 ExprKind::Path(None, path) => match &path.segments.as_slice() {
                     [var] => match &var.args {
                         None => {
-                            let id = var.ident;
+                            let id = translate_ident(&var.ident);
 
                             match r_e {
                                 (ExprTranslationResult::TransStmt(_), span) => {
@@ -395,7 +405,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                         ExprKind::Path(None, path) => match path.segments.as_slice() {
                             [var] => match &var.args {
                                 None => {
-                                    let id = var.ident;
+                                    let id = translate_ident(&var.ident);
                                     match r_e {
                                         (ExprTranslationResult::TransStmt(_), span) => {
                                             sess.span_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
@@ -469,7 +479,9 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
         }
         ExprKind::ForLoop(pat, range, b, _) => {
             let id = match &pat.kind {
-                PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => Ok(*id),
+                PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
+                    Ok(translate_ident(id))
+                }
                 _ => {
                     sess.span_err(
                         pat.span,
@@ -563,8 +575,8 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
 
 fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pattern>> {
     match &pat.kind {
-        PatKind::Ident(BindingMode::ByValue(mutab), id, None) => {
-            Ok((Pattern::IdentPat(*id, *mutab), pat.span))
+        PatKind::Ident(BindingMode::ByValue(_), id, None) => {
+            Ok((Pattern::IdentPat(translate_ident(id).0), pat.span))
         }
         PatKind::Tuple(pats) => {
             let pats = pats
@@ -724,7 +736,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                     // For now, we don't allow pattern destructuring in functions signatures
                     let id = match param.pat.kind {
                         PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
-                            Ok((id, param.pat.span))
+                            Ok(translate_ident(&id))
                         }
                         _ => {
                             sess.span_err(
@@ -765,7 +777,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                 args: fn_inputs,
                 ret: fn_output,
             };
-            Ok(Item::FnDecl(i.ident, fn_sig, fn_body))
+            Ok(Item::FnDecl(translate_ident(&i.ident), fn_sig, fn_body))
         }
         ItemKind::Use(ref tree) => match tree.kind {
             UseTreeKind::Glob => Ok(Item::Use(translate_path(sess, &tree.prefix)?)),

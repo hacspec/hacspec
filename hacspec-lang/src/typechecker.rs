@@ -1,7 +1,6 @@
 use crate::rustspec::*;
 use im::{HashMap, HashSet};
 use rustc_session::Session;
-use rustc_span::symbol::Ident;
 
 fn is_copy(t: &BaseTyp) -> bool {
     match t {
@@ -141,15 +140,15 @@ fn typecheck_expression(
         }
         Expression::Named(path) => match (path.arg.as_ref(), path.location.len()) {
             (None, 1) => {
-                let id = path.location[0];
-                match var_context.get(&id) {
+                let (id, _) = &path.location[0];
+                match var_context.get(id) {
                     None => {
                         sess.span_err(*span, format!("the variable {} is unknown", id).as_str());
                         Err(())
                     }
                     Some(t) => {
                         // This is where linearity kicks in
-                        if let Borrowing::Borrowed = (t.0).0 {
+                        if let Borrowing::Consumed = (t.0).0 {
                             if is_copy(&(t.1).0) {
                                 Ok((t.clone(), var_context.clone()))
                             } else {
@@ -157,8 +156,7 @@ fn typecheck_expression(
                                 Ok((t.clone(), new_var_context))
                             }
                         } else {
-                            let new_var_context = var_context.without(&id);
-                            Ok((t.clone(), new_var_context))
+                            Ok((t.clone(), var_context.clone()))
                         }
                     }
                 }
@@ -336,8 +334,8 @@ fn typecheck_expression(
         }
         Expression::FuncCall((f, f_span), args) => match (f.arg.as_ref(), f.location.len()) {
             (None, 1) => {
-                let id = f.location[0];
-                let f_sig = match fn_context.get(&FnKey::Static(id)) {
+                let (id, _) = &f.location[0];
+                let f_sig = match fn_context.get(&FnKey::Static(id.clone())) {
                     None => {
                         sess.span_err(*f_span, format!("unknown function {}", f).as_str());
                         return Err(());
@@ -405,7 +403,7 @@ fn typecheck_expression(
             let (sel_typ, new_var_context) =
                 typecheck_expression(sess, &sel, fn_context, &var_context)?;
             var_context = new_var_context;
-            let f_sig = match fn_context.get(&FnKey::Method((sel_typ.1).0.clone(), *f)) {
+            let f_sig = match fn_context.get(&FnKey::Method((sel_typ.1).0.clone(), f.clone())) {
                 None => {
                     sess.span_err(
                         *f_span,
@@ -503,7 +501,10 @@ fn typecheck_pattern(
             Err(())
         }
         (Pattern::WildCard, _) => Ok(HashMap::new()),
-        (Pattern::IdentPat(x, _), _) => Ok(HashMap::unit(*x, (borrowing_typ.clone(), typ.clone()))),
+        (Pattern::IdentPat(x), _) => Ok(HashMap::unit(
+            x.clone(),
+            (borrowing_typ.clone(), typ.clone()),
+        )),
     }
 }
 
@@ -590,16 +591,16 @@ fn typecheck_item(
     fn_context: &FnContext,
 ) -> TypecheckingResult<(Item, FnContext)> {
     match i {
-        Item::FnDecl(f, sig, (b, b_span)) => {
+        Item::FnDecl((f, f_span), sig, (b, b_span)) => {
             let var_context = HashMap::new();
             let var_context = sig
                 .args
                 .iter()
                 .fold(var_context, |var_context, ((x, _), (t, _))| {
-                    var_context.update(*x, t.clone())
+                    var_context.update(x.clone(), t.clone())
                 });
             let out = Item::FnDecl(
-                f,
+                (f.clone(), f_span),
                 sig.clone(),
                 (typecheck_block(sess, b, fn_context, &var_context)?, b_span),
             );
