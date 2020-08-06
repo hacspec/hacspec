@@ -56,6 +56,7 @@ fn translate_typ((_, (tau, _)): &Typ) -> RcDoc<()> {
 
 fn translate_literal(lit: &Literal) -> RcDoc<()> {
     match lit {
+        Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
         Literal::Int128(x) => RcDoc::as_string(format!("Int128.uint_to_t {}", x)),
@@ -228,8 +229,8 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .append(RcDoc::as_string("in")),
         Statement::ReturnExp(e1) => translate_expression(e1),
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
-            let (mutated, mutated_tuple) = mutated.as_ref().unwrap();
-            let no_mut_vars = mutated.len() == 0;
+            let mutated_info = mutated.as_ref().unwrap().as_ref();
+            let no_mut_vars = mutated_info.vars.len() == 0;
             (if no_mut_vars {
                 RcDoc::nil()
             } else {
@@ -237,7 +238,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .append(RcDoc::space())
                     .append(RcDoc::as_string("("))
                     .append(RcDoc::intersperse(
-                        mutated.iter().map(|i| translate_ident(i)),
+                        mutated_info.vars.iter().map(|i| translate_ident(i)),
                         RcDoc::as_string(",").append(RcDoc::space()),
                     ))
                     .append(RcDoc::as_string(")"))
@@ -256,7 +257,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .group()
             .append(translate_block(b1, true))
             .append(RcDoc::hardline())
-            .append(translate_statement(mutated_tuple))
+            .append(translate_statement(&mutated_info.stmt))
             .group()
             .nest(2)
             .append(RcDoc::line())
@@ -270,7 +271,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .append(RcDoc::line())
                     .append(translate_block(b2, true))
                     .append(RcDoc::hardline())
-                    .append(translate_statement(mutated_tuple))
+                    .append(translate_statement(&mutated_info.stmt))
                     .group()
                     .nest(2)
                     .append(RcDoc::line())
@@ -283,12 +284,8 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             })
         }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
-            let b_orig = b;
-            let added_stmt = match &b_orig.mutated_vars_tuple {
-                Some(s) => s.as_ref(),
-                None => panic!(), //should not happen
-            };
-            let no_mut_vars = b.mutated_vars.as_ref().unwrap().len() == 0;
+            let mutated_info = b.mutated.as_ref().unwrap().as_ref();
+            let no_mut_vars = mutated_info.vars.len() == 0;
             (if no_mut_vars {
                 RcDoc::nil()
             } else {
@@ -296,12 +293,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .append(RcDoc::space())
                     .append(RcDoc::as_string("("))
                     .append(RcDoc::intersperse(
-                        b_orig
-                            .mutated_vars
-                            .as_ref()
-                            .unwrap()
-                            .iter()
-                            .map(|i| translate_ident(i)),
+                        mutated_info.vars.iter().map(|i| translate_ident(i)),
                         RcDoc::as_string(",").append(RcDoc::space()),
                     ))
                     .append(RcDoc::as_string(")"))
@@ -329,12 +321,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                 RcDoc::as_string(",")
                     .append(RcDoc::space())
                     .append(RcDoc::intersperse(
-                        b_orig
-                            .mutated_vars
-                            .as_ref()
-                            .unwrap()
-                            .iter()
-                            .map(|i| translate_ident(i)),
+                        mutated_info.vars.iter().map(|i| translate_ident(i)),
                         RcDoc::as_string(",").append(RcDoc::space()),
                     ))
             })
@@ -342,9 +329,9 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .append(RcDoc::space())
             .append(RcDoc::as_string("->"))
             .append(RcDoc::line_())
-            .append(translate_block(b_orig, true))
+            .append(translate_block(b, true))
             .append(RcDoc::hardline())
-            .append(translate_statement(added_stmt))
+            .append(translate_statement(&mutated_info.stmt))
             .append(RcDoc::as_string(")"))
             .group()
             .nest(2)
@@ -354,12 +341,7 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                 RcDoc::space()
                     .append(RcDoc::as_string("("))
                     .append(RcDoc::intersperse(
-                        b_orig
-                            .mutated_vars
-                            .as_ref()
-                            .unwrap()
-                            .iter()
-                            .map(|i| translate_ident(i)),
+                        mutated_info.vars.iter().map(|i| translate_ident(i)),
                         RcDoc::as_string(",").append(RcDoc::space()),
                     ))
                     .append(RcDoc::as_string(")"))

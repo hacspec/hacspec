@@ -158,6 +158,7 @@ pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
 #[derive(Clone)]
 pub enum Literal {
+    Unit,
     Bool(bool),
     Int128(i128),
     UInt128(u128),
@@ -208,6 +209,14 @@ pub enum Pattern {
 }
 
 #[derive(Clone)]
+pub struct MutatedInfo {
+    pub vars: VarSet,
+    pub stmt: Statement,
+}
+
+pub type Fillable<T> = Option<T>;
+
+#[derive(Clone)]
 pub enum Statement {
     LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
     Reassignment(Spanned<Ident>, Spanned<Expression>),
@@ -215,7 +224,7 @@ pub enum Statement {
         Spanned<Expression>,
         Spanned<Block>,
         Option<Spanned<Block>>,
-        Option<(VarSet, Box<Statement>)>, // Vars mutated by both branches of the conditionnal
+        Fillable<Box<MutatedInfo>>,
     ),
     ForLoop(
         Spanned<Ident>,
@@ -230,9 +239,8 @@ pub enum Statement {
 #[derive(Clone)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
-    pub mutated_vars: Option<VarSet>,
-    pub mutated_vars_tuple: Option<Box<Statement>>,
-    pub return_typ: Option<Typ>,
+    pub mutated: Fillable<Box<MutatedInfo>>,
+    pub return_typ: Fillable<Typ>,
 }
 
 #[derive(Clone)]

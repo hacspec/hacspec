@@ -2,6 +2,7 @@ use crate::rustspec::*;
 use im::{HashMap, HashSet};
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
+use rustc_span::Span;
 
 fn is_copy(t: &BaseTyp) -> bool {
     match t {
@@ -224,6 +225,13 @@ fn typecheck_expression(
         }
         Expression::Unary(_, e1) => typecheck_expression(sess, e1, fn_context, var_context),
         Expression::Lit(lit) => match lit {
+            Literal::Unit => Ok((
+                (
+                    (Borrowing::Consumed, span.clone()),
+                    (BaseTyp::Unit, span.clone()),
+                ),
+                var_context.clone(),
+            )),
             Literal::Bool(_) => Ok((
                 (
                     (Borrowing::Consumed, span.clone()),
@@ -556,6 +564,26 @@ fn typecheck_pattern(
     }
 }
 
+fn var_set_to_tuple(vars: &VarSet, span: &Span) -> Statement {
+    Statement::ReturnExp(if vars.len() > 0 {
+        Expression::Tuple(
+            vars.iter()
+                .map(|i| {
+                    (
+                        Expression::Named(Path {
+                            location: vec![(i.clone(), span.clone())],
+                            arg: None,
+                        }),
+                        span.clone(),
+                    )
+                })
+                .collect(),
+        )
+    } else {
+        Expression::Lit(Literal::Unit)
+    })
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -750,37 +778,27 @@ fn typecheck_statement(
                     };
                 }
             }
-            let new_mutated = match &new_b1.mutated_vars {
+            let new_mutated = match &new_b1.mutated {
                 None => HashSet::new(),
-                Some(m) => m.clone(),
+                Some(m) => m.vars.clone(),
             }
             .union(match &new_b2 {
                 None => HashSet::new(),
-                Some((new_b2, _)) => match &new_b2.mutated_vars {
+                Some((new_b2, _)) => match &new_b2.mutated {
                     None => HashSet::new(),
-                    Some(m) => m.clone(),
+                    Some(m) => m.vars.clone(),
                 },
             });
-            let mut_tuple = Box::new(Statement::ReturnExp(Expression::Tuple(
-                new_mutated
-                    .iter()
-                    .map(|i| {
-                        (
-                            Expression::Named(Path {
-                                location: vec![(i.clone(), s_span.clone())],
-                                arg: None,
-                            }),
-                            s_span.clone(),
-                        )
-                    })
-                    .collect(),
-            )));
+            let mut_tuple = var_set_to_tuple(&new_mutated, &s_span);
             Ok((
                 Statement::Conditional(
                     cond.clone(),
                     (new_b1, *b1_span),
                     new_b2,
-                    Some((new_mutated.clone(), mut_tuple)),
+                    Some(Box::new(MutatedInfo {
+                        vars: new_mutated.clone(),
+                        stmt: mut_tuple,
+                    })),
                 ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 original_var_context
@@ -830,7 +848,7 @@ fn typecheck_statement(
             );
             let (new_b, var_context) =
                 typecheck_block(sess, (b.clone(), b_span.clone()), fn_context, &var_context)?;
-            let mutated_vars = new_b.mutated_vars.clone().unwrap();
+            let mutated_vars = new_b.mutated.as_ref().unwrap().as_ref().vars.clone();
             Ok((
                 Statement::ForLoop(
                     (x.clone(), *x_span),
@@ -877,25 +895,14 @@ fn typecheck_block(
             return_typ = Some(stmt_typ)
         }
     }
-    let mut_tuple = Some(Box::new(Statement::ReturnExp(Expression::Tuple(
-        mutated_vars
-            .iter()
-            .map(|i| {
-                (
-                    Expression::Named(Path {
-                        location: vec![(i.clone(), b_span.clone())],
-                        arg: None,
-                    }),
-                    b_span.clone(),
-                )
-            })
-            .collect(),
-    ))));
+    let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
     Ok((
         Block {
             stmts: new_stmts,
-            mutated_vars: Some(mutated_vars),
-            mutated_vars_tuple: mut_tuple,
+            mutated: Some(Box::new(MutatedInfo {
+                vars: mutated_vars,
+                stmt: mut_tuple,
+            })),
             return_typ,
         },
         var_context.intersection(original_var_context.clone()),

@@ -473,7 +473,9 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 },
             };
             Ok((
-                ExprTranslationResult::TransStmt(Statement::Conditional(r_cond?, r_t_e, r_f_e?, None)),
+                ExprTranslationResult::TransStmt(Statement::Conditional(
+                    r_cond?, r_t_e, r_f_e?, None,
+                )),
                 e.span,
             ))
         }
@@ -689,10 +691,9 @@ fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<
         Block {
             stmts,
             return_typ: None,
+            mutated: None,
             // We initialize these fields to None as they are
             // to be filled by the typechecker
-            mutated_vars: None,
-            mutated_vars_tuple: None,
         },
         b.span,
     ))
@@ -777,8 +778,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                     Block {
                         stmts: Vec::new(),
                         return_typ: None,
-                        mutated_vars: None,
-                        mutated_vars_tuple: None,
+                        mutated: None,
                     },
                     i.span,
                 ),
