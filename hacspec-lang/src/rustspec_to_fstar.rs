@@ -1,4 +1,5 @@
 use crate::rustspec::*;
+use core::iter::IntoIterator;
 use pretty::RcDoc;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
@@ -34,6 +35,36 @@ fn make_let_binding<'a>(
         } else {
             RcDoc::line().append(RcDoc::as_string("in"))
         })
+}
+
+fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
+    RcDoc::as_string("(")
+        .append(
+            RcDoc::line_()
+                .append(RcDoc::intersperse(
+                    args.into_iter(),
+                    RcDoc::as_string(",").append(RcDoc::line()),
+                ))
+                .group()
+                .nest(2),
+        )
+        .append(RcDoc::line_())
+        .append(RcDoc::as_string(")"))
+        .group()
+}
+
+fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
+    RcDoc::as_string("(")
+        .append(RcDoc::line_().append(e).group().nest(2))
+        .append(RcDoc::as_string(")"))
+        .group()
+}
+
+fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
+    RcDoc::as_string("begin")
+        .append(RcDoc::line().append(e).group().nest(2))
+        .append(RcDoc::line())
+        .append(RcDoc::as_string("end"))
 }
 
 fn translate_ident(x: &Ident) -> RcDoc<()> {
@@ -108,12 +139,7 @@ fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
         Pattern::IdentPat(x) => translate_ident(x),
         Pattern::WildCard => RcDoc::as_string("_"),
-        Pattern::Tuple(pats) => RcDoc::as_string("(")
-            .append(RcDoc::intersperse(
-                pats.iter().map(|(pat, _)| translate_pattern(pat)),
-                RcDoc::as_string(",").append(RcDoc::space()),
-            ))
-            .append(RcDoc::as_string(")")),
+        Pattern::Tuple(pats) => make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat))),
     }
 }
 
@@ -167,20 +193,13 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
                 .group()
         }
         Expression::Lit(lit) => translate_literal(lit),
-        Expression::Tuple(es) => RcDoc::as_string("(")
-            .append(RcDoc::intersperse(
-                es.iter().map(|(e, _)| translate_expression(e)),
-                RcDoc::as_string(",").append(RcDoc::space()),
-            ))
-            .append(RcDoc::as_string(")")),
+        Expression::Tuple(es) => make_tuple(es.into_iter().map(|(e, _)| translate_expression(&e))),
         Expression::Named(p) => translate_path(p),
         Expression::FuncCall((f, _), args) => translate_path(f).append(if args.len() > 0 {
-            RcDoc::concat(args.iter().map(|(arg, _)| {
-                RcDoc::space()
-                    .append(RcDoc::as_string("("))
-                    .append(translate_expression(arg))
-                    .append(RcDoc::as_string(")"))
-            }))
+            RcDoc::concat(
+                args.iter()
+                    .map(|(arg, _)| RcDoc::space().append(make_paren(translate_expression(arg)))),
+            )
         } else {
             RcDoc::space().append(RcDoc::as_string("()"))
         }),
@@ -191,22 +210,15 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
                 translate_expression(sel)
             })
             .append(RcDoc::concat(args.iter().map(|(arg, _)| {
-                RcDoc::space()
-                    .append(RcDoc::as_string("("))
-                    .append(translate_expression(arg))
-                    .append(RcDoc::as_string(")"))
+                RcDoc::space().append(make_paren(translate_expression(arg)))
             }))),
         Expression::ArrayIndex(x, e2) => {
             let e2 = &e2.0;
             RcDoc::as_string("array_index")
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("("))
-                .append(translate_ident(&x.0))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(translate_ident(&x.0)))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("("))
-                .append(translate_expression(e2))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(translate_expression(e2)))
         }
     }
 }
@@ -229,30 +241,16 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                 .append(RcDoc::space())
                 .append(translate_ident(x))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("("))
-                .append(translate_expression(e1))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(translate_expression(e1)))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("("))
-                .append(translate_expression(e2))
-                .append(RcDoc::as_string(")")),
+                .append(make_paren(translate_expression(e2))),
             false,
         ),
         Statement::ReturnExp(e1) => translate_expression(e1),
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
             let mutated_info = mutated.as_ref().unwrap().as_ref();
-            let no_mut_vars = mutated_info.vars.len() == 0;
             make_let_binding(
-                if no_mut_vars {
-                    RcDoc::as_string("_")
-                } else {
-                    RcDoc::as_string("(")
-                        .append(RcDoc::intersperse(
-                            mutated_info.vars.iter().map(|i| translate_ident(i)),
-                            RcDoc::as_string(",").append(RcDoc::space()),
-                        ))
-                        .append(RcDoc::as_string(")"))
-                },
+                make_tuple(mutated_info.vars.iter().map(|i| translate_ident(i))),
                 None,
                 RcDoc::as_string("if")
                     .append(RcDoc::space())
@@ -260,92 +258,50 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                     .append(RcDoc::space())
                     .append(RcDoc::as_string("then"))
                     .append(RcDoc::space())
-                    .append(RcDoc::as_string("begin"))
-                    .append(RcDoc::line())
-                    .append(translate_block(b1, true))
-                    .append(RcDoc::hardline())
-                    .append(translate_statement(&mutated_info.stmt))
-                    .group()
-                    .nest(2)
-                    .append(RcDoc::line())
-                    .append(RcDoc::as_string("end"))
+                    .append(make_begin_paren(
+                        translate_block(b1, true)
+                            .append(RcDoc::hardline())
+                            .append(translate_statement(&mutated_info.stmt)),
+                    ))
                     .append(match b2 {
                         None => RcDoc::nil(),
                         Some((b2, _)) => RcDoc::space()
                             .append(RcDoc::as_string("else"))
                             .append(RcDoc::space())
-                            .append(RcDoc::as_string("begin"))
-                            .append(RcDoc::line())
-                            .append(translate_block(b2, true))
-                            .append(RcDoc::hardline())
-                            .append(translate_statement(&mutated_info.stmt))
-                            .group()
-                            .nest(2)
-                            .append(RcDoc::line())
-                            .append(RcDoc::as_string("end")),
+                            .append(make_begin_paren(
+                                translate_block(b2, true)
+                                    .append(RcDoc::hardline())
+                                    .append(translate_statement(&mutated_info.stmt)),
+                            )),
                     }),
                 false,
             )
         }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
-            let no_mut_vars = mutated_info.vars.len() == 0;
-            let pat = if no_mut_vars {
-                RcDoc::as_string("_")
-            } else {
-                RcDoc::as_string("(")
-                    .append(RcDoc::intersperse(
-                        mutated_info.vars.iter().map(|i| translate_ident(i)),
-                        RcDoc::as_string(",").append(RcDoc::space()),
-                    ))
-                    .append(RcDoc::as_string(")"))
-            };
+            let mut_tuple = make_tuple(mutated_info.vars.iter().map(|i| translate_ident(i)));
+            let closure_tuple = make_tuple(vec![translate_ident(x), mut_tuple.clone()]);
             let loop_expr = RcDoc::as_string("foldi")
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("("))
-                .append(translate_expression(e1))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(translate_expression(e1)))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("("))
-                .append(translate_expression(e2))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(translate_expression(e2)))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(fun"))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("("))
-                .append(translate_ident(x))
-                .append(if no_mut_vars {
-                    RcDoc::nil()
-                } else {
-                    RcDoc::as_string(",")
-                        .append(RcDoc::space())
-                        .append(RcDoc::intersperse(
-                            mutated_info.vars.iter().map(|i| translate_ident(i)),
-                            RcDoc::as_string(",").append(RcDoc::space()),
-                        ))
-                })
-                .append(RcDoc::as_string(")"))
+                .append(closure_tuple)
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("->"))
-                .append(RcDoc::line_())
+                .append(RcDoc::line())
                 .append(translate_block(b, true))
                 .append(RcDoc::hardline())
                 .append(translate_statement(&mutated_info.stmt))
                 .append(RcDoc::as_string(")"))
                 .group()
                 .nest(2)
-                .append(if no_mut_vars {
-                    RcDoc::nil()
-                } else {
-                    RcDoc::space()
-                        .append(RcDoc::as_string("("))
-                        .append(RcDoc::intersperse(
-                            mutated_info.vars.iter().map(|i| translate_ident(i)),
-                            RcDoc::as_string(",").append(RcDoc::space()),
-                        ))
-                        .append(RcDoc::as_string(")"))
-                });
-            make_let_binding(pat, None, loop_expr, false)
+                .append(RcDoc::line())
+                .append(mut_tuple.clone());
+            make_let_binding(mut_tuple, None, loop_expr, false)
         }
     }
     .group()
@@ -373,14 +329,13 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                 .append(if sig.args.len() > 0 {
                     RcDoc::intersperse(
                         sig.args.iter().map(|((x, _), (tau, _))| {
-                            RcDoc::as_string("(")
-                                .append(translate_ident(x))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string(":"))
-                                .append(RcDoc::space())
-                                .append(translate_typ(tau))
-                                .append(RcDoc::as_string(")"))
-                                .group()
+                            make_paren(
+                                translate_ident(x)
+                                    .append(RcDoc::space())
+                                    .append(RcDoc::as_string(":"))
+                                    .append(RcDoc::space())
+                                    .append(translate_typ(tau)),
+                            )
                         }),
                         RcDoc::line(),
                     )
