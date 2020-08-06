@@ -685,7 +685,7 @@ fn typecheck_statement(
                 typecheck_expression(sess, &(e.clone(), s_span), fn_context, var_context)?;
             Ok((s.clone(), e_t, var_context, HashSet::new()))
         }
-        Statement::Conditional(cond, (b1, b1_span), b2) => {
+        Statement::Conditional(cond, (b1, b1_span), b2, _) => {
             let original_var_context = var_context;
             let (cond_t, var_context) = typecheck_expression(sess, &cond, fn_context, var_context)?;
             match cond_t {
@@ -761,8 +761,27 @@ fn typecheck_statement(
                     Some(m) => m.clone(),
                 },
             });
+            let mut_tuple = Box::new(Statement::ReturnExp(Expression::Tuple(
+                new_mutated
+                    .iter()
+                    .map(|i| {
+                        (
+                            Expression::Named(Path {
+                                location: vec![(i.clone(), s_span.clone())],
+                                arg: None,
+                            }),
+                            s_span.clone(),
+                        )
+                    })
+                    .collect(),
+            )));
             Ok((
-                Statement::Conditional(cond.clone(), (new_b1, *b1_span), new_b2),
+                Statement::Conditional(
+                    cond.clone(),
+                    (new_b1, *b1_span),
+                    new_b2,
+                    Some((new_mutated.clone(), mut_tuple)),
+                ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 original_var_context
                     .clone()

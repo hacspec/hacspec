@@ -211,7 +211,12 @@ pub enum Pattern {
 pub enum Statement {
     LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
     Reassignment(Spanned<Ident>, Spanned<Expression>),
-    Conditional(Spanned<Expression>, Spanned<Block>, Option<Spanned<Block>>),
+    Conditional(
+        Spanned<Expression>,
+        Spanned<Block>,
+        Option<Spanned<Block>>,
+        Option<(VarSet, Box<Statement>)>, // Vars mutated by both branches of the conditionnal
+    ),
     ForLoop(
         Spanned<Ident>,
         Spanned<Expression>,

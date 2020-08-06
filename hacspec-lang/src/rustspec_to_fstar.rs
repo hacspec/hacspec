@@ -227,7 +227,25 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .append(RcDoc::space())
             .append(RcDoc::as_string("in")),
         Statement::ReturnExp(e1) => translate_expression(e1),
-        Statement::Conditional((cond, _), (b1, _), b2) => RcDoc::as_string("if")
+        Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
+            let (mutated, mutated_tuple) = mutated.as_ref().unwrap();
+            let no_mut_vars = mutated.len() == 0;
+            (if no_mut_vars {
+                RcDoc::nil()
+            } else {
+                RcDoc::as_string("let")
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("("))
+                    .append(RcDoc::intersperse(
+                        mutated.iter().map(|i| translate_ident(i)),
+                        RcDoc::as_string(",").append(RcDoc::space()),
+                    ))
+                    .append(RcDoc::as_string(")"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("="))
+                    .append(RcDoc::space())
+            })
+            .append(RcDoc::as_string("if"))
             .append(RcDoc::space())
             .append(translate_expression(cond))
             .append(RcDoc::space())
@@ -236,7 +254,9 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
             .append(RcDoc::as_string("begin"))
             .append(RcDoc::line())
             .group()
-            .append(translate_block(b1, false))
+            .append(translate_block(b1, true))
+            .append(RcDoc::hardline())
+            .append(translate_statement(mutated_tuple))
             .group()
             .nest(2)
             .append(RcDoc::line())
@@ -245,15 +265,23 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                 None => RcDoc::nil(),
                 Some((b2, _)) => RcDoc::space()
                     .append(RcDoc::as_string("else"))
+                    .append(RcDoc::space())
                     .append(RcDoc::as_string("begin"))
                     .append(RcDoc::line())
-                    .append(translate_block(b2, false))
+                    .append(translate_block(b2, true))
+                    .append(RcDoc::hardline())
+                    .append(translate_statement(mutated_tuple))
                     .group()
                     .nest(2)
                     .append(RcDoc::line())
                     .append(RcDoc::as_string("end")),
             })
-            .append(RcDoc::as_string(";")),
+            .append(if no_mut_vars {
+                RcDoc::as_string(";")
+            } else {
+                RcDoc::space().append(RcDoc::as_string("in"))
+            })
+        }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
             let b_orig = b;
             let added_stmt = match &b_orig.mutated_vars_tuple {

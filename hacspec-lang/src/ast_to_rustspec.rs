@@ -473,7 +473,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 },
             };
             Ok((
-                ExprTranslationResult::TransStmt(Statement::Conditional(r_cond?, r_t_e, r_f_e?)),
+                ExprTranslationResult::TransStmt(Statement::Conditional(r_cond?, r_t_e, r_f_e?, None)),
                 e.span,
             ))
         }
