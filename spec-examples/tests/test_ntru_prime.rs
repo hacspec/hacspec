@@ -44,7 +44,7 @@ fn create_rand_poly(w: usize, h_deg: usize) -> Seq<i128> {
     let mut polynom: Seq<i128> = Seq::new(h_deg + 1);
 
     for _ in 0..h_deg * h_deg * h_deg * h_deg * h_deg * h_deg {
-        pos = random_public_byte() as usize % h_deg;
+        pos = (random_public_byte()as usize * random_public_byte()as usize) % h_deg;
         let c_val = (random_public_byte() % 2) as i128;
         //check if value already contained
         if polynom[pos] == 0 {
@@ -434,7 +434,7 @@ fn kat_ntru_prime_653() {
             panic!("NTRUps653 failed");
         }
     }
-    let message = decryption(c, sk, &n_v);
+    let message = decryption(cipher, sk, &n_v);
     for i in 0..m.len() {
         if message[i] != m[i] {
             panic!("NTRUps653 failed");
@@ -648,7 +648,7 @@ fn kat_ntru_prime_761() {
             panic!("NTRUps761");
         }
     }
-    let message = decryption(c, sk, &n_v);
+    let message = decryption(cipher, sk, &n_v);
     for i in 0..m.len() {
         if message[i] != m[i] {
             panic!("NTRUps761 failed");
@@ -691,7 +691,7 @@ fn kat_ntru_prime_857() {
         1, 0, 1, 0, 0, 1, 0, 0, 0, -1, -1, -1, 0, -1, -1, 1, 0, -1, 0, -1, 1, -1, -1, 0, 0, 0, 0,
     ]);
     let pk: Seq<i128> = Seq::from_native_slice(&[
-        0, 0, 1727, 4742, 3523, 2357, 5021, 4100, 3879, 353, 3191, 4858, 4101, 1795, 1611, 2762,
+        4712, 3175, 1727, 4742, 3523, 2357, 5021, 4100, 3879, 353, 3191, 4858, 4101, 1795, 1611, 2762,
         1671, 3826, 2845, 5110, 2200, 1967, 4947, 1117, 1801, 3355, 1596, 1808, 3428, 5097, 1923,
         602, 4623, 5111, 3763, 5016, 1795, 145, 1298, 1048, 5085, 4635, 3927, 2515, 1497, 927,
         3307, 1670, 2957, 4769, 985, 5076, 1993, 2668, 4923, 1934, 2342, 1455, 2170, 4701, 703,
@@ -880,15 +880,17 @@ fn kat_ntru_prime_857() {
     ]);
 
     let n_v = ntru_v!(2);
+    println!("ntru version {:?}", n_v.irr.len());
     let cipher = encryption(&m, pk, &n_v);
     for i in 0..cipher.len() {
         if cipher[i] != c[i] {
             panic!("NTRUps857 failed");
         }
     }
-    let message = decryption(c, sk, &n_v);
+    let message = decryption(cipher, sk, &n_v);
     for i in 0..m.len() {
         if message[i] != m[i] {
+            println!("message not equal!");
             panic!("NTRUps857 failed");
         }
     }
