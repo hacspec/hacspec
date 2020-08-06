@@ -21,13 +21,7 @@ fn check_vec<T>(v: Vec<TranslationResult<T>>) -> TranslationResult<Vec<T>> {
 }
 
 fn translate_ident(i: &symbol::Ident) -> Spanned<Ident> {
-    (
-        Ident {
-            id: i.name.as_u32(),
-            name: i.name.to_ident_string(),
-        },
-        i.span,
-    )
+    (Ident::Original(i.name.to_ident_string()), i.span)
 }
 
 fn translate_type_arg(

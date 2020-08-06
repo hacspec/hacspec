@@ -1,5 +1,5 @@
 use core::cmp::PartialEq;
-use core::hash::{Hash, Hasher};
+use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
@@ -8,35 +8,31 @@ use std::fmt;
 
 pub type Spanned<T> = (T, Span);
 
-#[derive(Clone)]
-pub struct Ident {
-    pub id: u32,
-    pub name: String,
-}
+#[derive(Clone, Hash, Debug, PartialEq, Eq)]
+pub struct RustspecId(pub usize);
 
-impl Hash for Ident {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
-    }
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub enum Ident {
+    Original(String),
+    Rustspec(RustspecId, String),
 }
-
-impl PartialEq for Ident {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
-
-impl Eq for Ident {}
 
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.name)
+        write!(
+            f,
+            "{}",
+            match self {
+                Ident::Original(n) => n.clone(),
+                Ident::Rustspec(x, n) => format!("{}_{}", n, x.0),
+            }
+        )
     }
 }
 
 impl fmt::Debug for Ident {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}[{}]", self.name, self.id)
+        write!(f, "{:?}", self)
     }
 }
 

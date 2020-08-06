@@ -68,7 +68,7 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 fn translate_ident(x: &Ident) -> RcDoc<()> {
-    RcDoc::as_string(x.name.clone())
+    RcDoc::as_string(format!("{}", x))
 }
 
 fn translate_path(p: &Path) -> RcDoc<()> {
