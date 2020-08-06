@@ -4,8 +4,14 @@
 ///!
 use crate::prelude::*;
 
+/// polynomial subtraction, calculates a - b mod modulo
+pub fn sub_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
+    let result = Seq::from_native_slice(&poly_sub(&a.b, &b.b, modulo));
+    make_positive(&result, modulo)
+}
+
 #[inline]
-pub fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
+fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
@@ -19,8 +25,14 @@ pub fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     out
 }
 
+/// Polynomial Addition, calculates a + b mod modulo
+pub fn add_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
+    let result = Seq::from_native_slice(&poly_add(&a.b, &b.b, modulo));
+    make_positive(&result, modulo)
+}
+
 #[inline]
-pub fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
+fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
     let mut out = vec![T::default(); x.len()];
@@ -502,24 +514,12 @@ pub fn leading_coef(poly: &Seq<i128>) -> i128 {
 }
 
 /// makes coefficients positiv, e.g. -3 mod 4 = 1
-pub fn make_positive(poly: &Seq<i128>, q: i128) -> Seq<i128> {
+pub fn make_positive<T: Numeric + Copy>(poly: &Seq<T>, q: T) -> Seq<T> {
     let mut result = Seq::new(poly.len());
     for i in 0..poly.len() {
         result[i] = poly[i].signed_modulo(q);
     }
     result
-}
-
-/// Polynomial Addition, calculates a + b mod modulo
-pub fn add_poly(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
-    let result = Seq::from_native_slice(&poly_add(&a.b, &b.b, modulo));
-    make_positive(&result, modulo)
-}
-
-/// polynomial subtraction, calculates a - b mod modulo
-pub fn sub_poly(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
-    let result = Seq::from_native_slice(&poly_sub(&a.b, &b.b, modulo));
-    make_positive(&result, modulo)
 }
 
 /// return the inverse of a mod m, Fermat's little theorem

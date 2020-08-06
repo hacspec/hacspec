@@ -169,13 +169,10 @@ fn test_poly_eea() {
     let irr: Seq<i128> = Seq::from_native_slice(&[1, 2, 0, 1]);
 
     let h_pre_inv = eea(&h, &irr, 3);
-    let mut h_inv: Seq<i128> = Seq::new(h.len());
-    match h_pre_inv {
-        Ok(v) => {
-            h_inv = v;
-        }
+    let h_inv = match h_pre_inv {
+        Ok(v) => v,
         Err(_) => panic!("test, failed!"),
-    }
+    };
     //2x^2 -2x + 2
     let expected: Seq<i128> = Seq::from_native_slice(&[2, 1, 2, 0]);
 

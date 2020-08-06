@@ -1,11 +1,13 @@
 use hacspec::prelude::*;
-/// Struct to decide Ntru prime version
-pub struct NtruPrimeVersion {
+
+/// NtruPrime parameters
+pub struct Parameters {
     pub p: usize,
     pub q: i128,
     pub w: usize,
     pub irr: Seq<i128>,
 }
+
 /// First transform each coefficients to a value between −(q−1)/2 and (q−1)/2
 /// then round it to the nearest multiple of 3
 pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
@@ -29,16 +31,12 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
 }
 
 /// r is the plaintext, h is the public key
-pub fn encryption(r: &Seq<i128>, h: Seq<i128>, n_v: &NtruPrimeVersion) -> Seq<i128> {
+pub fn encrypt(r: &Seq<i128>, h: Seq<i128>, n_v: &Parameters) -> Seq<i128> {
     let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q);
     round_to_3(&pre, n_v.q)
 }
 
-pub fn decryption(
-    c: Seq<i128>,
-    key: (Seq<i128>, Seq<i128>),
-    n_v: &NtruPrimeVersion,
-) -> Seq<i128> {
+pub fn decrypt(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &Parameters) -> Seq<i128> {
     let f = key.0;
     let v = key.1;
     // calculate 3*f and 3*f*c

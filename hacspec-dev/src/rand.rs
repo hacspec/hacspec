@@ -1,5 +1,25 @@
 use hacspec::prelude::*;
-use rand::{Rng, AsByteSliceMut};
+use rand::{
+    distributions::uniform::SampleBorrow, distributions::uniform::SampleUniform,
+    distributions::Distribution, distributions::Standard, AsByteSliceMut, Rng,
+};
+
+/// Random public integer
+pub fn random_public_integer<T>() -> T
+where
+    Standard: Distribution<T>,
+{
+    rand::thread_rng().gen()
+}
+
+/// Random public integer in range `[min, max)`
+pub fn random_public_integer_range<T, U>(min: U, max: U) -> T
+where
+    U: SampleBorrow<T> + Sized,
+    T: SampleUniform,
+{
+    rand::thread_rng().gen_range(min, max)
+}
 
 /// Random public byte
 pub fn random_public_byte() -> u8 {
