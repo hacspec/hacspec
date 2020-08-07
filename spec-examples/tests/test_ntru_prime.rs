@@ -3,43 +3,6 @@ use hacspec_dev::prelude::*;
 
 use hacspec_examples::ntru_prime::*;
 
-enum Version {
-    NtruPrime653,
-    NtruPrime761,
-    NtruPrime857,
-}
-
-fn set_irr(p: usize) -> Seq<i128> {
-    let mut irr: Seq<i128> = Seq::new(p + 1);
-    irr[0] = -1i128;
-    irr[1] = -1i128;
-    irr[p] = 1i128;
-    irr
-}
-
-fn get_version(v: Version) -> Parameters {
-    match v {
-        Version::NtruPrime653 => Parameters {
-            p: 653,
-            q: 4621,
-            w: 288,
-            irr: set_irr(653),
-        },
-        Version::NtruPrime761 => Parameters {
-            p: 761,
-            q: 4591,
-            w: 286,
-            irr: set_irr(761),
-        },
-        Version::NtruPrime857 => Parameters {
-            p: 857,
-            q: 5167,
-            w: 322,
-            irr: set_irr(857),
-        },
-    }
-}
-
 fn gen_coefficients(num: usize) -> Seq<i128> {
     let mut out = Seq::<i128>::new(num);
     for i in 0..out.len() {
@@ -192,12 +155,7 @@ fn test_round() {
 }
 #[test]
 fn test_encryption_decryption() {
-    let n_v = Parameters {
-        p: 761,
-        q: 4591,
-        w: 286,
-        irr: set_irr(761),
-    };
+    let n_v = get_parameters(Version::NtruPrime761);
     let g = Poly {
         positions: gen_positions(n_v.w, n_v.p),
         coefficients: gen_coefficients(n_v.w),
@@ -216,8 +174,8 @@ fn test_encryption_decryption() {
     let m = build_poly(&msg, n_v.p);
 
     // encryption
-    let c = encrypt(&m, pk, &n_v);
-    let result = decrypt(c, sk, &n_v);
+    let c = encrypt(&m, &pk, &n_v);
+    let result = decrypt(&c, &sk, &n_v);
     for i in 0..result.len() {
         if result[i] != m[i] {
             panic!("NTRU prime failed!");
@@ -417,14 +375,14 @@ fn kat_ntru_prime_653() {
         -2076, 1008, 753, -1458, -672, -1782, -1695, -780, -1596, 0,
     ]);
 
-    let n_v = get_version(Version::NtruPrime653);
-    let cipher = encrypt(&m, pk, &n_v);
+    let n_v = get_parameters(Version::NtruPrime653);
+    let cipher = encrypt(&m, &pk, &n_v);
     for i in 0..cipher.len() {
         if cipher[i] != c[i] {
             panic!("NTRUps653 failed");
         }
     }
-    let message = decrypt(cipher, sk, &n_v);
+    let message = decrypt(&cipher, &sk, &n_v);
     for i in 0..m.len() {
         if message[i] != m[i] {
             panic!("NTRUps653 failed");
@@ -632,14 +590,14 @@ fn kat_ntru_prime_761() {
         -810, -537, 345, -9, 0,
     ]);
 
-    let n_v = get_version(Version::NtruPrime761);
-    let cipher = encrypt(&m, pk, &n_v);
+    let n_v = get_parameters(Version::NtruPrime761);
+    let cipher = encrypt(&m, &pk, &n_v);
     for i in 0..cipher.len() {
         if cipher[i] != c[i] {
             panic!("NTRUps761");
         }
     }
-    let message = decrypt(cipher, sk, &n_v);
+    let message = decrypt(&cipher, &sk, &n_v);
     for i in 0..m.len() {
         if message[i] != m[i] {
             panic!("NTRUps761 failed");
@@ -870,15 +828,15 @@ fn kat_ntru_prime_857() {
         -156, -258, -705, 1731, 1548, 2244, 0,
     ]);
 
-    let n_v = get_version(Version::NtruPrime857);
+    let n_v = get_parameters(Version::NtruPrime857);
     println!("ntru version {:?}", n_v.irr.len());
-    let cipher = encrypt(&m, pk, &n_v);
+    let cipher = encrypt(&m, &pk, &n_v);
     for i in 0..cipher.len() {
         if cipher[i] != c[i] {
             panic!("NTRUps857 failed");
         }
     }
-    let message = decrypt(cipher, sk, &n_v);
+    let message = decrypt(&cipher, &sk, &n_v);
     for i in 0..m.len() {
         if message[i] != m[i] {
             println!("message not equal!");

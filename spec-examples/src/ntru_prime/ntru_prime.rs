@@ -14,6 +14,45 @@ pub struct Poly {
     pub coefficients: Seq<i128>,
 }
 
+type SecretKey = (Seq<i128>, Seq<i128>);
+
+pub enum Version {
+    NtruPrime653,
+    NtruPrime761,
+    NtruPrime857,
+}
+
+fn set_irr(p: usize) -> Seq<i128> {
+    let mut irr: Seq<i128> = Seq::new(p + 1);
+    irr[0] = -1i128;
+    irr[1] = -1i128;
+    irr[p] = 1i128;
+    irr
+}
+
+pub fn get_parameters(v: Version) -> Parameters {
+    match v {
+        Version::NtruPrime653 => Parameters {
+            p: 653,
+            q: 4621,
+            w: 288,
+            irr: set_irr(653),
+        },
+        Version::NtruPrime761 => Parameters {
+            p: 761,
+            q: 4591,
+            w: 286,
+            irr: set_irr(761),
+        },
+        Version::NtruPrime857 => Parameters {
+            p: 857,
+            q: 5167,
+            w: 322,
+            irr: set_irr(857),
+        },
+    }
+}
+
 /// First transform each coefficients to a value between −(q−1)/2 and (q−1)/2
 /// then round it to the nearest multiple of 3
 pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
@@ -37,14 +76,14 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
 }
 
 /// r is the plaintext, h is the public key
-pub fn encrypt(r: &Seq<i128>, h: Seq<i128>, n_v: &Parameters) -> Seq<i128> {
+pub fn encrypt(r: &Seq<i128>, h: &Seq<i128>, n_v: &Parameters) -> Seq<i128> {
     let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q);
     round_to_3(&pre, n_v.q)
 }
 
-pub fn decrypt(c: Seq<i128>, key: (Seq<i128>, Seq<i128>), n_v: &Parameters) -> Seq<i128> {
-    let f = key.0;
-    let v = key.1;
+pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Seq<i128> {
+    let f = &key.0;
+    let v = &key.1;
     // calculate 3*f and 3*f*c
     let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q);
     let mut f_3_c = poly_to_ring(
@@ -109,7 +148,7 @@ fn build_invertible_poly(
 
 /// Generate a key from given polynomials `f` and `g`.
 /// Generating the polynomials at random has to happen outside.
-pub fn key_gen(g: &Poly, f: &Poly, n_v: &Parameters) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
+pub fn key_gen(g: &Poly, f: &Poly, n_v: &Parameters) -> (Seq<i128>, SecretKey) {
     let poly_g = build_invertible_poly(g, n_v, 3);
     let g_inv = match poly_g.1 {
         Ok(v) => v,
