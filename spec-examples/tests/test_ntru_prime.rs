@@ -79,62 +79,6 @@ fn test_gen_pos() {
     println!("{:?}", vec);
 }
 
-/// This function creates a random polynomial with w many -1 or 1 and with the highest degree of h_deg.
-fn create_rand_poly(pos: &Seq<i128>, coeffs: &Seq<i128>, h_deg: usize) -> Seq<i128> {
-    let mut polynomial: Seq<i128> = Seq::new(h_deg + 1);
-
-    if pos.len() != coeffs.len() {
-        return polynomial; // TODO: return error instead.
-    }
-
-    for i in 0..pos.len() {
-        // TODO: This is ugly. Seq should support this
-        polynomial = polynomial.set_chunk(1, i, &Seq::from_native_slice(&[coeffs[i]]));
-    }
-
-    polynomial
-}
-
-fn create_invertible_poly(
-    poss: &Seq<i128>,
-    coeffs: &Seq<i128>,
-    n: &Parameters,
-    modulus: i128,
-) -> (Seq<i128>, Result<Seq<i128>, &'static str>) {
-    let f: Seq<i128> = create_rand_poly(poss, coeffs, n.p);
-    let x = eea(&f, &n.irr, modulus);
-    (f, x)
-}
-
-fn key_gen(
-    poss: &Seq<i128>,
-    coeffs: &Seq<i128>,
-    n_v: &Parameters,
-) -> (Seq<i128>, (Seq<i128>, Seq<i128>)) {
-    let poly_g = create_invertible_poly(poss, coeffs, n_v, 3);
-    let g_inv = match poly_g.1 {
-        Ok (v) => v,
-        Err(_) => panic!("This polynomial isn't invertible. Try another one."),
-    };
-
-    //create f
-    let coeffs = gen_coefficients(n_v.w);
-    let poss = gen_positions(n_v.w, n_v.p);
-    let f = create_rand_poly(&poss, &coeffs, n_v.p);
-    let f_3times = add_poly(&f, &add_poly(&f, &f, n_v.q), n_v.q);
-    let f_3times_pre_inv = eea(&f_3times, &n_v.irr, n_v.q);
-    let mut f_inv_3times: Seq<i128> = Seq::new(n_v.p + 1);
-    match f_3times_pre_inv {
-        Ok(v) => {
-            f_inv_3times = v;
-        }
-        Err(_) => println!("Key generating, failed"),
-    }
-    let h = mul_poly_irr(&poly_g.0, &f_inv_3times, &n_v.irr, n_v.q);
-
-    (h, (f, g_inv))
-}
-
 #[test]
 fn test_round() {
     let test: Seq<i128> = Seq::from_native_slice(&[
@@ -254,15 +198,23 @@ fn test_encryption_decryption() {
         w: 286,
         irr: set_irr(761),
     };
-    let coeffs = gen_coefficients(n_v.w);
-    let poss = gen_positions(n_v.w, n_v.p);
-    let keys = key_gen(&poss, &coeffs, &n_v);
-    let pk = keys.0;
-    let sk = keys.1;
+    let g = Poly {
+        positions: gen_positions(n_v.w, n_v.p),
+        coefficients: gen_coefficients(n_v.w),
+    };
+    let f = Poly {
+        positions: gen_positions(n_v.w, n_v.p),
+        coefficients: gen_coefficients(n_v.w),
+    };
+    let (pk, sk) = key_gen(&g, &f, &n_v);
+
     // message
-    let coeffs = gen_coefficients(n_v.w);
-    let poss = gen_positions(n_v.w, n_v.p);
-    let m = create_rand_poly(&poss, &coeffs, n_v.p);
+    let msg = Poly {
+        positions: gen_positions(n_v.w, n_v.p),
+        coefficients: gen_coefficients(n_v.w),
+    };
+    let m = build_poly(&msg, n_v.p);
+
     // encryption
     let c = encrypt(&m, pk, &n_v);
     let result = decrypt(c, sk, &n_v);
