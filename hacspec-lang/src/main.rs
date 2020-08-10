@@ -34,7 +34,16 @@ const ERROR_OUTPUT_CONFIG: ErrorOutputType =
 
 impl Callbacks for HacspecCallbacks {
     fn config(&mut self, config: &mut Config) {
-        let shared_libraries = env!("LD_LIBRARY_PATH").trim().split(":");
+        let libraries_string = if cfg!(target_os = "linux") {
+            option_env!("LD_LIBRARY_PATH")
+        } else if cfg!(target_os = "macos") {
+            option_env!("DYLD_LIBRARY_PATH")
+        } else if cfg!(target_os = "windows") {
+            option_env!("PATH")
+        } else {
+            panic!("Unsuported target OS: {}", cfg!(target_os))
+        };
+        let shared_libraries = libraries_string.unwrap_or("").trim().split(":");
         for shared_library in shared_libraries {
             if shared_library != "" {
                 config.opts.search_paths.push(SearchPath::from_cli_opt(
