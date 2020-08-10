@@ -38,7 +38,7 @@ impl fmt::Debug for Ident {
 
 pub type VarSet = HashSet<Ident>;
 
-#[derive(Clone, Hash)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Borrowing {
     Borrowed,
     Consumed,
@@ -109,6 +109,7 @@ pub enum BaseTyp {
     Usize,
     Isize,
     Seq(Box<Spanned<BaseTyp>>),
+    Array(Spanned<usize>, Box<Spanned<BaseTyp>>),
     Named(Path),
     Tuple(Vec<Spanned<BaseTyp>>),
 }
@@ -130,6 +131,10 @@ impl fmt::Display for BaseTyp {
             BaseTyp::Int8 => write!(f, "i8"),
             BaseTyp::Usize => write!(f, "usize"),
             BaseTyp::Isize => write!(f, "isize"),
+            BaseTyp::Array(size, mu) => {
+                let mu = &mu.0;
+                write!(f, "Array<{}, {}>", size.0, mu)
+            }
             BaseTyp::Seq(mu) => {
                 let mu = &mu.0;
                 write!(f, "Seq<{}>", mu)
@@ -151,6 +156,7 @@ impl fmt::Debug for BaseTyp {
 }
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
+
 
 #[derive(Clone)]
 pub enum Literal {

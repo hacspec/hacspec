@@ -19,6 +19,27 @@ fn fresh_ident(x: &Ident) -> Ident {
     }
 }
 
+fn is_int(t: &Typ) -> bool {
+    if (t.0).0 == Borrowing::Borrowed {
+        return false;
+    };
+    match &(t.1).0 {
+        BaseTyp::UInt128 => true,
+        BaseTyp::Int128 => true,
+        BaseTyp::UInt64 => true,
+        BaseTyp::Int64 => true,
+        BaseTyp::UInt32 => true,
+        BaseTyp::Int32 => true,
+        BaseTyp::UInt16 => true,
+        BaseTyp::Int16 => true,
+        BaseTyp::UInt8 => true,
+        BaseTyp::Int8 => true,
+        BaseTyp::Usize => true,
+        BaseTyp::Isize => true,
+        _ => false,
+    }
+}
+
 fn is_copy(t: &BaseTyp) -> bool {
     match t {
         BaseTyp::Unit => true,
@@ -36,17 +57,39 @@ fn is_copy(t: &BaseTyp) -> bool {
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
         BaseTyp::Seq(_) => false,
+        BaseTyp::Array(_, _) => true,
         // TODO: implement special cases for derived copy
         BaseTyp::Named(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t)),
     }
 }
 
-fn is_array(t: &BaseTyp) -> Option<&Spanned<BaseTyp>> {
-    match t {
-        BaseTyp::Seq(t1) => Some(&t1),
-        //TODO: add named array types
-        _ => None,
+fn is_array(sess: &Session, t: &Typ, typ_dict: &TypeDict) -> Result<Spanned<BaseTyp>, ()> {
+    match &(t.1).0 {
+        BaseTyp::Seq(t1) => Ok(t1.as_ref().clone()),
+        BaseTyp::Named(p) => {
+            if p.location.len() == 1 && p.arg == None {
+                let id = p.location.first().unwrap();
+                match &id.0 {
+                    Ident::Rustspec(_, _) => panic!(),
+                    Ident::Original(name) => match typ_dict.get(name) {
+                        Some(new_t) => is_array(sess, new_t, typ_dict),
+                        None => {
+                            sess.span_err(id.1.clone(), "unknown type");
+                            Err(())
+                        }
+                    },
+                }
+            } else {
+                sess.span_err(
+                    (t.1).1.clone(),
+                    "expected local named array type with no argument",
+                );
+                Err(())
+            }
+        }
+        BaseTyp::Array(_, cell_t) => Ok(cell_t.as_ref().clone()),
+        _ => Err(()),
     }
 }
 
@@ -68,7 +111,7 @@ fn is_index(t: &BaseTyp) -> bool {
     }
 }
 
-fn equal_types(t1: &Typ, t2: &Typ) -> bool {
+fn equal_types(t1: &Typ, t2: &Typ, typ_dict: &TypeDict) -> bool {
     match (&(t1.0).0, &(t2.0).0) {
         (Borrowing::Consumed, Borrowing::Consumed) | (Borrowing::Borrowed, Borrowing::Borrowed) => {
             match (&(t1.1).0, &(t2.1).0) {
@@ -89,6 +132,7 @@ fn equal_types(t1: &Typ, t2: &Typ) -> bool {
                 (BaseTyp::Seq(tc1), BaseTyp::Seq(tc2)) => equal_types(
                     &(((Borrowing::Consumed, (t1.1).1)), *tc1.clone()),
                     &(((Borrowing::Consumed, (t2.1).1)), *tc2.clone()),
+                    typ_dict,
                 ),
                 (BaseTyp::Named(p1), BaseTyp::Named(p2)) => {
                     p1.location.len() == p2.location.len()
@@ -102,6 +146,7 @@ fn equal_types(t1: &Typ, t2: &Typ) -> bool {
                             (Some(tc1), Some(tc2)) => equal_types(
                                 &(((Borrowing::Consumed, (t1.1).1)), (*tc1.clone(), (t1.1).1)),
                                 &(((Borrowing::Consumed, (t2.1).1)), (*tc2.clone(), (t2.1).1)),
+                                typ_dict,
                             ),
                             _ => false,
                         }
@@ -112,6 +157,7 @@ fn equal_types(t1: &Typ, t2: &Typ) -> bool {
                             equal_types(
                                 &(((Borrowing::Consumed, (t1.1).1)), tc1.clone()),
                                 &(((Borrowing::Consumed, (t2.1).1)), tc2.clone()),
+                                typ_dict,
                             )
                         })
                 }
@@ -131,6 +177,8 @@ enum FnKey {
 type FnContext = HashMap<FnKey, FuncSig>;
 
 type VarContext = HashMap<RustspecId, (Typ, String)>;
+
+type TypeDict = HashMap<String, Typ>;
 
 type NameContext = HashMap<String, Ident>;
 
@@ -188,6 +236,7 @@ fn typecheck_expression(
     sess: &Session,
     (e, span): &Spanned<Expression>,
     fn_context: &FnContext,
+    typ_dict: &TypeDict,
     var_context: &VarContext,
     name_context: &NameContext,
 ) -> TypecheckingResult<(Expression, Typ, VarContext)> {
@@ -198,7 +247,14 @@ fn typecheck_expression(
                 .iter()
                 .map(|arg| {
                     let (new_arg, ((arg_typ_borrowing, _), arg_typ), new_var_context) =
-                        typecheck_expression(sess, arg, fn_context, &var_context, name_context)?;
+                        typecheck_expression(
+                            sess,
+                            arg,
+                            fn_context,
+                            typ_dict,
+                            &var_context,
+                            name_context,
+                        )?;
                     var_context = new_var_context;
                     match arg_typ_borrowing {
                         Borrowing::Borrowed => {
@@ -258,47 +314,99 @@ fn typecheck_expression(
         },
         Expression::Binary((op, op_span), e1, e2) => {
             let (new_e1, t1, var_context) =
-                typecheck_expression(sess, e1, fn_context, var_context, name_context)?;
+                typecheck_expression(sess, e1, fn_context, typ_dict, var_context, name_context)?;
             let (new_e2, t2, var_context) =
-                typecheck_expression(sess, e2, fn_context, &var_context, name_context)?;
-            // TODO: do special thing for shift
-            if !equal_types(&t1, &t2) {
-                println!("Var context: {:?}", var_context);
-                println!("Name context: {:?}", name_context);
-                sess.span_err(
-                    *span,
-                    format!(
+                typecheck_expression(sess, e2, fn_context, typ_dict, &var_context, name_context)?;
+            match op {
+                BinOpKind::Shl | BinOpKind::Shr => match &(t2.1).0 {
+                    BaseTyp::UInt32 => {
+                        if is_int(&t1) {
+                            Ok((
+                                Expression::Binary(
+                                    (op.clone(), op_span.clone()),
+                                    Box::new((new_e1, e1.1.clone())),
+                                    Box::new((new_e2, e2.1.clone())),
+                                ),
+                                t1,
+                                var_context,
+                            ))
+                        } else {
+                            sess.span_err(
+                                e1.1.clone(),
+                                format!(
+                                    "you can only shift integers, but found type {}{}",
+                                    (t1.0).0,
+                                    (t1.1).0
+                                )
+                                .as_str(),
+                            );
+                            Err(())
+                        }
+                    }
+                    _ => {
+                        sess.span_err(
+                            e2.1.clone(),
+                            format!(
+                                "the shifting amount has to be an u32, found type {}{}",
+                                (t2.0).0,
+                                (t2.1).0
+                            )
+                            .as_str(),
+                        );
+                        Err(())
+                    }
+                },
+                _ => {
+                    if !equal_types(&t1, &t2, typ_dict) {
+                        sess.span_err(
+                            *span,
+                            format!(
                         "wrong types of binary operators, left is {}{} while right is {}{}",
                         t1.0.0, t1.1.0, t2.0.0, t2.1.0
                     )
-                    .as_str(),
-                );
-                Err(())
-            } else {
-                Ok((
-                    Expression::Binary(
-                        (op.clone(), op_span.clone()),
-                        Box::new((new_e1, e1.1.clone())),
-                        Box::new((new_e2, e2.1.clone())),
-                    ),
-                    match op {
-                        BinOpKind::Eq
-                        | BinOpKind::Lt
-                        | BinOpKind::Le
-                        | BinOpKind::Ne
-                        | BinOpKind::Ge
-                        | BinOpKind::Gt => {
-                            ((Borrowing::Consumed, (t1.0).1), (BaseTyp::Bool, (t1.1).1))
+                            .as_str(),
+                        );
+                        Err(())
+                    } else {
+                        if is_int(&t1) {
+                            Ok((
+                                Expression::Binary(
+                                    (op.clone(), op_span.clone()),
+                                    Box::new((new_e1, e1.1.clone())),
+                                    Box::new((new_e2, e2.1.clone())),
+                                ),
+                                match op {
+                                    BinOpKind::Eq
+                                    | BinOpKind::Lt
+                                    | BinOpKind::Le
+                                    | BinOpKind::Ne
+                                    | BinOpKind::Ge
+                                    | BinOpKind::Gt => {
+                                        ((Borrowing::Consumed, (t1.0).1), (BaseTyp::Bool, (t1.1).1))
+                                    }
+                                    _ => t1,
+                                },
+                                var_context,
+                            ))
+                        } else {
+                            sess.span_err(
+                                span.clone(),
+                                format!(
+                                    "operation only available for integers, but found type {}{}",
+                                    (t1.0).0,
+                                    (t1.1).0
+                                )
+                                .as_str(),
+                            );
+                            Err(())
                         }
-                        _ => t1,
-                    },
-                    var_context,
-                ))
+                    }
+                }
             }
         }
         Expression::Unary(op, e1) => {
             let (new_e1, e1_typ, new_var_context) =
-                typecheck_expression(sess, e1, fn_context, var_context, name_context)?;
+                typecheck_expression(sess, e1, fn_context, typ_dict, var_context, name_context)?;
             Ok((
                 Expression::Unary(op.clone(), Box::new((new_e1, e1.1.clone()))),
                 e1_typ,
@@ -429,11 +537,10 @@ fn typecheck_expression(
                 Some(t) => t,
             };
             let (new_e2, t2, var_context) =
-                typecheck_expression(sess, e2, fn_context, &var_context, name_context)?;
+                typecheck_expression(sess, e2, fn_context, typ_dict, &var_context, name_context)?;
             // We ignore t1.0 because we can read from both consumed and borrowed array types
-            match &(t1.1).0 {
-                BaseTyp::Seq(seq_t) => {
-                    let (cell_t, cell_t_span) = (&seq_t.0, &seq_t.1);
+            match is_array(sess, t1, typ_dict) {
+                Ok((cell_t, cell_t_span)) => {
                     if let Borrowing::Borrowed = (t2.0).0 {
                         sess.span_err(e2.1, "cannot index array with a borrowed type");
                         return Err(());
@@ -475,7 +582,6 @@ fn typecheck_expression(
                         }
                     }
                 }
-                //TODO: add named arrays
                 _ => {
                     sess.span_err(
                         *x_span,
@@ -518,12 +624,13 @@ fn typecheck_expression(
                         sess,
                         &(arg.clone(), arg_span.clone()),
                         fn_context,
+                        typ_dict,
                         &var_context,
                         name_context,
                     )?;
                     var_context = new_var_context;
                     new_args.push((new_arg, arg_span.clone()));
-                    if !equal_types(&arg_t, sig_t) {
+                    if !equal_types(&arg_t, sig_t, typ_dict) {
                         sess.span_err(
                             *arg_span,
                             format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
@@ -548,7 +655,7 @@ fn typecheck_expression(
         Expression::MethodCall(sel, _, (f, f_span), args) => {
             let mut var_context = var_context.clone();
             let (new_sel, sel_typ, new_var_context) =
-                typecheck_expression(sess, &sel, fn_context, &var_context, name_context)?;
+                typecheck_expression(sess, &sel, fn_context, typ_dict, &var_context, name_context)?;
             var_context = new_var_context;
             let f_sig = match fn_context.get(&FnKey::Method((sel_typ.1).0.clone(), f.clone())) {
                 None => {
@@ -581,12 +688,13 @@ fn typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
                     fn_context,
+                    typ_dict,
                     &var_context,
                     name_context,
                 )?;
                 var_context = new_var_context;
                 new_args.push((new_arg, arg_span.clone()));
-                if !equal_types(&arg_t, sig_t) {
+                if !equal_types(&arg_t, sig_t, typ_dict) {
                     sess.span_err(
                         arg_span,
                         format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
@@ -698,17 +806,18 @@ fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
     fn_context: &FnContext,
+    typ_dict: &TypeDict,
     var_context: &VarContext,
     name_context: &NameContext,
 ) -> TypecheckingResult<(Statement, Typ, VarContext, NameContext, VarSet)> {
     match &s {
         Statement::LetBinding((pat, pat_span), typ, ref expr) => {
             let (new_expr, expr_typ, new_var_context) =
-                typecheck_expression(sess, expr, fn_context, var_context, name_context)?;
+                typecheck_expression(sess, expr, fn_context, typ_dict, var_context, name_context)?;
             match typ {
                 None => (),
                 Some((typ, _)) => {
-                    if !equal_types(typ, &expr_typ) {
+                    if !equal_types(typ, &expr_typ, typ_dict) {
                         sess.span_err(
                             *pat_span,
                             format!(
@@ -741,7 +850,7 @@ fn typecheck_statement(
         Statement::Reassignment((x, x_span), e) => {
             let x = find_ident(x, name_context);
             let (new_e, e_typ, new_var_context) =
-                typecheck_expression(sess, &e, fn_context, var_context, name_context)?;
+                typecheck_expression(sess, &e, fn_context, typ_dict, var_context, name_context)?;
             let x_typ = find_typ(x, var_context);
             let x_typ = match x_typ {
                 Some(t) => t,
@@ -750,7 +859,7 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            if !equal_types(&e_typ, &x_typ) {
+            if !equal_types(&e_typ, &x_typ, typ_dict) {
                 sess.span_err(
                     e.1,
                     format!(
@@ -771,9 +880,9 @@ fn typecheck_statement(
         Statement::ArrayUpdate((x, x_span), e1, e2) => {
             let x = find_ident(x, name_context);
             let (new_e1, e1_t, var_context) =
-                typecheck_expression(sess, &e1, fn_context, var_context, name_context)?;
+                typecheck_expression(sess, &e1, fn_context, typ_dict, var_context, name_context)?;
             let (new_e2, e2_t, var_context) =
-                typecheck_expression(sess, &e2, fn_context, &var_context, name_context)?;
+                typecheck_expression(sess, &e2, fn_context, typ_dict, &var_context, name_context)?;
             if !is_index(&(e1_t.1).0) {
                 sess.span_err(
                     e1.1,
@@ -794,9 +903,9 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            let cell_t = match is_array(&(x_typ.1).0) {
-                Some(cell_t) => cell_t,
-                None => {
+            let cell_t = match is_array(sess, x_typ, typ_dict) {
+                Ok(cell_t) => cell_t,
+                Err(()) => {
                     sess.span_err(
                         *x_span,
                         format!(
@@ -813,6 +922,7 @@ fn typecheck_statement(
             if !equal_types(
                 &e2_t,
                 &((Borrowing::Consumed, x_span.clone()), cell_t.clone()),
+                typ_dict,
             ) {
                 sess.span_err(
                     e2.1,
@@ -840,6 +950,7 @@ fn typecheck_statement(
                 sess,
                 &(e.clone(), s_span),
                 fn_context,
+                typ_dict,
                 var_context,
                 name_context,
             )?;
@@ -854,7 +965,7 @@ fn typecheck_statement(
         Statement::Conditional(cond, (b1, b1_span), b2, _) => {
             let original_var_context = var_context;
             let (new_cond, cond_t, var_context) =
-                typecheck_expression(sess, &cond, fn_context, var_context, name_context)?;
+                typecheck_expression(sess, &cond, fn_context, typ_dict, var_context, name_context)?;
             match cond_t {
                 ((Borrowing::Consumed, _), (BaseTyp::Bool, _)) => (),
                 _ => sess.span_err(
@@ -871,6 +982,7 @@ fn typecheck_statement(
                 sess,
                 (b1.clone(), b1_span.clone()),
                 fn_context,
+                typ_dict,
                 &var_context,
                 name_context,
             )?;
@@ -881,6 +993,7 @@ fn typecheck_statement(
                         sess,
                         (b2.clone(), b2_span.clone()),
                         fn_context,
+                        typ_dict,
                         &var_context,
                         name_context,
                     )?;
@@ -954,9 +1067,9 @@ fn typecheck_statement(
             let x = fresh_ident(old_x);
             let original_var_context = var_context;
             let (new_e1, t_e1, var_context) =
-                typecheck_expression(sess, e1, fn_context, var_context, name_context)?;
+                typecheck_expression(sess, e1, fn_context, typ_dict, var_context, name_context)?;
             let (new_e2, t_e2, var_context) =
-                typecheck_expression(sess, e2, fn_context, &var_context, name_context)?;
+                typecheck_expression(sess, e2, fn_context, typ_dict, &var_context, name_context)?;
             match &t_e1 {
                 ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
                 _ => {
@@ -1003,6 +1116,7 @@ fn typecheck_statement(
                 sess,
                 (b.clone(), b_span.clone()),
                 fn_context,
+                typ_dict,
                 &var_context,
                 &new_name_context,
             )?;
@@ -1013,8 +1127,7 @@ fn typecheck_statement(
                 if original_var_context.contains_key(&var_diff_id) {
                     sess.span_err(
                         b_span.clone(),
-                        format!("loop body consumes linear variable: {}", var_diff_name)
-                            .as_str(),
+                        format!("loop body consumes linear variable: {}", var_diff_name).as_str(),
                     );
                     return Err(());
                 }
@@ -1039,6 +1152,7 @@ fn typecheck_block(
     sess: &Session,
     (b, b_span): Spanned<Block>,
     fn_context: &FnContext,
+    typ_dict: &TypeDict,
     original_var_context: &VarContext,
     name_context: &NameContext,
 ) -> TypecheckingResult<(Block, VarContext)> {
@@ -1051,7 +1165,7 @@ fn typecheck_block(
     for (i, s) in b.stmts.into_iter().enumerate() {
         let s_span = s.1.clone();
         let (new_stmt, stmt_typ, new_var_context, new_name_context, new_mutated_vars) =
-            typecheck_statement(sess, s, fn_context, &var_context, &name_context)?;
+            typecheck_statement(sess, s, fn_context, typ_dict, &var_context, &name_context)?;
         new_stmts.push((new_stmt, s_span));
         var_context = new_var_context;
         name_context = new_name_context;
@@ -1087,8 +1201,9 @@ fn typecheck_item(
     sess: &Session,
     i: Item,
     fn_context: &FnContext,
-) -> TypecheckingResult<(Item, FnContext)> {
-    match i {
+    typ_dict: &TypeDict,
+) -> TypecheckingResult<(Item, FnContext, TypeDict)> {
+    match &i {
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {
             let var_context = HashMap::new();
             let name_context = HashMap::new();
@@ -1103,32 +1218,59 @@ fn typecheck_item(
                 },
             );
             let out = Item::FnDecl(
-                (f.clone(), f_span),
+                (f.clone(), f_span.clone()),
                 FuncSig {
                     args: new_sig_args,
                     ret: sig.ret.clone(),
                 },
                 (
-                    typecheck_block(sess, (b, b_span), fn_context, &var_context, &name_context)?.0,
-                    b_span,
+                    typecheck_block(
+                        sess,
+                        (b.clone(), b_span.clone()),
+                        fn_context,
+                        typ_dict,
+                        &var_context,
+                        &name_context,
+                    )?
+                    .0,
+                    b_span.clone(),
                 ),
             );
-            let fn_context = fn_context.update(FnKey::Static(f), sig);
-            Ok((out, fn_context))
+            let fn_context = fn_context.update(FnKey::Static(f.clone()), sig.clone());
+            Ok((out, fn_context, typ_dict.clone()))
         }
-        Item::ArrayDecl(_,_,_) => unimplemented!(),
+        Item::ArrayDecl(id, size, cell_t) => Ok((
+            i.clone(),
+            fn_context.clone(),
+            typ_dict.update(
+                match &id.0 {
+                    Ident::Original(s) => s.clone(),
+                    Ident::Rustspec(_, _) => panic!(),
+                },
+                (
+                    (Borrowing::Consumed, id.1.clone()),
+                    (
+                        BaseTyp::Array(size.clone(), Box::new(cell_t.clone())),
+                        id.1.clone(),
+                    ),
+                ),
+            ),
+        )),
         // TODO: Collect uses and put them in context
-        Item::Use(ref _p) => Ok((i, fn_context.clone())),
+        Item::Use(ref _p) => Ok((i.clone(), fn_context.clone(), typ_dict.clone())),
     }
 }
 
 pub fn typecheck_program(sess: &Session, p: Program) -> TypecheckingResult<Program> {
     let mut fn_context = HashMap::new();
+    let mut typ_dict = HashMap::new();
     check_vec(
         p.into_iter()
             .map(|(i, i_span)| {
-                let (new_i, new_fn_context) = typecheck_item(sess, i, &fn_context)?;
+                let (new_i, new_fn_context, new_typ_dict) =
+                    typecheck_item(sess, i, &fn_context, &typ_dict)?;
                 fn_context = new_fn_context;
+                typ_dict = new_typ_dict;
                 Ok((new_i, i_span))
             })
             .collect(),

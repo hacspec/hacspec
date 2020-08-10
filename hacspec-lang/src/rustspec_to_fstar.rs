@@ -106,6 +106,15 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
                 .append(translate_base_typ(tau))
                 .group()
         }
+        BaseTyp::Array(size, tau) => {
+            let tau: &BaseTyp = &tau.0;
+            RcDoc::as_string("Seq.lseq")
+                .append(RcDoc::space())
+                .append(translate_base_typ(tau))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string(format!("{}", size.0)))
+                .group()
+        }
         BaseTyp::Named(p) => translate_path(p),
         BaseTyp::Tuple(_) => panic!(),
     }
@@ -359,7 +368,22 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                 .group(),
             true,
         ),
-        Item::ArrayDecl(_,_,_) => unimplemented!(),
+        Item::ArrayDecl(name, size, cell_t) => RcDoc::as_string("type")
+            .append(RcDoc::space())
+            .append(translate_ident(&name.0))
+            .append(RcDoc::space())
+            .append(RcDoc::as_string("="))
+            .group()
+            .append(
+                RcDoc::line()
+                    .append(RcDoc::as_string("Seq.lseq"))
+                    .append(RcDoc::space())
+                    .append(translate_base_typ(&cell_t.0))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string(format!("{}", &size.0)))
+                    .group()
+                    .nest(2),
+            ),
         Item::Use(_) => RcDoc::nil(),
     }
 }
