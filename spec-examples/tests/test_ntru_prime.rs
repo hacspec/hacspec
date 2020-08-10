@@ -839,7 +839,6 @@ fn kat_ntru_prime_857() {
     let message = decrypt(&cipher, &sk, &n_v);
     for i in 0..m.len() {
         if message[i] != m[i] {
-            println!("message not equal!");
             panic!("NTRUps857 failed");
         }
     }
