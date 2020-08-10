@@ -1,22 +1,34 @@
 use assert_cmd::prelude::*; // Add methods on commands
 use std::process::Command; // Run programs
 
-#[test]
-fn run_test1() -> Result<(), Box<dyn std::error::Error>> {
+const DEPS_ARG: &'static str = "-L ../../target/debug/deps";
+const CRATE_TYPE_ARG: &'static str = "--crate-type=lib";
+const EDITION_ARG: &'static str = "--edition=2018";
+const EXTERN_ARG: &'static str = "--extern=hacspec";
+
+fn run_test(input: &str, output: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!(
+        "Running: cargo run -- {} {} {} {} -o {} {}",
+        DEPS_ARG, CRATE_TYPE_ARG, EDITION_ARG, EXTERN_ARG, output, input
+    );
     let mut cmd = Command::cargo_bin("hacspec-lang")?;
-    cmd.arg("-o tests/Test1.fst");
-    cmd.arg("tests/test1.rs");
+    cmd.arg(DEPS_ARG);
+    cmd.arg(CRATE_TYPE_ARG);
+    cmd.arg(EDITION_ARG);
+    cmd.arg(EXTERN_ARG);
+    cmd.arg(format!("-o {}", output));
+    cmd.arg(format!("{}", input));
     cmd.assert().success();
     Ok(())
 }
 
+#[test]
+fn run_test1() -> Result<(), Box<dyn std::error::Error>> {
+    run_test("tests/test1.rs", "tests/Test1.fst")
+}
 
 #[test]
 #[ignore]
 fn run_test_chacha() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("hacspec-lang")?;
-    cmd.arg("-o tests/TestChacha.fst");
-    cmd.arg("tests/test_chacha.rs");
-    cmd.assert().success();
-    Ok(())
+    run_test("tests/test_chacha.rs", "tests/TestChacha.fst")
 }

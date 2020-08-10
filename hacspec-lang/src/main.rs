@@ -37,7 +37,7 @@ impl Callbacks for HacspecCallbacks {
         let libraries_string = if cfg!(target_os = "linux") {
             option_env!("LD_LIBRARY_PATH")
         } else if cfg!(target_os = "macos") {
-            option_env!("DYLD_LIBRARY_PATH")
+            option_env!("DYLD_FALLBACK_LIBRARY_PATH")
         } else if cfg!(target_os = "windows") {
             option_env!("PATH")
         } else {
@@ -54,7 +54,7 @@ impl Callbacks for HacspecCallbacks {
         }
     }
 
-    fn after_parsing<'tcx>(
+    fn after_analysis<'tcx>(
         &mut self,
         compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,

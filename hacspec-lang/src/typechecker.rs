@@ -19,7 +19,7 @@ fn fresh_ident(x: &Ident) -> Ident {
     }
 }
 
-fn is_int(t: &Typ) -> bool {
+fn is_numeric(t: &Typ) -> bool {
     if (t.0).0 == Borrowing::Borrowed {
         return false;
     };
@@ -319,8 +319,8 @@ fn typecheck_expression(
                 typecheck_expression(sess, e2, fn_context, typ_dict, &var_context, name_context)?;
             match op {
                 BinOpKind::Shl | BinOpKind::Shr => match &(t2.1).0 {
-                    BaseTyp::UInt32 => {
-                        if is_int(&t1) {
+                    BaseTyp::Usize => {
+                        if is_numeric(&t1) {
                             Ok((
                                 Expression::Binary(
                                     (op.clone(), op_span.clone()),
@@ -368,7 +368,7 @@ fn typecheck_expression(
                         );
                         Err(())
                     } else {
-                        if is_int(&t1) {
+                        if is_numeric(&t1) {
                             Ok((
                                 Expression::Binary(
                                     (op.clone(), op_span.clone()),
@@ -392,7 +392,7 @@ fn typecheck_expression(
                             sess.span_err(
                                 span.clone(),
                                 format!(
-                                    "operation only available for integers, but found type {}{}",
+                                    "operation only available for numerics, but found type {}{}",
                                     (t1.0).0,
                                     (t1.1).0
                                 )
@@ -737,6 +737,7 @@ fn typecheck_pattern(
                     let (new_pat, sub_var_context, sub_name_context) = typecheck_pattern(
                         sess,
                         pat_arg,
+                        //TODO: changed to propagate borrow to tuple args
                         &((Borrowing::Consumed, *pat_span), typ_arg.clone()),
                     )?;
                     acc_pat.push((new_pat, pat_arg.1.clone()));
