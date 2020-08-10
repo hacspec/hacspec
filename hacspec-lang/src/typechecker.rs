@@ -5,6 +5,8 @@ use rustc_session::Session;
 use rustc_span::Span;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+// TODO: explain that we need typechecking inference to disambiguate method calls
+
 static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 fn fresh_ident(x: &Ident) -> Ident {
@@ -128,7 +130,7 @@ enum FnKey {
 
 type FnContext = HashMap<FnKey, FuncSig>;
 
-type VarContext = HashMap<RustspecId, Typ>;
+type VarContext = HashMap<RustspecId, (Typ, String)>;
 
 type NameContext = HashMap<String, Ident>;
 
@@ -147,7 +149,7 @@ fn find_ident<'a, 'b>(x: &'a Ident, name_context: &'b NameContext) -> &'b Ident 
 fn find_typ<'a, 'b>(x: &'a Ident, var_context: &'b VarContext) -> Option<&'b Typ> {
     match x {
         Ident::Original(_) => panic!("trying to lookup in the var context an original id"),
-        Ident::Rustspec(id, _) => var_context.get(id),
+        Ident::Rustspec(id, _) => var_context.get(id).map(|x| &x.0),
     }
 }
 
@@ -161,7 +163,7 @@ fn remove_var(x: &Ident, var_context: &VarContext) -> VarContext {
 fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
     match x {
         Ident::Original(_) => panic!("trying to lookup in the var context an original id"),
-        Ident::Rustspec(id, _) => var_context.update(id.clone(), typ.clone()),
+        Ident::Rustspec(id, name) => var_context.update(id.clone(), (typ.clone(), name.clone())),
     }
 }
 
@@ -521,21 +523,7 @@ fn typecheck_expression(
                     )?;
                     var_context = new_var_context;
                     new_args.push((new_arg, arg_span.clone()));
-                    match ((arg_t.0).0, &sig_t.0) {
-                        (Borrowing::Consumed, &(Borrowing::Borrowed, _)) => {
-                            sess.span_err(*arg_span, "expected a borrow here but didn't find one");
-                            return Err(());
-                        }
-                        (Borrowing::Borrowed, &(Borrowing::Consumed, _)) => {
-                            sess.span_err(
-                                *arg_span,
-                                "superflous borrow here, argument is consumed",
-                            );
-                            return Err(());
-                        }
-                        _ => (),
-                    }
-                    if (arg_t.1).0 != (sig_t.1).0 {
+                    if !equal_types(&arg_t, sig_t) {
                         sess.span_err(
                             *arg_span,
                             format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
@@ -598,18 +586,7 @@ fn typecheck_expression(
                 )?;
                 var_context = new_var_context;
                 new_args.push((new_arg, arg_span.clone()));
-                match (arg_t.0, &sig_t.0) {
-                    ((Borrowing::Consumed, _), &(Borrowing::Borrowed, _)) => {
-                        sess.span_err(arg_span, "expected a borrow here but didn't find one");
-                        return Err(());
-                    }
-                    ((Borrowing::Borrowed, _), &(Borrowing::Consumed, _)) => {
-                        sess.span_err(arg_span, "superflous borrow here, argument is consumed");
-                        return Err(());
-                    }
-                    _ => (),
-                }
-                if (arg_t.1).0 != (sig_t.1).0 {
+                if !equal_types(&arg_t, sig_t) {
                     sess.span_err(
                         arg_span,
                         format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
@@ -678,15 +655,13 @@ fn typecheck_pattern(
         (Pattern::WildCard, _) => Ok((Pattern::WildCard, HashMap::new(), HashMap::new())),
         (Pattern::IdentPat(x), _) => {
             let x_new = fresh_ident(x);
+            let (id, name) = match &x_new {
+                Ident::Rustspec(id, name) => (id.clone(), name.clone()),
+                _ => panic!(), // shouls not happen
+            };
             Ok((
                 Pattern::IdentPat(x_new.clone()),
-                HashMap::unit(
-                    match &x_new {
-                        Ident::Rustspec(id, _) => id.clone(),
-                        _ => panic!(), // shouls not happen
-                    },
-                    (borrowing_typ.clone(), typ.clone()),
-                ),
+                HashMap::unit(id, ((borrowing_typ.clone(), typ.clone()), name)),
                 HashMap::unit(
                     match &x {
                         Ident::Original(name) => name.clone(),
@@ -1032,6 +1007,18 @@ fn typecheck_statement(
                 &new_name_context,
             )?;
             let mutated_vars = new_b.mutated.as_ref().unwrap().as_ref().vars.clone();
+            // Linear variables cannot be consumed in the body of the loop, so we check that
+            let var_diff = original_var_context.clone().difference(var_context.clone());
+            for (var_diff_id, (_, var_diff_name)) in var_diff {
+                if original_var_context.contains_key(&var_diff_id) {
+                    sess.span_err(
+                        b_span.clone(),
+                        format!("loop body consumes linear variable: {}", var_diff_name)
+                            .as_str(),
+                    );
+                    return Err(());
+                }
+            }
             Ok((
                 Statement::ForLoop(
                     (x.clone(), *x_span),

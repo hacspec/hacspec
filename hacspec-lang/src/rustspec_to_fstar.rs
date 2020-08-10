@@ -341,7 +341,14 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                     )
                 } else {
                     RcDoc::as_string("()")
-                }),
+                })
+                .append(RcDoc::line())
+                .append(
+                    RcDoc::as_string(":")
+                        .append(RcDoc::space())
+                        .append(translate_base_typ(&sig.ret.0))
+                        .group(),
+                ),
             None,
             translate_block(b, false)
                 .append(if let BaseTyp::Unit = sig.ret.0 {
