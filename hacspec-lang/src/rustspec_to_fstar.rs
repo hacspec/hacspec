@@ -359,6 +359,7 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                 .group(),
             true,
         ),
+        Item::ArrayDecl(_,_,_) => unimplemented!(),
         Item::Use(_) => RcDoc::nil(),
     }
 }

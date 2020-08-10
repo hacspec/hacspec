@@ -248,6 +248,7 @@ pub struct FuncSig {
 #[derive(Clone)]
 pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
+    ArrayDecl(Spanned<Ident>, Spanned<usize>, Spanned<BaseTyp>),
     Use(Path),
 }
 

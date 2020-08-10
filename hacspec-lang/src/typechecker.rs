@@ -1116,6 +1116,7 @@ fn typecheck_item(
             let fn_context = fn_context.update(FnKey::Static(f), sig);
             Ok((out, fn_context))
         }
+        Item::ArrayDecl(_,_,_) => unimplemented!(),
         // TODO: Collect uses and put them in context
         Item::Use(ref _p) => Ok((i, fn_context.clone())),
     }
