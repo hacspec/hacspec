@@ -13,25 +13,30 @@ extern crate im;
 extern crate pretty;
 
 mod ast_to_rustspec;
-mod hir_to_rustspec;
 mod rustspec;
 mod rustspec_to_fstar;
 mod typechecker;
 
 use clap::App;
+use hacspec_dev::external_sig::Signature;
 use rustc_driver::{run_compiler, Callbacks, Compilation};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_interface::{
     interface::{Compiler, Config},
     Queries,
 };
-use rustc_session::{config::ErrorOutputType, filesearch, search_paths::SearchPath};
+use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
+use serde_json;
+use std::collections::{HashMap, HashSet};
 use std::env;
+use std::fs::OpenOptions;
 use walkdir::WalkDir;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
 }
+
+const ITEM_LIST_LOCATION: &'static str = "../allowed_item_list.json";
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
     ErrorOutputType::HumanReadable(HumanReadableErrorType::Default(ColorConfig::Auto));
@@ -86,12 +91,17 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
-        queries
-            .global_ctxt()
-            .unwrap()
-            .peek_mut()
-            .enter(|tcx| hir_to_rustspec::retrieve_external_functions(&compiler.session(), &tcx));
-        let krate = match typechecker::typecheck_program(&compiler.session(), krate) {
+        let file = OpenOptions::new()
+            .read(true)
+            .open(ITEM_LIST_LOCATION)
+            .unwrap();
+        let key_s = String::from("primitive");
+        let crate_s = String::from("hacspec");
+        let item_list: HashMap<String, HashMap<String, HashSet<Signature>>> =
+            serde_json::from_reader(&file).unwrap();
+        let hacspec_items = item_list.get(&key_s).unwrap().get(&crate_s).unwrap();
+        let krate = match typechecker::typecheck_program(&compiler.session(), krate, hacspec_items)
+        {
             Ok(krate) => krate,
             Err(_) => {
                 &compiler

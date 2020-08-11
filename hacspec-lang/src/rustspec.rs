@@ -251,17 +251,6 @@ pub struct FuncSig {
     pub ret: Spanned<BaseTyp>,
 }
 
-pub enum ExternSig {
-    NotInRustspec,
-    Sig(FuncSig)
-}
-
-pub struct ExternFunc {
-    krate: String,
-    span: Span,
-    sig: ExternSig
-}
-
 #[derive(Clone)]
 pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
