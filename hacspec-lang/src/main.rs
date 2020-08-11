@@ -13,6 +13,7 @@ extern crate im;
 extern crate pretty;
 
 mod ast_to_rustspec;
+mod hir_to_rustspec;
 mod rustspec;
 mod rustspec_to_fstar;
 mod typechecker;
@@ -100,6 +101,11 @@ impl Callbacks for HacspecCallbacks {
         let item_list: HashMap<String, HashMap<String, HashSet<Signature>>> =
             serde_json::from_reader(&file).unwrap();
         let hacspec_items = item_list.get(&key_s).unwrap().get(&crate_s).unwrap();
+        queries
+            .global_ctxt()
+            .unwrap()
+            .peek_mut()
+            .enter(|tcx| hir_to_rustspec::retrieve_external_functions(&compiler.session(), &tcx));
         let krate = match typechecker::typecheck_program(&compiler.session(), krate, hacspec_items)
         {
             Ok(krate) => krate,

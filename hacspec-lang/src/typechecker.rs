@@ -3,7 +3,7 @@ use hacspec_dev::external_sig;
 use im::{HashMap, HashSet};
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
-use rustc_span::{Span, DUMMY_SP};
+use rustc_span::Span;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 // TODO: explain that we need typechecking inference to disambiguate method calls
@@ -1268,29 +1268,9 @@ fn typecheck_item(
 pub fn typecheck_program(
     sess: &Session,
     p: Program,
-    allowed_sigs: &AllowedSigs,
+    _allowed_sigs: &AllowedSigs,
 ) -> TypecheckingResult<Program> {
     let mut fn_context = HashMap::new();
-    for allowed_sig in allowed_sigs {
-        let fn_key = match &allowed_sig.method {
-            None => FnKey::Static(Ident::Original(allowed_sig.name.clone())),
-            //TODO handle polylmorphism
-            Some(typ) => FnKey::Method(
-                BaseTyp::Named(Path {
-                    location: vec![(Ident::Original(typ.clone()), DUMMY_SP)],
-                    arg: None,
-                }),
-                Ident::Original(allowed_sig.name.clone()),
-            ),
-        };
-        fn_context.insert(
-            fn_key,
-            FuncSig {
-                args: vec![],
-                ret: (BaseTyp::Unit, DUMMY_SP),
-            },
-        );
-    }
     let mut typ_dict = HashMap::new();
     check_vec(
         p.into_iter()

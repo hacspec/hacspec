@@ -39,9 +39,13 @@ macro_rules! declare_attribute {
                 TokenTree::Ident(ident) => ident,
                 _ => panic!(),
             };
-            let impl_type_name: Option<String> = attr_args_iter.next().map(|_| {
+            let _impl_type_name: Option<String> = attr_args_iter.next().map(|_| {
                 let arg = attr_args_iter.next().unwrap();
                 format!("{}", arg)
+            });
+            let _is_generic: bool = attr_args_iter.next().map_or(false, |_| {
+                let _ = attr_args_iter.next().unwrap();
+                true
             });
             if cfg!(feature = "print_attributes") {
                 if $allowed_item {
@@ -66,7 +70,7 @@ macro_rules! declare_attribute {
                         }
                         Some(items) => items
                     };
-                    item_list_type_crate.insert(syn_sig_to_reduced(&func.sig, impl_type_name));
+                    item_list_type_crate.insert(syn_sig_to_reduced(&func.sig));
                     let file = OpenOptions::new()
                         .truncate(true)
                         .write(true)

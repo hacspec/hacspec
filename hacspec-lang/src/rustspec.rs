@@ -157,7 +157,6 @@ impl fmt::Debug for BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
-
 #[derive(Clone)]
 pub enum Literal {
     Unit,

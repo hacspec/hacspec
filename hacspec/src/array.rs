@@ -481,7 +481,7 @@ macro_rules! generic_array {
 
             // We can't use the [From] trait here because otherwise it would conflict with
             // the From<T> for T core implementation, as the array also implements the [SeqTrait].
-            #[cfg_attr(feature="use_attributes", library(hacspec, , $name))]
+            #[cfg_attr(feature="use_attributes", library(hacspec, $name))]
             pub fn from_seq<U: SeqTrait<T>>(x: &U) -> $name<T> {
                 debug_assert_eq!(x.len(), $l);
                 let mut out = $name::new();
