@@ -748,6 +748,13 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                         PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
                             Ok(translate_ident(&id))
                         }
+                        PatKind::Wild => {
+                            sess.span_err(
+                                param.pat.span.clone(),
+                                "please give a name to this function argument",
+                            );
+                            Err(())
+                        }
                         _ => {
                             sess.span_err(
                             param.pat.span.clone(),

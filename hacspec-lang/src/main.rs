@@ -2,7 +2,9 @@
 extern crate rustc_ast;
 extern crate rustc_driver;
 extern crate rustc_errors;
+extern crate rustc_hir;
 extern crate rustc_interface;
+extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 #[macro_use]
@@ -11,6 +13,7 @@ extern crate im;
 extern crate pretty;
 
 mod ast_to_rustspec;
+mod hir_to_rustspec;
 mod rustspec;
 mod rustspec_to_fstar;
 mod typechecker;
@@ -22,8 +25,9 @@ use rustc_interface::{
     interface::{Compiler, Config},
     Queries,
 };
-use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
+use rustc_session::{config::ErrorOutputType, filesearch, search_paths::SearchPath};
 use std::env;
+use walkdir::WalkDir;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
@@ -50,8 +54,21 @@ impl Callbacks for HacspecCallbacks {
                     shared_library,
                     ERROR_OUTPUT_CONFIG,
                 ));
+                for entry in WalkDir::new(shared_library) {
+                    let entry = entry.unwrap();
+                    if entry.metadata().unwrap().is_dir() {
+                        config.opts.search_paths.push(SearchPath::from_cli_opt(
+                            entry.path().to_str().unwrap(),
+                            ERROR_OUTPUT_CONFIG,
+                        ));
+                    }
+                }
             }
         }
+        config.crate_cfg.insert((
+            String::from("feature"),
+            Some(String::from("\"hacspec_attributes\"")),
+        ));
     }
 
     fn after_analysis<'tcx>(
@@ -69,6 +86,11 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
+        queries
+            .global_ctxt()
+            .unwrap()
+            .peek_mut()
+            .enter(|tcx| hir_to_rustspec::retrieve_external_functions(&compiler.session(), &tcx));
         let krate = match typechecker::typecheck_program(&compiler.session(), krate) {
             Ok(krate) => krate,
             Err(_) => {
