@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec::*;
 
 fn foo(_a: Seq<u32>) -> Seq<u32> {
     Seq::new(2usize)

@@ -170,7 +170,7 @@ fn equal_types(t1: &Typ, t2: &Typ, typ_dict: &TypeDict) -> bool {
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
-enum FnKey {
+pub enum FnKey {
     Static(Ident),
     Method(BaseTyp, Ident),
 }
@@ -1260,8 +1260,6 @@ fn typecheck_item(
                 ),
             ),
         )),
-        // TODO: Collect uses and put them in context
-        Item::Use(ref _p) => Ok((i.clone(), fn_context.clone(), typ_dict.clone())),
     }
 }
 
@@ -1272,15 +1270,19 @@ pub fn typecheck_program(
 ) -> TypecheckingResult<Program> {
     let mut fn_context = HashMap::new();
     let mut typ_dict = HashMap::new();
-    check_vec(
-        p.into_iter()
-            .map(|(i, i_span)| {
-                let (new_i, new_fn_context, new_typ_dict) =
-                    typecheck_item(sess, i, &fn_context, &typ_dict)?;
-                fn_context = new_fn_context;
-                typ_dict = new_typ_dict;
-                Ok((new_i, i_span))
-            })
-            .collect(),
-    )
+    Ok(Program {
+        items: check_vec(
+            p.items
+                .into_iter()
+                .map(|(i, i_span)| {
+                    let (new_i, new_fn_context, new_typ_dict) =
+                        typecheck_item(sess, i, &fn_context, &typ_dict)?;
+                    fn_context = new_fn_context;
+                    typ_dict = new_typ_dict;
+                    Ok((new_i, i_span))
+                })
+                .collect(),
+        )?,
+        imported_crates: p.imported_crates,
+    })
 }

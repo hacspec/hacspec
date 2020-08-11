@@ -384,12 +384,11 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                     .group()
                     .nest(2),
             ),
-        Item::Use(_) => RcDoc::nil(),
     }
 }
 
 fn translate_program(p: &Program) -> RcDoc<()> {
-    RcDoc::concat(p.iter().map(|(i, _)| {
+    RcDoc::concat(p.items.iter().map(|(i, _)| {
         translate_item(i)
             .append(RcDoc::hardline())
             .append(RcDoc::hardline())

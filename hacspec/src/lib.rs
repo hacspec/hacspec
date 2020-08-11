@@ -36,7 +36,7 @@ pub mod vec_integers_public;
 pub mod vec_util;
 pub mod transmute;
 
-use crate::prelude::*;
+pub use crate::prelude::*;
 
 // XXX: How can we document these things nicely?
 // The following are only for documentation purposes.

@@ -105,7 +105,7 @@ impl Callbacks for HacspecCallbacks {
             .global_ctxt()
             .unwrap()
             .peek_mut()
-            .enter(|tcx| hir_to_rustspec::retrieve_external_functions(&compiler.session(), &tcx));
+            .enter(|tcx| hir_to_rustspec::retrieve_external_functions(&compiler.session(), &tcx, &krate.imported_crates));
         let krate = match typechecker::typecheck_program(&compiler.session(), krate, hacspec_items)
         {
             Ok(krate) => krate,

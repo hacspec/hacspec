@@ -254,7 +254,9 @@ pub struct FuncSig {
 pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
     ArrayDecl(Spanned<Ident>, Spanned<usize>, Spanned<BaseTyp>),
-    Use(Path),
 }
 
-pub type Program = Vec<Spanned<Item>>;
+pub struct Program {
+    pub items: Vec<Spanned<Item>>,
+    pub imported_crates: Vec<Spanned<String>>,
+}

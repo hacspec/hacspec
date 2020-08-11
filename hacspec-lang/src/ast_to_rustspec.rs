@@ -83,6 +83,26 @@ fn translate_type_arg(
     }
 }
 
+pub fn translate_use_path(sess: &Session, path: &ast::Path) -> TranslationResult<String> {
+    if path.segments.len() > 1 {
+        sess.span_err(path.span, "imports are limited to the top-level glob");
+        return Err(());
+    }
+    match path.segments.iter().last() {
+        None => {
+            sess.span_err(path.span, "empty path are not allowed in Rustspec");
+            Err(())
+        }
+        Some(segment) => match &segment.args {
+            None => Ok(segment.ident.name.to_ident_string()),
+            Some(_) => {
+                sess.span_err(path.span, "imports cannot have arguments");
+                Err(())
+            }
+        },
+    }
+}
+
 // TODO: translate paths into base types
 pub fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
     let location: Vec<TranslationResult<Spanned<Ident>>> = path
@@ -698,7 +718,12 @@ fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<
     ))
 }
 
-fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
+enum ItemTranslationResult {
+    Item(Item),
+    ImportedCrate(String),
+}
+
+fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTranslationResult> {
     match &i.kind {
         ItemKind::Fn(defaultness, ref sig, ref generics, ref body) => {
             // First, checking that no fancy function qualifier is here
@@ -797,11 +822,18 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                 args: fn_inputs,
                 ret: fn_output,
             };
-            Ok(Item::FnDecl(translate_ident(&i.ident), fn_sig, fn_body))
+            Ok(ItemTranslationResult::Item(Item::FnDecl(
+                translate_ident(&i.ident),
+                fn_sig,
+                fn_body,
+            )))
         }
         ItemKind::Use(ref tree) => match tree.kind {
             // TODO: better system
-            UseTreeKind::Glob => Ok(Item::Use(translate_path(sess, &tree.prefix)?)),
+            UseTreeKind::Glob => Ok(ItemTranslationResult::ImportedCrate(translate_use_path(
+                sess,
+                &tree.prefix,
+            )?)),
             _ => {
                 sess.span_err(tree.span.clone(), "only ::* uses are allowed in Rustspec");
                 Err(())
@@ -951,7 +983,9 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
                                     return Err(());
                                 }
                             }?;
-                            Ok(Item::ArrayDecl(typ_ident, size, cell_t))
+                            Ok(ItemTranslationResult::Item(Item::ArrayDecl(
+                                typ_ident, size, cell_t,
+                            )))
                         }
                         _ => {
                             sess.span_err(i.span.clone(), "expected delimited macro arguments");
@@ -981,10 +1015,37 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<Item> {
 
 pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
     let items = &krate.module.items;
-    check_vec(
+    let (items, imports): (Vec<_>, Vec<_>) = check_vec(
         items
             .into_iter()
             .map(|i| Ok((translate_items(sess, &i)?, i.span)))
             .collect(),
-    )
+    )?
+    .into_iter()
+    .partition(|(r, _)| match r {
+        ItemTranslationResult::Item(_) => true,
+        ItemTranslationResult::ImportedCrate(_) => false,
+    });
+    let items = items
+        .into_iter()
+        .map(|(r, r_span)| {
+            match r {
+                ItemTranslationResult::Item(i) => (i, r_span),
+                _ => panic!(), // should not happen
+            }
+        })
+        .collect();
+    let imports = imports
+        .into_iter()
+        .map(|(r, r_span)| {
+            match r {
+                ItemTranslationResult::ImportedCrate(i) => (i, r_span),
+                _ => panic!(), // should not happen
+            }
+        })
+        .collect();
+    Ok(Program {
+        items,
+        imported_crates: imports,
+    })
 }
