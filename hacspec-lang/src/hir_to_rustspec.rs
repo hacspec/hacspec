@@ -5,7 +5,7 @@ use rustc_middle::ty::TyCtxt;
 use rustc_session::Session;
 use rustc_span::{Span, Symbol};
 
-use crate::rustspec::*;
+use crate::{ast_to_rustspec, rustspec::*};
 
 pub fn retrieve_external_functions(sess: &Session, tcx: &TyCtxt) -> Vec<ExternFunc> {
     let krates = tcx.crates();
@@ -19,16 +19,8 @@ pub fn retrieve_external_functions(sess: &Session, tcx: &TyCtxt) -> Vec<ExternFu
         println!("Processing new crate! {}", original_crate_name);
         for (exported_symbol, _) in exported_symbols {
             match exported_symbol {
-                // TODO: check if it's really not necessary to include ExportedSymbol::Generic
                 ExportedSymbol::Generic(id, _) | ExportedSymbol::NonGeneric(id) => {
-                    for attribute in tcx.get_attrs(*id) {
-                        match (&attribute.style, &attribute.kind) {
-                            (_, AttrKind::Normal(attr)) => {
-                                ()
-                            }
-                            _ => (),
-                        }
-                    }
+                    ()
                 }
                 _ => (),
             }

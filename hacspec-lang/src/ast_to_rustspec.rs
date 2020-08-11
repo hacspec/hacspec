@@ -84,7 +84,7 @@ fn translate_type_arg(
 }
 
 // TODO: translate paths into base types
-fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
+pub fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
     let location: Vec<TranslationResult<Spanned<Ident>>> = path
         .segments
         .iter()

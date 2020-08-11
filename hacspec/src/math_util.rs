@@ -122,7 +122,7 @@ pub fn poly_div<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Result<(Vec<T>, Ve
 /// **Panics** if x is not invertible.
 ///
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool) -> T {
     let mut t = T::ZERO();
     let mut r = n;
@@ -305,7 +305,7 @@ pub fn extended_euclid<T: Integer + Copy>(
 /// Conditional, constant-time swapping.
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == 1`.
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn cswap_bit<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
     cswap(x, y, T::default().wrap_sub(c))
 }
@@ -314,7 +314,7 @@ pub fn cswap_bit<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == T::max`.
 /// The return value is undefined if `c` has any other value.
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn cswap<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
     let mask = c & (x ^ y);
     (x ^ mask, y ^ mask)
@@ -323,7 +323,7 @@ pub fn cswap<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
 /// Set bit at position `i` in `x` to `b` if `c` is all 1 and return the restult.
 /// Returns `x` if `c` is `0`.
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: usize, c: T) -> T {
     let set = x.set_bit(b, i);
     let (out, _) = cswap(x, set, c);
@@ -334,7 +334,7 @@ pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: usize, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn cadd<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let sum = x.wrap_add(y);
     let (x, _) = cswap(x, sum, c);
@@ -345,7 +345,7 @@ pub fn cadd<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn csub<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let diff = x.wrap_sub(y);
     let (x, _) = cswap(x, diff, c);
@@ -356,7 +356,7 @@ pub fn csub<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Multiplication is always wrapping.
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn cmul<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let prod = x.wrap_mul(y);
     let (x, _) = cswap(x, prod, c);
@@ -367,7 +367,7 @@ pub fn cmul<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Note that this function is only constant time if `T` is a secret integer and
 /// hence provides constant time implementations for the used functions.
 #[inline]
-#[cfg_attr(feature="use_attributes", library(internal))]
+#[cfg_attr(feature="use_attributes", internal(hacspec))]
 pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
     let mut q = T::default();
     let mut r = T::default();
