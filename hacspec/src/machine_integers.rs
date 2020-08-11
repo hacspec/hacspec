@@ -77,7 +77,7 @@ macro_rules! implement_public_signed_mi {
                 (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn pow_mod(self, exp: Self, n: Self) -> Self {
                 let r_big = BigInt::from(self).modpow(&BigInt::from(exp), &BigInt::from(n));
                 debug_assert!(r_big <= BigInt::from(Self::max_val()));

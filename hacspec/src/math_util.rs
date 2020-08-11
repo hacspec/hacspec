@@ -5,12 +5,14 @@
 use crate::prelude::*;
 
 /// polynomial subtraction, calculates a - b mod modulo
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn sub_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
     let result = Seq::from_native_slice(&poly_sub(&a.b, &b.b, modulo));
     make_positive(&result, modulo)
 }
 
 #[inline]
+#[cfg_attr(feature = "use_attributes", primitive(internal))]
 fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
@@ -26,12 +28,14 @@ fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
 }
 
 /// Polynomial Addition, calculates a + b mod modulo
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn add_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
     let result = Seq::from_native_slice(&poly_add(&a.b, &b.b, modulo));
     make_positive(&result, modulo)
 }
 
 #[inline]
+#[cfg_attr(feature = "use_attributes", primitive(internal))]
 fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
@@ -46,55 +50,28 @@ fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     out
 }
 
-/// Polynomial multiplication using operand scanning without modulo.
-#[allow(dead_code)]
-#[inline]
-pub(crate) fn poly_mul_plain<T: Numeric + Copy>(x: &[T], y: &[T], _n: T) -> Vec<T> {
-    let mut out = vec![T::default(); x.len() + y.len()];
-    for i in 0..x.len() {
-        for j in 0..y.len() {
-            out[i + j] = out[i + j] + x[i] * y[j];
-        }
-    }
-    out
-}
-
-/// Polynomial multiplication using operand scanning.
-/// This is very inefficient and prone to side-channel attacks.
-#[allow(dead_code)]
-#[inline]
-pub(crate) fn poly_mul_op_scanning<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
-    let mut out = vec![T::default(); x.len() + y.len()];
-    for i in 0..x.len() {
-        for j in 0..y.len() {
-            out[i + j] = out[i + j].add_mod(x[i].mul_mod(y[j], n), n);
-        }
-    }
-    out
+/// Simple polynomial multiplication for two fixed size polynomials O(n²) with `a * b mod n`
+pub fn mul_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, n: T) -> Seq<T> {
+    Seq::from_native_slice(&poly_mul(&a.b, &b.b, n))
 }
 
 /// Polynomial multiplication using sparse multiplication.
 /// This can be more efficient than operand scanning but also prone to side-channel
 /// attacks.
 #[inline]
-pub fn poly_mul<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
-    let mut out = vec![T::default(); x.len() + y.len()];
-    for adx in x
-        .iter()
-        .enumerate()
-        .map(|(i, x)| (i, x))
-        .filter(|(_, &x)| !x.equal(T::default()))
-    {
-        for bdx in y
-            .iter()
-            .enumerate()
-            .map(|(i, x)| (i, x))
-            .filter(|(_, &x)| !x.equal(T::default()))
-        {
-            out[adx.0 + bdx.0] = out[adx.0 + bdx.0].add_mod(adx.1.mul_mod(*bdx.1, n), n);
+#[cfg_attr(feature = "use_attributes", primitive(internal))]
+fn poly_mul<T: Numeric + Copy>(a: &[T], b: &[T], n: T) -> Vec<T> {
+    let mut result = vec![T::default(); a.len() + b.len()];
+    for i in 0..a.len() {
+        if !a[i].equal(T::default()) {
+            for j in 0..b.len() {
+                if !b[j].equal(T::default()) {
+                    result[i + j] = (result[i + j].add(a[i] * b[j])).modulo(n);
+                }
+            }
         }
     }
-    out
+    result
 }
 
 /// Euclidean algorithm to compute quotient `q` and remainder `r` of x/y.
@@ -103,6 +80,7 @@ pub fn poly_mul<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
 /// Returns Ok(quotient, remainder) or Err("Can't divide these two polynomials")
 ///
 #[inline]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn poly_div<T: Numeric + Copy>(
     x: &[T],
     y: &[T],
@@ -139,7 +117,7 @@ pub fn poly_div<T: Numeric + Copy>(
 /// **Panics** if x is not invertible.
 ///
 #[inline]
-#[cfg_attr(feature = "use_attributes", library(internal))]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool) -> T {
     let mut t = T::ZERO();
     let mut r = n;
@@ -287,6 +265,7 @@ fn divstepsx<T: Integer + Copy>(
 /// x.len() and degree of y are assumed to be public
 /// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266
 #[inline]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn extended_euclid<T: Integer + Copy>(x: &[T], y: &[T], n: T) -> Result<Vec<T>, &'static str> {
     let (yd, _) = leading_coefficient(y);
     debug_assert!(yd >= x.len());
@@ -312,7 +291,7 @@ pub fn extended_euclid<T: Integer + Copy>(x: &[T], y: &[T], n: T) -> Result<Vec<
 /// Conditional, constant-time swapping.
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == 1`.
 #[inline]
-#[cfg_attr(feature = "use_attributes", library(internal))]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn cswap_bit<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
     cswap(x, y, T::default().wrap_sub(c))
 }
@@ -321,7 +300,7 @@ pub fn cswap_bit<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == T::max`.
 /// The return value is undefined if `c` has any other value.
 #[inline]
-#[cfg_attr(feature = "use_attributes", library(internal))]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn cswap<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
     let mask = c & (x ^ y);
     (x ^ mask, y ^ mask)
@@ -330,7 +309,7 @@ pub fn cswap<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
 /// Set bit at position `i` in `x` to `b` if `c` is all 1 and return the restult.
 /// Returns `x` if `c` is `0`.
 #[inline]
-#[cfg_attr(feature = "use_attributes", library(internal))]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: usize, c: T) -> T {
     let set = x.set_bit(b, i);
     let (out, _) = cswap(x, set, c);
@@ -341,7 +320,7 @@ pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: usize, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-#[cfg_attr(feature = "use_attributes", library(internal))]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn cadd<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let sum = x.wrap_add(y);
     let (x, _) = cswap(x, sum, c);
@@ -363,7 +342,7 @@ pub fn csub<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Multiplication is always wrapping.
 #[inline]
-#[cfg_attr(feature = "use_attributes", library(internal))]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn cmul<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let prod = x.wrap_mul(y);
     let (x, _) = cswap(x, prod, c);
@@ -374,7 +353,7 @@ pub fn cmul<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Note that this function is only constant time if `T` is a secret integer and
 /// hence provides constant time implementations for the used functions.
 #[inline]
-#[cfg_attr(feature = "use_attributes", library(internal))]
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
     let mut q = T::default();
     let mut r = T::default();
@@ -393,16 +372,75 @@ pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
     (q, r)
 }
 
+/// if all coefficients of a polynomial are 0, returns True
+/// else false
+fn is_null<T: Integer + Copy>(poly: &Seq<T>) -> bool {
+    let mut result = true;
+    for i in 0..poly.len() {
+        if !poly[i].equal(T::default()) {
+            result = false;
+            break;
+        }
+    }
+    result
+}
+
+/// returns degree of polynomial, e.g. for  3x² + 2x + 1 -> 2
+pub fn deg<T: Integer + Copy>(poly: &Seq<T>) -> usize {
+    let mut deg = 0;
+    for i in 0..poly.len() - 1 {
+        if !poly[poly.len() - 1 - i].equal(T::default()) {
+            deg = poly.len() - 1 - i;
+            break;
+        }
+    }
+    deg
+}
+
+/// returns number of coefficient != 0, e.g. for  -3x⁵ + 3x² + 2x + 1 -> 4
+pub fn weight<T: Integer + Copy>(poly: &Seq<T>) -> usize {
+    let tmp = Seq::from_seq(poly);
+    let mut weight = 0;
+    for i in 0..tmp.len() {
+        if !tmp[i].equal(T::default()) {
+            weight = weight + 1;
+        }
+    }
+    weight
+}
+
+/// returns coefficient of the highest degree, e.g. for  3x² + 2x + 1 -> 3
+pub fn leading_coef<T: Integer + Copy>(poly: &Seq<T>) -> T {
+    poly[deg(poly)]
+}
+
+/// makes coefficients positiv, e.g. -3 mod 4 = 1
+pub fn make_positive<T: Numeric + Copy>(poly: &Seq<T>, q: T) -> Seq<T> {
+    let mut result = Seq::new(poly.len());
+    for i in 0..poly.len() {
+        result[i] = poly[i].signed_modulo(q);
+    }
+    result
+}
+
+/// Return the inverse of `a mod m`, Fermat's little theorem
+/// Necessary Assumption `m` is prime and `a < m`
+fn invert_fermat<T: Integer + Copy>(a: T, m: T) -> T {
+    a.pow_mod(m - T::TWO(), m)
+}
+
 // ==== Util for i128 specific ==== //
 //  Generalize later when possible  //
 
 /// makes poly to an element of R_modulo \ irr
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn poly_to_ring(irr: &Seq<i128>, poly: &Seq<i128>, modulo: i128) -> Seq<i128> {
     let pre = euclidean_division(&poly, &irr, modulo, irr.len() - 1).1;
     make_positive(&pre, modulo)
 }
 
 /// polynomial multiplication of two size fixed polynomials in R_modulo \ irr
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn mul_poly_irr(a: &Seq<i128>, b: &Seq<i128>, irr: &Seq<i128>, modulo: i128) -> Seq<i128> {
     assert!(a.len() == b.len(), true);
     let mut result: Seq<i128> = Seq::new(a.len());
@@ -436,7 +474,8 @@ pub fn mul_poly_irr(a: &Seq<i128>, b: &Seq<i128>, irr: &Seq<i128>, modulo: i128)
 }
 
 /// simple schoolbook polynomial multiplication with sparse and all coefficients mod modulo
-pub fn mul_poly_naive(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
+#[cfg_attr(feature = "use_attributes", primitive(internal))]
+fn mul_poly_naive(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
     let mut out: Seq<i128> = Seq::new(a.len() + b.len());
     for i in 0..a.len() {
         if a[i] == 0 {
@@ -447,85 +486,6 @@ pub fn mul_poly_naive(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
         }
     }
     make_positive(&out, modulo)
-}
-
-/// simple polynomial multiplication for two fixed size polynomials O(n²) with a * b mod modulo
-/// Assumption: Degree of a * b < Size of a
-pub fn mul_poly(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
-    assert!(a.len() == b.len(), true);
-    let mut result: Seq<i128> = Seq::new(a.len());
-    for i in 0..a.len() {
-        if a[i] == 0 {
-            continue;
-        }
-        for j in 0..b.len() {
-            if b[j] == 0 {
-                continue;
-            }
-            if i + j > a.len() - 1 {
-                panic!("Overflow");
-            }
-            result[i + j] = (result[i + j] + (a[i] * b[j])) % modulo;
-        }
-    }
-    result
-}
-
-/// if all coefficients of a polynomial are 0, returns True
-/// else false
-fn is_null(poly: &Seq<i128>) -> bool {
-    let mut result = true;
-    for i in 0..poly.len() {
-        if poly[i] != 0 {
-            result = false;
-            break;
-        }
-    }
-    result
-}
-
-/// returns degree of polynomial, e.g. for  3x² + 2x + 1 -> 2
-pub fn deg(poly: &Seq<i128>) -> usize {
-    let mut deg = 0;
-    for i in 0..poly.len() - 1 {
-        if poly[poly.len() - 1 - i] != 0 {
-            deg = poly.len() - 1 - i;
-            break;
-        }
-    }
-    deg
-}
-
-/// returns number of coefficient != 0, e.g. for  -3x⁵ + 3x² + 2x + 1 -> 4
-pub fn weight(poly: &Seq<i128>) -> usize {
-    let tmp = Seq::from_seq(poly);
-    let mut weight = 0;
-    for i in 0..tmp.len() {
-        if tmp[i] != 0 {
-            weight = weight + 1;
-        }
-    }
-    weight
-}
-
-/// returns coefficient of the highest degree, e.g. for  3x² + 2x + 1 -> 3
-pub fn leading_coef(poly: &Seq<i128>) -> i128 {
-    poly[deg(poly)]
-}
-
-/// makes coefficients positiv, e.g. -3 mod 4 = 1
-pub fn make_positive<T: Numeric + Copy>(poly: &Seq<T>, q: T) -> Seq<T> {
-    let mut result = Seq::new(poly.len());
-    for i in 0..poly.len() {
-        result[i] = poly[i].signed_modulo(q);
-    }
-    result
-}
-
-/// return the inverse of a mod m, Fermat's little theorem
-/// Necessary Assumption m is prime and a < m
-fn invert_fermat(a: i128, m: i128) -> i128 {
-    a.pow_mod(m - 2, m)
 }
 
 /// scalar division in R_p, calculates a / scalar mod p
@@ -588,11 +548,11 @@ pub fn eea(a: &Seq<i128>, irr: &Seq<i128>, modulo: i128) -> Result<Seq<i128>, &'
         let q = euclidean_division(&r, &new_r, modulo, p).0;
 
         let tmp_t = Seq::from_seq(&new_t);
-        new_t = sub_poly(&t, &mul_poly(&q, &new_t, modulo), modulo);
+        new_t = sub_poly(&t, &mul_poly(&q, &new_t, modulo).get_chunk(q.len(), 0).1, modulo);
         t = Seq::from_seq(&tmp_t);
 
         let tmp_r = Seq::from_seq(&new_r);
-        new_r = sub_poly(&r, &mul_poly(&q, &new_r, modulo), modulo);
+        new_r = sub_poly(&r, &mul_poly(&q, &new_r, modulo).get_chunk(q.len(), 0).1, modulo);
         r = Seq::from_seq(&tmp_r);
     }
     if deg(&r) > 0 {

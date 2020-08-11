@@ -152,8 +152,8 @@ fn test_mul_poly() {
         assert_eq!(product[i], p[i]);
     }
 }
+
 #[test]
-#[should_panic]
 fn test_mul_poly_with_unequal_sized_poly() {
     //x¹² + x
     let a: Seq<i128> = Seq::from_native_slice(&[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);

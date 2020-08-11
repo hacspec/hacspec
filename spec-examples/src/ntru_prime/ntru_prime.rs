@@ -82,8 +82,8 @@ pub fn encrypt(r: &Seq<i128>, h: &Seq<i128>, n_v: &Parameters) -> Seq<i128> {
 }
 
 pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Seq<i128> {
-    let f = &key.0;
-    let v = &key.1;
+    let (f, v) = key;
+
     // calculate 3*f and 3*f*c
     let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q);
     let mut f_3_c = poly_to_ring(
@@ -125,7 +125,6 @@ pub fn build_poly(poly: &Poly, h_deg: usize) -> Seq<i128> {
     }
 
     for i in 0..poly.coefficients.len() {
-        // TODO: This is ugly. Seq should support this
         polynomial = polynomial.set_chunk(
             1,
             poly.positions[i] as usize,
