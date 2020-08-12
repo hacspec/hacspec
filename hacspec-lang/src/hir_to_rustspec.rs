@@ -112,7 +112,7 @@ pub fn retrieve_external_functions(
 ) -> HashMap<FnKey, ExternalFuncSig> {
     let krates = tcx.crates();
     let mut def_ids_to_fetch = HashSet::new();
-    let extern_funcs = HashMap::new();
+    let mut extern_funcs = HashMap::new();
     for krate_num in krates {
         let exported_symbols = tcx.exported_symbols(*krate_num);
         let original_crate_name = tcx.original_crate_name(*krate_num);
@@ -144,8 +144,46 @@ pub fn retrieve_external_functions(
     for id in def_ids_to_fetch {
         let export_sig = tcx.fn_sig(id);
         match translate_polyfnsig(tcx, &export_sig) {
-            Ok(_sig) => (),
-            Err(()) => ()
+            Ok(sig) => {
+                let def_path = tcx.def_path(id);
+                if def_path.data.len() <= 2 {
+                    if def_path.data.len() == 1 {
+                        // Static function
+                        let name_segment = def_path.data.first().unwrap();
+                        match name_segment.data {
+                            DefPathData::ValueNs(name) => {
+                                let fn_key = FnKey::Static(Ident::Original(name.to_ident_string()));
+                                extern_funcs.insert(fn_key, sig);
+                            }
+                            _ => (),
+                        }
+                    } else {
+                        // Function inside an impl block
+                        let impl_segment = def_path.data.first().unwrap();
+                        let name_segment = def_path.data.last().unwrap();
+                        match (impl_segment.data, name_segment.data) {
+                            (DefPathData::Impl, DefPathData::ValueNs(name)) => {
+                                let impl_id = tcx.impl_of_method(id).unwrap();
+                                let impl_type = translate_base_typ(tcx, &tcx.type_of(impl_id));
+                                match impl_type {
+                                    Ok(impl_type) => {
+                                        let fn_key = FnKey::Method(
+                                            impl_type,
+                                            Ident::Original(name.to_ident_string()),
+                                        );
+                                        extern_funcs.insert(fn_key, sig);
+                                    }
+                                    Err(()) => (),
+                                }
+                            }
+                            _ => (),
+                        }
+                    };
+                } else {
+                    ()
+                };
+            }
+            Err(()) => (),
         }
     }
     extern_funcs

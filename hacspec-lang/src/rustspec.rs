@@ -250,7 +250,7 @@ pub struct FuncSig {
     pub ret: Spanned<BaseTyp>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ExternalFuncSig {
     pub args: Vec<Typ>,
     pub ret: BaseTyp,
