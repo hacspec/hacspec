@@ -251,6 +251,12 @@ pub struct FuncSig {
 }
 
 #[derive(Clone)]
+pub struct ExternalFuncSig {
+    pub args: Vec<Typ>,
+    pub ret: BaseTyp,
+}
+
+#[derive(Clone)]
 pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
     ArrayDecl(Spanned<Ident>, Spanned<usize>, Spanned<BaseTyp>),

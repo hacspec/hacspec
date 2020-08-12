@@ -76,7 +76,7 @@ macro_rules! declare_attribute {
                         .write(true)
                         .open(ITEM_LIST_LOCATION)
                         .unwrap();
-                    serde_json::to_writer(&file, &item_list).unwrap();
+                    serde_json::to_writer_pretty(&file, &item_list).unwrap();
                 }
                 Diagnostic::new(
                     Level::Note,
