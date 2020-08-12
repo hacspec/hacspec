@@ -175,7 +175,27 @@ pub enum FnKey {
     Method(BaseTyp, Ident),
 }
 
-type FnContext = HashMap<FnKey, FuncSig>;
+#[derive(Clone)]
+pub enum FnValue {
+    Local(FuncSig),
+    External(ExternalFuncSig),
+}
+
+fn sig_args(sig: &FnValue) -> Vec<Typ> {
+    match sig {
+        FnValue::Local(sig) => sig.args.clone().into_iter().map(|(_, (x, _))| x).collect(),
+        FnValue::External(sig) => sig.args.clone(),
+    }
+}
+
+fn sig_ret(sig: &FnValue) -> BaseTyp {
+    match sig {
+        FnValue::Local(sig) => sig.ret.0.clone(),
+        FnValue::External(sig) => sig.ret.clone(),
+    }
+}
+
+type FnContext = HashMap<FnKey, FnValue>;
 
 type VarContext = HashMap<RustspecId, (Typ, String)>;
 
@@ -608,13 +628,14 @@ fn typecheck_expression(
                     }
                     Some(sig) => sig,
                 };
-                if f_sig.args.len() != args.len() {
+                let sig_args = sig_args(f_sig);
+                if sig_args.len() != args.len() {
                     sess.span_err(
                         *span,
                         format!(
                             "function {} was expecting {} arguments but got {}",
                             f,
-                            f_sig.args.len(),
+                            sig_args.len(),
                             args.len()
                         )
                         .as_str(),
@@ -622,7 +643,7 @@ fn typecheck_expression(
                 }
                 let mut var_context = var_context.clone();
                 let mut new_args = Vec::new();
-                for ((_, (sig_t, _)), (arg, arg_span)) in f_sig.args.iter().zip(args) {
+                for (sig_t, (arg, arg_span)) in sig_args.iter().zip(args) {
                     let (new_arg, arg_t, new_var_context) = typecheck_expression(
                         sess,
                         &(arg.clone(), arg_span.clone()),
@@ -643,7 +664,10 @@ fn typecheck_expression(
                 }
                 Ok((
                     Expression::FuncCall((f.clone(), f_span.clone()), new_args),
-                    ((Borrowing::Consumed, *f_span), f_sig.ret.clone()),
+                    (
+                        (Borrowing::Consumed, f_span.clone()),
+                        (sig_ret(f_sig), f_span.clone()),
+                    ),
                     var_context,
                 ))
             }
@@ -672,21 +696,22 @@ fn typecheck_expression(
             };
             let mut args = args.clone();
             args.push(*sel.clone());
-            if f_sig.args.len() != args.len() {
+            let sig_args = sig_args(f_sig);
+            if sig_args.len() != args.len() {
                 sess.span_err(
                     *span,
                     format!(
                         "method {}::{} was expecting {} arguments but got {}",
                         (sel_typ.1).0,
                         f,
-                        f_sig.args.len(),
+                        sig_args.len(),
                         args.len()
                     )
                     .as_str(),
                 )
             }
             let mut new_args = Vec::new();
-            for ((_, (sig_t, _)), (ref arg, arg_span)) in f_sig.args.iter().zip(args) {
+            for (sig_t, (ref arg, arg_span)) in sig_args.iter().zip(args) {
                 let (new_arg, arg_t, new_var_context) = typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
@@ -712,7 +737,10 @@ fn typecheck_expression(
                     (f.clone(), f_span.clone()),
                     new_args,
                 ),
-                ((Borrowing::Consumed, *f_span), f_sig.ret.clone()),
+                (
+                    (Borrowing::Consumed, f_span.clone()),
+                    (sig_ret(f_sig), f_span.clone()),
+                ),
                 var_context,
             ))
         }
@@ -1240,7 +1268,8 @@ fn typecheck_item(
                     b_span.clone(),
                 ),
             );
-            let fn_context = fn_context.update(FnKey::Static(f.clone()), sig.clone());
+            let fn_context =
+                fn_context.update(FnKey::Static(f.clone()), FnValue::Local(sig.clone()));
             Ok((out, fn_context, typ_dict.clone()))
         }
         Item::ArrayDecl(id, size, cell_t) => Ok((
@@ -1266,9 +1295,10 @@ fn typecheck_item(
 pub fn typecheck_program(
     sess: &Session,
     p: Program,
+    external_funcs: &HashMap<FnKey, ExternalFuncSig>,
     _allowed_sigs: &AllowedSigs,
 ) -> TypecheckingResult<Program> {
-    let mut fn_context = HashMap::new();
+    let mut fn_context: FnContext = external_funcs.iter().map(|(k, v)| (k.clone(), FnValue::External(v.clone()))).collect();
     let mut typ_dict = HashMap::new();
     Ok(Program {
         items: check_vec(
