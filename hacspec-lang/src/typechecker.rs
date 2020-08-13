@@ -62,6 +62,7 @@ fn is_copy(t: &BaseTyp) -> bool {
         BaseTyp::Array(_, _) => true,
         // TODO: implement special cases for derived copy
         BaseTyp::Named(_, _) => false,
+        BaseTyp::Wildcard => false, //Changed when characterized by traits,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t)),
     }
 }
@@ -150,6 +151,7 @@ fn equal_types(t1: &Typ, t2: &Typ, typ_dict: &TypeDict) -> bool {
                             )
                         })
                 }
+                (BaseTyp::Wildcard, _) | (_, BaseTyp::Wildcard) => true,
                 _ => false,
             }
         }
@@ -214,6 +216,54 @@ type TypeDict = HashMap<String, Typ>;
 type NameContext = HashMap<String, Ident>;
 
 type AllowedSigs = std::collections::HashSet<external_sig::Signature>;
+
+fn find_func(
+    sess: &Session,
+    key1: &FnKey,
+    fn_context: &FnContext,
+    typ_dict: &TypeDict,
+    span: &Span,
+) -> TypecheckingResult<FnValue> {
+    let mut candidates = fn_context.clone();
+    candidates.retain(|key2, _| match (key1, key2) {
+        (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
+            (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
+            _ => panic!(),
+        },
+        (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
+            equal_types(
+                &(
+                    (Borrowing::Consumed, span.clone()),
+                    (t1.clone(), span.clone()),
+                ),
+                &(
+                    (Borrowing::Consumed, span.clone()),
+                    (t2.clone(), span.clone()),
+                ),
+                typ_dict,
+            ) && match (n1, n2) {
+                (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
+                _ => panic!(),
+            }
+        }
+        _ => false,
+    });
+    if candidates.len() == 0 {
+        sess.span_err(*span, format!("function {} cannot be found", key1).as_str());
+        return Err(());
+    }
+    if candidates.len() > 1 {
+        sess.span_err(
+            *span,
+            format!("Multiple implementations for function {}", key1).as_str(),
+        );
+        return Err(());
+    }
+    for (_, sig) in candidates {
+        return Ok(sig);
+    }
+    Err(())
+}
 
 fn find_ident<'a, 'b>(x: &'a Ident, name_context: &'b NameContext) -> &'b Ident {
     match x {
@@ -619,27 +669,16 @@ fn typecheck_expression(
             }
         }
         Expression::FuncCall(prefix, name, args) => {
-            let f_sig = match fn_context.get(&match prefix {
-                None => FnKey::Independent(name.0.clone()),
-                Some((prefix, _)) => FnKey::Impl(prefix.clone(), name.0.clone()),
-            }) {
-                None => {
-                    sess.span_err(
-                        name.1.clone(),
-                        format!(
-                            "unknown function {}{}",
-                            (match prefix {
-                                None => String::new(),
-                                Some(prefix) => format!("{}::", &prefix.0),
-                            }),
-                            &name.0
-                        )
-                        .as_str(),
-                    );
-                    return Err(());
-                }
-                Some(sig) => sig,
-            };
+            let f_sig = find_func(
+                sess,
+                &match prefix {
+                    None => FnKey::Independent(name.0.clone()),
+                    Some((prefix, _)) => FnKey::Impl(prefix.clone(), name.0.clone()),
+                },
+                fn_context,
+                typ_dict,
+                &name.1,
+            )?;
             if let FnValue::ExternalNotInRustspec = f_sig {
                 sess.span_err(
                     name.1.clone(),
@@ -655,7 +694,7 @@ fn typecheck_expression(
                 );
                 return Err(());
             };
-            let sig_args = sig_args(f_sig);
+            let sig_args = sig_args(&f_sig);
             if sig_args.len() != args.len() {
                 sess.span_err(
                     *span,
@@ -684,7 +723,14 @@ fn typecheck_expression(
                 if !equal_types(&arg_t, sig_t, typ_dict) {
                     sess.span_err(
                         *arg_span,
-                        format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
+                        format!(
+                            "expected type {}{}, got {}{}",
+                            (sig_t.0).0,
+                            (sig_t.1).0,
+                            (arg_t.0).0,
+                            (arg_t.1).0
+                        )
+                        .as_str(),
                     );
                     return Err(());
                 }
@@ -693,7 +739,7 @@ fn typecheck_expression(
                 Expression::FuncCall(prefix.clone(), name.clone(), new_args),
                 (
                     (Borrowing::Consumed, name.1.clone()),
-                    (sig_ret(f_sig), name.1.clone()),
+                    (sig_ret(&f_sig), name.1.clone()),
                 ),
                 var_context,
             ))
@@ -703,16 +749,13 @@ fn typecheck_expression(
             let (new_sel, sel_typ, new_var_context) =
                 typecheck_expression(sess, &sel, fn_context, typ_dict, &var_context, name_context)?;
             var_context = new_var_context;
-            let f_sig = match fn_context.get(&FnKey::Impl((sel_typ.1).0.clone(), f.clone())) {
-                None => {
-                    sess.span_err(
-                        *f_span,
-                        format!("unknown method {}::{}", (sel_typ.1).0, f).as_str(),
-                    );
-                    return Err(());
-                }
-                Some(sig) => sig,
-            };
+            let f_sig = find_func(
+                sess,
+                &FnKey::Impl((sel_typ.1).0.clone(), f.clone()),
+                fn_context,
+                typ_dict,
+                f_span,
+            )?;
             if let FnValue::ExternalNotInRustspec = f_sig {
                 sess.span_err(
                     *f_span,
@@ -727,7 +770,7 @@ fn typecheck_expression(
             };
             let mut args = args.clone();
             args.push(*sel.clone());
-            let sig_args = sig_args(f_sig);
+            let sig_args = sig_args(&f_sig);
             if sig_args.len() != args.len() {
                 sess.span_err(
                     *span,
@@ -756,7 +799,14 @@ fn typecheck_expression(
                 if !equal_types(&arg_t, sig_t, typ_dict) {
                     sess.span_err(
                         arg_span,
-                        format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
+                        format!(
+                            "expected type {}{}, got {}{}",
+                            (sig_t.0).0,
+                            (sig_t.1).0,
+                            (arg_t.0).0,
+                            (arg_t.1).0
+                        )
+                        .as_str(),
                     );
                     return Err(());
                 }
@@ -770,7 +820,7 @@ fn typecheck_expression(
                 ),
                 (
                     (Borrowing::Consumed, f_span.clone()),
-                    (sig_ret(f_sig), f_span.clone()),
+                    (sig_ret(&f_sig), f_span.clone()),
                 ),
                 var_context,
             ))

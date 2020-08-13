@@ -52,7 +52,6 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
                             let param_typ = if substs.len() == 1 {
                                 match substs.first().unwrap().unpack() {
                                     GenericArgKind::Type(arg_ty) => {
-                                        println!("Translating seq arg {:?}!", arg_ty);
                                         match translate_base_typ(tcx, &arg_ty) {
                                             Ok(t) => t,
                                             Err(()) => return Err(()),
@@ -79,6 +78,10 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
                 _ => Err(()),
             }
         }
+        TyKind::Param(_) => {
+            // TODO: sophisticate
+            Ok(BaseTyp::Wildcard)
+        }
         _ => Err(()),
     }
 }
@@ -90,7 +93,7 @@ fn translate_ty(tcx: &TyCtxt, ty: &ty::Ty) -> Result<Typ, ()> {
             (translate_base_typ(tcx, &ref_ty)?, DUMMY_SP),
         )),
         _ => Ok((
-            (Borrowing::Borrowed, DUMMY_SP),
+            (Borrowing::Consumed, DUMMY_SP),
             (translate_base_typ(tcx, ty)?, DUMMY_SP),
         )),
     }
@@ -162,7 +165,6 @@ pub fn retrieve_external_functions(
                                         match (impl_segment.data, name_segment.data) {
                                             (DefPathData::Impl, DefPathData::ValueNs(name)) => {
                                                 let impl_id = tcx.impl_of_method(*id).unwrap();
-                                                println!("Trying!");
                                                 let impl_type =
                                                     translate_base_typ(tcx, &tcx.type_of(impl_id));
                                                 // TODO: distinguish between methods and static for types
@@ -174,7 +176,7 @@ pub fn retrieve_external_functions(
                                                         );
                                                         extern_funcs.insert(fn_key, sig);
                                                     }
-                                                    Err(()) => println!("Rejecting {:?}", *id),
+                                                    Err(()) => (),
                                                 }
                                             }
                                             _ => (),

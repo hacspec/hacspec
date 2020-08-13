@@ -158,27 +158,24 @@ pub fn translate_func_name(
     let prefix = if path.segments.len() == 2 {
         match path.segments.first() {
             None => panic!(), // should not happen
-            Some(segment) => match &segment.args {
-                None => Ok(Some((
-                    BaseTyp::Named(translate_ident(&segment.ident), None),
-                    segment.ident.span,
-                ))),
-                Some(generic_args) => Ok(Some((
-                    BaseTyp::Named(
-                        translate_ident(&segment.ident),
-                        Some(Box::new(translate_type_arg(
-                            sess,
-                            generic_args,
-                            &path.span,
-                        )?)),
+            Some(segment) => Some(translate_base_typ(
+                sess,
+                &ast::Ty {
+                    span: path.span,
+                    id: NodeId::MAX,
+                    kind: TyKind::Path(
+                        None,
+                        ast::Path {
+                            span: path.span,
+                            segments: vec![segment.clone()],
+                        },
                     ),
-                    segment.ident.span,
-                ))),
-            },
+                },
+            )?),
         }
     } else {
-        Ok(None)
-    }?;
+        None
+    };
     Ok((
         prefix,
         translate_ident(&path.segments.last().unwrap().ident),
@@ -204,6 +201,10 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                         "bool" => return Ok((BaseTyp::Bool, ty.span)),
                         "usize" => return Ok((BaseTyp::Usize, ty.span)),
                         "isize" => return Ok((BaseTyp::Isize, ty.span)),
+                        "Seq" => {
+                            sess.span_err(ty.span, "Seq expects a type argument");
+                            return Err(());
+                        }
                         _ => (),
                     },
                     Some(args) => match t.ident.name.to_ident_string().as_str() {

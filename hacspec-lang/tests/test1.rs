@@ -1,7 +1,7 @@
 use hacspec::*;
 
 fn foo(_a: Seq<u32>) -> Seq<u32> {
-    Seq::new(2usize)
+    Seq::<u32>::new(2usize)
 }
 
 pub fn dummy_hacspec_func(x: u32, y: u32, a: Seq<u32>) -> u32 {

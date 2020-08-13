@@ -53,6 +53,24 @@ fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, (
         .group()
 }
 
+fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
+    RcDoc::as_string("(")
+        .append(
+            RcDoc::line_()
+                .append(RcDoc::intersperse(
+                    args.into_iter(),
+                    RcDoc::space()
+                        .append(RcDoc::as_string("&"))
+                        .append(RcDoc::line()),
+                ))
+                .group()
+                .nest(2),
+        )
+        .append(RcDoc::line_())
+        .append(RcDoc::as_string(")"))
+        .group()
+}
+
 fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
     RcDoc::as_string("(")
         .append(RcDoc::line_().append(e).group().nest(2))
@@ -107,7 +125,8 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
             None => RcDoc::nil(),
             Some(arg) => RcDoc::space().append(translate_base_typ(&arg.as_ref().0)),
         }),
-        BaseTyp::Tuple(_) => panic!(),
+        BaseTyp::Wildcard => RcDoc::as_string("'a"),
+        BaseTyp::Tuple(args) => make_typ_tuple(args.iter().map(|(arg, _)| translate_base_typ(arg))),
     }
 }
 
@@ -173,6 +192,49 @@ fn translate_unop(op: &UnOpKind) -> RcDoc<()> {
     }
 }
 
+fn translate_func_name<'a, 'b>(
+    prefix: &'a Option<Spanned<BaseTyp>>,
+    name: &'a Ident,
+) -> RcDoc<'a, ()> {
+    match prefix {
+        None => translate_ident(name),
+        Some((prefix, _)) => {
+            let module_name = match prefix {
+                BaseTyp::Bool => panic!(), // should not happen
+                BaseTyp::Unit => panic!(), // should not happen
+                BaseTyp::UInt8 => RcDoc::as_string("UInt8"),
+                BaseTyp::Int8 => RcDoc::as_string("Int8"),
+                BaseTyp::UInt16 => RcDoc::as_string("UInt16"),
+                BaseTyp::Int16 => RcDoc::as_string("Int16"),
+                BaseTyp::UInt32 => RcDoc::as_string("UInt32"),
+                BaseTyp::Int32 => RcDoc::as_string("Int32"),
+                BaseTyp::UInt64 => RcDoc::as_string("UInt64"),
+                BaseTyp::Int64 => RcDoc::as_string("Int64"),
+                BaseTyp::UInt128 => RcDoc::as_string("UInt128"),
+                BaseTyp::Int128 => RcDoc::as_string("Int128"),
+                BaseTyp::Usize => RcDoc::as_string("UInt32"),
+                BaseTyp::Isize => RcDoc::as_string("Int32"),
+                BaseTyp::Seq(_) | BaseTyp::Array(_, _) => RcDoc::as_string("Seq"),
+                BaseTyp::Named(ident, _) => translate_ident(&ident.0),
+                BaseTyp::Wildcard => panic!(), // should not happen
+                BaseTyp::Tuple(_) => panic!(), // should not happen
+            };
+            let type_arg = match prefix {
+                BaseTyp::Seq(tau) => Some(translate_base_typ(&tau.0)),
+                BaseTyp::Array(_, tau) => Some(translate_base_typ(&tau.0)),
+                _ => None,
+            };
+            module_name
+                .append(RcDoc::as_string("."))
+                .append(translate_ident(name))
+                .append(match type_arg {
+                    None => RcDoc::nil(),
+                    Some(arg) => RcDoc::space().append(RcDoc::as_string("#")).append(arg),
+                })
+        }
+    }
+}
+
 fn translate_expression(e: &Expression) -> RcDoc<()> {
     match e {
         Expression::Binary((op, _), ref e1, ref e2) => {
@@ -195,20 +257,17 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
         Expression::Lit(lit) => translate_literal(lit),
         Expression::Tuple(es) => make_tuple(es.into_iter().map(|(e, _)| translate_expression(&e))),
         Expression::Named(p) => translate_ident(p),
-        Expression::FuncCall(prefix, name, args) => (match prefix {
-            None => translate_ident(&name.0),
-            Some((prefix, _)) => translate_ident(&name.0)
-                .append(RcDoc::as_string("_"))
-                .append(translate_base_typ(&prefix)),
-        })
-        .append(if args.len() > 0 {
-            RcDoc::concat(
-                args.iter()
-                    .map(|(arg, _)| RcDoc::space().append(make_paren(translate_expression(arg)))),
-            )
-        } else {
-            RcDoc::space().append(RcDoc::as_string("()"))
-        }),
+        Expression::FuncCall(prefix, name, args) => {
+            translate_func_name(prefix, &name.0).append(if args.len() > 0 {
+                RcDoc::concat(
+                    args.iter().map(|(arg, _)| {
+                        RcDoc::space().append(make_paren(translate_expression(arg)))
+                    }),
+                )
+            } else {
+                RcDoc::space().append(RcDoc::as_string("()"))
+            })
+        }
         Expression::MethodCall(sel, _, (f, _), args) => translate_ident(f)
             .append(RcDoc::space())
             .append({

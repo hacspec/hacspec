@@ -51,7 +51,7 @@ impl fmt::Display for Borrowing {
             "{}",
             match self {
                 Borrowing::Consumed => "",
-                Borrowing::Borrowed => "& ",
+                Borrowing::Borrowed => "&",
             },
         )
     }
@@ -83,6 +83,7 @@ pub enum BaseTyp {
     Array(Spanned<usize>, Box<Spanned<BaseTyp>>),
     Named(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>),
     Tuple(Vec<Spanned<BaseTyp>>),
+    Wildcard,
 }
 
 impl fmt::Display for BaseTyp {
@@ -124,6 +125,7 @@ impl fmt::Display for BaseTyp {
                 "({})",
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
+            BaseTyp::Wildcard => write!(f, "*"),
         }
     }
 }
