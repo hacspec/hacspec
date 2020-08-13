@@ -103,43 +103,86 @@ pub fn translate_use_path(sess: &Session, path: &ast::Path) -> TranslationResult
     }
 }
 
-// TODO: translate paths into base types
-pub fn translate_path(sess: &Session, path: &ast::Path) -> TranslationResult<Path> {
-    let location: Vec<TranslationResult<Spanned<Ident>>> = path
-        .segments
-        .iter()
-        .enumerate()
-        .map(|(i, segment)| {
-            if let Some(_) = segment.args {
-                if i + 1 < path.segments.len() {
-                    // Only the last segment element should bear arguments
-                    sess.span_err(
-                        path.span,
-                        "type arguments only allowed for the last segment path in Rustspec",
-                    );
-                    return Err(());
-                }
-            };
-            Ok(translate_ident(&segment.ident))
-        })
-        .collect();
-    let location = check_vec(location)?;
-    let arg = match path.segments.iter().last() {
+pub fn translate_typ_name(
+    sess: &Session,
+    path: &ast::Path,
+) -> TranslationResult<(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>)> {
+    if path.segments.len() > 1 {
+        return Err(());
+    }
+    match path.segments.iter().last() {
         None => {
             sess.span_err(path.span, "empty path are not allowed in Rustspec");
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok(None),
-            Some(generic_args) => Ok(Some(Box::new(
-                translate_type_arg(sess, generic_args, &path.span)?.0,
-            ))),
+            None => Ok((translate_ident(&segment.ident), None)),
+            Some(generic_args) => Ok((
+                translate_ident(&segment.ident),
+                Some(Box::new(translate_type_arg(
+                    sess,
+                    generic_args,
+                    &path.span,
+                )?)),
+            )),
         },
-    };
-    Ok(Path {
-        location,
-        arg: arg?,
-    })
+    }
+}
+
+pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResult<Ident> {
+    if path.segments.len() > 1 {
+        return Err(());
+    }
+    match path.segments.iter().last() {
+        None => {
+            sess.span_err(path.span, "empty path are not allowed in Rustspec");
+            Err(())
+        }
+        Some(segment) => match &segment.args {
+            None => Ok(translate_ident(&segment.ident).0),
+            Some(_) => {
+                sess.span_err(path.span, "expression paths cannot have arguments");
+                Err(())
+            }
+        },
+    }
+}
+
+pub fn translate_func_name(
+    sess: &Session,
+    path: &ast::Path,
+) -> TranslationResult<(Option<Spanned<BaseTyp>>, Spanned<Ident>)> {
+    if path.segments.len() > 2 {
+        return Err(());
+    }
+    let prefix = if path.segments.len() == 2 {
+        match path.segments.first() {
+            None => panic!(), // should not happen
+            Some(segment) => match &segment.args {
+                None => Ok(Some((
+                    BaseTyp::Named(translate_ident(&segment.ident), None),
+                    segment.ident.span,
+                ))),
+                Some(generic_args) => Ok(Some((
+                    BaseTyp::Named(
+                        translate_ident(&segment.ident),
+                        Some(Box::new(translate_type_arg(
+                            sess,
+                            generic_args,
+                            &path.span,
+                        )?)),
+                    ),
+                    segment.ident.span,
+                ))),
+            },
+        }
+    } else {
+        Ok(None)
+    }?;
+    Ok((
+        prefix,
+        translate_ident(&path.segments.last().unwrap().ident),
+    ))
 }
 
 fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<BaseTyp>> {
@@ -173,7 +216,8 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                 },
                 _ => (),
             };
-            Ok((BaseTyp::Named(translate_path(sess, path)?), ty.span))
+            let (name, arg) = translate_typ_name(sess, path)?;
+            Ok((BaseTyp::Named(name, arg), ty.span))
         }
         TyKind::Tup(tys) => {
             let rtys: Vec<TranslationResult<Spanned<BaseTyp>>> = tys
@@ -260,12 +304,12 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             Err(())
         }
         ExprKind::Path(None, path) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Named(translate_path(sess, path)?)),
+            ExprTranslationResult::TransExpr(Expression::Named(translate_expr_name(sess, path)?)),
             e.span,
         )),
         ExprKind::Call(func, args) => {
-            let func_path = match &func.kind {
-                ExprKind::Path(None, path) => Ok((translate_path(sess, &path)?, path.span)),
+            let ((func_prefix, func_name), _) = match &func.kind {
+                ExprKind::Path(None, path) => Ok((translate_func_name(sess, &path)?, path.span)),
                 _ => {
                     sess.span_err(
                         func.span,
@@ -273,14 +317,18 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     );
                     Err(())
                 }
-            };
+            }?;
             let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
                 .iter()
                 .map(|arg| translate_expr_expects_exp(&arg))
                 .collect();
             let func_args = check_vec(func_args);
             Ok((
-                ExprTranslationResult::TransExpr(Expression::FuncCall(func_path?, func_args?)),
+                ExprTranslationResult::TransExpr(Expression::FuncCall(
+                    func_prefix,
+                    func_name,
+                    func_args?,
+                )),
                 e.span,
             ))
         }

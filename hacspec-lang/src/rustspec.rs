@@ -32,7 +32,7 @@ impl fmt::Display for Ident {
 
 impl fmt::Debug for Ident {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{}", self)
     }
 }
 
@@ -64,35 +64,6 @@ impl fmt::Debug for Borrowing {
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
-pub struct Path {
-    pub location: Vec<Spanned<Ident>>,
-    pub arg: Option<Box<BaseTyp>>,
-}
-
-impl fmt::Display for Path {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            self.location
-                .iter()
-                .map(|(loc, _)| format!("{}", loc))
-                .format("."),
-            match &self.arg {
-                None => String::new(),
-                Some(arg) => format!("<{}>", arg),
-            }
-        )
-    }
-}
-
-impl fmt::Debug for Path {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
-#[derive(Clone, Hash, PartialEq, Eq)]
 pub enum BaseTyp {
     Unit,
     Bool,
@@ -110,7 +81,7 @@ pub enum BaseTyp {
     Isize,
     Seq(Box<Spanned<BaseTyp>>),
     Array(Spanned<usize>, Box<Spanned<BaseTyp>>),
-    Named(Path),
+    Named(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>),
     Tuple(Vec<Spanned<BaseTyp>>),
 }
 
@@ -139,7 +110,15 @@ impl fmt::Display for BaseTyp {
                 let mu = &mu.0;
                 write!(f, "Seq<{}>", mu)
             }
-            BaseTyp::Named(path) => write!(f, "{}", path),
+            BaseTyp::Named(ident, arg) => write!(
+                f,
+                "{}{}",
+                ident.0,
+                match arg {
+                    None => String::new(),
+                    Some(arg) => format!("<{}>", arg.0),
+                }
+            ),
             BaseTyp::Tuple(args) => write!(
                 f,
                 "({})",
@@ -189,8 +168,13 @@ pub enum Expression {
         Box<Spanned<Expression>>,
         Box<Spanned<Expression>>,
     ),
-    Named(Path),
-    FuncCall(Spanned<Path>, Vec<Spanned<Expression>>),
+    Named(Ident),
+    // FuncCall(prefix, name, args)
+    FuncCall(
+        Option<Spanned<BaseTyp>>,
+        Spanned<Ident>,
+        Vec<Spanned<Expression>>,
+    ),
     MethodCall(
         Box<Spanned<Expression>>,
         Option<Typ>, // Type of self, to be filled by the typechecker
@@ -244,7 +228,7 @@ pub struct Block {
     pub return_typ: Fillable<Typ>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,

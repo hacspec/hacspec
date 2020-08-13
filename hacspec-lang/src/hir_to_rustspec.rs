@@ -1,4 +1,4 @@
-use im::{HashMap, HashSet};
+use im::HashMap;
 use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::definitions::DefPathData;
 use rustc_middle::middle::exported_symbols::ExportedSymbol;
@@ -52,7 +52,11 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
                             let param_typ = if substs.len() == 1 {
                                 match substs.first().unwrap().unpack() {
                                     GenericArgKind::Type(arg_ty) => {
-                                        translate_base_typ(tcx, &arg_ty)?
+                                        println!("Translating seq arg {:?}!", arg_ty);
+                                        match translate_base_typ(tcx, &arg_ty) {
+                                            Ok(t) => t,
+                                            Err(()) => return Err(()),
+                                        }
                                     }
                                     _ => return Err(()),
                                 }
@@ -61,15 +65,15 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
                             };
                             Ok(BaseTyp::Seq(Box::new((param_typ, DUMMY_SP))))
                         }
-                        _ => Ok(BaseTyp::Named(Path {
-                            location: vec![(Ident::Original(name.to_ident_string()), DUMMY_SP)],
-                            arg: None,
-                        })),
+                        _ => Ok(BaseTyp::Named(
+                            (Ident::Original(name.to_ident_string()), DUMMY_SP),
+                            None,
+                        )),
                     },
-                    _ => Ok(BaseTyp::Named(Path {
-                        location: vec![(Ident::Original(name.to_ident_string()), DUMMY_SP)],
-                        arg: None,
-                    })),
+                    _ => Ok(BaseTyp::Named(
+                        (Ident::Original(name.to_ident_string()), DUMMY_SP),
+                        None,
+                    )),
                 },
 
                 _ => Err(()),
@@ -109,9 +113,8 @@ pub fn retrieve_external_functions(
     _sess: &Session,
     tcx: &TyCtxt,
     imported_crates: &Vec<Spanned<String>>,
-) -> HashMap<FnKey, ExternalFuncSig> {
+) -> HashMap<FnKey, Option<ExternalFuncSig>> {
     let krates = tcx.crates();
-    let mut def_ids_to_fetch = HashSet::new();
     let mut extern_funcs = HashMap::new();
     for krate_num in krates {
         let exported_symbols = tcx.exported_symbols(*krate_num);
@@ -130,7 +133,53 @@ pub fn retrieve_external_functions(
                             TyKind::FnDef(_, _) => {
                                 let def_path = tcx.def_path(*id);
                                 if def_path.krate == *krate_num {
-                                    def_ids_to_fetch.insert(*id);
+                                    let export_sig = tcx.fn_sig(*id);
+                                    let sig = match translate_polyfnsig(tcx, &export_sig) {
+                                        Ok(sig) => Some(sig),
+                                        Err(()) => None,
+                                    };
+                                    if def_path.data.len() == 1
+                                        || (match def_path.data[def_path.data.len() - 2].data {
+                                            DefPathData::Impl | DefPathData::ImplTrait => false,
+                                            _ => true,
+                                        })
+                                    {
+                                        // Function not within impl block
+                                        let name_segment = def_path.data.last().unwrap();
+                                        match name_segment.data {
+                                            DefPathData::ValueNs(name) => {
+                                                let fn_key = FnKey::Independent(Ident::Original(
+                                                    name.to_ident_string(),
+                                                ));
+                                                extern_funcs.insert(fn_key, sig);
+                                            }
+                                            _ => (),
+                                        }
+                                    } else {
+                                        // Function inside an impl block
+                                        let impl_segment = def_path.data[def_path.data.len() - 2];
+                                        let name_segment = def_path.data.last().unwrap();
+                                        match (impl_segment.data, name_segment.data) {
+                                            (DefPathData::Impl, DefPathData::ValueNs(name)) => {
+                                                let impl_id = tcx.impl_of_method(*id).unwrap();
+                                                println!("Trying!");
+                                                let impl_type =
+                                                    translate_base_typ(tcx, &tcx.type_of(impl_id));
+                                                // TODO: distinguish between methods and static for types
+                                                match impl_type {
+                                                    Ok(impl_type) => {
+                                                        let fn_key = FnKey::Impl(
+                                                            impl_type,
+                                                            Ident::Original(name.to_ident_string()),
+                                                        );
+                                                        extern_funcs.insert(fn_key, sig);
+                                                    }
+                                                    Err(()) => println!("Rejecting {:?}", *id),
+                                                }
+                                            }
+                                            _ => (),
+                                        }
+                                    };
                                 }
                             }
                             _ => (),
@@ -141,50 +190,15 @@ pub fn retrieve_external_functions(
             }
         }
     }
-    for id in def_ids_to_fetch {
-        let export_sig = tcx.fn_sig(id);
-        match translate_polyfnsig(tcx, &export_sig) {
-            Ok(sig) => {
-                let def_path = tcx.def_path(id);
-                if def_path.data.len() <= 2 {
-                    if def_path.data.len() == 1 {
-                        // Static function
-                        let name_segment = def_path.data.first().unwrap();
-                        match name_segment.data {
-                            DefPathData::ValueNs(name) => {
-                                let fn_key = FnKey::Static(Ident::Original(name.to_ident_string()));
-                                extern_funcs.insert(fn_key, sig);
-                            }
-                            _ => (),
-                        }
-                    } else {
-                        // Function inside an impl block
-                        let impl_segment = def_path.data.first().unwrap();
-                        let name_segment = def_path.data.last().unwrap();
-                        match (impl_segment.data, name_segment.data) {
-                            (DefPathData::Impl, DefPathData::ValueNs(name)) => {
-                                let impl_id = tcx.impl_of_method(id).unwrap();
-                                let impl_type = translate_base_typ(tcx, &tcx.type_of(impl_id));
-                                match impl_type {
-                                    Ok(impl_type) => {
-                                        let fn_key = FnKey::Method(
-                                            impl_type,
-                                            Ident::Original(name.to_ident_string()),
-                                        );
-                                        extern_funcs.insert(fn_key, sig);
-                                    }
-                                    Err(()) => (),
-                                }
-                            }
-                            _ => (),
-                        }
-                    };
-                } else {
-                    ()
-                };
-            }
-            Err(()) => (),
-        }
-    }
+    // for (key, sig) in extern_funcs.iter() {
+    //     println!(
+    //         "Key in context: {:?} {}",
+    //         key,
+    //         match sig {
+    //             None => "(no sig)",
+    //             Some(_) => "",
+    //         }
+    //     );
+    // }
     extern_funcs
 }

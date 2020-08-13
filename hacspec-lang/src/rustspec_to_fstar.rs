@@ -71,18 +71,6 @@ fn translate_ident(x: &Ident) -> RcDoc<()> {
     RcDoc::as_string(format!("{}", x))
 }
 
-fn translate_path(p: &Path) -> RcDoc<()> {
-    RcDoc::intersperse(
-        p.location.iter().map(|(x, _)| translate_ident(x)),
-        RcDoc::as_string("_"),
-    )
-    .append(match &p.arg {
-        None => RcDoc::nil(),
-        Some(arg) => RcDoc::space().append(translate_base_typ(&arg)),
-    })
-    .group()
-}
-
 fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
     match tau {
         BaseTyp::Unit => RcDoc::as_string("unit"),
@@ -115,7 +103,10 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
                 .append(RcDoc::as_string(format!("{}", size.0)))
                 .group()
         }
-        BaseTyp::Named(p) => translate_path(p),
+        BaseTyp::Named(ident, arg) => translate_ident(&ident.0).append(match arg {
+            None => RcDoc::nil(),
+            Some(arg) => RcDoc::space().append(translate_base_typ(&arg.as_ref().0)),
+        }),
         BaseTyp::Tuple(_) => panic!(),
     }
 }
@@ -203,8 +194,14 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
         }
         Expression::Lit(lit) => translate_literal(lit),
         Expression::Tuple(es) => make_tuple(es.into_iter().map(|(e, _)| translate_expression(&e))),
-        Expression::Named(p) => translate_path(p),
-        Expression::FuncCall((f, _), args) => translate_path(f).append(if args.len() > 0 {
+        Expression::Named(p) => translate_ident(p),
+        Expression::FuncCall(prefix, name, args) => (match prefix {
+            None => translate_ident(&name.0),
+            Some((prefix, _)) => translate_ident(&name.0)
+                .append(RcDoc::as_string("_"))
+                .append(translate_base_typ(&prefix)),
+        })
+        .append(if args.len() > 0 {
             RcDoc::concat(
                 args.iter()
                     .map(|(arg, _)| RcDoc::space().append(make_paren(translate_expression(arg)))),

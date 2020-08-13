@@ -4,6 +4,7 @@ use im::{HashMap, HashSet};
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use rustc_span::Span;
+use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 // TODO: explain that we need typechecking inference to disambiguate method calls
@@ -60,7 +61,7 @@ fn is_copy(t: &BaseTyp) -> bool {
         BaseTyp::Seq(_) => false,
         BaseTyp::Array(_, _) => true,
         // TODO: implement special cases for derived copy
-        BaseTyp::Named(_) => false,
+        BaseTyp::Named(_, _) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t)),
     }
 }
@@ -68,27 +69,17 @@ fn is_copy(t: &BaseTyp) -> bool {
 fn is_array(sess: &Session, t: &Typ, typ_dict: &TypeDict) -> Result<Spanned<BaseTyp>, ()> {
     match &(t.1).0 {
         BaseTyp::Seq(t1) => Ok(t1.as_ref().clone()),
-        BaseTyp::Named(p) => {
-            if p.location.len() == 1 && p.arg == None {
-                let id = p.location.first().unwrap();
-                match &id.0 {
-                    Ident::Rustspec(_, _) => panic!(),
-                    Ident::Original(name) => match typ_dict.get(name) {
-                        Some(new_t) => is_array(sess, new_t, typ_dict),
-                        None => {
-                            sess.span_err(id.1.clone(), "unknown type");
-                            Err(())
-                        }
-                    },
+        BaseTyp::Named(id, None) => match &id.0 {
+            Ident::Rustspec(_, _) => panic!(),
+            Ident::Original(name) => match typ_dict.get(name) {
+                Some(new_t) => is_array(sess, new_t, typ_dict),
+                None => {
+                    sess.span_err(id.1.clone(), "unknown type");
+                    Err(())
                 }
-            } else {
-                sess.span_err(
-                    (t.1).1.clone(),
-                    "expected local named array type with no argument",
-                );
-                Err(())
-            }
-        }
+            },
+        },
+        BaseTyp::Named(_, Some(_)) => Err(()),
         BaseTyp::Array(_, cell_t) => Ok(cell_t.as_ref().clone()),
         _ => Err(()),
     }
@@ -135,22 +126,19 @@ fn equal_types(t1: &Typ, t2: &Typ, typ_dict: &TypeDict) -> bool {
                     &(((Borrowing::Consumed, (t2.1).1)), *tc2.clone()),
                     typ_dict,
                 ),
-                (BaseTyp::Named(p1), BaseTyp::Named(p2)) => {
-                    p1.location.len() == p2.location.len()
-                        && (p1
-                            .location
-                            .iter()
-                            .zip(p2.location.iter())
-                            .all(|(i1, i2)| i1 == i2))
-                        && match (&p1.arg, &p2.arg) {
-                            (None, None) => true,
-                            (Some(tc1), Some(tc2)) => equal_types(
-                                &(((Borrowing::Consumed, (t1.1).1)), (*tc1.clone(), (t1.1).1)),
-                                &(((Borrowing::Consumed, (t2.1).1)), (*tc2.clone(), (t2.1).1)),
-                                typ_dict,
-                            ),
-                            _ => false,
-                        }
+                (BaseTyp::Named(name1, arg1), BaseTyp::Named(name2, arg2)) => {
+                    (match (&name1.0, &name2.0) {
+                        (Ident::Original(name1), Ident::Original(name2)) => name1 == name2,
+                        _ => panic!(), //should not happen
+                    }) && match (&arg1, &arg2) {
+                        (None, None) => true,
+                        (Some(tc1), Some(tc2)) => equal_types(
+                            &(((Borrowing::Consumed, (t1.1).1)), tc1.as_ref().clone()),
+                            &(((Borrowing::Consumed, (t2.1).1)), tc2.as_ref().clone()),
+                            typ_dict,
+                        ),
+                        _ => false,
+                    }
                 }
                 (BaseTyp::Tuple(ts1), BaseTyp::Tuple(ts2)) => {
                     ts1.len() == ts2.len()
@@ -171,20 +159,41 @@ fn equal_types(t1: &Typ, t2: &Typ, typ_dict: &TypeDict) -> bool {
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum FnKey {
-    Static(Ident),
-    Method(BaseTyp, Ident),
+    Independent(Ident),
+    Impl(BaseTyp, Ident),
 }
 
-#[derive(Clone)]
+impl fmt::Display for FnKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                FnKey::Independent(ident) => format!("{}", ident),
+                FnKey::Impl(t, n) => format!("{}::{}", t, n),
+            }
+        )
+    }
+}
+
+impl fmt::Debug for FnKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum FnValue {
     Local(FuncSig),
     External(ExternalFuncSig),
+    ExternalNotInRustspec,
 }
 
 fn sig_args(sig: &FnValue) -> Vec<Typ> {
     match sig {
         FnValue::Local(sig) => sig.args.clone().into_iter().map(|(_, (x, _))| x).collect(),
         FnValue::External(sig) => sig.args.clone(),
+        FnValue::ExternalNotInRustspec => panic!(),
     }
 }
 
@@ -192,6 +201,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
     match sig {
         FnValue::Local(sig) => sig.ret.0.clone(),
         FnValue::External(sig) => sig.ret.clone(),
+        FnValue::ExternalNotInRustspec => panic!(),
     }
 }
 
@@ -302,39 +312,29 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::Named(path) => match (path.arg.as_ref(), path.location.len()) {
-            (None, 1) => {
-                let (id, id_span) = &path.location[0];
-                let id = find_ident(id, name_context);
-                let new_path = Expression::Named(Path {
-                    arg: None,
-                    location: vec![(id.clone(), id_span.clone())],
-                });
-                match find_typ(id, var_context) {
-                    None => {
-                        sess.span_err(*span, format!("the variable {} is unknown", id).as_str());
-                        Err(())
-                    }
-                    Some(t) => {
-                        // This is where linearity kicks in
-                        if let Borrowing::Consumed = (t.0).0 {
-                            if is_copy(&(t.1).0) {
-                                Ok((new_path, t.clone(), var_context.clone()))
-                            } else {
-                                let new_var_context = remove_var(&id, var_context);
-                                Ok((new_path, t.clone(), new_var_context))
-                            }
-                        } else {
+        Expression::Named(id) => {
+            let id = find_ident(id, name_context);
+            let new_path = Expression::Named(id.clone());
+            match find_typ(id, var_context) {
+                None => {
+                    sess.span_err(*span, format!("the variable {} is unknown", id).as_str());
+                    Err(())
+                }
+                Some(t) => {
+                    // This is where linearity kicks in
+                    if let Borrowing::Consumed = (t.0).0 {
+                        if is_copy(&(t.1).0) {
                             Ok((new_path, t.clone(), var_context.clone()))
+                        } else {
+                            let new_var_context = remove_var(&id, var_context);
+                            Ok((new_path, t.clone(), new_var_context))
                         }
+                    } else {
+                        Ok((new_path, t.clone(), var_context.clone()))
                     }
                 }
             }
-            _ => {
-                sess.span_err(*span, format!("the variable {} is unknown", path).as_str());
-                Err(())
-            }
-        },
+        }
         Expression::Binary((op, op_span), e1, e2) => {
             let (new_e1, t1, var_context) =
                 typecheck_expression(sess, e1, fn_context, typ_dict, var_context, name_context)?;
@@ -618,73 +618,92 @@ fn typecheck_expression(
                 }
             }
         }
-        Expression::FuncCall((f, f_span), args) => match (f.arg.as_ref(), f.location.len()) {
-            (None, 1) => {
-                let (id, _) = &f.location[0];
-                let f_sig = match fn_context.get(&FnKey::Static(id.clone())) {
-                    None => {
-                        sess.span_err(*f_span, format!("unknown function {}", f).as_str());
-                        return Err(());
-                    }
-                    Some(sig) => sig,
-                };
-                let sig_args = sig_args(f_sig);
-                if sig_args.len() != args.len() {
+        Expression::FuncCall(prefix, name, args) => {
+            let f_sig = match fn_context.get(&match prefix {
+                None => FnKey::Independent(name.0.clone()),
+                Some((prefix, _)) => FnKey::Impl(prefix.clone(), name.0.clone()),
+            }) {
+                None => {
                     sess.span_err(
-                        *span,
+                        name.1.clone(),
                         format!(
-                            "function {} was expecting {} arguments but got {}",
-                            f,
-                            sig_args.len(),
-                            args.len()
+                            "unknown function {}{}",
+                            (match prefix {
+                                None => String::new(),
+                                Some(prefix) => format!("{}::", &prefix.0),
+                            }),
+                            &name.0
                         )
                         .as_str(),
-                    )
+                    );
+                    return Err(());
                 }
-                let mut var_context = var_context.clone();
-                let mut new_args = Vec::new();
-                for (sig_t, (arg, arg_span)) in sig_args.iter().zip(args) {
-                    let (new_arg, arg_t, new_var_context) = typecheck_expression(
-                        sess,
-                        &(arg.clone(), arg_span.clone()),
-                        fn_context,
-                        typ_dict,
-                        &var_context,
-                        name_context,
-                    )?;
-                    var_context = new_var_context;
-                    new_args.push((new_arg, arg_span.clone()));
-                    if !equal_types(&arg_t, sig_t, typ_dict) {
-                        sess.span_err(
-                            *arg_span,
-                            format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
-                        );
-                        return Err(());
-                    }
-                }
-                Ok((
-                    Expression::FuncCall((f.clone(), f_span.clone()), new_args),
-                    (
-                        (Borrowing::Consumed, f_span.clone()),
-                        (sig_ret(f_sig), f_span.clone()),
-                    ),
-                    var_context,
-                ))
-            }
-            _ => {
+                Some(sig) => sig,
+            };
+            if let FnValue::ExternalNotInRustspec = f_sig {
                 sess.span_err(
-                    *f_span,
-                    "calling foreign functions not supported for now in Rustspec",
+                    name.1.clone(),
+                    format!(
+                        "function {}{} is known but its signature is not in Rustspec",
+                        (match prefix {
+                            None => String::new(),
+                            Some(prefix) => format!("{}::", &prefix.0),
+                        }),
+                        &name.0
+                    )
+                    .as_str(),
                 );
-                Err(())
+                return Err(());
+            };
+            let sig_args = sig_args(f_sig);
+            if sig_args.len() != args.len() {
+                sess.span_err(
+                    *span,
+                    format!(
+                        "function {} was expecting {} arguments but got {}",
+                        &name.0,
+                        sig_args.len(),
+                        args.len()
+                    )
+                    .as_str(),
+                )
             }
-        },
+            let mut var_context = var_context.clone();
+            let mut new_args = Vec::new();
+            for (sig_t, (arg, arg_span)) in sig_args.iter().zip(args) {
+                let (new_arg, arg_t, new_var_context) = typecheck_expression(
+                    sess,
+                    &(arg.clone(), arg_span.clone()),
+                    fn_context,
+                    typ_dict,
+                    &var_context,
+                    name_context,
+                )?;
+                var_context = new_var_context;
+                new_args.push((new_arg, arg_span.clone()));
+                if !equal_types(&arg_t, sig_t, typ_dict) {
+                    sess.span_err(
+                        *arg_span,
+                        format!("expected type {}, got {}", (sig_t.1).0, (arg_t.1).0).as_str(),
+                    );
+                    return Err(());
+                }
+            }
+            Ok((
+                Expression::FuncCall(prefix.clone(), name.clone(), new_args),
+                (
+                    (Borrowing::Consumed, name.1.clone()),
+                    (sig_ret(f_sig), name.1.clone()),
+                ),
+                var_context,
+            ))
+        }
         Expression::MethodCall(sel, _, (f, f_span), args) => {
             let mut var_context = var_context.clone();
             let (new_sel, sel_typ, new_var_context) =
                 typecheck_expression(sess, &sel, fn_context, typ_dict, &var_context, name_context)?;
             var_context = new_var_context;
-            let f_sig = match fn_context.get(&FnKey::Method((sel_typ.1).0.clone(), f.clone())) {
+            let f_sig = match fn_context.get(&FnKey::Impl((sel_typ.1).0.clone(), f.clone())) {
                 None => {
                     sess.span_err(
                         *f_span,
@@ -693,6 +712,18 @@ fn typecheck_expression(
                     return Err(());
                 }
                 Some(sig) => sig,
+            };
+            if let FnValue::ExternalNotInRustspec = f_sig {
+                sess.span_err(
+                    *f_span,
+                    format!(
+                        "function {}::{} is known but its signature is not in Rustspec",
+                        (sel_typ.1).0,
+                        f
+                    )
+                    .as_str(),
+                );
+                return Err(());
             };
             let mut args = args.clone();
             args.push(*sel.clone());
@@ -818,15 +849,7 @@ fn var_set_to_tuple(vars: &VarSet, span: &Span) -> Statement {
     Statement::ReturnExp(if vars.len() > 0 {
         Expression::Tuple(
             vars.iter()
-                .map(|i| {
-                    (
-                        Expression::Named(Path {
-                            location: vec![(i.clone(), span.clone())],
-                            arg: None,
-                        }),
-                        span.clone(),
-                    )
-                })
+                .map(|i| (Expression::Named(i.clone()), span.clone()))
                 .collect(),
         )
     } else {
@@ -1269,7 +1292,7 @@ fn typecheck_item(
                 ),
             );
             let fn_context =
-                fn_context.update(FnKey::Static(f.clone()), FnValue::Local(sig.clone()));
+                fn_context.update(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
             Ok((out, fn_context, typ_dict.clone()))
         }
         Item::ArrayDecl(id, size, cell_t) => Ok((
@@ -1295,10 +1318,21 @@ fn typecheck_item(
 pub fn typecheck_program(
     sess: &Session,
     p: Program,
-    external_funcs: &HashMap<FnKey, ExternalFuncSig>,
+    external_funcs: &HashMap<FnKey, Option<ExternalFuncSig>>,
     _allowed_sigs: &AllowedSigs,
 ) -> TypecheckingResult<Program> {
-    let mut fn_context: FnContext = external_funcs.iter().map(|(k, v)| (k.clone(), FnValue::External(v.clone()))).collect();
+    let mut fn_context: FnContext = external_funcs
+        .iter()
+        .map(|(k, v)| {
+            (
+                k.clone(),
+                match v {
+                    Some(v) => FnValue::External(v.clone()),
+                    None => FnValue::ExternalNotInRustspec,
+                },
+            )
+        })
+        .collect();
     let mut typ_dict = HashMap::new();
     Ok(Program {
         items: check_vec(

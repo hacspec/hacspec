@@ -1,213 +1,245 @@
 {
-  "primitive": {
-    "hacspec": [
-      {
-        "name": "to_le_bytes"
-      },
-      {
-        "name": "to_U128s_be"
-      },
-      {
-        "name": "to_be_u32s"
-      },
-      {
-        "name": "len"
-      },
-      {
-        "name": "to_u128s_le"
-      },
-      {
-        "name": "new"
-      },
-      {
-        "name": "declassify_eq"
-      },
-      {
-        "name": "from_hex_string"
-      },
-      {
-        "name": "from_hex"
-      },
-      {
-        "name": "to_le_u64s"
-      },
-      {
-        "name": "to_U128s_le"
-      },
-      {
-        "name": "to_le_u32s"
-      },
-      {
-        "name": "to_be_u64s"
-      },
-      {
-        "name": "to_u128s_be"
-      },
-      {
-        "name": "to_be_bytes"
-      },
-      {
-        "name": "cmp"
-      },
-      {
-        "name": "to_le_U64s"
-      },
-      {
-        "name": "index_mut"
-      },
-      {
-        "name": "to_le_U32s"
-      },
-      {
-        "name": "eq"
-      },
-      {
-        "name": "to_be_U32s"
-      },
-      {
-        "name": "to_be_U64s"
-      },
-      {
-        "name": "random"
-      },
-      {
-        "name": "index"
-      },
-      {
-        "name": "from_array"
-      }
-    ]
-  },
   "library": {
     "hacspec": [
       {
-        "name": "vec_poly_add"
-      },
-      {
-        "name": "update_start"
-      },
-      {
-        "name": "not"
-      },
-      {
-        "name": "absolute"
-      },
-      {
-        "name": "u64_to_le_bytes"
-      },
-      {
-        "name": "shl"
-      },
-      {
-        "name": "U32_to_be_bytes"
-      },
-      {
-        "name": "from_slice_range"
-      },
-      {
-        "name": "U16_from_le_bytes"
-      },
-      {
-        "name": "div"
-      },
-      {
-        "name": "get_byte"
-      },
-      {
-        "name": "update_slice"
-      },
-      {
-        "name": "classify"
-      },
-      {
-        "name": "exp"
-      },
-      {
-        "name": "less_than_or_equal"
-      },
-      {
-        "name": "from_slice"
-      },
-      {
-        "name": "update"
-      },
-      {
-        "name": "default"
-      },
-      {
-        "name": "TWO"
-      },
-      {
-        "name": "less_than_bm"
-      },
-      {
-        "name": "length"
-      },
-      {
-        "name": "shr"
-      },
-      {
-        "name": "U32_to_le_bytes"
-      },
-      {
-        "name": "U128_from_be_bytes"
+        "name": "wrap_sub"
       },
       {
         "name": "U16_to_le_bytes"
       },
       {
-        "name": "equal_bm"
+        "name": "U32_from_le_bytes"
       },
       {
-        "name": "bitand"
-      },
-      {
-        "name": "rotate_left"
-      },
-      {
-        "name": "u128_from_le_bytes"
-      },
-      {
-        "name": "sub"
-      },
-      {
-        "name": "greater_than_bm"
-      },
-      {
-        "name": "slice"
+        "name": "length"
       },
       {
         "name": "wrap_mul"
       },
       {
-        "name": "get_bit"
+        "name": "less_than_or_equal"
       },
       {
-        "name": "greater_than"
+        "name": "U128_from_le_bytes"
       },
       {
-        "name": "to_le_bytes"
+        "name": "from_le_bytes"
       },
       {
-        "name": "inv"
+        "name": "get_byte"
       },
       {
-        "name": "u32_from_be_bytes"
+        "name": "u64_to_le_bytes"
+      },
+      {
+        "name": "ZERO"
+      },
+      {
+        "name": "U32_to_be_bytes"
+      },
+      {
+        "name": "signed_modulo"
+      },
+      {
+        "name": "u64_from_le_bytes"
+      },
+      {
+        "name": "not"
+      },
+      {
+        "name": "U16_from_be_bytes"
+      },
+      {
+        "name": "u32_from_le_bytes"
+      },
+      {
+        "name": "u32_to_le_bytes"
+      },
+      {
+        "name": "update"
+      },
+      {
+        "name": "update_slice"
       },
       {
         "name": "to_be_bytes"
       },
       {
+        "name": "bitxor"
+      },
+      {
+        "name": "num_chunks"
+      },
+      {
+        "name": "create"
+      },
+      {
+        "name": "shl"
+      },
+      {
+        "name": "equal"
+      },
+      {
+        "name": "u32_from_be_bytes"
+      },
+      {
+        "name": "exp"
+      },
+      {
+        "name": "ONE"
+      },
+      {
+        "name": "U32_from_be_bytes"
+      },
+      {
         "name": "vec_poly_mul"
       },
       {
-        "name": "u128_from_be_bytes"
+        "name": "from_slice"
+      },
+      {
+        "name": "U64_from_le_bytes"
+      },
+      {
+        "name": "equal_bm"
+      },
+      {
+        "name": "update_start"
+      },
+      {
+        "name": "u64_from_be_bytes"
+      },
+      {
+        "name": "U128_to_le_bytes"
+      },
+      {
+        "name": "add"
+      },
+      {
+        "name": "classify"
+      },
+      {
+        "name": "set_chunk"
+      },
+      {
+        "name": "wrap_div"
+      },
+      {
+        "name": "rotate_right"
+      },
+      {
+        "name": "shr"
+      },
+      {
+        "name": "u32_to_be_bytes"
+      },
+      {
+        "name": "bitand"
+      },
+      {
+        "name": "partial_cmp"
+      },
+      {
+        "name": "greater_than_or_qual"
+      },
+      {
+        "name": "absolute"
+      },
+      {
+        "name": "U64_to_be_bytes"
+      },
+      {
+        "name": "default"
+      },
+      {
+        "name": "sub"
+      },
+      {
+        "name": "set"
+      },
+      {
+        "name": "U128_from_be_bytes"
+      },
+      {
+        "name": "mul"
+      },
+      {
+        "name": "greater_than"
+      },
+      {
+        "name": "get_bit"
+      },
+      {
+        "name": "TWO"
+      },
+      {
+        "name": "wrap_add"
+      },
+      {
+        "name": "greater_than_bm"
+      },
+      {
+        "name": "pow_mod"
+      },
+      {
+        "name": "from_slice_range"
+      },
+      {
+        "name": "get_chunk_len"
+      },
+      {
+        "name": "pow_self"
+      },
+      {
+        "name": "to_le_bytes"
+      },
+      {
+        "name": "U16_to_be_bytes"
+      },
+      {
+        "name": "U32_to_le_bytes"
+      },
+      {
+        "name": "less_than_bm"
+      },
+      {
+        "name": "u16_from_be_bytes"
+      },
+      {
+        "name": "from_seq"
       },
       {
         "name": "add_mod"
       },
       {
-        "name": "U64_from_le_bytes"
+        "name": "u16_to_be_bytes"
+      },
+      {
+        "name": "max_val"
+      },
+      {
+        "name": "greater_than_or_equal_bm"
+      },
+      {
+        "name": "slice"
+      },
+      {
+        "name": "get_chunk"
+      },
+      {
+        "name": "sub_mod"
+      },
+      {
+        "name": "u128_from_le_bytes"
+      },
+      {
+        "name": "vec_poly_sub"
+      },
+      {
+        "name": "U64_to_le_bytes"
+      },
+      {
+        "name": "mul_mod"
       },
       {
         "name": "U64_from_be_bytes"
@@ -216,181 +248,149 @@
         "name": "u16_to_le_bytes"
       },
       {
-        "name": "mul_mod"
+        "name": "not_equal_bm"
       },
       {
         "name": "modulo"
       },
       {
-        "name": "greater_than_or_equal_bm"
+        "name": "inv"
       },
       {
-        "name": "pow_self"
-      },
-      {
-        "name": "rotate_right"
-      },
-      {
-        "name": "u64_from_be_bytes"
-      },
-      {
-        "name": "U32_from_le_bytes"
-      },
-      {
-        "name": "wrap_div"
-      },
-      {
-        "name": "greater_than_or_qual"
-      },
-      {
-        "name": "sub_mod"
-      },
-      {
-        "name": "U16_to_be_bytes"
-      },
-      {
-        "name": "get_chunk_len"
-      },
-      {
-        "name": "create"
-      },
-      {
-        "name": "U128_to_le_bytes"
-      },
-      {
-        "name": "max_val"
-      },
-      {
-        "name": "ONE"
-      },
-      {
-        "name": "not_equal_bm"
-      },
-      {
-        "name": "less_than"
-      },
-      {
-        "name": "equal"
-      },
-      {
-        "name": "wrap_sub"
-      },
-      {
-        "name": "u128_to_le_bytes"
+        "name": "U16_from_le_bytes"
       },
       {
         "name": "slice_range"
       },
       {
-        "name": "U64_to_le_bytes"
-      },
-      {
-        "name": "num_chunks"
-      },
-      {
-        "name": "bitor"
-      },
-      {
-        "name": "u32_to_le_bytes"
-      },
-      {
-        "name": "U128_from_le_bytes"
-      },
-      {
-        "name": "u128_to_be_bytes"
-      },
-      {
-        "name": "less_than_or_equal_bm"
-      },
-      {
-        "name": "from_seq"
-      },
-      {
-        "name": "pow_mod"
-      },
-      {
-        "name": "mul"
-      },
-      {
-        "name": "add"
-      },
-      {
-        "name": "partial_cmp"
-      },
-      {
-        "name": "wrap_add"
-      },
-      {
-        "name": "u16_from_le_bytes"
-      },
-      {
-        "name": "set_chunk"
-      },
-      {
-        "name": "u64_from_le_bytes"
+        "name": "vec_poly_add"
       },
       {
         "name": "from_literal"
       },
       {
-        "name": "from_be_bytes"
-      },
-      {
-        "name": "ZERO"
-      },
-      {
-        "name": "U16_from_be_bytes"
-      },
-      {
-        "name": "u16_to_be_bytes"
-      },
-      {
-        "name": "set_bit"
-      },
-      {
-        "name": "u64_to_be_bytes"
-      },
-      {
-        "name": "signed_modulo"
-      },
-      {
-        "name": "U64_to_be_bytes"
-      },
-      {
-        "name": "from_le_bytes"
+        "name": "u128_from_be_bytes"
       },
       {
         "name": "divide"
       },
       {
-        "name": "set"
+        "name": "set_bit"
       },
       {
-        "name": "U32_from_be_bytes"
+        "name": "less_than_or_equal_bm"
       },
       {
-        "name": "get_chunk"
+        "name": "rem"
       },
       {
-        "name": "u16_from_be_bytes"
-      },
-      {
-        "name": "u32_from_le_bytes"
-      },
-      {
-        "name": "vec_poly_sub"
+        "name": "u16_from_le_bytes"
       },
       {
         "name": "U128_to_be_bytes"
       },
       {
-        "name": "u32_to_be_bytes"
+        "name": "from_be_bytes"
       },
       {
-        "name": "bitxor"
+        "name": "u128_to_le_bytes"
       },
       {
-        "name": "rem"
+        "name": "u128_to_be_bytes"
+      },
+      {
+        "name": "bitor"
+      },
+      {
+        "name": "u64_to_be_bytes"
+      },
+      {
+        "name": "rotate_left"
+      },
+      {
+        "name": "div"
+      },
+      {
+        "name": "less_than"
+      }
+    ]
+  },
+  "primitive": {
+    "hacspec": [
+      {
+        "name": "to_be_u32s"
+      },
+      {
+        "name": "from_hex"
+      },
+      {
+        "name": "cmp"
+      },
+      {
+        "name": "to_be_U64s"
+      },
+      {
+        "name": "to_le_u64s"
+      },
+      {
+        "name": "to_le_bytes"
+      },
+      {
+        "name": "from_array"
+      },
+      {
+        "name": "index"
+      },
+      {
+        "name": "to_be_bytes"
+      },
+      {
+        "name": "random"
+      },
+      {
+        "name": "to_u128s_le"
+      },
+      {
+        "name": "to_le_U64s"
+      },
+      {
+        "name": "declassify_eq"
+      },
+      {
+        "name": "from_hex_string"
+      },
+      {
+        "name": "to_le_U32s"
+      },
+      {
+        "name": "index_mut"
+      },
+      {
+        "name": "to_U128s_be"
+      },
+      {
+        "name": "to_be_u64s"
+      },
+      {
+        "name": "to_u128s_be"
+      },
+      {
+        "name": "len"
+      },
+      {
+        "name": "to_le_u32s"
+      },
+      {
+        "name": "new"
+      },
+      {
+        "name": "eq"
+      },
+      {
+        "name": "to_U128s_le"
+      },
+      {
+        "name": "to_be_U32s"
       }
     ]
   }
