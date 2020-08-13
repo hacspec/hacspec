@@ -1,6 +1,6 @@
-use hacspec::prelude::*;
+use hacspec::*;
 
-array!(State, 16, U32);
+array!(State, 16, u32);
 
 pub fn line(a: u32, b: u32, d: u32, s: usize, m: State) -> State {
     let mut state = m;
