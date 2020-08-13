@@ -651,6 +651,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 e.span,
             ))
         }
+        //TODO: fix by allowing ref expressions but only inside of args
         _ => {
             sess.span_err(e.span, "this expression is not allowed in Rustspec");
             Err(())
