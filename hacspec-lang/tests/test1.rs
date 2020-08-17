@@ -8,8 +8,8 @@ pub fn dummy_hacspec_func(x: u32, y: u32, a: Seq<u32>) -> u32 {
     let mut z = x - y;
     let mut z1 = x + y;
     let (c, d) = (z + 1u32, z - 1u32);
-    let a: Seq<u32> = a;
-    let mut a = a.update_start(&Seq::<u32>::new(3));
+    let mut a: Seq<u32> = a;
+    // let mut a = a.update_start(&Seq::<u32>::new(3));
     a = foo(a);
     a[1usize] = y + c - d;
     if a[1usize] == 0u32 {

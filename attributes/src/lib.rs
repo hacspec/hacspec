@@ -16,11 +16,13 @@ use proc_macro::*;
 use quote::quote;
 #[cfg(feature = "print_attributes")]
 use syn::{parse_macro_input, spanned::Spanned, ItemFn};
-
+#[cfg(feature = "print_attributes")]
 use std::collections::{HashMap, HashSet};
+#[cfg(feature = "print_attributes")]
 use std::fs::OpenOptions;
+#[cfg(feature = "print_attributes")]
 use hacspec_dev::external_sig::{Signature, syn_sig_to_reduced};
-
+#[cfg(feature = "print_attributes")]
 const ITEM_LIST_LOCATION: &'static str = "./allowed_item_list.json";
 
 macro_rules! declare_attribute {
