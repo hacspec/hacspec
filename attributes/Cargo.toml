@@ -20,3 +20,4 @@ hacspec-dev = { path = "../hacspec-dev" }
 [features]
 default = []
 print_attributes = []
+update_allowlist = [ "print_attributes" ]

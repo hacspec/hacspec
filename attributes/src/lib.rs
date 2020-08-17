@@ -11,17 +11,17 @@ extern crate syn;
 #[cfg(feature = "print_attributes")]
 use ansi_term::Colour::{Blue, Cyan, Green, Purple, Red, Yellow};
 #[cfg(feature = "print_attributes")]
+use hacspec_dev::external_sig::{syn_sig_to_reduced, Signature};
+#[cfg(feature = "print_attributes")]
 use proc_macro::*;
 #[cfg(feature = "print_attributes")]
 use quote::quote;
-#[cfg(feature = "print_attributes")]
-use syn::{parse_macro_input, spanned::Spanned, ItemFn};
 #[cfg(feature = "print_attributes")]
 use std::collections::{HashMap, HashSet};
 #[cfg(feature = "print_attributes")]
 use std::fs::OpenOptions;
 #[cfg(feature = "print_attributes")]
-use hacspec_dev::external_sig::{Signature, syn_sig_to_reduced};
+use syn::{parse_macro_input, spanned::Spanned, ItemFn};
 #[cfg(feature = "print_attributes")]
 const ITEM_LIST_LOCATION: &'static str = "./allowed_item_list.json";
 
@@ -36,17 +36,17 @@ macro_rules! declare_attribute {
             let mut attr_args_iter = attr.into_iter();
             let crate_name = match attr_args_iter
                 .next()
-                .unwrap_or_else(|| panic!("Expecting an argument to the attribute"))
+                .expect("Expecting an argument to the attribute")
             {
                 TokenTree::Ident(ident) => ident,
                 _ => panic!(),
             };
             let _impl_type_name: Option<String> = attr_args_iter.next().map(|_| {
-                let arg = attr_args_iter.next().unwrap();
+                let arg = attr_args_iter.next().expect("Error 6");
                 format!("{}", arg)
             });
             let _is_generic: bool = attr_args_iter.next().map_or(false, |_| {
-                let _ = attr_args_iter.next().unwrap();
+                let _ = attr_args_iter.next().expect("Error 7");
                 true
             });
             if cfg!(feature = "print_attributes") {
@@ -54,31 +54,31 @@ macro_rules! declare_attribute {
                     let file = OpenOptions::new()
                         .read(true)
                         .open(ITEM_LIST_LOCATION)
-                        .unwrap();
+                        .expect("Error 1");
                     let key_s = String::from($key);
                     let crate_s = String::from(format!("{}", crate_name));
                     let mut item_list : HashMap<String, HashMap<String, HashSet<Signature>>> = serde_json::from_reader(&file).unwrap();
                     let item_list_type = match item_list.get_mut(&key_s) {
                         None => {
                           item_list.insert(key_s.clone(), HashMap::new());
-                          item_list.get_mut(&key_s).unwrap()
+                          item_list.get_mut(&key_s).expect("Error 2")
                         }
                         Some(items) => items
                     };
                     let item_list_type_crate = match item_list_type.get_mut(&crate_s) {
                         None => {
                           item_list_type.insert(crate_s.clone(), HashSet::new());
-                          item_list_type.get_mut(&crate_s).unwrap()
+                          item_list_type.get_mut(&crate_s).expect("Error 3")
                         }
                         Some(items) => items
                     };
                     item_list_type_crate.insert(syn_sig_to_reduced(&func.sig));
-                    let file = OpenOptions::new()
-                        .truncate(true)
-                        .write(true)
-                        .open(ITEM_LIST_LOCATION)
-                        .unwrap();
-                    serde_json::to_writer_pretty(&file, &item_list).unwrap();
+                    // let file = OpenOptions::new()
+                    //     .truncate(true)
+                    //     .write(true)
+                    //     .open(ITEM_LIST_LOCATION)
+                    //     .expect("Error 4");
+                    // serde_json::to_writer_pretty(&file, &item_list).expect("Error 5");
                 }
                 Diagnostic::new(
                     Level::Note,
@@ -92,7 +92,7 @@ macro_rules! declare_attribute {
                             let start = func.sig.span().start();
                             format!(
                                 "in file {}, line {}",
-                                Yellow.paint(file.to_str().unwrap()),
+                                Yellow.paint(file.to_str().expect("Error 9")),
                                 Yellow.paint(format!("{}", start.line))
                             )
                         }
