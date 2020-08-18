@@ -11,7 +11,7 @@ fn run_test(input: &str, output: &str) -> Result<(), Box<dyn std::error::Error>>
         "Running: cargo run -- {} {} {} {} -o {} {}",
         DEPS_ARG, CRATE_TYPE_ARG, EDITION_ARG, EXTERN_ARG, output, input
     );
-    let mut cmd = Command::cargo_bin("hacspec-lang")?;
+    let mut cmd = Command::cargo_bin("hacspec")?;
     cmd.arg(DEPS_ARG);
     cmd.arg(CRATE_TYPE_ARG);
     cmd.arg(EDITION_ARG);
@@ -28,7 +28,6 @@ fn run_test1() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-#[ignore]
 fn run_test_chacha() -> Result<(), Box<dyn std::error::Error>> {
     run_test("tests/test_chacha.rs", "tests/TestChacha.fst")
 }
