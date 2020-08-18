@@ -32,6 +32,48 @@ impl Integer for BigInt {
     fn from_hex_string(s: &String) -> Self {
         BigInt::from_str(s).unwrap()
     }
+
+    /// Get bit `i` of this integer.
+    #[inline]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn get_bit(self, i: usize) -> Self {
+        (self >> i) & Self::ONE()
+    }
+
+    /// Set bit `i` of this integer to `b` and return the result.
+    /// Bit `b` has to be `0` or `1`.
+    #[inline]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn set_bit(self, b: Self, i: usize) -> Self {
+        debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+        let tmp1 = Self::from_literal(!(1 << i));
+        let tmp2 = b << i;
+        (self & tmp1) | tmp2
+    }
+
+    /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+    #[inline]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn set(self, pos: usize, y: Self, yi: usize) -> Self {
+        let b = y.get_bit(yi);
+        self.set_bit(b, pos)
+    }
+
+    #[allow(arithmetic_overflow)]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn rotate_left(self, n: usize) -> Self {
+        // Taken from https://blog.regehr.org/archives/1063
+        assert!(n < Self::NUM_BITS);
+        (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+    }
+
+    #[allow(arithmetic_overflow)]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn rotate_right(self, n: usize) -> Self {
+        // Taken from https://blog.regehr.org/archives/1063
+        assert!(n < Self::NUM_BITS);
+        (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+    }
 }
 impl Numeric for BigInt {
     /// Return largest value that can be represented.
@@ -129,32 +171,32 @@ impl Numeric for BigInt {
 
 impl ModNumeric for BigInt {
     /// (self - rhs) % n.
-    #[cfg_attr(feature="use_attributes", external(external))]
+    #[cfg_attr(feature = "use_attributes", external(external))]
     fn sub_mod(self, rhs: Self, n: Self) -> Self {
         (self - rhs) % n
     }
     /// `(self + rhs) % n`
-    #[cfg_attr(feature="use_attributes", external(external))]
+    #[cfg_attr(feature = "use_attributes", external(external))]
     fn add_mod(self, rhs: Self, n: Self) -> Self {
         (self + rhs) % n
     }
     /// `(self * rhs) % n`
-    #[cfg_attr(feature="use_attributes", external(external))]
+    #[cfg_attr(feature = "use_attributes", external(external))]
     fn mul_mod(self, rhs: Self, n: Self) -> Self {
         (self * rhs) % n
     }
     /// `(self ^ exp) % n`
-    #[cfg_attr(feature="use_attributes", external(external))]
+    #[cfg_attr(feature = "use_attributes", external(external))]
     fn pow_mod(self, exp: Self, n: Self) -> Self {
         unimplemented!();
     }
     /// `self % n`
-    #[cfg_attr(feature="use_attributes", external(external))]
+    #[cfg_attr(feature = "use_attributes", external(external))]
     fn modulo(self, n: Self) -> Self {
         self % n
     }
     /// `self % n` that always returns a positive integer
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     fn signed_modulo(self, n: Self) -> Self {
         unimplemented!();
     }

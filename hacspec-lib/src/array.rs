@@ -144,6 +144,34 @@ macro_rules! _array_base {
             fn iter(&self) -> std::slice::Iter<$t> {
                 self.0.iter()
             }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update_slice<A: SeqTrait<$t>>(
+                mut self,
+                start_out: usize,
+                v: &A,
+                start_in: usize,
+                len: usize,
+            ) -> Self {
+                debug_assert!(self.len() >= start_out + len);
+                debug_assert!(v.len() >= start_in + len);
+                for i in 0..len {
+                    self[start_out + i] = v[start_in + i];
+                }
+                self
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update<A: SeqTrait<$t>>(self, start: usize, v: &A) -> Self {
+                let len = v.len();
+                self.update_slice(start, v, 0, len)
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update_start<A: SeqTrait<$t>>(self, v: &A) -> Self {
+                let len = v.len();
+                self.update_slice(0, v, 0, len)
+            }
         }
 
         impl Index<usize> for $name {
@@ -388,6 +416,34 @@ macro_rules! generic_array {
             #[cfg_attr(feature = "use_attributes", external(hacspec, $name))]
             fn iter(&self) -> std::slice::Iter<T> {
                 self.0.iter()
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update_slice<A: SeqTrait<T>>(
+                mut self,
+                start_out: usize,
+                v: &A,
+                start_in: usize,
+                len: usize,
+            ) -> Self {
+                debug_assert!(self.len() >= start_out + len);
+                debug_assert!(v.len() >= start_in + len);
+                for i in 0..len {
+                    self[start_out + i] = v[start_in + i];
+                }
+                self
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
+                let len = v.len();
+                self.update_slice(start, v, 0, len)
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
+                let len = v.len();
+                self.update_slice(0, v, 0, len)
             }
         }
 

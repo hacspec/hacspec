@@ -26,19 +26,12 @@ pub trait SeqTrait<T: Copy>:
     /// ```
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn update_slice<A: SeqTrait<T>>(
-        mut self,
+        self,
         start_out: usize,
         v: &A,
         start_in: usize,
         len: usize,
-    ) -> Self {
-        debug_assert!(self.len() >= start_out + len);
-        debug_assert!(v.len() >= start_in + len);
-        for i in 0..len {
-            self[start_out + i] = v[start_in + i];
-        }
-        self
-    }
+    ) -> Self;
 
     /// Update this sequence with `v` starting at `start`.
     ///
@@ -53,16 +46,10 @@ pub trait SeqTrait<T: Copy>:
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
-    fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
-        let len = v.len();
-        self.update_slice(start, v, 0, len)
-    }
+    fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self;
 
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
-    fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
-        let len = v.len();
-        self.update_slice(0, v, 0, len)
-    }
+    fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self;
 }
 
 /// This trait extends the `Numeric` trait and is implemented by all integer
@@ -86,45 +73,20 @@ pub trait Integer: Numeric {
     /// Read a hex string (starting with 0x) into an `Integer`.
     fn from_hex_string(s: &String) -> Self;
 
-    /// Get bit `i` of this integer.
-    #[inline]
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
-    fn get_bit(self, i: usize) -> Self {
-        (self >> i) & Self::ONE()
-    }
-
-    /// Set bit `i` of this integer to `b` and return the result.
-    /// Bit `b` has to be `0` or `1`.
-    #[inline]
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
-    fn set_bit(self, b: Self, i: usize) -> Self {
-        debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
-        let tmp1 = Self::from_literal(!(1 << i));
-        let tmp2 = b << i;
-        (self & tmp1) | tmp2
-    }
-
-    /// Set bit `pos` of this integer to bit `yi` of integer `y`.
-    #[inline]
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
-    fn set(self, pos: usize, y: Self, yi: usize) -> Self {
-        let b = y.get_bit(yi);
-        self.set_bit(b, pos)
-    }
+    fn get_bit(self, i: usize) -> Self;
 
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
-    fn rotate_left(self, n: usize) -> Self {
-        // Taken from https://blog.regehr.org/archives/1063
-        assert!(n < Self::NUM_BITS);
-        (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
-    }
+    fn set_bit(self, b: Self, i: usize) -> Self;
 
     #[cfg_attr(feature = "use_attributes", library(hacspec))]
-    fn rotate_right(self, n: usize) -> Self {
-        // Taken from https://blog.regehr.org/archives/1063
-        assert!(n < Self::NUM_BITS);
-        (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
-    }
+    fn set(self, pos: usize, y: Self, yi: usize) -> Self;
+
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn rotate_left(self, n: usize) -> Self;
+
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn rotate_right(self, n: usize) -> Self;
 }
 
 pub trait SecretInteger: Integer {

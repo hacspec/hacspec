@@ -1449,6 +1449,7 @@ pub fn typecheck_program(
     let mut fn_context: FnContext = external_funcs
         .iter()
         .map(|(k, v)| {
+            println!("Imported {:?}", k);
             (
                 k.clone(),
                 match v {

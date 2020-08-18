@@ -124,6 +124,34 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             fn iter(&self) -> std::slice::Iter<T> {
                 self.b.iter()
             }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update_slice<A: SeqTrait<T>>(
+                mut self,
+                start_out: usize,
+                v: &A,
+                start_in: usize,
+                len: usize,
+            ) -> Self {
+                debug_assert!(self.len() >= start_out + len);
+                 debug_assert!(v.len() >= start_in + len);
+                for i in 0..len {
+                    self[start_out + i] = v[start_in + i];
+                }
+                self
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
+                let len = v.len();
+                self.update_slice(start, v, 0, len)
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
+                let len = v.len();
+                self.update_slice(0, v, 0, len)
+            }
         }
 
         impl<T: $bound $(+ $others)*> Index<u8> for $name<T> {
@@ -230,7 +258,7 @@ pub type PublicByteSeq = PublicSeq<u8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {
-    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+    #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
     pub fn from_hex(s: &str) -> Seq<U8> {
         Seq::from_vec(
             hex_string_to_bytes(s)
@@ -240,7 +268,7 @@ impl Seq<U8> {
         )
     }
 
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     pub fn from_string(s: String) -> Seq<U8> {
         Seq::<U8>::from_vec(
             hex_string_to_bytes(&s)
@@ -252,7 +280,7 @@ impl Seq<U8> {
 }
 
 impl PartialEq for Seq<U8> {
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     fn eq(&self, other: &Self) -> bool {
         self.b[..]
             .iter()
@@ -266,7 +294,7 @@ impl PartialEq for Seq<U8> {
 }
 
 impl PublicSeq<u8> {
-    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+    #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
     pub fn from_hex(s: &str) -> PublicSeq<u8> {
         PublicSeq::from_vec(
             hex_string_to_bytes(s)
@@ -276,7 +304,7 @@ impl PublicSeq<u8> {
         )
     }
 
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     pub fn from_string(s: String) -> PublicSeq<u8> {
         PublicSeq::<u8>::from_vec(
             hex_string_to_bytes(&s)
@@ -288,7 +316,7 @@ impl PublicSeq<u8> {
 }
 
 impl Seq<U8> {
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     fn get_random_vec(l: usize) -> Vec<U8> {
         (0..l)
             .map(|_| rand::random::<u8>())
@@ -296,20 +324,20 @@ impl Seq<U8> {
             .collect()
     }
 
-    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
+    #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
     pub fn random(l: usize) -> Self {
         Self {
             b: Seq::get_random_vec(l),
         }
     }
 
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
     }
 
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     pub fn from_public_slice(v: &[u8]) -> Seq<U8> {
         Self::from_vec(
             v[..]
@@ -321,7 +349,7 @@ impl Seq<U8> {
 }
 
 impl PublicSeq<u8> {
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
+    #[cfg_attr(feature = "use_attributes", external(hacspec))]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
