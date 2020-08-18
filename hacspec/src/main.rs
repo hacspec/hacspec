@@ -61,7 +61,10 @@ impl Callbacks for HacspecCallbacks {
                     ERROR_OUTPUT_CONFIG,
                 ));
                 for entry in WalkDir::new(shared_library) {
-                    let entry = entry.unwrap();
+                    let entry = match entry {
+                        Some(e) => e,
+                        None => continue,
+                    };
                     if entry.metadata().unwrap().is_dir() {
                         config.opts.search_paths.push(SearchPath::from_cli_opt(
                             entry.path().to_str().unwrap(),
@@ -102,7 +105,11 @@ impl Callbacks for HacspecCallbacks {
             serde_json::from_reader(&file).unwrap_or(HashMap::new());
         let empty_set = &HashSet::new();
         let empty_map = &HashMap::new();
-        let hacspec_items = item_list.get(&key_s).unwrap_or(empty_map).get(&crate_s).unwrap_or(empty_set);
+        let hacspec_items = item_list
+            .get(&key_s)
+            .unwrap_or(empty_map)
+            .get(&crate_s)
+            .unwrap_or(empty_set);
         let external_funcs = queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
             hir_to_rustspec::retrieve_external_functions(
                 &compiler.session(),
