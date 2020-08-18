@@ -99,8 +99,10 @@ impl Callbacks for HacspecCallbacks {
         let key_s = String::from("primitive");
         let crate_s = String::from("hacspec");
         let item_list: HashMap<String, HashMap<String, HashSet<Signature>>> =
-            serde_json::from_reader(&file).unwrap();
-        let hacspec_items = item_list.get(&key_s).unwrap().get(&crate_s).unwrap();
+            serde_json::from_reader(&file).unwrap_or(HashMap::new());
+        let empty_set = &HashSet::new();
+        let empty_map = &HashMap::new();
+        let hacspec_items = item_list.get(&key_s).unwrap_or(empty_map).get(&crate_s).unwrap_or(empty_set);
         let external_funcs = queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
             hir_to_rustspec::retrieve_external_functions(
                 &compiler.session(),
