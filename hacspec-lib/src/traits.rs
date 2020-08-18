@@ -24,7 +24,6 @@ pub trait SeqTrait<T: Copy>:
     /// s = s.update_slice(2, &tmp, 1, 1);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn update_slice<A: SeqTrait<T>>(
         self,
         start_out: usize,
@@ -45,10 +44,7 @@ pub trait SeqTrait<T: Copy>:
     /// s = s.update(2, &tmp);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self;
-
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self;
 }
 
@@ -73,19 +69,14 @@ pub trait Integer: Numeric {
     /// Read a hex string (starting with 0x) into an `Integer`.
     fn from_hex_string(s: &String) -> Self;
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn get_bit(self, i: usize) -> Self;
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn set_bit(self, b: Self, i: usize) -> Self;
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn set(self, pos: usize, y: Self, yi: usize) -> Self;
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn rotate_left(self, n: usize) -> Self;
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn rotate_right(self, n: usize) -> Self;
 }
 

@@ -167,23 +167,10 @@ fn process_fn_id(
                                         impl_type,
                                         Ident::Original(name.to_ident_string()),
                                     );
-                                    let msg = format!("{:?}", fn_key);
-                                    let to_print = msg.contains("Seq");
-                                    if to_print {
-                                        print!("Importing {}... ", msg);
-                                    };
                                     let export_sig = tcx.fn_sig(*id);
                                     let sig = match translate_polyfnsig(tcx, &export_sig) {
-                                        Ok(sig) => {
-                                            if to_print {
-                                                print!("Success !");
-                                            };
-                                            Some(sig)
-                                        }
+                                        Ok(sig) => Some(sig),
                                         Err(()) => None,
-                                    };
-                                    if to_print {
-                                        println!("");
                                     };
                                     extern_funcs.insert(fn_key, sig);
                                 }
