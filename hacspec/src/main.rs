@@ -62,8 +62,8 @@ impl Callbacks for HacspecCallbacks {
                 ));
                 for entry in WalkDir::new(shared_library) {
                     let entry = match entry {
-                        Some(e) => e,
-                        None => continue,
+                        Ok(e) => e,
+                        Err(_) => continue,
                     };
                     if entry.metadata().unwrap().is_dir() {
                         config.opts.search_paths.push(SearchPath::from_cli_opt(
