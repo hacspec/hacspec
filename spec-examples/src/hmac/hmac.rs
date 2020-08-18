@@ -1,5 +1,5 @@
 // Import hacspec and all needed definitions.
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 // linked in from ../sha2/ example
 use crate::sha2;

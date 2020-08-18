@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Jacobian<T: UnsignedIntegerCopy> (pub T, pub T, pub T);

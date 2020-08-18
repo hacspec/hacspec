@@ -4,7 +4,7 @@ use std::process::Command; // Run programs
 const DEPS_ARG: &'static str = "-L ../../target/debug/deps";
 const CRATE_TYPE_ARG: &'static str = "--crate-type=lib";
 const EDITION_ARG: &'static str = "--edition=2018";
-const EXTERN_ARG: &'static str = "--extern=hacspec";
+const EXTERN_ARG: &'static str = "--extern=hacspec_lib";
 
 fn run_test(input: &str, output: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!(

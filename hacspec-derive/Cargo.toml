@@ -10,7 +10,7 @@ proc-macro = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hacspec = { path = "../hacspec" }
+hacspec-lib = { path = "../hacspec-lib" }
 syn = "1.0"
 quote = "1.0"
 proc-macro2= "1.0.17"

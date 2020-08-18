@@ -1,4 +1,4 @@
-use hacspec::*;
+use hacspec_lib::*;
 
 array!(State, 16, u32);
 

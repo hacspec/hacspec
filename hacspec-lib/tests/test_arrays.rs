@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 
 #[test]
 #[allow(non_snake_case)]

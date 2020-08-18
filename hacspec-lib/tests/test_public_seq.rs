@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 
 #[test]
 fn test_byte_sequences() {

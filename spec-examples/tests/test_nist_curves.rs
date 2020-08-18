@@ -1,6 +1,6 @@
 use hacspec_examples::ec::{arithmetic, p256, p384, Affine};
 
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
 
 use rayon::prelude::*;

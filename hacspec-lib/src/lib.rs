@@ -21,20 +21,20 @@
 //! * add `cargo hacspec fstar` command
 //!
 
-pub mod array;
-pub mod bigint_integers;
-pub mod machine_integers;
-pub mod math_integers;
-pub mod math_util;
-pub mod traits;
+mod array;
+mod bigint_integers;
+mod machine_integers;
+mod math_integers;
+mod math_util;
 pub mod prelude;
-pub mod seq;
-pub mod util;
-pub mod vec_integers;
-pub mod vec_integers_secret;
-pub mod vec_integers_public;
-pub mod vec_util;
-pub mod transmute;
+mod seq;
+mod traits;
+mod transmute;
+mod util;
+mod vec_integers;
+mod vec_integers_public;
+mod vec_integers_secret;
+mod vec_util;
 
 pub use crate::prelude::*;
 

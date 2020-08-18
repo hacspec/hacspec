@@ -1,5 +1,5 @@
 [package]
-name = "hacspec_attributes"
+name = "hacspec-attributes"
 version = "0.1.0"
 authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"

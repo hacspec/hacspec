@@ -1,21 +1,20 @@
-
 [workspace]
 members = [
-    "hacspec",
+    "hacspec-lib",
     "hacspec-dev",
     "hacspec-derive",
-    "hacspec-lang",
+    "hacspec",
     "secret-integers",
     "abstract-integers",
     "spec-examples",
-    "attributes",
+    "hacspec-attributes",
 ]
 default-members = [
-    "hacspec",
+    "hacspec-lib",
     "hacspec-dev",
     "hacspec-derive",
     "secret-integers",
     "abstract-integers",
     "spec-examples",
-    "attributes",
+    "hacspec-attributes",
 ]

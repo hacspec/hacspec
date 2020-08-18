@@ -47,7 +47,7 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
                     .to_ident_string()
                     .as_str()
                 {
-                    "hacspec" => match name.to_ident_string().as_str() {
+                    "hacspec_lib" => match name.to_ident_string().as_str() {
                         "Seq" => {
                             let param_typ = if substs.len() == 1 {
                                 match substs.first().unwrap().unpack() {

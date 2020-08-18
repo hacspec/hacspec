@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 mod test_util;
 use test_util::*;
 

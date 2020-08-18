@@ -1,5 +1,5 @@
 // Import hacspec and all needed definitions.
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 array!(State, 16, U32);
 bytes!(StateBytes, 64);

@@ -1,5 +1,5 @@
 // Import hacspec and all needed definitions.
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 pub enum Variant {
     SHA224 = 224,
