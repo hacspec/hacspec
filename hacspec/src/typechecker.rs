@@ -757,7 +757,9 @@ fn typecheck_expression(
             }
             let mut var_context = var_context.clone();
             let mut new_args = Vec::new();
-            for (sig_t, (arg, arg_span)) in sig_args.iter().zip(args) {
+            for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
+                sig_args.iter().zip(args)
+            {
                 let (new_arg, arg_t, new_var_context) = typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
@@ -767,7 +769,18 @@ fn typecheck_expression(
                     name_context,
                 )?;
                 var_context = new_var_context;
-                new_args.push((new_arg, arg_span.clone()));
+                let new_arg_borrow = match (&(arg_t.0).0, &arg_borrow) {
+                    (Borrowing::Consumed, _) => arg_borrow.clone(),
+                    (Borrowing::Borrowed, Borrowing::Borrowed) => {
+                        sess.span_err(*arg_borrow_span, "double borrowing is forbidden in Rust!");
+                        return Err(());
+                    }
+                    (Borrowing::Borrowed, Borrowing::Consumed) => (arg_t.0).0.clone(),
+                };
+                new_args.push((
+                    (new_arg, arg_span.clone()),
+                    (new_arg_borrow, arg_borrow_span.clone()),
+                ));
                 if !equal_types(&arg_t, sig_t, typ_dict) {
                     sess.span_err(
                         *arg_span,
@@ -793,6 +806,7 @@ fn typecheck_expression(
             ))
         }
         Expression::MethodCall(sel, _, (f, f_span), args) => {
+            let (sel, sel_borrow) = sel.as_ref();
             let mut var_context = var_context.clone();
             let (new_sel, sel_typ, new_var_context) =
                 typecheck_expression(sess, &sel, fn_context, typ_dict, &var_context, name_context)?;
@@ -817,7 +831,7 @@ fn typecheck_expression(
                 return Err(());
             };
             let mut args = args.clone();
-            args.push(*sel.clone());
+            args.push((sel.clone(), sel_borrow.clone()));
             let sig_args = sig_args(&f_sig);
             if sig_args.len() != args.len() {
                 sess.span_err(
@@ -833,7 +847,9 @@ fn typecheck_expression(
                 )
             }
             let mut new_args = Vec::new();
-            for (sig_t, (ref arg, arg_span)) in sig_args.iter().zip(args) {
+            for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
+                sig_args.iter().zip(args)
+            {
                 let (new_arg, arg_t, new_var_context) = typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
@@ -843,7 +859,18 @@ fn typecheck_expression(
                     name_context,
                 )?;
                 var_context = new_var_context;
-                new_args.push((new_arg, arg_span.clone()));
+                let new_arg_borrow = match (&(arg_t.0).0, &arg_borrow) {
+                    (Borrowing::Consumed, _) => arg_borrow.clone(),
+                    (Borrowing::Borrowed, Borrowing::Borrowed) => {
+                        sess.span_err(arg_borrow_span, "double borrowing is forbidden in Rust!");
+                        return Err(());
+                    }
+                    (Borrowing::Borrowed, Borrowing::Consumed) => (arg_t.0).0.clone(),
+                };
+                new_args.push((
+                    (new_arg, arg_span.clone()),
+                    (new_arg_borrow, arg_borrow_span.clone()),
+                ));
                 if !equal_types(&arg_t, sig_t, typ_dict) {
                     sess.span_err(
                         arg_span,
@@ -861,7 +888,7 @@ fn typecheck_expression(
             }
             Ok((
                 Expression::MethodCall(
-                    Box::new((new_sel, sel.1.clone())),
+                    Box::new(((new_sel, sel.1.clone()), sel_borrow.clone())),
                     Some(sel_typ),
                     (f.clone(), f_span.clone()),
                     new_args,

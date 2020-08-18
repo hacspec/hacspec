@@ -1,10 +1,10 @@
 use rustc_ast;
 use rustc_ast::{
     ast::{
-        self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, Const, Crate, Defaultness,
-        Expr, ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind, LitIntType,
-        LitKind, MacArgs, Mutability, Pat, PatKind, RangeLimits, Stmt, StmtKind, Ty, TyKind,
-        UintTy, UnOp, Unsafe, UseTreeKind,
+        self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,
+        Defaultness, Expr, ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind,
+        LitIntType, LitKind, MacArgs, Mutability, Pat, PatKind, RangeLimits, Stmt, StmtKind, Ty,
+        TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
     },
     node_id::NodeId,
     token::{LitKind as TokenLitKind, TokenKind},
@@ -266,8 +266,8 @@ enum ExprTranslationResult {
     TransStmt(Statement),
 }
 
-fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTranslationResult>> {
-    let translate_expr_expects_exp = |e| match translate_expr(sess, e)? {
+fn translate_expr_expects_exp(sess: &Session, e: &Expr) -> TranslationResult<Spanned<Expression>> {
+    match translate_expr(sess, e)? {
         (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
         (ExprTranslationResult::TransStmt(_), span) => {
             sess.span_err(
@@ -276,13 +276,38 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             );
             Err(())
         }
-    };
+    }
+}
+
+fn translate_function_argument(
+    sess: &Session,
+    e: &Expr,
+) -> TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)> {
+    match &e.kind {
+        ExprKind::AddrOf(BorrowKind::Ref, is_mut, e1) => match is_mut {
+            Mutability::Mut => {
+                sess.span_err(e.span, "mutable borrows are forbidden in Rustspec");
+                Err(())
+            }
+            Mutability::Not => Ok((
+                translate_expr_expects_exp(sess, e1)?,
+                (Borrowing::Borrowed, e.span.clone()),
+            )),
+        },
+        _ => Ok((
+            translate_expr_expects_exp(sess, e)?,
+            (Borrowing::Consumed, e.span.clone()),
+        )),
+    }
+}
+
+fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTranslationResult>> {
     match &e.kind {
         ExprKind::Binary(op, e1, e2) => Ok((
             ExprTranslationResult::TransExpr(Expression::Binary(
                 (op.clone().node, op.clone().span),
-                Box::new(translate_expr_expects_exp(e1)?),
-                Box::new(translate_expr_expects_exp(e2)?),
+                Box::new(translate_expr_expects_exp(sess, e1)?),
+                Box::new(translate_expr_expects_exp(sess, e2)?),
             )),
             e.span,
         )),
@@ -296,7 +321,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                         return Err(());
                     }
                 },
-                Box::new(translate_expr_expects_exp(e1)?),
+                Box::new(translate_expr_expects_exp(sess, e1)?),
             )),
             e.span,
         )),
@@ -319,9 +344,9 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     Err(())
                 }
             }?;
-            let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
+            let func_args: Vec<TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>> = args
                 .iter()
-                .map(|arg| translate_expr_expects_exp(&arg))
+                .map(|arg| translate_function_argument(sess, &arg))
                 .collect();
             let func_args = check_vec(func_args);
             Ok((
@@ -334,9 +359,9 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             ))
         }
         ExprKind::MethodCall(method_name, args, span) => {
-            let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
+            let func_args: Vec<TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>> = args
                 .iter()
-                .map(|arg| translate_expr_expects_exp(&arg))
+                .map(|arg| translate_function_argument(sess, &arg))
                 .collect();
             let func_args = check_vec(func_args)?;
             let (method_arg, rest_args) = func_args.split_at(1);

@@ -259,11 +259,9 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
         Expression::Named(p) => translate_ident(p),
         Expression::FuncCall(prefix, name, args) => {
             translate_func_name(prefix, &name.0).append(if args.len() > 0 {
-                RcDoc::concat(
-                    args.iter().map(|(arg, _)| {
-                        RcDoc::space().append(make_paren(translate_expression(arg)))
-                    }),
-                )
+                RcDoc::concat(args.iter().map(|((arg, _), _)| {
+                    RcDoc::space().append(make_paren(translate_expression(arg)))
+                }))
             } else {
                 RcDoc::space().append(RcDoc::as_string("()"))
             })
@@ -272,9 +270,9 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
             .append(RcDoc::space())
             .append({
                 let sel = &sel.0;
-                translate_expression(sel)
+                translate_expression(&sel.0)
             })
-            .append(RcDoc::concat(args.iter().map(|(arg, _)| {
+            .append(RcDoc::concat(args.iter().map(|((arg, _), _)| {
                 RcDoc::space().append(make_paren(translate_expression(arg)))
             }))),
         Expression::ArrayIndex(x, e2) => {

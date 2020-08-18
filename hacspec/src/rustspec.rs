@@ -175,13 +175,13 @@ pub enum Expression {
     FuncCall(
         Option<Spanned<BaseTyp>>,
         Spanned<Ident>,
-        Vec<Spanned<Expression>>,
+        Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
     MethodCall(
-        Box<Spanned<Expression>>,
+        Box<(Spanned<Expression>, Spanned<Borrowing>)>,
         Option<Typ>, // Type of self, to be filled by the typechecker
         Spanned<Ident>,
-        Vec<Spanned<Expression>>,
+        Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
     Lit(Literal),
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
