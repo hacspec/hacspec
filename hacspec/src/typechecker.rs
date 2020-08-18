@@ -415,7 +415,14 @@ fn typecheck_expression(
             let new_path = Expression::Named(id.clone());
             match find_typ(id, var_context) {
                 None => {
-                    sess.span_err(*span, format!("the variable {} is unknown", id).as_str());
+                    sess.span_err(
+                        *span,
+                        format!(
+                            "the variable {} is unknown in context {:?}",
+                            id, var_context
+                        )
+                        .as_str(),
+                    );
                     Err(())
                 }
                 Some(t) => {
@@ -805,12 +812,13 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::MethodCall(sel, _, (f, f_span), args) => {
+        Expression::MethodCall(sel, _, (f, f_span), orig_args) => {
             let (sel, sel_borrow) = sel.as_ref();
             let mut var_context = var_context.clone();
-            let (new_sel, sel_typ, new_var_context) =
+            // We omit to take the new var context because it will be retypechecked later, this
+            // is just to determine wich type the method belongs to
+            let (new_sel, sel_typ, _) =
                 typecheck_expression(sess, &sel, fn_context, typ_dict, &var_context, name_context)?;
-            var_context = new_var_context;
             let f_sig = find_func(
                 sess,
                 &FnKey::Impl((sel_typ.1).0.clone(), f.clone()),
@@ -830,9 +838,19 @@ fn typecheck_expression(
                 );
                 return Err(());
             };
-            let mut args = args.clone();
-            args.push((sel.clone(), sel_borrow.clone()));
             let sig_args = sig_args(&f_sig);
+            // Because self arguments are implictly borrowed in Rust, we have to insert
+            // this implicit borrow logic here
+            let new_sel_borrow = match (&sel_borrow.0, &(sig_args.first().unwrap().0).0) {
+                (Borrowing::Consumed, Borrowing::Borrowed) => {
+                    (Borrowing::Borrowed, sel_borrow.1.clone())
+                }
+                _ => sel_borrow.clone(),
+            };
+            let mut args = Vec::new();
+            args.push((sel.clone(), new_sel_borrow.clone()));
+            args.extend(orig_args.clone());
+            let mut new_args = Vec::new();
             if sig_args.len() != args.len() {
                 sess.span_err(
                     *span,
@@ -846,7 +864,6 @@ fn typecheck_expression(
                     .as_str(),
                 )
             }
-            let mut new_args = Vec::new();
             for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
                 sig_args.iter().zip(args)
             {
@@ -859,27 +876,29 @@ fn typecheck_expression(
                     name_context,
                 )?;
                 var_context = new_var_context;
-                let new_arg_borrow = match (&(arg_t.0).0, &arg_borrow) {
-                    (Borrowing::Consumed, _) => arg_borrow.clone(),
+                let new_arg_t = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_err(arg_borrow_span, "double borrowing is forbidden in Rust!");
                         return Err(());
                     }
-                    (Borrowing::Borrowed, Borrowing::Consumed) => (arg_t.0).0.clone(),
+                    (Borrowing::Consumed, Borrowing::Borrowed) => {
+                        ((Borrowing::Borrowed, (arg_t.0).1.clone()), arg_t.1.clone())
+                    }
+                    _ => arg_t.clone(),
                 };
                 new_args.push((
                     (new_arg, arg_span.clone()),
-                    (new_arg_borrow, arg_borrow_span.clone()),
+                    (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
-                if !equal_types(&arg_t, sig_t, typ_dict) {
+                if !equal_types(&new_arg_t, sig_t, typ_dict) {
                     sess.span_err(
                         arg_span,
                         format!(
                             "expected type {}{}, got {}{}",
                             (sig_t.0).0,
                             (sig_t.1).0,
-                            (arg_t.0).0,
-                            (arg_t.1).0
+                            (new_arg_t.0).0,
+                            (new_arg_t.1).0
                         )
                         .as_str(),
                     );
