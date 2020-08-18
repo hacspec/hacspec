@@ -4,9 +4,12 @@ use rustc_hir::definitions::DefPathData;
 use rustc_middle::middle::exported_symbols::ExportedSymbol;
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
-use rustc_middle::ty::{self, PolyFnSig, TyCtxt, TyKind};
+use rustc_middle::ty::{self, AssocKind, PolyFnSig, TyCtxt, TyKind};
 use rustc_session::Session;
-use rustc_span::DUMMY_SP;
+use rustc_span::{
+    def_id::{CrateNum, DefId},
+    DUMMY_SP,
+};
 
 use crate::rustspec::*;
 use crate::typechecker::FnKey;
@@ -82,6 +85,10 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
             // TODO: sophisticate
             Ok(BaseTyp::Wildcard)
         }
+        TyKind::Bound(_, _) => {
+            // TODO: sophisticate
+            Ok(BaseTyp::Wildcard)
+        }
         _ => Err(()),
     }
 }
@@ -112,8 +119,88 @@ fn translate_polyfnsig(tcx: &TyCtxt, sig: &PolyFnSig) -> Result<ExternalFuncSig,
     })
 }
 
-pub fn retrieve_external_functions(
+fn process_fn_id(
     _sess: &Session,
+    tcx: &TyCtxt,
+    id: &DefId,
+    krate_num: &CrateNum,
+    extern_funcs: &mut HashMap<FnKey, Option<ExternalFuncSig>>,
+) {
+    match tcx.type_of(*id).kind {
+        TyKind::FnDef(_, _) => {
+            let def_path = tcx.def_path(*id);
+            if def_path.krate == *krate_num {
+                if def_path.data.len() == 1
+                    || (match def_path.data[def_path.data.len() - 2].data {
+                        DefPathData::Impl | DefPathData::ImplTrait => false,
+                        _ => true,
+                    })
+                {
+                    // Function not within impl block
+                    let export_sig = tcx.fn_sig(*id);
+                    let sig = match translate_polyfnsig(tcx, &export_sig) {
+                        Ok(sig) => Some(sig),
+                        Err(()) => None,
+                    };
+                    let name_segment = def_path.data.last().unwrap();
+                    match name_segment.data {
+                        DefPathData::ValueNs(name) => {
+                            let fn_key =
+                                FnKey::Independent(Ident::Original(name.to_ident_string()));
+                            extern_funcs.insert(fn_key, sig);
+                        }
+                        _ => (),
+                    }
+                } else {
+                    // Function inside an impl block
+                    let impl_segment = def_path.data[def_path.data.len() - 2];
+                    let name_segment = def_path.data.last().unwrap();
+                    match (impl_segment.data, name_segment.data) {
+                        (DefPathData::Impl, DefPathData::ValueNs(name)) => {
+                            let impl_id = tcx.impl_of_method(*id).unwrap();
+                            let impl_type = &tcx.type_of(impl_id);
+                            let impl_type = translate_base_typ(tcx, impl_type);
+                            // TODO: distinguish between methods and static for types
+                            match impl_type {
+                                Ok(impl_type) => {
+                                    let fn_key = FnKey::Impl(
+                                        impl_type,
+                                        Ident::Original(name.to_ident_string()),
+                                    );
+                                    let msg = format!("{:?}", fn_key);
+                                    let to_print = msg.contains("Seq");
+                                    if to_print {
+                                        print!("Importing {}... ", msg);
+                                    };
+                                    let export_sig = tcx.fn_sig(*id);
+                                    let sig = match translate_polyfnsig(tcx, &export_sig) {
+                                        Ok(sig) => {
+                                            if to_print {
+                                                print!("Success !");
+                                            };
+                                            Some(sig)
+                                        }
+                                        Err(()) => None,
+                                    };
+                                    if to_print {
+                                        println!("");
+                                    };
+                                    extern_funcs.insert(fn_key, sig);
+                                }
+                                Err(()) => (),
+                            }
+                        }
+                        _ => (),
+                    }
+                };
+            }
+        }
+        _ => (),
+    };
+}
+
+pub fn retrieve_external_functions(
+    sess: &Session,
     tcx: &TyCtxt,
     imported_crates: &Vec<Spanned<String>>,
 ) -> HashMap<FnKey, Option<ExternalFuncSig>> {
@@ -121,6 +208,7 @@ pub fn retrieve_external_functions(
     let mut extern_funcs = HashMap::new();
     for krate_num in krates {
         let exported_symbols = tcx.exported_symbols(*krate_num);
+        let trait_impls = tcx.all_trait_implementations(*krate_num);
         let original_crate_name = tcx.original_crate_name(*krate_num);
         if imported_crates
             .iter()
@@ -132,75 +220,20 @@ pub fn retrieve_external_functions(
             for (exported_symbol, _) in exported_symbols {
                 match exported_symbol {
                     ExportedSymbol::Generic(id, _) | ExportedSymbol::NonGeneric(id) => {
-                        match tcx.type_of(*id).kind {
-                            TyKind::FnDef(_, _) => {
-                                let def_path = tcx.def_path(*id);
-                                if def_path.krate == *krate_num {
-                                    let export_sig = tcx.fn_sig(*id);
-                                    let sig = match translate_polyfnsig(tcx, &export_sig) {
-                                        Ok(sig) => Some(sig),
-                                        Err(()) => None,
-                                    };
-                                    if def_path.data.len() == 1
-                                        || (match def_path.data[def_path.data.len() - 2].data {
-                                            DefPathData::Impl | DefPathData::ImplTrait => false,
-                                            _ => true,
-                                        })
-                                    {
-                                        // Function not within impl block
-                                        let name_segment = def_path.data.last().unwrap();
-                                        match name_segment.data {
-                                            DefPathData::ValueNs(name) => {
-                                                let fn_key = FnKey::Independent(Ident::Original(
-                                                    name.to_ident_string(),
-                                                ));
-                                                extern_funcs.insert(fn_key, sig);
-                                            }
-                                            _ => (),
-                                        }
-                                    } else {
-                                        // Function inside an impl block
-                                        let impl_segment = def_path.data[def_path.data.len() - 2];
-                                        let name_segment = def_path.data.last().unwrap();
-                                        match (impl_segment.data, name_segment.data) {
-                                            (DefPathData::Impl, DefPathData::ValueNs(name)) => {
-                                                let impl_id = tcx.impl_of_method(*id).unwrap();
-                                                let impl_type =
-                                                    translate_base_typ(tcx, &tcx.type_of(impl_id));
-                                                // TODO: distinguish between methods and static for types
-                                                match impl_type {
-                                                    Ok(impl_type) => {
-                                                        let fn_key = FnKey::Impl(
-                                                            impl_type,
-                                                            Ident::Original(name.to_ident_string()),
-                                                        );
-                                                        extern_funcs.insert(fn_key, sig);
-                                                    }
-                                                    Err(()) => (),
-                                                }
-                                            }
-                                            _ => (),
-                                        }
-                                    };
-                                }
-                            }
-                            _ => (),
-                        };
+                        process_fn_id(sess, tcx, id, krate_num, &mut extern_funcs)
                     }
                     _ => (),
                 }
             }
+            for trait_impl_id in trait_impls {
+                let assoc_items = tcx.associated_items(*trait_impl_id);
+                for item in assoc_items.in_definition_order() {
+                    if item.kind == AssocKind::Fn {
+                        process_fn_id(sess, tcx, &item.def_id, krate_num, &mut extern_funcs)
+                    }
+                }
+            }
         }
     }
-    // for (key, sig) in extern_funcs.iter() {
-    //     println!(
-    //         "Key in context: {:?} {}",
-    //         key,
-    //         match sig {
-    //             None => "(no sig)",
-    //             Some(_) => "",
-    //         }
-    //     );
-    // }
     extern_funcs
 }
