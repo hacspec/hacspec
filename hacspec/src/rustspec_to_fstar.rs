@@ -125,7 +125,6 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
             None => RcDoc::nil(),
             Some(arg) => RcDoc::space().append(translate_base_typ(&arg.as_ref().0)),
         }),
-        BaseTyp::Wildcard => RcDoc::as_string("'a"),
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
         BaseTyp::Tuple(args) => make_typ_tuple(args.iter().map(|(arg, _)| translate_base_typ(arg))),
     }
@@ -214,7 +213,6 @@ fn translate_func_name<'a>(prefix: &'a Option<Spanned<BaseTyp>>, name: &'a Ident
                 BaseTyp::Isize => RcDoc::as_string("Int32"),
                 BaseTyp::Seq(_) | BaseTyp::Array(_, _) => RcDoc::as_string("Seq"),
                 BaseTyp::Named(ident, _) => translate_ident(&ident.0),
-                BaseTyp::Wildcard => panic!(),    // should not happen
                 BaseTyp::Variable(_) => panic!(), // shoult not happen
                 BaseTyp::Tuple(_) => panic!(),    // should not happen
             };

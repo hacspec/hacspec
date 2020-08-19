@@ -8,5 +8,6 @@ pub fn line(a: u32, b: u32, d: u32, s: usize, m: State) -> State {
     state[a] = state[a] + state[b];
     state[d] = state[d] ^ state[a];
     state[d] = state[d] >> s;
+    let (chunk_size, chunk) = state.get_chunk(2usize, 4usize);
     state
 }

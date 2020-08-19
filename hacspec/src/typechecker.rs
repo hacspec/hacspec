@@ -62,7 +62,6 @@ fn is_copy(t: &BaseTyp) -> bool {
         BaseTyp::Array(_, _) => true,
         // TODO: implement special cases for derived copy
         BaseTyp::Named(_, _) => false,
-        BaseTyp::Wildcard => false, //Changed when characterized by traits,
         BaseTyp::Variable(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t)),
     }
@@ -166,11 +165,6 @@ fn unify_types(t1: &Typ, t2: &Typ, typ_ctx: &TypeVarCtx) -> Option<TypeVarCtx> {
                         None
                     }
                 }
-                (BaseTyp::Wildcard, BaseTyp::Wildcard) => None,
-                (BaseTyp::Wildcard, BaseTyp::Variable(_)) => None,
-                (BaseTyp::Variable(_), BaseTyp::Wildcard) => None,
-                (BaseTyp::Wildcard, _) => Some(typ_ctx.clone()),
-                (_, BaseTyp::Wildcard) => Some(typ_ctx.clone()),
                 (BaseTyp::Variable(_), BaseTyp::Variable(_)) => None,
                 (BaseTyp::Variable(id1), bt2) => Some(typ_ctx.update(id1.clone(), bt2.clone())),
                 (bt1, BaseTyp::Variable(id2)) => Some(typ_ctx.update(id2.clone(), bt1.clone())),
@@ -178,6 +172,34 @@ fn unify_types(t1: &Typ, t2: &Typ, typ_ctx: &TypeVarCtx) -> Option<TypeVarCtx> {
             }
         }
         _ => None,
+    }
+}
+
+fn bind_variable_type(ty: &BaseTyp, typ_ctx: &TypeVarCtx) -> BaseTyp {
+    match &ty {
+        BaseTyp::Variable(id) => match typ_ctx.get(&id) {
+            None => panic!("type {} cannot be unified, internal Rustspec error", ty),
+            Some(new_ty) => new_ty.clone(),
+        },
+        BaseTyp::Seq(arg_ty) => BaseTyp::Seq(Box::new((
+            bind_variable_type(&arg_ty.as_ref().0, typ_ctx),
+            arg_ty.as_ref().1.clone(),
+        ))),
+        BaseTyp::Named(name, arg) => BaseTyp::Named(
+            name.clone(),
+            arg.as_ref().map(|arg| {
+                Box::new((
+                    bind_variable_type(&arg.as_ref().0, typ_ctx),
+                    arg.as_ref().1.clone(),
+                ))
+            }),
+        ),
+        BaseTyp::Tuple(args) => BaseTyp::Tuple(
+            args.iter()
+                .map(|(arg, span)| (bind_variable_type(arg, typ_ctx), span.clone()))
+                .collect(),
+        ),
+        _ => ty.clone(),
     }
 }
 
@@ -244,46 +266,56 @@ fn find_func(
     key1: &FnKey,
     fn_context: &FnContext,
     span: &Span,
-) -> TypecheckingResult<FnValue> {
-    let mut candidates = fn_context.clone();
-    candidates.retain(|key2, _| match (key1, key2) {
-        (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
-            (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
-            _ => panic!(),
-        },
-        (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
-            unify_types(
-                &(
-                    (Borrowing::Consumed, span.clone()),
-                    (t1.clone(), span.clone()),
-                ),
-                &(
-                    (Borrowing::Consumed, span.clone()),
-                    (t2.clone(), span.clone()),
-                ),
-                &HashMap::new(),
-            )
-            .is_some()
-                && match (n1, n2) {
-                    (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
-                    _ => panic!(),
+) -> TypecheckingResult<(FnValue, TypeVarCtx)> {
+    let candidates = fn_context.clone();
+    let candidates: Vec<_> = candidates
+        .iter()
+        .filter_map(|(key2, sig)| match (key1, key2) {
+            (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
+                (Ident::Original(n1), Ident::Original(n2)) => {
+                    if n1 == n2 {
+                        Some((HashMap::new(), sig))
+                    } else {
+                        None
+                    }
                 }
-        }
-        _ => false,
-    });
+                _ => panic!(),
+            },
+            (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
+                match unify_types(
+                    &(
+                        (Borrowing::Consumed, span.clone()),
+                        (t1.clone(), span.clone()),
+                    ),
+                    &(
+                        (Borrowing::Consumed, span.clone()),
+                        (t2.clone(), span.clone()),
+                    ),
+                    &HashMap::new(),
+                ) {
+                    Some(new_typ_ctx) => match (n1, n2) {
+                        (Ident::Original(n1), Ident::Original(n2)) => {
+                            if n1 == n2 {
+                                Some((new_typ_ctx, sig))
+                            } else {
+                                None
+                            }
+                        }
+                        _ => panic!(),
+                    },
+                    None => None,
+                }
+            }
+            _ => None,
+        })
+        .collect();
     if candidates.len() == 0 {
         sess.span_err(*span, format!("function {} cannot be found", key1).as_str());
         return Err(());
     }
-    if candidates.len() > 1 {
-        sess.span_err(
-            *span,
-            format!("Multiple implementations for function {}", key1).as_str(),
-        );
-        return Err(());
-    }
-    for (_, sig) in candidates {
-        return Ok(sig);
+    // If there are multiple candidates we just take the first one
+    for (typ_ctx, sig) in candidates {
+        return Ok((sig.clone(), typ_ctx));
     }
     Err(())
 }
@@ -747,7 +779,7 @@ fn typecheck_expression(
             }
         }
         Expression::FuncCall(prefix, name, args) => {
-            let f_sig = find_func(
+            let (f_sig, typ_var_ctx) = find_func(
                 sess,
                 &match prefix {
                     None => FnKey::Independent(name.0.clone()),
@@ -756,6 +788,7 @@ fn typecheck_expression(
                 fn_context,
                 &name.1,
             )?;
+            let mut typ_var_ctx = typ_var_ctx;
             if let FnValue::ExternalNotInRustspec = f_sig {
                 sess.span_err(
                     name.1.clone(),
@@ -786,7 +819,6 @@ fn typecheck_expression(
             }
             let mut var_context = var_context.clone();
             let mut new_args = Vec::new();
-            let mut typ_var_ctx = HashMap::new();
             for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
                 sig_args.iter().zip(args)
             {
@@ -829,12 +861,13 @@ fn typecheck_expression(
                     Some(new_ctx) => typ_var_ctx = new_ctx,
                 }
             }
-            //TODO: change ret type to replace type variables!
+            let ret_ty = sig_ret(&f_sig);
+            let ret_ty = bind_variable_type(&ret_ty, &typ_var_ctx);
             Ok((
                 Expression::FuncCall(prefix.clone(), name.clone(), new_args),
                 (
                     (Borrowing::Consumed, name.1.clone()),
-                    (sig_ret(&f_sig), name.1.clone()),
+                    (ret_ty, name.1.clone()),
                 ),
                 var_context,
             ))
@@ -846,12 +879,13 @@ fn typecheck_expression(
             // is just to determine wich type the method belongs to
             let (new_sel, sel_typ, _) =
                 typecheck_expression(sess, &sel, fn_context, typ_dict, &var_context, name_context)?;
-            let f_sig = find_func(
+            let (f_sig, typ_var_ctx) = find_func(
                 sess,
                 &FnKey::Impl((sel_typ.1).0.clone(), f.clone()),
                 fn_context,
                 f_span,
             )?;
+            let mut typ_var_ctx = typ_var_ctx;
             if let FnValue::ExternalNotInRustspec = f_sig {
                 sess.span_err(
                     *f_span,
@@ -890,7 +924,6 @@ fn typecheck_expression(
                     .as_str(),
                 )
             }
-            let mut typ_var_ctx = HashMap::new();
             for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
                 sig_args.iter().zip(args)
             {
@@ -935,6 +968,8 @@ fn typecheck_expression(
                     Some(new_ctx) => typ_var_ctx = new_ctx,
                 }
             }
+            let ret_ty = sig_ret(&f_sig);
+            let ret_ty = bind_variable_type(&ret_ty, &typ_var_ctx);
             Ok((
                 Expression::MethodCall(
                     Box::new(((new_sel, sel.1.clone()), sel_borrow.clone())),
@@ -944,7 +979,7 @@ fn typecheck_expression(
                 ),
                 (
                     (Borrowing::Consumed, f_span.clone()),
-                    (sig_ret(&f_sig), f_span.clone()),
+                    (ret_ty, f_span.clone()),
                 ),
                 var_context,
             ))

@@ -15,11 +15,21 @@ use std::sync::atomic::Ordering;
 use crate::rustspec::*;
 use crate::typechecker::{FnKey, ID_COUNTER};
 
-type TypVarContext = HashMap<usize, BaseTyp>;
+#[derive(PartialEq, Eq, Hash, Debug, Clone)]
+enum ParamType {
+    ImplParam,
+    FnParam,
+}
 
-fn fresh_type_var(rust_id: usize, typ_ctx: &TypVarContext) -> (BaseTyp, TypVarContext) {
+type TypVarContext = HashMap<(ParamType, usize), BaseTyp>;
+
+fn fresh_type_var(
+    rust_id: usize,
+    p: ParamType,
+    typ_ctx: &TypVarContext,
+) -> (BaseTyp, TypVarContext) {
     let t = BaseTyp::Variable(RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)));
-    (t.clone(), typ_ctx.update(rust_id, t))
+    (t.clone(), typ_ctx.update((p, rust_id), t))
 }
 
 fn translate_base_typ(
@@ -88,13 +98,18 @@ fn translate_base_typ(
                 _ => Err(()),
             }
         }
-        TyKind::Param(_) => {
-            // TODO: sophisticate
-            Ok((BaseTyp::Wildcard, typ_ctx.clone()))
-        }
-        TyKind::Bound(rust_id, _) => match typ_ctx.get(&rust_id.index()) {
+        TyKind::Param(p) => match typ_ctx.get(&(ParamType::ImplParam, p.index as usize)) {
             None => {
-                let (id_typ, typ_ctx) = fresh_type_var(rust_id.index(), typ_ctx);
+                let (id_typ, typ_ctx) =
+                    fresh_type_var(p.index as usize, ParamType::ImplParam, typ_ctx);
+                Ok((id_typ, typ_ctx))
+            }
+            Some(id_typ) => Ok((id_typ.clone(), typ_ctx.clone())),
+        },
+        TyKind::Bound(rust_id, _) => match typ_ctx.get(&(ParamType::FnParam, rust_id.index())) {
+            None => {
+                let (id_typ, typ_ctx) =
+                    fresh_type_var(rust_id.index(), ParamType::FnParam, typ_ctx);
                 Ok((id_typ, typ_ctx))
             }
             Some(id_typ) => Ok((id_typ.clone(), typ_ctx.clone())),
@@ -120,16 +135,19 @@ fn translate_ty(
     }
 }
 
-fn translate_polyfnsig(tcx: &TyCtxt, sig: &PolyFnSig) -> Result<ExternalFuncSig, ()> {
+fn translate_polyfnsig(
+    tcx: &TyCtxt,
+    sig: &PolyFnSig,
+    typ_ctx: &TypVarContext,
+) -> Result<ExternalFuncSig, ()> {
     // The type context maps De Bruijn indexed types in the signature
     // to Rustspec type variables
-    let typ_ctx = HashMap::new();
     let mut new_args = Vec::new();
     let typ_ctx = sig
         .inputs()
         .skip_binder()
         .iter()
-        .fold(Ok(typ_ctx), |typ_ctx, ty| {
+        .fold(Ok(typ_ctx.clone()), |typ_ctx, ty| {
             let (new_ty, typ_ctx) = translate_ty(tcx, ty, &typ_ctx?)?;
             new_args.push(new_ty);
             Ok(typ_ctx)
@@ -160,7 +178,7 @@ fn process_fn_id(
                 {
                     // Function not within impl block
                     let export_sig = tcx.fn_sig(*id);
-                    let sig = match translate_polyfnsig(tcx, &export_sig) {
+                    let sig = match translate_polyfnsig(tcx, &export_sig, &HashMap::new()) {
                         Ok(sig) => Some(sig),
                         Err(()) => None,
                     };
@@ -184,13 +202,14 @@ fn process_fn_id(
                             let impl_type = translate_base_typ(tcx, impl_type, &HashMap::new());
                             // TODO: distinguish between methods and static for types
                             match impl_type {
-                                Ok((impl_type, _)) => {
+                                Ok((impl_type, typ_ctx)) => {
                                     let fn_key = FnKey::Impl(
                                         impl_type,
                                         Ident::Original(name.to_ident_string()),
                                     );
                                     let export_sig = tcx.fn_sig(*id);
-                                    let sig = match translate_polyfnsig(tcx, &export_sig) {
+                                    let sig = match translate_polyfnsig(tcx, &export_sig, &typ_ctx)
+                                    {
                                         Ok(sig) => Some(sig),
                                         Err(()) => None,
                                     };
