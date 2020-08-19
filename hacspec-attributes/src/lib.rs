@@ -2,7 +2,7 @@
 #![cfg_attr(feature = "print_attributes", feature(proc_macro_span))]
 
 extern crate ansi_term;
-extern crate hacspec_dev;
+extern crate hacspec_sig;
 extern crate quote;
 extern crate serde;
 extern crate serde_json;
@@ -11,7 +11,7 @@ extern crate syn;
 #[cfg(feature = "print_attributes")]
 use ansi_term::Colour::{Blue, Cyan, Green, Purple, Red, Yellow};
 #[cfg(feature = "print_attributes")]
-use hacspec_dev::external_sig::{syn_sig_to_reduced, Signature};
+use hacspec_sig::{syn_sig_to_reduced, Signature};
 #[cfg(feature = "print_attributes")]
 use proc_macro::*;
 #[cfg(feature = "print_attributes")]
