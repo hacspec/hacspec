@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 use rand::{
     distributions::uniform::SampleBorrow, distributions::uniform::SampleUniform,
     distributions::Distribution, distributions::Standard, AsByteSliceMut, Rng,

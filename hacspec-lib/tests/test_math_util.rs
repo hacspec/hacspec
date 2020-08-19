@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 
 // XXX: Careful in here. The `test` functions use `Numeric` functions and hence
 //      will end up being the same as what they test. Rewrite when merging!

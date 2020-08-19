@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 
 /// NtruPrime parameters
 pub struct Parameters {

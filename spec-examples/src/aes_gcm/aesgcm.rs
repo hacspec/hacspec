@@ -1,5 +1,5 @@
 // Import hacspec and all needed definitions.
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 // Import aes and gcm
 use super::aes::{self, aes_ctr_keyblock, aes_encrypt, Block};

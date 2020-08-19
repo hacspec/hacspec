@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
 
 use hacspec_examples::chacha20_poly1305::chacha20::*;

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 
 use rand::{AsByteSliceMut, Rng};
 

@@ -1,20 +1,21 @@
 [package]
 name = "hacspec"
 version = "0.1.0"
-authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>", "Denis Merigoux <denis.merigoux@gmail.com>"]
+authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-num = "0.2"
-
-secret_integers = { path = "../secret-integers" }
-abstract_integers = { path = "../abstract-integers" }
-hacspec_attributes = { path = "../attributes",  optional = true }
+clap = {version = "~2.33.1", features = ["yaml"]}
+pretty = "0.10.0"
+im = "15.0.0"
+itertools = "0.9.0"
+walkdir = "2.3.1"
+hacspec-dev = { path = "../hacspec-dev" }
+serde_json = "1.0"
+hacspec-sig = { path = "../hacspec-sig" }
 
 [dev-dependencies]
-rand = "0.7"
-
-[features]
-use_attributes = ["hacspec_attributes", "hacspec_attributes/print_attributes"]
+assert_cmd = "1.0.1"
+hacspec-lib = { path = "../hacspec-lib" }

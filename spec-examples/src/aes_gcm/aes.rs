@@ -1,5 +1,5 @@
 // Import hacspec and all needed definitions.
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 const BLOCKSIZE: usize = 16;
 const IVSIZE: usize = 12;

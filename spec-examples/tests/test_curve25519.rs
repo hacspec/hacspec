@@ -1,4 +1,4 @@
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 
 use hacspec_examples::curve25519::*;
 

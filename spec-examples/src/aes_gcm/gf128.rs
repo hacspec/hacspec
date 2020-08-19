@@ -1,5 +1,5 @@
 // Import hacspec and all needed definitions.
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 // Get Key, Block, and BLOCKSIZE types
 // use crate::aes::{Key, Block};
