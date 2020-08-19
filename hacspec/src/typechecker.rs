@@ -135,7 +135,7 @@ fn unify_types(t1: &Typ, t2: &Typ, typ_ctx: &TypeVarCtx) -> Option<TypeVarCtx> {
                         _ => panic!(), //should not happen
                     } {
                         match (&arg1, &arg2) {
-                            (None, None) => None,
+                            (None, None) => Some(typ_ctx.clone()),
                             (Some(tc1), Some(tc2)) => unify_types(
                                 &(((Borrowing::Consumed, (t1.1).1)), tc1.as_ref().clone()),
                                 &(((Borrowing::Consumed, (t2.1).1)), tc2.as_ref().clone()),
@@ -320,54 +320,6 @@ fn find_func(
     Err(())
 }
 
-fn find_func(
-    sess: &Session,
-    key1: &FnKey,
-    fn_context: &FnContext,
-    typ_dict: &TypeDict,
-    span: &Span,
-) -> TypecheckingResult<FnValue> {
-    let mut candidates = fn_context.clone();
-    candidates.retain(|key2, _| match (key1, key2) {
-        (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
-            (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
-            _ => panic!(),
-        },
-        (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
-            equal_types(
-                &(
-                    (Borrowing::Consumed, span.clone()),
-                    (t1.clone(), span.clone()),
-                ),
-                &(
-                    (Borrowing::Consumed, span.clone()),
-                    (t2.clone(), span.clone()),
-                ),
-                typ_dict,
-            ) && match (n1, n2) {
-                (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
-                _ => panic!(),
-            }
-        }
-        _ => false,
-    });
-    if candidates.len() == 0 {
-        sess.span_err(*span, format!("function {} cannot be found", key1).as_str());
-        return Err(());
-    }
-    if candidates.len() > 1 {
-        sess.span_err(
-            *span,
-            format!("Multiple implementations for function {}", key1).as_str(),
-        );
-        return Err(());
-    }
-    for (_, sig) in candidates {
-        return Ok(sig);
-    }
-    Err(())
-}
-
 fn find_ident<'a, 'b>(x: &'a Ident, name_context: &'b NameContext) -> &'b Ident {
     match x {
         Ident::Rustspec(_, _) => {
@@ -502,7 +454,7 @@ fn typecheck_expression(
                 typecheck_expression(sess, e2, fn_context, typ_dict, &var_context, name_context)?;
             match op {
                 BinOpKind::Shl | BinOpKind::Shr => match &(t2.1).0 {
-                    BaseTyp::Usize => {
+                    BaseTyp::UInt32 => {
                         if is_numeric(&t1) {
                             Ok((
                                 Expression::Binary(

@@ -263,12 +263,7 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
                 RcDoc::space().append(RcDoc::as_string("()"))
             })
         }
-        Expression::MethodCall(sel, _, (f, _), args) => translate_ident(f)
-            .append(RcDoc::space())
-            .append({
-                let sel = &sel.0;
-                translate_expression(&sel.0)
-            })
+        Expression::MethodCall(_, _, (f, _), args) => translate_ident(f)
             .append(RcDoc::concat(args.iter().map(|((arg, _), _)| {
                 RcDoc::space().append(make_paren(translate_expression(arg)))
             }))),

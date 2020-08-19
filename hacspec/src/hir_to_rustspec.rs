@@ -1,13 +1,13 @@
 use im::HashMap;
 use rustc_ast::ast::{IntTy, UintTy};
-use rustc_hir::definitions::DefPathData;
+use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_middle::middle::exported_symbols::ExportedSymbol;
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
 use rustc_middle::ty::{self, AssocKind, PolyFnSig, TyCtxt, TyKind};
 use rustc_session::Session;
 use rustc_span::{
-    def_id::{CrateNum, DefId},
+    def_id::{CrateNum, DefId, LOCAL_CRATE},
     DUMMY_SP,
 };
 use std::sync::atomic::Ordering;
@@ -114,6 +114,15 @@ fn translate_base_typ(
             }
             Some(id_typ) => Ok((id_typ.clone(), typ_ctx.clone())),
         },
+        TyKind::Tuple(args) => {
+            let mut new_args = Vec::new();
+            let typ_ctx = args.types().fold(Ok(typ_ctx.clone()), |typ_ctx, ty| {
+                let (new_ty, typ_ctx) = translate_base_typ(tcx, &ty, &typ_ctx?)?;
+                new_args.push((new_ty, DUMMY_SP));
+                Ok(typ_ctx)
+            })?;
+            Ok((BaseTyp::Tuple(new_args), typ_ctx))
+        }
         _ => Err(()),
     }
 }
@@ -232,32 +241,69 @@ pub fn retrieve_external_functions(
     tcx: &TyCtxt,
     imported_crates: &Vec<Spanned<String>>,
 ) -> HashMap<FnKey, Option<ExternalFuncSig>> {
-    let krates = tcx.crates();
+    let mut krates: Vec<_> = tcx.crates().iter().collect();
+    krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
     for krate_num in krates {
         let exported_symbols = tcx.exported_symbols(*krate_num);
-        let trait_impls = tcx.all_trait_implementations(*krate_num);
         let original_crate_name = tcx.original_crate_name(*krate_num);
         if imported_crates
             .iter()
-            .filter(|(imported_crate, _)| *imported_crate == original_crate_name.to_ident_string())
+            .filter(|(imported_crate, _)| {
+                *imported_crate == original_crate_name.to_ident_string()
+                    || original_crate_name.to_ident_string()
+                        == tcx.crate_name(LOCAL_CRATE).to_ident_string()
+            })
             .collect::<Vec<_>>()
             .len()
             > 0
         {
-            for (exported_symbol, _) in exported_symbols {
-                match exported_symbol {
-                    ExportedSymbol::Generic(id, _) | ExportedSymbol::NonGeneric(id) => {
-                        process_fn_id(sess, tcx, id, krate_num, &mut extern_funcs)
+            if *krate_num != LOCAL_CRATE {
+                for (exported_symbol, _) in exported_symbols {
+                    match exported_symbol {
+                        ExportedSymbol::Generic(id, _) | ExportedSymbol::NonGeneric(id) => {
+                            process_fn_id(sess, tcx, id, krate_num, &mut extern_funcs)
+                        }
+                        _ => (),
                     }
-                    _ => (),
                 }
-            }
-            for trait_impl_id in trait_impls {
-                let assoc_items = tcx.associated_items(*trait_impl_id);
-                for item in assoc_items.in_definition_order() {
-                    if item.kind == AssocKind::Fn {
-                        process_fn_id(sess, tcx, &item.def_id, krate_num, &mut extern_funcs)
+                let trait_impls = tcx.all_trait_implementations(*krate_num);
+                for trait_impl_id in trait_impls {
+                    let assoc_items = tcx.associated_items(*trait_impl_id);
+                    for item in assoc_items.in_definition_order() {
+                        if item.kind == AssocKind::Fn {
+                            process_fn_id(sess, tcx, &item.def_id, krate_num, &mut extern_funcs)
+                        }
+                    }
+                }
+            } else {
+                // For the local crate, we're importing local trait impls
+                let local_trait_impls = tcx.all_local_trait_impls(*krate_num);
+                for (local_trait_impl_id, _) in local_trait_impls {
+                    let assoc_items = tcx.associated_items(*local_trait_impl_id);
+                    for item in assoc_items.in_definition_order() {
+                        if item.kind == AssocKind::Fn {
+                            process_fn_id(sess, tcx, &item.def_id, krate_num, &mut extern_funcs)
+                        }
+                    }
+                }
+                // But also all the other functions not part of an impl
+                let items = &tcx.hir_crate(*krate_num).items;
+                for (item_id, item) in items {
+                    let item_id = tcx.hir().local_def_id(*item_id).to_def_id();
+                    match item.kind {
+                        ItemKind::Fn(_, _, _) => {
+                            process_fn_id(sess, tcx, &item_id, krate_num, &mut extern_funcs)
+                        }
+                        ItemKind::Impl { items, .. } => {
+                            for item in items {
+                                let item_id = tcx.hir().local_def_id(item.id.hir_id).to_def_id();
+                                if let AssocItemKind::Fn { .. } = item.kind {
+                                    process_fn_id(sess, tcx, &item_id, krate_num, &mut extern_funcs)
+                                }
+                            }
+                        }
+                        _ => (),
                     }
                 }
             }
