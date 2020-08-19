@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["hex_string_to_bytes","Internal function used in primitive implementations but that is not part of the language."],["to_array","Internal function used in primitive implementations but that is not part of the language."]]});
