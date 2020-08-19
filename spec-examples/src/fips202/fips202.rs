@@ -1,5 +1,5 @@
 // Import hacspec and all needed definitions.
-use hacspec::prelude::*;
+use hacspec_lib::*;
 
 const ROUNDS: usize = 24;
 pub const SHA3224_RATE: usize = 144;

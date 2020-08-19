@@ -17,14 +17,14 @@ pub trait SeqTrait<T: Copy>:
     /// # Examples
     ///
     /// ```
-    /// use hacspec::prelude::*;
+    /// use hacspec_lib::prelude::*;
     ///
     /// let mut s = Seq::<u8>::new(5);
     /// let tmp = Seq::<u8>::from_native_slice(&[2, 3]);
     /// s = s.update_slice(2, &tmp, 1, 1);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn update_slice<A: SeqTrait<T>>(
         mut self,
         start_out: usize,
@@ -45,7 +45,7 @@ pub trait SeqTrait<T: Copy>:
     /// # Examples
     ///
     /// ```
-    /// use hacspec::prelude::*;
+    /// use hacspec_lib::prelude::*;
     ///
     /// let mut s = Seq::<u8>::new(5);
     /// let tmp = Seq::<u8>::from_native_slice(&[2, 3]);
@@ -128,19 +128,19 @@ pub trait Integer: Numeric {
 }
 
 pub trait SecretInteger: Integer {
-    type PublicVersion : PublicInteger;
+    type PublicVersion: PublicInteger;
     fn classify(x: Self::PublicVersion) -> Self;
 }
 pub trait SecretIntegerCopy: SecretInteger + Copy {
-    type PublicVersionCopy : PublicIntegerCopy;
+    type PublicVersionCopy: PublicIntegerCopy;
     fn classify(x: Self::PublicVersionCopy) -> Self;
 }
 
 pub trait PublicInteger: Integer {
-    type SecretVersion : Integer;
+    type SecretVersion: Integer;
 }
 pub trait PublicIntegerCopy: PublicInteger + Copy {
-    type SecretVersionCopy : Integer + Copy;
+    type SecretVersionCopy: Integer + Copy;
 }
 
 pub trait UnsignedInteger: Integer {}
@@ -149,7 +149,7 @@ pub trait UnsignedIntegerCopy: UnsignedInteger + Copy {}
 pub trait SignedInteger: Integer {}
 pub trait SignedIntegerCopy: SignedInteger + Copy {}
 
-pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
+pub trait UnsignedSecretInteger: UnsignedInteger + SecretInteger {
     fn to_le_bytes(self) -> Seq<U8>;
     fn to_be_bytes(self) -> Seq<U8>;
     fn from_le_bytes(x: &Seq<U8>) -> Self;
@@ -163,7 +163,7 @@ pub trait UnsignedSecretInteger : UnsignedInteger + SecretInteger {
 }
 pub trait UnsignedSecretIntegerCopy: UnsignedSecretInteger + SecretIntegerCopy {}
 
-pub trait UnsignedPublicInteger : UnsignedInteger + PublicInteger {
+pub trait UnsignedPublicInteger: UnsignedInteger + PublicInteger {
     fn to_le_bytes(self) -> Seq<u8>;
     fn to_be_bytes(self) -> Seq<u8>;
     fn from_le_bytes(x: &Seq<u8>) -> Self;
@@ -188,7 +188,7 @@ pub trait ModNumeric {
     fn absolute(self) -> Self;
 }
 
-pub trait NumericCopy : Copy {}
+pub trait NumericCopy: Copy {}
 
 /// The `Numeric` trait has to be implemented by all numeric objects.
 pub trait Numeric:

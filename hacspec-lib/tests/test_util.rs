@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use hacspec::prelude::*;
+use hacspec_lib::prelude::*;
 
 pub(crate) fn get_expected(op: &'static str, a: &String, b: &String) -> String {
     let expected = std::process::Command::new("python")

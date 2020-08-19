@@ -1,16 +1,11 @@
 [package]
-name = "hacspec-derive"
+name = "hacspec-sig"
 version = "0.1.0"
 authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 
-[lib]
-proc-macro = true
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hacspec-lib = { path = "../hacspec-lib" }
-syn = "1.0"
-quote = "1.0"
-proc-macro2= "1.0.17"
+serde = {version = "1.0", features = ["derive"]}
+syn = { version = "1.0.17", features= ["full", "visit"] }
