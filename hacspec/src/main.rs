@@ -19,7 +19,7 @@ mod rustspec_to_fstar;
 mod typechecker;
 
 use clap::App;
-use hacspec_dev::external_sig::Signature;
+use hacspec_sig::Signature;
 use rustc_driver::{run_compiler, Callbacks, Compilation};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_interface::{

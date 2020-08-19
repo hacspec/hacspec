@@ -1,5 +1,5 @@
 use crate::rustspec::*;
-use hacspec_dev::external_sig;
+use hacspec_sig;
 use im::{HashMap, HashSet};
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
@@ -215,7 +215,7 @@ type TypeDict = HashMap<String, Typ>;
 
 type NameContext = HashMap<String, Ident>;
 
-type AllowedSigs = std::collections::HashSet<external_sig::Signature>;
+type AllowedSigs = std::collections::HashSet<hacspec_sig::Signature>;
 
 fn find_func(
     sess: &Session,
@@ -434,9 +434,9 @@ fn typecheck_expression(
                         sess.span_err(
                             *span,
                             format!(
-                        "wrong types of binary operators, left is {}{} while right is {}{}",
-                        t1.0.0, t1.1.0, t2.0.0, t2.1.0
-                    )
+                                "wrong types of binary operators, left is {}{} while right is {}{}",
+                                t1.0.0, t1.1.0, t2.0.0, t2.1.0
+                            )
                             .as_str(),
                         );
                         Err(())
