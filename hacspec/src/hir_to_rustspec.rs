@@ -15,11 +15,12 @@ use std::sync::atomic::Ordering;
 use crate::rustspec::*;
 use crate::typechecker::{FnKey, ID_COUNTER};
 
-fn fresh_type_var() -> BaseTyp {
-    BaseTyp::Variable(RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)))
-}
-
 type TypVarContext = HashMap<usize, BaseTyp>;
+
+fn fresh_type_var(rust_id: usize, typ_ctx: &TypVarContext) -> (BaseTyp, TypVarContext) {
+    let t = BaseTyp::Variable(RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)));
+    (t.clone(), typ_ctx.update(rust_id, t))
+}
 
 fn translate_base_typ(
     tcx: &TyCtxt,
@@ -91,10 +92,13 @@ fn translate_base_typ(
             // TODO: sophisticate
             Ok((BaseTyp::Wildcard, typ_ctx.clone()))
         }
-        TyKind::Bound(_, _) => {
-            // (TODO: sophisticate
-            Ok((BaseTyp::Wildcard, typ_ctx.clone()))
-        }
+        TyKind::Bound(rust_id, _) => match typ_ctx.get(&rust_id.index()) {
+            None => {
+                let (id_typ, typ_ctx) = fresh_type_var(rust_id.index(), typ_ctx);
+                Ok((id_typ, typ_ctx))
+            }
+            Some(id_typ) => Ok((id_typ.clone(), typ_ctx.clone())),
+        },
         _ => Err(()),
     }
 }
@@ -117,6 +121,8 @@ fn translate_ty(
 }
 
 fn translate_polyfnsig(tcx: &TyCtxt, sig: &PolyFnSig) -> Result<ExternalFuncSig, ()> {
+    // The type context maps De Bruijn indexed types in the signature
+    // to Rustspec type variables
     let typ_ctx = HashMap::new();
     let mut new_args = Vec::new();
     let typ_ctx = sig
