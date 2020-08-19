@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 // TODO: explain that we need typechecking inference to disambiguate method calls
 
-static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
+pub static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 fn fresh_ident(x: &Ident) -> Ident {
     match x {
@@ -63,6 +63,7 @@ fn is_copy(t: &BaseTyp) -> bool {
         // TODO: implement special cases for derived copy
         BaseTyp::Named(_, _) => false,
         BaseTyp::Wildcard => false, //Changed when characterized by traits,
+        BaseTyp::Variable(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t)),
     }
 }

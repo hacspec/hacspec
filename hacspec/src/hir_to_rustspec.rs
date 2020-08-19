@@ -10,33 +10,36 @@ use rustc_span::{
     def_id::{CrateNum, DefId},
     DUMMY_SP,
 };
+use std::sync::atomic::Ordering;
 
 use crate::rustspec::*;
-use crate::typechecker::FnKey;
+use crate::typechecker::{FnKey, ID_COUNTER};
 
-fn check_vec<T>(v: Vec<Result<T, ()>>) -> Result<Vec<T>, ()> {
-    if v.iter().all(|t| t.is_ok()) {
-        Ok(v.into_iter().map(|t| t.unwrap()).collect())
-    } else {
-        Err(())
-    }
+fn fresh_type_var() -> BaseTyp {
+    BaseTyp::Variable(RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)))
 }
 
-fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
+type TypVarContext = HashMap<usize, BaseTyp>;
+
+fn translate_base_typ(
+    tcx: &TyCtxt,
+    ty: &ty::Ty,
+    typ_ctx: &TypVarContext,
+) -> Result<(BaseTyp, TypVarContext), ()> {
     match ty.kind {
-        TyKind::Bool => Ok(BaseTyp::Bool),
-        TyKind::Int(IntTy::Isize) => Ok(BaseTyp::Isize),
-        TyKind::Int(IntTy::I8) => Ok(BaseTyp::Int8),
-        TyKind::Int(IntTy::I16) => Ok(BaseTyp::Int16),
-        TyKind::Int(IntTy::I32) => Ok(BaseTyp::Int32),
-        TyKind::Int(IntTy::I64) => Ok(BaseTyp::Int64),
-        TyKind::Int(IntTy::I128) => Ok(BaseTyp::Int128),
-        TyKind::Uint(UintTy::Usize) => Ok(BaseTyp::Usize),
-        TyKind::Uint(UintTy::U8) => Ok(BaseTyp::UInt8),
-        TyKind::Uint(UintTy::U16) => Ok(BaseTyp::UInt16),
-        TyKind::Uint(UintTy::U32) => Ok(BaseTyp::UInt32),
-        TyKind::Uint(UintTy::U64) => Ok(BaseTyp::UInt64),
-        TyKind::Uint(UintTy::U128) => Ok(BaseTyp::UInt128),
+        TyKind::Bool => Ok((BaseTyp::Bool, typ_ctx.clone())),
+        TyKind::Int(IntTy::Isize) => Ok((BaseTyp::Isize, typ_ctx.clone())),
+        TyKind::Int(IntTy::I8) => Ok((BaseTyp::Int8, typ_ctx.clone())),
+        TyKind::Int(IntTy::I16) => Ok((BaseTyp::Int16, typ_ctx.clone())),
+        TyKind::Int(IntTy::I32) => Ok((BaseTyp::Int32, typ_ctx.clone())),
+        TyKind::Int(IntTy::I64) => Ok((BaseTyp::Int64, typ_ctx.clone())),
+        TyKind::Int(IntTy::I128) => Ok((BaseTyp::Int128, typ_ctx.clone())),
+        TyKind::Uint(UintTy::Usize) => Ok((BaseTyp::Usize, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U8) => Ok((BaseTyp::UInt8, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U16) => Ok((BaseTyp::UInt16, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U32) => Ok((BaseTyp::UInt32, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U64) => Ok((BaseTyp::UInt64, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U128) => Ok((BaseTyp::UInt128, typ_ctx.clone())),
         TyKind::Adt(adt, substs) => {
             let adt_id = adt.did;
             let adt_def_path = tcx.def_path(adt_id);
@@ -52,11 +55,11 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
                 {
                     "hacspec_lib" => match name.to_ident_string().as_str() {
                         "Seq" => {
-                            let param_typ = if substs.len() == 1 {
+                            let (param_typ, typ_ctx) = if substs.len() == 1 {
                                 match substs.first().unwrap().unpack() {
                                     GenericArgKind::Type(arg_ty) => {
-                                        match translate_base_typ(tcx, &arg_ty) {
-                                            Ok(t) => t,
+                                        match translate_base_typ(tcx, &arg_ty, typ_ctx) {
+                                            Ok((t, typ_ctx)) => (t, typ_ctx),
                                             Err(()) => return Err(()),
                                         }
                                     }
@@ -65,16 +68,19 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
                             } else {
                                 return Err(());
                             };
-                            Ok(BaseTyp::Seq(Box::new((param_typ, DUMMY_SP))))
+                            Ok((BaseTyp::Seq(Box::new((param_typ, DUMMY_SP))), typ_ctx))
                         }
-                        _ => Ok(BaseTyp::Named(
-                            (Ident::Original(name.to_ident_string()), DUMMY_SP),
-                            None,
+                        _ => Ok((
+                            BaseTyp::Named(
+                                (Ident::Original(name.to_ident_string()), DUMMY_SP),
+                                None,
+                            ),
+                            typ_ctx.clone(),
                         )),
                     },
-                    _ => Ok(BaseTyp::Named(
-                        (Ident::Original(name.to_ident_string()), DUMMY_SP),
-                        None,
+                    _ => Ok((
+                        BaseTyp::Named((Ident::Original(name.to_ident_string()), DUMMY_SP), None),
+                        typ_ctx.clone(),
                     )),
                 },
 
@@ -83,39 +89,49 @@ fn translate_base_typ(tcx: &TyCtxt, ty: &ty::Ty) -> Result<BaseTyp, ()> {
         }
         TyKind::Param(_) => {
             // TODO: sophisticate
-            Ok(BaseTyp::Wildcard)
+            Ok((BaseTyp::Wildcard, typ_ctx.clone()))
         }
         TyKind::Bound(_, _) => {
-            // TODO: sophisticate
-            Ok(BaseTyp::Wildcard)
+            // (TODO: sophisticate
+            Ok((BaseTyp::Wildcard, typ_ctx.clone()))
         }
         _ => Err(()),
     }
 }
 
-fn translate_ty(tcx: &TyCtxt, ty: &ty::Ty) -> Result<Typ, ()> {
+fn translate_ty(
+    tcx: &TyCtxt,
+    ty: &ty::Ty,
+    typ_ctx: &TypVarContext,
+) -> Result<(Typ, TypVarContext), ()> {
     match ty.kind {
-        TyKind::Ref(_, ref_ty, Mutability::Not) => Ok((
-            (Borrowing::Borrowed, DUMMY_SP),
-            (translate_base_typ(tcx, &ref_ty)?, DUMMY_SP),
-        )),
-        _ => Ok((
-            (Borrowing::Consumed, DUMMY_SP),
-            (translate_base_typ(tcx, ty)?, DUMMY_SP),
-        )),
+        TyKind::Ref(_, ref_ty, Mutability::Not) => {
+            let (ty, typ_ctx) = translate_base_typ(tcx, &ref_ty, typ_ctx)?;
+            Ok((((Borrowing::Borrowed, DUMMY_SP), (ty, DUMMY_SP)), typ_ctx))
+        }
+        _ => {
+            let (ty, typ_ctx) = translate_base_typ(tcx, ty, typ_ctx)?;
+            Ok((((Borrowing::Consumed, DUMMY_SP), (ty, DUMMY_SP)), typ_ctx))
+        }
     }
 }
 
 fn translate_polyfnsig(tcx: &TyCtxt, sig: &PolyFnSig) -> Result<ExternalFuncSig, ()> {
+    let typ_ctx = HashMap::new();
+    let mut new_args = Vec::new();
+    let typ_ctx = sig
+        .inputs()
+        .skip_binder()
+        .iter()
+        .fold(Ok(typ_ctx), |typ_ctx, ty| {
+            let (new_ty, typ_ctx) = translate_ty(tcx, ty, &typ_ctx?)?;
+            new_args.push(new_ty);
+            Ok(typ_ctx)
+        })?;
+    let (ret, _) = translate_base_typ(tcx, &sig.output().skip_binder(), &typ_ctx)?;
     Ok(ExternalFuncSig {
-        args: check_vec(
-            sig.inputs()
-                .skip_binder()
-                .iter()
-                .map(|ty| translate_ty(tcx, ty))
-                .collect(),
-        )?,
-        ret: translate_base_typ(tcx, &sig.output().skip_binder())?,
+        args: new_args,
+        ret,
     })
 }
 
@@ -159,10 +175,10 @@ fn process_fn_id(
                         (DefPathData::Impl, DefPathData::ValueNs(name)) => {
                             let impl_id = tcx.impl_of_method(*id).unwrap();
                             let impl_type = &tcx.type_of(impl_id);
-                            let impl_type = translate_base_typ(tcx, impl_type);
+                            let impl_type = translate_base_typ(tcx, impl_type, &HashMap::new());
                             // TODO: distinguish between methods and static for types
                             match impl_type {
-                                Ok(impl_type) => {
+                                Ok((impl_type, _)) => {
                                     let fn_key = FnKey::Impl(
                                         impl_type,
                                         Ident::Original(name.to_ident_string()),

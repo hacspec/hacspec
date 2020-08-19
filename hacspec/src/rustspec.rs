@@ -82,6 +82,7 @@ pub enum BaseTyp {
     Seq(Box<Spanned<BaseTyp>>),
     Array(Spanned<usize>, Box<Spanned<BaseTyp>>),
     Named(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>),
+    Variable(RustspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
     Wildcard,
 }
@@ -126,6 +127,7 @@ impl fmt::Display for BaseTyp {
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
             BaseTyp::Wildcard => write!(f, "*"),
+            BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
         }
     }
 }

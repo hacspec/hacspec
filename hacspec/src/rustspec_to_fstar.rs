@@ -126,6 +126,7 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
             Some(arg) => RcDoc::space().append(translate_base_typ(&arg.as_ref().0)),
         }),
         BaseTyp::Wildcard => RcDoc::as_string("'a"),
+        BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
         BaseTyp::Tuple(args) => make_typ_tuple(args.iter().map(|(arg, _)| translate_base_typ(arg))),
     }
 }
@@ -192,10 +193,7 @@ fn translate_unop(op: &UnOpKind) -> RcDoc<()> {
     }
 }
 
-fn translate_func_name<'a, 'b>(
-    prefix: &'a Option<Spanned<BaseTyp>>,
-    name: &'a Ident,
-) -> RcDoc<'a, ()> {
+fn translate_func_name<'a>(prefix: &'a Option<Spanned<BaseTyp>>, name: &'a Ident) -> RcDoc<'a, ()> {
     match prefix {
         None => translate_ident(name),
         Some((prefix, _)) => {
@@ -216,8 +214,9 @@ fn translate_func_name<'a, 'b>(
                 BaseTyp::Isize => RcDoc::as_string("Int32"),
                 BaseTyp::Seq(_) | BaseTyp::Array(_, _) => RcDoc::as_string("Seq"),
                 BaseTyp::Named(ident, _) => translate_ident(&ident.0),
-                BaseTyp::Wildcard => panic!(), // should not happen
-                BaseTyp::Tuple(_) => panic!(), // should not happen
+                BaseTyp::Wildcard => panic!(),    // should not happen
+                BaseTyp::Variable(_) => panic!(), // shoult not happen
+                BaseTyp::Tuple(_) => panic!(),    // should not happen
             };
             let type_arg = match prefix {
                 BaseTyp::Seq(tau) => Some(translate_base_typ(&tau.0)),
