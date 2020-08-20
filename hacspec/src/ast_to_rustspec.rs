@@ -14,6 +14,7 @@ use rustc_session::Session;
 use rustc_span::{symbol, Span};
 
 use crate::rustspec::*;
+use crate::RustspectErrorEmitter;
 
 type TranslationResult<T> = Result<T, ()>;
 
@@ -36,7 +37,7 @@ fn translate_type_arg(
 ) -> TranslationResult<Spanned<BaseTyp>> {
     match args {
         GenericArgs::Parenthesized(_) => {
-            sess.span_err(
+            sess.span_rustspec_err(
                 *span,
                 "parenthesized path arguments are not allowed in Rustspec",
             );
@@ -44,19 +45,19 @@ fn translate_type_arg(
         }
         GenericArgs::AngleBracketed(args) => {
             if args.args.len() != 1 {
-                sess.span_err(args.span, "only one type argument is allowed in Rustspec");
+                sess.span_rustspec_err(args.span, "only one type argument is allowed in Rustspec");
                 Err(())
             } else {
                 match args.args.iter().next() {
                     None => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             args.span,
                             "empty type arguments are not allowed in Rustspec",
                         );
                         Err(())
                     }
                     Some(AngleBracketedArg::Constraint(_)) => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             args.span,
                             "contraint type arguments are not allowed in Rustspec",
                         );
@@ -67,14 +68,17 @@ fn translate_type_arg(
                         Ok((typ_arg?, ty.span))
                     }
                     Some(AngleBracketedArg::Arg(GenericArg::Lifetime(_))) => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             args.span,
                             "lifetime type parameters are not allowed in Rustspect",
                         );
                         Err(())
                     }
                     Some(AngleBracketedArg::Arg(GenericArg::Const(_))) => {
-                        sess.span_err(args.span, "const generics are not allowed in Rustspec");
+                        sess.span_rustspec_err(
+                            args.span,
+                            "const generics are not allowed in Rustspec",
+                        );
                         Err(())
                     }
                 }
@@ -85,18 +89,18 @@ fn translate_type_arg(
 
 pub fn translate_use_path(sess: &Session, path: &ast::Path) -> TranslationResult<String> {
     if path.segments.len() > 1 {
-        sess.span_err(path.span, "imports are limited to the top-level glob");
+        sess.span_rustspec_err(path.span, "imports are limited to the top-level glob");
         return Err(());
     }
     match path.segments.iter().last() {
         None => {
-            sess.span_err(path.span, "empty path are not allowed in Rustspec");
+            sess.span_rustspec_err(path.span, "empty path are not allowed in Rustspec");
             Err(())
         }
         Some(segment) => match &segment.args {
             None => Ok(segment.ident.name.to_ident_string()),
             Some(_) => {
-                sess.span_err(path.span, "imports cannot have arguments");
+                sess.span_rustspec_err(path.span, "imports cannot have arguments");
                 Err(())
             }
         },
@@ -112,7 +116,7 @@ pub fn translate_typ_name(
     }
     match path.segments.iter().last() {
         None => {
-            sess.span_err(path.span, "empty path are not allowed in Rustspec");
+            sess.span_rustspec_err(path.span, "empty path are not allowed in Rustspec");
             Err(())
         }
         Some(segment) => match &segment.args {
@@ -135,13 +139,13 @@ pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResul
     }
     match path.segments.iter().last() {
         None => {
-            sess.span_err(path.span, "empty path are not allowed in Rustspec");
+            sess.span_rustspec_err(path.span, "empty path are not allowed in Rustspec");
             Err(())
         }
         Some(segment) => match &segment.args {
             None => Ok(translate_ident(&segment.ident).0),
             Some(_) => {
-                sess.span_err(path.span, "expression paths cannot have arguments");
+                sess.span_rustspec_err(path.span, "expression paths cannot have arguments");
                 Err(())
             }
         },
@@ -202,7 +206,7 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                         "usize" => return Ok((BaseTyp::Usize, ty.span)),
                         "isize" => return Ok((BaseTyp::Isize, ty.span)),
                         "Seq" => {
-                            sess.span_err(ty.span, "Seq expects a type argument");
+                            sess.span_rustspec_err(ty.span, "Seq expects a type argument");
                             return Err(());
                         }
                         _ => (),
@@ -229,15 +233,15 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
             Ok((BaseTyp::Tuple(rtys), ty.span))
         }
         TyKind::Path(Some(_), _) => {
-            sess.span_err(ty.span, "trait associated types not allowed in Rustspec");
+            sess.span_rustspec_err(ty.span, "trait associated types not allowed in Rustspec");
             Err(())
         }
         TyKind::Rptr(_, _) => {
-            sess.span_err(ty.span, "double references not allowed in Rustspec");
+            sess.span_rustspec_err(ty.span, "double references not allowed in Rustspec");
             Err(())
         }
         _ => {
-            sess.span_err(ty.span, "type not allowed in Rustspec");
+            sess.span_rustspec_err(ty.span, "type not allowed in Rustspec");
             Err(())
         }
     }
@@ -247,14 +251,14 @@ fn translate_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Typ>> {
     match &ty.kind {
         TyKind::Rptr(None, mut_ty) => match &mut_ty.mutbl {
             Mutability::Mut => {
-                sess.span_err(ty.span, "mutable function arguments are not allowed");
+                sess.span_rustspec_err(ty.span, "mutable function arguments are not allowed");
                 Err(())
             }
             Mutability::Not => translate_base_typ(sess, &mut_ty.ty)
                 .map(|t| (((Borrowing::Borrowed, ty.span), t), ty.span)),
         },
         TyKind::Rptr(Some(_), _) => {
-            sess.span_err(ty.span, "lifetime annotations are not allowed in Rustspec");
+            sess.span_rustspec_err(ty.span, "lifetime annotations are not allowed in Rustspec");
             Err(())
         }
         _ => translate_base_typ(sess, ty).map(|t| (((Borrowing::Consumed, ty.span), t), ty.span)),
@@ -270,7 +274,7 @@ fn translate_expr_expects_exp(sess: &Session, e: &Expr) -> TranslationResult<Spa
     match translate_expr(sess, e)? {
         (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
         (ExprTranslationResult::TransStmt(_), span) => {
-            sess.span_err(
+            sess.span_rustspec_err(
                 span,
                 "statements inside expressions are not allowed in Rustspec",
             );
@@ -286,7 +290,7 @@ fn translate_function_argument(
     match &e.kind {
         ExprKind::AddrOf(BorrowKind::Ref, is_mut, e1) => match is_mut {
             Mutability::Mut => {
-                sess.span_err(e.span, "mutable borrows are forbidden in Rustspec");
+                sess.span_rustspec_err(e.span, "mutable borrows are forbidden in Rustspec");
                 Err(())
             }
             Mutability::Not => Ok((
@@ -317,7 +321,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     UnOp::Not => UnOpKind::Not,
                     UnOp::Neg => UnOpKind::Neg,
                     UnOp::Deref => {
-                        sess.span_err(e.span, "dereferences not allowed in Rustspec");
+                        sess.span_rustspec_err(e.span, "dereferences not allowed in Rustspec");
                         return Err(());
                     }
                 },
@@ -326,7 +330,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             e.span,
         )),
         ExprKind::Path(Some(_), _) => {
-            sess.span_err(e.span, "trait associated values not allowed in Rustspec");
+            sess.span_rustspec_err(e.span, "trait associated values not allowed in Rustspec");
             Err(())
         }
         ExprKind::Path(None, path) => Ok((
@@ -337,7 +341,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             let ((func_prefix, func_name), _) = match &func.kind {
                 ExprKind::Path(None, path) => Ok((translate_func_name(sess, &path)?, path.span)),
                 _ => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         func.span,
                         "function expressions are restricted to names only in Rustspec",
                     );
@@ -371,7 +375,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             let method_name = match method_name.args {
                 None => Ok(translate_ident(&method_name.ident)),
                 Some(_) => {
-                    sess.span_err(*span, "method type arguments not allowed in Rustspec");
+                    sess.span_rustspec_err(*span, "method type arguments not allowed in Rustspec");
                     Err(())
                 }
             }?;
@@ -442,14 +446,14 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 e.span,
             )),
             LitKind::Int(_, LitIntType::Unsuffixed) => {
-                sess.span_err(
+                sess.span_rustspec_err(
                     lit.span,
                     "integers literal of unspecified type are not allowed in Rustspec",
                 );
                 Err(())
             }
             _ => {
-                sess.span_err(lit.span, "literal not allowed in Rustspec");
+                sess.span_rustspec_err(lit.span, "literal not allowed in Rustspec");
                 Err(())
             }
         },
@@ -463,7 +467,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
 
                             match r_e {
                                 (ExprTranslationResult::TransStmt(_), span) => {
-                                    sess.span_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
+                                    sess.span_rustspec_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
                                     Err(())
                                 }
                                 (ExprTranslationResult::TransExpr(r_e), span) => Ok((
@@ -476,12 +480,15 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                             }
                         }
                         Some(_) => {
-                            sess.span_err(path.span, "no arguments expected in Rustspec");
+                            sess.span_rustspec_err(path.span, "no arguments expected in Rustspec");
                             Err(())
                         }
                     },
                     _ => {
-                        sess.span_err(path.span, "wrong assignment left-hand-side variable");
+                        sess.span_rustspec_err(
+                            path.span,
+                            "wrong assignment left-hand-side variable",
+                        );
                         Err(())
                     }
                 },
@@ -489,7 +496,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     let r_index = translate_expr(sess, index)?;
                     let r_index = match r_index {
                         (ExprTranslationResult::TransStmt(_), span) => {
-                            sess.span_err(span, "statements not allowed in Rustspec for assignments left-hand-sides");
+                            sess.span_rustspec_err(span, "statements not allowed in Rustspec for assignments left-hand-sides");
                             Err(())
                         }
                         (ExprTranslationResult::TransExpr(r_index), span) => Ok((r_index, span)),
@@ -501,7 +508,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                                     let id = translate_ident(&var.ident);
                                     match r_e {
                                         (ExprTranslationResult::TransStmt(_), span) => {
-                                            sess.span_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
+                                            sess.span_rustspec_err(span, "statements not allowed in Rustspec for assignments right-hand-sides");
                                             Err(())
                                         }
                                         (ExprTranslationResult::TransExpr(r_e), span) => Ok((
@@ -513,12 +520,15 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                                     }
                                 }
                                 Some(_) => {
-                                    sess.span_err(path.span, "no arguments expected in Rustspec");
+                                    sess.span_rustspec_err(
+                                        path.span,
+                                        "no arguments expected in Rustspec",
+                                    );
                                     Err(())
                                 }
                             },
                             _ => {
-                                sess.span_err(
+                                sess.span_rustspec_err(
                                     path.span,
                                     "wrong assignment left-hand-side array update variable",
                                 );
@@ -526,13 +536,13 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                             }
                         },
                         _ => {
-                            sess.span_err(a.span, "Rustspect only allows array updates on arrays that are explicitely let-binded in a variable");
+                            sess.span_rustspec_err(a.span, "Rustspect only allows array updates on arrays that are explicitely let-binded in a variable");
                             Err(())
                         }
                     }
                 }
                 _ => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         lhs.span,
                         "left-hand side of the assignment must be variables in Rustspec",
                     );
@@ -543,7 +553,10 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
         ExprKind::If(cond, t_e, f_e) => {
             let r_cond = match translate_expr(sess, cond)? {
                 (ExprTranslationResult::TransStmt(_), span) => {
-                    sess.span_err(span, "statements not allowed inside conditions in Rustspec");
+                    sess.span_rustspec_err(
+                        span,
+                        "statements not allowed inside conditions in Rustspec",
+                    );
                     Err(())
                 }
                 (ExprTranslationResult::TransExpr(r_cond), span) => Ok((r_cond, span)),
@@ -557,7 +570,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                         Ok(Some(r_f_e))
                     }
                     _ => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             f_e.span,
                             "block of statements expected in the else branch in Rustspec",
                         );
@@ -578,7 +591,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     Ok(translate_ident(id))
                 }
                 _ => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         pat.span,
                         "only single-variable-binding patterns are allowed for loops in Rustspec",
                     );
@@ -595,7 +608,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                             (ExprTranslationResult::TransExpr(e_end), span_end),
                         ) => Ok(((e_begin, span_begin), (e_end, span_end))),
                         _ => {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                                 range.span,
                                 "range expressions cannot contain statements in Rustspec",
                             );
@@ -604,7 +617,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     }
                 }
                 _ => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         range.span,
                         "expected a non-inclusive range expression here in Rustspec",
                     );
@@ -633,7 +646,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                                 e.span,
                             )),
                             _ => {
-                                sess.span_err(
+                                sess.span_rustspec_err(
                                         e.span,
                                         "statements not allowed in Rustspec inside array indexing expression",
                                     );
@@ -642,17 +655,17 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                         }
                     }
                     Some(_) => {
-                        sess.span_err(path.span, "no arguments expected in Rustspec");
+                        sess.span_rustspec_err(path.span, "no arguments expected in Rustspec");
                         Err(())
                     }
                 },
                 _ => {
-                    sess.span_err(path.span, "can only index local arrays");
+                    sess.span_rustspec_err(path.span, "can only index local arrays");
                     Err(())
                 }
             },
             _ => {
-                sess.span_err(a.span, "Rustspect only allows array indexing on arrays that are explicitely let-binded in a variable");
+                sess.span_rustspec_err(a.span, "Rustspect only allows array indexing on arrays that are explicitely let-binded in a variable");
                 Err(())
             }
         },
@@ -662,7 +675,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 .map(|arg| match translate_expr(sess, arg)? {
                     (ExprTranslationResult::TransExpr(r_arg), r_span) => Ok((r_arg, r_span)),
                     (ExprTranslationResult::TransStmt(_), r_span) => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             r_span,
                             "statements forbidden in tuple expressions in Rustspec",
                         );
@@ -678,7 +691,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
         }
         //TODO: fix by allowing ref expressions but only inside of args
         _ => {
-            sess.span_err(e.span, "this expression is not allowed in Rustspec");
+            sess.span_rustspec_err(e.span, "this expression is not allowed in Rustspec");
             Err(())
         }
     }
@@ -698,7 +711,7 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
             Ok((Pattern::Tuple(pats), pat.span))
         }
         _ => {
-            sess.span_err(pat.span, "pattern not allowed in Rustspec let bindings");
+            sess.span_rustspec_err(pat.span, "pattern not allowed in Rustspec let bindings");
             Err(())
         }
     }
@@ -707,18 +720,18 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
 fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanned<Statement>>> {
     match &s.kind {
         StmtKind::Item(_) => {
-            sess.span_err(s.span, "block-local items are not allowed in Rustspec");
+            sess.span_rustspec_err(s.span, "block-local items are not allowed in Rustspec");
             Err(())
         }
         StmtKind::MacCall(_) => {
-            sess.span_err(
+            sess.span_rustspec_err(
                 s.span,
                 "macro calls inside code blocks are not allowed inside Rustspec",
             );
             Err(())
         }
         StmtKind::Empty => {
-            sess.span_err(s.span, "empty blocks are not allowed in Rustspec");
+            sess.span_rustspec_err(s.span, "empty blocks are not allowed in Rustspec");
             Err(())
         }
         StmtKind::Local(local) => {
@@ -729,7 +742,7 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
             };
             let init = match &local.init {
                 None => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         local.span,
                         "let-bindings without initialization are not allowed in Rustspec",
                     );
@@ -737,7 +750,7 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
                 }
                 Some(e) => match translate_expr(sess, &e)? {
                     (ExprTranslationResult::TransStmt(_), _) => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             e.span,
                             "let binding expression should not contain statements in Rustspec",
                         );
@@ -770,7 +783,7 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
 fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<Block>> {
     match b.rules {
         BlockCheckMode::Unsafe(_) => {
-            sess.span_err(b.span, "unsafe blocks are not allowed in Rustspec");
+            sess.span_rustspec_err(b.span, "unsafe blocks are not allowed in Rustspec");
             return Err(());
         }
         BlockCheckMode::Default => (),
@@ -804,7 +817,10 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
             // First, checking that no fancy function qualifier is here
             match defaultness {
                 Defaultness::Default(span) => {
-                    sess.span_err(span.clone(), "\"default\" keyword not allowed in Rustspec");
+                    sess.span_rustspec_err(
+                        span.clone(),
+                        "\"default\" keyword not allowed in Rustspec",
+                    );
                     return Err(());
                 }
                 _ => (),
@@ -812,28 +828,34 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
             match sig.header.unsafety {
                 Unsafe::No => (),
                 Unsafe::Yes(span) => {
-                    sess.span_err(span.clone(), "unsafe functions not allowed in Rustspec");
+                    sess.span_rustspec_err(
+                        span.clone(),
+                        "unsafe functions not allowed in Rustspec",
+                    );
                     return Err(());
                 }
             }
             match sig.header.asyncness {
                 Async::No => (),
                 Async::Yes { span, .. } => {
-                    sess.span_err(span.clone(), "async functions not allowed in Rustspec");
+                    sess.span_rustspec_err(span.clone(), "async functions not allowed in Rustspec");
                     return Err(());
                 }
             }
             match sig.header.constness {
                 Const::No => (),
                 Const::Yes(span) => {
-                    sess.span_err(span.clone(), "const functions not allowed in Rustspec");
+                    sess.span_rustspec_err(span.clone(), "const functions not allowed in Rustspec");
                     return Err(());
                 }
             }
             match sig.header.ext {
                 Extern::None => (),
                 _ => {
-                    sess.span_err(i.span.clone(), "extern functions not allowed in Rustspec");
+                    sess.span_rustspec_err(
+                        i.span.clone(),
+                        "extern functions not allowed in Rustspec",
+                    );
                     return Err(());
                 }
             }
@@ -849,14 +871,14 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                             Ok(translate_ident(&id))
                         }
                         PatKind::Wild => {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                                 param.pat.span.clone(),
                                 "please give a name to this function argument",
                             );
                             Err(())
                         }
                         _ => {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                             param.pat.span.clone(),
                             "pattern destructuring in function arguments not allowed in Rustspec",
                         );
@@ -871,7 +893,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                 })
                 .collect();
             if generics.params.len() != 0 {
-                sess.span_err(
+                sess.span_rustspec_err(
                     generics.span.clone(),
                     "generics are not allowed in Rustspec",
                 );
@@ -910,13 +932,13 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                 &tree.prefix,
             )?)),
             _ => {
-                sess.span_err(tree.span.clone(), "only ::* uses are allowed in Rustspec");
+                sess.span_rustspec_err(tree.span.clone(), "only ::* uses are allowed in Rustspec");
                 Err(())
             }
         },
         ItemKind::MacCall(call) => {
             if call.path.segments.len() > 1 {
-                sess.span_err(
+                sess.span_rustspec_err(
                     call.path.span,
                     "cannot use macros other than the ones defined by Rustspec",
                 );
@@ -927,65 +949,68 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                 name.ident.name.to_ident_string().as_str(),
                 name.args.as_ref(),
             ) {
-                ("array", None) => {
-                    match &*call.args {
-                        MacArgs::Delimited(_, _, tokens) => {
-                            let (first_arg, second_arg, third_arg, fourth_arg, fifth_arg) = {
-                                let mut it = tokens.trees();
-                                let first_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                let second_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                let third_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                Ok((first_arg?, second_arg?, third_arg?, fourth_arg?, fifth_arg?))
-                            }?;
-                            let typ_ident = match first_arg {
-                                TokenTree::Token(tok) => match tok.kind {
-                                    TokenKind::Ident(id, _) => {
-                                        (Ident::Original(id.to_ident_string()), tok.span.clone())
-                                    }
-                                    _ => {
-                                        sess.span_err(tok.span.clone(), "expected an identifier");
-                                        return Err(());
-                                    }
-                                },
+                ("array", None) => match &*call.args {
+                    MacArgs::Delimited(_, _, tokens) => {
+                        let (first_arg, second_arg, third_arg, fourth_arg, fifth_arg) = {
+                            let mut it = tokens.trees();
+                            let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            Ok((first_arg?, second_arg?, third_arg?, fourth_arg?, fifth_arg?))
+                        }?;
+                        let typ_ident = match first_arg {
+                            TokenTree::Token(tok) => match tok.kind {
+                                TokenKind::Ident(id, _) => {
+                                    (Ident::Original(id.to_ident_string()), tok.span.clone())
+                                }
                                 _ => {
-                                    sess.span_err(
-                                        i.span.clone(),
-                                        "expected first argument to be a single token",
+                                    sess.span_rustspec_err(
+                                        tok.span.clone(),
+                                        "expected an identifier",
                                     );
                                     return Err(());
                                 }
-                            };
-                            match &second_arg {
-                                TokenTree::Token(tok) => match tok.kind {
-                                    TokenKind::Comma => (),
-                                    _ => {
-                                        sess.span_err(tok.span.clone(), "expected a comma");
-                                        return Err(());
-                                    }
-                                },
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected first argument to be a single token",
+                                );
+                                return Err(());
+                            }
+                        };
+                        match &second_arg {
+                            TokenTree::Token(tok) => match tok.kind {
+                                TokenKind::Comma => (),
                                 _ => {
-                                    sess.span_err(
-                                        i.span.clone(),
-                                        "expected delimiter to be a single token",
-                                    );
+                                    sess.span_rustspec_err(tok.span.clone(), "expected a comma");
                                     return Err(());
                                 }
-                            };
-                            let size = match third_arg {
-                                TokenTree::Token(tok) => match tok.kind {
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected delimiter to be a single token",
+                                );
+                                return Err(());
+                            }
+                        };
+                        let size = match third_arg {
+                            TokenTree::Token(tok) => {
+                                match tok.kind {
                                     TokenKind::Literal(lit) => match lit.kind {
                                         TokenLitKind::Integer => match lit.suffix {
                                             Some(_) => {
-                                                sess.span_err(tok.span.clone(), "no suffix expected for size specification literal");
+                                                sess.span_rustspec_err(tok.span.clone(), "no suffix expected for size specification literal");
                                                 return Err(());
                                             }
                                             None => {
                                                 match lit.symbol.to_ident_string().parse::<usize>()
                                                 {
                                                     Err(_) => {
-                                                        sess.span_err(
+                                                        sess.span_rustspec_err(
                                                             tok.span.clone(),
                                                             "unable to parse integer into an usize",
                                                         );
@@ -996,84 +1021,96 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                                             }
                                         },
                                         _ => {
-                                            sess.span_err(tok.span.clone(), "expected an integer");
+                                            sess.span_rustspec_err(
+                                                tok.span.clone(),
+                                                "expected an integer",
+                                            );
                                             return Err(());
                                         }
                                     },
                                     _ => {
-                                        sess.span_err(tok.span.clone(), "expected an identifier");
+                                        sess.span_rustspec_err(
+                                            tok.span.clone(),
+                                            "expected an identifier",
+                                        );
                                         return Err(());
                                     }
-                                },
+                                }
+                            }
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected second argument to be a single token",
+                                );
+                                return Err(());
+                            }
+                        }?;
+                        match &fourth_arg {
+                            TokenTree::Token(tok) => match tok.kind {
+                                TokenKind::Comma => (),
                                 _ => {
-                                    sess.span_err(
-                                        i.span.clone(),
-                                        "expected second argument to be a single token",
+                                    sess.span_rustspec_err(tok.span.clone(), "expected a comma");
+                                    return Err(());
+                                }
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected delimiter to be a single token",
+                                );
+                                return Err(());
+                            }
+                        };
+                        let cell_t = match fifth_arg {
+                            TokenTree::Token(tok) => match tok.kind {
+                                TokenKind::Ident(id, _) => translate_base_typ(
+                                    sess,
+                                    &Ty {
+                                        id: NodeId::MAX,
+                                        kind: TyKind::Path(
+                                            None,
+                                            ast::Path::from_ident(symbol::Ident {
+                                                name: id,
+                                                span: tok.span.clone(),
+                                            }),
+                                        ),
+                                        span: tok.span.clone(),
+                                    },
+                                ),
+                                _ => {
+                                    sess.span_rustspec_err(
+                                        tok.span.clone(),
+                                        "expected an identifier",
                                     );
                                     return Err(());
                                 }
-                            }?;
-                            match &fourth_arg {
-                                TokenTree::Token(tok) => match tok.kind {
-                                    TokenKind::Comma => (),
-                                    _ => {
-                                        sess.span_err(tok.span.clone(), "expected a comma");
-                                        return Err(());
-                                    }
-                                },
-                                _ => {
-                                    sess.span_err(
-                                        i.span.clone(),
-                                        "expected delimiter to be a single token",
-                                    );
-                                    return Err(());
-                                }
-                            };
-                            let cell_t = match fifth_arg {
-                                TokenTree::Token(tok) => match tok.kind {
-                                    TokenKind::Ident(id, _) => translate_base_typ(
-                                        sess,
-                                        &Ty {
-                                            id: NodeId::MAX,
-                                            kind: TyKind::Path(
-                                                None,
-                                                ast::Path::from_ident(symbol::Ident {
-                                                    name: id,
-                                                    span: tok.span.clone(),
-                                                }),
-                                            ),
-                                            span: tok.span.clone(),
-                                        },
-                                    ),
-                                    _ => {
-                                        sess.span_err(tok.span.clone(), "expected an identifier");
-                                        return Err(());
-                                    }
-                                },
-                                _ => {
-                                    sess.span_err(
-                                        i.span.clone(),
-                                        "expected first argument to be a single token",
-                                    );
-                                    return Err(());
-                                }
-                            }?;
-                            Ok(ItemTranslationResult::Item(Item::ArrayDecl(
-                                typ_ident, size, cell_t,
-                            )))
-                        }
-                        _ => {
-                            sess.span_err(i.span.clone(), "expected delimited macro arguments");
-                            Err(())
-                        }
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected first argument to be a single token",
+                                );
+                                return Err(());
+                            }
+                        }?;
+                        Ok(ItemTranslationResult::Item(Item::ArrayDecl(
+                            typ_ident, size, cell_t,
+                        )))
                     }
-                }
+                    _ => {
+                        sess.span_rustspec_err(
+                            i.span.clone(),
+                            "expected delimited macro arguments",
+                        );
+                        Err(())
+                    }
+                },
                 (_, None) => {
-                    sess.span_err(name.ident.span.clone(), "unknown  Rustspec macro");
+                    sess.span_rustspec_err(name.ident.span.clone(), "unknown Rustspec macro");
                     Err(())
                 }
                 (_, Some(_)) => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         name.ident.span.clone(),
                         "macro names should not have arguments",
                     );
@@ -1082,7 +1119,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
             }
         }
         _ => {
-            sess.span_err(i.span.clone(), "item not allowed in Rustspec");
+            sess.span_rustspec_err(i.span.clone(), "item not allowed in Rustspec");
             Err(())
         }
     }

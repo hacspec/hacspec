@@ -1,4 +1,6 @@
 use crate::rustspec::*;
+use crate::RustspectErrorEmitter;
+
 use hacspec_sig;
 use im::{HashMap, HashSet};
 use rustc_ast::ast::BinOpKind;
@@ -75,7 +77,7 @@ fn is_array(sess: &Session, t: &Typ, typ_dict: &TypeDict) -> Result<Spanned<Base
             Ident::Original(name) => match typ_dict.get(name) {
                 Some(new_t) => is_array(sess, new_t, typ_dict),
                 None => {
-                    sess.span_err(id.1.clone(), "unknown type");
+                    sess.span_rustspec_err(id.1.clone(), "unknown type");
                     Err(())
                 }
             },
@@ -310,7 +312,7 @@ fn find_func(
         })
         .collect();
     if candidates.len() == 0 {
-        sess.span_err(*span, format!("function {} cannot be found", key1).as_str());
+        sess.span_rustspec_err(*span, format!("function {} cannot be found", key1).as_str());
         return Err(());
     }
     // If there are multiple candidates we just take the first one
@@ -396,7 +398,7 @@ fn typecheck_expression(
                     var_context = new_var_context;
                     match arg_typ_borrowing {
                         Borrowing::Borrowed => {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                                 arg.1,
                                 "borrowed values are forbidden in Rustspec tuples",
                             );
@@ -422,7 +424,7 @@ fn typecheck_expression(
             let new_path = Expression::Named(id.clone());
             match find_typ(id, var_context) {
                 None => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         *span,
                         format!(
                             "the variable {} is unknown in context {:?}",
@@ -466,7 +468,7 @@ fn typecheck_expression(
                                 var_context,
                             ))
                         } else {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                                 e1.1.clone(),
                                 format!(
                                     "you can only shift integers, but found type {}{}",
@@ -479,7 +481,7 @@ fn typecheck_expression(
                         }
                     }
                     _ => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             e2.1.clone(),
                             format!(
                                 "the shifting amount has to be an u32, found type {}{}",
@@ -493,7 +495,7 @@ fn typecheck_expression(
                 },
                 _ => {
                     if unify_types(&t1, &t2, &HashMap::new()).is_none() {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             *span,
                             format!(
                                 "wrong types of binary operators, left is {}{} while right is {}{}",
@@ -524,7 +526,7 @@ fn typecheck_expression(
                                 var_context,
                             ))
                         } else {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                                 span.clone(),
                                 format!(
                                     "operation only available for numerics, but found type {}{}",
@@ -666,7 +668,10 @@ fn typecheck_expression(
             let x = find_ident(x, name_context);
             let t1 = match find_typ(x, var_context) {
                 None => {
-                    sess.span_err(*x_span, format!("the variable {} is unknown", x).as_str());
+                    sess.span_rustspec_err(
+                        *x_span,
+                        format!("the variable {} is unknown", x).as_str(),
+                    );
                     return Err(());
                 }
                 Some(t) => t,
@@ -677,7 +682,7 @@ fn typecheck_expression(
             match is_array(sess, t1, typ_dict) {
                 Ok((cell_t, cell_t_span)) => {
                     if let Borrowing::Borrowed = (t2.0).0 {
-                        sess.span_err(e2.1, "cannot index array with a borrowed type");
+                        sess.span_rustspec_err(e2.1, "cannot index array with a borrowed type");
                         return Err(());
                     }
                     match (t2.1).0 {
@@ -704,7 +709,7 @@ fn typecheck_expression(
                             var_context,
                         )),
                         _ => {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                                 e2.1,
                                 format!(
                                     "expected an integer to index array but got type {}{}",
@@ -718,7 +723,7 @@ fn typecheck_expression(
                     }
                 }
                 _ => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         *x_span,
                         format!(
                         "this expression should be an array or a sequence but instead has type {}{}",
@@ -742,7 +747,7 @@ fn typecheck_expression(
             )?;
             let mut typ_var_ctx = typ_var_ctx;
             if let FnValue::ExternalNotInRustspec = f_sig {
-                sess.span_err(
+                sess.span_rustspec_err(
                     name.1.clone(),
                     format!(
                         "function {}{} is known but its signature is not in Rustspec",
@@ -758,7 +763,7 @@ fn typecheck_expression(
             };
             let sig_args = sig_args(&f_sig);
             if sig_args.len() != args.len() {
-                sess.span_err(
+                sess.span_rustspec_err(
                     *span,
                     format!(
                         "function {} was expecting {} arguments but got {}",
@@ -786,7 +791,10 @@ fn typecheck_expression(
                 let new_arg_borrow = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Consumed, _) => arg_borrow.clone(),
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
-                        sess.span_err(*arg_borrow_span, "double borrowing is forbidden in Rust!");
+                        sess.span_rustspec_err(
+                            *arg_borrow_span,
+                            "double borrowing is forbidden in Rust!",
+                        );
                         return Err(());
                     }
                     (Borrowing::Borrowed, Borrowing::Consumed) => (arg_t.0).0.clone(),
@@ -797,7 +805,7 @@ fn typecheck_expression(
                 ));
                 match unify_types(&arg_t, sig_t, &typ_var_ctx) {
                     None => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             *arg_span,
                             format!(
                                 "expected type {}{}, got {}{}",
@@ -839,7 +847,7 @@ fn typecheck_expression(
             )?;
             let mut typ_var_ctx = typ_var_ctx;
             if let FnValue::ExternalNotInRustspec = f_sig {
-                sess.span_err(
+                sess.span_rustspec_err(
                     *f_span,
                     format!(
                         "function {}::{} is known but its signature is not in Rustspec",
@@ -864,7 +872,7 @@ fn typecheck_expression(
             args.extend(orig_args.clone());
             let mut new_args = Vec::new();
             if sig_args.len() != args.len() {
-                sess.span_err(
+                sess.span_rustspec_err(
                     *span,
                     format!(
                         "method {}::{} was expecting {} arguments but got {}",
@@ -890,7 +898,10 @@ fn typecheck_expression(
                 var_context = new_var_context;
                 let new_arg_t = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
-                        sess.span_err(arg_borrow_span, "double borrowing is forbidden in Rust!");
+                        sess.span_rustspec_err(
+                            arg_borrow_span,
+                            "double borrowing is forbidden in Rust!",
+                        );
                         return Err(());
                     }
                     (Borrowing::Consumed, Borrowing::Borrowed) => {
@@ -904,7 +915,7 @@ fn typecheck_expression(
                 ));
                 match unify_types(&new_arg_t, sig_t, &typ_var_ctx) {
                     None => {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             arg_span,
                             format!(
                                 "expected type {}{}, got {}{}",
@@ -947,7 +958,7 @@ fn typecheck_pattern(
     match (pat, &typ.0) {
         (Pattern::Tuple(pat_args), BaseTyp::Tuple(ref typ_args)) => {
             if pat_args.len() != typ_args.len() {
-                sess.span_err(*pat_span,
+                sess.span_rustspec_err(*pat_span,
                     format!("let-binding tuple pattern has {} variables but {} were expected from the type",
                      pat_args.len(),
                      typ_args.len()).as_str()
@@ -974,7 +985,7 @@ fn typecheck_pattern(
             Ok((Pattern::Tuple(tup_args), acc_var, acc_name))
         }
         (Pattern::Tuple(_), _) => {
-            sess.span_err(
+            sess.span_rustspec_err(
                 *pat_span,
                 format!(
                     "let-binding pattern expected a tuple but the type is {}",
@@ -1034,7 +1045,7 @@ fn typecheck_statement(
                 None => (),
                 Some((typ, _)) => {
                     if unify_types(typ, &expr_typ, &HashMap::new()).is_none() {
-                        sess.span_err(
+                        sess.span_rustspec_err(
                             *pat_span,
                             format!(
                                 "wrong type declared for variable: expected {}{}, found {}{}",
@@ -1071,12 +1082,12 @@ fn typecheck_statement(
             let x_typ = match x_typ {
                 Some(t) => t,
                 None => {
-                    sess.span_err(*x_span, "trying to reassign to an inexisting variable");
+                    sess.span_rustspec_err(*x_span, "trying to reassign to an inexisting variable");
                     return Err(());
                 }
             };
             if unify_types(&e_typ, &x_typ, &HashMap::new()).is_none() {
-                sess.span_err(
+                sess.span_rustspec_err(
                     e.1,
                     format!(
                         "variable {} has type {}{} but tried to reassign with an expression of type {}{}",
@@ -1100,7 +1111,7 @@ fn typecheck_statement(
             let (new_e2, e2_t, var_context) =
                 typecheck_expression(sess, &e2, fn_context, typ_dict, &var_context, name_context)?;
             if !is_index(&(e1_t.1).0) {
-                sess.span_err(
+                sess.span_rustspec_err(
                     e1.1,
                     format!(
                         "index should have an integer type but instead has {}{}",
@@ -1115,14 +1126,14 @@ fn typecheck_statement(
             let x_typ = match x_typ {
                 Some(t) => t,
                 None => {
-                    sess.span_err(*x_span, "trying to update an inexisting array");
+                    sess.span_rustspec_err(*x_span, "trying to update an inexisting array");
                     return Err(());
                 }
             };
             let cell_t = match is_array(sess, x_typ, typ_dict) {
                 Ok(cell_t) => cell_t,
                 Err(()) => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         *x_span,
                         format!(
                             "{} should be an array but has type {}{}",
@@ -1142,7 +1153,7 @@ fn typecheck_statement(
             )
             .is_none()
             {
-                sess.span_err(
+                sess.span_rustspec_err(
                     e2.1,
                     format!(
                         "array {} has type {}{} but tried to reassign cell with an expression of type {}{}",
@@ -1186,7 +1197,7 @@ fn typecheck_statement(
                 typecheck_expression(sess, &cond, fn_context, typ_dict, var_context, name_context)?;
             match cond_t {
                 ((Borrowing::Consumed, _), (BaseTyp::Bool, _)) => (),
-                _ => sess.span_err(
+                _ => sess.span_rustspec_err(
                     cond.1,
                     format!(
                         "if condition should have type bool but has type {}{}",
@@ -1222,7 +1233,7 @@ fn typecheck_statement(
                 None => panic!(), // should not happen
                 Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                 Some(((b_t, _), (t, _))) => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         *b1_span,
                         format!("block has return type {}{} but was expecting unit", b_t, t)
                             .as_str(),
@@ -1237,7 +1248,7 @@ fn typecheck_statement(
                         None => panic!(), // should not happen
                         Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                         Some(((b_t, _), (t, _))) => {
-                            sess.span_err(
+                            sess.span_rustspec_err(
                                 *b1_span,
                                 format!(
                                     "block has return type {}{} but was expecting unit",
@@ -1291,7 +1302,7 @@ fn typecheck_statement(
             match &t_e1 {
                 ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
                 _ => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         e1.1,
                         format!(
                             "loop range bound should be an integer but has type {}{}",
@@ -1306,7 +1317,7 @@ fn typecheck_statement(
             match &t_e2 {
                 ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
                 _ => {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         e2.1,
                         format!(
                             "loop range bound should be an integer but has type {}{}",
@@ -1343,7 +1354,7 @@ fn typecheck_statement(
             let var_diff = original_var_context.clone().difference(var_context.clone());
             for (var_diff_id, (_, var_diff_name)) in var_diff {
                 if original_var_context.contains_key(&var_diff_id) {
-                    sess.span_err(
+                    sess.span_rustspec_err(
                         b_span.clone(),
                         format!("loop body consumes linear variable: {}", var_diff_name).as_str(),
                     );
@@ -1393,7 +1404,7 @@ fn typecheck_block(
             match stmt_typ {
                 ((Borrowing::Consumed, _), (BaseTyp::Unit, _)) => (),
                 _ => {
-                    sess.span_err(s_span, "statement shoud have an unit type here");
+                    sess.span_rustspec_err(s_span, "statement shoud have an unit type here");
                     return Err(());
                 }
             }

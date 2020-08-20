@@ -22,11 +22,14 @@ use clap::App;
 use hacspec_sig::Signature;
 use rustc_driver::{run_compiler, Callbacks, Compilation};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
+use rustc_errors::DiagnosticId;
 use rustc_interface::{
     interface::{Compiler, Config},
     Queries,
 };
+use rustc_session::Session;
 use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
+use rustc_span::MultiSpan;
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -41,6 +44,16 @@ const ITEM_LIST_LOCATION: &'static str = "../allowed_item_list.json";
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
     ErrorOutputType::HumanReadable(HumanReadableErrorType::Default(ColorConfig::Auto));
+
+trait RustspectErrorEmitter {
+    fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str);
+}
+
+impl RustspectErrorEmitter for Session {
+    fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str) {
+        self.span_err_with_code(s, msg, DiagnosticId::Error(String::from("Rustspec")));
+    }
+}
 
 impl Callbacks for HacspecCallbacks {
     fn config(&mut self, config: &mut Config) {
