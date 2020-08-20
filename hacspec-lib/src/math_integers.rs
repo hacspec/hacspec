@@ -38,6 +38,46 @@ macro_rules! unsigned_public_integer {
             fn from_hex_string(s: &String) -> Self {
                 Self::from_hex(&s.replace("0x", ""))
             }
+
+            /// Get bit `i` of this integer.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn get_bit(self, i: usize) -> Self {
+                (self >> i) & Self::ONE()
+            }
+
+            /// Set bit `i` of this integer to `b` and return the result.
+            /// Bit `b` has to be `0` or `1`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set_bit(self, b: Self, i: usize) -> Self {
+                debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+                let tmp1 = Self::from_literal(!(1 << i));
+                let tmp2 = b << i;
+                (self & tmp1) | tmp2
+            }
+
+            /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set(self, pos: usize, y: Self, yi: usize) -> Self {
+                let b = y.get_bit(yi);
+                self.set_bit(b, pos)
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_left(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_right(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+            }
         }
         impl ModNumeric for $name {
             /// (self - rhs) % n.
@@ -544,6 +584,46 @@ macro_rules! signed_integer {
                     &s.replace("0x", "").replace("-", "").replace("+", ""),
                 )
             }
+
+            /// Get bit `i` of this integer.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn get_bit(self, i: usize) -> Self {
+                (self >> i) & Self::ONE()
+            }
+
+            /// Set bit `i` of this integer to `b` and return the result.
+            /// Bit `b` has to be `0` or `1`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set_bit(self, b: Self, i: usize) -> Self {
+                debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+                let tmp1 = Self::from_literal(!(1 << i));
+                let tmp2 = b << i;
+                (self & tmp1) | tmp2
+            }
+
+            /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set(self, pos: usize, y: Self, yi: usize) -> Self {
+                let b = y.get_bit(yi);
+                self.set_bit(b, pos)
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_left(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_right(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+            }
         }
         impl ModNumeric for $name {
             /// (self - rhs) % n.
@@ -720,6 +800,46 @@ macro_rules! nat_mod {
             #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn from_hex_string(s: &String) -> Self {
                 Self::from_hex(&s.replace("0x", ""))
+            }
+
+            /// Get bit `i` of this integer.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn get_bit(self, i: usize) -> Self {
+                (self >> i) & Self::ONE()
+            }
+
+            /// Set bit `i` of this integer to `b` and return the result.
+            /// Bit `b` has to be `0` or `1`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set_bit(self, b: Self, i: usize) -> Self {
+                debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+                let tmp1 = Self::from_literal(!(1 << i));
+                let tmp2 = b << i;
+                (self & tmp1) | tmp2
+            }
+
+            /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set(self, pos: usize, y: Self, yi: usize) -> Self {
+                let b = y.get_bit(yi);
+                self.set_bit(b, pos)
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_left(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_right(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
             }
         }
         impl UnsignedInteger for $name {}
@@ -964,6 +1084,46 @@ macro_rules! public_nat_mod {
             #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
             fn from_hex_string(s: &String) -> Self {
                 Self::from_hex(&s.replace("0x", ""))
+            }
+
+            /// Get bit `i` of this integer.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn get_bit(self, i: usize) -> Self {
+                (self >> i) & Self::ONE()
+            }
+
+            /// Set bit `i` of this integer to `b` and return the result.
+            /// Bit `b` has to be `0` or `1`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set_bit(self, b: Self, i: usize) -> Self {
+                debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+                let tmp1 = Self::from_literal(!(1 << i));
+                let tmp2 = b << i;
+                (self & tmp1) | tmp2
+            }
+
+            /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn set(self, pos: usize, y: Self, yi: usize) -> Self {
+                let b = y.get_bit(yi);
+                self.set_bit(b, pos)
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_left(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+            }
+
+            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            fn rotate_right(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS);
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
             }
         }
         impl ModNumeric for $name {
