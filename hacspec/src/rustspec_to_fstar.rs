@@ -319,7 +319,10 @@ fn translate_statement(s: &Statement) -> RcDoc<()> {
                             .append(translate_statement(&mutated_info.stmt)),
                     ))
                     .append(match b2 {
-                        None => RcDoc::nil(),
+                        None => RcDoc::space()
+                            .append(RcDoc::as_string("else"))
+                            .append(RcDoc::space())
+                            .append(make_begin_paren(translate_statement(&mutated_info.stmt))),
                         Some((b2, _)) => RcDoc::space()
                             .append(RcDoc::as_string("else"))
                             .append(RcDoc::space())
