@@ -1105,6 +1105,120 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                         Err(())
                     }
                 },
+                ("bytes", None) => match &*call.args {
+                    MacArgs::Delimited(_, _, tokens) => {
+                        let (first_arg, second_arg, third_arg) = {
+                            let mut it = tokens.trees();
+                            let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                            Ok((first_arg?, second_arg?, third_arg?))
+                        }?;
+                        let typ_ident = match first_arg {
+                            TokenTree::Token(tok) => match tok.kind {
+                                TokenKind::Ident(id, _) => {
+                                    (Ident::Original(id.to_ident_string()), tok.span.clone())
+                                }
+                                _ => {
+                                    sess.span_rustspec_err(
+                                        tok.span.clone(),
+                                        "expected an identifier",
+                                    );
+                                    return Err(());
+                                }
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected first argument to be a single token",
+                                );
+                                return Err(());
+                            }
+                        };
+                        match &second_arg {
+                            TokenTree::Token(tok) => match tok.kind {
+                                TokenKind::Comma => (),
+                                _ => {
+                                    sess.span_rustspec_err(tok.span.clone(), "expected a comma");
+                                    return Err(());
+                                }
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected delimiter to be a single token",
+                                );
+                                return Err(());
+                            }
+                        };
+                        let size = match third_arg {
+                            TokenTree::Token(tok) => {
+                                match tok.kind {
+                                    TokenKind::Literal(lit) => match lit.kind {
+                                        TokenLitKind::Integer => match lit.suffix {
+                                            Some(_) => {
+                                                sess.span_rustspec_err(tok.span.clone(), "no suffix expected for size specification literal");
+                                                return Err(());
+                                            }
+                                            None => {
+                                                match lit.symbol.to_ident_string().parse::<usize>()
+                                                {
+                                                    Err(_) => {
+                                                        sess.span_rustspec_err(
+                                                            tok.span.clone(),
+                                                            "unable to parse integer into an usize",
+                                                        );
+                                                        Err(())
+                                                    }
+                                                    Ok(x) => Ok((x, tok.span.clone())),
+                                                }
+                                            }
+                                        },
+                                        _ => {
+                                            sess.span_rustspec_err(
+                                                tok.span.clone(),
+                                                "expected an integer",
+                                            );
+                                            return Err(());
+                                        }
+                                    },
+                                    _ => {
+                                        sess.span_rustspec_err(
+                                            tok.span.clone(),
+                                            "expected an identifier",
+                                        );
+                                        return Err(());
+                                    }
+                                }
+                            }
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected second argument to be a single token",
+                                );
+                                return Err(());
+                            }
+                        }?;
+                        Ok(ItemTranslationResult::Item(Item::ArrayDecl(
+                            typ_ident.clone(),
+                            size,
+                            (
+                                BaseTyp::Named(
+                                    (Ident::Original("U8".into()), typ_ident.1.clone()),
+                                    None,
+                                ),
+                                typ_ident.1.clone(),
+                            ),
+                        )))
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            i.span.clone(),
+                            "expected delimited macro arguments",
+                        );
+                        Err(())
+                    }
+                },
                 (_, None) => {
                     sess.span_rustspec_err(name.ident.span.clone(), "unknown Rustspec macro");
                     Err(())
