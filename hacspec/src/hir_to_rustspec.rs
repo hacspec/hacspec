@@ -268,7 +268,7 @@ pub fn retrieve_external_functions(
                     }
                 }
                 let trait_impls = tcx.all_trait_implementations(*krate_num);
-                for trait_impl_id in trait_impls {
+                for (trait_impl_id, _) in trait_impls {
                     let assoc_items = tcx.associated_items(*trait_impl_id);
                     for item in assoc_items.in_definition_order() {
                         if item.kind == AssocKind::Fn {
