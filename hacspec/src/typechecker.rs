@@ -265,6 +265,54 @@ fn find_func(
     Err(())
 }
 
+fn find_func(
+    sess: &Session,
+    key1: &FnKey,
+    fn_context: &FnContext,
+    typ_dict: &TypeDict,
+    span: &Span,
+) -> TypecheckingResult<FnValue> {
+    let mut candidates = fn_context.clone();
+    candidates.retain(|key2, _| match (key1, key2) {
+        (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
+            (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
+            _ => panic!(),
+        },
+        (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
+            equal_types(
+                &(
+                    (Borrowing::Consumed, span.clone()),
+                    (t1.clone(), span.clone()),
+                ),
+                &(
+                    (Borrowing::Consumed, span.clone()),
+                    (t2.clone(), span.clone()),
+                ),
+                typ_dict,
+            ) && match (n1, n2) {
+                (Ident::Original(n1), Ident::Original(n2)) => n1 == n2,
+                _ => panic!(),
+            }
+        }
+        _ => false,
+    });
+    if candidates.len() == 0 {
+        sess.span_err(*span, format!("function {} cannot be found", key1).as_str());
+        return Err(());
+    }
+    if candidates.len() > 1 {
+        sess.span_err(
+            *span,
+            format!("Multiple implementations for function {}", key1).as_str(),
+        );
+        return Err(());
+    }
+    for (_, sig) in candidates {
+        return Ok(sig);
+    }
+    Err(())
+}
+
 fn find_ident<'a, 'b>(x: &'a Ident, name_context: &'b NameContext) -> &'b Ident {
     match x {
         Ident::Rustspec(_, _) => {

@@ -26,7 +26,6 @@ fn mask_scalar(s: SerializedScalar) -> SerializedScalar {
     k
 }
 
-// TODO: drop raw where possible
 fn decode_scalar(s: SerializedScalar) -> Scalar {
     let k = mask_scalar(s);
     Scalar::from_byte_seq_le(k)
