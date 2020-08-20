@@ -1069,7 +1069,7 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                     }
                 }
                 (_, None) => {
-                    sess.span_err(name.ident.span.clone(), "unknown macro");
+                    sess.span_err(name.ident.span.clone(), "unknown  Rustspec macro");
                     Err(())
                 }
                 (_, Some(_)) => {

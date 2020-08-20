@@ -28,6 +28,14 @@ fn run_test1() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn run_test_chacha() -> Result<(), Box<dyn std::error::Error>> {
+fn run_test_chacha_simplified() -> Result<(), Box<dyn std::error::Error>> {
     run_test("tests/test_chacha.rs", "tests/TestChacha.fst")
+}
+
+#[test]
+fn run_test_chacha20() -> Result<(), Box<dyn std::error::Error>> {
+    run_test(
+        "../spec-examples/src/chacha20_poly1305/chacha20.rs",
+        "tests/Chacha20.fst",
+    )
 }
