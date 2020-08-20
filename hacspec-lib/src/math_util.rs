@@ -117,7 +117,7 @@ pub fn poly_div<T: Numeric + Copy>(
 /// **Panics** if x is not invertible.
 ///
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool) -> T {
     let mut t = T::ZERO();
     let mut r = n;
@@ -291,7 +291,7 @@ pub fn extended_euclid<T: Integer + Copy>(x: &[T], y: &[T], n: T) -> Result<Vec<
 /// Conditional, constant-time swapping.
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == 1`.
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub fn cswap_bit<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
     cswap(x, y, T::default().wrap_sub(c))
 }
@@ -300,7 +300,7 @@ pub fn cswap_bit<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
 /// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == T::max`.
 /// The return value is undefined if `c` has any other value.
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub fn cswap<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
     let mask = c & (x ^ y);
     (x ^ mask, y ^ mask)
@@ -309,7 +309,7 @@ pub fn cswap<T: Integer + Copy>(x: T, y: T, c: T) -> (T, T) {
 /// Set bit at position `i` in `x` to `b` if `c` is all 1 and return the restult.
 /// Returns `x` if `c` is `0`.
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: usize, c: T) -> T {
     let set = x.set_bit(b, i);
     let (out, _) = cswap(x, set, c);
@@ -320,7 +320,7 @@ pub fn cset_bit<T: Integer + Copy>(x: T, b: T, i: usize, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub fn cadd<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let sum = x.wrap_add(y);
     let (x, _) = cswap(x, sum, c);
@@ -331,7 +331,7 @@ pub fn cadd<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Addition is always wrapping.
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub fn csub<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let diff = x.wrap_sub(y);
     let (x, _) = cswap(x, diff, c);
@@ -342,7 +342,7 @@ pub fn csub<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Returns `x` if condition `c` is `0`.
 /// Note: Multiplication is always wrapping.
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub fn cmul<T: Integer + Copy>(x: T, y: T, c: T) -> T {
     let prod = x.wrap_mul(y);
     let (x, _) = cswap(x, prod, c);
@@ -353,7 +353,7 @@ pub fn cmul<T: Integer + Copy>(x: T, y: T, c: T) -> T {
 /// Note that this function is only constant time if `T` is a secret integer and
 /// hence provides constant time implementations for the used functions.
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", internal(hacspec))]
 pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
     let mut q = T::default();
     let mut r = T::default();
@@ -434,9 +434,13 @@ fn invert_fermat<T: Integer + Copy>(a: T, m: T) -> T {
 
 /// makes poly to an element of R_modulo \ irr
 #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
-pub fn poly_to_ring(irr: &Seq<i128>, poly: &Seq<i128>, modulo: i128) -> Seq<i128> {
-    let pre = euclidean_division(&poly, &irr, modulo, irr.len() - 1).1;
-    make_positive(&pre, modulo)
+pub fn poly_to_ring<T: Integer + Copy>(
+    irr: &Seq<T>,
+    poly: &Seq<T>,
+    modulo: T,
+) -> Result<Seq<T>, &'static str> {
+    let pre = euclidean_division(&poly, &irr, modulo, irr.len() - 1)?.1;
+    Ok(make_positive(&pre, modulo))
 }
 
 /// polynomial multiplication of two size fixed polynomials in R_modulo \ irr
@@ -475,45 +479,46 @@ pub fn mul_poly_irr(a: &Seq<i128>, b: &Seq<i128>, irr: &Seq<i128>, modulo: i128)
 
 /// simple schoolbook polynomial multiplication with sparse and all coefficients mod modulo
 #[cfg_attr(feature = "use_attributes", primitive(internal))]
-fn mul_poly_naive(a: &Seq<i128>, b: &Seq<i128>, modulo: i128) -> Seq<i128> {
-    let mut out: Seq<i128> = Seq::new(a.len() + b.len());
+fn mul_poly_naive<T: Integer + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
+    let mut out: Seq<T> = Seq::new(a.len() + b.len());
     for i in 0..a.len() {
-        if a[i] == 0 {
+        if a[i].equal(T::ZERO()) {
             continue;
         }
         for j in 0..b.len() {
-            out[i + j] = (a[i] * b[j] + out[i + j]) % modulo;
+            out[i + j] = (a[i] * b[j] + out[i + j]).modulo(modulo);
         }
     }
     make_positive(&out, modulo)
 }
 
 /// scalar division in R_p, calculates a / scalar mod p
-fn scalar_div(a: &Seq<i128>, scalar: i128, p: i128) -> Seq<i128> {
+#[cfg_attr(feature = "use_attributes", primitive(internal))]
+fn scalar_div<T: Integer + Copy>(a: &Seq<T>, scalar: T, p: T) -> Seq<T> {
     let mut result = Seq::from_seq(a);
     let inv = invert_fermat(scalar, p);
     for i in 0..a.len() {
-        result[i] = (result[i] * inv) % p;
+        result[i] = (result[i] * inv).modulo(p);
     }
     result
 }
 /// euclidean polynomial division, calculates a/ b in R_modulo
 /// returns fixed size polynomial ( size is p)
-pub fn euclidean_division(
-    a: &Seq<i128>,
-    b: &Seq<i128>,
-    modulo: i128,
+pub fn euclidean_division<T: Integer + Copy>(
+    a: &Seq<T>,
+    b: &Seq<T>,
+    modulo: T,
     p: usize,
-) -> (Seq<i128>, Seq<i128>) {
-    let mut r: Seq<i128> = Seq::from_seq(a);
-    let mut q: Seq<i128> = Seq::new(p + 1);
+) -> Result<(Seq<T>, Seq<T>), &'static str> {
+    let mut r: Seq<T> = Seq::from_seq(a);
+    let mut q: Seq<T> = Seq::new(p + 1);
     if deg(&b) == 0 {
-        return (scalar_div(&r, b[0], modulo), q);
+        return Ok((scalar_div(&r, b[0], modulo), q));
     }
     let u = invert_fermat(leading_coef(b), modulo);
     let d = deg(&b);
     while deg(&r) >= d {
-        let mut s: Seq<i128> = Seq::new(deg(&r) - d + 1);
+        let mut s: Seq<T> = Seq::new(deg(&r) - d + 1);
         s[deg(&r) - d] = leading_coef(&r) * u;
         q = add_poly(&q, &s, modulo);
         r = sub_poly(&r, &mul_poly_naive(&s, &b, modulo), modulo);
@@ -522,20 +527,21 @@ pub fn euclidean_division(
     q = make_positive(&q, modulo);
 
     // back to right len
-    let mut q_right: Seq<i128> = Seq::new(b.len());
+    let mut q_right: Seq<T> = Seq::new(b.len());
     let mut r_right = Seq::from_seq(&q_right);
     if deg(&q) > p || deg(&r) > p {
-        panic!("Division failed");
+        return Err("Division failed");
     }
     for i in 0..p + 1 {
         q_right[i] = q[i];
         r_right[i] = r[i];
     }
-    (q_right, r_right)
+    Ok((q_right, r_right))
 }
 
 /// Extended Euclidean Algorithm on Seq<i128> which returns the inverse of a in R_modulo \ irr.
 /// if a has no inverse in R_modulo \ irr, returns Err(string)
+#[cfg_attr(feature = "use_attributes", primitive(internal))]
 pub fn eea(a: &Seq<i128>, irr: &Seq<i128>, modulo: i128) -> Result<Seq<i128>, &'static str> {
     let mut t: Seq<i128> = Seq::new(a.len());
     let mut r = Seq::from_seq(irr);
@@ -545,18 +551,26 @@ pub fn eea(a: &Seq<i128>, irr: &Seq<i128>, modulo: i128) -> Result<Seq<i128>, &'
     new_r = make_positive(&new_r, modulo);
     let p = irr.len() - 1;
     while !is_null(&new_r) {
-        let q = euclidean_division(&r, &new_r, modulo, p).0;
+        let q = euclidean_division(&r, &new_r, modulo, p)?.0;
 
         let tmp_t = Seq::from_seq(&new_t);
-        new_t = sub_poly(&t, &mul_poly(&q, &new_t, modulo).get_chunk(q.len(), 0).1, modulo);
+        new_t = sub_poly(
+            &t,
+            &mul_poly(&q, &new_t, modulo).get_chunk(q.len(), 0).1,
+            modulo,
+        );
         t = Seq::from_seq(&tmp_t);
 
         let tmp_r = Seq::from_seq(&new_r);
-        new_r = sub_poly(&r, &mul_poly(&q, &new_r, modulo).get_chunk(q.len(), 0).1, modulo);
+        new_r = sub_poly(
+            &r,
+            &mul_poly(&q, &new_r, modulo).get_chunk(q.len(), 0).1,
+            modulo,
+        );
         r = Seq::from_seq(&tmp_r);
     }
     if deg(&r) > 0 {
-        return Err("Not invertable");
+        return Err("Not invertible");
     }
     let pre = scalar_div(&t, r[0], modulo);
     let mut result = Seq::from_seq(irr);

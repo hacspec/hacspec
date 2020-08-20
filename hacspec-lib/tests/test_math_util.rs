@@ -116,10 +116,10 @@ fn test_poly_div() {
     let r: Seq<i128> = Seq::from_native_slice(&[0, 0]);
     let q: Seq<i128> = Seq::from_native_slice(&[3, 0]);
 
-    assert_eq!(deg(&quotient.0), 0);
-    assert_eq!(quotient.0[0], q[0]);
-    assert_eq!(deg(&quotient.1), 0);
-    assert_eq!(quotient.1[0], r[0]);
+    assert_eq!(deg(&quotient.clone().unwrap().0), 0);
+    assert_eq!(quotient.clone().unwrap().0[0], q[0]);
+    assert_eq!(deg(&quotient.clone().unwrap().1), 0);
+    assert_eq!(quotient.clone().unwrap().1[0], r[0]);
 
     //x¹² + x
     let a_2: Seq<i128> = Seq::from_native_slice(&[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]);
@@ -128,14 +128,14 @@ fn test_poly_div() {
     // (x¹² + x )/ (x-1) mod 4 = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
     quotient = euclidean_division(&a_2, &b_2, 4, 11);
     // q = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
-    assert_eq!(deg(&quotient.0), 11);
+    assert_eq!(deg(&quotient.clone().unwrap().0), 11);
     for i in 1..12 {
-        assert_eq!(quotient.0[i], 1 as i128);
+        assert_eq!(quotient.clone().unwrap().0[i], 1i128);
     }
-    assert_eq!(quotient.0[0], 2 as i128);
+    assert_eq!(quotient.clone().unwrap().0[0], 2i128);
     // r = 2
-    assert_eq!(deg(&quotient.1), 0);
-    assert_eq!(quotient.1[0], 2 as i128);
+    assert_eq!(deg(&quotient.clone().unwrap().1), 0);
+    assert_eq!(quotient.unwrap().1[0], 2i128);
 }
 
 #[test]

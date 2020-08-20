@@ -175,7 +175,7 @@ fn test_encryption_decryption() {
 
     // encryption
     let c = encrypt(&m, &pk, &n_v);
-    let result = decrypt(&c, &sk, &n_v);
+    let result = decrypt(&c, &sk, &n_v).unwrap();
     for i in 0..result.len() {
         if result[i] != m[i] {
             panic!("NTRU prime failed!");
@@ -382,7 +382,7 @@ fn kat_ntru_prime_653() {
             panic!("NTRUps653 failed");
         }
     }
-    let message = decrypt(&cipher, &sk, &n_v);
+    let message = decrypt(&cipher, &sk, &n_v).unwrap();
     for i in 0..m.len() {
         if message[i] != m[i] {
             panic!("NTRUps653 failed");
@@ -597,7 +597,7 @@ fn kat_ntru_prime_761() {
             panic!("NTRUps761");
         }
     }
-    let message = decrypt(&cipher, &sk, &n_v);
+    let message = decrypt(&cipher, &sk, &n_v).unwrap();
     for i in 0..m.len() {
         if message[i] != m[i] {
             panic!("NTRUps761 failed");
@@ -836,7 +836,7 @@ fn kat_ntru_prime_857() {
             panic!("NTRUps857 failed");
         }
     }
-    let message = decrypt(&cipher, &sk, &n_v);
+    let message = decrypt(&cipher, &sk, &n_v).unwrap();
     for i in 0..m.len() {
         if message[i] != m[i] {
             panic!("NTRUps857 failed");

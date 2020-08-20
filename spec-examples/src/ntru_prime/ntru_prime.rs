@@ -81,7 +81,7 @@ pub fn encrypt(r: &Seq<i128>, h: &Seq<i128>, n_v: &Parameters) -> Seq<i128> {
     round_to_3(&pre, n_v.q)
 }
 
-pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Seq<i128> {
+pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Result<Seq<i128>, &'static str> {
     let (f, v) = key;
 
     // calculate 3*f and 3*f*c
@@ -90,7 +90,7 @@ pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Seq<i128> {
         &n_v.irr,
         &add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q), n_v.q),
         n_v.q,
-    );
+    )?;
     // view coefficients as values between -(q-1/2) and (q-1/2)
 
     let q_12 = (n_v.q - 1) / 2;
@@ -113,7 +113,7 @@ pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Seq<i128> {
             r[i] = -1 as i128;
         }
     }
-    r
+    Ok(r)
 }
 
 /// This function creates a random polynomial with w many -1 or 1 and with the highest degree of h_deg.
