@@ -381,6 +381,7 @@ fn typecheck_expression(
     name_context: &NameContext,
 ) -> TypecheckingResult<(Expression, Typ, VarContext)> {
     match e {
+        Expression::NewArray(_, _, _) => panic!(),
         Expression::Tuple(args) => {
             let mut var_context = var_context.clone();
             let new_and_typ_args = args

@@ -185,6 +185,7 @@ pub enum Expression {
     ),
     Lit(Literal),
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
+    NewArray(Spanned<Ident>, Option<BaseTyp>, Vec<Spanned<Expression>>),
     Tuple(Vec<Spanned<Expression>>),
 }
 

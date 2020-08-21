@@ -48,22 +48,22 @@ fn double_round(state: State) -> State {
 
 pub fn block_init(key: Key, ctr: U32, iv: IV) -> State {
     State([
-        U32(0x6170_7865),
-        U32(0x3320_646e),
-        U32(0x7962_2d32),
-        U32(0x6b20_6574),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 0..4)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 4..8)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 8..12)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 12..16)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 16..20)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 20..24)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 24..28)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 28..32)),
+        U32(0x6170_7865u32),
+        U32(0x3320_646eu32),
+        U32(0x7962_2d32u32),
+        U32(0x6b20_6574u32),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 0usize..4usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 4usize..8usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 8usize..12usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 12usize..16usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 16usize..20usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 20usize..24usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 24usize..28usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 28usize..32usize)),
         ctr,
-        U32_from_le_bytes(U32Word::from_slice_range(&iv, 0..4)),
-        U32_from_le_bytes(U32Word::from_slice_range(&iv, 4..8)),
-        U32_from_le_bytes(U32Word::from_slice_range(&iv, 8..12)),
+        U32_from_le_bytes(U32Word::from_slice_range(&iv, 0usize..4usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&iv, 4usize..8usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&iv, 8usize..12usize)),
     ])
 }
 

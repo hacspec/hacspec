@@ -1,3 +1,4 @@
+use im::HashSet;
 use rustc_ast;
 use rustc_ast::{
     ast::{
@@ -15,6 +16,8 @@ use rustc_span::{symbol, Span};
 
 use crate::rustspec::*;
 use crate::RustspectErrorEmitter;
+
+type ArrayTypes = HashSet<String>;
 
 type TranslationResult<T> = Result<T, ()>;
 
@@ -270,8 +273,12 @@ enum ExprTranslationResult {
     TransStmt(Statement),
 }
 
-fn translate_expr_expects_exp(sess: &Session, e: &Expr) -> TranslationResult<Spanned<Expression>> {
-    match translate_expr(sess, e)? {
+fn translate_expr_expects_exp(
+    sess: &Session,
+    arr_typs: &ArrayTypes,
+    e: &Expr,
+) -> TranslationResult<Spanned<Expression>> {
+    match translate_expr(sess, arr_typs, e)? {
         (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
         (ExprTranslationResult::TransStmt(_), span) => {
             sess.span_rustspec_err(
@@ -285,6 +292,7 @@ fn translate_expr_expects_exp(sess: &Session, e: &Expr) -> TranslationResult<Spa
 
 fn translate_function_argument(
     sess: &Session,
+    arr_typs: &ArrayTypes,
     e: &Expr,
 ) -> TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)> {
     match &e.kind {
@@ -294,24 +302,28 @@ fn translate_function_argument(
                 Err(())
             }
             Mutability::Not => Ok((
-                translate_expr_expects_exp(sess, e1)?,
+                translate_expr_expects_exp(sess, arr_typs, e1)?,
                 (Borrowing::Borrowed, e.span.clone()),
             )),
         },
         _ => Ok((
-            translate_expr_expects_exp(sess, e)?,
+            translate_expr_expects_exp(sess, arr_typs, e)?,
             (Borrowing::Consumed, e.span.clone()),
         )),
     }
 }
 
-fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTranslationResult>> {
+fn translate_expr(
+    sess: &Session,
+    arr_typs: &ArrayTypes,
+    e: &Expr,
+) -> TranslationResult<Spanned<ExprTranslationResult>> {
     match &e.kind {
         ExprKind::Binary(op, e1, e2) => Ok((
             ExprTranslationResult::TransExpr(Expression::Binary(
                 (op.clone().node, op.clone().span),
-                Box::new(translate_expr_expects_exp(sess, e1)?),
-                Box::new(translate_expr_expects_exp(sess, e2)?),
+                Box::new(translate_expr_expects_exp(sess, arr_typs, e1)?),
+                Box::new(translate_expr_expects_exp(sess, arr_typs, e2)?),
             )),
             e.span,
         )),
@@ -325,7 +337,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                         return Err(());
                     }
                 },
-                Box::new(translate_expr_expects_exp(sess, e1)?),
+                Box::new(translate_expr_expects_exp(sess, arr_typs, e1)?),
             )),
             e.span,
         )),
@@ -348,9 +360,49 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     Err(())
                 }
             }?;
+            let func_name_string = match func_name.0 {
+                Ident::Original(ref s) => s,
+                _ => panic!(), // should not happen}
+            };
+            match func_name_string {
+                // Special cases for secret integers constructors
+                _ => (),
+            }
+            if arr_typs.contains(func_name_string) {
+                // Special case for array constructors
+                if args.len() != 1 {
+                    sess.span_rustspec_err(
+                        e.span,
+                        "array constructor called with more than one arguments",
+                    );
+                    return Err(());
+                }
+                match &args.first().unwrap().kind {
+                    ExprKind::Array(cells) => {
+                        let new_cells: Vec<TranslationResult<Spanned<Expression>>> = cells
+                            .iter()
+                            .map(|cell| translate_expr_expects_exp(sess, arr_typs, &cell))
+                            .collect();
+                        let new_cells = check_vec(new_cells)?;
+                        return Ok((
+                            (ExprTranslationResult::TransExpr(Expression::NewArray(
+                                func_name, None, new_cells,
+                            ))),
+                            e.span,
+                        ));
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            args.first().unwrap().span.clone(),
+                            "expected an array literal",
+                        );
+                        return Err(());
+                    }
+                }
+            }
             let func_args: Vec<TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>> = args
                 .iter()
-                .map(|arg| translate_function_argument(sess, &arg))
+                .map(|arg| translate_function_argument(sess, arr_typs, &arg))
                 .collect();
             let func_args = check_vec(func_args);
             Ok((
@@ -365,7 +417,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
         ExprKind::MethodCall(method_name, args, span) => {
             let func_args: Vec<TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>> = args
                 .iter()
-                .map(|arg| translate_function_argument(sess, &arg))
+                .map(|arg| translate_function_argument(sess, arr_typs, &arg))
                 .collect();
             let func_args = check_vec(func_args)?;
             let (method_arg, rest_args) = func_args.split_at(1);
@@ -458,7 +510,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             }
         },
         ExprKind::Assign(lhs, rhs_e, _) => {
-            let r_e = translate_expr(sess, rhs_e)?;
+            let r_e = translate_expr(sess, arr_typs, rhs_e)?;
             match &lhs.kind {
                 ExprKind::Path(None, path) => match &path.segments.as_slice() {
                     [var] => match &var.args {
@@ -493,7 +545,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                     }
                 },
                 ExprKind::Index(a, index) => {
-                    let r_index = translate_expr(sess, index)?;
+                    let r_index = translate_expr(sess, arr_typs, index)?;
                     let r_index = match r_index {
                         (ExprTranslationResult::TransStmt(_), span) => {
                             sess.span_rustspec_err(span, "statements not allowed in Rustspec for assignments left-hand-sides");
@@ -551,7 +603,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             }
         }
         ExprKind::If(cond, t_e, f_e) => {
-            let r_cond = match translate_expr(sess, cond)? {
+            let r_cond = match translate_expr(sess, arr_typs, cond)? {
                 (ExprTranslationResult::TransStmt(_), span) => {
                     sess.span_rustspec_err(
                         span,
@@ -561,12 +613,12 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 }
                 (ExprTranslationResult::TransExpr(r_cond), span) => Ok((r_cond, span)),
             };
-            let r_t_e = translate_block(sess, t_e)?;
+            let r_t_e = translate_block(sess, arr_typs, t_e)?;
             let r_f_e: TranslationResult<Option<Spanned<Block>>> = match f_e {
                 None => Ok(None),
                 Some(f_e) => match &f_e.kind {
                     ExprKind::Block(f_e, _) => {
-                        let r_f_e = translate_block(sess, f_e)?;
+                        let r_f_e = translate_block(sess, arr_typs, f_e)?;
                         Ok(Some(r_f_e))
                     }
                     _ => {
@@ -600,8 +652,8 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
             };
             let e_begin_end = match &range.kind {
                 ExprKind::Range(Some(r_begin), Some(r_end), RangeLimits::HalfOpen) => {
-                    let e_begin = translate_expr(sess, r_begin)?;
-                    let e_end = translate_expr(sess, r_end)?;
+                    let e_begin = translate_expr(sess, arr_typs, r_begin)?;
+                    let e_end = translate_expr(sess, arr_typs, r_end)?;
                     match (e_begin, e_end) {
                         (
                             (ExprTranslationResult::TransExpr(e_begin), span_begin),
@@ -625,7 +677,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 }
             };
             let (e_begin, e_end) = e_begin_end?;
-            let r_b = translate_block(sess, b)?;
+            let r_b = translate_block(sess, arr_typs, b)?;
             Ok((
                 ExprTranslationResult::TransStmt(Statement::ForLoop(id?, e_begin, e_end, r_b)),
                 e.span,
@@ -636,7 +688,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 [var] => match &var.args {
                     None => {
                         let id = translate_ident(&var.ident);
-                        let r_e2 = translate_expr(sess, e2)?;
+                        let r_e2 = translate_expr(sess, arr_typs, e2)?;
                         match r_e2 {
                             (ExprTranslationResult::TransExpr(r_e2), r_e2_span) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::ArrayIndex(
@@ -672,7 +724,7 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
         ExprKind::Tup(args) => {
             let r_args = args
                 .into_iter()
-                .map(|arg| match translate_expr(sess, arg)? {
+                .map(|arg| match translate_expr(sess, arr_typs, arg)? {
                     (ExprTranslationResult::TransExpr(r_arg), r_span) => Ok((r_arg, r_span)),
                     (ExprTranslationResult::TransStmt(_), r_span) => {
                         sess.span_rustspec_err(
@@ -689,7 +741,115 @@ fn translate_expr(sess: &Session, e: &Expr) -> TranslationResult<Spanned<ExprTra
                 e.span,
             ))
         }
-        //TODO: fix by allowing ref expressions but only inside of args
+        ExprKind::Struct(_, _, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO1");
+            Err(())
+        }
+        ExprKind::Box(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO2");
+            Err(())
+        }
+        ExprKind::Array(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO3");
+            Err(())
+        }
+        ExprKind::Cast(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO4");
+            Err(())
+        }
+        ExprKind::Type(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO5");
+            Err(())
+        }
+        ExprKind::Let(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO5");
+            Err(())
+        }
+        ExprKind::While(_, _, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO6");
+            Err(())
+        }
+        ExprKind::Loop(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO7");
+            Err(())
+        }
+        ExprKind::Match(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO8");
+            Err(())
+        }
+        ExprKind::Closure(_, _, _, _, _, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO9");
+            Err(())
+        }
+        ExprKind::Block(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO10");
+            Err(())
+        }
+        ExprKind::Async(_, _, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO11");
+            Err(())
+        }
+        ExprKind::Await(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO12");
+            Err(())
+        }
+        ExprKind::TryBlock(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO13");
+            Err(())
+        }
+        ExprKind::AssignOp(_, _, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO14");
+            Err(())
+        }
+        ExprKind::Field(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO15");
+            Err(())
+        }
+        ExprKind::Range(_, _, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO16");
+            Err(())
+        }
+        ExprKind::AddrOf(_, _, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO17");
+            Err(())
+        }
+        ExprKind::Break(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO18");
+            Err(())
+        }
+        ExprKind::Continue(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO19");
+            Err(())
+        }
+        ExprKind::Ret(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO20");
+            Err(())
+        }
+        ExprKind::InlineAsm(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO21");
+            Err(())
+        }
+        ExprKind::LlvmInlineAsm(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO22");
+            Err(())
+        }
+        ExprKind::MacCall(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO23");
+            Err(())
+        }
+        ExprKind::Repeat(_, _) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO24");
+            Err(())
+        }
+        ExprKind::Yield(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO25");
+            Err(())
+        }
+        ExprKind::Paren(e1) => translate_expr(sess, arr_typs, e1),
+        ExprKind::Try(_) => {
+            sess.span_rustspec_err(e.span.clone(), "FOO27");
+            Err(())
+        }
         _ => {
             sess.span_rustspec_err(e.span, "this expression is not allowed in Rustspec");
             Err(())
@@ -717,7 +877,11 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
     }
 }
 
-fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanned<Statement>>> {
+fn translate_statement(
+    sess: &Session,
+    arr_typs: &ArrayTypes,
+    s: &Stmt,
+) -> TranslationResult<Vec<Spanned<Statement>>> {
     match &s.kind {
         StmtKind::Item(_) => {
             sess.span_rustspec_err(s.span, "block-local items are not allowed in Rustspec");
@@ -748,7 +912,7 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
                     );
                     Err(())
                 }
-                Some(e) => match translate_expr(sess, &e)? {
+                Some(e) => match translate_expr(sess, arr_typs, &e)? {
                     (ExprTranslationResult::TransStmt(_), _) => {
                         sess.span_rustspec_err(
                             e.span,
@@ -762,14 +926,14 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
             Ok(vec![(Statement::LetBinding(pat, ty, init), s.span)])
         }
         StmtKind::Expr(e) => {
-            let t_s = match translate_expr(sess, &e)? {
+            let t_s = match translate_expr(sess, arr_typs, &e)? {
                 (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e),
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span)])
         }
         StmtKind::Semi(e) => {
-            let t_s = match translate_expr(sess, &e)? {
+            let t_s = match translate_expr(sess, arr_typs, &e)? {
                 (ExprTranslationResult::TransExpr(e), span) => {
                     Statement::LetBinding((Pattern::WildCard, span), None, (e, span))
                 }
@@ -780,7 +944,11 @@ fn translate_statement(sess: &Session, s: &Stmt) -> TranslationResult<Vec<Spanne
     }
 }
 
-fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<Block>> {
+fn translate_block(
+    sess: &Session,
+    arr_typs: &ArrayTypes,
+    b: &ast::Block,
+) -> TranslationResult<Spanned<Block>> {
     match b.rules {
         BlockCheckMode::Unsafe(_) => {
             sess.span_rustspec_err(b.span, "unsafe blocks are not allowed in Rustspec");
@@ -791,7 +959,7 @@ fn translate_block(sess: &Session, b: &ast::Block) -> TranslationResult<Spanned<
     let stmts = b
         .stmts
         .iter()
-        .map(|s| translate_statement(sess, &s))
+        .map(|s| translate_statement(sess, arr_typs, &s))
         .collect();
     let stmts = check_vec(stmts)?.into_iter().flatten().collect();
     Ok((
@@ -811,7 +979,11 @@ enum ItemTranslationResult {
     ImportedCrate(String),
 }
 
-fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTranslationResult> {
+fn translate_items(
+    sess: &Session,
+    i: &ast::Item,
+    arr_types: &ArrayTypes,
+) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
     match &i.kind {
         ItemKind::Fn(defaultness, ref sig, ref generics, ref body) => {
             // First, checking that no fancy function qualifier is here
@@ -913,24 +1085,27 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                     },
                     i.span,
                 ),
-                Some(b) => translate_block(sess, &b)?,
+                Some(b) => translate_block(sess, arr_types, &b)?,
             };
             let fn_sig = FuncSig {
                 args: fn_inputs,
                 ret: fn_output,
             };
-            Ok(ItemTranslationResult::Item(Item::FnDecl(
-                translate_ident(&i.ident),
-                fn_sig,
-                fn_body,
-            )))
+            Ok((
+                ItemTranslationResult::Item(Item::FnDecl(
+                    translate_ident(&i.ident),
+                    fn_sig,
+                    fn_body,
+                )),
+                arr_types.clone(),
+            ))
         }
         ItemKind::Use(ref tree) => match tree.kind {
             // TODO: better system
-            UseTreeKind::Glob => Ok(ItemTranslationResult::ImportedCrate(translate_use_path(
-                sess,
-                &tree.prefix,
-            )?)),
+            UseTreeKind::Glob => Ok((
+                ItemTranslationResult::ImportedCrate(translate_use_path(sess, &tree.prefix)?),
+                arr_types.clone(),
+            )),
             _ => {
                 sess.span_rustspec_err(tree.span.clone(), "only ::* uses are allowed in Rustspec");
                 Err(())
@@ -960,11 +1135,12 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                             let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
                             Ok((first_arg?, second_arg?, third_arg?, fourth_arg?, fifth_arg?))
                         }?;
-                        let typ_ident = match first_arg {
+                        let (typ_ident, typ_ident_string) = match first_arg {
                             TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Ident(id, _) => {
-                                    (Ident::Original(id.to_ident_string()), tok.span.clone())
-                                }
+                                TokenKind::Ident(id, _) => (
+                                    (Ident::Original(id.to_ident_string()), tok.span.clone()),
+                                    id.to_ident_string(),
+                                ),
                                 _ => {
                                     sess.span_rustspec_err(
                                         tok.span.clone(),
@@ -1093,9 +1269,10 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                                 return Err(());
                             }
                         }?;
-                        Ok(ItemTranslationResult::Item(Item::ArrayDecl(
-                            typ_ident, size, cell_t,
-                        )))
+                        Ok((
+                            (ItemTranslationResult::Item(Item::ArrayDecl(typ_ident, size, cell_t))),
+                            arr_types.update(typ_ident_string),
+                        ))
                     }
                     _ => {
                         sess.span_rustspec_err(
@@ -1114,11 +1291,12 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                             let third_arg = it.next().map_or(Err(()), |x| Ok(x));
                             Ok((first_arg?, second_arg?, third_arg?))
                         }?;
-                        let typ_ident = match first_arg {
+                        let (typ_ident, typ_ident_string) = match first_arg {
                             TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Ident(id, _) => {
-                                    (Ident::Original(id.to_ident_string()), tok.span.clone())
-                                }
+                                TokenKind::Ident(id, _) => (
+                                    (Ident::Original(id.to_ident_string()), tok.span.clone()),
+                                    id.to_ident_string(),
+                                ),
                                 _ => {
                                     sess.span_rustspec_err(
                                         tok.span.clone(),
@@ -1199,17 +1377,20 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
                                 return Err(());
                             }
                         }?;
-                        Ok(ItemTranslationResult::Item(Item::ArrayDecl(
-                            typ_ident.clone(),
-                            size,
-                            (
-                                BaseTyp::Named(
-                                    (Ident::Original("U8".into()), typ_ident.1.clone()),
-                                    None,
+                        Ok((
+                            ItemTranslationResult::Item(Item::ArrayDecl(
+                                typ_ident.clone(),
+                                size,
+                                (
+                                    BaseTyp::Named(
+                                        (Ident::Original("U8".into()), typ_ident.1.clone()),
+                                        None,
+                                    ),
+                                    typ_ident.1.clone(),
                                 ),
-                                typ_ident.1.clone(),
-                            ),
-                        )))
+                            )),
+                            arr_types.update(typ_ident_string),
+                        ))
                     }
                     _ => {
                         sess.span_rustspec_err(
@@ -1241,10 +1422,15 @@ fn translate_items(sess: &Session, i: &ast::Item) -> TranslationResult<ItemTrans
 
 pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
     let items = &krate.module.items;
+    let mut arr_types = HashSet::new();
     let (items, imports): (Vec<_>, Vec<_>) = check_vec(
         items
             .into_iter()
-            .map(|i| Ok((translate_items(sess, &i)?, i.span)))
+            .map(|i| {
+                let (new_i, new_arr_typs) = translate_items(sess, &i, &arr_types)?;
+                arr_types = new_arr_typs;
+                Ok((new_i, i.span))
+            })
             .collect(),
     )?
     .into_iter()

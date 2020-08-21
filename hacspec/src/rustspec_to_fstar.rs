@@ -276,6 +276,7 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e2)))
         }
+        Expression::NewArray(_, _, _) => panic!(),
     }
 }
 
