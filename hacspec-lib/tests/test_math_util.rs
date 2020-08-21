@@ -168,7 +168,7 @@ fn test_poly_eea() {
     // x^3 + 2x + 1
     let irr: Seq<i128> = Seq::from_native_slice(&[1, 2, 0, 1]);
 
-    let h_pre_inv = eea(&h, &irr, 3);
+    let h_pre_inv = extended_euclid(&h, &irr, 3);
     let h_inv = match h_pre_inv {
         Ok(v) => v,
         Err(_) => panic!("test, failed!"),

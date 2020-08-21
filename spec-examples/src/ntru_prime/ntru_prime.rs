@@ -77,7 +77,8 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
 
 /// r is the plaintext, h is the public key
 pub fn encrypt(r: &Seq<i128>, h: &Seq<i128>, n_v: &Parameters) -> Seq<i128> {
-    let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q);
+    let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q).unwrap();
+    println!("pre: {:?}", pre);
     round_to_3(&pre, n_v.q)
 }
 
@@ -85,7 +86,7 @@ pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Result<Seq<i
     let (f, v) = key;
 
     // calculate 3*f and 3*f*c
-    let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q);
+    let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q)?;
     let mut f_3_c = poly_to_ring(
         &n_v.irr,
         &add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q), n_v.q),
@@ -106,7 +107,7 @@ pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Result<Seq<i
     }
     e = make_positive(&e, 3);
     // calculate e * v in R
-    let mut r = mul_poly_irr(&e, &v, &n_v.irr, 3);
+    let mut r = mul_poly_irr(&e, &v, &n_v.irr, 3)?;
     // to R_short
     for i in 0..r.len() {
         if r[i] == 2 {
@@ -141,7 +142,7 @@ fn build_invertible_poly(
     modulus: i128,
 ) -> (Seq<i128>, Result<Seq<i128>, &'static str>) {
     let f = build_poly(poly, n.p);
-    let x = eea(&f, &n.irr, modulus);
+    let x = extended_euclid(&f, &n.irr, modulus);
     (f, x)
 }
 
@@ -157,7 +158,7 @@ pub fn key_gen(g: &Poly, f: &Poly, n_v: &Parameters) -> (Seq<i128>, SecretKey) {
     let f = build_poly(f, n_v.p);
 
     let f_3times = add_poly(&f, &add_poly(&f, &f, n_v.q), n_v.q);
-    let f_3times_pre_inv = eea(&f_3times, &n_v.irr, n_v.q);
+    let f_3times_pre_inv = extended_euclid(&f_3times, &n_v.irr, n_v.q);
     let mut f_inv_3times: Seq<i128> = Seq::new(n_v.p + 1);
     match f_3times_pre_inv {
         Ok(v) => {
@@ -165,7 +166,7 @@ pub fn key_gen(g: &Poly, f: &Poly, n_v: &Parameters) -> (Seq<i128>, SecretKey) {
         }
         Err(_) => println!("Key generating, failed"),
     }
-    let h = mul_poly_irr(&poly_g.0, &f_inv_3times, &n_v.irr, n_v.q);
+    let h = mul_poly_irr(&poly_g.0, &f_inv_3times, &n_v.irr, n_v.q).unwrap();
 
     (h, (f, g_inv))
 }

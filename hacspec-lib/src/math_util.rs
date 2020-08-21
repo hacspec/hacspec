@@ -124,7 +124,6 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
     let mut new_t = T::ONE();
     let mut new_r = x;
 
-    println!("n: {:?}", n);
     while !new_r.equal(T::ZERO()) {
         let q: T = r.divide(new_r);
 
@@ -261,14 +260,29 @@ fn divstepsx<T: Integer + Copy>(
     (delta, f, g, v)
 }
 
+#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+pub fn extended_euclid<T: Integer + Copy>(
+    x: &Seq<T>,
+    irr: &Seq<T>,
+    n: T,
+) -> Result<Seq<T>, &'static str> {
+    let result = extended_euclid_internal(&x.b, &irr.b, n)?;
+    Ok(Seq::from_native_slice(&result))
+}
+
 /// Constant-time extended euclidean algorithm to compute the inverse of x in yℤ\[x\]
 /// x.len() and degree of y are assumed to be public
 /// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266
 #[inline]
 #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
-pub fn extended_euclid<T: Integer + Copy>(x: &[T], y: &[T], n: T) -> Result<Vec<T>, &'static str> {
+fn extended_euclid_internal<T: Integer + Copy>(
+    x: &[T],
+    y: &[T],
+    n: T,
+) -> Result<Vec<T>, &'static str> {
     let (yd, _) = leading_coefficient(y);
-    debug_assert!(yd >= x.len());
+    let (xd, _) = leading_coefficient(x);
+    debug_assert!(yd >= xd);
     debug_assert!(yd > 0);
 
     let mut f = make_fixed_length(y, yd + 1);
@@ -372,19 +386,6 @@ pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
     (q, r)
 }
 
-/// if all coefficients of a polynomial are 0, returns True
-/// else false
-fn is_null<T: Integer + Copy>(poly: &Seq<T>) -> bool {
-    let mut result = true;
-    for i in 0..poly.len() {
-        if !poly[i].equal(T::default()) {
-            result = false;
-            break;
-        }
-    }
-    result
-}
-
 /// returns degree of polynomial, e.g. for  3x² + 2x + 1 -> 2
 pub fn deg<T: Integer + Copy>(poly: &Seq<T>) -> usize {
     let mut deg = 0;
@@ -425,6 +426,7 @@ pub fn make_positive<T: Numeric + Copy>(poly: &Seq<T>, q: T) -> Seq<T> {
 
 /// Return the inverse of `a mod m`, Fermat's little theorem
 /// Necessary Assumption `m` is prime and `a < m`
+#[cfg_attr(feature = "use_attributes", library(hacspec))]
 fn invert_fermat<T: Integer + Copy>(a: T, m: T) -> T {
     a.pow_mod(m - T::TWO(), m)
 }
@@ -437,16 +439,26 @@ fn invert_fermat<T: Integer + Copy>(a: T, m: T) -> T {
 pub fn poly_to_ring<T: Integer + Copy>(
     irr: &Seq<T>,
     poly: &Seq<T>,
-    modulo: T,
+    modulus: T,
 ) -> Result<Seq<T>, &'static str> {
-    let pre = euclidean_division(&poly, &irr, modulo, irr.len() - 1)?.1;
-    Ok(make_positive(&pre, modulo))
+    let pre = euclidean_division(&poly, &irr, modulus, irr.len() - 1)?.1;
+    // let pre = &poly_div(&poly.b, &irr.b, modulus)?.1[0..irr.len()-1];
+    Ok(make_positive(&pre, modulus))
 }
 
 /// polynomial multiplication of two size fixed polynomials in R_modulo \ irr
 #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
-pub fn mul_poly_irr(a: &Seq<i128>, b: &Seq<i128>, irr: &Seq<i128>, modulo: i128) -> Seq<i128> {
-    assert!(a.len() == b.len(), true);
+pub fn mul_poly_irr(
+    // <T: Integer + Copy>
+    a: &Seq<i128>,
+    b: &Seq<i128>,
+    irr: &Seq<i128>,
+    modulo: i128,
+) -> Result<Seq<i128>, &'static str> {
+    // let (a, b) = normalize(&a.b, &b.b);
+    // let tmp = poly_mul(&a, &b, modulo);
+    // let tmp = poly_div(&tmp, &irr.b, modulo)?;
+    // Ok(make_positive(&Seq::from_native_slice(&tmp.1), modulo))
     let mut result: Seq<i128> = Seq::new(a.len());
     for i in 0..a.len() {
         if a[i] == 0 {
@@ -471,10 +483,10 @@ pub fn mul_poly_irr(a: &Seq<i128>, b: &Seq<i128>, irr: &Seq<i128>, modulo: i128)
     }
     if modulo > 0 {
         for i in 0..result.len() {
-            result[i] = result[i] % modulo;
+            result[i] = result[i].modulo(modulo);
         }
     }
-    make_positive(&result, modulo)
+    Ok(make_positive(&result, modulo))
 }
 
 /// simple schoolbook polynomial multiplication with sparse and all coefficients mod modulo
@@ -502,6 +514,7 @@ fn scalar_div<T: Integer + Copy>(a: &Seq<T>, scalar: T, p: T) -> Seq<T> {
     }
     result
 }
+
 /// euclidean polynomial division, calculates a/ b in R_modulo
 /// returns fixed size polynomial ( size is p)
 pub fn euclidean_division<T: Integer + Copy>(
@@ -510,7 +523,7 @@ pub fn euclidean_division<T: Integer + Copy>(
     modulo: T,
     p: usize,
 ) -> Result<(Seq<T>, Seq<T>), &'static str> {
-    let mut r: Seq<T> = Seq::from_seq(a);
+    let mut r: Seq<T> = a.clone();
     let mut q: Seq<T> = Seq::new(p + 1);
     if deg(&b) == 0 {
         return Ok((scalar_div(&r, b[0], modulo), q));
@@ -537,45 +550,4 @@ pub fn euclidean_division<T: Integer + Copy>(
         r_right[i] = r[i];
     }
     Ok((q_right, r_right))
-}
-
-/// Extended Euclidean Algorithm on Seq<i128> which returns the inverse of a in R_modulo \ irr.
-/// if a has no inverse in R_modulo \ irr, returns Err(string)
-#[cfg_attr(feature = "use_attributes", primitive(internal))]
-pub fn eea(a: &Seq<i128>, irr: &Seq<i128>, modulo: i128) -> Result<Seq<i128>, &'static str> {
-    let mut t: Seq<i128> = Seq::new(a.len());
-    let mut r = Seq::from_seq(irr);
-    let mut new_t = Seq::new(a.len());
-    new_t[0] = 1 as i128;
-    let mut new_r = Seq::from_seq(a);
-    new_r = make_positive(&new_r, modulo);
-    let p = irr.len() - 1;
-    while !is_null(&new_r) {
-        let q = euclidean_division(&r, &new_r, modulo, p)?.0;
-
-        let tmp_t = Seq::from_seq(&new_t);
-        new_t = sub_poly(
-            &t,
-            &mul_poly(&q, &new_t, modulo).get_chunk(q.len(), 0).1,
-            modulo,
-        );
-        t = Seq::from_seq(&tmp_t);
-
-        let tmp_r = Seq::from_seq(&new_r);
-        new_r = sub_poly(
-            &r,
-            &mul_poly(&q, &new_r, modulo).get_chunk(q.len(), 0).1,
-            modulo,
-        );
-        r = Seq::from_seq(&tmp_r);
-    }
-    if deg(&r) > 0 {
-        return Err("Not invertible");
-    }
-    let pre = scalar_div(&t, r[0], modulo);
-    let mut result = Seq::from_seq(irr);
-    for i in 0..irr.len() {
-        result[i] = pre[i];
-    }
-    Ok(result)
 }
