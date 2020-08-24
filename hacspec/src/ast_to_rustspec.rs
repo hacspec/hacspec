@@ -195,16 +195,16 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
             match &path.segments.as_slice() {
                 [t] => match &t.args {
                     None => match t.ident.name.to_ident_string().as_str() {
-                        "u32" => return Ok((BaseTyp::UInt32, ty.span)),
-                        "i32" => return Ok((BaseTyp::Int32, ty.span)),
-                        "u8" => return Ok((BaseTyp::UInt8, ty.span)),
-                        "i8" => return Ok((BaseTyp::Int8, ty.span)),
-                        "u16" => return Ok((BaseTyp::UInt16, ty.span)),
-                        "i16" => return Ok((BaseTyp::Int16, ty.span)),
-                        "u64" => return Ok((BaseTyp::UInt64, ty.span)),
-                        "i64" => return Ok((BaseTyp::Int64, ty.span)),
-                        "u128" => return Ok((BaseTyp::UInt128, ty.span)),
-                        "i128" => return Ok((BaseTyp::Int128, ty.span)),
+                        "u32" => return Ok((BaseTyp::UInt32(Secrecy::Public), ty.span)),
+                        "i32" => return Ok((BaseTyp::Int32(Secrecy::Public), ty.span)),
+                        "u8" => return Ok((BaseTyp::UInt8(Secrecy::Public), ty.span)),
+                        "i8" => return Ok((BaseTyp::Int8(Secrecy::Public), ty.span)),
+                        "u16" => return Ok((BaseTyp::UInt16(Secrecy::Public), ty.span)),
+                        "i16" => return Ok((BaseTyp::Int16(Secrecy::Public), ty.span)),
+                        "u64" => return Ok((BaseTyp::UInt64(Secrecy::Public), ty.span)),
+                        "i64" => return Ok((BaseTyp::Int64(Secrecy::Public), ty.span)),
+                        "u128" => return Ok((BaseTyp::UInt128(Secrecy::Public), ty.span)),
+                        "i128" => return Ok((BaseTyp::Int128(Secrecy::Public), ty.span)),
                         "bool" => return Ok((BaseTyp::Bool, ty.span)),
                         "usize" => return Ok((BaseTyp::Usize, ty.span)),
                         "isize" => return Ok((BaseTyp::Isize, ty.span)),
@@ -450,43 +450,73 @@ fn translate_expr(
             )),
             //TODO: check that the casting is safe each time!
             LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int128(*x as i128))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int128(
+                    *x as i128,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt128(*x as u128))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt128(
+                    *x as u128,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int64(*x as i64))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int64(
+                    *x as i64,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt64(*x as u64))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt64(
+                    *x as u64,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(
+                    *x as i32,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt32(*x as u32))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt32(
+                    *x as u32,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int16(*x as i16))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int16(
+                    *x as i16,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt16(*x as u16))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt16(
+                    *x as u16,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int8(*x as i8))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int8(
+                    *x as i8,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt8(*x as u8))),
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt8(
+                    *x as u8,
+                    Secrecy::Public,
+                ))),
                 e.span,
             )),
             LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok((

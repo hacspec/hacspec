@@ -28,16 +28,16 @@ fn is_numeric(t: &Typ) -> bool {
         return false;
     };
     match &(t.1).0 {
-        BaseTyp::UInt128 => true,
-        BaseTyp::Int128 => true,
-        BaseTyp::UInt64 => true,
-        BaseTyp::Int64 => true,
-        BaseTyp::UInt32 => true,
-        BaseTyp::Int32 => true,
-        BaseTyp::UInt16 => true,
-        BaseTyp::Int16 => true,
-        BaseTyp::UInt8 => true,
-        BaseTyp::Int8 => true,
+        BaseTyp::UInt128(_) => true,
+        BaseTyp::Int128(_) => true,
+        BaseTyp::UInt64(_) => true,
+        BaseTyp::Int64(_) => true,
+        BaseTyp::UInt32(_) => true,
+        BaseTyp::Int32(_) => true,
+        BaseTyp::UInt16(_) => true,
+        BaseTyp::Int16(_) => true,
+        BaseTyp::UInt8(_) => true,
+        BaseTyp::Int8(_) => true,
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
         _ => false,
@@ -48,16 +48,16 @@ fn is_copy(t: &BaseTyp) -> bool {
     match t {
         BaseTyp::Unit => true,
         BaseTyp::Bool => true,
-        BaseTyp::UInt128 => true,
-        BaseTyp::Int128 => true,
-        BaseTyp::UInt64 => true,
-        BaseTyp::Int64 => true,
-        BaseTyp::UInt32 => true,
-        BaseTyp::Int32 => true,
-        BaseTyp::UInt16 => true,
-        BaseTyp::Int16 => true,
-        BaseTyp::UInt8 => true,
-        BaseTyp::Int8 => true,
+        BaseTyp::UInt128(_) => true,
+        BaseTyp::Int128(_) => true,
+        BaseTyp::UInt64(_) => true,
+        BaseTyp::Int64(_) => true,
+        BaseTyp::UInt32(_) => true,
+        BaseTyp::Int32(_) => true,
+        BaseTyp::UInt16(_) => true,
+        BaseTyp::Int16(_) => true,
+        BaseTyp::UInt8(_) => true,
+        BaseTyp::Int8(_) => true,
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
         BaseTyp::Seq(_) => false,
@@ -90,16 +90,16 @@ fn is_array(sess: &Session, t: &Typ, typ_dict: &TypeDict) -> Result<Spanned<Base
 
 fn is_index(t: &BaseTyp) -> bool {
     match t {
-        BaseTyp::UInt128 => true,
-        BaseTyp::Int128 => true,
-        BaseTyp::UInt64 => true,
-        BaseTyp::Int64 => true,
-        BaseTyp::UInt32 => true,
-        BaseTyp::Int32 => true,
-        BaseTyp::UInt16 => true,
-        BaseTyp::Int16 => true,
-        BaseTyp::UInt8 => true,
-        BaseTyp::Int8 => true,
+        BaseTyp::UInt128(Secrecy::Public) => true,
+        BaseTyp::Int128(Secrecy::Public) => true,
+        BaseTyp::UInt64(Secrecy::Public) => true,
+        BaseTyp::Int64(Secrecy::Public) => true,
+        BaseTyp::UInt32(Secrecy::Public) => true,
+        BaseTyp::Int32(Secrecy::Public) => true,
+        BaseTyp::UInt16(Secrecy::Public) => true,
+        BaseTyp::Int16(Secrecy::Public) => true,
+        BaseTyp::UInt8(Secrecy::Public) => true,
+        BaseTyp::Int8(Secrecy::Public) => true,
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
         _ => false,
@@ -114,16 +114,66 @@ fn unify_types(t1: &Typ, t2: &Typ, typ_ctx: &TypeVarCtx) -> Option<TypeVarCtx> {
             match (&(t1.1).0, &(t2.1).0) {
                 (BaseTyp::Unit, BaseTyp::Unit) => Some(typ_ctx.clone()),
                 (BaseTyp::Bool, BaseTyp::Bool) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt128, BaseTyp::UInt128) => Some(typ_ctx.clone()),
-                (BaseTyp::Int128, BaseTyp::Int128) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt64, BaseTyp::UInt64) => Some(typ_ctx.clone()),
-                (BaseTyp::Int64, BaseTyp::Int64) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt32, BaseTyp::UInt32) => Some(typ_ctx.clone()),
-                (BaseTyp::Int32, BaseTyp::Int32) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt16, BaseTyp::UInt16) => Some(typ_ctx.clone()),
-                (BaseTyp::Int16, BaseTyp::Int16) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt8, BaseTyp::UInt8) => Some(typ_ctx.clone()),
-                (BaseTyp::Int8, BaseTyp::Int8) => Some(typ_ctx.clone()),
+                (BaseTyp::UInt128(Secrecy::Public), BaseTyp::UInt128(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt128(Secrecy::Secret), BaseTyp::UInt128(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int128(Secrecy::Public), BaseTyp::Int128(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int128(Secrecy::Secret), BaseTyp::Int128(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt64(Secrecy::Public), BaseTyp::UInt64(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt64(Secrecy::Secret), BaseTyp::UInt64(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int64(Secrecy::Public), BaseTyp::Int64(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int64(Secrecy::Secret), BaseTyp::Int64(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt32(Secrecy::Public), BaseTyp::UInt32(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt32(Secrecy::Secret), BaseTyp::UInt32(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int32(Secrecy::Public), BaseTyp::Int32(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int32(Secrecy::Secret), BaseTyp::Int32(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt16(Secrecy::Public), BaseTyp::UInt16(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt16(Secrecy::Secret), BaseTyp::UInt16(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int16(Secrecy::Public), BaseTyp::Int16(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int16(Secrecy::Secret), BaseTyp::Int16(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt8(Secrecy::Public), BaseTyp::UInt8(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::UInt8(Secrecy::Secret), BaseTyp::UInt8(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int8(Secrecy::Public), BaseTyp::Int8(Secrecy::Public)) => {
+                    Some(typ_ctx.clone())
+                }
+                (BaseTyp::Int8(Secrecy::Secret), BaseTyp::Int8(Secrecy::Secret)) => {
+                    Some(typ_ctx.clone())
+                }
                 (BaseTyp::Usize, BaseTyp::Usize) => Some(typ_ctx.clone()),
                 (BaseTyp::Isize, BaseTyp::Isize) => Some(typ_ctx.clone()),
                 (BaseTyp::Seq(tc1), BaseTyp::Seq(tc2)) => unify_types(
@@ -457,7 +507,7 @@ fn typecheck_expression(
                 typecheck_expression(sess, e2, fn_context, typ_dict, &var_context, name_context)?;
             match op {
                 BinOpKind::Shl | BinOpKind::Shr => match &(t2.1).0 {
-                    BaseTyp::UInt32 => {
+                    BaseTyp::UInt32(Secrecy::Public) => {
                         if is_numeric(&t1) {
                             Ok((
                                 Expression::Binary(
@@ -568,83 +618,83 @@ fn typecheck_expression(
                 ),
                 var_context.clone(),
             )),
-            Literal::Int128(_) => Ok((
+            Literal::Int128(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int128, span.clone()),
+                    (BaseTyp::Int128(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::UInt128(_) => Ok((
+            Literal::UInt128(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt128, span.clone()),
+                    (BaseTyp::UInt128(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::Int64(_) => Ok((
+            Literal::Int64(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int64, span.clone()),
+                    (BaseTyp::Int64(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::UInt64(_) => Ok((
+            Literal::UInt64(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt64, span.clone()),
+                    (BaseTyp::UInt64(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::Int32(_) => Ok((
+            Literal::Int32(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int32, span.clone()),
+                    (BaseTyp::Int32(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::UInt32(_) => Ok((
+            Literal::UInt32(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt32, span.clone()),
+                    (BaseTyp::UInt32(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::Int16(_) => Ok((
+            Literal::Int16(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int16, span.clone()),
+                    (BaseTyp::Int16(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::UInt16(_) => Ok((
+            Literal::UInt16(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt16, span.clone()),
+                    (BaseTyp::UInt16(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::Int8(_) => Ok((
+            Literal::Int8(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int8, span.clone()),
+                    (BaseTyp::Int8(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
-            Literal::UInt8(_) => Ok((
+            Literal::UInt8(_, secrecy) => Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt8, span.clone()),
+                    (BaseTyp::UInt8(secrecy.clone()), span.clone()),
                 ),
                 var_context.clone(),
             )),
@@ -687,16 +737,16 @@ fn typecheck_expression(
                         return Err(());
                     }
                     match (t2.1).0 {
-                        BaseTyp::UInt128
-                        | BaseTyp::Int128
-                        | BaseTyp::UInt64
-                        | BaseTyp::Int64
-                        | BaseTyp::UInt32
-                        | BaseTyp::Int32
-                        | BaseTyp::UInt16
-                        | BaseTyp::Int16
-                        | BaseTyp::UInt8
-                        | BaseTyp::Int8
+                        BaseTyp::UInt128(Secrecy::Public)
+                        | BaseTyp::Int128(Secrecy::Public)
+                        | BaseTyp::UInt64(Secrecy::Public)
+                        | BaseTyp::Int64(Secrecy::Public)
+                        | BaseTyp::UInt32(Secrecy::Public)
+                        | BaseTyp::Int32(Secrecy::Public)
+                        | BaseTyp::UInt16(Secrecy::Public)
+                        | BaseTyp::Int16(Secrecy::Public)
+                        | BaseTyp::UInt8(Secrecy::Public)
+                        | BaseTyp::Int8(Secrecy::Public)
                         | BaseTyp::Usize
                         | BaseTyp::Isize => Ok((
                             Expression::ArrayIndex(
@@ -713,7 +763,7 @@ fn typecheck_expression(
                             sess.span_rustspec_err(
                                 e2.1,
                                 format!(
-                                    "expected an integer to index array but got type {}{}",
+                                    "expected a public integer to index array but got type {}{}",
                                     (t2.0).0,
                                     (t2.1).0
                                 )

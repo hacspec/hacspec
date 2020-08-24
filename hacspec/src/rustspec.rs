@@ -67,16 +67,16 @@ impl fmt::Debug for Borrowing {
 pub enum BaseTyp {
     Unit,
     Bool,
-    UInt128,
-    Int128,
-    UInt64,
-    Int64,
-    UInt32,
-    Int32,
-    UInt16,
-    Int16,
-    UInt8,
-    Int8,
+    UInt128(Secrecy),
+    Int128(Secrecy),
+    UInt64(Secrecy),
+    Int64(Secrecy),
+    UInt32(Secrecy),
+    Int32(Secrecy),
+    UInt16(Secrecy),
+    Int16(Secrecy),
+    UInt8(Secrecy),
+    Int8(Secrecy),
     Usize,
     Isize,
     Seq(Box<Spanned<BaseTyp>>),
@@ -91,16 +91,16 @@ impl fmt::Display for BaseTyp {
         match self {
             BaseTyp::Unit => write!(f, "unit"),
             BaseTyp::Bool => write!(f, "bool"),
-            BaseTyp::UInt128 => write!(f, "u128"),
-            BaseTyp::Int128 => write!(f, "i128"),
-            BaseTyp::UInt64 => write!(f, "u64"),
-            BaseTyp::Int64 => write!(f, "i64"),
-            BaseTyp::UInt32 => write!(f, "u32"),
-            BaseTyp::Int32 => write!(f, "i32"),
-            BaseTyp::UInt16 => write!(f, "u16"),
-            BaseTyp::Int16 => write!(f, "i16"),
-            BaseTyp::UInt8 => write!(f, "u8"),
-            BaseTyp::Int8 => write!(f, "i8"),
+            BaseTyp::UInt128(label) => write!(f, "u128[{}]", label),
+            BaseTyp::Int128(label) => write!(f, "i128[{}]", label),
+            BaseTyp::UInt64(label) => write!(f, "u64[{}]", label),
+            BaseTyp::Int64(label) => write!(f, "i64[{}]", label),
+            BaseTyp::UInt32(label) => write!(f, "u32[{}]", label),
+            BaseTyp::Int32(label) => write!(f, "i32[{}]", label),
+            BaseTyp::UInt16(label) => write!(f, "u16[{}]", label),
+            BaseTyp::Int16(label) => write!(f, "i16[{}]", label),
+            BaseTyp::UInt8(label) => write!(f, "u8[{}]", label),
+            BaseTyp::Int8(label) => write!(f, "i8[{}]", label),
             BaseTyp::Usize => write!(f, "usize"),
             BaseTyp::Isize => write!(f, "isize"),
             BaseTyp::Array(size, mu) => {
@@ -138,20 +138,45 @@ impl fmt::Debug for BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub enum Secrecy {
+    Secret,
+    Public,
+}
+
+impl fmt::Display for Secrecy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Secrecy::Public => "public",
+                Secrecy::Secret => "secret",
+            }
+        )
+    }
+}
+
+impl fmt::Debug for Secrecy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 #[derive(Clone)]
 pub enum Literal {
     Unit,
     Bool(bool),
-    Int128(i128),
-    UInt128(u128),
-    Int64(i64),
-    UInt64(u64),
-    Int32(i32),
-    UInt32(u32),
-    Int16(i16),
-    UInt16(u16),
-    Int8(i8),
-    UInt8(u8),
+    Int128(i128, Secrecy),
+    UInt128(u128, Secrecy),
+    Int64(i64, Secrecy),
+    UInt64(u64, Secrecy),
+    Int32(i32, Secrecy),
+    UInt32(u32, Secrecy),
+    Int16(i16, Secrecy),
+    UInt16(u16, Secrecy),
+    Int8(i8, Secrecy),
+    UInt8(u8, Secrecy),
     Usize(usize),
     Isize(isize),
 }
