@@ -5,7 +5,7 @@ use hacspec_sig;
 use im::{HashMap, HashSet};
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
-use rustc_span::Span;
+use rustc_span::{Span, DUMMY_SP};
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -40,6 +40,10 @@ fn is_numeric(t: &Typ) -> bool {
         BaseTyp::Int8 => true,
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
+        BaseTyp::Named((Ident::Original(name), _), None) => match name.as_str() {
+            "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64" | "I128" => true,
+            _ => false,
+        },
         _ => false,
     }
 }
@@ -77,7 +81,10 @@ fn is_array(sess: &Session, t: &Typ, typ_dict: &TypeDict) -> Result<Spanned<Base
             Ident::Original(name) => match typ_dict.get(name) {
                 Some(new_t) => is_array(sess, new_t, typ_dict),
                 None => {
-                    sess.span_rustspec_err(id.1.clone(), "unknown type");
+                    sess.span_rustspec_err(
+                        id.1.clone(),
+                        format!("unknown array type: {}{}", &(t.0).0, &(t.1).0).as_str(),
+                    );
                     Err(())
                 }
             },
@@ -381,7 +388,7 @@ fn typecheck_expression(
     name_context: &NameContext,
 ) -> TypecheckingResult<(Expression, Typ, VarContext)> {
     match e {
-        Expression::NewArray(_, _, _) => panic!(),
+        Expression::NewArray(_, _, _) => {}
         Expression::Tuple(args) => {
             let mut var_context = var_context.clone();
             let new_and_typ_args = args
@@ -838,7 +845,7 @@ fn typecheck_expression(
             let mut var_context = var_context.clone();
             // We omit to take the new var context because it will be retypechecked later, this
             // is just to determine wich type the method belongs to
-            let (new_sel, sel_typ, _) =
+            let (_, sel_typ, _) =
                 typecheck_expression(sess, &sel, fn_context, typ_dict, &var_context, name_context)?;
             let (f_sig, typ_var_ctx) = find_func(
                 sess,
@@ -896,7 +903,7 @@ fn typecheck_expression(
                     &var_context,
                     name_context,
                 )?;
-                var_context = new_var_context;
+
                 let new_arg_t = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
@@ -906,9 +913,14 @@ fn typecheck_expression(
                         return Err(());
                     }
                     (Borrowing::Consumed, Borrowing::Borrowed) => {
+                        // If the argument is borrowed, then the consumed variables are actually
+                        // not consumed so we don't update the var context
                         ((Borrowing::Borrowed, (arg_t.0).1.clone()), arg_t.1.clone())
                     }
-                    _ => arg_t.clone(),
+                    _ => {
+                        var_context = new_var_context;
+                        arg_t.clone()
+                    }
                 };
                 new_args.push((
                     (new_arg, arg_span.clone()),
@@ -932,11 +944,13 @@ fn typecheck_expression(
                     Some(new_ctx) => typ_var_ctx = new_ctx,
                 }
             }
+            let new_sel = new_args.first().unwrap().clone();
+            new_args = new_args[1..].to_vec();
             let ret_ty = sig_ret(&f_sig);
             let ret_ty = bind_variable_type(&ret_ty, &typ_var_ctx);
             Ok((
                 Expression::MethodCall(
-                    Box::new(((new_sel, sel.1.clone()), sel_borrow.clone())),
+                    Box::new(new_sel),
                     Some(sel_typ),
                     (f.clone(), f_span.clone()),
                     new_args,
@@ -1157,8 +1171,8 @@ fn typecheck_statement(
                 sess.span_rustspec_err(
                     e2.1,
                     format!(
-                        "array {} has type {}{} but tried to reassign cell with an expression of type {}{}",
-                        x, (x_typ.0).0, (x_typ.1).0, (e2_t.0).0, (e2_t.1).0
+                        "array {} has cells of type {} but tried to reassign cell with an expression of type {}{}",
+                        x, cell_t.0, (e2_t.0).0, (e2_t.1).0
                     ).as_str(),
                 );
                 return Err(());
@@ -1508,7 +1522,116 @@ pub fn typecheck_program(
             )
         })
         .collect();
-    let mut typ_dict = HashMap::new();
+    //TODO: better system, this whitelist is hardcoded
+    let mut typ_dict = HashMap::from(
+        vec![
+            (
+                String::from("U16Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array(
+                            (2, DUMMY_SP),
+                            Box::new((
+                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
+                                DUMMY_SP,
+                            )),
+                        ),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+            (
+                String::from("U32Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array(
+                            (4, DUMMY_SP),
+                            Box::new((
+                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
+                                DUMMY_SP,
+                            )),
+                        ),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+            (
+                String::from("U64Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array(
+                            (8, DUMMY_SP),
+                            Box::new((
+                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
+                                DUMMY_SP,
+                            )),
+                        ),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+            (
+                String::from("U128Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array(
+                            (16, DUMMY_SP),
+                            Box::new((
+                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
+                                DUMMY_SP,
+                            )),
+                        ),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+            (
+                String::from("u16Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array((2, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+            (
+                String::from("u32Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array((4, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+            (
+                String::from("u64Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array((8, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+            (
+                String::from("u128Word"),
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (
+                        BaseTyp::Array((16, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                        DUMMY_SP,
+                    ),
+                ),
+            ),
+        ]
+        .as_slice(),
+    );
     Ok(Program {
         items: check_vec(
             p.items

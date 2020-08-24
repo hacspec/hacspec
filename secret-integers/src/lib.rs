@@ -270,15 +270,15 @@ macro_rules! define_secret_integer {
 
         impl $name {
             #[inline]
-            pub fn rotate_left(self, rotval:u32) -> Self {
+            pub fn rotate_left(self, rotval:usize) -> Self {
                 let $name(i) = self;
-                $name(i.rotate_left(rotval))
+                $name(i.rotate_left(rotval as u32))
             }
 
             #[inline]
-            pub fn rotate_right(self, rotval:u32) -> Self {
+            pub fn rotate_right(self, rotval:usize) -> Self {
                 let $name(i) = self;
-                $name(i.rotate_right(rotval))
+                $name(i.rotate_right(rotval as u32))
             }
         }
 

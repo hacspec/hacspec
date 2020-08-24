@@ -801,9 +801,34 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "FOO15");
             Err(())
         }
-        ExprKind::Range(_, _, _) => {
-            sess.span_rustspec_err(e.span.clone(), "FOO16");
-            Err(())
+        ExprKind::Range(e1, e2, limits) => {
+            match limits {
+                RangeLimits::HalfOpen => (),
+                RangeLimits::Closed => {
+                    sess.span_rustspec_err(e.span, "inclusive ranges not allowed");
+                    return Err(());
+                }
+            }
+            let e1 = match e1 {
+                Some(e1) => e1,
+                None => {
+                    sess.span_rustspec_err(e.span, "missing left bound of the range");
+                    return Err(());
+                }
+            };
+            let e2 = match e2 {
+                Some(e2) => e2,
+                None => {
+                    sess.span_rustspec_err(e.span, "missing right bound of the range");
+                    return Err(());
+                }
+            };
+            let new_e1 = translate_expr_expects_exp(sess, arr_typs, e1)?;
+            let new_e2 = translate_expr_expects_exp(sess, arr_typs, e2)?;
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::Tuple(vec![new_e1, new_e2])),
+                e.span,
+            ))
         }
         ExprKind::AddrOf(_, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "FOO17");
