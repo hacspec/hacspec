@@ -6,4 +6,5 @@ pub mod fips202;
 pub mod sha2;
 pub mod hkdf;
 pub mod hmac;
+pub mod ntru_prime;
 pub mod ec;

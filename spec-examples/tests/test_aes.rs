@@ -1,4 +1,5 @@
 use hacspec_lib::prelude::*;
+use hacspec_dev::prelude::*;
 
 use hacspec_examples::aes_gcm::aes::*;
 
@@ -21,9 +22,9 @@ fn aes_256_enc_dec_test(m: &ByteSeq, key: Key256, iv: Nonce, ctr: U32, ctxt: Opt
 
 #[test]
 fn test_enc_dec() {
-    let key = Key128::random();
-    let iv = Nonce::random();
-    let m = ByteSeq::random(40);
+    let key = Key128::from_public_slice(&random_byte_vec(Key128::length()));
+    let iv = Nonce::from_public_slice(&random_byte_vec(Nonce::length()));
+    let m = ByteSeq::from_public_slice(&random_byte_vec(40));
     aes_128_enc_dec_test(&m, key, iv, U32(0), None);
 }
 

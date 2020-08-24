@@ -289,21 +289,6 @@ impl PublicSeq<u8> {
 
 impl Seq<U8> {
     #[cfg_attr(feature="use_attributes", external(hacspec))]
-    fn get_random_vec(l: usize) -> Vec<U8> {
-        (0..l)
-            .map(|_| rand::random::<u8>())
-            .map(|x| U8::classify(x))
-            .collect()
-    }
-
-    #[cfg_attr(feature="use_attributes", primitive(hacspec))]
-    pub fn random(l: usize) -> Self {
-        Self {
-            b: Seq::get_random_vec(l),
-        }
-    }
-
-    #[cfg_attr(feature="use_attributes", external(hacspec))]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")

@@ -8,6 +8,7 @@
 //! Secret machine integers are `U8, I8, U16, I16, U32, I32, U64, I64, U128, I128`.
 //!
 
+use crate::math_util::{ct_util::*, *};
 use crate::prelude::*;
 
 macro_rules! implement_public_unsigned_mi {
@@ -77,9 +78,12 @@ macro_rules! implement_public_signed_mi {
                 (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
-                unimplemented!();
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                let r_big = BigInt::from(self).modpow(&BigInt::from(exp), &BigInt::from(n));
+                debug_assert!(r_big <= BigInt::from(Self::max_val()));
+                let r_string = r_big.to_string();
+                r_string.parse().unwrap()
             }
             /// `self % n`
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
@@ -110,7 +114,7 @@ macro_rules! implement_public_mi {
         impl NumericCopy for $t {}
         impl Integer for $t {
             const NUM_BITS: usize = $bits;
-            
+
             #[inline]
             #[cfg_attr(feature = "use_attributes", library(hacspec))]
             fn ZERO() -> Self {
@@ -529,24 +533,24 @@ implement_secret_signed_mi!(I64, i64, 64);
 implement_secret_signed_mi!(I128, i128, 128);
 
 impl UnsignedPublicInteger for u8 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn to_le_bytes(self) -> Seq<u8>{
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn to_le_bytes(self) -> Seq<u8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<u8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         assert!(x.len() == 1);
         x[0]
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         assert!(x.len() == 1);
         x[0]
@@ -554,76 +558,76 @@ impl UnsignedPublicInteger for u8 {
 }
 
 impl UnsignedPublicInteger for u16 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u16_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u16_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u16_from_le_bytes(u16Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u16_from_be_bytes(u16Word::from_seq(x))
     }
 }
 
 impl UnsignedPublicInteger for u32 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u32_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u32_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u32_from_le_bytes(u32Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u32_from_be_bytes(u32Word::from_seq(x))
     }
 }
 
 impl UnsignedPublicInteger for u64 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u64_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u64_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u64_from_le_bytes(u64Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u64_from_be_bytes(u64Word::from_seq(x))
     }
 }
 
 impl UnsignedPublicInteger for u128 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u128_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u128_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u128_from_le_bytes(u128Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u128_from_be_bytes(u128Word::from_seq(x))
     }
@@ -881,24 +885,24 @@ impl SecretInteger for I128 {
 }
 
 impl UnsignedSecretInteger for U8 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
-    fn to_le_bytes(self) -> Seq<U8>{
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    fn to_le_bytes(self) -> Seq<U8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<U8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         assert!(x.len() == 1);
         x[0]
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         assert!(x.len() == 1);
         x[0]
@@ -906,76 +910,76 @@ impl UnsignedSecretInteger for U8 {
 }
 
 impl UnsignedSecretInteger for U16 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U16_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U16_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U16_from_le_bytes(U16Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U16_from_be_bytes(U16Word::from_seq(x))
     }
 }
 
 impl UnsignedSecretInteger for U32 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U32_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U32_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U32_from_le_bytes(U32Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U32_from_be_bytes(U32Word::from_seq(x))
     }
 }
 
 impl UnsignedSecretInteger for U64 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U64_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U64_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U64_from_le_bytes(U64Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U64_from_be_bytes(U64Word::from_seq(x))
     }
 }
 
 impl UnsignedSecretInteger for U128 {
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U128_to_le_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U128_to_be_bytes(self))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U128_from_le_bytes(U128Word::from_seq(x))
     }
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", library(hacspec))]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U128_from_be_bytes(U128Word::from_seq(x))
     }

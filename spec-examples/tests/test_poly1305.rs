@@ -1,13 +1,14 @@
 use hacspec_lib::prelude::*;
+use hacspec_dev::prelude::*;
 
 use hacspec_examples::chacha20_poly1305::chacha20::*;
 use hacspec_examples::chacha20_poly1305::poly1305::*;
 
 #[test]
 fn basic_test() {
-    let key = Key::random();
-    let iv = IV::random();
-    let m = ByteSeq::random(40);
+    let key = Key::from_public_slice(&random_byte_vec(Key::length()));
+    let iv = IV::from_public_slice(&random_byte_vec(IV::length()));
+    let m = ByteSeq::from_public_slice(&random_byte_vec(40));
     poly_mac(&m, key, iv);
 
     // RFC 7539 Test Vectors
