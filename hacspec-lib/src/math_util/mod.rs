@@ -97,7 +97,7 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
     while !new_r.equal(T::ZERO()) {
         let q: T = r.divide(new_r);
 
-        let tmp = new_r.clone();
+        let tmp = new_r;
         // XXX: a little hacky
         let tmp_prod = q * new_r;
         let mut tmp_r = r;
@@ -107,7 +107,7 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
         new_r = tmp_r - tmp_prod;
         r = tmp;
 
-        let tmp = new_t.clone();
+        let tmp = new_t;
         // XXX: a little hacky
         let tmp_prod = q * new_t;
         let mut tmp_t = t;
@@ -132,10 +132,7 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
     t
 }
 
-// ==== Util for i128 specific ==== //
-//  Generalize later when possible  //
-
-/// makes poly to an element of R_modulo \ irr
+/// Makes poly to an element of R_modulo \ irr
 #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
 pub fn poly_to_ring<T: Integer + Copy>(
     irr: &Seq<T>,
@@ -146,32 +143,26 @@ pub fn poly_to_ring<T: Integer + Copy>(
     Ok(make_positive(&pre, modulus))
 }
 
-/// polynomial multiplication of two size fixed polynomials in R_modulo \ irr
+/// Polynomial multiplication of two size fixed polynomials in R_modulo \ irr
 #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
-pub fn mul_poly_irr(
-    // <T: Integer + Copy>
-    a: &Seq<i128>,
-    b: &Seq<i128>,
-    irr: &Seq<i128>,
-    modulo: i128,
-) -> Result<Seq<i128>, &'static str> {
-    // let (a, b) = normalize(&a.b, &b.b);
-    // let tmp = poly_mul(&a, &b, modulo);
-    // let tmp = poly_div(&tmp, &irr.b, modulo)?;
-    // Ok(make_positive(&Seq::from_native_slice(&tmp.1), modulo))
-    let mut result: Seq<i128> = Seq::new(a.len());
+pub fn mul_poly_irr<T: Integer + Copy>(
+    a: &Seq<T>,
+    b: &Seq<T>,
+    irr: &Seq<T>,
+    modulo: T,
+) -> Result<Seq<T>, &'static str> {
+    let mut result: Seq<T> = Seq::new(a.len());
     for i in 0..a.len() {
-        if a[i] == 0 {
+        if a[i].equal(T::default()) {
             continue;
         }
         for j in 0..b.len() {
-            if b[j] == 0 {
+            if b[j].equal(T::default()) {
                 continue;
             }
 
             if i + j > a.len() - 2 {
-                // modulo irr
-                // factor is the coeff
+                // modulo irr | factor is the coefficient
                 let factor = a[i] * b[j];
                 result[1 + ((i + j) % (a.len() - 1))] =
                     result[1 + (i + j) % (a.len() - 1)] - factor * irr[1];
@@ -181,7 +172,7 @@ pub fn mul_poly_irr(
             result[i + j] = result[i + j] + a[i] * b[j];
         }
     }
-    if modulo > 0 {
+    if modulo.greater_than(T::default()) {
         for i in 0..result.len() {
             result[i] = result[i].modulo(modulo);
         }

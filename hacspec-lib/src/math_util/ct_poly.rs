@@ -70,15 +70,9 @@ fn divstepsx<T: Integer + Copy>(
         // TODO: make swap constant time
         if delta > 0 && !g[0].equal(T::ZERO()) {
             delta = -delta;
-            let t = f;
-            f = g;
-            g = t;
-            let t = q;
-            q = u;
-            u = t;
-            let t = r;
-            r = v;
-            v = t;
+            std::mem::swap(&mut f, &mut g);
+            std::mem::swap(&mut q, &mut u);
+            std::mem::swap(&mut r, &mut v);
         }
 
         delta = delta + 1;
