@@ -1,4 +1,5 @@
 use hacspec_lib::prelude::*;
+use hacspec_dev::prelude::*;
 
 use hacspec_examples::chacha20_poly1305::chacha20::*;
 
@@ -125,9 +126,9 @@ fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq, valid: bool) {
 
 #[test]
 fn test_enc_dec() {
-    let key = Key::random();
-    let iv = IV::random();
-    let m = ByteSeq::random(40);
+    let key = Key::from_public_slice(&random_byte_vec(Key::length()));
+    let iv = IV::from_public_slice(&random_byte_vec(IV::length()));
+    let m = ByteSeq::from_public_slice(&random_byte_vec(40));
     enc_dec_test(m, key, iv);
 }
 

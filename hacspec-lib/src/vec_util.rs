@@ -51,7 +51,7 @@ pub(crate) fn normalize<T: Numeric + Copy>(x: &[T], y: &[T]) -> (Vec<T>, Vec<T>)
 #[cfg_attr(feature="use_attributes", internal(hacspec))]
 /// Return the leading coefficient (value) of `x` that's non-zero.
 /// Returns a (index, coefficient)-Tuple.
-pub fn leading_coefficient<T: Numeric + Copy>(x: &[T]) -> (usize, T) {
+pub(crate) fn leading_coefficient<T: Numeric + Copy>(x: &[T]) -> (usize, T) {
     let zero = T::default();
     let mut degree: usize = 0;
     let mut coefficient = T::default();
@@ -74,13 +74,5 @@ pub(crate) fn is_zero<T: Numeric + Copy>(v: &[T]) -> bool {
             return false;
         }
     }
-    return true;
-}
-
-#[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
-/// Returns the vector of inverse element of `v`, i.e. this function inverts the
-/// coefficients in `v`.
-pub(crate) fn poly_z_inv<T: Numeric + Copy>(v: &[T], n: T) -> Vec<T> {
-    v.iter().map(|&x| T::inv(x, n)).collect::<Vec<T>>()
+    true
 }

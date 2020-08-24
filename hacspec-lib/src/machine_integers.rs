@@ -8,6 +8,7 @@
 //! Secret machine integers are `U8, I8, U16, I16, U32, I32, U64, I64, U128, I128`.
 //!
 
+use crate::math_util::{ct_util::*, *};
 use crate::prelude::*;
 
 macro_rules! implement_public_unsigned_mi {
@@ -77,9 +78,12 @@ macro_rules! implement_public_signed_mi {
                 (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
-            fn pow_mod(self, _exp: Self, _n: Self) -> Self {
-                unimplemented!();
+            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                let r_big = BigInt::from(self).modpow(&BigInt::from(exp), &BigInt::from(n));
+                debug_assert!(r_big <= BigInt::from(Self::max_val()));
+                let r_string = r_big.to_string();
+                r_string.parse().unwrap()
             }
             /// `self % n`
             #[cfg_attr(feature = "use_attributes", library(hacspec))]

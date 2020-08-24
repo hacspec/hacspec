@@ -259,12 +259,6 @@ macro_rules! _array_base {
         }
 
         impl $name {
-            #[cfg_attr(feature = "use_attributes", external(hacspec, $name))]
-            pub fn random() -> $name {
-                let mut tmp = [<$t>::default(); $l];
-                tmp.copy_from_slice(&$name::get_random_vec($l)[..$l]);
-                Self(tmp.clone())
-            }
             fn hex_string_to_vec(s: &str) -> Vec<$t> {
                 debug_assert!(s.len() % std::mem::size_of::<$t>() == 0);
                 let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
@@ -574,14 +568,7 @@ macro_rules! _secret_array {
             }
         }
         impl $name {
-            #[cfg_attr(feature = "use_attributes", external(hacspec, $name))]
-            pub fn get_random_vec(l: usize) -> Vec<$t> {
-                (0..l)
-                    .map(|_| <$t>::classify(rand::random::<$tbase>()))
-                    .collect()
-            }
-
-            #[cfg_attr(feature = "use_attributes", primitive(hacspec, $name))]
+            #[cfg_attr(feature="use_attributes", primitive(hacspec))]
             pub fn to_be_bytes(&self) -> Seq<U8> {
                 const FACTOR: usize = core::mem::size_of::<$t>();
                 let mut out: Seq<U8> = Seq::new($l * FACTOR);
@@ -649,12 +636,6 @@ macro_rules! _secret_array {
 macro_rules! _public_array {
     ($name:ident,$l:expr,$t:ty) => {
         _array_base!($name, $l, $t);
-        impl $name {
-            #[cfg_attr(feature = "use_attributes", external(hacspec, $name))]
-            pub fn get_random_vec(l: usize) -> Vec<$t> {
-                (0..l).map(|_| rand::random::<$t>()).collect()
-            }
-        }
 
         impl fmt::Debug for $name {
             #[cfg_attr(feature = "use_attributes", external(hacspec, $name))]
