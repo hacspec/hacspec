@@ -1,1 +1,1 @@
-initSidebarItems({"macro":[["create_test_vectors",""]],"mod":[["prelude","This crate can be used for tests that accompany hacspecs."],["test_vectors","Provide utilities to read test vectors from JSON files."]]});
+initSidebarItems({"macro":[["create_test_vectors",""]],"mod":[["prelude",""],["rand",""],["test_vectors","Provide utilities to read test vectors from JSON files."]]});

@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["aes_gcm",""],["blake2",""],["chacha20_poly1305",""],["curve25519",""],["ec",""],["fips202",""],["hkdf",""],["hmac",""],["sha2",""]]});
+initSidebarItems({"mod":[["aes_gcm",""],["blake2",""],["chacha20_poly1305",""],["curve25519",""],["ec",""],["fips202",""],["hkdf",""],["hmac",""],["ntru_prime",""],["sha2",""]]});
