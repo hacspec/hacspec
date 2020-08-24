@@ -150,7 +150,7 @@ fn test_round() {
         375, -2043, 849, 324, 870, -1419, -597, 927, -1170, 204, 942, -387, -60, -1224, -1536,
         -2259, -1266, -252, 2061, 1641, -2010, -732, -894, 0,
     ]);
-    assert_eq!(deg(&target), deg(&test));
+    assert_eq!(degree_poly(&target), degree_poly(&test));
     assert_eq!(weight(&target), weight(&test));
 }
 #[test]

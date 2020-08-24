@@ -8,6 +8,7 @@
 //! Secret machine integers are `U8, I8, U16, I16, U32, I32, U64, I64, U128, I128`.
 //!
 
+use crate::math_util::{ct_util::*, *};
 use crate::prelude::*;
 
 macro_rules! implement_public_unsigned_mi {

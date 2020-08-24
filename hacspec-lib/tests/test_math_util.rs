@@ -111,14 +111,14 @@ fn test_poly_div() {
     // x + 1
     let b: Seq<i128> = Seq::from_native_slice(&[1, 1]);
     // 3x +3 / x + 1  (mod 4) = 3
-    let mut quotient = euclidean_division(&a, &b, 4, 1);
+    let mut quotient = div_poly(&a, &b, 4);
     // q = 3 and r = 0
     let r: Seq<i128> = Seq::from_native_slice(&[0, 0]);
     let q: Seq<i128> = Seq::from_native_slice(&[3, 0]);
 
-    assert_eq!(deg(&quotient.clone().unwrap().0), 0);
+    assert_eq!(degree_poly(&quotient.clone().unwrap().0), 0);
     assert_eq!(quotient.clone().unwrap().0[0], q[0]);
-    assert_eq!(deg(&quotient.clone().unwrap().1), 0);
+    assert_eq!(degree_poly(&quotient.clone().unwrap().1), 0);
     assert_eq!(quotient.clone().unwrap().1[0], r[0]);
 
     //x¹² + x
@@ -126,15 +126,15 @@ fn test_poly_div() {
     //x - 1
     let b_2: Seq<i128> = Seq::from_native_slice(&[-1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     // (x¹² + x )/ (x-1) mod 4 = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
-    quotient = euclidean_division(&a_2, &b_2, 4, 11);
+    quotient = div_poly(&a_2, &b_2, 4);
     // q = x^11 + x^10 + x^9 + x^8 + x^7 + x^6 + x^5 + x^4 + x^3 + x^2 + x + 2
-    assert_eq!(deg(&quotient.clone().unwrap().0), 11);
+    assert_eq!(degree_poly(&quotient.clone().unwrap().0), 11);
     for i in 1..12 {
         assert_eq!(quotient.clone().unwrap().0[i], 1i128);
     }
     assert_eq!(quotient.clone().unwrap().0[0], 2i128);
     // r = 2
-    assert_eq!(deg(&quotient.clone().unwrap().1), 0);
+    assert_eq!(degree_poly(&quotient.clone().unwrap().1), 0);
     assert_eq!(quotient.unwrap().1[0], 2i128);
 }
 
