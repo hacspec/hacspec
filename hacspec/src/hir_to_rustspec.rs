@@ -40,17 +40,17 @@ fn translate_base_typ(
     match ty.kind {
         TyKind::Bool => Ok((BaseTyp::Bool, typ_ctx.clone())),
         TyKind::Int(IntTy::Isize) => Ok((BaseTyp::Isize, typ_ctx.clone())),
-        TyKind::Int(IntTy::I8) => Ok((BaseTyp::Int8(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Int(IntTy::I16) => Ok((BaseTyp::Int16(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Int(IntTy::I32) => Ok((BaseTyp::Int32(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Int(IntTy::I64) => Ok((BaseTyp::Int64(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Int(IntTy::I128) => Ok((BaseTyp::Int128(Secrecy::Public), typ_ctx.clone())),
+        TyKind::Int(IntTy::I8) => Ok((BaseTyp::Int8, typ_ctx.clone())),
+        TyKind::Int(IntTy::I16) => Ok((BaseTyp::Int16, typ_ctx.clone())),
+        TyKind::Int(IntTy::I32) => Ok((BaseTyp::Int32, typ_ctx.clone())),
+        TyKind::Int(IntTy::I64) => Ok((BaseTyp::Int64, typ_ctx.clone())),
+        TyKind::Int(IntTy::I128) => Ok((BaseTyp::Int128, typ_ctx.clone())),
         TyKind::Uint(UintTy::Usize) => Ok((BaseTyp::Usize, typ_ctx.clone())),
-        TyKind::Uint(UintTy::U8) => Ok((BaseTyp::UInt8(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Uint(UintTy::U16) => Ok((BaseTyp::UInt16(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Uint(UintTy::U32) => Ok((BaseTyp::UInt32(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Uint(UintTy::U64) => Ok((BaseTyp::UInt64(Secrecy::Public), typ_ctx.clone())),
-        TyKind::Uint(UintTy::U128) => Ok((BaseTyp::UInt128(Secrecy::Public), typ_ctx.clone())),
+        TyKind::Uint(UintTy::U8) => Ok((BaseTyp::UInt8, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U16) => Ok((BaseTyp::UInt16, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U32) => Ok((BaseTyp::UInt32, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U64) => Ok((BaseTyp::UInt64, typ_ctx.clone())),
+        TyKind::Uint(UintTy::U128) => Ok((BaseTyp::UInt128, typ_ctx.clone())),
         TyKind::Adt(adt, substs) => {
             let adt_id = adt.did;
             let adt_def_path = tcx.def_path(adt_id);

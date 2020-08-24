@@ -97,7 +97,7 @@ pub fn chacha(key: Key, iv: IV, m: &ByteSeq) -> ByteSeq {
             i,
             &(msg_block_padded ^ key_block).slice_range(0usize..block_len),
         );
-        ctr += U32(1);
+        ctr = ctr + U32(1u32);
     }
     blocks_out
 }
