@@ -73,25 +73,37 @@ fn is_copy(t: &BaseTyp) -> bool {
     }
 }
 
-fn is_array(sess: &Session, t: &Typ, typ_dict: &TypeDict) -> Result<Spanned<BaseTyp>, ()> {
+fn is_array(
+    sess: &Session,
+    t: &Typ,
+    typ_dict: &TypeDict,
+    span: &Span,
+) -> Result<(Option<Spanned<usize>>, Spanned<BaseTyp>), ()> {
     match &(t.1).0 {
-        BaseTyp::Seq(t1) => Ok(t1.as_ref().clone()),
+        BaseTyp::Seq(t1) => Ok((None, t1.as_ref().clone())),
         BaseTyp::Named(id, None) => match &id.0 {
             Ident::Rustspec(_, _) => panic!(),
             Ident::Original(name) => match typ_dict.get(name) {
-                Some(new_t) => is_array(sess, new_t, typ_dict),
+                Some(new_t) => is_array(sess, new_t, typ_dict, span),
                 None => {
                     sess.span_rustspec_err(
-                        id.1.clone(),
-                        format!("unknown array type: {}{}", &(t.0).0, &(t.1).0).as_str(),
+                        span.clone(),
+                        format!("expected and array  but got type {}{}", &(t.0).0, &(t.1).0)
+                            .as_str(),
                     );
                     Err(())
                 }
             },
         },
         BaseTyp::Named(_, Some(_)) => Err(()),
-        BaseTyp::Array(_, cell_t) => Ok(cell_t.as_ref().clone()),
-        _ => Err(()),
+        BaseTyp::Array(len, cell_t) => Ok((Some(len.clone()), cell_t.as_ref().clone())),
+        _ => {
+            sess.span_rustspec_err(
+                span.clone(),
+                format!("expected and array  but got type {}{}", &(t.0).0, &(t.1).0).as_str(),
+            );
+            Err(())
+        }
     }
 }
 
@@ -388,7 +400,6 @@ fn typecheck_expression(
     name_context: &NameContext,
 ) -> TypecheckingResult<(Expression, Typ, VarContext)> {
     match e {
-        Expression::NewArray(_, _, _) => {}
         Expression::Tuple(args) => {
             let mut var_context = var_context.clone();
             let new_and_typ_args = args
@@ -672,6 +683,100 @@ fn typecheck_expression(
                 var_context.clone(),
             )),
         },
+
+        Expression::NewArray(array_type, _, elements) => {
+            let (array_len, (cell_type, cell_type_span)) = is_array(
+                sess,
+                &(
+                    (Borrowing::Consumed, array_type.1.clone()),
+                    (
+                        BaseTyp::Named(array_type.clone(), None),
+                        array_type.1.clone(),
+                    ),
+                ),
+                typ_dict,
+                &array_type.1,
+            )?;
+            let array_len = match array_len {
+                Some(len) => len,
+                None => {
+                    sess.span_rustspec_err(
+                        array_type.1.clone(),
+                        "type should be an array but is Seq",
+                    );
+                    return Err(());
+                }
+            };
+            if elements.len() != array_len.0 {
+                sess.span_rustspec_err(
+                    span.clone(),
+                    format!(
+                        "array {} initializer expected {} elements but got {}",
+                        array_type.0,
+                        array_len.0,
+                        elements.len()
+                    )
+                    .as_str(),
+                )
+            }
+            let mut var_context = var_context.clone();
+            let new_elements = check_vec(
+                elements
+                    .iter()
+                    .map(|element| {
+                        let (new_element, element_typ, new_var_context) = typecheck_expression(
+                            sess,
+                            element,
+                            fn_context,
+                            typ_dict,
+                            &var_context,
+                            name_context,
+                        )?;
+                        var_context = new_var_context;
+                        match unify_types(
+                            &(
+                                (Borrowing::Consumed, cell_type_span.clone()),
+                                (cell_type.clone(), cell_type_span.clone()),
+                            ),
+                            &element_typ,
+                            &HashMap::new(),
+                        ) {
+                            None => {
+                                sess.span_rustspec_err(
+                                    element.1.clone(),
+                                    format!(
+                                        "expected type {}, got type {}{}",
+                                        &cell_type,
+                                        &(element_typ.0).0,
+                                        &(element_typ.1).0
+                                    )
+                                    .as_str(),
+                                );
+                                Err(())
+                            }
+                            Some(_) => {
+                                // Here we can drop the unified variables because there should not be any
+                                // unified variables (no generic functions involved)
+                                Ok((new_element, element.1.clone()))
+                            }
+                        }
+                    })
+                    .collect(),
+            )?;
+            let new_array_typ = BaseTyp::Array(array_len, Box::new((cell_type, cell_type_span)));
+            Ok((
+                Expression::NewArray(
+                    array_type.clone(),
+                    Some(new_array_typ.clone()),
+                    new_elements,
+                ),
+                (
+                    (Borrowing::Consumed, array_type.1.clone()),
+                    (new_array_typ, array_type.1.clone()),
+                ),
+                var_context,
+            ))
+        }
         Expression::ArrayIndex((x, x_span), e2) => {
             let x = find_ident(x, name_context);
             let t1 = match find_typ(x, var_context) {
@@ -686,57 +791,44 @@ fn typecheck_expression(
             };
             let (new_e2, t2, var_context) =
                 typecheck_expression(sess, e2, fn_context, typ_dict, &var_context, name_context)?;
+            let (_, (cell_t, cell_t_span)) = is_array(sess, t1, typ_dict, x_span)?;
             // We ignore t1.0 because we can read from both consumed and borrowed array types
-            match is_array(sess, t1, typ_dict) {
-                Ok((cell_t, cell_t_span)) => {
-                    if let Borrowing::Borrowed = (t2.0).0 {
-                        sess.span_rustspec_err(e2.1, "cannot index array with a borrowed type");
-                        return Err(());
-                    }
-                    match (t2.1).0 {
-                        BaseTyp::UInt128
-                        | BaseTyp::Int128
-                        | BaseTyp::UInt64
-                        | BaseTyp::Int64
-                        | BaseTyp::UInt32
-                        | BaseTyp::Int32
-                        | BaseTyp::UInt16
-                        | BaseTyp::Int16
-                        | BaseTyp::UInt8
-                        | BaseTyp::Int8
-                        | BaseTyp::Usize
-                        | BaseTyp::Isize => Ok((
-                            Expression::ArrayIndex(
-                                (x.clone(), x_span.clone()),
-                                Box::new((new_e2, e2.1.clone())),
-                            ),
-                            (
-                                (Borrowing::Consumed, (t1.0).1),
-                                (cell_t.clone(), cell_t_span.clone()),
-                            ),
-                            var_context,
-                        )),
-                        _ => {
-                            sess.span_rustspec_err(
-                                e2.1,
-                                format!(
-                                    "expected a public integer to index array but got type {}{}",
-                                    (t2.0).0,
-                                    (t2.1).0
-                                )
-                                .as_str(),
-                            );
-                            Err(())
-                        }
-                    }
-                }
+            if let Borrowing::Borrowed = (t2.0).0 {
+                sess.span_rustspec_err(e2.1, "cannot index array with a borrowed type");
+                return Err(());
+            }
+            match (t2.1).0 {
+                BaseTyp::UInt128
+                | BaseTyp::Int128
+                | BaseTyp::UInt64
+                | BaseTyp::Int64
+                | BaseTyp::UInt32
+                | BaseTyp::Int32
+                | BaseTyp::UInt16
+                | BaseTyp::Int16
+                | BaseTyp::UInt8
+                | BaseTyp::Int8
+                | BaseTyp::Usize
+                | BaseTyp::Isize => Ok((
+                    Expression::ArrayIndex(
+                        (x.clone(), x_span.clone()),
+                        Box::new((new_e2, e2.1.clone())),
+                    ),
+                    (
+                        (Borrowing::Consumed, (t1.0).1),
+                        (cell_t.clone(), cell_t_span.clone()),
+                    ),
+                    var_context,
+                )),
+
                 _ => {
                     sess.span_rustspec_err(
-                        *x_span,
+                        e2.1,
                         format!(
-                        "this expression should be an array or a sequence but instead has type {}{}",
-                        (t1.0).0, (t1.1).0
-                    )
+                            "expected a public integer to index array but got type {}{}",
+                            (t2.0).0,
+                            (t2.1).0
+                        )
                         .as_str(),
                     );
                     Err(())
@@ -1145,22 +1237,7 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            let cell_t = match is_array(sess, x_typ, typ_dict) {
-                Ok(cell_t) => cell_t,
-                Err(()) => {
-                    sess.span_rustspec_err(
-                        *x_span,
-                        format!(
-                            "{} should be an array but has type {}{}",
-                            x,
-                            (x_typ.0).0,
-                            (x_typ.1).0
-                        )
-                        .as_str(),
-                    );
-                    return Err(());
-                }
-            };
+            let (_, cell_t) = is_array(sess, x_typ, typ_dict, x_span)?;
             if unify_types(
                 &e2_t,
                 &((Borrowing::Consumed, x_span.clone()), cell_t.clone()),
