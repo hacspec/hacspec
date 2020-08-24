@@ -164,7 +164,7 @@ fn test_encryption_decryption() {
         positions: gen_positions(n_v.w, n_v.p),
         coefficients: gen_coefficients(n_v.w),
     };
-    let (pk, sk) = key_gen(&g, &f, &n_v);
+    let (pk, sk) = key_gen(&g, &f, &n_v).unwrap();
 
     // message
     let msg = Poly {

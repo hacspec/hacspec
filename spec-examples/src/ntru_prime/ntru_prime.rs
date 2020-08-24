@@ -56,7 +56,7 @@ pub fn get_parameters(v: Version) -> Parameters {
 /// First transform each coefficients to a value between −(q−1)/2 and (q−1)/2
 /// then round it to the nearest multiple of 3
 pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
-    let mut result = Seq::from_seq(poly);
+    let mut result = poly.clone();
     let q_12 = (q - 1) / 2;
     for i in 0..poly.len() {
         if poly[i] > q_12 {
@@ -67,9 +67,9 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
         if result[i] % 3 == 0 {
             continue;
         }
-        result[i] = result[i] - 1;
+        result[i] -= 1;
         if result[i] % 3 != 0 {
-            result[i] = result[i] + 2;
+            result[i] += 2;
         }
     }
     result
@@ -78,11 +78,14 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
 /// r is the plaintext, h is the public key
 pub fn encrypt(r: &Seq<i128>, h: &Seq<i128>, n_v: &Parameters) -> Seq<i128> {
     let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q).unwrap();
-    println!("pre: {:?}", pre);
     round_to_3(&pre, n_v.q)
 }
 
-pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Result<Seq<i128>, &'static str> {
+pub fn decrypt(
+    c: &Seq<i128>,
+    key: &SecretKey,
+    n_v: &Parameters,
+) -> Result<Seq<i128>, &'static str> {
     let (f, v) = key;
 
     // calculate 3*f and 3*f*c
@@ -93,21 +96,23 @@ pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Result<Seq<i
         n_v.q,
     )?;
     // view coefficients as values between -(q-1/2) and (q-1/2)
-
     let q_12 = (n_v.q - 1) / 2;
     for i in 0..f_3_c.len() {
         if f_3_c[i] > q_12 {
-            f_3_c[i] = f_3_c[i] - n_v.q;
+            f_3_c[i] -= n_v.q;
         }
     }
+
     // lift f_3_c to R_3
     let mut e: Seq<i128> = Seq::new(f_3_c.len());
     for i in 0..e.len() {
         e[i] = f_3_c[i] % 3;
     }
     e = make_positive(&e, 3);
+
     // calculate e * v in R
     let mut r = mul_poly_irr(&e, &v, &n_v.irr, 3)?;
+
     // to R_short
     for i in 0..r.len() {
         if r[i] == 2 {
@@ -117,13 +122,11 @@ pub fn decrypt(c: &Seq<i128>, key: &SecretKey, n_v: &Parameters) -> Result<Seq<i
     Ok(r)
 }
 
-/// This function creates a random polynomial with w many -1 or 1 and with the highest degree of h_deg.
+/// This function creates a polynomial with w many -1 or 1 and with the highest degree of h_deg.
+/// Randomness of the coefficients and positions has to be provided.
 pub fn build_poly(poly: &Poly, h_deg: usize) -> Seq<i128> {
+    debug_assert_eq!(poly.coefficients.len(), poly.positions.len());
     let mut polynomial: Seq<i128> = Seq::new(h_deg + 1);
-
-    if poly.coefficients.len() != poly.positions.len() {
-        return polynomial; // TODO: return error instead.
-    }
 
     for i in 0..poly.coefficients.len() {
         polynomial = polynomial.set_chunk(
@@ -148,25 +151,26 @@ fn build_invertible_poly(
 
 /// Generate a key from given polynomials `f` and `g`.
 /// Generating the polynomials at random has to happen outside.
-pub fn key_gen(g: &Poly, f: &Poly, n_v: &Parameters) -> (Seq<i128>, SecretKey) {
+pub fn key_gen(
+    g: &Poly,
+    f: &Poly,
+    n_v: &Parameters,
+) -> Result<(Seq<i128>, SecretKey), &'static str> {
     let poly_g = build_invertible_poly(g, n_v, 3);
     let g_inv = match poly_g.1 {
         Ok(v) => v,
-        Err(_) => panic!("This polynomial isn't invertible. Try another one."),
+        Err(_) => return Err("This polynomial isn't invertible. Try another one."),
     };
 
     let f = build_poly(f, n_v.p);
 
     let f_3times = add_poly(&f, &add_poly(&f, &f, n_v.q), n_v.q);
     let f_3times_pre_inv = extended_euclid(&f_3times, &n_v.irr, n_v.q);
-    let mut f_inv_3times: Seq<i128> = Seq::new(n_v.p + 1);
-    match f_3times_pre_inv {
-        Ok(v) => {
-            f_inv_3times = v;
-        }
-        Err(_) => println!("Key generating, failed"),
-    }
+    let f_inv_3times = match f_3times_pre_inv {
+        Ok(v) => v,
+        Err(_) => return Err("Key generating, failed"),
+    };
     let h = mul_poly_irr(&poly_g.0, &f_inv_3times, &n_v.irr, n_v.q).unwrap();
 
-    (h, (f, g_inv))
+    Ok((h, (f, g_inv)))
 }
