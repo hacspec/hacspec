@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 #[inline]
-#[cfg_attr(feature = "use_attributes", primitive(internal))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub(crate) fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
@@ -17,7 +17,7 @@ pub(crate) fn poly_sub<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
 }
 
 #[inline]
-#[cfg_attr(feature = "use_attributes", primitive(internal))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub(crate) fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
     let (x, y) = normalize(x, y);
     debug_assert!(x.len() == y.len());
@@ -36,7 +36,7 @@ pub(crate) fn poly_add<T: Numeric + Copy>(x: &[T], y: &[T], n: T) -> Vec<T> {
 /// This can be more efficient than operand scanning but also prone to side-channel
 /// attacks.
 #[inline]
-#[cfg_attr(feature = "use_attributes", primitive(internal))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub(crate) fn poly_mul<T: Numeric + Copy>(a: &[T], b: &[T], n: T) -> Vec<T> {
     let mut result = vec![T::default(); a.len() + b.len()];
     for i in 0..a.len() {
@@ -77,7 +77,7 @@ pub(crate) fn poly_div<T: Integer + Copy>(a: &[T], b: &[T], n: T) -> (Vec<T>, Ve
 
 /// scalar division in R_p, calculates a / scalar mod p
 #[inline]
-#[cfg_attr(feature = "use_attributes", primitive(internal))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub(crate) fn scalar_div<T: Integer + Copy>(a: &[T], scalar: T, p: T) -> Vec<T> {
     let mut result = Vec::new();
     let inv = invert_fermat(scalar, p);
@@ -99,7 +99,7 @@ pub(crate) fn make_positive_internal<T: Numeric + Copy>(poly: &[T], q: T) -> Vec
 
 /// simple schoolbook polynomial multiplication with sparse and all coefficients mod modulo
 #[inline]
-#[cfg_attr(feature = "use_attributes", primitive(internal))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 fn mul_poly_naive<T: Integer + Copy>(a: &[T], b: &[T], modulo: T) -> Vec<T> {
     let mut out = vec![T::default(); a.len() + b.len()];
     for i in 0..a.len() {
@@ -121,7 +121,7 @@ fn leading_coef<T: Integer + Copy>(poly: &[T]) -> T {
 
 /// Return the inverse of `a mod m`, Fermat's little theorem
 /// Necessary Assumption `m` is prime and `a < m`
-#[cfg_attr(feature = "use_attributes", library(hacspec))]
+#[cfg_attr(feature = "use_attributes", in_hacspec)]
 fn invert_fermat<T: Integer + Copy>(a: T, m: T) -> T {
     a.pow_mod(m - T::TWO(), m)
 }

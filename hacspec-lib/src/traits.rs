@@ -44,8 +44,17 @@ pub trait SeqTrait<T: Copy>:
     /// s = s.update(2, &tmp);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
-    fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self;
-    fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self;
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
+        let len = v.len();
+        self.update_slice(start, v, 0, len)
+    }
+
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
+        let len = v.len();
+        self.update_slice(0, v, 0, len)
+    }
 }
 
 /// This trait extends the `Numeric` trait and is implemented by all integer
@@ -109,7 +118,7 @@ pub trait UnsignedSecretInteger: UnsignedInteger + SecretInteger {
     fn from_be_bytes(x: &Seq<U8>) -> Self;
     /// Get byte `i` of this integer.
     #[inline]
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn get_byte(self, i: usize) -> Self {
         (self >> (i * 8)) & ((Self::ONE() << 8) - Self::ONE())
     }

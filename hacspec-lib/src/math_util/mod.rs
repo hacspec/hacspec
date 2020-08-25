@@ -12,14 +12,14 @@ use ct_poly::*;
 use poly::*;
 
 /// polynomial subtraction, calculates a - b mod modulo
-#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+#[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn sub_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
     let result = Seq::from_native_slice(&poly_sub(&a.b, &b.b, modulo));
     make_positive(&result, modulo)
 }
 
 /// Polynomial Addition, calculates a + b mod modulo
-#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+#[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn add_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
     let result = Seq::from_native_slice(&poly_add(&a.b, &b.b, modulo));
     make_positive(&result, modulo)
@@ -43,19 +43,19 @@ pub fn div_poly<T: Integer + Copy>(
 
 /// Scalar division in `R_p`.
 /// Returns `a / scalar mod p`.
-#[cfg_attr(feature = "use_attributes", primitive(internal))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub fn div_scalar<T: Integer + Copy>(a: &Seq<T>, scalar: T, p: T) -> Seq<T> {
     Seq::from_native_slice(&scalar_div(&a.b, scalar, p))
 }
 
 /// Returns degree of polynomial, e.g. for  3x² + 2x + 1 -> 2
-#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+#[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn degree_poly<T: Integer + Copy>(poly: &Seq<T>) -> usize {
     deg(&poly.b)
 }
 
 /// Euclidean algorithm to compute the inverse of x in yℤ\[x\]
-#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+#[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn extended_euclid<T: Integer + Copy>(
     x: &Seq<T>,
     irr: &Seq<T>,
@@ -87,7 +87,7 @@ pub fn make_positive<T: Numeric + Copy>(poly: &Seq<T>, q: T) -> Seq<T> {
 /// **Panics** if x is not invertible.
 ///
 #[inline]
-#[cfg_attr(feature = "use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool) -> T {
     let mut t = T::ZERO();
     let mut r = n;
@@ -133,7 +133,7 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
 }
 
 /// Makes poly to an element of R_modulo \ irr
-#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+#[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn poly_to_ring<T: Integer + Copy>(
     irr: &Seq<T>,
     poly: &Seq<T>,
@@ -144,7 +144,7 @@ pub fn poly_to_ring<T: Integer + Copy>(
 }
 
 /// Polynomial multiplication of two size fixed polynomials in R_modulo \ irr
-#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+#[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn mul_poly_irr<T: Integer + Copy>(
     a: &Seq<T>,
     b: &Seq<T>,

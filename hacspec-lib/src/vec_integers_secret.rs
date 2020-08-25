@@ -27,7 +27,7 @@ impl<T: Numeric + SecretInteger + Copy> ModNumeric for Seq<T> {
         unimplemented!();
     }
     /// `|self|` (coefficient-wise)
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn absolute(self) -> Self {
         unimplemented!();
     }
@@ -109,7 +109,7 @@ impl<T: Numeric + SecretInteger + Copy> Numeric for Seq<T> {
 /// Polynomial multiplication on ℤ\[x\]
 impl<T: Numeric + SecretInteger + Copy> Mul for Seq<T> {
     type Output = Self;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn mul(self, rhs: Self) -> Self::Output {
         vec_poly_mul(self, rhs, T::default())
     }
@@ -118,7 +118,7 @@ impl<T: Numeric + SecretInteger + Copy> Mul for Seq<T> {
 /// Polynomial subtraction on ℤ\[x\]
 impl<T: Numeric + SecretInteger + Copy> Sub for Seq<T> {
     type Output = Self;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn sub(self, rhs: Self) -> Self::Output {
         vec_poly_sub(self, rhs, T::default())
     }
@@ -127,7 +127,7 @@ impl<T: Numeric + SecretInteger + Copy> Sub for Seq<T> {
 /// Polynomial addition on ℤ\[x\]
 impl<T: Numeric + SecretInteger + Copy> Add for Seq<T> {
     type Output = Self;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn add(self, rhs: Self) -> Self::Output {
         vec_poly_add(self, rhs, T::default())
     }
@@ -135,7 +135,7 @@ impl<T: Numeric + SecretInteger + Copy> Add for Seq<T> {
 
 impl<T: Numeric + SecretInteger + Copy> Not for Seq<T> {
     type Output = Seq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn not(self) -> Self::Output {
         unimplemented!();
     }
@@ -143,7 +143,7 @@ impl<T: Numeric + SecretInteger + Copy> Not for Seq<T> {
 
 impl<T: Numeric + SecretInteger + Copy> BitOr for Seq<T> {
     type Output = Seq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitor(self, rhs: Self) -> Self::Output {
         unimplemented!();
     }
@@ -151,7 +151,7 @@ impl<T: Numeric + SecretInteger + Copy> BitOr for Seq<T> {
 
 impl<T: Numeric + SecretInteger + Copy> BitXor for Seq<T> {
     type Output = Seq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         let mut out = Self::default();
         for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
@@ -163,7 +163,7 @@ impl<T: Numeric + SecretInteger + Copy> BitXor for Seq<T> {
 
 impl<T: Numeric + SecretInteger + Copy> BitAnd for Seq<T> {
     type Output = Seq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitand(self, rhs: Self) -> Self::Output {
         unimplemented!();
     }
@@ -171,7 +171,7 @@ impl<T: Numeric + SecretInteger + Copy> BitAnd for Seq<T> {
 
 impl<T: Numeric + SecretInteger + Copy> Shr<usize> for Seq<T> {
     type Output = Seq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn shr(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }
@@ -179,7 +179,7 @@ impl<T: Numeric + SecretInteger + Copy> Shr<usize> for Seq<T> {
 
 impl<T: Numeric + SecretInteger + Copy> Shl<usize> for Seq<T> {
     type Output = Seq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn shl(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }

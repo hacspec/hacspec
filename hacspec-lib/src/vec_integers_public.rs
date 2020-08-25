@@ -28,7 +28,7 @@ impl<T: Numeric + PublicInteger + Copy> ModNumeric for PublicSeq<T> {
         unimplemented!();
     }
     /// `|self|` (coefficient-wise)
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn absolute(self) -> Self {
         unimplemented!();
     }
@@ -110,7 +110,7 @@ impl<T: Numeric + PublicInteger + Copy> Numeric for PublicSeq<T> {
 /// Polynomial multiplication on ℤ\[x\]
 impl<T: Numeric + PublicInteger + Copy> Mul for PublicSeq<T> {
     type Output = Self;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn mul(self, rhs: Self) -> Self::Output {
         vec_poly_mul(self, rhs, T::default())
     }
@@ -119,7 +119,7 @@ impl<T: Numeric + PublicInteger + Copy> Mul for PublicSeq<T> {
 /// Polynomial subtraction on ℤ\[x\]
 impl<T: Numeric + PublicInteger + Copy> Sub for PublicSeq<T> {
     type Output = Self;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn sub(self, rhs: Self) -> Self::Output {
         vec_poly_sub(self, rhs, T::default())
     }
@@ -128,7 +128,7 @@ impl<T: Numeric + PublicInteger + Copy> Sub for PublicSeq<T> {
 /// Polynomial addition on ℤ\[x\]
 impl<T: Numeric + PublicInteger + Copy> Add for PublicSeq<T> {
     type Output = Self;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn add(self, rhs: Self) -> Self::Output {
         vec_poly_add(self, rhs, T::default())
     }
@@ -136,7 +136,7 @@ impl<T: Numeric + PublicInteger + Copy> Add for PublicSeq<T> {
 
 impl<T: Numeric + PublicInteger + Copy> Not for PublicSeq<T> {
     type Output = PublicSeq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn not(self) -> Self::Output {
         unimplemented!();
     }
@@ -144,7 +144,7 @@ impl<T: Numeric + PublicInteger + Copy> Not for PublicSeq<T> {
 
 impl<T: Numeric + PublicInteger + Copy> BitOr for PublicSeq<T> {
     type Output = PublicSeq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitor(self, rhs: Self) -> Self::Output {
         unimplemented!();
     }
@@ -152,7 +152,7 @@ impl<T: Numeric + PublicInteger + Copy> BitOr for PublicSeq<T> {
 
 impl<T: Numeric + PublicInteger + Copy> BitXor for PublicSeq<T> {
     type Output = PublicSeq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         let mut out = Self::default();
         for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
@@ -164,7 +164,7 @@ impl<T: Numeric + PublicInteger + Copy> BitXor for PublicSeq<T> {
 
 impl<T: Numeric + PublicInteger + Copy> BitAnd for PublicSeq<T> {
     type Output = PublicSeq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitand(self, rhs: Self) -> Self::Output {
         unimplemented!();
     }
@@ -172,7 +172,7 @@ impl<T: Numeric + PublicInteger + Copy> BitAnd for PublicSeq<T> {
 
 impl<T: Numeric + PublicInteger + Copy> Shr<usize> for PublicSeq<T> {
     type Output = PublicSeq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn shr(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }
@@ -180,7 +180,7 @@ impl<T: Numeric + PublicInteger + Copy> Shr<usize> for PublicSeq<T> {
 
 impl<T: Numeric + PublicInteger + Copy> Shl<usize> for PublicSeq<T> {
     type Output = PublicSeq<T>;
-    #[cfg_attr(feature="use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn shl(self, rhs: usize) -> Self::Output {
         unimplemented!();
     }

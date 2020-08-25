@@ -16,7 +16,7 @@ macro_rules! implement_public_unsigned_mi {
         implement_public_mi!($t, $bits, <$t>::max_val());
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 let mut tmp = self;
                 while tmp < rhs {
@@ -25,32 +25,32 @@ macro_rules! implement_public_unsigned_mi {
                 (tmp - rhs) % n
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
                 (self + rhs) % n
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
                 (self * rhs) % n
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn modulo(self, n: Self) -> Self {
                 self % n
             }
             /// `self % n` that always returns a positive integer
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
             /// `|self|`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn absolute(self) -> Self {
                 self
             }
@@ -63,22 +63,22 @@ macro_rules! implement_public_signed_mi {
         implement_public_mi!($t, $bits, -1);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 (self - rhs).signed_modulo(n)
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
                 (self + rhs).signed_modulo(n)
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
                 (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
-            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             fn pow_mod(self, exp: Self, n: Self) -> Self {
                 let r_big = BigInt::from(self).modpow(&BigInt::from(exp), &BigInt::from(n));
                 debug_assert!(r_big <= BigInt::from(Self::max_val()));
@@ -86,12 +86,12 @@ macro_rules! implement_public_signed_mi {
                 r_string.parse().unwrap()
             }
             /// `self % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn modulo(self, n: Self) -> Self {
                 self % n
             }
             /// `self % n` that always returns a positive integer
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
                 while ret.less_than(Self::ZERO()) {
@@ -100,7 +100,7 @@ macro_rules! implement_public_signed_mi {
                 ret
             }
             /// `|self|`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn absolute(self) -> Self {
                 self.abs()
             }
@@ -115,29 +115,29 @@ macro_rules! implement_public_mi {
         impl Integer for $t {
             const NUM_BITS: usize = $bits;
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ZERO() -> Self {
                 0
             }
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ONE() -> Self {
                 1
             }
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn TWO() -> Self {
                 2
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn from_literal(val: u128) -> Self {
                 val as $t
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             fn from_hex_string(s: &String) -> Self {
                 <$t>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap()
             }
@@ -184,74 +184,74 @@ macro_rules! implement_public_mi {
         }
         impl Numeric for $t {
             /// Return largest value that can be represented.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn max_val() -> Self {
                 <$t>::max_value()
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_add(self, rhs: Self) -> Self {
                 self.wrapping_add(rhs)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_sub(self, rhs: Self) -> Self {
                 self.wrapping_sub(rhs)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_mul(self, rhs: Self) -> Self {
                 self.wrapping_mul(rhs)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_div(self, rhs: Self) -> Self {
                 self.wrapping_div(rhs)
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn exp(self, exp: u32) -> Self {
                 self.pow(exp)
             }
             /// `self ^ exp` where `exp` is a `Self`.
             /// **XXX: Not implemented for public machine integers**
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn divide(self, rhs: Self) -> Self {
                 self / rhs
             }
             /// Invert self modulo n.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn inv(self, n: Self) -> Self {
                 extended_euclid_invert(self, n, false)
             }
 
             // Comparison functions returning bool.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn equal(self, other: Self) -> bool {
                 self == other
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than(self, other: Self) -> bool {
                 self > other
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_or_qual(self, other: Self) -> bool {
                 self >= other
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than(self, other: Self) -> bool {
                 self < other
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than_or_equal(self, other: Self) -> bool {
                 self <= other
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn not_equal_bm(self, other: Self) -> Self {
                 if self != other {
                     $true_val
@@ -259,7 +259,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn equal_bm(self, other: Self) -> Self {
                 if self == other {
                     $true_val
@@ -267,7 +267,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_bm(self, other: Self) -> Self {
                 if self > other {
                     $true_val
@@ -275,7 +275,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 if self >= other {
                     $true_val
@@ -283,7 +283,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than_bm(self, other: Self) -> Self {
                 if self < other {
                     $true_val
@@ -291,7 +291,7 @@ macro_rules! implement_public_mi {
                     <$t>::default()
                 }
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
                 if self <= other {
                     $true_val
@@ -322,38 +322,38 @@ macro_rules! implement_secret_unsigned_mi {
         implement_secret_mi!($t, $base, $bits);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 (self - rhs).modulo(n)
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
                 (self + rhs).modulo(n)
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
                 (self * rhs).modulo(n)
             }
             /// `(self ^ exp) % n`
             /// TODO: implement
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn modulo(self, n: Self) -> Self {
                 ct_div(self, n).1
             }
             /// `self % n` that always returns a positive integer
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn signed_modulo(self, n: Self) -> Self {
                 self.modulo(n)
             }
             /// `|self|`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn absolute(self) -> Self {
                 self
             }
@@ -366,34 +366,34 @@ macro_rules! implement_secret_signed_mi {
         implement_secret_mi!($t, $base, $bits);
         impl ModNumeric for $t {
             /// (self - rhs) % n.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn sub_mod(self, rhs: Self, n: Self) -> Self {
                 (self - rhs).signed_modulo(n)
             }
             /// `(self + rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn add_mod(self, rhs: Self, n: Self) -> Self {
                 (self + rhs).signed_modulo(n)
             }
             /// `(self * rhs) % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn mul_mod(self, rhs: Self, n: Self) -> Self {
                 (self * rhs).signed_modulo(n)
             }
             /// `(self ^ exp) % n`
             /// TODO: implement
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn pow_mod(self, _exp: Self, _n: Self) -> Self {
                 unimplemented!();
             }
             /// `self % n`
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn modulo(self, n: Self) -> Self {
                 ct_div(self, n).1
             }
             /// `self % n` that always returns a positive integer
             /// FIXME: not ct!
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn signed_modulo(self, n: Self) -> Self {
                 let mut ret = self.modulo(n);
                 while ret.less_than(Self::ZERO()) {
@@ -403,7 +403,7 @@ macro_rules! implement_secret_signed_mi {
             }
             /// `|self|`
             /// TODO: Check if `abs` is ct
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn absolute(self) -> Self {
                 Self(self.declassify().abs())
             }
@@ -419,29 +419,29 @@ macro_rules! implement_secret_mi {
             const NUM_BITS: usize = $bits;
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ZERO() -> Self {
                 $t(0)
             }
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ONE() -> Self {
                 $t(1)
             }
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn TWO() -> Self {
                 $t(2)
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn from_literal(val: u128) -> Self {
                 Self::classify(val as $base)
             }
 
             #[inline]
-            #[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             fn from_hex_string(s: &String) -> Self {
                 Self::classify(<$base>::from_str_radix(s.trim_start_matches("0x"), 16).unwrap())
             }
@@ -488,31 +488,31 @@ macro_rules! implement_secret_mi {
         }
         impl Numeric for $t {
             /// Return largest value that can be represented.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn max_val() -> Self {
                 Self::from(<$base>::max_value())
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_add(self, rhs: Self) -> Self {
                 self + rhs
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_sub(self, rhs: Self) -> Self {
                 self - rhs
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_mul(self, rhs: Self) -> Self {
                 self * rhs
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn wrap_div(self, _rhs: Self) -> Self {
                 unimplemented!();
             }
 
             /// `self ^ exp` where `exp` is a `u32`.
             /// **Note:** the exponent `exp` MUST NOT be secret.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn exp(self, exp: u32) -> Self {
                 let mut s = self;
                 if exp == 0 {
@@ -527,71 +527,71 @@ macro_rules! implement_secret_mi {
             /// `self ^ exp` where `exp` is a `Self`.
             /// Here both, base and exponent, are secret.
             /// TODO: implement
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn pow_self(self, _exp: Self) -> Self {
                 unimplemented!();
             }
             /// Division.
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn divide(self, rhs: Self) -> Self {
                 ct_div(self, rhs).0
             }
             /// Invert self modulo n.
             /// FIXME: make ct
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn inv(self, n: Self) -> Self {
                 extended_euclid_invert(self, n, false)
             }
 
             // Comparison functions returning bool.
             /// **Declassifies**
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn equal(self, other: Self) -> bool {
                 self.equal_bm(other).declassify() != 0
             }
             /// **Declassifies**
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than(self, other: Self) -> bool {
                 self.greater_than_bm(other).declassify() != 0
             }
             /// **Declassifies**
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_or_qual(self, other: Self) -> bool {
                 self.greater_than_or_equal_bm(other).declassify() != 0
             }
             /// **Declassifies**
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than(self, other: Self) -> bool {
                 self.less_than_bm(other).declassify() != 0
             }
             /// **Declassifies**
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than_or_equal(self, other: Self) -> bool {
                 self.less_than_or_equal_bm(other).declassify() != 0
             }
 
             // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn not_equal_bm(self, other: Self) -> Self {
                 self.comp_ne(other)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn equal_bm(self, other: Self) -> Self {
                 self.comp_eq(other)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_bm(self, other: Self) -> Self {
                 self.comp_gt(other)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
                 self.comp_gte(other)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than_bm(self, other: Self) -> Self {
                 self.comp_lt(other)
             }
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn less_than_or_equal_bm(self, other: Self) -> Self {
                 self.comp_lte(other)
             }
@@ -612,24 +612,24 @@ implement_secret_signed_mi!(I64, i64, 64);
 implement_secret_signed_mi!(I128, i128, 128);
 
 impl UnsignedPublicInteger for u8 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<u8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         assert!(x.len() == 1);
         x[0]
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         assert!(x.len() == 1);
         x[0]
@@ -637,76 +637,76 @@ impl UnsignedPublicInteger for u8 {
 }
 
 impl UnsignedPublicInteger for u16 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u16_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u16_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u16_from_le_bytes(u16Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u16_from_be_bytes(u16Word::from_seq(x))
     }
 }
 
 impl UnsignedPublicInteger for u32 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u32_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u32_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u32_from_le_bytes(u32Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u32_from_be_bytes(u32Word::from_seq(x))
     }
 }
 
 impl UnsignedPublicInteger for u64 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u64_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u64_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u64_from_le_bytes(u64Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u64_from_be_bytes(u64Word::from_seq(x))
     }
 }
 
 impl UnsignedPublicInteger for u128 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u128_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u128_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<u8>) -> Self {
         u128_from_le_bytes(u128Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<u8>) -> Self {
         u128_from_be_bytes(u128Word::from_seq(x))
     }
@@ -894,94 +894,94 @@ impl PublicInteger for i128 {
 
 impl SecretInteger for U8 {
     type PublicVersion = u8;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         U8(x)
     }
 }
 impl SecretInteger for U16 {
     type PublicVersion = u16;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         U16(x)
     }
 }
 impl SecretInteger for U32 {
     type PublicVersion = u32;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         U32(x)
     }
 }
 impl SecretInteger for U64 {
     type PublicVersion = u64;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         U64(x)
     }
 }
 impl SecretInteger for U128 {
     type PublicVersion = u128;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         U128(x)
     }
 }
 impl SecretInteger for I8 {
     type PublicVersion = i8;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I8(x)
     }
 }
 impl SecretInteger for I16 {
     type PublicVersion = i16;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I16(x)
     }
 }
 impl SecretInteger for I32 {
     type PublicVersion = i32;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I32(x)
     }
 }
 impl SecretInteger for I64 {
     type PublicVersion = i64;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I64(x)
     }
 }
 impl SecretInteger for I128 {
     type PublicVersion = i128;
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I128(x)
     }
 }
 
 impl UnsignedSecretInteger for U8 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<U8> {
         let mut x = Seq::new(1);
         x[0] = self;
         x
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         assert!(x.len() == 1);
         x[0]
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         assert!(x.len() == 1);
         x[0]
@@ -989,76 +989,76 @@ impl UnsignedSecretInteger for U8 {
 }
 
 impl UnsignedSecretInteger for U16 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U16_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U16_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U16_from_le_bytes(U16Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U16_from_be_bytes(U16Word::from_seq(x))
     }
 }
 
 impl UnsignedSecretInteger for U32 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U32_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U32_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U32_from_le_bytes(U32Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U32_from_be_bytes(U32Word::from_seq(x))
     }
 }
 
 impl UnsignedSecretInteger for U64 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U64_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U64_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U64_from_le_bytes(U64Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U64_from_be_bytes(U64Word::from_seq(x))
     }
 }
 
 impl UnsignedSecretInteger for U128 {
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U128_to_le_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U128_to_be_bytes(self))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_le_bytes(x: &Seq<U8>) -> Self {
         U128_from_le_bytes(U128Word::from_seq(x))
     }
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn from_be_bytes(x: &Seq<U8>) -> Self {
         U128_from_be_bytes(U128Word::from_seq(x))
     }
