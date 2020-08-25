@@ -2029,7 +2029,7 @@
 
         <span class="comment">// FIXME: check if we really need this and maybe move this somewhere.</span>
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">to_remove</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_le</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_le_bytes</span>(
                     <span class="ident">s</span>.<span class="ident">iter</span>()
@@ -2039,12 +2039,12 @@
                 )
             }
 
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">to_remove</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_public_byte_seq_le</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
                 <span class="ident">Seq</span>::<span class="ident">from_vec</span>(<span class="self">self</span>.<span class="ident">to_le_bytes</span>())
             }
 
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">to_remove</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_byte_seq_le</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
                 <span class="ident">Seq</span>::<span class="ident">from_vec</span>(
                     <span class="self">self</span>.<span class="ident">to_le_bytes</span>()
@@ -2054,7 +2054,7 @@
                 )
             }
 
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">to_remove</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_secret_literal</span>(<span class="ident">x</span>: <span class="ident">U128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_literal</span>(<span class="ident">U128</span>::<span class="ident">declassify</span>(<span class="ident">x</span>))
             }
@@ -2096,27 +2096,27 @@
         }
         <span class="kw">impl</span> <span class="ident">ModNumeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// (self - rhs) % n.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">sub_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
             }
             <span class="doccomment">/// `(self + rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">add_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
             }
             <span class="doccomment">/// `(self * rhs) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">mul_mod</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
             }
             <span class="doccomment">/// `(self ^ exp) % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">pow_mod</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span>.<span class="ident">pow_felem</span>(<span class="ident">exp</span>)
             }
             <span class="doccomment">/// `self % n`</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">modulo</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">%</span> <span class="ident">n</span>
             }
@@ -2133,76 +2133,76 @@
         }
         <span class="kw">impl</span> <span class="ident">Numeric</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="doccomment">/// Return largest value that can be represented.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">max_val</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 (<span class="self">Self</span>::<span class="ident">max</span>() <span class="op">-</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>::<span class="ident">from_literal</span>(<span class="number">1</span>)).<span class="ident">into</span>()
             }
 
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">wrap_add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">wrap_sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">wrap_mul</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">*</span> <span class="ident">rhs</span>
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">wrap_div</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">/</span> <span class="ident">rhs</span>
             }
 
             <span class="doccomment">/// `self ^ exp` where `exp` is a `u32`.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">exp</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span>.<span class="ident">pow</span>(<span class="ident">exp</span>.<span class="ident">into</span>())
             }
             <span class="doccomment">/// `self ^ exp` where `exp` is a `Self`.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">pow_self</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span>.<span class="ident">pow_felem</span>(<span class="ident">exp</span>)
             }
             <span class="doccomment">/// Division.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">divide</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span> <span class="op">/</span> <span class="ident">rhs</span>
             }
             <span class="doccomment">/// Invert self modulo n.</span>
             <span class="doccomment">/// **NOTE:** `n` is ignored and inversion is done with respect to</span>
             <span class="doccomment">///            the modulus.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">inv</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span>.<span class="ident">inv</span>()
             }
 
             <span class="comment">// Comparison functions returning bool.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">greater_than</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&gt;</span> <span class="ident">other</span>
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">greater_than_or_qual</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">other</span>
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">less_than</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&lt;</span> <span class="ident">other</span>
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">less_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">other</span>
             }
 
             <span class="comment">// Comparison functions returning a bit mask (0x0..0 or 0xF..F).</span>
             <span class="comment">// Return $bits-1 1s as we can&#39;t represent 0xF..F.</span>
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">not_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">if</span> <span class="self">self</span> <span class="op">!</span><span class="op">=</span> <span class="ident">other</span> {
                     (<span class="self">Self</span>::<span class="ident">ONE</span>() <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">-</span> <span class="self">Self</span>::<span class="ident">ONE</span>()
@@ -2210,7 +2210,7 @@
                     <span class="self">Self</span>::<span class="ident">ZERO</span>()
                 }
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">if</span> <span class="self">self</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span> {
                     (<span class="self">Self</span>::<span class="ident">ONE</span>() <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">-</span> <span class="self">Self</span>::<span class="ident">ONE</span>()
@@ -2218,7 +2218,7 @@
                     <span class="self">Self</span>::<span class="ident">ZERO</span>()
                 }
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">greater_than_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">if</span> <span class="self">self</span> <span class="op">&gt;</span> <span class="ident">other</span> {
                     (<span class="self">Self</span>::<span class="ident">ONE</span>() <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">-</span> <span class="self">Self</span>::<span class="ident">ONE</span>()
@@ -2226,7 +2226,7 @@
                     <span class="self">Self</span>::<span class="ident">ZERO</span>()
                 }
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">greater_than_or_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">if</span> <span class="self">self</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">other</span> {
                     (<span class="self">Self</span>::<span class="ident">ONE</span>() <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">-</span> <span class="self">Self</span>::<span class="ident">ONE</span>()
@@ -2234,7 +2234,7 @@
                     <span class="self">Self</span>::<span class="ident">ZERO</span>()
                 }
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">less_than_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">if</span> <span class="self">self</span> <span class="op">&lt;</span> <span class="ident">other</span> {
                     (<span class="self">Self</span>::<span class="ident">ONE</span>() <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">-</span> <span class="self">Self</span>::<span class="ident">ONE</span>()
@@ -2242,7 +2242,7 @@
                     <span class="self">Self</span>::<span class="ident">ZERO</span>()
                 }
             }
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">library</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">less_than_or_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="kw">if</span> <span class="self">self</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">other</span> {
                     (<span class="self">Self</span>::<span class="ident">ONE</span>() <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">bits</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">-</span> <span class="self">Self</span>::<span class="ident">ONE</span>()
