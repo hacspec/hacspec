@@ -24,7 +24,7 @@ pub trait SeqTrait<T: Copy>:
     /// s = s.update_slice(2, &tmp, 1, 1);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
     /// ```
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn update_slice<A: SeqTrait<T>>(
         mut self,
         start_out: usize,
@@ -52,13 +52,13 @@ pub trait SeqTrait<T: Copy>:
     /// s = s.update(2, &tmp);
     /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
     /// ```
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
         let len = v.len();
         self.update_slice(start, v, 0, len)
     }
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
         let len = v.len();
         self.update_slice(0, v, 0, len)
@@ -88,7 +88,7 @@ pub trait Integer: Numeric {
 
     /// Get bit `i` of this integer.
     #[inline]
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn get_bit(self, i: usize) -> Self {
         (self >> i) & Self::ONE()
     }
@@ -96,7 +96,7 @@ pub trait Integer: Numeric {
     /// Set bit `i` of this integer to `b` and return the result.
     /// Bit `b` has to be `0` or `1`.
     #[inline]
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn set_bit(self, b: Self, i: usize) -> Self {
         debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
         let tmp1 = Self::from_literal(!(1 << i));
@@ -106,20 +106,20 @@ pub trait Integer: Numeric {
 
     /// Set bit `pos` of this integer to bit `yi` of integer `y`.
     #[inline]
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn set(self, pos: usize, y: Self, yi: usize) -> Self {
         let b = y.get_bit(yi);
         self.set_bit(b, pos)
     }
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn rotate_left(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS);
         (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
     }
 
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn rotate_right(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS);
@@ -156,7 +156,7 @@ pub trait UnsignedSecretInteger: UnsignedInteger + SecretInteger {
     fn from_be_bytes(x: &Seq<U8>) -> Self;
     /// Get byte `i` of this integer.
     #[inline]
-    #[cfg_attr(feature = "use_attributes", library(hacspec))]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn get_byte(self, i: usize) -> Self {
         (self >> (i * 8)) & ((Self::ONE() << 8) - Self::ONE())
     }

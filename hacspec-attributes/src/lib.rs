@@ -9,7 +9,7 @@ extern crate serde_json;
 extern crate syn;
 
 #[cfg(feature = "print_attributes")]
-use ansi_term::Colour::{Blue, Cyan, Green, Purple, Red, Yellow};
+use ansi_term::Colour::{Blue, Green, Purple, Yellow};
 #[cfg(feature = "print_attributes")]
 use hacspec_sig::{syn_sig_to_reduced, Signature};
 #[cfg(feature = "print_attributes")]
@@ -34,15 +34,7 @@ macro_rules! declare_attribute {
             let item_copy = proc_macro2::TokenStream::from(item.clone());
             let func = parse_macro_input!(item as ItemFn);
             let mut attr_args_iter = attr.into_iter();
-            let crate_name = match attr_args_iter
-                .next()
-                .expect("Expecting an argument to the attribute")
-            {
-                TokenTree::Ident(ident) => ident,
-                _ => panic!(),
-            };
-            let _impl_type_name: Option<String> = attr_args_iter.next().map(|_| {
-                let arg = attr_args_iter.next().expect("Error 6");
+            let _impl_type_name: Option<String> = attr_args_iter.next().map(|arg| {
                 format!("{}", arg)
             });
             let _is_generic: bool = attr_args_iter.next().map_or(false, |_| {
@@ -56,30 +48,21 @@ macro_rules! declare_attribute {
                         .open(ITEM_LIST_LOCATION)
                         .expect("Error 1");
                     let key_s = String::from($key);
-                    let crate_s = String::from(format!("{}", crate_name));
-                    let mut item_list : HashMap<String, HashMap<String, HashSet<Signature>>> = serde_json::from_reader(&file).unwrap();
+                    let mut item_list : HashMap<String, HashSet<Signature>> = serde_json::from_reader(&file).unwrap();
                     let item_list_type = match item_list.get_mut(&key_s) {
                         None => {
-                          item_list.insert(key_s.clone(), HashMap::new());
+                          item_list.insert(key_s.clone(), HashSet::new());
                           item_list.get_mut(&key_s).expect("Error 2")
                         }
                         Some(items) => items
                     };
-                    let item_list_type_crate = match item_list_type.get_mut(&crate_s) {
-                        None => {
-                          item_list_type.insert(crate_s.clone(), HashSet::new());
-                          item_list_type.get_mut(&crate_s).expect("Error 3")
-                        }
-                        Some(items) => items
-                    };
-                    item_list_type_crate.insert(syn_sig_to_reduced(&func.sig));
+                    item_list_type.insert(syn_sig_to_reduced(&func.sig));
                 }
                 Diagnostic::new(
                     Level::Note,
                     format!(
-                        "{} ({}): {} {}",
+                        "{}: {} {}",
                         $msg,
-                        crate_name,
                         Green.paint(format!("{}", func.sig.ident)),
                         {
                             let file = func.sig.span().unwrap().source_file().path();
@@ -105,39 +88,24 @@ macro_rules! declare_attribute {
 }
 
 declare_attribute!(
-    primitive,
-    "primitive",
-    Purple.paint("Primitive function"),
-    "**Primitive function**, part of the formalization of the language.",
+    in_hacspec,
+    "in_hacspec",
+    Blue.paint("Function in hacspec"),
+    "This function is within the hacspec subset of Rust: its signature and body use only hacspec constructs and 
+    call functions whose signatures are in hacspec.",
     true
 );
 declare_attribute!(
-    to_remove,
-    "to_remove",
-    Red.paint("Function to be removed"),
-    "Function that should be **removed** from the library.",
-    false
-);
-declare_attribute!(
-    external,
-    "external",
-    Yellow.paint("External function"),
-    "Function that is not part of the language but is offered as a **helper** for tests, etc.",
-    false
-);
-declare_attribute!(
-    library,
-    "library",
-    Blue.paint("Library function"),
-    "**Library** function that is part of the language but implemented only \
-with primitives and other library functions. As such, it does not need to be \
-formalized as a primitive.",
+    unsafe_hacspec,
+    "unsafe_hacspec",
+    Purple.paint("Unsafe hacspec function"),
+    "This function can be called from hacspec programs but its body features Rust constructs that are not part of hacspec",
     true
 );
 declare_attribute!(
-    internal,
-    "internal",
-    Cyan.paint("Internal function"),
-    "**Internal** function used in primitive implementations but that is not part of the language.",
+    not_hacspec,
+    "not_hacspec",
+    Yellow.paint("Function not in hacspec"),
+    "Function that is not part of the language but is offered as a helper for tests, etc.",
     false
 );

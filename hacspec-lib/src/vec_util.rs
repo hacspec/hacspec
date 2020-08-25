@@ -6,7 +6,7 @@
 use crate::prelude::*;
 
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Pad (append) a slice `v` to length `l` with `T::default()`.
 pub(crate) fn pad<T: Numeric + Copy>(v: &[T], l: usize) -> Vec<T> {
     let mut out = v.to_vec();
@@ -17,7 +17,7 @@ pub(crate) fn pad<T: Numeric + Copy>(v: &[T], l: usize) -> Vec<T> {
 }
 
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Generate a `Vec<T>` of length `l`, containing the first `l` elements of `v`.
 pub(crate) fn make_fixed_length<T: Numeric + Copy>(v: &[T], l: usize) -> Vec<T> {
     let mut out = vec![T::default(); l];
@@ -28,7 +28,7 @@ pub(crate) fn make_fixed_length<T: Numeric + Copy>(v: &[T], l: usize) -> Vec<T> 
 }
 
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Create a monomial `Vec<T>` with value `c` at position `d`.
 pub(crate) fn monomial<T>(c: T, d: usize) -> Vec<T>
 where
@@ -40,7 +40,7 @@ where
 }
 
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Return vectors `x` and `y`, padded to maximum length of the two.
 pub(crate) fn normalize<T: Numeric + Copy>(x: &[T], y: &[T]) -> (Vec<T>, Vec<T>) {
     let max_len = std::cmp::max(x.len(), y.len());
@@ -48,7 +48,7 @@ pub(crate) fn normalize<T: Numeric + Copy>(x: &[T], y: &[T]) -> (Vec<T>, Vec<T>)
 }
 
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Return the leading coefficient (value) of `x` that's non-zero.
 /// Returns a (index, coefficient)-Tuple.
 pub(crate) fn leading_coefficient<T: Numeric + Copy>(x: &[T]) -> (usize, T) {
@@ -65,7 +65,7 @@ pub(crate) fn leading_coefficient<T: Numeric + Copy>(x: &[T]) -> (usize, T) {
 }
 
 #[inline]
-#[cfg_attr(feature="use_attributes", internal(hacspec))]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Returns `true` if `v` is all zero, and `false` otherwise.
 /// Note: this is not constant-time.
 pub(crate) fn is_zero<T: Numeric + Copy>(v: &[T]) -> bool {

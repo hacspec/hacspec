@@ -6,7 +6,7 @@ use poly::*;
 /// x.len() and degree of y are assumed to be public
 /// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266
 #[inline]
-#[cfg_attr(feature = "use_attributes", primitive(hacspec))]
+#[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub(crate) fn extended_euclid_internal<T: Integer + Copy>(
     x: &[T],
     y: &[T],
