@@ -194,14 +194,14 @@
 <span class="kw">use</span> <span class="ident">poly</span>::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// polynomial subtraction, calculates a - b mod modulo</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub_poly</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Numeric</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">modulo</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">from_native_slice</span>(<span class="kw-2">&amp;</span><span class="ident">poly_sub</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">b</span>, <span class="ident">modulo</span>));
     <span class="ident">make_positive</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>, <span class="ident">modulo</span>)
 }
 
 <span class="doccomment">/// Polynomial Addition, calculates a + b mod modulo</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_poly</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Numeric</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">modulo</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="ident">from_native_slice</span>(<span class="kw-2">&amp;</span><span class="ident">poly_add</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">b</span>, <span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">b</span>, <span class="ident">modulo</span>));
     <span class="ident">make_positive</span>(<span class="kw-2">&amp;</span><span class="ident">result</span>, <span class="ident">modulo</span>)
@@ -225,19 +225,19 @@
 
 <span class="doccomment">/// Scalar division in `R_p`.</span>
 <span class="doccomment">/// Returns `a / scalar mod p`.</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">internal</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">div_scalar</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">scalar</span>: <span class="ident">T</span>, <span class="ident">p</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">Seq</span>::<span class="ident">from_native_slice</span>(<span class="kw-2">&amp;</span><span class="ident">scalar_div</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">b</span>, <span class="ident">scalar</span>, <span class="ident">p</span>))
 }
 
 <span class="doccomment">/// Returns degree of polynomial, e.g. for  3x² + 2x + 1 -&gt; 2</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">degree_poly</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">poly</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
     <span class="ident">deg</span>(<span class="kw-2">&amp;</span><span class="ident">poly</span>.<span class="ident">b</span>)
 }
 
 <span class="doccomment">/// Euclidean algorithm to compute the inverse of x in yℤ\[x\]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extended_euclid</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(
     <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     <span class="ident">irr</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
@@ -269,7 +269,7 @@
 <span class="doccomment">/// **Panics** if x is not invertible.</span>
 <span class="doccomment">///</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">extended_euclid_invert</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">n</span>: <span class="ident">T</span>, <span class="ident">signed</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">ZERO</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">n</span>;
@@ -315,7 +315,7 @@
 }
 
 <span class="doccomment">/// Makes poly to an element of R_modulo \ irr</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly_to_ring</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(
     <span class="ident">irr</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     <span class="ident">poly</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
@@ -326,7 +326,7 @@
 }
 
 <span class="doccomment">/// Polynomial multiplication of two size fixed polynomials in R_modulo \ irr</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul_poly_irr</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(
     <span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
     <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,

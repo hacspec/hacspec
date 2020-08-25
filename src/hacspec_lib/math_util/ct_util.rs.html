@@ -89,7 +89,7 @@
 <span class="doccomment">/// Conditional, constant-time swapping.</span>
 <span class="doccomment">/// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == 1`.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cswap_bit</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">y</span>: <span class="ident">T</span>, <span class="ident">c</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">T</span>, <span class="ident">T</span>) {
     <span class="ident">cswap</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">T</span>::<span class="ident">default</span>().<span class="ident">wrap_sub</span>(<span class="ident">c</span>))
 }
@@ -98,7 +98,7 @@
 <span class="doccomment">/// Returns `(x, y)` if `c == 0` and `(y, x)` if `c == T::max`.</span>
 <span class="doccomment">/// The return value is undefined if `c` has any other value.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cswap</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">y</span>: <span class="ident">T</span>, <span class="ident">c</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">T</span>, <span class="ident">T</span>) {
     <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">c</span> <span class="op">&amp;</span> (<span class="ident">x</span> <span class="op">^</span> <span class="ident">y</span>);
     (<span class="ident">x</span> <span class="op">^</span> <span class="ident">mask</span>, <span class="ident">y</span> <span class="op">^</span> <span class="ident">mask</span>)
@@ -107,7 +107,7 @@
 <span class="doccomment">/// Set bit at position `i` in `x` to `b` if `c` is all 1 and return the restult.</span>
 <span class="doccomment">/// Returns `x` if `c` is `0`.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cset_bit</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">b</span>: <span class="ident">T</span>, <span class="ident">i</span>: <span class="ident">usize</span>, <span class="ident">c</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
     <span class="kw">let</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">set_bit</span>(<span class="ident">b</span>, <span class="ident">i</span>);
     <span class="kw">let</span> (<span class="ident">out</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">cswap</span>(<span class="ident">x</span>, <span class="ident">set</span>, <span class="ident">c</span>);
@@ -118,7 +118,7 @@
 <span class="doccomment">/// Returns `x` if condition `c` is `0`.</span>
 <span class="doccomment">/// Note: Addition is always wrapping.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cadd</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">y</span>: <span class="ident">T</span>, <span class="ident">c</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
     <span class="kw">let</span> <span class="ident">sum</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">wrap_add</span>(<span class="ident">y</span>);
     <span class="kw">let</span> (<span class="ident">x</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">cswap</span>(<span class="ident">x</span>, <span class="ident">sum</span>, <span class="ident">c</span>);
@@ -129,7 +129,7 @@
 <span class="doccomment">/// Returns `x` if condition `c` is `0`.</span>
 <span class="doccomment">/// Note: Addition is always wrapping.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">csub</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">y</span>: <span class="ident">T</span>, <span class="ident">c</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
     <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">wrap_sub</span>(<span class="ident">y</span>);
     <span class="kw">let</span> (<span class="ident">x</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">cswap</span>(<span class="ident">x</span>, <span class="ident">diff</span>, <span class="ident">c</span>);
@@ -140,7 +140,7 @@
 <span class="doccomment">/// Returns `x` if condition `c` is `0`.</span>
 <span class="doccomment">/// Note: Multiplication is always wrapping.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmul</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">x</span>: <span class="ident">T</span>, <span class="ident">y</span>: <span class="ident">T</span>, <span class="ident">c</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
     <span class="kw">let</span> <span class="ident">prod</span> <span class="op">=</span> <span class="ident">x</span>.<span class="ident">wrap_mul</span>(<span class="ident">y</span>);
     <span class="kw">let</span> (<span class="ident">x</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">cswap</span>(<span class="ident">x</span>, <span class="ident">prod</span>, <span class="ident">c</span>);
@@ -151,7 +151,7 @@
 <span class="doccomment">/// Note that this function is only constant time if `T` is a secret integer and</span>
 <span class="doccomment">/// hence provides constant time implementations for the used functions.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">internal</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">not_hacspec</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ct_div</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(<span class="ident">a</span>: <span class="ident">T</span>, <span class="ident">d</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">T</span>, <span class="ident">T</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">default</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">default</span>();

@@ -134,7 +134,7 @@
 <span class="doccomment">/// x.len() and degree of y are assumed to be public</span>
 <span class="doccomment">/// See recipx in Figure 6.1 of https://eprint.iacr.org/2019/266</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">primitive</span>(<span class="ident">hacspec</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">extended_euclid_internal</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Integer</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span>(
     <span class="ident">x</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],
     <span class="ident">y</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>],

@@ -265,7 +265,7 @@
     <span class="doccomment">/// s = s.update_slice(2, &amp;tmp, 1, 1);</span>
     <span class="doccomment">/// // assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 3, 0, 0]));</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">update_slice</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">start_out</span>: <span class="ident">usize</span>,
@@ -293,13 +293,13 @@
     <span class="doccomment">/// s = s.update(2, &amp;tmp);</span>
     <span class="doccomment">/// // assert_eq!(s, Seq::&lt;u8&gt;::from_array(&amp;[0, 0, 2, 3, 0]));</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">update</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">start</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">len</span>();
         <span class="self">self</span>.<span class="ident">update_slice</span>(<span class="ident">start</span>, <span class="ident">v</span>, <span class="number">0</span>, <span class="ident">len</span>)
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">update_start</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">len</span>();
         <span class="self">self</span>.<span class="ident">update_slice</span>(<span class="number">0</span>, <span class="ident">v</span>, <span class="number">0</span>, <span class="ident">len</span>)
@@ -329,7 +329,7 @@
 
     <span class="doccomment">/// Get bit `i` of this integer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">get_bit</span>(<span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         (<span class="self">self</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">i</span>) <span class="op">&amp;</span> <span class="self">Self</span>::<span class="ident">ONE</span>()
     }
@@ -337,7 +337,7 @@
     <span class="doccomment">/// Set bit `i` of this integer to `b` and return the result.</span>
     <span class="doccomment">/// Bit `b` has to be `0` or `1`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">set_bit</span>(<span class="self">self</span>, <span class="ident">b</span>: <span class="self">Self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="self">Self</span>::<span class="ident">ONE</span>()) <span class="op">|</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">clone</span>().<span class="ident">equal</span>(<span class="self">Self</span>::<span class="ident">ZERO</span>()));
         <span class="kw">let</span> <span class="ident">tmp1</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">from_literal</span>(<span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">i</span>));
@@ -347,20 +347,20 @@
 
     <span class="doccomment">/// Set bit `pos` of this integer to bit `yi` of integer `y`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">set</span>(<span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="self">Self</span>, <span class="ident">yi</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">y</span>.<span class="ident">get_bit</span>(<span class="ident">yi</span>);
         <span class="self">self</span>.<span class="ident">set_bit</span>(<span class="ident">b</span>, <span class="ident">pos</span>)
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">rotate_left</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="comment">// Taken from https://blog.regehr.org/archives/1063</span>
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">n</span> <span class="op">&lt;</span> <span class="self">Self</span>::<span class="ident">NUM_BITS</span>);
         (<span class="self">self</span>.<span class="ident">clone</span>() <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">n</span>) <span class="op">|</span> (<span class="self">self</span> <span class="op">&gt;</span><span class="op">&gt;</span> ((<span class="op">-</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">&amp;</span> (<span class="self">Self</span>::<span class="ident">NUM_BITS</span> <span class="op">-</span> <span class="number">1</span>)))
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">rotate_right</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="comment">// Taken from https://blog.regehr.org/archives/1063</span>
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">n</span> <span class="op">&lt;</span> <span class="self">Self</span>::<span class="ident">NUM_BITS</span>);
@@ -397,7 +397,7 @@
     <span class="kw">fn</span> <span class="ident">from_be_bytes</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
     <span class="doccomment">/// Get byte `i` of this integer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">library</span>(<span class="ident">hacspec</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
     <span class="kw">fn</span> <span class="ident">get_byte</span>(<span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         (<span class="self">self</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="ident">i</span> <span class="op">*</span> <span class="number">8</span>)) <span class="op">&amp;</span> ((<span class="self">Self</span>::<span class="ident">ONE</span>() <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>) <span class="op">-</span> <span class="self">Self</span>::<span class="ident">ONE</span>())
     }
