@@ -2,13 +2,10 @@ use im::HashMap;
 use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_metadata::creader::CStore;
-use rustc_middle::middle::{
-    cstore::{CrateStore, CrateStoreDyn},
-    exported_symbols::ExportedSymbol,
-};
+use rustc_middle::middle::cstore::CrateStore;
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
-use rustc_middle::ty::{self, AssocKind, PolyFnSig, TyCtxt, TyKind};
+use rustc_middle::ty::{self, PolyFnSig, TyCtxt, TyKind};
 use rustc_session::Session;
 use rustc_span::{
     def_id::{CrateNum, DefId, LOCAL_CRATE},
@@ -85,6 +82,8 @@ fn translate_base_typ(
                             };
                             Ok((BaseTyp::Seq(Box::new((param_typ, DUMMY_SP))), typ_ctx))
                         }
+                        // We accept all named types from hacspec_lib because of the predefined
+                        // array types like U32Word, etc.
                         _ => Ok((
                             BaseTyp::Named(
                                 (Ident::Original(name.to_ident_string()), DUMMY_SP),
@@ -273,6 +272,13 @@ pub fn retrieve_external_functions(
     krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
     let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
+    let mut imported_crates = imported_crates.clone();
+    // You normally only import hacspec_lib which then reexports the definitions
+    // from abstract_integers and secret_integers. But we do have to fetch those
+    // reexported definitions here and thus need to examine the original crates
+    // containing them
+    imported_crates.push(("abstract_integers".to_string(), DUMMY_SP));
+    imported_crates.push(("secret_integers".to_string(), DUMMY_SP));
     for krate_num in krates {
         let original_crate_name = tcx.original_crate_name(*krate_num);
         if imported_crates
@@ -296,8 +302,26 @@ pub fn retrieve_external_functions(
                     match &def_path.data.last() {
                         None => (),
                         Some(x) => match x.data {
-                            DefPathData::ValueNs(_) | DefPathData::Ctor => {
+                            DefPathData::ValueNs(_) => {
                                 process_fn_id(sess, tcx, &def_id, krate_num, &mut extern_funcs)
+                            }
+                            DefPathData::Ctor => {
+                                let export_sig = tcx.fn_sig(def_id);
+                                let sig =
+                                    match translate_polyfnsig(tcx, &export_sig, &HashMap::new()) {
+                                        Ok(sig) => Some(sig),
+                                        Err(()) => None,
+                                    };
+                                let name_segment = def_path.data[def_path.data.len() - 2];
+                                match name_segment.data {
+                                    DefPathData::TypeNs(name) => {
+                                        let fn_key = FnKey::Independent(Ident::Original(
+                                            name.to_ident_string(),
+                                        ));
+                                        extern_funcs.insert(fn_key, sig);
+                                    }
+                                    _ => (),
+                                }
                             }
                             _ => (),
                         },
