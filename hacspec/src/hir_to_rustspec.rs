@@ -1,7 +1,11 @@
 use im::HashMap;
 use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
-use rustc_middle::middle::exported_symbols::ExportedSymbol;
+use rustc_metadata::creader::CStore;
+use rustc_middle::middle::{
+    cstore::{CrateStore, CrateStoreDyn},
+    exported_symbols::ExportedSymbol,
+};
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
 use rustc_middle::ty::{self, AssocKind, PolyFnSig, TyCtxt, TyKind};
@@ -244,8 +248,8 @@ pub fn retrieve_external_functions(
     let mut krates: Vec<_> = tcx.crates().iter().collect();
     krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
+    let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
     for krate_num in krates {
-        let exported_symbols = tcx.exported_symbols(*krate_num);
         let original_crate_name = tcx.original_crate_name(*krate_num);
         if imported_crates
             .iter()
@@ -259,54 +263,41 @@ pub fn retrieve_external_functions(
             > 0
         {
             if *krate_num != LOCAL_CRATE {
-                for (exported_symbol, _) in exported_symbols {
-                    match exported_symbol {
-                        ExportedSymbol::Generic(id, _) | ExportedSymbol::NonGeneric(id) => {
-                            process_fn_id(sess, tcx, id, krate_num, &mut extern_funcs)
-                        }
-                        _ => (),
-                    }
-                }
-                let trait_impls = tcx.all_trait_implementations(*krate_num);
-                for (trait_impl_id, _) in trait_impls {
-                    let assoc_items = tcx.associated_items(*trait_impl_id);
-                    for item in assoc_items.in_definition_order() {
-                        if item.kind == AssocKind::Fn {
-                            process_fn_id(sess, tcx, &item.def_id, krate_num, &mut extern_funcs)
-                        }
-                    }
-                }
-            } else {
-                // For the local crate, we're importing local trait impls
-                let local_trait_impls = tcx.all_local_trait_impls(*krate_num);
-                for (local_trait_impl_id, _) in local_trait_impls {
-                    let assoc_items = tcx.associated_items(*local_trait_impl_id);
-                    for item in assoc_items.in_definition_order() {
-                        if item.kind == AssocKind::Fn {
-                            process_fn_id(sess, tcx, &item.def_id, krate_num, &mut extern_funcs)
-                        }
-                    }
-                }
-                // But also all the other functions not part of an impl
-                let items = &tcx.hir_crate(*krate_num).items;
-                for (item_id, item) in items {
-                    let item_id = tcx.hir().local_def_id(*item_id).to_def_id();
-                    match item.kind {
-                        ItemKind::Fn(_, _, _) => {
-                            process_fn_id(sess, tcx, &item_id, krate_num, &mut extern_funcs)
-                        }
-                        ItemKind::Impl { items, .. } => {
-                            for item in items {
-                                let item_id = tcx.hir().local_def_id(item.id.hir_id).to_def_id();
-                                if let AssocItemKind::Fn { .. } = item.kind {
-                                    process_fn_id(sess, tcx, &item_id, krate_num, &mut extern_funcs)
-                                }
+                let def_ids = <CStore as CrateStore>::all_def_path_hashes_and_def_ids(
+                    crate_store,
+                    *krate_num,
+                );
+                for (_, def_id) in def_ids {
+                    let def_path = tcx.def_path(def_id);
+                    match &def_path.data.last() {
+                        None => (),
+                        Some(x) => match x.data {
+                            DefPathData::ValueNs(_) | DefPathData::Ctor => {
+                                process_fn_id(sess, tcx, &def_id, krate_num, &mut extern_funcs)
                             }
-                        }
-                        _ => (),
+                            _ => (),
+                        },
                     }
                 }
             }
+        }
+    }
+    let items = &tcx.hir_crate(LOCAL_CRATE).items;
+    for (item_id, item) in items {
+        let item_id = tcx.hir().local_def_id(*item_id).to_def_id();
+        match item.kind {
+            ItemKind::Fn(_, _, _) => {
+                process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)
+            }
+            ItemKind::Impl { items, .. } => {
+                for item in items {
+                    let item_id = tcx.hir().local_def_id(item.id.hir_id).to_def_id();
+                    if let AssocItemKind::Fn { .. } = item.kind {
+                        process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)
+                    }
+                }
+            }
+            _ => (),
         }
     }
     extern_funcs

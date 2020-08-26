@@ -29,3 +29,13 @@ pub use std::num::ParseIntError;
 pub use std::ops::*;
 pub use std::str::FromStr;
 pub use std::{cmp::min, cmp::PartialEq, fmt, fmt::Debug};
+
+bytes!(U16Word, 2);
+bytes!(U32Word, 4);
+bytes!(U64Word, 8);
+bytes!(U128Word, 16);
+
+public_bytes!(u16Word, 2);
+public_bytes!(u32Word, 4);
+public_bytes!(u64Word, 8);
+public_bytes!(u128Word, 16);
