@@ -68,7 +68,7 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
         BaseTyp::Array(_, _) => true,
         // TODO: implement special cases for derived copy
         BaseTyp::Named((Ident::Original(name), _), _) => match typ_dict.get(name) {
-            Some(t1) => {
+            Some((t1, _)) => {
                 debug_assert!((t1.0).0 == Borrowing::Consumed);
                 is_copy(&(t1.1).0, typ_dict)
             }
@@ -91,12 +91,11 @@ fn is_array(
         BaseTyp::Named(id, None) => match &id.0 {
             Ident::Rustspec(_, _) => panic!(),
             Ident::Original(name) => match typ_dict.get(name) {
-                Some(new_t) => is_array(sess, new_t, typ_dict, span),
+                Some((new_t, _)) => is_array(sess, new_t, typ_dict, span),
                 None => {
                     sess.span_rustspec_err(
                         span.clone(),
-                        format!("expected and array  but got type {}{}", &(t.0).0, &(t.1).0)
-                            .as_str(),
+                        format!("expected an array but got type {}{}", &(t.0).0, &(t.1).0).as_str(),
                     );
                     Err(())
                 }
@@ -107,7 +106,7 @@ fn is_array(
         _ => {
             sess.span_rustspec_err(
                 span.clone(),
-                format!("expected and array  but got type {}{}", &(t.0).0, &(t.1).0).as_str(),
+                format!("expected an array but got type {}{}", &(t.0).0, &(t.1).0).as_str(),
             );
             Err(())
         }
@@ -283,7 +282,13 @@ type FnContext = HashMap<FnKey, FnValue>;
 
 type VarContext = HashMap<RustspecId, (Typ, String)>;
 
-type TypeDict = HashMap<String, Typ>;
+#[derive(Debug, Clone)]
+enum DictEntry {
+    Alias,
+    Array,
+}
+
+type TypeDict = HashMap<String, (Typ, DictEntry)>;
 
 type NameContext = HashMap<String, Ident>;
 
@@ -293,6 +298,7 @@ fn find_func(
     sess: &Session,
     key1: &FnKey,
     fn_context: &FnContext,
+    typ_dict: &TypeDict,
     span: &Span,
 ) -> TypecheckingResult<(FnValue, TypeVarCtx)> {
     let candidates = fn_context.clone();
@@ -310,11 +316,27 @@ fn find_func(
                 _ => panic!(),
             },
             (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
-                match unify_types(
-                    &(
+                let t1 = match t1 {
+                    BaseTyp::Named((Ident::Original(name), _), None) => typ_dict.get(name).map_or(
+                        (
+                            (Borrowing::Consumed, span.clone()),
+                            (t1.clone(), span.clone()),
+                        ),
+                        |(t_alias, entry_typ)| match entry_typ {
+                            DictEntry::Alias => t_alias.clone(),
+                            DictEntry::Array => (
+                                (Borrowing::Consumed, span.clone()),
+                                (t1.clone(), span.clone()),
+                            ),
+                        },
+                    ),
+                    _ => (
                         (Borrowing::Consumed, span.clone()),
                         (t1.clone(), span.clone()),
                     ),
+                };
+                match unify_types(
+                    &t1,
                     &(
                         (Borrowing::Consumed, span.clone()),
                         (t2.clone(), span.clone()),
@@ -850,6 +872,7 @@ fn typecheck_expression(
                     Some((prefix, _)) => FnKey::Impl(prefix.clone(), name.0.clone()),
                 },
                 fn_context,
+                typ_dict,
                 &name.1,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
@@ -956,6 +979,7 @@ fn typecheck_expression(
                 sess,
                 &FnKey::Impl((sel_typ.1).0.clone(), f.clone()),
                 fn_context,
+                typ_dict,
                 f_span,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
@@ -1583,15 +1607,30 @@ fn typecheck_item(
                     Ident::Rustspec(_, _) => panic!(),
                 },
                 (
-                    (Borrowing::Consumed, id.1.clone()),
                     (
-                        BaseTyp::Array(size.clone(), Box::new(cell_t.clone())),
-                        id.1.clone(),
+                        (Borrowing::Consumed, id.1.clone()),
+                        (
+                            BaseTyp::Array(size.clone(), Box::new(cell_t.clone())),
+                            id.1.clone(),
+                        ),
                     ),
+                    DictEntry::Array,
                 ),
             ),
         )),
     }
+}
+
+macro_rules! type_dict_entry {
+    ($string:expr, $typ:expr, $entry_type:expr) => {
+        (
+            String::from($string),
+            (
+                ((Borrowing::Consumed, DUMMY_SP), ($typ, DUMMY_SP)),
+                $entry_type,
+            ),
+        )
+    };
 }
 
 pub fn typecheck_program(
@@ -1615,108 +1654,79 @@ pub fn typecheck_program(
     //TODO: better system, this whitelist is hardcoded
     let mut typ_dict = HashMap::from(
         vec![
-            (
-                String::from("U16Word"),
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (
-                        BaseTyp::Array(
-                            (2, DUMMY_SP),
-                            Box::new((
-                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
-                                DUMMY_SP,
-                            )),
-                        ),
+            type_dict_entry!(
+                "U16Word",
+                BaseTyp::Array(
+                    (2, DUMMY_SP),
+                    Box::new((
+                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
                         DUMMY_SP,
-                    ),
+                    )),
                 ),
+                DictEntry::Array
             ),
-            (
-                String::from("U32Word"),
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (
-                        BaseTyp::Array(
-                            (4, DUMMY_SP),
-                            Box::new((
-                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
-                                DUMMY_SP,
-                            )),
-                        ),
+            type_dict_entry!(
+                "U32Word",
+                BaseTyp::Array(
+                    (4, DUMMY_SP),
+                    Box::new((
+                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
                         DUMMY_SP,
-                    ),
+                    )),
                 ),
+                DictEntry::Array
             ),
-            (
-                String::from("U64Word"),
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (
-                        BaseTyp::Array(
-                            (8, DUMMY_SP),
-                            Box::new((
-                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
-                                DUMMY_SP,
-                            )),
-                        ),
+            type_dict_entry!(
+                "U64Word",
+                BaseTyp::Array(
+                    (8, DUMMY_SP),
+                    Box::new((
+                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
                         DUMMY_SP,
-                    ),
+                    )),
                 ),
+                DictEntry::Array
             ),
-            (
-                String::from("U128Word"),
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (
-                        BaseTyp::Array(
-                            (16, DUMMY_SP),
-                            Box::new((
-                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
-                                DUMMY_SP,
-                            )),
-                        ),
+            type_dict_entry!(
+                "U128Word",
+                BaseTyp::Array(
+                    (16, DUMMY_SP),
+                    Box::new((
+                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
                         DUMMY_SP,
-                    ),
+                    )),
                 ),
+                DictEntry::Array
             ),
-            (
-                String::from("u16Word"),
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (
-                        BaseTyp::Array((2, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
-                        DUMMY_SP,
-                    ),
-                ),
+            type_dict_entry!(
+                "u16Word",
+                BaseTyp::Array((2, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                DictEntry::Array
             ),
-            (
-                String::from("u32Word"),
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (
-                        BaseTyp::Array((4, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
-                        DUMMY_SP,
-                    ),
-                ),
+            type_dict_entry!(
+                "u32Word",
+                BaseTyp::Array((4, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                DictEntry::Array
             ),
-            (
-                String::from("u64Word"),
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (
-                        BaseTyp::Array((8, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
-                        DUMMY_SP,
-                    ),
-                ),
+            type_dict_entry!(
+                "u64Word",
+                BaseTyp::Array((8, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                DictEntry::Array
             ),
+            type_dict_entry!(
+                "u128Word",
+                BaseTyp::Array((16, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
+                DictEntry::Array
+            ),
+            // Handle type aliases in a more systematic way, this is another harcoded list
             (
-                String::from("u128Word"),
+                String::from("ByteSeq"),
                 (
-                    (Borrowing::Consumed, DUMMY_SP),
                     (
-                        BaseTyp::Array((16, DUMMY_SP), Box::new((BaseTyp::UInt8, DUMMY_SP))),
-                        DUMMY_SP,
+                        (Borrowing::Consumed, DUMMY_SP),
+                        (BaseTyp::Seq(Box::new((BaseTyp::UInt8, DUMMY_SP))), DUMMY_SP),
                     ),
+                    DictEntry::Alias,
                 ),
             ),
         ]
