@@ -39,6 +39,7 @@ use walkdir::WalkDir;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
+    typecheck_only: bool,
 }
 
 const ITEM_LIST_LOCATION: &'static str = "../allowed_item_list.json";
@@ -145,6 +146,9 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
+        if self.typecheck_only {
+            return Compilation::Stop;
+        }
         match &self.output_file {
             None => (),
             Some(file) => {
@@ -160,6 +164,12 @@ fn main() -> Result<(), ()> {
     let matches = App::from_yaml(yaml).get_matches();
     let mut callbacks = HacspecCallbacks {
         output_file: matches.value_of("output").map(|s| s.into()),
+        typecheck_only: matches
+            .value_of("unstable_flag")
+            .map_or(false, |s| match s {
+                "no-codegen" => true,
+                _ => false,
+            }),
     };
     let args = env::args().collect::<Vec<String>>();
     run_compiler(&args, &mut callbacks, None, None).map_err(|_| ())

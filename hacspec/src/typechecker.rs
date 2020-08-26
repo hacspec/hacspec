@@ -48,7 +48,7 @@ fn is_numeric(t: &Typ) -> bool {
     }
 }
 
-fn is_copy(t: &BaseTyp) -> bool {
+fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
     match t {
         BaseTyp::Unit => true,
         BaseTyp::Bool => true,
@@ -67,9 +67,16 @@ fn is_copy(t: &BaseTyp) -> bool {
         BaseTyp::Seq(_) => false,
         BaseTyp::Array(_, _) => true,
         // TODO: implement special cases for derived copy
-        BaseTyp::Named(_, _) => false,
+        BaseTyp::Named((Ident::Original(name), _), _) => match typ_dict.get(name) {
+            Some(t1) => {
+                debug_assert!((t1.0).0 == Borrowing::Consumed);
+                is_copy(&(t1.1).0, typ_dict)
+            }
+            None => false,
+        },
+        BaseTyp::Named((Ident::Rustspec(_, _), _), _) => panic!(), // should not happen
         BaseTyp::Variable(_) => false,
-        BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t)),
+        BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t, typ_dict)),
     }
 }
 
@@ -456,7 +463,7 @@ fn typecheck_expression(
                 Some(t) => {
                     // This is where linearity kicks in
                     if let Borrowing::Consumed = (t.0).0 {
-                        if is_copy(&(t.1).0) {
+                        if is_copy(&(t.1).0, typ_dict) {
                             Ok((new_path, t.clone(), var_context.clone()))
                         } else {
                             let new_var_context = remove_var(&id, var_context);

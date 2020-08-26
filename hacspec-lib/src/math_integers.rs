@@ -41,7 +41,7 @@ macro_rules! unsigned_public_integer {
 
             /// Get bit `i` of this integer.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn get_bit(self, i: usize) -> Self {
                 (self >> i) & Self::ONE()
             }
@@ -49,7 +49,7 @@ macro_rules! unsigned_public_integer {
             /// Set bit `i` of this integer to `b` and return the result.
             /// Bit `b` has to be `0` or `1`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set_bit(self, b: Self, i: usize) -> Self {
                 debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
                 let tmp1 = Self::from_literal(!(1 << i));
@@ -59,20 +59,20 @@ macro_rules! unsigned_public_integer {
 
             /// Set bit `pos` of this integer to bit `yi` of integer `y`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set(self, pos: usize, y: Self, yi: usize) -> Self {
                 let b = y.get_bit(yi);
                 self.set_bit(b, pos)
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
                 (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
@@ -587,7 +587,7 @@ macro_rules! signed_integer {
 
             /// Get bit `i` of this integer.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn get_bit(self, i: usize) -> Self {
                 (self >> i) & Self::ONE()
             }
@@ -595,7 +595,7 @@ macro_rules! signed_integer {
             /// Set bit `i` of this integer to `b` and return the result.
             /// Bit `b` has to be `0` or `1`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set_bit(self, b: Self, i: usize) -> Self {
                 debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
                 let tmp1 = Self::from_literal(!(1 << i));
@@ -605,20 +605,20 @@ macro_rules! signed_integer {
 
             /// Set bit `pos` of this integer to bit `yi` of integer `y`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set(self, pos: usize, y: Self, yi: usize) -> Self {
                 let b = y.get_bit(yi);
                 self.set_bit(b, pos)
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
                 (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
@@ -804,7 +804,7 @@ macro_rules! nat_mod {
 
             /// Get bit `i` of this integer.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn get_bit(self, i: usize) -> Self {
                 (self >> i) & Self::ONE()
             }
@@ -812,7 +812,7 @@ macro_rules! nat_mod {
             /// Set bit `i` of this integer to `b` and return the result.
             /// Bit `b` has to be `0` or `1`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set_bit(self, b: Self, i: usize) -> Self {
                 debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
                 let tmp1 = Self::from_literal(!(1 << i));
@@ -822,20 +822,20 @@ macro_rules! nat_mod {
 
             /// Set bit `pos` of this integer to bit `yi` of integer `y`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set(self, pos: usize, y: Self, yi: usize) -> Self {
                 let b = y.get_bit(yi);
                 self.set_bit(b, pos)
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
                 (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
@@ -1088,7 +1088,7 @@ macro_rules! public_nat_mod {
 
             /// Get bit `i` of this integer.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn get_bit(self, i: usize) -> Self {
                 (self >> i) & Self::ONE()
             }
@@ -1096,7 +1096,7 @@ macro_rules! public_nat_mod {
             /// Set bit `i` of this integer to `b` and return the result.
             /// Bit `b` has to be `0` or `1`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set_bit(self, b: Self, i: usize) -> Self {
                 debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
                 let tmp1 = Self::from_literal(!(1 << i));
@@ -1106,20 +1106,20 @@ macro_rules! public_nat_mod {
 
             /// Set bit `pos` of this integer to bit `yi` of integer `y`.
             #[inline]
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn set(self, pos: usize, y: Self, yi: usize) -> Self {
                 let b = y.get_bit(yi);
                 self.set_bit(b, pos)
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);
                 (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
                 assert!(n < Self::NUM_BITS);

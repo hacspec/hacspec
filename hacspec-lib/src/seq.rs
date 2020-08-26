@@ -125,7 +125,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self.b.iter()
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_slice<A: SeqTrait<T>>(
                 mut self,
                 start_out: usize,
@@ -141,13 +141,13 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(start, v, 0, len)
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(0, v, 0, len)

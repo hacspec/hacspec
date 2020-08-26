@@ -145,7 +145,7 @@ macro_rules! _array_base {
                 self.0.iter()
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_slice<A: SeqTrait<$t>>(
                 mut self,
                 start_out: usize,
@@ -161,13 +161,13 @@ macro_rules! _array_base {
                 self
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update<A: SeqTrait<$t>>(self, start: usize, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(start, v, 0, len)
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_start<A: SeqTrait<$t>>(self, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(0, v, 0, len)
@@ -412,7 +412,7 @@ macro_rules! generic_array {
                 self.0.iter()
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_slice<A: SeqTrait<T>>(
                 mut self,
                 start_out: usize,
@@ -428,13 +428,13 @@ macro_rules! generic_array {
                 self
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(start, v, 0, len)
             }
 
-            #[cfg_attr(feature = "use_attributes", library(hacspec))]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(0, v, 0, len)

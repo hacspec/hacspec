@@ -37,3 +37,7 @@ args:
         multiple: false
         number_of_values: 1
         help: put 2018
+    - unstable_flags:
+        short: Z
+        multiple: false
+        number_of_values: 1
