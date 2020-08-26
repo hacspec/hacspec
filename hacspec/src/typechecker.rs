@@ -887,9 +887,7 @@ fn typecheck_expression(
                     &var_context,
                     name_context,
                 )?;
-                var_context = new_var_context;
-                let new_arg_borrow = match (&(arg_t.0).0, &arg_borrow) {
-                    (Borrowing::Consumed, _) => arg_borrow.clone(),
+                let new_arg_t = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             *arg_borrow_span,
@@ -897,18 +895,26 @@ fn typecheck_expression(
                         );
                         return Err(());
                     }
-                    (Borrowing::Borrowed, Borrowing::Consumed) => (arg_t.0).0.clone(),
+                    (Borrowing::Consumed, Borrowing::Borrowed) => {
+                        // If the argument is borrowed, then the consumed variables are actually
+                        // not consumed so we don't update the var context
+                        ((Borrowing::Borrowed, (arg_t.0).1.clone()), arg_t.1.clone())
+                    }
+                    _ => {
+                        var_context = new_var_context;
+                        arg_t.clone()
+                    }
                 };
                 new_args.push((
                     (new_arg, arg_span.clone()),
-                    (new_arg_borrow, arg_borrow_span.clone()),
+                    (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
-                match unify_types(&arg_t, sig_t, &typ_var_ctx) {
+                match unify_types(&new_arg_t, sig_t, &typ_var_ctx) {
                     None => {
                         sess.span_rustspec_err(
                             *arg_span,
                             format!(
-                                "expected type {}{}, got {}{}",
+                                "expected type {}{} for function argument, got {}{}",
                                 (sig_t.0).0,
                                 (sig_t.1).0,
                                 (arg_t.0).0,

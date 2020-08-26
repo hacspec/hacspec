@@ -69,7 +69,7 @@ fn translate_base_typ(
                     .as_str()
                 {
                     "hacspec_lib" => match name.to_ident_string().as_str() {
-                        "Seq" => {
+                        "Seq" | "PublicSeq" | "SecretSeq" => {
                             let (param_typ, typ_ctx) = if substs.len() == 1 {
                                 match substs.first().unwrap().unpack() {
                                     GenericArgKind::Type(arg_ty) => {
@@ -93,12 +93,36 @@ fn translate_base_typ(
                             typ_ctx.clone(),
                         )),
                     },
+                    "core" => match name.to_ident_string().as_str() {
+                        "Range" => {
+                            let (param_typ, typ_ctx) = if substs.len() == 1 {
+                                match substs.first().unwrap().unpack() {
+                                    GenericArgKind::Type(arg_ty) => {
+                                        match translate_base_typ(tcx, &arg_ty, typ_ctx) {
+                                            Ok((t, typ_ctx)) => (t, typ_ctx),
+                                            Err(()) => return Err(()),
+                                        }
+                                    }
+                                    _ => return Err(()),
+                                }
+                            } else {
+                                return Err(());
+                            };
+                            Ok((
+                                BaseTyp::Tuple(vec![
+                                    (param_typ.clone(), DUMMY_SP),
+                                    (param_typ, DUMMY_SP),
+                                ]),
+                                typ_ctx,
+                            ))
+                        }
+                        _ => Err(()),
+                    },
                     _ => Ok((
                         BaseTyp::Named((Ident::Original(name.to_ident_string()), DUMMY_SP), None),
                         typ_ctx.clone(),
                     )),
                 },
-
                 _ => Err(()),
             }
         }
