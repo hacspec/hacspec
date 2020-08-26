@@ -44,7 +44,6 @@ fn run_test_chacha_simplified() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-#[ignore]
 fn run_test_chacha20() -> Result<(), Box<dyn std::error::Error>> {
     run_test("../spec-examples/src/chacha20_poly1305/chacha20.rs", None)
 }

@@ -23,7 +23,7 @@ fn fresh_ident(x: &Ident) -> Ident {
     }
 }
 
-fn is_numeric(t: &Typ) -> bool {
+fn is_numeric(t: &Typ, typ_dict: &TypeDict) -> bool {
     if (t.0).0 == Borrowing::Borrowed {
         return false;
     };
@@ -40,10 +40,19 @@ fn is_numeric(t: &Typ) -> bool {
         BaseTyp::Int8 => true,
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
-        BaseTyp::Named((Ident::Original(name), _), None) => match name.as_str() {
-            "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64" | "I128" => true,
-            _ => false,
+        BaseTyp::Named((Ident::Original(name), _), None) => match typ_dict.get(name) {
+            Some((t1, _)) => {
+                debug_assert!((t1.0).0 == Borrowing::Consumed);
+                is_numeric(t1, typ_dict)
+            }
+            None => match name.as_str() {
+                "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64" | "I128" => {
+                    true
+                }
+                _ => false,
+            },
         },
+        BaseTyp::Array(_, _) => true,
         _ => false,
     }
 }
@@ -66,13 +75,19 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
         BaseTyp::Isize => true,
         BaseTyp::Seq(_) => false,
         BaseTyp::Array(_, _) => true,
-        // TODO: implement special cases for derived copy
-        BaseTyp::Named((Ident::Original(name), _), _) => match typ_dict.get(name) {
+        BaseTyp::Named((Ident::Original(name), _), arg) => match typ_dict.get(name) {
             Some((t1, _)) => {
                 debug_assert!((t1.0).0 == Borrowing::Consumed);
                 is_copy(&(t1.1).0, typ_dict)
             }
-            None => false,
+            None => match arg {
+                None => match name.as_str() {
+                    "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64"
+                    | "I128" => true,
+                    _ => false,
+                },
+                Some(_) => false,
+            },
         },
         BaseTyp::Named((Ident::Rustspec(_, _), _), _) => panic!(), // should not happen
         BaseTyp::Variable(_) => false,
@@ -133,72 +148,148 @@ fn is_index(t: &BaseTyp) -> bool {
 
 type TypeVarCtx = HashMap<RustspecId, BaseTyp>;
 
-fn unify_types(t1: &Typ, t2: &Typ, typ_ctx: &TypeVarCtx) -> Option<TypeVarCtx> {
+fn unify_types(
+    sess: &Session,
+    t1: &Typ,
+    t2: &Typ,
+    typ_ctx: &TypeVarCtx,
+    typ_dict: &TypeDict,
+) -> TypecheckingResult<Option<TypeVarCtx>> {
+    // We first have to remove all the aliases
+    // We don't support generic aliases for now
+    match &(t1.1).0 {
+        BaseTyp::Named((Ident::Original(name1), _), None) => match typ_dict.get(name1) {
+            Some(((new_t1_borrow, new_t1), DictEntry::Alias)) => {
+                let new_new_t1_borrow = match (&(t1.0).0, &new_t1_borrow.0) {
+                    (Borrowing::Borrowed, Borrowing::Borrowed) => {
+                        sess.span_rustspec_err(
+                            (t1.0).1.clone(),
+                            "double borrowing is forbidden in Rust!",
+                        );
+                        return Err(());
+                    }
+                    (Borrowing::Consumed, Borrowing::Borrowed)
+                    | (Borrowing::Borrowed, Borrowing::Consumed) => {
+                        (Borrowing::Borrowed, (t1.0).1.clone())
+                    }
+                    _ => (Borrowing::Consumed, (t1.0).1.clone()),
+                };
+                return unify_types(
+                    sess,
+                    &(new_new_t1_borrow, new_t1.clone()),
+                    t2,
+                    typ_ctx,
+                    typ_dict,
+                );
+            }
+            _ => (),
+        },
+        _ => (),
+    }
+    //Same thing for t2
+    match &(t2.1).0 {
+        BaseTyp::Named((Ident::Original(name2), _), None) => match typ_dict.get(name2) {
+            Some(((new_t2_borrow, new_t2), DictEntry::Alias)) => {
+                let new_new_t2_borrow = match (&(t2.0).0, &new_t2_borrow.0) {
+                    (Borrowing::Borrowed, Borrowing::Borrowed) => {
+                        sess.span_rustspec_err(
+                            (t2.0).1.clone(),
+                            "double borrowing is forbidden in Rust!",
+                        );
+                        return Err(());
+                    }
+                    (Borrowing::Consumed, Borrowing::Borrowed)
+                    | (Borrowing::Borrowed, Borrowing::Consumed) => {
+                        (Borrowing::Borrowed, (t2.0).1.clone())
+                    }
+                    _ => (Borrowing::Consumed, (t2.0).1.clone()),
+                };
+                return unify_types(
+                    sess,
+                    &(new_new_t2_borrow, new_t2.clone()),
+                    t2,
+                    typ_ctx,
+                    typ_dict,
+                );
+            }
+            _ => (),
+        },
+        _ => (),
+    }
     match (&(t1.0).0, &(t2.0).0) {
         (Borrowing::Consumed, Borrowing::Consumed) | (Borrowing::Borrowed, Borrowing::Borrowed) => {
             match (&(t1.1).0, &(t2.1).0) {
-                (BaseTyp::Unit, BaseTyp::Unit) => Some(typ_ctx.clone()),
-                (BaseTyp::Bool, BaseTyp::Bool) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt128, BaseTyp::UInt128) => Some(typ_ctx.clone()),
-                (BaseTyp::Int128, BaseTyp::Int128) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt64, BaseTyp::UInt64) => Some(typ_ctx.clone()),
-                (BaseTyp::Int64, BaseTyp::Int64) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt32, BaseTyp::UInt32) => Some(typ_ctx.clone()),
-                (BaseTyp::Int32, BaseTyp::Int32) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt16, BaseTyp::UInt16) => Some(typ_ctx.clone()),
-                (BaseTyp::Int16, BaseTyp::Int16) => Some(typ_ctx.clone()),
-                (BaseTyp::UInt8, BaseTyp::UInt8) => Some(typ_ctx.clone()),
-                (BaseTyp::Int8, BaseTyp::Int8) => Some(typ_ctx.clone()),
-                (BaseTyp::Usize, BaseTyp::Usize) => Some(typ_ctx.clone()),
-                (BaseTyp::Isize, BaseTyp::Isize) => Some(typ_ctx.clone()),
+                (BaseTyp::Unit, BaseTyp::Unit) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Bool, BaseTyp::Bool) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::UInt128, BaseTyp::UInt128) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Int128, BaseTyp::Int128) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::UInt64, BaseTyp::UInt64) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Int64, BaseTyp::Int64) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::UInt32, BaseTyp::UInt32) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Int32, BaseTyp::Int32) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::UInt16, BaseTyp::UInt16) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Int16, BaseTyp::Int16) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::UInt8, BaseTyp::UInt8) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Int8, BaseTyp::Int8) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Usize, BaseTyp::Usize) => Ok(Some(typ_ctx.clone())),
+                (BaseTyp::Isize, BaseTyp::Isize) => Ok(Some(typ_ctx.clone())),
                 (BaseTyp::Seq(tc1), BaseTyp::Seq(tc2)) => unify_types(
+                    sess,
                     &(((Borrowing::Consumed, (t1.1).1)), *tc1.clone()),
                     &(((Borrowing::Consumed, (t2.1).1)), *tc2.clone()),
                     typ_ctx,
+                    typ_dict,
                 ),
                 (BaseTyp::Named(name1, arg1), BaseTyp::Named(name2, arg2)) => {
-                    if match (&name1.0, &name2.0) {
-                        (Ident::Original(name1), Ident::Original(name2)) => name1 == name2,
-                        _ => panic!(), //should not happen
-                    } {
+                    let (name1, name2) = match (&name1.0, &name2.0) {
+                        (Ident::Original(name1), Ident::Original(name2)) => {
+                            (name1.clone(), name2.clone())
+                        }
+                        _ => panic!(),
+                    };
+                    if name1 == name2 {
                         match (&arg1, &arg2) {
-                            (None, None) => Some(typ_ctx.clone()),
+                            (None, None) => Ok(Some(typ_ctx.clone())),
                             (Some(tc1), Some(tc2)) => unify_types(
+                                sess,
                                 &(((Borrowing::Consumed, (t1.1).1)), tc1.as_ref().clone()),
                                 &(((Borrowing::Consumed, (t2.1).1)), tc2.as_ref().clone()),
                                 typ_ctx,
+                                typ_dict,
                             ),
-                            _ => None,
+                            _ => Ok(None),
                         }
                     } else {
-                        None
+                        Ok(None)
                     }
                 }
                 (BaseTyp::Tuple(ts1), BaseTyp::Tuple(ts2)) => {
                     if ts1.len() == ts2.len() {
                         ts1.iter().zip(ts2.iter()).fold(
-                            Some(typ_ctx.clone()),
+                            Ok(Some(typ_ctx.clone())),
                             |typ_ctx, (tc1, tc2)| {
-                                typ_ctx.map_or(None, |typ_ctx| {
+                                typ_ctx?.map_or(Ok(None), |typ_ctx| {
                                     unify_types(
+                                        sess,
                                         &(((Borrowing::Consumed, (t1.1).1)), tc1.clone()),
                                         &(((Borrowing::Consumed, (t2.1).1)), tc2.clone()),
                                         &typ_ctx,
+                                        typ_dict,
                                     )
                                 })
                             },
                         )
                     } else {
-                        None
+                        Ok(None)
                     }
                 }
-                (BaseTyp::Variable(_), BaseTyp::Variable(_)) => None,
-                (BaseTyp::Variable(id1), bt2) => Some(typ_ctx.update(id1.clone(), bt2.clone())),
-                (bt1, BaseTyp::Variable(id2)) => Some(typ_ctx.update(id2.clone(), bt1.clone())),
-                _ => None,
+                (BaseTyp::Variable(_), BaseTyp::Variable(_)) => Ok(None),
+                (BaseTyp::Variable(id1), bt2) => Ok(Some(typ_ctx.update(id1.clone(), bt2.clone()))),
+                (bt1, BaseTyp::Variable(id2)) => Ok(Some(typ_ctx.update(id2.clone(), bt1.clone()))),
+                _ => Ok(None),
             }
         }
-        _ => None,
+        _ => Ok(None),
     }
 }
 
@@ -302,6 +393,7 @@ fn find_func(
     span: &Span,
 ) -> TypecheckingResult<(FnValue, TypeVarCtx)> {
     let candidates = fn_context.clone();
+    let mut has_err = false;
     let candidates: Vec<_> = candidates
         .iter()
         .filter_map(|(key2, sig)| match (key1, key2) {
@@ -335,15 +427,18 @@ fn find_func(
                         (t1.clone(), span.clone()),
                     ),
                 };
-                match unify_types(
+                let unification: TypecheckingResult<Option<TypeVarCtx>> = unify_types(
+                    sess,
                     &t1,
                     &(
                         (Borrowing::Consumed, span.clone()),
                         (t2.clone(), span.clone()),
                     ),
                     &HashMap::new(),
-                ) {
-                    Some(new_typ_ctx) => match (n1, n2) {
+                    typ_dict,
+                );
+                match unification {
+                    Ok(Some(new_typ_ctx)) => match (n1, n2) {
                         (Ident::Original(n1), Ident::Original(n2)) => {
                             if n1 == n2 {
                                 Some((new_typ_ctx, sig))
@@ -353,12 +448,20 @@ fn find_func(
                         }
                         _ => panic!(),
                     },
-                    None => None,
+
+                    Ok(None) => None,
+                    Err(_) => {
+                        has_err = true;
+                        None
+                    }
                 }
             }
             _ => None,
         })
         .collect();
+    if has_err {
+        return Err(());
+    }
     if candidates.len() == 0 {
         sess.span_rustspec_err(*span, format!("function {} cannot be found", key1).as_str());
         return Err(());
@@ -474,11 +577,7 @@ fn typecheck_expression(
                 None => {
                     sess.span_rustspec_err(
                         *span,
-                        format!(
-                            "the variable {} is unknown in context {:?}",
-                            id, var_context
-                        )
-                        .as_str(),
+                        format!("the variable {} is not present in the context", id).as_str(),
                     );
                     Err(())
                 }
@@ -505,7 +604,7 @@ fn typecheck_expression(
             match op {
                 BinOpKind::Shl | BinOpKind::Shr => match &(t2.1).0 {
                     BaseTyp::UInt32 => {
-                        if is_numeric(&t1) {
+                        if is_numeric(&t1, typ_dict) {
                             Ok((
                                 Expression::Binary(
                                     (op.clone(), op_span.clone()),
@@ -542,7 +641,7 @@ fn typecheck_expression(
                     }
                 },
                 _ => {
-                    if unify_types(&t1, &t2, &HashMap::new()).is_none() {
+                    if unify_types(sess, &t1, &t2, &HashMap::new(), typ_dict)?.is_none() {
                         sess.span_rustspec_err(
                             *span,
                             format!(
@@ -553,7 +652,7 @@ fn typecheck_expression(
                         );
                         Err(())
                     } else {
-                        if is_numeric(&t1) {
+                        if is_numeric(&t1, typ_dict) {
                             Ok((
                                 Expression::Binary(
                                     (op.clone(), op_span.clone()),
@@ -763,13 +862,15 @@ fn typecheck_expression(
                         )?;
                         var_context = new_var_context;
                         match unify_types(
+                            sess,
                             &(
                                 (Borrowing::Consumed, cell_type_span.clone()),
                                 (cell_type.clone(), cell_type_span.clone()),
                             ),
                             &element_typ,
                             &HashMap::new(),
-                        ) {
+                            typ_dict,
+                        )? {
                             None => {
                                 sess.span_rustspec_err(
                                     element.1.clone(),
@@ -939,7 +1040,7 @@ fn typecheck_expression(
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
-                match unify_types(&new_arg_t, sig_t, &typ_var_ctx) {
+                match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, typ_dict)? {
                     None => {
                         sess.span_rustspec_err(
                             *arg_span,
@@ -998,8 +1099,12 @@ fn typecheck_expression(
             let sig_args = sig_args(&f_sig);
             // Because self arguments are implictly borrowed in Rust, we have to insert
             // this implicit borrow logic here
-            let new_sel_borrow = match (&sel_borrow.0, &(sig_args.first().unwrap().0).0) {
-                (Borrowing::Consumed, Borrowing::Borrowed) => {
+            let new_sel_borrow = match (
+                &sel_borrow.0,
+                &(sel_typ.0).0,
+                &(sig_args.first().unwrap().0).0,
+            ) {
+                (Borrowing::Consumed, Borrowing::Consumed, Borrowing::Borrowed) => {
                     (Borrowing::Borrowed, sel_borrow.1.clone())
                 }
                 _ => sel_borrow.clone(),
@@ -1055,7 +1160,7 @@ fn typecheck_expression(
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
-                match unify_types(&new_arg_t, sig_t, &typ_var_ctx) {
+                match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, typ_dict)? {
                     None => {
                         sess.span_rustspec_err(
                             arg_span,
@@ -1188,7 +1293,7 @@ fn typecheck_statement(
             match typ {
                 None => (),
                 Some((typ, _)) => {
-                    if unify_types(typ, &expr_typ, &HashMap::new()).is_none() {
+                    if unify_types(sess, typ, &expr_typ, &HashMap::new(), typ_dict)?.is_none() {
                         sess.span_rustspec_err(
                             *pat_span,
                             format!(
@@ -1230,7 +1335,7 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            if unify_types(&e_typ, &x_typ, &HashMap::new()).is_none() {
+            if unify_types(sess, &e_typ, &x_typ, &HashMap::new(), typ_dict)?.is_none() {
                 sess.span_rustspec_err(
                     e.1,
                     format!(
@@ -1276,10 +1381,12 @@ fn typecheck_statement(
             };
             let (_, cell_t) = is_array(sess, x_typ, typ_dict, x_span)?;
             if unify_types(
+                sess,
                 &e2_t,
                 &((Borrowing::Consumed, x_span.clone()), cell_t.clone()),
                 &HashMap::new(),
-            )
+                typ_dict,
+            )?
             .is_none()
             {
                 sess.span_rustspec_err(
