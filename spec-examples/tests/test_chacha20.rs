@@ -1,5 +1,5 @@
-use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
+use hacspec_lib::prelude::*;
 
 use hacspec_examples::chacha20_poly1305::chacha20::*;
 
@@ -103,12 +103,8 @@ fn enc_dec_test(m: ByteSeq, key: Key, iv: IV) {
     );
 }
 
-fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq, valid: bool) {
+fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq) {
     let enc = chacha(key, iv, &m);
-    assert!(true == valid);
-    if !valid {
-        return;
-    }
     let c = enc;
     assert_eq!(
         exp_cipher
@@ -162,5 +158,5 @@ fn test_kat() {
         0x80, 0x8b, 0x48, 0x31, 0xd7, 0xbc, 0x3f, 0xf4, 0xde, 0xf0, 0x8e, 0x4b, 0x7a, 0x9d, 0xe5,
         0x76, 0xd2, 0x65, 0x86, 0xce, 0xc6, 0x4b, 0x61, 0x16,
     ]);
-    kat_test(m, key, iv, exp_cipher, true);
+    kat_test(m, key, iv, exp_cipher);
 }

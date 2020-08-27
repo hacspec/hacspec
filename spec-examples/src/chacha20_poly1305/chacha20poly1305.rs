@@ -46,8 +46,9 @@ pub fn decrypt(
     let mac_key = Key::from_slice_range(&key_block, 0..32);
     let padded_msg = pad_aad_msg(aad, cipher_text);
     let my_tag = poly(&padded_msg, mac_key);
+    let plain_text = chacha(key, iv, cipher_text);
     if my_tag == tag {
-        Ok(chacha(key, iv, cipher_text))
+        Ok(plain_text)
     } else {
         Err("Mac verification failed".to_string())
     }
