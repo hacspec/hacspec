@@ -76,7 +76,7 @@ use std::num::Wrapping;
 use std::ops::*;
 
 macro_rules! define_wrapping_op {
-    ($name:ident, $op:tt, $op_name:ident, $func_op:ident, $assign_name:ident, $assign_func:ident, $checked_func_op:ident) => {
+    ($name:ident, $op:tt, $op_name:ident, $func_op:ident, $assign_name:ident, $assign_func:ident, $checked_func_op:ident, $wrap_func_op:ident) => {
 
         /// **Warning:** has wrapping semantics.
         impl $op_name for $name {
@@ -98,6 +98,11 @@ macro_rules! define_wrapping_op {
                     None => panic!("Secret integer {} overflow!", stringify!($func_op)),
                     Some(r) => $name(r)
                 }
+            }
+
+            /// Implement standard wrapping function
+            pub fn $wrap_func_op(self, rhs: Self) -> Self {
+                self.$func_op(rhs)
             }
         }
 
@@ -261,9 +266,9 @@ macro_rules! define_secret_integer {
             }
         }
 
-        define_wrapping_op!($name, +, Add, add, AddAssign, add_assign, checked_add);
-        define_wrapping_op!($name, -, Sub, sub, SubAssign, sub_assign, checked_sub);
-        define_wrapping_op!($name, *, Mul, mul, MulAssign, mul_assign, checked_mul);
+        define_wrapping_op!($name, +, Add, add, AddAssign, add_assign, checked_add, wrapping_add);
+        define_wrapping_op!($name, -, Sub, sub, SubAssign, sub_assign, checked_sub, wrapping_sub);
+        define_wrapping_op!($name, *, Mul, mul, MulAssign, mul_assign, checked_mul, wrapping_mul);
 
         define_shift!($name, <<, wrapping_shl, Shl, shl, ShlAssign, shl_assign);
         define_shift!($name, >>, wrapping_shr, Shr, shr, ShrAssign, shr_assign);
