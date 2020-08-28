@@ -49,23 +49,6 @@ pub(crate) fn normalize<T: Numeric + Copy>(x: &[T], y: &[T]) -> (Vec<T>, Vec<T>)
 
 #[inline]
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
-/// Return the leading coefficient (value) of `x` that's non-zero.
-/// Returns a (index, coefficient)-Tuple.
-pub(crate) fn leading_coefficient<T: Numeric + Copy>(x: &[T]) -> (usize, T) {
-    let zero = T::default();
-    let mut degree: usize = 0;
-    let mut coefficient = T::default();
-    for (i, &c) in x.iter().enumerate() {
-        if !c.equal(zero) {
-            degree = i;
-            coefficient = c;
-        }
-    }
-    (degree, coefficient)
-}
-
-#[inline]
-#[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Returns `true` if `v` is all zero, and `false` otherwise.
 /// Note: this is not constant-time.
 pub(crate) fn is_zero<T: Numeric + Copy>(v: &[T]) -> bool {

@@ -7,6 +7,7 @@ use crate::prelude::*;
 mod ct_poly;
 pub mod ct_util;
 pub mod poly;
+pub mod vec_integers;
 
 use ct_poly::*;
 use poly::*;

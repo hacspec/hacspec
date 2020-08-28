@@ -14,8 +14,6 @@ pub use crate::traits::*;
 pub use crate::transmute::*;
 pub use crate::util::*;
 pub use crate::vec_integers::*;
-pub use crate::vec_integers_public::*;
-pub use crate::vec_integers_secret::*;
 pub(crate) use crate::vec_util::*;
 pub use crate::*;
 

@@ -136,3 +136,20 @@ pub(crate) fn deg<T: Integer + Copy>(poly: &[T]) -> usize {
     }
     deg
 }
+
+#[inline]
+#[cfg_attr(feature = "use_attributes", not_hacspec)]
+/// Return the leading coefficient (value) of `x` that's non-zero.
+/// Returns a (index, coefficient)-Tuple.
+pub(crate) fn leading_coefficient<T: Numeric + Copy>(x: &[T]) -> (usize, T) {
+    let zero = T::default();
+    let mut degree: usize = 0;
+    let mut coefficient = T::default();
+    for (i, &c) in x.iter().enumerate() {
+        if !c.equal(zero) {
+            degree = i;
+            coefficient = c;
+        }
+    }
+    (degree, coefficient)
+}
