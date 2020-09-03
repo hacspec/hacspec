@@ -16,6 +16,7 @@ use hacspec_examples::ec::{
     Affine,
 };
 use hacspec_examples::fips202::*;
+use hacspec_examples::sha2::hash as sha256;
 use hacspec_lib::prelude::*;
 
 fn randombytes(n: usize) -> Vec<u8> {
@@ -360,6 +361,18 @@ fn criterion_fips202(c: &mut Criterion) {
     });
 }
 
+fn criterion_sha2(c: &mut Criterion) {
+    c.bench_function("SHA 2 256", |b| {
+        b.iter_batched(
+            || ByteSeq::from_public_slice(&randombytes(10_000)),
+            |data| {
+                let _h = sha256(&data);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+}
+
 fn criterion_benchmark(c: &mut Criterion) {
     criterion_aes_gcm(c);
     criterion_chacha_poly(c);
@@ -368,6 +381,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     criterion_fips202(c);
     criterion_p256(c);
     criterion_p384(c);
+    criterion_sha2(c);
 }
 
 criterion_group!(benches, criterion_benchmark);
