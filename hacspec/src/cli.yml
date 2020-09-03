@@ -41,3 +41,7 @@ args:
         short: Z
         multiple: false
         number_of_values: 1
+    - crate_name:
+        long: crate-name
+        multiple: false
+        number_of_values: 1

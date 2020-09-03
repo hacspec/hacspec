@@ -6,13 +6,23 @@ const CRATE_TYPE_ARG: &'static str = "--crate-type=lib";
 const EDITION_ARG: &'static str = "--edition=2018";
 const EXTERN_ARG: &'static str = "--extern=hacspec_lib";
 
-fn run_test(input: &str, output: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+fn run_test(
+    input: &str,
+    output: Option<&str>,
+    krate: Option<&str>,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!(
-        "Running: cargo run -- {} {} {} {} {} {}",
+        "Running: cargo run -- {} {} {} {}{} {} {}",
         DEPS_ARG,
         CRATE_TYPE_ARG,
         EDITION_ARG,
         EXTERN_ARG,
+        match krate {
+            Some(krate) => {
+                format!(" --crate-name={}", krate)
+            }
+            None => "".to_string(),
+        },
         match output {
             None => "-Zno-codegen".to_string(),
             Some(f) => format!("-o {}", f),
@@ -24,6 +34,12 @@ fn run_test(input: &str, output: Option<&str>) -> Result<(), Box<dyn std::error:
     cmd.arg(CRATE_TYPE_ARG);
     cmd.arg(EDITION_ARG);
     cmd.arg(EXTERN_ARG);
+    match krate {
+        Some(krate) => {
+            cmd.arg(format!("--crate-name={}", krate));
+        }
+        None => (),
+    };
     match output {
         None => cmd.arg("-Zno-codegen".to_string()),
         Some(f) => cmd.arg(format!("-o {}", f)),
@@ -35,15 +51,20 @@ fn run_test(input: &str, output: Option<&str>) -> Result<(), Box<dyn std::error:
 
 #[test]
 fn run_test1() -> Result<(), Box<dyn std::error::Error>> {
-    run_test("tests/test1.rs", Some("tests/Test1.fst"))
+    run_test("tests/test1.rs", Some("tests/Test1.fst"), None)
 }
 
 #[test]
 fn run_test_chacha_simplified() -> Result<(), Box<dyn std::error::Error>> {
-    run_test("tests/test_chacha.rs", Some("tests/TestChacha.fst"))
+    run_test("tests/test_chacha.rs", Some("tests/TestChacha.fst"), None)
 }
 
 #[test]
+#[ignore]
 fn run_test_chacha20() -> Result<(), Box<dyn std::error::Error>> {
-    run_test("../spec-examples/src/chacha20_poly1305/chacha20.rs", None)
+    run_test(
+        "../spec-examples/src/lib.rs",
+        None,
+        Some("hacspec_examples"),
+    )
 }
