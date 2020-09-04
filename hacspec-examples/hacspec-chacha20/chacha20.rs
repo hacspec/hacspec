@@ -8,12 +8,12 @@ bytes!(Key, 32);
 
 pub fn state_to_bytes(x: State) -> StateBytes {
     let mut r = StateBytes::new();
-    for i in 0usize..x.len() {
+    for i in 0..x.len() {
         let bytes = U32_to_be_bytes(x[i]);
-        r[i * 4usize] = bytes[3usize];
-        r[i * 4usize + 1usize] = bytes[2usize];
-        r[i * 4usize + 2usize] = bytes[1usize];
-        r[i * 4usize + 3usize] = bytes[0usize];
+        r[i * 4] = bytes[3];
+        r[i * 4 + 1] = bytes[2];
+        r[i * 4 + 2] = bytes[1];
+        r[i * 4 + 3] = bytes[0];
     }
     r
 }
@@ -28,10 +28,10 @@ fn line(a: u32, b: u32, d: u32, s: usize, m: State) -> State {
 }
 
 pub fn quarter_round(a: u32, b: u32, c: u32, d: u32, state: State) -> State {
-    let state = line(a, b, d, 16usize, state);
-    let state = line(c, d, b, 12usize, state);
-    let state = line(a, b, d, 8usize, state);
-    line(c, d, b, 7usize, state)
+    let state = line(a, b, d, 16, state);
+    let state = line(c, d, b, 12, state);
+    let state = line(a, b, d, 8, state);
+    line(c, d, b, 7, state)
 }
 
 fn double_round(state: State) -> State {
@@ -52,28 +52,28 @@ pub fn block_init(key: Key, ctr: U32, iv: IV) -> State {
         U32(0x3320_646eu32),
         U32(0x7962_2d32u32),
         U32(0x6b20_6574u32),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 0usize..4usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 4usize..8usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 8usize..12usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 12usize..16usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 16usize..20usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 20usize..24usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 24usize..28usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&key, 28usize..32usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 0..4)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 4..8)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 8..12)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 12..16)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 16..20)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 20..24)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 24..28)),
+        U32_from_le_bytes(U32Word::from_slice_range(&key, 28..32)),
         ctr,
-        U32_from_le_bytes(U32Word::from_slice_range(&iv, 0usize..4usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&iv, 4usize..8usize)),
-        U32_from_le_bytes(U32Word::from_slice_range(&iv, 8usize..12usize)),
+        U32_from_le_bytes(U32Word::from_slice_range(&iv, 0..4)),
+        U32_from_le_bytes(U32Word::from_slice_range(&iv, 4..8)),
+        U32_from_le_bytes(U32Word::from_slice_range(&iv, 8..12)),
     ])
 }
 
 pub fn block_inner(key: Key, ctr: U32, iv: IV) -> State {
     let st = block_init(key, ctr, iv);
     let mut state = st;
-    for _i in 0usize..10usize {
+    for _i in 0..10 {
         state = double_round(state);
     }
-    for i in 0usize..16usize {
+    for i in 0..16 {
         state[i] = state[i] + st[i];
     }
     state
@@ -87,15 +87,15 @@ pub fn block(key: Key, ctr: U32, iv: IV) -> StateBytes {
 pub fn chacha(key: Key, iv: IV, m: &ByteSeq) -> ByteSeq {
     let mut ctr = U32(1u32);
     let mut blocks_out = ByteSeq::new(m.len());
-    for i in 0usize..m.num_chunks(64usize) {
-        let (block_len, msg_block) = m.get_chunk(64usize, i);
+    for i in 0..m.num_chunks(64) {
+        let (block_len, msg_block) = m.get_chunk(64, i);
         let key_block = block(key, ctr, iv);
         let msg_block_padded = StateBytes::new();
         let msg_block_padded = msg_block_padded.update_start(&msg_block);
         blocks_out = blocks_out.set_chunk(
-            64usize,
+            64,
             i,
-            &(msg_block_padded ^ key_block).slice_range(0usize..block_len),
+            &(msg_block_padded ^ key_block).slice_range(0..block_len),
         );
         ctr = ctr + U32(1u32);
     }

@@ -493,13 +493,11 @@ fn translate_expr(
                 ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
                 e.span,
             )),
-            LitKind::Int(_, LitIntType::Unsuffixed) => {
-                sess.span_rustspec_err(
-                    lit.span,
-                    "integers literal of unspecified type are not allowed in Rustspec",
-                );
-                Err(())
-            }
+            // Unspecified integers are always interpreted as usize
+            LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
+                e.span,
+            )),
             _ => {
                 sess.span_rustspec_err(lit.span, "literal not allowed in Rustspec");
                 Err(())
