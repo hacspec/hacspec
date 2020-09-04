@@ -44,7 +44,12 @@ fn run_test_chacha_simplified() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-#[ignore]
 fn run_test_chacha20() -> Result<(), Box<dyn std::error::Error>> {
     run_test("../hacspec-examples/hacspec-chacha20/chacha20.rs", None)
+}
+
+#[test]
+#[ignore]
+fn run_test_poly130520() -> Result<(), Box<dyn std::error::Error>> {
+    run_test("../hacspec-examples/hacspec-poly1305/poly1305.rs", None)
 }

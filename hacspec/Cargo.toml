@@ -18,3 +18,5 @@ hacspec-sig = { path = "../hacspec-sig" }
 [dev-dependencies]
 assert_cmd = "1.0.1"
 hacspec-lib = { path = "../hacspec-lib" }
+hacspec-chacha20 = { path = "../hacspec-examples/hacspec-chacha20" }
+hacspec-poly1305 = { path = "../hacspec-examples/hacspec-poly1305" }
