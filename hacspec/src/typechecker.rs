@@ -1740,12 +1740,14 @@ macro_rules! type_dict_entry {
     };
 }
 
-pub fn typecheck_module<F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<ExternalFuncSig>>>(
+pub fn typecheck_program<
+    F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<ExternalFuncSig>>,
+>(
     sess: &Session,
-    p: &Module,
+    p: &Program,
     external_funcs: &F,
     _allowed_sigs: &AllowedSigs,
-) -> TypecheckingResult<Module> {
+) -> TypecheckingResult<Program> {
     let mut fn_context: FnContext = external_funcs(&p.imported_crates)
         .iter()
         .map(|(k, v)| {
@@ -1839,7 +1841,7 @@ pub fn typecheck_module<F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<Ex
         ]
         .as_slice(),
     );
-    Ok(Module {
+    Ok(Program {
         items: check_vec(
             p.items
                 .iter()
@@ -1854,24 +1856,4 @@ pub fn typecheck_module<F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<Ex
         )?,
         imported_crates: p.imported_crates.clone(),
     })
-}
-
-pub fn typecheck_program<
-    F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<ExternalFuncSig>>,
->(
-    sess: &Session,
-    p: &Program,
-    external_funcs: &F,
-    allowed_sigs: &AllowedSigs,
-) -> TypecheckingResult<Program> {
-    if p.0.len() > 1 {
-        unimplemented!()
-    }
-    let p = p.0.first().unwrap().clone();
-    Ok(Program(vec![typecheck_module(
-        sess,
-        p,
-        external_funcs,
-        allowed_sigs,
-    )?]))
 }

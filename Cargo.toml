@@ -6,8 +6,8 @@ members = [
     "hacspec",
     "secret-integers",
     "abstract-integers",
+    "hacspec-examples/hacspec-chacha20",
     "spec-examples",
-    "hacspec-examples",
     "hacspec-attributes",
     "hacspec-sig"
 ]
@@ -17,8 +17,8 @@ default-members = [
     "hacspec-derive",
     "secret-integers",
     "abstract-integers",
+    "hacspec-examples/hacspec-chacha20",
     "spec-examples",
-    "hacspec-examples",
     "hacspec-attributes",
     "hacspec-sig"
 ]
