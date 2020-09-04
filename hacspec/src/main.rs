@@ -125,16 +125,18 @@ impl Callbacks for HacspecCallbacks {
             .unwrap_or(empty_map)
             .get(&crate_s)
             .unwrap_or(empty_set);
-        let external_funcs = queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-            hir_to_rustspec::retrieve_external_functions(
-                &compiler.session(),
-                &tcx,
-                &krate.imported_crates,
-            )
-        });
+        let external_funcs = |imported_crates: &Vec<rustspec::Spanned<String>>| {
+            queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
+                hir_to_rustspec::retrieve_external_functions(
+                    &compiler.session(),
+                    &tcx,
+                    imported_crates,
+                )
+            })
+        };
         let krate = match typechecker::typecheck_program(
             &compiler.session(),
-            krate,
+            &krate,
             &external_funcs,
             hacspec_items,
         ) {

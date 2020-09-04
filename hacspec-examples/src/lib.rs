@@ -1,1 +1,1 @@
-pub mod chacha20_poly1305;
+pub mod chacha20;

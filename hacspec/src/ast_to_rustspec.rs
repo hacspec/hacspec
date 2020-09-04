@@ -12,7 +12,7 @@ use rustc_ast::{
     tokenstream::TokenTree,
 };
 use rustc_session::Session;
-use rustc_span::{symbol, Span};
+use rustc_span::{symbol, Span, DUMMY_SP};
 
 use crate::rustspec::*;
 use crate::RustspectErrorEmitter;
@@ -998,6 +998,7 @@ fn translate_block(
 enum ItemTranslationResult {
     Item(Item),
     ImportedCrate(String),
+    Module(Module),
 }
 
 fn translate_items(
@@ -1434,6 +1435,57 @@ fn translate_items(
                 }
             }
         }
+        ItemKind::Mod(module) => {
+            println!(
+                "Number of items: {} {:?} {}",
+                module.items.len(),
+                module.inner,
+                module.inline
+            );
+            let translated_items = module.items.iter().map(|i| unimplemented!());
+            let mut found_mod = false;
+            let (items, imports): (Vec<_>, Vec<_>) =
+                translated_items.into_iter().partition(|(r, _)| match r {
+                    ItemTranslationResult::Item(_) => true,
+                    ItemTranslationResult::ImportedCrate(_) => false,
+                    ItemTranslationResult::Module(_) => {
+                        found_mod = true;
+                        true
+                    }
+                });
+            if found_mod {
+                sess.span_rustspec_err(
+                    module.inner.clone(),
+                    "cannot mix module declaration and items",
+                );
+                return Err(());
+            }
+            let items = items
+                .into_iter()
+                .map(|(r, r_span)| {
+                    match r {
+                        ItemTranslationResult::Item(i) => (i, r_span),
+                        _ => panic!(), // should not happen
+                    }
+                })
+                .collect();
+            let imports = imports
+                .into_iter()
+                .map(|(r, r_span)| {
+                    match r {
+                        ItemTranslationResult::ImportedCrate(i) => (i, r_span),
+                        _ => panic!(), // should not happen
+                    }
+                })
+                .collect();
+            Ok((
+                ItemTranslationResult::Module(Module {
+                    items,
+                    imported_crates: imports,
+                }),
+                arr_types.clone(),
+            ))
+        }
         _ => {
             sess.span_rustspec_err(i.span.clone(), "item not allowed in Rustspec");
             Err(())
@@ -1444,7 +1496,7 @@ fn translate_items(
 pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
     let items = &krate.module.items;
     let mut arr_types = HashSet::new();
-    let (items, imports): (Vec<_>, Vec<_>) = check_vec(
+    let translated_items = check_vec(
         items
             .into_iter()
             .map(|i| {
@@ -1453,32 +1505,49 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
                 Ok((new_i, i.span))
             })
             .collect(),
-    )?
-    .into_iter()
-    .partition(|(r, _)| match r {
-        ItemTranslationResult::Item(_) => true,
-        ItemTranslationResult::ImportedCrate(_) => false,
+    )?;
+    let all_mods = translated_items.iter().all(|(r, _)| match r {
+        ItemTranslationResult::Module(_) => true,
+        _ => false,
     });
-    let items = items
-        .into_iter()
-        .map(|(r, r_span)| {
-            match r {
-                ItemTranslationResult::Item(i) => (i, r_span),
-                _ => panic!(), // should not happen
-            }
-        })
-        .collect();
-    let imports = imports
-        .into_iter()
-        .map(|(r, r_span)| {
-            match r {
-                ItemTranslationResult::ImportedCrate(i) => (i, r_span),
-                _ => panic!(), // should not happen
-            }
-        })
-        .collect();
-    Ok(Program {
-        items,
-        imported_crates: imports,
-    })
+    if all_mods {
+        unimplemented!()
+    } else {
+        let mut found_mod = false;
+        let (items, imports): (Vec<_>, Vec<_>) =
+            translated_items.into_iter().partition(|(r, _)| match r {
+                ItemTranslationResult::Item(_) => true,
+                ItemTranslationResult::ImportedCrate(_) => false,
+                ItemTranslationResult::Module(_) => {
+                    found_mod = true;
+                    true
+                }
+            });
+        if found_mod {
+            sess.span_rustspec_err(DUMMY_SP, "cannot mix module declaration and items");
+            return Err(());
+        }
+        let items = items
+            .into_iter()
+            .map(|(r, r_span)| {
+                match r {
+                    ItemTranslationResult::Item(i) => (i, r_span),
+                    _ => panic!(), // should not happen
+                }
+            })
+            .collect();
+        let imports = imports
+            .into_iter()
+            .map(|(r, r_span)| {
+                match r {
+                    ItemTranslationResult::ImportedCrate(i) => (i, r_span),
+                    _ => panic!(), // should not happen
+                }
+            })
+            .collect();
+        Ok(Program(vec![Module {
+            items,
+            imported_crates: imports,
+        }]))
+    }
 }

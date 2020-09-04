@@ -1664,7 +1664,7 @@ fn typecheck_block(
 
 fn typecheck_item(
     sess: &Session,
-    i: Item,
+    i: &Item,
     fn_context: &FnContext,
     typ_dict: &TypeDict,
 ) -> TypecheckingResult<(Item, FnContext, TypeDict)> {
@@ -1740,13 +1740,13 @@ macro_rules! type_dict_entry {
     };
 }
 
-pub fn typecheck_program(
+pub fn typecheck_module<F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<ExternalFuncSig>>>(
     sess: &Session,
-    p: Program,
-    external_funcs: &HashMap<FnKey, Option<ExternalFuncSig>>,
+    p: &Module,
+    external_funcs: &F,
     _allowed_sigs: &AllowedSigs,
-) -> TypecheckingResult<Program> {
-    let mut fn_context: FnContext = external_funcs
+) -> TypecheckingResult<Module> {
+    let mut fn_context: FnContext = external_funcs(&p.imported_crates)
         .iter()
         .map(|(k, v)| {
             (
@@ -1839,19 +1839,39 @@ pub fn typecheck_program(
         ]
         .as_slice(),
     );
-    Ok(Program {
+    Ok(Module {
         items: check_vec(
             p.items
-                .into_iter()
+                .iter()
                 .map(|(i, i_span)| {
                     let (new_i, new_fn_context, new_typ_dict) =
                         typecheck_item(sess, i, &fn_context, &typ_dict)?;
                     fn_context = new_fn_context;
                     typ_dict = new_typ_dict;
-                    Ok((new_i, i_span))
+                    Ok((new_i, i_span.clone()))
                 })
                 .collect(),
         )?,
-        imported_crates: p.imported_crates,
+        imported_crates: p.imported_crates.clone(),
     })
+}
+
+pub fn typecheck_program<
+    F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<ExternalFuncSig>>,
+>(
+    sess: &Session,
+    p: &Program,
+    external_funcs: &F,
+    allowed_sigs: &AllowedSigs,
+) -> TypecheckingResult<Program> {
+    if p.0.len() > 1 {
+        unimplemented!()
+    }
+    let p = p.0.first().unwrap().clone();
+    Ok(Program(vec![typecheck_module(
+        sess,
+        p,
+        external_funcs,
+        allowed_sigs,
+    )?]))
 }

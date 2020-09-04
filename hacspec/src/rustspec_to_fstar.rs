@@ -439,6 +439,10 @@ fn translate_item(i: &Item) -> RcDoc<()> {
 }
 
 fn translate_program(p: &Program) -> RcDoc<()> {
+    if p.0.len() > 1 {
+        unimplemented!()
+    }
+    let p = p.0.first().unwrap();
     RcDoc::concat(p.items.iter().map(|(i, _)| {
         translate_item(i)
             .append(RcDoc::hardline())

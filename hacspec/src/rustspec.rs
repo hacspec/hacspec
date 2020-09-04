@@ -249,7 +249,9 @@ pub enum Item {
     ArrayDecl(Spanned<Ident>, Spanned<usize>, Spanned<BaseTyp>),
 }
 
-pub struct Program {
+pub struct Module {
     pub items: Vec<Spanned<Item>>,
     pub imported_crates: Vec<Spanned<String>>,
 }
+
+pub struct Program(pub Vec<Module>);
