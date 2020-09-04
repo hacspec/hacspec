@@ -2,8 +2,8 @@
 use hacspec_lib::*;
 
 // Import chacha20 and poly1305
-use super::chacha20::*;
 use super::poly1305::*;
+use hacspec_examples_typechecked::chacha20_poly1305::chacha20::*;
 
 fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
     let laad = aad.len();

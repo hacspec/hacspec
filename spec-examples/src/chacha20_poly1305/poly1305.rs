@@ -2,7 +2,7 @@
 use hacspec_lib::*;
 
 // Import chacha20
-use super::chacha20::{self, *};
+use hacspec_examples_typechecked::chacha20_poly1305::chacha20::*;
 
 const BLOCKSIZE: usize = 16;
 // Type definitions for use in poly1305.
@@ -21,7 +21,7 @@ public_nat_mod!(
 );
 
 fn key_gen(key: Key, iv: IV) -> Key {
-    let block = chacha20::block(key, U32(0), iv);
+    let block = block(key, U32(0), iv);
     Key::from_slice_range(&block, 0..32)
 }
 

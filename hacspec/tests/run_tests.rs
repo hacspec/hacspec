@@ -63,8 +63,8 @@ fn run_test_chacha_simplified() -> Result<(), Box<dyn std::error::Error>> {
 #[ignore]
 fn run_test_chacha20() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
-        "../spec-examples/src/lib.rs",
+        "../hacspec-examples/src/lib.rs",
         None,
-        Some("hacspec_examples"),
+        Some("hacspec_examples_typeckeched"),
     )
 }
