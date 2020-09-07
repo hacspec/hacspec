@@ -889,6 +889,7 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
             let pats = check_vec(pats)?;
             Ok((Pattern::Tuple(pats), pat.span))
         }
+        PatKind::Wild => Ok((Pattern::WildCard, pat.span)),
         _ => {
             sess.span_rustspec_err(pat.span, "pattern not allowed in Rustspec let bindings");
             Err(())

@@ -69,6 +69,12 @@ pub enum ArraySize {
     Ident(String),
 }
 
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+pub enum Secrecy {
+    Secret,
+    Public,
+}
+
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum BaseTyp {
     Unit,
@@ -90,6 +96,7 @@ pub enum BaseTyp {
     Named(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>),
     Variable(RustspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
+    NaturalInteger(Secrecy, Spanned<usize>, Spanned<String>),
 }
 
 impl fmt::Display for BaseTyp {
@@ -132,6 +139,11 @@ impl fmt::Display for BaseTyp {
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
+            BaseTyp::NaturalInteger(sec, canvas_size, modulo) => write!(
+                f,
+                "nat[{:?}][{} bits][modulo {}]",
+                sec, canvas_size.0, modulo.0
+            ),
         }
     }
 }

@@ -92,6 +92,7 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
         BaseTyp::Named((Ident::Rustspec(_, _), _), _) => panic!(), // should not happen
         BaseTyp::Variable(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t, typ_dict)),
+        BaseTyp::NaturalInteger(_, _, _) => true,
     }
 }
 
