@@ -63,6 +63,12 @@ impl fmt::Debug for Borrowing {
     }
 }
 
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+pub enum ArraySize {
+    Integer(usize),
+    Ident(String),
+}
+
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum BaseTyp {
     Unit,
@@ -80,7 +86,7 @@ pub enum BaseTyp {
     Usize,
     Isize,
     Seq(Box<Spanned<BaseTyp>>),
-    Array(Spanned<usize>, Box<Spanned<BaseTyp>>),
+    Array(Spanned<ArraySize>, Box<Spanned<BaseTyp>>),
     Named(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>),
     Variable(RustspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
@@ -105,7 +111,7 @@ impl fmt::Display for BaseTyp {
             BaseTyp::Isize => write!(f, "isize"),
             BaseTyp::Array(size, mu) => {
                 let mu = &mu.0;
-                write!(f, "Array<{}, {}>", size.0, mu)
+                write!(f, "Array<{:?}, {}>", size.0, mu)
             }
             BaseTyp::Seq(mu) => {
                 let mu = &mu.0;
@@ -246,7 +252,8 @@ pub struct ExternalFuncSig {
 #[derive(Clone)]
 pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
-    ArrayDecl(Spanned<Ident>, Spanned<usize>, Spanned<BaseTyp>),
+    ArrayDecl(Spanned<Ident>, Spanned<Expression>, Spanned<BaseTyp>),
+    ConstDecl(Spanned<Ident>, Spanned<BaseTyp>, Spanned<Expression>),
 }
 
 pub struct Program {

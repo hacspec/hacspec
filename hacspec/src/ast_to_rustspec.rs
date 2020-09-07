@@ -4,8 +4,8 @@ use rustc_ast::{
     ast::{
         self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,
         Defaultness, Expr, ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind,
-        LitIntType, LitKind, MacArgs, Mutability, Pat, PatKind, RangeLimits, Stmt, StmtKind, Ty,
-        TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
+        LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind, RangeLimits, Stmt,
+        StmtKind, Ty, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
     },
     node_id::NodeId,
     token::{LitKind as TokenLitKind, TokenKind},
@@ -998,6 +998,162 @@ enum ItemTranslationResult {
     ImportedCrate(String),
 }
 
+fn translate_array_decl(
+    sess: &Session,
+    i: &ast::Item,
+    arr_types: &ArrayTypes,
+    call: &MacCall,
+    cell_t: Option<BaseTyp>,
+) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+    match &*call.args {
+        MacArgs::Delimited(_, _, tokens) => {
+            let (first_arg, second_arg, third_arg, fourth_arg, fifth_arg) = {
+                let mut it = tokens.trees();
+                let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                Ok((first_arg?, second_arg?, third_arg?, fourth_arg?, fifth_arg?))
+            }?;
+            let (typ_ident, typ_ident_string) = match first_arg {
+                TokenTree::Token(tok) => match tok.kind {
+                    TokenKind::Ident(id, _) => (
+                        (Ident::Original(id.to_ident_string()), tok.span.clone()),
+                        id.to_ident_string(),
+                    ),
+                    _ => {
+                        sess.span_rustspec_err(tok.span.clone(), "expected an identifier");
+                        return Err(());
+                    }
+                },
+                _ => {
+                    sess.span_rustspec_err(
+                        i.span.clone(),
+                        "expected first argument to be a single token",
+                    );
+                    return Err(());
+                }
+            };
+            match &second_arg {
+                TokenTree::Token(tok) => match tok.kind {
+                    TokenKind::Comma => (),
+                    _ => {
+                        sess.span_rustspec_err(tok.span.clone(), "expected a comma");
+                        return Err(());
+                    }
+                },
+                _ => {
+                    sess.span_rustspec_err(
+                        i.span.clone(),
+                        "expected delimiter to be a single token",
+                    );
+                    return Err(());
+                }
+            };
+            let size = match third_arg {
+                TokenTree::Token(tok) => match tok.kind {
+                    TokenKind::Literal(lit) => match lit.kind {
+                        TokenLitKind::Integer => match lit.suffix {
+                            Some(_) => {
+                                sess.span_rustspec_err(
+                                    tok.span.clone(),
+                                    "no suffix expected for size specification literal",
+                                );
+                                return Err(());
+                            }
+                            None => match lit.symbol.to_ident_string().parse::<usize>() {
+                                Err(_) => {
+                                    sess.span_rustspec_err(
+                                        tok.span.clone(),
+                                        "unable to parse integer into an usize",
+                                    );
+                                    Err(())
+                                }
+                                Ok(x) => Ok((Expression::Lit(Literal::Usize(x)), tok.span.clone())),
+                            },
+                        },
+                        _ => {
+                            sess.span_rustspec_err(tok.span.clone(), "expected an integer");
+                            return Err(());
+                        }
+                    },
+                    _ => {
+                        sess.span_rustspec_err(tok.span.clone(), "expected an literal");
+                        return Err(());
+                    }
+                },
+                _ => {
+                    sess.span_rustspec_err(
+                        i.span.clone(),
+                        "expected second argument to be a single token",
+                    );
+                    return Err(());
+                }
+            }?;
+            let cell_t = match cell_t {
+                None => {
+                    match &fourth_arg {
+                        TokenTree::Token(tok) => match tok.kind {
+                            TokenKind::Comma => (),
+                            _ => {
+                                sess.span_rustspec_err(tok.span.clone(), "expected a comma");
+                                return Err(());
+                            }
+                        },
+                        _ => {
+                            sess.span_rustspec_err(
+                                i.span.clone(),
+                                "expected delimiter to be a single token",
+                            );
+                            return Err(());
+                        }
+                    };
+                    let cell_t = match fifth_arg {
+                        TokenTree::Token(tok) => match tok.kind {
+                            TokenKind::Ident(id, _) => translate_base_typ(
+                                sess,
+                                &Ty {
+                                    id: NodeId::MAX,
+                                    kind: TyKind::Path(
+                                        None,
+                                        ast::Path::from_ident(symbol::Ident {
+                                            name: id,
+                                            span: tok.span.clone(),
+                                        }),
+                                    ),
+                                    span: tok.span.clone(),
+                                },
+                            ),
+                            _ => {
+                                sess.span_rustspec_err(tok.span.clone(), "expected an identifier");
+                                return Err(());
+                            }
+                        },
+                        _ => {
+                            sess.span_rustspec_err(
+                                i.span.clone(),
+                                "expected first argument to be a single token",
+                            );
+                            return Err(());
+                        }
+                    }?;
+                    cell_t
+                }
+                Some(t) => (t, typ_ident.1.clone()),
+            };
+            Ok((
+                (ItemTranslationResult::Item(Item::ArrayDecl(typ_ident, size, cell_t))),
+                arr_types.update(typ_ident_string),
+            ))
+        }
+        _ => {
+            sess.span_rustspec_err(i.span.clone(), "expected delimited macro arguments");
+            Err(())
+        }
+    }
+}
+
 fn translate_items(
     sess: &Session,
     i: &ast::Item,
@@ -1143,282 +1299,20 @@ fn translate_items(
                 name.ident.name.to_ident_string().as_str(),
                 name.args.as_ref(),
             ) {
-                ("array", None) => match &*call.args {
-                    MacArgs::Delimited(_, _, tokens) => {
-                        let (first_arg, second_arg, third_arg, fourth_arg, fifth_arg) = {
-                            let mut it = tokens.trees();
-                            let first_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            let second_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            let third_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            Ok((first_arg?, second_arg?, third_arg?, fourth_arg?, fifth_arg?))
-                        }?;
-                        let (typ_ident, typ_ident_string) = match first_arg {
-                            TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Ident(id, _) => (
-                                    (Ident::Original(id.to_ident_string()), tok.span.clone()),
-                                    id.to_ident_string(),
-                                ),
-                                _ => {
-                                    sess.span_rustspec_err(
-                                        tok.span.clone(),
-                                        "expected an identifier",
-                                    );
-                                    return Err(());
-                                }
-                            },
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected first argument to be a single token",
-                                );
-                                return Err(());
-                            }
-                        };
-                        match &second_arg {
-                            TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Comma => (),
-                                _ => {
-                                    sess.span_rustspec_err(tok.span.clone(), "expected a comma");
-                                    return Err(());
-                                }
-                            },
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected delimiter to be a single token",
-                                );
-                                return Err(());
-                            }
-                        };
-                        let size = match third_arg {
-                            TokenTree::Token(tok) => {
-                                match tok.kind {
-                                    TokenKind::Literal(lit) => match lit.kind {
-                                        TokenLitKind::Integer => match lit.suffix {
-                                            Some(_) => {
-                                                sess.span_rustspec_err(tok.span.clone(), "no suffix expected for size specification literal");
-                                                return Err(());
-                                            }
-                                            None => {
-                                                match lit.symbol.to_ident_string().parse::<usize>()
-                                                {
-                                                    Err(_) => {
-                                                        sess.span_rustspec_err(
-                                                            tok.span.clone(),
-                                                            "unable to parse integer into an usize",
-                                                        );
-                                                        Err(())
-                                                    }
-                                                    Ok(x) => Ok((x, tok.span.clone())),
-                                                }
-                                            }
-                                        },
-                                        _ => {
-                                            sess.span_rustspec_err(
-                                                tok.span.clone(),
-                                                "expected an integer",
-                                            );
-                                            return Err(());
-                                        }
-                                    },
-                                    _ => {
-                                        sess.span_rustspec_err(
-                                            tok.span.clone(),
-                                            "expected an identifier",
-                                        );
-                                        return Err(());
-                                    }
-                                }
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected second argument to be a single token",
-                                );
-                                return Err(());
-                            }
-                        }?;
-                        match &fourth_arg {
-                            TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Comma => (),
-                                _ => {
-                                    sess.span_rustspec_err(tok.span.clone(), "expected a comma");
-                                    return Err(());
-                                }
-                            },
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected delimiter to be a single token",
-                                );
-                                return Err(());
-                            }
-                        };
-                        let cell_t = match fifth_arg {
-                            TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Ident(id, _) => translate_base_typ(
-                                    sess,
-                                    &Ty {
-                                        id: NodeId::MAX,
-                                        kind: TyKind::Path(
-                                            None,
-                                            ast::Path::from_ident(symbol::Ident {
-                                                name: id,
-                                                span: tok.span.clone(),
-                                            }),
-                                        ),
-                                        span: tok.span.clone(),
-                                    },
-                                ),
-                                _ => {
-                                    sess.span_rustspec_err(
-                                        tok.span.clone(),
-                                        "expected an identifier",
-                                    );
-                                    return Err(());
-                                }
-                            },
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected first argument to be a single token",
-                                );
-                                return Err(());
-                            }
-                        }?;
-                        Ok((
-                            (ItemTranslationResult::Item(Item::ArrayDecl(typ_ident, size, cell_t))),
-                            arr_types.update(typ_ident_string),
-                        ))
-                    }
-                    _ => {
-                        sess.span_rustspec_err(
-                            i.span.clone(),
-                            "expected delimited macro arguments",
-                        );
-                        Err(())
-                    }
-                },
-                ("bytes", None) => match &*call.args {
-                    MacArgs::Delimited(_, _, tokens) => {
-                        let (first_arg, second_arg, third_arg) = {
-                            let mut it = tokens.trees();
-                            let first_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            let second_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            let third_arg = it.next().map_or(Err(()), |x| Ok(x));
-                            Ok((first_arg?, second_arg?, third_arg?))
-                        }?;
-                        let (typ_ident, typ_ident_string) = match first_arg {
-                            TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Ident(id, _) => (
-                                    (Ident::Original(id.to_ident_string()), tok.span.clone()),
-                                    id.to_ident_string(),
-                                ),
-                                _ => {
-                                    sess.span_rustspec_err(
-                                        tok.span.clone(),
-                                        "expected an identifier",
-                                    );
-                                    return Err(());
-                                }
-                            },
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected first argument to be a single token",
-                                );
-                                return Err(());
-                            }
-                        };
-                        match &second_arg {
-                            TokenTree::Token(tok) => match tok.kind {
-                                TokenKind::Comma => (),
-                                _ => {
-                                    sess.span_rustspec_err(tok.span.clone(), "expected a comma");
-                                    return Err(());
-                                }
-                            },
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected delimiter to be a single token",
-                                );
-                                return Err(());
-                            }
-                        };
-                        let size = match third_arg {
-                            TokenTree::Token(tok) => {
-                                match tok.kind {
-                                    TokenKind::Literal(lit) => match lit.kind {
-                                        TokenLitKind::Integer => match lit.suffix {
-                                            Some(_) => {
-                                                sess.span_rustspec_err(tok.span.clone(), "no suffix expected for size specification literal");
-                                                return Err(());
-                                            }
-                                            None => {
-                                                match lit.symbol.to_ident_string().parse::<usize>()
-                                                {
-                                                    Err(_) => {
-                                                        sess.span_rustspec_err(
-                                                            tok.span.clone(),
-                                                            "unable to parse integer into an usize",
-                                                        );
-                                                        Err(())
-                                                    }
-                                                    Ok(x) => Ok((x, tok.span.clone())),
-                                                }
-                                            }
-                                        },
-                                        _ => {
-                                            sess.span_rustspec_err(
-                                                tok.span.clone(),
-                                                "expected an integer",
-                                            );
-                                            return Err(());
-                                        }
-                                    },
-                                    _ => {
-                                        sess.span_rustspec_err(
-                                            tok.span.clone(),
-                                            "expected an identifier",
-                                        );
-                                        return Err(());
-                                    }
-                                }
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    i.span.clone(),
-                                    "expected second argument to be a single token",
-                                );
-                                return Err(());
-                            }
-                        }?;
-                        Ok((
-                            ItemTranslationResult::Item(Item::ArrayDecl(
-                                typ_ident.clone(),
-                                size,
-                                (
-                                    BaseTyp::Named(
-                                        (Ident::Original("U8".into()), typ_ident.1.clone()),
-                                        None,
-                                    ),
-                                    typ_ident.1.clone(),
-                                ),
-                            )),
-                            arr_types.update(typ_ident_string),
-                        ))
-                    }
-                    _ => {
-                        sess.span_rustspec_err(
-                            i.span.clone(),
-                            "expected delimited macro arguments",
-                        );
-                        Err(())
-                    }
-                },
+                ("array", None) => translate_array_decl(sess, i, arr_types, call, None),
+                ("bytes", None) => translate_array_decl(
+                    sess,
+                    i,
+                    arr_types,
+                    call,
+                    Some(BaseTyp::Named(
+                        (Ident::Original("U8".into()), i.span.clone()),
+                        None,
+                    )),
+                ),
+                ("public_bytes", None) => {
+                    translate_array_decl(sess, i, arr_types, call, Some(BaseTyp::UInt8))
+                }
                 (_, None) => {
                     sess.span_rustspec_err(name.ident.span.clone(), "unknown Rustspec macro");
                     Err(())
@@ -1431,6 +1325,15 @@ fn translate_items(
                     Err(())
                 }
             }
+        }
+        ItemKind::Const(_, ty, Some(e)) => {
+            let new_ty = translate_base_typ(sess, ty)?;
+            let new_e = translate_expr_expects_exp(sess, arr_types, e)?;
+            let id = translate_ident(&i.ident);
+            Ok((
+                ItemTranslationResult::Item(Item::ConstDecl(id, new_ty, new_e)),
+                arr_types.clone(),
+            ))
         }
         _ => {
             sess.span_rustspec_err(i.span.clone(), "item not allowed in Rustspec");

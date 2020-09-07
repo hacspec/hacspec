@@ -119,7 +119,10 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
                 .append(RcDoc::space())
                 .append(translate_base_typ(tau))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string(format!("{}", size.0)))
+                .append(RcDoc::as_string(match &size.0 {
+                    ArraySize::Ident(id) => format!("{}", id),
+                    ArraySize::Integer(i) => format!("{}", i),
+                }))
                 .group()
         }
         BaseTyp::Named(ident, arg) => translate_ident(&ident.0).append(match arg {
@@ -431,10 +434,11 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                     .append(RcDoc::space())
                     .append(translate_base_typ(&cell_t.0))
                     .append(RcDoc::space())
-                    .append(RcDoc::as_string(format!("{}", &size.0)))
+                    .append(translate_expression(&size.0))
                     .group()
                     .nest(2),
             ),
+        Item::ConstDecl(_, _, _) => unimplemented!(),
     }
 }
 
