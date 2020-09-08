@@ -96,7 +96,7 @@ pub enum BaseTyp {
     Named(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>),
     Variable(RustspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
-    NaturalInteger(Secrecy, Spanned<usize>, Spanned<String>),
+    NaturalInteger(Secrecy, Spanned<String>),
 }
 
 impl fmt::Display for BaseTyp {
@@ -139,11 +139,9 @@ impl fmt::Display for BaseTyp {
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
-            BaseTyp::NaturalInteger(sec, canvas_size, modulo) => write!(
-                f,
-                "nat[{:?}][{} bits][modulo {}]",
-                sec, canvas_size.0, modulo.0
-            ),
+            BaseTyp::NaturalInteger(sec, modulo) => {
+                write!(f, "nat[{:?}][modulo {}]", sec, modulo.0)
+            }
         }
     }
 }
@@ -266,6 +264,13 @@ pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
     ArrayDecl(Spanned<Ident>, Spanned<Expression>, Spanned<BaseTyp>),
     ConstDecl(Spanned<Ident>, Spanned<BaseTyp>, Spanned<Expression>),
+    NaturalIntegerDecl(
+        Spanned<Ident>,
+        Spanned<Ident>,
+        Secrecy,
+        Spanned<Expression>,
+        Spanned<String>,
+    ),
 }
 
 pub struct Program {

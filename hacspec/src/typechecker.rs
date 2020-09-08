@@ -92,7 +92,7 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
         BaseTyp::Named((Ident::Rustspec(_, _), _), _) => panic!(), // should not happen
         BaseTyp::Variable(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t, typ_dict)),
-        BaseTyp::NaturalInteger(_, _, _) => true,
+        BaseTyp::NaturalInteger(_, _) => true,
     }
 }
 
@@ -373,7 +373,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
 #[derive(Clone)]
 struct TopLevelContext {
     functions: HashMap<FnKey, FnValue>,
-    consts: HashMap<String, (BaseTyp, Expression)>,
+    consts: HashMap<String, (Spanned<BaseTyp>, Spanned<Expression>)>,
 }
 
 type VarContext = HashMap<RustspecId, (Typ, String)>;
@@ -478,22 +478,44 @@ fn find_func(
     Err(())
 }
 
-fn find_ident<'a, 'b>(x: &'a Ident, name_context: &'b NameContext) -> &'b Ident {
-    match x {
+fn find_ident<'b>(
+    sess: &Session,
+    x: &Spanned<Ident>,
+    name_context: &NameContext,
+    top_level_context: &TopLevelContext,
+) -> TypecheckingResult<Ident> {
+    match &x.0 {
         Ident::Rustspec(_, _) => {
-            panic!("trying to lookup in the name context an already translated id")
+            sess.span_rustspec_err(
+                x.1.clone(),
+                "trying to lookup in the name context an already translated id",
+            );
+            Err(())
         }
         Ident::Original(name) => match name_context.get(name) {
-            None => panic!("original id not found in name context!"),
-            Some(id) => id,
+            None => match top_level_context.consts.get(name) {
+                Some(_) => Ok(x.0.clone()),
+                None => {
+                    sess.span_rustspec_err(x.1.clone(), "original id not found in name context");
+                    Err(())
+                }
+            },
+            Some(id) => Ok(id.clone()),
         },
     }
 }
 
-fn find_typ<'a, 'b>(x: &'a Ident, var_context: &'b VarContext) -> Option<&'b Typ> {
+fn find_typ(
+    x: &Ident,
+    var_context: &VarContext,
+    top_level_context: &TopLevelContext,
+) -> Option<Typ> {
     match x {
-        Ident::Original(_) => panic!("trying to lookup in the var context an original id"),
-        Ident::Rustspec(id, _) => var_context.get(id).map(|x| &x.0),
+        Ident::Original(name) => top_level_context
+            .consts
+            .get(name)
+            .map(|(t, _)| ((Borrowing::Consumed, t.1.clone()), t.clone())),
+        Ident::Rustspec(id, _) => var_context.get(id).map(|x| x.0.clone()),
     }
 }
 
@@ -576,9 +598,14 @@ fn typecheck_expression(
             ))
         }
         Expression::Named(id) => {
-            let id = find_ident(id, name_context);
+            let id = find_ident(
+                sess,
+                &(id.clone(), span.clone()),
+                name_context,
+                top_level_context,
+            )?;
             let new_path = Expression::Named(id.clone());
-            match find_typ(id, var_context) {
+            match find_typ(&id, var_context, top_level_context) {
                 None => {
                     sess.span_rustspec_err(
                         *span,
@@ -937,8 +964,13 @@ fn typecheck_expression(
             ))
         }
         Expression::ArrayIndex((x, x_span), e2) => {
-            let x = find_ident(x, name_context);
-            let t1 = match find_typ(x, var_context) {
+            let x = find_ident(
+                sess,
+                &(x.clone(), x_span.clone()),
+                name_context,
+                top_level_context,
+            )?;
+            let t1 = match find_typ(&x, var_context, top_level_context) {
                 None => {
                     sess.span_rustspec_err(
                         *x_span,
@@ -956,7 +988,7 @@ fn typecheck_expression(
                 &var_context,
                 name_context,
             )?;
-            let (_, (cell_t, cell_t_span)) = is_array(sess, t1, typ_dict, x_span)?;
+            let (_, (cell_t, cell_t_span)) = is_array(sess, &t1, typ_dict, x_span)?;
             // We ignore t1.0 because we can read from both consumed and borrowed array types
             if let Borrowing::Borrowed = (t2.0).0 {
                 sess.span_rustspec_err(e2.1, "cannot index array with a borrowed type");
@@ -1371,7 +1403,12 @@ fn typecheck_statement(
             ))
         }
         Statement::Reassignment((x, x_span), e) => {
-            let x = find_ident(x, name_context);
+            let x = find_ident(
+                sess,
+                &(x.clone(), x_span.clone()),
+                name_context,
+                top_level_context,
+            )?;
             let (new_e, e_typ, new_var_context) = typecheck_expression(
                 sess,
                 &e,
@@ -1380,7 +1417,7 @@ fn typecheck_statement(
                 var_context,
                 name_context,
             )?;
-            let x_typ = find_typ(x, var_context);
+            let x_typ = find_typ(&x, var_context, top_level_context);
             let x_typ = match x_typ {
                 Some(t) => t,
                 None => {
@@ -1401,13 +1438,18 @@ fn typecheck_statement(
             Ok((
                 Statement::Reassignment((x.clone(), x_span.clone()), (new_e, e.1.clone())),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
-                add_var(x, x_typ, &new_var_context),
+                add_var(&x, &x_typ, &new_var_context),
                 name_context.clone(),
                 HashSet::unit(x.clone()),
             ))
         }
         Statement::ArrayUpdate((x, x_span), e1, e2) => {
-            let x = find_ident(x, name_context);
+            let x = find_ident(
+                sess,
+                &(x.clone(), x_span.clone()),
+                name_context,
+                top_level_context,
+            )?;
             let (new_e1, e1_t, var_context) = typecheck_expression(
                 sess,
                 &e1,
@@ -1436,7 +1478,7 @@ fn typecheck_statement(
                 );
                 return Err(());
             };
-            let x_typ = find_typ(x, &var_context);
+            let x_typ = find_typ(&x, &var_context, top_level_context);
             let x_typ = match x_typ {
                 Some(t) => t,
                 None => {
@@ -1444,7 +1486,7 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            let (_, cell_t) = is_array(sess, x_typ, typ_dict, x_span)?;
+            let (_, cell_t) = is_array(sess, &x_typ, typ_dict, x_span)?;
             if unify_types(
                 sess,
                 &e2_t,
@@ -1896,7 +1938,7 @@ fn typecheck_item(
                     (Ident::Original(id), _) => id.clone(),
                     _ => panic!(), // should not happen
                 },
-                ((typ.0).clone(), new_e.clone()),
+                (typ.clone(), (new_e.clone(), e.1.clone())),
             );
             Ok((
                 Item::ConstDecl(id.clone(), typ.clone(), (new_e, (e.1).clone())),
@@ -1904,6 +1946,7 @@ fn typecheck_item(
                 typ_dict.clone(),
             ))
         }
+        Item::NaturalIntegerDecl(_, _, _, _, _) => unimplemented!(),
     }
 }
 

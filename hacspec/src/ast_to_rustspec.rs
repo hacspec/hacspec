@@ -999,6 +999,165 @@ enum ItemTranslationResult {
     ImportedCrate(String),
 }
 
+fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
+    match arg {
+        TokenTree::Token(tok) => match tok.kind {
+            TokenKind::Comma => Ok(()),
+            _ => {
+                sess.span_rustspec_err(tok.span.clone(), "expected a comma");
+                Err(())
+            }
+        },
+        _ => {
+            sess.span_rustspec_err(
+                arg.span().clone(),
+                "expected delimiter to be a single token",
+            );
+            Err(())
+        }
+    }
+}
+
+fn check_for_usize(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned<Expression>> {
+    match arg {
+        TokenTree::Token(tok) => match tok.kind {
+            TokenKind::Literal(lit) => match lit.kind {
+                TokenLitKind::Integer => match lit.suffix {
+                    Some(_) => {
+                        sess.span_rustspec_err(
+                            tok.span.clone(),
+                            "no suffix expected for size specification literal",
+                        );
+                        Err(())
+                    }
+                    None => match lit.symbol.to_ident_string().parse::<usize>() {
+                        Err(_) => {
+                            sess.span_rustspec_err(
+                                tok.span.clone(),
+                                "unable to parse integer into an usize",
+                            );
+                            Err(())
+                        }
+                        Ok(x) => Ok((Expression::Lit(Literal::Usize(x)), tok.span.clone())),
+                    },
+                },
+                _ => {
+                    sess.span_rustspec_err(tok.span.clone(), "expected an integer");
+                    Err(())
+                }
+            },
+            TokenKind::Ident(name, _) => Ok((
+                Expression::Named(Ident::Original(name.to_ident_string())),
+                tok.span.clone(),
+            )),
+            _ => {
+                sess.span_rustspec_err(tok.span.clone(), "expected a literal");
+                Err(())
+            }
+        },
+        _ => {
+            sess.span_rustspec_err(arg.span().clone(), "expected argument to be a single token");
+            Err(())
+        }
+    }
+}
+
+fn check_for_ident(sess: &Session, arg: &TokenTree) -> TranslationResult<(Spanned<Ident>, String)> {
+    match arg {
+        TokenTree::Token(tok) => match tok.kind {
+            TokenKind::Ident(id, _) => Ok((
+                (Ident::Original(id.to_ident_string()), tok.span.clone()),
+                id.to_ident_string(),
+            )),
+            _ => {
+                sess.span_rustspec_err(tok.span.clone(), "expected an identifier");
+                Err(())
+            }
+        },
+        _ => {
+            sess.span_rustspec_err(arg.span().clone(), "expected argument to be a single token");
+            Err(())
+        }
+    }
+}
+
+fn translate_natural_integer_decl(
+    sess: &Session,
+    i: &ast::Item,
+    arr_types: &ArrayTypes,
+    call: &MacCall,
+    secrecy: Secrecy,
+) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+    match &*call.args {
+        MacArgs::Delimited(_, _, tokens) => {
+            let mut it = tokens.trees();
+            let (first_arg, second_arg, third_arg, fourth_arg, fifth_arg, sixth_arg, seventh_arg) =
+                {
+                    let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                    let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                    let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                    let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                    let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                    let sixth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                    let seventh_arg = it.next().map_or(Err(()), |x| Ok(x));
+                    Ok((
+                        first_arg?,
+                        second_arg?,
+                        third_arg?,
+                        fourth_arg?,
+                        fifth_arg?,
+                        sixth_arg?,
+                        seventh_arg?,
+                    ))
+                }?;
+            let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
+            check_for_comma(sess, &second_arg)?;
+            let (canvas_typ_ident, _) = check_for_ident(sess, &third_arg)?;
+            check_for_comma(sess, &fourth_arg)?;
+            let canvas_size = check_for_usize(sess, &fifth_arg)?;
+            check_for_comma(sess, &sixth_arg)?;
+            let modulo_string = match &seventh_arg {
+                TokenTree::Token(tok) => match tok.kind {
+                    TokenKind::Literal(lit) => match lit.kind {
+                        TokenLitKind::Str => {
+                            (lit.symbol.to_ident_string(), seventh_arg.span().clone())
+                        }
+                        _ => {
+                            sess.span_rustspec_err(tok.span.clone(), "expected a  string literal");
+                            return Err(());
+                        }
+                    },
+                    _ => {
+                        sess.span_rustspec_err(tok.span.clone(), "expected a literal");
+                        return Err(());
+                    }
+                },
+                _ => {
+                    sess.span_rustspec_err(
+                        seventh_arg.span().clone(),
+                        "expected argument to be a single token",
+                    );
+                    return Err(());
+                }
+            };
+            Ok((
+                (ItemTranslationResult::Item(Item::NaturalIntegerDecl(
+                    typ_ident,
+                    canvas_typ_ident,
+                    secrecy,
+                    canvas_size,
+                    modulo_string,
+                ))),
+                arr_types.update(typ_ident_string),
+            ))
+        }
+        _ => {
+            sess.span_rustspec_err(i.span.clone(), "expected delimited macro arguments");
+            Err(())
+        }
+    }
+}
+
 fn translate_array_decl(
     sess: &Session,
     i: &ast::Item,
@@ -1015,81 +1174,9 @@ fn translate_array_decl(
                 let third_arg = it.next().map_or(Err(()), |x| Ok(x));
                 Ok((first_arg?, second_arg?, third_arg?))
             }?;
-            let (typ_ident, typ_ident_string) = match first_arg {
-                TokenTree::Token(tok) => match tok.kind {
-                    TokenKind::Ident(id, _) => (
-                        (Ident::Original(id.to_ident_string()), tok.span.clone()),
-                        id.to_ident_string(),
-                    ),
-                    _ => {
-                        sess.span_rustspec_err(tok.span.clone(), "expected an identifier");
-                        return Err(());
-                    }
-                },
-                _ => {
-                    sess.span_rustspec_err(
-                        i.span.clone(),
-                        "expected first argument to be a single token",
-                    );
-                    return Err(());
-                }
-            };
-            match &second_arg {
-                TokenTree::Token(tok) => match tok.kind {
-                    TokenKind::Comma => (),
-                    _ => {
-                        sess.span_rustspec_err(tok.span.clone(), "expected a comma");
-                        return Err(());
-                    }
-                },
-                _ => {
-                    sess.span_rustspec_err(
-                        i.span.clone(),
-                        "expected delimiter to be a single token",
-                    );
-                    return Err(());
-                }
-            };
-            let size = match third_arg {
-                TokenTree::Token(tok) => match tok.kind {
-                    TokenKind::Literal(lit) => match lit.kind {
-                        TokenLitKind::Integer => match lit.suffix {
-                            Some(_) => {
-                                sess.span_rustspec_err(
-                                    tok.span.clone(),
-                                    "no suffix expected for size specification literal",
-                                );
-                                return Err(());
-                            }
-                            None => match lit.symbol.to_ident_string().parse::<usize>() {
-                                Err(_) => {
-                                    sess.span_rustspec_err(
-                                        tok.span.clone(),
-                                        "unable to parse integer into an usize",
-                                    );
-                                    Err(())
-                                }
-                                Ok(x) => Ok((Expression::Lit(Literal::Usize(x)), tok.span.clone())),
-                            },
-                        },
-                        _ => {
-                            sess.span_rustspec_err(tok.span.clone(), "expected an integer");
-                            return Err(());
-                        }
-                    },
-                    _ => {
-                        sess.span_rustspec_err(tok.span.clone(), "expected an literal");
-                        return Err(());
-                    }
-                },
-                _ => {
-                    sess.span_rustspec_err(
-                        i.span.clone(),
-                        "expected second argument to be a single token",
-                    );
-                    return Err(());
-                }
-            }?;
+            let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
+            check_for_comma(sess, &second_arg)?;
+            let size = check_for_usize(sess, &third_arg)?;
             let cell_t = match cell_t {
                 None => {
                     let (fourth_arg, fifth_arg) = {
@@ -1097,22 +1184,7 @@ fn translate_array_decl(
                         let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
                         Ok((fourth_arg?, fifth_arg?))
                     }?;
-                    match &fourth_arg {
-                        TokenTree::Token(tok) => match tok.kind {
-                            TokenKind::Comma => (),
-                            _ => {
-                                sess.span_rustspec_err(tok.span.clone(), "expected a comma");
-                                return Err(());
-                            }
-                        },
-                        _ => {
-                            sess.span_rustspec_err(
-                                i.span.clone(),
-                                "expected delimiter to be a single token",
-                            );
-                            return Err(());
-                        }
-                    };
+                    check_for_comma(sess, &fourth_arg)?;
                     let cell_t = match fifth_arg {
                         TokenTree::Token(tok) => match tok.kind {
                             TokenKind::Ident(id, _) => translate_base_typ(
@@ -1316,6 +1388,9 @@ fn translate_items(
                 ),
                 ("public_bytes", None) => {
                     translate_array_decl(sess, i, arr_types, call, Some(BaseTyp::UInt8))
+                }
+                ("public_nat_mod", None) => {
+                    translate_natural_integer_decl(sess, i, arr_types, call, Secrecy::Public)
                 }
                 (_, None) => {
                     sess.span_rustspec_err(name.ident.span.clone(), "unknown Rustspec macro");
