@@ -41,9 +41,12 @@ fn is_numeric(t: &Typ, typ_dict: &TypeDict) -> bool {
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
         BaseTyp::Named((Ident::Original(name), _), None) => match typ_dict.get(name) {
-            Some((t1, _)) => {
-                debug_assert!((t1.0).0 == Borrowing::Consumed);
-                is_numeric(t1, typ_dict)
+            Some((new_t1, dict_entry)) => {
+                assert!((new_t1.0).0 == Borrowing::Consumed);
+                match dict_entry {
+                    DictEntry::Alias => is_numeric(new_t1, typ_dict),
+                    DictEntry::Array | DictEntry::NaturalInteger => true,
+                }
             }
             None => match name.as_str() {
                 "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64" | "I128" => {
@@ -76,9 +79,12 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
         BaseTyp::Seq(_) => false,
         BaseTyp::Array(_, _) => true,
         BaseTyp::Named((Ident::Original(name), _), arg) => match typ_dict.get(name) {
-            Some((t1, _)) => {
-                debug_assert!((t1.0).0 == Borrowing::Consumed);
-                is_copy(&(t1.1).0, typ_dict)
+            Some((new_t1, dict_entry)) => {
+                debug_assert!((new_t1.0).0 == Borrowing::Consumed);
+                match dict_entry {
+                    DictEntry::Alias => is_copy(&(new_t1.1).0, typ_dict),
+                    DictEntry::Array | DictEntry::NaturalInteger => true,
+                }
             }
             None => match arg {
                 None => match name.as_str() {
@@ -107,7 +113,29 @@ fn is_array(
         BaseTyp::Named(id, None) => match &id.0 {
             Ident::Rustspec(_, _) => panic!(),
             Ident::Original(name) => match typ_dict.get(name) {
-                Some((new_t, _)) => is_array(sess, new_t, typ_dict, span),
+                Some((new_t, dict_entry)) => match dict_entry {
+                    DictEntry::Alias => is_array(sess, new_t, typ_dict, span),
+                    DictEntry::Array => {
+                        match &(new_t.1).0 {
+                            BaseTyp::Array(size, cell_t) => {
+                                Ok((Some(size.clone()), cell_t.as_ref().clone()))
+                            }
+                            _ => panic!(), // shouldd not happen
+                        }
+                    }
+                    DictEntry::NaturalInteger => {
+                        sess.span_rustspec_err(
+                            span.clone(),
+                            format!(
+                                "expected an array but got a natural integer type: {}{}",
+                                &(t.0).0,
+                                &(t.1).0
+                            )
+                            .as_str(),
+                        );
+                        Err(())
+                    }
+                },
                 None => {
                     sess.span_rustspec_err(
                         span.clone(),
@@ -207,8 +235,8 @@ fn unify_types(
                 };
                 return unify_types(
                     sess,
+                    t1,
                     &(new_new_t2_borrow, new_t2.clone()),
-                    t2,
                     typ_ctx,
                     typ_dict,
                 );
@@ -2111,7 +2139,13 @@ pub fn typecheck_program<
                 (
                     (
                         (Borrowing::Consumed, DUMMY_SP),
-                        (BaseTyp::Seq(Box::new((BaseTyp::UInt8, DUMMY_SP))), DUMMY_SP),
+                        (
+                            BaseTyp::Seq(Box::new((
+                                BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None),
+                                DUMMY_SP,
+                            ))),
+                            DUMMY_SP,
+                        ),
                     ),
                     DictEntry::Alias,
                 ),
@@ -2132,6 +2166,6 @@ pub fn typecheck_program<
                 })
                 .collect(),
         )?,
-        imported_crates: p.imported_crates.clone(),
+        imported_crates,
     })
 }
