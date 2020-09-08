@@ -195,6 +195,28 @@ fn translate_polyfnsig(
     })
 }
 
+fn insert_extern_func(
+    extern_funcs: &mut HashMap<FnKey, Option<ExternalFuncSig>>,
+    fn_key: FnKey,
+    sig: Option<ExternalFuncSig>,
+) {
+    // Here we can deal with function name clashes
+    // When two functions have the same name, we can only keep one of them
+    // If one of the two is not in hacspec then we keep the other
+    // If the two are in hacspec then we decide in an ad hoc way
+    match extern_funcs.get(&fn_key) {
+        None => {
+            extern_funcs.insert(fn_key, sig);
+        }
+        Some(old_sig) => match (old_sig, &sig) {
+            (Some(_), None) => (),
+            _ => {
+                extern_funcs.insert(fn_key, sig);
+            }
+        },
+    }
+}
+
 fn process_fn_id(
     _sess: &Session,
     tcx: &TyCtxt,
@@ -214,6 +236,7 @@ fn process_fn_id(
                 {
                     // Function not within impl block
                     let export_sig = tcx.fn_sig(*id);
+                    let def_path_str = tcx.def_path_str(*id);
                     let sig = match translate_polyfnsig(tcx, &export_sig, &HashMap::new()) {
                         Ok(sig) => Some(sig),
                         Err(()) => None,
@@ -223,7 +246,7 @@ fn process_fn_id(
                         DefPathData::ValueNs(name) => {
                             let fn_key =
                                 FnKey::Independent(Ident::Original(name.to_ident_string()));
-                            extern_funcs.insert(fn_key, sig);
+                            insert_extern_func(extern_funcs, fn_key, sig);
                         }
                         _ => (),
                     }
@@ -249,7 +272,7 @@ fn process_fn_id(
                                         Ok(sig) => Some(sig),
                                         Err(()) => None,
                                     };
-                                    extern_funcs.insert(fn_key, sig);
+                                    insert_extern_func(extern_funcs, fn_key, sig);
                                 }
                                 Err(()) => (),
                             }
@@ -277,6 +300,7 @@ pub fn retrieve_external_functions(
     // from abstract_integers and secret_integers. But we do have to fetch those
     // reexported definitions here and thus need to examine the original crates
     // containing them
+    imported_crates.push(("core".to_string(), DUMMY_SP));
     imported_crates.push(("abstract_integers".to_string(), DUMMY_SP));
     imported_crates.push(("secret_integers".to_string(), DUMMY_SP));
     for krate_num in krates {
@@ -300,31 +324,49 @@ pub fn retrieve_external_functions(
                 for (_, def_id) in def_ids {
                     let def_path = tcx.def_path(def_id);
                     match &def_path.data.last() {
-                        None => (),
-                        Some(x) => match x.data {
-                            DefPathData::ValueNs(_) => {
-                                process_fn_id(sess, tcx, &def_id, krate_num, &mut extern_funcs)
-                            }
-                            DefPathData::Ctor => {
-                                let export_sig = tcx.fn_sig(def_id);
-                                let sig =
-                                    match translate_polyfnsig(tcx, &export_sig, &HashMap::new()) {
-                                        Ok(sig) => Some(sig),
-                                        Err(()) => None,
-                                    };
-                                let name_segment = def_path.data[def_path.data.len() - 2];
-                                match name_segment.data {
-                                    DefPathData::TypeNs(name) => {
-                                        let fn_key = FnKey::Independent(Ident::Original(
-                                            name.to_ident_string(),
-                                        ));
-                                        extern_funcs.insert(fn_key, sig);
+                        Some(x) => {
+                            // We only import things really defined in the crate
+                            if tcx.original_crate_name(def_path.krate).to_ident_string()
+                                == original_crate_name.to_ident_string()
+                            {
+                                match x.data {
+                                    DefPathData::ValueNs(_) => process_fn_id(
+                                        sess,
+                                        tcx,
+                                        &def_id,
+                                        krate_num,
+                                        &mut extern_funcs,
+                                    ),
+                                    DefPathData::Ctor => {
+                                        // Some weird constructor inside core crashes so we disable them for core
+                                        if original_crate_name.as_str() != "core" {
+                                            let export_sig = tcx.fn_sig(def_id);
+                                            let sig = match translate_polyfnsig(
+                                                tcx,
+                                                &export_sig,
+                                                &HashMap::new(),
+                                            ) {
+                                                Ok(sig) => Some(sig),
+                                                Err(()) => None,
+                                            };
+                                            let name_segment =
+                                                def_path.data[def_path.data.len() - 2];
+                                            match name_segment.data {
+                                                DefPathData::TypeNs(name) => {
+                                                    let fn_key = FnKey::Independent(
+                                                        Ident::Original(name.to_ident_string()),
+                                                    );
+                                                    extern_funcs.insert(fn_key, sig);
+                                                }
+                                                _ => (),
+                                            }
+                                        }
                                     }
                                     _ => (),
                                 }
                             }
-                            _ => (),
-                        },
+                        }
+                        _ => (),
                     }
                 }
             }

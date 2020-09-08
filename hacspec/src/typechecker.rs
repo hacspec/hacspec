@@ -322,31 +322,50 @@ fn unify_types(
     }
 }
 
-fn bind_variable_type(ty: &BaseTyp, typ_ctx: &TypeVarCtx) -> BaseTyp {
-    match &ty {
+fn bind_variable_type(
+    sess: &Session,
+    ty: &Spanned<BaseTyp>,
+    typ_ctx: &TypeVarCtx,
+) -> TypecheckingResult<BaseTyp> {
+    match &ty.0 {
         BaseTyp::Variable(id) => match typ_ctx.get(&id) {
-            None => panic!("type {} cannot be unified, internal Rustspec error", ty),
-            Some(new_ty) => new_ty.clone(),
+            None => {
+                sess.span_rustspec_err(
+                    ty.1.clone(),
+                    format!("type {} cannot be unified, internal Rustspec error", ty.0).as_str(),
+                );
+                Err(())
+            }
+            Some(new_ty) => Ok(new_ty.clone()),
         },
-        BaseTyp::Seq(arg_ty) => BaseTyp::Seq(Box::new((
-            bind_variable_type(&arg_ty.as_ref().0, typ_ctx),
+        BaseTyp::Seq(arg_ty) => Ok(BaseTyp::Seq(Box::new((
+            bind_variable_type(sess, arg_ty.as_ref(), typ_ctx)?,
             arg_ty.as_ref().1.clone(),
-        ))),
-        BaseTyp::Named(name, arg) => BaseTyp::Named(
+        )))),
+        BaseTyp::Named(name, arg) => Ok(BaseTyp::Named(
             name.clone(),
-            arg.as_ref().map(|arg| {
-                Box::new((
-                    bind_variable_type(&arg.as_ref().0, typ_ctx),
-                    arg.as_ref().1.clone(),
-                ))
-            }),
-        ),
-        BaseTyp::Tuple(args) => BaseTyp::Tuple(
+            match arg
+                .as_ref()
+                .map::<Result<_, ()>, _>(|arg: &Box<Spanned<BaseTyp>>| {
+                    let new_ty: BaseTyp = bind_variable_type(sess, arg.as_ref(), typ_ctx)?;
+                    Ok(Box::new((new_ty, arg.as_ref().1.clone())))
+                }) {
+                None => None,
+                Some(Ok(x)) => Some(x),
+                Some(Err(_)) => return Err(()),
+            },
+        )),
+        BaseTyp::Tuple(args) => Ok(BaseTyp::Tuple(check_vec(
             args.iter()
-                .map(|(arg, span)| (bind_variable_type(arg, typ_ctx), span.clone()))
+                .map(|(arg, span)| {
+                    Ok((
+                        bind_variable_type(sess, &(arg.clone(), ty.1.clone()), typ_ctx)?,
+                        span.clone(),
+                    ))
+                })
                 .collect(),
-        ),
-        _ => ty.clone(),
+        )?)),
+        _ => Ok(ty.0.clone()),
     }
 }
 
@@ -1155,7 +1174,7 @@ fn typecheck_expression(
                 }
             }
             let ret_ty = sig_ret(&f_sig);
-            let ret_ty = bind_variable_type(&ret_ty, &typ_var_ctx);
+            let ret_ty = bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx)?;
             Ok((
                 Expression::FuncCall(prefix.clone(), name.clone(), new_args),
                 (
@@ -1283,7 +1302,7 @@ fn typecheck_expression(
             let new_sel = new_args.first().unwrap().clone();
             new_args = new_args[1..].to_vec();
             let ret_ty = sig_ret(&f_sig);
-            let ret_ty = bind_variable_type(&ret_ty, &typ_var_ctx);
+            let ret_ty = bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx)?;
             Ok((
                 Expression::MethodCall(
                     Box::new(new_sel),
@@ -2166,6 +2185,6 @@ pub fn typecheck_program<
                 })
                 .collect(),
         )?,
-        imported_crates,
+        imported_crates: p.imported_crates.clone(),
     })
 }
