@@ -36,7 +36,7 @@ fn encode(block: &ByteSeq) -> FieldElement {
     let block_len = block.len();
     let block_as_u128 = U128Word::from_slice(block, 0, min(16, block_len));
     let w_elem = FieldElement::from_secret_literal(U128_from_le_bytes(block_as_u128));
-    let l_elem = FieldCanvas::pow2(8 * block_len).into();
+    let l_elem = FieldElement::from_canvas(FieldCanvas::pow2(8 * block_len));
     w_elem + l_elem
 }
 

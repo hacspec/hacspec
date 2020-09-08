@@ -38,6 +38,13 @@ macro_rules! modular_integer {
         }
 
         impl $name {
+            pub fn from_canvas(x: $base) -> $name {
+                $name(x.rem($max))
+            }
+            pub fn into_canvas(self) -> $base {
+                self.0
+            }
+
             pub fn max() -> $base {
                 $max
             }

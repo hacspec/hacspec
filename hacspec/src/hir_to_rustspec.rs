@@ -236,7 +236,6 @@ fn process_fn_id(
                 {
                     // Function not within impl block
                     let export_sig = tcx.fn_sig(*id);
-                    let def_path_str = tcx.def_path_str(*id);
                     let sig = match translate_polyfnsig(tcx, &export_sig, &HashMap::new()) {
                         Ok(sig) => Some(sig),
                         Err(()) => None,
