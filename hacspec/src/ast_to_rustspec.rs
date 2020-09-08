@@ -1008,14 +1008,12 @@ fn translate_array_decl(
 ) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
     match &*call.args {
         MacArgs::Delimited(_, _, tokens) => {
-            let (first_arg, second_arg, third_arg, fourth_arg, fifth_arg) = {
-                let mut it = tokens.trees();
+            let mut it = tokens.trees();
+            let (first_arg, second_arg, third_arg) = {
                 let first_arg = it.next().map_or(Err(()), |x| Ok(x));
                 let second_arg = it.next().map_or(Err(()), |x| Ok(x));
                 let third_arg = it.next().map_or(Err(()), |x| Ok(x));
-                let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                Ok((first_arg?, second_arg?, third_arg?, fourth_arg?, fifth_arg?))
+                Ok((first_arg?, second_arg?, third_arg?))
             }?;
             let (typ_ident, typ_ident_string) = match first_arg {
                 TokenTree::Token(tok) => match tok.kind {
@@ -1094,6 +1092,11 @@ fn translate_array_decl(
             }?;
             let cell_t = match cell_t {
                 None => {
+                    let (fourth_arg, fifth_arg) = {
+                        let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                        let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                        Ok((fourth_arg?, fifth_arg?))
+                    }?;
                     match &fourth_arg {
                         TokenTree::Token(tok) => match tok.kind {
                             TokenKind::Comma => (),

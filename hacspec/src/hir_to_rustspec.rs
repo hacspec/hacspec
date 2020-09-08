@@ -38,7 +38,7 @@ fn translate_base_typ(
     ty: &ty::Ty,
     typ_ctx: &TypVarContext,
 ) -> Result<(BaseTyp, TypVarContext), ()> {
-    match ty.kind {
+    match ty.kind() {
         TyKind::Bool => Ok((BaseTyp::Bool, typ_ctx.clone())),
         TyKind::Int(IntTy::Isize) => Ok((BaseTyp::Isize, typ_ctx.clone())),
         TyKind::Int(IntTy::I8) => Ok((BaseTyp::Int8, typ_ctx.clone())),
@@ -159,7 +159,7 @@ fn translate_ty(
     ty: &ty::Ty,
     typ_ctx: &TypVarContext,
 ) -> Result<(Typ, TypVarContext), ()> {
-    match ty.kind {
+    match ty.kind() {
         TyKind::Ref(_, ref_ty, Mutability::Not) => {
             let (ty, typ_ctx) = translate_base_typ(tcx, &ref_ty, typ_ctx)?;
             Ok((((Borrowing::Borrowed, DUMMY_SP), (ty, DUMMY_SP)), typ_ctx))
@@ -202,7 +202,7 @@ fn process_fn_id(
     krate_num: &CrateNum,
     extern_funcs: &mut HashMap<FnKey, Option<ExternalFuncSig>>,
 ) {
-    match tcx.type_of(*id).kind {
+    match tcx.type_of(*id).kind() {
         TyKind::FnDef(_, _) => {
             let def_path = tcx.def_path(*id);
             if def_path.krate == *krate_num {

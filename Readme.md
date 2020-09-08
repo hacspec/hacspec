@@ -52,3 +52,14 @@ To run all examples one can use `cargo test -p hacspec-examples`.
 [deploy-docs-image]: https://github.com/hacspec/hacspec/workflows/Deploy%20Docs/badge.svg?branch=master&event=push
 [deploy-docs-link]: https://github.com/hacspec/hacspec/actions?query=workflow%3A%22Deploy+Docs%22
 [maturitylevel-image]: https://img.shields.io/badge/maturity-alpha-red.svg
+
+# The hacspec compiler
+
+To build and run the hacspec compiler in `hacspec/`, you will need to use nightly Rust with 
+additional components : 
+
+```
+rustup toolchain install nightly 
+rustup component add --toolchain nightly rustc-dev
+rustup component add --toolchain nightly llvm-tools-preview
+```
