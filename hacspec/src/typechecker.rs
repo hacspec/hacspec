@@ -382,6 +382,7 @@ type VarContext = HashMap<RustspecId, (Typ, String)>;
 enum DictEntry {
     Alias,
     Array,
+    NaturalInteger,
 }
 
 type TypeDict = HashMap<String, (Typ, DictEntry)>;
@@ -421,7 +422,7 @@ fn find_func(
                         ),
                         |(t_alias, entry_typ)| match entry_typ {
                             DictEntry::Alias => t_alias.clone(),
-                            DictEntry::Array => (
+                            DictEntry::Array | DictEntry::NaturalInteger => (
                                 (Borrowing::Consumed, span.clone()),
                                 (t1.clone(), span.clone()),
                             ),
@@ -1946,7 +1947,47 @@ fn typecheck_item(
                 typ_dict.clone(),
             ))
         }
-        Item::NaturalIntegerDecl(_, _, _, _, _) => unimplemented!(),
+        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
+            let (_, top_level_context, typ_dict) = typecheck_item(
+                sess,
+                &Item::ArrayDecl(
+                    canvas_typ_ident.clone(),
+                    canvas_size.clone(),
+                    match secrecy {
+                        Secrecy::Secret => (
+                            BaseTyp::Named(
+                                (
+                                    Ident::Original("U8".to_string()),
+                                    canvas_typ_ident.1.clone(),
+                                ),
+                                None,
+                            ),
+                            canvas_typ_ident.1.clone(),
+                        ),
+                        Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
+                    },
+                ),
+                top_level_context,
+                typ_dict,
+            )?;
+            let typ_dict = typ_dict.update(
+                match &typ_ident.0 {
+                    Ident::Original(s) => s.clone(),
+                    Ident::Rustspec(_, _) => panic!(),
+                },
+                (
+                    (
+                        (Borrowing::Consumed, typ_ident.1.clone()),
+                        (
+                            BaseTyp::NaturalInteger(secrecy.clone(), mod_string.clone()),
+                            typ_ident.1.clone(),
+                        ),
+                    ),
+                    DictEntry::NaturalInteger,
+                ),
+            );
+            Ok((i.clone(), top_level_context, typ_dict))
+        }
     }
 }
 
