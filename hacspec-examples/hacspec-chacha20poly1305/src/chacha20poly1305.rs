@@ -8,8 +8,8 @@ use hacspec_poly1305::*;
 fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
     let laad = aad.len();
     let lmsg = msg.len();
-    let mut pad_aad = 16 * ((laad >> 4) + 1);
-    let mut pad_msg = 16 * ((lmsg >> 4) + 1);
+    let mut pad_aad = 16 * ((laad >> 4u32) + 1);
+    let mut pad_msg = 16 * ((lmsg >> 4u32) + 1);
     if laad % 16 == 0 {
         pad_aad = laad;
         pad_msg = lmsg;
@@ -23,7 +23,7 @@ fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
 }
 
 pub fn encrypt(key: Key, iv: IV, aad: &ByteSeq, msg: &ByteSeq) -> Result<(ByteSeq, Tag), String> {
-    let key_block = block(key, U32(0), iv);
+    let key_block = block(key, U32(0u32), iv);
     let mac_key = Key::from_slice_range(&key_block, 0..32);
     let cipher_text = chacha(key, iv, msg);
     let padded_msg = pad_aad_msg(aad, &cipher_text);
@@ -38,7 +38,7 @@ pub fn decrypt(
     cipher_text: &ByteSeq,
     tag: Tag,
 ) -> Result<ByteSeq, String> {
-    let key_block = block(key, U32(0), iv);
+    let key_block = block(key, U32(0u32), iv);
     let mac_key = Key::from_slice_range(&key_block, 0..32);
     let padded_msg = pad_aad_msg(aad, cipher_text);
     let my_tag = poly(&padded_msg, mac_key);

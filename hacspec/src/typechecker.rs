@@ -176,6 +176,56 @@ fn is_index(t: &BaseTyp) -> bool {
     }
 }
 
+fn is_castable_integer(t: &BaseTyp) -> bool {
+    match t {
+        BaseTyp::UInt128 => true,
+        BaseTyp::Int128 => true,
+        BaseTyp::UInt64 => true,
+        BaseTyp::Int64 => true,
+        BaseTyp::UInt32 => true,
+        BaseTyp::Int32 => true,
+        BaseTyp::UInt16 => true,
+        BaseTyp::Int16 => true,
+        BaseTyp::UInt8 => true,
+        BaseTyp::Int8 => true,
+        BaseTyp::Usize => true,
+        BaseTyp::Isize => true,
+        _ => false,
+    }
+}
+
+fn is_safe_casting(t1: &BaseTyp, t2: &BaseTyp) -> bool {
+    match (t2, t1) {
+        (BaseTyp::UInt128, BaseTyp::UInt64)
+        | (BaseTyp::UInt128, BaseTyp::UInt32)
+        | (BaseTyp::UInt128, BaseTyp::UInt16)
+        | (BaseTyp::UInt128, BaseTyp::Usize)
+        | (BaseTyp::UInt128, BaseTyp::UInt8) => true,
+        (BaseTyp::UInt64, BaseTyp::UInt32)
+        | (BaseTyp::UInt64, BaseTyp::UInt16)
+        | (BaseTyp::UInt64, BaseTyp::Usize)
+        | (BaseTyp::UInt64, BaseTyp::UInt8) => true,
+        (BaseTyp::UInt32, BaseTyp::UInt16)
+        | (BaseTyp::UInt32, BaseTyp::Usize)
+        | (BaseTyp::UInt32, BaseTyp::UInt8) => true,
+        (BaseTyp::UInt16, BaseTyp::UInt8) | (BaseTyp::UInt16, BaseTyp::Usize) => true,
+        (BaseTyp::Int128, BaseTyp::Int64)
+        | (BaseTyp::Int128, BaseTyp::Int32)
+        | (BaseTyp::Int128, BaseTyp::Int16)
+        | (BaseTyp::Int128, BaseTyp::Isize)
+        | (BaseTyp::Int128, BaseTyp::Int8) => true,
+        (BaseTyp::Int64, BaseTyp::Int32)
+        | (BaseTyp::Int64, BaseTyp::Int16)
+        | (BaseTyp::Int64, BaseTyp::Isize)
+        | (BaseTyp::Int64, BaseTyp::Int8) => true,
+        (BaseTyp::Int32, BaseTyp::Int16)
+        | (BaseTyp::Int32, BaseTyp::Isize)
+        | (BaseTyp::Int32, BaseTyp::Int8) => true,
+        (BaseTyp::Int16, BaseTyp::Int8) | (BaseTyp::Int16, BaseTyp::Isize) => true,
+        _ => false,
+    }
+}
+
 type TypeVarCtx = HashMap<RustspecId, BaseTyp>;
 
 fn unify_types(
@@ -1344,7 +1394,44 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::IntegerCasting(_, _) => unimplemented!(),
+        Expression::IntegerCasting(e1, t1) => {
+            let (new_e1, e1_typ, var_context) = typecheck_expression(
+                sess,
+                e1,
+                top_level_context,
+                typ_dict,
+                var_context,
+                name_context,
+            )?;
+            if (e1_typ.0).0 == Borrowing::Borrowed {
+                sess.span_rustspec_err(e1.1.clone(), "cannot cast borrowed expression");
+                return Err(());
+            }
+            if !is_castable_integer(&(e1_typ.1).0) {
+                sess.span_rustspec_err(e1.1.clone(), "this expression cannot be casted");
+                return Err(());
+            }
+            if !is_castable_integer(&t1.0) {
+                sess.span_rustspec_err(e1.1.clone(), "impossible to cast to this type");
+                return Err(());
+            }
+            if !is_safe_casting(&(e1_typ.1).0, &t1.0) {
+                sess.span_rustspec_err(
+                    span.clone(),
+                    format!("casting from {} to {} is not safe (i.e it can lead to overflow)",
+                        &e1_typ.1.0,
+                        &t1.0
+                    )
+                    .as_str(),
+                );
+                return Err(());
+            }
+            Ok((
+                Expression::IntegerCasting(Box::new((new_e1, e1.1.clone())), t1.clone()),
+                ((Borrowing::Consumed, t1.1.clone()), t1.clone()),
+                var_context,
+            ))
+        }
     }
 }
 
