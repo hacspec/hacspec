@@ -33,11 +33,11 @@ fn translate_ident(i: &symbol::Ident) -> Spanned<Ident> {
     (Ident::Original(i.name.to_ident_string()), i.span)
 }
 
-fn translate_type_arg(
+fn translate_type_args(
     sess: &Session,
     args: &GenericArgs,
     span: &Span,
-) -> TranslationResult<Spanned<BaseTyp>> {
+) -> TranslationResult<Vec<Spanned<BaseTyp>>> {
     match args {
         GenericArgs::Parenthesized(_) => {
             sess.span_rustspec_err(
@@ -46,47 +46,38 @@ fn translate_type_arg(
             );
             Err(())
         }
-        GenericArgs::AngleBracketed(args) => {
-            if args.args.len() != 1 {
-                sess.span_rustspec_err(args.span, "only one type argument is allowed in Rustspec");
-                Err(())
-            } else {
-                match args.args.iter().next() {
-                    None => {
-                        sess.span_rustspec_err(
-                            args.span,
-                            "empty type arguments are not allowed in Rustspec",
-                        );
-                        Err(())
-                    }
-                    Some(AngleBracketedArg::Constraint(_)) => {
+        GenericArgs::AngleBracketed(args) => check_vec(
+            args.args
+                .iter()
+                .map(|arg| match arg {
+                    AngleBracketedArg::Constraint(_) => {
                         sess.span_rustspec_err(
                             args.span,
                             "contraint type arguments are not allowed in Rustspec",
                         );
                         Err(())
                     }
-                    Some(AngleBracketedArg::Arg(GenericArg::Type(ty))) => {
+                    AngleBracketedArg::Arg(GenericArg::Type(ty)) => {
                         let typ_arg = translate_base_typ(sess, ty).map(|(t, _)| t);
                         Ok((typ_arg?, ty.span))
                     }
-                    Some(AngleBracketedArg::Arg(GenericArg::Lifetime(_))) => {
+                    AngleBracketedArg::Arg(GenericArg::Lifetime(_)) => {
                         sess.span_rustspec_err(
                             args.span,
                             "lifetime type parameters are not allowed in Rustspect",
                         );
                         Err(())
                     }
-                    Some(AngleBracketedArg::Arg(GenericArg::Const(_))) => {
+                    AngleBracketedArg::Arg(GenericArg::Const(_)) => {
                         sess.span_rustspec_err(
                             args.span,
                             "const generics are not allowed in Rustspec",
                         );
                         Err(())
                     }
-                }
-            }
-        }
+                })
+                .collect(),
+        ),
     }
 }
 
@@ -113,7 +104,7 @@ pub fn translate_use_path(sess: &Session, path: &ast::Path) -> TranslationResult
 pub fn translate_typ_name(
     sess: &Session,
     path: &ast::Path,
-) -> TranslationResult<(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>)> {
+) -> TranslationResult<(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>)> {
     if path.segments.len() > 1 {
         return Err(());
     }
@@ -126,11 +117,7 @@ pub fn translate_typ_name(
             None => Ok((translate_ident(&segment.ident), None)),
             Some(generic_args) => Ok((
                 translate_ident(&segment.ident),
-                Some(Box::new(translate_type_arg(
-                    sess,
-                    generic_args,
-                    &path.span,
-                )?)),
+                Some(translate_type_args(sess, generic_args, &path.span)?),
             )),
         },
     }
@@ -216,8 +203,18 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                     },
                     Some(args) => match t.ident.name.to_ident_string().as_str() {
                         "Seq" => {
-                            let arg = translate_type_arg(sess, args, &path.span)?;
-                            return Ok((BaseTyp::Seq(Box::new(arg)), path.span));
+                            let args = translate_type_args(sess, args, &path.span)?;
+                            if args.len() > 1 {
+                                sess.span_rustspec_err(
+                                    ty.span.clone(),
+                                    "Seq cannot have multiple type arguments",
+                                );
+                                return Err(());
+                            }
+                            return Ok((
+                                BaseTyp::Seq(Box::new(args.first().unwrap().clone())),
+                                path.span,
+                            ));
                         }
                         _ => (),
                     },

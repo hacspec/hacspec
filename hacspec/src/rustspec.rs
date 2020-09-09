@@ -93,7 +93,7 @@ pub enum BaseTyp {
     Isize,
     Seq(Box<Spanned<BaseTyp>>),
     Array(Spanned<ArraySize>, Box<Spanned<BaseTyp>>),
-    Named(Spanned<Ident>, Option<Box<Spanned<BaseTyp>>>),
+    Named(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(RustspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
     NaturalInteger(Secrecy, Spanned<String>),
@@ -124,13 +124,13 @@ impl fmt::Display for BaseTyp {
                 let mu = &mu.0;
                 write!(f, "Seq<{}>", mu)
             }
-            BaseTyp::Named(ident, arg) => write!(
+            BaseTyp::Named(ident, args) => write!(
                 f,
                 "{}{}",
                 ident.0,
-                match arg {
+                match args {
                     None => String::new(),
-                    Some(arg) => format!("<{}>", arg.0),
+                    Some(args) => format!("<{}>", args.iter().map(|(x, _)| x).format(", ")),
                 }
             ),
             BaseTyp::Tuple(args) => write!(

@@ -269,7 +269,7 @@ fn unify_types(
                     typ_ctx,
                     typ_dict,
                 ),
-                (BaseTyp::Named(name1, arg1), BaseTyp::Named(name2, arg2)) => {
+                (BaseTyp::Named(name1, args1), BaseTyp::Named(name2, args2)) => {
                     let (name1, name2) = match (&name1.0, &name2.0) {
                         (Ident::Original(name1), Ident::Original(name2)) => {
                             (name1.clone(), name2.clone())
@@ -277,15 +277,27 @@ fn unify_types(
                         _ => panic!(),
                     };
                     if name1 == name2 {
-                        match (&arg1, &arg2) {
+                        match (args1, args2) {
                             (None, None) => Ok(Some(typ_ctx.clone())),
-                            (Some(tc1), Some(tc2)) => unify_types(
-                                sess,
-                                &(((Borrowing::Consumed, (t1.1).1)), tc1.as_ref().clone()),
-                                &(((Borrowing::Consumed, (t2.1).1)), tc2.as_ref().clone()),
-                                typ_ctx,
-                                typ_dict,
-                            ),
+                            (Some(args1), Some(args2)) => {
+                                if args1.len() == args2.len() {
+                                    args1.iter().zip(args2.iter()).fold(
+                                        Ok(Some(typ_ctx.clone())),
+                                        |typ_ctx, (arg1, arg2)| match typ_ctx? {
+                                            None => Ok(None),
+                                            Some(typ_ctx) => unify_types(
+                                                sess,
+                                                &(((Borrowing::Consumed, arg1.1)), arg1.clone()),
+                                                &(((Borrowing::Consumed, arg2.1)), arg2.clone()),
+                                                &typ_ctx,
+                                                typ_dict,
+                                            ),
+                                        },
+                                    )
+                                } else {
+                                    Ok(None)
+                                }
+                            }
                             _ => Ok(None),
                         }
                     } else {
@@ -342,13 +354,19 @@ fn bind_variable_type(
             bind_variable_type(sess, arg_ty.as_ref(), typ_ctx)?,
             arg_ty.as_ref().1.clone(),
         )))),
-        BaseTyp::Named(name, arg) => Ok(BaseTyp::Named(
+        BaseTyp::Named(name, args) => Ok(BaseTyp::Named(
             name.clone(),
-            match arg
+            match args
                 .as_ref()
-                .map::<Result<_, ()>, _>(|arg: &Box<Spanned<BaseTyp>>| {
-                    let new_ty: BaseTyp = bind_variable_type(sess, arg.as_ref(), typ_ctx)?;
-                    Ok(Box::new((new_ty, arg.as_ref().1.clone())))
+                .map::<Result<_, ()>, _>(|args: &Vec<Spanned<BaseTyp>>| {
+                    check_vec(
+                        args.iter()
+                            .map(|arg| {
+                                let new_ty: BaseTyp = bind_variable_type(sess, arg, typ_ctx)?;
+                                Ok((new_ty, arg.1.clone()))
+                            })
+                            .collect(),
+                    )
                 }) {
                 None => None,
                 Some(Ok(x)) => Some(x),

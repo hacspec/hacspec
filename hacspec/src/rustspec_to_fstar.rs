@@ -125,9 +125,12 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
                 }))
                 .group()
         }
-        BaseTyp::Named(ident, arg) => translate_ident(&ident.0).append(match arg {
+        BaseTyp::Named(ident, args) => translate_ident(&ident.0).append(match args {
             None => RcDoc::nil(),
-            Some(arg) => RcDoc::space().append(translate_base_typ(&arg.as_ref().0)),
+            Some(args) => RcDoc::space().append(RcDoc::intersperse(
+                args.iter().map(|arg| translate_base_typ(&arg.0)),
+                RcDoc::space(),
+            )),
         }),
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
         BaseTyp::Tuple(args) => make_typ_tuple(args.iter().map(|(arg, _)| translate_base_typ(arg))),
