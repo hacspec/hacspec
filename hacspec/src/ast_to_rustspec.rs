@@ -1392,6 +1392,9 @@ fn translate_items(
                 ("public_nat_mod", None) => {
                     translate_natural_integer_decl(sess, i, arr_types, call, Secrecy::Public)
                 }
+                ("nat_mod", None) => {
+                    translate_natural_integer_decl(sess, i, arr_types, call, Secrecy::Secret)
+                }
                 (_, None) => {
                     sess.span_rustspec_err(name.ident.span.clone(), "unknown Rustspec macro");
                     Err(())

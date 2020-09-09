@@ -8,15 +8,11 @@ use hacspec_poly1305::*;
 fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
     let laad = aad.len();
     let lmsg = msg.len();
-    let pad_aad = if laad % 16 == 0 {
-        laad
-    } else {
-        16 * ((laad >> 4) + 1)
-    };
-    let pad_msg = if lmsg % 16 == 0 {
-        lmsg
-    } else {
-        16 * ((lmsg >> 4) + 1)
+    let mut pad_aad = 16 * ((laad >> 4) + 1);
+    let mut pad_msg = 16 * ((lmsg >> 4) + 1);
+    if laad % 16 == 0 {
+        pad_aad = laad;
+        pad_msg = lmsg;
     };
     let mut padded_msg = ByteSeq::new(pad_aad + pad_msg + 16);
     padded_msg = padded_msg.update(0, aad);

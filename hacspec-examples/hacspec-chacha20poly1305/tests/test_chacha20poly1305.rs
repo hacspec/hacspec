@@ -1,7 +1,7 @@
 use hacspec_lib::prelude::*;
 
 use hacspec_chacha20::*;
-use hacspec_examples::chacha20_poly1305::*;
+use hacspec_chacha20poly1305::*;
 use hacspec_poly1305::*;
 
 fn kat() {
