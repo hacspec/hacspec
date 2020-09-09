@@ -285,6 +285,11 @@ fn process_fn_id(
     };
 }
 
+fn process_type_id(_sess: &Session, tcx: &TyCtxt, id: &DefId, _krate_num: &CrateNum) {
+    // println!("Found {}", tcx.def_path_str(*id));
+    // TODO: find types which are arrays and import them
+}
+
 pub fn retrieve_external_functions(
     sess: &Session,
     tcx: &TyCtxt,
@@ -336,6 +341,9 @@ pub fn retrieve_external_functions(
                                         krate_num,
                                         &mut extern_funcs,
                                     ),
+                                    DefPathData::TypeNs(_) => {
+                                        process_type_id(sess, tcx, &def_id, krate_num)
+                                    }
                                     DefPathData::Ctor => {
                                         // Some weird constructor inside core crashes so we disable them for core
                                         if original_crate_name.as_str() != "core" {
