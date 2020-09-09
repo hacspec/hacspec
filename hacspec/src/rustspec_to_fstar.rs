@@ -106,6 +106,7 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
         BaseTyp::Int128 => RcDoc::as_string("Int128.t"),
         BaseTyp::Usize => RcDoc::as_string("UInt32.t"),
         BaseTyp::Isize => RcDoc::as_string("Int32.t"),
+        BaseTyp::Str => RcDoc::as_string("string"),
         BaseTyp::Seq(tau) => {
             let tau: &BaseTyp = &tau.0;
             RcDoc::as_string("Seq.seq")
@@ -159,6 +160,7 @@ fn translate_literal(lit: &Literal) -> RcDoc<()> {
         Literal::UInt8(x) => RcDoc::as_string(format!("{}uy", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("{}ul", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("{}l", x)),
+        Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
 
@@ -219,6 +221,7 @@ fn translate_func_name<'a>(prefix: &'a Option<Spanned<BaseTyp>>, name: &'a Ident
                 BaseTyp::Int128 => RcDoc::as_string("Int128"),
                 BaseTyp::Usize => RcDoc::as_string("UInt32"),
                 BaseTyp::Isize => RcDoc::as_string("Int32"),
+                BaseTyp::Str => RcDoc::as_string("String"),
                 BaseTyp::Seq(_) | BaseTyp::Array(_, _) => RcDoc::as_string("Seq"),
                 BaseTyp::Named(ident, _) => translate_ident(&ident.0),
                 BaseTyp::Variable(_) => panic!(), // shoult not happen

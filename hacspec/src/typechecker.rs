@@ -77,6 +77,7 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
         BaseTyp::Seq(_) => false,
+        BaseTyp::Str => false,
         BaseTyp::Array(_, _) => true,
         BaseTyp::Named((Ident::Original(name), _), arg) => match typ_dict.get(name) {
             Some((new_t1, dict_entry)) => {
@@ -923,6 +924,14 @@ fn typecheck_expression(
                 (
                     (Borrowing::Consumed, span.clone()),
                     (BaseTyp::Isize, span.clone()),
+                ),
+                var_context.clone(),
+            )),
+            Literal::Str(_) => Ok((
+                e.clone(),
+                (
+                    (Borrowing::Consumed, span.clone()),
+                    (BaseTyp::Str, span.clone()),
                 ),
                 var_context.clone(),
             )),

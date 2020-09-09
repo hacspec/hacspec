@@ -91,6 +91,7 @@ pub enum BaseTyp {
     Int8,
     Usize,
     Isize,
+    Str,
     Seq(Box<Spanned<BaseTyp>>),
     Array(Spanned<ArraySize>, Box<Spanned<BaseTyp>>),
     Named(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>),
@@ -116,6 +117,7 @@ impl fmt::Display for BaseTyp {
             BaseTyp::Int8 => write!(f, "i8"),
             BaseTyp::Usize => write!(f, "usize"),
             BaseTyp::Isize => write!(f, "isize"),
+            BaseTyp::Str => write!(f, "string"),
             BaseTyp::Array(size, mu) => {
                 let mu = &mu.0;
                 write!(f, "Array<{:?}, {}>", size.0, mu)
@@ -170,6 +172,7 @@ pub enum Literal {
     UInt8(u8),
     Usize(usize),
     Isize(isize),
+    Str(String),
 }
 
 #[derive(Clone)]

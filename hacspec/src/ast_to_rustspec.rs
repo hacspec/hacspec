@@ -5,7 +5,7 @@ use rustc_ast::{
         self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,
         Defaultness, Expr, ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind,
         LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind, RangeLimits, Stmt,
-        StmtKind, Ty, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
+        StmtKind, StrStyle, Ty, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
     },
     node_id::NodeId,
     token::{LitKind as TokenLitKind, TokenKind},
@@ -493,6 +493,12 @@ fn translate_expr(
             // Unspecified integers are always interpreted as usize
             LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
                 ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
+                e.span,
+            )),
+            LitKind::Str(msg, StrStyle::Cooked) => Ok((
+                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Str(
+                    msg.to_ident_string(),
+                ))),
                 e.span,
             )),
             _ => {
