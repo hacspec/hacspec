@@ -1317,6 +1317,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
+        Expression::IntegerCasting(_, _) => unimplemented!(),
     }
 }
 

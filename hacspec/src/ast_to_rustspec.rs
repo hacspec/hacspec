@@ -747,9 +747,16 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "FOO3");
             Err(())
         }
-        ExprKind::Cast(_, _) => {
-            sess.span_rustspec_err(e.span.clone(), "FOO4");
-            Err(())
+        ExprKind::Cast(e1, t1) => {
+            let new_e1 = translate_expr_expects_exp(sess, arr_typs, e1)?;
+            let new_t1 = translate_base_typ(sess, t1)?;
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::IntegerCasting(
+                    Box::new(new_e1),
+                    new_t1,
+                )),
+                e.span.clone(),
+            ))
         }
         ExprKind::Type(_, _) => {
             sess.span_rustspec_err(e.span.clone(), "FOO5");
