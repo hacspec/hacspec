@@ -26,3 +26,6 @@ default-members = [
     "hacspec-attributes",
     "hacspec-sig"
 ]
+
+[profile.release]
+debug = true
