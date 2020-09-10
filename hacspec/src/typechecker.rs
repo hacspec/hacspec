@@ -13,13 +13,14 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
+fn fresh_rustspec_id() -> RustspecId {
+    RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst))
+}
+
 fn fresh_ident(x: &Ident) -> Ident {
     match x {
         Ident::Rustspec(_, _) => panic!("fresh_ident only replaces original Rust ident ids"),
-        Ident::Original(n) => Ident::Rustspec(
-            RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)),
-            n.clone(),
-        ),
+        Ident::Original(n) => Ident::Rustspec(fresh_rustspec_id(), n.clone()),
     }
 }
 
@@ -467,14 +468,14 @@ impl fmt::Debug for FnKey {
 pub enum FnValue {
     Local(FuncSig),
     External(ExternalFuncSig),
-    ExternalNotInRustspec,
+    ExternalNotInRustspec(String),
 }
 
 fn sig_args(sig: &FnValue) -> Vec<Typ> {
     match sig {
         FnValue::Local(sig) => sig.args.clone().into_iter().map(|(_, (x, _))| x).collect(),
         FnValue::External(sig) => sig.args.clone(),
-        FnValue::ExternalNotInRustspec => panic!(),
+        FnValue::ExternalNotInRustspec(_) => panic!(),
     }
 }
 
@@ -482,7 +483,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
     match sig {
         FnValue::Local(sig) => sig.ret.0.clone(),
         FnValue::External(sig) => sig.ret.clone(),
-        FnValue::ExternalNotInRustspec => panic!(),
+        FnValue::ExternalNotInRustspec(_) => panic!(),
     }
 }
 
@@ -813,7 +814,12 @@ fn typecheck_expression(
                         );
                         Err(())
                     } else {
-                        if is_numeric(&t1, typ_dict) {
+                        if is_numeric(&t1, typ_dict)
+                            || (match op {
+                                BinOpKind::Eq | BinOpKind::Ne => true,
+                                _ => false,
+                            })
+                        {
                             Ok((
                                 Expression::Binary(
                                     (op.clone(), op_span.clone()),
@@ -837,7 +843,7 @@ fn typecheck_expression(
                             sess.span_rustspec_err(
                                 span.clone(),
                                 format!(
-                                    "operation only available for numerics, but found type {}{}",
+                                    "operation not available for type {}{}",
                                     (t1.0).0,
                                     (t1.1).0
                                 )
@@ -1169,16 +1175,17 @@ fn typecheck_expression(
                 &name.1,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
-            if let FnValue::ExternalNotInRustspec = f_sig {
+            if let FnValue::ExternalNotInRustspec(sig_str) = f_sig {
                 sess.span_rustspec_err(
                     name.1.clone(),
                     format!(
-                        "function {}{} is known but its signature is not in Rustspec",
+                        "function {}{} is known but its signature is not in Rustspec: {}",
                         (match prefix {
                             None => String::new(),
                             Some(prefix) => format!("{}::", &prefix.0),
                         }),
-                        &name.0
+                        &name.0,
+                        sig_str
                     )
                     .as_str(),
                 );
@@ -1282,7 +1289,7 @@ fn typecheck_expression(
                 f_span,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
-            if let FnValue::ExternalNotInRustspec = f_sig {
+            if let FnValue::ExternalNotInRustspec(_) = f_sig {
                 sess.span_rustspec_err(
                     *f_span,
                     format!(
@@ -2153,35 +2160,29 @@ fn typecheck_item(
     }
 }
 
-macro_rules! type_dict_entry {
-    ($string:expr, $typ:expr, $entry_type:expr) => {
-        (
-            String::from($string),
-            (
-                ((Borrowing::Consumed, DUMMY_SP), ($typ, DUMMY_SP)),
-                $entry_type,
-            ),
-        )
-    };
-}
-
 pub fn typecheck_program<
-    F: Fn(&Vec<Spanned<String>>) -> HashMap<FnKey, Option<ExternalFuncSig>>,
+    F: Fn(
+        &Vec<Spanned<String>>,
+    ) -> (
+        HashMap<FnKey, Result<ExternalFuncSig, String>>,
+        HashMap<String, BaseTyp>,
+    ),
 >(
     sess: &Session,
     p: &Program,
     external_funcs: &F,
     _allowed_sigs: &AllowedSigs,
 ) -> TypecheckingResult<Program> {
+    let (extern_funcs, extern_arrays) = external_funcs(&p.imported_crates);
     let mut top_level_context: TopLevelContext = TopLevelContext {
-        functions: external_funcs(&p.imported_crates)
+        functions: extern_funcs
             .iter()
             .map(|(k, v)| {
                 (
                     k.clone(),
                     match v {
-                        Some(v) => FnValue::External(v.clone()),
-                        None => FnValue::ExternalNotInRustspec,
+                        Ok(v) => FnValue::External(v.clone()),
+                        Err(s) => FnValue::ExternalNotInRustspec(s.clone()),
                     },
                 )
             })
@@ -2191,82 +2192,6 @@ pub fn typecheck_program<
     //TODO: better system, this whitelist is hardcoded
     let mut typ_dict = HashMap::from(
         vec![
-            type_dict_entry!(
-                "U16Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(2), DUMMY_SP),
-                    Box::new((
-                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
-                        DUMMY_SP,
-                    )),
-                ),
-                DictEntry::Array
-            ),
-            type_dict_entry!(
-                "U32Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(4), DUMMY_SP),
-                    Box::new((
-                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
-                        DUMMY_SP,
-                    )),
-                ),
-                DictEntry::Array
-            ),
-            type_dict_entry!(
-                "U64Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(8), DUMMY_SP),
-                    Box::new((
-                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
-                        DUMMY_SP,
-                    )),
-                ),
-                DictEntry::Array
-            ),
-            type_dict_entry!(
-                "U128Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(16), DUMMY_SP),
-                    Box::new((
-                        BaseTyp::Named((Ident::Original("U8".to_string()), DUMMY_SP), None,),
-                        DUMMY_SP,
-                    )),
-                ),
-                DictEntry::Array
-            ),
-            type_dict_entry!(
-                "u16Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(2), DUMMY_SP),
-                    Box::new((BaseTyp::UInt8, DUMMY_SP))
-                ),
-                DictEntry::Array
-            ),
-            type_dict_entry!(
-                "u32Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(4), DUMMY_SP),
-                    Box::new((BaseTyp::UInt8, DUMMY_SP))
-                ),
-                DictEntry::Array
-            ),
-            type_dict_entry!(
-                "u64Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(8), DUMMY_SP),
-                    Box::new((BaseTyp::UInt8, DUMMY_SP))
-                ),
-                DictEntry::Array
-            ),
-            type_dict_entry!(
-                "u128Word",
-                BaseTyp::Array(
-                    (ArraySize::Integer(16), DUMMY_SP),
-                    Box::new((BaseTyp::UInt8, DUMMY_SP))
-                ),
-                DictEntry::Array
-            ),
             // Handle type aliases in a more systematic way, this is another harcoded list
             (
                 String::from("ByteSeq"),
@@ -2287,6 +2212,15 @@ pub fn typecheck_program<
         ]
         .as_slice(),
     );
+    for (array_name, array_typ) in extern_arrays {
+        typ_dict.insert(
+            array_name,
+            (
+                ((Borrowing::Consumed, DUMMY_SP), (array_typ, DUMMY_SP)),
+                DictEntry::Array,
+            ),
+        );
+    }
     Ok(Program {
         items: check_vec(
             p.items

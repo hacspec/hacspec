@@ -3,9 +3,10 @@ use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_metadata::creader::CStore;
 use rustc_middle::middle::cstore::CrateStore;
+use rustc_middle::mir::interpret::{ConstValue, Scalar};
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
-use rustc_middle::ty::{self, PolyFnSig, TyCtxt, TyKind};
+use rustc_middle::ty::{self, ConstKind, PolyFnSig, RegionKind, TyCtxt, TyKind};
 use rustc_session::Session;
 use rustc_span::{
     def_id::{CrateNum, DefId, LOCAL_CRATE},
@@ -52,6 +53,16 @@ fn translate_base_typ(
         TyKind::Uint(UintTy::U32) => Ok((BaseTyp::UInt32, typ_ctx.clone())),
         TyKind::Uint(UintTy::U64) => Ok((BaseTyp::UInt64, typ_ctx.clone())),
         TyKind::Uint(UintTy::U128) => Ok((BaseTyp::UInt128, typ_ctx.clone())),
+        TyKind::Ref(region, inner_ty, mutability) => match region {
+            RegionKind::ReStatic => match mutability {
+                Mutability::Not => match inner_ty.kind() {
+                    TyKind::Str => Ok((BaseTyp::Str, typ_ctx.clone())),
+                    _ => Err(()),
+                },
+                _ => Err(()),
+            },
+            _ => Err(()),
+        },
         TyKind::Adt(adt, substs) => {
             let adt_id = adt.did;
             let adt_def_path = tcx.def_path(adt_id);
@@ -196,9 +207,9 @@ fn translate_polyfnsig(
 }
 
 fn insert_extern_func(
-    extern_funcs: &mut HashMap<FnKey, Option<ExternalFuncSig>>,
+    extern_funcs: &mut HashMap<FnKey, Result<ExternalFuncSig, String>>,
     fn_key: FnKey,
-    sig: Option<ExternalFuncSig>,
+    sig: Result<ExternalFuncSig, String>,
 ) {
     // Here we can deal with function name clashes
     // When two functions have the same name, we can only keep one of them
@@ -209,7 +220,7 @@ fn insert_extern_func(
             extern_funcs.insert(fn_key, sig);
         }
         Some(old_sig) => match (old_sig, &sig) {
-            (Some(_), None) => (),
+            (Ok(_), Err(_)) => (),
             _ => {
                 extern_funcs.insert(fn_key, sig);
             }
@@ -222,7 +233,7 @@ fn process_fn_id(
     tcx: &TyCtxt,
     id: &DefId,
     krate_num: &CrateNum,
-    extern_funcs: &mut HashMap<FnKey, Option<ExternalFuncSig>>,
+    extern_funcs: &mut HashMap<FnKey, Result<ExternalFuncSig, String>>,
 ) {
     match tcx.type_of(*id).kind() {
         TyKind::FnDef(_, _) => {
@@ -237,8 +248,8 @@ fn process_fn_id(
                     // Function not within impl block
                     let export_sig = tcx.fn_sig(*id);
                     let sig = match translate_polyfnsig(tcx, &export_sig, &HashMap::new()) {
-                        Ok(sig) => Some(sig),
-                        Err(()) => None,
+                        Ok(sig) => Ok(sig),
+                        Err(()) => Err(format!("{}", export_sig)),
                     };
                     let name_segment = def_path.data.last().unwrap();
                     match name_segment.data {
@@ -268,8 +279,8 @@ fn process_fn_id(
                                     let export_sig = tcx.fn_sig(*id);
                                     let sig = match translate_polyfnsig(tcx, &export_sig, &typ_ctx)
                                     {
-                                        Ok(sig) => Some(sig),
-                                        Err(()) => None,
+                                        Ok(sig) => Ok(sig),
+                                        Err(()) => Err(format!("{}", export_sig)),
                                     };
                                     insert_extern_func(extern_funcs, fn_key, sig);
                                 }
@@ -285,19 +296,72 @@ fn process_fn_id(
     };
 }
 
-fn process_type_id(_sess: &Session, tcx: &TyCtxt, id: &DefId, _krate_num: &CrateNum) {
-    // println!("Found {}", tcx.def_path_str(*id));
-    // TODO: find types which are arrays and import them
+fn add_array_type_from_ctor_sig(
+    tcx: &TyCtxt,
+    sig: &PolyFnSig,
+    external_arrays: &mut HashMap<String, BaseTyp>,
+) {
+    let ret = sig.output().skip_binder();
+    match ret.kind() {
+        TyKind::Adt(adt, substs) => {
+            if substs.len() > 0 {
+                return ();
+            }
+            if adt.variants.len() != 1 {
+                return ();
+            }
+            for variant in adt.variants.iter() {
+                if variant.fields.len() != 1 {
+                    return ();
+                }
+                for field in variant.fields.iter() {
+                    match tcx.type_of(field.did).kind() {
+                        TyKind::Array(cell_t, size) => {
+                            let (new_cell_t, _) =
+                                match translate_base_typ(tcx, cell_t, &HashMap::new()) {
+                                    Ok(x) => x,
+                                    Err(()) => return (),
+                                };
+                            let new_size = match &size.val {
+                                ConstKind::Value(value) => match value {
+                                    ConstValue::Scalar(scalar) => match scalar {
+                                        Scalar::Raw { data, .. } => *data as usize,
+                                        _ => return (),
+                                    },
+                                    _ => return (),
+                                },
+                                _ => return (),
+                            };
+                            let array_typ = BaseTyp::Array(
+                                (ArraySize::Integer(new_size), DUMMY_SP),
+                                Box::new((new_cell_t, DUMMY_SP)),
+                            );
+                            let array_name =
+                                tcx.def_path(adt.did).data.last().unwrap().data.to_string();
+                            external_arrays.insert(array_name, array_typ);
+                        }
+                        _ => return (),
+                    }
+                }
+            }
+            ()
+        }
+        _ => (),
+    }
 }
 
 pub fn retrieve_external_functions(
     sess: &Session,
     tcx: &TyCtxt,
     imported_crates: &Vec<Spanned<String>>,
-) -> HashMap<FnKey, Option<ExternalFuncSig>> {
+) -> (
+    HashMap<FnKey, Result<ExternalFuncSig, String>>,
+    HashMap<String, BaseTyp>,
+) {
     let mut krates: Vec<_> = tcx.crates().iter().collect();
     krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
+    let mut extern_arrays = HashMap::new();
     let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
     let mut imported_crates = imported_crates.clone();
     // You normally only import hacspec_lib which then reexports the definitions
@@ -341,21 +405,23 @@ pub fn retrieve_external_functions(
                                         krate_num,
                                         &mut extern_funcs,
                                     ),
-                                    DefPathData::TypeNs(_) => {
-                                        process_type_id(sess, tcx, &def_id, krate_num)
-                                    }
                                     DefPathData::Ctor => {
-                                        // Some weird constructor inside core crashes so we disable them for core
-                                        if original_crate_name.as_str() != "core" {
+                                        // Some weird constructor inside std crashes so we disable them for std
+                                        if &original_crate_name.to_ident_string() != "core" {
                                             let export_sig = tcx.fn_sig(def_id);
                                             let sig = match translate_polyfnsig(
                                                 tcx,
                                                 &export_sig,
                                                 &HashMap::new(),
                                             ) {
-                                                Ok(sig) => Some(sig),
-                                                Err(()) => None,
+                                                Ok(sig) => Ok(sig),
+                                                Err(()) => Err(format!("{}", export_sig)),
                                             };
+                                            add_array_type_from_ctor_sig(
+                                                tcx,
+                                                &export_sig,
+                                                &mut extern_arrays,
+                                            );
                                             let name_segment =
                                                 def_path.data[def_path.data.len() - 2];
                                             match name_segment.data {
@@ -397,5 +463,5 @@ pub fn retrieve_external_functions(
             _ => (),
         }
     }
-    extern_funcs
+    (extern_funcs, extern_arrays)
 }

@@ -22,13 +22,13 @@ fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
     padded_msg
 }
 
-pub fn encrypt(key: Key, iv: IV, aad: &ByteSeq, msg: &ByteSeq) -> Result<(ByteSeq, Tag), String> {
+pub fn encrypt(key: Key, iv: IV, aad: &ByteSeq, msg: &ByteSeq) -> (ByteSeq, Tag) {
     let key_block = block(key, U32(0u32), iv);
     let mac_key = Key::from_slice_range(&key_block, 0..32);
     let cipher_text = chacha(key, iv, msg);
     let padded_msg = pad_aad_msg(aad, &cipher_text);
     let tag = poly(&padded_msg, mac_key);
-    Ok((cipher_text, tag))
+    (cipher_text, tag)
 }
 
 pub fn decrypt(
@@ -37,15 +37,11 @@ pub fn decrypt(
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
     tag: Tag,
-) -> Result<ByteSeq, String> {
+) -> (ByteSeq, bool) {
     let key_block = block(key, U32(0u32), iv);
     let mac_key = Key::from_slice_range(&key_block, 0..32);
     let padded_msg = pad_aad_msg(aad, cipher_text);
     let my_tag = poly(&padded_msg, mac_key);
     let plain_text = chacha(key, iv, cipher_text);
-    if my_tag == tag {
-        Ok(plain_text)
-    } else {
-        Err("Mac verification failed".to_string())
-    }
+    (plain_text, my_tag == tag)
 }

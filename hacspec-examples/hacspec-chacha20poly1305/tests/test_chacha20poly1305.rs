@@ -43,7 +43,8 @@ fn kat() {
     let (cipher, mac) = encrypt(k, iv, &aad, &msg).unwrap();
     assert_bytes_eq!(exp_cipher, cipher);
     assert_eq!(exp_mac, mac);
-    let decrypted_msg = decrypt(k, iv, &aad, &cipher, mac).unwrap();
+    let (decrypted_msg, ok) = decrypt(k, iv, &aad, &cipher, mac);
+    assert!(ok);
     assert_bytes_eq!(msg, decrypted_msg);
 }
 
