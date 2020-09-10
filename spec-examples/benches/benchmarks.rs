@@ -2,13 +2,14 @@
 extern crate criterion;
 use criterion::{BatchSize, Criterion};
 
+use hacspec_chacha20::*;
+use hacspec_chacha20poly1305::*;
 use hacspec_examples::aes_gcm::{
     aes::{aes128_decrypt, aes128_encrypt, aes256_decrypt, aes256_encrypt, Key128, Key256, Nonce},
     gf128::{gmac, Key as GcmKey},
     *,
 };
 use hacspec_examples::blake2::blake2b::*;
-use hacspec_examples::chacha20_poly1305::{chacha20::*, poly1305::*, *};
 use hacspec_examples::curve25519::*;
 use hacspec_examples::ec::{
     p256::{point_mul as p256_point_mul, FieldElement as P256FieldElement, Scalar as P256Scalar},
@@ -18,6 +19,7 @@ use hacspec_examples::ec::{
 use hacspec_examples::fips202::*;
 use hacspec_examples::sha2::hash as sha256;
 use hacspec_lib::prelude::*;
+use hacspec_poly1305::*;
 
 fn randombytes(n: usize) -> Vec<u8> {
     use rand::rngs::OsRng;
@@ -196,7 +198,7 @@ fn criterion_chacha_poly(c: &mut Criterion) {
                 (data, nonce, key)
             },
             |(data, nonce, key)| {
-                let _c = chacha(key, nonce, &data).unwrap();
+                let _c = chacha(key, nonce, &data);
             },
             BatchSize::SmallInput,
         )
@@ -212,7 +214,7 @@ fn criterion_chacha_poly(c: &mut Criterion) {
                 (data, nonce, aad, key)
             },
             |(data, nonce, aad, key)| {
-                let (_cipher, _tag) = encrypt(key, nonce, &aad, &data).unwrap();
+                let (_cipher, _tag) = encrypt(key, nonce, &aad, &data);
             },
             BatchSize::SmallInput,
         )
@@ -225,11 +227,11 @@ fn criterion_chacha_poly(c: &mut Criterion) {
                 let nonce = IV::from_public_slice(&randombytes(12));
                 let data = Seq::<U8>::from_public_slice(&randombytes(10_000));
                 let aad = Seq::<U8>::from_public_slice(&randombytes(1_000));
-                let (cipher, tag) = encrypt(key, nonce, &aad, &data).unwrap();
+                let (cipher, tag) = encrypt(key, nonce, &aad, &data);
                 (nonce, aad, key, cipher, tag)
             },
             |(nonce, aad, key, cipher, tag)| {
-                let _msg = decrypt(key, nonce, &aad, &cipher, tag).unwrap();
+                let _msg = decrypt(key, nonce, &aad, &cipher, tag);
             },
             BatchSize::SmallInput,
         )

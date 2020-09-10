@@ -3,7 +3,7 @@ use std::io::Read;
 
 use hacspec_lib::prelude::*;
 
-use hacspec_examples::chacha20_poly1305::chacha20::*;
+use hacspec_chacha20::*;
 
 fn read_file() -> Vec<u8> {
     let mut file = File::open("input.data").unwrap();
@@ -13,8 +13,8 @@ fn read_file() -> Vec<u8> {
 }
 
 fn enc_dec_test(m: ByteSeq, key: Key, iv: IV) {
-    let c = chacha(key, iv, &m).unwrap();
-    let m_dec = chacha(key, iv, &c).unwrap();
+    let c = chacha(key, iv, &m);
+    let m_dec = chacha(key, iv, &c);
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
