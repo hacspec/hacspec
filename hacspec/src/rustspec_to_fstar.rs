@@ -1,6 +1,7 @@
 use crate::rustspec::*;
 
 use core::iter::IntoIterator;
+use heck::SnakeCase;
 use pretty::RcDoc;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
@@ -54,6 +55,22 @@ fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, (
         .group()
 }
 
+fn make_list<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
+    RcDoc::as_string("[")
+        .append(
+            RcDoc::line_()
+                .append(RcDoc::intersperse(
+                    args.into_iter(),
+                    RcDoc::as_string(";").append(RcDoc::line()),
+                ))
+                .group()
+                .nest(2),
+        )
+        .append(RcDoc::line_())
+        .append(RcDoc::as_string("]"))
+        .group()
+}
+
 fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
     RcDoc::as_string("(")
         .append(
@@ -87,7 +104,12 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 fn translate_ident(x: &Ident) -> RcDoc<()> {
-    RcDoc::as_string(format!("{}", x))
+    RcDoc::as_string(format!(
+        "{}",
+        match x {
+            Ident::Original(s) | Ident::Rustspec(_, s) => s.to_snake_case(),
+        }
+    ))
 }
 
 fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
@@ -223,9 +245,9 @@ fn translate_func_name<'a>(prefix: &'a Option<Spanned<BaseTyp>>, name: &'a Ident
                 BaseTyp::Isize => RcDoc::as_string("Int32"),
                 BaseTyp::Str => RcDoc::as_string("String"),
                 BaseTyp::Seq(_) | BaseTyp::Array(_, _) => RcDoc::as_string("Seq"),
-                BaseTyp::Named(ident, _) => translate_ident(&ident.0),
-                BaseTyp::Variable(_) => panic!(), // shoult not happen
-                BaseTyp::Tuple(_) => panic!(),    // should not happen
+                BaseTyp::Named(_ident, _) => RcDoc::as_string("Seq"), // TODO: change with typ dict
+                BaseTyp::Variable(_) => panic!(),                     // shoult not happen
+                BaseTyp::Tuple(_) => panic!(),                        // should not happen
                 BaseTyp::NaturalInteger(_, _) => unimplemented!(),
             };
             let type_arg = match prefix {
@@ -287,7 +309,9 @@ fn translate_expression(e: &Expression) -> RcDoc<()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e2)))
         }
-        Expression::NewArray(_, _, _) => panic!(),
+        Expression::NewArray(_, _, args) => RcDoc::as_string("Seq.from_list")
+            .append(RcDoc::space())
+            .append(make_list(args.iter().map(|(e, _)| translate_expression(e)))),
         Expression::IntegerCasting(_, _) => panic!(),
     }
 }
@@ -447,8 +471,32 @@ fn translate_item(i: &Item) -> RcDoc<()> {
                     .group()
                     .nest(2),
             ),
-        Item::ConstDecl(_, _, _) => unimplemented!(),
-        Item::NaturalIntegerDecl(_, _, _, _, _) => unimplemented!(),
+        Item::ConstDecl(name, ty, e) => make_let_binding(
+            translate_ident(&name.0),
+            Some(translate_base_typ(&ty.0)),
+            translate_expression(&e.0),
+            true,
+        ),
+        Item::NaturalIntegerDecl(_nat_name, canvas_name, _secrecy, canvas_size, _modulo) => {
+            RcDoc::as_string("type")
+                .append(RcDoc::space())
+                .append(translate_ident(&canvas_name.0))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("="))
+                .group()
+                .append(
+                    RcDoc::line()
+                        .append(RcDoc::as_string("Seq.lseq"))
+                        .append(RcDoc::space())
+                        .append(translate_base_typ(&BaseTyp::UInt8))
+                        .append(RcDoc::space())
+                        .append(translate_expression(&canvas_size.0))
+                        .group()
+                        .nest(2),
+                )
+                .append(RcDoc::hardline())
+                .append(RcDoc::hardline()) //TODO: add other decl
+        }
     }
 }
 
@@ -472,6 +520,8 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str) {
     };
     let width = 80;
     let mut w = Vec::new();
+    let module_name = path.file_stem().unwrap().to_str().unwrap();
+    write!(file, "module {}\n\nopen Rustspec\n\n", module_name).unwrap();
     translate_program(p).render(width, &mut w).unwrap();
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }
