@@ -175,12 +175,11 @@ fn test_poly_eea() {
     };
     //2x^2 -2x + 2
     let expected: Seq<i128> = Seq::from_native_slice(&[2, 1, 2]);
-    
     assert_eq!(h_inv.len(), expected.len());
     for i in 0..h_inv.len() {
         assert_eq!(h_inv[i], expected[i]);
     }
-    let scalar = mul_poly_irr(&h, &h_inv, &irr, 3).unwrap();
+    let scalar = mul_poly_irr(&h, &h_inv, &irr, 3);
     let one: Seq<i128> = Seq::from_native_slice(&[1, 0, 0, 0]);
     assert_eq!(scalar.len(), one.len());
     for i in 0..scalar.len() {

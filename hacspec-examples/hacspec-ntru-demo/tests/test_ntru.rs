@@ -183,7 +183,8 @@ fn kat_ntru_prime_653() {
         assert_eq!(cipher[i], c[i]);
     }
 
-    let message = ntru_prime_653_decrypt(&cipher, &sk.0, &sk.1);
+    let (message, ok) = ntru_prime_653_decrypt(&cipher, &sk.0, &sk.1);
+    assert_eq!(ok, true);
     assert_eq!(message.len(), m.len());
     for i in 0..message.len() {
         assert_eq!(message[i], m[i]);

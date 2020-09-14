@@ -90,11 +90,11 @@ pub fn decrypt(
 
     // calculate 3*f and 3*f*c
     let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q);
-    let mut f_3_c = poly_to_ring(
+    let (mut f_3_c, ok) = poly_to_ring(
         &n_v.irr,
         &add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q), n_v.q),
         n_v.q,
-    )?;
+    );
     // view coefficients as values between -(q-1/2) and (q-1/2)
     let q_12 = (n_v.q - 1) / 2;
     for i in 0..f_3_c.len() {
@@ -119,7 +119,11 @@ pub fn decrypt(
             r[i] = -1 as i128;
         }
     }
-    Ok(r)
+    if ok {
+        Ok(r)
+    } else {
+        Err("unable to decrypt")
+    }
 }
 
 /// This function creates a polynomial with w many -1 or 1 and with the highest degree of h_deg.
