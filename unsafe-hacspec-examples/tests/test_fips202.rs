@@ -1,6 +1,6 @@
 use hacspec_lib::prelude::*;
 
-use hacspec_examples::fips202::*;
+use unsafe_hacspec_examples::fips202::*;
 
 #[test]
 fn test_sha3224() {

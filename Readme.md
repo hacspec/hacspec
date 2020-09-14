@@ -8,34 +8,45 @@ A formal description of the hacspec language can be found in [Language.md](Langu
 
 # Repository Structure
 
-This is a cargo workspace consisting of five main crates:
-* [hacspec](hacspec/)
-* [abstract-integers](abstract-integers/)
-* [secret-integers](secret-integers/)
-* [hacspec-dev](hacspec-dev/)
-* [hacspec-examples](spec-examples/)
+This is a cargo workspace consisting of six main crates:
+* [hacspec](hacspec/): the compiler for the hacspec subset of Rust
+* [hacspec-lib](hacspec-lib):  the standard library of hacspec programs
+* [abstract-integers](abstract-integers/): wrapper around `BigInt` for modular natural integers
+* [secret-integers](secret-integers/): wrapper around integer types for constant-timedness
+* [unsafe-hacspec-examples](unsafe-hacspec-examples/): cryptographic specs written in hacspec but not formally typechecked (hence the unsafety)
 
-There's an additional crate [hacspec-attributes](attributes) that is only used in the hacspec library.
+The [hacspec-examples](hacspec_examples/) folder contains 
+cryptographic primitives that have passed the hacspec typechecking.
 
-The clippy checker for the hacspec language lives in a [separate repository](https://github.com/hacspec/rust-clippy/tree/hacspec).
+There's an additional crate [hacspec-attributes](attributes) that is
+only used in the hacspec library, and [hacspec-dev](hacspec-dev/)
+which are hacspec utilities that are not part of the language.
+
+Finally, the [hacspec-fstar](hacspec-fstar/) folder contains F* translations
+of the cryptograpghic specs, produced by the hacspec compiler.
 
 # Examples
-There's a set of example specs [here](spec-examples/).
-To run all examples one can use `cargo test -p hacspec-examples`.
 
-* [AES 128/256](spec-examples/src/aes_gcm/aes.rs)
-* [GF 128](spec-examples/src/aes_gcm/gf128.rs)
-* [AES-GCM 128/256](spec-examples/src/aes_gcm/aesgcm.rs)
-* [Chacha20](spec-examples/src/chacha20_poly1305/chacha20.rs)
-* [Poly1305](spec-examples/src/chacha20_poly1305/poly1305.rs)
-* [Chacha20Poly1305](spec-examples/src/chacha20_poly1305/chacha20poly1305.rs)
-* [Blake2b](spec-examples/src/blake2/blake2b.rs)
-* [Curve25519](spec-examples/src/curve25519/curve25519.rs)
-* [Fips202](spec-examples/src/fips202/fips202.rs)
-* [SHA256](spec-examples/src/sha2/sha2.rs)
-* [HKDF-SHA256](spec-examples/src/hkdf/hkdf.rs)
-* [HMAC-SHA256](spec-examples/src/hmac/hmac.rs)
-* [P256](spec-examples/src/p256/p256.rs)
+There's a set of example specs, divided between the [sage](hacspec-examples/) and [unsafe](unsafe-hacspec-examples). To run all examples one can use `cargo test`.
+
+## Safe examples
+
+* [Chacha20](hacspec-examples/hacspec-chacha20/src/chacha20.rs)
+* [Poly1305](hacspec-examples/hacspec-poly1305/src/poly1305.rs)
+* [Chacha20Poly1305](hacspec-examples/hacspec-chacha20poly1305/src/chacha20poly1305.rs)
+
+## Unsafe examples
+
+* [AES 128/256](unsafe-hacspec-examples/src/aes_gcm/aes.rs)
+* [GF 128](unsafe-hacspec-examples/src/aes_gcm/gf128.rs)
+* [AES-GCM 128/256](unsafe-hacspec-examples/src/aes_gcm/aesgcm.rs)
+* [Blake2b](unsafe-hacspec-examples/src/blake2/blake2b.rs)
+* [Curve25519](unsafe-hacspec-examples/src/curve25519/curve25519.rs)
+* [Fips202](unsafe-hacspec-examples/src/fips202/fips202.rs)
+* [SHA256](unsafe-hacspec-examples/src/sha2/sha2.rs)
+* [HKDF-SHA256](unsafe-hacspec-examples/src/hkdf/hkdf.rs)
+* [HMAC-SHA256](unsafe-hacspec-examples/src/hmac/hmac.rs)
+* [P256](unsafe-hacspec-examples/src/p256/p256.rs)
 
 [//]: # (badges)
 
@@ -55,11 +66,9 @@ To run all examples one can use `cargo test -p hacspec-examples`.
 
 # The hacspec compiler
 
-To build and run the hacspec compiler in `hacspec/`, you will need to use nightly Rust with 
-additional components : 
+The compiler is excluded from the main workspace of crates, 
+so it won't be build when you launch `cargo build` from the
+root of the repository.
 
-```
-rustup toolchain install nightly 
-rustup component add --toolchain nightly rustc-dev
-rustup component add --toolchain nightly llvm-tools-preview
-```
+Please refer to the [dedicated README.md](hacspec/README.md) 
+for instructions about how to run the compiler. 

@@ -1,7 +1,7 @@
-use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
+use hacspec_lib::prelude::*;
 
-use hacspec_examples::blake2::blake2b::*;
+use unsafe_hacspec_examples::blake2::blake2b::*;
 
 static EXPECTED_ABC: [u8; 64] = [
     0xba, 0x80, 0xa5, 0x3f, 0x98, 0x1c, 0x4d, 0x0d, 0x6a, 0x27, 0x97, 0xb6, 0x9f, 0x12, 0xf6, 0xe9,

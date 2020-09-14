@@ -1,12 +1,10 @@
-use hacspec_examples::ec::{arithmetic, p256, p384, Affine};
+use unsafe_hacspec_examples::ec::{p384::*, Affine};
 
-use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
 
-use rayon::prelude::*;
-
+// TODO: this is duplicating a lot of code from test_p256!
 create_test_vectors!(
-    TestVector,
+    P384TestVector,
     algorithm: String,
     generatorVersion: String,
     numberOfTests: usize,
@@ -36,59 +34,54 @@ create_test_vectors!(
 );
 
 #[allow(non_snake_case)]
-fn run_test<Scalar: UnsignedIntegerCopy, FieldElement: UnsignedIntegerCopy>(
-    tests: TestVector,
-    curve: &'static str,
-) {
+#[test]
+fn test_wycheproof_plain() {
+    let tests: P384TestVector = P384TestVector::from_file("tests/ecdh_secp384r1_ecpoint_test.json");
+
+    let num_tests = tests.numberOfTests;
+    let mut skipped_tests = 0;
+    let mut tests_run = 0;
     match tests.algorithm.as_ref() {
         "ECDH" => (),
         _ => panic!("This is not an ECDH test vector."),
     };
     for testGroup in tests.testGroups.iter() {
         assert_eq!(testGroup.r#type, "EcdhEcpointTest");
-        assert_eq!(testGroup.curve, curve);
+        assert_eq!(testGroup.curve, "secp384r1");
         assert_eq!(testGroup.encoding, "ecpoint");
-        let point_len = match curve {
-            "secp256r1" => 64,
-            "secp384r1" => 96,
-            _ => panic!("I don't know that curve"),
-        };
-        testGroup.tests.par_iter().for_each(|test| {
+        for test in testGroup.tests.iter() {
             println!("Test {:?}: {:?}", test.tcId, test.comment);
             if !test.result.eq("valid") {
                 println!("We're only doing valid tests for now.");
-                return;
+                skipped_tests += 1;
+                continue;
             }
             if test.comment == "compressed public key" {
                 // not implemented
                 println!("Compressed public keys are not supported.");
-                return;
+                skipped_tests += 1;
+                continue;
             }
             assert_eq!(&test.public[0..2], "04");
-            let k = Scalar::from_hex_string(&test.private);
+            let k = Scalar::from_hex(&test.private);
             // println!("k: {:?}", k);
             let p = Affine(
-                FieldElement::from_hex_string(&test.public[2..point_len + 2].to_string()),
-                FieldElement::from_hex_string(&test.public[point_len + 2..].to_string()),
+                FieldElement::from_hex(&test.public[2..98]),
+                FieldElement::from_hex(&test.public[98..]),
             );
             // println!("p: {:?}", p);
-            let expected = FieldElement::from_hex_string(&test.shared);
+            let expected = FieldElement::from_hex(&test.shared);
             // println!("expected: {:?}", expected);
-            let shared = arithmetic::point_mul(k, p);
+            let shared = point_mul(k, p);
             // println!("computed: {:?}", shared);
-            assert!(shared.0.equal(expected));
-        });
+            assert_eq!(shared.0, expected);
+            tests_run += 1;
+        }
     }
-}
-
-#[test]
-fn test_wycheproof_384_plain() {
-    let tests: TestVector = TestVector::from_file("tests/ecdh_secp384r1_ecpoint_test.json");
-    run_test::<p384::Scalar, p384::FieldElement>(tests, "secp384r1");
-}
-
-#[test]
-fn test_wycheproof_256_plain() {
-    let tests: TestVector = TestVector::from_file("tests/ecdh_secp256r1_ecpoint_test.json");
-    run_test::<p256::Scalar, p256::FieldElement>(tests, "secp256r1");
+    // Check that we ran all tests.
+    println!(
+        "Ran {} out of {} tests and skipped {}.",
+        tests_run, num_tests, skipped_tests
+    );
+    assert_eq!(num_tests - skipped_tests, tests_run);
 }

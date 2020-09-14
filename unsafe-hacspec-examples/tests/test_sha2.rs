@@ -1,6 +1,6 @@
 use hacspec_lib::prelude::*;
 
-use hacspec_examples::sha2::hash;
+use unsafe_hacspec_examples::sha2::hash;
 
 #[test]
 fn test_sha256_kat() {

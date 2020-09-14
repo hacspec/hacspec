@@ -1,7 +1,7 @@
-use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
+use hacspec_lib::prelude::*;
 
-use hacspec_examples::aes_gcm::*;
+use unsafe_hacspec_examples::aes_gcm::*;
 
 struct AeadTestVector<'a> {
     key: &'a str,

@@ -4,22 +4,22 @@ use criterion::{BatchSize, Criterion};
 
 use hacspec_chacha20::*;
 use hacspec_chacha20poly1305::*;
-use hacspec_examples::aes_gcm::{
+use hacspec_lib::prelude::*;
+use hacspec_poly1305::*;
+use unsafe_hacspec_examples::aes_gcm::{
     aes::{aes128_decrypt, aes128_encrypt, aes256_decrypt, aes256_encrypt, Key128, Key256, Nonce},
     gf128::{gmac, Key as GcmKey},
     *,
 };
-use hacspec_examples::blake2::blake2b::*;
-use hacspec_examples::curve25519::*;
-use hacspec_examples::ec::{
+use unsafe_hacspec_examples::blake2::blake2b::*;
+use unsafe_hacspec_examples::curve25519::*;
+use unsafe_hacspec_examples::ec::{
     p256::{point_mul as p256_point_mul, FieldElement as P256FieldElement, Scalar as P256Scalar},
     p384::{point_mul as p384_point_mul, FieldElement as P384FieldElement, Scalar as P384Scalar},
     Affine,
 };
-use hacspec_examples::fips202::*;
-use hacspec_examples::sha2::hash as sha256;
-use hacspec_lib::prelude::*;
-use hacspec_poly1305::*;
+use unsafe_hacspec_examples::fips202::*;
+use unsafe_hacspec_examples::sha2::hash as sha256;
 
 fn randombytes(n: usize) -> Vec<u8> {
     use rand::rngs::OsRng;

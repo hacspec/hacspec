@@ -1,7 +1,7 @@
 use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
 
-use hacspec_examples::ntru_prime::*;
+use unsafe_hacspec_examples::ntru_prime::*;
 
 fn gen_coefficients(num: usize) -> Seq<i128> {
     let mut out = Seq::<i128>::new(num);

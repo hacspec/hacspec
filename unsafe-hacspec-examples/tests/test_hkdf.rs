@@ -1,6 +1,6 @@
 use hacspec_lib::prelude::*;
 
-use hacspec_examples::hkdf::*;
+use unsafe_hacspec_examples::hkdf::*;
 
 struct HKDFTestVectors<'a> {
     ikm: &'a str,
@@ -45,7 +45,11 @@ fn test_kat() {
         let prk = extract(&ByteSeq::from_hex(kat.salt), &ByteSeq::from_hex(kat.ikm));
         assert_eq!(kat.prk, prk.to_hex());
 
-        let okm = expand(&ByteSeq::from_seq(&prk), &ByteSeq::from_hex(kat.info), kat.l);
+        let okm = expand(
+            &ByteSeq::from_seq(&prk),
+            &ByteSeq::from_hex(kat.info),
+            kat.l,
+        );
         assert_eq!(kat.okm, okm.to_hex());
     }
 }

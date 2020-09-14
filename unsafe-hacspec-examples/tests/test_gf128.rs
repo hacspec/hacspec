@@ -1,6 +1,6 @@
 use hacspec_lib::prelude::*;
 
-use hacspec_examples::aes_gcm::gf128::*;
+use unsafe_hacspec_examples::aes_gcm::gf128::*;
 
 #[test]
 fn test_gmac() {
