@@ -155,11 +155,13 @@ pub fn translate_func_name(
             Some(segment) => Some(translate_base_typ(
                 sess,
                 &ast::Ty {
+                    tokens: path.tokens.clone(),
                     span: path.span,
                     id: NodeId::MAX,
                     kind: TyKind::Path(
                         None,
                         ast::Path {
+                            tokens: path.tokens.clone(),
                             span: path.span,
                             segments: vec![segment.clone()],
                         },
@@ -1200,6 +1202,7 @@ fn translate_array_decl(
                             TokenKind::Ident(id, _) => translate_base_typ(
                                 sess,
                                 &Ty {
+                                    tokens: None,
                                     id: NodeId::MAX,
                                     kind: TyKind::Path(
                                         None,
