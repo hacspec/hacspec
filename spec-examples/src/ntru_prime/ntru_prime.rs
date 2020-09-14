@@ -77,7 +77,7 @@ pub fn round_to_3(poly: &Seq<i128>, q: i128) -> Seq<i128> {
 
 /// r is the plaintext, h is the public key
 pub fn encrypt(r: &Seq<i128>, h: &Seq<i128>, n_v: &Parameters) -> Seq<i128> {
-    let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q).unwrap();
+    let pre = mul_poly_irr(r, &h, &n_v.irr, n_v.q);
     round_to_3(&pre, n_v.q)
 }
 
@@ -89,12 +89,15 @@ pub fn decrypt(
     let (f, v) = key;
 
     // calculate 3*f and 3*f*c
-    let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q)?;
+    let f_c = mul_poly_irr(&f, &c, &n_v.irr, n_v.q);
     let mut f_3_c = poly_to_ring(
         &n_v.irr,
         &add_poly(&f_c, &add_poly(&f_c, &f_c, n_v.q), n_v.q),
         n_v.q,
-    )?;
+    );
+    if f_3_c.len() == 0 {
+        return Err("poly_to_ring failed");
+    }
     // view coefficients as values between -(q-1/2) and (q-1/2)
     let q_12 = (n_v.q - 1) / 2;
     for i in 0..f_3_c.len() {
@@ -111,7 +114,7 @@ pub fn decrypt(
     e = make_positive(&e, 3);
 
     // calculate e * v in R
-    let mut r = mul_poly_irr(&e, &v, &n_v.irr, 3)?;
+    let mut r = mul_poly_irr(&e, &v, &n_v.irr, 3);
 
     // to R_short
     for i in 0..r.len() {
@@ -170,7 +173,7 @@ pub fn key_gen(
         Ok(v) => v,
         Err(_) => return Err("Key generating, failed"),
     };
-    let h = mul_poly_irr(&poly_g.0, &f_inv_3times, &n_v.irr, n_v.q).unwrap();
+    let h = mul_poly_irr(&poly_g.0, &f_inv_3times, &n_v.irr, n_v.q);
 
     Ok((h, (f, g_inv)))
 }

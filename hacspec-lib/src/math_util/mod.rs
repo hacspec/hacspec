@@ -133,14 +133,18 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
 }
 
 /// Makes poly to an element of R_modulo \ irr
+/// Returns an empty sequence when an error occurs.
 #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn poly_to_ring<T: Integer + Copy>(
     irr: &Seq<T>,
     poly: &Seq<T>,
     modulus: T,
-) -> Result<Seq<T>, &'static str> {
-    let pre = div_poly(&poly, &irr, modulus)?.1;
-    Ok(make_positive(&pre, modulus))
+) -> Seq<T> {
+    let pre = match div_poly(&poly, &irr, modulus) {
+        Ok(p) => p.1,
+        Err(_) => return Seq::new(0),
+    };
+    make_positive(&pre, modulus)
 }
 
 /// Polynomial multiplication of two size fixed polynomials in R_modulo \ irr
@@ -150,7 +154,7 @@ pub fn mul_poly_irr<T: Integer + Copy>(
     b: &Seq<T>,
     irr: &Seq<T>,
     modulo: T,
-) -> Result<Seq<T>, &'static str> {
+) -> Seq<T> {
     let mut result: Seq<T> = Seq::new(a.len());
     for i in 0..a.len() {
         if a[i].equal(T::default()) {
@@ -177,5 +181,5 @@ pub fn mul_poly_irr<T: Integer + Copy>(
             result[i] = result[i].modulo(modulo);
         }
     }
-    Ok(make_positive(&result, modulo))
+    make_positive(&result, modulo)
 }
