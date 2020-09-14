@@ -81,3 +81,12 @@ fn chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
         vec!["hacspec_chacha20", "hacspec_poly1305"],
     )
 }
+
+#[test]
+fn ntru_demo_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test(
+        "../hacspec-examples/hacspec-ntru-demo/src/ntru.rs",
+        None,
+        vec![],
+    )
+}
