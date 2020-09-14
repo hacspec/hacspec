@@ -496,13 +496,13 @@ struct TopLevelContext {
 type VarContext = HashMap<RustspecId, (Typ, String)>;
 
 #[derive(Debug, Clone)]
-enum DictEntry {
+pub enum DictEntry {
     Alias,
     Array,
     NaturalInteger,
 }
 
-type TypeDict = HashMap<String, (Typ, DictEntry)>;
+pub type TypeDict = HashMap<String, (Typ, DictEntry)>;
 
 type NameContext = HashMap<String, Ident>;
 
@@ -2172,7 +2172,7 @@ pub fn typecheck_program<
     p: &Program,
     external_funcs: &F,
     _allowed_sigs: &AllowedSigs,
-) -> TypecheckingResult<Program> {
+) -> TypecheckingResult<(Program, TypeDict)> {
     let (extern_funcs, extern_arrays) = external_funcs(&p.imported_crates);
     let mut top_level_context: TopLevelContext = TopLevelContext {
         functions: extern_funcs
@@ -2221,19 +2221,22 @@ pub fn typecheck_program<
             ),
         );
     }
-    Ok(Program {
-        items: check_vec(
-            p.items
-                .iter()
-                .map(|(i, i_span)| {
-                    let (new_i, new_top_level_context, new_typ_dict) =
-                        typecheck_item(sess, i, &top_level_context, &typ_dict)?;
-                    top_level_context = new_top_level_context;
-                    typ_dict = new_typ_dict;
-                    Ok((new_i, i_span.clone()))
-                })
-                .collect(),
-        )?,
-        imported_crates: p.imported_crates.clone(),
-    })
+    Ok((
+        Program {
+            items: check_vec(
+                p.items
+                    .iter()
+                    .map(|(i, i_span)| {
+                        let (new_i, new_top_level_context, new_typ_dict) =
+                            typecheck_item(sess, i, &top_level_context, &typ_dict)?;
+                        top_level_context = new_top_level_context;
+                        typ_dict = new_typ_dict;
+                        Ok((new_i, i_span.clone()))
+                    })
+                    .collect(),
+            )?,
+            imported_crates: p.imported_crates.clone(),
+        },
+        typ_dict,
+    ))
 }

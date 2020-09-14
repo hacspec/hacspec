@@ -134,7 +134,7 @@ impl Callbacks for HacspecCallbacks {
                 )
             })
         };
-        let krate = match typechecker::typecheck_program(
+        let (krate, typ_dict) = match typechecker::typecheck_program(
             &compiler.session(),
             &krate,
             &external_funcs,
@@ -153,9 +153,12 @@ impl Callbacks for HacspecCallbacks {
         }
         match &self.output_file {
             None => (),
-            Some(file) => {
-                rustspec_to_fstar::translate_and_write_to_file(&compiler.session(), &krate, &file)
-            }
+            Some(file) => rustspec_to_fstar::translate_and_write_to_file(
+                &compiler.session(),
+                &krate,
+                &file,
+                &typ_dict,
+            ),
         }
         Compilation::Stop
     }
