@@ -245,7 +245,7 @@ fn unify_types(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             (t1.0).1.clone(),
-                            "double borrowing is forbidden in Rust!",
+                            "double borrowing is forbidden in Rustspec!",
                         );
                         return Err(());
                     }
@@ -275,7 +275,7 @@ fn unify_types(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             (t2.0).1.clone(),
-                            "double borrowing is forbidden in Rust!",
+                            "double borrowing is forbidden in Rustspec!",
                         );
                         return Err(());
                     }
@@ -1221,7 +1221,7 @@ fn typecheck_expression(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             *arg_borrow_span,
-                            "double borrowing is forbidden in Rust!",
+                            "double borrowing is forbidden in Rustspec!",
                         );
                         return Err(());
                     }
@@ -1347,7 +1347,7 @@ fn typecheck_expression(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             arg_borrow_span,
-                            "double borrowing is forbidden in Rust!",
+                            "double borrowing is forbidden in Rustspec!",
                         );
                         return Err(());
                     }
