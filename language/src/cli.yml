@@ -1,0 +1,48 @@
+name: hacspec-lang
+version: "1.0"
+author: Denis Merigoux <denis.merigoux@inria.fr>
+about: Typechecker and compiler for the Hacspec subset of Rust
+args:
+    - INPUTS:
+        help: Sets the input files to use
+        required: true
+        index: 1
+        multiple: true
+    - verbose:
+        short: v
+        multiple: true
+        number_of_values: 1
+        help: Sets the level of verbosity
+    - output:
+        short: o
+        multiple: false
+        number_of_values: 1
+        help: Name of the F* output file
+    - dependency:
+        short: L
+        multiple: true
+        number_of_values: 1
+        help: dependencies
+    - crate-type:
+        long: crate-type
+        multiple: false
+        number_of_values: 1
+        help: bin|lib|rlib|dylib|cdylib|staticlib|proc-macro
+    - extern:
+        long: extern
+        multiple: true
+        number_of_values: 1
+        help: extern crates
+    - edition:
+        long: edition
+        multiple: false
+        number_of_values: 1
+        help: put 2018
+    - unstable_flags:
+        short: Z
+        multiple: false
+        number_of_values: 1
+    - crate_name:
+        long: crate-name
+        multiple: false
+        number_of_values: 1

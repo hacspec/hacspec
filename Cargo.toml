@@ -1,24 +1,30 @@
 [workspace]
 members = [
-    "hacspec-lib",
-    "hacspec-dev",
-    "hacspec-derive",
-    "hacspec",
-    "secret-integers",
-    "abstract-integers",
-    "spec-examples",
-    "hacspec-attributes",
-    "hacspec-sig"
+    "lib",
+    "utils/dev",
+    "utils/derive",
+    "utils/secret-integers",
+    "utils/abstract-integers",
+    "utils/attributes",
+    "utils/sig",
+    "language",
+    "examples/hacspec-chacha20",
+    "examples/hacspec-poly1305",
+    "examples/hacspec-chacha20poly1305",
+    "examples-unsafe",
 ]
 default-members = [
-    "hacspec-lib",
-    "hacspec-dev",
-    "hacspec-derive",
-    "secret-integers",
-    "abstract-integers",
-    "spec-examples",
-    "hacspec-attributes",
-    "hacspec-sig"
+    "lib",
+    "utils/dev",
+    "utils/derive",
+    "utils/secret-integers",
+    "utils/abstract-integers",
+    "utils/attributes",
+    "utils/sig",
+    "examples/hacspec-chacha20",
+    "examples/hacspec-poly1305",
+    "examples/hacspec-chacha20poly1305",
+    "examples-unsafe",
 ]
 
 [profile.release]

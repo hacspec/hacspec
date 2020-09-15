@@ -19,8 +19,8 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Get hacspec function stats
-      run: bash hacspec-lib/get_func_stats.sh
+      run: bash lib/get_func_stats.sh
     - name: Build and test F* compiler
-      run: cargo clean && cd hacspec && cargo +nightly test --verbose
+      run: cargo clean && cd language && cargo +nightly test --verbose
       env:
         RUST_NIGHTLY: nightly
