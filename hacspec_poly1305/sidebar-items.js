@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["poly",""]],"struct":[["Block","Fixed length byte array."],["FieldCanvas",""],["FieldElement",""],["KeyPoly","Fixed length byte array."],["Tag","Fixed length byte array."]]});
