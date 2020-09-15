@@ -1,0 +1,26 @@
+[package]
+name = "hacspec-chacha20poly1305"
+version = "0.1.0"
+authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/chacha20poly1305.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+hacspec-derive = { path = "../../utils/derive" }
+secret_integers = { path = "../../utils/secret-integers" }
+abstract_integers = { path = "../../utils/abstract-integers" }
+hacspec-chacha20 = { path = "../hacspec-chacha20" }
+hacspec-poly1305 = { path = "../hacspec-poly1305" }
+
+[dev-dependencies]
+# FIXME: Why?
+serde_json = "1.0"
+serde = {version = "1.0", features = ["derive"]}
+rayon = "1.3.0"
+hacspec-dev = { path = "../../utils/dev" }
+
