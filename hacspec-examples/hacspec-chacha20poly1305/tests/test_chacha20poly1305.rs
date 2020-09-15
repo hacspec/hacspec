@@ -1,3 +1,4 @@
+use hacspec_dev::prelude::*;
 use hacspec_lib::prelude::*;
 
 use hacspec_chacha20::*;
@@ -50,5 +51,9 @@ fn kat() {
 
 #[test]
 fn kat_test() {
+    let key = KeyPoly::from_public_slice(&random_byte_vec(Key::length()));
+    let iv = IV::from_public_slice(&random_byte_vec(IV::length()));
+    let m = ByteSeq::from_public_slice(&random_byte_vec(40));
+    poly_mac(&m, key, iv);
     kat();
 }

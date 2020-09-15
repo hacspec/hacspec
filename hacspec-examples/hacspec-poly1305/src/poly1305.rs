@@ -1,8 +1,7 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-// Import chacha20
-use hacspec_chacha20::*;
+bytes!(KeyPoly, 32);
 
 const BLOCKSIZE: usize = 16;
 // Type definitions for use in poly1305.
@@ -19,11 +18,6 @@ public_nat_mod!(
     272,
     "03fffffffffffffffffffffffffffffffb"
 );
-
-fn key_gen(key: Key, iv: IV) -> Key {
-    let block = block(key, U32(0u32), iv);
-    Key::from_slice_range(&block, 0..32)
-}
 
 fn encode_r(r: Block) -> FieldElement {
     let r_128 = U128Word::from_slice(&r, 0, BLOCKSIZE);
@@ -49,7 +43,7 @@ fn poly_inner(m: &ByteSeq, r: FieldElement) -> FieldElement {
     acc
 }
 
-pub fn poly(m: &ByteSeq, key: Key) -> Tag {
+pub fn poly(m: &ByteSeq, key: KeyPoly) -> Tag {
     let s_elem = FieldElement::from_secret_literal(U128_from_le_bytes(U128Word::from_slice(
         &key, BLOCKSIZE, BLOCKSIZE,
     )));
@@ -64,9 +58,4 @@ pub fn poly(m: &ByteSeq, key: Key) -> Tag {
         tag[i] = n_v[i];
     }
     tag
-}
-
-pub fn poly_mac(m: &ByteSeq, key: Key, iv: IV) -> Tag {
-    let mac_key = key_gen(key, iv);
-    poly(m, mac_key)
 }

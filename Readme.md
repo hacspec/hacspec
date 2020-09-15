@@ -9,11 +9,11 @@ A formal description of the hacspec language can be found in [Language.md](Langu
 # Repository Structure
 
 This is a cargo workspace consisting of six main crates:
-* [hacspec](hacspec/): the compiler for the hacspec subset of Rust
+* [hacspec](hacspec/): the compiler, typechecker and language infrastructure for the hacspec subset of Rust
 * [hacspec-lib](hacspec-lib):  the standard library of hacspec programs
 * [abstract-integers](abstract-integers/): wrapper around `BigInt` for modular natural integers
 * [secret-integers](secret-integers/): wrapper around integer types for constant-timedness
-* [unsafe-hacspec-examples](unsafe-hacspec-examples/): cryptographic specs written in hacspec but not formally typechecked (hence the unsafety)
+* [unsafe-hacspec-examples](unsafe-hacspec-examples/): cryptographic specs written in hacspec but not formally typechecked yet(hence the unsafety) as hacspec is a work in progress
 
 The [hacspec-examples](hacspec_examples/) folder contains 
 cryptographic primitives that have passed the hacspec typechecking.
@@ -27,7 +27,7 @@ of the cryptograpghic specs, produced by the hacspec compiler.
 
 # Examples
 
-There's a set of example specs, divided between the [sage](hacspec-examples/) and [unsafe](unsafe-hacspec-examples). To run all examples one can use `cargo test`.
+There's a set of example specs, divided between the [safe](hacspec-examples/) and [unsafe](unsafe-hacspec-examples). To run all examples one can use `cargo test`.
 
 ## Safe examples
 
@@ -47,6 +47,7 @@ There's a set of example specs, divided between the [sage](hacspec-examples/) an
 * [HKDF-SHA256](unsafe-hacspec-examples/src/hkdf/hkdf.rs)
 * [HMAC-SHA256](unsafe-hacspec-examples/src/hmac/hmac.rs)
 * [P256](unsafe-hacspec-examples/src/p256/p256.rs)
+* [NTRU-prime](unsafe-hacspec-examples/src/ntru_prime/ntru_prime.rs)
 
 [//]: # (badges)
 
@@ -64,11 +65,11 @@ There's a set of example specs, divided between the [sage](hacspec-examples/) an
 [deploy-docs-link]: https://github.com/hacspec/hacspec/actions?query=workflow%3A%22Deploy+Docs%22
 [maturitylevel-image]: https://img.shields.io/badge/maturity-alpha-red.svg
 
-# The hacspec compiler
+# The hacspec language infrastructure
 
-The compiler is excluded from the main workspace of crates, 
+The language infrastructure is excluded from the main workspace of crates, 
 so it won't be build when you launch `cargo build` from the
 root of the repository.
 
 Please refer to the [dedicated README.md](hacspec/README.md) 
-for instructions about how to run the compiler. 
+for instructions about how to run the typechecker and compiler. 

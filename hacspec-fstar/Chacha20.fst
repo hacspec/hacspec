@@ -126,10 +126,10 @@ let block (key_1906 : key) (ctr_1907 : s_u32) (iv_1908 : iv) : state_bytes =
 let chacha (key_1910 : key) (iv_1911 : iv) (m_1912 : byte_seq) : byte_seq =
   let ctr_1913 = s_u32 (1ul) in
   let blocks_out_1914 = RSeq.new_ (len (m_1912)) in
-  let (ctr_1913, blocks_out_1914) =
+  let (blocks_out_1914, ctr_1913) =
     foldi (0ul) (num_chunks (m_1912) (64ul)) (fun (
         i_1915,
-        (ctr_1913, blocks_out_1914)
+        (blocks_out_1914, ctr_1913)
       ) ->
       let (block_len_1916, msg_block_1917) =
         get_chunk (m_1912) (64ul) (i_1915)
@@ -145,8 +145,8 @@ let chacha (key_1910 : key) (iv_1911 : iv) (m_1912 : byte_seq) : byte_seq =
             (0ul, block_len_1916)))
       in
       let ctr_1913 = ctr_1913 + s_u32 (1ul) in
-      (ctr_1913, blocks_out_1914))
-    (ctr_1913, blocks_out_1914)
+      (blocks_out_1914, ctr_1913))
+    (blocks_out_1914, ctr_1913)
   in
   blocks_out_1914
 
