@@ -10,10 +10,10 @@ edition = "2018"
 path = "src/chacha20poly1305.rs"
 
 [dependencies]
-hacspec-lib = { path = "../../hacspec-lib" }
-hacspec-derive = { path = "../../hacspec-derive" }
-secret_integers = { path = "../../secret-integers" }
-abstract_integers = { path = "../../abstract-integers" }
+hacspec-lib = { path = "../../lib" }
+hacspec-derive = { path = "../../utils/derive" }
+secret_integers = { path = "../../utils/secret-integers" }
+abstract_integers = { path = "../../utils/abstract-integers" }
 hacspec-chacha20 = { path = "../hacspec-chacha20" }
 hacspec-poly1305 = { path = "../hacspec-poly1305" }
 
@@ -22,5 +22,5 @@ hacspec-poly1305 = { path = "../hacspec-poly1305" }
 serde_json = "1.0"
 serde = {version = "1.0", features = ["derive"]}
 rayon = "1.3.0"
-hacspec-dev = { path = "../../hacspec-dev" }
+hacspec-dev = { path = "../../utils/dev" }
 

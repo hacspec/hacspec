@@ -15,7 +15,7 @@ ansi_term = "0.12.1"
 quote = "1.0"
 serde = "1.0"
 serde_json = "1.0"
-hacspec-sig = { path = "../hacspec-sig" }
+hacspec-sig = { path = "../sig" }
 
 [features]
 default = []

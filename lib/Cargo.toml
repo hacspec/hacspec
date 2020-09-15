@@ -9,9 +9,9 @@ edition = "2018"
 [dependencies]
 num = "0.2"
 
-secret_integers = { path = "../secret-integers" }
-abstract_integers = { path = "../abstract-integers" }
-hacspec-attributes = { path = "../hacspec-attributes",  optional = true }
+secret_integers = { path = "../utils/secret-integers" }
+abstract_integers = { path = "../utils/abstract-integers" }
+hacspec-attributes = { path = "../utils/attributes",  optional = true }
 
 [features]
 use_attributes = ["hacspec-attributes", "hacspec-attributes/print_attributes"]
