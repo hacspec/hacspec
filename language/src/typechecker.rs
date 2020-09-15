@@ -1,5 +1,5 @@
 use crate::rustspec::*;
-use crate::RustspectErrorEmitter;
+use crate::HacspectErrorEmitter;
 
 use hacspec_sig;
 use im::{HashMap, HashSet};
@@ -13,14 +13,14 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
-fn fresh_rustspec_id() -> RustspecId {
-    RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst))
+fn fresh_rustspec_id() -> HacspecId {
+    HacspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst))
 }
 
 fn fresh_ident(x: &Ident) -> Ident {
     match x {
-        Ident::Rustspec(_, _) => panic!("fresh_ident only replaces original Rust ident ids"),
-        Ident::Original(n) => Ident::Rustspec(fresh_rustspec_id(), n.clone()),
+        Ident::Hacspec(_, _) => panic!("fresh_ident only replaces original Rust ident ids"),
+        Ident::Original(n) => Ident::Hacspec(fresh_rustspec_id(), n.clone()),
     }
 }
 
@@ -97,7 +97,7 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
                 Some(_) => false,
             },
         },
-        BaseTyp::Named((Ident::Rustspec(_, _), _), _) => panic!(), // should not happen
+        BaseTyp::Named((Ident::Hacspec(_, _), _), _) => panic!(), // should not happen
         BaseTyp::Variable(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t, typ_dict)),
         BaseTyp::NaturalInteger(_, _) => true,
@@ -113,7 +113,7 @@ fn is_array(
     match &(t.1).0 {
         BaseTyp::Seq(t1) => Ok((None, t1.as_ref().clone())),
         BaseTyp::Named(id, None) => match &id.0 {
-            Ident::Rustspec(_, _) => panic!(),
+            Ident::Hacspec(_, _) => panic!(),
             Ident::Original(name) => match typ_dict.get(name) {
                 Some((new_t, dict_entry)) => match dict_entry {
                     DictEntry::Alias => is_array(sess, new_t, typ_dict, span),
@@ -227,7 +227,7 @@ fn is_safe_casting(t1: &BaseTyp, t2: &BaseTyp) -> bool {
     }
 }
 
-type TypeVarCtx = HashMap<RustspecId, BaseTyp>;
+type TypeVarCtx = HashMap<HacspecId, BaseTyp>;
 
 fn unify_types(
     sess: &Session,
@@ -245,7 +245,7 @@ fn unify_types(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             (t1.0).1.clone(),
-                            "double borrowing is forbidden in Rustspec!",
+                            "double borrowing is forbidden in Hacspec!",
                         );
                         return Err(());
                     }
@@ -275,7 +275,7 @@ fn unify_types(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             (t2.0).1.clone(),
-                            "double borrowing is forbidden in Rustspec!",
+                            "double borrowing is forbidden in Hacspec!",
                         );
                         return Err(());
                     }
@@ -396,7 +396,7 @@ fn bind_variable_type(
             None => {
                 sess.span_rustspec_err(
                     ty.1.clone(),
-                    format!("type {} cannot be unified, internal Rustspec error", ty.0).as_str(),
+                    format!("type {} cannot be unified, internal Hacspec error", ty.0).as_str(),
                 );
                 Err(())
             }
@@ -468,14 +468,14 @@ impl fmt::Debug for FnKey {
 pub enum FnValue {
     Local(FuncSig),
     External(ExternalFuncSig),
-    ExternalNotInRustspec(String),
+    ExternalNotInHacspec(String),
 }
 
 fn sig_args(sig: &FnValue) -> Vec<Typ> {
     match sig {
         FnValue::Local(sig) => sig.args.clone().into_iter().map(|(_, (x, _))| x).collect(),
         FnValue::External(sig) => sig.args.clone(),
-        FnValue::ExternalNotInRustspec(_) => panic!(),
+        FnValue::ExternalNotInHacspec(_) => panic!(),
     }
 }
 
@@ -483,7 +483,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
     match sig {
         FnValue::Local(sig) => sig.ret.0.clone(),
         FnValue::External(sig) => sig.ret.clone(),
-        FnValue::ExternalNotInRustspec(_) => panic!(),
+        FnValue::ExternalNotInHacspec(_) => panic!(),
     }
 }
 
@@ -493,7 +493,7 @@ struct TopLevelContext {
     consts: HashMap<String, (Spanned<BaseTyp>, Spanned<Expression>)>,
 }
 
-type VarContext = HashMap<RustspecId, (Typ, String)>;
+type VarContext = HashMap<HacspecId, (Typ, String)>;
 
 #[derive(Debug, Clone)]
 pub enum DictEntry {
@@ -603,7 +603,7 @@ fn find_ident<'b>(
     top_level_context: &TopLevelContext,
 ) -> TypecheckingResult<Ident> {
     match &x.0 {
-        Ident::Rustspec(_, _) => {
+        Ident::Hacspec(_, _) => {
             sess.span_rustspec_err(
                 x.1.clone(),
                 "trying to lookup in the name context an already translated id",
@@ -633,28 +633,28 @@ fn find_typ(
             .consts
             .get(name)
             .map(|(t, _)| ((Borrowing::Consumed, t.1.clone()), t.clone())),
-        Ident::Rustspec(id, _) => var_context.get(id).map(|x| x.0.clone()),
+        Ident::Hacspec(id, _) => var_context.get(id).map(|x| x.0.clone()),
     }
 }
 
 fn remove_var(x: &Ident, var_context: &VarContext) -> VarContext {
     match x {
         Ident::Original(_) => panic!("trying to lookup in the var context an original id"),
-        Ident::Rustspec(id, _) => var_context.without(id),
+        Ident::Hacspec(id, _) => var_context.without(id),
     }
 }
 
 fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
     match x {
         Ident::Original(_) => panic!("trying to lookup in the var context an original id"),
-        Ident::Rustspec(id, name) => var_context.update(id.clone(), (typ.clone(), name.clone())),
+        Ident::Hacspec(id, name) => var_context.update(id.clone(), (typ.clone(), name.clone())),
     }
 }
 
 fn add_name(name: &Ident, var: &Ident, name_context: &NameContext) -> NameContext {
     match name {
         Ident::Original(name) => name_context.update(name.clone(), var.clone()),
-        Ident::Rustspec(_, _) => panic!("trying to lookup in the name context a Rustspec id"),
+        Ident::Hacspec(_, _) => panic!("trying to lookup in the name context a Hacspec id"),
     }
 }
 
@@ -696,7 +696,7 @@ fn typecheck_expression(
                         Borrowing::Borrowed => {
                             sess.span_rustspec_err(
                                 arg.1,
-                                "borrowed values are forbidden in Rustspec tuples",
+                                "borrowed values are forbidden in Hacspec tuples",
                             );
                             Err(())
                         }
@@ -1175,11 +1175,11 @@ fn typecheck_expression(
                 &name.1,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
-            if let FnValue::ExternalNotInRustspec(sig_str) = f_sig {
+            if let FnValue::ExternalNotInHacspec(sig_str) = f_sig {
                 sess.span_rustspec_err(
                     name.1.clone(),
                     format!(
-                        "function {}{} is known but its signature is not in Rustspec: {}",
+                        "function {}{} is known but its signature is not in Hacspec: {}",
                         (match prefix {
                             None => String::new(),
                             Some(prefix) => format!("{}::", &prefix.0),
@@ -1221,7 +1221,7 @@ fn typecheck_expression(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             *arg_borrow_span,
-                            "double borrowing is forbidden in Rustspec!",
+                            "double borrowing is forbidden in Hacspec!",
                         );
                         return Err(());
                     }
@@ -1289,11 +1289,11 @@ fn typecheck_expression(
                 f_span,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
-            if let FnValue::ExternalNotInRustspec(_) = f_sig {
+            if let FnValue::ExternalNotInHacspec(_) = f_sig {
                 sess.span_rustspec_err(
                     *f_span,
                     format!(
-                        "function {}::{} is known but its signature is not in Rustspec",
+                        "function {}::{} is known but its signature is not in Hacspec",
                         (sel_typ.1).0,
                         f
                     )
@@ -1347,7 +1347,7 @@ fn typecheck_expression(
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
                             arg_borrow_span,
-                            "double borrowing is forbidden in Rustspec!",
+                            "double borrowing is forbidden in Hacspec!",
                         );
                         return Err(());
                     }
@@ -1491,7 +1491,7 @@ fn typecheck_pattern(
         (Pattern::IdentPat(x), _) => {
             let x_new = fresh_ident(x);
             let (id, name) = match &x_new {
-                Ident::Rustspec(id, name) => (id.clone(), name.clone()),
+                Ident::Hacspec(id, name) => (id.clone(), name.clone()),
                 _ => panic!(), // shouls not happen
             };
             Ok((
@@ -2056,7 +2056,7 @@ fn typecheck_item(
                 typ_dict.update(
                     match &id.0 {
                         Ident::Original(s) => s.clone(),
-                        Ident::Rustspec(_, _) => panic!(),
+                        Ident::Hacspec(_, _) => panic!(),
                     },
                     (
                         (
@@ -2142,7 +2142,7 @@ fn typecheck_item(
             let typ_dict = typ_dict.update(
                 match &typ_ident.0 {
                     Ident::Original(s) => s.clone(),
-                    Ident::Rustspec(_, _) => panic!(),
+                    Ident::Hacspec(_, _) => panic!(),
                 },
                 (
                     (
@@ -2182,7 +2182,7 @@ pub fn typecheck_program<
                     k.clone(),
                     match v {
                         Ok(v) => FnValue::External(v.clone()),
-                        Err(s) => FnValue::ExternalNotInRustspec(s.clone()),
+                        Err(s) => FnValue::ExternalNotInHacspec(s.clone()),
                     },
                 )
             })

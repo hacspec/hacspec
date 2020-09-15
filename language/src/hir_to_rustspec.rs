@@ -30,7 +30,7 @@ fn fresh_type_var(
     p: ParamType,
     typ_ctx: &TypVarContext,
 ) -> (BaseTyp, TypVarContext) {
-    let t = BaseTyp::Variable(RustspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)));
+    let t = BaseTyp::Variable(HacspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)));
     (t.clone(), typ_ctx.update((p, rust_id), t))
 }
 
@@ -188,7 +188,7 @@ fn translate_polyfnsig(
     typ_ctx: &TypVarContext,
 ) -> Result<ExternalFuncSig, ()> {
     // The type context maps De Bruijn indexed types in the signature
-    // to Rustspec type variables
+    // to Hacspec type variables
     let mut new_args = Vec::new();
     let typ_ctx = sig
         .inputs()

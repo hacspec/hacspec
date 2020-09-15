@@ -9,12 +9,12 @@ use std::fmt;
 pub type Spanned<T> = (T, Span);
 
 #[derive(Clone, Hash, Debug, PartialEq, Eq)]
-pub struct RustspecId(pub usize);
+pub struct HacspecId(pub usize);
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Ident {
     Original(String),
-    Rustspec(RustspecId, String),
+    Hacspec(HacspecId, String),
 }
 
 impl fmt::Display for Ident {
@@ -24,7 +24,7 @@ impl fmt::Display for Ident {
             "{}",
             match self {
                 Ident::Original(n) => n.clone(),
-                Ident::Rustspec(x, n) => format!("{}_{}", n, x.0),
+                Ident::Hacspec(x, n) => format!("{}_{}", n, x.0),
             }
         )
     }
@@ -95,7 +95,7 @@ pub enum BaseTyp {
     Seq(Box<Spanned<BaseTyp>>),
     Array(Spanned<ArraySize>, Box<Spanned<BaseTyp>>),
     Named(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>),
-    Variable(RustspecId),
+    Variable(HacspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
     NaturalInteger(Secrecy, Spanned<String>),
 }

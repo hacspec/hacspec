@@ -110,7 +110,7 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 fn translate_ident(x: &Ident) -> RcDoc<()> {
     let mut ident_str = match x {
         Ident::Original(s) => s.clone(),
-        Ident::Rustspec(id, s) => format!("{}_{}", s, id.0),
+        Ident::Hacspec(id, s) => format!("{}_{}", s, id.0),
     };
     let secret_int_regex = Regex::new(r"(U|I)\d{1,3}").unwrap();
     ident_str = secret_int_regex.replace_all(&ident_str, "s$0").to_string();
@@ -264,7 +264,7 @@ fn translate_prefix_for_func_name<'a, 'b>(
                     }
                     _ => (RcDoc::as_string(name), None),
                 },
-                Ident::Rustspec(_, _) => panic!(), // should not happen
+                Ident::Hacspec(_, _) => panic!(), // should not happen
             }
         } // TODO: change with typ dict
         BaseTyp::Variable(_) => panic!(), // shoult not happen
@@ -587,7 +587,7 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
     let module_name = path.file_stem().unwrap().to_str().unwrap();
     write!(
         file,
-        "module {}\n\nopen Rustspec\nopen FStar.Mul\n\nmodule RSeq = Rustspec.Seq\n\n",
+        "module {}\n\nopen Hacspec\nopen FStar.Mul\n\nmodule RSeq = Hacspec.Seq\n\n",
         module_name
     )
     .unwrap();
