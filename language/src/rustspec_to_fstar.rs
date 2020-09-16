@@ -112,8 +112,14 @@ fn translate_ident(x: &Ident) -> RcDoc<()> {
         Ident::Original(s) => s.clone(),
         Ident::Hacspec(id, s) => format!("{}_{}", s, id.0),
     };
-    let secret_int_regex = Regex::new(r"(U|I)\d{1,3}").unwrap();
-    ident_str = secret_int_regex.replace_all(&ident_str, "s$0").to_string();
+    let secret_int_regex = Regex::new(r"(?P<prefix>(U|I))(?P<digits>\d{1,3})").unwrap();
+    ident_str = secret_int_regex
+        .replace_all(&ident_str, r"${prefix}int${digits}")
+        .to_string();
+    let secret_signed_int_fix = Regex::new(r"iint").unwrap();
+    ident_str = secret_signed_int_fix
+        .replace_all(&ident_str, "int")
+        .to_string();
     let mut snake_case_ident = ident_str.to_snake_case();
     if snake_case_ident == "new" {
         snake_case_ident = "new_".to_string();
@@ -125,18 +131,18 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
     match tau {
         BaseTyp::Unit => RcDoc::as_string("unit"),
         BaseTyp::Bool => RcDoc::as_string("bool"),
-        BaseTyp::UInt8 => RcDoc::as_string("u8"),
-        BaseTyp::Int8 => RcDoc::as_string("i8"),
-        BaseTyp::UInt16 => RcDoc::as_string("u16"),
-        BaseTyp::Int16 => RcDoc::as_string("i16"),
-        BaseTyp::UInt32 => RcDoc::as_string("u32"),
-        BaseTyp::Int32 => RcDoc::as_string("i32"),
-        BaseTyp::UInt64 => RcDoc::as_string("u64"),
-        BaseTyp::Int64 => RcDoc::as_string("i64"),
-        BaseTyp::UInt128 => RcDoc::as_string("u128"),
-        BaseTyp::Int128 => RcDoc::as_string("i128"),
-        BaseTyp::Usize => RcDoc::as_string("usize"),
-        BaseTyp::Isize => RcDoc::as_string("isize"),
+        BaseTyp::UInt8 => RcDoc::as_string("pub_uint8"),
+        BaseTyp::Int8 => RcDoc::as_string("pub_int8"),
+        BaseTyp::UInt16 => RcDoc::as_string("pub_uin16"),
+        BaseTyp::Int16 => RcDoc::as_string("pub_int16"),
+        BaseTyp::UInt32 => RcDoc::as_string("pub_uint32"),
+        BaseTyp::Int32 => RcDoc::as_string("pub_int32"),
+        BaseTyp::UInt64 => RcDoc::as_string("pub_uint64"),
+        BaseTyp::Int64 => RcDoc::as_string("pub_int64"),
+        BaseTyp::UInt128 => RcDoc::as_string("pub_uint128"),
+        BaseTyp::Int128 => RcDoc::as_string("pub_int128"),
+        BaseTyp::Usize => RcDoc::as_string("uint_size"),
+        BaseTyp::Isize => RcDoc::as_string("int_size"),
         BaseTyp::Str => RcDoc::as_string("string"),
         BaseTyp::Seq(tau) => {
             let tau: &BaseTyp = &tau.0;
@@ -166,7 +172,9 @@ fn translate_base_typ(tau: &BaseTyp) -> RcDoc<()> {
         }),
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
         BaseTyp::Tuple(args) => make_typ_tuple(args.iter().map(|(arg, _)| translate_base_typ(arg))),
-        BaseTyp::NaturalInteger(_, _) => unimplemented!(),
+        BaseTyp::NaturalInteger(_secrecy, modulo) => RcDoc::as_string("nat_mod")
+            .append(RcDoc::space())
+            .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
     }
 }
 
@@ -179,18 +187,18 @@ fn translate_literal(lit: &Literal) -> RcDoc<()> {
         Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("Int128.uint_to_t {}", x)),
-        Literal::UInt128(x) => RcDoc::as_string(format!("UInt128.uint_to_t {}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("{}L", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("{}UL", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("{}l", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("{}ul", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("{}s", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("{}us", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("{}y", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("{}uy", x)),
-        Literal::Usize(x) => RcDoc::as_string(format!("{}ul", x)),
-        Literal::Isize(x) => RcDoc::as_string(format!("{}l", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", x)),
+        Literal::UInt128(x) => RcDoc::as_string(format!("pub_u128 {:#x}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("pub_i64 {:#x}", x)),
+        Literal::UInt64(x) => RcDoc::as_string(format!("pub_u64 {:#x}", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("pub_i32 {:#x}", x)),
+        Literal::UInt32(x) => RcDoc::as_string(format!("pub_u32 {:#x}", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("pub_i16 {:#x}", x)),
+        Literal::UInt16(x) => RcDoc::as_string(format!("pub_u16 {:#x}", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("pub_i8 {:#x}", x)),
+        Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {:#x}", x)),
+        Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
+        Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
@@ -233,43 +241,57 @@ fn translate_unop(op: &UnOpKind) -> RcDoc<()> {
     }
 }
 
+enum FuncPrefix {
+    Regular,
+    Array(ArraySize),
+    NatMod(String),
+}
+
 fn translate_prefix_for_func_name<'a, 'b>(
     prefix: &'a BaseTyp,
     typ_dict: &'a TypeDict,
-) -> (RcDoc<'a, ()>, Option<ArraySize>) {
+) -> (RcDoc<'a, ()>, FuncPrefix) {
     match prefix {
         BaseTyp::Bool => panic!(), // should not happen
         BaseTyp::Unit => panic!(), // should not happen
-        BaseTyp::UInt8 => (RcDoc::as_string("RInt8"), None),
-        BaseTyp::Int8 => (RcDoc::as_string("RInt8"), None),
-        BaseTyp::UInt16 => (RcDoc::as_string("RUInt16"), None),
-        BaseTyp::Int16 => (RcDoc::as_string("RInt16"), None),
-        BaseTyp::UInt32 => (RcDoc::as_string("RUInt32"), None),
-        BaseTyp::Int32 => (RcDoc::as_string("RInt32"), None),
-        BaseTyp::UInt64 => (RcDoc::as_string("RUInt64"), None),
-        BaseTyp::Int64 => (RcDoc::as_string("RInt64"), None),
-        BaseTyp::UInt128 => (RcDoc::as_string("RUInt128"), None),
-        BaseTyp::Int128 => (RcDoc::as_string("RInt128"), None),
-        BaseTyp::Usize => (RcDoc::as_string("RUInt32"), None),
-        BaseTyp::Isize => (RcDoc::as_string("RInt32"), None),
-        BaseTyp::Str => (RcDoc::as_string("RString"), None),
-        BaseTyp::Seq(_) => (RcDoc::as_string(SEQ_MODULE), None),
-        BaseTyp::Array(size, _) => (RcDoc::as_string(SEQ_MODULE), Some(size.0.clone())),
+        BaseTyp::UInt8 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Int8 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::UInt16 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Int16 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::UInt32 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Int32 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::UInt64 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Int64 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::UInt128 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Int128 => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Usize => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Isize => (RcDoc::as_string("RInt"), FuncPrefix::Regular),
+        BaseTyp::Str => (RcDoc::as_string("RString"), FuncPrefix::Regular),
+        BaseTyp::Seq(_) => (RcDoc::as_string(SEQ_MODULE), FuncPrefix::Regular),
+        BaseTyp::Array(size, _) => (
+            RcDoc::as_string(SEQ_MODULE),
+            FuncPrefix::Array(size.0.clone()),
+        ),
         BaseTyp::Named(ident, _) => {
             // if the type is an array, we should print the Seq module instead
             match &ident.0 {
                 Ident::Original(name) => match typ_dict.get(name) {
-                    Some((alias_typ, DictEntry::Array)) | Some((alias_typ, DictEntry::Alias)) => {
+                    Some((alias_typ, DictEntry::Array))
+                    | Some((alias_typ, DictEntry::Alias))
+                    | Some((alias_typ, DictEntry::NaturalInteger)) => {
                         translate_prefix_for_func_name(&(alias_typ.1).0, typ_dict)
                     }
-                    _ => (RcDoc::as_string(name), None),
+                    _ => (RcDoc::as_string(name), FuncPrefix::Regular),
                 },
                 Ident::Hacspec(_, _) => panic!(), // should not happen
             }
-        } // TODO: change with typ dict
+        }
         BaseTyp::Variable(_) => panic!(), // shoult not happen
         BaseTyp::Tuple(_) => panic!(),    // should not happen
-        BaseTyp::NaturalInteger(_, _) => unimplemented!(),
+        BaseTyp::NaturalInteger(_, modulo) => (
+            RcDoc::as_string("RNat"),
+            FuncPrefix::NatMod(modulo.0.clone()),
+        ),
     }
 }
 
@@ -281,7 +303,7 @@ fn translate_func_name<'a>(
     match prefix {
         None => translate_ident(name),
         Some((prefix, _)) => {
-            let (module_name, array_size) = translate_prefix_for_func_name(prefix, typ_dict);
+            let (module_name, prefix_info) = translate_prefix_for_func_name(prefix, typ_dict);
             let type_arg = match prefix {
                 BaseTyp::Seq(tau) => Some(translate_base_typ(&tau.0)),
                 BaseTyp::Array(_, tau) => Some(translate_base_typ(&tau.0)),
@@ -289,19 +311,26 @@ fn translate_func_name<'a>(
             };
             let func_ident = translate_ident(name);
             module_name
+                .clone()
                 .append(RcDoc::as_string("."))
                 .append(func_ident.clone())
-                .append(if format!("{}", func_ident.pretty(0)) == "new_" {
-                    match array_size {
-                        None => RcDoc::nil(),
-                        Some(ArraySize::Ident(s)) => RcDoc::space().append(RcDoc::as_string(s)),
-                        Some(ArraySize::Integer(i)) => {
-                            RcDoc::space().append(RcDoc::as_string(format!("{}ul", i)))
-                        }
-                    }
-                } else {
-                    RcDoc::nil()
-                })
+                .append(
+                    match (
+                        format!("{}", module_name.pretty(0)).as_str(),
+                        format!("{}", func_ident.pretty(0)).as_str(),
+                    ) {
+                        ("RSeq", "new_") => match prefix_info {
+                            FuncPrefix::Array(ArraySize::Ident(s)) => {
+                                RcDoc::space().append(RcDoc::as_string(s))
+                            }
+                            FuncPrefix::Array(ArraySize::Integer(i)) => {
+                                RcDoc::space().append(RcDoc::as_string(format!("{}ul", i)))
+                            }
+                            _ => panic!(), // should not happen,
+                        },
+                        _ => RcDoc::nil(),
+                    },
+                )
                 .append(match type_arg {
                     None => RcDoc::nil(),
                     Some(arg) => RcDoc::space().append(RcDoc::as_string("#")).append(arg),
@@ -528,9 +557,9 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                 RcDoc::line()
                     .append(RcDoc::as_string(format!("{}.lseq", SEQ_MODULE)))
                     .append(RcDoc::space())
-                    .append(translate_base_typ(&cell_t.0))
+                    .append(make_paren(translate_base_typ(&cell_t.0)))
                     .append(RcDoc::space())
-                    .append(translate_expression(&size.0, typ_dict))
+                    .append(make_paren(translate_expression(&size.0, typ_dict)))
                     .group()
                     .nest(2),
             ),
@@ -540,7 +569,7 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
             translate_expression(&e.0, typ_dict),
             true,
         ),
-        Item::NaturalIntegerDecl(_nat_name, canvas_name, _secrecy, canvas_size, _modulo) => {
+        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, modulo) => {
             RcDoc::as_string("type")
                 .append(RcDoc::space())
                 .append(translate_ident(&canvas_name.0))
@@ -549,17 +578,32 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                 .group()
                 .append(
                     RcDoc::line()
-                        .append(RcDoc::as_string("Seq.lseq"))
+                        .append(RcDoc::as_string("RSeq.lseq"))
                         .append(RcDoc::space())
-                        .append(translate_base_typ(&BaseTyp::UInt8))
+                        .append(make_paren(translate_base_typ(&BaseTyp::UInt8)))
                         .append(RcDoc::space())
-                        .append(translate_expression(&canvas_size.0, typ_dict))
+                        .append(make_paren(translate_expression(&canvas_size.0, typ_dict)))
                         .group()
                         .nest(2),
                 )
                 .append(RcDoc::hardline())
                 .append(RcDoc::hardline()) //TODO: add other decl
-                .append(RcDoc::as_string("// missing natural mod int type decl!"))
+                .append(
+                    RcDoc::as_string("type")
+                        .append(RcDoc::space())
+                        .append(translate_ident(&nat_name.0))
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string("="))
+                        .group()
+                        .append(
+                            RcDoc::line()
+                                .append(RcDoc::as_string("nat_mod"))
+                                .append(RcDoc::space())
+                                .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
+                                .group()
+                                .nest(2),
+                        ),
+                )
         }
     }
 }
@@ -587,7 +631,12 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
     let module_name = path.file_stem().unwrap().to_str().unwrap();
     write!(
         file,
-        "module {}\n\nopen Hacspec\nopen FStar.Mul\n\nmodule RSeq = Hacspec.Seq\n\n",
+        "module {}\n\n\
+        #set-options \"--fuel 0 --ifuel 1 --z3rlimit 15\"\n\n\
+        open Hacspec.Lib\n\
+        open FStar.Mul\n\n\
+        module RSeq = Hacspec.Lib.Seq\n\
+        module RNat = Hacspec.Lib.Nat\n\n",
         module_name
     )
     .unwrap();
