@@ -37,7 +37,7 @@ let encode (block_1868 : byte_seq) : field_element =
   let w_elem_1871 =
     RNat.from_secret_literal (uint128_from_le_bytes (block_as_u128_1870))
   in
-  let l_elem_1872 = RNat.from_canvas (RSeq.pow2 (usize 8 *. block_len_1869)) in
+  let l_elem_1872 = RNat.pow2 (usize 8 *. block_len_1869) in
   w_elem_1871 +. l_elem_1872
 
 let poly_inner (m_1873 : byte_seq) (r_1874 : field_element) : field_element =

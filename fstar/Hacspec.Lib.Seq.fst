@@ -6,7 +6,9 @@ open Hacspec.Lib.Int
 
 type lseq (a: Type) (len: uint_size) = LSeq.lseq a len
 
-type byte_seq (len: uint_size) = lseq uint8 len
+type seq (a: Type)  = LSeq.seq a
+
+type byte_seq = seq uint8
 
 (**** Array manipulation *)
 
@@ -17,9 +19,9 @@ assume val array_index (#a: Type) (#len: uint_size) (s: lseq a len) (i: uint_siz
 assume val array_upd (#a: Type) (#len: uint_size) (s: lseq a len) (i: uint_size{i < len})
  (new_v: a) : lseq a len
 
-assume val from_slice (#a: Type) (#len: uint_size) (input: lseq a len) (start: uint_size) (new_len: uint_size) : lseq a new_len
+assume val from_slice (#a: Type) (input: seq a) (start: uint_size) (new_len: uint_size) : lseq a new_len
 
-let len (#a: Type) (#len: uint_size) (s: lseq a len) = len
+let len (#a: Type) (s: seq a) = LSeq.length s
 
 (**** Integers to arrays *)
 

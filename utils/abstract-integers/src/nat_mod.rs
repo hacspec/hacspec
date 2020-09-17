@@ -424,6 +424,12 @@ macro_rules! abstract_public_modular_integer {
                 let base: $base = self.into();
                 base.pow(exp, Self::max()).into()
             }
+
+            /// Returns 2 to the power of the argument
+            #[allow(dead_code)]
+            pub fn pow2(x: usize) -> $name {
+                $base::pow2(x).into()
+            }
         }
     };
 }
