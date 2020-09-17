@@ -4,14 +4,14 @@ include Lib.IntTypes
 
 (**** Usize  *)
 
-let uint_size = pub_uint32
-let int_size = pub_int32
+let uint_size = range_t U32
+let int_size = range_t S32
 
 unfold
-let usize (n:range_t U32) : u:uint_size{v u == n} = uint #U32 #PUB n
+let usize (n:range_t U32) : u:uint_size{u == n} = n
 
 unfold
-let isize (n:range_t S32) : u:int_size{v u == n} = sint #S32 #PUB n
+let isize (n:range_t S32) : u:int_size{u == n} = n
 
 (**** Public integers *)
 

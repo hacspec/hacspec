@@ -213,24 +213,24 @@ fn translate_pattern(p: &Pattern) -> RcDoc<()> {
 
 fn translate_binop(op: &BinOpKind) -> RcDoc<()> {
     match op {
-        BinOpKind::Sub => RcDoc::as_string("-"),
-        BinOpKind::Add => RcDoc::as_string("+"),
-        BinOpKind::Mul => RcDoc::as_string("*"),
-        BinOpKind::Div => RcDoc::as_string("/"),
-        BinOpKind::Rem => RcDoc::as_string("%"),
+        BinOpKind::Sub => RcDoc::as_string("-."),
+        BinOpKind::Add => RcDoc::as_string("+."),
+        BinOpKind::Mul => RcDoc::as_string("*."),
+        BinOpKind::Div => RcDoc::as_string("/."),
+        BinOpKind::Rem => RcDoc::as_string("%."),
         BinOpKind::And => RcDoc::as_string("&&"),
         BinOpKind::Or => RcDoc::as_string("||"),
-        BinOpKind::BitXor => RcDoc::as_string("^"),
-        BinOpKind::BitAnd => RcDoc::as_string("&"),
-        BinOpKind::BitOr => RcDoc::as_string("|"),
+        BinOpKind::BitXor => RcDoc::as_string("^."),
+        BinOpKind::BitAnd => RcDoc::as_string("&."),
+        BinOpKind::BitOr => RcDoc::as_string("|."),
         BinOpKind::Shl => RcDoc::as_string("`shift_left`"),
         BinOpKind::Shr => RcDoc::as_string("`shift_right`"),
         BinOpKind::Eq => RcDoc::as_string("=="),
-        BinOpKind::Lt => RcDoc::as_string("<"),
-        BinOpKind::Le => RcDoc::as_string("<="),
+        BinOpKind::Lt => RcDoc::as_string("<."),
+        BinOpKind::Le => RcDoc::as_string("<=."),
         BinOpKind::Ne => RcDoc::as_string("!="),
-        BinOpKind::Ge => RcDoc::as_string(">="),
-        BinOpKind::Gt => RcDoc::as_string(">"),
+        BinOpKind::Ge => RcDoc::as_string(">=."),
+        BinOpKind::Gt => RcDoc::as_string(">."),
     }
 }
 
@@ -301,7 +301,20 @@ fn translate_func_name<'a>(
     typ_dict: &'a TypeDict,
 ) -> RcDoc<'a, ()> {
     match prefix {
-        None => translate_ident(name),
+        None => {
+            let name = translate_ident(name);
+            match format!("{}", name.pretty(0)).as_str() {
+                "uint128" | "uint64" | "uint32" | "uint16" | "uint8" | "int128" | "int64"
+                | "int32" | "int16" | "int8" => {
+                    // In this case, we're trying to apply a secret
+                    // int constructor. The value it is applied to is
+                    // a public integer of the same kind. So in F*, that
+                    // will amount to a classification operation
+                    RcDoc::as_string("secret")
+                }
+                _ => name,
+            }
+        }
         Some((prefix, _)) => {
             let (module_name, prefix_info) = translate_prefix_for_func_name(prefix, typ_dict);
             let type_arg = match prefix {
