@@ -2,7 +2,7 @@
 ################################################################################
 # Customize these variables for your project
 ################################################################################
-FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe
+FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 4
 
 # The root files of your project, from which to begin scanning dependences
 FSTAR_FILES ?= Hacspec.Poly1305.fst

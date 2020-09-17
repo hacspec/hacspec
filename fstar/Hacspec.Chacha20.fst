@@ -17,24 +17,23 @@ type iv = RSeq.lseq (uint8) (usize 12)
 type key = RSeq.lseq (uint8) (usize 32)
 
 let state_to_bytes (x_1870 : state) : state_bytes =
-  let r_1871 = RSeq.new_ 64ul () in
+  let r_1871 = RSeq.new_ 64 () in
   let (r_1871) =
-    foldi (usize 0) (len (x_1870)) (fun (i_1872, (r_1871)) ->
+    foldi (usize 0) (RSeq.len (x_1870)) (fun (i_1872, (r_1871)) ->
       let bytes_1873 = uint32_to_be_bytes (array_index (x_1870) (i_1872)) in
       let r_1871 =
-        array_upd r_1871 (i_1872 *. usize 4) (
-          array_index (bytes_1873) (usize 3))
+        array_upd r_1871 (i_1872 * usize 4) (array_index (bytes_1873) (usize 3))
       in
       let r_1871 =
-        array_upd r_1871 (i_1872 *. usize 4 +. usize 1) (
+        array_upd r_1871 (i_1872 * usize 4 + usize 1) (
           array_index (bytes_1873) (usize 2))
       in
       let r_1871 =
-        array_upd r_1871 (i_1872 *. usize 4 +. usize 2) (
+        array_upd r_1871 (i_1872 * usize 4 + usize 2) (
           array_index (bytes_1873) (usize 1))
       in
       let r_1871 =
-        array_upd r_1871 (i_1872 *. usize 4 +. usize 3) (
+        array_upd r_1871 (i_1872 * usize 4 + usize 3) (
           array_index (bytes_1873) (usize 0))
       in
       (r_1871))
@@ -60,7 +59,7 @@ let line
   in
   let state_1879 =
     array_upd state_1879 (d_1876) (
-      rotate_left (array_index (state_1879) (d_1876)) (s_1877))
+      U32.rotate_left (array_index (state_1879) (d_1876)) (s_1877))
   in
   state_1879
 
@@ -115,25 +114,28 @@ let block_init (key_1896 : key) (ctr_1897 : uint32) (iv_1898 : iv) : state =
     secret (pub_u32 0x79622d32);
     secret (pub_u32 0x6b206574);
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 0, usize 4)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 0, usize 4)));
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 4, usize 8)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 4, usize 8)));
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 8, usize 12)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 8, usize 12)));
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 12, usize 16)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 12, usize 16)));
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 16, usize 20)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 16, usize 20)));
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 20, usize 24)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 20, usize 24)));
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 24, usize 28)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 24, usize 28)));
     uint32_from_le_bytes (
-      RSeq.from_slice_range (key_1896) ((usize 28, usize 32)));
+      RSeq.from_slice_range 4 (key_1896) ((usize 28, usize 32)));
     ctr_1897;
-    uint32_from_le_bytes (RSeq.from_slice_range (iv_1898) ((usize 0, usize 4)));
-    uint32_from_le_bytes (RSeq.from_slice_range (iv_1898) ((usize 4, usize 8)));
-    uint32_from_le_bytes (RSeq.from_slice_range (iv_1898) ((usize 8, usize 12)))
+    uint32_from_le_bytes (
+      RSeq.from_slice_range 4 (iv_1898) ((usize 0, usize 4)));
+    uint32_from_le_bytes (
+      RSeq.from_slice_range 4 (iv_1898) ((usize 4, usize 8)));
+    uint32_from_le_bytes (
+      RSeq.from_slice_range 4 (iv_1898) ((usize 8, usize 12)))
   ]
 
 let block_inner (key_1899 : key) (ctr_1900 : uint32) (iv_1901 : iv) : state =
@@ -162,23 +164,23 @@ let block (key_1906 : key) (ctr_1907 : uint32) (iv_1908 : iv) : state_bytes =
 
 let chacha (key_1910 : key) (iv_1911 : iv) (m_1912 : byte_seq) : byte_seq =
   let ctr_1913 = secret (pub_u32 0x1) in
-  let blocks_out_1914 = RSeq.new_ (len (m_1912)) in
+  let blocks_out_1914 = RSeq.new_ (RSeq.len (m_1912)) in
   let (ctr_1913, blocks_out_1914) =
-    foldi (usize 0) (num_chunks (m_1912) (usize 64)) (fun (
+    foldi (usize 0) (RSeq.num_chunks (m_1912) (usize 64)) (fun (
         i_1915,
         (ctr_1913, blocks_out_1914)
       ) ->
       let (block_len_1916, msg_block_1917) =
-        get_chunk (m_1912) (usize 64) (i_1915)
+        RSeq.get_chunk (m_1912) (usize 64) (i_1915)
       in
       let key_block_1918 = block (key_1910) (ctr_1913) (iv_1911) in
-      let msg_block_padded_1919 = RSeq.new_ 64ul () in
+      let msg_block_padded_1919 = RSeq.new_ 64 () in
       let msg_block_padded_1920 =
-        update_start (msg_block_padded_1919) (msg_block_1917)
+        RSeq.update_start (msg_block_padded_1919) (msg_block_1917)
       in
       let blocks_out_1914 =
-        set_chunk (blocks_out_1914) (usize 64) (i_1915) (
-          slice_range (msg_block_padded_1920 ^. key_block_1918) (
+        RSeq.set_chunk #uint8 (blocks_out_1914) (usize 64) (i_1915) (
+          RSeq.slice_range (msg_block_padded_1920 ^. key_block_1918) (
             (usize 0, block_len_1916)))
       in
       let ctr_1913 = ctr_1913 +. secret (pub_u32 0x1) in

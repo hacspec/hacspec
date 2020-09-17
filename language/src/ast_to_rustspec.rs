@@ -323,6 +323,7 @@ fn translate_expr(
                 (op.clone().node, op.clone().span),
                 Box::new(translate_expr_expects_exp(sess, arr_typs, e1)?),
                 Box::new(translate_expr_expects_exp(sess, arr_typs, e2)?),
+                None,
             )),
             e.span,
         )),
@@ -337,6 +338,7 @@ fn translate_expr(
                     }
                 },
                 Box::new(translate_expr_expects_exp(sess, arr_typs, e1)?),
+                None,
             )),
             e.span,
         )),

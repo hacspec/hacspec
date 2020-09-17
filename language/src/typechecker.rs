@@ -746,7 +746,7 @@ fn typecheck_expression(
                 }
             }
         }
-        Expression::Binary((op, op_span), e1, e2) => {
+        Expression::Binary((op, op_span), e1, e2, _) => {
             let (new_e1, t1, var_context) = typecheck_expression(
                 sess,
                 e1,
@@ -772,6 +772,7 @@ fn typecheck_expression(
                                     (op.clone(), op_span.clone()),
                                     Box::new((new_e1, e1.1.clone())),
                                     Box::new((new_e2, e2.1.clone())),
+                                    Some(t1.clone()),
                                 ),
                                 t1,
                                 var_context,
@@ -825,6 +826,7 @@ fn typecheck_expression(
                                     (op.clone(), op_span.clone()),
                                     Box::new((new_e1, e1.1.clone())),
                                     Box::new((new_e2, e2.1.clone())),
+                                    Some(t1.clone()),
                                 ),
                                 match op {
                                     BinOpKind::Eq
@@ -855,7 +857,7 @@ fn typecheck_expression(
                 }
             }
         }
-        Expression::Unary(op, e1) => {
+        Expression::Unary(op, e1, _) => {
             let (new_e1, e1_typ, new_var_context) = typecheck_expression(
                 sess,
                 e1,
@@ -865,7 +867,11 @@ fn typecheck_expression(
                 name_context,
             )?;
             Ok((
-                Expression::Unary(op.clone(), Box::new((new_e1, e1.1.clone()))),
+                Expression::Unary(
+                    op.clone(),
+                    Box::new((new_e1, e1.1.clone())),
+                    Some(e1_typ.clone()),
+                ),
                 e1_typ,
                 new_var_context,
             ))

@@ -183,11 +183,12 @@ pub enum UnOpKind {
 
 #[derive(Clone)]
 pub enum Expression {
-    Unary(UnOpKind, Box<Spanned<Expression>>),
+    Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
     Binary(
         Spanned<BinOpKind>,
         Box<Spanned<Expression>>,
         Box<Spanned<Expression>>,
+        Option<Typ>,
     ),
     Named(Ident),
     // FuncCall(prefix, name, args)
