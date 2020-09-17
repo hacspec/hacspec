@@ -241,6 +241,7 @@ fn translate_unop(op: &UnOpKind) -> RcDoc<()> {
     }
 }
 
+#[derive(Debug)]
 enum FuncPrefix {
     Regular,
     Array(ArraySize),
@@ -339,7 +340,11 @@ fn translate_func_name<'a>(
                             FuncPrefix::Array(ArraySize::Integer(i)) => {
                                 RcDoc::space().append(RcDoc::as_string(format!("{}ul", i)))
                             }
-                            _ => panic!(), // should not happen,
+                            FuncPrefix::Regular => {
+                                // This is the Seq case, should be alright
+                                RcDoc::nil()
+                            }
+                            _ => panic!(), // should not happen
                         },
                         _ => RcDoc::nil(),
                     },
