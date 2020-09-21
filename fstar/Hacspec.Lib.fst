@@ -61,7 +61,7 @@ type seq (a: Type)  = LSeq.seq a
 
 type byte_seq = seq uint8
 
-assume val seq_from_list (#a: Type) (l: list a) : seq a
+assume val seq_from_list (#a: Type) (l: list a{List.Tot.length l <= max_size_t}) : lseq a (List.Tot.length l)
 
 assume val uint32_to_be_bytes : uint32 -> lseq uint8 4
 assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
@@ -69,11 +69,11 @@ assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
 
 (**** Array manipulation *)
 
-assume val seq_new_ (#a: Type) (len: uint_size) : lseq a len
+assume val seq_new_ (#a: Type) (len: uint_size) (init:a) : lseq a len
 
-assume val array_index (#a: Type) (s: seq a) (i: uint_size{i < LSeq.length s}) : a
+assume val array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a
 
-assume val array_upd (#a: Type) (s: seq a) (i: uint_size) (new_v: a) : seq a
+assume val array_upd (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) (new_v: a) : lseq a len
 
 assume val seq_from_slice (#a: Type) (out_len: uint_size) (input: seq a) (start: uint_size) (slice_len: uint_size{slice_len <= out_len}) : lseq a out_len
 
@@ -84,7 +84,7 @@ assume val seq_from_slice_range
   (start_end: (uint_size & uint_size))
     : lseq a out_len
 
-assume val seq_slice_range (#a: Type) (input: seq a) (start_end: (uint_size & uint_size)) : seq a
+assume val seq_slice_range (#a: Type) (#len:uint_size) (input: seq a) (start:uint_size) (fin:uint_size{fin >= start}) : lseq a (fin - start)
 
 assume val seq_update_start (#a: Type) (s: seq a) (start_s: seq a) : seq a
 
@@ -101,11 +101,12 @@ assume val seq_get_chunk (#a: Type) (s: seq a) (chunk_len: uint_size) (chunk_num
 
 assume val seq_set_chunk
   (#a: Type)
-  (s: seq a)
+  (#len: uint_size)
+  (s: lseq a len)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
   (chunk: lseq a chunk_len)
-    : Pure (seq a)
+    : Pure (lseq a len)
       (requires (True))
       (ensures (fun out -> seq_len out == seq_len s))
 
@@ -119,7 +120,7 @@ assume val uint128_from_le_bytes (input: lseq uint8 (usize 16)) : uint128
 
 (*** Loops *)
 
-assume val foldi (#acc: Type) (lo: uint_size) (hi: uint_size) (f: (uint_size & acc) -> acc) (init: acc) : acc
+assume val foldi (#acc: Type) (lo: uint_size) (hi: uint_size) (f: ((i:uint_size{i < hi}) * acc) -> acc) (init: acc) : acc
 
 
 (*** Nats *)
