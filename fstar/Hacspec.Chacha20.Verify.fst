@@ -39,14 +39,14 @@ let state_to_bytes (x_1870 : state) : state_bytes =
   in
   r_1871
 
+type state_range = u:uint_size {u < 16}
 let line
-  (a_1874 : pub_uint32)
-  (b_1875 : pub_uint32)
-  (d_1876 : pub_uint32)
-  (s_1877 : uint_size)
+  (a_1874 : state_range)
+  (b_1875 : state_range)
+  (d_1876 : state_range)
+  (s_1877 : rotval U32)
   (m_1878 : state)
   : state =
-  admit();
   let state_1879 = m_1878 in
   let state_1879 =
     array_upd state_1879 (a_1874) (
@@ -60,52 +60,85 @@ let line
   in
   let state_1879 =
     array_upd state_1879 (d_1876) (
-      uint32_rotate_left (array_index (state_1879) (d_1876)) (s_1877))
+      rotate_left (array_index (state_1879) (d_1876)) (s_1877))
   in
   state_1879
 
 let quarter_round
-  (a_1880 : pub_uint32)
-  (b_1881 : pub_uint32)
-  (c_1882 : pub_uint32)
-  (d_1883 : pub_uint32)
+  (a_1880 : state_range)
+  (b_1881 : state_range)
+  (c_1882 : state_range)
+  (d_1883 : state_range)
   (state_1884 : state)
   : state =
-  let state_1885 = line (a_1880) (b_1881) (d_1883) (usize 16) (state_1884) in
-  let state_1886 = line (c_1882) (d_1883) (b_1881) (usize 12) (state_1885) in
-  let state_1887 = line (a_1880) (b_1881) (d_1883) (usize 8) (state_1886) in
-  line (c_1882) (d_1883) (b_1881) (usize 7) (state_1887)
+  let state_1885 = line (a_1880) (b_1881) (d_1883) (pub_u32 16) (state_1884) in
+  let state_1886 = line (c_1882) (d_1883) (b_1881) (pub_u32 12) (state_1885) in
+  let state_1887 = line (a_1880) (b_1881) (d_1883) (pub_u32 8) (state_1886) in
+  line (c_1882) (d_1883) (b_1881) (pub_u32 7) (state_1887)
+
+(* Copied from Spec.Chacha.fst: *)
+type st = lseq uint32 16
+type idx = n:size_nat{n < 16}
+type shuffle = state -> Tot state
+let op_At f g = fun x -> g (f x)
+
+let hacl_line (a:idx) (b:idx) (d:idx) (s:rotval U32) (m:st) : Tot st =
+  let open Lib.Sequence in
+  let m = m.[a] <- (m.[a] +. m.[b]) in
+  let m = m.[d] <- (m.[d] ^. m.[a]) in
+  let m = m.[d] <- (m.[d] <<<. s) in m
+
+let line_lemma a b d s m : Lemma (a <> d ==> line a b d s m == hacl_line a b d s m) = ()
+(*  let open Lib.Sequence in
+  let st1 = line a b d s m in
+  let st2 = hacl_line a b d s m in
+  assert (a <> d ==> st1.[a] == m.[a] +. m.[b]);
+  Lib.Sequence.eq_intro (line a b d s m) (hacl_line a b d s m) *)
+
+let hacl_quarter_round a b c d : Tot shuffle =
+  let open Lib.IntTypes in
+  hacl_line a b d (size 16) @
+  hacl_line c d b (size 12) @
+  hacl_line a b d (size 8)  @
+  hacl_line c d b (size 7)
+
+let quarter_round_lemma a b c d st :
+  Lemma ((a <> d /\ c <> b) ==> quarter_round a b c d st == hacl_quarter_round a b c d st) =
+  ()
+(*  Lib.Sequence.eq_intro (quarter_round a b c d st) (hacl_quarter_round a b c d st) *)
+(* End of equiv proof demo *)
+
 
 let double_round (state_1888 : state) : state =
   let state_1889 =
-    quarter_round (pub_u32 0x0) (pub_u32 0x4) (pub_u32 0x8) (pub_u32 0xc) (
+    quarter_round (usize 0x0) (usize 0x4) (usize 0x8) (usize 0xc) (
       state_1888)
   in
   let state_1890 =
-    quarter_round (pub_u32 0x1) (pub_u32 0x5) (pub_u32 0x9) (pub_u32 0xd) (
+    quarter_round (usize 0x1) (usize 0x5) (usize 0x9) (usize 0xd) (
       state_1889)
   in
   let state_1891 =
-    quarter_round (pub_u32 0x2) (pub_u32 0x6) (pub_u32 0xa) (pub_u32 0xe) (
+    quarter_round (usize 0x2) (usize 0x6) (usize 0xa) (usize 0xe) (
       state_1890)
   in
   let state_1892 =
-    quarter_round (pub_u32 0x3) (pub_u32 0x7) (pub_u32 0xb) (pub_u32 0xf) (
+    quarter_round (usize 0x3) (usize 0x7) (usize 0xb) (usize 0xf) (
       state_1891)
   in
   let state_1893 =
-    quarter_round (pub_u32 0x0) (pub_u32 0x5) (pub_u32 0xa) (pub_u32 0xf) (
+    quarter_round (usize 0x0) (usize 0x5) (usize 0xa) (usize 0xf) (
       state_1892)
   in
   let state_1894 =
-    quarter_round (pub_u32 0x1) (pub_u32 0x6) (pub_u32 0xb) (pub_u32 0xc) (
+    quarter_round (usize 0x1) (usize 0x6) (usize 0xb) (usize 0xc) (
       state_1893)
   in
   let state_1895 =
-    quarter_round (pub_u32 0x2) (pub_u32 0x7) (pub_u32 0x8) (pub_u32 0xd) (
+    quarter_round (usize 0x2) (usize 0x7) (usize 0x8) (usize 0xd) (
       state_1894)
   in
-  quarter_round (pub_u32 0x3) (pub_u32 0x4) (pub_u32 0x9) (pub_u32 0xe) (
+  quarter_round (usize 0x3) (usize 0x4) (usize 0x9) (usize 0xe) (
     state_1895)
 
 let block_init (key_1896 : key) (ctr_1897 : uint32) (iv_1898 : iv) : state =
@@ -166,6 +199,7 @@ let block (key_1906 : key) (ctr_1907 : uint32) (iv_1908 : iv) : state_bytes =
   let state_1909 = block_inner (key_1906) (ctr_1907) (iv_1908) in
   state_to_bytes (state_1909)
 
+(* TODO: working on below *)
 let chacha (key_1910 : key) (iv_1911 : iv) (m_1912 : byte_seq{seq_len m_1912 <= max_size_t}) : byte_seq =
   let ctr_1913 = secret (pub_u32 0x1) in
   let blocks_out_1914 = seq_new_ (seq_len (m_1912)) (u8 0) in

@@ -47,9 +47,6 @@ let pub_u128 (n:range_t U128) : u:pub_uint128{v u == n} = uint #U128 #PUB n
 unfold
 let pub_i128 (n:range_t S128) : u:pub_int128{v u == n} = sint #S128 #PUB n
 
-(**** Operations *)
-
-assume val uint32_rotate_left (x: uint32) (rot_val: nat) : uint32
 
 (*** Seq *)
 
@@ -69,11 +66,13 @@ assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
 
 (**** Array manipulation *)
 
-assume val seq_new_ (#a: Type) (len: uint_size) (init:a) : lseq a len
+let seq_new_ (#a: Type) (len: uint_size) (init:a) : lseq a len =
+  LSeq.create len init
 
-assume val array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a
+let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a =
+  LSeq.index s i
 
-assume val array_upd (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) (new_v: a) : lseq a len
+let array_upd (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) (new_v: a) : lseq a len = LSeq.upd s i new_v
 
 assume val seq_from_slice (#a: Type) (out_len: uint_size) (input: seq a) (start: uint_size) (slice_len: uint_size{slice_len <= out_len}) : lseq a out_len
 
