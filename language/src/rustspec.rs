@@ -267,7 +267,12 @@ pub struct ExternalFuncSig {
 #[derive(Clone)]
 pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
-    ArrayDecl(Spanned<Ident>, Spanned<Expression>, Spanned<BaseTyp>),
+    ArrayDecl(
+        Spanned<Ident>,         // Name of the array type
+        Spanned<Expression>,    // Length
+        Spanned<BaseTyp>,       // Cell type
+        Option<Spanned<Ident>>, // Optional type alias for indexes
+    ),
     ConstDecl(Spanned<Ident>, Spanned<BaseTyp>, Spanned<Expression>),
     NaturalIntegerDecl(
         Spanned<Ident>,

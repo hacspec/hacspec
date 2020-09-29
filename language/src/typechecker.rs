@@ -2016,7 +2016,7 @@ fn typecheck_item(
             top_level_context.functions = new_functions;
             Ok((out, top_level_context, typ_dict.clone()))
         }
-        Item::ArrayDecl(id, size, cell_t) => {
+        Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let (new_size, size_typ, _) = typecheck_expression(
                 sess,
                 size,
@@ -2055,6 +2055,22 @@ fn typecheck_item(
                     );
                     return Err(());
                 }
+            };
+            let typ_dict = match index_typ {
+                None => typ_dict.clone(),
+                Some(index_typ) => typ_dict.update(
+                    match &index_typ.0 {
+                        Ident::Original(s) => s.clone(),
+                        Ident::Hacspec(_, _) => panic!(),
+                    },
+                    (
+                        (
+                            (Borrowing::Consumed, index_typ.1.clone()),
+                            (BaseTyp::Usize, index_typ.1.clone()),
+                        ),
+                        DictEntry::Alias,
+                    ),
+                ),
             };
             Ok((
                 i.clone(),
@@ -2141,6 +2157,7 @@ fn typecheck_item(
                         ),
                         Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
                     },
+                    None,
                 ),
                 top_level_context,
                 typ_dict,

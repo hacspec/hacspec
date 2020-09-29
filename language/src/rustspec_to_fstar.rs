@@ -765,7 +765,7 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                 .group(),
             true,
         ),
-        Item::ArrayDecl(name, size, cell_t) => RcDoc::as_string("type")
+        Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("type")
             .append(RcDoc::space())
             .append(translate_ident(name.0.clone()))
             .append(RcDoc::space())
@@ -780,7 +780,22 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                     .append(make_paren(translate_expression(size.0.clone(), typ_dict)))
                     .group()
                     .nest(2),
-            ),
+            )
+            .append(match index_typ {
+                None => RcDoc::nil(),
+                Some(index_typ) => {
+                    RcDoc::hardline()
+                        .append(RcDoc::hardline())
+                        .append(make_let_binding(
+                            translate_ident(index_typ.0.clone()),
+                            None,
+                            RcDoc::as_string("nat_mod")
+                                .append(RcDoc::space())
+                                .append(make_paren(translate_expression(size.0.clone(), typ_dict))),
+                            true,
+                        ))
+                }
+            }),
         Item::ConstDecl(name, ty, e) => make_let_binding(
             translate_ident(name.0.clone()),
             Some(translate_base_typ(ty.0.clone())),

@@ -1272,8 +1272,42 @@ fn translate_array_decl(
                 }
                 Some(t) => (t, typ_ident.1.clone()),
             };
+            let index_typ = {
+                let (fourth_arg, fifth_arg) = {
+                    let fourth_arg = it.next();
+                    let fifth_arg = it.next();
+                    (fourth_arg, fifth_arg)
+                };
+                match (fourth_arg, fifth_arg) {
+                    (Some(fourth_arg), Some(fifth_arg)) => {
+                        check_for_comma(sess, &fourth_arg)?;
+                        match fifth_arg {
+                            TokenTree::Token(tok) => match tok.kind {
+                                TokenKind::Ident(id, _) => {
+                                    Some((Ident::Original(id.to_ident_string()), tok.span.clone()))
+                                }
+                                _ => {
+                                    sess.span_rustspec_err(
+                                        tok.span.clone(),
+                                        "expected an identifier",
+                                    );
+                                    return Err(());
+                                }
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    i.span.clone(),
+                                    "expected first argument to be a single token",
+                                );
+                                return Err(());
+                            }
+                        }
+                    }
+                    _ => None,
+                }
+            };
             Ok((
-                (ItemTranslationResult::Item(Item::ArrayDecl(typ_ident, size, cell_t))),
+                (ItemTranslationResult::Item(Item::ArrayDecl(typ_ident, size, cell_t, index_typ))),
                 arr_types.update(typ_ident_string),
             ))
         }
