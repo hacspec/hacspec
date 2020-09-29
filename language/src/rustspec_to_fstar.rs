@@ -603,12 +603,28 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e2, typ_dict)))
         }
-        Expression::NewArray(_, _, args) => RcDoc::as_string(format!("{}_from_list", SEQ_MODULE))
-            .append(RcDoc::space())
-            .append(make_list(
-                args.into_iter()
-                    .map(|(e, _)| translate_expression(e, typ_dict)),
-            )),
+        Expression::NewArray(_, _, args) => {
+            let size = args.len();
+            RcDoc::as_string(format!("{}_from_list", SEQ_MODULE))
+                .append(RcDoc::space())
+                .append(make_paren(
+                    make_let_binding(
+                        RcDoc::as_string("l"),
+                        None,
+                        make_list(
+                            args.into_iter()
+                                .map(|(e, _)| translate_expression(e, typ_dict)),
+                        ),
+                        false,
+                    )
+                    .append(RcDoc::space())
+                    .append(
+                        RcDoc::as_string(format!("assert_norm (List.Tot.length l == {});", size))
+                            .append(RcDoc::space())
+                            .append(RcDoc::as_string("l")),
+                    ),
+                ))
+        }
         Expression::IntegerCasting(_, _) => unimplemented!(),
     }
 }

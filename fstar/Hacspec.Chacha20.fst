@@ -103,35 +103,38 @@ let double_round (state_1889 : state) : state =
   quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_1896)
 
 let block_init (key_1897 : key) (ctr_1898 : uint32) (iv_1899 : iv) : state =
-  seq_from_list [
-    secret (pub_u32 0x61707865);
-    secret (pub_u32 0x3320646e);
-    secret (pub_u32 0x79622d32);
-    secret (pub_u32 0x6b206574);
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 0, usize 4)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 4, usize 8)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 8, usize 12)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 12, usize 16)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 16, usize 20)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 20, usize 24)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 24, usize 28)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (key_1897) ((usize 28, usize 32)));
-    ctr_1898;
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (iv_1899) ((usize 0, usize 4)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (iv_1899) ((usize 4, usize 8)));
-    uint32_from_le_bytes (
-      seq_from_slice_range 4 (iv_1899) ((usize 8, usize 12)))
-  ]
+  seq_from_list (
+    let l =
+      [
+        secret (pub_u32 0x61707865);
+        secret (pub_u32 0x3320646e);
+        secret (pub_u32 0x79622d32);
+        secret (pub_u32 0x6b206574);
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 0, usize 4)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 4, usize 8)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 8, usize 12)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 12, usize 16)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 16, usize 20)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 20, usize 24)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 24, usize 28)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (key_1897) ((usize 28, usize 32)));
+        ctr_1898;
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (iv_1899) ((usize 0, usize 4)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (iv_1899) ((usize 4, usize 8)));
+        uint32_from_le_bytes (
+          seq_from_slice_range 4 (iv_1899) ((usize 8, usize 12)))
+      ]
+    in assert_norm (List.Tot.length l == 16); l)
 
 let block_inner (key_1900 : key) (ctr_1901 : uint32) (iv_1902 : iv) : state =
   let st_1903 = block_init (key_1900) (ctr_1901) (iv_1902) in
