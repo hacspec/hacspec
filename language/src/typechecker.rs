@@ -159,7 +159,7 @@ fn is_array(
     }
 }
 
-fn is_index(t: &BaseTyp) -> bool {
+fn is_index(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
     match t {
         BaseTyp::UInt128 => true,
         BaseTyp::Int128 => true,
@@ -173,6 +173,12 @@ fn is_index(t: &BaseTyp) -> bool {
         BaseTyp::Int8 => true,
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
+        BaseTyp::Named((Ident::Original(name), _), None) => match typ_dict.get(name) {
+            Some((((Borrowing::Consumed, _), (new_ty, _)), DictEntry::Alias)) => {
+                is_index(new_ty, typ_dict)
+            }
+            _ => false,
+        },
         _ => false,
     }
 }
@@ -1131,19 +1137,8 @@ fn typecheck_expression(
                 sess.span_rustspec_err(e2.1, "cannot index array with a borrowed type");
                 return Err(());
             }
-            match (t2.1).0 {
-                BaseTyp::UInt128
-                | BaseTyp::Int128
-                | BaseTyp::UInt64
-                | BaseTyp::Int64
-                | BaseTyp::UInt32
-                | BaseTyp::Int32
-                | BaseTyp::UInt16
-                | BaseTyp::Int16
-                | BaseTyp::UInt8
-                | BaseTyp::Int8
-                | BaseTyp::Usize
-                | BaseTyp::Isize => Ok((
+            if is_index(&(t2.1).0, typ_dict) {
+                Ok((
                     Expression::ArrayIndex(
                         (x.clone(), x_span.clone()),
                         Box::new((new_e2, e2.1.clone())),
@@ -1153,20 +1148,18 @@ fn typecheck_expression(
                         (cell_t.clone(), cell_t_span.clone()),
                     ),
                     var_context,
-                )),
-
-                _ => {
-                    sess.span_rustspec_err(
-                        e2.1,
-                        format!(
-                            "expected a public integer to index array but got type {}{}",
-                            (t2.0).0,
-                            (t2.1).0
-                        )
-                        .as_str(),
-                    );
-                    Err(())
-                }
+                ))
+            } else {
+                sess.span_rustspec_err(
+                    e2.1,
+                    format!(
+                        "expected a public integer to index array but got type {}{}",
+                        (t2.0).0,
+                        (t2.1).0
+                    )
+                    .as_str(),
+                );
+                Err(())
             }
         }
         Expression::FuncCall(prefix, name, args) => {
@@ -1642,7 +1635,7 @@ fn typecheck_statement(
                 &var_context,
                 name_context,
             )?;
-            if !is_index(&(e1_t.1).0) {
+            if !is_index(&(e1_t.1).0, typ_dict) {
                 sess.span_rustspec_err(
                     e1.1,
                     format!(

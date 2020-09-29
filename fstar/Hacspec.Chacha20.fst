@@ -43,9 +43,9 @@ let state_to_bytes (x_1871 : state) : state_bytes =
   r_1872
 
 let line
-  (a_1875 : pub_uint32)
-  (b_1876 : pub_uint32)
-  (d_1877 : pub_uint32)
+  (a_1875 : state_idx)
+  (b_1876 : state_idx)
+  (d_1877 : state_idx)
   (s_1878 : uint_size)
   (m_1879 : state)
   : state =
@@ -67,10 +67,10 @@ let line
   state_1880
 
 let quarter_round
-  (a_1881 : pub_uint32)
-  (b_1882 : pub_uint32)
-  (c_1883 : pub_uint32)
-  (d_1884 : pub_uint32)
+  (a_1881 : state_idx)
+  (b_1882 : state_idx)
+  (c_1883 : state_idx)
+  (d_1884 : state_idx)
   (state_1885 : state)
   : state =
   let state_1886 = line (a_1881) (b_1882) (d_1884) (usize 16) (state_1885) in
@@ -80,35 +80,27 @@ let quarter_round
 
 let double_round (state_1889 : state) : state =
   let state_1890 =
-    quarter_round (pub_u32 0x0) (pub_u32 0x4) (pub_u32 0x8) (pub_u32 0xc) (
-      state_1889)
+    quarter_round (usize 0) (usize 4) (usize 8) (usize 12) (state_1889)
   in
   let state_1891 =
-    quarter_round (pub_u32 0x1) (pub_u32 0x5) (pub_u32 0x9) (pub_u32 0xd) (
-      state_1890)
+    quarter_round (usize 1) (usize 5) (usize 9) (usize 13) (state_1890)
   in
   let state_1892 =
-    quarter_round (pub_u32 0x2) (pub_u32 0x6) (pub_u32 0xa) (pub_u32 0xe) (
-      state_1891)
+    quarter_round (usize 2) (usize 6) (usize 10) (usize 14) (state_1891)
   in
   let state_1893 =
-    quarter_round (pub_u32 0x3) (pub_u32 0x7) (pub_u32 0xb) (pub_u32 0xf) (
-      state_1892)
+    quarter_round (usize 3) (usize 7) (usize 11) (usize 15) (state_1892)
   in
   let state_1894 =
-    quarter_round (pub_u32 0x0) (pub_u32 0x5) (pub_u32 0xa) (pub_u32 0xf) (
-      state_1893)
+    quarter_round (usize 0) (usize 5) (usize 10) (usize 15) (state_1893)
   in
   let state_1895 =
-    quarter_round (pub_u32 0x1) (pub_u32 0x6) (pub_u32 0xb) (pub_u32 0xc) (
-      state_1894)
+    quarter_round (usize 1) (usize 6) (usize 11) (usize 12) (state_1894)
   in
   let state_1896 =
-    quarter_round (pub_u32 0x2) (pub_u32 0x7) (pub_u32 0x8) (pub_u32 0xd) (
-      state_1895)
+    quarter_round (usize 2) (usize 7) (usize 8) (usize 13) (state_1895)
   in
-  quarter_round (pub_u32 0x3) (pub_u32 0x4) (pub_u32 0x9) (pub_u32 0xe) (
-    state_1896)
+  quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_1896)
 
 let block_init (key_1897 : key) (ctr_1898 : uint32) (iv_1899 : iv) : state =
   seq_from_list [
