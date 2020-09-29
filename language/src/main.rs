@@ -177,5 +177,5 @@ fn main() -> Result<(), ()> {
             }),
     };
     let args = env::args().collect::<Vec<String>>();
-    run_compiler(&args, &mut callbacks, None, None).map_err(|_| ())
+    run_compiler(&args, &mut callbacks, None, None, None).map_err(|_| ())
 }
