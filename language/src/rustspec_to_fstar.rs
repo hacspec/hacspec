@@ -189,7 +189,7 @@ fn translate_typ((_, (tau, _)): &Typ) -> RcDoc<()> {
     translate_base_typ(tau.clone())
 }
 
-fn translate_literal(lit: &Literal) -> RcDoc<()> {
+fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
     match lit {
         Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
@@ -210,6 +210,107 @@ fn translate_literal(lit: &Literal) -> RcDoc<()> {
     }
 }
 
+fn get_type_default(t: &BaseTyp) -> Expression {
+    match t {
+        BaseTyp::UInt8 => Expression::Lit(Literal::UInt8(0)),
+        BaseTyp::Int8 => Expression::Lit(Literal::Int8(0)),
+        BaseTyp::UInt16 => Expression::Lit(Literal::UInt16(0)),
+        BaseTyp::Int16 => Expression::Lit(Literal::Int16(0)),
+        BaseTyp::UInt32 => Expression::Lit(Literal::UInt32(0)),
+        BaseTyp::Int32 => Expression::Lit(Literal::Int32(0)),
+        BaseTyp::UInt64 => Expression::Lit(Literal::UInt64(0)),
+        BaseTyp::Int64 => Expression::Lit(Literal::Int64(0)),
+        BaseTyp::UInt128 => Expression::Lit(Literal::UInt128(0)),
+        BaseTyp::Int128 => Expression::Lit(Literal::Int128(0)),
+        BaseTyp::Usize => Expression::Lit(Literal::Usize(0)),
+        BaseTyp::Isize => Expression::Lit(Literal::Isize(0)),
+        BaseTyp::Named((Ident::Original(name), i_s), None) => match name.as_str() {
+            "U8" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::UInt8(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "I8" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::Int8(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "U16" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::UInt16(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "I16" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::Int16(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "U32" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::UInt32(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "I32" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::Int32(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "U64" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::UInt64(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "I64" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::Int64(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "U128" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::UInt128(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            "I128" => Expression::FuncCall(
+                None,
+                (Ident::Original(name.clone()), i_s.clone()),
+                vec![(
+                    (Expression::Lit(Literal::Int128(8)), i_s.clone()),
+                    (Borrowing::Consumed, i_s.clone()),
+                )],
+            ),
+            _ => panic!("Trying to get default for {}", t),
+        },
+        _ => panic!("Trying to get default for {}", t),
+    }
+}
+
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
         Pattern::IdentPat(x) => translate_ident(x.clone()),
@@ -219,9 +320,9 @@ fn translate_pattern(p: &Pattern) -> RcDoc<()> {
 }
 
 fn translate_binop<'a, 'b>(
-    op: &'a BinOpKind,
+    op: BinOpKind,
     op_typ: &'b Typ,
-    typ_dict: &TypeDict,
+    typ_dict: &'a TypeDict,
 ) -> RcDoc<'a, ()> {
     match (op, &(op_typ.1).0) {
         (_, BaseTyp::Named(ident, _)) => {
@@ -303,7 +404,7 @@ fn translate_binop<'a, 'b>(
     }
 }
 
-fn translate_unop<'a, 'b>(op: &'a UnOpKind, _op_typ: &'b Typ) -> RcDoc<'a, ()> {
+fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
     match op {
         UnOpKind::Not => RcDoc::as_string("~"),
         UnOpKind::Neg => RcDoc::as_string("-"),
@@ -313,7 +414,8 @@ fn translate_unop<'a, 'b>(op: &'a UnOpKind, _op_typ: &'b Typ) -> RcDoc<'a, ()> {
 #[derive(Debug)]
 enum FuncPrefix {
     Regular,
-    Array(ArraySize),
+    Array(ArraySize, BaseTyp),
+    Seq(BaseTyp),
     NatMod(String),
 }
 
@@ -337,10 +439,13 @@ fn translate_prefix_for_func_name<'a>(
         BaseTyp::Usize => (RcDoc::as_string("int"), FuncPrefix::Regular),
         BaseTyp::Isize => (RcDoc::as_string("int"), FuncPrefix::Regular),
         BaseTyp::Str => (RcDoc::as_string("string"), FuncPrefix::Regular),
-        BaseTyp::Seq(_) => (RcDoc::as_string(SEQ_MODULE), FuncPrefix::Regular),
-        BaseTyp::Array(size, _) => (
+        BaseTyp::Seq(inner_ty) => (
             RcDoc::as_string(SEQ_MODULE),
-            FuncPrefix::Array(size.0.clone()),
+            FuncPrefix::Seq(inner_ty.as_ref().0.clone()),
+        ),
+        BaseTyp::Array(size, inner_ty) => (
+            RcDoc::as_string(SEQ_MODULE),
+            FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
         ),
         BaseTyp::Named(ident, _) => {
             // if the type is an array, we should print the Seq module instead
@@ -367,7 +472,7 @@ fn translate_prefix_for_func_name<'a>(
 
 fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
-    name: &'a Ident,
+    name: Ident,
     typ_dict: &'a TypeDict,
 ) -> RcDoc<'a, ()> {
     match prefix.clone() {
@@ -390,7 +495,7 @@ fn translate_func_name<'a>(
                 translate_prefix_for_func_name(prefix.clone(), typ_dict);
             let type_arg = match prefix.clone() {
                 BaseTyp::Seq(tau) => Some(translate_base_typ(tau.0.clone())),
-                BaseTyp::Array(_, tau) => Some(translate_base_typ(tau.0.clone())),
+                BaseTyp::Array(_, tau) => (Some(translate_base_typ(tau.0.clone()))),
                 _ => None,
             };
             let func_ident = translate_ident(name.clone());
@@ -404,16 +509,35 @@ fn translate_func_name<'a>(
                         format!("{}", func_ident.pretty(0)).as_str(),
                     ) {
                         ("seq", "new_") | ("seq", "from_slice") | ("seq", "from_slice_range") => {
-                            match prefix_info {
-                                FuncPrefix::Array(ArraySize::Ident(s)) => {
-                                    RcDoc::space().append(translate_ident_str(s))
+                            match &prefix_info {
+                                FuncPrefix::Array(ArraySize::Ident(s), _) => {
+                                    RcDoc::space().append(translate_ident_str(s.clone()))
                                 }
-                                FuncPrefix::Array(ArraySize::Integer(i)) => {
+                                FuncPrefix::Array(ArraySize::Integer(i), _) => {
                                     RcDoc::space().append(RcDoc::as_string(format!("{}", i)))
                                 }
-                                FuncPrefix::Regular => {
+                                FuncPrefix::Seq(_) => {
                                     // This is the Seq case, should be alright
                                     RcDoc::nil()
+                                }
+                                _ => panic!(), // should not happen
+                            }
+                        }
+                        _ => RcDoc::nil(),
+                    },
+                )
+                .append(
+                    match (
+                        format!("{}", module_name.pretty(0)).as_str(),
+                        format!("{}", func_ident.pretty(0)).as_str(),
+                    ) {
+                        ("seq", "new_") => {
+                            match prefix_info {
+                                FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
+                                    RcDoc::space().append(make_paren(translate_expression(
+                                        get_type_default(&inner_ty),
+                                        typ_dict,
+                                    )))
                                 }
                                 _ => panic!(), // should not happen
                             }
@@ -429,11 +553,11 @@ fn translate_func_name<'a>(
     }
 }
 
-fn translate_expression<'a>(e: &'a Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
+fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
     match e {
-        Expression::Binary((op, _), ref e1, ref e2, op_typ) => {
-            let e1 = &e1.0;
-            let e2 = &e2.0;
+        Expression::Binary((op, _), e1, e2, op_typ) => {
+            let e1 = e1.0;
+            let e2 = e2.0;
             make_paren(translate_expression(e1, typ_dict))
                 .append(RcDoc::space())
                 .append(translate_binop(op, op_typ.as_ref().unwrap(), typ_dict))
@@ -442,21 +566,21 @@ fn translate_expression<'a>(e: &'a Expression, typ_dict: &'a TypeDict) -> RcDoc<
                 .group()
         }
         Expression::Unary(op, e1, op_typ) => {
-            let e1 = &e1.0;
-            translate_unop(op, op_typ.as_ref().unwrap())
+            let e1 = e1.0;
+            translate_unop(op, op_typ.as_ref().unwrap().clone())
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e1, typ_dict)))
                 .group()
         }
-        Expression::Lit(lit) => translate_literal(lit),
+        Expression::Lit(lit) => translate_literal(lit.clone()),
         Expression::Tuple(es) => make_tuple(
             es.into_iter()
-                .map(|(e, _)| translate_expression(&e, typ_dict)),
+                .map(|(e, _)| translate_expression(e, typ_dict)),
         ),
         Expression::Named(p) => translate_ident(p.clone()),
         Expression::FuncCall(prefix, name, args) => {
-            translate_func_name(prefix.clone(), &name.0, typ_dict).append(RcDoc::concat(
-                args.iter().map(|((arg, _), _)| {
+            translate_func_name(prefix.clone(), name.0.clone(), typ_dict).append(RcDoc::concat(
+                args.into_iter().map(|((arg, _), _)| {
                     RcDoc::space().append(make_paren(translate_expression(arg, typ_dict)))
                 }),
             ))
@@ -465,14 +589,14 @@ fn translate_expression<'a>(e: &'a Expression, typ_dict: &'a TypeDict) -> RcDoc<
             translate_func_name(sel_typ.clone().map(|x| x.1), f, typ_dict)
                 .append(
                     RcDoc::space()
-                        .append(make_paren(translate_expression(&(sel_arg.0).0, typ_dict))),
+                        .append(make_paren(translate_expression((sel_arg.0).0, typ_dict))),
                 )
-                .append(RcDoc::concat(args.iter().map(|((arg, _), _)| {
+                .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
                     RcDoc::space().append(make_paren(translate_expression(arg, typ_dict)))
                 })))
         }
         Expression::ArrayIndex(x, e2) => {
-            let e2 = &e2.0;
+            let e2 = e2.0;
             RcDoc::as_string("array_index")
                 .append(RcDoc::space())
                 .append(make_paren(translate_ident(x.0.clone())))
@@ -482,7 +606,8 @@ fn translate_expression<'a>(e: &'a Expression, typ_dict: &'a TypeDict) -> RcDoc<
         Expression::NewArray(_, _, args) => RcDoc::as_string(format!("{}_from_list", SEQ_MODULE))
             .append(RcDoc::space())
             .append(make_list(
-                args.iter().map(|(e, _)| translate_expression(e, typ_dict)),
+                args.into_iter()
+                    .map(|(e, _)| translate_expression(e, typ_dict)),
             )),
         Expression::IntegerCasting(_, _) => unimplemented!(),
     }
@@ -493,13 +618,13 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
         Statement::LetBinding((pat, _), typ, (expr, _)) => make_let_binding(
             translate_pattern(pat),
             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
-            translate_expression(expr, typ_dict),
+            translate_expression(expr.clone(), typ_dict),
             false,
         ),
         Statement::Reassignment((x, _), (e1, _)) => make_let_binding(
             translate_ident(x.clone()),
             None,
-            translate_expression(e1, typ_dict),
+            translate_expression(e1.clone(), typ_dict),
             false,
         ),
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _)) => make_let_binding(
@@ -509,12 +634,12 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                 .append(RcDoc::space())
                 .append(translate_ident(x.clone()))
                 .append(RcDoc::space())
-                .append(make_paren(translate_expression(e1, typ_dict)))
+                .append(make_paren(translate_expression(e1.clone(), typ_dict)))
                 .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2, typ_dict))),
+                .append(make_paren(translate_expression(e2.clone(), typ_dict))),
             false,
         ),
-        Statement::ReturnExp(e1) => translate_expression(e1, typ_dict),
+        Statement::ReturnExp(e1) => translate_expression(e1.clone(), typ_dict),
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
             let mutated_info = mutated.as_ref().unwrap().as_ref();
             make_let_binding(
@@ -522,7 +647,7 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                 None,
                 RcDoc::as_string("if")
                     .append(RcDoc::space())
-                    .append(translate_expression(cond, typ_dict))
+                    .append(translate_expression(cond.clone(), typ_dict))
                     .append(RcDoc::space())
                     .append(RcDoc::as_string("then"))
                     .append(RcDoc::space())
@@ -558,9 +683,9 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
             let closure_tuple = make_tuple(vec![translate_ident(x.clone()), mut_tuple.clone()]);
             let loop_expr = RcDoc::as_string("foldi")
                 .append(RcDoc::space())
-                .append(make_paren(translate_expression(e1, typ_dict)))
+                .append(make_paren(translate_expression(e1.clone(), typ_dict)))
                 .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2, typ_dict)))
+                .append(make_paren(translate_expression(e2.clone(), typ_dict)))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(fun"))
                 .append(RcDoc::space())
@@ -652,14 +777,14 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                     .append(RcDoc::space())
                     .append(make_paren(translate_base_typ(cell_t.0.clone())))
                     .append(RcDoc::space())
-                    .append(make_paren(translate_expression(&size.0, typ_dict)))
+                    .append(make_paren(translate_expression(size.0.clone(), typ_dict)))
                     .group()
                     .nest(2),
             ),
         Item::ConstDecl(name, ty, e) => make_let_binding(
             translate_ident(name.0.clone()),
             Some(translate_base_typ(ty.0.clone())),
-            translate_expression(&e.0, typ_dict),
+            translate_expression(e.0.clone(), typ_dict),
             true,
         ),
         Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, modulo) => {
@@ -675,7 +800,10 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                         .append(RcDoc::space())
                         .append(make_paren(translate_base_typ(BaseTyp::UInt8)))
                         .append(RcDoc::space())
-                        .append(make_paren(translate_expression(&canvas_size.0, typ_dict)))
+                        .append(make_paren(translate_expression(
+                            canvas_size.0.clone(),
+                            typ_dict,
+                        )))
                         .group()
                         .nest(2),
                 )
