@@ -47,6 +47,9 @@ let pub_u128 (n:range_t U128) : u:pub_uint128{v u == n} = uint #U128 #PUB n
 unfold
 let pub_i128 (n:range_t S128) : u:pub_int128{v u == n} = sint #S128 #PUB n
 
+(**** Operations *)
+
+assume val uint32_rotate_left (u: uint32) (s: uint_size) : uint32
 
 (*** Seq *)
 
