@@ -17,7 +17,7 @@ type iv = lseq (uint8) (usize 12)
 type key = lseq (uint8) (usize 32)
 
 let state_to_bytes (x_1871 : state) : state_bytes =
-  let r_1872 = seq_new_ 64 (secret (pub_u8 0x8)) in
+  let r_1872 = seq_new_ #((uint8)) #((secret (pub_u8 0x8))) #(64) () in
   let (r_1872) =
     foldi (usize 0) (seq_len (x_1871)) (fun (i_1873, (r_1872)) ->
       let bytes_1874 = uint32_to_be_bytes (array_index (x_1871) (i_1873)) in
@@ -111,28 +111,34 @@ let block_init (key_1897 : key) (ctr_1898 : uint32) (iv_1899 : iv) : state =
         secret (pub_u32 0x79622d32);
         secret (pub_u32 0x6b206574);
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 0, usize 4)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) ((usize 0, usize 4)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 4, usize 8)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) ((usize 4, usize 8)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 8, usize 12)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) (
+            (usize 8, usize 12)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 12, usize 16)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) (
+            (usize 12, usize 16)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 16, usize 20)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) (
+            (usize 16, usize 20)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 20, usize 24)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) (
+            (usize 20, usize 24)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 24, usize 28)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) (
+            (usize 24, usize 28)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (key_1897) ((usize 28, usize 32)));
+          seq_from_slice_range #((uint8)) #(4) (key_1897) (
+            (usize 28, usize 32)));
         ctr_1898;
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (iv_1899) ((usize 0, usize 4)));
+          seq_from_slice_range #((uint8)) #(4) (iv_1899) ((usize 0, usize 4)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (iv_1899) ((usize 4, usize 8)));
+          seq_from_slice_range #((uint8)) #(4) (iv_1899) ((usize 4, usize 8)));
         uint32_from_le_bytes (
-          seq_from_slice_range 4 (iv_1899) ((usize 8, usize 12)))
+          seq_from_slice_range #((uint8)) #(4) (iv_1899) ((usize 8, usize 12)))
       ]
     in assert_norm (List.Tot.length l == 16); l)
 
@@ -163,28 +169,32 @@ let block (key_1907 : key) (ctr_1908 : uint32) (iv_1909 : iv) : state_bytes =
 
 let chacha (key_1911 : key) (iv_1912 : iv) (m_1913 : byte_seq) : byte_seq =
   let ctr_1914 = secret (pub_u32 0x1) in
-  let blocks_out_1915 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_1913)) in
-  let (ctr_1914, blocks_out_1915) =
+  let blocks_out_1915 =
+    seq_new_ #((uint8)) #((secret (pub_u8 0x8))) (seq_len (m_1913))
+  in
+  let (blocks_out_1915, ctr_1914) =
     foldi (usize 0) (seq_num_chunks (m_1913) (usize 64)) (fun (
         i_1916,
-        (ctr_1914, blocks_out_1915)
+        (blocks_out_1915, ctr_1914)
       ) ->
       let (block_len_1917, msg_block_1918) =
         seq_get_chunk (m_1913) (usize 64) (i_1916)
       in
       let key_block_1919 = block (key_1911) (ctr_1914) (iv_1912) in
-      let msg_block_padded_1920 = seq_new_ 64 (secret (pub_u8 0x8)) in
+      let msg_block_padded_1920 =
+        seq_new_ #((uint8)) #((secret (pub_u8 0x8))) #(64) ()
+      in
       let msg_block_padded_1921 =
         seq_update_start (msg_block_padded_1920) (msg_block_1918)
       in
       let blocks_out_1915 =
-        seq_set_chunk #uint8 (blocks_out_1915) (usize 64) (i_1916) (
+        seq_set_chunk (blocks_out_1915) (usize 64) (i_1916) (
           seq_slice_range ((msg_block_padded_1921) `seq_xor` (key_block_1919)) (
             (usize 0, block_len_1917)))
       in
       let ctr_1914 = (ctr_1914) +. (secret (pub_u32 0x1)) in
-      (ctr_1914, blocks_out_1915))
-    (ctr_1914, blocks_out_1915)
+      (blocks_out_1915, ctr_1914))
+    (blocks_out_1915, ctr_1914)
   in
   blocks_out_1915
 

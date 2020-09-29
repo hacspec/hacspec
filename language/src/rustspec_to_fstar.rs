@@ -470,11 +470,13 @@ fn translate_prefix_for_func_name<'a>(
     }
 }
 
+/// Returns the func name, as well as additional arguments to add when calling
+/// the function in F*
 fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
     name: Ident,
     typ_dict: &'a TypeDict,
-) -> RcDoc<'a, ()> {
+) -> (RcDoc<'a, ()>, Vec<RcDoc<'a, ()>>) {
     match prefix.clone() {
         None => {
             let name = translate_ident(name.clone());
@@ -485,70 +487,78 @@ fn translate_func_name<'a>(
                     // int constructor. The value it is applied to is
                     // a public integer of the same kind. So in F*, that
                     // will amount to a classification operation
-                    RcDoc::as_string("secret")
+                    (RcDoc::as_string("secret"), vec![])
                 }
-                _ => name,
+                _ => (name, vec![]),
             }
         }
         Some((prefix, _)) => {
             let (module_name, prefix_info) =
                 translate_prefix_for_func_name(prefix.clone(), typ_dict);
-            let type_arg = match prefix.clone() {
-                BaseTyp::Seq(tau) => Some(translate_base_typ(tau.0.clone())),
-                BaseTyp::Array(_, tau) => (Some(translate_base_typ(tau.0.clone()))),
-                _ => None,
-            };
             let func_ident = translate_ident(name.clone());
-            module_name
-                .clone()
-                .append(RcDoc::as_string("_"))
-                .append(func_ident.clone())
-                .append(
-                    match (
-                        format!("{}", module_name.pretty(0)).as_str(),
-                        format!("{}", func_ident.pretty(0)).as_str(),
-                    ) {
-                        ("seq", "new_") | ("seq", "from_slice") | ("seq", "from_slice_range") => {
-                            match &prefix_info {
-                                FuncPrefix::Array(ArraySize::Ident(s), _) => {
-                                    RcDoc::space().append(translate_ident_str(s.clone()))
-                                }
-                                FuncPrefix::Array(ArraySize::Integer(i), _) => {
-                                    RcDoc::space().append(RcDoc::as_string(format!("{}", i)))
-                                }
-                                FuncPrefix::Seq(_) => {
-                                    // This is the Seq case, should be alright
-                                    RcDoc::nil()
-                                }
-                                _ => panic!(), // should not happen
-                            }
+            let mut additional_args = Vec::new();
+            // We add the cell type for seqs
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                ("seq", "new_") | ("seq", "from_slice") | ("seq", "from_slice_range") => {
+                    match &prefix_info {
+                        FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
+                            additional_args.push(make_paren(translate_base_typ(inner_ty.clone())));
                         }
-                        _ => RcDoc::nil(),
-                    },
-                )
-                .append(
-                    match (
-                        format!("{}", module_name.pretty(0)).as_str(),
-                        format!("{}", func_ident.pretty(0)).as_str(),
-                    ) {
-                        ("seq", "new_") => {
-                            match prefix_info {
-                                FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
-                                    RcDoc::space().append(make_paren(translate_expression(
-                                        get_type_default(&inner_ty),
-                                        typ_dict,
-                                    )))
-                                }
-                                _ => panic!(), // should not happen
-                            }
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            };
+            // Then the default value
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                ("seq", "new_") => {
+                    match &prefix_info {
+                        FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
+                            additional_args.push(make_paren(translate_expression(
+                                get_type_default(inner_ty),
+                                typ_dict,
+                            )))
                         }
-                        _ => RcDoc::nil(),
-                    },
-                )
-                .append(match type_arg {
-                    None => RcDoc::nil(),
-                    Some(arg) => RcDoc::space().append(RcDoc::as_string("#")).append(arg),
-                })
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            };
+            // Then we add the size for arrays
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                ("seq", "new_") | ("seq", "from_slice") | ("seq", "from_slice_range") => {
+                    match &prefix_info {
+                        FuncPrefix::Array(ArraySize::Ident(s), _) => {
+                            additional_args.push(translate_ident_str(s.clone()))
+                        }
+                        FuncPrefix::Array(ArraySize::Integer(i), _) => {
+                            additional_args.push(RcDoc::as_string(format!("{}", i)))
+                        }
+                        FuncPrefix::Seq(_) => {
+                            // This is the Seq case, should be alright
+                            ()
+                        }
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            }
+            (
+                module_name
+                    .clone()
+                    .append(RcDoc::as_string("_"))
+                    .append(func_ident.clone()),
+                additional_args,
+            )
         }
     }
 }
@@ -579,18 +589,42 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
         ),
         Expression::Named(p) => translate_ident(p.clone()),
         Expression::FuncCall(prefix, name, args) => {
-            translate_func_name(prefix.clone(), name.0.clone(), typ_dict).append(RcDoc::concat(
-                args.into_iter().map(|((arg, _), _)| {
+            let (func_name, additional_args) =
+                translate_func_name(prefix.clone(), name.0.clone(), typ_dict);
+            let args_len = args.len();
+            func_name
+                // We append implicit arguments first
+                .append(RcDoc::concat(additional_args.into_iter().map(|arg| {
+                    RcDoc::space()
+                        .append(RcDoc::as_string("#"))
+                        .append(make_paren(arg))
+                })))
+                // Then the explicit arguments
+                .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
                     RcDoc::space().append(make_paren(translate_expression(arg, typ_dict)))
-                }),
-            ))
+                })))
+                // If there are no arguments, we add a unit
+                .append(if args_len == 0 {
+                    RcDoc::space().append(RcDoc::as_string("()"))
+                } else {
+                    RcDoc::nil()
+                })
         }
         Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
-            translate_func_name(sel_typ.clone().map(|x| x.1), f, typ_dict)
+            let (func_name, additional_args) =
+                translate_func_name(sel_typ.clone().map(|x| x.1), f, typ_dict);
+            func_name // We append implicit arguments first
+                .append(RcDoc::concat(additional_args.into_iter().map(|arg| {
+                    RcDoc::space()
+                        .append(RcDoc::as_string("#"))
+                        .append(make_paren(arg))
+                })))
+                // Then the self argument
                 .append(
                     RcDoc::space()
                         .append(make_paren(translate_expression((sel_arg.0).0, typ_dict))),
                 )
+                // And finally the rest of the arguments
                 .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
                     RcDoc::space().append(make_paren(translate_expression(arg, typ_dict)))
                 })))

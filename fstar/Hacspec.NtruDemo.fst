@@ -6,7 +6,9 @@ open Hacspec.Lib
 open FStar.Mul
 
 let build_irreducible (p_1843 : uint_size) : seq pub_int128 =
-  let irr_1844 = seq_new_ (pub_i128 0x0) #pub_int128 ((p_1843) + (usize 1)) in
+  let irr_1844 =
+    seq_new_ #((pub_int128)) #((pub_i128 0x0)) ((p_1843) + (usize 1))
+  in
   let irr_1844 = array_upd irr_1844 (usize 0) (- (pub_i128 0x1)) in
   let irr_1844 = array_upd irr_1844 (usize 1) (- (pub_i128 0x1)) in
   let irr_1844 = array_upd irr_1844 (p_1843) (pub_i128 0x1) in
@@ -16,13 +18,10 @@ let round_to_3
   (poly_1845 : seq pub_int128)
   (q_1846 : pub_int128)
   : seq pub_int128 =
-  let result_1847 = seq_clone #pub_int128 (poly_1845) in
+  let result_1847 = seq_clone (poly_1845) in
   let q_12_1848 = ((q_1846) -. (pub_i128 0x1)) /. (pub_i128 0x2) in
   let (result_1847) =
-    foldi (usize 0) (seq_len #pub_int128 (poly_1845)) (fun (
-        i_1849,
-        (result_1847)
-      ) ->
+    foldi (usize 0) (seq_len (poly_1845)) (fun (i_1849, (result_1847)) ->
       let (result_1847) =
         if (array_index (poly_1845) (i_1849)) >. (q_12_1848) then begin
           let result_1847 =
@@ -37,10 +36,7 @@ let round_to_3
     (result_1847)
   in
   let (result_1847) =
-    foldi (usize 0) (seq_len #pub_int128 (result_1847)) (fun (
-        i_1850,
-        (result_1847)
-      ) ->
+    foldi (usize 0) (seq_len (result_1847)) (fun (i_1850, (result_1847)) ->
       let (result_1847) =
         if ((array_index (result_1847) (i_1850)) %. (pub_i128 0x3)) != (
           pub_i128 0x0) then begin
@@ -108,10 +104,7 @@ let ntru_prime_653_decrypt
   let f_3_c_1873 = f_3_c_1871 in
   let q_12_1874 = ((q_1866) -. (pub_i128 0x1)) /. (pub_i128 0x2) in
   let (f_3_c_1873) =
-    foldi (usize 0) (seq_len #pub_int128 (f_3_c_1873)) (fun (
-        i_1875,
-        (f_3_c_1873)
-      ) ->
+    foldi (usize 0) (seq_len (f_3_c_1873)) (fun (i_1875, (f_3_c_1873)) ->
       let (f_3_c_1873) =
         if (array_index (f_3_c_1873) (i_1875)) >. (q_12_1874) then begin
           let f_3_c_1873 =
@@ -126,10 +119,10 @@ let ntru_prime_653_decrypt
     (f_3_c_1873)
   in
   let e_1876 =
-    seq_new_ (pub_i128 0x0) #pub_int128 (seq_len #pub_int128 (f_3_c_1873))
+    seq_new_ #((pub_int128)) #((pub_i128 0x0)) (seq_len (f_3_c_1873))
   in
   let (e_1876) =
-    foldi (usize 0) (seq_len #pub_int128 (e_1876)) (fun (i_1877, (e_1876)) ->
+    foldi (usize 0) (seq_len (e_1876)) (fun (i_1877, (e_1876)) ->
       let e_1876 =
         array_upd e_1876 (i_1877) (
           (array_index (f_3_c_1873) (i_1877)) %. (pub_i128 0x3))
@@ -142,7 +135,7 @@ let ntru_prime_653_decrypt
     mul_poly_irr (e_1876) (key_v_1864) (irreducible_1868) (pub_i128 0x3)
   in
   let (r_1878) =
-    foldi (usize 0) (seq_len #pub_int128 (r_1878)) (fun (i_1879, (r_1878)) ->
+    foldi (usize 0) (seq_len (r_1878)) (fun (i_1879, (r_1878)) ->
       let (r_1878) =
         if (array_index (r_1878) (i_1879)) == (pub_i128 0x2) then begin
           let r_1878 = array_upd r_1878 (i_1879) (- (pub_i128 0x1)) in

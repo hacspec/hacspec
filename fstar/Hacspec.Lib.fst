@@ -69,7 +69,7 @@ assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
 
 (**** Array manipulation *)
 
-let seq_new_ (#a: Type) (len: uint_size) (init:a) : lseq a len =
+let seq_new_ (#a: Type) (#init:a) (#len: uint_size) (_: unit) : lseq a len =
   LSeq.create len init
 
 let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a =
@@ -81,12 +81,19 @@ assume val seq_from_slice (#a: Type) (out_len: uint_size) (input: seq a) (start:
 
 assume val seq_from_slice_range
   (#a: Type)
-  (out_len: uint_size)
+  (#out_len: uint_size)
   (input: seq a)
   (start_end: (uint_size & uint_size))
     : lseq a out_len
 
-assume val seq_slice_range (#a: Type) (#len:uint_size) (input: seq a) (start:uint_size) (fin:uint_size{fin >= start}) : lseq a (fin - start)
+assume val seq_slice_range
+  (#a: Type)
+  (#len:uint_size)
+  (input: lseq a len)
+  (start_fin:(uint_size & uint_size){
+    fst start_fin >= 0 /\ snd start_fin <= len /\ snd start_fin >= fst start_fin
+  })
+    : lseq a (snd start_fin - fst start_fin)
 
 assume val seq_update_start (#a: Type) (s: seq a) (start_s: seq a) : seq a
 
@@ -114,7 +121,7 @@ assume val seq_set_chunk
 
 (**** Numeric operations *)
 
-assume val seq_xor (#a: Type) (s1: seq a) (s2 : seq a) : seq a
+assume val seq_xor (#a: Type) (#len: uint_size) (s1: lseq a len) (s2 : lseq a len) : seq a
 
 (**** Integers to arrays *)
 
