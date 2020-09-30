@@ -13,6 +13,8 @@ use std::path;
 
 const SEQ_MODULE: &'static str = "seq";
 
+const ARRAY_MODULE: &'static str = "array";
+
 fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
     typ: Option<RcDoc<'a, ()>>,
@@ -362,26 +364,33 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
             RcDoc::as_string("/")
         }
-        (BinOpKind::Sub, BaseTyp::Seq(_)) | (BinOpKind::Sub, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string("`seq_minus`")
+        (BinOpKind::Sub, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_minus`", SEQ_MODULE)),
+        (BinOpKind::Sub, BaseTyp::Array(_, _)) => {
+            RcDoc::as_string(format!("`{}_minus`", ARRAY_MODULE))
         }
-        (BinOpKind::Add, BaseTyp::Seq(_)) | (BinOpKind::Add, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string("`seq_add`")
+        (BinOpKind::Add, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_add`", SEQ_MODULE)),
+        (BinOpKind::Add, BaseTyp::Array(_, _)) => {
+            RcDoc::as_string(format!("`{}_add`", ARRAY_MODULE))
         }
-        (BinOpKind::Mul, BaseTyp::Seq(_)) | (BinOpKind::Mul, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string("`seq_mul`")
+        (BinOpKind::Mul, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_mul`", SEQ_MODULE)),
+        (BinOpKind::Mul, BaseTyp::Array(_, _)) => {
+            RcDoc::as_string(format!("`{}_mul`", ARRAY_MODULE))
         }
-        (BinOpKind::Div, BaseTyp::Seq(_)) | (BinOpKind::Div, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string("`seq_div`")
+        (BinOpKind::Div, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_div`", SEQ_MODULE)),
+        (BinOpKind::Div, BaseTyp::Array(_, _)) => {
+            RcDoc::as_string(format!("`{}_div`", ARRAY_MODULE))
         }
-        (BinOpKind::BitXor, BaseTyp::Seq(_)) | (BinOpKind::BitXor, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string("`seq_xor`")
+        (BinOpKind::BitXor, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_xor`", SEQ_MODULE)),
+        (BinOpKind::BitXor, BaseTyp::Array(_, _)) => {
+            RcDoc::as_string(format!("`{}_xor`", ARRAY_MODULE))
         }
-        (BinOpKind::BitAnd, BaseTyp::Seq(_)) | (BinOpKind::BitAnd, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string("`seq_and`")
+        (BinOpKind::BitOr, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_or`", SEQ_MODULE)),
+        (BinOpKind::BitOr, BaseTyp::Array(_, _)) => {
+            RcDoc::as_string(format!("`{}_or`", ARRAY_MODULE))
         }
-        (BinOpKind::BitOr, BaseTyp::Seq(_)) | (BinOpKind::BitOr, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string("`seq_or`")
+        (BinOpKind::BitAnd, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_and`", SEQ_MODULE)),
+        (BinOpKind::BitAnd, BaseTyp::Array(_, _)) => {
+            RcDoc::as_string(format!("`{}_and`", ARRAY_MODULE))
         }
         (BinOpKind::Sub, _) => RcDoc::as_string("-."),
         (BinOpKind::Add, _) => RcDoc::as_string("+."),
@@ -444,7 +453,7 @@ fn translate_prefix_for_func_name<'a>(
             FuncPrefix::Seq(inner_ty.as_ref().0.clone()),
         ),
         BaseTyp::Array(size, inner_ty) => (
-            RcDoc::as_string(SEQ_MODULE),
+            RcDoc::as_string(ARRAY_MODULE),
             FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
         ),
         BaseTyp::Named(ident, _) => {
@@ -498,32 +507,30 @@ fn translate_func_name<'a>(
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
             // We add the cell type for seqs
-            match (
-                format!("{}", module_name.pretty(0)).as_str(),
-                format!("{}", func_ident.pretty(0)).as_str(),
-            ) {
-                ("seq", "new_") | ("seq", "from_slice") | ("seq", "from_slice_range") => {
-                    match &prefix_info {
-                        FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
-                            additional_args.push(make_paren(translate_base_typ(inner_ty.clone())));
-                        }
-                        _ => panic!(), // should not happen
-                    }
-                }
-                _ => (),
-            };
+            // match (
+            //     format!("{}", module_name.pretty(0)).as_str(),
+            //     format!("{}", func_ident.pretty(0)).as_str(),
+            // ) {
+            //     (ARRAY_MODULE, "new_") => {
+            //         match &prefix_info {
+            //             FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
+            //                 additional_args.push(make_paren(translate_base_typ(inner_ty.clone())));
+            //             }
+            //             _ => panic!(), // should not happen
+            //         }
+            //     }
+            //     _ => (),
+            // };
             // Then the default value
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                ("seq", "new_") => {
+                (ARRAY_MODULE, "new_") | (SEQ_MODULE, "new_") => {
                     match &prefix_info {
                         FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
-                            additional_args.push(make_paren(translate_expression(
-                                get_type_default(inner_ty),
-                                typ_dict,
-                            )))
+                            additional_args
+                                .push(translate_expression(get_type_default(inner_ty), typ_dict))
                         }
                         _ => panic!(), // should not happen
                     }
@@ -535,7 +542,7 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                ("seq", "new_") | ("seq", "from_slice") | ("seq", "from_slice_range") => {
+                (ARRAY_MODULE, "new_") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
                             additional_args.push(translate_ident_str(s.clone()))
@@ -591,34 +598,27 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
         Expression::FuncCall(prefix, name, args) => {
             let (func_name, additional_args) =
                 translate_func_name(prefix.clone(), name.0.clone(), typ_dict);
-            let args_len = args.len();
             func_name
                 // We append implicit arguments first
-                .append(RcDoc::concat(additional_args.into_iter().map(|arg| {
-                    RcDoc::space()
-                        .append(RcDoc::as_string("#"))
-                        .append(make_paren(arg))
-                })))
+                .append(RcDoc::concat(
+                    additional_args
+                        .into_iter()
+                        .map(|arg| RcDoc::space().append(make_paren(arg))),
+                ))
                 // Then the explicit arguments
                 .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
                     RcDoc::space().append(make_paren(translate_expression(arg, typ_dict)))
                 })))
-                // If there are no arguments, we add a unit
-                .append(if args_len == 0 {
-                    RcDoc::space().append(RcDoc::as_string("()"))
-                } else {
-                    RcDoc::nil()
-                })
         }
         Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
             let (func_name, additional_args) =
                 translate_func_name(sel_typ.clone().map(|x| x.1), f, typ_dict);
             func_name // We append implicit arguments first
-                .append(RcDoc::concat(additional_args.into_iter().map(|arg| {
-                    RcDoc::space()
-                        .append(RcDoc::as_string("#"))
-                        .append(make_paren(arg))
-                })))
+                .append(RcDoc::concat(
+                    additional_args
+                        .into_iter()
+                        .map(|arg| RcDoc::space().append(make_paren(arg))),
+                ))
                 // Then the self argument
                 .append(
                     RcDoc::space()
@@ -639,7 +639,7 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
         }
         Expression::NewArray(_, _, args) => {
             let size = args.len();
-            RcDoc::as_string(format!("{}_from_list", SEQ_MODULE))
+            RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
                 .append(RcDoc::space())
                 .append(make_paren(
                     make_let_binding(

@@ -57,11 +57,11 @@ module LSeq = Lib.Sequence
 
 type lseq (a: Type) (len: uint_size) = LSeq.lseq a len
 
-type seq (a: Type)  = LSeq.seq a
+type seq (a: Type)  = s:LSeq.seq a{range (LSeq.length s) U32}
 
 type byte_seq = seq uint8
 
-assume val seq_from_list (#a: Type) (l: list a{List.Tot.length l <= max_size_t}) : lseq a (List.Tot.length l)
+assume val array_from_list (#a: Type) (l: list a{List.Tot.length l <= max_size_t}) : lseq a (List.Tot.length l)
 
 assume val uint32_to_be_bytes : uint32 -> lseq uint8 4
 assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
@@ -69,7 +69,8 @@ assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
 
 (**** Array manipulation *)
 
-let seq_new_ (#a: Type) (#init:a) (#len: uint_size) (_: unit) : lseq a len =
+
+let array_new_ (#a: Type) (init:a) (len: uint_size)  : lseq a len =
   LSeq.create len init
 
 let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a =
@@ -77,16 +78,16 @@ let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < le
 
 let array_upd (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) (new_v: a) : lseq a len = LSeq.upd s i new_v
 
-assume val seq_from_slice (#a: Type) (out_len: uint_size) (input: seq a) (start: uint_size) (slice_len: uint_size{slice_len <= out_len}) : lseq a out_len
-
-assume val seq_from_slice_range
+assume val array_from_slice_range
   (#a: Type)
-  (#out_len: uint_size)
-  (input: seq a)
-  (start_end: (uint_size & uint_size))
-    : lseq a out_len
+  (#len: uint_size)
+  (input: lseq a len)
+  (start_fin: (uint_size & uint_size){
+     fst start_fin >= 0 /\ snd start_fin <= len /\ snd start_fin >= fst start_fin
+   })
+    : lseq a (snd start_fin - fst start_fin)
 
-assume val seq_slice_range
+assume val array_slice_range
   (#a: Type)
   (#len:uint_size)
   (input: lseq a len)
@@ -95,33 +96,41 @@ assume val seq_slice_range
   })
     : lseq a (snd start_fin - fst start_fin)
 
-assume val seq_update_start (#a: Type) (s: seq a) (start_s: seq a) : seq a
+assume val array_update_start (#a: Type) (#len: uint_size) (s: lseq a len) (#s_len: uint_size{s_len <= len}) (start_s: lseq a s_len) : lseq a len
 
-let seq_len (#a: Type) (s: seq a) = LSeq.length s
+let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
+
+(**** Seq manipulation *)
+
+let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
+  LSeq.create len init
+
+let seq_len (#a: Type) (s: seq a) = Seq.length s
 
 (**** Chunking *)
 
 assume val seq_num_chunks (#a: Type) (s: seq a) (chunk_len: uint_size) : uint_size
 
-assume val seq_get_chunk (#a: Type) (s: seq a) (chunk_len: uint_size) (chunk_num: uint_size)
-  : Pure (uint_size & seq a)
-    (requires (True))
-    (ensures (fun (real_len, out) -> seq_len out == real_len))
+assume val seq_get_chunk
+  (#a: Type)
+  (s: seq a)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  : Tot (x:uint_size{x <= chunk_len} & lseq a x)
 
 assume val seq_set_chunk
   (#a: Type)
-  (#len: uint_size)
-  (s: lseq a len)
+  (s: seq a)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
   (chunk: lseq a chunk_len)
-    : Pure (lseq a len)
+    : Pure (seq a)
       (requires (True))
-      (ensures (fun out -> seq_len out == seq_len s))
+      (ensures (fun out -> Seq.length out == Seq.length s))
 
 (**** Numeric operations *)
 
-assume val seq_xor (#a: Type) (#len: uint_size) (s1: lseq a len) (s2 : lseq a len) : seq a
+assume val array_xor (#a: Type) (#len: uint_size) (s1: lseq a len) (s2 : lseq a len) : lseq a len
 
 (**** Integers to arrays *)
 

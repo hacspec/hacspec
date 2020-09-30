@@ -6,9 +6,7 @@ open Hacspec.Lib
 open FStar.Mul
 
 let build_irreducible (p_1843 : uint_size) : seq pub_int128 =
-  let irr_1844 =
-    seq_new_ #((pub_int128)) #((pub_i128 0x0)) ((p_1843) + (usize 1))
-  in
+  let irr_1844 = seq_new_ (pub_i128 0x0) ((p_1843) + (usize 1)) in
   let irr_1844 = array_upd irr_1844 (usize 0) (- (pub_i128 0x1)) in
   let irr_1844 = array_upd irr_1844 (usize 1) (- (pub_i128 0x1)) in
   let irr_1844 = array_upd irr_1844 (p_1843) (pub_i128 0x1) in
@@ -118,9 +116,7 @@ let ntru_prime_653_decrypt
       (f_3_c_1873))
     (f_3_c_1873)
   in
-  let e_1876 =
-    seq_new_ #((pub_int128)) #((pub_i128 0x0)) (seq_len (f_3_c_1873))
-  in
+  let e_1876 = seq_new_ (pub_i128 0x0) (seq_len (f_3_c_1873)) in
   let (e_1876) =
     foldi (usize 0) (seq_len (e_1876)) (fun (i_1877, (e_1876)) ->
       let e_1876 =

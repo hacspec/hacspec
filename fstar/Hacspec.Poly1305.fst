@@ -19,9 +19,7 @@ type field_canvas = lseq (pub_uint8) (usize 272)
 type field_element = nat_mod 0x03fffffffffffffffffffffffffffffffb
 
 let encode_r (r_1865 : block) : field_element =
-  let r_128_1866 =
-    seq_from_slice #((uint8)) #(16) (r_1865) (usize 0) (blocksize)
-  in
+  let r_128_1866 = array_from_slice (r_1865) (usize 0) (blocksize) in
   let r_uint_1867 = uint128_from_le_bytes (r_128_1866) in
   let r_uint_1868 =
     (r_uint_1867) &. (secret (pub_u128 0xffffffc0ffffffc0ffffffc0fffffff))
@@ -31,8 +29,7 @@ let encode_r (r_1865 : block) : field_element =
 let encode (block_1869 : byte_seq) : field_element =
   let block_len_1870 = seq_len (block_1869) in
   let block_as_u128_1871 =
-    seq_from_slice #((uint8)) #(16) (block_1869) (usize 0) (
-      min (usize 16) (block_len_1870))
+    array_from_slice (block_1869) (usize 0) (min (usize 16) (block_len_1870))
   in
   let w_elem_1872 =
     nat_from_secret_literal (uint128_from_le_bytes (block_as_u128_1871))
@@ -58,19 +55,17 @@ let poly (m_1879 : byte_seq) (key_1880 : key_poly) : tag =
   let s_elem_1881 =
     nat_from_secret_literal (
       uint128_from_le_bytes (
-        seq_from_slice #((uint8)) #(16) (key_1880) (blocksize) (blocksize)))
+        array_from_slice (key_1880) (blocksize) (blocksize)))
   in
   let r_elem_1882 =
-    encode_r (
-      seq_from_slice_range #((uint8)) #(blocksize) (key_1880) (
-        (usize 0, blocksize)))
+    encode_r (array_from_slice_range (key_1880) ((usize 0, blocksize)))
   in
   let a_1883 = poly_inner (m_1879) (r_elem_1882) in
   let n_1884 = (a_1883) + (s_elem_1881) in
   let n_v_1885 = nat_to_public_byte_seq_le (n_1884) in
-  let tag_1886 = seq_new_ #((pub_uint8)) #((pub_u8 0x0)) #(blocksize) () in
+  let tag_1886 = array_new_ (pub_u8 0x0) (blocksize) in
   let (tag_1886) =
-    foldi (usize 0) (min (seq_len (tag_1886)) (seq_len (n_v_1885))) (fun (
+    foldi (usize 0) (min (array_len (tag_1886)) (seq_len (n_v_1885))) (fun (
         i_1887,
         (tag_1886)
       ) ->
