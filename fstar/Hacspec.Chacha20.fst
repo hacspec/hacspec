@@ -19,7 +19,7 @@ type key = lseq (uint8) (usize 32)
 let state_to_bytes (x_1871 : state) : state_bytes =
   let r_1872 = array_new_ (secret (pub_u8 0x8)) (64) in
   let (r_1872) =
-    foldi (usize 0) (array_len (x_1871)) (fun (i_1873, (r_1872)) ->
+    foldi (usize 0) (array_len (x_1871)) (fun i_1873 (r_1872) ->
       let bytes_1874 = uint32_to_be_bytes (array_index (x_1871) (i_1873)) in
       let r_1872 =
         array_upd r_1872 ((i_1873) * (usize 4)) (
@@ -140,13 +140,13 @@ let block_inner (key_1900 : key) (ctr_1901 : uint32) (iv_1902 : iv) : state =
   let st_1903 = block_init (key_1900) (ctr_1901) (iv_1902) in
   let state_1904 = st_1903 in
   let (state_1904) =
-    foldi (usize 0) (usize 10) (fun (i_1905, (state_1904)) ->
+    foldi (usize 0) (usize 10) (fun i_1905 (state_1904) ->
       let state_1904 = double_round (state_1904) in
       (state_1904))
     (state_1904)
   in
   let (state_1904) =
-    foldi (usize 0) (usize 16) (fun (i_1906, (state_1904)) ->
+    foldi (usize 0) (usize 16) (fun i_1906 (state_1904) ->
       let state_1904 =
         array_upd state_1904 (i_1906) (
           (array_index (state_1904) (i_1906)) +. (
@@ -164,12 +164,12 @@ let block (key_1907 : key) (ctr_1908 : uint32) (iv_1909 : iv) : state_bytes =
 let chacha (key_1911 : key) (iv_1912 : iv) (m_1913 : byte_seq) : byte_seq =
   let ctr_1914 = secret (pub_u32 0x1) in
   let blocks_out_1915 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_1913)) in
-  let (blocks_out_1915, ctr_1914) =
-    foldi (usize 0) (seq_num_chunks (m_1913) (usize 64)) (fun (
-        i_1916,
-        (blocks_out_1915, ctr_1914)
+  let (ctr_1914, blocks_out_1915) =
+    foldi (usize 0) (seq_num_chunks (m_1913) (usize 64)) (fun i_1916 (
+        ctr_1914,
+        blocks_out_1915
       ) ->
-      let (| block_len_1917, msg_block_1918|) =
+      let (block_len_1917, msg_block_1918) =
         seq_get_chunk (m_1913) (usize 64) (i_1916)
       in
       let key_block_1919 = block (key_1911) (ctr_1914) (iv_1912) in
@@ -177,6 +177,7 @@ let chacha (key_1911 : key) (iv_1912 : iv) (m_1913 : byte_seq) : byte_seq =
       let msg_block_padded_1921 =
         array_update_start (msg_block_padded_1920) (msg_block_1918)
       in
+      assume(Seq.length blocks_out_1915 = Seq.length m_1913);
       let blocks_out_1915 =
         seq_set_chunk (blocks_out_1915) (usize 64) (i_1916) (
           array_slice_range (
@@ -184,7 +185,7 @@ let chacha (key_1911 : key) (iv_1912 : iv) (m_1913 : byte_seq) : byte_seq =
             (usize 0, block_len_1917)))
       in
       let ctr_1914 = (ctr_1914) +. (secret (pub_u32 0x1)) in
-      (blocks_out_1915, ctr_1914))
-    (blocks_out_1915, ctr_1914)
+      (ctr_1914, blocks_out_1915))
+    (ctr_1914, blocks_out_1915)
   in
   blocks_out_1915

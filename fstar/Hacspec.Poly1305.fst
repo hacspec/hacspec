@@ -40,9 +40,7 @@ let encode (block_1869 : byte_seq) : field_element =
 let poly_inner (m_1874 : byte_seq) (r_1875 : field_element) : field_element =
   let acc_1876 = nat_from_literal (pub_u128 0x0) in
   let (acc_1876) =
-    foldi (usize 0) (seq_num_chunks (m_1874) (blocksize)) (fun (
-        i_1877,
-        (acc_1876)
+    foldi (usize 0) (seq_num_chunks (m_1874) (blocksize)) (fun i_1877 (acc_1876
       ) ->
       let (_, block_1878) = seq_get_chunk (m_1874) (blocksize) (i_1877) in
       let acc_1876 = ((acc_1876) + (encode (block_1878))) * (r_1875) in
@@ -65,9 +63,8 @@ let poly (m_1879 : byte_seq) (key_1880 : key_poly) : tag =
   let n_v_1885 = nat_to_public_byte_seq_le (n_1884) in
   let tag_1886 = array_new_ (pub_u8 0x0) (blocksize) in
   let (tag_1886) =
-    foldi (usize 0) (min (array_len (tag_1886)) (seq_len (n_v_1885))) (fun (
-        i_1887,
-        (tag_1886)
+    foldi (usize 0) (
+        min (array_len (tag_1886)) (seq_len (n_v_1885))) (fun i_1887 (tag_1886
       ) ->
       let tag_1886 =
         array_upd tag_1886 (i_1887) (array_index (n_v_1885) (i_1887))

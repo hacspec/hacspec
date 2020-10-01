@@ -96,7 +96,7 @@ assume val array_slice_range
   })
     : lseq a (snd start_fin - fst start_fin)
 
-assume val array_update_start (#a: Type) (#len: uint_size) (s: lseq a len) (#s_len: uint_size{s_len <= len}) (start_s: lseq a s_len) : lseq a len
+assume val array_update_start (#a: Type) (#len: uint_size) (s: lseq a len) (start_s: seq a{Seq.length start_s <= len}) : lseq a len
 
 let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 
@@ -111,22 +111,43 @@ let seq_len (#a: Type) (s: seq a) = Seq.length s
 
 assume val seq_num_chunks (#a: Type) (s: seq a) (chunk_len: uint_size) : uint_size
 
+assume val seq_chunk_len
+  (#a: Type)
+  (s: seq a)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  : Tot (out_len:uint_size{out_len <= chunk_len})
+
+assume val seq_chunk_same_len_same_chunk_len
+  (#a: Type)
+  (s1 s2: seq a)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  : Lemma
+    (requires (LSeq.length s1 = LSeq.length s2))
+    (ensures (seq_chunk_len s1 chunk_len chunk_num = seq_chunk_len s2 chunk_len chunk_num))
+    [SMTPat (seq_chunk_len s1 chunk_len chunk_num); SMTPat (seq_chunk_len s2 chunk_len chunk_num)]
+
 assume val seq_get_chunk
   (#a: Type)
   (s: seq a)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
-  : Tot (x:uint_size{x <= chunk_len} & lseq a x)
+  : Pure (uint_size & seq a)
+    (requires (True))
+    (ensures (fun (out_len, chunk) ->
+      out_len = seq_chunk_len s chunk_len chunk_num /\ LSeq.length chunk = out_len
+    ))
 
 assume val seq_set_chunk
   (#a: Type)
   (s: seq a)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
-  (chunk: lseq a chunk_len)
+  (chunk: seq a)
     : Pure (seq a)
-      (requires (True))
-      (ensures (fun out -> Seq.length out == Seq.length s))
+      (requires (LSeq.length chunk = seq_chunk_len s chunk_len chunk_num))
+      (ensures (fun out -> LSeq.length out = LSeq.length s))
 
 (**** Numeric operations *)
 
@@ -138,7 +159,7 @@ assume val uint128_from_le_bytes (input: lseq uint8 (usize 16)) : uint128
 
 (*** Loops *)
 
-assume val foldi (#acc: Type) (lo: uint_size) (hi: uint_size) (f: ((i:uint_size{i < hi}) * acc) -> acc) (init: acc) : acc
+assume val foldi (#acc: Type) (lo: uint_size) (hi: uint_size) (f: (i:uint_size{i < hi}) -> acc -> acc) (init: acc) : acc
 
 
 (*** Nats *)

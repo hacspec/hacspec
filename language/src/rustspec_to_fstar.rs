@@ -730,7 +730,6 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
             let mut_tuple =
                 make_tuple(mutated_info.vars.iter().map(|i| translate_ident(i.clone())));
-            let closure_tuple = make_tuple(vec![translate_ident(x.clone()), mut_tuple.clone()]);
             let loop_expr = RcDoc::as_string("foldi")
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e1.clone(), typ_dict)))
@@ -739,7 +738,9 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(fun"))
                 .append(RcDoc::space())
-                .append(closure_tuple)
+                .append(translate_ident(x.clone()))
+                .append(RcDoc::space())
+                .append(mut_tuple.clone())
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("->"))
                 .append(RcDoc::line())
