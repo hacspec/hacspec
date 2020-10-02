@@ -80,6 +80,13 @@ let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < le
 
 let array_upd (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) (new_v: a) : lseq a len = LSeq.upd s i new_v
 
+let array_from_seq
+  (#a: Type)
+  (out_len:uint_size)
+  (input: seq a{Seq.length input = out_len})
+    : lseq a out_len
+  = input
+
 assume val array_from_slice
   (#a: Type)
   (input: seq a)
@@ -114,6 +121,13 @@ let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
   LSeq.create len init
 
 let seq_len (#a: Type) (s: seq a) : uint_size = Seq.length s
+
+assume val seq_slice
+  (#a: Type)
+  (s: seq a)
+  (start: uint_size)
+  (len: uint_size{start + len < LSeq.length s})
+  : lseq a len
 
 (**** Chunking *)
 
@@ -180,10 +194,10 @@ let (+%) #n a b = (a + b) % n
 val ( *% ) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let ( *% ) #n a b = (a * b) % n
 
-assume val nat_from_secret_literal (x:uint128) : n:nat{v x == n}
+assume val nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n}
 
-assume val nat_from_literal (x:pub_uint128) : n:nat{v x == n}
+assume val nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n}
 
-assume val nat_to_public_byte_seq_le (n:nat) : seq pub_uint8
+assume val nat_to_public_byte_seq_le (m: pos) (n:nat_mod m) : seq pub_uint8
 
-let nat_pow2 (x: nat) : nat = pow2 x
+let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x

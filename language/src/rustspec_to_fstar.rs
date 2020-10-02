@@ -15,6 +15,8 @@ const SEQ_MODULE: &'static str = "seq";
 
 const ARRAY_MODULE: &'static str = "array";
 
+const NAT_MODULE: &'static str = "nat";
+
 fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
     typ: Option<RcDoc<'a, ()>>,
@@ -473,7 +475,7 @@ fn translate_prefix_for_func_name<'a>(
         BaseTyp::Variable(_) => panic!(), // shoult not happen
         BaseTyp::Tuple(_) => panic!(),    // should not happen
         BaseTyp::NaturalInteger(_, modulo) => (
-            RcDoc::as_string("nat"),
+            RcDoc::as_string(NAT_MODULE),
             FuncPrefix::NatMod(modulo.0.clone()),
         ),
     }
@@ -506,22 +508,19 @@ fn translate_func_name<'a>(
                 translate_prefix_for_func_name(prefix.clone(), typ_dict);
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
-            // We add the cell type for seqs
-            // match (
-            //     format!("{}", module_name.pretty(0)).as_str(),
-            //     format!("{}", func_ident.pretty(0)).as_str(),
-            // ) {
-            //     (ARRAY_MODULE, "new_") => {
-            //         match &prefix_info {
-            //             FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
-            //                 additional_args.push(make_paren(translate_base_typ(inner_ty.clone())));
-            //             }
-            //             _ => panic!(), // should not happen
-            //         }
-            //     }
-            //     _ => (),
-            // };
-            // Then the default value
+            // We add the modulo value for nat_mod
+            match format!("{}", module_name.pretty(0)).as_str() {
+                NAT_MODULE => {
+                    match &prefix_info {
+                        FuncPrefix::NatMod(modulo) => {
+                            additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+                        }
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            };
+            // Then the default value for seqs
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
@@ -542,7 +541,7 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (ARRAY_MODULE, "new_") => {
+                (ARRAY_MODULE, "new_") | (ARRAY_MODULE, "from_seq") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
                             additional_args.push(translate_ident_str(s.clone()))
