@@ -1,5 +1,7 @@
 module Hacspec.Lib
 
+open FStar.Mul
+
 (*** Integers *)
 
 include Lib.IntTypes
@@ -55,11 +57,11 @@ assume val uint32_rotate_left (u: uint32) (s: uint_size) : uint32
 
 module LSeq = Lib.Sequence
 
-type lseq (a: Type) (len: uint_size) = LSeq.lseq a len
+let lseq (a: Type) (len: uint_size) = LSeq.lseq a len
 
-type seq (a: Type)  = s:LSeq.seq a{range (LSeq.length s) U32}
+let seq (a: Type) = s:LSeq.seq a{range (LSeq.length s) U32}
 
-type byte_seq = seq uint8
+unfold let byte_seq = seq uint8
 
 assume val array_from_list (#a: Type) (l: list a{List.Tot.length l <= max_size_t}) : lseq a (List.Tot.length l)
 
@@ -78,12 +80,18 @@ let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < le
 
 let array_upd (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) (new_v: a) : lseq a len = LSeq.upd s i new_v
 
+assume val array_from_slice
+  (#a: Type)
+  (input: seq a)
+  (start: uint_size)
+  (slice_len: uint_size{start + slice_len <= LSeq.length input})
+    : lseq a slice_len
+
 assume val array_from_slice_range
   (#a: Type)
-  (#len: uint_size)
-  (input: lseq a len)
+  (input: seq a)
   (start_fin: (uint_size & uint_size){
-     fst start_fin >= 0 /\ snd start_fin <= len /\ snd start_fin >= fst start_fin
+     fst start_fin >= 0 /\ snd start_fin <= LSeq.length input /\ snd start_fin >= fst start_fin
    })
     : lseq a (snd start_fin - fst start_fin)
 
@@ -105,7 +113,7 @@ let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
   LSeq.create len init
 
-let seq_len (#a: Type) (s: seq a) = Seq.length s
+let seq_len (#a: Type) (s: seq a) : uint_size = Seq.length s
 
 (**** Chunking *)
 
@@ -155,7 +163,7 @@ assume val array_xor (#a: Type) (#len: uint_size) (s1: lseq a len) (s2 : lseq a 
 
 (**** Integers to arrays *)
 
-assume val uint128_from_le_bytes (input: lseq uint8 (usize 16)) : uint128
+assume val uint128_from_le_bytes (input: seq uint8{LSeq.length input <= 16}) : uint128
 
 (*** Loops *)
 
@@ -165,6 +173,12 @@ assume val foldi (#acc: Type) (lo: uint_size) (hi: uint_size) (f: (i:uint_size{i
 (*** Nats *)
 
 let nat_mod (n: nat) = x:nat{x < n}
+
+val (+%) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
+let (+%) #n a b = (a + b) % n
+
+val ( *% ) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
+let ( *% ) #n a b = (a * b) % n
 
 assume val nat_from_secret_literal (x:uint128) : n:nat{v x == n}
 

@@ -165,7 +165,8 @@ let chacha (key_1911 : key) (iv_1912 : iv) (m_1913 : byte_seq) : byte_seq =
   let ctr_1914 = secret (pub_u32 0x1) in
   let blocks_out_1915 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_1913)) in
   let (ctr_1914, blocks_out_1915) =
-    foldi (usize 0) (seq_num_chunks (m_1913) (usize 64)) (fun i_1916 (
+    foldi #(_ & lseq uint8 (seq_len (m_1913)))
+      (usize 0) (seq_num_chunks (m_1913) (usize 64)) (fun i_1916 (
         ctr_1914,
         blocks_out_1915
       ) ->
@@ -177,7 +178,6 @@ let chacha (key_1911 : key) (iv_1912 : iv) (m_1913 : byte_seq) : byte_seq =
       let msg_block_padded_1921 =
         array_update_start (msg_block_padded_1920) (msg_block_1918)
       in
-      assume(Seq.length blocks_out_1915 = Seq.length m_1913);
       let blocks_out_1915 =
         seq_set_chunk (blocks_out_1915) (usize 64) (i_1916) (
           array_slice_range (
