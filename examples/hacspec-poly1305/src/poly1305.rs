@@ -7,7 +7,8 @@ bytes!(KeyPoly, 32);
 const BLOCKSIZE: usize = 16;
 
 // These are type aliases for convenience
-array!(Block, BLOCKSIZE, U8, BlockIdx);
+array!(Block, BLOCKSIZE, U8);
+array!(FieldCanvasBlock, 17, U8, FieldCanvasBlockIdx);
 
 // These are actual types; fixed-length arrays.
 public_bytes!(Tag, BLOCKSIZE);
@@ -39,7 +40,7 @@ pub fn clamp(r: U128) -> FieldElement {
 }
 
 /// Convert a block (part of the byte sequence) to a `FieldElement`.
-pub fn encode(block_uint: U128, len: BlockIdx) -> FieldElement {
+pub fn encode(block_uint: U128, len: FieldCanvasBlockIdx) -> FieldElement {
     let w_elem = FieldElement::from_secret_literal(block_uint);
     let l_elem = FieldElement::pow2(8 * len);
     w_elem + l_elem

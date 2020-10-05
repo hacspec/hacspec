@@ -94,6 +94,13 @@ assume val array_from_slice
   (slice_len: uint_size{start + slice_len <= LSeq.length input})
     : lseq a slice_len
 
+assume val array_slice
+  (#a: Type)
+  (input: seq a)
+  (start: uint_size)
+  (slice_len: uint_size{start + slice_len <= LSeq.length input})
+    : lseq a slice_len
+
 assume val array_from_slice_range
   (#a: Type)
   (input: seq a)
