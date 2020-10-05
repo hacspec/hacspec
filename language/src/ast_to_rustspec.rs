@@ -1144,32 +1144,47 @@ fn translate_natural_integer_decl(
     match &*call.args {
         MacArgs::Delimited(_, _, tokens) => {
             let mut it = tokens.trees();
-            let (first_arg, second_arg, third_arg, fourth_arg, fifth_arg, sixth_arg, seventh_arg) =
-                {
-                    let first_arg = it.next().map_or(Err(()), |x| Ok(x));
-                    let second_arg = it.next().map_or(Err(()), |x| Ok(x));
-                    let third_arg = it.next().map_or(Err(()), |x| Ok(x));
-                    let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                    let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                    let sixth_arg = it.next().map_or(Err(()), |x| Ok(x));
-                    let seventh_arg = it.next().map_or(Err(()), |x| Ok(x));
-                    Ok((
-                        first_arg?,
-                        second_arg?,
-                        third_arg?,
-                        fourth_arg?,
-                        fifth_arg?,
-                        sixth_arg?,
-                        seventh_arg?,
-                    ))
-                }?;
+            let (
+                first_arg,
+                second_arg,
+                third_arg,
+                fourth_arg,
+                fifth_arg,
+                sixth_arg,
+                seventh_arg,
+                eight_arg,
+                ninth_arg,
+            ) = {
+                let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let fourth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let fifth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let sixth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let seventh_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let eight_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let ninth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                Ok((
+                    first_arg?,
+                    second_arg?,
+                    third_arg?,
+                    fourth_arg?,
+                    fifth_arg?,
+                    sixth_arg?,
+                    seventh_arg?,
+                    eight_arg?,
+                    ninth_arg?,
+                ))
+            }?;
             let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
             check_for_comma(sess, &second_arg)?;
             let (canvas_typ_ident, _) = check_for_ident(sess, &third_arg)?;
             check_for_comma(sess, &fourth_arg)?;
-            let canvas_size = check_for_usize(sess, &fifth_arg)?;
+            let (idx_ident, _) = check_for_ident(sess, &fifth_arg)?;
             check_for_comma(sess, &sixth_arg)?;
-            let modulo_string = match &seventh_arg {
+            let canvas_size = check_for_usize(sess, &seventh_arg)?;
+            check_for_comma(sess, &eight_arg)?;
+            let modulo_string = match &ninth_arg {
                 TokenTree::Token(tok) => match tok.kind {
                     TokenKind::Literal(lit) => match lit.kind {
                         TokenLitKind::Str => {
@@ -1197,6 +1212,7 @@ fn translate_natural_integer_decl(
                 (ItemTranslationResult::Item(Item::NaturalIntegerDecl(
                     typ_ident,
                     canvas_typ_ident,
+                    idx_ident,
                     secrecy,
                     canvas_size,
                     modulo_string,

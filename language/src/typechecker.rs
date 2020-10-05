@@ -2134,7 +2134,14 @@ fn typecheck_item(
                 typ_dict.clone(),
             ))
         }
-        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
+        Item::NaturalIntegerDecl(
+            typ_ident,
+            canvas_typ_ident,
+            idx_typ_ident,
+            secrecy,
+            canvas_size,
+            mod_string,
+        ) => {
             let (_, top_level_context, typ_dict) = typecheck_item(
                 sess,
                 &Item::ArrayDecl(
@@ -2186,6 +2193,19 @@ fn typecheck_item(
                         ),
                     ),
                     DictEntry::NaturalInteger,
+                ),
+            );
+            let typ_dict = typ_dict.update(
+                match &idx_typ_ident.0 {
+                    Ident::Original(s) => s.clone(),
+                    Ident::Hacspec(_, _) => panic!(),
+                },
+                (
+                    (
+                        (Borrowing::Consumed, (idx_typ_ident.1).clone()),
+                        (BaseTyp::Usize, (idx_typ_ident.1).clone()),
+                    ),
+                    DictEntry::Alias,
                 ),
             );
             Ok((i.clone(), top_level_context, typ_dict))

@@ -275,8 +275,9 @@ pub enum Item {
     ),
     ConstDecl(Spanned<Ident>, Spanned<BaseTyp>, Spanned<Expression>),
     NaturalIntegerDecl(
-        Spanned<Ident>,
-        Spanned<Ident>,
+        Spanned<Ident>, // Element type name
+        Spanned<Ident>, // Canvas array type name
+        Spanned<Ident>, // Canvas array idx type name
         Secrecy,
         Spanned<Expression>,
         Spanned<String>,

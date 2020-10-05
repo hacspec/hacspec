@@ -46,12 +46,12 @@ fn run_test(
 }
 
 #[test]
-fn simple_test() -> Result<(), Box<dyn std::error::Error>> {
+fn run_simple_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test("tests/test1.rs", Some("tests/Test1.fst"), vec![])
 }
 
 #[test]
-fn chacha_simplified_test() -> Result<(), Box<dyn std::error::Error>> {
+fn run_chacha_simplified_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test("tests/test_chacha.rs", Some("tests/TestChacha.fst"), vec![])
 }
 
@@ -65,7 +65,7 @@ fn chacha20_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
+fn run_poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "../examples/hacspec-poly1305/src/poly1305.rs",
         Some("../fstar/Hacspec.Poly1305.fst"),
@@ -74,7 +74,7 @@ fn poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
+fn run_chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "../examples/hacspec-chacha20poly1305/src/chacha20poly1305.rs",
         None,
@@ -83,7 +83,7 @@ fn chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn ntru_demo_test() -> Result<(), Box<dyn std::error::Error>> {
+fn run_ntru_demo_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "../examples/hacspec-ntru-demo/src/ntru.rs",
         Some("../fstar/Hacspec.NtruDemo.fst"),

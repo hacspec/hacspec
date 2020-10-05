@@ -767,8 +767,10 @@ macro_rules! signed_integer {
 
 #[macro_export]
 macro_rules! nat_mod {
-    ($name:ident,$base:ident,$bits:literal,$n:literal) => {
+    ($name:ident,$base:ident,$baseidx:ident,$bits:literal,$n:literal) => {
         abstract_nat_mod!($name, $base, $bits, $n);
+
+        pub type $baseidx = usize;
 
         impl NumericCopy for $name {}
         impl Integer for $name {
@@ -1015,9 +1017,10 @@ macro_rules! nat_mod {
 
 #[macro_export]
 macro_rules! public_nat_mod {
-    ($name:ident,$base:ident,$bits:literal,$n:literal) => {
+    ($name:ident, $base:ident, $baseidx:ident, $bits:literal, $n:literal) => {
         unsigned_public_integer!($base, $bits);
         abstract_public_modular_integer!($name, $base, $base::from_hex($n));
+        pub type $baseidx = usize;
 
         // FIXME: check if we really need this and maybe move this somewhere.
         impl $name {

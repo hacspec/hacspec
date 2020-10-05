@@ -808,7 +808,7 @@ macro_rules! array {
     };
     ($name:ident, $l:expr, U8, $idx: ident) => {
         _implement_secret_u8_array!($name, $l);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, U16) => {
         _secret_array!($name, $l, U16, u16);
@@ -817,7 +817,7 @@ macro_rules! array {
     ($name:ident, $l:expr, U16, $idx: ident) => {
         _secret_array!($name, $l, U16, u16);
         _implement_numeric_unsigned_secret!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, U32) => {
         _secret_array!($name, $l, U32, u32);
@@ -826,7 +826,7 @@ macro_rules! array {
     ($name:ident, $l:expr, U32, $idx: ident) => {
         _secret_array!($name, $l, U32, u32);
         _implement_numeric_unsigned_secret!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, U64) => {
         _secret_array!($name, $l, U64, u64);
@@ -835,7 +835,7 @@ macro_rules! array {
     ($name:ident, $l:expr, U64, $idx: ident) => {
         _secret_array!($name, $l, U64, u64);
         _implement_numeric_unsigned_secret!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, U128) => {
         _secret_array!($name, $l, U128, u128);
@@ -844,14 +844,14 @@ macro_rules! array {
     ($name:ident, $l:expr, U128, $idx: ident) => {
         _secret_array!($name, $l, U128, u128);
         _implement_numeric_unsigned_secret!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, u8) => {
         _implement_public_u8_array!($name, $l);
     };
     ($name:ident, $l:expr, u8, $idx: ident) => {
         _implement_public_u8_array!($name, $l);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, u16) => {
         _public_array!($name, $l, u16);
@@ -860,7 +860,7 @@ macro_rules! array {
     ($name:ident, $l:expr, u16, $idx: ident) => {
         _public_array!($name, $l, u16);
         _implement_numeric_unsigned_public!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, u32) => {
         _public_array!($name, $l, u32);
@@ -869,7 +869,7 @@ macro_rules! array {
     ($name:ident, $l:expr, u32, $idx: ident) => {
         _public_array!($name, $l, u32);
         _implement_numeric_unsigned_public!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, u64) => {
         _public_array!($name, $l, u64);
@@ -878,7 +878,7 @@ macro_rules! array {
     ($name:ident, $l:expr, u64, $idx: ident) => {
         _public_array!($name, $l, u64);
         _implement_numeric_unsigned_public!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, u128) => {
         _public_array!($name, $l, u128);
@@ -887,14 +887,14 @@ macro_rules! array {
     ($name:ident, $l:expr, u128, $idx: ident) => {
         _public_array!($name, $l, u128);
         _implement_numeric_unsigned_public!($name);
-        type $idx = usize;
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, $t:ty) => {
         _public_array!($name, $l, $t);
     };
     ($name:ident, $l:expr, $t:ty, $idx: ident) => {
         _public_array!($name, $l, $t);
-        type $idx = usize;
+        pub type $idx = usize;
     };
 }
 

@@ -6,6 +6,7 @@ use crate::ec::arithmetic::{self, Affine};
 public_nat_mod!(
     FieldElement,
     FieldCanvas,
+    FieldCanvasIdx,
     384,
     "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF"
 );
