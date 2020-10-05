@@ -59,7 +59,19 @@ module LSeq = Lib.Sequence
 
 let lseq (a: Type) (len: uint_size) = LSeq.lseq a len
 
-let seq (a: Type) = s:LSeq.seq a{range (LSeq.length s) U32}
+let seq (a: Type) = LSeq.seq a
+//let seq (a: Type) = s:LSeq.seq a{range (LSeq.length s) U32}
+
+//let seq_len (#a: Type) (s: seq a) : uint_size = Seq.length s
+let seq_len (#a: Type) (s: seq a) : nat = Seq.length s
+
+let nseq (a: Type) (len: nat) = s:seq a{seq_len s == len}
+
+let lseq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
+  LSeq.create len init
+
+let seq_new_ (#a: Type) (init:a) (len: nat) : nseq a len =
+  Seq.create len init
 
 unfold let byte_seq = seq uint8
 
@@ -124,11 +136,6 @@ let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 
 (**** Seq manipulation *)
 
-let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
-  LSeq.create len init
-
-let seq_len (#a: Type) (s: seq a) : uint_size = Seq.length s
-
 assume val seq_slice
   (#a: Type)
   (s: seq a)
@@ -170,13 +177,14 @@ assume val seq_get_chunk
 
 assume val seq_set_chunk
   (#a: Type)
-  (s: seq a)
+  (#len:nat)
+  (s: nseq a len)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
-  (chunk: seq a)
-    : Pure (seq a)
+  (chunk: seq a )
+    : Pure (nseq a len)
       (requires (LSeq.length chunk = seq_chunk_len s chunk_len chunk_num))
-      (ensures (fun out -> LSeq.length out = LSeq.length s))
+      (ensures (fun out -> True))
 
 (**** Numeric operations *)
 
