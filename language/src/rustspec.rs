@@ -97,7 +97,7 @@ pub enum BaseTyp {
     Named(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(HacspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
-    NaturalInteger(Secrecy, Spanned<String>),
+    NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
 impl fmt::Display for BaseTyp {
@@ -141,8 +141,8 @@ impl fmt::Display for BaseTyp {
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
-            BaseTyp::NaturalInteger(sec, modulo) => {
-                write!(f, "nat[{:?}][modulo {}]", sec, modulo.0)
+            BaseTyp::NaturalInteger(sec, modulo, bits) => {
+                write!(f, "nat[{:?}][modulo {}][bits {}]", sec, modulo.0, bits.0)
             }
         }
     }

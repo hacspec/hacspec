@@ -198,6 +198,8 @@ assume val nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v 
 
 assume val nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n}
 
-assume val nat_to_public_byte_seq_le (m: pos) (n:nat_mod m) : seq pub_uint8
+let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
+  let n' = n % (pow2 (8 * len)) in
+  Lib.ByteSequence.nat_to_bytes_le len n'
 
 let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x

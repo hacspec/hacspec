@@ -183,7 +183,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
-        BaseTyp::NaturalInteger(_secrecy, modulo) => RcDoc::as_string("nat_mod")
+        BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
     }
@@ -337,11 +337,10 @@ fn translate_binop<'a, 'b>(
             match typ_dict.get(ident) {
                 Some((inner_ty, entry)) => match entry {
                     DictEntry::NaturalInteger => match op {
-                        BinOpKind::Sub => return RcDoc::as_string("-"),
-                        BinOpKind::Add => return RcDoc::as_string("+"),
-                        BinOpKind::Mul => return RcDoc::as_string("*"),
-                        BinOpKind::Div => return RcDoc::as_string("/"),
-                        BinOpKind::Rem => return RcDoc::as_string("%"),
+                        BinOpKind::Sub => return RcDoc::as_string("-%"),
+                        BinOpKind::Add => return RcDoc::as_string("+%"),
+                        BinOpKind::Mul => return RcDoc::as_string("*%"),
+                        BinOpKind::Div => return RcDoc::as_string("/%"),
                         _ => unimplemented!(),
                     },
                     DictEntry::Array | DictEntry::Alias => {
@@ -427,7 +426,7 @@ enum FuncPrefix {
     Regular,
     Array(ArraySize, BaseTyp),
     Seq(BaseTyp),
-    NatMod(String),
+    NatMod(String, usize), // Modulo value, number of bits for the encoding,
 }
 
 fn translate_prefix_for_func_name<'a>(
@@ -474,9 +473,9 @@ fn translate_prefix_for_func_name<'a>(
         }
         BaseTyp::Variable(_) => panic!(), // shoult not happen
         BaseTyp::Tuple(_) => panic!(),    // should not happen
-        BaseTyp::NaturalInteger(_, modulo) => (
+        BaseTyp::NaturalInteger(_, modulo, bits) => (
             RcDoc::as_string(NAT_MODULE),
-            FuncPrefix::NatMod(modulo.0.clone()),
+            FuncPrefix::NatMod(modulo.0.clone(), bits.0.clone()),
         ),
     }
 }
@@ -512,9 +511,23 @@ fn translate_func_name<'a>(
             match format!("{}", module_name.pretty(0)).as_str() {
                 NAT_MODULE => {
                     match &prefix_info {
-                        FuncPrefix::NatMod(modulo) => {
+                        FuncPrefix::NatMod(modulo, _bits) => {
                             additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
                         }
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            };
+            // ANd the encoding length for certain nat_mod related function
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                (NAT_MODULE, "to_public_byte_seq_le") => {
+                    match &prefix_info {
+                        FuncPrefix::NatMod(_, encoding_bits) => additional_args
+                            .push(RcDoc::as_string(format!("{}", (encoding_bits + 7) / 8))),
                         _ => panic!(), // should not happen
                     }
                 }

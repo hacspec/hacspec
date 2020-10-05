@@ -100,7 +100,7 @@ fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
         BaseTyp::Named((Ident::Hacspec(_, _), _), _) => panic!(), // should not happen
         BaseTyp::Variable(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t, typ_dict)),
-        BaseTyp::NaturalInteger(_, _) => true,
+        BaseTyp::NaturalInteger(_, _, _) => true,
     }
 }
 
@@ -815,7 +815,10 @@ fn typecheck_expression(
                             *span,
                             format!(
                                 "wrong types of binary operators, left is {}{} while right is {}{}",
-                                t1.0.0, t1.1.0, t2.0.0, t2.1.0
+                                (t1.0).0,
+                                (t1.1).0,
+                                (t2.0).0,
+                                (t2.1).0
                             )
                             .as_str(),
                         );
@@ -2162,9 +2165,23 @@ fn typecheck_item(
                 },
                 (
                     (
-                        (Borrowing::Consumed, typ_ident.1.clone()),
+                        (Borrowing::Consumed, (typ_ident.1).clone()),
                         (
-                            BaseTyp::NaturalInteger(secrecy.clone(), mod_string.clone()),
+                            BaseTyp::NaturalInteger(
+                                secrecy.clone(),
+                                mod_string.clone(),
+                                match &canvas_size.0 {
+                                    Expression::Lit(Literal::Usize(size)) => {
+                                        (size.clone(), (canvas_size.1).clone())
+                                    }
+                                    _ => {
+                                        sess.span_rustspec_err(
+                                            (canvas_size.1).clone(), "the size of the natural integer encoding has to be a usize literal"
+                                        );
+                                        return Err(())
+                                    }
+                                },
+                            ),
                             typ_ident.1.clone(),
                         ),
                     ),

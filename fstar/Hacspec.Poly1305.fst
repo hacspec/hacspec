@@ -43,11 +43,12 @@ let encode (block_uint_1869 : uint128) (len_1870 : block_idx) : field_element =
   let l_elem_1872 =
     nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (len_1870))
   in
-  (w_elem_1871) + (l_elem_1872)
+  (w_elem_1871) +% (l_elem_1872)
 
 let num_to_16_le_bytes (a_1873 : field_element) : tag =
   let n_v_1874 =
-    nat_to_public_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) (a_1873)
+    nat_to_public_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) (17) (
+      a_1873)
   in
   array_from_seq (blocksize) (seq_slice (n_v_1874) (usize 0) (blocksize))
 
@@ -71,10 +72,10 @@ let poly (m_1875 : byte_seq) (key_1876 : key_poly) : tag =
       in
       let block_uint_1885 = le_bytes_to_num (block_1884) in
       let n_1886 = encode (block_uint_1885) (len_1883) in
-      let a_1881 = (a_1881) + (n_1886) in
-      let a_1881 = (r_1878) * (a_1881) in
+      let a_1881 = (a_1881) +% (n_1886) in
+      let a_1881 = (r_1878) *% (a_1881) in
       (a_1881))
     (a_1881)
   in
-  let a_1887 = (a_1881) + (s_1880) in
+  let a_1887 = (a_1881) +% (s_1880) in
   num_to_16_le_bytes (a_1887)
