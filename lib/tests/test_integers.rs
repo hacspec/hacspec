@@ -163,13 +163,16 @@ generate_test!(I128, test_I128_integer, -1, 0, compare_secret);
 public_nat_mod!(
     PublicP256Elem,
     PublicP256Canvas,
+    PublicP256CanvasIdx,
     256,
     "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 generate_test!(
     PublicP256Elem,
     test_PublicNatMod_integer,
-    PublicP256Elem::from_hex_string(&"0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string()),
+    PublicP256Elem::from_hex_string(
+        &"0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff".to_string()
+    ),
     PublicP256Elem::ZERO(),
     assert_eq
 );
@@ -178,13 +181,18 @@ generate_test!(
 nat_mod!(
     P256Elem,
     P256Canvas,
+    P256CanvasIdx,
     256,
     "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 generate_test!(
     P256Elem,
     test_NatMod_integer,
-    BigInt::from_str_radix("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16).unwrap(),
+    BigInt::from_str_radix(
+        "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        16
+    )
+    .unwrap(),
     BigInt::from(0),
     compare_secret
 );

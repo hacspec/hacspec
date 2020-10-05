@@ -41,7 +41,13 @@ fn test_signed_integer() {
 
 #[test]
 fn test_public_nat_mod() {
-    public_nat_mod!(Elem, P256Canvas, 256, "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff");
+    public_nat_mod!(
+        Elem,
+        P256Canvas,
+        P256CanvasIdx,
+        256,
+        "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+    );
     let g_x = Elem::from_hex("6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
     let g_y = Elem::from_hex("4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
     let _g_g = g_x * g_y;
@@ -49,7 +55,13 @@ fn test_public_nat_mod() {
 
 #[test]
 fn test_secret_nat_mod() {
-    nat_mod!(Elem, P256Canvas, 256, "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff");
+    nat_mod!(
+        Elem,
+        P256Canvas,
+        P256CanvasIdx,
+        256,
+        "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+    );
     let g_x = Elem::from_hex("6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
     let g_y = Elem::from_hex("4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
     let _g_g = g_x * g_y;
