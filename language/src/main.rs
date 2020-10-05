@@ -47,11 +47,11 @@ const ITEM_LIST_LOCATION: &'static str = "../allowed_item_list.json";
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
     ErrorOutputType::HumanReadable(HumanReadableErrorType::Default(ColorConfig::Auto));
 
-trait HacspectErrorEmitter {
+trait HacspecErrorEmitter {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str);
 }
 
-impl HacspectErrorEmitter for Session {
+impl HacspecErrorEmitter for Session {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str) {
         self.span_err_with_code(s, msg, DiagnosticId::Error(String::from("Hacspec")));
     }

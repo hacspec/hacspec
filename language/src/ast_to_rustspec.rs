@@ -15,7 +15,7 @@ use rustc_session::Session;
 use rustc_span::{symbol, Span};
 
 use crate::rustspec::*;
-use crate::HacspectErrorEmitter;
+use crate::HacspecErrorEmitter;
 
 type ArrayTypes = HashSet<String>;
 

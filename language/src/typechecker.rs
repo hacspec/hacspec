@@ -1,5 +1,5 @@
 use crate::rustspec::*;
-use crate::HacspectErrorEmitter;
+use crate::HacspecErrorEmitter;
 
 use hacspec_sig;
 use im::{HashMap, HashSet};
