@@ -105,7 +105,7 @@
 <span class="comment">// Import hacspec and all needed definitions.</span>
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 
-<span class="macro">array</span><span class="macro">!</span>(<span class="ident">State</span>, <span class="number">16</span>, <span class="ident">U32</span>);
+<span class="macro">array</span><span class="macro">!</span>(<span class="ident">State</span>, <span class="number">16</span>, <span class="ident">U32</span>, <span class="ident">type_for_indexes</span>: <span class="ident">StateIdx</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">StateBytes</span>, <span class="number">64</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">IV</span>, <span class="number">12</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Key</span>, <span class="number">32</span>);
@@ -122,7 +122,7 @@
     <span class="ident">r</span>
 }
 
-<span class="kw">fn</span> <span class="ident">line</span>(<span class="ident">a</span>: <span class="ident">u32</span>, <span class="ident">b</span>: <span class="ident">u32</span>, <span class="ident">d</span>: <span class="ident">u32</span>, <span class="ident">s</span>: <span class="ident">usize</span>, <span class="ident">m</span>: <span class="ident">State</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">State</span> {
+<span class="kw">fn</span> <span class="ident">line</span>(<span class="ident">a</span>: <span class="ident">StateIdx</span>, <span class="ident">b</span>: <span class="ident">StateIdx</span>, <span class="ident">d</span>: <span class="ident">StateIdx</span>, <span class="ident">s</span>: <span class="ident">usize</span>, <span class="ident">m</span>: <span class="ident">State</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">State</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">m</span>;
     <span class="comment">// TODO: we can&#39;t write += or ^= here right now :(</span>
     <span class="ident">state</span>[<span class="ident">a</span>] <span class="op">=</span> <span class="ident">state</span>[<span class="ident">a</span>] <span class="op">+</span> <span class="ident">state</span>[<span class="ident">b</span>];
@@ -131,7 +131,7 @@
     <span class="ident">state</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">quarter_round</span>(<span class="ident">a</span>: <span class="ident">u32</span>, <span class="ident">b</span>: <span class="ident">u32</span>, <span class="ident">c</span>: <span class="ident">u32</span>, <span class="ident">d</span>: <span class="ident">u32</span>, <span class="ident">state</span>: <span class="ident">State</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">State</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">quarter_round</span>(<span class="ident">a</span>: <span class="ident">StateIdx</span>, <span class="ident">b</span>: <span class="ident">StateIdx</span>, <span class="ident">c</span>: <span class="ident">StateIdx</span>, <span class="ident">d</span>: <span class="ident">StateIdx</span>, <span class="ident">state</span>: <span class="ident">State</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">State</span> {
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">line</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">d</span>, <span class="number">16</span>, <span class="ident">state</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">line</span>(<span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">b</span>, <span class="number">12</span>, <span class="ident">state</span>);
     <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">line</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">d</span>, <span class="number">8</span>, <span class="ident">state</span>);
@@ -139,15 +139,15 @@
 }
 
 <span class="kw">fn</span> <span class="ident">double_round</span>(<span class="ident">state</span>: <span class="ident">State</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">State</span> {
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">0u32</span>, <span class="number">4u32</span>, <span class="number">8u32</span>, <span class="number">12u32</span>, <span class="ident">state</span>);
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">1u32</span>, <span class="number">5u32</span>, <span class="number">9u32</span>, <span class="number">13u32</span>, <span class="ident">state</span>);
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">2u32</span>, <span class="number">6u32</span>, <span class="number">10u32</span>, <span class="number">14u32</span>, <span class="ident">state</span>);
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">3u32</span>, <span class="number">7u32</span>, <span class="number">11u32</span>, <span class="number">15u32</span>, <span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">0</span>, <span class="number">4</span>, <span class="number">8</span>, <span class="number">12</span>, <span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">1</span>, <span class="number">5</span>, <span class="number">9</span>, <span class="number">13</span>, <span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">2</span>, <span class="number">6</span>, <span class="number">10</span>, <span class="number">14</span>, <span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">3</span>, <span class="number">7</span>, <span class="number">11</span>, <span class="number">15</span>, <span class="ident">state</span>);
 
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">0u32</span>, <span class="number">5u32</span>, <span class="number">10u32</span>, <span class="number">15u32</span>, <span class="ident">state</span>);
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">1u32</span>, <span class="number">6u32</span>, <span class="number">11u32</span>, <span class="number">12u32</span>, <span class="ident">state</span>);
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">2u32</span>, <span class="number">7u32</span>, <span class="number">8u32</span>, <span class="number">13u32</span>, <span class="ident">state</span>);
-    <span class="ident">quarter_round</span>(<span class="number">3u32</span>, <span class="number">4u32</span>, <span class="number">9u32</span>, <span class="number">14u32</span>, <span class="ident">state</span>)
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">0</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">15</span>, <span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">1</span>, <span class="number">6</span>, <span class="number">11</span>, <span class="number">12</span>, <span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">quarter_round</span>(<span class="number">2</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">13</span>, <span class="ident">state</span>);
+    <span class="ident">quarter_round</span>(<span class="number">3</span>, <span class="number">4</span>, <span class="number">9</span>, <span class="number">14</span>, <span class="ident">state</span>)
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">block_init</span>(<span class="ident">key</span>: <span class="ident">Key</span>, <span class="ident">ctr</span>: <span class="ident">U32</span>, <span class="ident">iv</span>: <span class="ident">IV</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">State</span> {

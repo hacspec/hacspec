@@ -134,16 +134,16 @@
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 
 <span class="macro">public_nat_mod</span><span class="macro">!</span>(
-    <span class="ident">FieldElement</span>,
-    <span class="ident">FieldCanvas</span>,
-    <span class="number">256</span>,
-    <span class="string">&quot;7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed&quot;</span>
+    <span class="ident">type_name</span>: <span class="ident">FieldElement</span>,
+    <span class="ident">type_of_canvas</span>: <span class="ident">FieldCanvas</span>,
+    <span class="ident">bit_size_of_field</span>: <span class="number">256</span>,
+    <span class="ident">modulo_value</span>: <span class="string">&quot;7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed&quot;</span>
 );
 <span class="macro">public_nat_mod</span><span class="macro">!</span>(
-    <span class="ident">Scalar</span>,
-    <span class="ident">ScalarCanvas</span>,
-    <span class="number">256</span>,
-    <span class="string">&quot;8000000000000000000000000000000000000000000000000000000000000000&quot;</span>
+    <span class="ident">type_name</span>: <span class="ident">Scalar</span>,
+    <span class="ident">type_of_canvas</span>: <span class="ident">ScalarCanvas</span>,
+    <span class="ident">bit_size_of_field</span>: <span class="number">256</span>,
+    <span class="ident">modulo_value</span>: <span class="string">&quot;8000000000000000000000000000000000000000000000000000000000000000&quot;</span>
 );
 
 <span class="kw">type</span> <span class="ident">Point</span> <span class="op">=</span> (<span class="ident">FieldElement</span>, <span class="ident">FieldElement</span>);
@@ -239,7 +239,7 @@
     <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">SerializedScalar</span>::<span class="ident">from_public_slice</span>(<span class="kw-2">&amp;</span>[
         <span class="number">0xa5</span>, <span class="number">0x46</span>, <span class="number">0xe3</span>, <span class="number">0x6b</span>, <span class="number">0xf0</span>, <span class="number">0x52</span>, <span class="number">0x7c</span>, <span class="number">0x9d</span>, <span class="number">0x3b</span>, <span class="number">0x16</span>, <span class="number">0x15</span>, <span class="number">0x4b</span>, <span class="number">0x82</span>, <span class="number">0x46</span>, <span class="number">0x5e</span>,
         <span class="number">0xdd</span>, <span class="number">0x62</span>, <span class="number">0x14</span>, <span class="number">0x4c</span>, <span class="number">0x0a</span>, <span class="number">0xc1</span>, <span class="number">0xfc</span>, <span class="number">0x5a</span>, <span class="number">0x18</span>, <span class="number">0x50</span>, <span class="number">0x6a</span>, <span class="number">0x22</span>, <span class="number">0x44</span>, <span class="number">0xba</span>, <span class="number">0x44</span>,
-        <span class="number">0x9a</span>, <span class="number">0xc4</span>
+        <span class="number">0x9a</span>, <span class="number">0xc4</span>,
     ]);
     <span class="kw">let</span> <span class="ident">s_expected</span> <span class="op">=</span>
         <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;449a44ba44226a50185afcc10a4c1462dd5e46824b15163b9d7c52f06be346a0&quot;</span>);
@@ -249,7 +249,7 @@
     <span class="kw">let</span> <span class="ident">u</span> <span class="op">=</span> <span class="ident">SerializedPoint</span>::<span class="ident">from_public_slice</span>(<span class="kw-2">&amp;</span>[
         <span class="number">0xe6</span>, <span class="number">0xdb</span>, <span class="number">0x68</span>, <span class="number">0x67</span>, <span class="number">0x58</span>, <span class="number">0x30</span>, <span class="number">0x30</span>, <span class="number">0xdb</span>, <span class="number">0x35</span>, <span class="number">0x94</span>, <span class="number">0xc1</span>, <span class="number">0xa4</span>, <span class="number">0x24</span>, <span class="number">0xb1</span>, <span class="number">0x5f</span>,
         <span class="number">0x7c</span>, <span class="number">0x72</span>, <span class="number">0x66</span>, <span class="number">0x24</span>, <span class="number">0xec</span>, <span class="number">0x26</span>, <span class="number">0xb3</span>, <span class="number">0x35</span>, <span class="number">0x3b</span>, <span class="number">0x10</span>, <span class="number">0xa9</span>, <span class="number">0x03</span>, <span class="number">0xa6</span>, <span class="number">0xd0</span>, <span class="number">0xab</span>,
-        <span class="number">0x1c</span>, <span class="number">0x4c</span>
+        <span class="number">0x1c</span>, <span class="number">0x4c</span>,
     ]);
     <span class="kw">let</span> <span class="ident">u_expected</span> <span class="op">=</span> (
         <span class="ident">FieldElement</span>::<span class="ident">from_hex</span>(<span class="string">&quot;4c1cabd0a603a9103b35b326ec2466727c5fb124a4c19435db3030586768dbe6&quot;</span>),

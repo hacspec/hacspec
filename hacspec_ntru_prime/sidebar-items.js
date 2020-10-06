@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["ntru_prime_653_decrypt","NTRU Prime 653 basic decryption"],["ntru_prime_653_encrypt","NTRU Prime 653 basic encryption"],["round_to_3","First transform each coefficients to a value between −(q−1)/2 and (q−1)/2 then round it to the nearest multiple of 3"]]});

@@ -30,10 +30,10 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ec</span>::<span class="ident">arithmetic</span>::{<span class="self">self</span>, <span class="ident">Affine</span>};
 
 <span class="macro">public_nat_mod</span><span class="macro">!</span>(
-    <span class="ident">FieldElement</span>,
-    <span class="ident">FieldCanvas</span>,
-    <span class="number">256</span>,
-    <span class="string">&quot;ffffffff00000001000000000000000000000000ffffffffffffffffffffffff&quot;</span>
+    <span class="ident">type_name</span>: <span class="ident">FieldElement</span>,
+    <span class="ident">type_of_canvas</span>: <span class="ident">FieldCanvas</span>,
+    <span class="ident">bit_size_of_field</span>: <span class="number">256</span>,
+    <span class="ident">modulo_value</span>: <span class="string">&quot;ffffffff00000001000000000000000000000000ffffffffffffffffffffffff&quot;</span>
 );
 
 <span class="macro">unsigned_public_integer</span><span class="macro">!</span>(<span class="ident">Scalar</span>, <span class="number">256</span>);
@@ -41,7 +41,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_mul_base</span>(<span class="ident">k</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Affine</span><span class="op">&lt;</span><span class="ident">FieldElement</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">base_point</span> <span class="op">=</span> <span class="ident">Affine</span>(
         <span class="ident">FieldElement</span>::<span class="ident">from_hex</span>(<span class="string">&quot;6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296&quot;</span>),
-        <span class="ident">FieldElement</span>::<span class="ident">from_hex</span>(<span class="string">&quot;4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5&quot;</span>)
+        <span class="ident">FieldElement</span>::<span class="ident">from_hex</span>(<span class="string">&quot;4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5&quot;</span>),
     );
     <span class="ident">arithmetic</span>::<span class="ident">point_mul</span>(<span class="ident">k</span>, <span class="ident">base_point</span>)
 }

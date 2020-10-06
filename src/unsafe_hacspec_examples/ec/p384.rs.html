@@ -30,10 +30,10 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ec</span>::<span class="ident">arithmetic</span>::{<span class="self">self</span>, <span class="ident">Affine</span>};
 
 <span class="macro">public_nat_mod</span><span class="macro">!</span>(
-    <span class="ident">FieldElement</span>,
-    <span class="ident">FieldCanvas</span>,
-    <span class="number">384</span>,
-    <span class="string">&quot;FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF&quot;</span>
+    <span class="ident">type_name</span>: <span class="ident">FieldElement</span>,
+    <span class="ident">type_of_canvas</span>: <span class="ident">FieldCanvas</span>,
+    <span class="ident">bit_size_of_field</span>: <span class="number">384</span>,
+    <span class="ident">modulo_value</span>: <span class="string">&quot;FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF&quot;</span>
 );
 
 <span class="macro">unsigned_public_integer</span><span class="macro">!</span>(<span class="ident">Scalar</span>, <span class="number">384</span>);
