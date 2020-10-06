@@ -652,12 +652,9 @@ macro_rules! _public_array {
     };
 }
 
-// The following are the macros intended for use from the outside.
-
 #[macro_export]
-/// Create a new array with the given name, length, and type.
-macro_rules! array {
-    ($name:ident, $l:expr, U8) => {
+macro_rules! _implement_secret_u8_array {
+    ($name:ident, $l:expr) => {
         _secret_array!($name, $l, U8, u8);
         _implement_numeric_unsigned_secret!($name);
 
@@ -729,23 +726,11 @@ macro_rules! array {
             }
         }
     };
-    ($name:ident, $l:expr, U16) => {
-        _secret_array!($name, $l, U16, u16);
-        _implement_numeric_unsigned_secret!($name);
-    };
-    ($name:ident, $l:expr, U32) => {
-        _secret_array!($name, $l, U32, u32);
-        _implement_numeric_unsigned_secret!($name);
-    };
-    ($name:ident, $l:expr, U64) => {
-        _secret_array!($name, $l, U64, u64);
-        _implement_numeric_unsigned_secret!($name);
-    };
-    ($name:ident, $l:expr, U128) => {
-        _secret_array!($name, $l, U128, u128);
-        _implement_numeric_unsigned_secret!($name);
-    };
-    ($name:ident, $l:expr, u8) => {
+}
+
+#[macro_export]
+macro_rules! _implement_public_u8_array {
+    ($name:ident, $l:expr) => {
         _public_array!($name, $l, u8);
         _implement_numeric_unsigned_public!($name);
 
@@ -811,24 +796,105 @@ macro_rules! array {
             }
         }
     };
+}
+
+// The following are the macros intended for use from the outside.
+
+#[macro_export]
+/// Create a new array with the given name, length, and type.
+macro_rules! array {
+    ($name:ident, $l:expr, U8) => {
+        _implement_secret_u8_array!($name, $l);
+    };
+    ($name:ident, $l:expr, U8, $idx: ident) => {
+        _implement_secret_u8_array!($name, $l);
+        pub type $idx = usize;
+    };
+    ($name:ident, $l:expr, U16) => {
+        _secret_array!($name, $l, U16, u16);
+        _implement_numeric_unsigned_secret!($name);
+    };
+    ($name:ident, $l:expr, U16, type_for_indexes: $idx: ident) => {
+        _secret_array!($name, $l, U16, u16);
+        _implement_numeric_unsigned_secret!($name);
+        pub type $idx = usize;
+    };
+    ($name:ident, $l:expr, U32) => {
+        _secret_array!($name, $l, U32, u32);
+        _implement_numeric_unsigned_secret!($name);
+    };
+    ($name:ident, $l:expr, U32, type_for_indexes: $idx: ident) => {
+        _secret_array!($name, $l, U32, u32);
+        _implement_numeric_unsigned_secret!($name);
+        pub type $idx = usize;
+    };
+    ($name:ident, $l:expr, U64) => {
+        _secret_array!($name, $l, U64, u64);
+        _implement_numeric_unsigned_secret!($name);
+    };
+    ($name:ident, $l:expr, U64, type_for_indexes: $idx: ident) => {
+        _secret_array!($name, $l, U64, u64);
+        _implement_numeric_unsigned_secret!($name);
+        pub type $idx = usize;
+    };
+    ($name:ident, $l:expr, U128) => {
+        _secret_array!($name, $l, U128, u128);
+        _implement_numeric_unsigned_secret!($name);
+    };
+    ($name:ident, $l:expr, U128, type_for_indexes: $idx: ident) => {
+        _secret_array!($name, $l, U128, u128);
+        _implement_numeric_unsigned_secret!($name);
+        pub type $idx = usize;
+    };
+    ($name:ident, $l:expr, u8) => {
+        _implement_public_u8_array!($name, $l);
+    };
+    ($name:ident, $l:expr, u8, type_for_indexes: $idx: ident) => {
+        _implement_public_u8_array!($name, $l);
+        pub type $idx = usize;
+    };
     ($name:ident, $l:expr, u16) => {
         _public_array!($name, $l, u16);
         _implement_numeric_unsigned_public!($name);
+    };
+    ($name:ident, $l:expr, u16, type_for_indexes: $idx: ident) => {
+        _public_array!($name, $l, u16);
+        _implement_numeric_unsigned_public!($name);
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, u32) => {
         _public_array!($name, $l, u32);
         _implement_numeric_unsigned_public!($name);
     };
+    ($name:ident, $l:expr, u32, type_for_indexes: $idx: ident) => {
+        _public_array!($name, $l, u32);
+        _implement_numeric_unsigned_public!($name);
+        pub type $idx = usize;
+    };
     ($name:ident, $l:expr, u64) => {
         _public_array!($name, $l, u64);
         _implement_numeric_unsigned_public!($name);
+    };
+    ($name:ident, $l:expr, u64, type_for_indexes: $idx: ident) => {
+        _public_array!($name, $l, u64);
+        _implement_numeric_unsigned_public!($name);
+        pub type $idx = usize;
     };
     ($name:ident, $l:expr, u128) => {
         _public_array!($name, $l, u128);
         _implement_numeric_unsigned_public!($name);
     };
+    ($name:ident, $l:expr, u128, type_for_indexes: $idx: ident) => {
+        _public_array!($name, $l, u128);
+        _implement_numeric_unsigned_public!($name);
+        pub type $idx = usize;
+    };
     ($name:ident, $l:expr, $t:ty) => {
         _public_array!($name, $l, $t);
+    };
+    ($name:ident, $l:expr, $t:ty, type_for_indexes: $idx: ident) => {
+        _public_array!($name, $l, $t);
+        pub type $idx = usize;
     };
 }
 

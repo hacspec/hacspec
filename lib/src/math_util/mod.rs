@@ -134,23 +134,19 @@ pub(crate) fn extended_euclid_invert<T: Integer + Copy>(x: T, n: T, signed: bool
 
 /// Makes poly to an element of R_modulo \ irr
 #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-pub fn poly_to_ring<T: Integer + Copy>(
-    irr: &Seq<T>,
-    poly: &Seq<T>,
-    modulus: T,
-) -> Result<Seq<T>, &'static str> {
-    let pre = div_poly(&poly, &irr, modulus)?.1;
-    Ok(make_positive(&pre, modulus))
+pub fn poly_to_ring<T: Integer + Copy>(irr: &Seq<T>, poly: &Seq<T>, modulus: T) -> (Seq<T>, bool) {
+    match div_poly(&poly, &irr, modulus) {
+        Ok(pre) => {
+            let pre = pre.1;
+            (make_positive(&pre, modulus), true)
+        }
+        Err(_) => (Seq::new(1usize), false),
+    }
 }
 
 /// Polynomial multiplication of two size fixed polynomials in R_modulo \ irr
 #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-pub fn mul_poly_irr<T: Integer + Copy>(
-    a: &Seq<T>,
-    b: &Seq<T>,
-    irr: &Seq<T>,
-    modulo: T,
-) -> Result<Seq<T>, &'static str> {
+pub fn mul_poly_irr<T: Integer + Copy>(a: &Seq<T>, b: &Seq<T>, irr: &Seq<T>, modulo: T) -> Seq<T> {
     let mut result: Seq<T> = Seq::new(a.len());
     for i in 0..a.len() {
         if a[i].equal(T::default()) {
@@ -177,5 +173,5 @@ pub fn mul_poly_irr<T: Integer + Copy>(
             result[i] = result[i].modulo(modulo);
         }
     }
-    Ok(make_positive(&result, modulo))
+    make_positive(&result, modulo)
 }

@@ -1,7 +1,7 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-array!(State, 16, U32);
+array!(State, 16, U32, type_for_indexes: StateIdx);
 bytes!(StateBytes, 64);
 bytes!(IV, 12);
 bytes!(Key, 32);
@@ -18,7 +18,7 @@ pub fn state_to_bytes(x: State) -> StateBytes {
     r
 }
 
-fn line(a: u32, b: u32, d: u32, s: usize, m: State) -> State {
+fn line(a: StateIdx, b: StateIdx, d: StateIdx, s: usize, m: State) -> State {
     let mut state = m;
     // TODO: we can't write += or ^= here right now :(
     state[a] = state[a] + state[b];
@@ -27,7 +27,7 @@ fn line(a: u32, b: u32, d: u32, s: usize, m: State) -> State {
     state
 }
 
-pub fn quarter_round(a: u32, b: u32, c: u32, d: u32, state: State) -> State {
+pub fn quarter_round(a: StateIdx, b: StateIdx, c: StateIdx, d: StateIdx, state: State) -> State {
     let state = line(a, b, d, 16, state);
     let state = line(c, d, b, 12, state);
     let state = line(a, b, d, 8, state);
@@ -35,15 +35,15 @@ pub fn quarter_round(a: u32, b: u32, c: u32, d: u32, state: State) -> State {
 }
 
 fn double_round(state: State) -> State {
-    let state = quarter_round(0u32, 4u32, 8u32, 12u32, state);
-    let state = quarter_round(1u32, 5u32, 9u32, 13u32, state);
-    let state = quarter_round(2u32, 6u32, 10u32, 14u32, state);
-    let state = quarter_round(3u32, 7u32, 11u32, 15u32, state);
+    let state = quarter_round(0, 4, 8, 12, state);
+    let state = quarter_round(1, 5, 9, 13, state);
+    let state = quarter_round(2, 6, 10, 14, state);
+    let state = quarter_round(3, 7, 11, 15, state);
 
-    let state = quarter_round(0u32, 5u32, 10u32, 15u32, state);
-    let state = quarter_round(1u32, 6u32, 11u32, 12u32, state);
-    let state = quarter_round(2u32, 7u32, 8u32, 13u32, state);
-    quarter_round(3u32, 4u32, 9u32, 14u32, state)
+    let state = quarter_round(0, 5, 10, 15, state);
+    let state = quarter_round(1, 6, 11, 12, state);
+    let state = quarter_round(2, 7, 8, 13, state);
+    quarter_round(3, 4, 9, 14, state)
 }
 
 pub fn block_init(key: Key, ctr: U32, iv: IV) -> State {

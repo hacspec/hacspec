@@ -47,13 +47,13 @@ const ITEM_LIST_LOCATION: &'static str = "../allowed_item_list.json";
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
     ErrorOutputType::HumanReadable(HumanReadableErrorType::Default(ColorConfig::Auto));
 
-trait RustspectErrorEmitter {
+trait HacspecErrorEmitter {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str);
 }
 
-impl RustspectErrorEmitter for Session {
+impl HacspecErrorEmitter for Session {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str) {
-        self.span_err_with_code(s, msg, DiagnosticId::Error(String::from("Rustspec")));
+        self.span_err_with_code(s, msg, DiagnosticId::Error(String::from("Hacspec")));
     }
 }
 
@@ -106,7 +106,7 @@ impl Callbacks for HacspecCallbacks {
             Err(_) => {
                 &compiler
                     .session()
-                    .err("unable to translate to Rustspec due to out-of-language errors");
+                    .err("unable to translate to Hacspec due to out-of-language errors");
                 return Compilation::Stop;
             }
         };
@@ -144,7 +144,7 @@ impl Callbacks for HacspecCallbacks {
             Err(_) => {
                 &compiler
                     .session()
-                    .err("unable to translate to F* due to Rustspec typechecking errors");
+                    .err("unable to translate to F* due to Hacspec typechecking errors");
                 return Compilation::Stop;
             }
         };
@@ -177,5 +177,5 @@ fn main() -> Result<(), ()> {
             }),
     };
     let args = env::args().collect::<Vec<String>>();
-    run_compiler(&args, &mut callbacks, None, None).map_err(|_| ())
+    run_compiler(&args, &mut callbacks, None, None, None).map_err(|_| ())
 }

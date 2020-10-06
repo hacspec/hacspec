@@ -2,16 +2,16 @@
 use hacspec_lib::*;
 
 public_nat_mod!(
-    FieldElement,
-    FieldCanvas,
-    256,
-    "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
+    type_name: FieldElement,
+    type_of_canvas: FieldCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
 );
 public_nat_mod!(
-    Scalar,
-    ScalarCanvas,
-    256,
-    "8000000000000000000000000000000000000000000000000000000000000000"
+    type_name: Scalar,
+    type_of_canvas: ScalarCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "8000000000000000000000000000000000000000000000000000000000000000"
 );
 
 type Point = (FieldElement, FieldElement);
@@ -107,7 +107,7 @@ fn test_encode_decode_scalar() {
     let s = SerializedScalar::from_public_slice(&[
         0xa5, 0x46, 0xe3, 0x6b, 0xf0, 0x52, 0x7c, 0x9d, 0x3b, 0x16, 0x15, 0x4b, 0x82, 0x46, 0x5e,
         0xdd, 0x62, 0x14, 0x4c, 0x0a, 0xc1, 0xfc, 0x5a, 0x18, 0x50, 0x6a, 0x22, 0x44, 0xba, 0x44,
-        0x9a, 0xc4
+        0x9a, 0xc4,
     ]);
     let s_expected =
         Scalar::from_hex("449a44ba44226a50185afcc10a4c1462dd5e46824b15163b9d7c52f06be346a0");
@@ -117,7 +117,7 @@ fn test_encode_decode_scalar() {
     let u = SerializedPoint::from_public_slice(&[
         0xe6, 0xdb, 0x68, 0x67, 0x58, 0x30, 0x30, 0xdb, 0x35, 0x94, 0xc1, 0xa4, 0x24, 0xb1, 0x5f,
         0x7c, 0x72, 0x66, 0x24, 0xec, 0x26, 0xb3, 0x35, 0x3b, 0x10, 0xa9, 0x03, 0xa6, 0xd0, 0xab,
-        0x1c, 0x4c
+        0x1c, 0x4c,
     ]);
     let u_expected = (
         FieldElement::from_hex("4c1cabd0a603a9103b35b326ec2466727c5fb124a4c19435db3030586768dbe6"),

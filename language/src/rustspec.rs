@@ -9,12 +9,12 @@ use std::fmt;
 pub type Spanned<T> = (T, Span);
 
 #[derive(Clone, Hash, Debug, PartialEq, Eq)]
-pub struct RustspecId(pub usize);
+pub struct HacspecId(pub usize);
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Ident {
     Original(String),
-    Rustspec(RustspecId, String),
+    Hacspec(HacspecId, String),
 }
 
 impl fmt::Display for Ident {
@@ -24,7 +24,7 @@ impl fmt::Display for Ident {
             "{}",
             match self {
                 Ident::Original(n) => n.clone(),
-                Ident::Rustspec(x, n) => format!("{}_{}", n, x.0),
+                Ident::Hacspec(x, n) => format!("{}_{}", n, x.0),
             }
         )
     }
@@ -95,9 +95,9 @@ pub enum BaseTyp {
     Seq(Box<Spanned<BaseTyp>>),
     Array(Spanned<ArraySize>, Box<Spanned<BaseTyp>>),
     Named(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>),
-    Variable(RustspecId),
+    Variable(HacspecId),
     Tuple(Vec<Spanned<BaseTyp>>),
-    NaturalInteger(Secrecy, Spanned<String>),
+    NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
 impl fmt::Display for BaseTyp {
@@ -141,8 +141,8 @@ impl fmt::Display for BaseTyp {
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
-            BaseTyp::NaturalInteger(sec, modulo) => {
-                write!(f, "nat[{:?}][modulo {}]", sec, modulo.0)
+            BaseTyp::NaturalInteger(sec, modulo, bits) => {
+                write!(f, "nat[{:?}][modulo {}][bits {}]", sec, modulo.0, bits.0)
             }
         }
     }
@@ -183,11 +183,12 @@ pub enum UnOpKind {
 
 #[derive(Clone)]
 pub enum Expression {
-    Unary(UnOpKind, Box<Spanned<Expression>>),
+    Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
     Binary(
         Spanned<BinOpKind>,
         Box<Spanned<Expression>>,
         Box<Spanned<Expression>>,
+        Option<Typ>,
     ),
     Named(Ident),
     // FuncCall(prefix, name, args)
@@ -266,11 +267,16 @@ pub struct ExternalFuncSig {
 #[derive(Clone)]
 pub enum Item {
     FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
-    ArrayDecl(Spanned<Ident>, Spanned<Expression>, Spanned<BaseTyp>),
+    ArrayDecl(
+        Spanned<Ident>,         // Name of the array type
+        Spanned<Expression>,    // Length
+        Spanned<BaseTyp>,       // Cell type
+        Option<Spanned<Ident>>, // Optional type alias for indexes
+    ),
     ConstDecl(Spanned<Ident>, Spanned<BaseTyp>, Spanned<Expression>),
     NaturalIntegerDecl(
-        Spanned<Ident>,
-        Spanned<Ident>,
+        Spanned<Ident>, // Element type name
+        Spanned<Ident>, // Canvas array type name
         Secrecy,
         Spanned<Expression>,
         Spanned<String>,
