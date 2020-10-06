@@ -7,7 +7,7 @@ bytes!(KeyPoly, 32);
 const BLOCKSIZE: usize = 16;
 
 // These are type aliases for convenience
-array!(Block, BLOCKSIZE, U8);
+bytes!(Block, BLOCKSIZE);
 
 // These are actual types; fixed-length arrays.
 public_bytes!(Tag, BLOCKSIZE);

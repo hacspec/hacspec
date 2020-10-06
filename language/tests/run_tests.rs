@@ -85,7 +85,7 @@ fn run_chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn run_ntru_demo_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
-        "../examples/hacspec-ntru-demo/src/ntru.rs",
+        "../examples/hacspec-ntru-prime/src/ntru.rs",
         Some("../fstar/Hacspec.NtruDemo.fst"),
         vec![],
     )

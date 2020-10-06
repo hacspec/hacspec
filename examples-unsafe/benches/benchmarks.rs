@@ -178,7 +178,7 @@ fn criterion_chacha_poly(c: &mut Criterion) {
     c.bench_function("Poly1305", |b| {
         b.iter_batched(
             || {
-                let key = Key::from_public_slice(&randombytes(32));
+                let key = KeyPoly::from_public_slice(&randombytes(32));
                 let data = Seq::<U8>::from_public_slice(&randombytes(1_000));
                 (data, key)
             },
