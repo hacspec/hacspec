@@ -2,18 +2,16 @@
 use hacspec_lib::*;
 
 public_nat_mod!(
-    FieldElement,
-    FieldCanvas,
-    FieldCanvasIdx,
-    256,
-    "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
+    type_name: FieldElement,
+    type_of_canvas: FieldCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
 );
 public_nat_mod!(
-    Scalar,
-    ScalarCanvas,
-    ScalarCanvasIdx,
-    256,
-    "8000000000000000000000000000000000000000000000000000000000000000"
+    type_name: Scalar,
+    type_of_canvas: ScalarCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "8000000000000000000000000000000000000000000000000000000000000000"
 );
 
 type Point = (FieldElement, FieldElement);
