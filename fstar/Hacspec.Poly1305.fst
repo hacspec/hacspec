@@ -18,67 +18,63 @@ type field_canvas = lseq (pub_uint8) (17)
 
 type field_element = nat_mod 0x03fffffffffffffffffffffffffffffffb
 
-let field_canvas_idx =
-  nat_mod 17
-
-let le_bytes_to_num (b_1865 : byte_seq) : uint128 =
-  let block_as_u128_1866 =
-    array_from_slice (b_1865) (usize 0) (min (blocksize) (seq_len (b_1865)))
+let le_bytes_to_num (b_1868 : byte_seq) : uint128 =
+  let block_as_u128_1869 =
+    array_from_slice (b_1868) (usize 0) (min (blocksize) (seq_len (b_1868)))
   in
-  uint128_from_le_bytes (block_as_u128_1866)
+  uint128_from_le_bytes (block_as_u128_1869)
 
-let clamp (r_1867 : uint128) : field_element =
-  let r_uint_1868 =
-    (r_1867) &. (secret (pub_u128 0xffffffc0ffffffc0ffffffc0fffffff))
+let clamp (r_1870 : uint128) : field_element =
+  let r_uint_1871 =
+    (r_1870) &. (secret (pub_u128 0xffffffc0ffffffc0ffffffc0fffffff))
   in
-  nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (r_uint_1868)
+  nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (r_uint_1871)
 
-let encode
-  (block_uint_1869 : uint128)
-  (len_1870 : field_canvas_idx)
-  : field_element =
-  let w_elem_1871 =
+let encode (block_uint_1872 : uint128) (len_1873 : uint_size{
+  (**) len_1873 < 17
+  }) : field_element =
+  let w_elem_1874 =
     nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (
-      block_uint_1869)
+      block_uint_1872)
   in
   (**) assert_norm (pow2 128 < 0x03fffffffffffffffffffffffffffffffb);
-  (**) Math.Lemmas.pow2_le_compat 128 (8 * len_1870);
-  let l_elem_1872 =
-    nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (len_1870))
+  (**) Math.Lemmas.pow2_le_compat 128 (8 * len_1873);
+  let l_elem_1875 =
+    nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (len_1873))
   in
-  (w_elem_1871) +% (l_elem_1872)
+  (w_elem_1874) +% (l_elem_1875)
 
-let num_to_16_le_bytes (a_1873 : field_element) : tag =
-  let n_v_1874 =
+let num_to_16_le_bytes (a_1876 : field_element) : tag =
+  let n_v_1877 =
     nat_to_public_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) (17) (
-      a_1873)
+      a_1876)
   in
-  array_from_seq (blocksize) (seq_slice (n_v_1874) (usize 0) (blocksize))
+  array_from_seq (blocksize) (seq_slice (n_v_1877) (usize 0) (blocksize))
 
-let poly (m_1875 : byte_seq) (key_1876 : key_poly) : tag =
-  let r_1877 = le_bytes_to_num (array_slice (key_1876) (usize 0) (blocksize)) in
-  let r_1878 = clamp (r_1877) in
-  let s_1879 =
-    le_bytes_to_num (array_slice (key_1876) (blocksize) (blocksize))
+let poly (m_1878 : byte_seq) (key_1879 : key_poly) : tag =
+  let r_1880 = le_bytes_to_num (array_slice (key_1879) (usize 0) (blocksize)) in
+  let r_1881 = clamp (r_1880) in
+  let s_1882 =
+    le_bytes_to_num (array_slice (key_1879) (blocksize) (blocksize))
   in
-  let s_1880 =
-    nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (s_1879)
+  let s_1883 =
+    nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (s_1882)
   in
-  let a_1881 =
+  let a_1884 =
     nat_from_literal (0x03fffffffffffffffffffffffffffffffb) (pub_u128 0x0)
   in
-  let (a_1881) =
-    foldi (usize 0) (seq_num_chunks (m_1875) (blocksize)) (fun i_1882 (a_1881
+  let (a_1884) =
+    foldi (usize 0) (seq_num_chunks (m_1878) (blocksize)) (fun i_1885 (a_1884
       ) ->
-      let (len_1883, block_1884) =
-        seq_get_chunk (m_1875) (blocksize) (i_1882)
+      let (len_1886, block_1887) =
+        seq_get_chunk (m_1878) (blocksize) (i_1885)
       in
-      let block_uint_1885 = le_bytes_to_num (block_1884) in
-      let n_1886 = encode (block_uint_1885) (len_1883) in
-      let a_1881 = (a_1881) +% (n_1886) in
-      let a_1881 = (r_1878) *% (a_1881) in
-      (a_1881))
-    (a_1881)
+      let block_uint_1888 = le_bytes_to_num (block_1887) in
+      let n_1889 = encode (block_uint_1888) (len_1886) in
+      let a_1884 = (a_1884) +% (n_1889) in
+      let a_1884 = (r_1881) *% (a_1884) in
+      (a_1884))
+    (a_1884)
   in
-  let a_1887 = (a_1881) +% (s_1880) in
-  num_to_16_le_bytes (a_1887)
+  let a_1890 = (a_1884) +% (s_1883) in
+  num_to_16_le_bytes (a_1890)
