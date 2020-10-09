@@ -76,12 +76,6 @@ let array_from_list
   =
   LSeq.of_list l
 
-let uint32_to_be_bytes (x: uint32) : lseq uint8 4 =
-  LBSeq.uint_to_bytes_be x
-
-let  uint32_from_le_bytes (s: lseq uint8 4) : uint32 =
-  LBSeq.uint_from_bytes_be s
-
 (**** Array manipulation *)
 
 
@@ -102,12 +96,15 @@ let array_from_seq
 
 let array_from_slice
   (#a: Type)
+  (default_value: a)
+  (out_len: uint_size)
   (input: seq a)
   (start: uint_size)
-  (slice_len: uint_size{start + slice_len <= LSeq.length input})
-    : lseq a slice_len
+  (slice_len: uint_size{start + slice_len <= LSeq.length input /\ slice_len <= out_len})
+    : lseq a out_len
   =
-  Seq.slice input start (start + slice_len)
+  let out = LSeq.create out_len default_value in
+  LSeq.update_sub out 0 slice_len (LSeq.slice #a #(Seq.length input) input start (start + slice_len))
 
 let array_slice
   (#a: Type)
@@ -233,7 +230,15 @@ assume val array_xor (#a: Type) (#len: uint_size) (s1: lseq a len) (s2 : lseq a 
 
 (**** Integers to arrays *)
 
-assume val uint128_from_le_bytes (input: seq uint8{LSeq.length input <= 16}) : uint128
+
+let uint32_to_be_bytes (x: uint32) : lseq uint8 4 =
+  LBSeq.uint_to_bytes_be x
+
+let  uint32_from_le_bytes (s: lseq uint8 4) : uint32 =
+  LBSeq.uint_from_bytes_be s
+
+let uint128_from_le_bytes (input: lseq uint8 16) : uint128 =
+  LBSeq.uint_from_bytes_le input
 
 (*** Loops *)
 
