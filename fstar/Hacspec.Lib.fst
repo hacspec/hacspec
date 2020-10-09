@@ -76,10 +76,11 @@ let array_from_list
   =
   LSeq.of_list l
 
-assume val uint32_to_be_bytes (x: uint32) : lseq uint8 4
+let uint32_to_be_bytes (x: uint32) : lseq uint8 4 =
+  LBSeq.uint_to_bytes_be x
 
-assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
-
+let  uint32_from_le_bytes (s: lseq uint8 4) : uint32 =
+  LBSeq.uint_from_bytes_be s
 
 (**** Array manipulation *)
 
@@ -99,29 +100,36 @@ let array_from_seq
     : lseq a out_len
   = input
 
-assume val array_from_slice
+let array_from_slice
   (#a: Type)
   (input: seq a)
   (start: uint_size)
   (slice_len: uint_size{start + slice_len <= LSeq.length input})
     : lseq a slice_len
+  =
+  Seq.slice input start (start + slice_len)
 
-assume val array_slice
+let array_slice
   (#a: Type)
   (input: seq a)
   (start: uint_size)
   (slice_len: uint_size{start + slice_len <= LSeq.length input})
     : lseq a slice_len
+  =
+  Seq.slice input start (start + slice_len)
 
-assume val array_from_slice_range
+let array_from_slice_range
   (#a: Type)
   (input: seq a)
   (start_fin: (uint_size & uint_size){
      fst start_fin >= 0 /\ snd start_fin <= LSeq.length input /\ snd start_fin >= fst start_fin
    })
     : lseq a (snd start_fin - fst start_fin)
+  =
+  let (start, fin) = start_fin in
+  Seq.slice input start fin
 
-assume val array_slice_range
+let array_slice_range
   (#a: Type)
   (#len:uint_size)
   (input: lseq a len)
@@ -129,53 +137,79 @@ assume val array_slice_range
     fst start_fin >= 0 /\ snd start_fin <= len /\ snd start_fin >= fst start_fin
   })
     : lseq a (snd start_fin - fst start_fin)
+  =
+  let (start, fin) = start_fin in
+  LSeq.slice input start fin
 
-assume val array_update_start (#a: Type) (#len: uint_size) (s: lseq a len) (start_s: seq a{Seq.length start_s <= len}) : lseq a len
+let array_update_start
+  (#a: Type)
+  (#len: uint_size)
+  (s: lseq a len)
+  (start_s: seq a{Seq.length start_s <= len})
+    : lseq a len
+  =
+  LSeq.update_sub s 0 (Seq.length start_s) start_s
 
 let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 
 (**** Seq manipulation *)
 
-assume val seq_slice
+let seq_slice
   (#a: Type)
   (s: seq a)
   (start: uint_size)
   (len: uint_size{start + len < LSeq.length s})
-  : lseq a len
+    : lseq a len
+  =
+  LSeq.slice #a #(Seq.length s) s start (start + len)
 
 (**** Chunking *)
 
-assume val seq_num_chunks (#a: Type) (s: seq a) (chunk_len: uint_size) : uint_size
+let seq_num_chunks (#a: Type) (s: seq a) (chunk_len: uint_size{chunk_len > 0}) : uint_size =
+  (Seq.length s + chunk_len - 1) / chunk_len
 
-assume val seq_chunk_len
+let seq_chunk_len
   (#a: Type)
   (s: seq a)
   (chunk_len: uint_size)
-  (chunk_num: uint_size)
-  : Tot (out_len:uint_size{out_len <= chunk_len})
+  (chunk_num: uint_size{chunk_len * chunk_num <= Seq.length s})
+    : Tot (out_len:uint_size{out_len <= chunk_len})
+  =
+  let idx_start = chunk_len * chunk_num in
+  if idx_start + chunk_len > Seq.length s then
+    Seq.length s - idx_start
+  else
+    chunk_len
 
-assume val seq_chunk_same_len_same_chunk_len
+let seq_chunk_same_len_same_chunk_len
   (#a: Type)
   (s1 s2: seq a)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
   : Lemma
-    (requires (LSeq.length s1 = LSeq.length s2))
+    (requires (LSeq.length s1 = LSeq.length s2 /\ chunk_len * chunk_num <= Seq.length s1))
     (ensures (seq_chunk_len s1 chunk_len chunk_num = seq_chunk_len s2 chunk_len chunk_num))
     [SMTPat (seq_chunk_len s1 chunk_len chunk_num); SMTPat (seq_chunk_len s2 chunk_len chunk_num)]
+  =
+  ()
 
-assume val seq_get_chunk
+let seq_get_chunk
   (#a: Type)
   (s: seq a)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
   : Pure (uint_size & seq a)
-    (requires (True))
+    (requires (chunk_len * chunk_num <= Seq.length s))
     (ensures (fun (out_len, chunk) ->
       out_len = seq_chunk_len s chunk_len chunk_num /\ LSeq.length chunk = out_len
     ))
+  =
+  let idx_start = chunk_len * chunk_num in
+  let out_len = seq_chunk_len s chunk_len chunk_num in
+  (out_len, LSeq.slice #a #(Seq.length s)
+    s idx_start (idx_start + seq_chunk_len s chunk_len chunk_num))
 
-assume val seq_set_chunk
+let seq_set_chunk
   (#a: Type)
   (#len:uint_size)
   (s: lseq a len)
@@ -183,8 +217,15 @@ assume val seq_set_chunk
   (chunk_num: uint_size)
   (chunk: seq a )
     : Pure (lseq a len)
-      (requires (LSeq.length chunk = seq_chunk_len s chunk_len chunk_num))
+      (requires (
+        chunk_len * chunk_num <= Seq.length s /\
+        LSeq.length chunk = seq_chunk_len s chunk_len chunk_num
+      ))
       (ensures (fun out -> True))
+  =
+  let idx_start = chunk_len * chunk_num in
+  let out_len = seq_chunk_len s chunk_len chunk_num in
+  LSeq.update_sub s idx_start out_len chunk
 
 (**** Numeric operations *)
 
