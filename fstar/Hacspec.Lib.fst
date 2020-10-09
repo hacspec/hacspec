@@ -56,28 +56,28 @@ assume val uint32_rotate_left (u: uint32) (s: uint_size) : uint32
 (*** Seq *)
 
 module LSeq = Lib.Sequence
+module LBSeq = Lib.ByteSequence
 
 let lseq (a: Type) (len: uint_size) = LSeq.lseq a len
 
-let seq (a: Type) = LSeq.seq a
-//let seq (a: Type) = s:LSeq.seq a{range (LSeq.length s) U32}
+let seq (a: Type) = s:LSeq.seq a{range (LSeq.length s) U32}
 
-//let seq_len (#a: Type) (s: seq a) : uint_size = Seq.length s
 let seq_len (#a: Type) (s: seq a) : nat = Seq.length s
 
-let nseq (a: Type) (len: nat) = s:seq a{seq_len s == len}
-
-let lseq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
-  LSeq.create len init
-
-let seq_new_ (#a: Type) (init:a) (len: nat) : nseq a len =
+let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
   Seq.create len init
 
 unfold let byte_seq = seq uint8
 
-assume val array_from_list (#a: Type) (l: list a{List.Tot.length l <= max_size_t}) : lseq a (List.Tot.length l)
+let array_from_list
+  (#a: Type)
+  (l: list a{List.Tot.length l <= max_size_t})
+    : lseq a (List.Tot.length l)
+  =
+  LSeq.of_list l
 
-assume val uint32_to_be_bytes : uint32 -> lseq uint8 4
+assume val uint32_to_be_bytes (x: uint32) : lseq uint8 4
+
 assume val uint32_from_le_bytes : lseq uint8 4 -> uint32
 
 
@@ -177,12 +177,12 @@ assume val seq_get_chunk
 
 assume val seq_set_chunk
   (#a: Type)
-  (#len:nat)
-  (s: nseq a len)
+  (#len:uint_size)
+  (s: lseq a len)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
   (chunk: seq a )
-    : Pure (nseq a len)
+    : Pure (lseq a len)
       (requires (LSeq.length chunk = seq_chunk_len s chunk_len chunk_num))
       (ensures (fun out -> True))
 
