@@ -7,7 +7,7 @@ bytes!(KeyPoly, 32);
 const BLOCKSIZE: usize = 16;
 
 // These are type aliases for convenience
-array!(Block, BLOCKSIZE, U8);
+bytes!(Block, BLOCKSIZE);
 
 // These are actual types; fixed-length arrays.
 public_bytes!(Tag, BLOCKSIZE);
@@ -20,11 +20,10 @@ public_bytes!(Tag, BLOCKSIZE);
 // XXX: The types are public here but should be secret. But secret BigNums are
 // not implemented yet.
 public_nat_mod!(
-    FieldElement,
-    FieldCanvas,
-    FieldCanvasIdx,
-    131, // This amounts to 17 bytes
-    "03fffffffffffffffffffffffffffffffb"
+    type_name: FieldElement,
+    type_of_canvas: FieldCanvas,
+    bit_size_of_field: 131, // This amounts to 17 bytes
+    modulo_value: "03fffffffffffffffffffffffffffffffb"
 );
 
 /// Take a variable length byte array and convert it into a U128 (secret u128).
@@ -40,7 +39,7 @@ pub fn clamp(r: U128) -> FieldElement {
 }
 
 /// Convert a block (part of the byte sequence) to a `FieldElement`.
-pub fn encode(block_uint: U128, len: FieldCanvasIdx) -> FieldElement {
+pub fn encode(block_uint: U128, len: usize) -> FieldElement {
     let w_elem = FieldElement::from_secret_literal(block_uint);
     let l_elem = FieldElement::pow2(8 * len);
     w_elem + l_elem

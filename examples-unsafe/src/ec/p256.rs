@@ -4,11 +4,10 @@ use hacspec_lib::*;
 use crate::ec::arithmetic::{self, Affine};
 
 public_nat_mod!(
-    FieldElement,
-    FieldCanvas,
-    FieldCanvasIdx,
-    256,
-    "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+    type_name: FieldElement,
+    type_of_canvas: FieldCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 
 unsigned_public_integer!(Scalar, 256);

@@ -1,6 +1,6 @@
 use hacspec_lib::*;
 
-use hacspec_ntru_demo::*;
+use hacspec_ntru_prime::*;
 
 #[test]
 fn kat_ntru_prime_653() {

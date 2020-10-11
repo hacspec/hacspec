@@ -865,14 +865,7 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
             translate_expression(e.0.clone(), typ_dict),
             true,
         ),
-        Item::NaturalIntegerDecl(
-            nat_name,
-            canvas_name,
-            idx_typ_name,
-            _secrecy,
-            canvas_size,
-            modulo,
-        ) => {
+        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, modulo) => {
             let canvas_size_bytes = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => {
                     RcDoc::as_string(format!("{}", (size + 7) / 8))
@@ -912,18 +905,6 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                                 .group()
                                 .nest(2),
                         ),
-                )
-                .append(
-                    RcDoc::hardline()
-                        .append(RcDoc::hardline())
-                        .append(make_let_binding(
-                            translate_ident(idx_typ_name.0.clone()),
-                            None,
-                            RcDoc::as_string("nat_mod")
-                                .append(RcDoc::space())
-                                .append(canvas_size_bytes),
-                            true,
-                        )),
                 )
         }
     }

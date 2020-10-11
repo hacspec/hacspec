@@ -1071,6 +1071,25 @@ fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
     }
 }
 
+fn check_for_colon(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
+    match arg {
+        TokenTree::Token(tok) => match tok.kind {
+            TokenKind::Colon => Ok(()),
+            _ => {
+                sess.span_rustspec_err(tok.span.clone(), "expected a colon");
+                Err(())
+            }
+        },
+        _ => {
+            sess.span_rustspec_err(
+                arg.span().clone(),
+                "expected delimiter to be a single token",
+            );
+            Err(())
+        }
+    }
+}
+
 fn check_for_usize(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned<Expression>> {
     match arg {
         TokenTree::Token(tok) => match tok.kind {
@@ -1154,6 +1173,12 @@ fn translate_natural_integer_decl(
                 seventh_arg,
                 eight_arg,
                 ninth_arg,
+                tenth_arg,
+                eleventh_arg,
+                twelveth_arg,
+                thirteenth_arg,
+                fourteenth_arg,
+                fiftheen_arg,
             ) = {
                 let first_arg = it.next().map_or(Err(()), |x| Ok(x));
                 let second_arg = it.next().map_or(Err(()), |x| Ok(x));
@@ -1164,6 +1189,12 @@ fn translate_natural_integer_decl(
                 let seventh_arg = it.next().map_or(Err(()), |x| Ok(x));
                 let eight_arg = it.next().map_or(Err(()), |x| Ok(x));
                 let ninth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let tenth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let eleventh_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let twelveth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let thirteenth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let fourteenth_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let fiftheen_arg = it.next().map_or(Err(()), |x| Ok(x));
                 Ok((
                     first_arg?,
                     second_arg?,
@@ -1174,17 +1205,29 @@ fn translate_natural_integer_decl(
                     seventh_arg?,
                     eight_arg?,
                     ninth_arg?,
+                    tenth_arg?,
+                    eleventh_arg?,
+                    twelveth_arg?,
+                    thirteenth_arg?,
+                    fourteenth_arg?,
+                    fiftheen_arg?,
                 ))
             }?;
-            let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
-            check_for_comma(sess, &second_arg)?;
-            let (canvas_typ_ident, _) = check_for_ident(sess, &third_arg)?;
+            check_for_ident(sess, &first_arg)?;
+            check_for_colon(sess, &second_arg)?;
+            let (typ_ident, typ_ident_string) = check_for_ident(sess, &third_arg)?;
             check_for_comma(sess, &fourth_arg)?;
-            let (idx_ident, _) = check_for_ident(sess, &fifth_arg)?;
-            check_for_comma(sess, &sixth_arg)?;
-            let canvas_size = check_for_usize(sess, &seventh_arg)?;
+            check_for_ident(sess, &fifth_arg)?;
+            check_for_colon(sess, &sixth_arg)?;
+            let (canvas_typ_ident, _) = check_for_ident(sess, &seventh_arg)?;
             check_for_comma(sess, &eight_arg)?;
-            let modulo_string = match &ninth_arg {
+            check_for_ident(sess, &ninth_arg)?;
+            check_for_colon(sess, &tenth_arg)?;
+            let canvas_size = check_for_usize(sess, &eleventh_arg)?;
+            check_for_comma(sess, &twelveth_arg)?;
+            check_for_ident(sess, &thirteenth_arg)?;
+            check_for_colon(sess, &fourteenth_arg)?;
+            let modulo_string = match &fiftheen_arg {
                 TokenTree::Token(tok) => match tok.kind {
                     TokenKind::Literal(lit) => match lit.kind {
                         TokenLitKind::Str => {
@@ -1212,7 +1255,6 @@ fn translate_natural_integer_decl(
                 (ItemTranslationResult::Item(Item::NaturalIntegerDecl(
                     typ_ident,
                     canvas_typ_ident,
-                    idx_ident,
                     secrecy,
                     canvas_size,
                     modulo_string,
@@ -1289,15 +1331,19 @@ fn translate_array_decl(
                 Some(t) => (t, typ_ident.1.clone()),
             };
             let index_typ = {
-                let (fourth_arg, fifth_arg) = {
+                let (fourth_arg, fifth_arg, sixth_arg, seventh_arg) = {
                     let fourth_arg = it.next();
                     let fifth_arg = it.next();
-                    (fourth_arg, fifth_arg)
+                    let sixth_arg = it.next();
+                    let seventh_arg = it.next();
+                    (fourth_arg, fifth_arg, sixth_arg, seventh_arg)
                 };
-                match (fourth_arg, fifth_arg) {
-                    (Some(fourth_arg), Some(fifth_arg)) => {
+                match (fourth_arg, fifth_arg, sixth_arg, seventh_arg) {
+                    (Some(fourth_arg), Some(fifth_arg), Some(sixth_arg), Some(seventh_arg)) => {
                         check_for_comma(sess, &fourth_arg)?;
-                        match fifth_arg {
+                        check_for_ident(sess, &fifth_arg)?;
+                        check_for_colon(sess, &sixth_arg)?;
+                        match seventh_arg {
                             TokenTree::Token(tok) => match tok.kind {
                                 TokenKind::Ident(id, _) => {
                                     Some((Ident::Original(id.to_ident_string()), tok.span.clone()))

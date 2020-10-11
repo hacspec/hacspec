@@ -161,11 +161,10 @@ generate_test!(I128, test_I128_integer, -1, 0, compare_secret);
 
 // Public natural numbers modulo p
 public_nat_mod!(
-    PublicP256Elem,
-    PublicP256Canvas,
-    PublicP256CanvasIdx,
-    256,
-    "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+    type_name: PublicP256Elem,
+    type_of_canvas: PublicP256Canvas,
+    bit_size_of_field: 256,
+    modulo_value: "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 generate_test!(
     PublicP256Elem,
@@ -179,11 +178,10 @@ generate_test!(
 
 // Secret natural numbers modulo p
 nat_mod!(
-    P256Elem,
-    P256Canvas,
-    P256CanvasIdx,
-    256,
-    "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
+    type_name: P256Elem,
+    type_of_canvas: P256Canvas,
+    bit_size_of_field: 256,
+    modulo_value: "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 generate_test!(
     P256Elem,

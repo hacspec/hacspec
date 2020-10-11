@@ -83,10 +83,10 @@ fn run_chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn run_ntru_demo_test() -> Result<(), Box<dyn std::error::Error>> {
+fn run_ntru_prime_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
-        "../examples/hacspec-ntru-demo/src/ntru.rs",
-        Some("../fstar/Hacspec.NtruDemo.fst"),
+        "../examples/hacspec-ntru-prime/src/ntru-prime.rs",
+        Some("../fstar/Hacspec.NtruPrime.fst"),
         vec![],
     )
 }

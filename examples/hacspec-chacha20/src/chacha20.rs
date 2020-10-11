@@ -1,7 +1,7 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-array!(State, 16, U32, StateIdx);
+array!(State, 16, U32, type_for_indexes: StateIdx);
 bytes!(StateBytes, 64);
 bytes!(IV, 12);
 bytes!(Key, 32);
