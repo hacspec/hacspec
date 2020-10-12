@@ -207,7 +207,11 @@ pub enum Expression {
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
     NewArray(Spanned<Ident>, Option<BaseTyp>, Vec<Spanned<Expression>>),
     Tuple(Vec<Spanned<Expression>>),
-    IntegerCasting(Box<Spanned<Expression>>, Spanned<BaseTyp>),
+    IntegerCasting(
+        Box<Spanned<Expression>>, //expression to cast
+        Spanned<BaseTyp>,         // destination type
+        Option<BaseTyp>,          // origin type
+    ),
 }
 
 #[derive(Clone)]

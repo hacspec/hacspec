@@ -46,11 +46,11 @@ let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq) : byte_seq =
   let padded_msg_13 = seq_update (padded_msg_13) (pad_aad_11) (msg_8) in
   let padded_msg_13 =
     seq_update (padded_msg_13) ((pad_aad_11) + (pad_msg_12)) (
-      uint64_to_le_bytes (secret (cast U64 PUB (size laad_9))))
+      uint64_to_le_bytes (secret (pub_u64 (laad_9))))
   in
   let padded_msg_13 =
     seq_update (padded_msg_13) (((pad_aad_11) + (pad_msg_12)) + (usize 8)) (
-      uint64_to_le_bytes (secret (cast U64 PUB (size lmsg_10))))
+      uint64_to_le_bytes (secret (pub_u64 (lmsg_10))))
   in
   padded_msg_13
 

@@ -1403,7 +1403,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::IntegerCasting(e1, t1) => {
+        Expression::IntegerCasting(e1, t1, _) => {
             let (new_e1, e1_typ, var_context) = typecheck_expression(
                 sess,
                 e1,
@@ -1436,7 +1436,11 @@ fn typecheck_expression(
                 return Err(());
             }
             Ok((
-                Expression::IntegerCasting(Box::new((new_e1, e1.1.clone())), t1.clone()),
+                Expression::IntegerCasting(
+                    Box::new((new_e1, e1.1.clone())),
+                    t1.clone(),
+                    Some((e1_typ.1).0.clone()),
+                ),
                 ((Borrowing::Consumed, t1.1.clone()), t1.clone()),
                 var_context,
             ))

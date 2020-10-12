@@ -707,42 +707,66 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
                     ),
                 ))
         }
-        Expression::IntegerCasting(x, new_t) => {
-            let new_t_doc = match &new_t.0 {
-                BaseTyp::UInt8 => String::from("U8"),
-                BaseTyp::UInt16 => String::from("U16"),
-                BaseTyp::UInt32 => String::from("U32"),
-                BaseTyp::UInt64 => String::from("U64"),
-                BaseTyp::UInt128 => String::from("U128"),
-                BaseTyp::Usize => String::from("U32"),
-                BaseTyp::Int8 => String::from("I8"),
-                BaseTyp::Int16 => String::from("I16"),
-                BaseTyp::Int32 => String::from("I32"),
-                BaseTyp::Int64 => String::from("I64"),
-                BaseTyp::Int128 => String::from("I128"),
-                BaseTyp::Isize => String::from("I32"),
-                BaseTyp::Named((Ident::Original(s), _), None) => s.clone(),
-                _ => panic!(), // should not happen
-            };
-            let secret = match &new_t.0 {
-                BaseTyp::Named(_, _) => true,
-                _ => false,
-            };
-            RcDoc::as_string("cast")
-                .append(RcDoc::space())
-                .append(new_t_doc)
-                .append(RcDoc::space())
-                .append(if secret {
-                    RcDoc::as_string("SEC")
-                } else {
-                    RcDoc::as_string("PUB")
-                })
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(
-                    x.as_ref().0.clone(),
-                    typ_dict,
-                )))
-                .group()
+        Expression::IntegerCasting(x, new_t, old_t) => {
+            let old_t = old_t.unwrap();
+            match old_t {
+                BaseTyp::Usize | BaseTyp::Isize => {
+                    (match &new_t.0 {
+                        BaseTyp::UInt8 => RcDoc::as_string("pub_u8"),
+                        BaseTyp::UInt16 => RcDoc::as_string("pub_u16"),
+                        BaseTyp::UInt32 => RcDoc::as_string("pub_u32"),
+                        BaseTyp::UInt64 => RcDoc::as_string("pub_u64"),
+                        BaseTyp::UInt128 => RcDoc::as_string("pub_u128"),
+                        BaseTyp::Usize => RcDoc::as_string("usize"),
+                        BaseTyp::Int8 => RcDoc::as_string("pub_i8"),
+                        BaseTyp::Int16 => RcDoc::as_string("pub_i16"),
+                        BaseTyp::Int32 => RcDoc::as_string("pub_i32"),
+                        BaseTyp::Int64 => RcDoc::as_string("pub_i64"),
+                        BaseTyp::Int128 => RcDoc::as_string("pub_i28"),
+                        BaseTyp::Isize => RcDoc::as_string("isize"),
+                        _ => panic!(), // should not happen
+                    })
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(x.0.clone(), typ_dict)))
+                }
+                _ => {
+                    let new_t_doc = match &new_t.0 {
+                        BaseTyp::UInt8 => String::from("U8"),
+                        BaseTyp::UInt16 => String::from("U16"),
+                        BaseTyp::UInt32 => String::from("U32"),
+                        BaseTyp::UInt64 => String::from("U64"),
+                        BaseTyp::UInt128 => String::from("U128"),
+                        BaseTyp::Usize => String::from("U32"),
+                        BaseTyp::Int8 => String::from("I8"),
+                        BaseTyp::Int16 => String::from("I16"),
+                        BaseTyp::Int32 => String::from("I32"),
+                        BaseTyp::Int64 => String::from("I64"),
+                        BaseTyp::Int128 => String::from("I128"),
+                        BaseTyp::Isize => String::from("I32"),
+                        BaseTyp::Named((Ident::Original(s), _), None) => s.clone(),
+                        _ => panic!(), // should not happen
+                    };
+                    let secret = match &new_t.0 {
+                        BaseTyp::Named(_, _) => true,
+                        _ => false,
+                    };
+                    RcDoc::as_string("cast")
+                        .append(RcDoc::space())
+                        .append(new_t_doc)
+                        .append(RcDoc::space())
+                        .append(if secret {
+                            RcDoc::as_string("SEC")
+                        } else {
+                            RcDoc::as_string("PUB")
+                        })
+                        .append(RcDoc::space())
+                        .append(make_paren(translate_expression(
+                            x.as_ref().0.clone(),
+                            typ_dict,
+                        )))
+                        .group()
+                }
+            }
         }
     }
 }
