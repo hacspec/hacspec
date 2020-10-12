@@ -81,7 +81,11 @@ let uint128_rotate_left (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 
 let uint128_rotate_right (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 =
   rotate_right u (size s)
 
-assume val usize_shift_right (u: uint_size) (s: pub_uint32) : uint_size
+let usize_shift_right (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
+  v (shift_right (size u) s)
+
+let usize_shift_left (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
+  v (shift_left (size u) s)
 
 (*** Loops *)
 
@@ -213,13 +217,14 @@ let seq_slice
   =
   LSeq.slice #a #(Seq.length s) s start (start + len)
 
-assume val seq_update
+let seq_update
   (#a: Type)
   (s: seq a)
   (start: uint_size)
   (input: seq a{start + LSeq.length input <= LSeq.length s})
-  : out:seq a{LSeq.length out = LSeq.length s}
-
+    : out:seq a{LSeq.length out = LSeq.length s}
+  =
+  LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input
 
 (**** Chunking *)
 

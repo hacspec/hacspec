@@ -424,9 +424,7 @@ fn translate_binop<'a, 'b>(
             RcDoc::as_string("%")
         }
         (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
-        (BinOpKind::Shl, BaseTyp::Isize) => RcDoc::as_string("`isize_shift_left`"),
         (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
-        (BinOpKind::Shr, BaseTyp::Isize) => RcDoc::as_string("`isize_shift_right`"),
         (BinOpKind::Rem, _) => RcDoc::as_string("%."),
         (BinOpKind::Sub, _) => RcDoc::as_string("-."),
         (BinOpKind::Add, _) => RcDoc::as_string("+."),
