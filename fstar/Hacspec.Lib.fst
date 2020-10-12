@@ -119,6 +119,8 @@ let lseq (a: Type) (len: uint_size) = LSeq.lseq a len
 
 let seq (a: Type) = s:LSeq.seq a{range (LSeq.length s) U32}
 
+let nseq (a: Type) (len: nat) = s:LSeq.seq a{LSeq.length s == len}
+
 let seq_len (#a: Type) (s: seq a) : nat = Seq.length s
 
 let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
@@ -222,7 +224,7 @@ let seq_update
   (s: seq a)
   (start: uint_size)
   (input: seq a{start + LSeq.length input <= LSeq.length s})
-    : out:seq a{LSeq.length out = LSeq.length s}
+    : nseq a (LSeq.length s)
   =
   LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input
 
@@ -274,7 +276,7 @@ let seq_get_chunk
 
 let seq_set_chunk
   (#a: Type)
-  (#len:uint_size)
+  (#len:uint_size) (* change to nseq but update_sub missing for nseq *)
   (s: lseq a len)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
