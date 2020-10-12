@@ -81,6 +81,30 @@ let uint128_rotate_left (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 
 let uint128_rotate_right (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 =
   rotate_right u (size s)
 
+
+(*** Loops *)
+
+let rec foldi_
+  (#acc: Type)
+  (cur_i: uint_size)
+  (hi: uint_size{cur_i <= hi})
+  (f: (i:uint_size{i < hi}) -> acc -> acc)
+  (cur: acc)
+    : Tot acc (decreases (hi - cur_i))
+  =
+  if cur_i = hi then cur else
+  foldi_ (cur_i + 1) hi f (f cur_i cur)
+
+let foldi
+  (#acc: Type)
+  (lo: uint_size)
+  (hi: uint_size{lo <= hi})
+  (f: (i:uint_size{i < hi}) -> acc -> acc)
+  (init: acc)
+    : acc
+  =
+  foldi_ lo hi f init
+
 (*** Seq *)
 
 module LSeq = Lib.Sequence
@@ -254,7 +278,18 @@ let seq_set_chunk
 
 (**** Numeric operations *)
 
-assume val array_xor (#a: Type) (#len: uint_size) (s1: lseq a len) (s2 : lseq a len) : lseq a len
+let array_xor
+  (#a: Type)
+  (#len: uint_size)
+  (xor: a -> a -> a)
+  (s1: lseq a len)
+  (s2 : lseq a len)
+    : lseq a len
+  =
+  let out = s1 in
+  foldi 0 len (fun i out ->
+    array_upd out i (array_index s1 i `xor` array_index s2 i)
+  ) out
 
 (**** Integers to arrays *)
 
@@ -267,30 +302,6 @@ let  uint32_from_le_bytes (s: lseq uint8 4) : uint32 =
 
 let uint128_from_le_bytes (input: lseq uint8 16) : uint128 =
   LBSeq.uint_from_bytes_le input
-
-(*** Loops *)
-
-let rec foldi_
-  (#acc: Type)
-  (cur_i: uint_size)
-  (hi: uint_size{cur_i <= hi})
-  (f: (i:uint_size{i < hi}) -> acc -> acc)
-  (cur: acc)
-    : Tot acc (decreases (hi - cur_i))
-  =
-  if cur_i = hi then cur else
-  foldi_ (cur_i + 1) hi f (f cur_i cur)
-
-let foldi
-  (#acc: Type)
-  (lo: uint_size)
-  (hi: uint_size{lo <= hi})
-  (f: (i:uint_size{i < hi}) -> acc -> acc)
-  (init: acc)
-    : acc
-  =
-  foldi_ lo hi f init
-
 
 (*** Nats *)
 

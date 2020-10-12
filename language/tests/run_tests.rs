@@ -56,7 +56,7 @@ fn run_chacha_simplified_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn chacha20_test() -> Result<(), Box<dyn std::error::Error>> {
+fn run_chacha20_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "../examples/hacspec-chacha20/src/chacha20.rs",
         Some("../fstar/Hacspec.Chacha20.fst"),

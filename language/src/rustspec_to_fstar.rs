@@ -365,33 +365,187 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
             RcDoc::as_string("/")
         }
-        (BinOpKind::Sub, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_minus`", SEQ_MODULE)),
-        (BinOpKind::Sub, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string(format!("`{}_minus`", ARRAY_MODULE))
+        (BinOpKind::Sub, BaseTyp::Seq(inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!(
+                "`{}_minus ({})`",
+                SEQ_MODULE,
+                inner_ty_op.pretty(0)
+            ))
         }
-        (BinOpKind::Add, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_add`", SEQ_MODULE)),
-        (BinOpKind::Add, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string(format!("`{}_add`", ARRAY_MODULE))
+        (BinOpKind::Sub, BaseTyp::Array(_, inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!(
+                "`{}_minus ({})`",
+                ARRAY_MODULE,
+                inner_ty_op.pretty(0)
+            ))
         }
-        (BinOpKind::Mul, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_mul`", SEQ_MODULE)),
-        (BinOpKind::Mul, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string(format!("`{}_mul`", ARRAY_MODULE))
+        (BinOpKind::Add, BaseTyp::Seq(inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!("`{}_add ({})`", SEQ_MODULE, inner_ty_op.pretty(0)))
         }
-        (BinOpKind::Div, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_div`", SEQ_MODULE)),
-        (BinOpKind::Div, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string(format!("`{}_div`", ARRAY_MODULE))
+        (BinOpKind::Add, BaseTyp::Array(_, inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!(
+                "`{}_add ({})`",
+                ARRAY_MODULE,
+                inner_ty_op.pretty(0)
+            ))
         }
-        (BinOpKind::BitXor, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_xor`", SEQ_MODULE)),
-        (BinOpKind::BitXor, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string(format!("`{}_xor`", ARRAY_MODULE))
+        (BinOpKind::Mul, BaseTyp::Seq(inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!("`{}_mul ({})`", SEQ_MODULE, inner_ty_op.pretty(0)))
         }
-        (BinOpKind::BitOr, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_or`", SEQ_MODULE)),
-        (BinOpKind::BitOr, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string(format!("`{}_or`", ARRAY_MODULE))
+        (BinOpKind::Mul, BaseTyp::Array(_, inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!(
+                "`{}_mul ({})`",
+                ARRAY_MODULE,
+                inner_ty_op.pretty(0)
+            ))
         }
-        (BinOpKind::BitAnd, BaseTyp::Seq(_)) => RcDoc::as_string(format!("`{}_and`", SEQ_MODULE)),
-        (BinOpKind::BitAnd, BaseTyp::Array(_, _)) => {
-            RcDoc::as_string(format!("`{}_and`", ARRAY_MODULE))
+        (BinOpKind::Div, BaseTyp::Seq(inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!("`{}_div ({})`", SEQ_MODULE, inner_ty_op.pretty(0)))
+        }
+        (BinOpKind::Div, BaseTyp::Array(_, inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!(
+                "`{}_div ({})`",
+                ARRAY_MODULE,
+                inner_ty_op.pretty(0)
+            ))
+        }
+        (BinOpKind::BitXor, BaseTyp::Seq(inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!("`{}_xor ({})`", SEQ_MODULE, inner_ty_op.pretty(0)))
+        }
+        (BinOpKind::BitXor, BaseTyp::Array(_, inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!(
+                "`{}_xor ({})`",
+                ARRAY_MODULE,
+                inner_ty_op.pretty(0)
+            ))
+        }
+        (BinOpKind::BitOr, BaseTyp::Seq(inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!("`{}_or ({})`", SEQ_MODULE, inner_ty_op.pretty(0)))
+        }
+        (BinOpKind::BitOr, BaseTyp::Array(_, inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!("`{}_or ({})`", ARRAY_MODULE, inner_ty_op.pretty(0)))
+        }
+        (BinOpKind::BitAnd, BaseTyp::Seq(inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!("`{}_and ({})`", SEQ_MODULE, inner_ty_op.pretty(0)))
+        }
+        (BinOpKind::BitAnd, BaseTyp::Array(_, inner_ty)) => {
+            let inner_ty_op = translate_binop(
+                op,
+                &(
+                    (Borrowing::Consumed, inner_ty.1.clone()),
+                    inner_ty.as_ref().clone(),
+                ),
+                typ_dict,
+            );
+            RcDoc::as_string(format!(
+                "`{}_and ({})`",
+                ARRAY_MODULE,
+                inner_ty_op.pretty(0)
+            ))
         }
         (BinOpKind::Sub, _) => RcDoc::as_string("-."),
         (BinOpKind::Add, _) => RcDoc::as_string("+."),
