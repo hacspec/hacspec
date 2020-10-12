@@ -166,10 +166,10 @@ let block (key_1910 : key) (ctr_1911 : uint32) (iv_1912 : iv) : state_bytes =
 let chacha (key_1914 : key) (iv_1915 : iv) (m_1916 : byte_seq) : byte_seq =
   let ctr_1917 = secret (pub_u32 0x1) in
   let blocks_out_1918 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_1916)) in
-  let (blocks_out_1918, ctr_1917) =
+  let (ctr_1917, blocks_out_1918) =
     foldi (usize 0) (seq_num_chunks (m_1916) (usize 64)) (fun i_1919 (
-        blocks_out_1918,
-        ctr_1917
+        ctr_1917,
+        blocks_out_1918
       ) ->
       let (block_len_1920, msg_block_1921) =
         seq_get_chunk (m_1916) (usize 64) (i_1919)
@@ -186,7 +186,7 @@ let chacha (key_1914 : key) (iv_1915 : iv) (m_1916 : byte_seq) : byte_seq =
             (usize 0, block_len_1920)))
       in
       let ctr_1917 = (ctr_1917) +. (secret (pub_u32 0x1)) in
-      (blocks_out_1918, ctr_1917))
-    (blocks_out_1918, ctr_1917)
+      (ctr_1917, blocks_out_1918))
+    (ctr_1917, blocks_out_1918)
   in
   blocks_out_1918
