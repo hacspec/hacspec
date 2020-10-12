@@ -51,7 +51,35 @@ let pub_i128 (n:range_t S128) : u:pub_int128{v u == n} = sint #S128 #PUB n
 
 (**** Operations *)
 
-assume val uint32_rotate_left (u: uint32) (s: uint_size) : uint32
+let uint8_rotate_left (u: uint8) (s: uint_size{s > 0 /\ s < 8}) : uint8 =
+  rotate_left u (size s)
+
+let uint8_rotate_right (u: uint8) (s: uint_size{s > 0 /\ s < 8}) : uint8 =
+  rotate_right u (size s)
+
+let uint16_rotate_left (u: uint16) (s: uint_size{s > 0 /\ s < 16}) : uint16 =
+  rotate_left u (size s)
+
+let uint16_rotate_right (u: uint16) (s: uint_size{s > 0 /\ s < 16}) : uint16 =
+  rotate_right u (size s)
+
+let uint32_rotate_left (u: uint32) (s: uint_size{s > 0 /\ s < 32}) : uint32 =
+  rotate_left u (size s)
+
+let uint32_rotate_right (u: uint32) (s: uint_size{s > 0 /\ s < 32}) : uint32 =
+  rotate_right u (size s)
+
+let uint64_rotate_left (u: uint64) (s: uint_size{s > 0 /\ s < 64}) : uint64 =
+  rotate_left u (size s)
+
+let uint64_rotate_right (u: uint64) (s: uint_size{s > 0 /\ s < 64}) : uint64 =
+  rotate_right u (size s)
+
+let uint128_rotate_left (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 =
+  rotate_left u (size s)
+
+let uint128_rotate_right (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 =
+  rotate_right u (size s)
 
 (*** Seq *)
 
@@ -242,7 +270,26 @@ let uint128_from_le_bytes (input: lseq uint8 16) : uint128 =
 
 (*** Loops *)
 
-assume val foldi (#acc: Type) (lo: uint_size) (hi: uint_size) (f: (i:uint_size{i < hi}) -> acc -> acc) (init: acc) : acc
+let rec foldi_
+  (#acc: Type)
+  (cur_i: uint_size)
+  (hi: uint_size{cur_i <= hi})
+  (f: (i:uint_size{i < hi}) -> acc -> acc)
+  (cur: acc)
+    : Tot acc (decreases (hi - cur_i))
+  =
+  if cur_i = hi then cur else
+  foldi_ (cur_i + 1) hi f (f cur_i cur)
+
+let foldi
+  (#acc: Type)
+  (lo: uint_size)
+  (hi: uint_size{lo <= hi})
+  (f: (i:uint_size{i < hi}) -> acc -> acc)
+  (init: acc)
+    : acc
+  =
+  foldi_ lo hi f init
 
 
 (*** Nats *)
@@ -255,9 +302,11 @@ let (+%) #n a b = (a + b) % n
 val ( *% ) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let ( *% ) #n a b = (a * b) % n
 
-assume val nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n}
+let nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n} =
+  v x
 
-assume val nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n}
+let nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n} =
+  v x
 
 let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   let n' = n % (pow2 (8 * len)) in

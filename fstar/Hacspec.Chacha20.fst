@@ -46,7 +46,9 @@ let line
   (a_1875 : state_idx)
   (b_1876 : state_idx)
   (d_1877 : state_idx)
-  (s_1878 : uint_size)
+  (s_1878 : uint_size{
+  (**) s_1878 > 0 /\ s_1878 < 32
+  })
   (m_1879 : state)
   : state =
   let state_1880 = m_1879 in
@@ -188,4 +190,3 @@ let chacha (key_1911 : key) (iv_1912 : iv) (m_1913 : byte_seq) : byte_seq =
     (blocks_out_1915, ctr_1914)
   in
   blocks_out_1915
-
