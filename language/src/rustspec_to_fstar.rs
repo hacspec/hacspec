@@ -435,7 +435,7 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Ge, _) => RcDoc::as_string(">=."),
         (BinOpKind::Gt, _) => RcDoc::as_string(">."),
         (BinOpKind::Ne, _) => RcDoc::as_string("!="),
-        (BinOpKind::Eq, _) => RcDoc::as_string("=="),
+        (BinOpKind::Eq, _) => RcDoc::as_string("="),
         (BinOpKind::And, _) => RcDoc::as_string("&&"),
         (BinOpKind::Or, _) => RcDoc::as_string("||"),
     }
@@ -701,7 +701,22 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
                 ))
         }
         Expression::IntegerCasting(x, new_t) => {
-            let new_t_doc = translate_base_typ(new_t.0.clone());
+            let new_t_doc = match &new_t.0 {
+                BaseTyp::UInt8 => String::from("U8"),
+                BaseTyp::UInt16 => String::from("U16"),
+                BaseTyp::UInt32 => String::from("U32"),
+                BaseTyp::UInt64 => String::from("U64"),
+                BaseTyp::UInt128 => String::from("U128"),
+                BaseTyp::Usize => String::from("U32"),
+                BaseTyp::Int8 => String::from("I8"),
+                BaseTyp::Int16 => String::from("I16"),
+                BaseTyp::Int32 => String::from("I32"),
+                BaseTyp::Int64 => String::from("I64"),
+                BaseTyp::Int128 => String::from("I128"),
+                BaseTyp::Isize => String::from("I32"),
+                BaseTyp::Named((Ident::Original(s), _), None) => s.clone(),
+                _ => panic!(), // should not happen
+            };
             let secret = match &new_t.0 {
                 BaseTyp::Named(_, _) => true,
                 _ => false,

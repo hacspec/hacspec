@@ -28,7 +28,7 @@ let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq) : byte_seq =
     (usize 16) * (((lmsg_10) `shift_right` (pub_u32 0x4)) + (usize 1))
   in
   let (pad_msg_12, pad_aad_11) =
-    if ((laad_9) %. (usize 16)) == (usize 0) then begin
+    if ((laad_9) %. (usize 16)) = (usize 0) then begin
       let pad_aad_11 = laad_9 in
       let pad_msg_12 = lmsg_10 in
       (pad_msg_12, pad_aad_11)
@@ -42,11 +42,11 @@ let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq) : byte_seq =
   let padded_msg_13 = seq_update (padded_msg_13) (pad_aad_11) (msg_8) in
   let padded_msg_13 =
     seq_update (padded_msg_13) ((pad_aad_11) + (pad_msg_12)) (
-      uint64_to_le_bytes (secret (cast pub_uint64 PUB (laad_9))))
+      uint64_to_le_bytes (secret (cast U64 PUB (laad_9))))
   in
   let padded_msg_13 =
     seq_update (padded_msg_13) (((pad_aad_11) + (pad_msg_12)) + (usize 8)) (
-      uint64_to_le_bytes (secret (cast pub_uint64 PUB (lmsg_10))))
+      uint64_to_le_bytes (secret (cast U64 PUB (lmsg_10))))
   in
   padded_msg_13
 
@@ -79,5 +79,5 @@ let decrypt
   let padded_msg_30 = pad_aad_msg (aad_25) (cipher_text_26) in
   let my_tag_31 = poly (padded_msg_30) (array_from_seq (32) (mac_key_29)) in
   let plain_text_32 = chacha (key_23) (iv_24) (cipher_text_26) in
-  (plain_text_32, (my_tag_31) == (tag_27))
+  (plain_text_32, (my_tag_31) = (tag_27))
 

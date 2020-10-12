@@ -212,6 +212,14 @@ let seq_slice
   =
   LSeq.slice #a #(Seq.length s) s start (start + len)
 
+assume val seq_update
+  (#a: Type)
+  (s: seq a)
+  (start: uint_size)
+  (input: seq a{start + LSeq.length input <= LSeq.length s})
+  : out:seq a{LSeq.length out = LSeq.length s}
+
+
 (**** Chunking *)
 
 let seq_num_chunks (#a: Type) (s: seq a) (chunk_len: uint_size{chunk_len > 0}) : uint_size =
@@ -293,15 +301,42 @@ let array_xor
 
 (**** Integers to arrays *)
 
+let uint32_to_le_bytes (x: uint32) : lseq uint8 4 =
+  LBSeq.uint_to_bytes_le x
 
 let uint32_to_be_bytes (x: uint32) : lseq uint8 4 =
   LBSeq.uint_to_bytes_be x
 
-let  uint32_from_le_bytes (s: lseq uint8 4) : uint32 =
+let uint32_from_le_bytes (s: lseq uint8 4) : uint32 =
+  LBSeq.uint_from_bytes_le s
+
+let uint32_from_be_bytes (s: lseq uint8 4) : uint32 =
   LBSeq.uint_from_bytes_be s
+
+let uint64_to_le_bytes (x: uint64) : lseq uint8 8 =
+  LBSeq.uint_to_bytes_le x
+
+let uint64_to_be_bytes (x: uint64) : lseq uint8 8 =
+  LBSeq.uint_to_bytes_be x
+
+let uint64_from_le_bytes (s: lseq uint8 8) : uint64 =
+  LBSeq.uint_from_bytes_le s
+
+let uint64_from_be_bytes (s: lseq uint8 8) : uint64 =
+  LBSeq.uint_from_bytes_be s
+
+let uint128_to_le_bytes (x: uint128) : lseq uint8 16 =
+  LBSeq.uint_to_bytes_le x
+
+let uint128_to_be_bytes (x: uint128) : lseq uint8 16 =
+  LBSeq.uint_to_bytes_be x
 
 let uint128_from_le_bytes (input: lseq uint8 16) : uint128 =
   LBSeq.uint_from_bytes_le input
+
+let uint128_from_be_bytes (s: lseq uint8 16) : uint128 =
+  LBSeq.uint_from_bytes_be s
+
 
 (*** Nats *)
 
