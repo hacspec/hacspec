@@ -5,142 +5,133 @@ module Hacspec.NtruPrime
 open Hacspec.Lib
 open FStar.Mul
 
-let build_irreducible (p_1843 : uint_size) : seq pub_int128 =
-  let irr_1844 = seq_new_ (pub_i128 0x0) ((p_1843) + (usize 1)) in
-  let irr_1844 = array_upd irr_1844 (usize 0) (- (pub_i128 0x1)) in
-  let irr_1844 = array_upd irr_1844 (usize 1) (- (pub_i128 0x1)) in
-  let irr_1844 = array_upd irr_1844 (p_1843) (pub_i128 0x1) in
-  irr_1844
+let build_irreducible (p_0 : uint_size) : seq pub_int128 =
+  let irr_1 = seq_new_ (pub_i128 0x0) ((p_0) + (usize 1)) in
+  let irr_1 = array_upd irr_1 (usize 0) (- (pub_i128 0x1)) in
+  let irr_1 = array_upd irr_1 (usize 1) (- (pub_i128 0x1)) in
+  let irr_1 = array_upd irr_1 (p_0) (pub_i128 0x1) in
+  irr_1
 
-let round_to_3
-  (poly_1845 : seq pub_int128)
-  (q_1846 : pub_int128)
-  : seq pub_int128 =
-  let result_1847 = seq_clone (poly_1845) in
-  let q_12_1848 = ((q_1846) -. (pub_i128 0x1)) /. (pub_i128 0x2) in
-  let (result_1847) =
-    foldi (usize 0) (seq_len (poly_1845)) (fun i_1849 (result_1847) ->
-      let (result_1847) =
-        if (array_index (poly_1845) (i_1849)) >. (q_12_1848) then begin
-          let result_1847 =
-            array_upd result_1847 (i_1849) (
-              (array_index (poly_1845) (i_1849)) -. (q_1846))
+let round_to_3 (poly_2 : seq pub_int128) (q_3 : pub_int128) : seq pub_int128 =
+  let result_4 = seq_clone (poly_2) in
+  let q_12_5 = ((q_3) -. (pub_i128 0x1)) /. (pub_i128 0x2) in
+  let (result_4) =
+    foldi (usize 0) (seq_len (poly_2)) (fun i_6 (result_4) ->
+      let (result_4) =
+        if (array_index (poly_2) (i_6)) >. (q_12_5) then begin
+          let result_4 =
+            array_upd result_4 (i_6) ((array_index (poly_2) (i_6)) -. (q_3))
           in
-          (result_1847)
-        end else begin (result_1847)
+          (result_4)
+        end else begin (result_4)
         end
       in
-      (result_1847))
-    (result_1847)
+      (result_4))
+    (result_4)
   in
-  let (result_1847) =
-    foldi (usize 0) (seq_len (result_1847)) (fun i_1850 (result_1847) ->
-      let (result_1847) =
-        if ((array_index (result_1847) (i_1850)) %. (pub_i128 0x3)) != (
+  let (result_4) =
+    foldi (usize 0) (seq_len (result_4)) (fun i_7 (result_4) ->
+      let (result_4) =
+        if ((array_index (result_4) (i_7)) %. (pub_i128 0x3)) != (
           pub_i128 0x0) then begin
-          let result_1847 =
-            array_upd result_1847 (i_1850) (
-              (array_index (result_1847) (i_1850)) -. (pub_i128 0x1))
+          let result_4 =
+            array_upd result_4 (i_7) (
+              (array_index (result_4) (i_7)) -. (pub_i128 0x1))
           in
-          let (result_1847) =
-            if ((array_index (result_1847) (i_1850)) %. (pub_i128 0x3)) != (
+          let (result_4) =
+            if ((array_index (result_4) (i_7)) %. (pub_i128 0x3)) != (
               pub_i128 0x0) then begin
-              let result_1847 =
-                array_upd result_1847 (i_1850) (
-                  (array_index (result_1847) (i_1850)) +. (pub_i128 0x2))
+              let result_4 =
+                array_upd result_4 (i_7) (
+                  (array_index (result_4) (i_7)) +. (pub_i128 0x2))
               in
-              (result_1847)
-            end else begin (result_1847)
+              (result_4)
+            end else begin (result_4)
             end
           in
-          (result_1847)
-        end else begin (result_1847)
+          (result_4)
+        end else begin (result_4)
         end
       in
-      (result_1847))
-    (result_1847)
+      (result_4))
+    (result_4)
   in
-  result_1847
+  result_4
 
 let encrypt
-  (r_1851 : seq pub_int128)
-  (h_1852 : seq pub_int128)
-  (q_1853 : pub_int128)
-  (irreducible_1854 : seq pub_int128)
+  (r_8 : seq pub_int128)
+  (h_9 : seq pub_int128)
+  (q_10 : pub_int128)
+  (irreducible_11 : seq pub_int128)
   : seq pub_int128 =
-  let pre_1855 = mul_poly_irr (r_1851) (h_1852) (irreducible_1854) (q_1853) in
-  round_to_3 (pre_1855) (q_1853)
+  let pre_12 = mul_poly_irr (r_8) (h_9) (irreducible_11) (q_10) in
+  round_to_3 (pre_12) (q_10)
 
 let ntru_prime_653_encrypt
-  (r_1856 : seq pub_int128)
-  (h_1857 : seq pub_int128)
+  (r_13 : seq pub_int128)
+  (h_14 : seq pub_int128)
   : seq pub_int128 =
-  let p_1858 = usize 653 in
-  let q_1859 = pub_i128 0x120d in
-  let w_1860 = usize 288 in
-  let irreducible_1861 = build_irreducible (p_1858) in
-  encrypt (r_1856) (h_1857) (q_1859) (irreducible_1861)
+  let p_15 = usize 653 in
+  let q_16 = pub_i128 0x120d in
+  let w_17 = usize 288 in
+  let irreducible_18 = build_irreducible (p_15) in
+  encrypt (r_13) (h_14) (q_16) (irreducible_18)
 
 let ntru_prime_653_decrypt
-  (c_1862 : seq pub_int128)
-  (key_f_1863 : seq pub_int128)
-  (key_v_1864 : seq pub_int128)
+  (c_19 : seq pub_int128)
+  (key_f_20 : seq pub_int128)
+  (key_v_21 : seq pub_int128)
   : (seq pub_int128 & bool) =
-  let p_1865 = usize 653 in
-  let q_1866 = pub_i128 0x120d in
-  let w_1867 = usize 288 in
-  let irreducible_1868 = build_irreducible (p_1865) in
-  let f_c_1869 =
-    mul_poly_irr (key_f_1863) (c_1862) (irreducible_1868) (q_1866)
+  let p_22 = usize 653 in
+  let q_23 = pub_i128 0x120d in
+  let w_24 = usize 288 in
+  let irreducible_25 = build_irreducible (p_22) in
+  let f_c_26 = mul_poly_irr (key_f_20) (c_19) (irreducible_25) (q_23) in
+  let f_3_c_and_decryption_ok_27 =
+    poly_to_ring (irreducible_25) (
+      add_poly (f_c_26) (add_poly (f_c_26) (f_c_26) (q_23)) (q_23)) (q_23)
   in
-  let f_3_c_and_decryption_ok_1870 =
-    poly_to_ring (irreducible_1868) (
-      add_poly (f_c_1869) (add_poly (f_c_1869) (f_c_1869) (q_1866)) (q_1866)) (
-      q_1866)
-  in
-  let (f_3_c_1871, ok_decrypt_1872) = f_3_c_and_decryption_ok_1870 in
-  let f_3_c_1873 = f_3_c_1871 in
-  let q_12_1874 = ((q_1866) -. (pub_i128 0x1)) /. (pub_i128 0x2) in
-  let (f_3_c_1873) =
-    foldi (usize 0) (seq_len (f_3_c_1873)) (fun i_1875 (f_3_c_1873) ->
-      let (f_3_c_1873) =
-        if (array_index (f_3_c_1873) (i_1875)) >. (q_12_1874) then begin
-          let f_3_c_1873 =
-            array_upd f_3_c_1873 (i_1875) (
-              (array_index (f_3_c_1873) (i_1875)) -. (q_1866))
+  let (f_3_c_28, ok_decrypt_29) = f_3_c_and_decryption_ok_27 in
+  let f_3_c_30 = f_3_c_28 in
+  let q_12_31 = ((q_23) -. (pub_i128 0x1)) /. (pub_i128 0x2) in
+  let (f_3_c_30) =
+    foldi (usize 0) (seq_len (f_3_c_30)) (fun i_32 (f_3_c_30) ->
+      let (f_3_c_30) =
+        if (array_index (f_3_c_30) (i_32)) >. (q_12_31) then begin
+          let f_3_c_30 =
+            array_upd f_3_c_30 (i_32) (
+              (array_index (f_3_c_30) (i_32)) -. (q_23))
           in
-          (f_3_c_1873)
-        end else begin (f_3_c_1873)
+          (f_3_c_30)
+        end else begin (f_3_c_30)
         end
       in
-      (f_3_c_1873))
-    (f_3_c_1873)
+      (f_3_c_30))
+    (f_3_c_30)
   in
-  let e_1876 = seq_new_ (pub_i128 0x0) (seq_len (f_3_c_1873)) in
-  let (e_1876) =
-    foldi (usize 0) (seq_len (e_1876)) (fun i_1877 (e_1876) ->
-      let e_1876 =
-        array_upd e_1876 (i_1877) (
-          (array_index (f_3_c_1873) (i_1877)) %. (pub_i128 0x3))
+  let e_33 = seq_new_ (pub_i128 0x0) (seq_len (f_3_c_30)) in
+  let (e_33) =
+    foldi (usize 0) (seq_len (e_33)) (fun i_34 (e_33) ->
+      let e_33 =
+        array_upd e_33 (i_34) (
+          (array_index (f_3_c_30) (i_34)) %. (pub_i128 0x3))
       in
-      (e_1876))
-    (e_1876)
+      (e_33))
+    (e_33)
   in
-  let e_1876 = make_positive (e_1876) (pub_i128 0x3) in
-  let r_1878 =
-    mul_poly_irr (e_1876) (key_v_1864) (irreducible_1868) (pub_i128 0x3)
-  in
-  let (r_1878) =
-    foldi (usize 0) (seq_len (r_1878)) (fun i_1879 (r_1878) ->
-      let (r_1878) =
-        if (array_index (r_1878) (i_1879)) == (pub_i128 0x2) then begin
-          let r_1878 = array_upd r_1878 (i_1879) (- (pub_i128 0x1)) in
-          (r_1878)
-        end else begin (r_1878)
+  let e_33 = make_positive (e_33) (pub_i128 0x3) in
+  let r_35 = mul_poly_irr (e_33) (key_v_21) (irreducible_25) (pub_i128 0x3) in
+  let (r_35) =
+    foldi (usize 0) (seq_len (r_35)) (fun i_36 (r_35) ->
+      let (r_35) =
+        if (array_index (r_35) (i_36)) == (pub_i128 0x2) then begin
+          let r_35 = array_upd r_35 (i_36) (- (pub_i128 0x1)) in
+          (r_35)
+        end else begin (r_35)
         end
       in
-      (r_1878))
-    (r_1878)
+      (r_35))
+    (r_35)
   in
-  (r_1878, ok_decrypt_1872)
+  (r_35, ok_decrypt_29)
 

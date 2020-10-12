@@ -3,19 +3,33 @@ use crate::rustspec::*;
 use crate::typechecker::{DictEntry, TypeDict};
 use core::iter::IntoIterator;
 use heck::SnakeCase;
+use lazy_static::lazy_static;
 use pretty::RcDoc;
 use regex::Regex;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::path;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Mutex;
 
 const SEQ_MODULE: &'static str = "seq";
 
 const ARRAY_MODULE: &'static str = "array";
 
 const NAT_MODULE: &'static str = "nat";
+
+static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+fn fresh_codegen_id() -> usize {
+    ID_COUNTER.fetch_add(1, Ordering::SeqCst)
+}
+
+lazy_static! {
+    static ref ID_MAP: Mutex<HashMap<usize, usize>> = Mutex::new(HashMap::new());
+}
 
 fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
@@ -114,7 +128,18 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     let ident_str = match x {
         Ident::Original(s) => s.clone(),
-        Ident::Hacspec(id, s) => format!("{}_{}", s, id.0),
+        Ident::Hacspec(id, s) => {
+            let mut id_map = ID_MAP.lock().unwrap();
+            let codegen_id: usize = match id_map.get(&id.0) {
+                Some(c_id) => *c_id,
+                None => {
+                    let c_id = fresh_codegen_id();
+                    id_map.insert(id.0, c_id);
+                    c_id
+                }
+            };
+            format!("{}_{}", s, codegen_id)
+        }
     };
     translate_ident_str(ident_str)
 }
