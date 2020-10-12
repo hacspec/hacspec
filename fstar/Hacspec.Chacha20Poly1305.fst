@@ -22,31 +22,35 @@ let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq) : byte_seq =
   let laad_9 = seq_len (aad_7) in
   let lmsg_10 = seq_len (msg_8) in
   let pad_aad_11 =
-    (usize 16) * (((laad_9) `shift_right` (pub_u32 0x4)) + (usize 1))
+    (usize 16) * (((laad_9) `usize_shift_right` (pub_u32 0x4)) + (usize 1))
   in
   let pad_msg_12 =
-    (usize 16) * (((lmsg_10) `shift_right` (pub_u32 0x4)) + (usize 1))
+    (usize 16) * (((lmsg_10) `usize_shift_right` (pub_u32 0x4)) + (usize 1))
   in
-  let (pad_msg_12, pad_aad_11) =
-    if ((laad_9) %. (usize 16)) = (usize 0) then begin
+  (**) assume(range pad_aad_11 U32);
+  let (pad_aad_11, pad_msg_12) =
+    if ((laad_9) % (usize 16)) = (usize 0) then begin
       let pad_aad_11 = laad_9 in
       let pad_msg_12 = lmsg_10 in
-      (pad_msg_12, pad_aad_11)
-    end else begin (pad_msg_12, pad_aad_11)
+      (pad_aad_11, pad_msg_12)
+    end else begin (pad_aad_11, pad_msg_12)
     end
   in
+  (**) assume(range (((pad_aad_11) + (pad_msg_12)) + (usize 16)) U32);
   let padded_msg_13 =
     seq_new_ (secret (pub_u8 0x8)) (((pad_aad_11) + (pad_msg_12)) + (usize 16))
   in
+  (**) assume(seq_len aad_7 <= seq_len padded_msg_13);
   let padded_msg_13 = seq_update (padded_msg_13) (usize 0) (aad_7) in
+  (**) assume(pad_aad_11 + seq_len msg_8 <= seq_len padded_msg_13);
   let padded_msg_13 = seq_update (padded_msg_13) (pad_aad_11) (msg_8) in
   let padded_msg_13 =
     seq_update (padded_msg_13) ((pad_aad_11) + (pad_msg_12)) (
-      uint64_to_le_bytes (secret (cast U64 PUB (laad_9))))
+      uint64_to_le_bytes (secret (cast U64 PUB (size laad_9))))
   in
   let padded_msg_13 =
     seq_update (padded_msg_13) (((pad_aad_11) + (pad_msg_12)) + (usize 8)) (
-      uint64_to_le_bytes (secret (cast U64 PUB (lmsg_10))))
+      uint64_to_le_bytes (secret (cast U64 PUB (size lmsg_10))))
   in
   padded_msg_13
 
@@ -80,4 +84,3 @@ let decrypt
   let my_tag_31 = poly (padded_msg_30) (array_from_seq (32) (mac_key_29)) in
   let plain_text_32 = chacha (key_23) (iv_24) (cipher_text_26) in
   (plain_text_32, (my_tag_31) = (tag_27))
-

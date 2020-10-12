@@ -378,18 +378,6 @@ fn translate_binop<'a, 'b>(
         _ => (),
     };
     match (op, &(op_typ.1).0) {
-        (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
-            RcDoc::as_string("-")
-        }
-        (BinOpKind::Add, BaseTyp::Usize) | (BinOpKind::Add, BaseTyp::Isize) => {
-            RcDoc::as_string("+")
-        }
-        (BinOpKind::Mul, BaseTyp::Usize) | (BinOpKind::Mul, BaseTyp::Isize) => {
-            RcDoc::as_string("*")
-        }
-        (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
-            RcDoc::as_string("/")
-        }
         (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, inner_ty)) => {
             let inner_ty_op = translate_binop(
                 op,
@@ -420,11 +408,30 @@ fn translate_binop<'a, 'b>(
                 inner_ty_op.pretty(0)
             ))
         }
+        (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
+            RcDoc::as_string("-")
+        }
+        (BinOpKind::Add, BaseTyp::Usize) | (BinOpKind::Add, BaseTyp::Isize) => {
+            RcDoc::as_string("+")
+        }
+        (BinOpKind::Mul, BaseTyp::Usize) | (BinOpKind::Mul, BaseTyp::Isize) => {
+            RcDoc::as_string("*")
+        }
+        (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
+            RcDoc::as_string("/")
+        }
+        (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
+            RcDoc::as_string("%")
+        }
+        (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
+        (BinOpKind::Shl, BaseTyp::Isize) => RcDoc::as_string("`isize_shift_left`"),
+        (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
+        (BinOpKind::Shr, BaseTyp::Isize) => RcDoc::as_string("`isize_shift_right`"),
+        (BinOpKind::Rem, _) => RcDoc::as_string("%."),
         (BinOpKind::Sub, _) => RcDoc::as_string("-."),
         (BinOpKind::Add, _) => RcDoc::as_string("+."),
         (BinOpKind::Mul, _) => RcDoc::as_string("*."),
         (BinOpKind::Div, _) => RcDoc::as_string("/."),
-        (BinOpKind::Rem, _) => RcDoc::as_string("%."),
         (BinOpKind::BitXor, _) => RcDoc::as_string("^."),
         (BinOpKind::BitAnd, _) => RcDoc::as_string("&."),
         (BinOpKind::BitOr, _) => RcDoc::as_string("|."),

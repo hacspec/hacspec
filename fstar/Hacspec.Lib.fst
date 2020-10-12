@@ -81,6 +81,7 @@ let uint128_rotate_left (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 
 let uint128_rotate_right (u: uint128) (s: uint_size{s > 0 /\ s < 128}) : uint128 =
   rotate_right u (size s)
 
+assume val usize_shift_right (u: uint_size) (s: pub_uint32) : uint_size
 
 (*** Loops *)
 
