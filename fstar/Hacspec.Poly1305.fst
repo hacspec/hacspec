@@ -5,6 +5,8 @@ module Hacspec.Poly1305
 open Hacspec.Lib
 open FStar.Mul
 
+
+
 type key_poly = lseq (uint8) (usize 32)
 
 let blocksize : uint_size =
@@ -73,3 +75,4 @@ let poly (m_10 : byte_seq) (key_11 : key_poly) : tag =
   in
   let a_22 = (a_16) +% (s_15) in
   num_to_16_le_bytes (a_22)
+

@@ -2,7 +2,7 @@ use crate::rustspec::*;
 
 use crate::typechecker::{DictEntry, TypeDict};
 use core::iter::IntoIterator;
-use heck::SnakeCase;
+use heck::{SnakeCase, TitleCase};
 use lazy_static::lazy_static;
 use pretty::RcDoc;
 use regex::Regex;
@@ -700,7 +700,28 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
                     ),
                 ))
         }
-        Expression::IntegerCasting(_, _) => unimplemented!(),
+        Expression::IntegerCasting(x, new_t) => {
+            let new_t_doc = translate_base_typ(new_t.0.clone());
+            let secret = match &new_t.0 {
+                BaseTyp::Named(_, _) => true,
+                _ => false,
+            };
+            RcDoc::as_string("cast")
+                .append(RcDoc::space())
+                .append(new_t_doc)
+                .append(RcDoc::space())
+                .append(if secret {
+                    RcDoc::as_string("SEC")
+                } else {
+                    RcDoc::as_string("PUB")
+                })
+                .append(RcDoc::space())
+                .append(make_paren(translate_expression(
+                    x.as_ref().0.clone(),
+                    typ_dict,
+                )))
+                .group()
+        }
     }
 }
 
@@ -969,6 +990,22 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
         module_name
     )
     .unwrap();
+    let i_c_iter: Vec<RcDoc<()>> = p
+        .imported_crates
+        .iter()
+        .skip(1)
+        .map(|(kr, _)| {
+            RcDoc::as_string(format!(
+                "open {}",
+                str::replace(&kr.to_title_case(), " ", ".")
+            ))
+        })
+        .collect();
+    RcDoc::intersperse(i_c_iter, RcDoc::line())
+        .append(RcDoc::hardline())
+        .append(RcDoc::hardline())
+        .render(width, &mut w)
+        .unwrap();
     translate_program(p, typ_dict)
         .render(width, &mut w)
         .unwrap();

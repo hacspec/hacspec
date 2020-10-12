@@ -5,6 +5,8 @@ module Hacspec.Chacha20
 open Hacspec.Lib
 open FStar.Mul
 
+
+
 type state = lseq (uint32) (usize 16)
 
 let state_idx =
@@ -41,7 +43,7 @@ let state_to_bytes (x_0 : state) : state_bytes =
   in
   r_1
 
-let line
+let chacha_line
   (a_4 : state_idx)
   (b_5 : state_idx)
   (d_6 : state_idx)
@@ -65,43 +67,43 @@ let line
   in
   state_9
 
-let quarter_round
+let chacha_quarter_round
   (a_10 : state_idx)
   (b_11 : state_idx)
   (c_12 : state_idx)
   (d_13 : state_idx)
   (state_14 : state)
   : state =
-  let state_15 = line (a_10) (b_11) (d_13) (usize 16) (state_14) in
-  let state_16 = line (c_12) (d_13) (b_11) (usize 12) (state_15) in
-  let state_17 = line (a_10) (b_11) (d_13) (usize 8) (state_16) in
-  line (c_12) (d_13) (b_11) (usize 7) (state_17)
+  let state_15 = chacha_line (a_10) (b_11) (d_13) (usize 16) (state_14) in
+  let state_16 = chacha_line (c_12) (d_13) (b_11) (usize 12) (state_15) in
+  let state_17 = chacha_line (a_10) (b_11) (d_13) (usize 8) (state_16) in
+  chacha_line (c_12) (d_13) (b_11) (usize 7) (state_17)
 
-let double_round (state_18 : state) : state =
+let chacha_double_round (state_18 : state) : state =
   let state_19 =
-    quarter_round (usize 0) (usize 4) (usize 8) (usize 12) (state_18)
+    chacha_quarter_round (usize 0) (usize 4) (usize 8) (usize 12) (state_18)
   in
   let state_20 =
-    quarter_round (usize 1) (usize 5) (usize 9) (usize 13) (state_19)
+    chacha_quarter_round (usize 1) (usize 5) (usize 9) (usize 13) (state_19)
   in
   let state_21 =
-    quarter_round (usize 2) (usize 6) (usize 10) (usize 14) (state_20)
+    chacha_quarter_round (usize 2) (usize 6) (usize 10) (usize 14) (state_20)
   in
   let state_22 =
-    quarter_round (usize 3) (usize 7) (usize 11) (usize 15) (state_21)
+    chacha_quarter_round (usize 3) (usize 7) (usize 11) (usize 15) (state_21)
   in
   let state_23 =
-    quarter_round (usize 0) (usize 5) (usize 10) (usize 15) (state_22)
+    chacha_quarter_round (usize 0) (usize 5) (usize 10) (usize 15) (state_22)
   in
   let state_24 =
-    quarter_round (usize 1) (usize 6) (usize 11) (usize 12) (state_23)
+    chacha_quarter_round (usize 1) (usize 6) (usize 11) (usize 12) (state_23)
   in
   let state_25 =
-    quarter_round (usize 2) (usize 7) (usize 8) (usize 13) (state_24)
+    chacha_quarter_round (usize 2) (usize 7) (usize 8) (usize 13) (state_24)
   in
-  quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_25)
+  chacha_quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_25)
 
-let block_init (key_26 : key) (ctr_27 : uint32) (iv_28 : iv) : state =
+let chacha_block_init (key_26 : key) (ctr_27 : uint32) (iv_28 : iv) : state =
   array_from_list (
     let l =
       [
@@ -135,12 +137,12 @@ let block_init (key_26 : key) (ctr_27 : uint32) (iv_28 : iv) : state =
       ]
     in assert_norm (List.Tot.length l == 16); l)
 
-let block_inner (key_29 : key) (ctr_30 : uint32) (iv_31 : iv) : state =
-  let st_32 = block_init (key_29) (ctr_30) (iv_31) in
+let chacha_block_inner (key_29 : key) (ctr_30 : uint32) (iv_31 : iv) : state =
+  let st_32 = chacha_block_init (key_29) (ctr_30) (iv_31) in
   let state_33 = st_32 in
   let (state_33) =
     foldi (usize 0) (usize 10) (fun i_34 (state_33) ->
-      let state_33 = double_round (state_33) in
+      let state_33 = chacha_double_round (state_33) in
       (state_33))
     (state_33)
   in
@@ -155,22 +157,22 @@ let block_inner (key_29 : key) (ctr_30 : uint32) (iv_31 : iv) : state =
   in
   state_33
 
-let block (key_36 : key) (ctr_37 : uint32) (iv_38 : iv) : state_bytes =
-  let state_39 = block_inner (key_36) (ctr_37) (iv_38) in
+let chacha_block (key_36 : key) (ctr_37 : uint32) (iv_38 : iv) : state_bytes =
+  let state_39 = chacha_block_inner (key_36) (ctr_37) (iv_38) in
   state_to_bytes (state_39)
 
 let chacha (key_40 : key) (iv_41 : iv) (m_42 : byte_seq) : byte_seq =
   let ctr_43 = secret (pub_u32 0x1) in
   let blocks_out_44 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_42)) in
-  let (ctr_43, blocks_out_44) =
+  let (blocks_out_44, ctr_43) =
     foldi (usize 0) (seq_num_chunks (m_42) (usize 64)) (fun i_45 (
-        ctr_43,
-        blocks_out_44
+        blocks_out_44,
+        ctr_43
       ) ->
       let (block_len_46, msg_block_47) =
         seq_get_chunk (m_42) (usize 64) (i_45)
       in
-      let key_block_48 = block (key_40) (ctr_43) (iv_41) in
+      let key_block_48 = chacha_block (key_40) (ctr_43) (iv_41) in
       let msg_block_padded_49 = array_new_ (secret (pub_u8 0x8)) (64) in
       let msg_block_padded_50 =
         array_update_start (msg_block_padded_49) (msg_block_47)
@@ -182,7 +184,8 @@ let chacha (key_40 : key) (iv_41 : iv) (m_42 : byte_seq) : byte_seq =
             (usize 0, block_len_46)))
       in
       let ctr_43 = (ctr_43) +. (secret (pub_u32 0x1)) in
-      (ctr_43, blocks_out_44))
-    (ctr_43, blocks_out_44)
+      (blocks_out_44, ctr_43))
+    (blocks_out_44, ctr_43)
   in
   blocks_out_44
+
