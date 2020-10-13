@@ -8,10 +8,10 @@ use std::fmt;
 
 pub type Spanned<T> = (T, Span);
 
-#[derive(Clone, Hash, Debug, PartialEq, Eq)]
+#[derive(Clone, Hash, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HacspecId(pub usize);
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Ident {
     Original(String),
     Hacspec(HacspecId, String),

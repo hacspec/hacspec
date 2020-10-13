@@ -3,6 +3,7 @@ use crate::rustspec::*;
 use crate::typechecker::{DictEntry, TypeDict};
 use core::iter::IntoIterator;
 use heck::{SnakeCase, TitleCase};
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use pretty::RcDoc;
 use regex::Regex;
@@ -799,7 +800,13 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
             let mutated_info = mutated.as_ref().unwrap().as_ref();
             make_let_binding(
-                make_tuple(mutated_info.vars.iter().map(|i| translate_ident(i.clone()))),
+                make_tuple(
+                    mutated_info
+                        .vars
+                        .iter()
+                        .sorted()
+                        .map(|i| translate_ident(i.clone())),
+                ),
                 None,
                 RcDoc::as_string("if")
                     .append(RcDoc::space())
@@ -834,8 +841,13 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
         }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
-            let mut_tuple =
-                make_tuple(mutated_info.vars.iter().map(|i| translate_ident(i.clone())));
+            let mut_tuple = make_tuple(
+                mutated_info
+                    .vars
+                    .iter()
+                    .sorted()
+                    .map(|i| translate_ident(i.clone())),
+            );
             let loop_expr = RcDoc::as_string("foldi")
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e1.clone(), typ_dict)))

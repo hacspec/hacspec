@@ -3,6 +3,7 @@ use crate::HacspecErrorEmitter;
 
 use hacspec_sig;
 use im::{HashMap, HashSet};
+use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
@@ -1519,6 +1520,7 @@ fn var_set_to_tuple(vars: &VarSet, span: &Span) -> Statement {
     Statement::ReturnExp(if vars.len() > 0 {
         Expression::Tuple(
             vars.iter()
+                .sorted()
                 .map(|i| (Expression::Named(i.clone()), span.clone()))
                 .collect(),
         )
