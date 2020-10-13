@@ -119,14 +119,14 @@ let lseq (a: Type) (len: uint_size) = LSeq.lseq a len
 
 let seq (a: Type) = s:LSeq.seq a{range (LSeq.length s) U32}
 
+unfold let byte_seq = seq uint8
+
 let nseq (a: Type) (len: nat) = s:LSeq.seq a{LSeq.length s == len}
 
 let seq_len (#a: Type) (s: seq a) : nat = Seq.length s
 
 let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
   Seq.create len init
-
-unfold let byte_seq = seq uint8
 
 let array_from_list
   (#a: Type)
