@@ -764,6 +764,7 @@ fn translate_expr(
                 ExprTranslationResult::TransExpr(Expression::IntegerCasting(
                     Box::new(new_e1),
                     new_t1,
+                    None,
                 )),
                 e.span.clone(),
             ))

@@ -21,7 +21,7 @@ mod typechecker;
 
 use clap::App;
 use hacspec_sig::Signature;
-use rustc_driver::{run_compiler, Callbacks, Compilation};
+use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
 use rustc_interface::{
@@ -177,5 +177,7 @@ fn main() -> Result<(), ()> {
             }),
     };
     let args = env::args().collect::<Vec<String>>();
-    run_compiler(&args, &mut callbacks, None, None, None).map_err(|_| ())
+    RunCompiler::new(&args, &mut callbacks)
+        .run()
+        .map_err(|_| ())
 }
