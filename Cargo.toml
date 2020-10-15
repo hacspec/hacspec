@@ -6,6 +6,7 @@ members = [
     "utils/secret-integers",
     "utils/abstract-integers",
     "utils/attributes",
+    "utils/provider",
     "utils/sig",
     "language",
     "examples/hacspec-chacha20",
