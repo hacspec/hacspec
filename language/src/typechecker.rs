@@ -403,7 +403,7 @@ fn bind_variable_type(
             None => {
                 sess.span_rustspec_err(
                     ty.1.clone(),
-                    format!("type {} cannot be unified, internal Hacspec error", ty.0).as_str(),
+                    format!("type {} cannot be unified, Hacspec does not handle that kind of parametricity", ty.0).as_str(),
                 );
                 Err(())
             }
@@ -772,7 +772,7 @@ fn typecheck_expression(
             )?;
             match op {
                 BinOpKind::Shl | BinOpKind::Shr => match &(t2.1).0 {
-                    BaseTyp::UInt32 => {
+                    BaseTyp::UInt32 | BaseTyp::Usize => {
                         if is_numeric(&t1, typ_dict) {
                             Ok((
                                 Expression::Binary(
@@ -801,7 +801,7 @@ fn typecheck_expression(
                         sess.span_rustspec_err(
                             e2.1.clone(),
                             format!(
-                                "the shifting amount has to be an u32, found type {}{}",
+                                "the shifting amount has to be an u32 or an usize, found type {}{}",
                                 (t2.0).0,
                                 (t2.1).0
                             )
@@ -1096,7 +1096,7 @@ fn typecheck_expression(
                     })
                     .collect(),
             )?;
-            let new_array_typ = BaseTyp::Array(array_len, Box::new((cell_type, cell_type_span)));
+            let new_array_typ = BaseTyp::Named(array_type.clone(), None);
             Ok((
                 Expression::NewArray(
                     array_type.clone(),
