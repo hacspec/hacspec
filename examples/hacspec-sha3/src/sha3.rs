@@ -118,7 +118,7 @@ fn absorb_block(mut s: State, block: &ByteSeq) -> State {
     for i in 0..block.len() {
         let w = i >> 3u32;
         let o = 8 * (i & 7);
-        s[w] = s[w] ^ U64::from(block[i]) << o;
+        s[w] = s[w] ^ U64_from_U8(block[i]) << o;
     }
     keccakf1600(s)
 }
@@ -130,7 +130,7 @@ fn squeeze(mut s: State, nbytes: usize, rate: usize) -> ByteSeq {
         let w = pos >> 3u32;
         let o = 8 * (pos & 7);
         let b = (s[w] >> o) & U64::classify(0xffu64);
-        out[i] = b.into();
+        out[i] = U8_from_U64(b);
         if ((i + 1) % rate) == 0 {
             s = keccakf1600(s);
         }

@@ -460,29 +460,41 @@ define_secret_signed_integer!(I64, i64, 64);
 define_secret_signed_integer!(I128, i128, 128);
 
 macro_rules! define_uU_casting {
-    ($from:ident, $to:ident, $to_repr:ident) => {
+    ($from:ident, $to:ident, $to_repr:ident, $func_name: ident) => {
         impl From<$from> for $to {
             #[inline]
             fn from(x: $from) -> $to {
                 $to(<$to_repr>::from(x))
             }
         }
+
+        #[inline]
+        #[allow(non_snake_case)]
+        pub fn $func_name(x: $from) -> $to {
+            $to(<$to_repr>::from(x))
+        }
     };
 }
 
 macro_rules! define_usize_casting {
-    ($from:ident, $to:ident, $to_repr:ident) => {
+    ($from:ident, $to:ident, $to_repr:ident, $func_name: ident) => {
         impl From<$from> for $to {
             #[inline]
             fn from(x: $from) -> $to {
                 $to(x as $to_repr)
             }
         }
+
+        #[inline]
+        #[allow(non_snake_case)]
+        pub fn $func_name(x: $from) -> $to {
+            $to(x as $to_repr)
+        }
     };
 }
 
 macro_rules! define_Uu_casting {
-    ($from:ident, $to:ident) => {
+    ($from:ident, $to:ident, $func_name: ident) => {
         /// **Warning:** conversion can be lossy!
         impl From<$from> for $to {
             #[inline]
@@ -490,28 +502,48 @@ macro_rules! define_Uu_casting {
                 <$to>::from(x.declassify())
             }
         }
+
+        /// **Warning:** conversion can be lossy!
+        #[inline]
+        #[allow(non_snake_case)]
+        pub fn $func_name(x: $from) -> $to {
+            <$to>::from(x.declassify())
+        }
     };
 }
 
 macro_rules! define_safe_casting {
-    ($from:ident, $to:ident, $to_repr:ident) => {
+    ($from:ident, $to:ident, $to_repr:ident, $func_name: ident) => {
         impl From<$from> for $to {
             #[inline]
             fn from(x: $from) -> $to {
                 $to(x.0 as $to_repr)
             }
         }
+
+        #[inline]
+        #[allow(non_snake_case)]
+        pub fn $func_name(x: $from) -> $to {
+            $to(x.0 as $to_repr)
+        }
     };
 }
 
 macro_rules! define_unsafe_casting {
-    ($from:ident, $to:ident, $to_repr:ident) => {
+    ($from:ident, $to:ident, $to_repr:ident, $func_name: ident) => {
         /// **Warning:** wrapping semantics.
         impl From<$from> for $to {
             #[inline]
             fn from(x: $from) -> $to {
                 $to(x.0 as $to_repr)
             }
+        }
+
+        /// **Warning:** wrapping semantics.
+        #[inline]
+        #[allow(non_snake_case)]
+        pub fn $func_name(x: $from) -> $to {
+            $to(x.0 as $to_repr)
         }
     };
 }
@@ -538,107 +570,107 @@ macro_rules! define_signed_unsigned_casting {
 // Casting
 
 // U128 <-> Un{n < 128}
-define_safe_casting!(U8, U128, u128);
-define_unsafe_casting!(U128, U8, u8);
-define_safe_casting!(U16, U128, u128);
-define_unsafe_casting!(U128, U16, u16);
-define_safe_casting!(U32, U128, u128);
-define_unsafe_casting!(U128, U32, u32);
-define_safe_casting!(U64, U128, u128);
-define_unsafe_casting!(U128, U64, u64);
+define_safe_casting!(U8, U128, u128, U128_from_U8);
+define_unsafe_casting!(U128, U8, u8, U8_from_U128);
+define_safe_casting!(U16, U128, u128, U128_from_U16);
+define_unsafe_casting!(U128, U16, u16, U16_from_U128);
+define_safe_casting!(U32, U128, u128, U128_from_U32);
+define_unsafe_casting!(U128, U32, u32, U32_from_U128);
+define_safe_casting!(U64, U128, u128, U128_from_U64);
+define_unsafe_casting!(U128, U64, u64, U64_from_U128);
 
 // U64 <-> Un{n < 64}
-define_safe_casting!(U8, U64, u64);
-define_unsafe_casting!(U64, U8, u8);
-define_safe_casting!(U16, U64, u64);
-define_unsafe_casting!(U64, U16, u16);
-define_safe_casting!(U32, U64, u64);
-define_unsafe_casting!(U64, U32, u32);
+define_safe_casting!(U8, U64, u64, U64_from_U8);
+define_unsafe_casting!(U64, U8, u8, U8_from_U64);
+define_safe_casting!(U16, U64, u64, U64_from_U16);
+define_unsafe_casting!(U64, U16, u16, U16_from_U64);
+define_safe_casting!(U32, U64, u64, U64_from_U32);
+define_unsafe_casting!(U64, U32, u32, U32_from_U64);
 
 // U32 <-> Un{n < 32}
-define_safe_casting!(U8, U32, u32);
-define_unsafe_casting!(U32, U8, u8);
-define_safe_casting!(U16, U32, u32);
-define_unsafe_casting!(U32, U16, u16);
-
-// U8 <-> u
-define_Uu_casting!(U8, u8);
-define_Uu_casting!(U8, u16);
-define_Uu_casting!(U8, u32);
-define_Uu_casting!(U8, u64);
-define_Uu_casting!(U8, u128);
-define_Uu_casting!(U8, usize);
-define_usize_casting!(usize, U8, u8);
-
-// U16 <-> u
-define_Uu_casting!(U16, u16);
-define_Uu_casting!(U16, u32);
-define_Uu_casting!(U16, u64);
-define_Uu_casting!(U16, u128);
-
-// U32 <-> u
-define_Uu_casting!(U32, u32);
-define_Uu_casting!(U32, u64);
-define_Uu_casting!(U32, u128);
-
-// U64 <-> u
-define_Uu_casting!(U64, u64);
-define_Uu_casting!(U64, u128);
-
-// U128 <-> u
-define_Uu_casting!(U128, u128);
-
-// u16 <-> U
-define_uU_casting!(u8, U16, u16);
-
-// u32 <-> U
-define_uU_casting!(u8, U32, u32);
-define_uU_casting!(u16, U32, u32);
-
-// u64 <-> U
-define_uU_casting!(u8, U64, u64);
-define_uU_casting!(u16, U64, u64);
-define_uU_casting!(u32, U64, u64);
-define_usize_casting!(usize, U64, u64);
-
-// u128 <-> U
-define_uU_casting!(u8, U128, u128);
-define_uU_casting!(u16, U128, u128);
-define_uU_casting!(u32, U128, u128);
-define_uU_casting!(u64, U128, u128);
-define_usize_casting!(usize, U128, u128);
+define_safe_casting!(U8, U32, u32, U32_from_U8);
+define_unsafe_casting!(U32, U8, u8, U8_from_U32);
+define_safe_casting!(U16, U32, u32, U32_from_U16);
+define_unsafe_casting!(U32, U16, u16, U16_from_U32);
 
 // U16 <-> Un{n < 16}
-define_safe_casting!(U8, U16, u16);
-define_unsafe_casting!(U16, U8, u8);
+define_safe_casting!(U8, U16, u16, U16_from_U8);
+define_unsafe_casting!(U16, U8, u8, U8_from_U16);
+
+// U8 <-> u
+define_Uu_casting!(U8, u8, declassify_u8_from_U8);
+define_Uu_casting!(U8, u16, declassify_u16_from_U8);
+define_Uu_casting!(U8, u32, declassify_u32_from_U8);
+define_Uu_casting!(U8, u64, declassify_u64_from_U8);
+define_Uu_casting!(U8, u128, declassify_u128_from_U8);
+define_Uu_casting!(U8, usize, declassify_usize_from_U8);
+define_usize_casting!(usize, U8, u8, U8_from_usize);
+
+// U16 <-> u
+define_Uu_casting!(U16, u16, declassify_u16_from_U16);
+define_Uu_casting!(U16, u32, declassify_u32_from_U16);
+define_Uu_casting!(U16, u64, declassify_u64_from_U16);
+define_Uu_casting!(U16, u128, u128_from_U16);
+
+// U32 <-> u
+define_Uu_casting!(U32, u32, declassify_u32_from_U32);
+define_Uu_casting!(U32, u64, declassify_u64_from_U32);
+define_Uu_casting!(U32, u128, declassify_u128_from_U32);
+
+// U64 <-> u
+define_Uu_casting!(U64, u64, declassify_u64_from_U64);
+define_Uu_casting!(U64, u128, declassify_u128_from_U64);
+
+// U128 <-> u
+define_Uu_casting!(U128, u128, declassify_u128_from_U128);
+
+// u16 <-> U
+define_uU_casting!(u8, U16, u16, u8_from_U16);
+
+// u32 <-> U
+define_uU_casting!(u8, U32, u32, u8_from_U32);
+define_uU_casting!(u16, U32, u32, u16_from_U32);
+
+// u64 <-> U
+define_uU_casting!(u8, U64, u64, u8_from_U64);
+define_uU_casting!(u16, U64, u64, u16_from_U64);
+define_uU_casting!(u32, U64, u64, u32_from_U64);
+define_usize_casting!(usize, U64, u64, U64_from_usize);
+
+// u128 <-> U
+define_uU_casting!(u8, U128, u128, u8_from_U128);
+define_uU_casting!(u16, U128, u128, u16_from_U128);
+define_uU_casting!(u32, U128, u128, u32_from_U128);
+define_uU_casting!(u64, U128, u128, u64_from_U128);
+define_usize_casting!(usize, U128, u128, U128_from_usize);
 
 // I128 <-> In{n < 128}
-define_safe_casting!(I8, I128, i128);
-define_unsafe_casting!(I128, I8, i8);
-define_safe_casting!(I16, I128, i128);
-define_unsafe_casting!(I128, I16, i16);
-define_safe_casting!(I32, I128, i128);
-define_unsafe_casting!(I128, I32, i32);
-define_safe_casting!(I64, I128, i128);
-define_unsafe_casting!(I128, I64, i64);
+define_safe_casting!(I8, I128, i128, I128_from_I8);
+define_unsafe_casting!(I128, I8, i8, I8_from_I128);
+define_safe_casting!(I16, I128, i128, I128_from_I16);
+define_unsafe_casting!(I128, I16, i16, I16_from_I128);
+define_safe_casting!(I32, I128, i128, I128_from_I32);
+define_unsafe_casting!(I128, I32, i32, I32_from_I128);
+define_safe_casting!(I64, I128, i128, I128_from_I64);
+define_unsafe_casting!(I128, I64, i64, I64_from_I128);
 
 // I64 <-> In{n < 64}
-define_safe_casting!(I8, I64, i64);
-define_unsafe_casting!(I64, I8, i8);
-define_safe_casting!(I16, I64, i64);
-define_unsafe_casting!(I64, I16, i16);
-define_safe_casting!(I32, I64, i64);
-define_unsafe_casting!(I64, I32, i32);
+define_safe_casting!(I8, I64, i64, I64_from_I8);
+define_unsafe_casting!(I64, I8, i8, I8_from_I64);
+define_safe_casting!(I16, I64, i64, I64_from_I16);
+define_unsafe_casting!(I64, I16, i16, I16_from_I64);
+define_safe_casting!(I32, I64, i64, I64_from_I32);
+define_unsafe_casting!(I64, I32, i32, I32_from_I64);
 
 // I32 <-> In{n < 32}
-define_safe_casting!(I8, I32, i32);
-define_unsafe_casting!(I32, I8, i8);
-define_safe_casting!(I16, I32, i32);
-define_unsafe_casting!(I32, I16, i16);
+define_safe_casting!(I8, I32, i32, I32_from_I8);
+define_unsafe_casting!(I32, I8, i8, I8_from_I32);
+define_safe_casting!(I16, I32, i32, I32_from_I16);
+define_unsafe_casting!(I32, I16, i16, I16_from_I32);
 
 // I16 <-> In{n < 16}
-define_safe_casting!(I8, I16, i16);
-define_unsafe_casting!(I16, I8, i8);
+define_safe_casting!(I8, I16, i16, I16_from_I8);
+define_unsafe_casting!(I16, I8, i8, I8_from_I16);
 
 // Unsigned <-> signed
 define_signed_unsigned_casting!(U128, u128, I128, i128);
