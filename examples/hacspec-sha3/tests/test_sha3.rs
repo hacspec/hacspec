@@ -1,6 +1,74 @@
 use hacspec_lib::prelude::*;
 
-use unsafe_hacspec_examples::fips202::*;
+use hacspec_sha3::*;
+
+#[test]
+fn test_keccakf1600() {
+    let s: State = State(secret_array!(
+        U64,
+        [
+            0x5ba446eba89b9b78,
+            0x6ef6eb8a586fb342,
+            0x85cb3d1fcec58036,
+            0xa59848fabf68003d,
+            0x35fdce49db45e6c1,
+            0x0cf8fad4b3c5a04c,
+            0x9afa06a9884be9bc,
+            0x1ff35d85c227b2e0,
+            0x09ec8487110fc092,
+            0xcdea358a32c0fafb,
+            0x74241ac11e48073a,
+            0x72f921a900982d03,
+            0x676616072102dbbc,
+            0x2638caacb8a3a5de,
+            0xc603972154aa5dd8,
+            0x68b2fefc9b5075e3,
+            0x8373f072f138bdee,
+            0xdff378a39b99a1a0,
+            0x0b4bc139e9140556,
+            0x19195e7735eb1c0a,
+            0x056b896a9884cb04,
+            0x68e821e02963121f,
+            0xce7c280b9563ae2c,
+            0xc88f8da33e4311d6,
+            0xc67829e549219318
+        ]
+    ));
+
+    let c: State = State(secret_array!(
+        U64,
+        [
+            0x95bef5e1cff30a77,
+            0x91857a255e178abd,
+            0xbf8f4cef4c33fbe9,
+            0xa40655d779ecdc92,
+            0xb17af41f3c6a6d09,
+            0x9f4e56cfd932c0c7,
+            0x8dedfc2eb4c43a69,
+            0x92e3a4f9f54bf903,
+            0x51eca70f0657a075,
+            0x690f9af199489ab5,
+            0x718748b08fba9389,
+            0x2d7349b2fd3c5cbe,
+            0xc8e1c9f8a9b002aa,
+            0x272dfd58ff1304ec,
+            0x665d945446962fe5,
+            0xdabb2fbc07dc0b57,
+            0xc49e2cecb193b592,
+            0x63c1c463f370e7a5,
+            0xc643a20b2ffb0e52,
+            0xee9f85afed7d708c,
+            0xb031433c85642b6c,
+            0xfbe4f94ffc73ddbe,
+            0xfa2a02bb934e7bb3,
+            0x38025c926f7136f5,
+            0xf83d27a7f7ec241e
+        ]
+    ));
+    let v = keccakf1600(s);
+
+    assert_secret_array_eq!(c, v, U64);
+}
 
 #[test]
 fn test_sha3224() {

@@ -90,3 +90,8 @@ fn run_ntru_prime_test() -> Result<(), Box<dyn std::error::Error>> {
         vec![],
     )
 }
+
+#[test]
+fn run_sha3_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test("../examples/hacspec-sha3/src/sha3.rs", None, vec![])
+}

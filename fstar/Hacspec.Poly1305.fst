@@ -33,15 +33,11 @@ let clamp (r_2 : uint128) : field_element =
   in
   nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (r_uint_3)
 
-let encode (block_uint_4 : uint128) (len_5 : uint_size{
-  (**) len_5 < 17
-  }) : field_element =
+let encode (block_uint_4 : uint128) (len_5 : uint_size) : field_element =
   let w_elem_6 =
     nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (
       block_uint_4)
   in
-  (**) assert_norm (pow2 128 < 0x03fffffffffffffffffffffffffffffffb);
-  (**) Math.Lemmas.pow2_le_compat 128 (8 * len_5);
   let l_elem_7 =
     nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (len_5))
   in
