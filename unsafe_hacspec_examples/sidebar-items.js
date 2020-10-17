@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["aes_gcm",""],["blake2",""],["curve25519",""],["ec",""],["fips202",""],["hkdf",""],["hmac",""],["ntru_prime",""],["sha2",""]]});
+initSidebarItems({"mod":[["aes_gcm",""],["blake2",""],["curve25519",""],["ec",""],["hkdf",""],["hmac",""],["ntru_prime",""],["sha2",""]]});
