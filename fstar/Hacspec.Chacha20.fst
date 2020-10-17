@@ -47,9 +47,7 @@ let chacha_line
   (a_4 : state_idx)
   (b_5 : state_idx)
   (d_6 : state_idx)
-  (s_7 : uint_size{
-  (**) s_7 > 0 /\ s_7 < 32
-  })
+  (s_7 : uint_size)
   (m_8 : state)
   : state =
   let state_9 = m_8 in

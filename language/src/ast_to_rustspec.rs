@@ -1438,7 +1438,7 @@ fn translate_items(
                 .map(|param| {
                     // For now, we don't allow pattern destructuring in functions signatures
                     let id = match param.pat.kind {
-                        PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
+                        PatKind::Ident(BindingMode::ByValue(_), id, None) => {
                             Ok(translate_ident(&id))
                         }
                         PatKind::Wild => {

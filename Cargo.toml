@@ -11,6 +11,7 @@ members = [
     "examples/hacspec-chacha20",
     "examples/hacspec-poly1305",
     "examples/hacspec-chacha20poly1305",
+    "examples/hacspec-sha3",
     "examples/hacspec-ntru-prime",
     "examples-unsafe",
 ]
@@ -25,6 +26,7 @@ default-members = [
     "examples/hacspec-chacha20",
     "examples/hacspec-poly1305",
     "examples/hacspec-chacha20poly1305",
+    "examples/hacspec-sha3",
     "examples/hacspec-ntru-prime",
     "examples-unsafe",
 ]
