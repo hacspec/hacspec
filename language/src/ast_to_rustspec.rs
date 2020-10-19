@@ -927,6 +927,10 @@ fn translate_expr(
             sess.span_rustspec_err(e.span, "error expressions are not allowed in Hacspec");
             Err(())
         }
+        ExprKind::ConstBlock(_) => {
+            sess.span_rustspec_err(e.span.clone(), "const blocks are not allowed in Hacspec");
+            Err(())
+        }
     }
 }
 
