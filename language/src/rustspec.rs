@@ -8,10 +8,10 @@ use std::fmt;
 
 pub type Spanned<T> = (T, Span);
 
-#[derive(Clone, Hash, Debug, PartialEq, Eq)]
+#[derive(Clone, Hash, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HacspecId(pub usize);
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Ident {
     Original(String),
     Hacspec(HacspecId, String),
@@ -207,7 +207,11 @@ pub enum Expression {
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
     NewArray(Spanned<Ident>, Option<BaseTyp>, Vec<Spanned<Expression>>),
     Tuple(Vec<Spanned<Expression>>),
-    IntegerCasting(Box<Spanned<Expression>>, Spanned<BaseTyp>),
+    IntegerCasting(
+        Box<Spanned<Expression>>, //expression to cast
+        Spanned<BaseTyp>,         // destination type
+        Option<BaseTyp>,          // origin type
+    ),
 }
 
 #[derive(Clone)]

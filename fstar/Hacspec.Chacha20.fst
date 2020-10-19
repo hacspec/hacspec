@@ -5,6 +5,8 @@ module Hacspec.Chacha20
 open Hacspec.Lib
 open FStar.Mul
 
+
+
 type state = lseq (uint32) (usize 16)
 
 let state_idx =
@@ -16,93 +18,90 @@ type iv = lseq (uint8) (usize 12)
 
 type key = lseq (uint8) (usize 32)
 
-let state_to_bytes (x_1874 : state) : state_bytes =
-  let r_1875 = array_new_ (secret (pub_u8 0x8)) (64) in
-  let (r_1875) =
-    foldi (usize 0) (array_len (x_1874)) (fun i_1876 (r_1875) ->
-      let bytes_1877 = uint32_to_be_bytes (array_index (x_1874) (i_1876)) in
-      let r_1875 =
-        array_upd r_1875 ((i_1876) * (usize 4)) (
-          array_index (bytes_1877) (usize 3))
+let state_to_bytes (x_0 : state) : state_bytes =
+  let r_1 = array_new_ (secret (pub_u8 0x8)) (64) in
+  let (r_1) =
+    foldi (usize 0) (array_len (x_0)) (fun i_2 (r_1) ->
+      let bytes_3 = uint32_to_be_bytes (array_index (x_0) (i_2)) in
+      let r_1 =
+        array_upd r_1 ((i_2) * (usize 4)) (array_index (bytes_3) (usize 3))
       in
-      let r_1875 =
-        array_upd r_1875 (((i_1876) * (usize 4)) + (usize 1)) (
-          array_index (bytes_1877) (usize 2))
+      let r_1 =
+        array_upd r_1 (((i_2) * (usize 4)) + (usize 1)) (
+          array_index (bytes_3) (usize 2))
       in
-      let r_1875 =
-        array_upd r_1875 (((i_1876) * (usize 4)) + (usize 2)) (
-          array_index (bytes_1877) (usize 1))
+      let r_1 =
+        array_upd r_1 (((i_2) * (usize 4)) + (usize 2)) (
+          array_index (bytes_3) (usize 1))
       in
-      let r_1875 =
-        array_upd r_1875 (((i_1876) * (usize 4)) + (usize 3)) (
-          array_index (bytes_1877) (usize 0))
+      let r_1 =
+        array_upd r_1 (((i_2) * (usize 4)) + (usize 3)) (
+          array_index (bytes_3) (usize 0))
       in
-      (r_1875))
-    (r_1875)
+      (r_1))
+    (r_1)
   in
-  r_1875
+  r_1
 
-let line
-  (a_1878 : state_idx)
-  (b_1879 : state_idx)
-  (d_1880 : state_idx)
-  (s_1881 : uint_size)
-  (m_1882 : state)
+let chacha_line
+  (a_4 : state_idx)
+  (b_5 : state_idx)
+  (d_6 : state_idx)
+  (s_7 : uint_size)
+  (m_8 : state)
   : state =
-  let state_1883 = m_1882 in
-  let state_1883 =
-    array_upd state_1883 (a_1878) (
-      (array_index (state_1883) (a_1878)) +. (
-        array_index (state_1883) (b_1879)))
+  let state_9 = m_8 in
+  let state_9 =
+    array_upd state_9 (a_4) (
+      (array_index (state_9) (a_4)) +. (array_index (state_9) (b_5)))
   in
-  let state_1883 =
-    array_upd state_1883 (d_1880) (
-      (array_index (state_1883) (d_1880)) ^. (
-        array_index (state_1883) (a_1878)))
+  let state_9 =
+    array_upd state_9 (d_6) (
+      (array_index (state_9) (d_6)) ^. (array_index (state_9) (a_4)))
   in
-  let state_1883 =
-    array_upd state_1883 (d_1880) (
-      uint32_rotate_left (array_index (state_1883) (d_1880)) (s_1881))
+  let state_9 =
+    array_upd state_9 (d_6) (
+      uint32_rotate_left (array_index (state_9) (d_6)) (s_7))
   in
-  state_1883
+  state_9
 
-let quarter_round
-  (a_1884 : state_idx)
-  (b_1885 : state_idx)
-  (c_1886 : state_idx)
-  (d_1887 : state_idx)
-  (state_1888 : state)
+let chacha_quarter_round
+  (a_10 : state_idx)
+  (b_11 : state_idx)
+  (c_12 : state_idx)
+  (d_13 : state_idx)
+  (state_14 : state)
   : state =
-  let state_1889 = line (a_1884) (b_1885) (d_1887) (usize 16) (state_1888) in
-  let state_1890 = line (c_1886) (d_1887) (b_1885) (usize 12) (state_1889) in
-  let state_1891 = line (a_1884) (b_1885) (d_1887) (usize 8) (state_1890) in
-  line (c_1886) (d_1887) (b_1885) (usize 7) (state_1891)
+  let state_15 = chacha_line (a_10) (b_11) (d_13) (usize 16) (state_14) in
+  let state_16 = chacha_line (c_12) (d_13) (b_11) (usize 12) (state_15) in
+  let state_17 = chacha_line (a_10) (b_11) (d_13) (usize 8) (state_16) in
+  chacha_line (c_12) (d_13) (b_11) (usize 7) (state_17)
 
-let double_round (state_1892 : state) : state =
-  let state_1893 =
-    quarter_round (usize 0) (usize 4) (usize 8) (usize 12) (state_1892)
+let chacha_double_round (state_18 : state) : state =
+  let state_19 =
+    chacha_quarter_round (usize 0) (usize 4) (usize 8) (usize 12) (state_18)
   in
-  let state_1894 =
-    quarter_round (usize 1) (usize 5) (usize 9) (usize 13) (state_1893)
+  let state_20 =
+    chacha_quarter_round (usize 1) (usize 5) (usize 9) (usize 13) (state_19)
   in
-  let state_1895 =
-    quarter_round (usize 2) (usize 6) (usize 10) (usize 14) (state_1894)
+  let state_21 =
+    chacha_quarter_round (usize 2) (usize 6) (usize 10) (usize 14) (state_20)
   in
-  let state_1896 =
-    quarter_round (usize 3) (usize 7) (usize 11) (usize 15) (state_1895)
+  let state_22 =
+    chacha_quarter_round (usize 3) (usize 7) (usize 11) (usize 15) (state_21)
   in
-  let state_1897 =
-    quarter_round (usize 0) (usize 5) (usize 10) (usize 15) (state_1896)
+  let state_23 =
+    chacha_quarter_round (usize 0) (usize 5) (usize 10) (usize 15) (state_22)
   in
-  let state_1898 =
-    quarter_round (usize 1) (usize 6) (usize 11) (usize 12) (state_1897)
+  let state_24 =
+    chacha_quarter_round (usize 1) (usize 6) (usize 11) (usize 12) (state_23)
   in
-  let state_1899 =
-    quarter_round (usize 2) (usize 7) (usize 8) (usize 13) (state_1898)
+  let state_25 =
+    chacha_quarter_round (usize 2) (usize 7) (usize 8) (usize 13) (state_24)
   in
-  quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_1899)
+  chacha_quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_25)
 
-let block_init (key_1900 : key) (ctr_1901 : uint32) (iv_1902 : iv) : state =
+let chacha_block_init (key_26 : key) (ctr_27 : uint32) (iv_28 : iv) : state =
   array_from_list (
     let l =
       [
@@ -111,81 +110,80 @@ let block_init (key_1900 : key) (ctr_1901 : uint32) (iv_1902 : iv) : state =
         secret (pub_u32 0x79622d32);
         secret (pub_u32 0x6b206574);
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 0, usize 4)));
+          array_from_slice_range (key_26) ((usize 0, usize 4)));
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 4, usize 8)));
+          array_from_slice_range (key_26) ((usize 4, usize 8)));
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 8, usize 12)));
+          array_from_slice_range (key_26) ((usize 8, usize 12)));
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 12, usize 16)));
+          array_from_slice_range (key_26) ((usize 12, usize 16)));
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 16, usize 20)));
+          array_from_slice_range (key_26) ((usize 16, usize 20)));
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 20, usize 24)));
+          array_from_slice_range (key_26) ((usize 20, usize 24)));
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 24, usize 28)));
+          array_from_slice_range (key_26) ((usize 24, usize 28)));
         uint32_from_le_bytes (
-          array_from_slice_range (key_1900) ((usize 28, usize 32)));
-        ctr_1901;
+          array_from_slice_range (key_26) ((usize 28, usize 32)));
+        ctr_27;
         uint32_from_le_bytes (
-          array_from_slice_range (iv_1902) ((usize 0, usize 4)));
+          array_from_slice_range (iv_28) ((usize 0, usize 4)));
         uint32_from_le_bytes (
-          array_from_slice_range (iv_1902) ((usize 4, usize 8)));
+          array_from_slice_range (iv_28) ((usize 4, usize 8)));
         uint32_from_le_bytes (
-          array_from_slice_range (iv_1902) ((usize 8, usize 12)))
+          array_from_slice_range (iv_28) ((usize 8, usize 12)))
       ]
     in assert_norm (List.Tot.length l == 16); l)
 
-let block_inner (key_1903 : key) (ctr_1904 : uint32) (iv_1905 : iv) : state =
-  let st_1906 = block_init (key_1903) (ctr_1904) (iv_1905) in
-  let state_1907 = st_1906 in
-  let (state_1907) =
-    foldi (usize 0) (usize 10) (fun i_1908 (state_1907) ->
-      let state_1907 = double_round (state_1907) in
-      (state_1907))
-    (state_1907)
+let chacha_block_inner (key_29 : key) (ctr_30 : uint32) (iv_31 : iv) : state =
+  let st_32 = chacha_block_init (key_29) (ctr_30) (iv_31) in
+  let state_33 = st_32 in
+  let (state_33) =
+    foldi (usize 0) (usize 10) (fun i_34 (state_33) ->
+      let state_33 = chacha_double_round (state_33) in
+      (state_33))
+    (state_33)
   in
-  let (state_1907) =
-    foldi (usize 0) (usize 16) (fun i_1909 (state_1907) ->
-      let state_1907 =
-        array_upd state_1907 (i_1909) (
-          (array_index (state_1907) (i_1909)) +. (
-            array_index (st_1906) (i_1909)))
+  let (state_33) =
+    foldi (usize 0) (usize 16) (fun i_35 (state_33) ->
+      let state_33 =
+        array_upd state_33 (i_35) (
+          (array_index (state_33) (i_35)) +. (array_index (st_32) (i_35)))
       in
-      (state_1907))
-    (state_1907)
+      (state_33))
+    (state_33)
   in
-  state_1907
+  state_33
 
-let block (key_1910 : key) (ctr_1911 : uint32) (iv_1912 : iv) : state_bytes =
-  let state_1913 = block_inner (key_1910) (ctr_1911) (iv_1912) in
-  state_to_bytes (state_1913)
+let chacha_block (key_36 : key) (ctr_37 : uint32) (iv_38 : iv) : state_bytes =
+  let state_39 = chacha_block_inner (key_36) (ctr_37) (iv_38) in
+  state_to_bytes (state_39)
 
-let chacha (key_1914 : key) (iv_1915 : iv) (m_1916 : byte_seq) : byte_seq =
-  let ctr_1917 = secret (pub_u32 0x1) in
-  let blocks_out_1918 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_1916)) in
-  let (blocks_out_1918, ctr_1917) =
-    foldi (usize 0) (seq_num_chunks (m_1916) (usize 64)) (fun i_1919 (
-        blocks_out_1918,
-        ctr_1917
+let chacha (key_40 : key) (iv_41 : iv) (m_42 : byte_seq) : byte_seq =
+  let ctr_43 = secret (pub_u32 0x1) in
+  let blocks_out_44 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_42)) in
+  let (ctr_43, blocks_out_44) =
+    foldi (usize 0) (seq_num_chunks (m_42) (usize 64)) (fun i_45 (
+        ctr_43,
+        blocks_out_44
       ) ->
-      let (block_len_1920, msg_block_1921) =
-        seq_get_chunk (m_1916) (usize 64) (i_1919)
+      let (block_len_46, msg_block_47) =
+        seq_get_chunk (m_42) (usize 64) (i_45)
       in
-      let key_block_1922 = block (key_1914) (ctr_1917) (iv_1915) in
-      let msg_block_padded_1923 = array_new_ (secret (pub_u8 0x8)) (64) in
-      let msg_block_padded_1924 =
-        array_update_start (msg_block_padded_1923) (msg_block_1921)
+      let key_block_48 = chacha_block (key_40) (ctr_43) (iv_41) in
+      let msg_block_padded_49 = array_new_ (secret (pub_u8 0x8)) (64) in
+      let msg_block_padded_50 =
+        array_update_start (msg_block_padded_49) (msg_block_47)
       in
-      let blocks_out_1918 =
-        seq_set_chunk (blocks_out_1918) (usize 64) (i_1919) (
+      let blocks_out_44 =
+        seq_set_chunk (blocks_out_44) (usize 64) (i_45) (
           array_slice_range (
-            (msg_block_padded_1924) `array_xor` (key_block_1922)) (
-            (usize 0, block_len_1920)))
+            (msg_block_padded_50) `array_xor (^.)` (key_block_48)) (
+            (usize 0, block_len_46)))
       in
-      let ctr_1917 = (ctr_1917) +. (secret (pub_u32 0x1)) in
-      (blocks_out_1918, ctr_1917))
-    (blocks_out_1918, ctr_1917)
+      let ctr_43 = (ctr_43) +. (secret (pub_u32 0x1)) in
+      (ctr_43, blocks_out_44))
+    (ctr_43, blocks_out_44)
   in
-  blocks_out_1918
+  blocks_out_44
 

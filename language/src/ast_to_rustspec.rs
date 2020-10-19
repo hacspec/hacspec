@@ -764,6 +764,7 @@ fn translate_expr(
                 ExprTranslationResult::TransExpr(Expression::IntegerCasting(
                     Box::new(new_e1),
                     new_t1,
+                    None,
                 )),
                 e.span.clone(),
             ))
@@ -1437,7 +1438,7 @@ fn translate_items(
                 .map(|param| {
                     // For now, we don't allow pattern destructuring in functions signatures
                     let id = match param.pat.kind {
-                        PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
+                        PatKind::Ident(BindingMode::ByValue(_), id, None) => {
                             Ok(translate_ident(&id))
                         }
                         PatKind::Wild => {

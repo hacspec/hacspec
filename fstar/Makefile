@@ -2,7 +2,7 @@
 ################################################################################
 # Customize these variables for your project
 ################################################################################
-FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 8
+FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 32
 
 # The root files of your project, from which to begin scanning dependences
 FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst
@@ -21,7 +21,9 @@ TOP_LEVEL_FILE ?=
 OUTPUT_DIRECTORY ?= _output
 
 ################################################################################
-MY_FSTAR=$(FSTAR) --cache_checked_modules $(addprefix --include , $(INCLUDE_PATHS)) --odir $(OUTPUT_DIRECTORY)
+MY_FSTAR=$(FSTAR) \
+	--cache_checked_modules $(addprefix --include , $(INCLUDE_PATHS)) \
+	--odir $(OUTPUT_DIRECTORY)
 ML_FILES=$(addprefix $(OUTPUT_DIRECTORY)/,$(addsuffix .ml,$(subst .,_, $(subst .fst,,$(FSTAR_FILES)))))
 OCAML_EXE=$(PROGRAM).ocaml.exe
 KREMLIN_EXE=$(PROGRAM).exe

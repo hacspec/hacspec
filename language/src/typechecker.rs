@@ -3,6 +3,7 @@ use crate::HacspecErrorEmitter;
 
 use hacspec_sig;
 use im::{HashMap, HashSet};
+use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
@@ -402,7 +403,7 @@ fn bind_variable_type(
             None => {
                 sess.span_rustspec_err(
                     ty.1.clone(),
-                    format!("type {} cannot be unified, internal Hacspec error", ty.0).as_str(),
+                    format!("type {} cannot be unified, Hacspec does not handle that kind of parametricity", ty.0).as_str(),
                 );
                 Err(())
             }
@@ -771,7 +772,7 @@ fn typecheck_expression(
             )?;
             match op {
                 BinOpKind::Shl | BinOpKind::Shr => match &(t2.1).0 {
-                    BaseTyp::UInt32 => {
+                    BaseTyp::UInt32 | BaseTyp::Usize => {
                         if is_numeric(&t1, typ_dict) {
                             Ok((
                                 Expression::Binary(
@@ -800,7 +801,7 @@ fn typecheck_expression(
                         sess.span_rustspec_err(
                             e2.1.clone(),
                             format!(
-                                "the shifting amount has to be an u32, found type {}{}",
+                                "the shifting amount has to be an u32 or an usize, found type {}{}",
                                 (t2.0).0,
                                 (t2.1).0
                             )
@@ -1095,7 +1096,7 @@ fn typecheck_expression(
                     })
                     .collect(),
             )?;
-            let new_array_typ = BaseTyp::Array(array_len, Box::new((cell_type, cell_type_span)));
+            let new_array_typ = BaseTyp::Named(array_type.clone(), None);
             Ok((
                 Expression::NewArray(
                     array_type.clone(),
@@ -1403,7 +1404,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::IntegerCasting(e1, t1) => {
+        Expression::IntegerCasting(e1, t1, _) => {
             let (new_e1, e1_typ, var_context) = typecheck_expression(
                 sess,
                 e1,
@@ -1436,7 +1437,11 @@ fn typecheck_expression(
                 return Err(());
             }
             Ok((
-                Expression::IntegerCasting(Box::new((new_e1, e1.1.clone())), t1.clone()),
+                Expression::IntegerCasting(
+                    Box::new((new_e1, e1.1.clone())),
+                    t1.clone(),
+                    Some((e1_typ.1).0.clone()),
+                ),
                 ((Borrowing::Consumed, t1.1.clone()), t1.clone()),
                 var_context,
             ))
@@ -1515,6 +1520,7 @@ fn var_set_to_tuple(vars: &VarSet, span: &Span) -> Statement {
     Statement::ReturnExp(if vars.len() > 0 {
         Expression::Tuple(
             vars.iter()
+                .sorted()
                 .map(|i| (Expression::Named(i.clone()), span.clone()))
                 .collect(),
         )
