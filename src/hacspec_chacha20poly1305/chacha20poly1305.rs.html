@@ -55,6 +55,8 @@
 <span id="55">55</span>
 <span id="56">56</span>
 <span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Import hacspec and all needed definitions.</span>
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
@@ -80,8 +82,10 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pad_msg</span> <span class="op">=</span> <span class="number">16</span> <span class="op">*</span> ((<span class="ident">lmsg</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">4u32</span>) <span class="op">+</span> <span class="number">1</span>);
     <span class="kw">if</span> <span class="ident">laad</span> <span class="op">%</span> <span class="number">16</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
         <span class="ident">pad_aad</span> <span class="op">=</span> <span class="ident">laad</span>;
-        <span class="ident">pad_msg</span> <span class="op">=</span> <span class="ident">lmsg</span>;
     };
+    <span class="kw">if</span> <span class="ident">lmsg</span> <span class="op">%</span> <span class="number">16</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="ident">pad_msg</span> <span class="op">=</span> <span class="ident">lmsg</span>;
+    }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">padded_msg</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">pad_aad</span> <span class="op">+</span> <span class="ident">pad_msg</span> <span class="op">+</span> <span class="number">16</span>);
     <span class="ident">padded_msg</span> <span class="op">=</span> <span class="ident">padded_msg</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="ident">aad</span>);
     <span class="ident">padded_msg</span> <span class="op">=</span> <span class="ident">padded_msg</span>.<span class="ident">update</span>(<span class="ident">pad_aad</span>, <span class="ident">msg</span>);
