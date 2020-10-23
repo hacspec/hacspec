@@ -22,3 +22,21 @@ fn basic_test() {
     let computed = poly(&msg, k);
     assert_eq!(expected, computed)
 }
+
+#[test]
+fn corner_case_test() {
+    let msg = ByteSeq::from_public_slice(&[
+        0, 0, 0, 0, 0, 0, 0, 0, 22, 3, 3, 0, 16, 0, 0, 0, 231, 158, 214, 194, 136, 21, 80, 132,
+        115, 98, 192, 197, 90, 173, 113, 64, 13, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0,
+    ]);
+    let k = KeyPoly::from_public_slice(&[
+        0x07, 0xdb, 0xd6, 0xfd, 0x01, 0x03, 0x2c, 0x53, 0x64, 0x4b, 0x9f, 0x94, 0x76, 0x23, 0xbd,
+        0x2d, 0x25, 0xec, 0x44, 0xc2, 0x08, 0xe1, 0x32, 0x23, 0xca, 0x8c, 0x5b, 0x89, 0x11, 0xbf,
+        0x59, 0xe8,
+    ]);
+    let expected = Tag::from_native_slice(&[
+        1, 66, 72, 238, 152, 119, 158, 102, 3, 127, 38, 148, 173, 28, 215, 205,
+    ]);
+    let computed = poly(&msg, k);
+    assert_eq!(expected, computed)
+}
