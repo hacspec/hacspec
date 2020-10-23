@@ -60,13 +60,23 @@ macro_rules! modular_integer {
             }
 
             #[allow(dead_code)]
+            pub fn from_be_bytes(v: &[u8]) -> Self {
+                $base::from_be_bytes(v).into()
+            }
+
+            #[allow(dead_code)]
+            pub fn to_be_bytes(self) -> Vec<u8> {
+                $base::to_be_bytes(self.into()).to_vec()
+            }
+
+            #[allow(dead_code)]
             pub fn from_le_bytes(v: &[u8]) -> Self {
                 $base::from_le_bytes(v).into()
             }
 
             #[allow(dead_code)]
             pub fn to_le_bytes(self) -> Vec<u8> {
-                $base::to_le_bytes(self.into())
+                $base::to_le_bytes(self.into()).to_vec()
             }
 
             /// Gets the `i`-th least significant bit of this integer.

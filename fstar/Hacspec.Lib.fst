@@ -87,6 +87,9 @@ let usize_shift_right (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
 let usize_shift_left (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
   v (shift_left (size u) s)
 
+let pub_uint128_wrapping_add (x y: pub_uint128) : pub_uint128 =
+  x +. y
+
 (*** Loops *)
 
 let rec foldi_
@@ -214,7 +217,7 @@ let seq_slice
   (#a: Type)
   (s: seq a)
   (start: uint_size)
-  (len: uint_size{start + len < LSeq.length s})
+  (len: uint_size{start + len <= LSeq.length s})
     : lseq a len
   =
   LSeq.slice #a #(Seq.length s) s start (start + len)
@@ -345,6 +348,41 @@ let uint128_from_le_bytes (input: lseq uint8 16) : uint128 =
 let uint128_from_be_bytes (s: lseq uint8 16) : uint128 =
   LBSeq.uint_from_bytes_be s
 
+let u32_to_le_bytes (x: pub_uint32) : lseq pub_uint8 4 =
+  LBSeq.uint_to_bytes_le x
+
+let u32_to_be_bytes (x: pub_uint32) : lseq pub_uint8 4 =
+  LBSeq.uint_to_bytes_be x
+
+let u32_from_le_bytes (s: lseq pub_uint8 4) : pub_uint32 =
+  LBSeq.uint_from_bytes_le s
+
+let u32_from_be_bytes (s: lseq pub_uint8 4) : pub_uint32 =
+  LBSeq.uint_from_bytes_be s
+
+let u64_to_le_bytes (x: pub_uint64) : lseq pub_uint8 8 =
+  LBSeq.uint_to_bytes_le x
+
+let u64_to_be_bytes (x: pub_uint64) : lseq pub_uint8 8 =
+  LBSeq.uint_to_bytes_be x
+
+let u64_from_le_bytes (s: lseq pub_uint8 8) : pub_uint64 =
+  LBSeq.uint_from_bytes_le s
+
+let u64_from_be_bytes (s: lseq pub_uint8 8) : pub_uint64 =
+  LBSeq.uint_from_bytes_be s
+
+let u128_to_le_bytes (x: pub_uint128) : lseq pub_uint8 16 =
+  LBSeq.uint_to_bytes_le x
+
+let u128_to_be_bytes (x: pub_uint128) : lseq pub_uint8 16 =
+  LBSeq.uint_to_bytes_be x
+
+let u128_from_le_bytes (input: lseq pub_uint8 16) : pub_uint128 =
+  LBSeq.uint_from_bytes_le input
+
+let u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 =
+  LBSeq.uint_from_bytes_be s
 
 (*** Nats *)
 
@@ -365,5 +403,10 @@ let nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n} =
 let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   let n' = n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_le len n'
+
+let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
+  let n' = n % (pow2 (8 * len)) in
+  Lib.ByteSequence.nat_to_bytes_be len n'
+
 
 let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x

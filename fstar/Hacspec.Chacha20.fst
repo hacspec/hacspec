@@ -47,7 +47,9 @@ let chacha_line
   (a_4 : state_idx)
   (b_5 : state_idx)
   (d_6 : state_idx)
-  (s_7 : uint_size)
+  (s_7 : uint_size{
+  (**) s_7 > 0 /\ s_7 < 32
+  })
   (m_8 : state)
   : state =
   let state_9 = m_8 in
@@ -186,4 +188,3 @@ let chacha (key_40 : key) (iv_41 : iv) (m_42 : byte_seq) : byte_seq =
     (ctr_43, blocks_out_44)
   in
   blocks_out_44
-
