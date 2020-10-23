@@ -53,7 +53,7 @@ pub fn poly_finish(a: FieldElement, s: FieldElement) -> Tag {
     let a = u128_from_be_bytes(u128Word::from_seq(&a));
     let s = s.to_public_byte_seq_be().slice(1, BLOCKSIZE);
     let s = u128_from_be_bytes(u128Word::from_seq(&s));
-    let a = a + s;
+    let a = a.wrapping_add(s);
     Tag::from_seq(&u128_to_le_bytes(a))
 }
 
