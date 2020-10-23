@@ -364,8 +364,32 @@ macro_rules! abstract_unsigned {
             }
 
             #[allow(dead_code)]
+            pub fn from_le_bytes(v: &[u8]) -> Self {
+                debug_assert!(
+                    v.len() <= ($bits + 7) / 8,
+                    "from_be_bytes: lenght of bytes should be lesser than the lenght of the canvas"
+                );
+                let mut repr = [0u8; ($bits + 7) / 8];
+                let upper = repr.len();
+                let lower = upper - v.len();
+                repr[lower..upper].copy_from_slice(&v);
+                BigInt::from_bytes_le(Sign::Plus, &repr).into()
+            }
+
+            #[allow(dead_code)]
             pub fn to_be_bytes(self) -> [u8; ($bits + 7) / 8] {
                 self.b
+            }
+
+            #[allow(dead_code)]
+            pub fn to_le_bytes(self) -> [u8; ($bits + 7) / 8] {
+                let x = BigInt::from_bytes_be(Sign::Plus, &self.b);
+                let (_, x_s) = x.to_bytes_le();
+                let mut repr = [0u8; ($bits + 7) / 8];
+                let upper = repr.len();
+                let lower = upper - x_s.len();
+                repr[lower..upper].copy_from_slice(&x_s);
+                repr
             }
 
             /// Produces a new integer which is all ones if the two arguments are equal and

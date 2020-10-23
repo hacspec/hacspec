@@ -792,6 +792,28 @@ macro_rules! nat_mod {
             }
         }
 
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
+                $name::from_le_bytes(
+                    s.iter()
+                        .map(|x| U8::declassify(*x))
+                        .collect::<Vec<_>>()
+                        .as_slice(),
+                )
+            }
+
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_byte_seq_le(self) -> Seq<U8> {
+                Seq::from_vec(
+                    self.to_le_bytes()
+                        .iter()
+                        .map(|x| U8::classify(*x))
+                        .collect::<Vec<U8>>(),
+                )
+            }
+        }
+
         impl NumericCopy for $name {}
         impl Integer for $name {
             const NUM_BITS: usize = $bits;
@@ -1070,6 +1092,36 @@ macro_rules! public_nat_mod {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn to_public_byte_seq_be(self) -> Seq<u8> {
                 Seq::from_vec(self.to_be_bytes())
+            }
+
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
+                $name::from_le_bytes(
+                    s.iter()
+                        .map(|x| U8::declassify(*x))
+                        .collect::<Vec<_>>()
+                        .as_slice(),
+                )
+            }
+
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_public_byte_seq_le<A: SeqTrait<u8>>(s: A) -> $name {
+                $name::from_le_bytes(s.iter().map(|x| *x).collect::<Vec<_>>().as_slice())
+            }
+
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_byte_seq_le(self) -> Seq<U8> {
+                Seq::from_vec(
+                    self.to_le_bytes()
+                        .iter()
+                        .map(|x| U8::classify(*x))
+                        .collect::<Vec<U8>>(),
+                )
+            }
+
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_public_byte_seq_le(self) -> Seq<u8> {
+                Seq::from_vec(self.to_le_bytes())
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]

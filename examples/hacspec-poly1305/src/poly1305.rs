@@ -45,10 +45,11 @@ pub fn encode(block_uint: U128, len: usize) -> FieldElement {
     w_elem + l_elem
 }
 
-/// Convert a `FieldElement` to a `Tag` (16-byte array).
+/// Convert the addition modulo 2^128 of two `FieldElement` to a `Tag` (16-byte array).
 pub fn poly_finish(a: FieldElement, s: FieldElement) -> Tag {
-    // Note that a might be less than 16 byte -> zero-pad; but might also be
-    // larger than Tag::capacity().
+    // The public slices representing a and s are 17 bytes
+    // using big-endian representation; to get a modulo 2^128
+    // we simply cut-off the left-most byte using slice.
     let a = a.to_public_byte_seq_be().slice(1, BLOCKSIZE);
     let a = u128_from_be_bytes(u128Word::from_seq(&a));
     let s = s.to_public_byte_seq_be().slice(1, BLOCKSIZE);
