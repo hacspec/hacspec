@@ -46,11 +46,15 @@ pub fn encode(block_uint: U128, len: usize) -> FieldElement {
 }
 
 /// Convert a `FieldElement` to a `Tag` (16-byte array).
-pub fn num_to_16_le_bytes(a: FieldElement) -> Tag {
+pub fn poly_finish(a: FieldElement, s: FieldElement) -> Tag {
     // Note that a might be less than 16 byte -> zero-pad; but might also be
     // larger than Tag::capacity().
-    let n_v = a.to_public_byte_seq_le();
-    Tag::from_seq(&n_v.slice(0, BLOCKSIZE))
+    let a = a.to_public_byte_seq_be().slice(1, BLOCKSIZE);
+    let a = u128_from_be_bytes(u128Word::from_seq(&a));
+    let s = s.to_public_byte_seq_be().slice(1, BLOCKSIZE);
+    let s = u128_from_be_bytes(u128Word::from_seq(&s));
+    let a = a + s;
+    Tag::from_seq(&u128_to_le_bytes(a))
 }
 
 pub fn poly(m: &ByteSeq, key: KeyPoly) -> Tag {
@@ -68,7 +72,5 @@ pub fn poly(m: &ByteSeq, key: KeyPoly) -> Tag {
         a = a + n;
         a = r * a;
     }
-
-    let a = a + s;
-    num_to_16_le_bytes(a)
+    poly_finish(a, s)
 }

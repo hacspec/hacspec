@@ -770,24 +770,26 @@ macro_rules! nat_mod {
     (type_name: $name:ident, type_of_canvas: $base:ident, bit_size_of_field: $bits:literal, modulo_value: $n:literal) => {
         abstract_nat_mod!($name, $base, $bits, $n);
 
-        #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: A) -> $name {
-            $name::from_be_bytes(
-                s.iter()
-                    .map(|x| U8::declassify(*x))
-                    .collect::<Vec<_>>()
-                    .as_slice(),
-            )
-        }
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: A) -> $name {
+                $name::from_be_bytes(
+                    s.iter()
+                        .map(|x| U8::declassify(*x))
+                        .collect::<Vec<_>>()
+                        .as_slice(),
+                )
+            }
 
-        #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        pub fn to_byte_seq_be(self) -> Seq<U8> {
-            Seq::from_vec(
-                self.to_be_bytes()
-                    .iter()
-                    .map(|x| U8::classify(*x))
-                    .collect::<Vec<U8>>(),
-            )
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_byte_seq_be(self) -> Seq<U8> {
+                Seq::from_vec(
+                    self.to_be_bytes()
+                        .iter()
+                        .map(|x| U8::classify(*x))
+                        .collect::<Vec<U8>>(),
+                )
+            }
         }
 
         impl NumericCopy for $name {}
