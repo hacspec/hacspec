@@ -53,6 +53,22 @@ pub fn num_to_16_le_bytes(a: FieldElement) -> Tag {
     Tag::from_seq(&n_v.slice(0, BLOCKSIZE))
 }
 
+pub fn field_element_to_u128(a: FieldElement) -> u128 {
+    let mut a_bytes: Vec<u8> = a.to_public_byte_seq_le().iter().map(|&x| x).collect();
+    if a_bytes.len() > 16 {
+        a_bytes.pop();
+    }
+    loop {
+        if a_bytes.len() == 16 {
+            break;
+        }
+        a_bytes.push(0);
+    }
+    let mut a_bytes_array = [0u8; 16];
+    a_bytes_array.clone_from_slice(&a_bytes);
+    u128::from_le_bytes(a_bytes_array)
+}
+
 pub fn poly(m: &ByteSeq, key: KeyPoly) -> Tag {
     let r = le_bytes_to_num(&key.slice(0, BLOCKSIZE));
     let r = clamp(r);
@@ -69,6 +85,7 @@ pub fn poly(m: &ByteSeq, key: KeyPoly) -> Tag {
         a = r * a;
     }
 
-    let a = a + s;
-    num_to_16_le_bytes(a)
+    let a = field_element_to_u128(a).wrapping_add(field_element_to_u128(s));
+    let a = PublicByteSeq::from_native_slice(&a.to_le_bytes());
+    Tag::from_seq(&a.slice(0, BLOCKSIZE))
 }
