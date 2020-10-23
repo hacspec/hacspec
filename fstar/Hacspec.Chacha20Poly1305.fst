@@ -18,7 +18,9 @@ let poly_mac (m_3 : byte_seq) (key_4 : key_poly) (iv_5 : iv) : tag =
   let mac_key_6 = key_gen (key_4) (iv_5) in
   poly (m_3) (mac_key_6)
 
-let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq) : byte_seq =
+let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq{
+    (**) seq_len msg_8 + 16 + seq_len aad_7 + 16 + 16 <= maxint U32
+  }) : byte_seq =
   let laad_9 = seq_len (aad_7) in
   let lmsg_10 = seq_len (msg_8) in
   let pad_aad_11 =
@@ -27,12 +29,18 @@ let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq) : byte_seq =
   let pad_msg_12 =
     (usize 16) * (((lmsg_10) `usize_shift_right` (pub_u32 0x4)) + (usize 1))
   in
-  let (pad_aad_11, pad_msg_12) =
+  let (pad_aad_11) =
     if ((laad_9) % (usize 16)) = (usize 0) then begin
       let pad_aad_11 = laad_9 in
+      (pad_aad_11)
+    end else begin (pad_aad_11)
+    end
+  in
+  let (pad_msg_12) =
+    if ((lmsg_10) % (usize 16)) = (usize 0) then begin
       let pad_msg_12 = lmsg_10 in
-      (pad_aad_11, pad_msg_12)
-    end else begin (pad_aad_11, pad_msg_12)
+      (pad_msg_12)
+    end else begin (pad_msg_12)
     end
   in
   let padded_msg_13 =
@@ -54,7 +62,9 @@ let encrypt
   (key_14 : key)
   (iv_15 : iv)
   (aad_16 : byte_seq)
-  (msg_17 : byte_seq)
+  (msg_17 : byte_seq{
+    (**) seq_len msg_17 + 16 + seq_len aad_16 + 16 + 16 <= maxint U32
+  })
   : (byte_seq & tag) =
   let key_block_18 = chacha_block (key_14) (secret (pub_u32 0x0)) (iv_15) in
   let mac_key_19 =
@@ -69,7 +79,9 @@ let decrypt
   (key_23 : key)
   (iv_24 : iv)
   (aad_25 : byte_seq)
-  (cipher_text_26 : byte_seq)
+  (cipher_text_26 : byte_seq{
+    (**) seq_len cipher_text_26 + 16 + seq_len aad_25 + 16 + 16 <= maxint U32
+  })
   (tag_27 : tag)
   : (byte_seq & bool) =
   let key_block_28 = chacha_block (key_23) (secret (pub_u32 0x0)) (iv_24) in
@@ -80,4 +92,3 @@ let decrypt
   let my_tag_31 = poly (padded_msg_30) (array_from_seq (32) (mac_key_29)) in
   let plain_text_32 = chacha (key_23) (iv_24) (cipher_text_26) in
   (plain_text_32, (my_tag_31) = (tag_27))
-

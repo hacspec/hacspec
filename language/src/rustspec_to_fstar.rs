@@ -469,18 +469,18 @@ fn translate_prefix_for_func_name<'a>(
     match prefix {
         BaseTyp::Bool => panic!(), // should not happen
         BaseTyp::Unit => panic!(), // should not happen
-        BaseTyp::UInt8 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::Int8 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::UInt16 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::Int16 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::UInt32 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::Int32 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::UInt64 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::Int64 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::UInt128 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::Int128 => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::Usize => (RcDoc::as_string("int"), FuncPrefix::Regular),
-        BaseTyp::Isize => (RcDoc::as_string("int"), FuncPrefix::Regular),
+        BaseTyp::UInt8 => (RcDoc::as_string("pub_uint8"), FuncPrefix::Regular),
+        BaseTyp::Int8 => (RcDoc::as_string("pub_int8"), FuncPrefix::Regular),
+        BaseTyp::UInt16 => (RcDoc::as_string("pub_uint16"), FuncPrefix::Regular),
+        BaseTyp::Int16 => (RcDoc::as_string("pub_int16"), FuncPrefix::Regular),
+        BaseTyp::UInt32 => (RcDoc::as_string("pub_uint32"), FuncPrefix::Regular),
+        BaseTyp::Int32 => (RcDoc::as_string("pub_int32"), FuncPrefix::Regular),
+        BaseTyp::UInt64 => (RcDoc::as_string("pub_uint64"), FuncPrefix::Regular),
+        BaseTyp::Int64 => (RcDoc::as_string("pub_int64"), FuncPrefix::Regular),
+        BaseTyp::UInt128 => (RcDoc::as_string("pub_uint128"), FuncPrefix::Regular),
+        BaseTyp::Int128 => (RcDoc::as_string("pub_int128"), FuncPrefix::Regular),
+        BaseTyp::Usize => (RcDoc::as_string("uint_size"), FuncPrefix::Regular),
+        BaseTyp::Isize => (RcDoc::as_string("int_size"), FuncPrefix::Regular),
         BaseTyp::Str => (RcDoc::as_string("string"), FuncPrefix::Regular),
         BaseTyp::Seq(inner_ty) => (
             RcDoc::as_string(SEQ_MODULE),
@@ -557,7 +557,7 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (NAT_MODULE, "to_public_byte_seq_le") => {
+                (NAT_MODULE, "to_public_byte_seq_le") | (NAT_MODULE, "to_public_byte_seq_be") => {
                     match &prefix_info {
                         FuncPrefix::NatMod(_, encoding_bits) => additional_args
                             .push(RcDoc::as_string(format!("{}", (encoding_bits + 7) / 8))),
