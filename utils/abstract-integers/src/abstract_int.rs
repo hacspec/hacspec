@@ -14,7 +14,7 @@ macro_rules! abstract_int {
             }
 
             pub fn max_value() -> Self {
-                Self::max().into()
+                Self::from(Self::max())
             }
 
             fn hex_string_to_bytes(s: &str) -> Vec<u8> {
@@ -152,7 +152,7 @@ macro_rules! abstract_public {
         impl $name {
             #[allow(dead_code)]
             pub fn inv(self, modval: Self) -> Self {
-                let biguintmodval : BigInt = modval.into();
+                let biguintmodval: BigInt = modval.into();
                 let m = &biguintmodval - BigInt::from(2u32);
                 let s: BigInt = (self).into();
                 s.modpow(&m, &biguintmodval).into()
@@ -347,13 +347,25 @@ macro_rules! abstract_unsigned {
             }
 
             #[allow(dead_code)]
-            pub fn from_le_bytes(v: &[u8]) -> Self {
-                BigInt::from_bytes_le(Sign::Plus, v).into()
+            pub fn from_be_bytes(v: &[u8]) -> Self {
+                debug_assert!(
+                    v.len() <= ($bits + 7) / 8,
+                    "from_be_bytes: lenght of bytes should be lesser than the lenght of the canvas"
+                );
+                let mut repr = [0u8; ($bits + 7) / 8];
+                let upper = repr.len();
+                let lower = upper - v.len();
+                repr[lower..upper].copy_from_slice(&v);
+                $name {
+                    b: repr,
+                    sign: Sign::Plus,
+                    signed: false,
+                }
             }
 
             #[allow(dead_code)]
-            pub fn to_le_bytes(self) -> Vec<u8> {
-                BigInt::to_bytes_le(&self.into()).1
+            pub fn to_be_bytes(self) -> [u8; ($bits + 7) / 8] {
+                self.b
             }
 
             /// Produces a new integer which is all ones if the two arguments are equal and
@@ -365,7 +377,7 @@ macro_rules! abstract_unsigned {
                 let b: BigInt = rhs.into();
                 if a == b {
                     let one = Self::from_literal(1);
-                    (one << ($bits-1)) - one
+                    (one << ($bits - 1)) - one
                 } else {
                     Self::default()
                 }
@@ -380,14 +392,14 @@ macro_rules! abstract_unsigned {
                 let b: BigInt = rhs.into();
                 if a != b {
                     let one = Self::from_literal(1);
-                    (one << ($bits-1)) - one
+                    (one << ($bits - 1)) - one
                 } else {
                     Self::default()
                 }
             }
 
             /// Produces a new integer which is all ones if the first argument is greater than or
-            /// equal to the second argument, and all zeroes otherwise. 
+            /// equal to the second argument, and all zeroes otherwise.
             /// **NOTE:** This is not constant time but `BigInt` generally isn't.
             #[inline]
             pub fn comp_gte(self, rhs: Self) -> Self {
@@ -395,7 +407,7 @@ macro_rules! abstract_unsigned {
                 let b: BigInt = rhs.into();
                 if a >= b {
                     let one = Self::from_literal(1);
-                    (one << ($bits-1)) - one
+                    (one << ($bits - 1)) - one
                 } else {
                     Self::default()
                 }
@@ -410,7 +422,7 @@ macro_rules! abstract_unsigned {
                 let b: BigInt = rhs.into();
                 if a > b {
                     let one = Self::from_literal(1);
-                    (one << ($bits-1)) - one
+                    (one << ($bits - 1)) - one
                 } else {
                     Self::default()
                 }
@@ -425,7 +437,7 @@ macro_rules! abstract_unsigned {
                 let b: BigInt = rhs.into();
                 if a <= b {
                     let one = Self::from_literal(1);
-                    (one << ($bits-1)) - one
+                    (one << ($bits - 1)) - one
                 } else {
                     Self::default()
                 }
@@ -440,7 +452,7 @@ macro_rules! abstract_unsigned {
                 let b: BigInt = rhs.into();
                 if a < b {
                     let one = Self::from_literal(1);
-                    (one << ($bits-1)) - one
+                    (one << ($bits - 1)) - one
                 } else {
                     Self::default()
                 }
@@ -448,7 +460,6 @@ macro_rules! abstract_unsigned {
         }
     };
 }
-
 
 #[macro_export]
 macro_rules! abstract_signed {
@@ -462,7 +473,7 @@ macro_rules! abstract_signed {
                     "+" => Sign::Plus,
                     "-" => Sign::Minus,
                     "" => Sign::NoSign,
-                    _ => panic!("from_hex requires the first argument to be + or -")
+                    _ => panic!("from_hex requires the first argument to be + or -"),
                 };
                 BigInt::from_bytes_be(sign, &Self::hex_string_to_bytes(s)).into()
             }
