@@ -2,7 +2,6 @@ mod chacha20poly1305_trait;
 mod evercrypt_provider;
 mod hacspec_provider;
 
-
 fn clone_into_array<A, T>(slice: &[T]) -> A
 where
     A: Default + AsMut<[T]>,
@@ -17,8 +16,8 @@ where
 mod tests {
     use rand::Rng;
     use crate::chacha20poly1305_trait::Chacha20Poly1305;
-    use crate::evercrypt_provider::Chacha20Poly1305_Evercrypt;
-    use crate::hacspec_provider::Chacha20Poly1305_Hacspec;
+    use crate::evercrypt_provider::Chacha20Poly1305Evercrypt;
+    use crate::hacspec_provider::Chacha20Poly1305Hacspec;
 
     fn chachapoly_enc_dec(cipher: &dyn Chacha20Poly1305) {
         let key = cipher.key_gen();
@@ -39,7 +38,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        chachapoly_enc_dec(&Chacha20Poly1305_Evercrypt::new());
-        chachapoly_enc_dec(&Chacha20Poly1305_Hacspec::new());
+        chachapoly_enc_dec(&Chacha20Poly1305Evercrypt::new());
+        chachapoly_enc_dec(&Chacha20Poly1305Hacspec::new());
     }
 }

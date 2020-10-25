@@ -6,17 +6,11 @@ use hacspec_poly1305::Tag as HacspecTag;
 use super::{chacha20poly1305_trait::*, *};
 use evercrypt::prelude::*;
 
-pub struct Chacha20Poly1305_Hacspec {}
+pub struct Chacha20Poly1305Hacspec {}
 
-impl Chacha20Poly1305 for Chacha20Poly1305_Hacspec {
-    fn new() -> Self
-    where
-        Self: Sized,
-    {
+impl Chacha20Poly1305 for Chacha20Poly1305Hacspec {
+    fn new() -> Self {
         Self {}
-    }
-    fn get_instance(&self) -> Box<dyn Chacha20Poly1305> {
-        Box::new(Self {})
     }
 
     // Nonce and key generation helper.
@@ -53,7 +47,7 @@ impl Chacha20Poly1305 for Chacha20Poly1305_Hacspec {
         aad: &[u8],
         c: &[u8],
         tag: &[u8; 16],
-    ) -> Result<Vec<u8>, String> {
+    ) -> Result<Vec<u8>, Error> {
         let (msg, valid) = decrypt(
             HacspecKey::from_public_slice(key),
             HacspecNonce::from_public_slice(nonce),
@@ -65,7 +59,7 @@ impl Chacha20Poly1305 for Chacha20Poly1305_Hacspec {
         if valid {
             Ok(msg)
         } else {
-            Err("Error decrypting.".to_string())
+            Err(Error("Error decrypting.".to_string()))
         }
     }
 }

@@ -1,17 +1,11 @@
 use super::{chacha20poly1305_trait::*, *};
 use evercrypt::prelude::*;
 
-pub struct Chacha20Poly1305_Evercrypt {}
+pub struct Chacha20Poly1305Evercrypt {}
 
-impl Chacha20Poly1305 for Chacha20Poly1305_Evercrypt {
-    fn new() -> Self
-    where
-        Self: Sized,
-    {
+impl Chacha20Poly1305 for Chacha20Poly1305Evercrypt {
+    fn new() -> Self {
         Self {}
-    }
-    fn get_instance(&self) -> Box<dyn Chacha20Poly1305> {
-        Box::new(Self {})
     }
 
     // Nonce and key generation helper.
@@ -30,10 +24,7 @@ impl Chacha20Poly1305 for Chacha20Poly1305_Evercrypt {
         aad: &[u8],
         m: &[u8],
     ) -> Result<(Vec<u8>, [u8; 16]), Error> {
-        let (ctxt, tag) = Aead::new(AeadMode::Chacha20Poly1305, key)
-            .unwrap()
-            .encrypt(m, nonce, aad)
-            .unwrap();
+        let (ctxt, tag) = Aead::new(AeadMode::Chacha20Poly1305, key)?.encrypt(m, nonce, aad)?;
         Ok((ctxt, tag))
     }
 
@@ -44,15 +35,8 @@ impl Chacha20Poly1305 for Chacha20Poly1305_Evercrypt {
         aad: &[u8],
         c: &[u8],
         tag: &[u8; 16],
-    ) -> Result<Vec<u8>, String> {
-        let mut n = [0u8; 12];
-        let ctxt = match Aead::new(AeadMode::Chacha20Poly1305, key)
-            .unwrap()
-            .decrypt(c, tag, nonce, aad)
-        {
-            Ok(c) => c,
-            Err(e) => return Err(format!("Error: {:?}", e)),
-        };
-        Ok(ctxt)
+    ) -> Result<Vec<u8>, Error> {
+        let ptxt = Aead::new(AeadMode::Chacha20Poly1305, key)?.decrypt(c, tag, nonce, aad)?;
+        Ok(ptxt)
     }
 }
