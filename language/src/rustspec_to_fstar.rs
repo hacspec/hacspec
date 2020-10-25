@@ -645,6 +645,7 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
         Expression::FuncCall(prefix, name, args) => {
             let (func_name, additional_args) =
                 translate_func_name(prefix.clone(), name.0.clone(), typ_dict);
+            let total_args = args.len() + additional_args.len();
             func_name
                 // We append implicit arguments first
                 .append(RcDoc::concat(
@@ -656,6 +657,11 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
                 .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
                     RcDoc::space().append(make_paren(translate_expression(arg, typ_dict)))
                 })))
+                .append(if total_args == 0 {
+                    RcDoc::space().append(RcDoc::as_string("()"))
+                } else {
+                    RcDoc::nil()
+                })
         }
         Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
             let (func_name, additional_args) =

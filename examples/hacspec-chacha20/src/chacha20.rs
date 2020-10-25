@@ -53,7 +53,7 @@ fn chacha_double_round(state: State) -> State {
 }
 
 pub fn chacha20_constants_init() -> Seq<U32> {
-    let mut constants = Seq::new(4);
+    let mut constants = Seq::<U32>::new(4);
     constants[0] = U32(0x6170_7865u32);
     constants[1] = U32(0x3320_646eu32);
     constants[2] = U32(0x7962_2d32u32);
@@ -62,7 +62,7 @@ pub fn chacha20_constants_init() -> Seq<U32> {
 }
 
 pub fn chacha20_key_to_u32s(key: Key) -> Seq<U32> {
-    let mut uints = Seq::new(8);
+    let mut uints = Seq::<U32>::new(8);
     uints[0] = U32_from_le_bytes(U32Word::from_slice_range(&key, 0..4));
     uints[1] = U32_from_le_bytes(U32Word::from_slice_range(&key, 4..8));
     uints[2] = U32_from_le_bytes(U32Word::from_slice_range(&key, 8..12));
@@ -75,7 +75,7 @@ pub fn chacha20_key_to_u32s(key: Key) -> Seq<U32> {
 }
 
 pub fn chacha20_iv_to_u32s(iv: IV) -> Seq<U32> {
-    let mut uints = Seq::new(3);
+    let mut uints = Seq::<U32>::new(3);
     uints[0] = U32_from_le_bytes(U32Word::from_slice_range(&iv, 0..4));
     uints[1] = U32_from_le_bytes(U32Word::from_slice_range(&iv, 4..8));
     uints[2] = U32_from_le_bytes(U32Word::from_slice_range(&iv, 8..12));
@@ -83,7 +83,7 @@ pub fn chacha20_iv_to_u32s(iv: IV) -> Seq<U32> {
 }
 
 pub fn chacha20_ctr_to_seq(ctr: U32) -> Seq<U32> {
-    let mut uints = Seq::new(1);
+    let mut uints = Seq::<U32>::new(1);
     uints[0] = ctr;
     uints
 }

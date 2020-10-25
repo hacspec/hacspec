@@ -103,88 +103,147 @@ let chacha_double_round (state_18 : state) : state =
   in
   chacha_quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_25)
 
-let chacha_block_init (key_26 : key) (ctr_27 : uint32) (iv_28 : iv) : state =
-  array_from_list (
-    let l =
-      [
-        secret (pub_u32 0x61707865);
-        secret (pub_u32 0x3320646e);
-        secret (pub_u32 0x79622d32);
-        secret (pub_u32 0x6b206574);
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 0, usize 4)));
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 4, usize 8)));
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 8, usize 12)));
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 12, usize 16)));
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 16, usize 20)));
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 20, usize 24)));
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 24, usize 28)));
-        uint32_from_le_bytes (
-          array_from_slice_range (key_26) ((usize 28, usize 32)));
-        ctr_27;
-        uint32_from_le_bytes (
-          array_from_slice_range (iv_28) ((usize 0, usize 4)));
-        uint32_from_le_bytes (
-          array_from_slice_range (iv_28) ((usize 4, usize 8)));
-        uint32_from_le_bytes (
-          array_from_slice_range (iv_28) ((usize 8, usize 12)))
-      ]
-    in assert_norm (List.Tot.length l == 16); l)
-
-let chacha_block_inner (key_29 : key) (ctr_30 : uint32) (iv_31 : iv) : state =
-  let st_32 = chacha_block_init (key_29) (ctr_30) (iv_31) in
-  let state_33 = st_32 in
-  let (state_33) =
-    foldi (usize 0) (usize 10) (fun i_34 (state_33) ->
-      let state_33 = chacha_double_round (state_33) in
-      (state_33))
-    (state_33)
+let chacha20_constants_init () : seq uint32 =
+  let constants_26 = seq_new_ (secret (pub_u32 0x8)) (usize 4) in
+  let constants_26 =
+    array_upd constants_26 (usize 0) (secret (pub_u32 0x61707865))
   in
-  let (state_33) =
-    foldi (usize 0) (usize 16) (fun i_35 (state_33) ->
-      let state_33 =
-        array_upd state_33 (i_35) (
-          (array_index (state_33) (i_35)) +. (array_index (st_32) (i_35)))
+  let constants_26 =
+    array_upd constants_26 (usize 1) (secret (pub_u32 0x3320646e))
+  in
+  let constants_26 =
+    array_upd constants_26 (usize 2) (secret (pub_u32 0x79622d32))
+  in
+  let constants_26 =
+    array_upd constants_26 (usize 3) (secret (pub_u32 0x6b206574))
+  in
+  constants_26
+
+let chacha20_key_to_u32s (key_27 : key) : seq uint32 =
+  let uints_28 = seq_new_ (secret (pub_u32 0x8)) (usize 8) in
+  let uints_28 =
+    array_upd uints_28 (usize 0) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 0, usize 4))))
+  in
+  let uints_28 =
+    array_upd uints_28 (usize 1) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 4, usize 8))))
+  in
+  let uints_28 =
+    array_upd uints_28 (usize 2) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 8, usize 12))))
+  in
+  let uints_28 =
+    array_upd uints_28 (usize 3) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 12, usize 16))))
+  in
+  let uints_28 =
+    array_upd uints_28 (usize 4) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 16, usize 20))))
+  in
+  let uints_28 =
+    array_upd uints_28 (usize 5) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 20, usize 24))))
+  in
+  let uints_28 =
+    array_upd uints_28 (usize 6) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 24, usize 28))))
+  in
+  let uints_28 =
+    array_upd uints_28 (usize 7) (
+      uint32_from_le_bytes (
+        array_from_slice_range (key_27) ((usize 28, usize 32))))
+  in
+  uints_28
+
+let chacha20_iv_to_u32s (iv_29 : iv) : seq uint32 =
+  let uints_30 = seq_new_ (secret (pub_u32 0x8)) (usize 3) in
+  let uints_30 =
+    array_upd uints_30 (usize 0) (
+      uint32_from_le_bytes (
+        array_from_slice_range (iv_29) ((usize 0, usize 4))))
+  in
+  let uints_30 =
+    array_upd uints_30 (usize 1) (
+      uint32_from_le_bytes (
+        array_from_slice_range (iv_29) ((usize 4, usize 8))))
+  in
+  let uints_30 =
+    array_upd uints_30 (usize 2) (
+      uint32_from_le_bytes (
+        array_from_slice_range (iv_29) ((usize 8, usize 12))))
+  in
+  uints_30
+
+let chacha20_ctr_to_seq (ctr_31 : uint32) : seq uint32 =
+  let uints_32 = seq_new_ (secret (pub_u32 0x8)) (usize 1) in
+  let uints_32 = array_upd uints_32 (usize 0) (ctr_31) in
+  uints_32
+
+let chacha_block_init (key_33 : key) (ctr_34 : uint32) (iv_35 : iv) : state =
+  array_from_seq (16) (
+    seq_concat (
+      seq_concat (
+        seq_concat (chacha20_constants_init ()) (
+          chacha20_key_to_u32s (key_33))) (chacha20_ctr_to_seq (ctr_34))) (
+      chacha20_iv_to_u32s (iv_35)))
+
+let chacha_block_inner (key_36 : key) (ctr_37 : uint32) (iv_38 : iv) : state =
+  let st_39 = chacha_block_init (key_36) (ctr_37) (iv_38) in
+  let state_40 = st_39 in
+  let (state_40) =
+    foldi (usize 0) (usize 10) (fun i_41 (state_40) ->
+      let state_40 = chacha_double_round (state_40) in
+      (state_40))
+    (state_40)
+  in
+  let (state_40) =
+    foldi (usize 0) (usize 16) (fun i_42 (state_40) ->
+      let state_40 =
+        array_upd state_40 (i_42) (
+          (array_index (state_40) (i_42)) +. (array_index (st_39) (i_42)))
       in
-      (state_33))
-    (state_33)
+      (state_40))
+    (state_40)
   in
-  state_33
+  state_40
 
-let chacha_block (key_36 : key) (ctr_37 : uint32) (iv_38 : iv) : state_bytes =
-  let state_39 = chacha_block_inner (key_36) (ctr_37) (iv_38) in
-  state_to_bytes (state_39)
+let chacha_block (key_43 : key) (ctr_44 : uint32) (iv_45 : iv) : state_bytes =
+  let state_46 = chacha_block_inner (key_43) (ctr_44) (iv_45) in
+  state_to_bytes (state_46)
 
-let chacha (key_40 : key) (iv_41 : iv) (m_42 : byte_seq) : byte_seq =
-  let ctr_43 = secret (pub_u32 0x1) in
-  let blocks_out_44 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_42)) in
-  let (ctr_43, blocks_out_44) =
-    foldi (usize 0) (seq_num_chunks (m_42) (usize 64)) (fun i_45 (
-        ctr_43,
-        blocks_out_44
+let chacha (key_47 : key) (iv_48 : iv) (m_49 : byte_seq) : byte_seq =
+  let ctr_50 = secret (pub_u32 0x1) in
+  let blocks_out_51 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_49)) in
+  let (ctr_50, blocks_out_51) =
+    foldi (usize 0) (seq_num_chunks (m_49) (usize 64)) (fun i_52 (
+        ctr_50,
+        blocks_out_51
       ) ->
-      let (block_len_46, msg_block_47) =
-        seq_get_chunk (m_42) (usize 64) (i_45)
+      let (block_len_53, msg_block_54) =
+        seq_get_chunk (m_49) (usize 64) (i_52)
       in
-      let key_block_48 = chacha_block (key_40) (ctr_43) (iv_41) in
-      let msg_block_padded_49 = array_new_ (secret (pub_u8 0x8)) (64) in
-      let msg_block_padded_50 =
-        array_update_start (msg_block_padded_49) (msg_block_47)
+      let key_block_55 = chacha_block (key_47) (ctr_50) (iv_48) in
+      let msg_block_padded_56 = array_new_ (secret (pub_u8 0x8)) (64) in
+      let msg_block_padded_57 =
+        array_update_start (msg_block_padded_56) (msg_block_54)
       in
-      let blocks_out_44 =
-        seq_set_chunk (blocks_out_44) (usize 64) (i_45) (
+      let blocks_out_51 =
+        seq_set_chunk (blocks_out_51) (usize 64) (i_52) (
           array_slice_range (
-            (msg_block_padded_50) `array_xor (^.)` (key_block_48)) (
-            (usize 0, block_len_46)))
+            (msg_block_padded_57) `array_xor (^.)` (key_block_55)) (
+            (usize 0, block_len_53)))
       in
-      let ctr_43 = (ctr_43) +. (secret (pub_u32 0x1)) in
-      (ctr_43, blocks_out_44))
-    (ctr_43, blocks_out_44)
+      let ctr_50 = (ctr_50) +. (secret (pub_u32 0x1)) in
+      (ctr_50, blocks_out_51))
+    (ctr_50, blocks_out_51)
   in
-  blocks_out_44
+  blocks_out_51
+
