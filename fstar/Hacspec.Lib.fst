@@ -231,6 +231,15 @@ let seq_update
   =
   LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input
 
+let seq_concat
+  (#a: Type)
+  (s1 :seq a)
+  (s2: seq a{range (LSeq.length s1 + LSeq.length s2) U32})
+  : lseq a (LSeq.length s1 + LSeq.length s2)
+  =
+  LSeq.concat #a #(LSeq.length s1) #(LSeq.length s2) s1 s2
+
+
 (**** Chunking *)
 
 let seq_num_chunks (#a: Type) (s: seq a) (chunk_len: uint_size{chunk_len > 0}) : uint_size =

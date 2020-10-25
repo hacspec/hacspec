@@ -335,6 +335,14 @@ macro_rules! generic_array {
                 a
             }
 
+            #[cfg_attr(feature="use_attributes", in_hacspec)]
+            pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> Seq<T> {
+                let mut out = Seq::new(self.len() + next.len());
+                out = out.update_start(self);
+                out = out.update_slice(self.len(), next, 0, next.len());
+                out
+            }
+
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_slice_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
                 Self::from_slice(input, r.start, r.end - r.start)

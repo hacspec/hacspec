@@ -61,6 +61,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 a = a.update_slice(0, input, start, len);
                 a
             }
+            
+            #[cfg_attr(feature="use_attributes", in_hacspec)]
+            pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> Self {
+                let mut out = Self::new(self.len() + next.len());
+                out = out.update_start(self);
+                out = out.update_slice(self.len(), next, 0, next.len());
+                out
+            }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn from_slice_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
