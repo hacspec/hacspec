@@ -1229,6 +1229,10 @@ fn typecheck_expression(
                         return Err(());
                     }
                     (Borrowing::Consumed, Borrowing::Borrowed) => {
+                        // TODO: change this so that context is not updated
+                        // only if the argument is a var, because in the
+                        // case of a tuple you want to register all the moves
+                        // that have happened
                         // If the argument is borrowed, then the consumed variables are actually
                         // not consumed so we don't update the var context
                         ((Borrowing::Borrowed, (arg_t.0).1.clone()), arg_t.1.clone())
@@ -1355,6 +1359,10 @@ fn typecheck_expression(
                         return Err(());
                     }
                     (Borrowing::Consumed, Borrowing::Borrowed) => {
+                        // TODO: change this so that context is not updated
+                        // only if the argument is a var, because in the
+                        // case of a tuple you want to register all the moves
+                        // that have happened
                         // If the argument is borrowed, then the consumed variables are actually
                         // not consumed so we don't update the var context
                         ((Borrowing::Borrowed, (arg_t.0).1.clone()), arg_t.1.clone())
