@@ -100,3 +100,8 @@ fn run_sha3_test() -> Result<(), Box<dyn std::error::Error>> {
 fn run_sha256_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test("../examples/hacspec-sha256/src/sha256.rs", None, vec![])
 }
+
+#[test]
+fn run_curve25519_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test("../examples/hacspec-curve25519/src/curve25519.rs", None, vec![])
+}
