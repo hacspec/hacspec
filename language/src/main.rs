@@ -16,6 +16,7 @@ extern crate pretty;
 mod ast_to_rustspec;
 mod hir_to_rustspec;
 mod rustspec;
+mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
 
@@ -34,7 +35,9 @@ use rustc_span::MultiSpan;
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::env;
+use std::ffi::OsStr;
 use std::fs::OpenOptions;
+use std::path::Path;
 use walkdir::WalkDir;
 
 struct HacspecCallbacks {
@@ -153,12 +156,26 @@ impl Callbacks for HacspecCallbacks {
         }
         match &self.output_file {
             None => (),
-            Some(file) => rustspec_to_fstar::translate_and_write_to_file(
-                &compiler.session(),
-                &krate,
-                &file,
-                &typ_dict,
-            ),
+            Some(file) => match Path::new(file).extension().and_then(OsStr::to_str).unwrap() {
+                "fst" => rustspec_to_fstar::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &typ_dict,
+                ),
+                "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &typ_dict,
+                ),
+                _ => {
+                    &compiler
+                        .session()
+                        .err("unknown backend extension for output file");
+                    return Compilation::Stop;
+                }
+            },
         }
         Compilation::Stop
     }
