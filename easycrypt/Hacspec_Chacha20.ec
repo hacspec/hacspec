@@ -1,9 +1,11 @@
-module Hacspec.Chacha20
+module Hacspec_Chacha20
 
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
 
 open Hacspec.Lib
 open FStar.Mul
+
+
 
 type state = lseq (uint32) (usize 16)
 
