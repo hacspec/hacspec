@@ -32,6 +32,30 @@ lazy_static! {
     static ref ID_MAP: Mutex<HashMap<usize, usize>> = Mutex::new(HashMap::new());
 }
 
+fn make_op_binding<'a>(
+    pat: RcDoc<'a, ()>,
+    typ: Option<RcDoc<'a, ()>>,
+    expr: RcDoc<'a, ()>,
+) -> RcDoc<'a, ()> {
+    RcDoc::as_string("op")
+        .append(RcDoc::space())
+        .append(
+            pat.append(match typ {
+                None => RcDoc::nil(),
+                Some(tau) => RcDoc::space()
+                    .append(RcDoc::as_string(":"))
+                    .append(RcDoc::space())
+                    .append(tau),
+            })
+            .group(),
+        )
+        .append(RcDoc::space())
+        .append(RcDoc::as_string("="))
+        .group()
+        .append(RcDoc::line().append(expr.group()))
+        .nest(2)
+}
+
 fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
     typ: Option<RcDoc<'a, ()>>,
@@ -234,8 +258,8 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::UInt16(x) => RcDoc::as_string(format!("pub_u16 {:#x}", x)),
         Literal::Int8(x) => RcDoc::as_string(format!("pub_i8 {:#x}", x)),
         Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {:#x}", x)),
-        Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
-        Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
+        Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
+        Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
@@ -948,28 +972,30 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
             .group()
             .append(
                 RcDoc::line()
-                    .append(RcDoc::as_string("lseq"))
+                    .append(translate_base_typ(cell_t.0.clone()))
                     .append(RcDoc::space())
-                    .append(make_paren(translate_base_typ(cell_t.0.clone())))
-                    .append(RcDoc::space())
-                    .append(make_paren(translate_expression(size.0.clone(), typ_dict)))
+                    .append(RcDoc::as_string("Array"))
+                    .append(translate_expression(size.0.clone(), typ_dict))
+                    .append(RcDoc::as_string(".t"))
                     .group()
                     .nest(2),
             )
             .append(match index_typ {
                 None => RcDoc::nil(),
-                Some(index_typ) => {
-                    RcDoc::hardline()
-                        .append(RcDoc::hardline())
-                        .append(make_let_binding(
-                            translate_ident(index_typ.0.clone()),
-                            None,
-                            RcDoc::as_string("nat_mod")
-                                .append(RcDoc::space())
-                                .append(make_paren(translate_expression(size.0.clone(), typ_dict))),
-                            true,
-                        ))
-                }
+                Some(index_typ) => RcDoc::as_string(".")
+                    .append(RcDoc::hardline())
+                    .append(RcDoc::hardline())
+                    .append(make_op_binding(
+                        translate_ident(index_typ.0.clone())
+                            .append(RcDoc::space())
+                            .append(RcDoc::as_string("i")),
+                        None,
+                        RcDoc::as_string("nat_mod")
+                            .append(RcDoc::space())
+                            .append(make_paren(translate_expression(size.0.clone(), typ_dict)))
+                            .append(RcDoc::space())
+                            .append(RcDoc::as_string("i")),
+                    )),
             }),
         Item::ConstDecl(name, ty, e) => make_let_binding(
             translate_ident(name.0.clone()),
@@ -1025,6 +1051,7 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
 fn translate_program<'a>(p: &'a Program, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
     RcDoc::concat(p.items.iter().map(|(i, _)| {
         translate_item(i, typ_dict)
+            .append(RcDoc::as_string("."))
             .append(RcDoc::hardline())
             .append(RcDoc::hardline())
     }))
@@ -1042,14 +1069,13 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
     };
     let width = 80;
     let mut w = Vec::new();
-    let module_name = path.file_stem().unwrap().to_str().unwrap();
     write!(
         file,
-        "module {}\n\n\
-        #set-options \"--fuel 0 --ifuel 1 --z3rlimit 15\"\n\n\
-        open Hacspec.Lib\n\
-        open FStar.Mul\n\n",
-        module_name
+        "require import List Int IntDiv CoreMap AllCore.\n\
+         require import Array3 Array8 Array12 Array16 Array32 Array64.\n\
+         require import WArray64.\n\n\
+         from Jasmin require import JModel JMemory JArray.\n\
+         require import Hacspec.\n",
     )
     .unwrap();
     let i_c_iter: Vec<RcDoc<()>> = p

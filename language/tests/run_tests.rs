@@ -61,6 +61,11 @@ fn run_chacha20_test() -> Result<(), Box<dyn std::error::Error>> {
         "../examples/hacspec-chacha20/src/chacha20.rs",
         Some("../fstar/Hacspec.Chacha20.fst"),
         vec![],
+    )?;
+    run_test(
+        "../examples/hacspec-chacha20/src/chacha20.rs",
+        Some("../easycrypt/Hacspec_Chacha20.ec"),
+        vec![],
     )
 }
 
@@ -70,11 +75,6 @@ fn run_poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
         "../examples/hacspec-poly1305/src/poly1305.rs",
         Some("../fstar/Hacspec.Poly1305.fst"),
         vec![""],
-    )?;
-    run_test(
-        "../examples/hacspec-poly1305/src/poly1305.rs",
-        Some("../easycrypt/Hacspec_Poly1305.ec"),
-        vec![],
     )
 }
 

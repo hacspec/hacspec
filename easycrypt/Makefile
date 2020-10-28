@@ -1,14 +1,15 @@
-SRC=Hacspec_Poly1305.ec
+SRC=Hacspec_Chacha20.ec Hacspec_Chacha20_expected.ec
+
+EASYCRYPT=easycrypt compile \
+	-I Jasmin:eclib \
+	-I . \
+	-I ~/libjc/proof/crypto_core/keccakf160064bits
+
+Hacspec_Chacha20.eco: Hacspec_Chacha20.ec
+	$(EASYCRYPT) -I ~/libjc/proof/crypto_stream/chacha20 $^
+
+Hacspec_Chacha20_expected.eco: Hacspec_Chacha20_expected.ec
+	$(EASYCRYPT) -I ~/libjc/proof/crypto_stream/chacha20 $^
 
 
-
-%.ec.checked: %.ec
-	easycrypt compile \
-		-I Jasmin:eclib \
-		-I . \
-		-I ~/libjc/proof/crypto_onetimeauth/poly1305 \
-		-I ~/libjc/proof/crypto_core/keccakf160064bits \
-		-I /usr/local/lib/easycrypt/theories/algebra \
-		$^
-
-verify-all: $(addsuffix .checked,$(SRC))
+verify-all: $(addsuffix o,$(SRC))
