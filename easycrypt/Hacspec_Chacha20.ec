@@ -8,8 +8,7 @@ require import Hacspec.
 
 type state = uint32 Array16.t.
 
-op state_idx i =
-  nat_mod (16) i.
+type state_idx = uint_size.
 
 type state_bytes = uint8 Array64.t.
 
@@ -32,3 +31,46 @@ op state_to_bytes (x_0 : state) : state_bytes =
     r_1
   in
   r_1.
+
+op chacha_line
+  (a_4 : state_idx)
+  (b_5 : state_idx)
+  (d_6 : state_idx)
+  (s_7 : uint_size)
+  (m_8 : state)
+  : state =
+  let state_9 = m_8 in
+  let state_9 = state_9.[(a_4) <- ((state_9.[a_4]) + (state_9.[b_5]))] in
+  let state_9 = state_9.[(d_6) <- ((state_9.[d_6]) +^ (state_9.[a_4]))] in
+  let state_9 = state_9.[(d_6) <- (uint32_rotate_left (state_9.[d_6]) (s_7))] in
+  state_9.
+
+op chacha_quarter_round
+  (a_10 : state_idx)
+  (b_11 : state_idx)
+  (c_12 : state_idx)
+  (d_13 : state_idx)
+  (state_14 : state)
+  : state =
+  let state_15 = chacha_line (a_10) (b_11) (d_13) (16) (state_14) in
+  let state_16 = chacha_line (c_12) (d_13) (b_11) (12) (state_15) in
+  let state_17 = chacha_line (a_10) (b_11) (d_13) (8) (state_16) in
+  chacha_line (c_12) (d_13) (b_11) (7) (state_17).
+
+op chacha_double_round (state_18 : state) : state =
+  let state_19 = chacha_quarter_round (0) (4) (8) (12) (state_18) in
+  let state_20 = chacha_quarter_round (1) (5) (9) (13) (state_19) in
+  let state_21 = chacha_quarter_round (2) (6) (10) (14) (state_20) in
+  let state_22 = chacha_quarter_round (3) (7) (11) (15) (state_21) in
+  let state_23 = chacha_quarter_round (0) (5) (10) (15) (state_22) in
+  let state_24 = chacha_quarter_round (1) (6) (11) (12) (state_23) in
+  let state_25 = chacha_quarter_round (2) (7) (8) (13) (state_24) in
+  chacha_quarter_round (3) (4) (9) (14) (state_25).
+
+op chacha20_constants_init (_: unit) : uint32 Sequence.t =
+  let constants_26 = seq_new_ (secret (pub_u32 8)) (4) in
+  let constants_26 = constants_26.[(0) <- (secret (pub_u32 1634760805))] in
+  let constants_26 = constants_26.[(1) <- (secret (pub_u32 857760878))] in
+  let constants_26 = constants_26.[(2) <- (secret (pub_u32 2036477234))] in
+  let constants_26 = constants_26.[(3) <- (secret (pub_u32 1797285236))] in
+  constants_26.

@@ -212,9 +212,9 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Str => RcDoc::as_string("string"),
         BaseTyp::Seq(tau) => {
             let tau: BaseTyp = tau.0;
-            RcDoc::as_string("seq")
+            translate_base_typ(tau)
                 .append(RcDoc::space())
-                .append(translate_base_typ(tau))
+                .append(RcDoc::as_string("Sequence.t"))
                 .group()
         }
         BaseTyp::Array(size, tau) => {
@@ -458,19 +458,19 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
         (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
         (BinOpKind::Rem, _) => RcDoc::as_string("%."),
-        (BinOpKind::Sub, _) => RcDoc::as_string("-."),
-        (BinOpKind::Add, _) => RcDoc::as_string("+."),
-        (BinOpKind::Mul, _) => RcDoc::as_string("*."),
-        (BinOpKind::Div, _) => RcDoc::as_string("/."),
-        (BinOpKind::BitXor, _) => RcDoc::as_string("^."),
-        (BinOpKind::BitAnd, _) => RcDoc::as_string("&."),
-        (BinOpKind::BitOr, _) => RcDoc::as_string("|."),
+        (BinOpKind::Sub, _) => RcDoc::as_string("-"),
+        (BinOpKind::Add, _) => RcDoc::as_string("+"),
+        (BinOpKind::Mul, _) => RcDoc::as_string("*"),
+        (BinOpKind::Div, _) => RcDoc::as_string("/"),
+        (BinOpKind::BitXor, _) => RcDoc::as_string("+^"),
+        (BinOpKind::BitAnd, _) => RcDoc::as_string("&"),
+        (BinOpKind::BitOr, _) => RcDoc::as_string("|"),
         (BinOpKind::Shl, _) => RcDoc::as_string("`shift_left`"),
         (BinOpKind::Shr, _) => RcDoc::as_string("`shift_right`"),
-        (BinOpKind::Lt, _) => RcDoc::as_string("<."),
-        (BinOpKind::Le, _) => RcDoc::as_string("<=."),
-        (BinOpKind::Ge, _) => RcDoc::as_string(">=."),
-        (BinOpKind::Gt, _) => RcDoc::as_string(">."),
+        (BinOpKind::Lt, _) => RcDoc::as_string("<"),
+        (BinOpKind::Le, _) => RcDoc::as_string("<="),
+        (BinOpKind::Ge, _) => RcDoc::as_string(">="),
+        (BinOpKind::Gt, _) => RcDoc::as_string(">"),
         (BinOpKind::Ne, _) => RcDoc::as_string("!="),
         (BinOpKind::Eq, _) => RcDoc::as_string("="),
         (BinOpKind::And, _) => RcDoc::as_string("&&"),
@@ -958,7 +958,7 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                         RcDoc::line(),
                     )
                 } else {
-                    RcDoc::as_string("()")
+                    RcDoc::as_string("(_: unit)")
                 })
                 .append(RcDoc::line())
                 .append(
@@ -997,17 +997,15 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                 Some(index_typ) => RcDoc::as_string(".")
                     .append(RcDoc::hardline())
                     .append(RcDoc::hardline())
-                    .append(make_op_binding(
-                        translate_ident(index_typ.0.clone())
+                    .append(
+                        RcDoc::as_string("type")
                             .append(RcDoc::space())
-                            .append(RcDoc::as_string("i")),
-                        None,
-                        RcDoc::as_string("nat_mod")
+                            .append(translate_ident(index_typ.0.clone()))
                             .append(RcDoc::space())
-                            .append(make_paren(translate_expression(size.0.clone(), typ_dict)))
+                            .append(RcDoc::as_string("="))
                             .append(RcDoc::space())
-                            .append(RcDoc::as_string("i")),
-                    )),
+                            .append(RcDoc::as_string("uint_size")),
+                    ),
             }),
         Item::ConstDecl(name, ty, e) => make_op_binding(
             translate_ident(name.0.clone()),
