@@ -166,3 +166,30 @@ op chacha_block_inner (key_36 : key) (ctr_37 : uint32) (iv_38 : iv) : state =
 op chacha_block (key_43 : key) (ctr_44 : uint32) (iv_45 : iv) : state_bytes =
   let state_46 = chacha_block_inner (key_43) (ctr_44) (iv_45) in
   state_to_bytes (state_46).
+
+op chacha (key_47 : key) (iv_48 : iv) (m_49 : byte_seq) : byte_seq =
+  let ctr_50 = secret (pub_u32 1) in
+  let blocks_out_51 = seq_new_ (secret (pub_u8 8)) (seq_len (m_49)) in
+  let (ctr_50, blocks_out_51) =
+    foldi (0) (seq_num_chunks (m_49) (64)) (fun i_52 acc =>
+      let (ctr_50, blocks_out_51) =
+        acc
+      in
+      let (block_len_53, msg_block_54) = seq_get_chunk (m_49) (64) (i_52) in
+      let key_block_55 = chacha_block (key_47) (ctr_50) (iv_48) in
+      let msg_block_padded_56 = array_64_new_ (secret (pub_u8 8)) in
+      let msg_block_padded_57 =
+        array_64_update_start (msg_block_padded_56) (msg_block_54)
+      in
+      let blocks_out_51 =
+        seq_set_chunk (blocks_out_51) (64) (i_52) (
+          array_64_slice_range (
+            array_64_xor W8.(+^) (msg_block_padded_57) (key_block_55)) (
+            (0, block_len_53)))
+      in
+      let ctr_50 = (ctr_50) + (secret (pub_u32 1)) in
+      (ctr_50, blocks_out_51))
+    (ctr_50, blocks_out_51)
+  in
+  blocks_out_51.
+

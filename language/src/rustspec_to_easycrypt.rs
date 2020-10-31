@@ -380,11 +380,12 @@ fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     }
 }
 
+// The bool returned is true if the binop needs to become prefix
 fn translate_binop<'a, 'b>(
     op: BinOpKind,
     op_typ: &'b Typ,
     typ_dict: &'a TypeDict,
-) -> RcDoc<'a, ()> {
+) -> (RcDoc<'a, ()>, bool) {
     match (op, &(op_typ.1).0) {
         (_, BaseTyp::Named(ident, _)) => {
             let ident = match &ident.0 {
@@ -394,10 +395,10 @@ fn translate_binop<'a, 'b>(
             match typ_dict.get(ident) {
                 Some((inner_ty, entry)) => match entry {
                     DictEntry::NaturalInteger => match op {
-                        BinOpKind::Sub => return RcDoc::as_string("-%"),
-                        BinOpKind::Add => return RcDoc::as_string("+%"),
-                        BinOpKind::Mul => return RcDoc::as_string("*%"),
-                        BinOpKind::Div => return RcDoc::as_string("/%"),
+                        BinOpKind::Sub => return (RcDoc::as_string("-%"), false),
+                        BinOpKind::Add => return (RcDoc::as_string("+%"), false),
+                        BinOpKind::Mul => return (RcDoc::as_string("*%"), false),
+                        BinOpKind::Div => return (RcDoc::as_string("/%"), false),
                         _ => unimplemented!(),
                     },
                     DictEntry::Array | DictEntry::Alias => {
@@ -411,7 +412,7 @@ fn translate_binop<'a, 'b>(
     };
     match (op, &(op_typ.1).0) {
         (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, inner_ty)) => {
-            let inner_ty_op = translate_binop(
+            let (inner_ty_op, _) = translate_binop(
                 op,
                 &(
                     (Borrowing::Consumed, inner_ty.1.clone()),
@@ -429,52 +430,64 @@ fn translate_binop<'a, 'b>(
                 BinOpKind::BitAnd => "and",
                 _ => panic!(), // should not happen
             };
-            RcDoc::as_string(format!(
-                "`{}_{} ({})`",
-                match &(op_typ.1).0 {
-                    BaseTyp::Seq(_) => SEQ_MODULE,
-                    BaseTyp::Array(_, _) => ARRAY_MODULE,
-                    _ => panic!(), // should not happen
-                },
-                op_str,
-                inner_ty_op.pretty(0)
-            ))
+            (
+                RcDoc::as_string(format!(
+                    "{}_{} {}.({})",
+                    match &(op_typ.1).0 {
+                        BaseTyp::Seq(_) => SEQ_MODULE.to_string(),
+                        BaseTyp::Array((ArraySize::Integer(size), _), _) =>
+                            format!("{}_{}", ARRAY_MODULE, size),
+                        BaseTyp::Array(_, _) => ARRAY_MODULE.to_string(),
+                        _ => panic!(), // should not happen
+                    },
+                    op_str,
+                    match &inner_ty.0 {
+                        BaseTyp::Named((Ident::Original(name), _), None) => match name.as_str() {
+                            "U8" => "W8",
+                            _ => "Unknown",
+                        },
+                        _ => "Unknown",
+                    },
+                    inner_ty_op.pretty(0)
+                )),
+                true,
+            )
         }
         (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
-            RcDoc::as_string("-")
+            (RcDoc::as_string("-"), false)
         }
         (BinOpKind::Add, BaseTyp::Usize) | (BinOpKind::Add, BaseTyp::Isize) => {
-            RcDoc::as_string("+")
+            (RcDoc::as_string("+"), false)
         }
         (BinOpKind::Mul, BaseTyp::Usize) | (BinOpKind::Mul, BaseTyp::Isize) => {
-            RcDoc::as_string("*")
+            (RcDoc::as_string("*"), false)
         }
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
-            RcDoc::as_string("/")
+            (RcDoc::as_string("/"), false)
         }
         (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
-            RcDoc::as_string("%")
+            (RcDoc::as_string("%"), false)
         }
-        (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
-        (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
-        (BinOpKind::Rem, _) => RcDoc::as_string("%."),
-        (BinOpKind::Sub, _) => RcDoc::as_string("-"),
-        (BinOpKind::Add, _) => RcDoc::as_string("+"),
-        (BinOpKind::Mul, _) => RcDoc::as_string("*"),
-        (BinOpKind::Div, _) => RcDoc::as_string("/"),
-        (BinOpKind::BitXor, _) => RcDoc::as_string("+^"),
-        (BinOpKind::BitAnd, _) => RcDoc::as_string("&"),
-        (BinOpKind::BitOr, _) => RcDoc::as_string("|"),
-        (BinOpKind::Shl, _) => RcDoc::as_string("`shift_left`"),
-        (BinOpKind::Shr, _) => RcDoc::as_string("`shift_right`"),
-        (BinOpKind::Lt, _) => RcDoc::as_string("<"),
-        (BinOpKind::Le, _) => RcDoc::as_string("<="),
-        (BinOpKind::Ge, _) => RcDoc::as_string(">="),
-        (BinOpKind::Gt, _) => RcDoc::as_string(">"),
-        (BinOpKind::Ne, _) => RcDoc::as_string("!="),
-        (BinOpKind::Eq, _) => RcDoc::as_string("="),
-        (BinOpKind::And, _) => RcDoc::as_string("&&"),
-        (BinOpKind::Or, _) => RcDoc::as_string("||"),
+        (BinOpKind::Shl, BaseTyp::Usize) => (RcDoc::as_string("usize_shift_left"), true),
+        (BinOpKind::Shr, BaseTyp::Usize) => (RcDoc::as_string("usize_shift_right"), true),
+        (BinOpKind::Rem, _) => (RcDoc::as_string("%."), false),
+        (BinOpKind::Sub, _) => (RcDoc::as_string("-"), false),
+        (BinOpKind::Add, _) => (RcDoc::as_string("+"), false),
+        (BinOpKind::Mul, _) => (RcDoc::as_string("*"), false),
+        (BinOpKind::Div, _) => (RcDoc::as_string("/"), false),
+        (BinOpKind::BitXor, _) => (RcDoc::as_string("+^"), false),
+        (BinOpKind::BitAnd, _) => (RcDoc::as_string("&"), false),
+        (BinOpKind::BitOr, _) => (RcDoc::as_string("|"), false),
+        (BinOpKind::Shl, _) => (RcDoc::as_string("shift_left"), true),
+        (BinOpKind::Shr, _) => (RcDoc::as_string("shift_right"), true),
+        (BinOpKind::Lt, _) => (RcDoc::as_string("<"), false),
+        (BinOpKind::Le, _) => (RcDoc::as_string("<="), false),
+        (BinOpKind::Ge, _) => (RcDoc::as_string(">="), false),
+        (BinOpKind::Gt, _) => (RcDoc::as_string(">"), false),
+        (BinOpKind::Ne, _) => (RcDoc::as_string("!="), false),
+        (BinOpKind::Eq, _) => (RcDoc::as_string("="), false),
+        (BinOpKind::And, _) => (RcDoc::as_string("&&"), false),
+        (BinOpKind::Or, _) => (RcDoc::as_string("||"), false),
     }
 }
 
@@ -658,12 +671,22 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
         Expression::Binary((op, _), e1, e2, op_typ) => {
             let e1 = e1.0;
             let e2 = e2.0;
-            make_paren(translate_expression(e1, typ_dict))
-                .append(RcDoc::space())
-                .append(translate_binop(op, op_typ.as_ref().unwrap(), typ_dict))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2, typ_dict)))
-                .group()
+            let (binop, is_prefix) = translate_binop(op, op_typ.as_ref().unwrap(), typ_dict);
+            if is_prefix {
+                binop
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e1, typ_dict)))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e2, typ_dict)))
+                    .group()
+            } else {
+                make_paren(translate_expression(e1, typ_dict))
+                    .append(RcDoc::space())
+                    .append(binop)
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e2, typ_dict)))
+                    .group()
+            }
         }
         Expression::Unary(op, e1, op_typ) => {
             let e1 = e1.0;
@@ -884,6 +907,7 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
         }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
+            let mutated_num = mutated_info.vars.len();
             let mut_tuple = make_tuple(
                 mutated_info
                     .vars
@@ -901,10 +925,20 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                 .append(RcDoc::space())
                 .append(translate_ident(x.clone()))
                 .append(RcDoc::space())
-                .append(mut_tuple.clone())
+                .append(if mutated_num > 1 {
+                    RcDoc::as_string("acc")
+                } else {
+                    mut_tuple.clone()
+                })
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("=>"))
                 .append(RcDoc::line())
+                .append(if mutated_num > 1 {
+                    make_let_binding(mut_tuple.clone(), None, RcDoc::as_string("acc"))
+                        .append(RcDoc::line())
+                } else {
+                    RcDoc::nil()
+                })
                 .append(translate_block(b, true, typ_dict))
                 .append(RcDoc::hardline())
                 .append(translate_statement(&mutated_info.stmt, typ_dict))
