@@ -60,7 +60,6 @@ fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
     typ: Option<RcDoc<'a, ()>>,
     expr: RcDoc<'a, ()>,
-    toplevel: bool,
 ) -> RcDoc<'a, ()> {
     RcDoc::as_string("let")
         .append(RcDoc::space())
@@ -79,27 +78,35 @@ fn make_let_binding<'a>(
         .group()
         .append(RcDoc::line().append(expr.group()))
         .nest(2)
-        .append(if toplevel {
-            RcDoc::nil()
-        } else {
-            RcDoc::line().append(RcDoc::as_string("in"))
-        })
+        .append(RcDoc::line().append(RcDoc::as_string("in")))
 }
 
-fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
-    RcDoc::as_string("(")
-        .append(
-            RcDoc::line_()
-                .append(RcDoc::intersperse(
-                    args.into_iter(),
-                    RcDoc::as_string(",").append(RcDoc::line()),
-                ))
-                .group()
-                .nest(2),
-        )
-        .append(RcDoc::line_())
-        .append(RcDoc::as_string(")"))
-        .group()
+fn make_tuple<'a, I: ExactSizeIterator + IntoIterator<Item = RcDoc<'a, ()>>>(
+    args: I,
+) -> RcDoc<'a, ()> {
+    let args_len = args.len();
+    let args_iter = args.into_iter();
+    if args_len > 1 {
+        RcDoc::as_string("(")
+    } else {
+        RcDoc::nil()
+    }
+    .append(
+        RcDoc::line_()
+            .append(RcDoc::intersperse(
+                args_iter,
+                RcDoc::as_string(",").append(RcDoc::line()),
+            ))
+            .group()
+            .nest(2),
+    )
+    .append(RcDoc::line_())
+    .append(if args_len > 1 {
+        RcDoc::as_string(")")
+    } else {
+        RcDoc::nil()
+    })
+    .group()
 }
 
 fn make_list<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
@@ -726,7 +733,6 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
                             args.into_iter()
                                 .map(|(e, _)| translate_expression(e, typ_dict)),
                         ),
-                        false,
                     )
                     .append(RcDoc::space())
                     .append(
@@ -806,13 +812,11 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
             translate_pattern(pat),
             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
             translate_expression(expr.clone(), typ_dict),
-            false,
         ),
         Statement::Reassignment((x, _), (e1, _)) => make_let_binding(
             translate_ident(x.clone()),
             None,
             translate_expression(e1.clone(), typ_dict),
-            false,
         ),
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _)) => make_let_binding(
             translate_ident(x.clone()),
@@ -824,7 +828,6 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                 .append(make_paren(translate_expression(e1.clone(), typ_dict)))
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e2.clone(), typ_dict))),
-            false,
         ),
         Statement::ReturnExp(e1) => translate_expression(e1.clone(), typ_dict),
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
@@ -866,7 +869,6 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                                     .append(translate_statement(&mutated_info.stmt, typ_dict)),
                             )),
                     }),
-                false,
             )
         }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
@@ -890,7 +892,7 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                 .append(RcDoc::space())
                 .append(mut_tuple.clone())
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("->"))
+                .append(RcDoc::as_string("=>"))
                 .append(RcDoc::line())
                 .append(translate_block(b, true, typ_dict))
                 .append(RcDoc::hardline())
@@ -900,7 +902,7 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
                 .nest(2)
                 .append(RcDoc::line())
                 .append(mut_tuple.clone());
-            make_let_binding(mut_tuple, None, loop_expr, false)
+            make_let_binding(mut_tuple, None, loop_expr)
         }
     }
     .group()
@@ -928,7 +930,7 @@ fn translate_block<'a>(
 
 fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
     match i {
-        Item::FnDecl((f, _), sig, (b, _)) => make_let_binding(
+        Item::FnDecl((f, _), sig, (b, _)) => make_op_binding(
             translate_ident(f.clone())
                 .append(RcDoc::line())
                 .append(if sig.args.len() > 0 {
@@ -962,7 +964,6 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                     RcDoc::nil()
                 })
                 .group(),
-            true,
         ),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("type")
             .append(RcDoc::space())
@@ -997,11 +998,10 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                             .append(RcDoc::as_string("i")),
                     )),
             }),
-        Item::ConstDecl(name, ty, e) => make_let_binding(
+        Item::ConstDecl(name, ty, e) => make_op_binding(
             translate_ident(name.0.clone()),
             Some(translate_base_typ(ty.0.clone())),
             translate_expression(e.0.clone(), typ_dict),
-            true,
         ),
         Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, modulo) => {
             let canvas_size_bytes = match &canvas_size.0 {
@@ -1072,7 +1072,7 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
     write!(
         file,
         "require import List Int IntDiv CoreMap AllCore.\n\
-         require import Array3 Array8 Array12 Array16 Array32 Array64.\n\
+         require import Array3 Array4 Array8 Array12 Array16 Array32 Array64.\n\
          require import WArray64.\n\n\
          from Jasmin require import JModel JMemory JArray.\n\
          require import Hacspec.\n",
