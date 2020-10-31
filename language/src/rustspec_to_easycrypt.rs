@@ -255,16 +255,16 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", x)),
-        Literal::UInt128(x) => RcDoc::as_string(format!("pub_u128 {:#x}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("pub_i64 {:#x}", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("pub_u64 {:#x}", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("pub_i32 {:#x}", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("pub_u32 {:#x}", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("pub_i16 {:#x}", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("pub_u16 {:#x}", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("pub_i8 {:#x}", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {:#x}", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {}", x)),
+        Literal::UInt128(x) => RcDoc::as_string(format!("pub_u128 {}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("pub_i64 {}", x)),
+        Literal::UInt64(x) => RcDoc::as_string(format!("pub_u64 {}", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("pub_i32 {}", x)),
+        Literal::UInt32(x) => RcDoc::as_string(format!("pub_u32 {}", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("pub_i16 {}", x)),
+        Literal::UInt16(x) => RcDoc::as_string(format!("pub_u16 {}", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("pub_i8 {}", x)),
+        Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
@@ -618,9 +618,8 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (ARRAY_MODULE, "new_")
-                | (ARRAY_MODULE, "from_seq")
-                | (ARRAY_MODULE, "from_slice") => {
+                // (ARRAY_MODULE, "new_")
+                (ARRAY_MODULE, "from_seq") | (ARRAY_MODULE, "from_slice") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
                             additional_args.push(translate_ident_str(s.clone()))
@@ -640,6 +639,12 @@ fn translate_func_name<'a>(
             (
                 module_name
                     .clone()
+                    .append(match prefix_info {
+                        FuncPrefix::Array(ArraySize::Integer(size), _) => {
+                            RcDoc::as_string("_").append(RcDoc::as_string(format!("{}", size)))
+                        }
+                        _ => RcDoc::nil(),
+                    })
                     .append(RcDoc::as_string("_"))
                     .append(func_ident.clone()),
                 additional_args,
@@ -715,11 +720,11 @@ fn translate_expression<'a>(e: Expression, typ_dict: &'a TypeDict) -> RcDoc<'a, 
         }
         Expression::ArrayIndex(x, e2) => {
             let e2 = e2.0;
-            RcDoc::as_string("array_index")
-                .append(RcDoc::space())
-                .append(make_paren(translate_ident(x.0.clone())))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2, typ_dict)))
+            translate_ident(x.0.clone())
+                .append(RcDoc::as_string("."))
+                .append(RcDoc::as_string("["))
+                .append(translate_expression(e2, typ_dict))
+                .append(RcDoc::as_string("]"))
         }
         Expression::NewArray(_, _, args) => {
             let size = args.len();
@@ -821,13 +826,19 @@ fn translate_statement<'a>(s: &'a Statement, typ_dict: &'a TypeDict) -> RcDoc<'a
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _)) => make_let_binding(
             translate_ident(x.clone()),
             None,
-            RcDoc::as_string("array_upd")
-                .append(RcDoc::space())
-                .append(translate_ident(x.clone()))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e1.clone(), typ_dict)))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2.clone(), typ_dict))),
+            translate_ident(x.clone())
+                .append(RcDoc::as_string("."))
+                .append(RcDoc::as_string("["))
+                .append(
+                    make_paren(translate_expression(e1.clone(), typ_dict))
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string("<-"))
+                        .append(RcDoc::space())
+                        .append(make_paren(translate_expression(e2.clone(), typ_dict)))
+                        .group()
+                        .nest(2),
+                )
+                .append(RcDoc::as_string("]")),
         ),
         Statement::ReturnExp(e1) => translate_expression(e1.clone(), typ_dict),
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
