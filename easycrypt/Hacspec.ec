@@ -21,7 +21,11 @@ op pub_u32 x = W32.of_int x.
 
 op array_16_size (x: 'a Array16.t) : int = 16.
 
+op array_16_from_seq (size: int) (x: 'a Sequence.t) : 'a Array16.t.
+
 op uint32_to_be_bytes (x: uint32) : uint8 Array4.t.
+
+op uint32_from_le_bytes (x: uint8 Array4.t) : uint32.
 
 op uint32_rotate_left (x: uint32) (rotval: int) : uint32.
 
@@ -30,3 +34,7 @@ op foldi (low: int) (hi: int) (f: int -> 'a -> 'a) (init: 'a) : 'a.
 op array_64_new_ (init: 'a) : 'a Array64.t.
 
 op array_16_len (x: 'a Array16.t) : int = 16.
+
+op array_4_from_slice_range (x: 'a Sequence.t) (start_end : int * int) : 'a Array4.t.
+
+op seq_concat (x: 'a Sequence.t) (y: 'a Sequence.t) : 'a Sequence.t.

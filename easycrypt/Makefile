@@ -1,4 +1,4 @@
-SRC=Hacspec.ec Hacspec_Chacha20.ec Hacspec_Chacha20_expected.ec
+SRC=Hacspec_Chacha20.ec Hacspec_Chacha20_expected.ec
 
 EASYCRYPT=easycrypt compile \
 	-I Jasmin:eclib \

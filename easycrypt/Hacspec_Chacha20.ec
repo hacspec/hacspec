@@ -74,3 +74,95 @@ op chacha20_constants_init (_: unit) : uint32 Sequence.t =
   let constants_26 = constants_26.[(2) <- (secret (pub_u32 2036477234))] in
   let constants_26 = constants_26.[(3) <- (secret (pub_u32 1797285236))] in
   constants_26.
+
+op chacha20_key_to_u32s (key_27 : key) : uint32 Sequence.t =
+  (* *) let key_27 = Sequence.of_list witness (Array32.to_list key_27) in
+  let uints_28 = seq_new_ (secret (pub_u32 8)) (8) in
+  let uints_28 =
+    uints_28.[(0) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((0, 4))))]
+  in
+  let uints_28 =
+    uints_28.[(1) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((4, 8))))]
+  in
+  let uints_28 =
+    uints_28.[(2) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((8, 12))))]
+  in
+  let uints_28 =
+    uints_28.[(3) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((12, 16))))]
+  in
+  let uints_28 =
+    uints_28.[(4) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((16, 20))))]
+  in
+  let uints_28 =
+    uints_28.[(5) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((20, 24))))]
+  in
+  let uints_28 =
+    uints_28.[(6) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((24, 28))))]
+  in
+  let uints_28 =
+    uints_28.[(7) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((28, 32))))]
+  in
+  uints_28.
+
+op chacha20_iv_to_u32s (iv_29 : iv) : uint32 Sequence.t =
+  (* *) let iv_29 = Sequence.of_list witness (Array12.to_list iv_29) in  
+  let uints_30 = seq_new_ (secret (pub_u32 8)) (3) in
+  let uints_30 =
+    uints_30.[(0) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (iv_29) ((0, 4))))]
+  in
+  let uints_30 =
+    uints_30.[(1) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (iv_29) ((4, 8))))]
+  in
+  let uints_30 =
+    uints_30.[(2) <- (
+        uint32_from_le_bytes (array_4_from_slice_range (iv_29) ((8, 12))))]
+  in
+  uints_30.
+
+op chacha20_ctr_to_seq (ctr_31 : uint32) : uint32 Sequence.t =
+  let uints_32 = seq_new_ (secret (pub_u32 8)) (1) in
+  let uints_32 = uints_32.[(0) <- (ctr_31)] in
+  uints_32.
+
+op chacha_block_init (key_33 : key) (ctr_34 : uint32) (iv_35 : iv) : state =
+  array_16_from_seq (16) (
+    seq_concat (
+      seq_concat (
+        seq_concat (chacha20_constants_init ()) (
+          chacha20_key_to_u32s (key_33))) (chacha20_ctr_to_seq (ctr_34))) (
+      chacha20_iv_to_u32s (iv_35))).
+
+op chacha_block_inner (key_36 : key) (ctr_37 : uint32) (iv_38 : iv) : state =
+  let st_39 = chacha_block_init (key_36) (ctr_37) (iv_38) in
+  let state_40 = st_39 in
+  let state_40 =
+    foldi (0) (10) (fun i_41 state_40 =>
+      let state_40 = chacha_double_round (state_40) in
+      state_40)
+    state_40
+  in
+  let state_40 =
+    foldi (0) (16) (fun i_42 (state_40: 
+      (* *) state
+    ) =>
+      let state_40 =
+        state_40.[(i_42) <- ((state_40.[i_42]) + (st_39.[i_42]))]
+      in
+      state_40)
+    state_40
+  in
+  state_40.
+
+op chacha_block (key_43 : key) (ctr_44 : uint32) (iv_45 : iv) : state_bytes =
+  let state_46 = chacha_block_inner (key_43) (ctr_44) (iv_45) in
+  state_to_bytes (state_46).
