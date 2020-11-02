@@ -571,7 +571,10 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (ARRAY_MODULE, "new_") | (SEQ_MODULE, "new_") | (ARRAY_MODULE, "from_slice") => {
+                (ARRAY_MODULE, "new_")
+                | (SEQ_MODULE, "new_")
+                | (ARRAY_MODULE, "from_slice")
+                | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
                             additional_args
@@ -589,7 +592,8 @@ fn translate_func_name<'a>(
             ) {
                 (ARRAY_MODULE, "new_")
                 | (ARRAY_MODULE, "from_seq")
-                | (ARRAY_MODULE, "from_slice") => {
+                | (ARRAY_MODULE, "from_slice")
+                | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
                             additional_args.push(translate_ident_str(s.clone()))

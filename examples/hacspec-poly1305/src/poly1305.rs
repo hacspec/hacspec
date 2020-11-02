@@ -7,10 +7,10 @@ bytes!(KeyPoly, 32);
 const BLOCKSIZE: usize = 16;
 
 // These are type aliases for convenience
-bytes!(Block, BLOCKSIZE);
+bytes!(Block, 16);
 
 // These are actual types; fixed-length arrays.
-public_bytes!(Tag, BLOCKSIZE);
+public_bytes!(Tag, 16);
 
 // This defines the field for modulo 2^130-5.
 // In particular `FieldElement` and `FieldCanvas` are defined.

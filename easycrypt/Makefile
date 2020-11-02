@@ -1,4 +1,5 @@
 SRC=\
+	Hacspec.ec \
 	Hacspec_Chacha20.ec \
 	Hacspec_Chacha20_reference.ec \
 	Hacspec_Poly1305.ec \

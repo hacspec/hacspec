@@ -395,10 +395,10 @@ fn translate_binop<'a, 'b>(
             match typ_dict.get(ident) {
                 Some((inner_ty, entry)) => match entry {
                     DictEntry::NaturalInteger => match op {
-                        BinOpKind::Sub => return (RcDoc::as_string("-%"), false),
-                        BinOpKind::Add => return (RcDoc::as_string("+%"), false),
-                        BinOpKind::Mul => return (RcDoc::as_string("*%"), false),
-                        BinOpKind::Div => return (RcDoc::as_string("/%"), false),
+                        BinOpKind::Sub => return (RcDoc::as_string("-"), false),
+                        BinOpKind::Add => return (RcDoc::as_string("+"), false),
+                        BinOpKind::Mul => return (RcDoc::as_string("*"), false),
+                        BinOpKind::Div => return (RcDoc::as_string("/"), false),
                         _ => unimplemented!(),
                     },
                     DictEntry::Array | DictEntry::Alias => {
@@ -470,13 +470,25 @@ fn translate_binop<'a, 'b>(
         }
         (BinOpKind::Shl, BaseTyp::Usize) => (RcDoc::as_string("usize_shift_left"), true),
         (BinOpKind::Shr, BaseTyp::Usize) => (RcDoc::as_string("usize_shift_right"), true),
+        (BinOpKind::BitAnd, BaseTyp::UInt128) => (RcDoc::as_string("W128.(&)"), false),
+        (BinOpKind::BitAnd, BaseTyp::Named((Ident::Original(name), _), None))
+            if (match name.as_str() {
+                "U8" | "U16" | "U64" | "U128" => true,
+                _ => false,
+            }) =>
+        {
+            match name.as_str() {
+                "U128" => (RcDoc::as_string("W128.andw"), true),
+                _ => (RcDoc::as_string("&"), false),
+            }
+        }
+        (BinOpKind::BitAnd, _) => (RcDoc::as_string("&"), false),
         (BinOpKind::Rem, _) => (RcDoc::as_string("%."), false),
         (BinOpKind::Sub, _) => (RcDoc::as_string("-"), false),
         (BinOpKind::Add, _) => (RcDoc::as_string("+"), false),
         (BinOpKind::Mul, _) => (RcDoc::as_string("*"), false),
         (BinOpKind::Div, _) => (RcDoc::as_string("/"), false),
         (BinOpKind::BitXor, _) => (RcDoc::as_string("+^"), false),
-        (BinOpKind::BitAnd, _) => (RcDoc::as_string("&"), false),
         (BinOpKind::BitOr, _) => (RcDoc::as_string("|"), false),
         (BinOpKind::Shl, _) => (RcDoc::as_string("shift_left"), true),
         (BinOpKind::Shr, _) => (RcDoc::as_string("shift_right"), true),
@@ -585,17 +597,17 @@ fn translate_func_name<'a>(
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
             // We add the modulo value for nat_mod
-            match format!("{}", module_name.pretty(0)).as_str() {
-                NAT_MODULE => {
-                    match &prefix_info {
-                        FuncPrefix::NatMod(modulo, _bits) => {
-                            additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
-                        }
-                        _ => panic!(), // should not happen
-                    }
-                }
-                _ => (),
-            };
+            // match format!("{}", module_name.pretty(0)).as_str() {
+            //     NAT_MODULE => {
+            //         match &prefix_info {
+            //             FuncPrefix::NatMod(modulo, _bits) => {
+            //                 additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+            //             }
+            //             _ => panic!(), // should not happen
+            //         }
+            //     }
+            //     _ => (),
+            // };
             // ANd the encoding length for certain nat_mod related function
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
@@ -615,7 +627,10 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (ARRAY_MODULE, "new_") | (SEQ_MODULE, "new_") | (ARRAY_MODULE, "from_slice") => {
+                (ARRAY_MODULE, "from_slice")
+                | (ARRAY_MODULE, "from_slice_range")
+                | (ARRAY_MODULE, "new_")
+                | (SEQ_MODULE, "new_") => {
                     match &prefix_info {
                         FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
                             additional_args
@@ -627,28 +642,29 @@ fn translate_func_name<'a>(
                 _ => (),
             };
             // Then we add the size for arrays
-            match (
-                format!("{}", module_name.pretty(0)).as_str(),
-                format!("{}", func_ident.pretty(0)).as_str(),
-            ) {
-                // (ARRAY_MODULE, "new_")
-                (ARRAY_MODULE, "from_seq") | (ARRAY_MODULE, "from_slice") => {
-                    match &prefix_info {
-                        FuncPrefix::Array(ArraySize::Ident(s), _) => {
-                            additional_args.push(translate_ident_str(s.clone()))
-                        }
-                        FuncPrefix::Array(ArraySize::Integer(i), _) => {
-                            additional_args.push(RcDoc::as_string(format!("{}", i)))
-                        }
-                        FuncPrefix::Seq(_) => {
-                            // This is the Seq case, should be alright
-                            ()
-                        }
-                        _ => panic!(), // should not happen
-                    }
-                }
-                _ => (),
-            }
+            // match (
+            //     format!("{}", module_name.pretty(0)).as_str(),
+            //     format!("{}", func_ident.pretty(0)).as_str(),
+            // ) {
+            //     (ARRAY_MODULE, "new_")
+            //     | (ARRAY_MODULE, "from_seq")
+            //     | (ARRAY_MODULE, "from_slice") => {
+            //         match &prefix_info {
+            //             FuncPrefix::Array(ArraySize::Ident(s), _) => {
+            //                 additional_args.push(translate_ident_str(s.clone()))
+            //             }
+            //             FuncPrefix::Array(ArraySize::Integer(i), _) => {
+            //                 additional_args.push(RcDoc::as_string(format!("{}", i)))
+            //             }
+            //             FuncPrefix::Seq(_) => {
+            //                 // This is the Seq case, should be alright
+            //                 ()
+            //             }
+            //             _ => panic!(), // should not happen
+            //         }
+            //     }
+            //     _ => (),
+            // }
             (
                 module_name
                     .clone()
@@ -1046,7 +1062,7 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
             Some(translate_base_typ(ty.0.clone())),
             translate_expression(e.0.clone(), typ_dict),
         ),
-        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, modulo) => {
+        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, _modulo) => {
             let canvas_size_bytes = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => {
                     RcDoc::as_string(format!("{}", (size + 7) / 8))
@@ -1061,11 +1077,12 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                 .group()
                 .append(
                     RcDoc::line()
-                        .append(RcDoc::as_string("lseq"))
+                        .append(translate_base_typ(BaseTyp::UInt8))
                         .append(RcDoc::space())
-                        .append(make_paren(translate_base_typ(BaseTyp::UInt8)))
-                        .append(RcDoc::space())
-                        .append(make_paren(canvas_size_bytes.clone()))
+                        .append(RcDoc::as_string("Array"))
+                        .append(canvas_size_bytes)
+                        .append(RcDoc::as_string(".t"))
+                        .append(RcDoc::as_string("."))
                         .group()
                         .nest(2),
                 )
@@ -1077,15 +1094,8 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                         .append(translate_ident(nat_name.0.clone()))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("="))
-                        .group()
-                        .append(
-                            RcDoc::line()
-                                .append(RcDoc::as_string("nat_mod"))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
-                                .group()
-                                .nest(2),
-                        ),
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string("int")),
                 )
         }
     }
@@ -1115,7 +1125,7 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
     write!(
         file,
         "require import List Int IntDiv CoreMap AllCore.\n\
-         require import Array3 Array4 Array8 Array12 Array16 Array32 Array64.\n\
+         require import Array3 Array4 Array8 Array12 Array16 Array17 Array32 Array64.\n\
          require import WArray64.\n\n\
          from Jasmin require import JModel JMemory JArray.\n\
          require import Hacspec.\n",
