@@ -58,7 +58,7 @@ op array_64_new_ (init: 'a) : 'a Array64.t.
 
 op array_16_len (x: 'a Array16.t) : int = 16.
 
-op array_4_from_slice_range (x: 'a Sequence.t) (start_end : int * int) : 'a Array4.t.
+op array_4_from_slice_range (default: 'a) (x: 'a Sequence.t) (start_end : int * int) : 'a Array4.t.
 
 op array_16_from_slice (default: 'a) (x: 'a Sequence.t) (start: int) (len: int) : 'a Array16.t.
 

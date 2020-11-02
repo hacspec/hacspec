@@ -1,5 +1,5 @@
 require import List Int IntDiv CoreMap AllCore.
-require import Array3 Array4 Array8 Array12 Array16 Array32 Array64.
+require import Array3 Array4 Array8 Array12 Array16 Array17 Array32 Array64.
 require import WArray64.
 
 from Jasmin require import JModel JMemory JArray.
@@ -80,35 +80,43 @@ op chacha20_key_to_u32s (key_27 : key) : uint32 Sequence.t =
   let uints_28 = seq_new_ (secret (pub_u32 8)) (8) in
   let uints_28 =
     uints_28.[(0) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((0, 4))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((0, 4))))]
   in
   let uints_28 =
     uints_28.[(1) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((4, 8))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((4, 8))))]
   in
   let uints_28 =
     uints_28.[(2) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((8, 12))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((8, 12))))]
   in
   let uints_28 =
     uints_28.[(3) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((12, 16))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((12, 16))))]
   in
   let uints_28 =
     uints_28.[(4) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((16, 20))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((16, 20))))]
   in
   let uints_28 =
     uints_28.[(5) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((20, 24))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((20, 24))))]
   in
   let uints_28 =
     uints_28.[(6) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((24, 28))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((24, 28))))]
   in
   let uints_28 =
     uints_28.[(7) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (key_27) ((28, 32))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (key_27) ((28, 32))))]
   in
   uints_28.
 
@@ -117,15 +125,18 @@ op chacha20_iv_to_u32s (iv_29 : iv) : uint32 Sequence.t =
   let uints_30 = seq_new_ (secret (pub_u32 8)) (3) in
   let uints_30 =
     uints_30.[(0) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (iv_29) ((0, 4))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (iv_29) ((0, 4))))]
   in
   let uints_30 =
     uints_30.[(1) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (iv_29) ((4, 8))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (iv_29) ((4, 8))))]
   in
   let uints_30 =
     uints_30.[(2) <- (
-        uint32_from_le_bytes (array_4_from_slice_range (iv_29) ((8, 12))))]
+        uint32_from_le_bytes (
+          array_4_from_slice_range (secret (pub_u8 8)) (iv_29) ((8, 12))))]
   in
   uints_30.
 
@@ -135,7 +146,7 @@ op chacha20_ctr_to_seq (ctr_31 : uint32) : uint32 Sequence.t =
   uints_32.
 
 op chacha_block_init (key_33 : key) (ctr_34 : uint32) (iv_35 : iv) : state =
-  array_16_from_seq (16) (
+  array_16_from_seq (
     seq_concat (
       seq_concat (
         seq_concat (chacha20_constants_init ()) (

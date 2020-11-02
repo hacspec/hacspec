@@ -124,42 +124,50 @@ let chacha20_key_to_u32s (key_27 : key) : seq uint32 =
   let uints_28 =
     array_upd uints_28 (usize 0) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 0, usize 4))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 0, usize 4))))
   in
   let uints_28 =
     array_upd uints_28 (usize 1) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 4, usize 8))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 4, usize 8))))
   in
   let uints_28 =
     array_upd uints_28 (usize 2) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 8, usize 12))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 8, usize 12))))
   in
   let uints_28 =
     array_upd uints_28 (usize 3) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 12, usize 16))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 12, usize 16))))
   in
   let uints_28 =
     array_upd uints_28 (usize 4) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 16, usize 20))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 16, usize 20))))
   in
   let uints_28 =
     array_upd uints_28 (usize 5) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 20, usize 24))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 20, usize 24))))
   in
   let uints_28 =
     array_upd uints_28 (usize 6) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 24, usize 28))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 24, usize 28))))
   in
   let uints_28 =
     array_upd uints_28 (usize 7) (
       uint32_from_le_bytes (
-        array_from_slice_range (key_27) ((usize 28, usize 32))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (key_27) (
+          (usize 28, usize 32))))
   in
   uints_28
 
@@ -168,17 +176,20 @@ let chacha20_iv_to_u32s (iv_29 : iv) : seq uint32 =
   let uints_30 =
     array_upd uints_30 (usize 0) (
       uint32_from_le_bytes (
-        array_from_slice_range (iv_29) ((usize 0, usize 4))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (iv_29) (
+          (usize 0, usize 4))))
   in
   let uints_30 =
     array_upd uints_30 (usize 1) (
       uint32_from_le_bytes (
-        array_from_slice_range (iv_29) ((usize 4, usize 8))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (iv_29) (
+          (usize 4, usize 8))))
   in
   let uints_30 =
     array_upd uints_30 (usize 2) (
       uint32_from_le_bytes (
-        array_from_slice_range (iv_29) ((usize 8, usize 12))))
+        array_from_slice_range (secret (pub_u8 0x8)) (4) (iv_29) (
+          (usize 8, usize 12))))
   in
   uints_30
 
