@@ -81,7 +81,9 @@ let decrypt
   (key_23 : key)
   (iv_24 : iv)
   (aad_25 : byte_seq)
-  (cipher_text_26 : byte_seq)
+  (cipher_text_26 : byte_seq{
+    (**) seq_len cipher_text_26 + 16 + seq_len aad_25 + 16 + 16 <= maxint U32
+  })
   (tag_27 : tag)
   : (byte_seq & bool) =
   let key_block_28 = chacha_block (key_23) (secret (pub_u32 0x0)) (iv_24) in
@@ -93,4 +95,3 @@ let decrypt
   let my_tag_31 = poly (padded_msg_30) (array_from_seq (32) (mac_key_29)) in
   let plain_text_32 = chacha (key_23) (iv_24) (cipher_text_26) in
   (plain_text_32, (my_tag_31) `array_eq (=)` (tag_27))
-

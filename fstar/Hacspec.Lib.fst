@@ -323,6 +323,19 @@ let array_xor
     array_upd out i (array_index s1 i `xor` array_index s2 i)
   ) out
 
+let array_eq
+  (#a: Type)
+  (#len: uint_size)
+  (eq: a -> a -> bool)
+  (s1: lseq a len)
+  (s2 : lseq a len)
+    : bool
+  =
+  let out = true in
+  foldi 0 len (fun i out ->
+    out && (array_index s1 i `eq` array_index s2 i)
+  ) out
+
 (**** Integers to arrays *)
 
 let uint32_to_le_bytes (x: uint32) : lseq uint8 4 =
