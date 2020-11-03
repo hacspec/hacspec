@@ -18,9 +18,9 @@ bytes!(SerializedScalar, 32);
 
 fn mask_scalar(s: SerializedScalar) -> SerializedScalar {
     let mut k = s;
-    k[0] = k[0] & U8(248);
-    k[31] = k[31] & U8(127);
-    k[31] = k[31] | U8(64);
+    k[0] = k[0] & U8(248u8);
+    k[31] = k[31] & U8(127u8);
+    k[31] = k[31] | U8(64u8);
     k
 }
 
@@ -31,10 +31,10 @@ fn decode_scalar(s: SerializedScalar) -> Scalar {
 
 fn decode_point(u: SerializedPoint) -> (FieldElement, FieldElement) {
     let mut u_ = u;
-    u_[31] = u_[31] & U8(127);
+    u_[31] = u_[31] & U8(127u8);
     (
         FieldElement::from_byte_seq_le(u_),
-        FieldElement::from_literal(1),
+        FieldElement::from_literal(1u128),
     )
 }
 
@@ -46,13 +46,14 @@ fn encode_point(p: (FieldElement, FieldElement)) -> SerializedPoint {
 
 fn point_add_and_double(
     q: (FieldElement, FieldElement),
-    (nq, nqp1): ((FieldElement, FieldElement), (FieldElement, FieldElement)),
+    np: ((FieldElement, FieldElement), (FieldElement, FieldElement)),
 ) -> ((FieldElement, FieldElement), (FieldElement, FieldElement)) {
+    let (nq, nqp1) = np;
     let (x_1, _z_1) = q;
     let (x_2, z_2) = nq;
     let (x_3, z_3) = nqp1;
     let a = x_2 + z_2;
-    let aa = a.pow(2);
+    let aa = a.pow(2u128);
     let b = x_2 - z_2;
     let bb = b * b;
     let e = aa - bb;
@@ -61,10 +62,10 @@ fn point_add_and_double(
     let da = d * a;
     let cb = c * b;
 
-    let x_3 = (da + cb).pow(2);
-    let z_3 = x_1 * ((da - cb).pow(2));
+    let x_3 = (da + cb).pow(2u128);
+    let z_3 = x_1 * ((da - cb).pow(2u128));
     let x_2 = aa * bb;
-    let e121665 = FieldElement::from_literal(121_665);
+    let e121665 = FieldElement::from_literal(121_665u128);
     let z_2 = e * (aa + (e121665 * e));
     ((x_2, z_2), (x_3, z_3))
 }
@@ -72,14 +73,18 @@ fn point_add_and_double(
 fn swap(
     x: ((FieldElement, FieldElement), (FieldElement, FieldElement)),
 ) -> ((FieldElement, FieldElement), (FieldElement, FieldElement)) {
-    (x.1, x.0)
+    let (x0, x1) = x;
+    (x1, x0)
 }
 
 fn montgomery_ladder(
     k: Scalar,
     init: (FieldElement, FieldElement),
 ) -> (FieldElement, FieldElement) {
-    let inf = (FieldElement::from_literal(1), FieldElement::from_literal(0));
+    let inf = (
+        FieldElement::from_literal(1u128),
+        FieldElement::from_literal(0u128),
+    );
     let mut acc: ((FieldElement, FieldElement), (FieldElement, FieldElement)) = (inf, init);
     for i in 0..256 {
         if k.bit(255 - i) {
@@ -90,7 +95,8 @@ fn montgomery_ladder(
             acc = point_add_and_double(init, acc);
         }
     }
-    acc.0
+    let (out, _) = acc;
+    out
 }
 
 pub fn scalarmult(s: SerializedScalar, p: SerializedPoint) -> SerializedPoint {
@@ -101,6 +107,7 @@ pub fn scalarmult(s: SerializedScalar, p: SerializedPoint) -> SerializedPoint {
 }
 
 pub fn secret_to_public(s: SerializedScalar) -> SerializedPoint {
-    let base = SerializedPoint::from_hex("09");
+    let mut base = SerializedPoint::new();
+    base[0] = U8(0x09u8);
     scalarmult(s, base)
 }
