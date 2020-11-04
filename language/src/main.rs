@@ -144,7 +144,7 @@ impl Callbacks for HacspecCallbacks {
             Err(_) => {
                 &compiler
                     .session()
-                    .err("unable to translate to F* due to Hacspec typechecking errors");
+                    .err("found some Hacspec typechecking errors");
                 return Compilation::Stop;
             }
         };

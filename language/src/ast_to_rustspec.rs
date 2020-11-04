@@ -8,7 +8,7 @@ use rustc_ast::{
         StmtKind, StrStyle, Ty, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
     },
     node_id::NodeId,
-    token::{LitKind as TokenLitKind, TokenKind},
+    token::{DelimToken, LitKind as TokenLitKind, TokenKind},
     tokenstream::TokenTree,
 };
 use rustc_session::Session;
@@ -312,6 +312,81 @@ fn translate_function_argument(
     }
 }
 
+fn translate_literal(
+    sess: &Session,
+    lit: &rustc_ast::Lit,
+    span: Span,
+) -> TranslationResult<Spanned<ExprTranslationResult>> {
+    match &lit.kind {
+        LitKind::Bool(b) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),
+            span,
+        )),
+        //TODO: check that the casting is safe each time!
+        LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int128(*x as i128))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt128(*x as u128))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int64(*x as i64))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt64(*x as u64))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt32(*x as u32))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int16(*x as i16))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt16(*x as u16))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int8(*x as i8))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt8(*x as u8))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Isize(*x as isize))),
+            span,
+        )),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
+            span,
+        )),
+        // Unspecified integers are always interpreted as usize
+        LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
+            span,
+        )),
+        LitKind::Str(msg, StrStyle::Cooked) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Str(msg.to_ident_string()))),
+            span,
+        )),
+        _ => {
+            sess.span_rustspec_err(lit.span, "literal not allowed in Hacspec");
+            Err(())
+        }
+    }
+}
+
 fn translate_expr(
     sess: &Session,
     arr_typs: &ArrayTypes,
@@ -375,6 +450,7 @@ fn translate_expr(
                     return Err(());
                 }
                 match &args.first().unwrap().kind {
+                    // First case: the array itself
                     ExprKind::Array(cells) => {
                         let new_cells: Vec<TranslationResult<Spanned<Expression>>> = cells
                             .iter()
@@ -387,6 +463,72 @@ fn translate_expr(
                             ))),
                             e.span,
                         ));
+                    }
+                    // Second case: a call to the secret_array! macro
+                    ExprKind::MacCall(call) => {
+                        if call.path.segments.len() > 1 {
+                            sess.span_rustspec_err(
+                                call.path.span,
+                                "cannot use macros other than the ones defined by Hacspec",
+                            );
+                            return Err(());
+                        }
+                        let name = call.path.segments.first().unwrap();
+                        match (
+                            name.ident.name.to_ident_string().as_str(),
+                            name.args.as_ref(),
+                        ) {
+                            ("secret_array", None) => match &*call.args {
+                                MacArgs::Delimited(_, _, tokens) => {
+                                    let mut it = tokens.trees();
+                                    let (first_arg, second_arg, third_arg) = {
+                                        let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                                        let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                                        let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                                        Ok((first_arg?, second_arg?, third_arg?))
+                                    }?;
+                                    let typ_ident = check_for_ident(sess, &first_arg)?;
+                                    check_for_comma(sess, &second_arg)?;
+                                    let array = check_for_literal_array(sess, &third_arg)?;
+                                    let array = array
+                                        .into_iter()
+                                        .map(|i| {
+                                            (
+                                                Expression::FuncCall(
+                                                    None,
+                                                    typ_ident.0.clone(),
+                                                    vec![(
+                                                        i.clone(),
+                                                        (Borrowing::Consumed, i.1.clone()),
+                                                    )],
+                                                ),
+                                                i.1.clone(),
+                                            )
+                                        })
+                                        .collect();
+                                    return Ok((
+                                        (ExprTranslationResult::TransExpr(Expression::NewArray(
+                                            func_name, None, array,
+                                        ))),
+                                        e.span,
+                                    ));
+                                }
+                                _ => {
+                                    sess.span_rustspec_err(
+                                        call.args.span().unwrap().clone(),
+                                        "expected parenthesis-delimited args",
+                                    );
+                                    return Err(());
+                                }
+                            },
+                            _ => {
+                                sess.span_rustspec_err(
+                                    call.path.span.clone(),
+                                    "only the secret_array! macro can be called here",
+                                );
+                                return Err(());
+                            }
+                        }
                     }
                     _ => {
                         sess.span_rustspec_err(
@@ -440,76 +582,7 @@ fn translate_expr(
                 e.span,
             ))
         }
-        ExprKind::Lit(lit) => match &lit.kind {
-            LitKind::Bool(b) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),
-                e.span,
-            )),
-            //TODO: check that the casting is safe each time!
-            LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int128(*x as i128))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt128(*x as u128))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int64(*x as i64))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt64(*x as u64))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt32(*x as u32))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int16(*x as i16))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt16(*x as u16))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int8(*x as i8))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt8(*x as u8))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Isize(*x as isize))),
-                e.span,
-            )),
-            LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
-                e.span,
-            )),
-            // Unspecified integers are always interpreted as usize
-            LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
-                e.span,
-            )),
-            LitKind::Str(msg, StrStyle::Cooked) => Ok((
-                ExprTranslationResult::TransExpr(Expression::Lit(Literal::Str(
-                    msg.to_ident_string(),
-                ))),
-                e.span,
-            )),
-            _ => {
-                sess.span_rustspec_err(lit.span, "literal not allowed in Hacspec");
-                Err(())
-            }
-        },
+        ExprKind::Lit(lit) => translate_literal(sess, lit, e.span.clone()),
         ExprKind::Assign(lhs, rhs_e, _) => {
             let r_e = translate_expr(sess, arr_typs, rhs_e)?;
             match &lhs.kind {
@@ -1055,6 +1128,7 @@ fn translate_block(
 enum ItemTranslationResult {
     Item(Item),
     ImportedCrate(String),
+    TyAlias(Spanned<String>, Spanned<BaseTyp>),
 }
 
 fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
@@ -1070,6 +1144,65 @@ fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
             sess.span_rustspec_err(
                 arg.span().clone(),
                 "expected delimiter to be a single token",
+            );
+            Err(())
+        }
+    }
+}
+
+fn check_for_literal(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned<Expression>> {
+    match arg {
+        TokenTree::Token(tok) => match tok.kind {
+            TokenKind::Literal(l) => {
+                match translate_literal(
+                    sess,
+                    &match rustc_ast::Lit::from_lit_token(l, tok.span.clone()) {
+                        Ok(x) => x,
+                        Err(_) => return Err(()),
+                    },
+                    tok.span.clone(),
+                )? {
+                    (ExprTranslationResult::TransStmt(_), _) => panic!(), // should not happen
+                    (ExprTranslationResult::TransExpr(e), s) => Ok((e, s)),
+                }
+            }
+            _ => {
+                sess.span_rustspec_err(tok.span.clone(), "expected a literal");
+                Err(())
+            }
+        },
+        _ => {
+            sess.span_rustspec_err(arg.span().clone(), "expected a literal");
+            Err(())
+        }
+    }
+}
+
+fn check_for_literal_array(
+    sess: &Session,
+    arg: &TokenTree,
+) -> TranslationResult<Vec<Spanned<Expression>>> {
+    match arg {
+        TokenTree::Delimited(_, DelimToken::Bracket, inside) => {
+            let commas_and_exprs: Vec<TranslationResult<Option<Spanned<Expression>>>> = inside
+                .trees()
+                .enumerate()
+                .map(|(i, tok)| {
+                    if i % 2 == 1 {
+                        check_for_comma(sess, &tok)?;
+                        Ok(None)
+                    } else {
+                        Ok(Some(check_for_literal(sess, &tok)?))
+                    }
+                })
+                .collect();
+            let commas_and_exprs = check_vec(commas_and_exprs)?;
+            Ok(commas_and_exprs.into_iter().filter_map(|x| x).collect())
+        }
+        _ => {
+            sess.span_rustspec_err(
+                arg.span().clone(),
+                "expected delimiter to be a bracket-enclosed expression",
             );
             Err(())
         }
@@ -1569,6 +1702,42 @@ fn translate_items(
                 arr_types.clone(),
             ))
         }
+        ItemKind::TyAlias(defaultness, generics, _, ty) => {
+            match defaultness {
+                Defaultness::Final => (),
+                Defaultness::Default(span) => {
+                    sess.span_rustspec_err(
+                        span.clone(),
+                        "default type aliases not supported in Hacspec",
+                    );
+                    return Err(());
+                }
+            };
+            if generics.params.len() > 0 {
+                sess.span_rustspec_err(
+                    generics.span.clone(),
+                    "generics in type aliases not supported in Hacspec",
+                );
+                return Err(());
+            }
+            match ty {
+                None => {
+                    sess.span_rustspec_err(
+                        generics.span.clone(),
+                        "type aliases should have a definition in Hacspec",
+                    );
+                    Err(())
+                }
+                Some(ty) => {
+                    let ty = translate_base_typ(sess, ty)?;
+                    let ty_alias_name = (i.ident.name.to_ident_string(), i.span);
+                    Ok((
+                        ItemTranslationResult::TyAlias(ty_alias_name, ty),
+                        arr_types.clone(),
+                    ))
+                }
+            }
+        }
         _ => {
             sess.span_rustspec_err(i.span.clone(), "item not allowed in Hacspec");
             Err(())
@@ -1589,11 +1758,16 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
             })
             .collect(),
     )?;
-    let (items, imports): (Vec<_>, Vec<_>) =
+    let (items, rest): (Vec<_>, Vec<_>) =
         translated_items.into_iter().partition(|(r, _)| match r {
             ItemTranslationResult::Item(_) => true,
-            ItemTranslationResult::ImportedCrate(_) => false,
+            _ => false,
         });
+    let (imports, aliases): (Vec<_>, Vec<_>) = rest.into_iter().partition(|(r, _)| match r {
+        ItemTranslationResult::Item(_) => panic!(), // should not happen
+        ItemTranslationResult::ImportedCrate(_) => true,
+        ItemTranslationResult::TyAlias(_, _) => false,
+    });
     let items = items
         .into_iter()
         .map(|(r, r_span)| {
@@ -1612,8 +1786,18 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
             }
         })
         .collect();
+    let aliases = aliases
+        .into_iter()
+        .map(|(r, _)| {
+            match r {
+                ItemTranslationResult::TyAlias(name, ty) => (name, ty),
+                _ => panic!(), // should not happen
+            }
+        })
+        .collect();
     Ok(Program {
         items,
         imported_crates: imports,
+        ty_aliases: aliases,
     })
 }

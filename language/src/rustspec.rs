@@ -290,4 +290,5 @@ pub enum Item {
 pub struct Program {
     pub items: Vec<Spanned<Item>>,
     pub imported_crates: Vec<Spanned<String>>,
+    pub ty_aliases: Vec<(Spanned<String>, Spanned<BaseTyp>)>,
 }
