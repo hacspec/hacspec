@@ -179,14 +179,18 @@ let array_slice
 
 let array_from_slice_range
   (#a: Type)
+  (default_value: a)
+  (out_len: uint_size)
   (input: seq a)
   (start_fin: (uint_size & uint_size){
-     fst start_fin >= 0 /\ snd start_fin <= LSeq.length input /\ snd start_fin >= fst start_fin
+     fst start_fin >= 0 /\ snd start_fin <= LSeq.length input /\ snd start_fin >= fst start_fin /\
+     snd start_fin - fst start_fin <= out_len
    })
-    : lseq a (snd start_fin - fst start_fin)
+    : lseq a out_len
   =
+  let out = array_new_ default_value out_len in
   let (start, fin) = start_fin in
-  Seq.slice input start fin
+  LSeq.update_sub out 0 (fin - start) (Seq.slice input start fin)
 
 let array_slice_range
   (#a: Type)
@@ -317,6 +321,19 @@ let array_xor
   let out = s1 in
   foldi 0 len (fun i out ->
     array_upd out i (array_index s1 i `xor` array_index s2 i)
+  ) out
+
+let array_eq
+  (#a: Type)
+  (#len: uint_size)
+  (eq: a -> a -> bool)
+  (s1: lseq a len)
+  (s2 : lseq a len)
+    : bool
+  =
+  let out = true in
+  foldi 0 len (fun i out ->
+    out && (array_index s1 i `eq` array_index s2 i)
   ) out
 
 (**** Integers to arrays *)

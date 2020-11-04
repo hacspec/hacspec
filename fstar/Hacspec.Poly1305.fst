@@ -12,9 +12,9 @@ type key_poly = lseq (uint8) (usize 32)
 let blocksize : uint_size =
   usize 16
 
-type block = lseq (uint8) (blocksize)
+type block = lseq (uint8) (usize 16)
 
-type tag = lseq (pub_uint8) (blocksize)
+type tag = lseq (pub_uint8) (usize 16)
 
 type field_canvas = lseq (pub_uint8) (17)
 
@@ -61,7 +61,7 @@ let poly_finish (a_8 : field_element) (s_9 : field_element) : tag =
   in
   let s_13 = u128_from_be_bytes (array_from_seq (16) (s_12)) in
   let a_14 = pub_uint128_wrapping_add (a_11) (s_13) in
-  array_from_seq (blocksize) (u128_to_le_bytes (a_14))
+  array_from_seq (16) (u128_to_le_bytes (a_14))
 
 let poly (m_15 : byte_seq) (key_16 : key_poly) : tag =
   let r_17 = le_bytes_to_num (array_slice (key_16) (usize 0) (blocksize)) in
@@ -84,3 +84,4 @@ let poly (m_15 : byte_seq) (key_16 : key_poly) : tag =
     (a_21)
   in
   poly_finish (a_21) (s_20)
+
