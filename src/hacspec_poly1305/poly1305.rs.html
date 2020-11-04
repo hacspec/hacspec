@@ -85,10 +85,10 @@
 <span class="kw">const</span> <span class="ident">BLOCKSIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
 
 <span class="comment">// These are type aliases for convenience</span>
-<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Block</span>, <span class="ident">BLOCKSIZE</span>);
+<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Block</span>, <span class="number">16</span>);
 
 <span class="comment">// These are actual types; fixed-length arrays.</span>
-<span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">Tag</span>, <span class="ident">BLOCKSIZE</span>);
+<span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">Tag</span>, <span class="number">16</span>);
 
 <span class="comment">// This defines the field for modulo 2^130-5.</span>
 <span class="comment">// In particular `FieldElement` and `FieldCanvas` are defined.</span>
