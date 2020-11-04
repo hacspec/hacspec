@@ -1453,7 +1453,22 @@ fn typecheck_pattern(
     sess: &Session,
     (pat, pat_span): &Spanned<Pattern>,
     (borrowing_typ, typ): &Typ,
+    typ_dict: &TypeDict,
 ) -> TypecheckingResult<(Pattern, VarContext, NameContext)> {
+    match &typ.0 {
+        BaseTyp::Named((Ident::Original(name), _), None) => match typ_dict.get(name) {
+            Some((((Borrowing::Consumed, _), (new_ty, _)), DictEntry::Alias)) => {
+                return typecheck_pattern(
+                    sess,
+                    &(pat.clone(), pat_span.clone()),
+                    &(borrowing_typ.clone(), (new_ty.clone(), typ.1.clone())),
+                    typ_dict,
+                )
+            }
+            _ => (),
+        },
+        _ => (),
+    };
     match (pat, &typ.0) {
         (Pattern::Tuple(pat_args), BaseTyp::Tuple(ref typ_args)) => {
             if pat_args.len() != typ_args.len() {
@@ -1472,6 +1487,7 @@ fn typecheck_pattern(
                         pat_arg,
                         //TODO: changed to propagate borrow to tuple args
                         &((Borrowing::Consumed, *pat_span), typ_arg.clone()),
+                        typ_dict,
                     )?;
                     acc_pat.push((new_pat, pat_arg.1.clone()));
                     Ok((
@@ -1567,7 +1583,7 @@ fn typecheck_statement(
                 }
             };
             let (new_pat, pat_var_context, pat_name_context) =
-                typecheck_pattern(sess, &(pat.clone(), pat_span.clone()), &expr_typ)?;
+                typecheck_pattern(sess, &(pat.clone(), pat_span.clone()), &expr_typ, typ_dict)?;
             Ok((
                 Statement::LetBinding(
                     (new_pat, pat_span.clone()),
@@ -2251,6 +2267,15 @@ pub fn typecheck_program<
         ]
         .as_slice(),
     );
+    for (alias_name, alias_ty) in &p.ty_aliases {
+        typ_dict.insert(
+            alias_name.0.clone(),
+            (
+                ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
+                DictEntry::Alias,
+            ),
+        );
+    }
     for (array_name, array_typ) in extern_arrays {
         typ_dict.insert(
             array_name,
@@ -2275,6 +2300,7 @@ pub fn typecheck_program<
                     .collect(),
             )?,
             imported_crates: p.imported_crates.clone(),
+            ty_aliases: p.ty_aliases.clone(),
         },
         typ_dict,
     ))

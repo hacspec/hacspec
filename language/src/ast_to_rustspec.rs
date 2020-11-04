@@ -1128,6 +1128,7 @@ fn translate_block(
 enum ItemTranslationResult {
     Item(Item),
     ImportedCrate(String),
+    TyAlias(Spanned<String>, Spanned<BaseTyp>),
 }
 
 fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
@@ -1701,6 +1702,42 @@ fn translate_items(
                 arr_types.clone(),
             ))
         }
+        ItemKind::TyAlias(defaultness, generics, _, ty) => {
+            match defaultness {
+                Defaultness::Final => (),
+                Defaultness::Default(span) => {
+                    sess.span_rustspec_err(
+                        span.clone(),
+                        "default type aliases not supported in Hacspec",
+                    );
+                    return Err(());
+                }
+            };
+            if generics.params.len() > 0 {
+                sess.span_rustspec_err(
+                    generics.span.clone(),
+                    "generics in type aliases not supported in Hacspec",
+                );
+                return Err(());
+            }
+            match ty {
+                None => {
+                    sess.span_rustspec_err(
+                        generics.span.clone(),
+                        "type aliases should have a definition in Hacspec",
+                    );
+                    Err(())
+                }
+                Some(ty) => {
+                    let ty = translate_base_typ(sess, ty)?;
+                    let ty_alias_name = (i.ident.name.to_ident_string(), i.span);
+                    Ok((
+                        ItemTranslationResult::TyAlias(ty_alias_name, ty),
+                        arr_types.clone(),
+                    ))
+                }
+            }
+        }
         _ => {
             sess.span_rustspec_err(i.span.clone(), "item not allowed in Hacspec");
             Err(())
@@ -1721,11 +1758,16 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
             })
             .collect(),
     )?;
-    let (items, imports): (Vec<_>, Vec<_>) =
+    let (items, rest): (Vec<_>, Vec<_>) =
         translated_items.into_iter().partition(|(r, _)| match r {
             ItemTranslationResult::Item(_) => true,
-            ItemTranslationResult::ImportedCrate(_) => false,
+            _ => false,
         });
+    let (imports, aliases): (Vec<_>, Vec<_>) = rest.into_iter().partition(|(r, _)| match r {
+        ItemTranslationResult::Item(_) => panic!(), // should not happen
+        ItemTranslationResult::ImportedCrate(_) => true,
+        ItemTranslationResult::TyAlias(_, _) => false,
+    });
     let items = items
         .into_iter()
         .map(|(r, r_span)| {
@@ -1744,8 +1786,18 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
             }
         })
         .collect();
+    let aliases = aliases
+        .into_iter()
+        .map(|(r, _)| {
+            match r {
+                ItemTranslationResult::TyAlias(name, ty) => (name, ty),
+                _ => panic!(), // should not happen
+            }
+        })
+        .collect();
     Ok(Program {
         items,
         imported_crates: imports,
+        ty_aliases: aliases,
     })
 }

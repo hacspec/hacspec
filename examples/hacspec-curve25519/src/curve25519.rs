@@ -13,6 +13,8 @@ public_nat_mod!(
     modulo_value: "8000000000000000000000000000000000000000000000000000000000000000"
 );
 
+type Point = (FieldElement, FieldElement);
+
 bytes!(SerializedPoint, 32);
 bytes!(SerializedScalar, 32);
 
@@ -29,7 +31,7 @@ fn decode_scalar(s: SerializedScalar) -> Scalar {
     Scalar::from_byte_seq_le(k)
 }
 
-fn decode_point(u: SerializedPoint) -> (FieldElement, FieldElement) {
+fn decode_point(u: SerializedPoint) -> Point {
     let mut u_ = u;
     u_[31] = u_[31] & U8(127u8);
     (
@@ -38,16 +40,13 @@ fn decode_point(u: SerializedPoint) -> (FieldElement, FieldElement) {
     )
 }
 
-fn encode_point(p: (FieldElement, FieldElement)) -> SerializedPoint {
+fn encode_point(p: Point) -> SerializedPoint {
     let (x, y) = p;
     let b = x * y.inv();
     SerializedPoint::new().update_start(&b.to_byte_seq_le())
 }
 
-fn point_add_and_double(
-    q: (FieldElement, FieldElement),
-    np: ((FieldElement, FieldElement), (FieldElement, FieldElement)),
-) -> ((FieldElement, FieldElement), (FieldElement, FieldElement)) {
+fn point_add_and_double(q: Point, np: (Point, Point)) -> (Point, Point) {
     let (nq, nqp1) = np;
     let (x_1, _z_1) = q;
     let (x_2, z_2) = nq;
@@ -70,22 +69,17 @@ fn point_add_and_double(
     ((x_2, z_2), (x_3, z_3))
 }
 
-fn swap(
-    x: ((FieldElement, FieldElement), (FieldElement, FieldElement)),
-) -> ((FieldElement, FieldElement), (FieldElement, FieldElement)) {
+fn swap(x: (Point, Point)) -> (Point, Point) {
     let (x0, x1) = x;
     (x1, x0)
 }
 
-fn montgomery_ladder(
-    k: Scalar,
-    init: (FieldElement, FieldElement),
-) -> (FieldElement, FieldElement) {
+fn montgomery_ladder(k: Scalar, init: Point) -> Point {
     let inf = (
         FieldElement::from_literal(1u128),
         FieldElement::from_literal(0u128),
     );
-    let mut acc: ((FieldElement, FieldElement), (FieldElement, FieldElement)) = (inf, init);
+    let mut acc: (Point, Point) = (inf, init);
     for i in 0..256 {
         if k.bit(255 - i) {
             acc = swap(acc);
