@@ -450,7 +450,7 @@ fn translate_expr(
                     return Err(());
                 }
                 match &args.first().unwrap().kind {
-                    // First case: the arrat itself
+                    // First case: the array itself
                     ExprKind::Array(cells) => {
                         let new_cells: Vec<TranslationResult<Spanned<Expression>>> = cells
                             .iter()
