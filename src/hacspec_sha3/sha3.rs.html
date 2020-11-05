@@ -171,21 +171,6 @@
 <span id="171">171</span>
 <span id="172">172</span>
 <span id="173">173</span>
-<span id="174">174</span>
-<span id="175">175</span>
-<span id="176">176</span>
-<span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
-<span id="181">181</span>
-<span id="182">182</span>
-<span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Import hacspec and all needed definitions.</span>
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
@@ -207,31 +192,16 @@
 <span class="macro">array</span><span class="macro">!</span>(<span class="ident">RoundConstants</span>, <span class="ident">ROUNDS</span>, <span class="ident">u64</span>);
 <span class="macro">array</span><span class="macro">!</span>(<span class="ident">RotationConstants</span>, <span class="number">25</span>, <span class="ident">usize</span>);
 
+<span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
 <span class="kw">const</span> <span class="ident">ROUNDCONSTANTS</span>: <span class="ident">RoundConstants</span> <span class="op">=</span> <span class="ident">RoundConstants</span>([
-    <span class="number">0x0000_0000_0000_0001u64</span>,
-    <span class="number">0x0000_0000_0000_8082u64</span>,
-    <span class="number">0x8000_0000_0000_808au64</span>,
-    <span class="number">0x8000_0000_8000_8000u64</span>,
-    <span class="number">0x0000_0000_0000_808bu64</span>,
-    <span class="number">0x0000_0000_8000_0001u64</span>,
-    <span class="number">0x8000_0000_8000_8081u64</span>,
-    <span class="number">0x8000_0000_0000_8009u64</span>,
-    <span class="number">0x0000_0000_0000_008au64</span>,
-    <span class="number">0x0000_0000_0000_0088u64</span>,
-    <span class="number">0x0000_0000_8000_8009u64</span>,
-    <span class="number">0x0000_0000_8000_000au64</span>,
-    <span class="number">0x0000_0000_8000_808bu64</span>,
-    <span class="number">0x8000_0000_0000_008bu64</span>,
-    <span class="number">0x8000_0000_0000_8089u64</span>,
-    <span class="number">0x8000_0000_0000_8003u64</span>,
-    <span class="number">0x8000_0000_0000_8002u64</span>,
-    <span class="number">0x8000_0000_0000_0080u64</span>,
-    <span class="number">0x0000_0000_0000_800au64</span>,
-    <span class="number">0x8000_0000_8000_000au64</span>,
-    <span class="number">0x8000_0000_8000_8081u64</span>,
-    <span class="number">0x8000_0000_0000_8080u64</span>,
-    <span class="number">0x0000_0000_8000_0001u64</span>,
-    <span class="number">0x8000_0000_8000_8008u64</span>,
+    <span class="number">0x0000_0000_0000_0001u64</span>,  <span class="number">0x0000_0000_0000_8082u64</span>,  <span class="number">0x8000_0000_0000_808au64</span>,
+    <span class="number">0x8000_0000_8000_8000u64</span>,  <span class="number">0x0000_0000_0000_808bu64</span>,  <span class="number">0x0000_0000_8000_0001u64</span>,
+    <span class="number">0x8000_0000_8000_8081u64</span>,  <span class="number">0x8000_0000_0000_8009u64</span>,  <span class="number">0x0000_0000_0000_008au64</span>,
+    <span class="number">0x0000_0000_0000_0088u64</span>,  <span class="number">0x0000_0000_8000_8009u64</span>,  <span class="number">0x0000_0000_8000_000au64</span>,
+    <span class="number">0x0000_0000_8000_808bu64</span>,  <span class="number">0x8000_0000_0000_008bu64</span>,  <span class="number">0x8000_0000_0000_8089u64</span>,
+    <span class="number">0x8000_0000_0000_8003u64</span>,  <span class="number">0x8000_0000_0000_8002u64</span>,  <span class="number">0x8000_0000_0000_0080u64</span>,
+    <span class="number">0x0000_0000_0000_800au64</span>,  <span class="number">0x8000_0000_8000_000au64</span>,  <span class="number">0x8000_0000_8000_8081u64</span>,
+    <span class="number">0x8000_0000_0000_8080u64</span>,  <span class="number">0x0000_0000_8000_0001u64</span>,  <span class="number">0x8000_0000_8000_8008u64</span>,
 ]);
 
 <span class="kw">const</span> <span class="ident">ROTC</span>: <span class="ident">RotationConstants</span> <span class="op">=</span> <span class="ident">RotationConstants</span>([
