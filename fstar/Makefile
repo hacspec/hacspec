@@ -9,7 +9,7 @@ FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst Hacspec.Chacha20Poly130
 
 # The paths to related files which to include for scanning
 #   -- No need to add FSTAR_HOME/ulib; it is included by default
-INCLUDE_PATHS ?= $(HACL_HOME)/lib
+INCLUDE_PATHS ?= $(HACL_HOME)/lib $(HACL_HOME)/specs
 
 # The executable file you want to produce
 PROGRAM ?= specs.exe
