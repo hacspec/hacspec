@@ -325,7 +325,7 @@ fn add_array_type_from_ctor_sig(
                             let new_size = match &size.val {
                                 ConstKind::Value(value) => match value {
                                     ConstValue::Scalar(scalar) => match scalar {
-                                        Scalar::Raw { data, .. } => *data as usize,
+                                        Scalar::Int(s) => s.to_bits(s.size()).unwrap() as usize,
                                         _ => return (),
                                     },
                                     _ => return (),
