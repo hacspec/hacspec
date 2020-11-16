@@ -1004,6 +1004,10 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "const blocks are not allowed in Hacspec");
             Err(())
         }
+        ExprKind::Underscore => {
+            sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
+            Err(())
+        }
     }
 }
 
