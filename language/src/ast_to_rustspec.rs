@@ -392,6 +392,7 @@ fn translate_expr(
     arr_typs: &ArrayTypes,
     e: &Expr,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
+    #[allow(unreachable_patterns)]
     match &e.kind {
         ExprKind::Binary(op, e1, e2) => Ok((
             ExprTranslationResult::TransExpr(Expression::Binary(
@@ -1002,6 +1003,14 @@ fn translate_expr(
         }
         ExprKind::ConstBlock(_) => {
             sess.span_rustspec_err(e.span.clone(), "const blocks are not allowed in Hacspec");
+            Err(())
+        }
+        ExprKind::Underscore => {
+            sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
+            Err(())
+        }
+        _ => {
+            sess.span_rustspec_err(e.span.clone(), "this expression is not allowed in Hacspec");
             Err(())
         }
     }
