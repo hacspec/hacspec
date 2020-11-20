@@ -193,7 +193,10 @@ fn main() -> Result<(), ()> {
                 _ => false,
             }),
     };
-    let args = env::args().collect::<Vec<String>>();
+    let mut args = env::args().collect::<Vec<String>>();
+    args.push("--crate-type=lib".to_string());
+    args.push("--edition=2018".to_string());
+    args.push("--extern=hacspec_lib".to_string());
     RunCompiler::new(&args, &mut callbacks)
         .run()
         .map_err(|_| ())

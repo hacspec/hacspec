@@ -2,22 +2,13 @@ use assert_cmd::prelude::*; // Add methods on commands
 use itertools::Itertools;
 use std::process::Command; // Run programs
 
-const DEPS_ARG: &'static str = "-L ../../target/debug/deps";
-const CRATE_TYPE_ARG: &'static str = "--crate-type=lib";
-const EDITION_ARG: &'static str = "--edition=2018";
-const EXTERN_ARG: &'static str = "--extern=hacspec_lib";
-
 fn run_test(
     input: &str,
     output: Option<&str>,
     dependencies: Vec<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!(
-        "Running: cargo run -- {} {} {} {} {} {} {}",
-        DEPS_ARG,
-        CRATE_TYPE_ARG,
-        EDITION_ARG,
-        EXTERN_ARG,
+        "Running: cargo run -- {} {} {}",
         dependencies
             .iter()
             .map(|d| format!("--extern={}", d))
@@ -28,11 +19,7 @@ fn run_test(
         },
         input
     );
-    let mut cmd = Command::cargo_bin("hacspec")?;
-    cmd.arg(DEPS_ARG);
-    cmd.arg(CRATE_TYPE_ARG);
-    cmd.arg(EDITION_ARG);
-    cmd.arg(EXTERN_ARG);
+    let mut cmd = Command::cargo_bin("cargo-hacspec")?;
     dependencies.iter().for_each(|d| {
         cmd.arg(format!("--extern={}", d));
     });

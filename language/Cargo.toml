@@ -1,10 +1,8 @@
 [package]
-name = "hacspec"
+name = "cargo-hacspec"
 version = "0.1.0"
 authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = {version = "~2.33.1", features = ["yaml"]}
