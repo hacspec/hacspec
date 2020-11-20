@@ -4,7 +4,7 @@ author: Denis Merigoux <denis.merigoux@inria.fr>
 about: Typechecker and compiler for the Hacspec subset of Rust
 args:
     - INPUTS:
-        help: Sets the input files to use
+        help: Path to the crate to analyze
         required: true
         index: 1
         multiple: true

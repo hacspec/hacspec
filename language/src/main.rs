@@ -32,6 +32,7 @@ use rustc_interface::{
 use rustc_session::Session;
 use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
 use rustc_span::MultiSpan;
+use serde::Deserialize;
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -45,7 +46,7 @@ struct HacspecCallbacks {
     typecheck_only: bool,
 }
 
-const ITEM_LIST_LOCATION: &'static str = "../allowed_item_list.json";
+const ITEM_LIST_LOCATION: &'static str = "/tmp/allowed_item_list.json";
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
     ErrorOutputType::HumanReadable(HumanReadableErrorType::Default(ColorConfig::Auto));
@@ -69,8 +70,9 @@ impl Callbacks for HacspecCallbacks {
         } else if cfg!(target_os = "windows") {
             option_env!("PATH")
         } else {
-            panic!("Unsuported target OS: {}", cfg!(target_os))
+            panic!("Unsupported target OS: {}", cfg!(target_os))
         };
+        println!(" >>> shared libs: {:?}", libraries_string);
         let shared_libraries = libraries_string.unwrap_or("").trim().split(":");
         for shared_library in shared_libraries {
             if shared_library != "" {
@@ -181,6 +183,77 @@ impl Callbacks for HacspecCallbacks {
     }
 }
 
+#[derive(Debug, Default, Deserialize)]
+struct Dependency {
+    name: String,
+    kind: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct Target {
+    name: String,
+    kind: Vec<String>,
+    crate_types: Vec<String>,
+    src_path: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct Package {
+    name: String,
+    targets: Vec<Target>,
+    dependencies: Vec<Dependency>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct Manifest {
+    packages: Vec<Package>,
+    target_directory: String,
+}
+
+fn read_crate(crate_ta: String, package_name: String, args: &mut Vec<String>) {
+    let manifest: Manifest = {
+        let mut output = std::process::Command::new("cargo");
+        let output = output
+            .arg("metadata")
+            .args(&["--manifest-path", &format!("{}/Cargo.toml", crate_ta)])
+            .args(&["--no-deps", "--format-version", "1"]);
+        // println!("Commend: {:?}", output);
+        let output = output.output().expect("Error reading cargo manifest.");
+        let stdout = output.stdout;
+        if !output.status.success() {
+            let error =
+                String::from_utf8(output.stderr).expect("Failed reading cargo stderr output");
+            panic!("Error running cargo metadata: {:?}", error);
+        }
+        let json_string = String::from_utf8(stdout).expect("Failed reading cargo output");
+        serde_json::from_str(&json_string).expect("Error reading to manifest")
+    };
+    println!("Manifest: {:?}", manifest);
+    // Pick the package of the given name.
+    let package = manifest
+        .packages
+        .iter()
+        .find(|p| p.name == package_name)
+        .expect(&format!(
+            "Can't find the package {} in the Cargo.toml",
+            package_name
+        ));
+    // Take the first lib target we find. There should be only one really.
+    let target = package
+        .targets
+        .iter()
+        .find(|p| p.crate_types.contains(&"lib".to_string()))
+        .expect("No target in the Cargo.toml");
+
+    // Add the target source file to the arguments
+    args.push(target.src_path.clone());
+
+    // Add dependencies to link path.
+    // This only works with debug builds.
+    let deps = manifest.target_directory + "/debug/deps";
+    args.push(format!("-L dependency={}", deps));
+}
+
 fn main() -> Result<(), ()> {
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
@@ -194,9 +267,41 @@ fn main() -> Result<(), ()> {
             }),
     };
     let mut args = env::args().collect::<Vec<String>>();
+    if args[1] == "hacspec" {
+        // Remove the first arg if it is hacspec.
+        // This is the case when running this through `cargo hacspec` instead of
+        // the binary directly.
+        args.remove(1);
+    }
+    let package_name = args.pop().expect("No package to analyze.");
+    let crate_to_process = args.pop().expect("No crate to analyze.");
+
+    read_crate(crate_to_process, package_name, &mut args);
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
     args.push("--extern=hacspec_lib".to_string());
+
+    let mut sysroot = std::process::Command::new("rustc")
+        .arg("--print")
+        .arg("sysroot")
+        .output()
+        .ok()
+        .and_then(|out| String::from_utf8(out.stdout).ok())
+        .expect("Couldn't get sysroot");
+    sysroot.pop(); // get rid of line break
+    args.push("--sysroot=".to_string() + &sysroot + "/lib");
+
+    let mut target_libdir = std::process::Command::new("rustc")
+        .arg("--print")
+        .arg("target-libdir")
+        .output()
+        .ok()
+        .and_then(|out| String::from_utf8(out.stdout).ok())
+        .expect("Couldn't get target-libdir");
+    target_libdir.pop(); // get rid of line break
+    args.push("-L ".to_string() + &target_libdir);
+
+    println!(" >>> args: {:?}", args);
     RunCompiler::new(&args, &mut callbacks)
         .run()
         .map_err(|_| ())
