@@ -38,15 +38,13 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::OsStr;
 use std::fs::OpenOptions;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
     typecheck_only: bool,
 }
-
-const ITEM_LIST_LOCATION: &'static str = "/tmp/allowed_item_list.json";
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
     ErrorOutputType::HumanReadable(HumanReadableErrorType::Default(ColorConfig::Auto));
@@ -115,9 +113,13 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
+        let mut item_list: PathBuf = std::env::temp_dir();
+        item_list.push("allowed_list_items.json");
         let file = OpenOptions::new()
             .read(true)
-            .open(ITEM_LIST_LOCATION)
+            .write(true)
+            .create(true)
+            .open(item_list.as_path())
             .unwrap();
         let key_s = String::from("primitive");
         let crate_s = String::from("hacspec");
