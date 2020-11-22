@@ -6,7 +6,7 @@ fn run_test(
     output: Option<&str>,
     dependencies: Vec<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("cargo-hacspec")?;
+    let mut cmd = Command::cargo_bin("hacspec")?;
     dependencies.iter().for_each(|d| {
         cmd.arg(format!("--extern={}", d));
     });

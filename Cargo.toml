@@ -9,6 +9,7 @@ members = [
     "utils/provider",
     "utils/sig",
     "language",
+    "bin",
     "examples/hacspec-curve25519",
     "examples/hacspec-chacha20",
     "examples/hacspec-poly1305",

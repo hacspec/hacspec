@@ -21,7 +21,6 @@ mod rustspec_to_fstar;
 mod typechecker;
 
 use clap::App;
-use env::current_dir;
 use hacspec_sig::Signature;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
@@ -44,6 +43,7 @@ use walkdir::WalkDir;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
+    target_directory: String,
     typecheck_only: bool,
 }
 
@@ -62,6 +62,7 @@ impl HacspecErrorEmitter for Session {
 
 impl Callbacks for HacspecCallbacks {
     fn config(&mut self, config: &mut Config) {
+        // TODO: drop
         let libraries_string = if cfg!(target_os = "linux") {
             option_env!("LD_LIBRARY_PATH")
         } else if cfg!(target_os = "macos") {
@@ -71,8 +72,13 @@ impl Callbacks for HacspecCallbacks {
         } else {
             panic!("Unsupported target OS: {}", cfg!(target_os))
         };
+
+        // Add local dependencies.
+        let mut libraries_string = libraries_string.unwrap_or_default().trim().to_string();
+        libraries_string += &(":".to_string() + &self.target_directory);
+
         println!(" >>> shared libs: {:?}", libraries_string);
-        let shared_libraries = libraries_string.unwrap_or("").trim().split(":");
+        let shared_libraries = libraries_string.split(":");
         for shared_library in shared_libraries {
             if shared_library != "" {
                 config.opts.search_paths.push(SearchPath::from_cli_opt(
@@ -186,6 +192,8 @@ impl Callbacks for HacspecCallbacks {
     }
 }
 
+// === Cargo Metadata Helpers ===
+
 #[derive(Debug, Default, Deserialize)]
 struct Dependency {
     name: String,
@@ -213,7 +221,10 @@ struct Manifest {
     target_directory: String,
 }
 
-fn read_crate(package_name: String, args: &mut Vec<String>) {
+// ===
+
+/// Read the crate metadata and use the information for the build.
+fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut HacspecCallbacks) {
     let manifest: Manifest = {
         let mut output = std::process::Command::new("cargo");
         let output = output
@@ -253,12 +264,13 @@ fn read_crate(package_name: String, args: &mut Vec<String>) {
     // Add dependencies to link path.
     // This only works with debug builds.
     let deps = manifest.target_directory + "/debug/deps";
-    args.push(format!("-L dependency={}", deps));
+    callbacks.target_directory = deps;
 }
 
 fn main() -> Result<(), ()> {
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
+
     let mut callbacks = HacspecCallbacks {
         output_file: matches.value_of("output").map(|s| s.into()),
         typecheck_only: matches
@@ -267,7 +279,9 @@ fn main() -> Result<(), ()> {
                 "no-codegen" => true,
                 _ => false,
             }),
+        target_directory: String::new(),
     };
+
     let mut args = env::args().collect::<Vec<String>>();
     if args[1] == "hacspec" {
         // Remove the first arg if it is hacspec.
@@ -277,32 +291,13 @@ fn main() -> Result<(), ()> {
     }
     let package_name = args.pop().expect("No package to analyze.");
 
-    read_crate(package_name, &mut args);
+    // TODO: run cargo build
+
+    read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
     args.push("--extern=hacspec_lib".to_string());
 
-    let mut sysroot = std::process::Command::new("rustc")
-        .arg("--print")
-        .arg("sysroot")
-        .output()
-        .ok()
-        .and_then(|out| String::from_utf8(out.stdout).ok())
-        .expect("Couldn't get sysroot");
-    sysroot.pop(); // get rid of line break
-    args.push("--sysroot=".to_string() + &sysroot + "/lib");
-
-    let mut target_libdir = std::process::Command::new("rustc")
-        .arg("--print")
-        .arg("target-libdir")
-        .output()
-        .ok()
-        .and_then(|out| String::from_utf8(out.stdout).ok())
-        .expect("Couldn't get target-libdir");
-    target_libdir.pop(); // get rid of line break
-    args.push("-L ".to_string() + &target_libdir);
-
-    println!(" >>> args: {:?}", args);
     RunCompiler::new(&args, &mut callbacks)
         .run()
         .map_err(|_| ())
