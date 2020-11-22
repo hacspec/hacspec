@@ -21,6 +21,7 @@ mod rustspec_to_fstar;
 mod typechecker;
 
 use clap::App;
+use env::current_dir;
 use hacspec_sig::Signature;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
@@ -212,12 +213,11 @@ struct Manifest {
     target_directory: String,
 }
 
-fn read_crate(crate_ta: String, package_name: String, args: &mut Vec<String>) {
+fn read_crate(package_name: String, args: &mut Vec<String>) {
     let manifest: Manifest = {
         let mut output = std::process::Command::new("cargo");
         let output = output
             .arg("metadata")
-            .args(&["--manifest-path", &format!("{}/Cargo.toml", crate_ta)])
             .args(&["--no-deps", "--format-version", "1"]);
         // println!("Commend: {:?}", output);
         let output = output.output().expect("Error reading cargo manifest.");
@@ -276,9 +276,8 @@ fn main() -> Result<(), ()> {
         args.remove(1);
     }
     let package_name = args.pop().expect("No package to analyze.");
-    let crate_to_process = args.pop().expect("No crate to analyze.");
 
-    read_crate(crate_to_process, package_name, &mut args);
+    read_crate(package_name, &mut args);
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
     args.push("--extern=hacspec_lib".to_string());

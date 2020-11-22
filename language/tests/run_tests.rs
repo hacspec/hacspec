@@ -2,7 +2,6 @@ use assert_cmd::prelude::*; // Add methods on commands
 use std::process::Command; // Run programs
 
 fn run_test(
-    input_path: &str,
     package_name: &str,
     output: Option<&str>,
     dependencies: Vec<&str>,
@@ -15,7 +14,6 @@ fn run_test(
         None => cmd.arg("-Zno-codegen".to_string()),
         Some(f) => cmd.arg(format!("-o {}", f)),
     };
-    cmd.arg(format!("{}", input_path));
     cmd.arg(format!("{}", package_name));
     println!("Running: {:?}", cmd);
     cmd.assert().success();
@@ -25,13 +23,11 @@ fn run_test(
 #[test]
 fn run_chacha20_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
-        "../examples/hacspec-chacha20/",
         "hacspec-chacha20",
         Some("../fstar/Hacspec.Chacha20.fst"),
         vec![],
     )?;
     run_test(
-        "../examples/hacspec-chacha20/",
         "hacspec-chacha20",
         Some("../easycrypt/Hacspec_Chacha20.ec"),
         vec![],
@@ -41,13 +37,11 @@ fn run_chacha20_test() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn run_poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
-        "../examples/hacspec-poly1305/",
         "hacspec-poly1305",
         Some("../fstar/Hacspec.Poly1305.fst"),
         vec![""],
     )?;
     run_test(
-        "../examples/hacspec-poly1305",
         "hacspec-poly1305",
         Some("../easycrypt/Hacspec_Poly1305.ec"),
         vec![""],
@@ -57,7 +51,6 @@ fn run_poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn run_chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
-        "../examples/hacspec-chacha20poly1305/",
         "hacspec-chacha20poly1305",
         Some("../fstar/Hacspec.Chacha20Poly1305.fst"),
         vec!["hacspec_chacha20", "hacspec_poly1305"],
@@ -66,30 +59,20 @@ fn run_chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn run_ntru_prime_test() -> Result<(), Box<dyn std::error::Error>> {
-    run_test(
-        "../examples/hacspec-ntru-prime/",
-        "hacspec-ntru-prime",
-        None,
-        vec![],
-    )
+    run_test("hacspec-ntru-prime", None, vec![])
 }
 
 #[test]
 fn run_sha3_test() -> Result<(), Box<dyn std::error::Error>> {
-    run_test("../examples/hacspec-sha3", "hacspec-sha3", None, vec![])
+    run_test("hacspec-sha3", None, vec![])
 }
 
 #[test]
 fn run_sha256_test() -> Result<(), Box<dyn std::error::Error>> {
-    run_test("../examples/hacspec-sha256", "hacspec-sha256", None, vec![])
+    run_test("hacspec-sha256", None, vec![])
 }
 
 #[test]
 fn run_curve25519_test() -> Result<(), Box<dyn std::error::Error>> {
-    run_test(
-        "../examples/hacspec-curve25519/",
-        "hacspec-curve25519",
-        None,
-        vec![],
-    )
+    run_test("hacspec-curve25519", None, vec![])
 }
