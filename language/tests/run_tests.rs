@@ -1,12 +1,24 @@
 use assert_cmd::prelude::*; // Add methods on commands
-use std::process::Command; // Run programs
+use std::{env, process::Command}; // Run programs
 
 fn run_test(
     package_name: &str,
     output: Option<&str>,
     dependencies: Vec<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::cargo_bin("hacspec")?;
+    let mut sysroot = std::process::Command::new("rustc")
+        .arg("--print")
+        .arg("sysroot")
+        .output()
+        .ok()
+        .and_then(|out| String::from_utf8(out.stdout).ok())
+        .expect("Couldn't get sysroot");
+    sysroot.pop(); // get rid of line break
+
+    let mut cmd = Command::cargo_bin("cargo-hacspec")?;
+    cmd.arg(format!("--sysroot={}", sysroot));
+    cmd.args(env::args().skip(1));
+    cmd.envs(env::vars());
     dependencies.iter().for_each(|d| {
         cmd.arg(format!("--extern={}", d));
     });

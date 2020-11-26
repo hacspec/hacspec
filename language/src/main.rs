@@ -39,7 +39,6 @@ use std::env;
 use std::ffi::OsStr;
 use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
@@ -62,43 +61,10 @@ impl HacspecErrorEmitter for Session {
 
 impl Callbacks for HacspecCallbacks {
     fn config(&mut self, config: &mut Config) {
-        // TODO: drop
-        let libraries_string = if cfg!(target_os = "linux") {
-            option_env!("LD_LIBRARY_PATH")
-        } else if cfg!(target_os = "macos") {
-            option_env!("DYLD_FALLBACK_LIBRARY_PATH")
-        } else if cfg!(target_os = "windows") {
-            option_env!("PATH")
-        } else {
-            panic!("Unsupported target OS: {}", cfg!(target_os))
-        };
-
-        // Add local dependencies.
-        let mut libraries_string = libraries_string.unwrap_or_default().trim().to_string();
-        libraries_string += &(":".to_string() + &self.target_directory);
-
-        println!(" >>> shared libs: {:?}", libraries_string);
-        let shared_libraries = libraries_string.split(":");
-        for shared_library in shared_libraries {
-            if shared_library != "" {
-                config.opts.search_paths.push(SearchPath::from_cli_opt(
-                    shared_library,
-                    ERROR_OUTPUT_CONFIG,
-                ));
-                for entry in WalkDir::new(shared_library) {
-                    let entry = match entry {
-                        Ok(e) => e,
-                        Err(_) => continue,
-                    };
-                    if entry.metadata().unwrap().is_dir() {
-                        config.opts.search_paths.push(SearchPath::from_cli_opt(
-                            entry.path().to_str().unwrap(),
-                            ERROR_OUTPUT_CONFIG,
-                        ));
-                    }
-                }
-            }
-        }
+        config.opts.search_paths.push(SearchPath::from_cli_opt(
+            &self.target_directory,
+            ERROR_OUTPUT_CONFIG,
+        ));
         config.crate_cfg.insert((
             String::from("feature"),
             Some(String::from("\"hacspec_attributes\"")),
@@ -241,7 +207,7 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
         let json_string = String::from_utf8(stdout).expect("Failed reading cargo output");
         serde_json::from_str(&json_string).expect("Error reading to manifest")
     };
-    println!("Manifest: {:?}", manifest);
+    // println!("Manifest: {:?}", manifest);
     // Pick the package of the given name.
     let package = manifest
         .packages
@@ -290,8 +256,6 @@ fn main() -> Result<(), ()> {
         args.remove(1);
     }
     let package_name = args.pop().expect("No package to analyze.");
-
-    // TODO: run cargo build
 
     read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());

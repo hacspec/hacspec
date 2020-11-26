@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 
+[[bin]]
+name = "cargo-hacspec"
+path = "src/main.rs"
+
 [dependencies]
 clap = {version = "~2.33.1", features = ["yaml"]}
 pretty = "0.10.0"

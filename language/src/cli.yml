@@ -27,3 +27,7 @@ args:
         short: Z
         multiple: false
         number_of_values: 1
+    - sysroot:
+        long: sysroot
+        multiple: false
+        number_of_values: 1
