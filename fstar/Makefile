@@ -2,10 +2,11 @@
 ################################################################################
 # Customize these variables for your project
 ################################################################################
-FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 32
+FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 128
 
 # The root files of your project, from which to begin scanning dependences
-FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst Hacspec.Chacha20Poly1305.fst
+FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst Hacspec.Chacha20Poly1305.fst \
+	Hacspec.Chacha20.Proof.fst
 
 # The paths to related files which to include for scanning
 #   -- No need to add FSTAR_HOME/ulib; it is included by default
