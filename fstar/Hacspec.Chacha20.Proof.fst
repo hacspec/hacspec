@@ -5,6 +5,7 @@ open FStar.Mul
 
 module Orig = Spec.Chacha20
 module New = Hacspec.Chacha20
+module Seq = Lib.Sequence
 
 #set-options "--fuel 0 --ifuel 0 --z3rlimit 30"
 
@@ -40,22 +41,23 @@ let double_round_equiv (state: New.state)
 
 let constants_equiv ()
     : Lemma (forall (i:nat{i < 4}).
-      v (Seq.index (New.chacha20_constants_init ()) i) ==
+      v (Seq.index #_ #4 (New.chacha20_constants_init ()) i) ==
       v (Seq.index Orig.chacha20_constants i)
     )
   =
-  (* Why can't F* find this ? Orig.chacha20c_constants = [c0; c1; c2; c3] *)
-  assume(v Orig.c0 == v (Seq.index Orig.chacha20_constants 0));
-  assume(v Orig.c1 == v (Seq.index Orig.chacha20_constants 1));
-  assume(v Orig.c2 == v (Seq.index Orig.chacha20_constants 2));
-  assume(v Orig.c3 == v (Seq.index Orig.chacha20_constants 3))
+  let l = [Orig.c0;Orig.c1;Orig.c2;Orig.c3] in
+  assert_norm(List.Tot.length l == 4);
+  assert_norm(List.Tot.index l 0 == Orig.c0);
+  assert_norm(List.Tot.index l 1 == Orig.c1);
+  assert_norm(List.Tot.index l 2 == Orig.c2);
+  assert_norm(List.Tot.index l 3 == Orig.c3)
 
 let key_to_u32s_equiv (key: New.key)
     : Lemma (New.chacha20_key_to_u32s key == Lib.ByteSequence.uints_from_bytes_le #U32 #SEC #8 key)
   [SMTPat (New.chacha20_key_to_u32s key)]
   =
   let aux (i:nat{i < 8}) : Lemma (
-    Seq.index (New.chacha20_key_to_u32s key) i ==
+    Seq.index #_ #8 (New.chacha20_key_to_u32s key) i ==
     Seq.index (Lib.ByteSequence.uints_from_bytes_le #U32 #SEC #8 key) i
   ) =
     Lib.ByteSequence.index_uints_from_bytes_le #U32 #SEC #8 key i
@@ -71,7 +73,7 @@ let iv_to_u32s_equiv (iv: New.iv)
   [SMTPat (New.chacha20_iv_to_u32s iv)]
   =
   let aux (i:nat{i < 3}) : Lemma (
-    Seq.index (New.chacha20_iv_to_u32s iv) i ==
+    Seq.index #_ #3 (New.chacha20_iv_to_u32s iv) i ==
     Seq.index (Lib.ByteSequence.uints_from_bytes_le #U32 #SEC #3 iv) i
   ) =
     Lib.ByteSequence.index_uints_from_bytes_le #U32 #SEC #3 iv i
@@ -83,10 +85,10 @@ let iv_to_u32s_equiv (iv: New.iv)
   )
 
 let ctr_to_seq_equiv (ctr: uint32)
-    : Lemma (New.chacha20_ctr_to_seq ctr == Seq.init 1 (fun _ -> ctr))
+    : Lemma (New.chacha20_ctr_to_seq ctr == FStar.Seq.init 1 (fun _ -> ctr))
   [SMTPat (New.chacha20_ctr_to_seq ctr)]
   =
-  assert(New.chacha20_ctr_to_seq ctr `Seq.equal` Seq.init 1 (fun _ -> ctr))
+  assert(New.chacha20_ctr_to_seq ctr `Seq.equal #_ #1` FStar.Seq.init 1 (fun _ -> ctr))
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit 1000"
 let chacha_block_init_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
