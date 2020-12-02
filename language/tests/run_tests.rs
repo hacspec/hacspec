@@ -15,7 +15,7 @@ fn run_test(
         .expect("Couldn't get sysroot");
     sysroot.pop(); // get rid of line break
 
-    let mut cmd = Command::cargo_bin("cargo-hacspec")?;
+    let mut cmd = Command::cargo_bin("hacspec-driver")?;
     cmd.arg(format!("--sysroot={}", sysroot));
     cmd.args(env::args().skip(1));
     cmd.envs(env::vars());

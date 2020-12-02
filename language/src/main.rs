@@ -39,6 +39,7 @@ use std::env;
 use std::ffi::OsStr;
 use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
@@ -192,7 +193,7 @@ struct Manifest {
 /// Read the crate metadata and use the information for the build.
 fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut HacspecCallbacks) {
     let manifest: Manifest = {
-        let mut output = std::process::Command::new("cargo");
+        let mut output = Command::new("cargo");
         let output = output
             .arg("metadata")
             .args(&["--no-deps", "--format-version", "1"]);
@@ -249,18 +250,15 @@ fn main() -> Result<(), ()> {
     };
 
     let mut args = env::args().collect::<Vec<String>>();
-    if args[1] == "hacspec" {
-        // Remove the first arg if it is hacspec.
-        // This is the case when running this through `cargo hacspec` instead of
-        // the binary directly.
-        args.remove(1);
-    }
     let package_name = args.pop().expect("No package to analyze.");
 
     read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
     args.push("--extern=hacspec_lib".to_string());
+    // args.push(format!("--sysroot={}", get_sysroot()));
+
+    println!(" >>> {:?}", args);
 
     RunCompiler::new(&args, &mut callbacks)
         .run()

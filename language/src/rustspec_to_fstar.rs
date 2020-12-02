@@ -1,3 +1,5 @@
+extern crate rustc_ast;
+
 use crate::rustspec::*;
 
 use crate::typechecker::{DictEntry, TypeDict};

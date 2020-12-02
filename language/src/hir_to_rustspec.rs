@@ -1,3 +1,8 @@
+extern crate rustc_ast;
+extern crate rustc_hir;
+extern crate rustc_metadata;
+extern crate rustc_middle;
+
 use im::HashMap;
 use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};

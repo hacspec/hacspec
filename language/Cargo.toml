@@ -6,6 +6,10 @@ edition = "2018"
 
 [[bin]]
 name = "cargo-hacspec"
+path = "src/bin.rs"
+
+[[bin]]
+name = "hacspec-driver"
 path = "src/main.rs"
 
 [dependencies]
