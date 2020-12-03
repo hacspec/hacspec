@@ -198,7 +198,37 @@ let chacha_block_inner_loop2_f (st_39: New.state) =
     in
     (state_40)
 
-#push-options "--fuel 2 --z3rlimit 50"
+#push-options "--fuel 2"
+let rec map2_equals_foldi_lemma1
+  (n: uint_size{n >= 1 /\ n <= 16})
+  (i: uint_size{i <= n - 1})
+  (x: New.state)
+  (y: New.state)
+    : Lemma (requires (True)) (ensures (
+      foldi i n (chacha_block_inner_loop2_f y) x ==
+      chacha_block_inner_loop2_f y (n-1) (foldi i (n-1) (chacha_block_inner_loop2_f y) x)
+    ))
+    (decreases (n - i))
+  =
+  if i = n - 1 then () else map2_equals_foldi_lemma1 n (i + 1) (chacha_block_inner_loop2_f y i x) y
+#pop-options
+
+#push-options "--fuel 2"
+let rec map2_equals_foldi_lemma2
+  (n: uint_size{n >= 1 /\ n <= 16})
+  (i: uint_size{i <= n - 1})
+  (x: New.state)
+  (y: New.state)
+    : Lemma (requires (True)) (ensures (
+      Seq.index (foldi i n (chacha_block_inner_loop2_f y) x) (n-1) ==
+      Seq.index (chacha_block_inner_loop2_f y (n-1) x) (n-1)
+    ))
+    (decreases (n - i))
+  =
+  if i = n - 1 then () else map2_equals_foldi_lemma2 n (i + 1) (chacha_block_inner_loop2_f y i x) y
+#pop-options
+
+#push-options "--fuel 2 --z3rlimit 30"
 let rec map2_equals_foldi
   (n: uint_size{n >= 1 /\ n <= 16})
   (x: New.state)
@@ -212,6 +242,7 @@ let rec map2_equals_foldi
   end else begin
     map2_equals_foldi (n-1) x y;
     assert(Seq.sub (Seq.map2 (+.) x y) 0 (n-1) `Seq.equal`
+
       Seq.sub (foldi 0 (n-1) (chacha_block_inner_loop2_f y) x) 0 (n-1));
     let aux (i: nat{i < n}) : Lemma (Seq.index (Seq.sub (Seq.map2 (+.) x y) 0 n) i ==
       Seq.index (Seq.sub (foldi 0 n (chacha_block_inner_loop2_f y) x) 0 n) i)
@@ -219,10 +250,14 @@ let rec map2_equals_foldi
       if i < n-1 then begin
         assert(Seq.index (Seq.sub (Seq.map2 (+.) x y) 0 n) i ==
           Seq.index (Seq.sub (Seq.map2 (+.) x y) 0 (n-1)) i);
-        assume(Seq.index (Seq.sub (foldi 0 (n-1) (chacha_block_inner_loop2_f y) x) 0 (n-1)) i ==
-          Seq.index (Seq.sub (foldi 0 n (chacha_block_inner_loop2_f y) x) 0 n) i);
-        ()
-      end else admit()
+        map2_equals_foldi_lemma1 n 0 x y;
+        assert(Seq.index (foldi 0 (n-1) (chacha_block_inner_loop2_f y) x) i ==
+          Seq.index (foldi 0 n (chacha_block_inner_loop2_f y) x) i)
+      end else begin
+        assert(Seq.index (Seq.sub (foldi 0 n (chacha_block_inner_loop2_f y) x) 0 n) i ==
+          Seq.index (foldi 0 n (chacha_block_inner_loop2_f y) x) (n-1));
+        map2_equals_foldi_lemma2 n 0 x y
+      end
     in
     Classical.forall_intro aux;
     assert(Seq.sub (Seq.map2 (+.) x y) 0 n `Seq.equal`
@@ -245,10 +280,11 @@ let chacha_block_inner_alt (key: New.key) (ctr: uint32) (iv: New.iv) =
   let st = chacha_block_inner_loop2 st st0 in
   st
 
+open FStar.Tactics
+
 let chacha_block_inner_new_comp (key: New.key) (ctr: uint32) (iv: New.iv)
   : Lemma (New.chacha_block_inner key ctr iv == chacha_block_inner_alt key ctr iv)
   =
-  let open FStar.Tactics in
   assert(New.chacha_block_inner key ctr iv == chacha_block_inner_alt key ctr iv) by begin
     norm [delta_only [
       "Hacspec.Chacha20.chacha_block_inner";
@@ -256,12 +292,13 @@ let chacha_block_inner_new_comp (key: New.key) (ctr: uint32) (iv: New.iv)
       "Hacspec.Chacha20.Proof.chacha_block_inner_loop1";
       "Hacspec.Chacha20.Proof.chacha_block_inner_loop1_f";
       "Hacspec.Chacha20.Proof.chacha_block_inner_loop2";
-      "Hacspec.Chacha20.Proof.chacha_block_inner_loop2_f"
+      "Hacspec.Chacha20.Proof.chacha_block_inner_loop2_f";
+      "Hacspec.Chacha20.state"
     ]];
-    tadmit ()
+    smt ()
   end
 
-#push-options "--z3rlimit 100 --fuel 0 --ifuel 0"
+#push-options "--z3rlimit 20"
 let chacha_block_inner_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
     : Lemma (chacha_block_inner_alt key ctr iv == chacha_block_inner_equiv_orig key ctr iv)
   =
@@ -270,10 +307,10 @@ let chacha_block_inner_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
   chacha_block_init_equiv key ctr iv;
   assert(st0 == Orig.chacha20_init key iv (v ctr));
   let st  = chacha_block_inner_loop1 st in
+  chacha_block_inner_loop1_equiv st;
   let st = chacha_block_inner_loop2 st st0 in
-  map2_equals_foldi 16 st st0;
-  let st_orig = Orig.chacha20_add_counter st (v ctr) in
+  chacha_block_inner_loop2_equiv st st0;
+  let st = Orig.chacha20_add_counter st (v ctr) in
   assume(st == chacha_block_inner_alt key ctr iv);
-  assume(st_orig == chacha_block_inner_equiv_orig key ctr iv);
-  admit()
+  assume(st == chacha_block_inner_equiv_orig key ctr iv)
 #pop-options
