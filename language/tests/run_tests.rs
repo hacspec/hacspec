@@ -6,17 +6,7 @@ fn run_test(
     output: Option<&str>,
     dependencies: Vec<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut sysroot = std::process::Command::new("rustc")
-        .arg("--print")
-        .arg("sysroot")
-        .output()
-        .ok()
-        .and_then(|out| String::from_utf8(out.stdout).ok())
-        .expect("Couldn't get sysroot");
-    sysroot.pop(); // get rid of line break
-
-    let mut cmd = Command::cargo_bin("hacspec-driver")?;
-    cmd.arg(format!("--sysroot={}", sysroot));
+    let mut cmd = Command::cargo_bin("cargo-hacspec")?;
     cmd.args(env::args().skip(1));
     cmd.envs(env::vars());
     dependencies.iter().for_each(|d| {

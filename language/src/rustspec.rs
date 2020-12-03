@@ -1,5 +1,3 @@
-extern crate rustc_ast;
-
 use core::cmp::PartialEq;
 use core::hash::Hash;
 use im::HashSet;

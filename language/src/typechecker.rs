@@ -1,5 +1,3 @@
-extern crate rustc_ast;
-
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 

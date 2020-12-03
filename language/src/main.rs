@@ -197,7 +197,6 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
         let output = output
             .arg("metadata")
             .args(&["--no-deps", "--format-version", "1"]);
-        // println!("Commend: {:?}", output);
         let output = output.output().expect("Error reading cargo manifest.");
         let stdout = output.stdout;
         if !output.status.success() {
@@ -208,7 +207,7 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
         let json_string = String::from_utf8(stdout).expect("Failed reading cargo output");
         serde_json::from_str(&json_string).expect("Error reading to manifest")
     };
-    // println!("Manifest: {:?}", manifest);
+
     // Pick the package of the given name.
     let package = manifest
         .packages
@@ -218,6 +217,7 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
             "Can't find the package {} in the Cargo.toml",
             package_name
         ));
+
     // Take the first lib target we find. There should be only one really.
     let target = package
         .targets
@@ -256,11 +256,12 @@ fn main() -> Result<(), ()> {
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
     args.push("--extern=hacspec_lib".to_string());
-    // args.push(format!("--sysroot={}", get_sysroot()));
 
-    println!(" >>> {:?}", args);
-
-    RunCompiler::new(&args, &mut callbacks)
-        .run()
-        .map_err(|_| ())
+    match RunCompiler::new(&args, &mut callbacks).run() {
+        Ok(_) => {
+            println!(" > Successfully verified.");
+            Ok(())
+        },
+        Err(_) => Err(()),
+    }
 }

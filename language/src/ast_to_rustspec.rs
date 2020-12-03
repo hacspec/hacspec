@@ -1,5 +1,3 @@
-extern crate rustc_ast;
-
 use im::HashSet;
 // use rustc_ast;
 use rustc_ast::{
