@@ -298,19 +298,29 @@ let chacha_block_inner_new_comp (key: New.key) (ctr: uint32) (iv: New.iv)
     smt ()
   end
 
-#push-options "--z3rlimit 20"
+#push-options "--fuel 1 --z3rlimit 20"
 let chacha_block_inner_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
     : Lemma (chacha_block_inner_alt key ctr iv == chacha_block_inner_equiv_orig key ctr iv)
   =
+  let st0' = Orig.chacha20_init key iv (v ctr) in
+  let st' = Orig.chacha20_add_counter st0' (v ctr) in
+
   let st = New.chacha_block_init key ctr iv in
   let st0 = st in
   chacha_block_init_equiv key ctr iv;
-  assert(st0 == Orig.chacha20_init key iv (v ctr));
-  let st  = chacha_block_inner_loop1 st in
-  chacha_block_inner_loop1_equiv st;
+  assert(st0 == st0');
+
+  let st' = Orig.rounds st' in
+
+  let st = chacha_block_inner_loop1 st in
+
+
+  let st' = Orig.sum_state st' st0' in
+
   let st = chacha_block_inner_loop2 st st0 in
-  chacha_block_inner_loop2_equiv st st0;
-  let st = Orig.chacha20_add_counter st (v ctr) in
-  assume(st == chacha_block_inner_alt key ctr iv);
-  assume(st == chacha_block_inner_equiv_orig key ctr iv)
+
+  let st' = Orig.chacha20_add_counter st' (v ctr) in
+  assert(st' == chacha_block_inner_equiv_orig key ctr iv);
+  assert(st == chacha_block_inner_alt key ctr iv);
+  admit()
 #pop-options
