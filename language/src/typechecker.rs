@@ -1450,9 +1450,9 @@ fn typecheck_expression(
             if !is_safe_casting(&(e1_typ.1).0, &t1.0) {
                 sess.span_rustspec_err(
                     span.clone(),
-                    format!("casting from {} to {} is not safe (i.e it can lead to overflow)",
-                        &e1_typ.1.0,
-                        &t1.0
+                    format!(
+                        "casting from {} to {} is not safe (i.e it can lead to overflow)",
+                        &e1_typ.1 .0, &t1.0
                     )
                     .as_str(),
                 );

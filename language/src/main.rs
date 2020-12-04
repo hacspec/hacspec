@@ -1,4 +1,6 @@
 #![feature(rustc_private)]
+extern crate im;
+extern crate pretty;
 extern crate rustc_ast;
 extern crate rustc_driver;
 extern crate rustc_errors;
@@ -8,8 +10,6 @@ extern crate rustc_metadata;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
-extern crate im;
-extern crate pretty;
 
 mod ast_to_rustspec;
 mod hir_to_rustspec;
@@ -19,7 +19,6 @@ mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
-use util::APP_USAGE;
 use hacspec_sig::Signature;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
@@ -39,6 +38,7 @@ use std::ffi::OsStr;
 use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use util::APP_USAGE;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
@@ -243,7 +243,9 @@ fn main() -> Result<(), ()> {
         target_directory: String::new(),
     };
 
-    let package_name = args.pop().expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
+    let package_name = args
+        .pop()
+        .expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
 
     read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());
