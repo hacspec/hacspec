@@ -1,4 +1,6 @@
 #![feature(rustc_private)]
+extern crate im;
+extern crate pretty;
 extern crate rustc_ast;
 extern crate rustc_driver;
 extern crate rustc_errors;
@@ -8,10 +10,6 @@ extern crate rustc_metadata;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
-#[macro_use]
-extern crate clap;
-extern crate im;
-extern crate pretty;
 
 mod ast_to_rustspec;
 mod hir_to_rustspec;
@@ -19,8 +17,8 @@ mod rustspec;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
+mod util;
 
-use clap::App;
 use hacspec_sig::Signature;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
@@ -32,20 +30,20 @@ use rustc_interface::{
 use rustc_session::Session;
 use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
 use rustc_span::MultiSpan;
+use serde::Deserialize;
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::OsStr;
 use std::fs::OpenOptions;
-use std::path::Path;
-use walkdir::WalkDir;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use util::APP_USAGE;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
-    typecheck_only: bool,
+    target_directory: String,
 }
-
-const ITEM_LIST_LOCATION: &'static str = "../allowed_item_list.json";
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
     ErrorOutputType::HumanReadable(HumanReadableErrorType::Default(ColorConfig::Auto));
@@ -62,36 +60,10 @@ impl HacspecErrorEmitter for Session {
 
 impl Callbacks for HacspecCallbacks {
     fn config(&mut self, config: &mut Config) {
-        let libraries_string = if cfg!(target_os = "linux") {
-            option_env!("LD_LIBRARY_PATH")
-        } else if cfg!(target_os = "macos") {
-            option_env!("DYLD_FALLBACK_LIBRARY_PATH")
-        } else if cfg!(target_os = "windows") {
-            option_env!("PATH")
-        } else {
-            panic!("Unsuported target OS: {}", cfg!(target_os))
-        };
-        let shared_libraries = libraries_string.unwrap_or("").trim().split(":");
-        for shared_library in shared_libraries {
-            if shared_library != "" {
-                config.opts.search_paths.push(SearchPath::from_cli_opt(
-                    shared_library,
-                    ERROR_OUTPUT_CONFIG,
-                ));
-                for entry in WalkDir::new(shared_library) {
-                    let entry = match entry {
-                        Ok(e) => e,
-                        Err(_) => continue,
-                    };
-                    if entry.metadata().unwrap().is_dir() {
-                        config.opts.search_paths.push(SearchPath::from_cli_opt(
-                            entry.path().to_str().unwrap(),
-                            ERROR_OUTPUT_CONFIG,
-                        ));
-                    }
-                }
-            }
-        }
+        config.opts.search_paths.push(SearchPath::from_cli_opt(
+            &self.target_directory,
+            ERROR_OUTPUT_CONFIG,
+        ));
         config.crate_cfg.insert((
             String::from("feature"),
             Some(String::from("\"hacspec_attributes\"")),
@@ -113,9 +85,13 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
+        let mut item_list: PathBuf = std::env::temp_dir();
+        item_list.push("allowed_list_items.json");
         let file = OpenOptions::new()
             .read(true)
-            .open(ITEM_LIST_LOCATION)
+            .write(true)
+            .create(true)
+            .open(item_list.as_path())
             .unwrap();
         let key_s = String::from("primitive");
         let crate_s = String::from("hacspec");
@@ -151,11 +127,9 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
-        if self.typecheck_only {
-            return Compilation::Stop;
-        }
+
         match &self.output_file {
-            None => (),
+            None => return Compilation::Stop,
             Some(file) => match Path::new(file).extension().and_then(OsStr::to_str).unwrap() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
@@ -181,20 +155,108 @@ impl Callbacks for HacspecCallbacks {
     }
 }
 
-fn main() -> Result<(), ()> {
-    let yaml = load_yaml!("cli.yml");
-    let matches = App::from_yaml(yaml).get_matches();
-    let mut callbacks = HacspecCallbacks {
-        output_file: matches.value_of("output").map(|s| s.into()),
-        typecheck_only: matches
-            .value_of("unstable_flag")
-            .map_or(false, |s| match s {
-                "no-codegen" => true,
-                _ => false,
-            }),
+// === Cargo Metadata Helpers ===
+
+#[derive(Debug, Default, Deserialize)]
+struct Dependency {
+    name: String,
+    kind: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct Target {
+    name: String,
+    kind: Vec<String>,
+    crate_types: Vec<String>,
+    src_path: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct Package {
+    name: String,
+    targets: Vec<Target>,
+    dependencies: Vec<Dependency>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct Manifest {
+    packages: Vec<Package>,
+    target_directory: String,
+}
+
+// ===
+
+/// Read the crate metadata and use the information for the build.
+fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut HacspecCallbacks) {
+    let manifest: Manifest = {
+        let mut output = Command::new("cargo");
+        let output = output
+            .arg("metadata")
+            .args(&["--no-deps", "--format-version", "1"]);
+        let output = output.output().expect("Error reading cargo manifest.");
+        let stdout = output.stdout;
+        if !output.status.success() {
+            let error =
+                String::from_utf8(output.stderr).expect("Failed reading cargo stderr output");
+            panic!("Error running cargo metadata: {:?}", error);
+        }
+        let json_string = String::from_utf8(stdout).expect("Failed reading cargo output");
+        serde_json::from_str(&json_string).expect("Error reading to manifest")
     };
-    let args = env::args().collect::<Vec<String>>();
-    RunCompiler::new(&args, &mut callbacks)
-        .run()
-        .map_err(|_| ())
+
+    // Pick the package of the given name.
+    let package = manifest
+        .packages
+        .iter()
+        .find(|p| p.name == package_name)
+        .expect(&format!(
+            "Can't find the package {} in the Cargo.toml",
+            package_name
+        ));
+
+    // Take the first lib target we find. There should be only one really.
+    let target = package
+        .targets
+        .iter()
+        .find(|p| p.crate_types.contains(&"lib".to_string()))
+        .expect("No target in the Cargo.toml");
+
+    // Add the target source file to the arguments
+    args.push(target.src_path.clone());
+
+    // Add dependencies to link path.
+    // This only works with debug builds.
+    let deps = manifest.target_directory + "/debug/deps";
+    callbacks.target_directory = deps;
+}
+
+fn main() -> Result<(), ()> {
+    let mut args = env::args().collect::<Vec<String>>();
+    let output_file_index = args.iter().position(|a| a == "-o");
+    let output_file = match output_file_index {
+        Some(i) => args.get(i + 1).cloned(),
+        None => None,
+    };
+
+    let mut callbacks = HacspecCallbacks {
+        output_file,
+        target_directory: String::new(),
+    };
+
+    let package_name = args
+        .pop()
+        .expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
+
+    read_crate(package_name, &mut args, &mut callbacks);
+    args.push("--crate-type=lib".to_string());
+    args.push("--edition=2018".to_string());
+    args.push("--extern=hacspec_lib".to_string());
+
+    match RunCompiler::new(&args, &mut callbacks).run() {
+        Ok(_) => {
+            println!(" > Successfully verified.");
+            Ok(())
+        }
+        Err(_) => Err(()),
+    }
 }
