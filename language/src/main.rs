@@ -8,8 +8,6 @@ extern crate rustc_metadata;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
-#[macro_use]
-extern crate clap;
 extern crate im;
 extern crate pretty;
 
@@ -19,8 +17,9 @@ mod rustspec;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
+mod util;
 
-use clap::App;
+use util::APP_USAGE;
 use hacspec_sig::Signature;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
@@ -44,7 +43,6 @@ use std::process::Command;
 struct HacspecCallbacks {
     output_file: Option<String>,
     target_directory: String,
-    typecheck_only: bool,
 }
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
@@ -129,11 +127,9 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
-        if self.typecheck_only {
-            return Compilation::Stop;
-        }
+
         match &self.output_file {
-            None => (),
+            None => return Compilation::Stop,
             Some(file) => match Path::new(file).extension().and_then(OsStr::to_str).unwrap() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
@@ -235,22 +231,19 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
 }
 
 fn main() -> Result<(), ()> {
-    let yaml = load_yaml!("cli.yml");
-    let matches = App::from_yaml(yaml).get_matches();
+    let mut args = env::args().collect::<Vec<String>>();
+    let output_file_index = args.iter().position(|a| a == "-o");
+    let output_file = match output_file_index {
+        Some(i) => args.get(i + 1).cloned(),
+        None => None,
+    };
 
     let mut callbacks = HacspecCallbacks {
-        output_file: matches.value_of("output").map(|s| s.into()),
-        typecheck_only: matches
-            .value_of("unstable_flag")
-            .map_or(false, |s| match s {
-                "no-codegen" => true,
-                _ => false,
-            }),
+        output_file,
         target_directory: String::new(),
     };
 
-    let mut args = env::args().collect::<Vec<String>>();
-    let package_name = args.pop().expect("No package to analyze.");
+    let package_name = args.pop().expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
 
     read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());
@@ -261,7 +254,7 @@ fn main() -> Result<(), ()> {
         Ok(_) => {
             println!(" > Successfully verified.");
             Ok(())
-        },
+        }
         Err(_) => Err(()),
     }
 }

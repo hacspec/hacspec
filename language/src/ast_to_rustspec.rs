@@ -1,5 +1,4 @@
 use im::HashSet;
-// use rustc_ast;
 use rustc_ast::{
     ast::{
         self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,

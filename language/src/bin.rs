@@ -1,3 +1,6 @@
+mod util;
+use util::APP_USAGE;
+
 use std::{collections::HashMap, env, path::PathBuf};
 
 fn driver() -> PathBuf {
@@ -34,9 +37,15 @@ fn main() {
     };
 
     let mut args: Vec<String> = env::args().skip(1).collect();
-    if args[0] == "hacspec" {
+
+    if !args.is_empty() && args[0] == "hacspec" {
         args.remove(0);
     };
+
+    if args.len() < 1 {
+        println!("{}", APP_USAGE);
+        std::process::exit(1);
+    }
 
     let environment: HashMap<String, String> = env::vars().collect();
 
