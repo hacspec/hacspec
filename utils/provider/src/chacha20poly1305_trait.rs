@@ -1,5 +1,4 @@
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Error(pub String);
 
 impl From<evercrypt::aead::Error> for Error {
