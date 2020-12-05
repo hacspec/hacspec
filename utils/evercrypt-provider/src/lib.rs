@@ -1,6 +1,5 @@
-pub mod chacha20poly1305_trait;
-pub mod evercrypt_provider;
-pub mod hacspec_provider;
+mod provider;
+pub use provider::Chacha20Poly1305Evercrypt;
 
 fn clone_into_array<A, T>(slice: &[T]) -> A
 where

@@ -1,12 +1,13 @@
 [workspace]
 members = [
     "lib",
+    "provider",
     "utils/dev",
     "utils/derive",
+    "utils/evercrypt-provider",
     "utils/secret-integers",
     "utils/abstract-integers",
     "utils/attributes",
-    "utils/provider",
     "utils/sig",
     "language",
     "examples/hacspec-curve25519",
@@ -20,6 +21,7 @@ members = [
 ]
 default-members = [
     "lib",
+    "provider",
     "utils/dev",
     "utils/derive",
     "utils/secret-integers",

@@ -1,5 +1,6 @@
-use super::{chacha20poly1305_trait::*, *};
+use super::*;
 use evercrypt::prelude::*;
+use hacspec_provider::traits::*;
 
 pub struct Chacha20Poly1305Evercrypt {}
 
@@ -24,7 +25,13 @@ impl Chacha20Poly1305 for Chacha20Poly1305Evercrypt {
         aad: &[u8],
         m: &[u8],
     ) -> Result<(Vec<u8>, [u8; 16]), Error> {
-        let (ctxt, tag) = Aead::new(AeadMode::Chacha20Poly1305, key)?.encrypt(m, nonce, aad)?;
+        let (ctxt, tag) = match Aead::new(AeadMode::Chacha20Poly1305, key) {
+            Ok(cipher) => match cipher.encrypt(m, nonce, aad) {
+                Ok(r) => r,
+                Err(e) => return Err(Error(format!("Error: {:?}", e))),
+            },
+            Err(e) => return Err(Error(format!("Error: {:?}", e))),
+        };
         Ok((ctxt, tag))
     }
 
@@ -36,7 +43,13 @@ impl Chacha20Poly1305 for Chacha20Poly1305Evercrypt {
         c: &[u8],
         tag: &[u8; 16],
     ) -> Result<Vec<u8>, Error> {
-        let ptxt = Aead::new(AeadMode::Chacha20Poly1305, key)?.decrypt(c, tag, nonce, aad)?;
+        let ptxt = match Aead::new(AeadMode::Chacha20Poly1305, key) {
+            Ok(cipher) => match cipher.decrypt(c, tag, nonce, aad) {
+                Ok(r) => r,
+                Err(e) => return Err(Error(format!("Error: {:?}", e))),
+            },
+            Err(e) => return Err(Error(format!("Error: {:?}", e))),
+        };
         Ok(ptxt)
     }
 }

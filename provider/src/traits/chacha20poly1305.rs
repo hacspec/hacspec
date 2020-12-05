@@ -1,11 +1,4 @@
-#[derive(Debug, PartialEq)]
-pub struct Error(pub String);
-
-impl From<evercrypt::aead::Error> for Error {
-    fn from(e: evercrypt::aead::Error) -> Error {
-        Error(format!("Error: {:?}", e))
-    }
-}
+use super::Error;
 
 pub trait Chacha20Poly1305 {
     fn new() -> Self

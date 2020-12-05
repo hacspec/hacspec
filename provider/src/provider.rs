@@ -3,8 +3,7 @@ use hacspec_chacha20poly1305::{decrypt, encrypt};
 use hacspec_lib::*;
 use hacspec_poly1305::Tag as HacspecTag;
 
-use super::{chacha20poly1305_trait::*, *};
-use evercrypt::prelude::*;
+use super::{traits::*, *};
 
 pub struct Chacha20Poly1305Hacspec {}
 

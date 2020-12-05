@@ -1,11 +1,9 @@
 mod test_util;
 use test_util::*;
 
-use hacspec_provider::chacha20poly1305_trait::{Chacha20Poly1305, Error};
-use hacspec_provider::evercrypt_provider::Chacha20Poly1305Evercrypt;
-use hacspec_provider::hacspec_provider::Chacha20Poly1305Hacspec;
+use evercrypt_provider::Chacha20Poly1305Evercrypt;
+use hacspec_provider::traits::{Chacha20Poly1305, Error};
 use rand::Rng;
-// use evercrypt::aead::{self, Aead, Error, Mode, Nonce, Tag};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[allow(non_snake_case)]
@@ -88,7 +86,7 @@ fn test_wycheproof() {
                 let exp_tag: [u8; 16] = hex_str_to_array(&test.tag);
                 let key: [u8; 32] = hex_str_to_array(&test.key);
 
-                let cipher = Chacha20Poly1305Hacspec::new();
+                let cipher = Chacha20Poly1305Evercrypt::new();
 
                 // let cipher = Aead::new(algorithm, &key).unwrap();
                 let (ctxt, tag) = match cipher.encrypt(&key, &nonce, &aad, &msg) {
@@ -149,27 +147,26 @@ fn self_test() {
         assert_eq!(m[..], m_dec[..]);
     }
     chachapoly_enc_dec(&Chacha20Poly1305Evercrypt::new());
-    chachapoly_enc_dec(&Chacha20Poly1305Hacspec::new());
 }
 
-#[test]
-fn evercrypt_test() {
-    let evercrypt_cipher = Chacha20Poly1305Evercrypt::new();
-    let hacspec_cipher = Chacha20Poly1305Hacspec::new();
+// #[test]
+// fn evercrypt_test() {
+//     let evercrypt_cipher = Chacha20Poly1305Evercrypt::new();
+//     let hacspec_cipher = Chacha20Poly1305Hacspec::new();
 
-    let key = evercrypt_cipher.key_gen();
-    let nonce = evercrypt_cipher.nonce_gen();
-    let aad = rand::thread_rng().gen::<[u8; 10]>();
-    let mut m = [0u8; 345];
-    rand::thread_rng().fill(&mut m[..]);
+//     let key = evercrypt_cipher.key_gen();
+//     let nonce = evercrypt_cipher.nonce_gen();
+//     let aad = rand::thread_rng().gen::<[u8; 10]>();
+//     let mut m = [0u8; 345];
+//     rand::thread_rng().fill(&mut m[..]);
 
-    let (c, tag) = evercrypt_cipher.encrypt(&key, &nonce, &aad, &m).unwrap();
-    let m_dec = match hacspec_cipher.decrypt(&key, &nonce, &aad, &c, &tag) {
-        Err(e) => {
-            println!("Error decrypting {:?}", e);
-            vec![]
-        }
-        Ok(v) => v,
-    };
-    assert_eq!(m[..], m_dec[..]);
-}
+//     let (c, tag) = evercrypt_cipher.encrypt(&key, &nonce, &aad, &m).unwrap();
+//     let m_dec = match hacspec_cipher.decrypt(&key, &nonce, &aad, &c, &tag) {
+//         Err(e) => {
+//             println!("Error decrypting {:?}", e);
+//             vec![]
+//         }
+//         Ok(v) => v,
+//     };
+//     assert_eq!(m[..], m_dec[..]);
+// }
