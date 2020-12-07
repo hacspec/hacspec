@@ -5,7 +5,7 @@ set -e
 cwd=$(cd $(dirname $0); pwd -P)
 pushd $cwd
 
-NIGHTLY="${RUST_NIGHTLY:-nightly}"
+NIGHTLY="${RUST_NIGHTLY:-nightly-2020-12-01}"
 
 cargo +$NIGHTLY build --tests --features="use_attributes"
 
