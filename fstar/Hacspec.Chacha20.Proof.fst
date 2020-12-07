@@ -92,7 +92,8 @@ let ctr_to_seq_equiv (ctr: uint32)
 
 #push-options "--z3rlimit 50"
 let chacha_block_init_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
-    : Lemma (New.chacha_block_init key ctr iv == Orig.chacha20_init key iv (v ctr))
+    : Lemma (New.chacha_block_init key ctr iv ==
+      Orig.chacha20_add_counter (Orig.chacha20_init key iv 0) (v ctr))
   =
   let st = Seq.create 16 (u32 0) in
   let st = Seq.update_sub st 0 4 (Seq.map Lib.IntTypes.secret Orig.chacha20_constants) in
@@ -101,25 +102,34 @@ let chacha_block_init_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
   let st = Seq.update_sub st 4 8 (Lib.ByteSequence.uints_from_bytes_le #U32 #SEC #8 key) in
   assert(Seq.sub st 0 4 `Seq.equal` New.chacha20_constants_init ());
   assert(Seq.sub st 4 8 `Seq.equal` New.chacha20_key_to_u32s key);
-  let st = Seq.(st.[12] <- ctr) in
+  let st = Seq.(st.[12] <- u32 0) in
   assert(Seq.sub st 0 4 `Seq.equal` New.chacha20_constants_init ());
   assert(Seq.sub st 4 8 `Seq.equal` New.chacha20_key_to_u32s key);
-  assert(Seq.sub st 12 1 `Seq.equal` New.chacha20_ctr_to_seq ctr);
+  assert(Seq.sub st 12 1 `Seq.equal` New.chacha20_ctr_to_seq (u32 0));
   let st = Seq.update_sub st 13 3 (Lib.ByteSequence.uints_from_bytes_le #U32 #SEC #3 iv) in
+  assert(Seq.sub st 0 4 `Seq.equal` New.chacha20_constants_init ());
+  assert(Seq.sub st 4 8 `Seq.equal` New.chacha20_key_to_u32s key);
+  assert(Seq.sub st 12 1 `Seq.equal` New.chacha20_ctr_to_seq (u32 0));
+  assert(Seq.sub st 13 3 `Seq.equal` New.chacha20_iv_to_u32s iv);
+  assert(st `Seq.equal` Orig.chacha20_init key iv 0);
+  assert(New.chacha_block_init key (u32 0) iv `Seq.equal` Orig.chacha20_init key iv 0);
+  assert(Seq.(st.[12]) == u32 0);
+  let st = Seq.(st.[12] <- st.[12] +. ctr) in
+  assert(v (u32 0 +. ctr) == v ctr);
+  assert(st == Orig.chacha20_add_counter (Orig.chacha20_init key iv 0) (v ctr));
   assert(Seq.sub st 0 4 `Seq.equal` New.chacha20_constants_init ());
   assert(Seq.sub st 4 8 `Seq.equal` New.chacha20_key_to_u32s key);
   assert(Seq.sub st 12 1 `Seq.equal` New.chacha20_ctr_to_seq ctr);
   assert(Seq.sub st 13 3 `Seq.equal` New.chacha20_iv_to_u32s iv);
-  assert(st `Seq.equal` Orig.chacha20_init key iv (v ctr));
-  assert(New.chacha_block_init key ctr iv `Seq.equal` Orig.chacha20_init key iv (v ctr))
+  assert(st `Seq.equal` (New.chacha_block_init key ctr iv))
 #pop-options
 
 let chacha_block_inner_equiv_orig (key: New.key) (ctr: uint32) (iv: New.iv) =
-  let st0 = Orig.chacha20_init key iv (v ctr) in
+  let st0 = Orig.chacha20_init key iv 0 in
   let st = Orig.chacha20_add_counter st0 (v ctr) in
   let st = Orig.rounds st in
-  let st = Orig.sum_state st st0 in
-  Orig.chacha20_add_counter st (v ctr)
+  let st = Orig.sum_state st (Orig.chacha20_add_counter st0 (v ctr)) in
+  st
 
 let rec repeat_left (#a: Type) (n: nat) (f: a -> a) (init: a) =
   if n = 0 then init else repeat_left (n-1) f (f init)
@@ -298,29 +308,82 @@ let chacha_block_inner_new_comp (key: New.key) (ctr: uint32) (iv: New.iv)
     smt ()
   end
 
-#push-options "--fuel 1 --z3rlimit 20"
+let chacha_block_inner_equiv_orig2 (key: New.key) (ctr: uint32) (iv: New.iv) =
+  let st0 = Orig.chacha20_init key iv 0 in
+  let st = Orig.chacha20_core (v ctr) st0 in
+  st
+
+#push-options "--z3rlimit 10"
+let sum_assoc (x y z: uint32) : Lemma (x +. y +. z == x +. (y +. z)) =
+  assert(v (x +. y +. z) = (v x + v y + v z) @%. U32);
+  assert(v (y +. z) = (v y + v z) @%. U32);
+  assert(v (x +. (y +. z)) = (v x + ((v y + v z) @%. U32)) @%. U32);
+  // Missing a lemma for modulo ?
+  assume(v (x +. (y +. z)) = (v x + v y + v z) @%. U32)
+#pop-options
+
+#push-options "--z3rlimit 15"
+let sum_state_and_add_counter_commute (x: New.state) (y: New.state) (c: uint32)
+  : Lemma (Orig.sum_state x (Orig.chacha20_add_counter y (v c)) ==
+          Orig.chacha20_add_counter (Orig.sum_state x y) (v c))
+  =
+  let aux (i:nat{i < 16}) : Lemma (
+    Seq.index (Orig.sum_state x (Orig.chacha20_add_counter y (v c))) i ==
+          Seq.index (Orig.chacha20_add_counter (Orig.sum_state x y) (v c)) i
+  ) =
+    assert(Seq.index (Orig.sum_state x (Orig.chacha20_add_counter y (v c))) i ==
+      Seq.index x i +. Seq.index (Orig.chacha20_add_counter y (v c)) i);
+    if i = 12 then begin
+      assert(Seq.index (Orig.chacha20_add_counter y (v c)) i == Seq.index y i +. c);
+      assert(Seq.index (Orig.chacha20_add_counter (Orig.sum_state x y) (v c)) i ==
+        Seq.index (Orig.sum_state x y) i +. c);
+      assert(Seq.index (Orig.sum_state x y) i +. c ==
+        Seq.index x i +. Seq.index y i +. c);
+      assert(Seq.index x i +. Seq.index (Orig.chacha20_add_counter y (v c)) i ==
+        Seq.index x i +. (Seq.index y i +. c));
+      sum_assoc (Seq.index x i) (Seq.index y i) c;
+      assert(Seq.index x i +. Seq.index y i +. c == Seq.index x i +. (Seq.index y i +. c))
+    end else begin
+      assert(Seq.index (Orig.chacha20_add_counter y (v c)) i == Seq.index y i);
+      assert(Seq.index (Orig.chacha20_add_counter (Orig.sum_state x y) (v c)) i ==
+        Seq.index (Orig.sum_state x y) i)
+    end
+  in
+  Classical.forall_intro aux;
+  assert(Orig.sum_state x (Orig.chacha20_add_counter y (v c)) `Seq.equal`
+          Orig.chacha20_add_counter (Orig.sum_state x y) (v c))
+#pop-options
+
+let chacha_block_inner_equiv_orig_1_2_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
+    : Lemma (chacha_block_inner_equiv_orig key ctr iv == chacha_block_inner_equiv_orig2 key ctr iv)
+  =
+  let st0 = Orig.chacha20_init key iv 0 in
+  let st_1 = Orig.chacha20_add_counter st0 (v ctr) in
+  let st_2 = Orig.chacha20_add_counter st0 (v ctr) in
+  let st_1 = Orig.rounds st_1 in
+  let st_2 = Orig.rounds st_2 in
+  assert(st_1 == st_2);
+  sum_state_and_add_counter_commute st_1 st0 ctr;
+  let st_1 = Orig.sum_state st_1 (Orig.chacha20_add_counter st0 (v ctr)) in
+  let st_2 = Orig.sum_state st_2 st0 in
+  let st_2 = Orig.chacha20_add_counter st_2 (v ctr) in
+  assert(st_1 == chacha_block_inner_equiv_orig key ctr iv);
+  assert(st_2 == chacha_block_inner_equiv_orig2 key ctr iv)
+
 let chacha_block_inner_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
     : Lemma (chacha_block_inner_alt key ctr iv == chacha_block_inner_equiv_orig key ctr iv)
   =
-  let st0' = Orig.chacha20_init key iv (v ctr) in
+  let st0' = Orig.chacha20_init key iv 0 in
   let st' = Orig.chacha20_add_counter st0' (v ctr) in
-
   let st = New.chacha_block_init key ctr iv in
   let st0 = st in
   chacha_block_init_equiv key ctr iv;
-  assert(st0 == st0');
-
+  assert(st0 == st');
+  chacha_block_inner_loop1_equiv st;
   let st' = Orig.rounds st' in
-
   let st = chacha_block_inner_loop1 st in
-
-
-  let st' = Orig.sum_state st' st0' in
-
+  chacha_block_inner_loop2_equiv st st0;
+  let st' = Orig.sum_state st' (Orig.chacha20_add_counter st0' (v ctr)) in
   let st = chacha_block_inner_loop2 st st0 in
-
-  let st' = Orig.chacha20_add_counter st' (v ctr) in
   assert(st' == chacha_block_inner_equiv_orig key ctr iv);
-  assert(st == chacha_block_inner_alt key ctr iv);
-  admit()
-#pop-options
+  assert(st == chacha_block_inner_alt key ctr iv)
