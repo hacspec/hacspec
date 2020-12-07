@@ -387,3 +387,59 @@ let chacha_block_inner_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
   let st = chacha_block_inner_loop2 st st0 in
   assert(st' == chacha_block_inner_equiv_orig key ctr iv);
   assert(st == chacha_block_inner_alt key ctr iv)
+
+let state_to_bytes_loop
+  (x_0: New.state)
+  (i_2:nat{i_2 <16})
+  (r_1: New.state_bytes)
+    : New.state_bytes
+  =
+  let bytes_3 = uint32_to_be_bytes (array_index (x_0) (i_2)) in
+  let r_1 =
+    array_upd r_1 ((i_2) * (usize 4)) (array_index (bytes_3) (usize 3))
+  in
+  let r_1 =
+    array_upd r_1 (((i_2) * (usize 4)) + (usize 1)) (
+      array_index (bytes_3) (usize 2))
+  in
+  let r_1 =
+    array_upd r_1 (((i_2) * (usize 4)) + (usize 2)) (
+      array_index (bytes_3) (usize 1))
+  in
+  let r_1 =
+    array_upd r_1 (((i_2) * (usize 4)) + (usize 3)) (
+      array_index (bytes_3) (usize 0))
+  in
+  (r_1)
+
+let state_to_bytes_equiv_aux (st: New.state) : Lemma (New.state_to_bytes st == (
+  let r = array_new_ (u8 0x8) 64 in
+  foldi 0 16 (state_to_bytes_loop st) r)
+)
+  =
+  assert(New.state_to_bytes st == (
+  let r = array_new_ (secret (pub_u8 0x8)) 64 in
+  let open FStar.Tactics in
+  foldi (usize 0) (array_len st) (state_to_bytes_loop st) r)) by begin
+    norm [delta_only [
+      "Hacspec.Chacha20.state_to_bytes";
+      "Hacspec.Chacha20.Proof.state_to_bytes_loop"
+    ]];
+    compute ()
+  end
+
+let state_to_bytes_loop_equiv (x: New.state) (i:nat{i < 16}) (r: New.state_bytes)
+    : Lemma (Seq.sub (state_to_bytes_loop x i r) (4 * i) 4 ==
+      Lib.ByteSequence.uint_to_bytes_le (Seq.index x i)
+    )
+  =
+  Lib.ByteSequence.index_uint_to_bytes_le (Seq.index x i);
+  assume(Seq.sub (state_to_bytes_loop x i r) (4 * i) 4 `Seq.equal`
+    Lib.ByteSequence.uint_to_bytes_le (Seq.index x i))
+
+let state_to_bytes_equiv (st: New.state)
+    : Lemma (
+      New.state_to_bytes st == Lib.ByteSequence.uints_to_bytes_le st)
+  =
+  Classical.forall_intro (Lib.ByteSequence.index_uints_to_bytes_le st);
+  assume(New.state_to_bytes st `Seq.equal` Lib.ByteSequence.uints_to_bytes_le st)
