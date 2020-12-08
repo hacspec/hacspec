@@ -2,14 +2,13 @@ use im::HashMap;
 use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_metadata::creader::CStore;
-use rustc_middle::middle::cstore::CrateStore;
 use rustc_middle::mir::interpret::{ConstValue, Scalar};
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
 use rustc_middle::ty::{self, ConstKind, PolyFnSig, RegionKind, TyCtxt, TyKind};
 use rustc_session::Session;
 use rustc_span::{
-    def_id::{CrateNum, DefId, LOCAL_CRATE},
+    def_id::{CrateNum, DefId, DefIndex, LOCAL_CRATE},
     DUMMY_SP,
 };
 use std::sync::atomic::Ordering;
@@ -385,11 +384,12 @@ pub fn retrieve_external_functions(
             > 0
         {
             if *krate_num != LOCAL_CRATE {
-                let def_ids = <CStore as CrateStore>::all_def_path_hashes_and_def_ids(
-                    crate_store,
-                    *krate_num,
-                );
-                for (_, def_id) in def_ids {
+                let num_def_ids = crate_store.num_def_ids(*krate_num);
+                let def_ids = (0..num_def_ids).into_iter().map(|id| DefId {
+                    krate: *krate_num,
+                    index: DefIndex::from_usize(id),
+                });
+                for def_id in def_ids {
                     let def_path = tcx.def_path(def_id);
                     match &def_path.data.last() {
                         Some(x) => {
