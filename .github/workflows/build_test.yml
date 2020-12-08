@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Prepare
-      run: rustup toolchain install nightly-2020-12-01 && rustup component add --toolchain nightly-2020-12-01 rustc-dev && rustup component add --toolchain nightly-2020-12-01 llvm-tools-preview
+      run: rustup toolchain install nightly && rustup default nightly && rustup component add --toolchain nightly rustc-dev && rustup component add --toolchain nightly llvm-tools-preview
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -21,6 +21,6 @@ jobs:
     - name: Get hacspec function stats
       run: bash lib/get_func_stats.sh
     - name: Build and test F* compiler
-      run: cargo clean && cd language && cargo +nightly-2020-12-01 test --verbose
+      run: cargo clean && cd language && cargo +nightly test --verbose
       env:
         RUST_NIGHTLY: nightly
