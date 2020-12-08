@@ -313,13 +313,13 @@ let chacha_block_inner_equiv_orig2 (key: New.key) (ctr: uint32) (iv: New.iv) =
   let st = Orig.chacha20_core (v ctr) st0 in
   st
 
-#push-options "--z3rlimit 10"
+#push-options "--z3rlimit 50"
 let sum_assoc (x y z: uint32) : Lemma (x +. y +. z == x +. (y +. z)) =
-  assert(v (x +. y +. z) = (v x + v y + v z) @%. U32);
-  assert(v (y +. z) = (v y + v z) @%. U32);
-  assert(v (x +. (y +. z)) = (v x + ((v y + v z) @%. U32)) @%. U32);
-  // Missing a lemma for modulo ?
-  assume(v (x +. (y +. z)) = (v x + v y + v z) @%. U32)
+  assert(v (x +. y +. z) = (v x + v y + v z) % modulus U32);
+  assert(v (y +. z) = (v y + v z) % modulus U32);
+  assert(v (x +. (y +. z)) = (v x + ((v y + v z) % modulus U32)) % modulus U32);
+  FStar.Math.Lemmas.lemma_mod_mod (v (x +. (y +. z))) (v x + ((v y + v z) )) (modulus U32);
+  assert(v (x +. (y +. z)) = (v x + v y + v z) % modulus U32)
 #pop-options
 
 #push-options "--z3rlimit 15"
@@ -443,3 +443,135 @@ let state_to_bytes_equiv (st: New.state)
   =
   Classical.forall_intro (Lib.ByteSequence.index_uints_to_bytes_le st);
   assume(New.state_to_bytes st `Seq.equal` Lib.ByteSequence.uints_to_bytes_le st)
+
+unfold let chacha20_main_loop_inner
+  (key_47: New.key) (iv_48: New.iv)
+  (i_52:uint_size)
+  (block_len_53: uint_size{block_len_53 <= 64})
+  (msg_block_54: lseq uint8 block_len_53)
+  (ctr_50:uint32)
+  =
+  let key_block_55 = New.chacha_block (key_47) (ctr_50) (iv_48) in
+  let msg_block_padded_56 = array_new_ (secret (pub_u8 0x8)) (64) in
+  let msg_block_padded_57 =
+    array_update_start (msg_block_padded_56) (msg_block_54)
+  in
+  array_slice_range (
+   (msg_block_padded_57) `array_xor (^.)` (key_block_55)) (
+     (usize 0, block_len_53))
+
+let chacha20_main_loop_alt (key_47: New.key) (iv_48: New.iv) (m_49: byte_seq)
+  (i_52:uint_size{i_52 < seq_num_chunks (m_49) (usize 64)})
+  (tup: (uint32 & lseq uint8 (seq_len m_49)))
+    : (uint32 & lseq uint8 (seq_len m_49))
+  =
+  let (ctr_50, blocks_out_51) = tup in
+  let (block_len_53, msg_block_54) =
+    seq_get_chunk (m_49) (usize 64) (i_52)
+  in
+  let blocks_out_51 =
+    seq_set_chunk (blocks_out_51) (usize 64) (i_52) (
+      chacha20_main_loop_inner key_47 iv_48 i_52 block_len_53 msg_block_54 ctr_50)
+  in
+  let ctr_50 = (ctr_50) +. (secret (pub_u32 0x1)) in
+  (ctr_50, blocks_out_51)
+
+let chacha20_main_loop (key_47: New.key) (iv_48: New.iv) (m_49: byte_seq)
+  (i_52:uint_size{i_52 < seq_num_chunks (m_49) (usize 64)})
+  (tup: (uint32 & lseq uint8 (seq_len m_49)))
+    : (uint32 & lseq uint8 (seq_len m_49))
+  =
+  let (ctr_50, blocks_out_51) = tup in
+  let (block_len_53, msg_block_54) =
+    seq_get_chunk (m_49) (usize 64) (i_52)
+  in
+   let key_block_55 = New.chacha_block (key_47) (ctr_50) (iv_48) in
+  let msg_block_padded_56 = array_new_ (secret (pub_u8 0x8)) (64) in
+  let msg_block_padded_57 =
+    array_update_start (msg_block_padded_56) (msg_block_54)
+  in
+  let blocks_out_51 =
+    seq_set_chunk (blocks_out_51) (usize 64) (i_52) ( array_slice_range (
+   (msg_block_padded_57) `array_xor (^.)` (key_block_55)) (
+     (usize 0, block_len_53)))
+  in
+  let ctr_50 = (ctr_50) +. (secret (pub_u32 0x1)) in
+  (ctr_50, blocks_out_51)
+
+let chacha20_main_loop_equiv (key_47: New.key) (iv_48: New.iv) (m_49: byte_seq)
+  (i_52:uint_size{i_52 < seq_num_chunks (m_49) (usize 64)})
+  (tup: (uint32 & lseq uint8 (seq_len m_49)))
+    : Lemma (chacha20_main_loop key_47 iv_48 m_49 i_52 tup ==
+      chacha20_main_loop_alt key_47 iv_48 m_49 i_52 tup)
+  =
+  ()
+
+let chacha20_alt_alt (key: New.key) (iv: New.iv) (m: byte_seq) =
+  let ctr = secret (pub_u32 0x1) in
+  let blocks_out = seq_new_ (secret (pub_u8 0x8)) (seq_len m) in
+  let ctr, blocks_out = foldi (usize 0) (seq_num_chunks m (usize 64))
+    (chacha20_main_loop_alt key iv m) (ctr, blocks_out)
+  in
+  blocks_out
+
+let chacha20_alt (key: New.key) (iv: New.iv) (m: byte_seq) =
+  let ctr = secret (pub_u32 0x1) in
+  let blocks_out = seq_new_ (secret (pub_u8 0x8)) (seq_len m) in
+  let ctr, blocks_out = foldi (usize 0) (seq_num_chunks m (usize 64))
+    (chacha20_main_loop key iv m) (ctr, blocks_out)
+  in
+  blocks_out
+
+let chacha20_alt_alt_equiv (key: New.key) (iv: New.iv) (m: byte_seq)
+    : Lemma (chacha20_alt key iv m == chacha20_alt_alt key iv m)
+  =
+  // Need another foldi lemma using chacha20_main_loop_equiv...
+  admit()
+
+let chacha20_equiv_one_iter
+  (key: New.key)
+  (iv: New.iv)
+  (i:uint_size{i + 1 < maxint U32})
+  (x: lseq uint8 64)
+    : Lemma(Orig.chacha20_encrypt_block (Orig.chacha20_init key iv 0) i x ==
+      chacha20_main_loop_inner key iv i 64 x (u32 (i + 1)))
+  =
+  admit()
+
+
+let chacha20_equiv_aux1 (key: New.key) (iv: New.iv) (m: byte_seq)
+    : Lemma (chacha20_alt_alt key iv m == Orig.chacha20_decrypt_bytes key iv 0 m)
+  =
+  let st0 = Orig.chacha20_init key iv 0 in
+  let st =  Lib.Sequence.map_blocks 64 m
+    (Orig.chacha20_encrypt_block st0)
+    (Orig.chacha20_encrypt_last st0) in
+
+  let ctr = secret (pub_u32 0x1) in
+  let blocks_out = seq_new_ (secret (pub_u8 0x8)) (seq_len m) in
+  let ctr, blocks_out = foldi (usize 0) (seq_num_chunks m (usize 64))
+    (chacha20_main_loop_alt key iv m) (ctr, blocks_out)
+  in
+  // Use chacha20_equiv_one_iter and chacha20_equiv_one_iter_last
+  assume(blocks_out == st)
+
+let chacha20_alt_equiv (key: New.key) (iv: New.iv) (m: byte_seq)
+  : Lemma (chacha20_alt key iv m == New.chacha key iv m)
+  =
+  let open FStar.Tactics in
+  assert(chacha20_alt key iv m == New.chacha key iv m) by begin
+    norm [delta_only [
+      "Hacspec.Chacha20.Proof.chacha20_alt";
+      "Hacspec.Chacha20.Proof.chacha20_main_loop";
+      "Hacspec.Chacha20.chacha"
+    ]];
+    smt ()
+  end
+
+(* This is the main theorem *)
+let chacha20_equiv (key: New.key) (iv: New.iv) (m: byte_seq)
+    : Lemma (New.chacha key iv m == Orig.chacha20_encrypt_bytes key iv 0 m)
+  =
+  chacha20_equiv_aux1 key iv m;
+  chacha20_alt_alt_equiv key iv m;
+  chacha20_alt_equiv key iv m
