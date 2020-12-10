@@ -11,13 +11,17 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Prepare
       run: rustup toolchain install nightly && rustup default nightly && rustup component add --toolchain nightly rustc-dev && rustup component add --toolchain nightly llvm-tools-preview
     - name: Build
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Test Provider
+      run: cargo test --verbose -p rc-tests
     - name: Get hacspec function stats
       run: bash lib/get_func_stats.sh
     - name: Build and test F* compiler
