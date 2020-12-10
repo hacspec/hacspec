@@ -2,6 +2,7 @@
 extern crate criterion;
 use criterion::{BatchSize, Criterion};
 
+use chacha20poly1305::ChaCha20Poly1305 as RustCrypto_ChaCha20Poly1305;
 use evercrypt_provider::Chacha20Poly1305 as Evercrypt_Chacha20Poly1305;
 use hacspec_provider::{
     aead::consts::{U12, U16, U32},
@@ -87,6 +88,7 @@ where
 fn criterion_benchmark(c: &mut Criterion) {
     criterion_chacha_poly::<Hacspec_Chacha20Poly1305>(c, "Hacspec");
     criterion_chacha_poly::<Evercrypt_Chacha20Poly1305>(c, "Evercrypt");
+    criterion_chacha_poly::<RustCrypto_ChaCha20Poly1305>(c, "RustCrypto");
 }
 
 criterion_group!(benches, criterion_benchmark);

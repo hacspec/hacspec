@@ -1,6 +1,7 @@
 mod test_util;
 use test_util::*;
 
+use chacha20poly1305::ChaCha20Poly1305 as RustCrypto_ChaCha20Poly1305;
 use evercrypt_provider::Chacha20Poly1305 as Evercrypt_Chacha20Poly1305;
 use hacspec_provider::{
     aead::consts::U12, Aead, Chacha20Poly1305 as Hacspec_Chacha20Poly1305, Key, NewAead, Nonce,
@@ -163,6 +164,17 @@ fn test_wycheproof() {
                     invalid_iv,
                     valid,
                 );
+                test_case(
+                    RustCrypto_ChaCha20Poly1305::new(Key::from_slice(&key)),
+                    &nonce,
+                    &msg,
+                    &aad,
+                    exp_tag,
+                    &exp_cipher,
+                    tests_run,
+                    invalid_iv,
+                    valid,
+                );
             }
         }
     }
@@ -171,5 +183,5 @@ fn test_wycheproof() {
         "Ran {} out of {} tests and skipped {}.",
         tests_run, num_tests, skipped_tests
     );
-    assert_eq!((num_tests - skipped_tests) * 2, tests_run);
+    assert_eq!((num_tests - skipped_tests) * 3, tests_run);
 }
