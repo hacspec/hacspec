@@ -1,7 +1,9 @@
 var N = null;var sourcesIndex = {};
 sourcesIndex["abstract_integers"] = {"name":"","files":["abstract_int.rs","lib.rs","nat_mod.rs"]};
+sourcesIndex["aead"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["ansi_term"] = {"name":"","files":["ansi.rs","debug.rs","difference.rs","display.rs","lib.rs","style.rs","util.rs","windows.rs","write.rs"]};
 sourcesIndex["cfg_if"] = {"name":"","files":["lib.rs"]};
+sourcesIndex["generic_array"] = {"name":"","files":["arr.rs","functional.rs","hex.rs","impls.rs","iter.rs","lib.rs","sequence.rs"]};
 sourcesIndex["getrandom"] = {"name":"","files":["error.rs","error_impls.rs","lib.rs","linux_android.rs","use_file.rs","util.rs","util_libc.rs"]};
 sourcesIndex["hacspec_attributes"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["hacspec_chacha20"] = {"name":"","files":["chacha20.rs"]};
@@ -12,6 +14,7 @@ sourcesIndex["hacspec_dev"] = {"name":"","files":["lib.rs","prelude.rs","rand.rs
 sourcesIndex["hacspec_lib"] = {"name":"","dirs":[{"name":"math_util","files":["ct_poly.rs","ct_util.rs","mod.rs","poly.rs"]}],"files":["array.rs","bigint_integers.rs","lib.rs","machine_integers.rs","math_integers.rs","prelude.rs","seq.rs","traits.rs","transmute.rs","util.rs","vec_integers.rs","vec_integers_public.rs","vec_integers_secret.rs","vec_util.rs"]};
 sourcesIndex["hacspec_ntru_prime"] = {"name":"","files":["ntru-prime.rs"]};
 sourcesIndex["hacspec_poly1305"] = {"name":"","files":["poly1305.rs"]};
+sourcesIndex["hacspec_provider"] = {"name":"","files":["lib.rs","provider.rs"]};
 sourcesIndex["hacspec_sha256"] = {"name":"","files":["sha256.rs"]};
 sourcesIndex["hacspec_sha3"] = {"name":"","files":["sha3.rs"]};
 sourcesIndex["hacspec_sig"] = {"name":"","files":["lib.rs"]};
@@ -36,6 +39,7 @@ sourcesIndex["serde"] = {"name":"","dirs":[{"name":"de","files":["from_primitive
 sourcesIndex["serde_derive"] = {"name":"","dirs":[{"name":"internals","files":["ast.rs","attr.rs","case.rs","check.rs","ctxt.rs","mod.rs","symbol.rs"]}],"files":["bound.rs","de.rs","dummy.rs","fragment.rs","lib.rs","pretend.rs","ser.rs","try.rs"]};
 sourcesIndex["serde_json"] = {"name":"","dirs":[{"name":"features_check","files":["mod.rs"]},{"name":"io","files":["mod.rs"]},{"name":"value","files":["de.rs","from.rs","index.rs","mod.rs","partial_eq.rs","ser.rs"]}],"files":["de.rs","error.rs","iter.rs","lib.rs","macros.rs","map.rs","number.rs","read.rs","ser.rs"]};
 sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","gen_helper.rs","visit.rs"]}],"files":["attr.rs","bigint.rs","buffer.rs","custom_keyword.rs","custom_punctuation.rs","data.rs","derive.rs","discouraged.rs","error.rs","export.rs","expr.rs","ext.rs","file.rs","generics.rs","group.rs","ident.rs","item.rs","lib.rs","lifetime.rs","lit.rs","lookahead.rs","mac.rs","macros.rs","op.rs","parse.rs","parse_macro_input.rs","parse_quote.rs","pat.rs","path.rs","print.rs","punctuated.rs","reserved.rs","sealed.rs","span.rs","spanned.rs","stmt.rs","thread.rs","token.rs","ty.rs","verbatim.rs","whitespace.rs"]};
+sourcesIndex["typenum"] = {"name":"","files":["array.rs","bit.rs","int.rs","lib.rs","marker_traits.rs","operator_aliases.rs","private.rs","type_operators.rs","uint.rs"]};
 sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
 sourcesIndex["unsafe_hacspec_examples"] = {"name":"","dirs":[{"name":"aes_gcm","files":["aes.rs","aesgcm.rs","gf128.rs","mod.rs"]},{"name":"blake2","files":["blake2b.rs","mod.rs"]},{"name":"curve25519","files":["curve25519.rs","mod.rs"]},{"name":"ec","files":["arithmetic.rs","mod.rs","p256.rs","p384.rs"]},{"name":"hkdf","files":["hkdf.rs","mod.rs"]},{"name":"hmac","files":["hmac.rs","mod.rs"]},{"name":"ntru_prime","files":["mod.rs","ntru_prime.rs"]},{"name":"sha2","files":["mod.rs","sha2.rs"]}],"files":["lib.rs"]};
 createSourceSidebar();
