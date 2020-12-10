@@ -6,6 +6,7 @@ use hacspec_chacha20::*;
 use hacspec_chacha20poly1305::*;
 use hacspec_lib::prelude::*;
 use hacspec_poly1305::*;
+use hacspec_sha3::*;
 use unsafe_hacspec_examples::aes_gcm::{
     aes::{aes128_decrypt, aes128_encrypt, aes256_decrypt, aes256_encrypt, Key128, Key256, Nonce},
     gf128::{gmac, Key as GcmKey},
@@ -18,7 +19,6 @@ use unsafe_hacspec_examples::ec::{
     p384::{point_mul as p384_point_mul, FieldElement as P384FieldElement, Scalar as P384Scalar},
     Affine,
 };
-use unsafe_hacspec_examples::fips202::*;
 use unsafe_hacspec_examples::sha2::hash as sha256;
 
 fn randombytes(n: usize) -> Vec<u8> {

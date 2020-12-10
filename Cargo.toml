@@ -8,6 +8,7 @@ members = [
     "utils/secret-integers",
     "utils/abstract-integers",
     "utils/attributes",
+    "utils/rc-bench",
     "utils/rc-tests",
     "utils/sig",
     "language",
