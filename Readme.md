@@ -55,7 +55,7 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 [crate-image]: https://img.shields.io/crates/v/hacspec.svg
 [crate-link]: https://crates.io/crates/hacspec
 [docs-master-image]: https://img.shields.io/badge/docs-master-blue.svg
-[docs-master-link]: https://hacspec.github.io/hacspec/hacspec/index.html
+[docs-master-link]: https://hacspec.github.io/hacspec/hacspec_lib/index.html
 [docs-image]: https://docs.rs/hacspec/badge.svg
 [docs-link]: https://docs.rs/hacspec/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
