@@ -1,25 +1,12 @@
 mod provider;
-use aead::Payload;
-pub use provider::Chacha20Poly1305Evercrypt;
-
-pub mod rc_provider;
-
-fn clone_into_array<A, T>(slice: &[T]) -> A
-where
-    A: Default + AsMut<[T]>,
-    T: Clone,
-{
-    let mut a = Default::default();
-    A::as_mut(&mut a).clone_from_slice(slice);
-    a
-}
+pub use aead::{Error, Payload};
+pub use provider::{Aead, AeadInPlace, Chacha20Poly1305, Key, NewAead, Nonce, Tag};
 
 #[test]
 fn test_rc_provider() {
-    use rc_provider::*;
-    let key = Chacha20Poly1305RC::key_gen();
-    let nonce = Chacha20Poly1305RC::nonce_gen();
-    let cipher = Chacha20Poly1305RC::new(&key);
+    let key = Chacha20Poly1305::key_gen();
+    let nonce = Chacha20Poly1305::nonce_gen();
+    let cipher = Chacha20Poly1305::new(&key);
     const MESSAGE: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
     let mut message = MESSAGE;
     let tag = cipher

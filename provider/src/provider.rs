@@ -1,64 +1,80 @@
-use hacspec_chacha20::{Key as HacspecKey, IV as HacspecNonce};
-use hacspec_chacha20poly1305::{decrypt, encrypt};
-use hacspec_lib::*;
+pub use aead::{self, Aead, AeadInPlace, Error, NewAead, Payload};
+use aead::{
+    consts::{U0, U12, U16, U32},
+    generic_array::GenericArray,
+};
+use hacspec_chacha20::{Key as HacspecKey, IV};
+use hacspec_chacha20poly1305::*;
+use hacspec_lib::prelude::*;
 use hacspec_poly1305::Tag as HacspecTag;
 
-use super::{traits::*, *};
+pub struct Chacha20Poly1305 {
+    key: Key,
+}
 
-pub struct Chacha20Poly1305Hacspec {}
+pub type Key = GenericArray<u8, U32>;
+pub type Nonce = GenericArray<u8, U12>;
+pub type Tag = GenericArray<u8, U16>;
 
-impl Chacha20Poly1305 for Chacha20Poly1305Hacspec {
-    fn new() -> Self {
-        Self {}
+impl NewAead for Chacha20Poly1305 {
+    type KeySize = U32;
+
+    fn new(key: &Key) -> Self {
+        Self { key: *key }
     }
+}
 
-    // Nonce and key generation helper.
-    fn key_gen(&self) -> [u8; 32] {
-        get_random_array()
-    }
-    fn nonce_gen(&self) -> [u8; 12] {
-        get_random_array()
-    }
+impl AeadInPlace for Chacha20Poly1305 {
+    type NonceSize = U12;
+    type TagSize = U16;
+    type CiphertextOverhead = U0;
 
-    // Single-shot encryption/decryption.
-    fn encrypt(
+    fn encrypt_in_place_detached(
         &self,
-        key: &[u8; 32],
-        nonce: &[u8; 12],
-        aad: &[u8],
-        m: &[u8],
-    ) -> Result<(Vec<u8>, [u8; 16]), Error> {
+        nonce: &Nonce,
+        associated_data: &[u8],
+        buffer: &mut [u8],
+    ) -> Result<Tag, Error> {
+        let nonce = IV::from_public_slice(&(nonce.as_slice()));
+        let key = HacspecKey::from_public_slice(&self.key.as_slice());
         let (ctxt, tag) = encrypt(
-            HacspecKey::from_public_slice(key),
-            HacspecNonce::from_public_slice(nonce),
-            &ByteSeq::from_public_slice(aad),
-            &ByteSeq::from_public_slice(m),
+            key,
+            nonce,
+            &ByteSeq::from_public_slice(&associated_data),
+            &ByteSeq::from_public_slice(buffer),
         );
-        let ctxt = ctxt.iter().map(|b| b.declassify()).collect();
-        let tag = clone_into_array(&tag.iter().map(|&b| b).collect::<Vec<u8>>());
-        Ok((ctxt, tag))
+
+        buffer
+            .iter_mut()
+            .zip(ctxt.iter())
+            .for_each(|(dst, &src)| *dst = src.declassify());
+        let tag = Tag::clone_from_slice(&tag.iter().map(|&b| b).collect::<Vec<u8>>());
+        Ok(tag)
     }
 
-    fn decrypt(
+    fn decrypt_in_place_detached(
         &self,
-        key: &[u8; 32],
-        nonce: &[u8; 12],
-        aad: &[u8],
-        c: &[u8],
-        tag: &[u8; 16],
-    ) -> Result<Vec<u8>, Error> {
-        let (msg, valid) = decrypt(
-            HacspecKey::from_public_slice(key),
-            HacspecNonce::from_public_slice(nonce),
-            &ByteSeq::from_public_slice(aad),
-            &ByteSeq::from_public_slice(c),
+        nonce: &Nonce,
+        associated_data: &[u8],
+        buffer: &mut [u8],
+        tag: &Tag,
+    ) -> Result<(), Error> {
+        let (ptxt, valid) = decrypt(
+            HacspecKey::from_public_slice(self.key.as_slice()),
+            IV::from_public_slice(nonce),
+            &ByteSeq::from_public_slice(associated_data),
+            &ByteSeq::from_public_slice(buffer),
             HacspecTag::from_native_slice(tag),
         );
-        let msg = msg.iter().map(|b| b.declassify()).collect();
+
+        buffer
+            .iter_mut()
+            .zip(ptxt.iter())
+            .for_each(|(dst, &src)| *dst = src.declassify());
         if valid {
-            Ok(msg)
+            Ok(())
         } else {
-            Err(Error("Error decrypting.".to_string()))
+            Err(Error)
         }
     }
 }

@@ -8,6 +8,7 @@ members = [
     "utils/secret-integers",
     "utils/abstract-integers",
     "utils/attributes",
+    "utils/rc-tests",
     "utils/sig",
     "language",
     "examples/hacspec-curve25519",
