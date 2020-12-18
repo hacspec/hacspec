@@ -1,8 +1,13 @@
 [package]
 name = "hacspec"
-version = "0.1.0"
-authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
+version = "0.2.0"
+authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>", "Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+documentation = "https://docs.rs/hacspec"
+description = "The hacspec compiler."
+readme = "README.md"
+repository = "https://github.com/hacspec/hacspec"
 
 [[bin]]
 name = "cargo-hacspec"
