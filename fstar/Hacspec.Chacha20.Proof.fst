@@ -536,6 +536,7 @@ let chacha20_equiv_one_iter
     : Lemma(Orig.chacha20_encrypt_block (Orig.chacha20_init key iv 0) i x ==
       chacha20_main_loop_inner key iv i 64 x (u32 (i + 1)))
   =
+  // To prove using chacha_block_inner_alt_equiv and stuff like this
   admit()
 
 
