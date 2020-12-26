@@ -5,6 +5,7 @@
 use crate::prelude::*;
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _implement_numeric_unsigned_public {
     ($name:ident) => {
         impl PartialOrd for $name {
@@ -324,6 +325,7 @@ macro_rules! _implement_numeric_unsigned_public {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _implement_numeric_signed_public {
     ($name:ident) => {
         impl PartialOrd for $name {
@@ -573,6 +575,7 @@ macro_rules! _implement_numeric_signed_public {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _implement_numeric_unsigned_secret {
     ($name:ident) => {
         /// **Warning**: wraps on overflow.
@@ -820,6 +823,7 @@ macro_rules! _implement_numeric_unsigned_secret {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _implement_numeric_signed_secret {
     ($name:ident) => {
         impl PartialOrd for $name {

@@ -13,6 +13,7 @@ fn test_unsigned_public_integers() {
 #[should_panic]
 fn test_unsigned_integer() {
     unsigned_integer!(LargeSecretInteger, 233);
+    println!("{:x}",LargeSecretInteger::max());
     let a = LargeSecretInteger::from_literal(1);
     let b = LargeSecretInteger::from_literal(2);
     let c = a + b;

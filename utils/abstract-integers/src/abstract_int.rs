@@ -81,7 +81,7 @@ macro_rules! abstract_int {
         impl From<BigInt> for $name {
             fn from(x: BigInt) -> $name {
                 let max_value = Self::max();
-                assert!(x < max_value, "{} is too large for type {}!", x, stringify!($name));
+                assert!(x <= max_value, "{} is too large for type {}!", x, stringify!($name));
                 let (sign, repr) = x.to_bytes_be();
                 if sign == Sign::Minus && (!$signed) {
                     panic!("Trying to convert a negative number into an unsigned integer!")
