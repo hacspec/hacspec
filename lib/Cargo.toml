@@ -1,6 +1,6 @@
 [package]
 name = "hacspec-lib"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>", "Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -11,9 +11,9 @@ repository = "https://github.com/hacspec/hacspec"
 
 [dependencies]
 num = "0.2"
-
-secret_integers = { path = "../utils/secret-integers" }
-abstract_integers = { path = "../utils/abstract-integers" }
+# hacspec-attributes = "0.1.0" # FIXME: publish
+secret_integers = { path = "../utils/secret-integers", version = "0.1.7" } #FIXME: publish new version
+abstract_integers = { path = "../utils/abstract-integers", version = "0.1.5" } #FIXME: publish new version
 hacspec-attributes = { path = "../utils/attributes",  optional = true }
 
 [features]

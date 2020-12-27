@@ -1,6 +1,6 @@
 [package]
 name = "hacspec-provider"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>", "Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -10,7 +10,7 @@ readme = "../README.md"
 repository = "https://github.com/hacspec/hacspec"
 
 [dependencies]
-hacspec-lib = { path = "../lib" }
+hacspec-lib = { path = "../lib", version = "0.1.0-beta.1" }
 hacspec-chacha20poly1305 = { path = "../examples/hacspec-chacha20poly1305" }
 hacspec-chacha20 = { path = "../examples/hacspec-chacha20" }
 hacspec-poly1305 = { path = "../examples/hacspec-poly1305" }
