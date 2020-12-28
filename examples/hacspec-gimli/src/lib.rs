@@ -20,26 +20,26 @@ fn gimli_round(mut s: State, r: u32) -> State {
         s[col] = z ^ y ^ ((x & y) << 3);
     }
 
-    if (r & 3) == 0 {
+    if (r & 3u32) == 0u32 {
         s = swap(s, 0, 1);
         s = swap(s, 2, 3);
     }
 
-    if (r & 3) == 2 {
+    if (r & 3u32) == 2u32 {
         s = swap(s, 0, 2);
         s = swap(s, 1, 3);
     }
 
-    if (r & 3) == 0 {
-        s[0] = s[0] ^ (U32(0x9e377900) | U32(r))
+    if (r & 3u32) == 0u32 {
+        s[0] = s[0] ^ (U32(0x9e377900u32) | U32(r))
     }
 
     s
 }
 
 pub fn gimli(mut s: State) -> State {
-    for rnd in 0u32..24 {
-        s = gimli_round(s, 24 - rnd)
+    for rnd in 0..24 { // XXX: Why do we only allow usize loops?
+        s = gimli_round(s, (24 - rnd) as u32)
     }
 
     s
@@ -76,7 +76,6 @@ pub fn gimli_hash(input_bytes: &ByteSeq) -> Digest {
     let mut s = State::new();
 
     let rate = Block::length();
-    // let num_full_blocks = input_length / rate;
     for i in 0..input_bytes.num_chunks(rate) {
         let (block_len, input_block) = input_bytes.get_chunk(rate, i);
         if block_len == rate {
@@ -88,10 +87,10 @@ pub fn gimli_hash(input_bytes: &ByteSeq) -> Digest {
             // Note that this would work in all other cases as well, but the above is safer.
             let input_block_padded = Block::new();
             let mut input_block_padded = input_block_padded.update_start(&input_block);
-            input_block_padded[block_len] = U8(1);
+            input_block_padded[block_len] = U8(1u8);
 
             // XOR in capacity part
-            s[11] = s[11] ^ U32(0x01000000);
+            s[11] = s[11] ^ U32(0x01000000u32);
             s = absorb_block(input_block_padded, s);
         }
     }
