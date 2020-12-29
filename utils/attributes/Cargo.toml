@@ -3,6 +3,10 @@ name = "hacspec-attributes"
 version = "0.1.0-beta.1"
 authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
+description = "hacspec attributes"
+readme = "Readme.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/hacspec/hacspec"
 
 [lib]
 proc-macro = true
