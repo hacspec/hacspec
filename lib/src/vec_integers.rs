@@ -574,7 +574,7 @@ macro_rules! _implement_numeric_signed_public {
 
 #[macro_export]
 macro_rules! _implement_numeric_unsigned_secret {
-    ($name:ident) => {
+    ($name:ident, $t:ty) => {
         /// **Warning**: wraps on overflow.
         impl Add for $name {
             type Output = $name;
@@ -770,8 +770,12 @@ macro_rules! _implement_numeric_unsigned_secret {
 
             // Comparison functions returning bool.
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn equal(self, _other: Self) -> bool {
-                unimplemented!();
+            fn equal(self, other: Self) -> bool {
+                let mut result = <$t>::default();
+                for (&a, &b) in self.iter().zip(other.iter()) {
+                    result = result & a.equal_bm(b);
+                }
+                result.declassify() == <$t>::default().declassify()
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than(self, _other: Self) -> bool {

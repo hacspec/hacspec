@@ -96,14 +96,14 @@ fn kat_gimli_aead() {
         0xe3, 0xfd, 0x63, 0x8e, 0x12, 0x69, 0x78, 0x84, 0xb3, 0xf4, 0x90, 0x0, 0x74, 0x6d, 0xc9,
         0xd4, 0xc9, 0xe5,
     ]);
-    let expected_tag = Tag::from_native_slice(&[
+    let expected_tag = Tag::from_public_slice(&[
         0x1d, 0x67, 0xd9, 0x60, 0x57, 0x83, 0xf1, 0x4c, 0x55, 0xd7, 0x8, 0x96, 0x68, 0x3d, 0x78,
         0x5d,
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
     assert_eq!(expected_ct, ct);
-    assert_eq!(expected_tag, tag);
+    assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
     assert_eq!(msg, msg_out);

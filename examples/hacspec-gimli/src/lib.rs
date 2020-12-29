@@ -39,8 +39,8 @@ fn gimli_round(mut s: State, r: u32) -> State {
 
 pub fn gimli(mut s: State) -> State {
     for rnd in 0..24 {
-        // XXX: Why do we only allow usize loops?
-        s = gimli_round(s, (24 - rnd) as u32)
+        let rnd = (24 - rnd) as u32;
+        s = gimli_round(s, rnd);
     }
 
     s
@@ -110,7 +110,7 @@ pub fn gimli_hash(input_bytes: &ByteSeq) -> Digest {
 
 bytes!(Nonce, 16);
 bytes!(Key, 32);
-public_bytes!(Tag, 16);
+bytes!(Tag, 16);
 
 fn process_ad(ad: &ByteSeq, s: State) -> State {
     gimli_hash_state(ad, s)
@@ -123,11 +123,12 @@ fn process_msg(message: &ByteSeq, mut s: State) -> (State, ByteSeq) {
     let num_chunks = message.num_chunks(rate);
     for i in 0..num_chunks {
         let key_block = squeeze_block(s);
-
         let (block_len, msg_block) = message.get_chunk(rate, i);
+
         // This pads the msg_block if necessary.
         let msg_block_padded = Block::new();
         let mut msg_block_padded = msg_block_padded.update_start(&msg_block);
+
         ciphertext = ciphertext.set_chunk(
             rate,
             i,
@@ -157,10 +158,7 @@ fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
         // This pads the ct_block if necessary.
         let ct_block_padded = Block::new();
         let ct_block_padded = ct_block_padded.update_start(&ct_block);
-        let msg_block = ct_block_padded ^ key_block;
-
-        // XXX: pretty ugly. Zero pad the last block if it is padded.
-        let mut msg_block = Block::from_slice_range(&msg_block, 0..block_len);
+        let mut msg_block = ct_block_padded ^ key_block;
 
         // Slice_range cuts off the msg_block to the actual length.
         message = message.set_chunk(rate, i, &msg_block.slice_range(0..block_len));
@@ -212,12 +210,9 @@ pub fn gimli_aead_encrypt(
     let (s, ciphertext) = process_msg(message, s);
 
     let tag = squeeze_block(s);
-    // XXX: not great
-    let mut public_tag = Tag::new();
-    for i in 0..Tag::length() {
-        public_tag[i] = tag[i].declassify();
-    }
-    (ciphertext, public_tag)
+    let tag = Tag::from_seq(&tag);
+
+    (ciphertext, tag)
 }
 
 pub fn gimli_aead_decrypt(
@@ -235,15 +230,10 @@ pub fn gimli_aead_decrypt(
     let (s, message) = process_ct(ciphertext, s);
 
     let my_tag = squeeze_block(s);
-
-    // XXX: not great
-    let mut my_public_tag = Tag::new();
-    for i in 0..Tag::length() {
-        my_public_tag[i] = my_tag[i].declassify();
-    }
+    let my_tag = Tag::from_seq(&my_tag);
 
     let mut out = ByteSeq::new(0);
-    if my_public_tag == tag {
+    if my_tag.equal(tag) {
         out = message;
     };
 
