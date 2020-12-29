@@ -38,7 +38,8 @@ fn gimli_round(mut s: State, r: u32) -> State {
 }
 
 pub fn gimli(mut s: State) -> State {
-    for rnd in 0..24 { // XXX: Why do we only allow usize loops?
+    for rnd in 0..24 {
+        // XXX: Why do we only allow usize loops?
         s = gimli_round(s, (24 - rnd) as u32)
     }
 
@@ -72,12 +73,10 @@ fn squeeze_block(s: State) -> Block {
     block
 }
 
-pub fn gimli_hash(input_bytes: &ByteSeq) -> Digest {
-    let mut s = State::new();
-
+fn gimli_hash_state(input: &ByteSeq, mut s: State) -> State {
     let rate = Block::length();
-    for i in 0..input_bytes.num_chunks(rate) {
-        let (block_len, input_block) = input_bytes.get_chunk(rate, i);
+    for i in 0..input.num_chunks(rate) {
+        let (block_len, input_block) = input.get_chunk(rate, i);
         if block_len == rate {
             // Absorb full blocks
             let full_block = Block::from_seq(&input_block);
@@ -95,8 +94,158 @@ pub fn gimli_hash(input_bytes: &ByteSeq) -> Digest {
         }
     }
 
+    s
+}
+
+pub fn gimli_hash(input_bytes: &ByteSeq) -> Digest {
+    let s = State::new();
+    let s = gimli_hash_state(input_bytes, s);
     let output = Digest::new();
     let output = output.update_start(&squeeze_block(s));
-    s = gimli(s);
-    output.update(rate, &squeeze_block(s))
+    let s = gimli(s);
+    output.update(Block::length(), &squeeze_block(s))
+}
+
+// === Cipher ===
+
+bytes!(Nonce, 16);
+bytes!(Key, 32);
+public_bytes!(Tag, 16);
+
+fn process_ad(ad: &ByteSeq, s: State) -> State {
+    gimli_hash_state(ad, s)
+}
+
+fn process_msg(message: &ByteSeq, mut s: State) -> (State, ByteSeq) {
+    let mut ciphertext = ByteSeq::new(message.len());
+
+    let rate = Block::length();
+    let num_chunks = message.num_chunks(rate);
+    for i in 0..num_chunks {
+        let key_block = squeeze_block(s);
+
+        let (block_len, msg_block) = message.get_chunk(rate, i);
+        // This pads the msg_block if necessary.
+        let msg_block_padded = Block::new();
+        let mut msg_block_padded = msg_block_padded.update_start(&msg_block);
+        ciphertext = ciphertext.set_chunk(
+            rate,
+            i,
+            // the slice_range cuts off the last block if it is padded
+            &(msg_block_padded ^ key_block).slice_range(0..block_len),
+        );
+        if i == num_chunks - 1 {
+            // XXX: this is in the code but I don't see it in the spec.
+            msg_block_padded[block_len] = msg_block_padded[block_len] ^ U8(1u8);
+            s[11] = s[11] ^ U32(0x01000000u32); // s_2,3
+        }
+        s = absorb_block(msg_block_padded, s);
+    }
+
+    (s, ciphertext)
+}
+
+fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
+    let mut message = ByteSeq::new(ciphertext.len());
+
+    let rate = Block::length();
+    let num_chunks = ciphertext.num_chunks(rate);
+    for i in 0..num_chunks {
+        let key_block = squeeze_block(s);
+        let (block_len, ct_block) = ciphertext.get_chunk(rate, i);
+
+        // This pads the ct_block if necessary.
+        let ct_block_padded = Block::new();
+        let ct_block_padded = ct_block_padded.update_start(&ct_block);
+        let msg_block = ct_block_padded ^ key_block;
+
+        // XXX: pretty ugly. Zero pad the last block if it is padded.
+        let mut msg_block = Block::from_slice_range(&msg_block, 0..block_len);
+
+        // Slice_range cuts off the msg_block to the actual length.
+        message = message.set_chunk(rate, i, &msg_block.slice_range(0..block_len));
+        if i == num_chunks - 1 {
+            // XXX: this is in the code but I don't see it in the spec.
+            msg_block[block_len] = msg_block[block_len] ^ U8(1u8);
+            s[11] = s[11] ^ U32(0x01000000u32); // s_2,3
+        }
+        s = absorb_block(msg_block, s);
+    }
+
+    (s, message)
+}
+
+// XXX: These two functions should maybe get a helper in the library.
+pub fn nonce_to_u32s(nonce: Nonce) -> Seq<U32> {
+    let mut uints = Seq::<U32>::new(4);
+    uints[0] = U32_from_le_bytes(U32Word::from_slice_range(&nonce, 0..4));
+    uints[1] = U32_from_le_bytes(U32Word::from_slice_range(&nonce, 4..8));
+    uints[2] = U32_from_le_bytes(U32Word::from_slice_range(&nonce, 8..12));
+    uints[3] = U32_from_le_bytes(U32Word::from_slice_range(&nonce, 12..16));
+    uints
+}
+
+pub fn key_to_u32s(key: Key) -> Seq<U32> {
+    let mut uints = Seq::<U32>::new(8);
+    uints[0] = U32_from_le_bytes(U32Word::from_slice_range(&key, 0..4));
+    uints[1] = U32_from_le_bytes(U32Word::from_slice_range(&key, 4..8));
+    uints[2] = U32_from_le_bytes(U32Word::from_slice_range(&key, 8..12));
+    uints[3] = U32_from_le_bytes(U32Word::from_slice_range(&key, 12..16));
+    uints[4] = U32_from_le_bytes(U32Word::from_slice_range(&key, 16..20));
+    uints[5] = U32_from_le_bytes(U32Word::from_slice_range(&key, 20..24));
+    uints[6] = U32_from_le_bytes(U32Word::from_slice_range(&key, 24..28));
+    uints[7] = U32_from_le_bytes(U32Word::from_slice_range(&key, 28..32));
+    uints
+}
+
+pub fn gimli_aead_encrypt(
+    message: &ByteSeq,
+    ad: &ByteSeq,
+    nonce: Nonce,
+    key: Key,
+) -> (ByteSeq, Tag) {
+    // Add nonce and key to state
+    let s = State::from_seq(&nonce_to_u32s(nonce).concat(&key_to_u32s(key)));
+    let s = gimli(s);
+
+    let s = process_ad(ad, s);
+    let (s, ciphertext) = process_msg(message, s);
+
+    let tag = squeeze_block(s);
+    // XXX: not great
+    let mut public_tag = Tag::new();
+    for i in 0..Tag::length() {
+        public_tag[i] = tag[i].declassify();
+    }
+    (ciphertext, public_tag)
+}
+
+pub fn gimli_aead_decrypt(
+    ciphertext: &ByteSeq,
+    ad: &ByteSeq,
+    tag: Tag,
+    nonce: Nonce,
+    key: Key,
+) -> ByteSeq {
+    // Add nonce and key to state
+    let s = State::from_seq(&nonce_to_u32s(nonce).concat(&key_to_u32s(key)));
+    let s = gimli(s);
+
+    let s = process_ad(ad, s);
+    let (s, message) = process_ct(ciphertext, s);
+
+    let my_tag = squeeze_block(s);
+
+    // XXX: not great
+    let mut my_public_tag = Tag::new();
+    for i in 0..Tag::length() {
+        my_public_tag[i] = my_tag[i].declassify();
+    }
+
+    let mut out = ByteSeq::new(0);
+    if my_public_tag == tag {
+        out = message;
+    };
+
+    out
 }

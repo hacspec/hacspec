@@ -6,3 +6,6 @@ edition = "2018"
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
+
+[dev-dependencies]
+hacspec-dev = { path = "../../utils/dev" }
