@@ -11,10 +11,9 @@ repository = "https://github.com/hacspec/hacspec"
 
 [dependencies]
 num = "0.2"
-# hacspec-attributes = "0.1.0" # FIXME: publish
 secret_integers = { path = "../utils/secret-integers", version = "0.1.7" } #FIXME: publish new version
 abstract_integers = { path = "../utils/abstract-integers", version = "0.1.5" } #FIXME: publish new version
-hacspec-attributes = { path = "../utils/attributes",  optional = true }
+hacspec-attributes = { path = "../utils/attributes",  optional = true, version = "0.1.0-beta.1" }
 
 [features]
 use_attributes = ["hacspec-attributes", "hacspec-attributes/print_attributes"]
