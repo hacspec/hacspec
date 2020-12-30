@@ -136,7 +136,6 @@ fn process_msg(message: &ByteSeq, mut s: State) -> (State, ByteSeq) {
             &(msg_block_padded ^ key_block).slice_range(0..block_len),
         );
         if i == num_chunks - 1 {
-            // XXX: this is in the code but I don't see it in the spec.
             msg_block_padded[block_len] = msg_block_padded[block_len] ^ U8(1u8);
             s[11] = s[11] ^ U32(0x01000000u32); // s_2,3
         }
@@ -158,12 +157,13 @@ fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
         // This pads the ct_block if necessary.
         let ct_block_padded = Block::new();
         let ct_block_padded = ct_block_padded.update_start(&ct_block);
-        let mut msg_block = ct_block_padded ^ key_block;
+        let msg_block = ct_block_padded ^ key_block;
+        // Zero pad the block if necessary (replace bytes with zeros if block_len != rate).
+        let mut msg_block = Block::from_slice_range(&msg_block, 0..block_len);
 
         // Slice_range cuts off the msg_block to the actual length.
         message = message.set_chunk(rate, i, &msg_block.slice_range(0..block_len));
         if i == num_chunks - 1 {
-            // XXX: this is in the code but I don't see it in the spec.
             msg_block[block_len] = msg_block[block_len] ^ U8(1u8);
             s[11] = s[11] ^ U32(0x01000000u32); // s_2,3
         }

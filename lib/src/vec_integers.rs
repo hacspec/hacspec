@@ -771,11 +771,11 @@ macro_rules! _implement_numeric_unsigned_secret {
             // Comparison functions returning bool.
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn equal(self, other: Self) -> bool {
-                let mut result = <$t>::default();
+                let mut result = <$t>::max_value();
                 for (&a, &b) in self.iter().zip(other.iter()) {
                     result = result & a.equal_bm(b);
                 }
-                result.declassify() == <$t>::default().declassify()
+                result.declassify() == <$t>::max_value().declassify()
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than(self, _other: Self) -> bool {
