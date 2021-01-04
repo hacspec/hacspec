@@ -428,7 +428,8 @@ fn translate_binop<'a, 'b>(
                 BinOpKind::BitXor => "xor",
                 BinOpKind::BitOr => "or",
                 BinOpKind::BitAnd => "and",
-                _ => panic!(), // should not happen
+                BinOpKind::Eq => "eq",
+                _ => panic!("{:?} is not supported.", op), // should not happen
             };
             (
                 RcDoc::as_string(format!(
