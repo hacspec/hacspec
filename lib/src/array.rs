@@ -121,7 +121,7 @@ macro_rules! _array_base {
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(
                     input.len() == len,
-                    "the chunk length should match the input"
+                    format!("the chunk length should match the input. got {}, expected {}", input.len(), len)
                 );
                 self.update_slice(idx_start, input, 0, len)
             }
@@ -396,7 +396,7 @@ macro_rules! generic_array {
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(
                     input.len() == len,
-                    "the chunk length should match the input"
+                    format!("the chunk length should match the input. got {}, expected {}", input.len(), len)
                 );
                 self.update_slice(idx_start, input, 0, len)
             }
@@ -671,7 +671,7 @@ macro_rules! _public_array {
 macro_rules! _implement_secret_u8_array {
     ($name:ident, $l:expr) => {
         _secret_array!($name, $l, U8, u8);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U8);
 
         impl $name {
             #[allow(non_snake_case)]
@@ -828,38 +828,38 @@ macro_rules! array {
     };
     ($name:ident, $l:expr, U16) => {
         _secret_array!($name, $l, U16, u16);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U16);
     };
     ($name:ident, $l:expr, U16, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U16, u16);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U16);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, U32) => {
         _secret_array!($name, $l, U32, u32);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U32);
     };
     ($name:ident, $l:expr, U32, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U32, u32);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U32);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, U64) => {
         _secret_array!($name, $l, U64, u64);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U64);
     };
     ($name:ident, $l:expr, U64, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U64, u64);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U64);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, U128) => {
         _secret_array!($name, $l, U128, u128);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U128);
     };
     ($name:ident, $l:expr, U128, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U128, u128);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U128);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, u8) => {

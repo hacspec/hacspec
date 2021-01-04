@@ -1,0 +1,11 @@
+[package]
+name = "hacspec-gimli"
+version = "0.1.0"
+authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+
+[dev-dependencies]
+hacspec-dev = { path = "../../utils/dev" }
