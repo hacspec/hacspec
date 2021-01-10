@@ -45,37 +45,145 @@
 <span id="45">45</span>
 <span id="46">46</span>
 <span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! # The hacspec standard library</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! hacspec consists of three parts:</span>
-<span class="doccomment">//! * hacspec library</span>
-<span class="doccomment">//! * syntax checker</span>
-<span class="doccomment">//! * compiler</span>
+<span class="doccomment">//! ## Data types</span>
+<span class="doccomment">//! The standard library provides two main data types.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! # The hacspec library</span>
+<span class="doccomment">//! ### Sequences</span>
+<span class="doccomment">//! Sequences [`Seq`](`seq::Seq`) arrays with a fixed length set at runtime.</span>
+<span class="doccomment">//! They replace Rust vectors, which are not allowed in hacspec.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! The hacspec library implements a comprehensive set of functions to implement</span>
-<span class="doccomment">//! succinct cryptographic specs that can be compiled to formal languages such</span>
-<span class="doccomment">//! as [F*](https://www.fstar-lang.org/).</span>
+<span class="doccomment">//! See the [seq](`mod@seq`) module documentation for more details.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! # The syntax checker</span>
-<span class="doccomment">//! TODO:</span>
-<span class="doccomment">//! * describe clippy extension</span>
-<span class="doccomment">//! * add `cargo hacspec check` command</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! let x = Seq::&lt;U128&gt;::from_public_slice(&amp;[5, 2, 7, 8, 9]);</span>
+<span class="doccomment">//! let x = Seq::&lt;u128&gt;::from_native_slice(&amp;[5, 2, 7, 8, 9]);</span>
+<span class="doccomment">//! let y = ByteSeq::from_hex(&quot;0388dace60b6a392f328c2b971b2fe78&quot;);</span>
+<span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! # The compiler</span>
-<span class="doccomment">//! TODO:</span>
-<span class="doccomment">//! * define compiler interface</span>
-<span class="doccomment">//! * add `cargo hacspec fstar` command</span>
+<span class="doccomment">//! ### Arrays</span>
+<span class="doccomment">//! Arrays have a fixed length that is known at compile time.</span>
+<span class="doccomment">//! They replace the Rust arrays, which are not allowed in hacspec.</span>
 <span class="doccomment">//!</span>
+<span class="doccomment">//! See the [arrays](`mod@array`) module documentation for more details.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! To define a new array type with name `State`, holding `16` `u32` run</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! array!(State, 16, u32, type_for_indexes: StateIdx);</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The `type_for_indexes` defines the index type for this array as `StateIdx`.</span>
+<span class="doccomment">//! Such an array can now be used similarly to regular Rust arrays.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! array!(State, 16, u32, type_for_indexes: StateIdx);</span>
+<span class="doccomment">//! fn modify_state(mut state: State) -&gt; State {</span>
+<span class="doccomment">//!     state[1] = state[1] + state[2];</span>
+<span class="doccomment">//!     state</span>
+<span class="doccomment">//! }</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Numeric Types</span>
+<span class="doccomment">//! The standard library provides two main numeric types.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ### Math Integers</span>
+<span class="doccomment">//! Integers with a fixed upper bound on the byte length.</span>
+<span class="doccomment">//! See the [math integer](`mod@math_integers`) module documentation for more details.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The following example defines and uses the type `LargeSecretInteger` that can hold unsigned integers up to 2^233-1.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! unsigned_integer!(LargeSecretInteger, 233);</span>
+<span class="doccomment">//! let a = LargeSecretInteger::from_literal(1);</span>
+<span class="doccomment">//! let b = LargeSecretInteger::from_literal(2);</span>
+<span class="doccomment">//! let c = a + b;</span>
+<span class="doccomment">//! let result = std::panic::catch_unwind(|| {</span>
+<span class="doccomment">//!     // This panics because comparing secret math integers is currently not support.</span>
+<span class="doccomment">//!     assert!(c.equal(LargeSecretInteger::from_literal(3)));</span>
+<span class="doccomment">//! });</span>
+<span class="doccomment">//! assert!(result.is_err());</span>
+<span class="doccomment">//! let _max = LargeSecretInteger::from_hex(&quot;1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff&quot;);</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Secret Integers</span>
+<span class="doccomment">//! All numeric types can be public or secret.</span>
+<span class="doccomment">//! By default they are secret types.</span>
+<span class="doccomment">//! Public types are prefixed with `public_`.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ### Secret Machine Integers</span>
+<span class="doccomment">//! The regular machine integers Rust provides are considered public integers.</span>
+<span class="doccomment">//! This standard library defines secret variants for all public machine integers defined as follows.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Unsigned secret integers: `U8, U16, U32, U64, U128`</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Signed secret integers: `I8, I16, I32, I64, I128`</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! See the [secret integers](`secret_integers`) for details.</span>
 
-<span class="kw">mod</span> <span class="ident">array</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">array</span>;
 <span class="kw">mod</span> <span class="ident">bigint_integers</span>;
 <span class="kw">mod</span> <span class="ident">machine_integers</span>;
-<span class="kw">mod</span> <span class="ident">math_integers</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">math_integers</span>;
 <span class="kw">mod</span> <span class="ident">math_util</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span>;
-<span class="kw">mod</span> <span class="ident">seq</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">seq</span>;
 <span class="kw">mod</span> <span class="ident">traits</span>;
 <span class="kw">mod</span> <span class="ident">transmute</span>;
 <span class="kw">mod</span> <span class="ident">util</span>;
@@ -85,13 +193,5 @@
 <span class="kw">mod</span> <span class="ident">vec_util</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-
-<span class="comment">// XXX: How can we document these things nicely?</span>
-<span class="comment">// The following are only for documentation purposes.</span>
-<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">DocSecretBytes</span>, <span class="number">64</span>);
-<span class="macro">public_bytes</span><span class="macro">!</span>(<span class="ident">DocPublicBytes</span>, <span class="number">64</span>);
-<span class="macro">array</span><span class="macro">!</span>(<span class="ident">DocSecretArray</span>, <span class="number">64</span>, <span class="ident">U32</span>);
-<span class="macro">array</span><span class="macro">!</span>(<span class="ident">DocPublicArray</span>, <span class="number">64</span>, <span class="ident">u32</span>);
-<span class="macro">generic_array</span><span class="macro">!</span>(<span class="ident">DocParametricArray</span>, <span class="number">64</span>);
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "hacspec_lib";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

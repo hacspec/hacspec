@@ -1363,7 +1363,55 @@
 <span id="1363">1363</span>
 <span id="1364">1364</span>
 <span id="1365">1365</span>
+<span id="1366">1366</span>
+<span id="1367">1367</span>
+<span id="1368">1368</span>
+<span id="1369">1369</span>
+<span id="1370">1370</span>
+<span id="1371">1371</span>
+<span id="1372">1372</span>
+<span id="1373">1373</span>
+<span id="1374">1374</span>
+<span id="1375">1375</span>
+<span id="1376">1376</span>
+<span id="1377">1377</span>
+<span id="1378">1378</span>
+<span id="1379">1379</span>
+<span id="1380">1380</span>
+<span id="1381">1381</span>
+<span id="1382">1382</span>
+<span id="1383">1383</span>
+<span id="1384">1384</span>
+<span id="1385">1385</span>
+<span id="1386">1386</span>
+<span id="1387">1387</span>
+<span id="1388">1388</span>
+<span id="1389">1389</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! # Math Integers</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This module implements a number of different math integers.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Integers</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! * Unsigned Integers: `unsigned_integer`, `unsigned_public_integer`</span>
+<span class="doccomment">//! * Signed Integers: `signed_integer`, `signed_public_integer`</span>
+<span class="doccomment">//! * Natural Numbers modulo an integer: `nat_mod`, `public_nat_mod`</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//! use hacspec_lib::prelude::*;</span>
+<span class="doccomment">//! unsigned_integer!(LargeSecretInteger, 233);</span>
+<span class="doccomment">//! let a = LargeSecretInteger::from_literal(1);</span>
+<span class="doccomment">//! let b = LargeSecretInteger::from_literal(2);</span>
+<span class="doccomment">//! let c = a + b;</span>
+<span class="doccomment">//! let result = std::panic::catch_unwind(|| {</span>
+<span class="doccomment">//!     // This panics because comparing secret math integers is currently not support.</span>
+<span class="doccomment">//!     assert!(c.equal(LargeSecretInteger::from_literal(3)));</span>
+<span class="doccomment">//! });</span>
+<span class="doccomment">//! assert!(result.is_err());</span>
+<span class="doccomment">//! let _max = LargeSecretInteger::from_hex(&quot;1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff&quot;);</span>
+<span class="doccomment">//! ```</span>
+
 <span class="comment">// TODO: Implement Integer for all math integers?</span>
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
