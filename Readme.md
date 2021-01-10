@@ -8,7 +8,7 @@ A specification language for crypto primitives in Rust.
 
 | Name             | Crates.io                                                                 |                                                                 Docs                                                                  |                        CI                         |
 | :--------------- | :------------------------------------------------------------------------ | :-----------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------: |
-| hacspec          | [![crates.io][crate-hacspec]](https://crates.io/crates/hacspec)           |     [![Docs](https://img.shields.io/badge/docs-master-blue.svg?logo=rust)](https://hacspec.github.io/hacspec/hacspec/index.html)      | [![Build & Test Status][build-image]][build-link] |
+| hacspec          | [![crates.io][crate-hacspec]](https://crates.io/crates/hacspec)           |     [![Docs](https://img.shields.io/badge/docs-master-blue.svg?logo=rust)](language/)      | [![Build & Test Status][build-image]][build-link] |
 | hacspec-lib      | [![crates.io][crate-lib]](https://crates.io/crates/hacspec-lib)           |   [![Docs](https://img.shields.io/badge/docs-master-blue.svg?logo=rust)](https://hacspec.github.io/hacspec/hacspec_lib/index.html)    | [![Build & Test Status][build-image]][build-link] |
 | hacspec-provider | [![crates.io][crate-provider]](https://crates.io/crates/hacspec-provider) | [![Docs](https://img.shields.io/badge/docs-master-blue.svg?logo=rust)](https://hacspec.github.io/hacspec/hacspec_provider/index.html) | [![Build & Test Status][build-image]][build-link] |
 
