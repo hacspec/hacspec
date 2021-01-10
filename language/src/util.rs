@@ -1,5 +1,5 @@
 pub(crate) const APP_USAGE: &'static str = "Hacspec 0.1.0
-Hacspec Developers <contact@hacspec.org>
+Hacspec Developers
 Typechecker and compiler for the Hacspec subset of Rust
 
 USAGE:
