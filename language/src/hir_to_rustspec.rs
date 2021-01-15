@@ -411,8 +411,8 @@ pub fn retrieve_external_functions(
                                         // some def_id corresponding to constructors of structs
                                         // having a special behavior, for instance std::PhantomData
                                         // or gimli::common::Dwarf64.
-                                        // is_mir_available captures those special cases
-                                        tcx.is_mir_available(def_id) {
+                                        // tcx.type_of(def_id).is_fn() captures those special cases
+                                        tcx.type_of(def_id).is_fn() {
                                             let export_sig = tcx.fn_sig(def_id);
                                             let sig = match translate_polyfnsig(
                                                 tcx,
