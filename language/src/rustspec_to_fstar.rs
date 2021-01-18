@@ -168,7 +168,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Bool => RcDoc::as_string("bool"),
         BaseTyp::UInt8 => RcDoc::as_string("pub_uint8"),
         BaseTyp::Int8 => RcDoc::as_string("pub_int8"),
-        BaseTyp::UInt16 => RcDoc::as_string("pub_uin16"),
+        BaseTyp::UInt16 => RcDoc::as_string("pub_uint16"),
         BaseTyp::Int16 => RcDoc::as_string("pub_int16"),
         BaseTyp::UInt32 => RcDoc::as_string("pub_uint32"),
         BaseTyp::Int32 => RcDoc::as_string("pub_int32"),
