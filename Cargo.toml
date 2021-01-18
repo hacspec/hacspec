@@ -21,6 +21,7 @@ members = [
     "examples/hacspec-sha3",
     "examples/hacspec-ntru-prime",
     "examples-unsafe",
+    "examples/hacspec-riot-bootloader",
 ]
 default-members = [
     "lib",
@@ -40,6 +41,7 @@ default-members = [
     "examples/hacspec-sha3",
     "examples/hacspec-ntru-prime",
     "examples-unsafe",
+    "examples/hacspec-riot-bootloader",
 ]
 
 [profile.release]
