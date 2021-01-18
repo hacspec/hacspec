@@ -58,17 +58,37 @@ pub fn value(x: Fletcher) -> u32 {
 /// 4. Checksum of riotboot_hdr
 type Header = (u32, u32, u32, u32);
 
-fn header_as_u16_slice(_h: &Header) -> Seq<u16> {
-    Seq::<u16>::new(1) // TODO: split all u32 into 2 u16 and concatenate
+fn header_as_u16_slice(h: Header) -> Seq<u16> {
+    let (magic, seq_number, start_addr, _) = h;
+    let magic = u32_to_be_bytes(magic);
+    let seq_number = u32_to_be_bytes(seq_number);
+    let start_addr = u32_to_be_bytes(start_addr);
+    let u8_seq = Seq::<u8>::new(12);
+    let u8_seq = u8_seq.update_slice(0, &magic, 0, 4);
+    let u8_seq = u8_seq.update_slice(4, &seq_number, 0, 4);
+    let u8_seq = u8_seq.update_slice(8, &start_addr, 0, 4);
+    let mut u16_seq = Seq::<u16>::new(6);
+    for i in 0..6 {
+        let u16_word = u16Word::from_seq(&u8_seq.slice(i * 2, 2));
+        let u16_value = u16_from_be_bytes(u16_word);
+        u16_seq[i] = u16_value
+    }
+    u16_seq
 }
 pub fn is_valid_header(h: &Header) -> bool {
-    let (magic_number, _, _, checksum) = h;
+    let (magic_number, seq_number, start_addr, checksum) = h;
+    let slice = header_as_u16_slice((
+        magic_number.clone(),
+        seq_number.clone(),
+        start_addr.clone(),
+        checksum.clone(),
+    ));
     let magic_number = magic_number.clone();
     let checksum = checksum.clone();
     let mut result = false;
     if magic_number == RIOTBOOT_MAGIC {
         let fletcher = new_fletcher();
-        let fletcher = update_fletcher(fletcher, header_as_u16_slice(h));
+        let fletcher = update_fletcher(fletcher, slice);
         let sum = value(fletcher);
         result = sum == checksum;
     }
