@@ -1,169 +1,94 @@
-use std::marker::PhantomData;
-use std::ops::Add;
+use hacspec_lib::*;
 
 //use cortex_m_semihosting::{dbg, hprintln};
 /// "RIOT"
-const RIOTBOOT_MAGIC: u32 = 0x544f_4952;
-
-/// Defines the required traits for the accumulator type
-/// used in the algorithm
-pub trait FletcherAccumulator<T>: Add<Self> + From<T> + From<<Self as Add>::Output> + Copy {
-    /// Should return a reasonable default value
-    ///
-    /// Usual default values have the least significant bits set
-    /// and the most significant bits cleared, i.e. 0x00ff
-    fn default_value() -> Self;
-    /// Should return the maximum number of words to sum before reducing
-    ///
-    /// This value should be the maximum summations that can happen before
-    /// either accumulator overflows. This can be determined by
-    /// putting the maximum word value into the algorithm and counting
-    /// the number of words can be added before an overflow occurs.
-    fn max_chunk_size() -> usize;
-    /// Combines the two accumulator values into a single value
-    ///
-    /// This function can assume that the accumulators have already
-    /// been fully reduced. This usually involves simply shifting
-    /// the upper accumulator value into the MSB
-    fn combine(lower: &Self, upper: &Self) -> Self;
-    /// Reduces the accumulator value
-    ///
-    /// This function needs to reduce the accumulator value in a manner
-    /// that rounds the value according to one's compliment math. This
-    /// is usually accomplished with masking and shifting
-    fn reduce(self) -> Self;
-}
+const RIOTBOOT_MAGIC: u32 = 0x544f_4952u32;
 
 /// A generic type for holding intermediate checksum values
-pub struct Fletcher<T, U> {
-    a: T,
-    b: T,
-    phantom: PhantomData<U>,
+type Fletcher = (u32, u32);
+
+pub fn new_fletcher() -> Fletcher {
+    (0u32, 0u32)
 }
 
-impl<T, U> Fletcher<T, U>
-where
-    T: FletcherAccumulator<U>,
-    U: Copy,
-{
-    pub fn new() -> Fletcher<T, U> {
-        Fletcher {
-            a: T::default_value(),
-            b: T::default_value(),
-            phantom: PhantomData,
+pub fn max_chunk_size() -> usize {
+    360
+}
+
+fn reduce_u32(x: u32) -> u32 {
+    (x & 0xffffu32) + (x >> 16)
+}
+
+fn combine(lower: u32, upper: u32) -> u32 {
+    lower | (upper << 16)
+}
+
+pub fn update_fletcher(f: Fletcher, data: Seq<u16>) -> Fletcher {
+    let max_chunk_size = max_chunk_size();
+    let (mut a, mut b) = f;
+
+    for i in 0..data.num_chunks(max_chunk_size) {
+        let (chunk_len, chunk) = data.get_chunk(i, max_chunk_size);
+        let mut intermediate_a = a;
+        let mut intermediate_b = b;
+
+        for _j in 0..chunk_len {
+            intermediate_a = intermediate_a + chunk[i] as u32;
+            intermediate_b = intermediate_b + intermediate_a;
         }
+
+        a = reduce_u32(intermediate_a);
+        b = reduce_u32(intermediate_b);
     }
 
-    /// The core fletcher checksum algorithm
-    ///
-    /// The input data is processed in chunks which reduces the
-    /// number of calls to `reduce()`. The size of the chunks depends
-    /// on the accumulator size and data size.
-    pub fn update(&mut self, data: &[U]) {
-        let max_chunk_size = T::max_chunk_size();
+    a = reduce_u32(a);
+    b = reduce_u32(b);
+    (a, b)
+}
 
-        for chunk in data.chunks(max_chunk_size) {
-            let mut intermediate_a = self.a;
-            let mut intermediate_b = self.b;
+/// Returns the current checksum value of the `Fletcher` object
+pub fn value(x: Fletcher) -> u32 {
+    let (a, b) = x;
+    combine(a, b)
+}
 
-            for byte in chunk {
-                intermediate_a = T::from(intermediate_a + T::from(*byte));
-                intermediate_b = T::from(intermediate_b + intermediate_a);
+/// 1. Header magic number (always "RIOT")
+/// 2. Integer representing the partition version
+/// 3. Address after the allocated space for the header
+/// 4. Checksum of riotboot_hdr
+type Header = (u32, u32, u32, u32);
+
+fn header_as_u16_slice(_h: &Header) -> Seq<u16> {
+    Seq::<u16>::new(1) // TODO: split all u32 into 2 u16 and concatenate
+}
+pub fn is_valid_header(h: &Header) -> bool {
+    let (magic_number, _, _, checksum) = h;
+    let magic_number = magic_number.clone();
+    let checksum = checksum.clone();
+    let mut result = false;
+    if magic_number == RIOTBOOT_MAGIC {
+        let fletcher = new_fletcher();
+        let fletcher = update_fletcher(fletcher, header_as_u16_slice(h));
+        let sum = value(fletcher);
+        result = sum == checksum;
+    }
+    result
+}
+
+pub fn choose_image(images: Seq<Header>) -> (bool, u32) {
+    let mut image = 0u32;
+    let mut image_found = false;
+
+    for i in 0..images.len() {
+        let header = images[i];
+        if is_valid_header(&header) {
+            let (_, sequence_number, start_addr, _) = header;
+            let change_image = !(image_found && (sequence_number <= image));
+            if change_image {
+                image = start_addr;
+                image_found = true;
             }
-
-            self.a = intermediate_a.reduce();
-            self.b = intermediate_b.reduce();
-        }
-
-        // One last reduction must be done since we  process in chunks
-        self.a = self.a.reduce();
-        self.b = self.b.reduce();
-    }
-
-    /// Returns the current checksum value of the `Fletcher` object
-    pub fn value(&self) -> T {
-        T::combine(&self.a, &self.b)
-    }
-}
-
-pub type Fletcher32 = Fletcher<u32, u16>;
-
-impl FletcherAccumulator<u16> for u32 {
-    fn default_value() -> Self {
-        0x0000ffff
-    }
-
-    fn max_chunk_size() -> usize {
-        360
-    }
-
-    fn combine(lower: &Self, upper: &Self) -> Self {
-        lower | (upper << 16)
-    }
-
-    fn reduce(self) -> Self {
-        (self & 0xffff) + (self >> 16)
-    }
-}
-
-/// struct defining riotboot header
-#[derive(Debug)]
-#[repr(C)]
-pub struct Header {
-    /// Header magic number (always "RIOT")
-    magic_number: u32,
-    /// Integer representing the partition version
-    sequence_number: u32,
-    /// Address after the allocated space for the header
-    start_addr: u32,
-    /// Checksum of riotboot_hdr
-    checksum: u32,
-}
-
-impl Header {
-    fn as_u16_slice(&self) -> &[u16] {
-        unsafe {
-            ::core::slice::from_raw_parts(
-                (self as *const Header) as *const u16,
-                (::core::mem::size_of::<Header>() / 2) - 2, // assume checksum is last and two words long, and must be skipped.
-            )
         }
     }
-    pub fn is_valid(&self) -> bool {
-        //hprintln!("magic: {:#08x}", self.magic_number).unwrap();
-        if self.magic_number == RIOTBOOT_MAGIC {
-            let mut fletcher = Fletcher32::new();
-            fletcher.update(self.as_u16_slice());
-            let sum = fletcher.value();
-            //hprintln!("sum: {:#08x}", sum).unwrap();
-            //hprintln!("expexted: {:#08x}", self.checksum).unwrap();
-            return sum == self.checksum;
-        }
-        false
-    }
+    (image_found, image)
 }
-
-pub fn choose_image(images: &[&Header]) -> Option<u32> {
-    let mut image: Option<u32> = None;
-
-    for header in images {
-        if header.is_valid() {
-            if let Some(image) = image {
-                if header.sequence_number <= image {
-                    continue;
-                }
-            }
-            //hprintln!("found image").unwrap();
-            //hprintln!("valid image address: {:#08x}", header.start_addr).unwrap();
-            image = Some(header.start_addr)
-        }
-    }
-    image
-}
-
-// #![test]
-// mod test {
-//     use super::*;
-
-//     #[test]
-//     test_
