@@ -32,8 +32,8 @@ pub fn update_fletcher(f: Fletcher, data: Seq<u16>) -> Fletcher {
         let mut intermediate_a = a;
         let mut intermediate_b = b;
 
-        for _j in 0..chunk_len {
-            intermediate_a = intermediate_a + chunk[i] as u32;
+        for j in 0..chunk_len {
+            intermediate_a = intermediate_a + chunk[j] as u32;
             intermediate_b = intermediate_b + intermediate_a;
         }
 
@@ -75,16 +75,9 @@ fn header_as_u16_slice(h: Header) -> Seq<u16> {
     }
     u16_seq
 }
-pub fn is_valid_header(h: &Header) -> bool {
+pub fn is_valid_header(h: Header) -> bool {
     let (magic_number, seq_number, start_addr, checksum) = h;
-    let slice = header_as_u16_slice((
-        magic_number.clone(),
-        seq_number.clone(),
-        start_addr.clone(),
-        checksum.clone(),
-    ));
-    let magic_number = magic_number.clone();
-    let checksum = checksum.clone();
+    let slice = header_as_u16_slice((magic_number, seq_number, start_addr, checksum));
     let mut result = false;
     if magic_number == RIOTBOOT_MAGIC {
         let fletcher = new_fletcher();
@@ -101,9 +94,9 @@ pub fn choose_image(images: Seq<Header>) -> (bool, u32) {
 
     for i in 0..images.len() {
         let header = images[i];
-        if is_valid_header(&header) {
-            let (_, sequence_number, start_addr, _) = header;
-            let change_image = !(image_found && (sequence_number <= image));
+        let (magic_number, seq_number, start_addr, checksum) = header;
+        if is_valid_header((magic_number, seq_number, start_addr, checksum)) {
+            let change_image = !(image_found && (seq_number <= image));
             if change_image {
                 image = start_addr;
                 image_found = true;

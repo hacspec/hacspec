@@ -2034,6 +2034,14 @@ fn typecheck_block(
             return_typ = Some(stmt_typ)
         }
     }
+    // We only keep in the list of mutated vars of this block the ones that
+    // were defined at the beginning of the block
+    mutated_vars.retain(|mut_var| {
+        original_var_context.contains_key(match mut_var {
+            Ident::Hacspec(id, _) => id,
+            Ident::Original(_) => panic!(), // should not happen
+        })
+    });
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
     Ok((
         Block {

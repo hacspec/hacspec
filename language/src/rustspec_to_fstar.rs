@@ -451,7 +451,7 @@ fn translate_binop<'a, 'b>(
 
 fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
     match op {
-        UnOpKind::Not => RcDoc::as_string("~"),
+        UnOpKind::Not => RcDoc::as_string("not"),
         UnOpKind::Neg => RcDoc::as_string("-"),
     }
 }
