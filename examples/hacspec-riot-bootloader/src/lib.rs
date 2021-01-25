@@ -16,11 +16,11 @@ pub fn max_chunk_size() -> usize {
 }
 
 fn reduce_u32(x: u32) -> u32 {
-    (x & 0xffffu32) + (x >> 16)
+    (x & 0xffffu32) + (x >> 16u32)
 }
 
 fn combine(lower: u32, upper: u32) -> u32 {
-    lower | (upper << 16)
+    lower | (upper << 16u32)
 }
 
 pub fn update_fletcher(f: Fletcher, data: Seq<u16>) -> Fletcher {
