@@ -16,6 +16,7 @@ sourcesIndex["hacspec_lib"] = {"name":"","dirs":[{"name":"math_util","files":["c
 sourcesIndex["hacspec_ntru_prime"] = {"name":"","files":["ntru-prime.rs"]};
 sourcesIndex["hacspec_poly1305"] = {"name":"","files":["poly1305.rs"]};
 sourcesIndex["hacspec_provider"] = {"name":"","files":["lib.rs","provider.rs"]};
+sourcesIndex["hacspec_riot_bootloader"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["hacspec_sha256"] = {"name":"","files":["sha256.rs"]};
 sourcesIndex["hacspec_sha3"] = {"name":"","files":["sha3.rs"]};
 sourcesIndex["hacspec_util"] = {"name":"","files":["lib.rs"]};
