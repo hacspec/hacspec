@@ -1,6 +1,5 @@
 use hacspec_lib::*;
 
-//use cortex_m_semihosting::{dbg, hprintln};
 /// "RIOT"
 const RIOTBOOT_MAGIC: u32 = 0x544f_4952u32;
 

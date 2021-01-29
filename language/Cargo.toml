@@ -32,7 +32,11 @@ regex = "1.3.9"
 [dev-dependencies]
 assert_cmd = "1.0.1"
 hacspec-lib = { path = "../lib" }
-hacspec-chacha20 = { path = "../examples/hacspec-chacha20" }
-hacspec-poly1305 = { path = "../examples/hacspec-poly1305" }
-hacspec-chacha20poly1305 = { path = "../examples/hacspec-chacha20poly1305" }
-hacspec-ntru-prime = { path = "../examples/hacspec-ntru-prime" }
+hacspec-chacha20 = { path = "../examples/chacha20" }
+hacspec-poly1305 = { path = "../examples/poly1305" }
+hacspec-chacha20poly1305 = { path = "../examples/chacha20poly1305" }
+hacspec-ntru-prime = { path = "../examples/ntru-prime" }
+hacspec-sha3 = { path = "../examples/sha3" }
+hacspec-sha256 = { path = "../examples/sha256" }
+hacspec-curve25519 = { path = "../examples/curve25519" }
+hacspec-riot-bootloader = { path = "../examples/riot-bootloader" }

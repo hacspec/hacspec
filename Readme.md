@@ -98,13 +98,13 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 
 ## Examples
 
-* [Chacha20](examples/hacspec-chacha20/src/chacha20.rs)
-* [Poly1305](examples/hacspec-poly1305/src/poly1305.rs)
-* [Chacha20Poly1305](examples/hacspec-chacha20poly1305/src/chacha20poly1305.rs)
-* [SHA256](examples/hacspec-sha256/src/sha256.rs)
-* [Curve25519](examples/hacspec-curve25519/src/curve25519.rs)
-* [NTRU-prime](examples/hacspec-hacspec-ntru-prime/src/ntru-prime.rs)
-* [SHA-3](examples/hacspec-sha3/src/sha3.rs)
+* [Chacha20](examples/chacha20/src/chacha20.rs)
+* [Poly1305](examples/poly1305/src/poly1305.rs)
+* [Chacha20Poly1305](examples/chacha20poly1305/src/chacha20poly1305.rs)
+* [SHA256](examples/sha256/src/sha256.rs)
+* [Curve25519](examples/curve25519/src/curve25519.rs)
+* [NTRU-prime](examples/hacspec-ntru-prime/src/ntru-prime.rs)
+* [SHA-3](examples/sha3/src/sha3.rs)
 
 ## Unsafe examples
 
