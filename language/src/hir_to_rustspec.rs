@@ -1,11 +1,10 @@
 use im::HashMap;
-use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_metadata::creader::CStore;
 use rustc_middle::mir::interpret::{ConstValue, Scalar};
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
-use rustc_middle::ty::{self, ConstKind, PolyFnSig, RegionKind, TyCtxt, TyKind};
+use rustc_middle::ty::{self, ConstKind, IntTy, PolyFnSig, RegionKind, TyCtxt, TyKind, UintTy};
 use rustc_session::Session;
 use rustc_span::{
     def_id::{CrateNum, DefId, DefIndex, LOCAL_CRATE},

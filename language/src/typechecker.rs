@@ -62,6 +62,26 @@ fn is_numeric(t: &Typ, typ_dict: &TypeDict) -> bool {
     }
 }
 
+fn is_bool(t: &Typ, typ_dict: &TypeDict) -> bool {
+    if (t.0).0 == Borrowing::Borrowed {
+        return false;
+    };
+    match &(t.1).0 {
+        BaseTyp::Bool => true,
+        BaseTyp::Named((Ident::Original(name), _), None) => match typ_dict.get(name) {
+            Some((new_t1, dict_entry)) => {
+                assert!((new_t1.0).0 == Borrowing::Consumed);
+                match dict_entry {
+                    DictEntry::Alias => is_numeric(new_t1, typ_dict),
+                    DictEntry::Array | DictEntry::NaturalInteger => false,
+                }
+            }
+            None => false,
+        },
+        _ => false,
+    }
+}
+
 fn is_copy(t: &BaseTyp, typ_dict: &TypeDict) -> bool {
     match t {
         BaseTyp::Unit => true,
@@ -852,16 +872,34 @@ fn typecheck_expression(
                                 var_context,
                             ))
                         } else {
-                            sess.span_rustspec_err(
-                                span.clone(),
-                                format!(
-                                    "operation not available for type {}{}",
-                                    (t1.0).0,
-                                    (t1.1).0
-                                )
-                                .as_str(),
-                            );
-                            Err(())
+                            if is_bool(&t1, typ_dict)
+                                && (match op {
+                                    BinOpKind::And | BinOpKind::Or => true,
+                                    _ => false,
+                                })
+                            {
+                                Ok((
+                                    Expression::Binary(
+                                        (op.clone(), op_span.clone()),
+                                        Box::new((new_e1, e1.1.clone())),
+                                        Box::new((new_e2, e2.1.clone())),
+                                        Some(t1.clone()),
+                                    ),
+                                    ((Borrowing::Consumed, (t1.0).1), (BaseTyp::Bool, (t1.1).1)),
+                                    var_context,
+                                ))
+                            } else {
+                                sess.span_rustspec_err(
+                                    span.clone(),
+                                    format!(
+                                        "operation not available for type {}{}",
+                                        (t1.0).0,
+                                        (t1.1).0
+                                    )
+                                    .as_str(),
+                                );
+                                Err(())
+                            }
                         }
                     }
                 }
@@ -1996,6 +2034,14 @@ fn typecheck_block(
             return_typ = Some(stmt_typ)
         }
     }
+    // We only keep in the list of mutated vars of this block the ones that
+    // were defined at the beginning of the block
+    mutated_vars.retain(|mut_var| {
+        original_var_context.contains_key(match mut_var {
+            Ident::Hacspec(id, _) => id,
+            Ident::Original(_) => panic!(), // should not happen
+        })
+    });
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
     Ok((
         Block {

@@ -7,7 +7,6 @@ fn run_test(
     dependencies: Vec<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("cargo-hacspec")?;
-    cmd.args(env::args().skip(1));
     cmd.envs(env::vars());
     dependencies.iter().for_each(|d| {
         cmd.arg(format!("--extern={}", d));
@@ -77,4 +76,13 @@ fn run_sha256_test() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn run_curve25519_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test("hacspec-curve25519", None, vec![])
+}
+
+#[test]
+fn run_riot_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test(
+        "hacspec-riot-bootloader",
+        Some("../fstar/Hacspec.Riot.fst"),
+        vec![],
+    )
 }

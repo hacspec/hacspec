@@ -168,7 +168,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Bool => RcDoc::as_string("bool"),
         BaseTyp::UInt8 => RcDoc::as_string("pub_uint8"),
         BaseTyp::Int8 => RcDoc::as_string("pub_int8"),
-        BaseTyp::UInt16 => RcDoc::as_string("pub_uin16"),
+        BaseTyp::UInt16 => RcDoc::as_string("pub_uint16"),
         BaseTyp::Int16 => RcDoc::as_string("pub_int16"),
         BaseTyp::UInt32 => RcDoc::as_string("pub_uint32"),
         BaseTyp::Int32 => RcDoc::as_string("pub_int32"),
@@ -451,7 +451,7 @@ fn translate_binop<'a, 'b>(
 
 fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
     match op {
-        UnOpKind::Not => RcDoc::as_string("~"),
+        UnOpKind::Not => RcDoc::as_string("not"),
         UnOpKind::Neg => RcDoc::as_string("-"),
     }
 }
@@ -1069,7 +1069,25 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
             ))
         })
         .collect();
-    RcDoc::intersperse(i_c_iter, RcDoc::line())
+    let t_a_iter: Vec<RcDoc<()>> = p
+        .ty_aliases
+        .iter()
+        .map(|((name, _), (ty, _))| {
+            RcDoc::as_string("type")
+                .append(RcDoc::space())
+                .append(translate_ident_str(name.clone()))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("="))
+                .append(RcDoc::space())
+                .append(translate_base_typ(ty.clone()))
+        })
+        .collect();
+    RcDoc::intersperse(i_c_iter, RcDoc::hardline())
+        .append(RcDoc::hardline())
+        .append(RcDoc::hardline())
+        .render(width, &mut w)
+        .unwrap();
+    RcDoc::intersperse(t_a_iter, RcDoc::hardline())
         .append(RcDoc::hardline())
         .append(RcDoc::hardline())
         .render(width, &mut w)

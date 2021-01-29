@@ -235,6 +235,21 @@ let seq_update
   =
   LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input
 
+let seq_update_slice
+  (#a: Type)
+  (out: seq a)
+  (start_out: uint_size)
+  (input: seq a)
+  (start_in: uint_size)
+  (len: uint_size{
+    start_in + len <= LSeq.length input /\
+    start_out + len <= LSeq.length out
+  })
+    : nseq a (LSeq.length out)
+  =
+  LSeq.update_sub #a #(LSeq.length out) out start_out len
+    (LSeq.sub #a #(LSeq.length input) input start_in len)
+
 let seq_concat
   (#a: Type)
   (s1 :seq a)
@@ -338,6 +353,18 @@ let array_eq
 
 (**** Integers to arrays *)
 
+let uint16_to_le_bytes (x: uint16) : lseq uint8 2 =
+  LBSeq.uint_to_bytes_le x
+
+let uint16_to_be_bytes (x: uint16) : lseq uint8 2 =
+  LBSeq.uint_to_bytes_be x
+
+let uint16_from_le_bytes (s: lseq uint8 2) : uint16 =
+  LBSeq.uint_from_bytes_le s
+
+let uint16_from_be_bytes (s: lseq uint8 2) : uint16 =
+  LBSeq.uint_from_bytes_be s
+
 let uint32_to_le_bytes (x: uint32) : lseq uint8 4 =
   LBSeq.uint_to_bytes_le x
 
@@ -372,6 +399,19 @@ let uint128_from_le_bytes (input: lseq uint8 16) : uint128 =
   LBSeq.uint_from_bytes_le input
 
 let uint128_from_be_bytes (s: lseq uint8 16) : uint128 =
+  LBSeq.uint_from_bytes_be s
+
+
+let u16_to_le_bytes (x: pub_uint16) : lseq pub_uint8 2 =
+  LBSeq.uint_to_bytes_le x
+
+let u16_to_be_bytes (x: pub_uint16) : lseq pub_uint8 2 =
+  LBSeq.uint_to_bytes_be x
+
+let u16_from_le_bytes (s: lseq pub_uint8 2) : pub_uint16 =
+  LBSeq.uint_from_bytes_le s
+
+let u16_from_be_bytes (s: lseq pub_uint8 2) : pub_uint16 =
   LBSeq.uint_from_bytes_be s
 
 let u32_to_le_bytes (x: pub_uint32) : lseq pub_uint8 4 =
