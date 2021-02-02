@@ -1,6 +1,6 @@
 [package]
 name = "hacspec"
-version = "0.2.0-beta.1"
+version = "0.2.0-beta.2"
 authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>", "Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
