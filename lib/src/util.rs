@@ -4,7 +4,9 @@
 
 #[cfg(feature = "use_attributes")]
 use crate::prelude::*;
-use std::num::ParseIntError;
+use core::num::ParseIntError;
+
+use alloc::vec::Vec;
 
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub fn hex_string_to_bytes(s: &str) -> Vec<u8> {

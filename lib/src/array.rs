@@ -150,7 +150,7 @@ macro_rules! _array_base {
                 $l
             }
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn iter(&self) -> std::slice::Iter<$t> {
+            fn iter(&self) -> core::slice::Iter<$t> {
                 self.0.iter()
             }
 
@@ -269,7 +269,7 @@ macro_rules! _array_base {
 
         impl $name {
             fn hex_string_to_vec(s: &str) -> Vec<$t> {
-                debug_assert!(s.len() % std::mem::size_of::<$t>() == 0);
+                debug_assert!(s.len() % core::mem::size_of::<$t>() == 0);
                 let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
                     .step_by(2)
                     .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map(<$t>::from))
@@ -422,7 +422,7 @@ macro_rules! generic_array {
                 $l
             }
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn iter(&self) -> std::slice::Iter<T> {
+            fn iter(&self) -> core::slice::Iter<T> {
                 self.0.iter()
             }
 
