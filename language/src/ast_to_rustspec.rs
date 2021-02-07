@@ -2,9 +2,9 @@ use im::HashSet;
 use rustc_ast::{
     ast::{
         self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,
-        Defaultness, Expr, ExprKind, Extern, FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind,
+        Defaultness, Expr, ExprKind, Extern, FnRetTy, FnKind, GenericArg, GenericArgs, IntTy, ItemKind,
         LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind, RangeLimits, Stmt,
-        StmtKind, StrStyle, Ty, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
+        StmtKind, StrStyle, Ty, TyKind, TyAliasKind, UintTy, UnOp, Unsafe, UseTreeKind,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -1532,7 +1532,8 @@ fn translate_items(
     arr_types: &ArrayTypes,
 ) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
     match &i.kind {
-        ItemKind::Fn(defaultness, ref sig, ref generics, ref body) => {
+        ItemKind::Fn(fn_kind) => {
+            let FnKind(defaultness, ref sig, ref generics, ref body) = fn_kind.as_ref();
             // First, checking that no fancy function qualifier is here
             match defaultness {
                 Defaultness::Default(span) => {
@@ -1710,7 +1711,8 @@ fn translate_items(
                 arr_types.clone(),
             ))
         }
-        ItemKind::TyAlias(defaultness, generics, _, ty) => {
+        ItemKind::TyAlias(ty_alias_kind) => {
+            let TyAliasKind(defaultness, generics, _, ty) = ty_alias_kind.as_ref();
             match defaultness {
                 Defaultness::Final => (),
                 Defaultness::Default(span) => {
