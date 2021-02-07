@@ -1131,7 +1131,7 @@
                 <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_chunk_len</span>(<span class="ident">chunk_size</span>, <span class="ident">chunk_number</span>);
                 <span class="macro">debug_assert</span><span class="macro">!</span>(
                     <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">len</span>,
-                    <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;the chunk length should match the input. got {}, expected {}&quot;</span>, <span class="ident">input</span>.<span class="ident">len</span>(), <span class="ident">len</span>)
+                    <span class="string">&quot;the chunk length should match the input. got {}, expected {}&quot;</span>, <span class="ident">input</span>.<span class="ident">len</span>(), <span class="ident">len</span>
                 );
                 <span class="self">self</span>.<span class="ident">update_slice</span>(<span class="ident">idx_start</span>, <span class="ident">input</span>, <span class="number">0</span>, <span class="ident">len</span>)
             }
