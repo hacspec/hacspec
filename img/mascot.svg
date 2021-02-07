@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 719 576" style="enable-background:new 0 0 719 576;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:url(#SVGID_1_);}
+	.st1{fill:url(#SVGID_2_);stroke:url(#SVGID_3_);stroke-miterlimit:10;}
+	.st2{fill:url(#SVGID_4_);}
+	.st3{fill:url(#SVGID_5_);stroke:url(#SVGID_6_);stroke-miterlimit:10;}
+	.st4{fill:#A52B00;}
+	.st5{fill:#F74C00;}
+	.st6{fill:#FFFFFF;}
+</style>
+<radialGradient id="SVGID_1_" cx="389.1996" cy="69.8112" r="55.1585" fx="408.8417" fy="32.9877" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.1499" style="stop-color:#FFF2E6"/>
+	<stop  offset="0.7456" style="stop-color:#FFE2D6"/>
+</radialGradient>
+<ellipse class="st0" cx="386.4" cy="72.2" rx="82.9" ry="40.2"/>
+<radialGradient id="SVGID_2_" cx="375.5937" cy="138.7046" r="99.3451" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.1545" style="stop-color:#FFE9DB"/>
+	<stop  offset="0.774" style="stop-color:#FFD5B3"/>
+</radialGradient>
+<radialGradient id="SVGID_3_" cx="375.5937" cy="138.7046" r="113.4167" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.2972" style="stop-color:#FFE9DB"/>
+	<stop  offset="1" style="stop-color:#FFD5B3"/>
+</radialGradient>
+<ellipse class="st1" cx="375.6" cy="138.7" rx="143.7" ry="69.7"/>
+<g>
+	
+		<radialGradient id="SVGID_4_" cx="365.2066" cy="224.7081" r="154.8846" fx="247.222" fy="174.9565" gradientUnits="userSpaceOnUse">
+		<stop  offset="0.2957" style="stop-color:#FFDDC6"/>
+		<stop  offset="0.7855" style="stop-color:#FFC16E"/>
+	</radialGradient>
+	<ellipse class="st2" cx="365.2" cy="224.7" rx="197.1" ry="95.6"/>
+	<g>
+		
+			<image style="overflow:visible;" width="395.2" height="192.2" xlink:href="F564C5B223DF5CA2.png"  transform="matrix(1 0 0 1 167.6251 128.6198)"/>
+	</g>
+</g>
+<radialGradient id="SVGID_5_" cx="408.8745" cy="379.1254" r="250.484" gradientUnits="userSpaceOnUse">
+	<stop  offset="9.119588e-02" style="stop-color:#FFBA7A"/>
+	<stop  offset="0.9792" style="stop-color:#FF931E"/>
+</radialGradient>
+<radialGradient id="SVGID_6_" cx="359.5" cy="346.5" r="187.907" gradientUnits="userSpaceOnUse">
+	<stop  offset="0.2972" style="stop-color:#FFE9DB"/>
+	<stop  offset="1" style="stop-color:#FF931E"/>
+</radialGradient>
+<ellipse class="st3" cx="359.5" cy="346.5" rx="238.5" ry="115.7"/>
+<path class="st4" d="M467,475.4l-5.3-11c0-0.4,0-0.8,0-1.3c0-12.4-12.9-23.9-34.7-33.1v66.2c10.2-4.3,18.4-9.1,24.3-14.2
+	c-1.7,7-7.7,21.1-12.4,31c-7.8,14.2-10.6,26.6-10.2,27.2c0.2,0.4,2.9-3.7,6.8-10.3c9.1-13,26.4-37.7,29.8-44
+	C469.2,478.7,467,475.4,467,475.4z"/>
+<path class="st4" d="M249.4,457.9c0,2.4,0.4,4.8,1.2,7.1l-2.7,5.7c0,0-2.1,3.3,1.6,10.3c3.3,6.1,20,30.2,28.8,42.7
+	c3.8,6.4,6.4,10.4,6.6,10c0.4-0.6-2.4-12.7-9.9-26.5c-3.5-7.4-7.7-17.2-10.2-24.5c7,5.3,16.2,10,27.1,14.1V419
+	C265.7,428.9,249.4,442.7,249.4,457.9z"/>
+<path class="st5" d="M439.5,442.4h-160c-27.9,0-50.7-22.8-50.7-50.7v-11.9c0-27.9,28.8-50.7,50.7-50.7h160
+	c27.9,0,50.7,22.8,50.7,50.7v11.9C490.2,419.6,467.4,442.4,439.5,442.4z"/>
+<g>
+	<path class="st4" d="M316,418c-23.7,8.9-46.5,25.6-51.8,53.1c23.8,19.6,57.7,31.9,95.3,31.9c36.9,0,70.2-11.8,93.9-30.8
+		C440.6,413.5,365.2,398.3,316,418z"/>
+</g>
+<g>
+	<path class="st5" d="M490.2,402c0-55.8-58.5-101-130.7-101s-130.7,45.2-130.7,101c0,26.7,13.5,51,35.4,69.1
+		c5.3-27.5,28.1-44.2,51.8-53.1c49.2-19.7,124.6-4.5,137.4,54.2C476.2,454.1,490.2,429.3,490.2,402z"/>
+</g>
+<g>
+	<ellipse class="st5" cx="279.5" cy="301.5" rx="54.5" ry="57.5"/>
+	<g>
+		<path d="M257.8,264.3c0,0,43.5-19.3,55.4,23.7c0,0,12.4,50.1-35.7,53C277.5,341,216,329.2,257.8,264.3z"/>
+		<path class="st6" d="M279.7,282.9c0,11.2-6.6,20.2-14.7,20.2c-8.1,0-14.7-9-14.7-20.2c0-11.2,6.6-20.2,14.7-20.2
+			C273.1,262.7,279.7,271.7,279.7,282.9z"/>
+	</g>
+</g>
+<path d="M318.3,360.3l80.8-6.5c0,0-2.7,13-13.3,22.8c0,0-27.8,30.5-59.7-2.5C326.2,374.1,320.9,368.4,318.3,360.3z"/>
+<g>
+	<ellipse class="st5" cx="440.5" cy="300.5" rx="54.5" ry="57.5"/>
+	<g>
+		<path d="M418.8,263.3c0,0,43.5-19.3,55.4,23.7c0,0,12.4,50.1-35.7,53C438.5,340,377,328.2,418.8,263.3z"/>
+		<path class="st6" d="M440.7,281.9c0,11.2-6.6,20.2-14.7,20.2c-8.1,0-14.7-9-14.7-20.2c0-11.2,6.6-20.2,14.7-20.2
+			C434.1,261.7,440.7,270.7,440.7,281.9z"/>
+	</g>
+</g>
+<path class="st5" d="M463.2,392.3c0,0,40.5-1.9,93.7-56l7.5-16.7c0,0-82.6-82.1,45.8-138.9c0,0-11.2,18.4-7.9,89.3
+	c0,0,38.7-13.4,50.1-76.1c0,0,56.5,74.4-61.3,144.2c0,0-55.3,88.6-133.1,80.1L463.2,392.3z"/>
+<path class="st5" d="M245.3,370.6c-0.5,0-1,0-1.5,0.1c-20.5-4.7-78-19.7-93.2-44c0,0,77.4-88.1-43.6-144.4l14.1,97.4
+	c0,0-37.3-24.9-45.4-79.1c0,0-90.8,65.9,40.1,129.1c0,0,11.9,44.6,125.9,80.2l0.1-0.3c1.1,0.2,2.3,0.3,3.5,0.3
+	c10.8,0,19.5-8.8,19.5-19.7C264.8,379.5,256.1,370.6,245.3,370.6z"/>
+<ellipse class="st4" cx="359" cy="484.5" rx="79" ry="23.5"/>
+<path class="st5" d="M259.6,455.2c3.7-4.7,5.7-10.3,3.3-16.3c-0.3-1.3-0.7-2.7-1.3-4c-2.9-10.1-17.5-11.6-25.2-5.7l0,0.1
+	c-0.1,0.3-0.2,0.5-0.2,0.8l-28.9,30.7c0,0-4.4,3.5,2,11.6c5.7,7.2,34.9,35.8,50.3,50.7c6.5,7.6,11,12.3,11.5,11.9
+	c0.7-0.6-3.1-14.5-16-30.7c-9.9-14.5-22.7-36.9-19.7-39.5c0,0,3.4-4.3,10.3-7.5c-0.1-0.1-0.1-0.1,0,0c0,0,1.3,0.6,3.8,1.6
+	C253.2,458.8,256.9,458.3,259.6,455.2z"/>
+<path class="st5" d="M505.4,460.3l-31.1-22.9c-0.3-1-0.6-2-0.9-3.1l1.2-1.8c-0.9-1.4-2.1-2.7-3.6-3.6c-5-3-11.7-4.3-16.7-0.7
+	c-12.1,8.9-12.3,27.1-0.3,35.9c0.4-0.2,0.8-0.4,1.3-0.6c15.4-2.8,24.7,5.5,24.7,5.5c3.2,1.9-5.1,24.9-11.9,40.1
+	c-9.3,17.3-10.7,30.8-9.9,31.3c0.5,0.3,3.9-4.8,8.7-13c11.9-16.6,34.4-48.2,38.5-55.9C510.1,462.7,505.4,460.3,505.4,460.3z"/>
+<ellipse transform="matrix(0.987 -0.1606 0.1606 0.987 -24.1461 41.3228)" class="st6" cx="243.5" cy="170" rx="27.5" ry="13"/>
+<ellipse transform="matrix(0.987 -0.1606 0.1606 0.987 -11.4126 49.0317)" class="st6" cx="297.5" cy="95.1" rx="21" ry="9.9"/>
+<ellipse transform="matrix(0.987 -0.1606 0.1606 0.987 -2.8512 56.0189)" class="st6" cx="345" cy="45.6" rx="10.5" ry="5"/>
+</svg>
