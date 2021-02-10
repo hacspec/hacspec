@@ -7,7 +7,7 @@ const RIOTBOOT_MAGIC: u32 = 0x544f_4952u32;
 type Fletcher = (u32, u32);
 
 pub fn new_fletcher() -> Fletcher {
-    (0u32, 0u32)
+    (0x0000_ffff, 0x0000_ffff)
 }
 
 pub fn max_chunk_size() -> usize {
