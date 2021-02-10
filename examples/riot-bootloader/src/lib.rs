@@ -7,7 +7,7 @@ const RIOTBOOT_MAGIC: u32 = 0x544f_4952u32;
 type Fletcher = (u32, u32);
 
 pub fn new_fletcher() -> Fletcher {
-    (0u32, 0u32)
+    (0x0000_ffff, 0x0000_ffff)
 }
 
 pub fn max_chunk_size() -> usize {
@@ -27,7 +27,7 @@ pub fn update_fletcher(f: Fletcher, data: Seq<u16>) -> Fletcher {
     let (mut a, mut b) = f;
 
     for i in 0..data.num_chunks(max_chunk_size) {
-        let (chunk_len, chunk) = data.get_chunk(i, max_chunk_size);
+        let (chunk_len, chunk) = data.get_chunk(max_chunk_size, i);
         let mut intermediate_a = a;
         let mut intermediate_b = b;
 
@@ -67,10 +67,13 @@ fn header_as_u16_slice(h: Header) -> Seq<u16> {
     let u8_seq = u8_seq.update_slice(4, &seq_number, 0, 4);
     let u8_seq = u8_seq.update_slice(8, &start_addr, 0, 4);
     let mut u16_seq = Seq::<u16>::new(6);
-    for i in 0..6 {
-        let u16_word = u16Word::from_seq(&u8_seq.slice(i * 2, 2));
+    for i in 0..3 {
+        let u16_word = u16Word::from_seq(&u8_seq.slice(i * 4, 2));
         let u16_value = u16_from_be_bytes(u16_word);
-        u16_seq[i] = u16_value
+        u16_seq[2 * i + 1] = u16_value;
+        let u16_word = u16Word::from_seq(&u8_seq.slice(i * 4 + 2, 2));
+        let u16_value = u16_from_be_bytes(u16_word);
+        u16_seq[2 * i] = u16_value;
     }
     u16_seq
 }
