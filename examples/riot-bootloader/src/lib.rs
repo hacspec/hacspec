@@ -67,10 +67,13 @@ fn header_as_u16_slice(h: Header) -> Seq<u16> {
     let u8_seq = u8_seq.update_slice(4, &seq_number, 0, 4);
     let u8_seq = u8_seq.update_slice(8, &start_addr, 0, 4);
     let mut u16_seq = Seq::<u16>::new(6);
-    for i in 0..6 {
-        let u16_word = u16Word::from_seq(&u8_seq.slice(i * 2, 2));
+    for i in 0..3 {
+        let u16_word = u16Word::from_seq(&u8_seq.slice(i * 4, 2));
         let u16_value = u16_from_be_bytes(u16_word);
-        u16_seq[i] = u16_value
+        u16_seq[2 * i + 1] = u16_value;
+        let u16_word = u16Word::from_seq(&u8_seq.slice(i * 4 + 2, 2));
+        let u16_value = u16_from_be_bytes(u16_word);
+        u16_seq[2 * i] = u16_value;
     }
     u16_seq
 }
