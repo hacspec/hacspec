@@ -27,7 +27,7 @@ pub fn update_fletcher(f: Fletcher, data: Seq<u16>) -> Fletcher {
     let (mut a, mut b) = f;
 
     for i in 0..data.num_chunks(max_chunk_size) {
-        let (chunk_len, chunk) = data.get_chunk(i, max_chunk_size);
+        let (chunk_len, chunk) = data.get_chunk(max_chunk_size, i);
         let mut intermediate_a = a;
         let mut intermediate_b = b;
 
