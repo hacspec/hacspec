@@ -38,7 +38,7 @@ fn make_let_binding<'a>(
     expr: RcDoc<'a, ()>,
     toplevel: bool,
 ) -> RcDoc<'a, ()> {
-    RcDoc::as_string(if toplevel {"let"} else {"Definition"})
+    RcDoc::as_string(if toplevel {"Definition"} else {"let"})
         .append(RcDoc::space())
         .append(
             pat.append(match typ {
@@ -56,7 +56,7 @@ fn make_let_binding<'a>(
         .append(RcDoc::line().append(expr.group()))
         .nest(2)
         .append(if toplevel {
-            RcDoc::as_string(".")
+            RcDoc::as_string("")
         } else {
             RcDoc::line().append(RcDoc::as_string("in"))
         })
@@ -947,11 +947,11 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
         ),
         // TODO: explain behavior as comment
         Item::ArrayDecl(name, size, cell_t, index_typ) => 
-            RcDoc::as_string("type")
+            RcDoc::as_string("Definition")
             .append(RcDoc::space())
             .append(translate_ident(name.0.clone()))
             .append(RcDoc::space())
-            .append(RcDoc::as_string("="))
+            .append(RcDoc::as_string(":="))
             .group()
             .append(
                 RcDoc::line()
@@ -992,11 +992,11 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                 }
                 _ => panic!(), // should not happen by virtue of typchecking
             };
-            RcDoc::as_string("type")
+            RcDoc::as_string("Definition")
                 .append(RcDoc::space())
                 .append(translate_ident(canvas_name.0.clone()))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("="))
+                .append(RcDoc::as_string(":="))
                 .group()
                 .append(
                     RcDoc::line()
@@ -1011,11 +1011,11 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                 .append(RcDoc::hardline())
                 .append(RcDoc::hardline()) //TODO: add other decl
                 .append(
-                    RcDoc::as_string("type")
+                    RcDoc::as_string("Definition")
                         .append(RcDoc::space())
                         .append(translate_ident(nat_name.0.clone()))
                         .append(RcDoc::space())
-                        .append(RcDoc::as_string("="))
+                        .append(RcDoc::as_string(":="))
                         .group()
                         .append(
                             RcDoc::line()
@@ -1033,6 +1033,7 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
 fn translate_program<'a>(p: &'a Program, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
     RcDoc::concat(p.items.iter().map(|(i, _)| {
         translate_item(i, typ_dict)
+            .append(RcDoc::as_string("."))
             .append(RcDoc::hardline())
             .append(RcDoc::hardline())
     }))
@@ -1080,5 +1081,5 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
         .render(width, &mut w)
         .unwrap();
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap();
-    write!(file, "\nEnd {}", module_name).unwrap()
+    write!(file, "\nEnd {}.", module_name).unwrap()
 }
