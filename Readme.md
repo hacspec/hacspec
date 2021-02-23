@@ -21,24 +21,34 @@ It is recommended to use the [hacspec standard library](https://crates.io/crates
 In order to ensure that the code is a hacspec one can use the typecheker.
 
 ### Typechecking
+Make sure you have at least `rustup 1.23.0`.
+The [`rust-toolchain`](./language/rust-toolchain) automatically picks the correct Rust nightly version and components.
+The compiler version is currently pinned to `nightly-2021-02-14`.
+
 First ensure that Rust nightly is installed and the typechecker is installed.
 
 ```bash
-rustup toolchain install nightly
-rustup component add --toolchain nightly rustc-dev
-cargo +nightly install hacspec
+rustup toolchain install nightly-2021-02-14
+rustup component add --toolchain nightly-2021-02-14 rustc-dev
+cargo +nightly-2021-02-14 install hacspec
+```
+
+Depending on your system you might also need `llvm-tools-preview`
+
+```bash
+rustup component add --toolchain nightly-2021-02-14 llvm-tools-preview
 ```
 
 In a hacspec crate or workspace directory typechecking can be done as follows now:
 
 ```bash
-cargo +nightly hacspec <crate-name>
+cargo +nightly-2021-02-14 hacspec <crate-name>
 ```
 
 Note that the crate needs to be compiled before it can be typechecked.
 
 ```bash
-cargo +nightly build
+cargo +nightly-2021-02-14 build
 ```
 
 If typechecking succeeds, it should show
@@ -51,8 +61,8 @@ If typechecking succeeds, it should show
 To generate F* or EasyCrypt code from hacspec the typechecker (see above) is required.
 
 ```bash
-cargo +nightly hacspec -o <fst-name>.fst <crate-name>
-cargo +nightly hacspec -o <ec-name>.ec <crate-name>
+cargo +nightly-2021-02-14 hacspec -o <fst-name>.fst <crate-name>
+cargo +nightly-2021-02-14 hacspec -o <ec-name>.ec <crate-name>
 ```
 
 # Repository Structure
