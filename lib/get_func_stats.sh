@@ -7,6 +7,7 @@ pushd $cwd
 
 NIGHTLY="${RUST_NIGHTLY:-nightly}"
 
+cargo +$NIGHTLY --version
 cargo +$NIGHTLY build --tests --features="use_attributes"
 
 REMOVE='\033[1;31m'
