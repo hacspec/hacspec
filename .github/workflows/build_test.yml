@@ -15,7 +15,7 @@ jobs:
       with:
         submodules: true
     - name: Prepare
-      run: rustup toolchain install nightly && rustup default nightly && rustup component add --toolchain nightly rustc-dev && rustup component add --toolchain nightly llvm-tools-preview
+      run: rustup toolchain install nightly-2021-02-14 && rustup default nightly-2021-02-14 && rustup component add --toolchain nightly-2021-02-14 rustc-dev && rustup component add --toolchain nightly-2021-02-14 llvm-tools-preview
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -23,8 +23,6 @@ jobs:
     - name: Test Provider
       run: cargo test --verbose -p rc-tests
     - name: Get hacspec function stats
-      run: bash lib/get_func_stats.sh
+      run: RUST_NIGHTLY=nightly-2021-02-14 ./lib/get_func_stats.sh
     - name: Build and test F* compiler
-      run: cargo clean && cd language && cargo +nightly test --verbose
-      env:
-        RUST_NIGHTLY: nightly
+      run: cargo clean && cd language && cargo +nightly-2021-02-14 test --verbose
