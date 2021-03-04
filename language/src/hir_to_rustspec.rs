@@ -1,11 +1,10 @@
 use im::HashMap;
-use rustc_ast::ast::{IntTy, UintTy};
 use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_metadata::creader::CStore;
 use rustc_middle::mir::interpret::{ConstValue, Scalar};
 use rustc_middle::mir::terminator::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
-use rustc_middle::ty::{self, ConstKind, PolyFnSig, RegionKind, TyCtxt, TyKind};
+use rustc_middle::ty::{self, ConstKind, IntTy, PolyFnSig, RegionKind, TyCtxt, TyKind, UintTy};
 use rustc_session::Session;
 use rustc_span::{
     def_id::{CrateNum, DefId, DefIndex, LOCAL_CRATE},
@@ -411,8 +410,8 @@ pub fn retrieve_external_functions(
                                         // some def_id corresponding to constructors of structs
                                         // having a special behavior, for instance std::PhantomData
                                         // or gimli::common::Dwarf64.
-                                        // is_mir_available captures those special cases
-                                        tcx.is_mir_available(def_id) {
+                                        // tcx.type_of(def_id).is_fn() captures those special cases
+                                        tcx.type_of(def_id).is_fn() {
                                             let export_sig = tcx.fn_sig(def_id);
                                             let sig = match translate_polyfnsig(
                                                 tcx,
@@ -455,12 +454,12 @@ pub fn retrieve_external_functions(
     let items = &tcx.hir_crate(LOCAL_CRATE).items;
     for (item_id, item) in items {
         let item_id = tcx.hir().local_def_id(*item_id).to_def_id();
-        match item.kind {
+        match &item.kind {
             ItemKind::Fn(_, _, _) => {
                 process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)
             }
-            ItemKind::Impl { items, .. } => {
-                for item in items {
+            ItemKind::Impl(i) => {
+                for item in i.items.iter() {
                     let item_id = tcx.hir().local_def_id(item.id.hir_id).to_def_id();
                     if let AssocItemKind::Fn { .. } = item.kind {
                         process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)

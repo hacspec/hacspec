@@ -112,7 +112,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 } else {
                     chunk_size
                 };
-                debug_assert!(input.len() == len, format!("the chunk length should match the input. got {}, expected {}", input.len(), len));
+                debug_assert!(input.len() == len, "the chunk length should match the input. got {}, expected {}", input.len(), len);
                 self.update_slice(idx_start, input, 0, len)
             }
         }

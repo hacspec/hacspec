@@ -9,10 +9,10 @@ hacspec-lib = { path = "../lib" }
 hacspec-derive = { path = "../utils/derive" }
 secret_integers = { path = "../utils/secret-integers" }
 abstract_integers = { path = "../utils/abstract-integers" }
-hacspec-chacha20 = { path = "../examples/hacspec-chacha20" }
-hacspec-poly1305 = { path = "../examples/hacspec-poly1305" }
-hacspec-chacha20poly1305 = { path = "../examples/hacspec-chacha20poly1305" }
-hacspec-sha3 = { path = "../examples/hacspec-sha3" }
+hacspec-chacha20 = { path = "../examples/chacha20" }
+hacspec-poly1305 = { path = "../examples/poly1305" }
+hacspec-chacha20poly1305 = { path = "../examples/chacha20poly1305" }
+hacspec-sha3 = { path = "../examples/sha3" }
 
 [dev-dependencies]
 serde_json = "1.0"
