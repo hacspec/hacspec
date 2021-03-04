@@ -1,7 +1,7 @@
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
-use hacspec_sig;
+use hacspec_util;
 use im::{HashMap, HashSet};
 use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
@@ -513,7 +513,7 @@ pub type TypeDict = HashMap<String, (Typ, DictEntry)>;
 
 type NameContext = HashMap<String, Ident>;
 
-type AllowedSigs = std::collections::HashSet<hacspec_sig::Signature>;
+type AllowedSigs = std::collections::HashSet<hacspec_util::Signature>;
 
 fn find_func(
     sess: &Session,

@@ -1,0 +1,18 @@
+[package]
+name = "evercrypt-provider"
+version = "0.1.0"
+authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
+edition = "2018"
+
+[features]
+random = []
+
+[dependencies]
+evercrypt = "0.0.3"
+hacspec-provider = { path = "../../provider" }
+aead = "0.3"
+
+[dev-dependencies]
+serde_json = "1.0"
+serde = {version = "1.0", features = ["derive"]}
+rand = "0.7"

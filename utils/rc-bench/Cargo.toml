@@ -1,0 +1,18 @@
+[package]
+name = "rc-bench"
+version = "0.1.0"
+authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
+[dev-dependencies]
+evercrypt-provider = { path = "../evercrypt-provider" }
+hacspec-provider = { path = "../../provider" }
+chacha20poly1305 = "0.7"
+criterion = "^0.3"
+rand = "^0.7"
+
+[[bench]]
+name = "benchmarks"
+harness = false

@@ -61,7 +61,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 a = a.update_slice(0, input, start, len);
                 a
             }
-            
+
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> Self {
                 let mut out = Self::new(self.len() + next.len());
@@ -112,7 +112,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 } else {
                     chunk_size
                 };
-                debug_assert!(input.len() == len, "the chunk length should match the input");
+                debug_assert!(input.len() == len, format!("the chunk length should match the input. got {}, expected {}", input.len(), len));
                 self.update_slice(idx_start, input, 0, len)
             }
         }
@@ -323,21 +323,33 @@ impl PublicSeq<u8> {
     }
 }
 
+macro_rules! impl_from_public_slice {
+    ($t:ty,$st:ty) => {
+        impl Seq<$st> {
+            #[cfg_attr(feature = "use_attributes", not_hacspec)]
+            pub fn from_public_slice(v: &[$t]) -> Seq<$st> {
+                Self::from_vec(
+                    v[..]
+                        .iter()
+                        .map(|x| <$st>::classify(*x))
+                        .collect::<Vec<$st>>(),
+                )
+            }
+        }
+    };
+}
+
+impl_from_public_slice!(u8, U8);
+impl_from_public_slice!(u16, U16);
+impl_from_public_slice!(u32, U32);
+impl_from_public_slice!(u64, U64);
+impl_from_public_slice!(u128, U128);
+
 impl Seq<U8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     pub fn to_hex(&self) -> String {
         let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
-    }
-
-    #[cfg_attr(feature = "use_attributes", not_hacspec)]
-    pub fn from_public_slice(v: &[u8]) -> Seq<U8> {
-        Self::from_vec(
-            v[..]
-                .iter()
-                .map(|x| <U8>::classify(*x))
-                .collect::<Vec<U8>>(),
-        )
     }
 }
 

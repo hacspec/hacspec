@@ -8,7 +8,6 @@ additional components :
 ```
 rustup toolchain install nightly 
 rustup component add --toolchain nightly rustc-dev
-rustup component add --toolchain nightly llvm-tools-preview
 ```
 
 ## Usage

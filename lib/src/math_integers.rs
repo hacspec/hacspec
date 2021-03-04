@@ -1,3 +1,27 @@
+//! # Math Integers
+//!
+//! This module implements a number of different math integers.
+//!
+//! ## Integers
+//!
+//! * Unsigned Integers: `unsigned_integer`, `unsigned_public_integer`
+//! * Signed Integers: `signed_integer`, `signed_public_integer`
+//! * Natural Numbers modulo an integer: `nat_mod`, `public_nat_mod`
+//!
+//! ```
+//! use hacspec_lib::prelude::*;
+//! unsigned_integer!(LargeSecretInteger, 233);
+//! let a = LargeSecretInteger::from_literal(1);
+//! let b = LargeSecretInteger::from_literal(2);
+//! let c = a + b;
+//! let result = std::panic::catch_unwind(|| {
+//!     // This panics because comparing secret math integers is currently not support.
+//!     assert!(c.equal(LargeSecretInteger::from_literal(3)));
+//! });
+//! assert!(result.is_err());
+//! let _max = LargeSecretInteger::from_hex("1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+//! ```
+
 // TODO: Implement Integer for all math integers?
 
 #[macro_export]

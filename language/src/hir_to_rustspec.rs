@@ -377,7 +377,7 @@ pub fn retrieve_external_functions(
             .filter(|(imported_crate, _)| {
                 *imported_crate == original_crate_name.to_ident_string()
                     || original_crate_name.to_ident_string()
-                        == tcx.crate_name(LOCAL_CRATE).to_ident_string()
+                        == tcx.original_crate_name(LOCAL_CRATE).to_ident_string()
             })
             .collect::<Vec<_>>()
             .len()
@@ -406,8 +406,13 @@ pub fn retrieve_external_functions(
                                         &mut extern_funcs,
                                     ),
                                     DefPathData::Ctor => {
-                                        // Some weird constructor inside std crashes so we disable them for std
-                                        if &original_crate_name.to_ident_string() != "core" {
+                                        if
+                                        // This filter here is complicated. It is used to not check
+                                        // some def_id corresponding to constructors of structs
+                                        // having a special behavior, for instance std::PhantomData
+                                        // or gimli::common::Dwarf64.
+                                        // is_mir_available captures those special cases
+                                        tcx.is_mir_available(def_id) {
                                             let export_sig = tcx.fn_sig(def_id);
                                             let sig = match translate_polyfnsig(
                                                 tcx,
@@ -433,6 +438,8 @@ pub fn retrieve_external_functions(
                                                 }
                                                 _ => (),
                                             }
+                                        } else {
+                                            ()
                                         }
                                     }
                                     _ => (),

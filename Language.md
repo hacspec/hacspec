@@ -20,7 +20,6 @@
       | u8 | u16 | u32 | u64 | u128 | U8 | U16 | U32 | U64 | U128
       | i8 | i16 | i32 | i64 | i128 | I8 | I16 | I32 | I64 | I128
       | Seq<tau> (* Unknown-length array *)
-      | [tau; c] (* fixed-length array *)
       | y (* type variable *)
       | ([tau,]+) (* tuples *)
 
@@ -36,12 +35,11 @@
       | l (* literal *) | (u::)x (* variable *)
       | (u::)(y::)f([(&)e]+); (* function call *)
       | e.f([e']+)  (* method call *)
-      | e1.e2 (* field access *)
+      | ([e]) (* tuple *)
+      | e1.n (* tuple member access *)
       | e1..e2 (* range *)
       | e1 op e2 (* arithmetic operations *) | unop e (* unary op *)
       | x[e] (* array indexing *)
-      | match e {[| p -> e']+ }
-      | z(e) (* enum constructors *)
       | e1 as e2 (* UNsafe integer casting *)
 
     Operator op := + | - | * | / | ^ | && | || | & | | | % | >> | << |
@@ -51,7 +49,6 @@
     Pattern p :=
       | x
       | ([p,]*) (* tuple destructuring *)
-      | z(p) (* enum destructuring *)
       | _ (* wildcard *)
 ```
 

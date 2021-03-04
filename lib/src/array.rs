@@ -3,20 +3,24 @@
 //!
 //! This module implements fixed-length arrays and utility functions for it.
 //!
-//! Note that implementations have to be created with one of the provided macros
-//! such that there's no documentation in here.
-//!
-//! You can find examples for the different types of arrays here:
-//! * [DocSecretBytes](../struct.DocSecretBytes.html) for `bytes!(DocSecretBytes, 64)`
-//! * [DocPublicBytes](../struct.DocPublicBytes.html) for `public_bytes!(DocPublicBytes, 64)`
-//! * [DocSecretArray](../struct.DocSecretArray.html) for `array!(DocSecretArray, 64, U32)`
-//! * [DocPublicArray](../struct.DocPublicArray.html) for `array!(DocPublicArray, 64, u32)`
-//!
 //! **Note** that all macros starting with an underscore (`_array_base` etc.)
 //! are note intended for public use. Unfortunately it's not possible to hide
 //! them.
+//!
+//! To define a new array type with name `State`, holding `16` `u32` run
+//!
+//! ```
+//! use hacspec_lib::prelude::*;
+//! array!(State, 16, u32, type_for_indexes: StateIdx);
+//! ```
+//!
+//! ## Instantiating Arrays
+//! There are several different ways of creating array types.
+//!
+//! ### 
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _array_base {
     ($name:ident,$l:expr,$t:ty) => {
         /// Fixed length byte array.
@@ -117,7 +121,7 @@ macro_rules! _array_base {
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(
                     input.len() == len,
-                    "the chunk length should match the input"
+                    format!("the chunk length should match the input. got {}, expected {}", input.len(), len)
                 );
                 self.update_slice(idx_start, input, 0, len)
             }
@@ -392,7 +396,7 @@ macro_rules! generic_array {
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(
                     input.len() == len,
-                    "the chunk length should match the input"
+                    format!("the chunk length should match the input. got {}, expected {}", input.len(), len)
                 );
                 self.update_slice(idx_start, input, 0, len)
             }
@@ -544,6 +548,7 @@ macro_rules! generic_array {
 }
 
 #[macro_export]
+#[doc(hidden)]
 /// This creates arrays for secret integers, i.e. `$t` is the secret integer
 /// type and `$tbase` is the according Rust type.
 macro_rules! _secret_array {
@@ -641,6 +646,7 @@ macro_rules! _secret_array {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _public_array {
     ($name:ident,$l:expr,$t:ty) => {
         _array_base!($name, $l, $t);
@@ -661,10 +667,11 @@ macro_rules! _public_array {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _implement_secret_u8_array {
     ($name:ident, $l:expr) => {
         _secret_array!($name, $l, U8, u8);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U8);
 
         impl $name {
             #[allow(non_snake_case)]
@@ -737,6 +744,7 @@ macro_rules! _implement_secret_u8_array {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! _implement_public_u8_array {
     ($name:ident, $l:expr) => {
         _public_array!($name, $l, u8);
@@ -820,38 +828,38 @@ macro_rules! array {
     };
     ($name:ident, $l:expr, U16) => {
         _secret_array!($name, $l, U16, u16);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U16);
     };
     ($name:ident, $l:expr, U16, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U16, u16);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U16);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, U32) => {
         _secret_array!($name, $l, U32, u32);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U32);
     };
     ($name:ident, $l:expr, U32, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U32, u32);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U32);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, U64) => {
         _secret_array!($name, $l, U64, u64);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U64);
     };
     ($name:ident, $l:expr, U64, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U64, u64);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U64);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, U128) => {
         _secret_array!($name, $l, U128, u128);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U128);
     };
     ($name:ident, $l:expr, U128, type_for_indexes: $idx: ident) => {
         _secret_array!($name, $l, U128, u128);
-        _implement_numeric_unsigned_secret!($name);
+        _implement_numeric_unsigned_secret!($name, U128);
         pub type $idx = usize;
     };
     ($name:ident, $l:expr, u8) => {
