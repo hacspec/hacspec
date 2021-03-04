@@ -90,12 +90,13 @@ let ctr_to_seq_equiv (ctr: uint32)
   =
   assert(New.chacha20_ctr_to_seq ctr `Seq.equal #_ #1` FStar.Seq.init 1 (fun _ -> ctr))
 
-#push-options "--z3rlimit 50"
+#push-options "--z3rlimit 100"
 let chacha_block_init_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
     : Lemma (New.chacha_block_init key ctr iv ==
       Orig.chacha20_add_counter (Orig.chacha20_init key iv 0) (v ctr))
-  =
-  let st = Seq.create 16 (u32 0) in
+  = Seq.eq_intro (New.chacha_block_init key ctr iv) (Orig.chacha20_add_counter (Orig.chacha20_init key iv 0) (v ctr))
+  
+    let st = Seq.create 16 (u32 0) in
   let st = Seq.update_sub st 0 4 (Seq.map Lib.IntTypes.secret Orig.chacha20_constants) in
   constants_equiv ();
   assert(Seq.sub st 0 4 `Seq.equal` New.chacha20_constants_init ());
