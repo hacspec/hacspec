@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.60/src/item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.62/src/item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -3319,6 +3319,23 @@
 <span id="3319">3319</span>
 <span id="3320">3320</span>
 <span id="3321">3321</span>
+<span id="3322">3322</span>
+<span id="3323">3323</span>
+<span id="3324">3324</span>
+<span id="3325">3325</span>
+<span id="3326">3326</span>
+<span id="3327">3327</span>
+<span id="3328">3328</span>
+<span id="3329">3329</span>
+<span id="3330">3330</span>
+<span id="3331">3331</span>
+<span id="3332">3332</span>
+<span id="3333">3333</span>
+<span id="3334">3334</span>
+<span id="3335">3335</span>
+<span id="3336">3336</span>
+<span id="3337">3337</span>
+<span id="3338">3338</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">derive</span>::{<span class="ident">Data</span>, <span class="ident">DataEnum</span>, <span class="ident">DataStruct</span>, <span class="ident">DataUnion</span>, <span class="ident">DeriveInput</span>};
@@ -3702,7 +3719,11 @@
             <span class="op">|</span> <span class="ident">Item</span>::<span class="ident">Macro</span>(<span class="ident">ItemMacro</span> { <span class="ident">attrs</span>, .. })
             <span class="op">|</span> <span class="ident">Item</span>::<span class="ident">Macro2</span>(<span class="ident">ItemMacro2</span> { <span class="ident">attrs</span>, .. }) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">mem</span>::<span class="ident">replace</span>(<span class="ident">attrs</span>, <span class="ident">new</span>),
             <span class="ident">Item</span>::<span class="ident">Verbatim</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">Item</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+            <span class="ident">Item</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
         }
     }
 }
@@ -4819,11 +4840,11 @@
                 <span class="ident">abi</span>,
                 <span class="ident">fn_token</span>,
                 <span class="ident">ident</span>,
+                <span class="ident">generics</span>,
                 <span class="ident">paren_token</span>,
                 <span class="ident">inputs</span>,
-                <span class="ident">output</span>,
                 <span class="ident">variadic</span>,
-                <span class="ident">generics</span>,
+                <span class="ident">output</span>,
             })
         }
     }
@@ -5109,7 +5130,11 @@
                 <span class="ident">ForeignItem</span>::<span class="ident">Type</span>(<span class="ident">item</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                 <span class="ident">ForeignItem</span>::<span class="ident">Macro</span>(<span class="ident">item</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                 <span class="ident">ForeignItem</span>::<span class="ident">Verbatim</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">item</span>),
-                <span class="ident">ForeignItem</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+                <span class="ident">ForeignItem</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
             };
             <span class="ident">attrs</span>.<span class="ident">extend</span>(<span class="ident">item_attrs</span>.<span class="ident">drain</span>(..));
             <span class="kw-2">*</span><span class="ident">item_attrs</span> <span class="op">=</span> <span class="ident">attrs</span>;
@@ -5587,7 +5612,12 @@
                 <span class="ident">TraitItem</span>::<span class="ident">Method</span>(<span class="ident">item</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                 <span class="ident">TraitItem</span>::<span class="ident">Type</span>(<span class="ident">item</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                 <span class="ident">TraitItem</span>::<span class="ident">Macro</span>(<span class="ident">item</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
-                <span class="ident">TraitItem</span>::<span class="ident">Verbatim</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">TraitItem</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                <span class="ident">TraitItem</span>::<span class="ident">Verbatim</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+                <span class="ident">TraitItem</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
             };
             <span class="ident">attrs</span>.<span class="ident">extend</span>(<span class="ident">item_attrs</span>.<span class="ident">drain</span>(..));
             <span class="kw-2">*</span><span class="ident">item_attrs</span> <span class="op">=</span> <span class="ident">attrs</span>;
@@ -5918,7 +5948,11 @@
                     <span class="ident">ImplItem</span>::<span class="ident">Type</span>(<span class="ident">item</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                     <span class="ident">ImplItem</span>::<span class="ident">Macro</span>(<span class="ident">item</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                     <span class="ident">ImplItem</span>::<span class="ident">Verbatim</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">item</span>),
-                    <span class="ident">ImplItem</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+                    <span class="ident">ImplItem</span>::<span class="ident">__TestExhaustive</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
                 };
                 <span class="ident">attrs</span>.<span class="ident">extend</span>(<span class="ident">item_attrs</span>.<span class="ident">drain</span>(..));
                 <span class="kw-2">*</span><span class="ident">item_attrs</span> <span class="op">=</span> <span class="ident">attrs</span>;
