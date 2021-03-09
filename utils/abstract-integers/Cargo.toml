@@ -10,4 +10,4 @@ license = "Apache-2.0"
 readme = "README.md"
 
 [dependencies]
-num = "0.2"
+num = "0.4"
