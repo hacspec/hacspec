@@ -2,9 +2,9 @@ use im::HashSet;
 use rustc_ast::{
     ast::{
         self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,
-        Defaultness, Expr, ExprKind, Extern, FnRetTy, FnKind, GenericArg, GenericArgs, IntTy, ItemKind,
-        LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind, RangeLimits, Stmt,
-        StmtKind, StrStyle, Ty, TyKind, TyAliasKind, UintTy, UnOp, Unsafe, UseTreeKind,
+        Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs, IntTy,
+        ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind, RangeLimits,
+        Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -689,9 +689,9 @@ fn translate_expr(
                     Err(())
                 }
                 (ExprTranslationResult::TransExpr(r_cond), span) => Ok((r_cond, span)),
-            };
-            let r_t_e = translate_block(sess, arr_typs, t_e)?;
-            let r_f_e: TranslationResult<Option<Spanned<Block>>> = match f_e {
+            }?;
+            let mut r_t_e = translate_block(sess, arr_typs, t_e)?;
+            let r_f_e = match f_e {
                 None => Ok(None),
                 Some(f_e) => match &f_e.kind {
                     ExprKind::Block(f_e, _) => {
@@ -706,13 +706,42 @@ fn translate_expr(
                         Err(())
                     }
                 },
-            };
-            Ok((
+            }?;
+            let stmt_result = (
                 ExprTranslationResult::TransStmt(Statement::Conditional(
-                    r_cond?, r_t_e, r_f_e?, None,
+                    r_cond.clone(),
+                    r_t_e.clone(),
+                    r_f_e.clone(),
+                    None,
                 )),
                 e.span,
-            ))
+            );
+            // Now, we determine whether what we have translate is an inline conditional
+            // or a statement-like conditional
+            match r_f_e {
+                Some(mut r_f_e) => {
+                    if r_t_e.0.stmts.len() == 1 && r_f_e.0.stmts.len() == 1 {
+                        let r_t_span = r_t_e.1.clone();
+                        let r_f_span = r_f_e.1.clone();
+                        let r_t_e = r_t_e.0.stmts.pop().unwrap();
+                        let r_f_e = r_f_e.0.stmts.pop().unwrap();
+                        match (r_t_e.0, r_f_e.0) {
+                            (Statement::ReturnExp(r_t_e), Statement::ReturnExp(r_f_e)) => Ok((
+                                ExprTranslationResult::TransExpr(Expression::InlineConditional(
+                                    Box::new(r_cond),
+                                    Box::new((r_t_e, r_t_span)),
+                                    Box::new((r_f_e, r_f_span)),
+                                )),
+                                e.span,
+                            )),
+                            _ => Ok(stmt_result),
+                        }
+                    } else {
+                        Ok(stmt_result)
+                    }
+                }
+                _ => Ok(stmt_result),
+            }
         }
         ExprKind::ForLoop(pat, range, b, _) => {
             let id = match &pat.kind {
