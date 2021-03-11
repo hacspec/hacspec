@@ -522,6 +522,45 @@ fn translate_expr(
                                     return Err(());
                                 }
                             },
+                            ("secret_bytes", None) => match &*call.args {
+                                MacArgs::Delimited(_, _, tokens) => {
+                                    let mut it = tokens.trees();
+                                    let first_arg = it.next().map_or(Err(()), |x| Ok(x))?;
+                                    let array = check_for_literal_array(sess, &first_arg)?;
+                                    let array = array
+                                        .into_iter()
+                                        .map(|i| {
+                                            (
+                                                Expression::FuncCall(
+                                                    None,
+                                                    (
+                                                        Ident::Original("U8".to_string()),
+                                                        call.span(),
+                                                    ),
+                                                    vec![(
+                                                        i.clone(),
+                                                        (Borrowing::Consumed, i.1.clone()),
+                                                    )],
+                                                ),
+                                                i.1.clone(),
+                                            )
+                                        })
+                                        .collect();
+                                    return Ok((
+                                        (ExprTranslationResult::TransExpr(Expression::NewArray(
+                                            func_name, None, array,
+                                        ))),
+                                        e.span,
+                                    ));
+                                }
+                                _ => {
+                                    sess.span_rustspec_err(
+                                        call.args.span().unwrap().clone(),
+                                        "expected parenthesis-delimited args",
+                                    );
+                                    return Err(());
+                                }
+                            },
                             _ => {
                                 sess.span_rustspec_err(
                                     call.path.span.clone(),
