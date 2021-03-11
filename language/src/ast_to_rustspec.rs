@@ -1,10 +1,11 @@
 use im::HashSet;
 use rustc_ast::{
     ast::{
-        self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,
-        Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs, IntTy,
-        ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind, RangeLimits,
-        Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
+        self, AngleBracketedArg, Async, Attribute, BindingMode, BlockCheckMode, BorrowKind, Const,
+        Crate, Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs,
+        IntTy, ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind,
+        RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe,
+        UseTreeKind,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -1164,6 +1165,7 @@ fn translate_block(
 
 enum ItemTranslationResult {
     Item(Item),
+    Ignored,
     ImportedCrate(String),
     TyAlias(Spanned<String>, Spanned<BaseTyp>),
 }
@@ -1555,6 +1557,13 @@ fn translate_array_decl(
     }
 }
 
+fn attribute_is_test(attr: &Attribute) -> bool {
+    match attr.ident() {
+        Some(s) => s.name.to_ident_string() == "test",
+        None => false,
+    }
+}
+
 fn translate_items(
     sess: &Session,
     i: &ast::Item,
@@ -1562,6 +1571,11 @@ fn translate_items(
 ) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
     match &i.kind {
         ItemKind::Fn(fn_kind) => {
+            // Foremost we check whether this function is a test, in which case
+            // we ignore it
+            if i.attrs.iter().any(attribute_is_test) {
+                return Ok((ItemTranslationResult::Ignored, arr_types.clone()));
+            }
             let FnKind(defaultness, ref sig, ref generics, ref body) = fn_kind.as_ref();
             // First, checking that no fancy function qualifier is here
             match defaultness {
@@ -1800,13 +1814,22 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
     let (items, rest): (Vec<_>, Vec<_>) =
         translated_items.into_iter().partition(|(r, _)| match r {
             ItemTranslationResult::Item(_) => true,
+            ItemTranslationResult::Ignored => true,
             _ => false,
         });
     let (imports, aliases): (Vec<_>, Vec<_>) = rest.into_iter().partition(|(r, _)| match r {
         ItemTranslationResult::Item(_) => panic!(), // should not happen
+        ItemTranslationResult::Ignored => panic!(), // should not happen
         ItemTranslationResult::ImportedCrate(_) => true,
         ItemTranslationResult::TyAlias(_, _) => false,
     });
+    let items: Vec<_> = items
+        .into_iter()
+        .filter(|(r, _)| match r {
+            ItemTranslationResult::Ignored => false,
+            _ => true,
+        })
+        .collect();
     let items = items
         .into_iter()
         .map(|(r, r_span)| {
