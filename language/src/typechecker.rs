@@ -773,6 +773,52 @@ fn typecheck_expression(
                 }
             }
         }
+        Expression::InlineConditional(cond, e_t, e_f) => {
+            let (new_cond, t_cond, var_context) = typecheck_expression(
+                sess,
+                cond,
+                top_level_context,
+                typ_dict,
+                &var_context,
+                name_context,
+            )?;
+            unify_types(
+                sess,
+                &t_cond,
+                &(
+                    (Borrowing::Consumed, (t_cond.0).1),
+                    (BaseTyp::Bool, (t_cond.1).1),
+                ),
+                &HashMap::new(),
+                typ_dict,
+            )?;
+            let (new_e_t, t_e_t, var_context) = typecheck_expression(
+                sess,
+                e_t,
+                top_level_context,
+                typ_dict,
+                &var_context,
+                name_context,
+            )?;
+            let (new_e_f, t_e_f, var_context) = typecheck_expression(
+                sess,
+                e_f,
+                top_level_context,
+                typ_dict,
+                &var_context,
+                name_context,
+            )?;
+            unify_types(sess, &t_e_t, &t_e_f, &HashMap::new(), typ_dict)?;
+            Ok((
+                Expression::InlineConditional(
+                    Box::new((new_cond, cond.1.clone())),
+                    Box::new((new_e_t, e_t.1.clone())),
+                    Box::new((new_e_f, e_f.1.clone())),
+                ),
+                t_e_t,
+                var_context,
+            ))
+        }
         Expression::Binary((op, op_span), e1, e2, _) => {
             let (new_e1, t1, var_context) = typecheck_expression(
                 sess,
@@ -1798,18 +1844,16 @@ fn typecheck_statement(
                 var_context,
                 name_context,
             )?;
-            match cond_t {
-                ((Borrowing::Consumed, _), (BaseTyp::Bool, _)) => (),
-                _ => sess.span_rustspec_err(
-                    cond.1,
-                    format!(
-                        "if condition should have type bool but has type {}{}",
-                        (cond_t.0).0,
-                        (cond_t.1).0
-                    )
-                    .as_str(),
+            unify_types(
+                sess,
+                &cond_t,
+                &(
+                    (Borrowing::Consumed, (cond_t.0).1),
+                    (BaseTyp::Bool, (cond_t.1).1),
                 ),
-            }
+                &HashMap::new(),
+                typ_dict,
+            )?;
             let (new_b1, var_context_b1) = typecheck_block(
                 sess,
                 (b1.clone(), b1_span.clone()),
