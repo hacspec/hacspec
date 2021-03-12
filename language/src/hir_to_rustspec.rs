@@ -453,14 +453,14 @@ pub fn retrieve_external_functions(
     }
     let items = &tcx.hir_crate(LOCAL_CRATE).items;
     for (item_id, item) in items {
-        let item_id = tcx.hir().local_def_id(*item_id).to_def_id();
+        let item_id = tcx.hir().local_def_id(item_id.hir_id()).to_def_id();
         match &item.kind {
             ItemKind::Fn(_, _, _) => {
                 process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)
             }
             ItemKind::Impl(i) => {
                 for item in i.items.iter() {
-                    let item_id = tcx.hir().local_def_id(item.id.hir_id).to_def_id();
+                    let item_id = tcx.hir().local_def_id(item.id.hir_id()).to_def_id();
                     if let AssocItemKind::Fn { .. } = item.kind {
                         process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)
                     }

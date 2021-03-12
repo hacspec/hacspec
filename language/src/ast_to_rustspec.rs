@@ -1785,7 +1785,7 @@ fn translate_items(
 }
 
 pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
-    let items = &krate.module.items;
+    let items = &krate.items;
     let mut arr_types = HashSet::new();
     let translated_items = check_vec(
         items
