@@ -46,12 +46,10 @@ pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> (bool, ByteSeq) {
         let mut t_i = PRK::new();
         let mut t = ByteSeq::new(n as usize * PRK::capacity());
         for i in 0..n {
-            // TODO: allow let declarations #76
-            let mut hmac_txt_in: ByteSeq = ByteSeq::new(0);
-            if i == 0 {
-                hmac_txt_in = build_hmac_txt(&ByteSeq::new(0), info, U8(i + 1))
+            let hmac_txt_in = if i == 0 {
+                build_hmac_txt(&ByteSeq::new(0), info, U8(i + 1))
             } else {
-                hmac_txt_in = build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8(i + 1))
+                build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8(i + 1))
             };
             t_i = hmac(prk, &hmac_txt_in);
             t = t.update(i as usize * t_i.len(), &t_i);

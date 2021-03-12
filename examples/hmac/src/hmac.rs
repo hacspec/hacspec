@@ -9,7 +9,7 @@ const HASH_SIZE: usize = 256 / 8;
 bytes!(PRK, HASH_SIZE);
 
 // HMAC
-array!(Block, BLOCK_LEN, U8);
+bytes!(Block, BLOCK_LEN);
 
 // TODO: see issue #74
 const I_PAD: Block = Block(secret_array!(
