@@ -86,3 +86,21 @@ fn run_riot_test() -> Result<(), Box<dyn std::error::Error>> {
         vec![],
     )
 }
+
+#[test]
+fn run_hmac_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test(
+        "hacspec-hmac",
+        Some("../fstar/Hacspec.Hmac.fst"),
+        vec!["hacspec_sha256"],
+    )
+}
+
+#[test]
+fn run_hkdf_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test(
+        "hacspec-hkdf",
+        Some("../fstar/Hacspec.Hkdf.fst"),
+        vec!["hacspec_sha256", "hacspec_hmac"],
+    )
+}
