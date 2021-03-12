@@ -517,7 +517,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
 #[derive(Clone)]
 struct TopLevelContext {
     functions: HashMap<FnKey, FnValue>,
-    consts: HashMap<String, (Spanned<BaseTyp>, Spanned<Expression>)>,
+    consts: HashMap<String, (Spanned<BaseTyp>, Option<Spanned<Expression>>)>,
 }
 
 type VarContext = HashMap<HacspecId, (Typ, String)>;
@@ -1532,7 +1532,7 @@ fn typecheck_expression(
                 return Err(());
             }
             if !is_safe_casting(&(e1_typ.1).0, &t1.0) {
-                sess.span_rustspec_err(
+                sess.span_rustspec_warn(
                     span.clone(),
                     format!(
                         "casting from {} to {} is not safe (i.e it can lead to overflow)",
@@ -1540,7 +1540,6 @@ fn typecheck_expression(
                     )
                     .as_str(),
                 );
-                return Err(());
             }
             Ok((
                 Expression::IntegerCasting(
@@ -2260,7 +2259,7 @@ fn typecheck_item(
                     (Ident::Original(id), _) => id.clone(),
                     _ => panic!(), // should not happen
                 },
-                (typ.clone(), (new_e.clone(), e.1.clone())),
+                (typ.clone(), Some((new_e.clone(), e.1.clone()))),
             );
             Ok((
                 Item::ConstDecl(id.clone(), typ.clone(), (new_e, (e.1).clone())),
@@ -2333,6 +2332,7 @@ pub fn typecheck_program<
     ) -> (
         HashMap<FnKey, Result<ExternalFuncSig, String>>,
         HashMap<String, BaseTyp>,
+        HashMap<String, BaseTyp>,
     ),
 >(
     sess: &Session,
@@ -2340,10 +2340,10 @@ pub fn typecheck_program<
     external_funcs: &F,
     _allowed_sigs: &AllowedSigs,
 ) -> TypecheckingResult<(Program, TypeDict)> {
-    let (extern_funcs, extern_arrays) = external_funcs(&p.imported_crates);
+    let (extern_funcs, extern_consts, extern_arrays) = external_funcs(&p.imported_crates);
     let mut top_level_context: TopLevelContext = TopLevelContext {
         functions: extern_funcs
-            .iter()
+            .into_iter()
             .map(|(k, v)| {
                 (
                     k.clone(),
@@ -2354,7 +2354,10 @@ pub fn typecheck_program<
                 )
             })
             .collect(),
-        consts: HashMap::new(),
+        consts: extern_consts
+            .into_iter()
+            .map(|(k, v)| (k, ((v, DUMMY_SP), None)))
+            .collect(),
     };
     //TODO: better system, this whitelist is hardcoded
     let mut typ_dict = HashMap::from(
