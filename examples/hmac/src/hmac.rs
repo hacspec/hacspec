@@ -2,16 +2,10 @@ use hacspec_lib::*;
 use hacspec_sha256::*;
 
 // HASH_SIZE and K_SIZE are defined in the sha256 crate.
-// TODO: see issue #75
-const BLOCK_LEN: usize = 64; // K_SIZE
-const HASH_SIZE: usize = 256 / 8;
-
+const BLOCK_LEN: usize = K_SIZE;
 bytes!(PRK, HASH_SIZE);
-
-// HMAC
 bytes!(Block, BLOCK_LEN);
 
-// TODO: see issue #74
 const I_PAD: Block = Block(secret_array!(
     U8,
     [

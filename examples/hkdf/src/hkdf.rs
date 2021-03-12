@@ -1,10 +1,9 @@
 use hacspec_hmac::*;
 use hacspec_lib::*;
 
-// HASH_LEN (HASH_SIZE) is defined in the sha256 crate.
-// TODO: see issue #75
+// HASH_LEN for SHA256
+// XXX: HMAC should probably expose this
 const HASH_LEN: usize = 256 / 8;
-// bytes!(PRK, HASH_LEN);
 
 // TODO: add Option when supported
 /// Extract a pseudo-random key from input key material (IKM) and optionally a salt.
@@ -40,19 +39,17 @@ fn div_ceil(a: usize, b: usize) -> usize {
 pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> (bool, ByteSeq) {
     let n = div_ceil(l, HASH_LEN);
     let mut result = (false, ByteSeq::new(0));
-    if n <= u8::max_value().into() {
-        // TODO: allow downcasting #77
-        let n = u8::try_from(n).unwrap();
+    if n <= 255 {
         let mut t_i = PRK::new();
-        let mut t = ByteSeq::new(n as usize * PRK::capacity());
+        let mut t = ByteSeq::new(n * PRK::capacity());
         for i in 0..n {
             let hmac_txt_in = if i == 0 {
-                build_hmac_txt(&ByteSeq::new(0), info, U8(i + 1))
+                build_hmac_txt(&ByteSeq::new(0), info, U8((i as u8) + 1u8))
             } else {
-                build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8(i + 1))
+                build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8((i as u8) + 1u8))
             };
             t_i = hmac(prk, &hmac_txt_in);
-            t = t.update(i as usize * t_i.len(), &t_i);
+            t = t.update(i * t_i.len(), &t_i);
         }
         result = (true, t.slice(0, l));
     }
