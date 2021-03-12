@@ -4,21 +4,41 @@ use tls13crypto::*;
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
+/* TLS 1.3 - specific crypto code */
+
+pub fn vlbytes1(b:Bytes) : Res<Bytes> {
+    let lenb = b.len();
+    if lenb >= 256 {return Err(0);}
+    else {
+        let lenb = lenb as u8;
+        return Ok(Seq::from_seq(secret_bytes!([lenb])).concat(&b))}
+}
+
+static empty: Bytes = Seq::new(0);
+static label_tls13 : Bytes = Seq::from_seq(secret_bytes!([116,108,115,049,051,032]));
+static label_res_binder : Bytes = Seq::from_seq(secret_bytes!([114, 101, 115, 032, 098, 105, 110, 100, 101, 114]));
+static label_ext_binder : Bytes = Seq::from_seq(secret_bytes!([101, 120, 116, 032, 098, 105, 110, 100, 101, 114]));
+
 pub fn hkdf_expand_label(
     ha: HashAlgorithm,
     k: KEY,
-    label: String,
+    label: Bytes,
     context: Bytes,
-    len: usize,
+    len: u16,
 ) -> Res<KEY> {
-    return Ok(k);
+    let lenb = Seq::from_seq(&U16_to_be_bytes(U16(len)));
+    let labelb = label_tls13.concat(&label);
+    let info = lenb.concat(&vlbytes1(labelb)?).concat(&vlbytes1(context)?);
+    return hkdf_expand(ha,k,info,len as usize);
 }
 
-pub fn derive_secret(ha: HashAlgorithm, k: KEY, label: String, context: Bytes) -> Res<KEY> {
-    return Ok(k);
+pub fn derive_secret(ha: HashAlgorithm, k: KEY, label: Bytes, context: Bytes) -> Res<KEY> {
+    return hkdf_expand_label(ha,k,label,context,32);
 }
-fn derive_binder_key(psk: PSK) -> MACK {
-    return MACK::new();
+
+fn derive_binder_key(ha: HashAlgorithm, k: KEY) -> Res<MACK> {
+    let mk = derive_secret(ha, k, label_res_binder, empty)?;
+    return Ok(MACK::from_seq(&mk));
 }
 
 fn derive_0rtt_keys(psk: PSK, ch: Bytes, ae_alg: AEADAlgorithm) -> (AEK, KEY) {

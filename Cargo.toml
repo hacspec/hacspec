@@ -22,6 +22,7 @@ members = [
     "examples/ntru-prime",
     "examples-unsafe",
     "examples/riot-bootloader",
+    "protocols/tls13"
 ]
 default-members = [
     "lib",
@@ -42,6 +43,7 @@ default-members = [
     "examples/ntru-prime",
     "examples-unsafe",
     "examples/riot-bootloader",
+    "protocols/tls13"
 ]
 
 [profile.release]
