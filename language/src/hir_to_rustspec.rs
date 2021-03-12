@@ -232,6 +232,7 @@ fn process_fn_id(
     id: &DefId,
     krate_num: &CrateNum,
     extern_funcs: &mut HashMap<FnKey, Result<ExternalFuncSig, String>>,
+    extern_consts: &mut HashMap<String, BaseTyp>,
 ) {
     match tcx.type_of(*id).kind() {
         TyKind::FnDef(_, _) => {
@@ -290,7 +291,23 @@ fn process_fn_id(
                 };
             }
         }
-        _ => (),
+        _ => {
+            let def_path = tcx.def_path(*id);
+            if def_path.krate == *krate_num {
+                if def_path.data.len() == 1 {
+                    let ty = translate_base_typ(tcx, &tcx.type_of(*id), &HashMap::new());
+                    match ty {
+                        Ok((ty, _)) => match def_path.data[0].data {
+                            DefPathData::ValueNs(name) => {
+                                extern_consts.insert(name.to_ident_string(), ty);
+                            }
+                            _ => (),
+                        },
+                        Err(_) => (),
+                    }
+                }
+            }
+        }
     };
 }
 
@@ -355,10 +372,12 @@ pub fn retrieve_external_functions(
 ) -> (
     HashMap<FnKey, Result<ExternalFuncSig, String>>,
     HashMap<String, BaseTyp>,
+    HashMap<String, BaseTyp>,
 ) {
     let mut krates: Vec<_> = tcx.crates().iter().collect();
     krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
+    let mut extern_consts = HashMap::new();
     let mut extern_arrays = HashMap::new();
     let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
     let mut imported_crates = imported_crates.clone();
@@ -403,6 +422,7 @@ pub fn retrieve_external_functions(
                                         &def_id,
                                         krate_num,
                                         &mut extern_funcs,
+                                        &mut extern_consts,
                                     ),
                                     DefPathData::Ctor => {
                                         if
@@ -455,19 +475,31 @@ pub fn retrieve_external_functions(
     for (item_id, item) in items {
         let item_id = tcx.hir().local_def_id(item_id.hir_id()).to_def_id();
         match &item.kind {
-            ItemKind::Fn(_, _, _) => {
-                process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)
-            }
+            ItemKind::Fn(_, _, _) => process_fn_id(
+                sess,
+                tcx,
+                &item_id,
+                &LOCAL_CRATE,
+                &mut extern_funcs,
+                &mut extern_consts,
+            ),
             ItemKind::Impl(i) => {
                 for item in i.items.iter() {
                     let item_id = tcx.hir().local_def_id(item.id.hir_id()).to_def_id();
                     if let AssocItemKind::Fn { .. } = item.kind {
-                        process_fn_id(sess, tcx, &item_id, &LOCAL_CRATE, &mut extern_funcs)
+                        process_fn_id(
+                            sess,
+                            tcx,
+                            &item_id,
+                            &LOCAL_CRATE,
+                            &mut extern_funcs,
+                            &mut extern_consts,
+                        )
                     }
                 }
             }
             _ => (),
         }
     }
-    (extern_funcs, extern_arrays)
+    (extern_funcs, extern_consts, extern_arrays)
 }
