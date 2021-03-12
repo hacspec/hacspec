@@ -1532,7 +1532,7 @@ fn typecheck_expression(
                 return Err(());
             }
             if !is_safe_casting(&(e1_typ.1).0, &t1.0) {
-                sess.span_rustspec_err(
+                sess.span_rustspec_warn(
                     span.clone(),
                     format!(
                         "casting from {} to {} is not safe (i.e it can lead to overflow)",
@@ -1540,7 +1540,6 @@ fn typecheck_expression(
                     )
                     .as_str(),
                 );
-                return Err(());
             }
             Ok((
                 Expression::IntegerCasting(
