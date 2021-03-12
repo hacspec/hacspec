@@ -56,7 +56,7 @@ cargo +nightly-2021-03-11 build
 If typechecking succeeds, it should show
 
 ```bash
-> Successfully verified.
+> Successfully typechecked.
 ```
 
 ### Generating code

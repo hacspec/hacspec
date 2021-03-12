@@ -254,7 +254,7 @@ fn main() -> Result<(), ()> {
 
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => {
-            println!(" > Successfully verified.");
+            println!(" > Successfully typechecked.");
             Ok(())
         }
         Err(_) => Err(()),
