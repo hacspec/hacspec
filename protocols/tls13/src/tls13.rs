@@ -6,7 +6,7 @@ use tls13crypto::*;
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-/* TLS 1.3 - specific crypto code */
+/* TLS 1.3 - specific crypto code for key schedule */
 
 pub fn hkdf_expand_label(
     ha: HashAlgorithm,
@@ -37,6 +37,16 @@ fn derive_binder_key(ha: HashAlgorithm, k: KEY) -> Res<MACK> {
     return Ok(MACK::from_seq(&mk));
 }
 
+fn derive_aead_keyiv(ha: HashAlgorithm, k: KEY) -> Res<AEKIV> {
+    let empty = Bytes::new(0);
+    let sender_write_key = hkdf_expand_label(ha, k, Seq::from_seq(&label_key), &empty, 32)?;
+    let sender_write_iv = hkdf_expand_label(ha, k, Seq::from_seq(&label_iv), &empty, 12)?;
+    return Ok((
+        AEK::from_seq(&sender_write_key),
+        AEIV::from_seq(&sender_write_iv),
+    ));
+}
+
 fn derive_0rtt_keys(
     ha: HashAlgorithm,
     ae: AEADAlgorithm,
@@ -44,30 +54,13 @@ fn derive_0rtt_keys(
     ch_log: &Bytes,
 ) -> Res<(AEKIV, KEY)> {
     let zeros = KEY::new();
-    let empty = Bytes::new(0);
     let early_secret = hkdf_extract(ha, k, zeros)?;
     let client_early_traffic_secret =
         derive_secret(ha, early_secret, Seq::from_seq(&label_c_e_traffic), ch_log)?;
     let early_exporter_master_secret =
         derive_secret(ha, early_secret, Seq::from_seq(&label_c_e_traffic), ch_log)?;
-    let sender_write_key = AEK::from_seq(&hkdf_expand_label(
-        ha,
-        client_early_traffic_secret,
-        Seq::from_seq(&label_key),
-        &empty,
-        32,
-    )?);
-    let sender_write_iv = AEIV::from_seq(&hkdf_expand_label(
-        ha,
-        client_early_traffic_secret,
-        Seq::from_seq(&label_iv),
-        &empty,
-        12,
-    )?);
-    return Ok((
-        (sender_write_key, sender_write_iv),
-        early_exporter_master_secret,
-    ));
+    let sender_write_key_iv = derive_aead_keyiv(ha, client_early_traffic_secret)?;
+    return Ok((sender_write_key_iv, early_exporter_master_secret));
 }
 
 fn derive_hk_ms(
@@ -107,40 +100,14 @@ fn derive_hk_ms(
         &empty,
         32,
     )?);
-    let client_write_key = AEK::from_seq(&hkdf_expand_label(
-        ha,
-        client_handshake_traffic_secret,
-        Seq::from_seq(&label_key),
-        &empty,
-        32,
-    )?);
-    let client_write_iv = AEIV::from_seq(&hkdf_expand_label(
-        ha,
-        client_handshake_traffic_secret,
-        Seq::from_seq(&label_iv),
-        &empty,
-        12,
-    )?);
-    let server_write_key = AEK::from_seq(&hkdf_expand_label(
-        ha,
-        server_handshake_traffic_secret,
-        Seq::from_seq(&label_key),
-        &empty,
-        32,
-    )?);
-    let server_write_iv = AEIV::from_seq(&hkdf_expand_label(
-        ha,
-        server_handshake_traffic_secret,
-        Seq::from_seq(&label_iv),
-        &empty,
-        12,
-    )?);
+    let client_write_key_iv = derive_aead_keyiv(ha, client_handshake_traffic_secret)?;
+    let server_write_key_iv = derive_aead_keyiv(ha, server_handshake_traffic_secret)?;
     let master_secret_ =
         derive_secret(ha, handshake_secret, Seq::from_seq(&label_derived), &empty)?;
     let master_secret = hkdf_extract(ha, zeros, master_secret_)?;
     return Ok((
-        (client_write_key, client_write_iv),
-        (server_write_key, server_write_iv),
+        client_write_key_iv,
+        server_write_key_iv,
         client_finished_key,
         server_finished_key,
         master_secret,
@@ -157,39 +124,13 @@ fn derive_app_keys(
         derive_secret(ha, master_secret, Seq::from_seq(&label_c_ap_traffic), log)?;
     let server_application_traffic_secret_0 =
         derive_secret(ha, master_secret, Seq::from_seq(&label_s_ap_traffic), log)?;
-    let client_write_key = AEK::from_seq(&hkdf_expand_label(
-        ha,
-        client_application_traffic_secret_0,
-        Seq::from_seq(&label_key),
-        &Seq::new(0),
-        32,
-    )?);
-    let client_write_iv = AEIV::from_seq(&hkdf_expand_label(
-        ha,
-        client_application_traffic_secret_0,
-        Seq::from_seq(&label_iv),
-        &Seq::new(0),
-        12,
-    )?);
-    let server_write_key = AEK::from_seq(&hkdf_expand_label(
-        ha,
-        server_application_traffic_secret_0,
-        Seq::from_seq(&label_key),
-        &Seq::new(0),
-        32,
-    )?);
-    let server_write_iv = AEIV::from_seq(&hkdf_expand_label(
-        ha,
-        server_application_traffic_secret_0,
-        Seq::from_seq(&label_iv),
-        &Seq::new(0),
-        12,
-    )?);
+    let client_write_key_iv = derive_aead_keyiv(ha, client_application_traffic_secret_0)?;
+    let server_write_key_iv = derive_aead_keyiv(ha, server_application_traffic_secret_0)?;
     let exporter_master_secret =
         derive_secret(ha, master_secret, Seq::from_seq(&label_exp_master), log)?;
     return Ok((
-        (client_write_key, client_write_iv),
-        (server_write_key, server_write_iv),
+        client_write_key_iv,
+        server_write_key_iv,
         exporter_master_secret,
     ));
 }
