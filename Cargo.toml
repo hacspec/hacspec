@@ -27,6 +27,8 @@ members = [
     "examples/p256",
     "examples/bls12-381",
     "examples/ecdsa-p256-sha256",
+    "examples/gmac",
+    "examples/aes",
 ]
 default-members = [
     "lib",
@@ -52,6 +54,8 @@ default-members = [
     "examples/p256",
     "examples/bls12-381",
     "examples/ecdsa-p256-sha256",
+    "examples/gmac",
+    "examples/aes",
 ]
 
 [profile.release]
