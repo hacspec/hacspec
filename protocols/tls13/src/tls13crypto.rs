@@ -18,6 +18,8 @@ bytes!(HMAC, 32);
 bytes!(SIG, 64);
 bytes!(AEIV, 12);
 
+pub const zeros : KEY = KEY(secret_bytes!([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]));
+
 pub type AEKIV = (AEK,AEIV);
 
 #[derive(Clone, Copy)]

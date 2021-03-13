@@ -81,3 +81,11 @@ pub fn vlbytes2(b: &Bytes) -> Res<Bytes> {
         return Ok(lenb.concat(b));
     }
 }
+
+pub fn empty() -> Bytes {
+    return Seq::new(0);
+}
+
+pub fn bytes<T: SeqTrait<U8>>(x: &T) -> Bytes {
+    return Seq::from_seq(x);
+}
