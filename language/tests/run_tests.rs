@@ -11,10 +11,9 @@ fn run_test(
     dependencies.iter().for_each(|d| {
         cmd.arg(format!("--extern={}", d));
     });
-    match output {
-        None => cmd.arg("-Zno-codegen".to_string()),
-        Some(f) => cmd.arg(format!("-o {}", f)),
-    };
+    if let Some(f) = output {
+        cmd.arg(format!("-o {}", f));
+    }
     cmd.arg(format!("{}", package_name));
     println!("Running: {:?}", cmd);
     cmd.assert().success();
