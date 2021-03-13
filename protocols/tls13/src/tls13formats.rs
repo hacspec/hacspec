@@ -6,11 +6,15 @@ use hacspec_lib::*;
 pub type Res<T> = Result<T, usize>;
 pub type Bytes = Seq<U8>;
 
+bytes!(Bytes1, 1);
 bytes!(Bytes2, 2);
 bytes!(Bytes3, 3);
+bytes!(Bytes4, 4);
+bytes!(Bytes5, 5);
 bytes!(Bytes6, 6);
 bytes!(Bytes7, 7);
 bytes!(Bytes8, 8);
+bytes!(Bytes9, 9);
 bytes!(Bytes10, 10);
 bytes!(Bytes11, 11);
 bytes!(Bytes12, 12);
@@ -62,7 +66,7 @@ pub const payload_too_long: usize = 5;
 pub const psk_mode_mismatch: usize = 6;
 pub const negotiation_mismatch: usize = 7;
 
-pub fn vlbytes1(b: &Bytes) -> Res<Bytes> {
+pub fn lbytes1(b: &Bytes) -> Res<Bytes> {
     let len = b.len();
     if len >= 256 {
         return Err(payload_too_long);
@@ -73,7 +77,7 @@ pub fn vlbytes1(b: &Bytes) -> Res<Bytes> {
     }
 }
 
-pub fn vlbytes2(b: &Bytes) -> Res<Bytes> {
+pub fn lbytes2(b: &Bytes) -> Res<Bytes> {
     let len = b.len();
     if len >= 65536 {
         return Err(payload_too_long);

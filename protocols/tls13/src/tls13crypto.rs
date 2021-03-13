@@ -14,6 +14,7 @@ bytes!(VERK, 32);
 bytes!(MACK, 32);
 bytes!(AEK, 32);
 bytes!(KEY, 32);
+bytes!(HASH, 32);
 bytes!(HMAC, 32);
 bytes!(SIG, 64);
 bytes!(AEIV, 12);
@@ -88,4 +89,8 @@ pub fn aead_encrypt(a: AEADAlgorithm, k: AEK, iv: AEIV, payload: Bytes, ad: Byte
 
 pub fn aead_decrypt(a: AEADAlgorithm, k: AEK, iv: AEIV, Ciphertext: Bytes, ad: Bytes) -> Res<Bytes> {
     return Ok(Ciphertext);
+}
+
+pub fn hash_empty(ha:HashAlgorithm) -> HASH {
+    return (HASH::new());
 }
