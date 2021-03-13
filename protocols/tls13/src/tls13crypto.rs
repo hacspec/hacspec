@@ -1,9 +1,18 @@
 // A module that wraps all the Generic crypto needed by TLS 1.3
 // Each function below should be supported by a standard crypto library
-use crate::tls13formats::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
+
+pub type Res<T> = Result<T, usize>;
+pub type Bytes = Seq<U8>;
+pub fn empty() -> Bytes {
+    return Seq::new(0);
+}
+
+pub fn bytes<T: SeqTrait<U8>>(x: &T) -> Bytes {
+    return Seq::from_seq(x);
+}
 
 bytes!(Entropy, 64);
 bytes!(Random, 32);

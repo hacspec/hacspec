@@ -15,7 +15,9 @@ pub fn hkdf_expand_label(
 ) -> Res<KEY> {
     let lenb = bytes(&U16_to_be_bytes(U16(len)));
     let tls13_label = label_tls13.concat(&label);
-    let info = lenb.concat(&lbytes1(&tls13_label)?).concat(&lbytes1(context)?);
+    let info = lenb
+        .concat(&lbytes1(&tls13_label)?)
+        .concat(&lbytes1(context)?);
     return hkdf_expand(ha, k, info, len as usize);
 }
 
@@ -48,7 +50,7 @@ fn derive_0rtt_keys(ha: HashAlgorithm, ae: AEADAlgorithm, k: KEY, tx: &HASH) -> 
     return Ok((sender_write_key_iv, early_exporter_master_secret));
 }
 
-fn derive_finished_key(ha:HashAlgorithm,k:KEY) -> Res<MACK> {
+fn derive_finished_key(ha: HashAlgorithm, k: KEY) -> Res<MACK> {
     Ok(MACK::from_seq(&hkdf_expand_label(
         ha,
         k,
@@ -71,8 +73,8 @@ fn derive_hk_ms(
         derive_secret(ha, handshake_secret, bytes(&label_c_hs_traffic), tx)?;
     let server_handshake_traffic_secret =
         derive_secret(ha, handshake_secret, bytes(&label_s_hs_traffic), tx)?;
-    let client_finished_key = derive_finished_key(ha,client_handshake_traffic_secret)?;
-    let server_finished_key = derive_finished_key(ha,server_handshake_traffic_secret)?;
+    let client_finished_key = derive_finished_key(ha, client_handshake_traffic_secret)?;
+    let server_finished_key = derive_finished_key(ha, server_handshake_traffic_secret)?;
     let client_write_key_iv = derive_aead_key_iv(ha, client_handshake_traffic_secret)?;
     let server_write_key_iv = derive_aead_key_iv(ha, server_handshake_traffic_secret)?;
     let master_secret_ =
@@ -117,7 +119,7 @@ fn derive_rms(ha: HashAlgorithm, master_secret: KEY, tx: &HASH) -> Res<KEY> {
 // Using newtype pattern below, but the same thing works with tuples too
 struct CipherState(AEADAlgorithm, AEKIV);
 
-fn derive_iv_ctr(iv:AEIV, n:u64) -> AEIV {
+fn derive_iv_ctr(iv: AEIV, n: u64) -> AEIV {
     let counter = bytes(&U64_to_be_bytes(U64(n)));
     let mut iv_ctr = iv;
     for i in 0..8 {
@@ -127,7 +129,7 @@ fn derive_iv_ctr(iv:AEIV, n:u64) -> AEIV {
 }
 fn encrypt(payload: Bytes, n: u64, st: CipherState) -> Res<Bytes> {
     let CipherState(ae, (k, iv)) = st;
-    let iv_ctr = derive_iv_ctr(iv,n);
+    let iv_ctr = derive_iv_ctr(iv, n);
     let clen = payload.len() + 16;
     if clen <= 65536 {
         let clenb = u16_to_be_bytes(clen as u16);
@@ -140,7 +142,7 @@ fn encrypt(payload: Bytes, n: u64, st: CipherState) -> Res<Bytes> {
 
 fn decrypt(ciphertext: Bytes, n: u64, st: CipherState) -> Res<Bytes> {
     let CipherState(ae, (k, iv)) = st;
-    let iv_ctr = derive_iv_ctr(iv,n);
+    let iv_ctr = derive_iv_ctr(iv, n);
     if ciphertext.len() <= 65536 {
         let clenb = u16_to_be_bytes(ciphertext.len() as u16);
         let ad = bytes(&Bytes5(secret_bytes!([23, 3, 3, clenb[0], clenb[1]])));
@@ -154,16 +156,6 @@ fn decrypt(ciphertext: Bytes, n: u64, st: CipherState) -> Res<Bytes> {
 /* We implement a simple linear state machine:
 PostClientHello -> PostServerHello -> PostCertificateVerify -> PostServerFinished -> PostClientFinished -> PostServerTicket
 There are no optional steps, all states must be traversed, even if the traversals are NOOPS */
-
-#[derive(Clone, Copy, PartialEq)]
-pub struct ALGS(
-    HashAlgorithm,
-    AEADAlgorithm,
-    SignatureScheme,
-    NamedGroup,
-    bool,
-    bool,
-);
 
 struct ClientPostClientHello(Random, ALGS, DHSK, KEY);
 struct ClientPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
