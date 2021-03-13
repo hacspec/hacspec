@@ -1,10 +1,10 @@
-use crate::tls13formats::*;
 use crate::tls13crypto::*;
+use crate::tls13formats::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-/* TLS 1.3 - specific crypto code for key schedule */
+/* TLS 1.3 Key Schedule: See RFC 8446 Section 7 */
 
 pub fn hkdf_expand_label(
     ha: HashAlgorithm,
@@ -23,15 +23,9 @@ pub fn derive_secret(ha: HashAlgorithm, k: KEY, label: Bytes, context: &Bytes) -
     return hkdf_expand_label(ha, k, label, context, 32);
 }
 
-
 fn derive_binder_key(ha: HashAlgorithm, k: KEY) -> Res<MACK> {
     let early_secret = hkdf_extract(ha, k, zeros)?;
-    let mk = derive_secret(
-        ha,
-        early_secret,
-        bytes(&label_res_binder),
-        &empty(),
-    )?;
+    let mk = derive_secret(ha, early_secret, bytes(&label_res_binder), &empty())?;
     return Ok(MACK::from_seq(&mk));
 }
 
@@ -68,18 +62,10 @@ fn derive_hk_ms(
 ) -> Res<(AEKIV, AEKIV, MACK, MACK, KEY)> {
     let early_secret = hkdf_extract(ha, psk, zeros)?;
     let handshake_secret = hkdf_extract(ha, gxy, early_secret)?;
-    let client_handshake_traffic_secret = derive_secret(
-        ha,
-        handshake_secret,
-        bytes(&label_c_hs_traffic),
-        log,
-    )?;
-    let server_handshake_traffic_secret = derive_secret(
-        ha,
-        handshake_secret,
-        bytes(&label_s_hs_traffic),
-        log,
-    )?;
+    let client_handshake_traffic_secret =
+        derive_secret(ha, handshake_secret, bytes(&label_c_hs_traffic), log)?;
+    let server_handshake_traffic_secret =
+        derive_secret(ha, handshake_secret, bytes(&label_s_hs_traffic), log)?;
     let client_finished_key = MACK::from_seq(&hkdf_expand_label(
         ha,
         client_handshake_traffic_secret,
@@ -96,8 +82,7 @@ fn derive_hk_ms(
     )?);
     let client_write_key_iv = derive_aead_keyiv(ha, client_handshake_traffic_secret)?;
     let server_write_key_iv = derive_aead_keyiv(ha, server_handshake_traffic_secret)?;
-    let master_secret_ =
-        derive_secret(ha, handshake_secret, bytes(&label_derived), &empty())?;
+    let master_secret_ = derive_secret(ha, handshake_secret, bytes(&label_derived), &empty())?;
     let master_secret = hkdf_extract(ha, zeros, master_secret_)?;
     return Ok((
         client_write_key_iv,
@@ -120,8 +105,7 @@ fn derive_app_keys(
         derive_secret(ha, master_secret, bytes(&label_s_ap_traffic), log)?;
     let client_write_key_iv = derive_aead_keyiv(ha, client_application_traffic_secret_0)?;
     let server_write_key_iv = derive_aead_keyiv(ha, server_application_traffic_secret_0)?;
-    let exporter_master_secret =
-        derive_secret(ha, master_secret, bytes(&label_exp_master), log)?;
+    let exporter_master_secret = derive_secret(ha, master_secret, bytes(&label_exp_master), log)?;
     return Ok((
         client_write_key_iv,
         server_write_key_iv,
@@ -130,91 +114,126 @@ fn derive_app_keys(
 }
 
 fn derive_rms(ha: HashAlgorithm, master_secret: KEY, log: &Bytes) -> Res<KEY> {
-    let resumption_master_secret =
-        derive_secret(ha, master_secret, bytes(&label_res_master), log)?;
+    let resumption_master_secret = derive_secret(ha, master_secret, bytes(&label_res_master), log)?;
     return Ok(resumption_master_secret);
 }
 
-/* Record Layer Encryption */
+/* TLS 1.3 Record Layer Encryption: See RFC 8446 Section 5 */
 
 // Using newtype pattern below, but the same thing works with tuples too
 struct CipherState(AEADAlgorithm, AEKIV);
 
 fn encrypt(payload: Bytes, n: u64, st: CipherState) -> Res<Bytes> {
-    let CipherState(ae,(k,iv)) = st;
+    let CipherState(ae, (k, iv)) = st;
     let counter = bytes(&U64_to_be_bytes(U64(n)));
     let mut nonce = iv;
     for i in 0..8 {
-        nonce[i+4] = iv[i+4] ^ counter[i];
+        nonce[i + 4] = iv[i + 4] ^ counter[i];
     }
     let clen = payload.len() + 16;
     if clen <= 65536 {
         let mut ad = Bytes::new(5);
         let clenb = u16_to_be_bytes(clen as u16);
-        ad[0] = U8(23); ad[1] = U8(0x03); ad[2] = U8(0x03);
-        ad[3] = U8(clenb[0]); ad[4] = U8(clenb[1]);
-        return aead_encrypt(ae,k,nonce,payload,ad);
-    } else {return Err(payload_too_long)}
+        ad[0] = U8(23);
+        ad[1] = U8(0x03);
+        ad[2] = U8(0x03);
+        ad[3] = U8(clenb[0]);
+        ad[4] = U8(clenb[1]);
+        return aead_encrypt(ae, k, nonce, payload, ad);
+    } else {
+        return Err(payload_too_long);
+    }
 }
 
 fn decrypt(ciphertext: Bytes, n: u64, st: CipherState) -> Res<Bytes> {
-    let CipherState(ae,(k,iv)) = st;
+    let CipherState(ae, (k, iv)) = st;
     let counter = bytes(&U64_to_be_bytes(U64(n)));
     let mut nonce = iv;
     for i in 0..8 {
-        nonce[i+4] = iv[i+4] ^ counter[i];
+        nonce[i + 4] = iv[i + 4] ^ counter[i];
     }
     let clen = ciphertext.len();
     if clen <= 65536 {
         let mut ad = Bytes::new(5);
         let clenb = u16_to_be_bytes(clen as u16);
-        ad[0] = U8(23); ad[1] = U8(0x03); ad[2] = U8(0x03);
-        ad[3] = U8(clenb[0]); ad[4] = U8(clenb[1]);
-        return aead_encrypt(ae,k,nonce,ciphertext,ad);
-    } else {return Err(payload_too_long)}
+        ad[0] = U8(23);
+        ad[1] = U8(0x03);
+        ad[2] = U8(0x03);
+        ad[3] = U8(clenb[0]);
+        ad[4] = U8(clenb[1]);
+        return aead_encrypt(ae, k, nonce, ciphertext, ad);
+    } else {
+        return Err(payload_too_long);
+    }
 }
 
-/* Handshake State and Core Functions */
+/* Handshake State Machine */
+/* We implement a simple linear state machine:
+   PostClientHello -> PostServerHello -> PostCertificateVerify -> PostServerFinished -> PostClientFinished -> PostServerTicket
+   There are no optional steps, all states must be traversed, even if the traversals are NOOPS */
 
-struct ClientPostClientHello(Random, DH_KEYPAIR, PSK, Option<AEADAlgorithm>);
-struct ClientPostClientHelloBinder(Random, DH_KEYPAIR, PSK, Option<AEADAlgorithm>);
+#[derive(Clone, Copy, PartialEq)]
+pub struct ALGS(
+    HashAlgorithm,
+    AEADAlgorithm,
+    SignatureScheme,
+    NamedGroup,
+    bool,
+    bool,
+);
+
+struct ClientPostClientHello(Random, ALGS, DHSK, KEY);
 struct ClientPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 struct ClientPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 struct ClientPostServerFinished(Random, Random, ALGS, KEY, MACK);
 struct ClientPostClientFinished(Random, Random, ALGS, KEY);
 struct ClientPostServerTicket(Random, Random, ALGS, KEY);
 
-struct ServerPostClientHello(Random, Random, KEY, PSK, Option<AEADAlgorithm>);
+struct ServerPostClientHello(Random, Random, ALGS, KEY, PSK);
 struct ServerPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 struct ServerPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 struct ServerPostServerFinished(Random, Random, ALGS, KEY, MACK);
 struct ServerPostClientFinished(Random, Random, ALGS, KEY);
 
+/* Handshake Core Functions: See RFC 8446 Section 4 */
+/* We delegate all details of message formatting and transcript hashes to the caller */
+
+/* TLS 1.3 Client Side Handshake Functions */
+
 fn get_client_hello(
-    gn: NamedGroup,
-    psk: PSK,
-    zerortt: Option<AEADAlgorithm>,
+    algs0: ALGS,
+    psk: Option<KEY>,
     ent: Entropy,
 ) -> Res<(Random, DHPK, ClientPostClientHello)> {
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
     let cr = Random::from_seq(&ent.slice_range(0..32));
     let x = DHSK::from_seq(&ent.slice_range(32..64));
     let gx = secret_to_public(gn, x)?;
-    return Ok((cr, gx, ClientPostClientHello(cr, (gn, x, gx), psk, zerortt)));
+    match psk {
+        Some(k) if psk_mode => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, k))),
+        None if !psk_mode => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, zeros))),
+        _ => Err(psk_mode_mismatch),
+    }
 }
 
 fn get_client_hello_binder(truncated_ch: &Bytes, st: ClientPostClientHello) -> Res<HMAC> {
-    let ClientPostClientHello(cr, _, (ha, psk), _) = st;
-    let mk = derive_binder_key(ha, psk)?;
-    let mac = hmac(ha, mk, truncated_ch)?;
-    Ok(mac)
+    let ClientPostClientHello(cr, algs0, x, psk) = st;
+    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs0 {
+        let mk = derive_binder_key(ha, psk)?;
+        let mac = hmac(ha, mk, truncated_ch)?;
+        Ok(mac)
+    } else {
+        Err(psk_mode_mismatch)
+    }
 }
 
 fn client_get_0rtt_keys(ch_log: &Bytes, st: ClientPostClientHello) -> Res<(CipherState, KEY)> {
-    if let ClientPostClientHello(cr, _, (ha, psk), Some(ae_alg)) = st {
-        let (aek, key) = derive_0rtt_keys(ha, ae_alg, psk, ch_log)?;
-        return Ok((CipherState(ae_alg, aek), key));
+    let ClientPostClientHello(cr, algs0, x, psk) = st;
+    if let ALGS(ha, ae, sa, gn, true, true) = algs0 {
+        let (aek, key) = derive_0rtt_keys(ha, ae, psk, ch_log)?;
+        Ok((CipherState(ae, aek), key))
     } else {
-        return Err(zero_rtt_disabled);
+        Err(zero_rtt_disabled)
     }
 }
 
@@ -225,16 +244,19 @@ fn put_server_hello(
     log: &Bytes,
     st: ClientPostClientHello,
 ) -> Res<(CipherState, CipherState, ClientPostServerHello)> {
-    let ClientPostClientHello(cr, (gn, x, gx), (_, psk), _) = st;
-    let (ha, ae, sa) = algs;
-    let gxy = ecdh(gn, x, gy)?;
-    let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, gxy, psk, log)?;
-    let (ha, ae, sa) = algs;
-    Ok((
-        CipherState(ae, chk),
-        CipherState(ae, shk),
-        ClientPostServerHello(cr, sr, algs, ms, cfk, sfk),
-    ))
+    let ClientPostClientHello(cr, algs0, x, psk) = st;
+    if algs == algs0 {
+        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+        let gxy = ecdh(gn, x, gy)?;
+        let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, gxy, psk, log)?;
+        Ok((
+            CipherState(ae, chk),
+            CipherState(ae, shk),
+            ClientPostServerHello(cr, sr, algs, ms, cfk, sfk),
+        ))
+    } else {
+        Err(negotiation_mismatch)
+    }
 }
 
 fn put_server_signature(
@@ -244,9 +266,19 @@ fn put_server_signature(
     st: ClientPostServerHello,
 ) -> Res<ClientPostCertificateVerify> {
     let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
-    let (ha, ae, sa) = algs;
-    verify(sa, pk, log, sig)?;
-    return Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk));
+    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = algs {
+        verify(sa, pk, log, sig)?;
+        Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
+    } else {Err (psk_mode_mismatch)}
+}
+
+fn put_skip_server_signature(
+    st: ClientPostServerHello,
+) -> Res<ClientPostCertificateVerify> {
+    let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
+    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs {
+        Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
+    } else {Err (psk_mode_mismatch)}
 }
 
 fn put_server_finished(
@@ -255,7 +287,7 @@ fn put_server_finished(
     st: ClientPostCertificateVerify,
 ) -> Res<ClientPostServerFinished> {
     let ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
-    let (ha, ae, sa) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     hmac_verify(ha, sfk, log, vd)?;
     return Ok(ClientPostServerFinished(cr, sr, algs, ms, cfk));
 }
@@ -264,7 +296,7 @@ fn client_get_1rtt_keys(
     st: ClientPostServerFinished,
 ) -> Res<(CipherState, CipherState, KEY)> {
     let ClientPostServerFinished(_, _, algs, ms, cfk) = st;
-    let (ha, ae, sa) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, ms, log)?;
     return Ok((CipherState(ae, cak), CipherState(ae, sak), exp));
 }
@@ -274,58 +306,59 @@ fn get_client_finished(
     st: ClientPostServerFinished,
 ) -> Res<(HMAC, ClientPostClientFinished)> {
     let ClientPostServerFinished(cr, sr, algs, ms, cfk) = st;
-    let (ha, ae, sig) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let m = hmac(ha, cfk, log)?;
     return Ok((m, ClientPostClientFinished(cr, sr, algs, ms)));
 }
 
 fn put_server_ticket(log: &Bytes, st: ClientPostClientFinished) -> Res<ClientPostServerTicket> {
     let ClientPostClientFinished(cr, sr, algs, ms) = st;
-    let (ha, ae, sa) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let rms = derive_rms(ha, ms, log)?;
     return Ok(ClientPostServerTicket(cr, sr, algs, rms));
 }
 
+/* TLS 1.3 Server Side Handshake Functions */
+
 fn put_client_hello(
     cr: Random,
-    gn: NamedGroup,
+    algs: ALGS,
     gx: DHPK,
-    psk: PSK,
-    truncated_ch: &Bytes,
-    binder: HMAC,
-    zerortt: Option<AEADAlgorithm>,
+    psk: Option<(PSK, &Bytes, HMAC)>,
     ent: Entropy,
 ) -> Res<(Random, DHPK, ServerPostClientHello)> {
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let sr = Random::from_seq(&ent.slice_range(0..32));
     let y = DHSK::from_seq(&ent.slice_range(32..64));
     let gy = secret_to_public(gn, y)?;
     let gxy = ecdh(gn, y, gx)?;
-    let (ha, psk) = psk;
-    let mk = derive_binder_key(ha, psk)?;
-    hmac_verify(ha, mk, truncated_ch, binder)?;
-    return Ok((
-        sr,
-        gy,
-        ServerPostClientHello(cr, sr, gxy, (ha, psk), zerortt),
-    ));
+    match psk {
+        Some((k, truncated_ch, binder)) if psk_mode => {
+            let mk = derive_binder_key(ha, k)?;
+            hmac_verify(ha, mk, truncated_ch, binder)?;
+            Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, k)))
+        }
+        None if !psk_mode => Ok((cr, gx, ServerPostClientHello(cr, sr, algs, gxy, zeros))),
+        _ => Err(psk_mode_mismatch),
+    }
 }
 
 fn server_get_0rtt_keys(ch_log: &Bytes, st: ServerPostClientHello) -> Res<(CipherState, KEY)> {
-    if let ServerPostClientHello(_, _, _, (ha, psk), Some(ae_alg)) = st {
-        let (aek, key) = derive_0rtt_keys(ha, ae_alg, psk, ch_log)?;
-        return Ok((CipherState(ae_alg, aek), key));
+    let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
+    if let ALGS(ha, ae, sa, gn, true, true) = algs {
+        let (aek, key) = derive_0rtt_keys(ha, ae, psk, ch_log)?;
+        Ok((CipherState(ae, aek), key))
     } else {
-        return Err(zero_rtt_disabled);
+        Err(zero_rtt_disabled)
     }
 }
 
 fn get_server_hello(
-    algs: ALGS,
     log: &Bytes,
     st: ServerPostClientHello,
 ) -> Res<(CipherState, CipherState, ServerPostServerHello)> {
-    let ServerPostClientHello(cr, sr, gxy, (ha, psk), zerortt) = st;
-    let (ha, ae, sa) = algs;
+    let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, gxy, psk, log)?;
     Ok((
         CipherState(ae, shk),
@@ -340,9 +373,19 @@ fn get_server_signature(
     st: ServerPostServerHello,
 ) -> Res<(SIG, ServerPostCertificateVerify)> {
     let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
-    let (ha, ae, sa) = algs;
-    let sig = sign(sa, sk, log)?;
-    Ok((sig, ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk)))
+    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = algs {
+        let sig = sign(sa, sk, log)?;
+        Ok((sig, ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk)))
+    } else {Err(psk_mode_mismatch)}
+}
+
+fn get_skip_server_signature(
+    st: ServerPostServerHello,
+) -> Res<ServerPostCertificateVerify> {
+    let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
+    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs {
+        Ok(ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
+    } else {Err(psk_mode_mismatch)}
 }
 
 fn get_server_finished(
@@ -351,7 +394,7 @@ fn get_server_finished(
     st: ServerPostCertificateVerify,
 ) -> Res<(HMAC, ServerPostServerFinished)> {
     let ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
-    let (ha, ae, sa) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let m = hmac(ha, sfk, log)?;
     Ok((m, ServerPostServerFinished(cr, sr, algs, ms, cfk)))
 }
@@ -361,7 +404,7 @@ fn server_get_1rtt_keys(
     st: ServerPostServerFinished,
 ) -> Res<(CipherState, CipherState, KEY)> {
     let ServerPostServerFinished(_, _, algs, ms, cfk) = st;
-    let (ha, ae, sa) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, ms, log)?;
     return Ok((CipherState(ae, sak), CipherState(ae, cak), exp));
 }
@@ -373,7 +416,7 @@ fn put_client_finished(
     st: ServerPostServerFinished,
 ) -> Res<ServerPostClientFinished> {
     let ServerPostServerFinished(cr, sr, algs, ms, cfk) = st;
-    let (ha, ae, sa) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     hmac_verify(ha, cfk, log1, mac)?;
     let rms = derive_rms(ha, ms, log2)?;
     return Ok(ServerPostClientFinished(cr, sr, algs, rms));

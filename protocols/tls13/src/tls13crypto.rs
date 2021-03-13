@@ -22,7 +22,7 @@ pub const zeros : KEY = KEY(secret_bytes!([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 pub type AEKIV = (AEK,AEIV);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum NamedGroup {
     X25519,
     SECP256r1,
@@ -34,23 +34,22 @@ pub enum HashAlgorithm {
     SHA384,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum AEADAlgorithm {
     CHACHA20_POLY1305,
     AES_128_GCM,
     AES_256_GCM,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum SignatureScheme {
     ED25519,
     ECDSA_SECP256r1_SHA256,
     RSA_PSS_RSAE_SHA256,
 }
 
-pub type DH_KEYPAIR = (NamedGroup, DHSK, DHPK);
-pub type PSK = (HashAlgorithm, KEY);
-pub type ALGS = (HashAlgorithm, AEADAlgorithm, SignatureScheme);
+//pub type DH_KEYPAIR = (NamedGroup, DHSK, DHPK);
+pub type PSK = KEY;
 
 pub fn secret_to_public(group_name: NamedGroup, x: DHSK) -> Res<DHPK> {
     return Ok(DHPK::new());

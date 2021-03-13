@@ -59,6 +59,8 @@ pub const verify_failed: usize = 2;
 pub const zero_rtt_disabled: usize = 3;
 pub const not_zero_rtt_sender: usize = 4;
 pub const payload_too_long: usize = 5;
+pub const psk_mode_mismatch: usize = 6;
+pub const negotiation_mismatch: usize = 7;
 
 pub fn vlbytes1(b: &Bytes) -> Res<Bytes> {
     let len = b.len();
