@@ -60,20 +60,20 @@ pub enum SignatureScheme {
 //pub type DH_KEYPAIR = (NamedGroup, DHSK, DHPK);
 pub type PSK = KEY;
 
-pub fn hash_len(ha:HashAlgorithm) -> u16 {
+pub fn hash_len(ha:HashAlgorithm) -> usize {
     match ha {
         HashAlgorithm::SHA256 => 32,
         HashAlgorithm::SHA384 => 48
     }
 }
 
-pub fn hmac_key_len(ha:HashAlgorithm) -> u16 {
+pub fn hmac_key_len(ha:HashAlgorithm) -> usize {
     match ha {
         HashAlgorithm::SHA256 => 32,
         HashAlgorithm::SHA384 => 48
     }
 }
-pub fn ae_key_len(ae:AEADAlgorithm) -> u16 {
+pub fn ae_key_len(ae:AEADAlgorithm) -> usize {
     match ae {
         AEADAlgorithm::CHACHA20_POLY1305 => 32,
         AEADAlgorithm::AES_128_GCM => 32,
@@ -81,7 +81,7 @@ pub fn ae_key_len(ae:AEADAlgorithm) -> u16 {
     }
 }
 
-pub fn ae_iv_len(ae:AEADAlgorithm) -> u16 {
+pub fn ae_iv_len(ae:AEADAlgorithm) -> usize {
     match ae {
         AEADAlgorithm::CHACHA20_POLY1305 => 12,
         AEADAlgorithm::AES_128_GCM => 12,
@@ -107,45 +107,45 @@ pub fn zero_key(ha:HashAlgorithm) -> KEY {
     KEY::new(hash_len(ha) as usize)
 } 
 
-pub fn secret_to_public(group_name: NamedGroup, x: &DHSK) -> Res<DHPK> {
+pub fn secret_to_public(group_name:NamedGroup, x: &DHSK) -> Res<DHPK> {
     return Ok(DHPK::new(32));
 }
 
-pub fn ecdh(group_name: NamedGroup, x: &DHSK, y: &DHPK) -> Res<KEY> {
+pub fn ecdh(group_name:NamedGroup, x: &DHSK, y: &DHPK) -> Res<KEY> {
     return Ok(KEY::new(32));
 }
 
-pub fn hash(ha: HashAlgorithm, payload: &Bytes) -> Res<HASH> {
+pub fn hash(ha:HashAlgorithm, payload: &Bytes) -> Res<HASH> {
     return Ok(HASH::new(32));
 }
 
-pub fn hmac(ha: HashAlgorithm, mk: &MACK, payload: &Bytes) -> Res<HMAC> {
+pub fn hmac(ha:HashAlgorithm, mk: &MACK, payload: &Bytes) -> Res<HMAC> {
     return Ok(HMAC::new(32));
 }
 
-pub fn hmac_verify(ha: HashAlgorithm, mk: &MACK, payload: &Bytes, m: &HMAC) -> Res<()> {
+pub fn hmac_verify(ha:HashAlgorithm, mk: &MACK, payload: &Bytes, m: &HMAC) -> Res<()> {
     return Ok(());
 }
 
-pub fn sign(sa: SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
+pub fn sign(sa:SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
     return Ok(SIG::new(32));
 }
-pub fn verify(sa: SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
+pub fn verify(sa:SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
     return Ok(());
 }
 
-pub fn hkdf_extract(ha: HashAlgorithm, k: &KEY, salt: &KEY) -> Res<KEY> {
+pub fn hkdf_extract(ha:HashAlgorithm, k: &KEY, salt: &KEY) -> Res<KEY> {
     return Ok(KEY::new(32));
 }
 
-pub fn hkdf_expand(ha: HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res<KEY> {
+pub fn hkdf_expand(ha:HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res<KEY> {
     return Ok(KEY::new(32));
 }
 
-pub fn aead_encrypt(a: AEADAlgorithm, k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
+pub fn aead_encrypt(a:AEADAlgorithm, k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
     return Ok(empty());
 }
 
-pub fn aead_decrypt(a: AEADAlgorithm, k: &AEK, iv: &AEIV, Ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
+pub fn aead_decrypt(a:AEADAlgorithm, k: &AEK, iv: &AEIV, Ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
     return Ok(empty());
 }

@@ -214,6 +214,11 @@ pub struct ALGS(
     pub bool,
 );
 
+pub fn hash_alg(algs:&ALGS) -> HashAlgorithm {
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    *ha
+}
+
 pub fn ciphersuite(algs: ALGS) -> Res<Bytes> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     match (ha, ae) {
@@ -356,7 +361,7 @@ pub fn check_server_psk_shared_key(algs: ALGS, b: &Bytes) -> Res<()> {
     check_eq(&bytes2(0, 0), &b)
 }
 
-pub struct EXTS(Option<Bytes>, Option<Bytes>, Option<Bytes>, Option<Bytes>);
+pub struct EXTS(pub Option<Bytes>, pub Option<Bytes>, pub Option<Bytes>, pub Option<Bytes>);
 
 pub fn merge_opts<T>(o1: Option<T>, o2: Option<T>) -> Res<Option<T>> {
     match (o1, o2) {
@@ -443,7 +448,7 @@ pub fn client_hello(
     gx: DHPK,
     sn: &Bytes,
     tkt: Option<&Bytes>,
-) -> Res<Bytes> {
+) -> Res<(Bytes,usize)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let ty = bytes1(1);
     let ver = bytes2(3, 3);
@@ -472,10 +477,11 @@ pub fn client_hello(
             .concat(&comp)
             .concat(&lbytes2(&exts)?),
     )?);
-    Ok(ch)
+    let trunc_len = ch.len() - hash_len(ha) - 3;
+    Ok((ch,trunc_len))
 }
 
-pub fn parse_client_hello(algs: ALGS, ch: &Bytes) -> Res<(Bytes, EXTS)> {
+pub fn parse_client_hello(algs: ALGS, ch: &Bytes) -> Res<(Random, EXTS)> {
     let ty = bytes1(1);
     let ver = bytes2(3, 3);
     let comp = bytes2(1, 0);
@@ -497,7 +503,7 @@ pub fn parse_client_hello(algs: ALGS, ch: &Bytes) -> Res<(Bytes, EXTS)> {
     check_lbytes2_full(&ch.slice_range(next..ch.len()))?;
     next = next + 2;
     let exts = check_extensions(algs, &ch.slice_range(next..ch.len()))?;
-    return Ok((crand, exts));
+    return Ok((Random::from_seq(&crand), exts));
 }
 
 pub fn server_hello(algs: ALGS, sr: Random, sid: &Bytes, gy: DHPK) -> Res<Bytes> {
@@ -523,7 +529,7 @@ pub fn server_hello(algs: ALGS, sr: Random, sid: &Bytes, gy: DHPK) -> Res<Bytes>
     Ok(sh)
 }
 
-pub fn parse_server_hello(algs: ALGS, sh: &Bytes) -> Res<(Bytes, Option<Bytes>)> {
+pub fn parse_server_hello(algs: ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
     let ty = bytes1(2);
     let ver = bytes2(3, 3);
     let cip = ciphersuite(algs)?;
@@ -546,7 +552,8 @@ pub fn parse_server_hello(algs: ALGS, sh: &Bytes) -> Res<(Bytes, Option<Bytes>)>
     check_lbytes2_full(&sh.slice_range(next..sh.len()))?;
     next = next + 2;
     let gy = check_server_extensions(algs, &sh.slice_range(next..sh.len()))?;
-    return Ok((srand, gy));
+    if let Some(gy) = gy {Ok((Random::from_seq(&srand), gy))}
+    else {Err(unsupported_algorithm)}
 }
 
 pub fn encrypted_extensions(algs: ALGS) -> Res<Bytes> {
