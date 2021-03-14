@@ -114,9 +114,9 @@ pub fn derive_rms(ha: &HashAlgorithm, master_secret: &KEY, tx: &HASH) -> Res<KEY
 /* TLS 1.3 Record Layer Encryption: See RFC 8446 Section 5 */
 
 // Using newtype pattern below, but the same thing works with tuples too
-pub struct CipherState(AEADAlgorithm, AEKIV);
+pub struct CipherState(AEADAlgorithm, AEKIV, u64);
 
-pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n: u64) -> AEIV {
+pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n:u64) -> AEIV {
     let counter = bytes(&U64_to_be_bytes(U64(n)));
     let mut iv_ctr = AEIV::new(iv.len());
     for i in 0..iv.len()-8 {
@@ -128,28 +128,46 @@ pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n: u64) -> AEIV {
     return iv_ctr;
 }
 
-pub fn encrypt(payload: &Bytes, n: u64, st: &CipherState) -> Res<Bytes> {
-    let CipherState(ae, (k, iv)) = st;
-    let iv_ctr = derive_iv_ctr(ae,&iv,n);
-    let clen = payload.len() + 16;
+pub const ct_app_data : u8 = 0x17; 
+pub const ct_handshake: u8 = 0x16; 
+
+pub fn encrypt_record(ct:u8, payload: &Bytes, pad:usize, st: CipherState) -> Res<(Bytes,CipherState)> {
+    let CipherState(ae, (k, iv), n) = st;
+    let iv_ctr = derive_iv_ctr(&ae,&iv,n);
+    let inner_plaintext = payload.concat(&bytes1(ct)).concat(&zeros(pad));
+    let clen = inner_plaintext.len() + 16;
     if clen <= 65536 {
         let clenb = u16_to_be_bytes(clen as u16);
-        let ad = bytes(&Bytes5(secret_bytes!([23, 3, 3, clenb[0], clenb[1]])));
-        return aead_encrypt(ae, &k, &iv_ctr, payload, &ad);
+        let ad = bytes5(23, 3, 3, clenb[0], clenb[1]);
+        let cip = aead_encrypt(&ae, &k, &iv_ctr, payload, &ad)?;
+        let rec = ad.concat(&cip);
+        Ok((cip,CipherState(ae,(k,iv),n+1)))
     } else {
-        return Err(payload_too_long);
+        Err(payload_too_long)
     }
 }
 
-pub fn decrypt(ciphertext: &Bytes, n: u64, st: &CipherState) -> Res<Bytes> {
-    let CipherState(ae, (k, iv)) = st;
-    let iv_ctr = derive_iv_ctr(ae, &iv, n);
-    if ciphertext.len() <= 65536 {
+pub fn padlen(b:&Bytes,n:usize) -> usize {
+    if n > 0 && b[n-1].declassify() == 0 {1 + padlen(&b,n-1)}
+    else {0}
+}
+
+pub fn decrypt_record(ciphertext: &Bytes, st: CipherState) -> Res<(u8,Bytes,CipherState)> {
+    let CipherState(ae, (k, iv), n) = st;
+    let iv_ctr = derive_iv_ctr(&ae, &iv, n);
+    let clen = ciphertext.len() - 5;
+    if clen <= 65536 && clen > 16 {
         let clenb = u16_to_be_bytes(ciphertext.len() as u16);
-        let ad = bytes(&Bytes5(secret_bytes!([23, 3, 3, clenb[0], clenb[1]])));
-        return aead_encrypt(ae, &k, &iv_ctr, &ciphertext, &ad);
+        let ad = bytes5(23, 3, 3, clenb[0], clenb[1]);
+        check_eq(&ad,&ciphertext.slice_range(0..5))?;
+        let cip = ciphertext.slice_range(5..5+ciphertext.len());
+        let plain = aead_decrypt(&ae, &k, &iv_ctr, &cip, &ad)?;
+        let payload_len = plain.len() - padlen(&plain,plain.len()) - 1;
+        let ct = plain[payload_len].declassify();
+        let payload = plain.slice_range(0..payload_len);
+        Ok((ct,payload,CipherState(ae, (k, iv), n+1)))
     } else {
-        return Err(payload_too_long);
+        Err(payload_too_long)
     }
 }
 
@@ -206,22 +224,6 @@ pub fn get_client_hello(
     }
 }
 
-/*
-pub fn get_client_hello_binder(
-    tx: &TranscriptTruncatedClientHello,
-    st: ClientPostClientHello,
-) -> Res<(HMAC,ClientPostClientHello)> {
-    let ClientPostClientHello(cr, algs0, x, psk) = st;
-    let TranscriptTruncatedClientHello(tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs0 {
-        let mk = derive_binder_key(ha, &psk)?;
-        let mac = hmac(ha, &mk, &bytes(tx_hash))?;
-        Ok((mac,ClientPostClientHello(cr, algs0, x, psk)))
-    } else {
-        Err(psk_mode_mismatch)
-    }
-}
-*/
 
 pub fn get_client_hello_binder(
     tx: &TranscriptTruncatedClientHello,
@@ -246,7 +248,7 @@ pub fn client_get_0rtt_keys(
     let TranscriptClientHello(tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, true, true) = algs0 {
         let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
-        Ok((CipherState(*ae, aek), key))
+        Ok((CipherState(*ae, aek, 0), key))
     } else {
         Err(zero_rtt_disabled)
     }
@@ -266,8 +268,8 @@ pub fn put_server_hello(
         let gxy = ecdh(gn, &x, &gy)?;
         let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
         Ok((
-            CipherState(*ae, chk),
-            CipherState(*ae, shk),
+            CipherState(*ae, chk, 0),
+            CipherState(*ae, shk, 0),
             ClientPostServerHello(cr, sr, algs, ms, cfk, sfk),
         ))
     } else {
@@ -276,8 +278,8 @@ pub fn put_server_hello(
 }
 
 pub fn put_server_signature(
-    pk: VERK,
-    sig: Bytes,
+    pk: &VERK,
+    sig: &Bytes,
     tx: &TranscriptServerCertificate,
     st: ClientPostServerHello,
 ) -> Res<ClientPostCertificateVerify> {
@@ -301,7 +303,7 @@ pub fn put_skip_server_signature(st: ClientPostServerHello) -> Res<ClientPostCer
 }
 
 pub fn put_server_finished(
-    vd: HMAC,
+    vd: &HMAC,
     tx: &TranscriptServerCertificateVerify,
     st: ClientPostCertificateVerify,
 ) -> Res<ClientPostServerFinished> {
@@ -319,7 +321,8 @@ pub fn client_get_1rtt_keys(
     let TranscriptServerFinished(tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
-    return Ok((CipherState(*ae, cak), CipherState(*ae, sak), exp));
+    return Ok((CipherState(*ae, cak, 0), 
+               CipherState(*ae, sak, 0), exp));
 }
 
 pub fn get_client_finished(
@@ -381,7 +384,7 @@ pub fn server_get_0rtt_keys(
     let TranscriptClientHello(tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, true, true) = algs {
         let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
-        Ok((CipherState(*ae, aek), key))
+        Ok((CipherState(*ae, aek, 0), key))
     } else {
         Err(zero_rtt_disabled)
     }
@@ -396,8 +399,8 @@ pub fn get_server_hello(
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
     Ok((
-        CipherState(*ae, shk),
-        CipherState(*ae, chk),
+        CipherState(*ae, chk, 0),
+        CipherState(*ae, shk, 0),
         ServerPostServerHello(cr, sr, algs, ms, cfk, sfk),
     ))
 }
@@ -446,7 +449,8 @@ pub fn server_get_1rtt_keys(
     let TranscriptServerFinished(tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
-    return Ok((CipherState(*ae, sak), CipherState(*ae, cak), exp));
+    return Ok((CipherState(*ae, cak, 0),
+               CipherState(*ae, sak, 0), exp));
 }
 
 pub fn put_client_finished(

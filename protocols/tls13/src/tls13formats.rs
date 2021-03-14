@@ -23,6 +23,12 @@ pub fn bytes1(x: u8) -> Bytes {
 pub fn bytes2(x: u8, y: u8) -> Bytes {
     bytes(&Bytes2([U8(x), U8(y)]))
 }
+pub fn bytes3(x: u8, y: u8, z: u8) -> Bytes {
+    bytes(&Bytes3([U8(x), U8(y), U8(z)]))
+}
+pub fn bytes5(x0: u8, x1: u8, x2:u8, x3:u8, x4:u8) -> Bytes {
+    bytes(&Bytes5([U8(x0), U8(x1), U8(x2), U8(x3), U8(x4)]))
+}
 pub fn hash_empty(ha:&HashAlgorithm) -> Res<HASH> {
     return hash(ha, &empty());
 }
