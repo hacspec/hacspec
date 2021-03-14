@@ -484,7 +484,7 @@ pub fn client_hello(
     Ok((ch,trunc_len))
 }
 
-pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, EXTS)> {
+pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes, Bytes, Option<(Bytes,Bytes,usize)>)> {
     let ty = bytes1(1);
     let ver = bytes2(3, 3);
     let comp = bytes2(1, 0);
@@ -498,6 +498,7 @@ pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, EXTS)> {
     let crand = ch.slice_range(next..next + 32);
     next = next + 32;
     let sidlen = check_lbytes1(&ch.slice_range(next..ch.len()))?;
+    let sid = ch.slice_range(next+1..next+1+sidlen);
     next = next + 1 + sidlen;
     let cslen = check_ciphersuites(algs, &ch.slice_range(next..ch.len()))?;
     next = next + cslen;
@@ -506,7 +507,16 @@ pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, EXTS)> {
     check_lbytes2_full(&ch.slice_range(next..ch.len()))?;
     next = next + 2;
     let exts = check_extensions(algs, &ch.slice_range(next..ch.len()))?;
-    return Ok((Random::from_seq(&crand), exts));
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let trunc_len = ch.len() - hash_len(ha) - 3;
+    match (psk_mode,exts) {
+        (true,EXTS(Some(sn),Some(gx),Some(tkt),Some(binder))) =>
+            Ok((Random::from_seq(&crand),sid,sn,gx,Some((tkt,binder,trunc_len)))),
+        (false,EXTS(Some(sn),Some(gx),None,None)) =>
+            Ok((Random::from_seq(&crand),sid,sn,gx,None)),
+        _ => Err(parse_failed)
+    }
+
 }
 
 pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<Bytes> {
@@ -534,6 +544,7 @@ pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<Byt
 }
 
 pub fn parse_server_hello(algs: &ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let ty = bytes1(2);
     let ver = bytes2(3, 3);
     let cip = ciphersuite(algs)?;

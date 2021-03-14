@@ -352,8 +352,8 @@ pub fn client_complete(
 pub fn put_client_hello(
     cr: Random,
     algs: ALGS,
-    gx: DHPK,
-    psk: Option<(PSK, &TranscriptTruncatedClientHello, HMAC)>,
+    gx: &DHPK,
+    psk: Option<(PSK, TranscriptTruncatedClientHello, HMAC)>,
     ent: Entropy,
 ) -> Res<(Random, DHPK, ServerPostClientHello)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
@@ -367,10 +367,10 @@ pub fn put_client_hello(
             (Some((k, tx, binder)),true) => {
                 let mk = derive_binder_key(ha, &k)?;
                 let TranscriptTruncatedClientHello(tx_hash) = tx;
-                hmac_verify(ha, &mk, &bytes(tx_hash), &binder)?;
+                hmac_verify(ha, &mk, &bytes(&tx_hash), &binder)?;
                 Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, k)))
             }
-            (None,false) => Ok((cr, gx, ServerPostClientHello(cr, sr, algs, gxy, zero_key(ha)))),
+            (None,false) => Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, zero_key(ha)))),
             _ => Err(psk_mode_mismatch),
         }
     }
@@ -406,7 +406,7 @@ pub fn get_server_hello(
 }
 
 pub fn get_server_signature(
-    sk: SIGK,
+    sk: &SIGK,
     tx: &TranscriptServerCertificate,
     st: ServerPostServerHello,
 ) -> Res<(SIG, ServerPostCertificateVerify)> {
@@ -430,7 +430,6 @@ pub fn get_skip_server_signature(st: ServerPostServerHello) -> Res<ServerPostCer
 }
 
 pub fn get_server_finished(
-    sk: SIGK,
     tx: &TranscriptServerCertificateVerify,
     st: ServerPostCertificateVerify,
 ) -> Res<(HMAC, ServerPostServerFinished)> {
@@ -443,11 +442,11 @@ pub fn get_server_finished(
 
 pub fn server_get_1rtt_keys(
     tx: &TranscriptServerFinished,
-    st: ServerPostServerFinished,
+    st: &ServerPostServerFinished,
 ) -> Res<(CipherState, CipherState, KEY)> {
     let ServerPostServerFinished(_, _, algs, ms, cfk) = st;
     let TranscriptServerFinished(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
     return Ok((CipherState(*ae, cak, 0),
                CipherState(*ae, sak, 0), exp));

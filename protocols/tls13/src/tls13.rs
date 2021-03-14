@@ -38,16 +38,21 @@ pub fn first_application_record(p:&Bytes) -> Res<usize> {
     Ok(len+5)
 }
 
+pub fn check_handshake_message(p:&Bytes) -> Res<(Bytes,usize)> {
+    let len = check_lbytes3(&p.slice_range(1..p.len()))?;
+    Ok((p.slice_range(0..4+len),4+len))
+}
+
 pub struct Client0(ALGS,Bytes,ClientPostClientHello,Option<(CipherState,KEY)>);
 pub struct Client1(ALGS,Bytes,ClientPostClientFinished,CipherState,CipherState,KEY);
 
-pub fn client_init(algs0:ALGS,sn:&Bytes,tkt_psk:Option<(&Bytes,KEY)>,ent:Entropy) -> Res<(Bytes,Client0)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs0;
+pub fn client_init(algs:ALGS,sn:&Bytes,tkt_psk:Option<(&Bytes,KEY)>,ent:Entropy) -> Res<(Bytes,Client0)> {
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let mut transcript = empty();
     match (psk_mode,tkt_psk) {
         (true,Some((tkt,psk))) => {
-            let (crand,gx,cstate) = get_client_hello(algs0,Some(psk),ent)?;
-            let (ch,trunc_len) = client_hello(&algs0,&crand,&gx,sn,Some(tkt))?;
+            let (crand,gx,cstate) = get_client_hello(algs,Some(psk),ent)?;
+            let (ch,trunc_len) = client_hello(&algs,&crand,&gx,sn,Some(tkt))?;
             let trunc_hash = TranscriptTruncatedClientHello(hash(ha,&ch.slice_range(0..trunc_len))?);
             let binder = get_client_hello_binder(&trunc_hash,&cstate)?;
             let nch = ch.update_slice(trunc_len,&binder,0,hash_len(ha));
@@ -55,15 +60,15 @@ pub fn client_init(algs0:ALGS,sn:&Bytes,tkt_psk:Option<(&Bytes,KEY)>,ent:Entropy
             let rec = handshake_record(&nch)?;
             let tx0 = TranscriptClientHello(hash(ha,&nch)?);
             let (cip,exp) = client_get_0rtt_keys(&tx0,&cstate)?;
-            let st = Client0(algs0,transcript,cstate,Some((cip,exp)));
+            let st = Client0(algs,transcript,cstate,Some((cip,exp)));
             Ok((rec,st))
         },
         (false, None) => {
-            let (crand,gx,cstate) = get_client_hello(algs0,None,ent)?;
-            let (ch,_) = client_hello(&algs0,&crand,&gx,sn,None)?;
+            let (crand,gx,cstate) = get_client_hello(algs,None,ent)?;
+            let (ch,_) = client_hello(&algs,&crand,&gx,sn,None)?;
             transcript = transcript.concat(&ch);
             let rec = handshake_record(&ch)?;
-            let st = Client0(algs0,transcript,cstate,None);
+            let st = Client0(algs,transcript,cstate,None);
             Ok((rec,st))
         },
         _ => Err(psk_mode_mismatch)
@@ -86,21 +91,21 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
     let (ct,payload,s2c) = decrypt_record(&msg.slice_range(len1..len1+len2),s2c)?;
     if ct == ct_handshake {
         let mut next = 0;
-        let (ee,len3) = check_handshake_record(&payload)?;
+        let (ee,len3) = check_handshake_message(&payload)?;
         parse_encrypted_extensions(&algs,&ee)?;
         transcript = transcript.concat(&payload.slice_range(next..next+len3));
         next = next + len3;
-        let (sc,len4) = check_handshake_record(&payload.slice_range(next..payload.len()))?;
+        let (sc,len4) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
         let cert = parse_server_certificate(&algs,&sc)?;
         transcript = transcript.concat(&payload.slice_range(next..next+len4));
         let tx1 = TranscriptServerCertificate(hash(ha,&transcript)?);
         next = next + len4;
-        let (cv,len5) = check_handshake_record(&payload.slice_range(next..payload.len()))?;
+        let (cv,len5) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
         let sig = parse_certificate_verify(&algs,&cv)?;
         transcript = transcript.concat(&payload.slice_range(next..next+len5));
         let tx2 = TranscriptServerCertificateVerify(hash(ha,&transcript)?);
         next = next + len5;       
-        let (fin,len6) = check_handshake_record(&payload.slice_range(next..payload.len()))?;
+        let (fin,len6) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
         let vd = parse_finished(&algs,&fin)?;
         transcript = transcript.concat(&payload.slice_range(next..next+len6));
         let tx3 = TranscriptServerFinished(hash(ha,&transcript)?);
@@ -116,5 +121,73 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
             let (cfin_rec,c2s) = encrypt_record(ct_handshake,&cfin,0,c2s)?;
             Ok((cfin_rec,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
         } else {Err(parse_failed)}
+    } else {Err(parse_failed)}
+}
+
+pub struct Server0(ALGS,Bytes,ServerPostServerFinished,CipherState,CipherState,CipherState);
+pub struct Server1(ALGS,Bytes,ServerPostClientFinished,CipherState,CipherState);
+
+fn get_psk_opts(ha: &HashAlgorithm, psk_mode:&bool,client_tkt_psk:Option<(Bytes,HMAC,usize)>,
+                server_tkt_psk:Option<(&Bytes,KEY)>, tx:&Bytes) -> 
+                Res<Option<(PSK, TranscriptTruncatedClientHello, HMAC)>> {
+    match (psk_mode,client_tkt_psk, server_tkt_psk) {
+        (true, Some((tktc,binder,trunc_len)), Some((tkts,psk))) => {
+                check_eq(&tktc,&tkts)?;
+                let trunc_hash = TranscriptTruncatedClientHello(hash(ha,&tx.slice_range(0..trunc_len))?);          
+                Ok(Some((psk,trunc_hash,binder)))},
+        (false, None, None) => Ok(None),
+        _ => {return(Err(parse_failed))}
+    }             
+}
+
+pub fn server_init(algs:ALGS,msg:&Bytes,sn:&Bytes,cert:&Bytes,sk:&SIGK,tkt_psks:Option<(&Bytes,KEY)>,ent:Entropy) -> Res<(Bytes,Server0)> {
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let mut transcript = empty();
+    let (ch,len1) = check_handshake_record(&msg)?;
+    let (cr,sid,snc,gx,tkt_pskc) = parse_client_hello(&algs,&ch)?;
+    check_eq(&snc,sn)?;
+    let psk_opt = get_psk_opts(ha,psk_mode,tkt_pskc,tkt_psks,&ch)?;        
+    transcript = transcript.concat(&ch);
+    let (sr,gy,sstate) = put_client_hello(cr,algs,&gx,psk_opt,ent)?;
+    let sh = server_hello(&algs,&sr,&sid,&gy)?;
+    transcript = transcript.concat(&sh);
+    let tx1 = TranscriptClientHello(hash(ha,&transcript)?);
+    let (c2s,s2c,sstate) = get_server_hello(&tx1,sstate)?;
+    let ee = encrypted_extensions(&algs)?;
+    let mut payload = empty();
+    payload = payload.concat(&ee);
+    transcript = transcript.concat(&ee);
+    let sc = server_certificate(&algs,&cert)?;
+    payload = payload.concat(&sc);
+    transcript = transcript.concat(&sc);
+    let tx2 = TranscriptServerCertificate(hash(ha,&transcript)?);
+    let (sig,sstate) = get_server_signature(sk,&tx2,sstate)?;
+    let cv = certificate_verify(&algs,&sig)?;
+    payload = payload.concat(&cv);
+    transcript = transcript.concat(&cv);
+    let tx3 = TranscriptServerCertificateVerify(hash(ha,&transcript)?);
+    let (vd,sstate) = get_server_finished(&tx3,sstate)?;
+    let fin = finished(&algs,&vd)?;
+    payload = payload.concat(&fin);
+    transcript = transcript.concat(&fin);
+    let tx3 = TranscriptServerFinished(hash(ha,&transcript)?);
+    let (c2sa,s2ca,exp) = server_get_1rtt_keys(&tx3, &sstate)?;
+    let rec0 = handshake_record(&sh)?;
+    let (rec1,s2c) = encrypt_record(ct_handshake,&payload,0,s2c)?;
+    Ok((rec0.concat(&rec1),Server0(algs,transcript,sstate,c2s,c2sa,s2ca)))
+}
+    
+pub fn server_finish(msg:&Bytes,st:Server0) -> Res<Server1> {
+    let Server0(algs,transcript,sstate,c2s,c2sa,s2ca) = st;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let len = first_application_record(&msg)?;
+    let (ct,payload,s2c) = decrypt_record(&msg.slice_range(0..len),c2s)?;
+    if ct == ct_handshake {
+        let (cfin,flen) = check_handshake_message(&payload)?;
+        let vd = parse_finished(&algs,&cfin)?;
+        let tx = TranscriptServerFinished(hash(ha,&transcript)?);
+        let sstate = put_client_finished(vd,&tx,sstate)?;
+        let transcript = transcript.concat(&cfin);
+        Ok(Server1(algs,transcript,sstate,c2sa,s2ca))
     } else {Err(parse_failed)}
 }
