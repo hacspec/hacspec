@@ -82,20 +82,20 @@ pub enum SignatureScheme {
 //pub type DH_KEYPAIR = (NamedGroup, DHSK, DHPK);
 pub type PSK = KEY;
 
-pub fn hash_len(ha: HashAlgorithm) -> u16 {
+pub fn hash_len(ha:HashAlgorithm) -> usize {
     match ha {
         HashAlgorithm::SHA256 => 32,
         HashAlgorithm::SHA384 => 48,
     }
 }
 
-pub fn hmac_key_len(ha: HashAlgorithm) -> u16 {
+pub fn hmac_key_len(ha:HashAlgorithm) -> usize {
     match ha {
         HashAlgorithm::SHA256 => 32,
         HashAlgorithm::SHA384 => 48,
     }
 }
-pub fn ae_key_len(ae: AEADAlgorithm) -> u16 {
+pub fn ae_key_len(ae:AEADAlgorithm) -> usize {
     match ae {
         AEADAlgorithm::CHACHA20_POLY1305 => 32,
         AEADAlgorithm::AES_128_GCM => 32,
@@ -103,7 +103,7 @@ pub fn ae_key_len(ae: AEADAlgorithm) -> u16 {
     }
 }
 
-pub fn ae_iv_len(ae: AEADAlgorithm) -> u16 {
+pub fn ae_iv_len(ae:AEADAlgorithm) -> usize {
     match ae {
         AEADAlgorithm::CHACHA20_POLY1305 => 12,
         AEADAlgorithm::AES_128_GCM => 12,
@@ -188,10 +188,10 @@ pub fn hmac_verify(ha: HashAlgorithm, mk: &MACK, payload: &Bytes, m: &HMAC) -> R
     result
 }
 
-pub fn sign(sa: SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
+pub fn sign(sa:SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
     return Ok(SIG::new(32));
 }
-pub fn verify(sa: SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
+pub fn verify(sa:SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
     return Ok(());
 }
 
