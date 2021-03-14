@@ -4,8 +4,30 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
+use hacspec_sha256::*;
+// XXX: this type of import is not allowed in hacspec
+use hacspec_chacha20::{Key as Chacha20Key, IV as Chacha20Iv};
+use hacspec_chacha20poly1305::{decrypt as chacha_poly_decrypt, encrypt as chacha_poly_encrypt};
+use hacspec_curve25519::{
+    scalarmult as x25519_point_mul, secret_to_public as x25519_secret_to_public, SerializedPoint,
+    SerializedScalar,
+};
+use hacspec_poly1305::Tag as Poly1305Tag;
+use unsafe_hacspec_examples::{
+    ec::{
+        p256::{
+            point_mul as p256_point_mul, point_mul_base as p256_secret_to_public,
+            FieldElement as P256FieldElement, Scalar as P256Scalar,
+        },
+        Affine,
+    },
+    hkdf, hmac,
+};
+
+use crate::{mac_failed, unsupported_algorithm};
+
 pub type Res<T> = Result<T, usize>;
-pub type Bytes = Seq<U8>;
+pub type Bytes = ByteSeq;
 pub fn empty() -> Bytes {
     return Seq::new(0);
 }
@@ -17,9 +39,9 @@ pub fn bytes<T: SeqTrait<U8>>(x: &T) -> Bytes {
 bytes!(Entropy, 64);
 bytes!(Random, 32);
 
-pub type DHSK = Bytes; 
+pub type DHSK = Bytes;
 pub type DHPK = Bytes;
-pub type SIGK = Bytes; 
+pub type SIGK = Bytes;
 pub type VERK = Bytes;
 pub type MACK = Bytes;
 pub type AEK = Bytes;
@@ -29,7 +51,7 @@ pub type HMAC = Bytes;
 pub type SIG = Bytes;
 pub type AEIV = Bytes;
 
-pub type AEKIV = (AEK,AEIV);
+pub type AEKIV = (AEK, AEIV);
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum NamedGroup {
@@ -60,71 +82,110 @@ pub enum SignatureScheme {
 //pub type DH_KEYPAIR = (NamedGroup, DHSK, DHPK);
 pub type PSK = KEY;
 
-pub fn hash_len(ha:HashAlgorithm) -> u16 {
+pub fn hash_len(ha: HashAlgorithm) -> u16 {
     match ha {
         HashAlgorithm::SHA256 => 32,
-        HashAlgorithm::SHA384 => 48
+        HashAlgorithm::SHA384 => 48,
     }
 }
 
-pub fn hmac_key_len(ha:HashAlgorithm) -> u16 {
+pub fn hmac_key_len(ha: HashAlgorithm) -> u16 {
     match ha {
         HashAlgorithm::SHA256 => 32,
-        HashAlgorithm::SHA384 => 48
+        HashAlgorithm::SHA384 => 48,
     }
 }
-pub fn ae_key_len(ae:AEADAlgorithm) -> u16 {
+pub fn ae_key_len(ae: AEADAlgorithm) -> u16 {
     match ae {
         AEADAlgorithm::CHACHA20_POLY1305 => 32,
         AEADAlgorithm::AES_128_GCM => 32,
-        AEADAlgorithm::AES_256_GCM => 32
+        AEADAlgorithm::AES_256_GCM => 32,
     }
 }
 
-pub fn ae_iv_len(ae:AEADAlgorithm) -> u16 {
+pub fn ae_iv_len(ae: AEADAlgorithm) -> u16 {
     match ae {
         AEADAlgorithm::CHACHA20_POLY1305 => 12,
         AEADAlgorithm::AES_128_GCM => 12,
-        AEADAlgorithm::AES_256_GCM => 12
+        AEADAlgorithm::AES_256_GCM => 12,
     }
 }
 
-pub fn dh_priv_len(gn:NamedGroup) -> usize {
+pub fn dh_priv_len(gn: NamedGroup) -> usize {
     match gn {
         NamedGroup::X25519 => 32,
-        NamedGroup::SECP256r1 => 32
+        NamedGroup::SECP256r1 => 32,
     }
 }
 
-pub fn dh_pub_len(gn:NamedGroup) -> usize {
+pub fn dh_pub_len(gn: NamedGroup) -> usize {
     match gn {
         NamedGroup::X25519 => 32,
-        NamedGroup::SECP256r1 => 64
+        NamedGroup::SECP256r1 => 64,
     }
 }
 
-pub fn zero_key(ha:HashAlgorithm) -> KEY {
+pub fn zero_key(ha: HashAlgorithm) -> KEY {
     KEY::new(hash_len(ha) as usize)
-} 
+}
 
 pub fn secret_to_public(group_name: NamedGroup, x: &DHSK) -> Res<DHPK> {
-    return Ok(DHPK::new(32));
+    match group_name {
+        NamedGroup::SECP256r1 => {
+            let Affine(X, Y) = p256_secret_to_public(P256Scalar::from_byte_seq_be(x));
+            Ok(X.to_byte_seq_be().concat(&Y.to_byte_seq_be()))
+        }
+        NamedGroup::X25519 => Ok(DHPK::from_seq(&x25519_secret_to_public(
+            SerializedScalar::from_seq(x),
+        ))),
+    }
 }
 
 pub fn ecdh(group_name: NamedGroup, x: &DHSK, y: &DHPK) -> Res<KEY> {
-    return Ok(KEY::new(32));
+    match group_name {
+        NamedGroup::SECP256r1 => {
+            let pk = Affine(
+                P256FieldElement::from_byte_seq_be(y.slice_range(0..32)),
+                P256FieldElement::from_byte_seq_be(y.slice_range(32..64)),
+            );
+            let Affine(X, Y) = p256_point_mul(P256Scalar::from_byte_seq_be(x), pk);
+            Ok(X.to_byte_seq_be().concat(&Y.to_byte_seq_be()))
+        }
+        NamedGroup::X25519 => Ok(DHPK::from_seq(&x25519_point_mul(
+            SerializedScalar::from_seq(x),
+            SerializedPoint::from_seq(y),
+        ))),
+    }
 }
 
 pub fn hash(ha: HashAlgorithm, payload: &Bytes) -> Res<HASH> {
-    return Ok(HASH::new(32));
+    match ha {
+        HashAlgorithm::SHA256 => Ok(HASH::from_seq(&sha256(payload))),
+        HashAlgorithm::SHA384 => Err(unsupported_algorithm),
+    }
 }
 
 pub fn hmac(ha: HashAlgorithm, mk: &MACK, payload: &Bytes) -> Res<HMAC> {
-    return Ok(HMAC::new(32));
+    match ha {
+        HashAlgorithm::SHA256 => Ok(HMAC::from_seq(&hmac::hmac(mk, payload))),
+        HashAlgorithm::SHA384 => Err(unsupported_algorithm),
+    }
 }
 
 pub fn hmac_verify(ha: HashAlgorithm, mk: &MACK, payload: &Bytes, m: &HMAC) -> Res<()> {
-    return Ok(());
+    // XXX: this is pretty ugly
+    let my_hmac = hmac(ha, mk, payload)?;
+    let mut result = if m.len() == my_hmac.len() {
+        Ok(())
+    } else {
+        Err(mac_failed)
+    };
+    for i in 0..m.len() {
+        if !my_hmac[i].equal(m[i]) {
+            result = Err(mac_failed);
+        }
+    }
+    result
 }
 
 pub fn sign(sa: SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
@@ -135,17 +196,68 @@ pub fn verify(sa: SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> R
 }
 
 pub fn hkdf_extract(ha: HashAlgorithm, k: &KEY, salt: &KEY) -> Res<KEY> {
-    return Ok(KEY::new(32));
+    match ha {
+        HashAlgorithm::SHA256 => Ok(KEY::from_seq(&hkdf::extract(salt, k))),
+        HashAlgorithm::SHA384 => Err(unsupported_algorithm),
+    }
 }
 
 pub fn hkdf_expand(ha: HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res<KEY> {
-    return Ok(KEY::new(32));
+    match ha {
+        HashAlgorithm::SHA256 => Ok(KEY::from_seq(&hkdf::expand(k, info, len))),
+        HashAlgorithm::SHA384 => Err(unsupported_algorithm),
+    }
 }
 
-pub fn aead_encrypt(a: AEADAlgorithm, k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
-    return Ok(empty());
+pub fn aead_encrypt(
+    a: AEADAlgorithm,
+    k: &AEK,
+    iv: &AEIV,
+    payload: &Bytes,
+    ad: &Bytes,
+) -> Res<Bytes> {
+    // XXX: the result should be Seq<u8> not Seq<U8>.
+    match a {
+        AEADAlgorithm::AES_128_GCM => Err(unsupported_algorithm),
+        AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),
+        AEADAlgorithm::CHACHA20_POLY1305 => {
+            // XXX: ctxt should really be Seq<u8> not Seq<U8>.
+            let (ctxt, tag) = chacha_poly_encrypt(
+                Chacha20Key::from_seq(k),
+                Chacha20Iv::from_seq(iv),
+                ad,
+                payload,
+            );
+            Ok(ctxt.concat(&Bytes::from_public_seq(&tag)))
+        }
+    }
 }
 
-pub fn aead_decrypt(a: AEADAlgorithm, k: &AEK, iv: &AEIV, Ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
-    return Ok(empty());
+pub fn aead_decrypt(
+    a: AEADAlgorithm,
+    k: &AEK,
+    iv: &AEIV,
+    ciphertext: &Bytes, // XXX: this should be public, i.e. Seq<u8>/PublicByteSeq
+    ad: &Bytes,
+) -> Res<Bytes> {
+    match a {
+        AEADAlgorithm::AES_128_GCM => Err(unsupported_algorithm),
+        AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),
+        AEADAlgorithm::CHACHA20_POLY1305 => {
+            // XXX: ciphertext should really be Seq<u8> not Seq<U8>.
+            let (ptxt, success) = chacha_poly_decrypt(
+                Chacha20Key::from_seq(k),
+                Chacha20Iv::from_seq(iv),
+                ad,
+                &ciphertext.slice_range(0..ciphertext.len() - 16),
+                Poly1305Tag::from_seq(
+                    &ciphertext
+                        .slice_range(ciphertext.len() - 16..ciphertext.len())
+                        .declassify(),
+                ),
+            );
+            let result = if success { Ok(ptxt) } else { Err(mac_failed) };
+            result
+        }
+    }
 }
