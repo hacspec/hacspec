@@ -20,6 +20,7 @@ bytes!(Bytes12, 12);
 pub fn bytes1(x:u8) -> Bytes {bytes(&Bytes1([U8(x)]))}
 pub fn bytes2(x:u8,y:u8) -> Bytes {bytes(&Bytes2([U8(x),U8(y)]))}
 
+
 pub const label_iv: Bytes2 = Bytes2(secret_bytes!([105, 118]));
 pub const label_key: Bytes3 = Bytes3(secret_bytes!([107, 101, 121]));
 pub const label_tls13: Bytes6 = Bytes6(secret_bytes!([116, 108, 115, 049, 051, 032]));
@@ -167,6 +168,11 @@ pub fn key_shares(algs:ALGS,gx:DHPK) -> Res<Bytes> {
     Ok(bytes2(0,0x33).concat(&lbytes2(&lbytes2(&ks)?)?))
 }
 
+pub fn server_key_shares(algs:ALGS,gx:DHPK) -> Res<Bytes> {
+    let ks = supported_group(algs)?.concat(&lbytes2(&bytes(&gx))?);
+    Ok(bytes2(0,0x33).concat(&lbytes2(&ks)?))
+}
+
 pub fn pre_shared_key(algs:ALGS,tkt:&Bytes) -> Res<Bytes> {
     let identities = lbytes2(&lbytes2(tkt)?.concat(&U32_to_be_bytes(U32(0xffffffff))))?;
     let binders = lbytes2(&lbytes1(&bytes(&HMAC::new()))?)?;
@@ -189,14 +195,14 @@ pub fn client_hello(algs:ALGS,cr:Random,gx:DHPK,sn:&Bytes,tkt:Option<&Bytes>) ->
     let sg = supported_groups(algs)?;
     let sa = signature_algorithms(algs)?;
     let ks = key_shares(algs,gx)?;
-    let mut exts = sn.concat(&sv.concat(&sg.concat(&sa.concat(&ks))));
+    let mut exts = sn.concat(&sv).concat(&sg).concat(&sa).concat(&ks);
     if psk_mode {
         if let Some(tkt) = tkt {
             let pskm = psk_key_exchange_modes(algs)?;
             let psk = pre_shared_key(algs,tkt)?;
-            exts = exts.concat(&pskm.concat(&psk))}
+            exts = exts.concat(&pskm).concat(&psk)}
         else {return Err(psk_mode_mismatch)}}
-    let ch = ty.concat(&lbytes3(&ver.concat(&cr.concat(&sid.concat(&cip.concat(&comp.concat(&lbytes2(&exts)?))))))?);
+    let ch = ty.concat(&lbytes3(&ver.concat(&cr).concat(&sid).concat(&cip).concat(&comp).concat(&lbytes2(&exts)?))?);
     Ok(ch)
 }
 
@@ -207,14 +213,50 @@ pub fn server_hello(algs:ALGS,sr:Random,sid:&Bytes,gy:DHPK) -> Res<Bytes> {
     let sid = lbytes1(sid)?;
     let cip = ciphersuite(algs)?;
     let comp = bytes1(0);
-    let ks = key_shares(algs,gy)?;
+    let ks = server_key_shares(algs,gy)?;
     let sv = server_supported_version(algs)?;
     let mut exts = ks.concat(&sv);
     if psk_mode {
         exts = exts.concat(&server_pre_shared_key(algs)?);
     }
-    let sh = ty.concat(&lbytes3(&ver.concat(&sr.concat(&sid.concat(&cip.concat(&comp.concat(&lbytes2(&exts)?))))))?);
+    let sh = ty.concat(&lbytes3(&ver.concat(&sr).concat(&sid).concat(&cip).concat(&comp).concat(&lbytes2(&exts)?))?);
     Ok(sh)
+}
+
+pub fn encrypted_extensions(algs:ALGS) -> Res<Bytes> {
+    let ty = bytes1(8);
+    Ok(ty.concat(&lbytes3(&empty())?))
+}
+
+pub fn server_certificate(algs:ALGS,cert:&Bytes) -> Res<Bytes> {
+    let ty = bytes1(0x0b);
+    let creq = lbytes1(&empty())?;
+    let crt = lbytes3(cert)?;
+    let ext = lbytes2(&empty())?;
+    let crts = lbytes3(&crt.concat(&ext))?;
+    Ok(ty.concat(&creq).concat(&crts))
+}
+
+
+pub fn certificate_verify(algs:ALGS,cv:&Bytes) -> Res<Bytes> {
+    let ty = bytes1(0x0f);
+    Ok(ty.concat(&lbytes3(cv)?))
+}
+
+pub fn finished(algs:ALGS,vd:&Bytes) -> Res<Bytes> {
+    let ty = bytes1(0x14);
+    Ok(ty.concat(&lbytes3(vd)?))
+}
+
+pub fn session_ticket(algs:ALGS,tkt:&Bytes) -> Res<Bytes> {
+    let ty = bytes1(0x04);
+    let lifetime = U32_to_be_bytes(U32(172800));
+    let age = U32_to_be_bytes(U32(9999));
+    let nonce = lbytes1(&bytes1(1))?;
+    let stkt = lbytes2(&tkt)?;
+    let grease_ext = bytes2(0x5a,0x5a).concat(&lbytes2(&empty())?);
+    let ext = lbytes2(&grease_ext)?;
+    Ok(ty.concat(&lbytes3(&lifetime.concat(&age).concat(&nonce).concat(&stkt).concat(&grease_ext))?))
 }
 
 pub fn check_eq(b1:&Bytes,b2:&Bytes) -> Res<()> {

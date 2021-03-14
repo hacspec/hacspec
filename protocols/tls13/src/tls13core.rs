@@ -154,21 +154,24 @@ fn decrypt(ciphertext: Bytes, n: u64, st: CipherState) -> Res<Bytes> {
 
 /* Handshake State Machine */
 /* We implement a simple linear state machine:
-PostClientHello -> PostServerHello -> PostCertificateVerify -> PostServerFinished -> PostClientFinished -> PostServerTicket
-There are no optional steps, all states must be traversed, even if the traversals are NOOPS */
+PostClientHello -> PostServerHello -> PostCertificateVerify ->
+PostServerFinished -> PostClientFinished -> Complete
+There are no optional steps, all states must be traversed, even if the traversals are NOOPS.
+See "put_skip_server_signature" below */
 
 struct ClientPostClientHello(Random, ALGS, DHSK, KEY);
 struct ClientPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 struct ClientPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 struct ClientPostServerFinished(Random, Random, ALGS, KEY, MACK);
 struct ClientPostClientFinished(Random, Random, ALGS, KEY);
-struct ClientPostServerTicket(Random, Random, ALGS, KEY);
+struct ClientComplete(Random, Random, ALGS, KEY);
 
 struct ServerPostClientHello(Random, Random, ALGS, KEY, PSK);
 struct ServerPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 struct ServerPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 struct ServerPostServerFinished(Random, Random, ALGS, KEY, MACK);
 struct ServerPostClientFinished(Random, Random, ALGS, KEY);
+struct ServerComplete(Random, Random, ALGS, KEY);
 
 struct TranscriptTruncatedClientHello(HASH);
 struct TranscriptClientHello(HASH);
@@ -177,6 +180,8 @@ struct TranscriptServerCertificate(HASH);
 struct TranscriptServerCertificateVerify(HASH);
 struct TranscriptServerFinished(HASH);
 struct TranscriptClientFinished(HASH);
+
+
 /* Handshake Core Functions: See RFC 8446 Section 4 */
 /* We delegate all details of message formatting and transcript hashes to the caller */
 
@@ -308,15 +313,15 @@ fn get_client_finished(
     return Ok((m, ClientPostClientFinished(cr, sr, algs, ms)));
 }
 
-fn put_server_ticket(
+fn client_complete(
     tx: &TranscriptClientFinished,
     st: ClientPostClientFinished,
-) -> Res<ClientPostServerTicket> {
+) -> Res<ClientComplete> {
     let ClientPostClientFinished(cr, sr, algs, ms) = st;
     let TranscriptClientFinished(tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let rms = derive_rms(ha, ms, tx_hash)?;
-    return Ok(ClientPostServerTicket(cr, sr, algs, rms));
+    Ok(ClientComplete(cr,sr,algs,rms))
 }
 
 /* TLS 1.3 Server Side Handshake Functions */
@@ -422,16 +427,24 @@ fn server_get_1rtt_keys(
 }
 
 fn put_client_finished(
-    tx1: &TranscriptServerFinished,
     mac: HMAC,
-    tx2: &TranscriptClientFinished,
+    tx: &TranscriptServerFinished,
     st: ServerPostServerFinished,
 ) -> Res<ServerPostClientFinished> {
     let ServerPostServerFinished(cr, sr, algs, ms, cfk) = st;
-    let TranscriptServerFinished(tx_hash1) = tx1;
-    let TranscriptClientFinished(tx_hash2) = tx2;
+    let TranscriptServerFinished(tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    hmac_verify(ha, cfk, &bytes(tx_hash1), mac)?;
-    let rms = derive_rms(ha, ms, tx_hash2)?;
-    return Ok(ServerPostClientFinished(cr, sr, algs, rms));
+    hmac_verify(ha, cfk, &bytes(tx_hash), mac)?;
+    return Ok(ServerPostClientFinished(cr, sr, algs, ms));
+}
+
+fn server_complete(
+    tx: &TranscriptClientFinished,
+    st: ServerPostClientFinished,
+) -> Res<ClientComplete> {
+    let TranscriptClientFinished(tx_hash) = tx;
+    let ServerPostClientFinished(cr, sr, algs, ms) = st;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let rms = derive_rms(ha, ms, tx_hash)?;
+    Ok(ClientComplete(cr,sr,algs,rms))
 }

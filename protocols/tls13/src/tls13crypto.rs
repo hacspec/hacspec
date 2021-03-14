@@ -14,6 +14,7 @@ pub fn bytes<T: SeqTrait<U8>>(x: &T) -> Bytes {
     return Seq::from_seq(x);
 }
 
+
 bytes!(Entropy, 64);
 bytes!(Random, 32);
 bytes!(DHSK, 32);
