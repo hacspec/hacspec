@@ -119,7 +119,7 @@ fn compress(block: Block, h_in: Hash) -> Hash {
     h
 }
 
-pub fn hash(msg: &ByteSeq) -> Digest {
+pub fn sha256(msg: &ByteSeq) -> Digest {
     let mut h = HASH_INIT;
     for i in 0..msg.num_chunks(BLOCK_SIZE) {
         let (block_len, block) = msg.get_chunk(BLOCK_SIZE, i);

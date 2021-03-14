@@ -335,6 +335,15 @@ macro_rules! impl_from_public_slice {
                         .collect::<Vec<$st>>(),
                 )
             }
+
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn from_public_seq<U: SeqTrait<$t>>(x: &U) -> Seq<$st> {
+                let mut tmp = Self::new(x.len());
+                for i in 0..x.len() {
+                    tmp[i] = <$st>::classify(x[i]);
+                }
+                tmp
+            }
         }
     };
 }
@@ -344,6 +353,27 @@ impl_from_public_slice!(u16, U16);
 impl_from_public_slice!(u32, U32);
 impl_from_public_slice!(u64, U64);
 impl_from_public_slice!(u128, U128);
+
+macro_rules! impl_declassify {
+    ($t:ty,$st:ty) => {
+        impl Seq<$st> {
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn declassify(self) -> Seq<$t> {
+                let mut tmp = <Seq<$t>>::new(self.len());
+                for i in 0..self.len() {
+                    tmp[i] = <$st>::declassify(self[i]);
+                }
+                tmp
+            }
+        }
+    };
+}
+
+impl_declassify!(u8, U8);
+impl_declassify!(u16, U16);
+impl_declassify!(u32, U32);
+impl_declassify!(u64, U64);
+impl_declassify!(u128, U128);
 
 impl Seq<U8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]

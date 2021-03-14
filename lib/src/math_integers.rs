@@ -29,6 +29,18 @@ macro_rules! unsigned_public_integer {
     ($name:ident,$n:literal) => {
         abstract_unsigned_public_integer!($name, $n);
 
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: &A) -> $name {
+                $name::from_be_bytes(
+                    s.iter()
+                        .map(|x| U8::declassify(*x))
+                        .collect::<Vec<_>>()
+                        .as_slice(),
+                )
+            }
+        }
+
         impl NumericCopy for $name {}
         impl UnsignedInteger for $name {}
         impl UnsignedIntegerCopy for $name {}
