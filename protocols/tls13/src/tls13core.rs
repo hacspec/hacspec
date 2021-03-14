@@ -7,7 +7,7 @@ use hacspec_lib::*;
 /* TLS 1.3 Key Schedule: See RFC 8446 Section 7 */
 
 pub fn hkdf_expand_label(
-    ha: HashAlgorithm,
+    ha: &HashAlgorithm,
     k: &KEY,
     label: &Bytes,
     context: &Bytes,
@@ -24,17 +24,17 @@ pub fn hkdf_expand_label(
     }
 }
 
-pub fn derive_secret(ha: HashAlgorithm, k: &KEY, label: &Bytes, tx: &HASH) -> Res<KEY> {
+pub fn derive_secret(ha: &HashAlgorithm, k: &KEY, label: &Bytes, tx: &HASH) -> Res<KEY> {
     return hkdf_expand_label(ha, k, label, &bytes(tx), hash_len(ha));
 }
 
-pub fn derive_binder_key(ha: HashAlgorithm, k: &KEY) -> Res<MACK> {
+pub fn derive_binder_key(ha: &HashAlgorithm, k: &KEY) -> Res<MACK> {
     let early_secret = hkdf_extract(ha, k, &zero_key(ha))?;
     let mk = derive_secret(ha, &early_secret, &bytes(&label_res_binder), &hash_empty(ha)?)?;
     return Ok(MACK::from_seq(&mk));
 }
 
-pub fn derive_aead_key_iv(ha: HashAlgorithm, ae: AEADAlgorithm, k: &KEY) -> Res<AEKIV> {
+pub fn derive_aead_key_iv(ha: &HashAlgorithm, ae: &AEADAlgorithm, k: &KEY) -> Res<AEKIV> {
     let sender_write_key = hkdf_expand_label(ha, k, &bytes(&label_key), &empty(), ae_key_len(ae))?;
     let sender_write_iv = hkdf_expand_label(ha, k, &bytes(&label_iv), &empty(), ae_iv_len(ae))?;
     return Ok((
@@ -43,7 +43,7 @@ pub fn derive_aead_key_iv(ha: HashAlgorithm, ae: AEADAlgorithm, k: &KEY) -> Res<
     ));
 }
 
-pub fn derive_0rtt_keys(ha: HashAlgorithm, ae: AEADAlgorithm, k: &KEY, tx: &HASH) -> Res<(AEKIV, KEY)> {
+pub fn derive_0rtt_keys(ha: &HashAlgorithm, ae: &AEADAlgorithm, k: &KEY, tx: &HASH) -> Res<(AEKIV, KEY)> {
     let early_secret = hkdf_extract(ha, k, &zero_key(ha))?;
     let client_early_traffic_secret =
         derive_secret(ha, &early_secret, &bytes(&label_c_e_traffic), tx)?;
@@ -53,13 +53,13 @@ pub fn derive_0rtt_keys(ha: HashAlgorithm, ae: AEADAlgorithm, k: &KEY, tx: &HASH
     return Ok((sender_write_key_iv, early_exporter_master_secret));
 }
 
-pub fn derive_finished_key(ha: HashAlgorithm, k: &KEY) -> Res<MACK> {
+pub fn derive_finished_key(ha: &HashAlgorithm, k: &KEY) -> Res<MACK> {
     Ok(hkdf_expand_label(ha,k,&bytes(&label_finished),&empty(),hmac_key_len(ha))?)
 }
 
 pub fn derive_hk_ms(
-    ha: HashAlgorithm,
-    ae: AEADAlgorithm,
+    ha: &HashAlgorithm,
+    ae: &AEADAlgorithm,
     gxy: &KEY,
     psk: &KEY,
     tx: &HASH,
@@ -87,8 +87,8 @@ pub fn derive_hk_ms(
 }
 
 pub fn derive_app_keys(
-    ha: HashAlgorithm,
-    ae: AEADAlgorithm,
+    ha: &HashAlgorithm,
+    ae: &AEADAlgorithm,
     master_secret: &KEY,
     tx: &HASH,
 ) -> Res<(AEKIV, AEKIV, KEY)> {
@@ -106,7 +106,7 @@ pub fn derive_app_keys(
     ));
 }
 
-pub fn derive_rms(ha: HashAlgorithm, master_secret: &KEY, tx: &HASH) -> Res<KEY> {
+pub fn derive_rms(ha: &HashAlgorithm, master_secret: &KEY, tx: &HASH) -> Res<KEY> {
     let resumption_master_secret = derive_secret(ha, master_secret, &bytes(&label_res_master), tx)?;
     return Ok(resumption_master_secret);
 }
@@ -116,7 +116,7 @@ pub fn derive_rms(ha: HashAlgorithm, master_secret: &KEY, tx: &HASH) -> Res<KEY>
 // Using newtype pattern below, but the same thing works with tuples too
 pub struct CipherState(AEADAlgorithm, AEKIV);
 
-pub fn derive_iv_ctr(ae:AEADAlgorithm, iv: &AEIV, n: u64) -> AEIV {
+pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n: u64) -> AEIV {
     let counter = bytes(&U64_to_be_bytes(U64(n)));
     let mut iv_ctr = AEIV::new(iv.len());
     for i in 0..iv.len()-8 {
@@ -130,12 +130,12 @@ pub fn derive_iv_ctr(ae:AEADAlgorithm, iv: &AEIV, n: u64) -> AEIV {
 
 pub fn encrypt(payload: &Bytes, n: u64, st: &CipherState) -> Res<Bytes> {
     let CipherState(ae, (k, iv)) = st;
-    let iv_ctr = derive_iv_ctr(*ae,&iv,n);
+    let iv_ctr = derive_iv_ctr(ae,&iv,n);
     let clen = payload.len() + 16;
     if clen <= 65536 {
         let clenb = u16_to_be_bytes(clen as u16);
         let ad = bytes(&Bytes5(secret_bytes!([23, 3, 3, clenb[0], clenb[1]])));
-        return aead_encrypt(*ae, &k, &iv_ctr, payload, &ad);
+        return aead_encrypt(ae, &k, &iv_ctr, payload, &ad);
     } else {
         return Err(payload_too_long);
     }
@@ -143,11 +143,11 @@ pub fn encrypt(payload: &Bytes, n: u64, st: &CipherState) -> Res<Bytes> {
 
 pub fn decrypt(ciphertext: &Bytes, n: u64, st: &CipherState) -> Res<Bytes> {
     let CipherState(ae, (k, iv)) = st;
-    let iv_ctr = derive_iv_ctr(*ae, &iv, n);
+    let iv_ctr = derive_iv_ctr(ae, &iv, n);
     if ciphertext.len() <= 65536 {
         let clenb = u16_to_be_bytes(ciphertext.len() as u16);
         let ad = bytes(&Bytes5(secret_bytes!([23, 3, 3, clenb[0], clenb[1]])));
-        return aead_encrypt(*ae, &k, &iv_ctr, &ciphertext, &ad);
+        return aead_encrypt(ae, &k, &iv_ctr, &ciphertext, &ad);
     } else {
         return Err(payload_too_long);
     }
@@ -192,15 +192,15 @@ pub fn get_client_hello(
     psk: Option<KEY>,
     ent: Entropy,
 ) -> Res<(Random, DHPK, ClientPostClientHello)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs0;
     if ent.len() < 32 + dh_priv_len(gn) {Err(insufficient_entropy)}
     else {
         let cr = Random::from_seq(&ent.slice_range(0..32));
         let x = DHSK::from_seq(&ent.slice_range(32..32+dh_priv_len(gn)));
         let gx = secret_to_public(gn, &x)?;
-        match psk {
-            Some(k) if psk_mode => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, k))),
-            None if !psk_mode => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, zero_key(ha)))),
+        match (psk,psk_mode) {
+            (Some(k), true) => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, k))),
+            (None, false) => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, zero_key(ha)))),
             _ => Err(psk_mode_mismatch),
         }
     }
@@ -230,8 +230,8 @@ pub fn get_client_hello_binder(
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptTruncatedClientHello(tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs0 {
-        let mk = derive_binder_key(*ha, &psk)?;
-        let mac = hmac(*ha, &mk, &bytes(tx_hash))?;
+        let mk = derive_binder_key(ha, &psk)?;
+        let mac = hmac(ha, &mk, &bytes(tx_hash))?;
         Ok(mac)
     } else {
         Err(psk_mode_mismatch)
@@ -245,7 +245,7 @@ pub fn client_get_0rtt_keys(
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptClientHello(tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, true, true) = algs0 {
-        let (aek, key) = derive_0rtt_keys(*ha, *ae, &psk, tx_hash)?;
+        let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
         Ok((CipherState(*ae, aek), key))
     } else {
         Err(zero_rtt_disabled)
@@ -262,12 +262,12 @@ pub fn put_server_hello(
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptServerHello(tx_hash) = tx;
     if algs == algs0 {
-        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
         let gxy = ecdh(gn, &x, &gy)?;
         let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
         Ok((
-            CipherState(ae, chk),
-            CipherState(ae, shk),
+            CipherState(*ae, chk),
+            CipherState(*ae, shk),
             ClientPostServerHello(cr, sr, algs, ms, cfk, sfk),
         ))
     } else {
@@ -283,7 +283,7 @@ pub fn put_server_signature(
 ) -> Res<ClientPostCertificateVerify> {
     let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificate(tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = algs {
+    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
         verify(sa, &pk, &bytes(tx_hash), &sig)?;
         Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
     } else {
@@ -293,7 +293,7 @@ pub fn put_server_signature(
 
 pub fn put_skip_server_signature(st: ClientPostServerHello) -> Res<ClientPostCertificateVerify> {
     let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
-    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs {
+    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = &algs {
         Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
     } else {
         Err(psk_mode_mismatch)
@@ -307,7 +307,7 @@ pub fn put_server_finished(
 ) -> Res<ClientPostServerFinished> {
     let ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificateVerify(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &sfk, &bytes(tx_hash), &vd)?;
     return Ok(ClientPostServerFinished(cr, sr, algs, ms, cfk));
 }
@@ -318,7 +318,7 @@ pub fn client_get_1rtt_keys(
     let ClientPostServerFinished(_, _, algs, ms, cfk) = st;
     let TranscriptServerFinished(tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    let (cak, sak, exp) = derive_app_keys(*ha, *ae, &ms, tx_hash)?;
+    let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
     return Ok((CipherState(*ae, cak), CipherState(*ae, sak), exp));
 }
 
@@ -328,7 +328,7 @@ pub fn get_client_finished(
 ) -> Res<(HMAC, ClientPostClientFinished)> {
     let ClientPostServerFinished(cr, sr, algs, ms, cfk) = st;
     let TranscriptServerFinished(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let m = hmac(ha, &cfk, &bytes(tx_hash))?;
     return Ok((m, ClientPostClientFinished(cr, sr, algs, ms)));
 }
@@ -339,7 +339,7 @@ pub fn client_complete(
 ) -> Res<ClientComplete> {
     let ClientPostClientFinished(cr, sr, algs, ms) = st;
     let TranscriptClientFinished(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let rms = derive_rms(ha, &ms, tx_hash)?;
     Ok(ClientComplete(cr,sr,algs,rms))
 }
@@ -353,21 +353,21 @@ pub fn put_client_hello(
     psk: Option<(PSK, &TranscriptTruncatedClientHello, HMAC)>,
     ent: Entropy,
 ) -> Res<(Random, DHPK, ServerPostClientHello)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     if ent.len() < 32 + dh_priv_len(gn) {Err(insufficient_entropy)}
     else {
         let sr = Random::from_seq(&ent.slice_range(0..32));
         let y = DHSK::from_seq(&ent.slice_range(32..32+dh_priv_len(gn)));
         let gy = secret_to_public(gn, &y)?;
         let gxy = ecdh(gn, &y, &gx)?;
-        match psk {
-            Some((k, tx, binder)) if psk_mode => {
+        match (psk,psk_mode) {
+            (Some((k, tx, binder)),true) => {
                 let mk = derive_binder_key(ha, &k)?;
                 let TranscriptTruncatedClientHello(tx_hash) = tx;
                 hmac_verify(ha, &mk, &bytes(tx_hash), &binder)?;
                 Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, k)))
             }
-            None if !psk_mode => Ok((cr, gx, ServerPostClientHello(cr, sr, algs, gxy, zero_key(ha)))),
+            (None,false) => Ok((cr, gx, ServerPostClientHello(cr, sr, algs, gxy, zero_key(ha)))),
             _ => Err(psk_mode_mismatch),
         }
     }
@@ -380,7 +380,7 @@ pub fn server_get_0rtt_keys(
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
     let TranscriptClientHello(tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, true, true) = algs {
-        let (aek, key) = derive_0rtt_keys(*ha, *ae, &psk, tx_hash)?;
+        let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
         Ok((CipherState(*ae, aek), key))
     } else {
         Err(zero_rtt_disabled)
@@ -393,11 +393,11 @@ pub fn get_server_hello(
 ) -> Res<(CipherState, CipherState, ServerPostServerHello)> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
     let TranscriptClientHello(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
     Ok((
-        CipherState(ae, shk),
-        CipherState(ae, chk),
+        CipherState(*ae, shk),
+        CipherState(*ae, chk),
         ServerPostServerHello(cr, sr, algs, ms, cfk, sfk),
     ))
 }
@@ -409,7 +409,7 @@ pub fn get_server_signature(
 ) -> Res<(SIG, ServerPostCertificateVerify)> {
     let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificate(tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = algs {
+    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
         let sig = sign(sa, &sk, &bytes(tx_hash))?;
         Ok((sig, ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk)))
     } else {
@@ -433,7 +433,7 @@ pub fn get_server_finished(
 ) -> Res<(HMAC, ServerPostServerFinished)> {
     let ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificateVerify(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let m = hmac(ha, &sfk, &bytes(tx_hash))?;
     Ok((m, ServerPostServerFinished(cr, sr, algs, ms, cfk)))
 }
@@ -444,9 +444,9 @@ pub fn server_get_1rtt_keys(
 ) -> Res<(CipherState, CipherState, KEY)> {
     let ServerPostServerFinished(_, _, algs, ms, cfk) = st;
     let TranscriptServerFinished(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
-    return Ok((CipherState(ae, sak), CipherState(ae, cak), exp));
+    return Ok((CipherState(*ae, sak), CipherState(*ae, cak), exp));
 }
 
 pub fn put_client_finished(
@@ -456,7 +456,7 @@ pub fn put_client_finished(
 ) -> Res<ServerPostClientFinished> {
     let ServerPostServerFinished(cr, sr, algs, ms, cfk) = st;
     let TranscriptServerFinished(tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &cfk, &bytes(tx_hash), &mac)?;
     return Ok(ServerPostClientFinished(cr, sr, algs, ms));
 }
@@ -467,7 +467,7 @@ pub fn server_complete(
 ) -> Res<ClientComplete> {
     let TranscriptClientFinished(tx_hash) = tx;
     let ServerPostClientFinished(cr, sr, algs, ms) = st;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let rms = derive_rms(ha, &ms, tx_hash)?;
     Ok(ClientComplete(cr,sr,algs,rms))
 }
