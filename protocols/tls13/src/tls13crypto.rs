@@ -10,6 +10,10 @@ pub fn empty() -> Bytes {
     return Seq::new(0);
 }
 
+pub fn zeros(u:usize) -> Bytes {
+    return Seq::new(u);
+}
+
 pub fn bytes<T: SeqTrait<U8>>(x: &T) -> Bytes {
     return Seq::from_seq(x);
 }

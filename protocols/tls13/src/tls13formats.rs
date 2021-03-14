@@ -74,6 +74,7 @@ pub const negotiation_mismatch: usize = 7;
 pub const unsupported_algorithm: usize = 8;
 pub const parse_failed: usize = 9;
 pub const insufficient_entropy: usize = 10;
+pub const insufficient_data: usize = 11;
 
 pub fn check_eq(b1: &Bytes, b2: &Bytes) -> Res<()> {
     if b1.len() != b2.len() {
