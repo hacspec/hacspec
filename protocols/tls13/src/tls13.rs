@@ -191,3 +191,31 @@ pub fn server_finish(msg:&Bytes,st:Server0) -> Res<Server1> {
         Ok(Server1(algs,transcript,sstate,c2sa,s2ca))
     } else {Err(parse_failed)}
 }
+
+pub fn client_send(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+    let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
+    let (cip,c2sa) = encrypt_record(ct_app_data,msg,0,c2sa)?;
+    Ok((cip,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
+}
+
+pub fn client_recv(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+    let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
+    let (ct,plain,s2ca) = decrypt_record(msg,s2ca)?;
+    if ct == ct_app_data {
+        Ok((plain,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
+    } else {Err(parse_failed)}
+}
+
+pub fn server_send(st:Server1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+    let Server1(algs,transcript,sstate,c2sa,s2ca) = st;
+    let (cip,s2ca) = encrypt_record(ct_app_data,msg,0,s2ca)?;
+    Ok((cip,Server1(algs,transcript,sstate,c2sa,s2ca)))
+}
+
+pub fn server_recv(st:Server1,msg:&Bytes) -> Res<(Bytes,Server1)> {
+    let Server1(algs,transcript,sstate,c2sa,s2ca) = st;
+    let (ct,plain,c2sa) = decrypt_record(msg,c2sa)?;
+    if ct == ct_app_data {
+        Ok((plain,Server1(algs,transcript,sstate,c2sa,s2ca)))
+    } else {Err(parse_failed)}
+}
