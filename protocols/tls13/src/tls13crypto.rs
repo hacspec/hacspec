@@ -70,6 +70,10 @@ pub fn ecdh(group_name: NamedGroup, x: DHSK, y: DHPK) -> Res<KEY> {
     return Ok(KEY::new());
 }
 
+pub fn hash(ha: HashAlgorithm, payload: &Bytes) -> Res<HASH> {
+    return Ok(HASH::new());
+}
+
 pub fn hmac(ha: HashAlgorithm, mk: MACK, payload: &Bytes) -> Res<HMAC> {
     return Ok(HMAC::new());
 }
@@ -101,6 +105,6 @@ pub fn aead_decrypt(a: AEADAlgorithm, k: AEK, iv: AEIV, Ciphertext: Bytes, ad: B
     return Ok(Ciphertext);
 }
 
-pub fn hash_empty(ha:HashAlgorithm) -> HASH {
-    return (HASH::new());
+pub fn hash_empty(ha:HashAlgorithm) -> Res<HASH> {
+    return hash(ha,&empty());
 }

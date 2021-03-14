@@ -27,7 +27,7 @@ pub fn derive_secret(ha: HashAlgorithm, k: KEY, label: Bytes, tx: &HASH) -> Res<
 
 fn derive_binder_key(ha: HashAlgorithm, k: KEY) -> Res<MACK> {
     let early_secret = hkdf_extract(ha, k, zeros)?;
-    let mk = derive_secret(ha, early_secret, bytes(&label_res_binder), &hash_empty(ha))?;
+    let mk = derive_secret(ha, early_secret, bytes(&label_res_binder), &hash_empty(ha)?)?;
     return Ok(MACK::from_seq(&mk));
 }
 
@@ -78,7 +78,7 @@ fn derive_hk_ms(
     let client_write_key_iv = derive_aead_key_iv(ha, client_handshake_traffic_secret)?;
     let server_write_key_iv = derive_aead_key_iv(ha, server_handshake_traffic_secret)?;
     let master_secret_ =
-        derive_secret(ha, handshake_secret, bytes(&label_derived), &hash_empty(ha))?;
+        derive_secret(ha, handshake_secret, bytes(&label_derived), &hash_empty(ha)?)?;
     let master_secret = hkdf_extract(ha, zeros, master_secret_)?;
     return Ok((
         client_write_key_iv,
