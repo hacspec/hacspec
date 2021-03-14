@@ -58,10 +58,13 @@ pub fn client_init(algs:ALGS,sn:&Bytes,tkt_psk:Option<(&Bytes,KEY)>,ent:Entropy)
             let nch = ch.update_slice(trunc_len,&binder,0,hash_len(ha));
             transcript = transcript.concat(&nch);
             let rec = handshake_record(&nch)?;
-            let tx0 = TranscriptClientHello(hash(ha,&nch)?);
-            let (cip,exp) = client_get_0rtt_keys(&tx0,&cstate)?;
-            let st = Client0(algs,transcript,cstate,Some((cip,exp)));
-            Ok((rec,st))
+            match zero_rtt {
+                true => {let tx0 = TranscriptClientHello(hash(ha,&nch)?);
+                         let (cip,exp) = client_get_0rtt_keys(&tx0,&cstate)?;
+                         let st = Client0(algs,transcript,cstate,Some((cip,exp)));
+                         Ok((rec,st))},
+                false => Ok((rec,Client0(algs,transcript,cstate,None)))
+            }            
         },
         (false, None) => {
             let (crand,gx,cstate) = get_client_hello(algs,None,ent)?;
@@ -124,8 +127,8 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
     } else {Err(parse_failed)}
 }
 
-pub struct Server0(ALGS,Bytes,ServerPostServerFinished,CipherState,CipherState,CipherState);
-pub struct Server1(ALGS,Bytes,ServerPostClientFinished,CipherState,CipherState);
+pub struct Server0(ALGS,Bytes,ServerPostServerFinished,Option<(CipherState,KEY)>,CipherState,CipherState,CipherState,KEY);
+pub struct Server1(ALGS,Bytes,ServerPostClientFinished,CipherState,CipherState,KEY);
 
 fn get_psk_opts(ha: &HashAlgorithm, psk_mode:&bool,client_tkt_psk:Option<(Bytes,HMAC,usize)>,
                 server_tkt_psk:Option<(&Bytes,KEY)>, tx:&Bytes) -> 
@@ -149,9 +152,16 @@ pub fn server_init(algs:ALGS,msg:&Bytes,sn:&Bytes,cert:&Bytes,sk:&SIGK,tkt_psks:
     let psk_opt = get_psk_opts(ha,psk_mode,tkt_pskc,tkt_psks,&ch)?;        
     transcript = transcript.concat(&ch);
     let (sr,gy,sstate) = put_client_hello(cr,algs,&gx,psk_opt,ent)?;
+    let mut c2s0 = None;
+    match zero_rtt {
+        true => {let tx0 = TranscriptClientHello(hash(ha,&transcript)?);
+                 let (cip,exp) = server_get_0rtt_keys(&tx0,&sstate)?;
+                 c2s0 = Some((cip,exp))},
+        false => ()
+    }           
     let sh = server_hello(&algs,&sr,&sid,&gy)?;
     transcript = transcript.concat(&sh);
-    let tx1 = TranscriptClientHello(hash(ha,&transcript)?);
+    let tx1 = TranscriptServerHello(hash(ha,&transcript)?);
     let (c2s,s2c,sstate) = get_server_hello(&tx1,sstate)?;
     let ee = encrypted_extensions(&algs)?;
     let mut payload = empty();
@@ -174,31 +184,39 @@ pub fn server_init(algs:ALGS,msg:&Bytes,sn:&Bytes,cert:&Bytes,sk:&SIGK,tkt_psks:
     let (c2sa,s2ca,exp) = server_get_1rtt_keys(&tx3, &sstate)?;
     let rec0 = handshake_record(&sh)?;
     let (rec1,s2c) = encrypt_record(ct_handshake,&payload,0,s2c)?;
-    Ok((rec0.concat(&rec1),Server0(algs,transcript,sstate,c2s,c2sa,s2ca)))
+    Ok((rec0.concat(&rec1),Server0(algs,transcript,sstate,c2s0,c2s,c2sa,s2ca,exp)))
 }
     
 pub fn server_finish(msg:&Bytes,st:Server0) -> Res<Server1> {
-    let Server0(algs,transcript,sstate,c2s,c2sa,s2ca) = st;
+    let Server0(algs,transcript,sstate,c2s0,c2sh,c2sa,s2ca,exp) = st;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let len = first_application_record(&msg)?;
-    let (ct,payload,s2c) = decrypt_record(&msg.slice_range(0..len),c2s)?;
+    let (ct,payload,s2c) = decrypt_record(&msg.slice_range(0..len),c2sh)?;
     if ct == ct_handshake {
         let (cfin,flen) = check_handshake_message(&payload)?;
         let vd = parse_finished(&algs,&cfin)?;
         let tx = TranscriptServerFinished(hash(ha,&transcript)?);
         let sstate = put_client_finished(vd,&tx,sstate)?;
         let transcript = transcript.concat(&cfin);
-        Ok(Server1(algs,transcript,sstate,c2sa,s2ca))
+        Ok(Server1(algs,transcript,sstate,c2sa,s2ca,exp))
     } else {Err(parse_failed)}
 }
 
-pub fn client_send(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+pub fn client_send0(st:Client0,msg:&Bytes) -> Res<(Bytes,Client0)> {
+    let Client0(algs,transcript,cstate,c2s0) = st;
+    if let Some((c2s,exp)) = c2s0 {
+        let (cip,c2s) = encrypt_record(ct_app_data,msg,0,c2s)?;
+        Ok((cip,Client0(algs,transcript,cstate,Some((c2s,exp)))))
+    } else {Err(psk_mode_mismatch)}
+}
+
+pub fn client_send1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
     let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
     let (cip,c2sa) = encrypt_record(ct_app_data,msg,0,c2sa)?;
     Ok((cip,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
 }
 
-pub fn client_recv(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+pub fn client_recv1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
     let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
     let (ct,plain,s2ca) = decrypt_record(msg,s2ca)?;
     if ct == ct_app_data {
@@ -206,16 +224,25 @@ pub fn client_recv(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
     } else {Err(parse_failed)}
 }
 
-pub fn server_send(st:Server1,msg:&Bytes) -> Res<(Bytes,Client1)> {
-    let Server1(algs,transcript,sstate,c2sa,s2ca) = st;
+pub fn server_recv0(st:Server0,msg:&Bytes) -> Res<(Bytes,Server0)> {
+    let Server0(algs,transcript,sstate,c2szero,c2sh,c2sa,s2ca,exp) = st;
+    if let Some((c2s0,exp0)) = c2szero {
+        let (ct,plain,c2s0) = decrypt_record(msg,c2s0)?;
+        if ct == ct_app_data {
+           Ok((plain,Server0(algs,transcript,sstate,Some((c2s0,exp0)),c2sh,c2sa,s2ca,exp)))
+        } else {Err(parse_failed)}
+    } else {Err(psk_mode_mismatch)}
+}
+pub fn server_send1(st:Server1,msg:&Bytes) -> Res<(Bytes,Server1)> {
+    let Server1(algs,transcript,sstate,c2sa,s2ca,exp) = st;
     let (cip,s2ca) = encrypt_record(ct_app_data,msg,0,s2ca)?;
-    Ok((cip,Server1(algs,transcript,sstate,c2sa,s2ca)))
+    Ok((cip,Server1(algs,transcript,sstate,c2sa,s2ca,exp)))
 }
 
-pub fn server_recv(st:Server1,msg:&Bytes) -> Res<(Bytes,Server1)> {
-    let Server1(algs,transcript,sstate,c2sa,s2ca) = st;
+pub fn server_recv1(st:Server1,msg:&Bytes) -> Res<(Bytes,Server1)> {
+    let Server1(algs,transcript,sstate,c2sa,s2ca,exp) = st;
     let (ct,plain,c2sa) = decrypt_record(msg,c2sa)?;
     if ct == ct_app_data {
-        Ok((plain,Server1(algs,transcript,sstate,c2sa,s2ca)))
+        Ok((plain,Server1(algs,transcript,sstate,c2sa,s2ca,exp)))
     } else {Err(parse_failed)}
 }

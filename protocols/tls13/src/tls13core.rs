@@ -391,11 +391,11 @@ pub fn server_get_0rtt_keys(
 }
 
 pub fn get_server_hello(
-    tx: &TranscriptClientHello,
+    tx: &TranscriptServerHello,
     st: ServerPostClientHello,
 ) -> Res<(CipherState, CipherState, ServerPostServerHello)> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
-    let TranscriptClientHello(tx_hash) = tx;
+    let TranscriptServerHello(tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
     Ok((
