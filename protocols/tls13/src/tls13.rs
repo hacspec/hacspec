@@ -10,6 +10,8 @@ mod tls13formats;
 use tls13formats::*;
 mod tls13crypto;
 use tls13crypto::*;
+mod tls13record;
+use tls13record::*;
 mod tls13core;
 use tls13core::*;
 mod tls13traces;

@@ -1,5 +1,6 @@
 use crate::tls13crypto::*;
 use crate::tls13formats::*;
+use crate::tls13record::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
@@ -112,6 +113,7 @@ pub fn derive_rms(ha: &HashAlgorithm, master_secret: &KEY, tx: &HASH) -> Res<KEY
     return Ok(resumption_master_secret);
 }
 
+/*
 /* TLS 1.3 Record Layer Encryption: See RFC 8446 Section 5 */
 
 // Using newtype pattern below, but the same thing works with tuples too
@@ -171,7 +173,7 @@ pub fn decrypt_record(ciphertext: &Bytes, st: CipherState) -> Res<(u8,Bytes,Ciph
         Err(payload_too_long)
     }
 }
-
+*/
 /* Incremental Transcript Construction 
    For simplicity, we store the full transcript, but an internal hash state would suffice. */
 
