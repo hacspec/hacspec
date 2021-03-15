@@ -564,8 +564,8 @@ fn test_full_round_trip() {
     let x = load_hex(client_x25519_priv);
     let ent_c = Entropy::from_seq(&cr.concat(&x));
     let gx = load_hex(client_x25519_pub);
-    let sn = Bytes::new(23);
-    let sn_ = Bytes::new(23);
+    let sn = load_hex("6c 6f 63 61 6c 68 6f 73 74");
+    let sn_ = load_hex("6c 6f 63 61 6c 68 6f 73 74");
     let mut sr: Random = Random::new();
     sr[0] = U8(2);
     let y = load_hex(server_x25519_priv);
@@ -596,5 +596,61 @@ fn test_full_round_trip() {
             }
         }
     }
+    assert!(true);
+}    
+
+use std::io;
+use std::io::prelude::*;
+use std::net::TcpStream;
+use std::str;
+
+#[test]
+fn test_connect() {
+    let mut cr: Random = Random::new();
+    cr[0] = U8(1);
+    let x = load_hex(client_x25519_priv);
+    let ent_c = Entropy::from_seq(&cr.concat(&x));
+   // let sn = load_hex("6c 6f 63 61 6c 68 6f 73 74");
+    let sn = load_hex("77 77 77 2e 67 6f 6f 67 6c 65 2e 63 6f 6d");
+    let http_get = load_hex("47 45 54 20 2f 0d 0a 0d 0a");
+    match client_init(algs,&sn,None,None,ent_c) {
+        Err(x) => {println!("Client0 Error {}",x)},
+        Ok((ch,cstate)) => {
+            println!("Initiating connection to www.google.com:443");
+            let mut stream = TcpStream::connect("www.google.com:443").unwrap();
+            let decoded = hex::decode(&ch.to_hex()).expect("Decoding failed");
+            let len = stream.write(&decoded).expect("Decoding failed");// ignore the Result
+            let mut buf = [0; 4096];
+            match stream.read(&mut buf) {
+                Ok(len) => {//println!("Client Received: len {}: {}",len, hex::encode(&buf[0..len]));
+                     match stream.read(&mut buf[len..4096]) {
+                        Ok(len_) => {
+                            let sf = load_hex(&hex::encode(&buf[0..len+len_]));
+                            //println!("Client Received: len {}: {}",len+len_, sf.to_hex());
+                            match client_finish(&sf,cstate) {
+                                Err(x) => {println!("Client1 Error0 {}",x);},
+                                Ok((cf,cstate)) => {println!("Connection established to www.google.com:443");
+                                                    let ccs = hex::decode("140303000101").expect("Decoding failed");
+                                                    let _ = stream.write(&ccs);
+                                                    let decoded = hex::decode(&cf.to_hex()).expect("Decoding failed");
+                                                    let _ = stream.write(&decoded);
+                                                    match client_send1(cstate,&http_get) {
+                                                         Err(x) => {println!("Client Send1 Error {}",x);},
+                                                         Ok((get_rec,cstate)) => {println!("Sending 'GET /' to www.google.com:443");
+                                                                  let decoded = hex::decode(&get_rec.to_hex()).expect("Decoding failed");
+                                                                  let _ = stream.write(&decoded);
+                                                                  match stream.read(&mut buf) {
+                                                                    Ok(len) => {
+                                                                            let resp = load_hex(&hex::encode(&buf[0..len]));
+                                                                            match client_recv1(cstate,&resp) {
+                                                                                Err(x) => {println!("Recv Data Error {}",x);},
+                                                                                Ok((msg,cstate)) => {
+                                                                                    let decoded = hex::decode(&msg.to_hex()).expect("Decoding failed");
+                                                                                    println!("Received Response from www.google.com:443\n\n{}", str::from_utf8(&decoded).unwrap())}}},
+                                                                    Err(s) => {println!("Client read error")}}}}}}},
+                                          
+                        Err(_) => {println!("Client read error")}}},
+                Err(_) => {println!("Client read error")}}}}
+        
     assert!(true);
 }    

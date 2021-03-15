@@ -51,26 +51,30 @@ pub fn client_send0(st:Client0,msg:&Bytes) -> Res<(Bytes,Client0)> {
 pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
     let Client0(algs,tx_ch,cstate,_) = st;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let mut next = 0;
     let (sh,len1) = check_handshake_record(&msg)?;
     let (sr,gy) = parse_server_hello(&algs,&sh)?;    
     let tx_sh = transcript_server_hello(tx_ch,&sh)?;
     let (c2s,s2c,cstate) = put_server_hello(sr, gy, algs, &tx_sh, cstate)?;
-    let len2 = check_encrypted_record(&msg.slice_range(len1..msg.len()))?;
-    let (ct,payload,s2c) = decrypt_record(&msg.slice_range(len1..len1+len2),s2c)?;
+    next = next + len1;
+    let len2 = check_ccs_record(&msg.slice_range(next..msg.len()))?;
+    next = next + len2;
+    let len3 = check_encrypted_record(&msg.slice_range(next..msg.len()))?;
+    let (ct,payload,s2c) = decrypt_record(&msg.slice_range(next..next+len3),s2c)?; 
     if ct == ct_handshake {
-        let mut next = 0;
-        let (ee,len3) = check_handshake_message(&payload)?;
+        next = 0;
+        let (ee,len4) = check_handshake_message(&payload)?;
         parse_encrypted_extensions(&algs,&ee)?;
-        next = next + len3;
+        next = next + len4;
         let (tx_cv,cstate) =
             match psk_mode {
-                false => {
-                    let (sc,len4) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
+                false => {  
+                    let (sc,len5) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
                     let cert = parse_server_certificate(&algs,&sc)?;
-                    next = next + len4;
-                    let (cv,len5) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
+                    next = next + len5;
+                    let (cv,len6) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
                     let sig = parse_certificate_verify(&algs,&cv)?;
-                    next = next + len5; 
+                    next = next + len6; 
                     let pk = verk_from_cert(&cert)?;
                     let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
                     let cstate = put_server_signature(&pk, &sig, &tx_sc, cstate)?;

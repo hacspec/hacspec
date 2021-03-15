@@ -62,17 +62,24 @@ pub fn decrypt_record(ciphertext: &Bytes, st: CipherState) -> Res<(u8,Bytes,Ciph
 
 pub fn handshake_record(p:&Bytes) -> Res<Bytes> {
     let ty = bytes1(0x16);
-    let ver = bytes2(3,1);
+    let ver = bytes2(3,3);
     Ok(ty.concat(&ver).concat(&lbytes2(p)?))
 }
 
 pub fn check_handshake_record(p:&Bytes) -> Res<(Bytes,usize)> {
     let ty = bytes1(0x16);
-    let ver = bytes2(3,1);
+    let ver = bytes2(3,3);
     check_eq(&ty,&p.slice_range(0..1))?;
     check_eq(&ver,&p.slice_range(1..3))?;
     let len = check_lbytes2(&p.slice_range(3..p.len()))?;
     Ok((p.slice_range(5..5+len),5+len))
+}
+
+pub fn check_ccs_record(p:&Bytes) -> Res<usize> {
+    let pref = bytes3(0x14,3,3);
+    check_eq(&pref,&p.slice_range(0..3))?;
+    let len = check_lbytes2(&p.slice_range(3..p.len()))?;
+    Ok(len+5)
 }
 
 pub fn check_encrypted_record(p:&Bytes) -> Res<usize> {
