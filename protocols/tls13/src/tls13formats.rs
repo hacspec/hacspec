@@ -1,5 +1,5 @@
 // A module that for the formatting code needed by TLS 1.3
-use crate::tls13crypto::*;
+use crate::cryptolib::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;

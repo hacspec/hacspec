@@ -8,49 +8,23 @@
 
 mod tls13formats;
 use tls13formats::*;
-mod tls13crypto;
-use tls13crypto::*;
+mod cryptolib;
+use cryptolib::*;
 mod tls13record;
 use tls13record::*;
-mod tls13core;
-use tls13core::*;
-mod tls13traces;
-use tls13traces::*;
+mod tls13handshake;
+use tls13handshake::*;
+mod testtraces;
+use testtraces::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-pub fn handshake_record(p:&Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x16);
-    let ver = bytes2(3,1);
-    Ok(ty.concat(&ver).concat(&lbytes2(p)?))
-}
-
-pub fn check_handshake_record(p:&Bytes) -> Res<(Bytes,usize)> {
-    let ty = bytes1(0x16);
-    let ver = bytes2(3,1);
-    check_eq(&ty,&p.slice_range(0..1))?;
-    check_eq(&ver,&p.slice_range(1..3))?;
-    let len = check_lbytes2(&p.slice_range(3..p.len()))?;
-    Ok((p.slice_range(5..5+len),5+len))
-}
-
-pub fn check_encrypted_record(p:&Bytes) -> Res<usize> {
-    let pref = bytes3(0x17,3,3);
-    check_eq(&pref,&p.slice_range(0..3))?;
-    let len = check_lbytes2(&p.slice_range(3..p.len()))?;
-    Ok(len+5)
-}
-
-pub fn check_handshake_message(p:&Bytes) -> Res<(Bytes,usize)> {
-    let len = check_lbytes3(&p.slice_range(1..p.len()))?;
-    Ok((p.slice_range(0..4+len),4+len))
-}
+// Client-Side API for TLS 1.3 Applications
+// client_init -> (client_send0)* -> client_finish -> (client_send1|client_recv1)* */
 
 pub struct Client0(ALGS,TranscriptClientHello,ClientPostClientHello,Option<(CipherState,KEY)>);
 pub struct Client1(ALGS,TranscriptClientFinished,ClientPostClientFinished,CipherState,CipherState,KEY);
-
-
     
 pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Entropy) -> Res<(Bytes,Client0)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
@@ -64,6 +38,14 @@ pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Ent
     let c2s0 = client_get_0rtt_keys(&tx_ch,&cstate)?;
     let st = Client0(algs,tx_ch,cstate,c2s0);
     Ok((rec,st))  
+}
+
+pub fn client_send0(st:Client0,msg:&Bytes) -> Res<(Bytes,Client0)> {
+    let Client0(algs,transcript,cstate,c2s0) = st;
+    if let Some((c2s,exp)) = c2s0 {
+        let (cip,c2s) = encrypt_record(ct_app_data,msg,0,c2s)?;
+        Ok((cip,Client0(algs,transcript,cstate,Some((c2s,exp)))))
+    } else {Err(psk_mode_mismatch)}
 }
 
 pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
@@ -115,6 +97,24 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
         } else {Err(parse_failed)}
     } else {Err(parse_failed)}
 }
+
+
+pub fn client_send1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+    let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
+    let (cip,c2sa) = encrypt_record(ct_app_data,msg,0,c2sa)?;
+    Ok((cip,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
+}
+
+pub fn client_recv1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+    let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
+    let (ct,plain,s2ca) = decrypt_record(msg,s2ca)?;
+    if ct == ct_app_data {
+        Ok((plain,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
+    } else {Err(parse_failed)}
+}
+
+// Server-Side API for TLS 1.3 Applications
+// server_init -> (server_recv0)* -> server_finish -> (server_recv1|server_send1)* */
 
 pub struct Server0(ALGS,TranscriptServerFinished,ServerPostServerFinished,Option<(CipherState,KEY)>,CipherState,CipherState,CipherState,KEY);
 pub struct Server1(ALGS,TranscriptClientFinished,ServerPostClientFinished,CipherState,CipherState,KEY);
@@ -186,28 +186,6 @@ pub fn server_finish(msg:&Bytes,st:Server0) -> Res<Server1> {
         let sstate = put_client_finished(vd,&tx_sf,sstate)?;
         let tx_cf = transcript_client_finished(tx_sf,&cfin)?;
         Ok(Server1(algs,tx_cf,sstate,c2sa,s2ca,exp))
-    } else {Err(parse_failed)}
-}
-
-pub fn client_send0(st:Client0,msg:&Bytes) -> Res<(Bytes,Client0)> {
-    let Client0(algs,transcript,cstate,c2s0) = st;
-    if let Some((c2s,exp)) = c2s0 {
-        let (cip,c2s) = encrypt_record(ct_app_data,msg,0,c2s)?;
-        Ok((cip,Client0(algs,transcript,cstate,Some((c2s,exp)))))
-    } else {Err(psk_mode_mismatch)}
-}
-
-pub fn client_send1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
-    let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
-    let (cip,c2sa) = encrypt_record(ct_app_data,msg,0,c2sa)?;
-    Ok((cip,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
-}
-
-pub fn client_recv1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
-    let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
-    let (ct,plain,s2ca) = decrypt_record(msg,s2ca)?;
-    if ct == ct_app_data {
-        Ok((plain,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
     } else {Err(parse_failed)}
 }
 
