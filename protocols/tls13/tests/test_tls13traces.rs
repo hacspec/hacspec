@@ -1,9 +1,22 @@
-// These are the sample TLS 1.3 traces taken from RFC 8448
-use crate::cryptolib::*;
+use hacspec_dev::prelude::*;
+use hacspec_lib::prelude::*;
 
-fn load_hex(s:&str) -> Res<Bytes> {
+use bertie::*;
+use bertie::tls13formats::*;
+use bertie::tls13handshake::*;
+use bertie::tls13record::*;
+use bertie::cryptolib::*;
+use bertie::cryptolib::HashAlgorithm::*;
+use bertie::cryptolib::AEADAlgorithm::*;
+use bertie::cryptolib::NamedGroup::*;
+use bertie::cryptolib::SignatureScheme::*;
+
+// These are the sample TLS 1.3 traces taken from RFC 8448
+use bertie::cryptolib::*;
+
+fn load_hex(s:&str) -> Bytes {
     let s_no_ws : String = s.split_whitespace().collect();
-    Ok(Bytes::from_hex(&s_no_ws))
+    (Bytes::from_hex(&s_no_ws))
 }
 
 /* Server's RSA Private Key */ 
@@ -102,7 +115,7 @@ const encrypted_extensions : & str = "08 00 00 24 00 22 00 0a 00 14 00
 12 00 1d 00 17 00 18 00 19 01 00 01 01 01 02 01 03 01 04 00 1c
 00 02 40 01 00 00 00 00";
 
-const certificate : & str = "0b 00 01 b9 00 00 01 b5 00 01 b0 30 82
+const server_certificate : & str = "0b 00 01 b9 00 00 01 b5 00 01 b0 30 82
 01 ac 30 82 01 15 a0 03 02 01 02 02 01 02 30 0d 06 09 2a 86 48
 86 f7 0d 01 01 0b 05 00 30 0e 31 0c 30 0a 06 03 55 04 03 13 03
 72 73 61 30 1e 17 0d 31 36 30 37 33 30 30 31 32 33 35 39 5a 17
@@ -125,7 +138,7 @@ c1 fc 63 a4 2a 99 be 5c 3e b7 10 7c 3c 54 e9 b9 eb 2b d5 20 3b
 1c 3b 84 e0 a8 b2 f7 59 40 9b a3 ea c9 d9 1d 40 2d cc 0c c8 f8
 96 12 29 ac 91 87 b4 2b 4d e1 00 00";
 
-const certificate_verify : & str = "0f 00 00 84 08 04 00 80 5a 74 7c
+const server_certificate_verify : & str = "0f 00 00 84 08 04 00 80 5a 74 7c
 5d 88 fa 9b d2 e5 5a b0 85 a6 10 15 b7 21 1f 82 4c d4 84 14 5a
 b3 ff 52 f1 fd a8 47 7b 0b 7a bc 90 db 78 e2 d3 3a 5c 14 1a 07
 86 53 fa 6b ef 78 0c 5e a2 48 ee aa a7 85 c4 f3 94 ca b6 d3 0b
@@ -171,3 +184,132 @@ d5 02 78 40 16 e4 b3 be 7e f0 4d da 49 f4 b4 40 a3 0c b5 d2 af
 93 98 28 fd 4a e3 79 4e 44 f9 4d f5 a6 31 ed e4 2c 17 19 bf da
 bf 02 53 fe 51 75 be 89 8e 75 0e dc 53 37 0d 2b";
 
+const client_finished : &str = "14 00 00 20 a8 ec 43 6d 67 76 34 ae 52 5a
+c1 fc eb e1 1a 03 9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce
+61";
+
+const client_finished_record : &str = "17 03 03 00 35 75 ec 4d c2 38 cc e6
+0b 29 80 44 a7 1e 21 9c 56 cc 77 b0 51 7f e9 b9 3c 7a 4b fc 44
+d8 7f 38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7
+26 c4 05 46";
+
+const algs : ALGS = ALGS(SHA256,AES_128_GCM,RSA_PSS_RSAE_SHA256,X25519,false,false);
+
+
+
+#[test]
+fn test_parse_client_hello() {
+    let ch:Bytes = load_hex(client_hello);
+ //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+    let res = parse_client_hello(&algs, &ch);
+    let b = res.is_ok();
+    match res{
+	    Err(x) => {println!("Error: {}",x);},
+	    Ok((cr,sid,sn,gx,tkto,bo,l)) => {
+            println!("Parsed CH!");
+            println!("cr: {}", cr.to_hex());
+            println!("sid: {}", sid.to_hex());
+            println!("sn: {}", sn.to_hex());
+            println!("gx: {}", gx.to_hex());
+            println!("trunc_len: {}", l);}
+    }
+    assert!(b);
+}
+
+#[test]
+fn test_parse_client_hello_record() {
+    let ch:Bytes = load_hex(client_hello_record);
+ //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+    let mut b = true;
+    match check_handshake_record(&ch) {
+        Err(x) => {println!("Error: {}",x);b = false;},
+        Ok ((hs,len)) => {
+            match parse_client_hello(&algs, &ch) {
+                Err(x) => {println!("Error: {}",x);b = false;},
+                Ok((cr,sid,sn,gx,tkto,bo,l)) => {
+                    println!("Parsed CH!");
+                    println!("cr: {}", cr.to_hex());
+                    println!("sid: {}", sid.to_hex());
+                    println!("sn: {}", sn.to_hex());
+                    println!("gx: {}", gx.to_hex());
+                    println!("trunc_len: {}", l);}
+            }}
+    }
+    assert!(true);
+}
+
+#[test]
+fn test_parse_server_hello() {
+    let sh:Bytes = load_hex(server_hello);
+ //   let algs = ALGS(SHA256,AES_128_GCM,ECDSA_SECP256r1_SHA256,X25519,false,false);
+    let res = parse_server_hello(&algs, &sh);
+    let b = res.is_ok();
+    match res {
+	    Err(x) => {println!("Error: {}",x);},
+	    Ok((sr,gy)) => {
+            println!("Parsed SH!");
+            println!("sr: {}", sr.to_hex());
+            println!("gy: {}", gy.to_hex());}
+    }
+    assert!(b);
+}
+
+#[test]
+fn test_parse_encrypted_extensions() {
+    let ee:Bytes = load_hex(encrypted_extensions);
+    let res = parse_encrypted_extensions(&algs, &ee);
+    let b = res.is_ok();
+    match res {
+	    Err(x) => {println!("Error: {}",x);},
+	    Ok(()) => {println!("Parsed EE!");}
+        }
+    assert!(b);
+    }
+
+#[test]
+fn test_parse_server_certificate() {
+    let sc:Bytes = load_hex(server_certificate);
+    let res = parse_server_certificate(&algs, &sc);
+    let b = res.is_ok();
+    match res {
+	    Err(x) => {println!("Error: {}",x);},
+	    Ok(_) => {println!("Parsed SC!");}
+        }
+    assert!(b);
+    }
+
+#[test]
+fn test_parse_server_certificate_verify() {
+    let cv:Bytes = load_hex(server_certificate_verify);  
+    let res = parse_certificate_verify(&algs, &cv);
+    let b = res.is_ok();
+    match res {
+	    Err(x) => {println!("Error: {}",x);},
+	    Ok(_) => {println!("Parsed CV!");}
+        }
+    assert!(b);
+    }
+
+#[test]
+fn test_parse_server_finished() {
+        let sf:Bytes = load_hex(server_finished);  
+        let res = parse_finished(&algs, &sf);
+        let b = res.is_ok();
+        match res {
+            Err(x) => {println!("Error: {}",x);},
+            Ok(_) => {println!("Parsed SF!");}
+            }
+        assert!(b);
+        }
+
+#[test]
+fn test_parse_client_finished() {
+        let cf:Bytes = load_hex(client_finished);  
+        let res = parse_finished(&algs, &cf);
+        let b = res.is_ok();
+        match res {
+            Err(x) => {println!("Error: {}",x);},
+            Ok(_) => {println!("Parsed CF!");}
+            }
+        assert!(b);
+        }

@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(unused_imports)]
+#![allow(unused_parens)]
+
 // A module that for the formatting code needed by TLS 1.3
 use crate::cryptolib::*;
 
@@ -103,8 +111,12 @@ pub fn check_mem(b1: &Bytes, b2: &Bytes) -> Res<()> {
     if b2.len() % b1.len() != 0 {
         Err(parse_failed)
     } else {
-        for i in 0..b2.len() / b1.len() {
-            check_eq(b1, &b2.slice_range(i * b1.len()..(i + 1) * b1.len()))?
+        for i in 0..(b2.len() / b1.len()) {
+            let snip = b2.slice_range(i * b1.len()..(i + 1) * b1.len());
+            match check_eq(b1, &snip) {
+                Ok(()) => {return(Ok(()));},
+                Err(x) => {}
+            }
         }
         Ok(())
     }
@@ -150,7 +162,7 @@ pub fn check_lbytes1(b: &Bytes) -> Res<usize> {
         if b.len() - 1 < l {
             Err(parse_failed)
         } else {
-            Ok(b.len() - 1 - l)
+            Ok(l)
         }
     }
 }
@@ -250,7 +262,9 @@ pub fn signature_algorithm(algs: &ALGS) -> Res<Bytes> {
 
 pub fn check_ciphersuites(algs: &ALGS, b: &Bytes) -> Res<usize> {
     let len = check_lbytes2(b)?;
-    check_mem(&ciphersuite(algs)?, &b.slice_range(2..2 + len))?;
+    let cs = ciphersuite(algs)?;
+    let csl = b.slice_range(2..2 + len);
+    check_mem(&cs, &csl)?;
     Ok(len + 2)
 }
 
@@ -370,6 +384,7 @@ pub fn merge_opts<T>(o1: Option<T>, o2: Option<T>) -> Res<Option<T>> {
     match (o1, o2) {
         (None, Some(o)) => Ok(Some(o)),
         (Some(o), None) => Ok(Some(o)),
+        (None,None) => Ok(None),
         _ => Err(parse_failed),
     }
 }
@@ -560,7 +575,7 @@ pub fn parse_server_hello(algs: &ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
     let ty = bytes1(2);
     let ver = bytes2(3, 3);
     let cip = ciphersuite(algs)?;
-    let comp = bytes2(1, 0);
+    let comp = bytes1(0);
     let mut next = 0;
     check_eq(&ty, &sh.slice_range(next..next + 1))?;
     next = 1;
@@ -574,8 +589,8 @@ pub fn parse_server_hello(algs: &ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
     next = next + 1 + sidlen;
     check_eq(&cip, &sh.slice_range(next..next + 2))?;
     next = next + 2;
-    check_eq(&comp, &sh.slice_range(next..next + 2))?;
-    next = next + 2;
+    check_eq(&comp, &sh.slice_range(next..next + 1))?;
+    next = next + 1;
     check_lbytes2_full(&sh.slice_range(next..sh.len()))?;
     next = next + 2;
     let gy = check_server_extensions(algs, &sh.slice_range(next..sh.len()))?;
@@ -642,7 +657,7 @@ pub fn finished(algs: &ALGS, vd: &Bytes) -> Res<Bytes> {
 }
 
 pub fn parse_finished(algs: &ALGS, fin: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x0f);
+    let ty = bytes1(0x14);
     check_eq(&ty, &fin.slice_range(0..1))?;
     check_lbytes3_full(&fin.slice_range(1..fin.len()))?;
     Ok(fin.slice_range(4..fin.len()))
