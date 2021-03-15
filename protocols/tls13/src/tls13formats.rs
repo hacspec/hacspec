@@ -30,7 +30,7 @@ pub fn bytes5(x0: u8, x1: u8, x2:u8, x3:u8, x4:u8) -> Bytes {
     bytes(&Bytes5([U8(x0), U8(x1), U8(x2), U8(x3), U8(x4)]))
 }
 pub fn hash_empty(ha:&HashAlgorithm) -> Res<HASH> {
-    return hash(ha, &empty());
+    hash(ha, &empty())
 }
 pub const label_iv: Bytes2 = Bytes2(secret_bytes!([105, 118]));
 pub const label_key: Bytes3 = Bytes3(secret_bytes!([107, 101, 121]));
@@ -113,22 +113,22 @@ pub fn check_mem(b1: &Bytes, b2: &Bytes) -> Res<()> {
 pub fn lbytes1(b: &Bytes) -> Res<Bytes> {
     let len = b.len();
     if len >= 256 {
-        return Err(payload_too_long);
+        Err(payload_too_long)
     } else {
         let mut lenb = Seq::new(1);
         lenb[0] = U8(len as u8);
-        return Ok(lenb.concat(b));
+        Ok(lenb.concat(b))
     }
 }
 
 pub fn lbytes2(b: &Bytes) -> Res<Bytes> {
     let len = b.len();
     if len >= 65536 {
-        return Err(payload_too_long);
+        Err(payload_too_long)
     } else {
         let len: u16 = len as u16;
         let lenb = Seq::from_seq(&U16_to_be_bytes(U16(len)));
-        return Ok(lenb.concat(b));
+        Ok(lenb.concat(b))
     }
 }
 
@@ -405,7 +405,7 @@ pub fn check_extension(algs: &ALGS, b: &Bytes) -> Res<(usize, EXTS)> {
         (0, 41) => check_psk_shared_key(algs, &b.slice_range(4..4 + len))?,
         _ => (),
     }
-    return Ok((4 + len, out));
+    Ok((4 + len, out))
 }
 
 pub fn check_server_extension(algs: &ALGS, b: &Bytes) -> Res<(usize, Option<Bytes>)> {
@@ -422,7 +422,7 @@ pub fn check_server_extension(algs: &ALGS, b: &Bytes) -> Res<(usize, Option<Byte
         (0, 41) => check_server_psk_shared_key(algs, &b.slice_range(4..4 + len))?,
         _ => (),
     }
-    return Ok((4 + len, out));
+    Ok((4 + len, out))
 }
 
 pub fn check_extensions(algs: &ALGS, b: &Bytes) -> Res<EXTS> {

@@ -21,27 +21,27 @@ pub fn hkdf_expand_label(
         let info = lenb
             .concat(&lbytes1(&tls13_label)?)
             .concat(&lbytes1(context)?);
-        return hkdf_expand(ha, k, &info, len as usize);
+        hkdf_expand(ha, k, &info, len as usize)
     }
 }
 
 pub fn derive_secret(ha: &HashAlgorithm, k: &KEY, label: &Bytes, tx: &HASH) -> Res<KEY> {
-    return hkdf_expand_label(ha, k, label, &bytes(tx), hash_len(ha));
+    hkdf_expand_label(ha, k, label, &bytes(tx), hash_len(ha))
 }
 
 pub fn derive_binder_key(ha: &HashAlgorithm, k: &KEY) -> Res<MACK> {
     let early_secret = hkdf_extract(ha, k, &zero_key(ha))?;
     let mk = derive_secret(ha, &early_secret, &bytes(&label_res_binder), &hash_empty(ha)?)?;
-    return Ok(MACK::from_seq(&mk));
+    Ok(MACK::from_seq(&mk))
 }
 
 pub fn derive_aead_key_iv(ha: &HashAlgorithm, ae: &AEADAlgorithm, k: &KEY) -> Res<AEKIV> {
     let sender_write_key = hkdf_expand_label(ha, k, &bytes(&label_key), &empty(), ae_key_len(ae))?;
     let sender_write_iv = hkdf_expand_label(ha, k, &bytes(&label_iv), &empty(), ae_iv_len(ae))?;
-    return Ok((
+    Ok((
         AEK::from_seq(&sender_write_key),
         AEIV::from_seq(&sender_write_iv),
-    ));
+    ))
 }
 
 pub fn derive_0rtt_keys(ha: &HashAlgorithm, ae: &AEADAlgorithm, k: &KEY, tx: &HASH) -> Res<(AEKIV, KEY)> {
@@ -51,7 +51,7 @@ pub fn derive_0rtt_keys(ha: &HashAlgorithm, ae: &AEADAlgorithm, k: &KEY, tx: &HA
     let early_exporter_master_secret =
         derive_secret(ha, &early_secret, &bytes(&label_c_e_traffic), tx)?;
     let sender_write_key_iv = derive_aead_key_iv(ha, ae, &client_early_traffic_secret)?;
-    return Ok((sender_write_key_iv, early_exporter_master_secret));
+    Ok((sender_write_key_iv, early_exporter_master_secret))
 }
 
 pub fn derive_finished_key(ha: &HashAlgorithm, k: &KEY) -> Res<MACK> {
@@ -79,13 +79,13 @@ pub fn derive_hk_ms(
     let master_secret_ =
         derive_secret(ha, &handshake_secret, &bytes(&label_derived), &hash_empty(ha)?)?;
     let master_secret = hkdf_extract(ha, &zero_key(ha), &master_secret_)?;
-    return Ok((
+    Ok((
         client_write_key_iv,
         server_write_key_iv,
         client_finished_key,
         server_finished_key,
         master_secret,
-    ));
+    ))
 }
 
 pub fn derive_app_keys(
@@ -101,16 +101,16 @@ pub fn derive_app_keys(
     let client_write_key_iv = derive_aead_key_iv(ha, ae, &client_application_traffic_secret_0)?;
     let server_write_key_iv = derive_aead_key_iv(ha, ae, &server_application_traffic_secret_0)?;
     let exporter_master_secret = derive_secret(ha, master_secret, &bytes(&label_exp_master), tx)?;
-    return Ok((
+    Ok((
         client_write_key_iv,
         server_write_key_iv,
         exporter_master_secret,
-    ));
+    ))
 }
 
 pub fn derive_rms(ha: &HashAlgorithm, master_secret: &KEY, tx: &HASH) -> Res<KEY> {
     let resumption_master_secret = derive_secret(ha, master_secret, &bytes(&label_res_master), tx)?;
-    return Ok(resumption_master_secret);
+    Ok(resumption_master_secret)
 }
 
 
@@ -323,7 +323,7 @@ pub fn put_server_finished(
     let TranscriptServerCertificateVerify(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &sfk, &bytes(tx_hash), &vd)?;
-    return Ok(ClientPostServerFinished(cr, sr, algs, ms, cfk));
+    Ok(ClientPostServerFinished(cr, sr, algs, ms, cfk))
 }
 pub fn client_get_1rtt_keys(
     tx: &TranscriptServerFinished,
@@ -333,8 +333,7 @@ pub fn client_get_1rtt_keys(
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
-    return Ok((CipherState(*ae, cak, 0), 
-               CipherState(*ae, sak, 0), exp));
+    Ok((CipherState(*ae, cak, 0),CipherState(*ae, sak, 0), exp))
 }
 
 pub fn get_client_finished(
@@ -345,7 +344,7 @@ pub fn get_client_finished(
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let m = hmac(ha, &cfk, &bytes(tx_hash))?;
-    return Ok((m, ClientPostClientFinished(cr, sr, algs, ms)));
+    Ok((m, ClientPostClientFinished(cr, sr, algs, ms)))
 }
 
 pub fn client_complete(
@@ -465,8 +464,7 @@ pub fn server_get_1rtt_keys(
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
-    return Ok((CipherState(*ae, cak, 0),
-               CipherState(*ae, sak, 0), exp));
+    Ok((CipherState(*ae, cak, 0),CipherState(*ae, sak, 0), exp))
 }
 
 pub fn put_client_finished(
@@ -478,7 +476,7 @@ pub fn put_client_finished(
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &cfk, &bytes(tx_hash), &mac)?;
-    return Ok(ServerPostClientFinished(cr, sr, algs, ms));
+    Ok(ServerPostClientFinished(cr, sr, algs, ms))
 }
 
 pub fn server_complete(
