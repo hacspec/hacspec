@@ -61,10 +61,11 @@ pub fn derive_hk_ms(
     ha: &HashAlgorithm,
     ae: &AEADAlgorithm,
     gxy: &KEY,
-    psk: &KEY,
+    psko: &Option<PSK>,
     tx: &HASH,
 ) -> Res<(AEKIV, AEKIV, MACK, MACK, KEY)> {
-    let early_secret = hkdf_extract(ha, psk, &zero_key(ha))?;
+    let psk = if let Some(k) = psko {KEY::from_seq(k)} else {zero_key(ha)};
+    let early_secret = hkdf_extract(ha, &psk, &zero_key(ha))?;
     let handshake_secret = hkdf_extract(ha, gxy, &early_secret)?;
     let client_handshake_traffic_secret =
         derive_secret(ha, &handshake_secret, &bytes(&label_c_hs_traffic), tx)?;
@@ -174,7 +175,7 @@ pub fn decrypt_record(ciphertext: &Bytes, st: CipherState) -> Res<(u8,Bytes,Ciph
 /* Incremental Transcript Construction 
    For simplicity, we store the full transcript, but an internal hash state would suffice. */
 
-pub struct TranscriptTruncatedClientHello(pub HASH);
+pub struct TranscriptTruncatedClientHello(pub HashAlgorithm, pub HASH);
 pub struct TranscriptClientHello(pub HashAlgorithm,pub Bytes, pub HASH);
 pub struct TranscriptServerHello(pub HashAlgorithm,pub Bytes, pub HASH);
 pub struct TranscriptServerCertificate(pub HashAlgorithm,pub Bytes, pub HASH);
@@ -186,7 +187,7 @@ pub fn transcript_truncated_client_hello(algs:ALGS,ch:&Bytes,trunc_len:usize) ->
     Res<TranscriptTruncatedClientHello> {
         let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
         let th = hash(&ha,&ch.slice_range(0..trunc_len))?;
-        Ok(TranscriptTruncatedClientHello(th))
+        Ok(TranscriptTruncatedClientHello(ha,th))
     }
 
 pub fn transcript_client_hello(algs:ALGS,ch:&Bytes) -> Res<TranscriptClientHello> {
@@ -239,14 +240,14 @@ PostServerFinished -> PostClientFinished -> Complete
 There are no optional steps, all states must be traversed, even if the traversals are NOOPS.
 See "put_skip_server_signature" below */
 
-pub struct ClientPostClientHello(Random, ALGS, DHSK, KEY);
+pub struct ClientPostClientHello(Random, ALGS, DHSK, Option<PSK>);
 pub struct ClientPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ClientPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ClientPostServerFinished(Random, Random, ALGS, KEY, MACK);
 pub struct ClientPostClientFinished(Random, Random, ALGS, KEY);
 pub struct ClientComplete(Random, Random, ALGS, KEY);
 
-pub struct ServerPostClientHello(Random, Random, ALGS, KEY, PSK);
+pub struct ServerPostClientHello(Random, Random, ALGS, KEY, Option<PSK>);
 pub struct ServerPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ServerPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ServerPostServerFinished(Random, Random, ALGS, KEY, MACK);
@@ -260,7 +261,7 @@ pub struct ServerComplete(Random, Random, ALGS, KEY);
 
 pub fn get_client_hello(
     algs0:ALGS,
-    psk: Option<KEY>,
+    psk: Option<PSK>,
     ent: Entropy,
 ) -> Res<(Random, DHPK, ClientPostClientHello)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs0;
@@ -269,40 +270,41 @@ pub fn get_client_hello(
         let cr = Random::from_seq(&ent.slice_range(0..32));
         let x = DHSK::from_seq(&ent.slice_range(32..32+dh_priv_len(gn)));
         let gx = secret_to_public(gn, &x)?;
-        match (psk,psk_mode) {
-            (Some(k), true) => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, k))),
-            (None, false) => Ok((cr, gx, ClientPostClientHello(cr, algs0, x, zero_key(ha)))),
-            _ => Err(psk_mode_mismatch),
-        }
+        Ok((cr, gx, ClientPostClientHello(cr, algs0, x, psk)))
     }
 }
 
 pub fn get_client_hello_binder(
     tx: &TranscriptTruncatedClientHello,
     st: &ClientPostClientHello,
-) -> Res<HMAC> {
+) -> Res<Option<HMAC>> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
-    let TranscriptTruncatedClientHello(tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs0 {
-        let mk = derive_binder_key(ha, &psk)?;
-        let mac = hmac(ha, &mk, &bytes(tx_hash))?;
-        Ok(mac)
-    } else {
-        Err(psk_mode_mismatch)
-    }
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
+    let TranscriptTruncatedClientHello(_,tx_hash) = tx;
+    match (psk_mode, psk) {
+        (true,Some(k)) => {
+            let mk = derive_binder_key(ha, &k)?;
+            let mac = hmac(ha, &mk, &bytes(tx_hash))?;
+            Ok(Some(mac))},
+        (false,None) => Ok(None),
+        _ => Err(psk_mode_mismatch)
+     }
 }
 
 pub fn client_get_0rtt_keys(
     tx: &TranscriptClientHello,
     st: &ClientPostClientHello,
-) -> Res<(CipherState, KEY)> {
+) -> Res<Option<(CipherState, KEY)>> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptClientHello(_,_,tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, true, true) = algs0 {
-        let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
-        Ok((CipherState(*ae, aek, 0), key))
-    } else {
-        Err(zero_rtt_disabled)
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
+    match (psk_mode, zero_rtt, psk) {
+        (true,true,Some(k)) => {
+            let (aek, key) = derive_0rtt_keys(ha, ae, &k, tx_hash)?;
+            Ok(Some((CipherState(*ae, aek, 0), key)))},
+        (false,false,None) => Ok(None),
+        (true,false,Some(k)) => Ok(None),
+        _ => Err(psk_mode_mismatch)
     }
 }
 
@@ -405,7 +407,9 @@ pub fn put_client_hello(
     cr: Random,
     algs: ALGS,
     gx: &DHPK,
-    psk: Option<(PSK, TranscriptTruncatedClientHello, HMAC)>,
+    psk: Option<PSK>,
+    tx: TranscriptTruncatedClientHello,
+    binder: Option<HMAC>,
     ent: Entropy,
 ) -> Res<(Random, DHPK, ServerPostClientHello)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
@@ -415,14 +419,14 @@ pub fn put_client_hello(
         let y = DHSK::from_seq(&ent.slice_range(32..32+dh_priv_len(gn)));
         let gy = secret_to_public(gn, &y)?;
         let gxy = ecdh(gn, &y, &gx)?;
-        match (psk,psk_mode) {
-            (Some((k, tx, binder)),true) => {
+        match (psk_mode, psk, binder) {
+            (true, Some(k), Some(binder)) => {
                 let mk = derive_binder_key(ha, &k)?;
-                let TranscriptTruncatedClientHello(tx_hash) = tx;
+                let TranscriptTruncatedClientHello(_,tx_hash) = tx;
                 hmac_verify(ha, &mk, &bytes(&tx_hash), &binder)?;
-                Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, k)))
+                Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, Some(k))))
             }
-            (None,false) => Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, zero_key(ha)))),
+            (false, None, None) => Ok((sr, gy, ServerPostClientHello(cr, sr, algs, gxy, None))),
             _ => Err(psk_mode_mismatch),
         }
     }
@@ -431,15 +435,18 @@ pub fn put_client_hello(
 pub fn server_get_0rtt_keys(
     tx: &TranscriptClientHello,
     st: &ServerPostClientHello,
-) -> Res<(CipherState, KEY)> {
+) -> Res<Option<(CipherState, KEY)>> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
     let TranscriptClientHello(_,_,tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, true, true) = algs {
-        let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
-        Ok((CipherState(*ae, aek, 0), key))
-    } else {
-        Err(zero_rtt_disabled)
-    }
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    match (psk_mode, zero_rtt, psk) {
+        (true,true,Some(k)) => {
+            let (aek, key) = derive_0rtt_keys(ha, ae, &k, tx_hash)?;
+            Ok(Some((CipherState(*ae, aek, 0), key)))},
+        (false,false,None) => Ok(None),
+        (true,false,Some(k)) => Ok(None),
+        _ => Err(psk_mode_mismatch)    
+        }
 }
 
 pub fn get_server_hello(

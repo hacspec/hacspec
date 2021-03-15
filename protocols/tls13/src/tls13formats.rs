@@ -332,11 +332,12 @@ pub fn check_server_key_share(algs: &ALGS, b: &Bytes) -> Res<Bytes> {
     Ok(b.slice_range(4..b.len()))
 }
 
-pub fn pre_shared_key(algs: &ALGS, tkt: &Bytes) -> Res<Bytes> {
+pub fn pre_shared_key(algs: &ALGS, tkt: &Bytes) -> Res<(Bytes,usize)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let identities = lbytes2(&lbytes2(tkt)?.concat(&U32_to_be_bytes(U32(0xffffffff))))?;
     let binders = lbytes2(&lbytes1(&zero_key(ha))?)?;
-    Ok(bytes2(0, 41).concat(&lbytes2(&identities.concat(&binders))?))
+    let ext = bytes2(0, 41).concat(&lbytes2(&identities.concat(&binders))?);
+    Ok((ext,binders.len()))
 }
 
 pub fn check_psk_shared_key(algs: &ALGS, ch: &Bytes) -> Res<()> {
@@ -449,7 +450,7 @@ pub fn client_hello(
     cr: &Random,
     gx: &DHPK,
     sn: &Bytes,
-    tkt: Option<&Bytes>,
+    tkt:&Option<Bytes>,
 ) -> Res<(Bytes,usize)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let ty = bytes1(1);
@@ -463,11 +464,14 @@ pub fn client_hello(
     let sa = signature_algorithms(algs)?;
     let ks = key_shares(algs, gx)?;
     let mut exts = sn.concat(&sv).concat(&sg).concat(&sa).concat(&ks);
+    let mut trunc_len = 0;
     match (psk_mode,tkt) {
         (true, Some(tkt)) => {
             let pskm = psk_key_exchange_modes(algs)?;
-            let psk = pre_shared_key(algs, tkt)?;
-            exts = exts.concat(&pskm).concat(&psk)},
+            let (psk,len) = pre_shared_key(algs, tkt)?;
+            exts = exts.concat(&pskm).concat(&psk);
+            trunc_len = len;
+            },
         (false,None) => {},
         _ => {return Err(psk_mode_mismatch)
         }
@@ -480,11 +484,19 @@ pub fn client_hello(
             .concat(&comp)
             .concat(&lbytes2(&exts)?),
     )?);
-    let trunc_len = ch.len() - hash_len(ha) - 3;
     Ok((ch,trunc_len))
 }
 
-pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes, Bytes, Option<(Bytes,Bytes,usize)>)> {
+pub fn set_client_hello_binder(algs: &ALGS, binder:&Option<HMAC>, ch:Bytes) -> Res<Bytes> {
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let chlen = &ch.len();
+    match binder {
+        Some(m) => Ok(ch.update_slice(chlen-hash_len(ha),m,0,hash_len(ha))),
+        None => Ok(ch),
+    }
+} 
+
+pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes, Bytes, Option<Bytes>, Option<Bytes> ,usize)> {
     let ty = bytes1(1);
     let ver = bytes2(3, 3);
     let comp = bytes2(1, 0);
@@ -511,9 +523,9 @@ pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes,
     let trunc_len = ch.len() - hash_len(ha) - 3;
     match (psk_mode,exts) {
         (true,EXTS(Some(sn),Some(gx),Some(tkt),Some(binder))) =>
-            Ok((Random::from_seq(&crand),sid,sn,gx,Some((tkt,binder,trunc_len)))),
+            Ok((Random::from_seq(&crand),sid,sn,gx,Some(tkt),Some(binder),trunc_len)),
         (false,EXTS(Some(sn),Some(gx),None,None)) =>
-            Ok((Random::from_seq(&crand),sid,sn,gx,None)),
+            Ok((Random::from_seq(&crand),sid,sn,gx,None,None,0)),
         _ => Err(parse_failed)
     }
 
