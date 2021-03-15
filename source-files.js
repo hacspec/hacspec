@@ -12,6 +12,8 @@ sourcesIndex["hacspec_curve25519"] = {"name":"","files":["curve25519.rs"]};
 sourcesIndex["hacspec_derive"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["hacspec_dev"] = {"name":"","files":["lib.rs","prelude.rs","rand.rs","test_vectors.rs"]};
 sourcesIndex["hacspec_gimli"] = {"name":"","files":["gimli.rs"]};
+sourcesIndex["hacspec_hkdf"] = {"name":"","files":["hkdf.rs"]};
+sourcesIndex["hacspec_hmac"] = {"name":"","files":["hmac.rs"]};
 sourcesIndex["hacspec_lib"] = {"name":"","dirs":[{"name":"math_util","files":["ct_poly.rs","ct_util.rs","mod.rs","poly.rs"]}],"files":["array.rs","bigint_integers.rs","lib.rs","machine_integers.rs","math_integers.rs","prelude.rs","seq.rs","traits.rs","transmute.rs","util.rs","vec_integers.rs","vec_integers_public.rs","vec_integers_secret.rs","vec_util.rs"]};
 sourcesIndex["hacspec_ntru_prime"] = {"name":"","files":["ntru-prime.rs"]};
 sourcesIndex["hacspec_poly1305"] = {"name":"","files":["poly1305.rs"]};
@@ -43,5 +45,5 @@ sourcesIndex["serde_json"] = {"name":"","dirs":[{"name":"features_check","files"
 sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","gen_helper.rs","visit.rs"]}],"files":["attr.rs","bigint.rs","buffer.rs","custom_keyword.rs","custom_punctuation.rs","data.rs","derive.rs","discouraged.rs","error.rs","export.rs","expr.rs","ext.rs","file.rs","generics.rs","group.rs","ident.rs","item.rs","lib.rs","lifetime.rs","lit.rs","lookahead.rs","mac.rs","macros.rs","op.rs","parse.rs","parse_macro_input.rs","parse_quote.rs","pat.rs","path.rs","print.rs","punctuated.rs","reserved.rs","sealed.rs","span.rs","spanned.rs","stmt.rs","thread.rs","token.rs","ty.rs","verbatim.rs","whitespace.rs"]};
 sourcesIndex["typenum"] = {"name":"","files":["array.rs","bit.rs","int.rs","lib.rs","marker_traits.rs","operator_aliases.rs","private.rs","type_operators.rs","uint.rs"]};
 sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
-sourcesIndex["unsafe_hacspec_examples"] = {"name":"","dirs":[{"name":"aes_gcm","files":["aes.rs","aesgcm.rs","gf128.rs","mod.rs"]},{"name":"blake2","files":["blake2b.rs","mod.rs"]},{"name":"curve25519","files":["curve25519.rs","mod.rs"]},{"name":"ec","files":["arithmetic.rs","mod.rs","p256.rs","p384.rs"]},{"name":"hkdf","files":["hkdf.rs","mod.rs"]},{"name":"hmac","files":["hmac.rs","mod.rs"]},{"name":"ntru_prime","files":["mod.rs","ntru_prime.rs"]},{"name":"sha2","files":["mod.rs","sha2.rs"]}],"files":["lib.rs"]};
+sourcesIndex["unsafe_hacspec_examples"] = {"name":"","dirs":[{"name":"aes_gcm","files":["aes.rs","aesgcm.rs","gf128.rs","mod.rs"]},{"name":"blake2","files":["blake2b.rs","mod.rs"]},{"name":"curve25519","files":["curve25519.rs","mod.rs"]},{"name":"ec","files":["arithmetic.rs","mod.rs","p256.rs","p384.rs"]},{"name":"ntru_prime","files":["mod.rs","ntru_prime.rs"]},{"name":"sha2","files":["mod.rs","sha2.rs"]}],"files":["lib.rs"]};
 createSourceSidebar();
