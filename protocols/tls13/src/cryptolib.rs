@@ -102,8 +102,8 @@ pub fn hmac_key_len(ha: &HashAlgorithm) -> usize {
 pub fn ae_key_len(ae: &AEADAlgorithm) -> usize {
     match ae {
         AEADAlgorithm::CHACHA20_POLY1305 => 32,
-        AEADAlgorithm::AES_128_GCM => 32,
-        AEADAlgorithm::AES_256_GCM => 32,
+        AEADAlgorithm::AES_128_GCM => 16,
+        AEADAlgorithm::AES_256_GCM => 16,
     }
 }
 

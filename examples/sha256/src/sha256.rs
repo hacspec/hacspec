@@ -119,30 +119,39 @@ fn compress(block: Block, h_in: Hash) -> Hash {
     h
 }
 
+const sha256_empty : Digest = Digest(secret_bytes!([
+    0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
+    0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
+]));
+
 pub fn sha256(msg: &ByteSeq) -> Digest {
     let mut h = HASH_INIT;
-    for i in 0..msg.num_chunks(BLOCK_SIZE) {
-        let (block_len, block) = msg.get_chunk(BLOCK_SIZE, i);
-        if block_len < BLOCK_SIZE {
-            // Add padding for last block
-            let mut last_block = Block::new();
-            let block = Block::new().update_start(&block);
-            last_block = last_block.update(0, &block);
-            last_block[block_len] = U8(0x80u8);
-            let len_bist = U64((msg.len() * 8) as u64);
-            if block_len < BLOCK_SIZE - LEN_SIZE {
-                last_block = last_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
-                h = compress(last_block, h);
+    if msg.len() == 0 {
+        Digest::from_seq(&sha256_empty)
+    } else {
+        for i in 0..msg.num_chunks(BLOCK_SIZE) {
+            let (block_len, block) = msg.get_chunk(BLOCK_SIZE, i);
+            if block_len < BLOCK_SIZE {
+                // Add padding for last block
+                let mut last_block = Block::new();
+                let block = Block::new().update_start(&block);
+                last_block = last_block.update(0, &block);
+                last_block[block_len] = U8(0x80u8);
+                let len_bist = U64((msg.len() * 8) as u64);
+                if block_len < BLOCK_SIZE - LEN_SIZE {
+                    last_block = last_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
+                    h = compress(last_block, h);
+                } else {
+                    let mut pad_block = Block::new();
+                    pad_block = pad_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
+                    h = compress(last_block, h);
+                    h = compress(pad_block, h);
+                }
             } else {
-                let mut pad_block = Block::new();
-                pad_block = pad_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
-                h = compress(last_block, h);
-                h = compress(pad_block, h);
+                let compress_input = Block::new().update_start(&block);
+                h = compress(compress_input, h);
             }
-        } else {
-            let compress_input = Block::new().update_start(&block);
-            h = compress(compress_input, h);
         }
+        Digest::from_seq(&h.to_be_bytes())
     }
-    Digest::from_seq(&h.to_be_bytes())
 }

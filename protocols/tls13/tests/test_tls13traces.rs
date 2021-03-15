@@ -75,6 +75,9 @@ const server_x25519_priv: &str = "b1 58 0e ea df 6d d5 89 b8 ef 4f 2d 56
 const server_x25519_pub : &str = "c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6
 72 e1 56 d6 cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f";
 
+const shared_secret : & str = "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d
+35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d";
+
 //Simple 1-RTT Handshake Transcript
 
 const client_hello: &str = "01 00 00 c0 03 03 cb 34 ec b1 e7 81 63
@@ -313,3 +316,60 @@ fn test_parse_client_finished() {
             }
         assert!(b);
         }
+
+
+#[test]
+fn test_key_schedule() {
+    let sha256_emp_str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    let sha256_emp =  load_hex(sha256_emp_str);
+    match hash(&SHA256,&Bytes::new(0)) {
+        Ok(ha) => {println!("computed hash(empty) {}\nexpected hash(empty) {}", ha.to_hex(), sha256_emp.to_hex());}
+        _ => {}
+    }
+    let ch:Bytes = load_hex(client_hello);
+    let sh:Bytes = load_hex(server_hello);
+    let ee:Bytes = load_hex(encrypted_extensions);
+    let sc:Bytes = load_hex(server_certificate);
+    let cv:Bytes = load_hex(server_certificate_verify);
+    let sf:Bytes = load_hex(server_finished);
+    let gxy:KEY = KEY::from_seq(&load_hex(shared_secret));
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let tx = ch.concat(&sh);
+    let tx_hash = hash(&ha,&tx);
+    let mut b = true;
+    match tx_hash {
+        Err(x) => {println!("Error: {}",x);},
+        Ok(tx_hash) => {
+            let keys = derive_hk_ms(&ha,&ae,&gxy,&None,&tx_hash);
+            b = keys.is_ok();
+            match  keys {
+                Err(x) => {println!("Error: {}",x);},
+                Ok(((k1,iv1),(k2,iv2),cfk,sfk,ms)) => {
+                    println!("Derive Succeeded!");
+                    println!("chk: key {} \n iv {}",k1.to_hex(),iv1.to_hex());
+                    println!("shk: key {} \n iv {}",k2.to_hex(),iv2.to_hex());
+                    println!("cfk: {}",cfk.to_hex());
+                    println!("sfk: {}",sfk.to_hex());
+                    println!("ms: {}",ms.to_hex());
+                    let tx = tx.concat(&ee).concat(&sc).concat(&cv).concat(&sf);
+                    let tx_hash = hash(&ha,&tx);
+                    match tx_hash {
+                        Err(x) => {println!("Error: {}",x);},
+                        Ok(tx_hash) => {
+                            let keys = derive_app_keys(&ha,&ae,&ms,&tx_hash);
+                            b = keys.is_ok();
+                            match  keys {
+                                Err(x) => {println!("Error: {}",x);},
+                                Ok(((k1,iv1),(k2,iv2),ms)) => {
+                                    println!("Derive Succeeded!");
+                                    println!("cak: key {} \n iv {}",k1.to_hex(),iv1.to_hex());
+                                    println!("sak: key {} \n iv {}",k2.to_hex(),iv2.to_hex());
+                                    println!("exp: {}",ms.to_hex());}
+                                }
+                            }
+                        }
+                }
+            }}
+        }
+    assert!(b);
+}

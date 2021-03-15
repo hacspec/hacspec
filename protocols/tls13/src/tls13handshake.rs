@@ -7,6 +7,7 @@ use hacspec_lib::*;
 
 /* TLS 1.3 Key Schedule: See RFC 8446 Section 7 */
 
+
 pub fn hkdf_expand_label(
     ha: &HashAlgorithm,
     k: &KEY,
@@ -67,17 +68,28 @@ pub fn derive_hk_ms(
 ) -> Res<(AEKIV, AEKIV, MACK, MACK, KEY)> {
     let psk = if let Some(k) = psko {KEY::from_seq(k)} else {zero_key(ha)};
     let early_secret = hkdf_extract(ha, &psk, &zero_key(ha))?;
-    let handshake_secret = hkdf_extract(ha, gxy, &early_secret)?;
+    let hash_emp = hash_empty(ha)?;
+    let derived_secret =
+        derive_secret(ha, &early_secret, &bytes(&label_derived), &hash_emp)?;
+//    println!("derived secret: {}", derived_secret.to_hex());
+    let handshake_secret = hkdf_extract(ha, gxy, &derived_secret)?;
+//    println!("handshake secret: {}", handshake_secret.to_hex());
     let client_handshake_traffic_secret =
         derive_secret(ha, &handshake_secret, &bytes(&label_c_hs_traffic), tx)?;
+//    println!("c h ts: {}", client_handshake_traffic_secret.to_hex());
     let server_handshake_traffic_secret =
         derive_secret(ha, &handshake_secret, &bytes(&label_s_hs_traffic), tx)?;
+ //   println!("s h ts: {}", server_handshake_traffic_secret.to_hex());
     let client_finished_key = derive_finished_key(ha, &client_handshake_traffic_secret)?;
+ //   println!("cfk: {}", client_finished_key.to_hex());
     let server_finished_key = derive_finished_key(ha, &server_handshake_traffic_secret)?;
+//    println!("sfk: {}", server_finished_key.to_hex());
     let client_write_key_iv = derive_aead_key_iv(ha, ae, &client_handshake_traffic_secret)?;
+ //   let (k,iv) = &client_write_key_iv; println!("chk: {}\n     {}", k.to_hex(), iv.to_hex());
     let server_write_key_iv = derive_aead_key_iv(ha, ae, &server_handshake_traffic_secret)?;
+ //   let (k,iv) = &server_write_key_iv; println!("shk: {}\n     {}", k.to_hex(), iv.to_hex());
     let master_secret_ =
-        derive_secret(ha, &handshake_secret, &bytes(&label_derived), &hash_empty(ha)?)?;
+        derive_secret(ha, &handshake_secret, &bytes(&label_derived), &hash_emp)?;
     let master_secret = hkdf_extract(ha, &zero_key(ha), &master_secret_)?;
     Ok((
         client_write_key_iv,

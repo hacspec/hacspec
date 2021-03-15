@@ -24,6 +24,7 @@ bytes!(Bytes9, 9);
 bytes!(Bytes10, 10);
 bytes!(Bytes11, 11);
 bytes!(Bytes12, 12);
+bytes!(Bytes32, 32);
 
 pub fn bytes1(x: u8) -> Bytes {
     bytes(&Bytes1([U8(x)]))
@@ -37,8 +38,15 @@ pub fn bytes3(x: u8, y: u8, z: u8) -> Bytes {
 pub fn bytes5(x0: u8, x1: u8, x2:u8, x3:u8, x4:u8) -> Bytes {
     bytes(&Bytes5([U8(x0), U8(x1), U8(x2), U8(x3), U8(x4)]))
 }
+
+const sha256_empty : Bytes32 = Bytes32(secret_bytes!([
+    0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
+    0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
+]));
+
 pub fn hash_empty(ha:&HashAlgorithm) -> Res<HASH> {
-    hash(ha, &empty())
+   hash(ha, &empty())
+   //Ok(HASH::from_seq(&sha256_empty))
 }
 pub const label_iv: Bytes2 = Bytes2(secret_bytes!([105, 118]));
 pub const label_key: Bytes3 = Bytes3(secret_bytes!([107, 101, 121]));
