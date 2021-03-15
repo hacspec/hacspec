@@ -14,6 +14,11 @@ use hacspec_curve25519::{
 };
 use hacspec_poly1305::Tag as Poly1305Tag;
 use unsafe_hacspec_examples::{
+    aes_gcm::{
+        aes::{Key128, Key256, Nonce as AesNonce},
+        decrypt_aes128, encrypt_aes128,
+        gf128::Tag as GcmTag,
+    },
     ec::{
         p256::{
             point_mul as p256_point_mul, point_mul_base as p256_secret_to_public,
@@ -192,7 +197,7 @@ pub fn hmac_verify(ha: &HashAlgorithm, mk: &MACK, payload: &Bytes, m: &HMAC) -> 
     result
 }
 
-pub fn verk_from_cert(cert:&Bytes) -> Res<VERK> {
+pub fn verk_from_cert(cert: &Bytes) -> Res<VERK> {
     Ok(VERK::new(64))
 }
 
@@ -226,7 +231,11 @@ pub fn aead_encrypt(
 ) -> Res<Bytes> {
     // XXX: the result should be Seq<u8> not Seq<U8>.
     match a {
-        AEADAlgorithm::AES_128_GCM => Err(unsupported_algorithm),
+        AEADAlgorithm::AES_128_GCM => {
+            let (ctxt, tag) =
+                encrypt_aes128(Key128::from_seq(k), AesNonce::from_seq(iv), ad, payload);
+            Ok(ctxt.concat(&Bytes::from_seq(&tag)))
+        }
         AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),
         AEADAlgorithm::CHACHA20_POLY1305 => {
             // XXX: ctxt should really be Seq<u8> not Seq<U8>.
@@ -249,7 +258,18 @@ pub fn aead_decrypt(
     ad: &Bytes,
 ) -> Res<Bytes> {
     match a {
-        AEADAlgorithm::AES_128_GCM => Err(unsupported_algorithm),
+        AEADAlgorithm::AES_128_GCM => {
+            match decrypt_aes128(
+                Key128::from_seq(k),
+                AesNonce::from_seq(iv),
+                ad,
+                &ciphertext.slice_range(0..ciphertext.len() - 16),
+                GcmTag::from_seq(&ciphertext.slice_range(ciphertext.len() - 16..ciphertext.len())),
+            ) {
+                Ok(m) => Ok(m),
+                Err(_e) => return Err(mac_failed),
+            }
+        }
         AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),
         AEADAlgorithm::CHACHA20_POLY1305 => {
             // XXX: ciphertext should really be Seq<u8> not Seq<U8>.
