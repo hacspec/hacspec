@@ -171,12 +171,74 @@ pub fn decrypt_record(ciphertext: &Bytes, st: CipherState) -> Res<(u8,Bytes,Ciph
     }
 }
 
+/* Incremental Transcript Construction 
+   For simplicity, we store the full transcript, but an internal hash state would suffice. */
+
+pub struct TranscriptTruncatedClientHello(pub HASH);
+pub struct TranscriptClientHello(pub HashAlgorithm,pub Bytes, pub HASH);
+pub struct TranscriptServerHello(pub HashAlgorithm,pub Bytes, pub HASH);
+pub struct TranscriptServerCertificate(pub HashAlgorithm,pub Bytes, pub HASH);
+pub struct TranscriptServerCertificateVerify(pub HashAlgorithm,pub Bytes, pub HASH);
+pub struct TranscriptServerFinished(pub HashAlgorithm,pub Bytes, pub HASH);
+pub struct TranscriptClientFinished(pub HashAlgorithm,pub Bytes, pub HASH);
+
+pub fn transcript_truncated_client_hello(algs:ALGS,ch:&Bytes,trunc_len:usize) ->
+    Res<TranscriptTruncatedClientHello> {
+        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+        let th = hash(&ha,&ch.slice_range(0..trunc_len))?;
+        Ok(TranscriptTruncatedClientHello(th))
+    }
+
+pub fn transcript_client_hello(algs:ALGS,ch:&Bytes) -> Res<TranscriptClientHello> {
+        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+        let transcript = empty().concat(ch);
+        let th = hash(&ha,&transcript)?;
+        Ok(TranscriptClientHello(ha,transcript,th))
+    }
+
+pub fn transcript_server_hello(tx:TranscriptClientHello,sh:&Bytes) -> Res<TranscriptServerHello> {
+        let TranscriptClientHello(ha,transcript,_) = tx;
+        let transcript = transcript.concat(sh);
+        let th = hash(&ha,&transcript)?;
+        Ok(TranscriptServerHello(ha,transcript,th))
+    }
+
+pub fn transcript_server_certificate(tx:TranscriptServerHello,ee:&Bytes,sc:&Bytes) -> Res<TranscriptServerCertificate> {
+        let TranscriptServerHello(ha,transcript,_) = tx;
+        let transcript = transcript.concat(ee);
+        let transcript = transcript.concat(sc);
+        let th = hash(&ha,&transcript)?;
+        Ok(TranscriptServerCertificate(ha,transcript,th))
+    }
+
+pub fn transcript_server_certificate_verify(tx:TranscriptServerCertificate,cv:&Bytes) -> Res<TranscriptServerCertificateVerify> {
+        let TranscriptServerCertificate(ha,transcript,_) = tx;
+        let transcript = transcript.concat(cv);
+        let th = hash(&ha,&transcript)?;
+        Ok(TranscriptServerCertificateVerify(ha,transcript,th))
+    }
+
+pub fn transcript_server_finished(tx:TranscriptServerCertificateVerify,sf:&Bytes) -> Res<TranscriptServerFinished> {
+        let TranscriptServerCertificateVerify(ha,transcript,_) = tx;
+        let transcript = transcript.concat(sf);
+        let th = hash(&ha,&transcript)?;
+        Ok(TranscriptServerFinished(ha,transcript,th))
+    }
+
+pub fn transcript_client_finished(tx:TranscriptServerFinished,cf:&Bytes) -> Res<TranscriptClientFinished> {
+        let TranscriptServerFinished(ha,transcript,_) = tx;
+        let transcript = transcript.concat(cf);
+        let th = hash(&ha,&transcript)?;
+        Ok(TranscriptClientFinished(ha,transcript,th))
+    }
+
 /* Handshake State Machine */
 /* We implement a simple linear state machine:
 PostClientHello -> PostServerHello -> PostCertificateVerify ->
 PostServerFinished -> PostClientFinished -> Complete
 There are no optional steps, all states must be traversed, even if the traversals are NOOPS.
 See "put_skip_server_signature" below */
+
 pub struct ClientPostClientHello(Random, ALGS, DHSK, KEY);
 pub struct ClientPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ClientPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
@@ -190,15 +252,6 @@ pub struct ServerPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ServerPostServerFinished(Random, Random, ALGS, KEY, MACK);
 pub struct ServerPostClientFinished(Random, Random, ALGS, KEY);
 pub struct ServerComplete(Random, Random, ALGS, KEY);
-
-pub struct TranscriptTruncatedClientHello(pub HASH);
-pub struct TranscriptClientHello(pub HASH);
-pub struct TranscriptServerHello(pub HASH);
-pub struct TranscriptServerCertificate(pub HASH);
-pub struct TranscriptServerCertificateVerify(pub HASH);
-pub struct TranscriptServerFinished(pub HASH);
-pub struct TranscriptClientFinished(pub HASH);
-
 
 /* Handshake Core Functions: See RFC 8446 Section 4 */
 /* We delegate all details of message formatting and transcript hashes to the caller */
@@ -224,7 +277,6 @@ pub fn get_client_hello(
     }
 }
 
-
 pub fn get_client_hello_binder(
     tx: &TranscriptTruncatedClientHello,
     st: &ClientPostClientHello,
@@ -245,7 +297,7 @@ pub fn client_get_0rtt_keys(
     st: &ClientPostClientHello,
 ) -> Res<(CipherState, KEY)> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
-    let TranscriptClientHello(tx_hash) = tx;
+    let TranscriptClientHello(_,_,tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, true, true) = algs0 {
         let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
         Ok((CipherState(*ae, aek, 0), key))
@@ -262,7 +314,7 @@ pub fn put_server_hello(
     st: ClientPostClientHello,
 ) -> Res<(CipherState, CipherState, ClientPostServerHello)> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
-    let TranscriptServerHello(tx_hash) = tx;
+    let TranscriptServerHello(_,_,tx_hash) = tx;
     if algs == algs0 {
         let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
         let gxy = ecdh(gn, &x, &gy)?;
@@ -284,7 +336,7 @@ pub fn put_server_signature(
     st: ClientPostServerHello,
 ) -> Res<ClientPostCertificateVerify> {
     let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
-    let TranscriptServerCertificate(tx_hash) = tx;
+    let TranscriptServerCertificate(_,_,tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
         verify(sa, &pk, &bytes(tx_hash), &sig)?;
         Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
@@ -308,7 +360,7 @@ pub fn put_server_finished(
     st: ClientPostCertificateVerify,
 ) -> Res<ClientPostServerFinished> {
     let ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
-    let TranscriptServerCertificateVerify(tx_hash) = tx;
+    let TranscriptServerCertificateVerify(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &sfk, &bytes(tx_hash), &vd)?;
     return Ok(ClientPostServerFinished(cr, sr, algs, ms, cfk));
@@ -318,7 +370,7 @@ pub fn client_get_1rtt_keys(
     st: &ClientPostServerFinished,
 ) -> Res<(CipherState, CipherState, KEY)> {
     let ClientPostServerFinished(_, _, algs, ms, cfk) = st;
-    let TranscriptServerFinished(tx_hash) = tx;
+    let TranscriptServerFinished(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
     return Ok((CipherState(*ae, cak, 0), 
@@ -330,7 +382,7 @@ pub fn get_client_finished(
     st: ClientPostServerFinished,
 ) -> Res<(HMAC, ClientPostClientFinished)> {
     let ClientPostServerFinished(cr, sr, algs, ms, cfk) = st;
-    let TranscriptServerFinished(tx_hash) = tx;
+    let TranscriptServerFinished(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let m = hmac(ha, &cfk, &bytes(tx_hash))?;
     return Ok((m, ClientPostClientFinished(cr, sr, algs, ms)));
@@ -341,7 +393,7 @@ pub fn client_complete(
     st: ClientPostClientFinished,
 ) -> Res<ClientComplete> {
     let ClientPostClientFinished(cr, sr, algs, ms) = st;
-    let TranscriptClientFinished(tx_hash) = tx;
+    let TranscriptClientFinished(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let rms = derive_rms(ha, &ms, tx_hash)?;
     Ok(ClientComplete(cr,sr,algs,rms))
@@ -381,7 +433,7 @@ pub fn server_get_0rtt_keys(
     st: &ServerPostClientHello,
 ) -> Res<(CipherState, KEY)> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
-    let TranscriptClientHello(tx_hash) = tx;
+    let TranscriptClientHello(_,_,tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, true, true) = algs {
         let (aek, key) = derive_0rtt_keys(ha, ae, &psk, tx_hash)?;
         Ok((CipherState(*ae, aek, 0), key))
@@ -395,7 +447,7 @@ pub fn get_server_hello(
     st: ServerPostClientHello,
 ) -> Res<(CipherState, CipherState, ServerPostServerHello)> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
-    let TranscriptServerHello(tx_hash) = tx;
+    let TranscriptServerHello(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
     Ok((
@@ -411,7 +463,7 @@ pub fn get_server_signature(
     st: ServerPostServerHello,
 ) -> Res<(SIG, ServerPostCertificateVerify)> {
     let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
-    let TranscriptServerCertificate(tx_hash) = tx;
+    let TranscriptServerCertificate(_,_,tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
         let sig = sign(sa, &sk, &bytes(tx_hash))?;
         Ok((sig, ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk)))
@@ -434,7 +486,7 @@ pub fn get_server_finished(
     st: ServerPostCertificateVerify,
 ) -> Res<(HMAC, ServerPostServerFinished)> {
     let ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
-    let TranscriptServerCertificateVerify(tx_hash) = tx;
+    let TranscriptServerCertificateVerify(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let m = hmac(ha, &sfk, &bytes(tx_hash))?;
     Ok((m, ServerPostServerFinished(cr, sr, algs, ms, cfk)))
@@ -445,7 +497,7 @@ pub fn server_get_1rtt_keys(
     st: &ServerPostServerFinished,
 ) -> Res<(CipherState, CipherState, KEY)> {
     let ServerPostServerFinished(_, _, algs, ms, cfk) = st;
-    let TranscriptServerFinished(tx_hash) = tx;
+    let TranscriptServerFinished(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
     return Ok((CipherState(*ae, cak, 0),
@@ -458,7 +510,7 @@ pub fn put_client_finished(
     st: ServerPostServerFinished,
 ) -> Res<ServerPostClientFinished> {
     let ServerPostServerFinished(cr, sr, algs, ms, cfk) = st;
-    let TranscriptServerFinished(tx_hash) = tx;
+    let TranscriptServerFinished(_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &cfk, &bytes(tx_hash), &mac)?;
     return Ok(ServerPostClientFinished(cr, sr, algs, ms));
@@ -468,7 +520,7 @@ pub fn server_complete(
     tx: &TranscriptClientFinished,
     st: ServerPostClientFinished,
 ) -> Res<ClientComplete> {
-    let TranscriptClientFinished(tx_hash) = tx;
+    let TranscriptClientFinished(_,_,tx_hash) = tx;
     let ServerPostClientFinished(cr, sr, algs, ms) = st;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let rms = derive_rms(ha, &ms, tx_hash)?;

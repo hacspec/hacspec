@@ -192,6 +192,10 @@ pub fn hmac_verify(ha: &HashAlgorithm, mk: &MACK, payload: &Bytes, m: &HMAC) -> 
     result
 }
 
+pub fn verk_from_cert(cert:&Bytes) -> Res<VERK> {
+    Ok(VERK::new(64))
+}
+
 pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
     return Ok(SIG::new(32));
 }
