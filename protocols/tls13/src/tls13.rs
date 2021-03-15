@@ -66,6 +66,7 @@ pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Ent
 
 pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
     let Client0(algs,tx_ch,cstate,_) = st;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (sh,len1) = check_handshake_record(&msg)?;
     let (sr,gy) = parse_server_hello(&algs,&sh)?;    
     let tx_sh = transcript_server_hello(tx_ch,&sh)?;
@@ -77,20 +78,30 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
         let (ee,len3) = check_handshake_message(&payload)?;
         parse_encrypted_extensions(&algs,&ee)?;
         next = next + len3;
-        let (sc,len4) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
-        let cert = parse_server_certificate(&algs,&sc)?;
-        next = next + len4;
-        let (cv,len5) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
-        let sig = parse_certificate_verify(&algs,&cv)?;
-        next = next + len5;       
+        let (tx_cv,cstate) =
+            match psk_mode {
+                false => {
+                    let (sc,len4) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
+                    let cert = parse_server_certificate(&algs,&sc)?;
+                    next = next + len4;
+                    let (cv,len5) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
+                    let sig = parse_certificate_verify(&algs,&cv)?;
+                    next = next + len5; 
+                    let pk = verk_from_cert(&cert)?;
+                    let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
+                    let cstate = put_server_signature(&pk, &sig, &tx_sc, cstate)?;
+                    let tx_cv = transcript_server_certificate_verify(tx_sc,&cv)?;
+                    (tx_cv,cstate)}
+                true => {
+                    let cstate = put_skip_server_signature(cstate)?;
+                    let tx_cv = transcript_skip_server_certificate_verify(tx_sh,&ee)?;
+                    (tx_cv,cstate)
+                }
+            };    
         let (sfin,len6) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
         let vd = parse_finished(&algs,&sfin)?;
         next = next + len6;
         if next == payload.len() {
-            let pk = verk_from_cert(&cert)?;
-            let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
-            let cstate = put_server_signature(&pk, &sig, &tx_sc, cstate)?;
-            let tx_cv = transcript_server_certificate_verify(tx_sc,&cv)?;
             let cstate = put_server_finished(&vd,&tx_cv,cstate)?;
             let tx_sf = transcript_server_finished(tx_cv,&sfin)?;
             let (c2sa,s2ca,exp) = client_get_1rtt_keys(&tx_sf,&cstate)?;
@@ -137,13 +148,22 @@ pub fn server_init(algs:ALGS,db:ServerDB,msg:&Bytes,ent:Entropy) -> Res<(Bytes,S
     let ee = encrypted_extensions(&algs)?;
     let mut payload = empty();
     payload = payload.concat(&ee);
-    let sc = server_certificate(&algs,&cert)?;
-    payload = payload.concat(&sc);
-    let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
-    let (sig,sstate) = get_server_signature(&sigk,&tx_sc,sstate)?;
-    let cv = certificate_verify(&algs,&sig)?;
-    payload = payload.concat(&cv);
-    let tx_cv = transcript_server_certificate_verify(tx_sc,&cv)?;
+    let (tx_cv,sstate) =
+        match psk_mode {
+            false => {
+                let sc = server_certificate(&algs,&cert)?;
+                payload = payload.concat(&sc);
+                let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
+                let (sig,sstate) = get_server_signature(&sigk,&tx_sc,sstate)?;
+                let cv = certificate_verify(&algs,&sig)?;
+                payload = payload.concat(&cv);
+                let tx_cv = transcript_server_certificate_verify(tx_sc,&cv)?;
+                (tx_cv,sstate)},
+            true => {
+                let tx_cv = transcript_skip_server_certificate_verify(tx_sh,&ee)?;
+                let sstate = get_skip_server_signature(sstate)?;
+                (tx_cv,sstate)}
+        };
     let (vd,sstate) = get_server_finished(&tx_cv,sstate)?;
     let sfin = finished(&algs,&vd)?;
     payload = payload.concat(&sfin);
