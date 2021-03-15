@@ -256,6 +256,40 @@ fn test_parse_client_hello_record() {
 }
 
 #[test]
+fn test_parse_client_hello_roundtrip() {
+    let cr: Random = Random::new();
+    let gx = load_hex(client_x25519_pub);
+    let sn = Bytes::new(23);
+    let ch = tls13formats::client_hello(&algs,&cr,&gx,&sn,&None);
+    let mut b = true;
+    match ch {
+        Err(x) => {
+            println!("Error serializing: {}", x);
+            b = false;
+        },
+        Ok((ch,_)) => {
+            //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+            let res = parse_client_hello(&algs, &ch);
+            let b = res.is_ok();
+            match res {
+                Err(x) => {
+                    println!("Error: {}", x);
+                }
+                Ok((cr, sid, sn, gx, tkto, bo, l)) => {
+                    println!("Parsed CH!");
+                    println!("cr: {}", cr.to_hex());
+                    println!("sid: {}", sid.to_hex());
+                    println!("sn: {}", sn.to_hex());
+                    println!("gx: {}", gx.to_hex());
+                    println!("trunc_len: {}", l);
+                }
+            }
+        }
+    }
+    assert!(b);
+}
+
+#[test]
 fn test_parse_server_hello() {
     let sh: Bytes = load_hex(server_hello);
     //   let algs = ALGS(SHA256,AES_128_GCM,ECDSA_SECP256r1_SHA256,X25519,false,false);
@@ -273,6 +307,39 @@ fn test_parse_server_hello() {
     }
     assert!(b);
 }
+
+#[test]
+fn test_parse_server_hello_roundtrip() {
+    let sr: Random = Random::new();
+    let mut sid = Bytes::new(24);
+    sid[0] = U8(255);
+    let gy = load_hex(server_x25519_pub);
+    let sh = tls13formats::server_hello(&algs,&sr,&sid,&gy);
+    let mut b = true;
+    match sh {
+        Err(x) => {
+            println!("Error serializing: {}", x);
+            b = false;
+        },
+        Ok(sh) => {
+            //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+            let res = parse_server_hello(&algs, &sh);
+            let b = res.is_ok();
+            match res {
+                Err(x) => {
+                    println!("Error: {}", x);
+                }
+                Ok((sr, gy)) => {
+                    println!("Parsed SH!");
+                    println!("sr: {}", sr.to_hex());
+                    println!("gy: {}", gy.to_hex());
+                }
+            }
+        }
+    }
+    assert!(b);
+}
+
 
 #[test]
 fn test_parse_encrypted_extensions() {
@@ -489,3 +556,45 @@ fn test_finished() {
     }
     assert!(true);
 }
+
+#[test]
+fn test_full_round_trip() {
+    let mut cr: Random = Random::new();
+    cr[0] = U8(1);
+    let x = load_hex(client_x25519_priv);
+    let ent_c = Entropy::from_seq(&cr.concat(&x));
+    let gx = load_hex(client_x25519_pub);
+    let sn = Bytes::new(23);
+    let sn_ = Bytes::new(23);
+    let mut sr: Random = Random::new();
+    sr[0] = U8(2);
+    let y = load_hex(server_x25519_priv);
+    let gy = load_hex(server_x25519_pub);
+    let ent_s = Entropy::from_seq(&sr.concat(&y));
+    let db = ServerDB(sn_,Bytes::new(123),SIGK::new(64),None);
+    
+    match client_init(algs,&sn,None,None,ent_c) {
+        Err(x) => {println!("Client0 Error {}",x)},
+        Ok((ch,cstate)) => {
+            println!("Client0 Complete");
+            match server_init(algs,db,&ch,ent_s) {
+                Err(x) => {println!("Server0 Error {}",x)},
+                Ok((sf,sstate)) => {
+                        println!("Server0 Complete");
+                        match client_finish(&sf,cstate) {
+                            Err(x) => {println!("Client1 Error {}",x);},
+                            Ok((cf,cstate)) => {
+                                println!("Client Complete");
+                                match server_finish(&cf,sstate) {
+                                    Err(x) => {println!("Server1 Error {}",x);},
+                                    Ok(sstate) => {println!("Server Complete");}
+                                }
+                            }
+                        }
+                
+                }
+            }
+        }
+    }
+    assert!(true);
+}    

@@ -623,7 +623,7 @@ pub fn server_certificate(algs: &ALGS, cert: &Bytes) -> Res<Bytes> {
     let crt = lbytes3(cert)?;
     let ext = lbytes2(&empty())?;
     let crts = lbytes3(&crt.concat(&ext))?;
-    Ok(ty.concat(&creq).concat(&crts))
+    Ok(ty.concat(&lbytes3(&creq.concat(&crts))?))
 }
 
 pub fn parse_server_certificate(algs: &ALGS, sc: &Bytes) -> Res<Bytes> {

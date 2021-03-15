@@ -28,9 +28,9 @@ pub fn encrypt_record(ct:u8, payload: &Bytes, pad:usize, st: CipherState) -> Res
     if clen <= 65536 {
         let clenb = u16_to_be_bytes(clen as u16);
         let ad = bytes5(23, 3, 3, clenb[0], clenb[1]);
-        let cip = aead_encrypt(&ae, &k, &iv_ctr, payload, &ad)?;
+        let cip = aead_encrypt(&ae, &k, &iv_ctr, &inner_plaintext, &ad)?;
         let rec = ad.concat(&cip);
-        Ok((cip,CipherState(ae,(k,iv),n+1)))
+        Ok((rec,CipherState(ae,(k,iv),n+1)))
     } else {
         Err(payload_too_long)
     }
@@ -46,14 +46,14 @@ pub fn decrypt_record(ciphertext: &Bytes, st: CipherState) -> Res<(u8,Bytes,Ciph
     let iv_ctr = derive_iv_ctr(&ae, &iv, n);
     let clen = ciphertext.len() - 5;
     if clen <= 65536 && clen > 16 {
-        let clenb = u16_to_be_bytes(ciphertext.len() as u16);
+        let clenb = u16_to_be_bytes(clen as u16);
         let ad = bytes5(23, 3, 3, clenb[0], clenb[1]);
         check_eq(&ad,&ciphertext.slice_range(0..5))?;
-        let cip = ciphertext.slice_range(5..5+ciphertext.len());
+        let cip = ciphertext.slice_range(5..ciphertext.len());
         let plain = aead_decrypt(&ae, &k, &iv_ctr, &cip, &ad)?;
         let payload_len = plain.len() - padlen(&plain,plain.len()) - 1;
         let ct = plain[payload_len].declassify();
-        let payload = plain.slice_range(0..payload_len);
+        let payload = plain.slice_range(0..payload_len);       
         Ok((ct,payload,CipherState(ae, (k, iv), n+1)))
     } else {
         Err(payload_too_long)

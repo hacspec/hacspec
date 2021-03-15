@@ -119,7 +119,7 @@ pub fn client_recv1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
 pub struct Server0(ALGS,TranscriptServerFinished,ServerPostServerFinished,Option<(CipherState,KEY)>,CipherState,CipherState,CipherState,KEY);
 pub struct Server1(ALGS,TranscriptClientFinished,ServerPostClientFinished,CipherState,CipherState,KEY);
 
-pub struct ServerDB(Bytes,Bytes,SIGK,Option<(Bytes,PSK)>);
+pub struct ServerDB(pub Bytes,pub Bytes,pub SIGK,pub Option<(Bytes,PSK)>);
 
 fn lookup_db(algs:ALGS, db:&ServerDB,sni:&Bytes,tkt:&Option<Bytes>) ->
              Res<(Bytes,SIGK,Option<PSK>)> {
@@ -145,6 +145,7 @@ pub fn server_init(algs:ALGS,db:ServerDB,msg:&Bytes,ent:Entropy) -> Res<(Bytes,S
     let tx_ch = transcript_client_hello(algs,&ch)?;
     let c2s0 = server_get_0rtt_keys(&tx_ch,&sstate)?;
     let sh = server_hello(&algs,&sr,&sid,&gy)?;
+    
     let tx_sh = transcript_server_hello(tx_ch,&sh)?;
     let (c2s,s2c,sstate) = get_server_hello(&tx_sh,sstate)?;
     let ee = encrypted_extensions(&algs)?;

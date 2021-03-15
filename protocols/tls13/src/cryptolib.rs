@@ -202,7 +202,7 @@ pub fn verk_from_cert(cert: &Bytes) -> Res<VERK> {
 }
 
 pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
-    return Ok(SIG::new(32));
+    return Ok(SIG::new(64));
 }
 pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
     return Ok(());
