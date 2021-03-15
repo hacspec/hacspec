@@ -11,10 +11,9 @@ fn run_test(
     dependencies.iter().for_each(|d| {
         cmd.arg(format!("--extern={}", d));
     });
-    match output {
-        None => cmd.arg("-Zno-codegen".to_string()),
-        Some(f) => cmd.arg(format!("-o {}", f)),
-    };
+    if let Some(f) = output {
+        cmd.arg(format!("-o {}", f));
+    }
     cmd.arg(format!("{}", package_name));
     println!("Running: {:?}", cmd);
     cmd.assert().success();
@@ -84,5 +83,23 @@ fn run_riot_test() -> Result<(), Box<dyn std::error::Error>> {
         "hacspec-riot-bootloader",
         Some("../fstar/Hacspec.Riot.fst"),
         vec![],
+    )
+}
+
+#[test]
+fn run_hmac_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test(
+        "hacspec-hmac",
+        Some("../fstar/Hacspec.Hmac.fst"),
+        vec!["hacspec_sha256"],
+    )
+}
+
+#[test]
+fn run_hkdf_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test(
+        "hacspec-hkdf",
+        Some("../fstar/Hacspec.Hkdf.fst"),
+        vec!["hacspec_sha256", "hacspec_hmac"],
     )
 }

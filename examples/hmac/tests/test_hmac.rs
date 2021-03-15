@@ -1,6 +1,5 @@
 use hacspec_lib::prelude::*;
-
-use unsafe_hacspec_examples::hmac::*;
+use hacspec_hmac::*;
 
 struct HMACTestVectors<'a> {
     key: &'a str,

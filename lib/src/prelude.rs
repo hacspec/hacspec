@@ -39,3 +39,6 @@ public_bytes!(u16Word, 2);
 public_bytes!(u32Word, 4);
 public_bytes!(u64Word, 8);
 public_bytes!(u128Word, 16);
+
+// Re-export some std lib functions
+pub use std::convert::TryFrom; // Allow down-casting of integers.

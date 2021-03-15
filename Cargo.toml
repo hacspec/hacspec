@@ -22,6 +22,8 @@ members = [
     "examples/ntru-prime",
     "examples-unsafe",
     "examples/riot-bootloader",
+    "examples/hmac",
+    "examples/hkdf",
 ]
 default-members = [
     "lib",
@@ -42,6 +44,8 @@ default-members = [
     "examples/ntru-prime",
     "examples-unsafe",
     "examples/riot-bootloader",
+    "examples/hmac",
+    "examples/hkdf",
 ]
 
 [profile.release]
