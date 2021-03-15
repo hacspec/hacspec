@@ -604,6 +604,12 @@ use std::io::prelude::*;
 use std::net::TcpStream;
 use std::str;
 
+//NOTES:
+//OpenSSL divides up the server flight into multiple encrypted records, whereas most other servers send one big record
+//We need to process the dummy CCS messages in the TCP layer
+//Google divides messages into 1418-byte chunks and so sends 2 messages for the encrypted server flight
+//(we horribly bake in this Google behavior below)
+
 #[test]
 fn test_connect() {
     let mut cr: Random = Random::new();
