@@ -14,7 +14,7 @@ pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n:u64) -> AEIV {
     for i in 0..8 {
         iv_ctr[i+iv.len()-8] = iv[i+iv.len()-8] ^ counter[i];
     }
-    return iv_ctr;
+    iv_ctr
 }
 
 pub const ct_app_data : u8 = 0x17; 
