@@ -18,7 +18,8 @@ pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Ent
     let binder = get_client_hello_binder(&tx_trunc,&cstate)?;
     let nch = set_client_hello_binder(&algs,&binder,ch)?;
     let tx_ch = transcript_client_hello(algs,&nch)?;
-    let rec = handshake_record(&nch)?;
+    let mut rec = handshake_record(&nch)?;
+    rec[2] = U8(0x01);
     let c2s0 = client_get_0rtt_keys(&tx_ch,&cstate)?;
     let st = Client0(algs,tx_ch,cstate,c2s0);
     Ok((rec,st))  
@@ -44,7 +45,7 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
     let len2 = check_ccs_record(&msg.slice_range(next..msg.len()))?;
     next = next + len2;
     let len3 = check_encrypted_record(&msg.slice_range(next..msg.len()))?;
-    let (ct,payload,s2c) = decrypt_record(&msg.slice_range(next..next+len3),s2c)?; 
+    let (ct,payload,s2c) = decrypt_record(&msg.slice_range(next..next+len3),s2c)?;   
     if ct == ct_handshake {
         next = 0;
         let (ee,len4) = check_handshake_message(&payload)?;
@@ -56,10 +57,14 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
                     let (sc,len5) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
                     let cert = parse_server_certificate(&algs,&sc)?;
                     next = next + len5;
+                   // println!("HERE len {}, {}",payload.len() - next, &payload.slice_range(next..payload.len()).to_hex());  
                     let (cv,len6) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
                     let sig = parse_certificate_verify(&algs,&cv)?;
+
+
                     next = next + len6; 
                     let pk = verk_from_cert(&cert)?;
+         
                     let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
                     let cstate = put_server_signature(&pk, &sig, &tx_sc, cstate)?;
                     let tx_cv = transcript_server_certificate_verify(tx_sc,&cv)?;
