@@ -57,14 +57,10 @@ pub fn client_finish(msg:&Bytes,st:Client0) -> Res<(Bytes,Client1)> {
                     let (sc,len5) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
                     let cert = parse_server_certificate(&algs,&sc)?;
                     next = next + len5;
-                   // println!("HERE len {}, {}",payload.len() - next, &payload.slice_range(next..payload.len()).to_hex());  
                     let (cv,len6) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
                     let sig = parse_certificate_verify(&algs,&cv)?;
-
-
                     next = next + len6; 
                     let pk = verk_from_cert(&cert)?;
-         
                     let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
                     let cstate = put_server_signature(&pk, &sig, &tx_sc, cstate)?;
                     let tx_cv = transcript_server_certificate_verify(tx_sc,&cv)?;

@@ -18,7 +18,8 @@ pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n:u64) -> AEIV {
 }
 
 pub const ct_app_data : u8 = 0x17; 
-pub const ct_handshake: u8 = 0x16; 
+pub const ct_handshake: u8 = 0x16;
+pub const ct_alert: u8 = 0x15; 
 
 pub fn encrypt_record(ct:u8, payload: &Bytes, pad:usize, st: CipherState) -> Res<(Bytes,CipherState)> {
     let CipherState(ae, (k, iv), n) = st;
