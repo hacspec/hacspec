@@ -264,14 +264,14 @@ pub fn get_client_hello_binder(
 pub fn client_get_0rtt_keys(
     tx: &TranscriptClientHello,
     st: &ClientPostClientHello,
-) -> Res<Option<(CipherState, KEY)>> {
+) -> Res<Option<ClientCipherState0>> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptClientHello(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
     match (psk_mode, zero_rtt, psk) {
         (true,true,Some(k)) => {
             let (aek, key) = derive_0rtt_keys(ha, ae, &k, tx_hash)?;
-            Ok(Some((CipherState(*ae, aek, 0), key)))},
+            Ok(Some(ClientCipherState0(*ae, aek, 0, key)))},
         (false,false,None) => Ok(None),
         (true,false,Some(k)) => Ok(None),
         _ => Err(psk_mode_mismatch)
@@ -284,7 +284,7 @@ pub fn put_server_hello(
     algs: ALGS,
     tx: &TranscriptServerHello,
     st: ClientPostClientHello,
-) -> Res<(CipherState, CipherState, ClientPostServerHello)> {
+) -> Res<(DuplexCipherStateH, ClientPostServerHello)> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptServerHello(_,_,_,tx_hash) = tx;
     if algs == algs0 {
@@ -292,8 +292,7 @@ pub fn put_server_hello(
         let gxy = ecdh(gn, &x, &gy)?;
         let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
         Ok((
-            CipherState(*ae, chk, 0),
-            CipherState(*ae, shk, 0),
+            DuplexCipherStateH(*ae, chk, 0, shk, 0),
             ClientPostServerHello(cr, sr, algs, ms, cfk, sfk),
         ))
     } else {
@@ -340,12 +339,12 @@ pub fn put_server_finished(
 pub fn client_get_1rtt_keys(
     tx: &TranscriptServerFinished,
     st: &ClientPostServerFinished,
-) -> Res<(CipherState, CipherState, KEY)> {
+) -> Res<DuplexCipherState1> {
     let ClientPostServerFinished(_, _, algs, ms, cfk) = st;
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
-    Ok((CipherState(*ae, cak, 0),CipherState(*ae, sak, 0), exp))
+    Ok(DuplexCipherState1(*ae, cak, 0, sak, 0, exp))
 }
 
 pub fn get_client_finished(
@@ -404,14 +403,14 @@ pub fn put_client_hello(
 pub fn server_get_0rtt_keys(
     tx: &TranscriptClientHello,
     st: &ServerPostClientHello,
-) -> Res<Option<(CipherState, KEY)>> {
+) -> Res<Option<ServerCipherState0>> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
     let TranscriptClientHello(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     match (psk_mode, zero_rtt, psk) {
         (true,true,Some(k)) => {
             let (aek, key) = derive_0rtt_keys(ha, ae, &k, tx_hash)?;
-            Ok(Some((CipherState(*ae, aek, 0), key)))},
+            Ok(Some(ServerCipherState0(*ae, aek, 0, key)))},
         (false,false,None) => Ok(None),
         (true,false,Some(k)) => Ok(None),
         _ => Err(psk_mode_mismatch)    
@@ -421,14 +420,13 @@ pub fn server_get_0rtt_keys(
 pub fn get_server_hello(
     tx: &TranscriptServerHello,
     st: ServerPostClientHello,
-) -> Res<(CipherState, CipherState, ServerPostServerHello)> {
+) -> Res<(DuplexCipherStateH, ServerPostServerHello)> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
     let TranscriptServerHello(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
     Ok((
-        CipherState(*ae, chk, 0),
-        CipherState(*ae, shk, 0),
+        DuplexCipherStateH(*ae, shk, 0, chk, 0),
         ServerPostServerHello(cr, sr, algs, ms, cfk, sfk),
     ))
 }
@@ -471,12 +469,12 @@ pub fn get_server_finished(
 pub fn server_get_1rtt_keys(
     tx: &TranscriptServerFinished,
     st: &ServerPostServerFinished,
-) -> Res<(CipherState, CipherState, KEY)> {
+) -> Res<DuplexCipherState1> {
     let ServerPostServerFinished(_, _, algs, ms, cfk) = st;
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
-    Ok((CipherState(*ae, cak, 0),CipherState(*ae, sak, 0), exp))
+    Ok(DuplexCipherState1(*ae, sak, 0, cak, 0, exp))
 }
 
 pub fn put_client_finished(

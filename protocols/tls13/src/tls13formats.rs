@@ -97,21 +97,27 @@ pub const parse_failed: usize = 9;
 pub const insufficient_entropy: usize = 10;
 pub const insufficient_data: usize = 11;
 
+pub fn check_eq_size(s1: usize, s2: usize) -> Res<()> {
+    if s1 == s2 {Ok(())}
+    else {Err(parse_failed)}
+}
+
+pub fn eq1(b1: U8, b2: U8) -> bool {
+    b1.declassify() == b2.declassify()
+}
+pub fn check_eq1(b1: U8, b2: U8) -> Res<()> {
+    if eq1(b1,b2) {Ok(())}
+    else {Err(parse_failed)}
+}
+
 pub fn check_eq(b1: &Bytes, b2: &Bytes) -> Res<()> {
     if b1.len() != b2.len() {
         Err(parse_failed)
     } else {
-        let mut ok = true;
         for i in 0..b1.len() {
-            if b1[i].declassify() != b2[i].declassify() {
-                ok = false;
-            }
+            check_eq1(b1[i],b2[i])?;
         }
-        if ok {
-            Ok(())
-        } else {
-            Err(parse_failed)
-        }
+        Ok(())
     }
 }
 
@@ -468,6 +474,14 @@ pub fn check_server_extensions(algs: &ALGS, b: &Bytes) -> Res<Option<Bytes>> {
     }
 }
 
+pub const ty_client_hello : u8 = 1;
+pub const ty_server_hello : u8 = 2;
+pub const ty_encrypted_extensions : u8 = 8;
+pub const ty_server_certificate : u8 = 0x0b;
+pub const ty_certificate_verify : u8 = 0x0f;
+pub const ty_finished : u8 = 0x14;
+pub const ty_session_ticket : u8 = 0x04;
+
 pub fn client_hello(
     algs: &ALGS,
     cr: &Random,
@@ -476,7 +490,7 @@ pub fn client_hello(
     tkt:&Option<Bytes>,
 ) -> Res<(Bytes,usize)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    let ty = bytes1(1);
+    let ty = bytes1(ty_client_hello);
     let ver = bytes2(3, 3);
     let sid = lbytes1(&Bytes::new(32))?;
     let cip = lbytes2(&ciphersuite(algs)?)?;
@@ -520,7 +534,7 @@ pub fn set_client_hello_binder(algs: &ALGS, binder:&Option<HMAC>, ch:Bytes) -> R
 } 
 
 pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes, Bytes, Option<Bytes>, Option<Bytes> ,usize)> {
-    let ty = bytes1(1);
+    let ty = bytes1(ty_client_hello);
     let ver = bytes2(3, 3);
     let comp = bytes2(1, 0);
     let mut next = 0;
@@ -556,7 +570,7 @@ pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes,
 
 pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<Bytes> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    let ty = bytes1(2);
+    let ty = bytes1(ty_server_hello);
     let ver = bytes2(3, 3);
     let sid = lbytes1(sid)?;
     let cip = ciphersuite(algs)?;
@@ -580,7 +594,7 @@ pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<Byt
 
 pub fn parse_server_hello(algs: &ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    let ty = bytes1(2);
+    let ty = bytes1(ty_server_hello);
     let ver = bytes2(3, 3);
     let cip = ciphersuite(algs)?;
     let comp = bytes1(0);
@@ -607,18 +621,18 @@ pub fn parse_server_hello(algs: &ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
 }
 
 pub fn encrypted_extensions(algs: &ALGS) -> Res<Bytes> {
-    let ty = bytes1(8);
+    let ty = bytes1(ty_encrypted_extensions);
     Ok(ty.concat(&lbytes3(&empty())?))
 }
 
 pub fn parse_encrypted_extensions(algs: &ALGS, ee: &Bytes) -> Res<()> {
-    let ty = bytes1(8);
+    let ty = bytes1(ty_encrypted_extensions);
     check_eq(&ty, &ee.slice_range(0..1))?;
     check_lbytes3_full(&ee.slice_range(1..ee.len()))
 }
 
 pub fn server_certificate(algs: &ALGS, cert: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x0b);
+    let ty = bytes1(ty_server_certificate);
     let creq = lbytes1(&empty())?;
     let crt = lbytes3(cert)?;
     let ext = lbytes2(&empty())?;
@@ -627,7 +641,7 @@ pub fn server_certificate(algs: &ALGS, cert: &Bytes) -> Res<Bytes> {
 }
 
 pub fn parse_server_certificate(algs: &ALGS, sc: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x0b);
+    let ty = bytes1(ty_server_certificate);
     check_eq(&ty, &sc.slice_range(0..1))?;
     let mut next = 1;
     check_lbytes3_full(&sc.slice_range(next..sc.len()))?;
@@ -645,13 +659,13 @@ pub fn parse_server_certificate(algs: &ALGS, sc: &Bytes) -> Res<Bytes> {
 }
 
 pub fn certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x0f);
+    let ty = bytes1(ty_certificate_verify);
     let sig = signature_algorithm(algs)?.concat(&lbytes2(cv)?);
     Ok(ty.concat(&lbytes3(&sig)?))
 }
 
 pub fn parse_certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x0f);
+    let ty = bytes1(ty_certificate_verify);
     check_eq(&ty, &cv.slice_range(0..1))?;
     check_lbytes3_full(&cv.slice_range(1..cv.len()))?;
     check_eq(&signature_algorithm(algs)?, &cv.slice_range(4..6))?;
@@ -660,19 +674,19 @@ pub fn parse_certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<Bytes> {
 }
 
 pub fn finished(algs: &ALGS, vd: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x14);
+    let ty = bytes1(ty_finished);
     Ok(ty.concat(&lbytes3(vd)?))
 }
 
 pub fn parse_finished(algs: &ALGS, fin: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x14);
+    let ty = bytes1(ty_finished);
     check_eq(&ty, &fin.slice_range(0..1))?;
     check_lbytes3_full(&fin.slice_range(1..fin.len()))?;
     Ok(fin.slice_range(4..fin.len()))
 }
 
 pub fn session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x04);
+    let ty = bytes1(ty_session_ticket);
     let lifetime = U32_to_be_bytes(U32(172800));
     let age = U32_to_be_bytes(U32(9999));
     let nonce = lbytes1(&bytes1(1))?;
@@ -689,7 +703,7 @@ pub fn session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<Bytes> {
 }
 
 pub fn parse_session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<(U32, Bytes)> {
-    let ty = bytes1(0x0f);
+    let ty = bytes1(ty_session_ticket);
     check_eq(&ty, &tkt.slice_range(0..1))?;
     check_lbytes3_full(&tkt.slice_range(1..tkt.len()))?;
     let lifetime = U32_from_be_bytes(U32Word::from_seq(&tkt.slice_range(4..8)));
