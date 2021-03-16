@@ -1,0 +1,16 @@
+[package]
+name = "hacspec-p256"
+version = "0.1.0"
+authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
+edition = "2018"
+
+[lib]
+path = "src/p256.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+
+[dev-dependencies]
+serde_json = "1.0"
+serde = {version = "1.0", features = ["derive"]}
+hacspec-dev = { path = "../../utils/dev" }
