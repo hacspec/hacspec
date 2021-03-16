@@ -9,6 +9,7 @@ use bertie::cryptolib::*;
 use bertie::tls13formats::*;
 use bertie::tls13handshake::*;
 use bertie::tls13record::*;
+use bertie::tls13api::*;
 use bertie::*;
 
 // These are the sample TLS 1.3 traces taken from RFC 8448
@@ -610,8 +611,13 @@ use std::str;
 //Google divides messages into 1418-byte chunks and so sends 2 messages for the encrypted server flight
 //(we horribly bake in this Google behavior below)
 
+// use dhat::{Dhat, DhatAlloc};
+// #[global_allocator]
+// static ALLOCATOR: DhatAlloc = DhatAlloc;
+
 #[test]
 fn test_connect() {
+    //let _dhat = Dhat::start_heap_profiling();
     let mut cr: Random = Random::new();
     cr[0] = U8(1);
     let x = load_hex(client_x25519_priv);
