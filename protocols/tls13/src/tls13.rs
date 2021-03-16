@@ -58,8 +58,9 @@ pub fn tls13client(host:&str) -> Res<()> {
     let mut in_buf = [0; 4096];
     let len0 = stream.read(&mut in_buf).unwrap();
     let len1 = len0 + stream.read(&mut in_buf[len0..4096]).unwrap();
-//    let len2 = len1 + stream.read(&mut in_buf[len1..4096]).unwrap();
+//   let len2 = len1 + stream.read(&mut in_buf[len1..4096]).unwrap();
     let len2 = len1;
+    if len2 <= 0 {println!("Received 0 bytes from {}",host);return Err(0)};
     let sf = Bytes::from_public_slice(&in_buf[0..len2]);
     let (cf,cstate) = client_finish(&sf,cstate)?;
     println!("Connected to {}:443", host);
@@ -77,11 +78,12 @@ pub fn tls13client(host:&str) -> Res<()> {
  //   let len1 = len0 + stream.read(&mut in_buf[len0..4096]).unwrap();
  //   let len2 = len1 + stream.read(&mut in_buf[len1..4096]).unwrap();
     let len2 = len0;
+    if len2 <= 0 {println!("Received 0 bytes from {}",host);return Err(0)};
     let http_resp_wire = Bytes::from_public_slice(&in_buf[0..len2]);
     let (http_resp,cstate) = client_recv1(cstate,&http_resp_wire)?;
     let html_by = hex::decode(&http_resp.to_hex()).expect("Decoding HTTP Response failed");
     let html = str::from_utf8(&html_by).unwrap();
-    println!("Received HTTP Response from www.google.com:443\n\n{}", html);
+    println!("Received HTTP Response from {}\n\n{}", host, html);
     Ok(())
 }
 
@@ -89,7 +91,7 @@ fn main () {
     let args: Vec<String> = env::args().collect();
     let target = if args.len() <= 1 {"www.google.com"} else {&args[1]};
     match tls13client(target) {
-        Err(x) => {println!("Connection to www.google.com failed\n");}
-        Ok(x) => {println!("Connection to www.google.com succeeded\n");}
+        Err(x) => {println!("Connection to {} failed\n",target);}
+        Ok(x) => {println!("Connection to {} succeeded\n",target);}
     }
 }
