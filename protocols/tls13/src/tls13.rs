@@ -41,12 +41,13 @@ const algs: ALGS = ALGS(
     false,
 );
 
-fn tls13client(host:&str) -> Res<()> {
+pub fn tls13client(host:&str) -> Res<()> {
     let mut entropy = [0 as u8;64];
     thread_rng().fill(&mut entropy);
     let ent_c = Entropy::from_public_slice(&entropy);
     let sni = Bytes::from_public_slice(&host.as_bytes());
-    let http_get = Bytes::from_public_slice("GET /\r\n\r\n".as_bytes());
+    let http_get_str = format!("GET / HTTP/1.1\r\nHost: {}\r\n\r\n",host);
+    let http_get = Bytes::from_public_slice(http_get_str.as_bytes());
     let (ch,cstate) = client_init(algs,&sni,None,None,ent_c)?;
     let addr = [host,"443"].join(":");
     let mut stream = TcpStream::connect(&addr).unwrap();
