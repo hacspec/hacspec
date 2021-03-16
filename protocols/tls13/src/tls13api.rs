@@ -93,11 +93,12 @@ pub fn client_send1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
     Ok((cip,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
 }
 
-pub fn client_recv1(st:Client1,msg:&Bytes) -> Res<(Bytes,Client1)> {
+pub fn client_recv1(st:Client1,msg:&Bytes) -> Res<(Bytes,usize,Client1)> {
     let Client1(algs,transcript,cstate,c2sa,s2ca,exp) = st;
-    let (ct,plain,s2ca) = decrypt_record(msg,s2ca)?;
+    let len = check_encrypted_record(&msg)?;
+    let (ct,plain,s2ca) = decrypt_record(&msg.slice_range(0..len),s2ca)?;
     if ct == ct_app_data {
-        Ok((plain,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
+        Ok((plain,len,Client1(algs,transcript,cstate,c2sa,s2ca,exp)))
     } else {Err(parse_failed)}
 }
 

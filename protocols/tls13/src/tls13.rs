@@ -21,6 +21,7 @@ use tls13api::*;
 use hacspec_lib::*;
 use rand::*;
 use std::env;
+use std::time::Duration;
 
 // A Simple TLS 1.3 HTTP Client Implementation
 // It connects to a give host at port 443, sends an HTTP "GET /", and prints a prefix of the HTTP response
@@ -43,6 +44,7 @@ const algs: ALGS = ALGS(
 
 pub fn tls13client(host:&str) -> Res<()> {
     let mut entropy = [0 as u8;64];
+    let d = Duration::new(1, 0);
     thread_rng().fill(&mut entropy);
     let ent_c = Entropy::from_public_slice(&entropy);
     let sni = Bytes::from_public_slice(&host.as_bytes());
@@ -51,6 +53,7 @@ pub fn tls13client(host:&str) -> Res<()> {
     let (ch,cstate) = client_init(algs,&sni,None,None,ent_c)?;
     let addr = [host,"443"].join(":");
     let mut stream = TcpStream::connect(&addr).unwrap();
+    stream.set_read_timeout(Some(d)).expect("set_read_timeout call failed");
     println!("Initiating connection to {}", addr);
     let ch_wire = hex::decode(&ch.to_hex()).expect("Client Hello Decoding Failed");
     let len = stream.write(&ch_wire).unwrap();
@@ -75,13 +78,13 @@ pub fn tls13client(host:&str) -> Res<()> {
     println!("Sent HTTP GET to {}:443", host);
     if len != http_get_wire.len() {println!("TCP send failed to send full HTTP GET"); return Err(0);};
     let len0 = stream.read(&mut in_buf).unwrap();
- //   let len1 = len0 + stream.read(&mut in_buf[len0..4096]).unwrap();
+    let len1 = len0 + stream.read(&mut in_buf[len0..4096]).unwrap();
  //   let len2 = len1 + stream.read(&mut in_buf[len1..4096]).unwrap();
-    let len2 = len0;
+    let len2 = len1;
     if len2 <= 0 {println!("Received 0 bytes from {}",host);return Err(0)};
     println!("Received {} bytesfrom {}", len2, host);
     let http_resp_wire = Bytes::from_public_slice(&in_buf[0..len2]);
-    let (http_resp,cstate) = client_recv1(cstate,&http_resp_wire)?;
+    let (http_resp,len,cstate) = client_recv1(cstate,&http_resp_wire)?;
     let html_by = hex::decode(&http_resp.to_hex()).expect("Decoding HTTP Response failed");
     let html = str::from_utf8(&html_by).unwrap();
     println!("Received HTTP Response from {}\n\n{}", host, html);
