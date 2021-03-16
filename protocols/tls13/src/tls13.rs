@@ -68,9 +68,8 @@ pub fn tls13client(host:&str) -> Res<()> {
     let mut in_buf = [0; 4096];
     let len0 = read_some(&mut stream,&mut in_buf);
     let len1 = len0 + read_some(&mut stream, &mut in_buf[len0..4096]);
-//   let len2 = len1 + stream.read(&mut in_buf[len1..4096]).unwrap();
-    let len2 = len1;
-    if len2 <= 0 {println!("Received 0 bytes from {}",host);return Err(0)};
+    let len2 = len1 + read_some(&mut stream, &mut in_buf[len1..4096]);
+    if len2 < 5 {println!("Received {} bytes from {}",len2,host);return Err(0)};
     let sf = Bytes::from_public_slice(&in_buf[0..len2]);
     let (cf,cstate) = client_finish(&sf,cstate)?;
     println!("Connected to {}:443", host);
@@ -87,9 +86,7 @@ pub fn tls13client(host:&str) -> Res<()> {
     let len0 = read_some(&mut stream, &mut in_buf);
     let len1 = len0 + read_some(&mut stream, &mut in_buf[len0..4096]);
     let len2 = len1 + read_some(&mut stream, &mut in_buf[len1..4096]);
-    let len2 = len1;
-    println!("Received {} bytesfrom {}", len2, host);
-    if len2 <= 0 {return Err(0)};
+    if len2 < 5 {println!("Received {} bytes from {}",len2,host);return Err(0)};
     let http_resp_wire = Bytes::from_public_slice(&in_buf[0..len2]);
     match client_recv1(cstate,&http_resp_wire) {
         Ok((http_resp,len,cstate)) => {

@@ -67,29 +67,41 @@ pub fn handshake_record(p:&Bytes) -> Res<Bytes> {
 }
 
 pub fn check_handshake_record(p:&Bytes) -> Res<(Bytes,usize)> {
-    let ty = bytes1(0x16);
-    let ver = bytes2(3,3);
-    check_eq(&ty,&p.slice_range(0..1))?;
-    check_eq(&ver,&p.slice_range(1..3))?;
-    let len = check_lbytes2(&p.slice_range(3..p.len()))?;
-    Ok((p.slice_range(5..5+len),5+len))
+    if p.len() < 5 {Err(parse_failed)}
+    else {
+        let ty = bytes1(0x16);
+        let ver = bytes2(3,3);
+        check_eq(&ty,&p.slice_range(0..1))?;
+        check_eq(&ver,&p.slice_range(1..3))?;
+        let len = check_lbytes2(&p.slice_range(3..p.len()))?;
+        Ok((p.slice_range(5..5+len),5+len))
+    }
 }
 
 pub fn check_ccs_record(p:&Bytes) -> Res<usize> {
-    let pref = bytes3(0x14,3,3);
-    check_eq(&pref,&p.slice_range(0..3))?;
-    let len = check_lbytes2(&p.slice_range(3..p.len()))?;
-    Ok(len+5)
+    if p.len() < 5 {Err(parse_failed)}
+    else {
+        let pref = bytes3(0x14,3,3);
+        check_eq(&pref,&p.slice_range(0..3))?;
+        let len = check_lbytes2(&p.slice_range(3..p.len()))?;
+        Ok(len+5)
+    }
 }
 
 pub fn check_encrypted_record(p:&Bytes) -> Res<usize> {
-    let pref = bytes3(0x17,3,3);
-    check_eq(&pref,&p.slice_range(0..3))?;
-    let len = check_lbytes2(&p.slice_range(3..p.len()))?;
-    Ok(len+5)
+    if p.len() < 5 {Err(parse_failed)}
+    else {
+        let pref = bytes3(0x17,3,3);
+        check_eq(&pref,&p.slice_range(0..3))?;
+        let len = check_lbytes2(&p.slice_range(3..p.len()))?;
+        Ok(len+5)
+    }
 }
 
 pub fn check_handshake_message(p:&Bytes) -> Res<(Bytes,usize)> {
-    let len = check_lbytes3(&p.slice_range(1..p.len()))?;
-    Ok((p.slice_range(0..4+len),4+len))
+    if p.len() < 3 {Err(parse_failed)}
+    else {
+        let len = check_lbytes3(&p.slice_range(1..p.len()))?;
+        Ok((p.slice_range(0..4+len),4+len))
+    }
 }
