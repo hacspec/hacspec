@@ -98,7 +98,7 @@ pub fn tls13client(host:&str) -> Res<()> {
             println!("Received HTTP Response from {}\n\n{}", host, html);
             Ok(())},
         Err(s) => {
-            println!("Could not Decrypt HTTP Response from {}:{}", host, &http_resp_wire.to_hex());
+            println!("Incomplete HTTP Response from {}: {}", host, &http_resp_wire.to_hex());
             Err(0)
         }
     }
