@@ -576,19 +576,24 @@ fn test_full_round_trip() {
     
     match client_init(algs,&sn,None,None,ent_c) {
         Err(x) => {println!("Client0 Error {}",x)},
-        Ok((ch,cstate)) => {
+        Ok((ch,cstate,_)) => {
             println!("Client0 Complete");
             match server_init(algs,db,&ch,ent_s) {
                 Err(x) => {println!("Server0 Error {}",x)},
-                Ok((sf,sstate)) => {
+                Ok((sh,sf,sstate,_,_)) => {
                         println!("Server0 Complete");
-                        match client_finish(&sf,cstate) {
-                            Err(x) => {println!("Client1 Error {}",x);},
-                            Ok((cf,cstate)) => {
-                                println!("Client Complete");
-                                match server_finish(&cf,sstate) {
-                                    Err(x) => {println!("Server1 Error {}",x);},
-                                    Ok(sstate) => {println!("Server Complete");}
+                        match client_set_params(&sh,cstate) {
+                            Err(x) => {println!("ClientH Error {}",x);},
+                            Ok((cstate,_)) => {
+                                match client_finish(&sf,cstate) {
+                                    Err(x) => {println!("Client1 Error {}",x);},
+                                    Ok((cf,cstate,_)) => {
+                                        println!("Client Complete");
+                                        match server_finish(&cf,sstate) {
+                                            Err(x) => {println!("Server1 Error {}",x);},
+                                            Ok(sstate) => {println!("Server Complete");}
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -618,11 +623,11 @@ use std::str;
 #[test]
 fn test_connect() {
     let mut b = true;
-    match tls13client("www.google.com") {
+    match tls13client("www.google.com","443") {
         Err(x) => {println!("Connection to www.google.com failed\n");b = false}
         Ok(x) => {println!("Connection to www.google.com succeeded\n");}
     }
-    match tls13client("www.cloudflare.com") {
+    match tls13client("www.cloudflare.com","443") {
         Err(x) => {println!("Connection to www.cloudflare.com failed\n");b = false}
         Ok(x) => {println!("Connection to www.cloudflare.com succeeded\n");}
     }
