@@ -179,12 +179,13 @@ pub fn server_finish(msg:&Bytes,st:Server0) -> Res<Server1> {
     } else {Err(parse_failed)}
 }
 
-pub fn server_recv0(st:Server0,msg:&Bytes) -> Res<(Bytes,Server0)> {
+pub fn server_recv0(st:Server0,msg:&Bytes) -> Res<(Bytes,usize,Server0)> {
     let Server0(algs,transcript,sstate,c2szero,c2sh,c2sa,s2ca,exp) = st;
+    let len = check_encrypted_record(&msg)?;
     if let Some((c2s0,exp0)) = c2szero {
-        let (ct,plain,c2s0) = decrypt_record(msg,c2s0)?;
+        let (ct,plain,c2s0) = decrypt_record(&msg.slice_range(0..len),c2s0)?;
         if ct == ct_app_data {
-           Ok((plain,Server0(algs,transcript,sstate,Some((c2s0,exp0)),c2sh,c2sa,s2ca,exp)))
+           Ok((plain,len,Server0(algs,transcript,sstate,Some((c2s0,exp0)),c2sh,c2sa,s2ca,exp)))
         } else {Err(parse_failed)}
     } else {Err(psk_mode_mismatch)}
 }
@@ -194,10 +195,11 @@ pub fn server_send1(st:Server1,msg:&Bytes) -> Res<(Bytes,Server1)> {
     Ok((cip,Server1(algs,transcript,sstate,c2sa,s2ca,exp)))
 }
 
-pub fn server_recv1(st:Server1,msg:&Bytes) -> Res<(Bytes,Server1)> {
+pub fn server_recv1(st:Server1,msg:&Bytes) -> Res<(Bytes,usize,Server1)> {
     let Server1(algs,transcript,sstate,c2sa,s2ca,exp) = st;
-    let (ct,plain,c2sa) = decrypt_record(msg,c2sa)?;
+    let len = check_encrypted_record(&msg)?;
+    let (ct,plain,c2sa) = decrypt_record(&msg.slice_range(0..len),c2sa)?;
     if ct == ct_app_data {
-        Ok((plain,Server1(algs,transcript,sstate,c2sa,s2ca,exp)))
+        Ok((plain,len,Server1(algs,transcript,sstate,c2sa,s2ca,exp)))
     } else {Err(parse_failed)}
 }

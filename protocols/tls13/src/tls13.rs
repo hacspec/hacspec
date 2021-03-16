@@ -42,6 +42,13 @@ const algs: ALGS = ALGS(
     false,
 );
 
+fn read_some(stream:&mut TcpStream,buf:&mut [u8]) -> usize {
+        match stream.read(buf) {
+            Ok(len) => (len),
+            Err(_) => 0
+        }
+}
+
 pub fn tls13client(host:&str) -> Res<()> {
     let mut entropy = [0 as u8;64];
     let d = Duration::new(1, 0);
@@ -59,8 +66,8 @@ pub fn tls13client(host:&str) -> Res<()> {
     let len = stream.write(&ch_wire).unwrap();
     if len != ch_wire.len() {println!("TCP send failed to send full client hello"); return Err(0);};
     let mut in_buf = [0; 4096];
-    let len0 = stream.read(&mut in_buf).unwrap();
-    let len1 = len0 + stream.read(&mut in_buf[len0..4096]).unwrap();
+    let len0 = read_some(&mut stream,&mut in_buf);
+    let len1 = len0 + read_some(&mut stream, &mut in_buf[len0..4096]);
 //   let len2 = len1 + stream.read(&mut in_buf[len1..4096]).unwrap();
     let len2 = len1;
     if len2 <= 0 {println!("Received 0 bytes from {}",host);return Err(0)};
@@ -77,18 +84,24 @@ pub fn tls13client(host:&str) -> Res<()> {
     let len = stream.write(&http_get_wire).unwrap();
     println!("Sent HTTP GET to {}:443", host);
     if len != http_get_wire.len() {println!("TCP send failed to send full HTTP GET"); return Err(0);};
-    let len0 = stream.read(&mut in_buf).unwrap();
-    let len1 = len0 + stream.read(&mut in_buf[len0..4096]).unwrap();
- //   let len2 = len1 + stream.read(&mut in_buf[len1..4096]).unwrap();
+    let len0 = read_some(&mut stream, &mut in_buf);
+    let len1 = len0 + read_some(&mut stream, &mut in_buf[len0..4096]);
+    let len2 = len1 + read_some(&mut stream, &mut in_buf[len1..4096]);
     let len2 = len1;
-    if len2 <= 0 {println!("Received 0 bytes from {}",host);return Err(0)};
     println!("Received {} bytesfrom {}", len2, host);
+    if len2 <= 0 {return Err(0)};
     let http_resp_wire = Bytes::from_public_slice(&in_buf[0..len2]);
-    let (http_resp,len,cstate) = client_recv1(cstate,&http_resp_wire)?;
-    let html_by = hex::decode(&http_resp.to_hex()).expect("Decoding HTTP Response failed");
-    let html = str::from_utf8(&html_by).unwrap();
-    println!("Received HTTP Response from {}\n\n{}", host, html);
-    Ok(())
+    match client_recv1(cstate,&http_resp_wire) {
+        Ok((http_resp,len,cstate)) => {
+            let html_by = hex::decode(&http_resp.to_hex()).expect("Decoding HTTP Response failed");
+            let html = str::from_utf8(&html_by).unwrap();
+            println!("Received HTTP Response from {}\n\n{}", host, html);
+            Ok(())},
+        Err(s) => {
+            println!("Could not Decrypt HTTP Response from {}:{}", host, &http_resp_wire.to_hex());
+            Err(0)
+        }
+    }
 }
 
 fn main () {
