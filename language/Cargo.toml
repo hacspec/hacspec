@@ -40,3 +40,4 @@ hacspec-sha3 = { path = "../examples/sha3" }
 hacspec-sha256 = { path = "../examples/sha256" }
 hacspec-curve25519 = { path = "../examples/curve25519" }
 hacspec-riot-bootloader = { path = "../examples/riot-bootloader" }
+bertie = { path = "../protocols/tls13" }
