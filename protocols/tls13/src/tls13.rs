@@ -10,8 +10,10 @@ pub mod tls13formats;
 use tls13formats::*;
 pub mod cryptolib;
 use cryptolib::*;
-pub mod tls13core;
-use tls13core::*;
+pub mod tls13handshake;
+use tls13handshake::*;
+pub mod tls13record;
+use tls13record::*;
 pub mod tls13api;
 use tls13api::*;
 

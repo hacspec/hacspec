@@ -2,7 +2,8 @@
 use hacspec_lib::*;
 use crate::cryptolib::*;
 use crate::tls13formats::*;
-use crate::tls13core::*;
+use crate::tls13handshake::*;
+use crate::tls13record::*;
 
 // Client-Side Handshake API for TLS 1.3 Applications
 // client_init -> (encrypt_zerortt)* -> client_set_params ->
@@ -158,6 +159,7 @@ pub fn encrypt_zerortt(payload:&Bytes, pad:usize, st: ClientCipherState0) -> Res
     let rec = encrypt_record_payload(&ae,&kiv,n,ct_app_data,payload,pad)?;
     Ok((rec,ClientCipherState0(ae,kiv,n+1, exp)))
 }
+
 pub fn decrypt_zerortt(ciphertext:&Bytes, st: ServerCipherState0) -> Res<(Bytes,ServerCipherState0)> {
     let ServerCipherState0(ae, kiv, n, exp) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
