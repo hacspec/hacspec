@@ -72,7 +72,7 @@ pub fn client_finish(payload:&HandshakeData,st:ClientH) -> Res<(HandshakeData,Cl
         let cfin = finished(&algs,&vd)?;
         let tx_cf = transcript_client_finished(tx_sf,&cfin)?;
         Ok((cfin,Client1(algs,tx_cf,cstate),cipher))
-    } else {Err(parse_failed)}
+    } else {err(parse_failed)}
 }
 
 // Server-Side Handshake API for TLS 1.3 Applications
@@ -148,7 +148,7 @@ pub fn server_finish(payload:&HandshakeData,st:Server0) -> Res<Server1> {
     let tx_cf = transcript_client_finished(tx_sf,&cfin)?;
     if !has_handshake_message(payload,flen) {
         Ok(Server1(algs,tx_cf,sstate))
-    } else {Err(parse_failed)}
+    } else {err(parse_failed)}
 }
 
 /* Record Encryption/Decryption API */

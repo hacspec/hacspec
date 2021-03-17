@@ -44,7 +44,7 @@ fn read_bytes(stream: &mut TcpStream, buf: &mut [u8], nbytes: usize) -> Res<usiz
                 read_bytes(stream, &mut buf[len..], nbytes - len)
             }
         }
-        Err(_) => Err(parse_failed),
+        Err(_) => err(parse_failed),
     }
 }
 
@@ -58,11 +58,11 @@ fn read_record(stream: &mut TcpStream, buf: &mut [u8]) -> Res<usize> {
     let l1 = b[4] as usize;
     let len = l0 * 256 + l1;
     if len + 5 > buf.len() {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         let extra = read_bytes(stream, &mut buf[0..len + 5], len + 5)?;
         if extra > 0 {
-            Err(parse_failed)
+            err(parse_failed)
         } else {
             Ok(len + 5)
         }
@@ -80,10 +80,10 @@ fn get_handshake_message(stream: &mut TcpStream, buf: &mut [u8]) -> Res<(Handsha
 fn put_record(stream: &mut TcpStream, rec: &Bytes) -> Res<()> {
     let wire = hex::decode(&rec.to_hex()).expect("Record Decoding Failed");
     match stream.write(&wire) {
-        Err(_) => Err(parse_failed),
+        Err(_) => err(parse_failed),
         Ok(len) => {
             if len < wire.len() {
-                Err(parse_failed)
+                err(parse_failed)
             } else {
                 Ok(())
             }
@@ -103,7 +103,7 @@ fn get_ccs_message(stream: &mut TcpStream, buf: &mut [u8]) -> Res<()> {
     {
         Ok(())
     } else {
-        Err(parse_failed)
+        err(parse_failed)
     }
 }
 
