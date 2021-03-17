@@ -7,10 +7,8 @@ use bertie::cryptolib::NamedGroup::*;
 use bertie::cryptolib::SignatureScheme::*;
 use bertie::cryptolib::*;
 use bertie::tls13formats::*;
-use bertie::tls13handshake::*;
-use bertie::tls13record::*;
+use bertie::tls13core::*;
 use bertie::tls13api::*;
-use bertie::*;
 
 // These are the sample TLS 1.3 traces taken from RFC 8448
 use bertie::cryptolib::*;

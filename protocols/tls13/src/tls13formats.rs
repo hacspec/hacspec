@@ -714,3 +714,43 @@ pub fn parse_session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<(U32, Bytes)> {
     check_lbytes2_full(&tkt.slice_range(15 + nonce_len + stkt_len..tkt.len()))?;
     Ok((lifetime + age, stkt))
 }
+
+pub const ct_app_data : u8 = 0x17; 
+pub const ct_handshake: u8 = 0x16;
+pub const ct_alert: u8 = 0x15; 
+
+pub fn handshake_record(p:&Bytes) -> Res<Bytes> {
+    let ty = bytes1(0x16);
+    let ver = bytes2(3,3);
+    Ok(ty.concat(&ver).concat(&lbytes2(p)?))
+}
+
+pub fn check_handshake_record(p:&Bytes) -> Res<(Bytes,usize)> {
+    if p.len() < 5 {Err(parse_failed)}
+    else {
+        let ty = bytes1(0x16);
+        let ver = bytes2(3,3);
+        check_eq(&ty,&p.slice_range(0..1))?;
+        check_eq(&ver,&p.slice_range(1..3))?;
+        let len = check_lbytes2(&p.slice_range(3..p.len()))?;
+        Ok((p.slice_range(5..5+len),5+len))
+    }
+}
+
+pub fn check_handshake_message(p:&Bytes) -> Res<(Bytes,usize)> {
+    if p.len() < 3 {Err(parse_failed)}
+    else {
+        let len = check_lbytes3(&p.slice_range(1..p.len()))?;
+        Ok((p.slice_range(0..4+len),4+len))
+    }
+}
+
+pub fn find_handshake_message(ty:u8,payload:&Bytes) -> bool {
+    match check_handshake_message(payload) {
+        Err(_) => false,
+        Ok((_,len)) => {
+            if eq1(payload[0],U8(ty)) {true}
+            else {find_handshake_message(ty,&payload.slice_range(len..payload.len()))}
+        }
+    }
+}

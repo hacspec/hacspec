@@ -2,10 +2,12 @@
 use hacspec_lib::*;
 use crate::cryptolib::*;
 use crate::tls13formats::*;
-use crate::tls13record::*;
-use crate::tls13handshake::*;
-// Client-Side API for TLS 1.3 Applications
-// client_init -> (client_send0)* -> client_finish -> (client_send1|client_recv1)* */
+use crate::tls13core::*;
+
+// Client-Side Handshake API for TLS 1.3 Applications
+// client_init -> (encrypt_zerortt)* -> client_set_params ->
+// (decrypt_handshake)* -> client_finish -> (encrypt_handhsake) ->
+// (encrypt_data | decrypt_data)*
 
 pub struct Client0(ALGS,TranscriptClientHello,ClientPostClientHello);
 pub struct ClientH(ALGS,TranscriptServerHello,ClientPostServerHello);
@@ -72,8 +74,10 @@ pub fn client_finish(payload:&Bytes,st:ClientH) -> Res<(Bytes,Client1,DuplexCiph
     } else {Err(parse_failed)}
 }
 
-// Server-Side API for TLS 1.3 Applications
-// server_init -> (server_recv0)* -> server_finish -> (server_recv1|server_send1)* */
+// Server-Side Handshake API for TLS 1.3 Applications
+// server_init -> (encrypt_handshake)* -> (decrypt_zerortt)* ->
+// (decrypt_handshake) -> server_finish ->
+// (encrypt data | decrypt data)*
 
 pub struct Server0(ALGS,TranscriptServerFinished,ServerPostServerFinished);
 pub struct Server1(ALGS,TranscriptClientFinished,ServerPostClientFinished);
@@ -145,4 +149,49 @@ pub fn server_finish(payload:&Bytes,st:Server0) -> Res<Server1> {
     if flen == payload.len() {
         Ok(Server1(algs,tx_cf,sstate))
     } else {Err(parse_failed)}
+}
+
+/* Record Encryption/Decryption API */
+
+pub fn encrypt_zerortt(payload:&Bytes, pad:usize, st: ClientCipherState0) -> Res<(Bytes,ClientCipherState0)> {
+    let ClientCipherState0(ae, kiv, n, exp) = st;
+    let rec = encrypt_record_payload(&ae,&kiv,n,ct_app_data,payload,pad)?;
+    Ok((rec,ClientCipherState0(ae,kiv,n+1, exp)))
+}
+pub fn decrypt_zerortt(ciphertext:&Bytes, st: ServerCipherState0) -> Res<(Bytes,ServerCipherState0)> {
+    let ServerCipherState0(ae, kiv, n, exp) = st;
+    let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
+    check_eq1(ct,U8(ct_app_data))?;
+    Ok((payload,ServerCipherState0(ae,kiv,n+1,exp)))
+}
+
+pub fn encrypt_handshake(payload:&Bytes, pad:usize, st: DuplexCipherStateH) -> Res<(Bytes,DuplexCipherStateH)> {
+    let DuplexCipherStateH(ae, kiv, n, x, y) = st;
+    let rec = encrypt_record_payload(&ae,&kiv,n,ct_handshake,payload,pad)?;
+    Ok((rec,DuplexCipherStateH(ae,kiv,n+1, x, y)))
+}
+
+pub fn decrypt_handshake(ciphertext:&Bytes, st: DuplexCipherStateH) -> Res<(Bytes,DuplexCipherStateH)> {
+    let DuplexCipherStateH(ae, x, y, kiv, n) = st;
+    let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
+    check_eq1(ct,U8(ct_handshake))?;
+    Ok((payload,DuplexCipherStateH(ae, x, y, kiv, n+1)))
+}
+
+pub fn encrypt_data(payload:&Bytes, pad:usize, st: DuplexCipherState1) -> Res<(Bytes,DuplexCipherState1)> {
+    let DuplexCipherState1(ae, kiv, n, x, y, exp) = st;
+    let rec = encrypt_record_payload(&ae,&kiv,n,ct_app_data,payload,pad)?;
+    Ok((rec,DuplexCipherState1(ae,kiv,n+1,x,y,exp)))
+}
+
+pub fn decrypt_data_or_hs(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(U8,Bytes,DuplexCipherState1)> {
+    let DuplexCipherState1(ae, x, y, kiv, n, exp) = st;
+    let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
+    Ok((ct,payload,DuplexCipherState1(ae, x, y, kiv, n+1, exp)))
+}
+pub fn decrypt_data(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(Bytes,DuplexCipherState1)> {
+    let DuplexCipherState1(ae, x, y, kiv, n, exp) = st;
+    let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
+    check_eq1(ct,U8(ct_app_data))?;
+    Ok((payload,DuplexCipherState1(ae, x, y, kiv, n+1, exp)))
 }

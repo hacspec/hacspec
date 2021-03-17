@@ -10,10 +10,8 @@ pub mod tls13formats;
 use tls13formats::*;
 pub mod cryptolib;
 use cryptolib::*;
-pub mod tls13record;
-use tls13record::*;
-pub mod tls13handshake;
-use tls13handshake::*;
+pub mod tls13core;
+use tls13core::*;
 pub mod tls13api;
 use tls13api::*;
 
@@ -125,7 +123,7 @@ fn decrypt_handshake_flight(
         let (plain, cip) = decrypt_handshake(&rec, cipherH)?;
         payload = payload.concat(&plain);
         cipherH = cip;
-        finished = has_finished_message(&payload);
+        finished = find_handshake_message(ty_finished,&payload);
     }
     Ok((payload, cipherH))
 }

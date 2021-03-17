@@ -1,6 +1,5 @@
 use crate::cryptolib::*;
 use crate::tls13formats::*;
-use crate::tls13record::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
@@ -124,6 +123,64 @@ pub fn derive_rms(ha: &HashAlgorithm, master_secret: &KEY, tx: &HASH) -> Res<KEY
     Ok(resumption_master_secret)
 }
 
+/* Record Layer Computations */
+pub struct ClientCipherState0(pub AEADAlgorithm, pub AEKIV, pub u64, pub KEY);
+pub struct ServerCipherState0(pub AEADAlgorithm, pub AEKIV, pub u64, pub KEY);
+pub struct DuplexCipherStateH(pub AEADAlgorithm, pub AEKIV, pub u64, pub AEKIV, pub u64);
+pub struct DuplexCipherState1(pub AEADAlgorithm, pub AEKIV, pub u64, pub AEKIV, pub u64, pub KEY);
+
+pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n:u64) -> AEIV {
+    let counter = bytes(&U64_to_be_bytes(U64(n)));
+    let mut iv_ctr = AEIV::new(iv.len());
+    for i in 0..iv.len()-8 {
+        iv_ctr[i] = iv[i];
+    }
+    for i in 0..8 {
+        iv_ctr[i+iv.len()-8] = iv[i+iv.len()-8] ^ counter[i];
+    }
+    iv_ctr
+}
+
+
+pub fn encrypt_record_payload(ae:&AEADAlgorithm, kiv: &AEKIV, n:u64, ct:u8, payload: &Bytes, pad:usize) -> Res<Bytes> {
+    let (k,iv) = kiv;
+    let iv_ctr = derive_iv_ctr(&ae,&iv,n);
+    let inner_plaintext = payload.concat(&bytes1(ct)).concat(&zeros(pad));
+    let clen = inner_plaintext.len() + 16;
+    if clen <= 65536 {
+        let clenb = u16_to_be_bytes(clen as u16);
+        let ad = bytes5(23, 3, 3, clenb[0], clenb[1]);
+        let cip = aead_encrypt(&ae, &k, &iv_ctr, &inner_plaintext, &ad)?;
+        let rec = ad.concat(&cip);
+        Ok(rec)
+    } else {
+        Err(payload_too_long)
+    }
+}
+
+pub fn padlen(b:&Bytes,n:usize) -> usize {
+    if n > 0 && b[n-1].declassify() == 0 {1 + padlen(&b,n-1)}
+    else {0}
+}
+pub fn decrypt_record_payload(ae:&AEADAlgorithm, kiv:&AEKIV, n:u64, ciphertext: &Bytes) -> Res<(U8,Bytes)> {
+    let (k,iv) = kiv;
+    let iv_ctr = derive_iv_ctr(&ae, &iv, n);
+    let clen = ciphertext.len() - 5;
+    if clen <= 65536 && clen > 16 {
+        let clenb = u16_to_be_bytes(clen as u16);
+        let ad = bytes5(23, 3, 3, clenb[0], clenb[1]);
+        check_eq(&ad,&ciphertext.slice_range(0..5))?;
+        let cip = ciphertext.slice_range(5..ciphertext.len());
+        let plain = aead_decrypt(&ae, &k, &iv_ctr, &cip, &ad)?;
+        let payload_len = plain.len() - padlen(&plain,plain.len()) - 1;
+        let ct = plain[payload_len];
+        let payload = plain.slice_range(0..payload_len);       
+        Ok((ct,payload))
+    } else {
+        Err(payload_too_long)
+    }
+}
+
 
 /* Incremental Transcript Construction 
    For simplicity, we store the full transcript, but an internal hash state would suffice. */
@@ -201,6 +258,7 @@ pub fn transcript_client_finished(tx:TranscriptServerFinished,cf:&Bytes) -> Res<
         let th = hash(&ha,&transcript)?;
         Ok(TranscriptClientFinished(ha,psk_mode,transcript,th))
     }
+
 
 /* Handshake State Machine */
 /* We implement a simple linear state machine:
