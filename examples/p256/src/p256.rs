@@ -68,13 +68,15 @@ fn is_point_at_infinity(p: Jacobian) -> bool {
 }
 
 fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
-    let result = if is_point_at_infinity(p) {
-        (true, q)
+    let mut result = (false, q);
+    if is_point_at_infinity(p) {
+        result = (true, q);
+    // TODO: #85 needs to get fixed for this.
     // } else if is_point_at_infinity(q) {
     //     (true, p)
     } else {
         if is_point_at_infinity(q) {
-            (true, p)
+            result = (true, p);
         } else {
             let (x1, y1, z1) = p;
             let (x2, y2, z2) = q;
@@ -88,7 +90,7 @@ fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
             if u1.equal(u2) {
                 // assert!(!s1.equal(s2));
                 let success = if s1.equal(s2) { false } else { true };
-                (
+                result = (
                     success,
                     (
                         FieldElement::from_literal(0),
@@ -113,7 +115,7 @@ fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
 
                 let z3_ = (z1 + z2).exp(2);
                 let z3 = (z3_ - (z1z1 + z2z2)) * h;
-                (true, (x3, y3, z3))
+                result = (true, (x3, y3, z3));
             }
         }
     };
