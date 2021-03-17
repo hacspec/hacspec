@@ -1369,6 +1369,41 @@ fn check_for_ident(sess: &Session, arg: &TokenTree) -> TranslationResult<(Spanne
     }
 }
 
+fn translate_simplified_natural_integer_decl(
+    sess: &Session,
+    i: &ast::Item,
+    arr_types: &ArrayTypes,
+    call: &MacCall,
+    secrecy: Secrecy,
+) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+    match &*call.args {
+        MacArgs::Delimited(_, _, tokens) => {
+            let mut it = tokens.trees();
+            let (first_arg, second_arg, third_arg) = {
+                let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                Ok((first_arg?, second_arg?, third_arg?))
+            }?;
+            let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
+            check_for_comma(sess, &second_arg)?;
+            let canvas_size = check_for_usize(sess, &third_arg)?;
+            Ok((
+                (ItemTranslationResult::Item(Item::SimplifiedNaturalIntegerDecl(
+                    typ_ident,
+                    secrecy,
+                    canvas_size,
+                ))),
+                arr_types.update(typ_ident_string),
+            ))
+        }
+        _ => {
+            sess.span_rustspec_err(i.span.clone(), "expected delimited macro arguments");
+            Err(())
+        }
+    }
+}
+
 fn translate_natural_integer_decl(
     sess: &Session,
     i: &ast::Item,
@@ -1771,6 +1806,13 @@ fn translate_items(
                 ("nat_mod", None) => {
                     translate_natural_integer_decl(sess, i, arr_types, call, Secrecy::Secret)
                 }
+                ("unsigned_public_integer", None) => translate_simplified_natural_integer_decl(
+                    sess,
+                    i,
+                    arr_types,
+                    call,
+                    Secrecy::Public,
+                ),
                 (_, None) => {
                     sess.span_rustspec_err(name.ident.span.clone(), "unknown Hacspec macro");
                     Err(())

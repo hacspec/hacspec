@@ -1042,6 +1042,26 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                         ),
                 )
         }
+        Item::SimplifiedNaturalIntegerDecl(nat_name, _secrecy, canvas_size) => {
+            let canvas_size = match &canvas_size.0 {
+                Expression::Lit(Literal::Usize(size)) => size,
+                _ => panic!(), // should not happen by virtue of typchecking
+            };
+            RcDoc::as_string("type")
+                .append(RcDoc::space())
+                .append(translate_ident(nat_name.0.clone()))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("="))
+                .group()
+                .append(
+                    RcDoc::line()
+                        .append(RcDoc::as_string("nat_mod"))
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string(format!("pow2 {}", canvas_size)))
+                        .group()
+                        .nest(2),
+                )
+        }
     }
 }
 

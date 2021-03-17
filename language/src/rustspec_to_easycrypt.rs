@@ -1116,6 +1116,9 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                         .append(RcDoc::as_string("int")),
                 )
         }
+        Item::SimplifiedNaturalIntegerDecl(_nat_name, _secrecy, _modulo_power) => {
+            unimplemented!()
+        }
     }
 }
 
