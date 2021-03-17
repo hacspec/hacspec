@@ -208,7 +208,7 @@ const algs: ALGS = ALGS(
 
 #[test]
 fn test_parse_client_hello() {
-    let ch: Bytes = load_hex(client_hello);
+    let ch = HandshakeData(load_hex(client_hello));
     //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
     let res = parse_client_hello(&algs, &ch);
     let b = res.is_ok();
@@ -230,7 +230,8 @@ fn test_parse_client_hello() {
 
 #[test]
 fn test_parse_client_hello_record() {
-    let ch: Bytes = load_hex(client_hello_record);
+    let mut ch: Bytes = load_hex(client_hello_record);
+    ch[2] = U8(3);
     //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
     let mut b = true;
     match check_handshake_record(&ch) {
@@ -238,7 +239,7 @@ fn test_parse_client_hello_record() {
             println!("Error: {}", x);
             b = false;
         }
-        Ok((hs, len)) => match parse_client_hello(&algs, &ch) {
+        Ok((hs, len)) => match parse_client_hello(&algs, &hs) {
             Err(x) => {
                 println!("Error: {}", x);
                 b = false;
@@ -253,7 +254,7 @@ fn test_parse_client_hello_record() {
             }
         },
     }
-    assert!(true);
+    assert!(b);
 }
 
 #[test]
@@ -292,7 +293,7 @@ fn test_parse_client_hello_roundtrip() {
 
 #[test]
 fn test_parse_server_hello() {
-    let sh: Bytes = load_hex(server_hello);
+    let sh = HandshakeData(load_hex(server_hello));
     //   let algs = ALGS(SHA256,AES_128_GCM,ECDSA_SECP256r1_SHA256,X25519,false,false);
     let res = parse_server_hello(&algs, &sh);
     let b = res.is_ok();
@@ -344,7 +345,7 @@ fn test_parse_server_hello_roundtrip() {
 
 #[test]
 fn test_parse_encrypted_extensions() {
-    let ee: Bytes = load_hex(encrypted_extensions);
+    let ee = HandshakeData(load_hex(encrypted_extensions));
     let res = parse_encrypted_extensions(&algs, &ee);
     let b = res.is_ok();
     match res {
@@ -360,7 +361,7 @@ fn test_parse_encrypted_extensions() {
 
 #[test]
 fn test_parse_server_certificate() {
-    let sc: Bytes = load_hex(server_certificate);
+    let sc = HandshakeData(load_hex(server_certificate));
     let res = parse_server_certificate(&algs, &sc);
     let b = res.is_ok();
     match res {
@@ -376,7 +377,7 @@ fn test_parse_server_certificate() {
 
 #[test]
 fn test_parse_server_certificate_verify() {
-    let cv: Bytes = load_hex(server_certificate_verify);
+    let cv = HandshakeData(load_hex(server_certificate_verify));
     let res = parse_certificate_verify(&algs, &cv);
     let b = res.is_ok();
     match res {
@@ -392,7 +393,7 @@ fn test_parse_server_certificate_verify() {
 
 #[test]
 fn test_parse_server_finished() {
-    let sf: Bytes = load_hex(server_finished);
+    let sf = HandshakeData(load_hex(server_finished));
     let res = parse_finished(&algs, &sf);
     let b = res.is_ok();
     match res {
@@ -408,7 +409,7 @@ fn test_parse_server_finished() {
 
 #[test]
 fn test_parse_client_finished() {
-    let cf: Bytes = load_hex(client_finished);
+    let cf = HandshakeData(load_hex(client_finished));
     let res = parse_finished(&algs, &cf);
     let b = res.is_ok();
     match res {
@@ -519,7 +520,7 @@ fn test_ecdh() {
                 println!("computed yx {}",ss2.to_hex());},
          _ => {b = false;}
         }
-    assert!(true);
+    assert!(b);
 }
 
 const cfk_str: &str = "b80ad01015fb2f0bd65ff7d4da5d6bf83f84821d1f87fdc7d3c75b5a7b42d9c4";
@@ -555,7 +556,7 @@ fn test_finished() {
                 }},
         _ => {b = false}
     }
-    assert!(true);
+    assert!(b);
 }
 
 #[test]
@@ -574,23 +575,24 @@ fn test_full_round_trip() {
     let ent_s = Entropy::from_seq(&sr.concat(&y));
     let db = ServerDB(sn_,Bytes::new(123),SIGK::new(64),None);
     
+    let mut b = true;
     match client_init(algs,&sn,None,None,ent_c) {
-        Err(x) => {println!("Client0 Error {}",x)},
+        Err(x) => {println!("Client0 Error {}",x);  b = false;},
         Ok((ch,cstate,_)) => {
             println!("Client0 Complete");
             match server_init(algs,db,&ch,ent_s) {
-                Err(x) => {println!("Server0 Error {}",x)},
+                Err(x) => {println!("Server0 Error {}",x); b = false;},
                 Ok((sh,sf,sstate,_,_)) => {
                         println!("Server0 Complete");
                         match client_set_params(&sh,cstate) {
-                            Err(x) => {println!("ClientH Error {}",x);},
+                            Err(x) => {println!("ClientH Error {}",x); b = false;},
                             Ok((cstate,_)) => {
                                 match client_finish(&sf,cstate) {
-                                    Err(x) => {println!("Client1 Error {}",x);},
+                                    Err(x) => {println!("Client1 Error {}",x); b = false;},
                                     Ok((cf,cstate,_)) => {
                                         println!("Client Complete");
                                         match server_finish(&cf,sstate) {
-                                            Err(x) => {println!("Server1 Error {}",x);},
+                                            Err(x) => {println!("Server1 Error {}",x); b = false;},
                                             Ok(sstate) => {println!("Server Complete");}
                                         }
                                     }
@@ -602,7 +604,7 @@ fn test_full_round_trip() {
             }
         }
     }
-    assert!(true);
+    assert!(b);
 }    
 
 use std::io;

@@ -14,7 +14,7 @@ pub struct Client0(ALGS,TranscriptClientHello,ClientPostClientHello);
 pub struct ClientH(ALGS,TranscriptServerHello,ClientPostServerHello);
 pub struct Client1(ALGS,TranscriptClientFinished,ClientPostClientFinished);
     
-pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Entropy) -> Res<(Bytes,Client0,Option<ClientCipherState0>)> {
+pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Entropy) -> Res<(HandshakeData,Client0,Option<ClientCipherState0>)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (crand,gx,cstate) = get_client_hello(algs,psk,ent)?;
     let (ch,trunc_len) = client_hello(&algs,&crand,&gx,sn,&tkt)?;
@@ -27,7 +27,7 @@ pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Ent
     Ok((nch,st,c2s0))  
 }
 
-pub fn client_set_params(sh:&Bytes,st:Client0) -> Res<(ClientH,DuplexCipherStateH)> {
+pub fn client_set_params(sh:&HandshakeData,st:Client0) -> Res<(ClientH,DuplexCipherStateH)> {
     let Client0(algs,tx_ch,cstate) = st;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (sr,gy) = parse_server_hello(&algs,&sh)?;    
@@ -36,21 +36,21 @@ pub fn client_set_params(sh:&Bytes,st:Client0) -> Res<(ClientH,DuplexCipherState
     Ok((ClientH(algs,tx_sh,cstate),cipher))
 }
 
-pub fn client_finish(payload:&Bytes,st:ClientH) -> Res<(Bytes,Client1,DuplexCipherState1)> {
+pub fn client_finish(payload:&HandshakeData,st:ClientH) -> Res<(HandshakeData,Client1,DuplexCipherState1)> {
     let ClientH(algs,tx_sh,cstate) = st;
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let mut next = 0;
-    let (ee,len_ee) = check_handshake_message(&payload)?;
+    let (ee,len_ee) = check_handshake_message(&payload,0)?;
     parse_encrypted_extensions(&algs,&ee)?;
     next = next + len_ee;
     let tx_cv:TranscriptServerCertificateVerify;
     let cstate_cv:ClientPostCertificateVerify;
     match psk_mode {
         false => {  
-            let (sc,len_sc) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
+            let (sc,len_sc) = check_handshake_message(&payload,next)?;
             let cert = parse_server_certificate(&algs,&sc)?;
             next = next + len_sc;
-            let (cv,len_cv) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
+            let (cv,len_cv) = check_handshake_message(&payload,next)?;
             let sig = parse_certificate_verify(&algs,&cv)?;
             next = next + len_cv; 
             let pk = verk_from_cert(&cert)?;
@@ -61,10 +61,10 @@ pub fn client_finish(payload:&Bytes,st:ClientH) -> Res<(Bytes,Client1,DuplexCiph
             cstate_cv = put_skip_server_signature(cstate)?;
             tx_cv = transcript_skip_server_certificate_verify(tx_sh,&ee)?;}
     };    
-    let (sfin,len_fin) = check_handshake_message(&payload.slice_range(next..payload.len()))?;
+    let (sfin,len_fin) = check_handshake_message(&payload,next)?;
     let vd = parse_finished(&algs,&sfin)?;
     next = next + len_fin;
-    if next == payload.len() {
+    if !has_handshake_message(payload,next) {
         let cstate = put_server_finished(&vd,&tx_cv,cstate_cv)?;
         let tx_sf = transcript_server_finished(tx_cv,&sfin)?;
         let cipher = client_get_1rtt_keys(&tx_sf,&cstate)?;
@@ -99,9 +99,8 @@ fn lookup_db(algs:ALGS, db:&ServerDB,sni:&Bytes,tkt:&Option<Bytes>) ->
     }
 }
 
-pub fn server_init(algs:ALGS,db:ServerDB,msg:&Bytes,ent:Entropy) -> Res<(Bytes,Bytes,Server0,DuplexCipherStateH,DuplexCipherState1)> {
+pub fn server_init(algs:ALGS,db:ServerDB,ch:&HandshakeData,ent:Entropy) -> Res<(HandshakeData,HandshakeData,Server0,DuplexCipherStateH,DuplexCipherState1)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
-    let (ch,len1) = check_handshake_record(&msg)?;
     let (cr,sid,sni,gx,tkto, bindero, trunc_len) = parse_client_hello(&algs,&ch)?;
     let tx_trunc = transcript_truncated_client_hello(algs,&ch,trunc_len)?;
     let (cert,sigk,psk_opt) = lookup_db(algs,&db,&sni,&tkto)?;
@@ -112,18 +111,18 @@ pub fn server_init(algs:ALGS,db:ServerDB,msg:&Bytes,ent:Entropy) -> Res<(Bytes,B
     let tx_sh = transcript_server_hello(tx_ch,&sh)?;
     let (cipherH,sstate) = get_server_hello(&tx_sh,sstate)?;
     let ee = encrypted_extensions(&algs)?;
-    let mut payload = empty();
-    payload = payload.concat(&ee);
+    let mut payload = HandshakeData(empty());
+    payload = handshake_concat(payload,&ee);
     let mut tx_cv : Option<TranscriptServerCertificateVerify> = None;
     let mut sstate_cv : Option<ServerPostCertificateVerify> = None;
     match psk_mode {
         false => {
             let sc = server_certificate(&algs,&cert)?;
-            payload = payload.concat(&sc);
+            payload = handshake_concat(payload,&sc);
             let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
             let (sig,sstate) = get_server_signature(&sigk,&tx_sc,sstate)?;
             let cv = certificate_verify(&algs,&sig)?;
-            payload = payload.concat(&cv);
+            payload = handshake_concat(payload,&cv);
             tx_cv = Some(transcript_server_certificate_verify(tx_sc,&cv)?);
             sstate_cv = Some(sstate);},
         true => {
@@ -134,66 +133,71 @@ pub fn server_init(algs:ALGS,db:ServerDB,msg:&Bytes,ent:Entropy) -> Res<(Bytes,B
     let sstate_cv = sstate_cv.unwrap();
     let (vd,sstate) = get_server_finished(&tx_cv,sstate_cv)?;
     let sfin = finished(&algs,&vd)?;
-    payload = payload.concat(&sfin);
+    payload = handshake_concat(payload,&sfin);
     let tx_sf = transcript_server_finished(tx_cv,&sfin)?;
     let cipher1 = server_get_1rtt_keys(&tx_sf, &sstate)?;
     let st = Server0(algs,tx_sf,sstate);
     Ok((sh,payload,st,cipherH,cipher1))
 }
     
-pub fn server_finish(payload:&Bytes,st:Server0) -> Res<Server1> {
+pub fn server_finish(payload:&HandshakeData,st:Server0) -> Res<Server1> {
     let Server0(algs,tx_sf,sstate) = st;
-    let (cfin,flen) = check_handshake_message(&payload)?;
+    let (cfin,flen) = check_handshake_message(payload,0)?;
     let vd = parse_finished(&algs,&cfin)?;
     let sstate = put_client_finished(vd,&tx_sf,sstate)?;
     let tx_cf = transcript_client_finished(tx_sf,&cfin)?;
-    if flen == payload.len() {
+    if !has_handshake_message(payload,flen) {
         Ok(Server1(algs,tx_cf,sstate))
     } else {Err(parse_failed)}
 }
 
 /* Record Encryption/Decryption API */
 
-pub fn encrypt_zerortt(payload:&Bytes, pad:usize, st: ClientCipherState0) -> Res<(Bytes,ClientCipherState0)> {
+pub struct AppData(pub Bytes);
+
+pub fn encrypt_zerortt(payload:&AppData, pad:usize, st: ClientCipherState0) -> Res<(Bytes,ClientCipherState0)> {
     let ClientCipherState0(ae, kiv, n, exp) = st;
-    let rec = encrypt_record_payload(&ae,&kiv,n,ct_app_data,payload,pad)?;
+    let AppData(payload) = payload;
+    let rec = encrypt_record_payload(&ae,&kiv,n,ContentType::ApplicationData,payload,pad)?;
     Ok((rec,ClientCipherState0(ae,kiv,n+1, exp)))
 }
 
-pub fn decrypt_zerortt(ciphertext:&Bytes, st: ServerCipherState0) -> Res<(Bytes,ServerCipherState0)> {
+pub fn decrypt_zerortt(ciphertext:&Bytes, st: ServerCipherState0) -> Res<(AppData,ServerCipherState0)> {
     let ServerCipherState0(ae, kiv, n, exp) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
-    check_eq1(ct,U8(ct_app_data))?;
-    Ok((payload,ServerCipherState0(ae,kiv,n+1,exp)))
+    check(ct == ContentType::ApplicationData)?;
+    Ok((AppData(payload),ServerCipherState0(ae,kiv,n+1,exp)))
 }
 
-pub fn encrypt_handshake(payload:&Bytes, pad:usize, st: DuplexCipherStateH) -> Res<(Bytes,DuplexCipherStateH)> {
+pub fn encrypt_handshake(payload:&HandshakeData, pad:usize, st: DuplexCipherStateH) -> Res<(Bytes,DuplexCipherStateH)> {
     let DuplexCipherStateH(ae, kiv, n, x, y) = st;
-    let rec = encrypt_record_payload(&ae,&kiv,n,ct_handshake,payload,pad)?;
+    let HandshakeData(payload) = payload;
+    let rec = encrypt_record_payload(&ae,&kiv,n,ContentType::Handshake,payload,pad)?;
     Ok((rec,DuplexCipherStateH(ae,kiv,n+1, x, y)))
 }
 
-pub fn decrypt_handshake(ciphertext:&Bytes, st: DuplexCipherStateH) -> Res<(Bytes,DuplexCipherStateH)> {
+pub fn decrypt_handshake(ciphertext:&Bytes, st: DuplexCipherStateH) -> Res<(HandshakeData,DuplexCipherStateH)> {
     let DuplexCipherStateH(ae, x, y, kiv, n) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
-    check_eq1(ct,U8(ct_handshake))?;
-    Ok((payload,DuplexCipherStateH(ae, x, y, kiv, n+1)))
+    check(ct == ContentType::Handshake)?;
+    Ok((HandshakeData(payload),DuplexCipherStateH(ae, x, y, kiv, n+1)))
 }
 
-pub fn encrypt_data(payload:&Bytes, pad:usize, st: DuplexCipherState1) -> Res<(Bytes,DuplexCipherState1)> {
+pub fn encrypt_data(payload:&AppData, pad:usize, st: DuplexCipherState1) -> Res<(Bytes,DuplexCipherState1)> {
     let DuplexCipherState1(ae, kiv, n, x, y, exp) = st;
-    let rec = encrypt_record_payload(&ae,&kiv,n,ct_app_data,payload,pad)?;
+    let AppData(payload) = payload;
+    let rec = encrypt_record_payload(&ae,&kiv,n,ContentType::ApplicationData,payload,pad)?;
     Ok((rec,DuplexCipherState1(ae,kiv,n+1,x,y,exp)))
 }
 
-pub fn decrypt_data_or_hs(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(U8,Bytes,DuplexCipherState1)> {
+pub fn decrypt_data_or_hs(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(ContentType,Bytes,DuplexCipherState1)> {
     let DuplexCipherState1(ae, x, y, kiv, n, exp) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
     Ok((ct,payload,DuplexCipherState1(ae, x, y, kiv, n+1, exp)))
 }
-pub fn decrypt_data(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(Bytes,DuplexCipherState1)> {
+pub fn decrypt_data(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(AppData,DuplexCipherState1)> {
     let DuplexCipherState1(ae, x, y, kiv, n, exp) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
-    check_eq1(ct,U8(ct_app_data))?;
-    Ok((payload,DuplexCipherState1(ae, x, y, kiv, n+1, exp)))
+    check(ct == ContentType::ApplicationData)?;
+    Ok((AppData(payload),DuplexCipherState1(ae, x, y, kiv, n+1, exp)))
 }

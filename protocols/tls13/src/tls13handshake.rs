@@ -133,76 +133,79 @@ pub struct DuplexCipherState1(pub AEADAlgorithm, pub AEKIV, pub u64, pub AEKIV, 
    For simplicity, we store the full transcript, but an internal hash state would suffice. */
 
 pub struct TranscriptTruncatedClientHello(pub HashAlgorithm, pub HASH);
-pub struct TranscriptClientHello(pub HashAlgorithm, pub bool, pub Bytes, pub HASH);
-pub struct TranscriptServerHello(pub HashAlgorithm, pub bool, pub Bytes, pub HASH);
-pub struct TranscriptServerCertificate(pub HashAlgorithm, pub bool, pub Bytes, pub HASH);
-pub struct TranscriptServerCertificateVerify(pub HashAlgorithm, pub bool, pub Bytes, pub HASH);
-pub struct TranscriptServerFinished(pub HashAlgorithm, pub bool, pub Bytes, pub HASH);
-pub struct TranscriptClientFinished(pub HashAlgorithm, pub bool, pub Bytes, pub HASH);
+pub struct TranscriptClientHello(pub HashAlgorithm, pub bool, pub HandshakeData, pub HASH);
+pub struct TranscriptServerHello(pub HashAlgorithm, pub bool, pub HandshakeData, pub HASH);
+pub struct TranscriptServerCertificate(pub HashAlgorithm, pub bool, pub HandshakeData, pub HASH);
+pub struct TranscriptServerCertificateVerify(pub HashAlgorithm, pub bool, pub HandshakeData, pub HASH);
+pub struct TranscriptServerFinished(pub HashAlgorithm, pub bool, pub HandshakeData, pub HASH);
+pub struct TranscriptClientFinished(pub HashAlgorithm, pub bool, pub HandshakeData, pub HASH);
 
-pub fn transcript_truncated_client_hello(algs:ALGS,ch:&Bytes,trunc_len:usize) ->
+
+pub fn transcript_add(ha:HashAlgorithm,tx:HandshakeData,msg:&HandshakeData) -> Res<(HandshakeData,HASH)> {
+    let tx = handshake_concat(tx,msg);
+    let HandshakeData(txby) = tx;
+    let th = hash(&ha,&txby)?;
+    Ok((HandshakeData(txby),th))
+}
+
+pub fn transcript_truncated_client_hello(algs:ALGS,ch:&HandshakeData,trunc_len:usize) ->
     Res<TranscriptTruncatedClientHello> {
         let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+        let HandshakeData(ch) = ch;
         let th = hash(&ha,&ch.slice_range(0..trunc_len))?;
         Ok(TranscriptTruncatedClientHello(ha,th))
     }
 
-pub fn transcript_client_hello(algs:ALGS,ch:&Bytes) -> Res<TranscriptClientHello> {
+pub fn transcript_client_hello(algs:ALGS,ch:&HandshakeData) -> Res<TranscriptClientHello> {
         let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-        let transcript = empty().concat(ch);
-        let th = hash(&ha,&transcript)?;
+        let transcript = HandshakeData(empty());
+        let (transcript,th) = transcript_add(ha,transcript,ch)?;
         Ok(TranscriptClientHello(ha,psk_mode,transcript,th))
     }
 
-pub fn transcript_server_hello(tx:TranscriptClientHello,sh:&Bytes) -> Res<TranscriptServerHello> {
+pub fn transcript_server_hello(tx:TranscriptClientHello,sh:&HandshakeData) -> Res<TranscriptServerHello> {
         let TranscriptClientHello(ha,psk_mode,transcript,_) = tx;
-        let transcript = transcript.concat(sh);
-        let th = hash(&ha,&transcript)?;
+        let (transcript,th) = transcript_add(ha,transcript,sh)?;
         Ok(TranscriptServerHello(ha,psk_mode,transcript,th))
     }
 
-pub fn transcript_server_certificate(tx:TranscriptServerHello,ee:&Bytes,sc:&Bytes) -> Res<TranscriptServerCertificate> {
+pub fn transcript_server_certificate(tx:TranscriptServerHello,ee:&HandshakeData,sc:&HandshakeData) -> Res<TranscriptServerCertificate> {
         let TranscriptServerHello(ha,psk_mode,transcript,_) = tx;
         if psk_mode {Err(psk_mode_mismatch)}
         else {
-            let transcript = transcript.concat(ee);
-            let transcript = transcript.concat(sc);
-            let th = hash(&ha,&transcript)?;
+            let transcript = handshake_concat(transcript,ee);
+            let (transcript,th) = transcript_add(ha,transcript,sc)?;           
             Ok(TranscriptServerCertificate(ha,psk_mode,transcript,th))
         }
     }
 
-pub fn transcript_server_certificate_verify(tx:TranscriptServerCertificate,cv:&Bytes) -> Res<TranscriptServerCertificateVerify> {
+pub fn transcript_server_certificate_verify(tx:TranscriptServerCertificate,cv:&HandshakeData) -> Res<TranscriptServerCertificateVerify> {
         let TranscriptServerCertificate(ha,psk_mode,transcript,_) = tx;
         if psk_mode {Err(psk_mode_mismatch)}
         else {
-            let transcript = transcript.concat(cv);
-            let th = hash(&ha,&transcript)?;
+            let (transcript,th) = transcript_add(ha,transcript,cv)?;
             Ok(TranscriptServerCertificateVerify(ha,psk_mode,transcript,th))
         }
     }
 
-pub fn transcript_skip_server_certificate_verify(tx:TranscriptServerHello,ee:&Bytes) -> Res<TranscriptServerCertificateVerify> {
+pub fn transcript_skip_server_certificate_verify(tx:TranscriptServerHello,ee:&HandshakeData) -> Res<TranscriptServerCertificateVerify> {
         let TranscriptServerHello(ha,psk_mode,transcript,_) = tx;
         if !psk_mode {Err(psk_mode_mismatch)}
         else {
-            let transcript = transcript.concat(ee);
-            let th = hash(&ha,&transcript)?;
+            let (transcript,th) = transcript_add(ha,transcript,ee)?;
             Ok(TranscriptServerCertificateVerify(ha,psk_mode,transcript,th))
         }
     }
 
-pub fn transcript_server_finished(tx:TranscriptServerCertificateVerify,sf:&Bytes) -> Res<TranscriptServerFinished> {
+pub fn transcript_server_finished(tx:TranscriptServerCertificateVerify,sf:&HandshakeData) -> Res<TranscriptServerFinished> {
         let TranscriptServerCertificateVerify(ha,psk_mode,transcript,_) = tx;
-        let transcript = transcript.concat(sf);
-        let th = hash(&ha,&transcript)?;
+        let (transcript,th) = transcript_add(ha,transcript,sf)?;
         Ok(TranscriptServerFinished(ha,psk_mode,transcript,th))
     }
 
-pub fn transcript_client_finished(tx:TranscriptServerFinished,cf:&Bytes) -> Res<TranscriptClientFinished> {
+pub fn transcript_client_finished(tx:TranscriptServerFinished,cf:&HandshakeData) -> Res<TranscriptClientFinished> {
         let TranscriptServerFinished(ha,psk_mode,transcript,_) = tx;
-        let transcript = transcript.concat(cf);
-        let th = hash(&ha,&transcript)?;
+        let (transcript,th) = transcript_add(ha,transcript,cf)?;
         Ok(TranscriptClientFinished(ha,psk_mode,transcript,th))
     }
 

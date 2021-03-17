@@ -5,6 +5,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(unused_imports)]
 #![allow(unused_parens)]
+#![feature(backtrace)]
 
 pub mod tls13formats;
 use tls13formats::*;
@@ -68,11 +69,11 @@ fn read_record(stream: &mut TcpStream, buf: &mut [u8]) -> Res<usize> {
     }
 }
 
-fn get_handshake_message(stream: &mut TcpStream, buf: &mut [u8]) -> Res<(Bytes, usize)> {
+fn get_handshake_message(stream: &mut TcpStream, buf: &mut [u8]) -> Res<(HandshakeData, usize)> {
     let len = read_record(stream, buf)?;
     let rec = Bytes::from_public_slice(&buf[0..len]);
     let (msg, len_) = check_handshake_record(&rec)?;
-    check_eq_size(len, len_)?;
+    check(len == len_)?;
     Ok((msg, len))
 }
 
@@ -115,17 +116,17 @@ fn decrypt_handshake_flight(
     stream: &mut TcpStream,
     buf: &mut [u8],
     cipherH: DuplexCipherStateH,
-) -> Res<(Bytes, DuplexCipherStateH)> {
-    let mut payload = Bytes::new(0);
+) -> Res<(HandshakeData, DuplexCipherStateH)> {
+    let mut payload = HandshakeData(empty());
     let mut finished = false;
     let mut cipherH = cipherH;
     while !finished {
         let len = read_record(stream, buf)?;
         let rec = Bytes::from_public_slice(&buf[0..len]);
         let (plain, cip) = decrypt_handshake(&rec, cipherH)?;
-        payload = payload.concat(&plain);
+        payload = handshake_concat(payload,&plain);
         cipherH = cip;
-        finished = find_handshake_message(ty_finished,&payload);
+        finished = find_handshake_message(HandshakeType::Finished,&payload,0);
     }
     Ok((payload, cipherH))
 }
@@ -144,7 +145,7 @@ fn decrypt_tickets_and_data(
         let (ct, pl, cip) = decrypt_data_or_hs(&rec, cipher1)?;
         payload = pl;
         cipher1 = cip;
-        if eq1(ct, U8(ct_app_data)) {
+        if ct == ContentType::ApplicationData {
             data = true;
         } else {
             println!("Received Session Ticket");
@@ -200,7 +201,7 @@ pub fn tls13client(host: &str, port: &str) -> Res<()> {
     put_record(&mut stream, &cf_rec)?;
     println!("Connected to {}:443", host);
     /* Send HTTP GET  */
-    let (ap, cipher1) = encrypt_data(&http_get, 0, cipher1)?;
+    let (ap, cipher1) = encrypt_data(&AppData(http_get), 0, cipher1)?;
     put_record(&mut stream, &ap)?;
     println!("Sent HTTP GET to {}:443", host);
 

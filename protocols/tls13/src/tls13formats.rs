@@ -97,9 +97,15 @@ pub const parse_failed: usize = 9;
 pub const insufficient_entropy: usize = 10;
 pub const insufficient_data: usize = 11;
 
+/*
 pub fn check_eq_size(s1: usize, s2: usize) -> Res<()> {
     if s1 == s2 {Ok(())}
-    else {Err(parse_failed)}
+    else {err(parse_failed)}
+}*/
+
+pub fn check(b:bool) -> Res<()> {
+    if b {Ok(())}
+    else {err(parse_failed)}
 }
 
 pub fn eq1(b1: U8, b2: U8) -> bool {
@@ -107,12 +113,23 @@ pub fn eq1(b1: U8, b2: U8) -> bool {
 }
 pub fn check_eq1(b1: U8, b2: U8) -> Res<()> {
     if eq1(b1,b2) {Ok(())}
-    else {Err(parse_failed)}
+    else {err(parse_failed)}
+}
+
+pub fn eq(b1: &Bytes, b2: &Bytes) -> bool {
+    if b1.len() != b2.len() {
+        false
+    } else {
+        for i in 0..b1.len() {
+            if !eq1(b1[i],b2[i]) {return false;};
+        }
+        true
+    }
 }
 
 pub fn check_eq(b1: &Bytes, b2: &Bytes) -> Res<()> {
     if b1.len() != b2.len() {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         for i in 0..b1.len() {
             check_eq1(b1[i],b2[i])?;
@@ -123,16 +140,13 @@ pub fn check_eq(b1: &Bytes, b2: &Bytes) -> Res<()> {
 
 pub fn check_mem(b1: &Bytes, b2: &Bytes) -> Res<()> {
     if b2.len() % b1.len() != 0 {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         for i in 0..(b2.len() / b1.len()) {
             let snip = b2.slice_range(i * b1.len()..(i + 1) * b1.len());
-            match check_eq(b1, &snip) {
-                Ok(()) => {return(Ok(()));},
-                Err(x) => {}
+            if eq(b1, &snip) {return Ok(());}
             }
-        }
-        Ok(())
+        err(parse_failed)
     }
 }
 
@@ -170,11 +184,11 @@ pub fn lbytes3(b: &Bytes) -> Res<Bytes> {
 
 pub fn check_lbytes1(b: &Bytes) -> Res<usize> {
     if b.len() < 1 {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         let l = (b[0] as U8).declassify() as usize;
         if b.len() - 1 < l {
-            Err(parse_failed)
+            err(parse_failed)
         } else {
             Ok(l)
         }
@@ -183,13 +197,13 @@ pub fn check_lbytes1(b: &Bytes) -> Res<usize> {
 
 pub fn check_lbytes2(b: &Bytes) -> Res<usize> {
     if b.len() < 2 {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         let l0 = (b[0] as U8).declassify() as usize;
         let l1 = (b[1] as U8).declassify() as usize;
         let l = l0 * 256 + l1;
         if b.len() - 2 < l as usize {
-            Err(parse_failed)
+            err(parse_failed)
         } else {
             Ok(l)
         }
@@ -198,14 +212,14 @@ pub fn check_lbytes2(b: &Bytes) -> Res<usize> {
 
 pub fn check_lbytes3(b: &Bytes) -> Res<usize> {
     if b.len() < 3 {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         let l0 = (b[0] as U8).declassify() as usize;
         let l1 = (b[1] as U8).declassify() as usize;
         let l2 = (b[2] as U8).declassify() as usize;
         let l = l0 * 65536 + l1 * 256 + l2;
         if b.len() - 3 < l {
-            Err(parse_failed)
+            err(parse_failed)
         } else {
             Ok(l)
         }
@@ -214,7 +228,7 @@ pub fn check_lbytes3(b: &Bytes) -> Res<usize> {
 
 pub fn check_lbytes1_full(b: &Bytes) -> Res<()> {
     if check_lbytes1(b)? + 1 != b.len() {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         Ok(())
     }
@@ -222,7 +236,7 @@ pub fn check_lbytes1_full(b: &Bytes) -> Res<()> {
 
 pub fn check_lbytes2_full(b: &Bytes) -> Res<()> {
     if check_lbytes2(b)? + 2 != b.len() {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         Ok(())
     }
@@ -230,7 +244,7 @@ pub fn check_lbytes2_full(b: &Bytes) -> Res<()> {
 
 pub fn check_lbytes3_full(b: &Bytes) -> Res<()> {
     if check_lbytes3(b)? + 3 != b.len() {
-        Err(parse_failed)
+        err(parse_failed)
     } else {
         Ok(())
     }
@@ -375,12 +389,12 @@ pub fn check_psk_shared_key(algs: &ALGS, ch: &Bytes) -> Res<()> {
         check_lbytes2_full(&ch.slice_range(2 + len_id..ch.len()))?;
         check_lbytes1_full(&ch.slice_range(4 + len_id..ch.len()))?;
         if ch.len() - 6 - len_id != 32 {
-            Err(parse_failed)
+            err(parse_failed)
         } else {
             Ok(())
         }
     } else {
-        Err(parse_failed)
+        err(parse_failed)
     }
 }
 
@@ -399,7 +413,7 @@ pub fn merge_opts<T>(o1: Option<T>, o2: Option<T>) -> Res<Option<T>> {
         (None, Some(o)) => Ok(Some(o)),
         (Some(o), None) => Ok(Some(o)),
         (None,None) => Ok(None),
-        _ => Err(parse_failed),
+        _ => err(parse_failed),
     }
 }
 pub fn merge_exts(e1: EXTS, e2: EXTS) -> Res<EXTS> {
@@ -474,13 +488,62 @@ pub fn check_server_extensions(algs: &ALGS, b: &Bytes) -> Res<Option<Bytes>> {
     }
 }
 
-pub const ty_client_hello : u8 = 1;
-pub const ty_server_hello : u8 = 2;
-pub const ty_encrypted_extensions : u8 = 8;
-pub const ty_server_certificate : u8 = 0x0b;
-pub const ty_certificate_verify : u8 = 0x0f;
-pub const ty_finished : u8 = 0x14;
-pub const ty_session_ticket : u8 = 0x04;
+#[derive(Clone, Copy, PartialEq)]
+pub enum HandshakeType {
+    ClientHello,
+    ServerHello,
+    NewSessionTicket,
+    EndOfEarlyData,
+    EncryptedExtensions,
+    Certificate,
+    CertificateRequest,
+    CertificateVerify,
+    Finished,
+    KeyUpdate,
+    MessageHash
+}
+
+pub fn hs_type(t:HandshakeType) -> u8 {
+    match t {
+        HandshakeType::ClientHello => 1,
+        HandshakeType::ServerHello => 2,
+        HandshakeType::NewSessionTicket => 4,
+        HandshakeType::EndOfEarlyData => 5,
+        HandshakeType::EncryptedExtensions => 8,
+        HandshakeType::Certificate => 11,
+        HandshakeType::CertificateRequest => 13,
+        HandshakeType::CertificateVerify => 15,
+        HandshakeType::Finished => 20,
+        HandshakeType::KeyUpdate => 24,
+        HandshakeType::MessageHash => 254
+    }
+}
+
+pub fn get_hs_type(t:u8) -> Res<HandshakeType> {
+    match t {
+        1 => Ok(HandshakeType::ClientHello),
+        2 => Ok(HandshakeType::ServerHello),
+        4 => Ok(HandshakeType::NewSessionTicket),
+        5 => Ok(HandshakeType::EndOfEarlyData),
+        8 => Ok(HandshakeType::EncryptedExtensions),
+        11 => Ok(HandshakeType::Certificate),
+        13 => Ok(HandshakeType::CertificateRequest),
+        15 => Ok(HandshakeType::CertificateVerify),
+        20 => Ok(HandshakeType::Finished),
+        24 => Ok(HandshakeType::KeyUpdate),
+        254 => Ok(HandshakeType::MessageHash),
+        _ => err(parse_failed)
+    }
+}
+
+pub struct HandshakeData(pub Bytes);
+
+pub fn handshake_concat(msg1:HandshakeData,
+                        msg2:&HandshakeData) -> HandshakeData {
+    let HandshakeData(m1) = msg1;
+    let HandshakeData(m2) = msg2;
+    HandshakeData(m1.concat(m2))    
+}
 
 pub fn client_hello(
     algs: &ALGS,
@@ -488,9 +551,9 @@ pub fn client_hello(
     gx: &DHPK,
     sn: &Bytes,
     tkt:&Option<Bytes>,
-) -> Res<(Bytes,usize)> {
+) -> Res<(HandshakeData,usize)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    let ty = bytes1(ty_client_hello);
+    let ty = bytes1(hs_type(HandshakeType::ClientHello));
     let ver = bytes2(3, 3);
     let sid = lbytes1(&Bytes::new(32))?;
     let cip = lbytes2(&ciphersuite(algs)?)?;
@@ -521,20 +584,22 @@ pub fn client_hello(
             .concat(&comp)
             .concat(&lbytes2(&exts)?),
     )?);
-    Ok((ch,trunc_len))
+    Ok((HandshakeData(ch),trunc_len))
 }
 
-pub fn set_client_hello_binder(algs: &ALGS, binder:&Option<HMAC>, ch:Bytes) -> Res<Bytes> {
+pub fn set_client_hello_binder(algs: &ALGS, binder:&Option<HMAC>, ch:HandshakeData) -> Res<HandshakeData> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let HandshakeData(ch) = ch;
     let chlen = &ch.len();
     match binder {
-        Some(m) => Ok(ch.update_slice(chlen-hash_len(ha),m,0,hash_len(ha))),
-        None => Ok(ch),
+        Some(m) => Ok(HandshakeData(ch.update_slice(chlen-hash_len(ha),m,0,hash_len(ha)))),
+        None => Ok(HandshakeData(ch)),
     }
 } 
 
-pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes, Bytes, Option<Bytes>, Option<Bytes> ,usize)> {
-    let ty = bytes1(ty_client_hello);
+pub fn parse_client_hello(algs: &ALGS, ch: &HandshakeData) -> Res<(Random, Bytes, Bytes, Bytes, Option<Bytes>, Option<Bytes> ,usize)> {
+    let HandshakeData(ch) = ch;
+    let ty = bytes1(hs_type(HandshakeType::ClientHello));
     let ver = bytes2(3, 3);
     let comp = bytes2(1, 0);
     let mut next = 0;
@@ -563,14 +628,14 @@ pub fn parse_client_hello(algs: &ALGS, ch: &Bytes) -> Res<(Random, Bytes, Bytes,
             Ok((Random::from_seq(&crand),sid,sn,gx,Some(tkt),Some(binder),trunc_len)),
         (false,EXTS(Some(sn),Some(gx),None,None)) =>
             Ok((Random::from_seq(&crand),sid,sn,gx,None,None,0)),
-        _ => Err(parse_failed)
+        _ => err(parse_failed)
     }
 
 }
 
-pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<Bytes> {
+pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<HandshakeData> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    let ty = bytes1(ty_server_hello);
+    let ty = bytes1(hs_type(HandshakeType::ServerHello));
     let ver = bytes2(3, 3);
     let sid = lbytes1(sid)?;
     let cip = ciphersuite(algs)?;
@@ -589,12 +654,13 @@ pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<Byt
             .concat(&comp)
             .concat(&lbytes2(&exts)?),
     )?);
-    Ok(sh)
+    Ok(HandshakeData(sh))
 }
 
-pub fn parse_server_hello(algs: &ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
+pub fn parse_server_hello(algs: &ALGS, sh: &HandshakeData) -> Res<(Random, DHPK)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
-    let ty = bytes1(ty_server_hello);
+    let HandshakeData(sh) = sh;
+    let ty = bytes1(hs_type(HandshakeType::ServerHello));
     let ver = bytes2(3, 3);
     let cip = ciphersuite(algs)?;
     let comp = bytes1(0);
@@ -620,28 +686,30 @@ pub fn parse_server_hello(algs: &ALGS, sh: &Bytes) -> Res<(Random, DHPK)> {
     else {Err(unsupported_algorithm)}
 }
 
-pub fn encrypted_extensions(algs: &ALGS) -> Res<Bytes> {
-    let ty = bytes1(ty_encrypted_extensions);
-    Ok(ty.concat(&lbytes3(&empty())?))
+pub fn encrypted_extensions(algs: &ALGS) -> Res<HandshakeData> {
+    let ty = bytes1(hs_type(HandshakeType::EncryptedExtensions));
+    Ok(HandshakeData(ty.concat(&lbytes3(&empty())?)))
 }
 
-pub fn parse_encrypted_extensions(algs: &ALGS, ee: &Bytes) -> Res<()> {
-    let ty = bytes1(ty_encrypted_extensions);
+pub fn parse_encrypted_extensions(algs: &ALGS, ee: &HandshakeData) -> Res<()> {
+    let HandshakeData(ee) = ee;
+    let ty = bytes1(hs_type(HandshakeType::EncryptedExtensions));
     check_eq(&ty, &ee.slice_range(0..1))?;
     check_lbytes3_full(&ee.slice_range(1..ee.len()))
 }
 
-pub fn server_certificate(algs: &ALGS, cert: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(ty_server_certificate);
+pub fn server_certificate(algs: &ALGS, cert: &Bytes) -> Res<HandshakeData> {
+    let ty = bytes1(hs_type(HandshakeType::Certificate));
     let creq = lbytes1(&empty())?;
     let crt = lbytes3(cert)?;
     let ext = lbytes2(&empty())?;
     let crts = lbytes3(&crt.concat(&ext))?;
-    Ok(ty.concat(&lbytes3(&creq.concat(&crts))?))
+    Ok(HandshakeData(ty.concat(&lbytes3(&creq.concat(&crts))?)))
 }
 
-pub fn parse_server_certificate(algs: &ALGS, sc: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(ty_server_certificate);
+pub fn parse_server_certificate(algs: &ALGS, sc: &HandshakeData) -> Res<Bytes> {
+    let HandshakeData(sc) = sc;
+    let ty = bytes1(hs_type(HandshakeType::Certificate));
     check_eq(&ty, &sc.slice_range(0..1))?;
     let mut next = 1;
     check_lbytes3_full(&sc.slice_range(next..sc.len()))?;
@@ -658,14 +726,15 @@ pub fn parse_server_certificate(algs: &ALGS, sc: &Bytes) -> Res<Bytes> {
     Ok(crt)
 }
 
-pub fn certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(ty_certificate_verify);
+pub fn certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<HandshakeData> {
+    let ty = bytes1(hs_type(HandshakeType::CertificateVerify));
     let sig = signature_algorithm(algs)?.concat(&lbytes2(cv)?);
-    Ok(ty.concat(&lbytes3(&sig)?))
+    Ok(HandshakeData(ty.concat(&lbytes3(&sig)?)))
 }
 
-pub fn parse_certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(ty_certificate_verify);
+pub fn parse_certificate_verify(algs: &ALGS, cv: &HandshakeData) -> Res<Bytes> {
+    let HandshakeData(cv) = cv;
+    let ty = bytes1(hs_type(HandshakeType::CertificateVerify));
     check_eq(&ty, &cv.slice_range(0..1))?;
     check_lbytes3_full(&cv.slice_range(1..cv.len()))?;
     check_eq(&signature_algorithm(algs)?, &cv.slice_range(4..6))?;
@@ -673,37 +742,39 @@ pub fn parse_certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<Bytes> {
     Ok(cv.slice_range(8..cv.len()))
 }
 
-pub fn finished(algs: &ALGS, vd: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(ty_finished);
-    Ok(ty.concat(&lbytes3(vd)?))
+pub fn finished(algs: &ALGS, vd: &Bytes) -> Res<HandshakeData> {
+    let ty = bytes1(hs_type(HandshakeType::Finished));
+    Ok(HandshakeData(ty.concat(&lbytes3(vd)?)))
 }
 
-pub fn parse_finished(algs: &ALGS, fin: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(ty_finished);
+pub fn parse_finished(algs: &ALGS, fin: &HandshakeData) -> Res<Bytes> {
+    let HandshakeData(fin) = fin;
+    let ty = bytes1(hs_type(HandshakeType::Finished));
     check_eq(&ty, &fin.slice_range(0..1))?;
     check_lbytes3_full(&fin.slice_range(1..fin.len()))?;
     Ok(fin.slice_range(4..fin.len()))
 }
 
-pub fn session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<Bytes> {
-    let ty = bytes1(ty_session_ticket);
+pub fn session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<HandshakeData> {
+    let ty = bytes1(hs_type(HandshakeType::NewSessionTicket));
     let lifetime = U32_to_be_bytes(U32(172800));
     let age = U32_to_be_bytes(U32(9999));
     let nonce = lbytes1(&bytes1(1))?;
     let stkt = lbytes2(&tkt)?;
     let grease_ext = bytes2(0x5a, 0x5a).concat(&lbytes2(&empty())?);
     let ext = lbytes2(&grease_ext)?;
-    Ok(ty.concat(&lbytes3(
+    Ok(HandshakeData(ty.concat(&lbytes3(
         &lifetime
             .concat(&age)
             .concat(&nonce)
             .concat(&stkt)
             .concat(&grease_ext),
-    )?))
+    )?)))
 }
 
-pub fn parse_session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<(U32, Bytes)> {
-    let ty = bytes1(ty_session_ticket);
+pub fn parse_session_ticket(algs: &ALGS, tkt: &HandshakeData) -> Res<(U32, Bytes)> {
+    let HandshakeData(tkt) = tkt;
+    let ty = bytes1(hs_type(HandshakeType::NewSessionTicket));
     check_eq(&ty, &tkt.slice_range(0..1))?;
     check_lbytes3_full(&tkt.slice_range(1..tkt.len()))?;
     let lifetime = U32_from_be_bytes(U32Word::from_seq(&tkt.slice_range(4..8)));
@@ -715,42 +786,84 @@ pub fn parse_session_ticket(algs: &ALGS, tkt: &Bytes) -> Res<(U32, Bytes)> {
     Ok((lifetime + age, stkt))
 }
 
-pub const ct_app_data : u8 = 0x17; 
-pub const ct_handshake: u8 = 0x16;
-pub const ct_alert: u8 = 0x15; 
+/* Record Layer Serialization and Parsing */
+#[derive(Clone, Copy, PartialEq)]
+pub enum ContentType {
+    Invalid,
+    ChangeCipherSpec,
+    Alert,
+    Handshake,
+    ApplicationData
+}
 
-pub fn handshake_record(p:&Bytes) -> Res<Bytes> {
-    let ty = bytes1(0x16);
+
+pub fn content_type(t:ContentType) -> u8 {
+    match t {
+        ContentType::Invalid => 0,
+        ContentType::ChangeCipherSpec => 20,
+        ContentType::Alert => 21,
+        ContentType::Handshake => 22,
+        ContentType::ApplicationData => 23
+    }
+}
+
+pub fn get_content_type(t:u8) -> Res<ContentType> {
+    match t {
+        0 => err(parse_failed),
+        20 => Ok(ContentType::ChangeCipherSpec),
+        21 => Ok(ContentType::Alert),
+        22 => Ok(ContentType::Handshake),
+        23 => Ok(ContentType::ApplicationData),
+        _ => err(parse_failed)
+    }
+}
+
+
+pub fn handshake_record(p:&HandshakeData) -> Res<Bytes> {
+    let HandshakeData(p) = p;
+    let ty = bytes1(content_type(ContentType::Handshake));
     let ver = bytes2(3,3);
     Ok(ty.concat(&ver).concat(&lbytes2(p)?))
 }
 
-pub fn check_handshake_record(p:&Bytes) -> Res<(Bytes,usize)> {
-    if p.len() < 5 {Err(parse_failed)}
+pub fn check_handshake_record(p:&Bytes) -> Res<(HandshakeData,usize)> {
+    if p.len() < 5 {err(parse_failed)}
     else {
-        let ty = bytes1(0x16);
+        let ty = bytes1(content_type(ContentType::Handshake));
         let ver = bytes2(3,3);
         check_eq(&ty,&p.slice_range(0..1))?;
         check_eq(&ver,&p.slice_range(1..3))?;
         let len = check_lbytes2(&p.slice_range(3..p.len()))?;
-        Ok((p.slice_range(5..5+len),5+len))
+        Ok((HandshakeData(p.slice_range(5..5+len)),5+len))
     }
 }
 
-pub fn check_handshake_message(p:&Bytes) -> Res<(Bytes,usize)> {
-    if p.len() < 3 {Err(parse_failed)}
+pub fn has_handshake_message(p:&HandshakeData,start:usize) -> bool {
+    let HandshakeData(p) = p;
+    if p.len() < start + 3 {false}
     else {
-        let len = check_lbytes3(&p.slice_range(1..p.len()))?;
-        Ok((p.slice_range(0..4+len),4+len))
+        match check_lbytes3(&p.slice_range(start + 1..p.len())) {
+            Ok(_) => true,
+            Err(_) => false
+        }
     }
 }
 
-pub fn find_handshake_message(ty:u8,payload:&Bytes) -> bool {
-    match check_handshake_message(payload) {
+pub fn check_handshake_message(p:&HandshakeData,start:usize) -> Res<(HandshakeData,usize)> {
+    let HandshakeData(p) = p;
+    if p.len() < start + 3 {err(parse_failed)}
+    else {
+        let len = check_lbytes3(&p.slice_range(start + 1..p.len()))?;
+        Ok((HandshakeData(p.slice_range(start..start+4+len)),4+len))
+    }
+}
+
+pub fn find_handshake_message(ty:HandshakeType,payload:&HandshakeData,start:usize) -> bool {
+    match check_handshake_message(payload,start) {
         Err(_) => false,
-        Ok((_,len)) => {
-            if eq1(payload[0],U8(ty)) {true}
-            else {find_handshake_message(ty,&payload.slice_range(len..payload.len()))}
+        Ok((HandshakeData(p),len)) => {
+            if eq1(p[0],U8(hs_type(ty))) {true}
+            else {find_handshake_message(ty,payload,start+len)}
         }
     }
 }

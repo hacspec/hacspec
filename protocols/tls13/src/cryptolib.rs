@@ -31,7 +31,13 @@ use unsafe_hacspec_examples::{
 
 use crate::{mac_failed, unsupported_algorithm};
 
+use backtrace::Backtrace;
 pub type Res<T> = Result<T, usize>;
+pub fn err<T>(x:usize) -> Res<T> {
+    let bt = Backtrace::new();
+    println!("{:?}",bt);
+    Err(x)
+}
 pub type Bytes = ByteSeq;
 pub fn empty() -> Bytes {
     return Seq::new(0);
