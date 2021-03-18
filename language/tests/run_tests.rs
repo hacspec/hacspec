@@ -73,6 +73,11 @@ fn run_sha256_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn run_p256_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test("hacspec-p256", None, vec![])
+}
+
+#[test]
 fn run_curve25519_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test("hacspec-curve25519", None, vec![])
 }

@@ -26,7 +26,7 @@ pub fn point_mul(k: Scalar, p: Affine) -> Affine {
 
 fn jacobian_to_affine(p: Jacobian) -> Affine {
     let (x, y, z) = p;
-    let z2 = z.exp(2);
+    let z2 = z.exp(2u32);
     let z2i = z2.inv();
     let z3 = z * z2;
     let z3i = z3.inv();
@@ -37,34 +37,34 @@ fn jacobian_to_affine(p: Jacobian) -> Affine {
 
 fn affine_to_jacobian(p: Affine) -> Jacobian {
     let (x, y) = p;
-    (x, y, FieldElement::from_literal(1))
+    (x, y, FieldElement::from_literal(1u128))
 }
 
 fn point_double(p: Jacobian) -> Jacobian {
     let (x1, y1, z1) = p;
-    let delta = z1.exp(2);
-    let gamma = y1.exp(2);
+    let delta = z1.exp(2u32);
+    let gamma = y1.exp(2u32);
 
     let beta = x1 * gamma;
 
     let alpha_1 = x1 - delta;
     let alpha_2 = x1 + delta;
-    let alpha = FieldElement::from_literal(3) * (alpha_1 * alpha_2);
+    let alpha = FieldElement::from_literal(3u128) * (alpha_1 * alpha_2);
 
-    let x3 = alpha.exp(2) - (FieldElement::from_literal(8) * beta);
+    let x3 = alpha.exp(2u32) - (FieldElement::from_literal(8u128) * beta);
 
-    let z3_ = (y1 + z1).exp(2);
+    let z3_ = (y1 + z1).exp(2u32);
     let z3 = z3_ - (gamma + delta);
 
-    let y3_1 = (FieldElement::from_literal(4) * beta) - x3;
-    let y3_2 = FieldElement::from_literal(8) * (gamma * gamma);
+    let y3_1 = (FieldElement::from_literal(4u128) * beta) - x3;
+    let y3_2 = FieldElement::from_literal(8u128) * (gamma * gamma);
     let y3 = (alpha * y3_1) - y3_2;
     (x3, y3, z3)
 }
 
 fn is_point_at_infinity(p: Jacobian) -> bool {
     let (_x, _y, z) = p;
-    z.equal(FieldElement::from_literal(0))
+    z.equal(FieldElement::from_literal(0u128))
 }
 
 fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
@@ -80,8 +80,8 @@ fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
         } else {
             let (x1, y1, z1) = p;
             let (x2, y2, z2) = q;
-            let z1z1 = z1.exp(2);
-            let z2z2 = z2.exp(2);
+            let z1z1 = z1.exp(2u32);
+            let z2z2 = z2.exp(2u32);
             let u1 = x1 * z2z2;
             let u2 = x2 * z1z1;
             let s1 = (y1 * z2) * z2z2;
@@ -93,27 +93,27 @@ fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
                 result = (
                     success,
                     (
-                        FieldElement::from_literal(0),
-                        FieldElement::from_literal(1),
-                        FieldElement::from_literal(0),
+                        FieldElement::from_literal(0u128),
+                        FieldElement::from_literal(1u128),
+                        FieldElement::from_literal(0u128),
                     ),
                 )
             } else {
                 let h = u2 - u1;
-                let i = (FieldElement::from_literal(2) * h).exp(2);
+                let i = (FieldElement::from_literal(2u128) * h).exp(2u32);
                 let j = h * i;
-                let r = FieldElement::from_literal(2) * (s2 - s1);
+                let r = FieldElement::from_literal(2u128) * (s2 - s1);
                 let v = u1 * i;
 
-                let x3_1 = FieldElement::from_literal(2) * v;
-                let x3_2 = r.exp(2) - j;
+                let x3_1 = FieldElement::from_literal(2u128) * v;
+                let x3_2 = r.exp(2u32) - j;
                 let x3 = x3_2 - x3_1;
 
-                let y3_1 = (FieldElement::from_literal(2) * s1) * j;
+                let y3_1 = (FieldElement::from_literal(2u128) * s1) * j;
                 let y3_2 = r * (v - x3);
                 let y3 = y3_2 - y3_1;
 
-                let z3_ = (z1 + z2).exp(2);
+                let z3_ = (z1 + z2).exp(2u32);
                 let z3 = (z3_ - (z1z1 + z2z2)) * h;
                 result = (true, (x3, y3, z3));
             }
@@ -124,15 +124,13 @@ fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
 
 fn ltr_mul(k: Scalar, p: Jacobian) -> Jacobian {
     let mut q = (
-        FieldElement::from_literal(0),
-        FieldElement::from_literal(1),
-        FieldElement::from_literal(0),
+        FieldElement::from_literal(0u128),
+        FieldElement::from_literal(1u128),
+        FieldElement::from_literal(0u128),
     );
-    for i in 0..FieldElement::NUM_BITS {
+    for i in 0..256 {
         q = point_double(q);
-        if k.get_bit(FieldElement::NUM_BITS - 1 - i)
-            .equal(Scalar::ONE())
-        {
+        if k.get_bit(256 - 1 - i).equal(Scalar::ONE()) {
             let (_success, result) = point_add(q, p); // TODO: check success
             q = result;
         }
