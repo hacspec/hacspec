@@ -12,15 +12,25 @@ public_nat_mod!(
 
 unsigned_public_integer!(Scalar, 256);
 
-pub fn point_mul_base(k: Scalar) -> Affine {
+bytes!(Element, 32);
+
+pub fn point_mul_base(k: Scalar) -> (bool, Affine) {
     let base_point = (
-        FieldElement::from_hex("6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296"),
-        FieldElement::from_hex("4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5"),
+        FieldElement::from_byte_seq_be(Element(secret_bytes!([
+            0x6Bu8, 0x17u8, 0xD1u8, 0xF2u8, 0xE1u8, 0x2Cu8, 0x42u8, 0x47u8, 0xF8u8, 0xBCu8, 0xE6u8,
+            0xE5u8, 0x63u8, 0xA4u8, 0x40u8, 0xF2u8, 0x77u8, 0x03u8, 0x7Du8, 0x81u8, 0x2Du8, 0xEBu8,
+            0x33u8, 0xA0u8, 0xF4u8, 0xA1u8, 0x39u8, 0x45u8, 0xD8u8, 0x98u8, 0xC2u8, 0x96u8
+        ]))),
+        FieldElement::from_byte_seq_be(Element(secret_bytes!([
+            0x4Fu8, 0xE3u8, 0x42u8, 0xE2u8, 0xFEu8, 0x1Au8, 0x7Fu8, 0x9Bu8, 0x8Eu8, 0xE7u8, 0xEBu8,
+            0x4Au8, 0x7Cu8, 0x0Fu8, 0x9Eu8, 0x16u8, 0x2Bu8, 0xCEu8, 0x33u8, 0x57u8, 0x6Bu8, 0x31u8,
+            0x5Eu8, 0xCEu8, 0xCBu8, 0xB6u8, 0x40u8, 0x68u8, 0x37u8, 0xBFu8, 0x51u8, 0xF5u8
+        ]))),
     );
     generic_point_mul(k, base_point)
 }
 
-pub fn point_mul(k: Scalar, p: Affine) -> Affine {
+pub fn point_mul(k: Scalar, p: Affine) -> (bool, Affine) {
     generic_point_mul(k, p)
 }
 
@@ -68,12 +78,12 @@ fn is_point_at_infinity(p: Jacobian) -> bool {
 }
 
 fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
-    let mut result = (false, q);
+    let mut result = (true, q);
     if is_point_at_infinity(p) {
-        result = (true, q);
-    // TODO: #85 needs to get fixed for this.
-    // } else if is_point_at_infinity(q) {
-    //     (true, p)
+        // result = (true, q);
+        // TODO: #85 needs to get fixed for this.
+        // } else if is_point_at_infinity(q) {
+        //     (true, p)
     } else {
         if is_point_at_infinity(q) {
             result = (true, p);
@@ -122,23 +132,25 @@ fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
     result
 }
 
-fn ltr_mul(k: Scalar, p: Jacobian) -> Jacobian {
+fn ltr_mul(k: Scalar, p: Jacobian) -> (bool, Jacobian) {
     let mut q = (
         FieldElement::from_literal(0u128),
         FieldElement::from_literal(1u128),
         FieldElement::from_literal(0u128),
     );
+    let mut success = true;
     for i in 0..256 {
         q = point_double(q);
         if k.get_bit(256 - 1 - i).equal(Scalar::ONE()) {
-            let (_success, result) = point_add(q, p); // TODO: check success
-            q = result;
+            let (s, r) = point_add(q, p);
+            q = r;
+            success = success && s;
         }
     }
-    q
+    (success, q)
 }
 
-pub fn generic_point_mul(k: Scalar, p: Affine) -> Affine {
-    let jac = ltr_mul(k, affine_to_jacobian(p));
-    jacobian_to_affine(jac)
+pub fn generic_point_mul(k: Scalar, p: Affine) -> (bool, Affine) {
+    let (success, jac) = ltr_mul(k, affine_to_jacobian(p));
+    (success, jacobian_to_affine(jac))
 }

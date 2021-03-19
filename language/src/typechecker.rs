@@ -1876,7 +1876,10 @@ fn typecheck_statement(
                 }
             };
             match &new_b1.return_typ {
-                None => panic!(), // should not happen
+                None => {
+                    sess.span_rustspec_err(*b1_span, &format!("PANIC"));
+                    panic!(); // should not happen
+                },
                 Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                 Some(((b_t, _), (t, _))) => {
                     sess.span_rustspec_err(
