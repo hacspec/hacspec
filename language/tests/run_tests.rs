@@ -39,12 +39,12 @@ fn run_poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "hacspec-poly1305",
         Some("../fstar/Hacspec.Poly1305.fst"),
-        vec![""],
+        vec![],
     )?;
     run_test(
         "hacspec-poly1305",
         Some("../easycrypt/Hacspec_Poly1305.ec"),
-        vec![""],
+        vec![],
     )
 }
 
@@ -53,7 +53,7 @@ fn run_chacha20poly1305_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "hacspec-chacha20poly1305",
         Some("../fstar/Hacspec.Chacha20Poly1305.fst"),
-        vec!["hacspec_chacha20", "hacspec_poly1305"],
+        vec![],
     )
 }
 
@@ -96,7 +96,7 @@ fn run_hmac_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "hacspec-hmac",
         Some("../fstar/Hacspec.Hmac.fst"),
-        vec!["hacspec_sha256"],
+        vec![],
     )
 }
 
@@ -105,6 +105,6 @@ fn run_hkdf_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test(
         "hacspec-hkdf",
         Some("../fstar/Hacspec.Hkdf.fst"),
-        vec!["hacspec_sha256", "hacspec_hmac"],
+        vec![],
     )
 }
