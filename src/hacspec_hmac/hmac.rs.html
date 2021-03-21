@@ -52,8 +52,6 @@
 <span id="52">52</span>
 <span id="53">53</span>
 <span id="54">54</span>
-<span id="55">55</span>
-<span id="56">56</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">hacspec_sha256</span>::<span class="kw-2">*</span>;
@@ -63,8 +61,7 @@
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">PRK</span>, <span class="ident">HASH_SIZE</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Block</span>, <span class="ident">BLOCK_LEN</span>);
 
-<span class="kw">const</span> <span class="ident">I_PAD</span>: <span class="ident">Block</span> <span class="op">=</span> <span class="ident">Block</span>(<span class="macro">secret_array</span><span class="macro">!</span>(
-    <span class="ident">U8</span>,
+<span class="kw">const</span> <span class="ident">I_PAD</span>: <span class="ident">Block</span> <span class="op">=</span> <span class="ident">Block</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>(
     [
         <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>,
         <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>,
@@ -74,8 +71,7 @@
         <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>, <span class="number">0x36u8</span>
     ]
 ));
-<span class="kw">const</span> <span class="ident">O_PAD</span>: <span class="ident">Block</span> <span class="op">=</span> <span class="ident">Block</span>(<span class="macro">secret_array</span><span class="macro">!</span>(
-    <span class="ident">U8</span>,
+<span class="kw">const</span> <span class="ident">O_PAD</span>: <span class="ident">Block</span> <span class="op">=</span> <span class="ident">Block</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>(
     [
         <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>,
         <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>, <span class="number">0x5cu8</span>,
