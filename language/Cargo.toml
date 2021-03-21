@@ -42,3 +42,4 @@ hacspec-curve25519 = { path = "../examples/curve25519" }
 hacspec-riot-bootloader = { path = "../examples/riot-bootloader" }
 hacspec-hmac = { path = "../examples/hmac" }
 hacspec-hkdf = { path = "../examples/hkdf" }
+hacspec-p256 = { path = "../examples/p256" }

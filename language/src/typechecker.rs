@@ -1876,7 +1876,10 @@ fn typecheck_statement(
                 }
             };
             match &new_b1.return_typ {
-                None => panic!(), // should not happen
+                None => {
+                    // Should not happen
+                    panic!()
+                }
                 Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                 Some(((b_t, _), (t, _))) => {
                     sess.span_rustspec_err(
@@ -2046,7 +2049,7 @@ fn typecheck_block(
     let mut var_context = original_var_context.clone();
     let mut name_context = name_context.clone();
     let mut mutated_vars = HashSet::new();
-    let mut return_typ = None;
+    let mut return_typ = Some(((Borrowing::Consumed, DUMMY_SP), (BaseTyp::Unit, DUMMY_SP)));
     let mut new_stmts = Vec::new();
     let n_stmts = b.stmts.len();
     for (i, s) in b.stmts.into_iter().enumerate() {

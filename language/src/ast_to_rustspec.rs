@@ -125,17 +125,18 @@ pub fn translate_typ_name(
 
 pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResult<Ident> {
     if path.segments.len() > 1 {
+        sess.span_rustspec_err(path.span, "associated constants are not allowed in Hacspec");
         return Err(());
     }
     match path.segments.iter().last() {
         None => {
-            sess.span_rustspec_err(path.span, "empty path are not allowed in Hacspec");
+            sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
             Err(())
         }
         Some(segment) => match &segment.args {
             None => Ok(translate_ident(&segment.ident).0),
             Some(_) => {
-                sess.span_rustspec_err(path.span, "expression paths cannot have arguments");
+                sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
                 Err(())
             }
         },
