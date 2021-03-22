@@ -1633,9 +1633,55 @@ fn translate_array_decl(
 }
 
 fn attribute_is_test(attr: &Attribute) -> bool {
-    match attr.ident() {
-        Some(s) => s.name.to_ident_string() == "test",
-        None => false,
+    let attr_name = attr.name_or_empty().to_ident_string();
+    match attr_name.as_str() {
+        "test" => true,
+        "cfg" => {
+            let inner_tokens = attr.tokens();
+            if inner_tokens.len() != 2 {
+                return false;
+            }
+            let mut it = inner_tokens.trees();
+            let first_token = it.next().unwrap();
+            let second_token = it.next().unwrap();
+            match (first_token, second_token) {
+                (TokenTree::Token(first_tok), TokenTree::Delimited(_, _, inner)) => {
+                    match first_tok.kind {
+                        TokenKind::Pound => {
+                            if inner.len() != 2 {
+                                return false;
+                            }
+                            let mut it = inner.trees();
+                            let _first_token = it.next().unwrap();
+                            // First is cfg
+                            let second_token = it.next().unwrap();
+                            match second_token {
+                                TokenTree::Delimited(_, _, inner) => {
+                                    if inner.len() != 1 {
+                                        return false;
+                                    }
+                                    let mut it = inner.trees();
+                                    let first_token = it.next().unwrap();
+                                    match first_token {
+                                        TokenTree::Token(tok) => match tok.kind {
+                                            TokenKind::Ident(ident, _) => {
+                                                ident.to_ident_string() == "test"
+                                            }
+                                            _ => false,
+                                        },
+                                        _ => false,
+                                    }
+                                }
+                                _ => false,
+                            }
+                        }
+                        _ => false,
+                    }
+                }
+                _ => false,
+            }
+        }
+        _ => false,
     }
 }
 
@@ -1644,13 +1690,13 @@ fn translate_items(
     i: &ast::Item,
     arr_types: &ArrayTypes,
 ) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+    if i.attrs.iter().any(attribute_is_test) {
+        return Ok((ItemTranslationResult::Ignored, arr_types.clone()));
+    }
     match &i.kind {
         ItemKind::Fn(fn_kind) => {
             // Foremost we check whether this function is a test, in which case
             // we ignore it
-            if i.attrs.iter().any(attribute_is_test) {
-                return Ok((ItemTranslationResult::Ignored, arr_types.clone()));
-            }
             let FnKind(defaultness, ref sig, ref generics, ref body) = fn_kind.as_ref();
             // First, checking that no fancy function qualifier is here
             match defaultness {
