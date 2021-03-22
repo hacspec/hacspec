@@ -43,3 +43,7 @@ hacspec-riot-bootloader = { path = "../examples/riot-bootloader" }
 hacspec-hmac = { path = "../examples/hmac" }
 hacspec-hkdf = { path = "../examples/hkdf" }
 hacspec-p256 = { path = "../examples/p256" }
+
+
+[package.metadata.rust-analyzer]
+rustc_private=true
