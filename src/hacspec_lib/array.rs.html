@@ -1019,8 +1019,6 @@
 <span id="1019">1019</span>
 <span id="1020">1020</span>
 <span id="1021">1021</span>
-<span id="1022">1022</span>
-<span id="1023">1023</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Arrays</span>
@@ -1041,7 +1039,7 @@
 <span class="doccomment">//! ## Instantiating Arrays</span>
 <span class="doccomment">//! There are several different ways of creating array types.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! ### </span>
+<span class="doccomment">//! ###</span>
 
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
@@ -1430,11 +1428,9 @@
                 <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_chunk_len</span>(<span class="ident">chunk_size</span>, <span class="ident">chunk_number</span>);
                 <span class="macro">debug_assert</span><span class="macro">!</span>(
                     <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">len</span>,
-                    <span class="macro">format</span><span class="macro">!</span>(
-                        <span class="string">&quot;the chunk length should match the input. got {}, expected {}&quot;</span>,
-                        <span class="ident">input</span>.<span class="ident">len</span>(),
-                        <span class="ident">len</span>
-                    )
+                    <span class="string">&quot;the chunk length should match the input. got {}, expected {}&quot;</span>,
+                    <span class="ident">input</span>.<span class="ident">len</span>(),
+                    <span class="ident">len</span>
                 );
                 <span class="self">self</span>.<span class="ident">update_slice</span>(<span class="ident">idx_start</span>, <span class="ident">input</span>, <span class="number">0</span>, <span class="ident">len</span>)
             }
