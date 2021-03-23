@@ -261,7 +261,6 @@ fn main() -> Result<(), ()> {
     read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
-    args.push("--extern=hacspec_lib".to_string());
 
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => {
