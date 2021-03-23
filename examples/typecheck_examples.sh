@@ -13,3 +13,4 @@ cargo hacspec hacspec-riot-bootloader
 cargo hacspec hacspec-sha3
 cargo hacspec hacspec-gimli
 cargo hacspec hacspec-bls12-381
+cargo hacspec hacspec-ecdsa-p256-sha256

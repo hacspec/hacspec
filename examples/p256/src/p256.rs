@@ -1,6 +1,6 @@
 use hacspec_lib::*;
 
-type Affine = (FieldElement, FieldElement);
+pub type Affine = (FieldElement, FieldElement);
 type Jacobian = (FieldElement, FieldElement, FieldElement);
 
 public_nat_mod!(
@@ -10,7 +10,12 @@ public_nat_mod!(
     modulo_value: "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 
-unsigned_public_integer!(Scalar, 256);
+public_nat_mod!(
+    type_name: Scalar,
+    type_of_canvas: ScalarCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551"
+);
 
 bytes!(Element, 32);
 
@@ -27,11 +32,12 @@ pub fn point_mul_base(k: Scalar) -> (bool, Affine) {
             0x5Eu8, 0xCEu8, 0xCBu8, 0xB6u8, 0x40u8, 0x68u8, 0x37u8, 0xBFu8, 0x51u8, 0xF5u8
         ]))),
     );
-    generic_point_mul(k, base_point)
+    point_mul(k, base_point)
 }
 
 pub fn point_mul(k: Scalar, p: Affine) -> (bool, Affine) {
-    generic_point_mul(k, p)
+    let (success, jac) = ltr_mul(k, affine_to_jacobian(p));
+    (success, jacobian_to_affine(jac))
 }
 
 fn jacobian_to_affine(p: Jacobian) -> Affine {
@@ -77,7 +83,21 @@ fn is_point_at_infinity(p: Jacobian) -> bool {
     z.equal(FieldElement::from_literal(0u128))
 }
 
-fn point_add(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
+pub fn point_add(p: Affine, q: Affine) -> (bool, Affine) {
+    // TODO: this is pretty ugly but everything else doesn't work in hacspec yet.
+    let (mut success, mut result) = (false, p);
+    if p != q {
+        let (s, r) = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q));
+        result = jacobian_to_affine(r);
+        success = s;
+    } else {
+        result = jacobian_to_affine(point_double(affine_to_jacobian(p)));
+        success = true;
+    };
+    (success, result)
+}
+
+fn point_add_jacob(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
     let mut result = (true, q);
     if is_point_at_infinity(p) {
         // result = (true, q);
@@ -142,15 +162,10 @@ fn ltr_mul(k: Scalar, p: Jacobian) -> (bool, Jacobian) {
     for i in 0..256 {
         q = point_double(q);
         if k.get_bit(256 - 1 - i).equal(Scalar::ONE()) {
-            let (s, r) = point_add(q, p);
+            let (s, r) = point_add_jacob(q, p);
             q = r;
             success = success && s;
         }
     }
     (success, q)
-}
-
-pub fn generic_point_mul(k: Scalar, p: Affine) -> (bool, Affine) {
-    let (success, jac) = ltr_mul(k, affine_to_jacobian(p));
-    (success, jacobian_to_affine(jac))
 }
