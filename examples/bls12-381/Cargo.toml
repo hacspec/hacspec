@@ -1,5 +1,5 @@
 [package]
-name = "bls12-381"
+name = "hacspec-bls12-381"
 version = "1.0.0"
 authors = ["Kasper S. Nielsen <Kasper@s-nielsen.dk>", "Mathias Rud Laursen <mathias_rud@hotmail.com>"]
 edition = "2018"

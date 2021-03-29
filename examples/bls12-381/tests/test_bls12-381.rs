@@ -1,5 +1,5 @@
 /* TO DO: Property Tests with associativity and distributive law */
-use bls12_381::*;
+use hacspec_bls12_381::*;
 
 //Generators taken from:
 //https://tools.ietf.org/id/draft-yonezawa-pairing-friendly-curves-02.html#rfc.section.4.2.2
