@@ -8,7 +8,19 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        spec: [hacspec-chacha20, hacspec-chacha20poly1305, hacspec-poly1305, hacspec-curve25519, hacspec-hkdf, hacspec-hmac, hacspec-sha256, hacspec-ntru-prime, hacspec-p256, hacspec-riot-bootloader, hacspec-sha3, hacspec-gimli]
+        spec:
+          - hacspec-chacha20
+          - hacspec-chacha20poly1305
+          - hacspec-poly1305
+          - hacspec-curve25519
+          - hacspec-hkdf
+          - hacspec-hmac
+          - hacspec-sha256
+          - hacspec-ntru-prime
+          - hacspec-p256
+          - hacspec-riot-bootloader
+          - hacspec-sha3
+          - hacspec-gimli
 
     steps:
       - uses: actions/checkout@v2
@@ -17,7 +29,7 @@ jobs:
       - name: Prepare
         run: |
           rustup toolchain install nightly-2021-03-11
-          cargo install -p hacspec --verbose
+          cargo install --path language --verbose
       - name: Build
         run: cargo build --verbose
       - name: Typecheck
