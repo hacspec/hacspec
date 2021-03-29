@@ -1,6 +1,6 @@
+use crate::name_resolution::DictEntry;
 use crate::rustspec::*;
-
-use crate::typechecker::{DictEntry, TypeDict};
+use crate::typechecker::TypeDict;
 use core::iter::IntoIterator;
 use heck::{SnakeCase, TitleCase};
 use itertools::Itertools;

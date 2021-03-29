@@ -1,4 +1,6 @@
+use crate::name_resolution::DictEntry;
 use crate::rustspec::*;
+use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
 
 use hacspec_util;
@@ -522,13 +524,6 @@ struct TopLevelContext {
 
 type VarContext = HashMap<HacspecId, (Typ, String)>;
 
-#[derive(Debug, Clone)]
-pub enum DictEntry {
-    Alias,
-    Array,
-    NaturalInteger,
-}
-
 pub type TypeDict = HashMap<String, (Typ, DictEntry)>;
 
 type NameContext = HashMap<String, Ident>;
@@ -686,14 +681,6 @@ fn add_name(name: &Ident, var: &Ident, name_context: &NameContext) -> NameContex
 }
 
 pub type TypecheckingResult<T> = Result<T, ()>;
-
-fn check_vec<T>(v: Vec<TypecheckingResult<T>>) -> TypecheckingResult<Vec<T>> {
-    if v.iter().all(|t| t.is_ok()) {
-        Ok(v.into_iter().map(|t| t.unwrap()).collect())
-    } else {
-        Err(())
-    }
-}
 
 fn typecheck_expression(
     sess: &Session,

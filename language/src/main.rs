@@ -13,6 +13,7 @@ extern crate rustc_span;
 
 mod ast_to_rustspec;
 mod hir_to_rustspec;
+mod name_resolution;
 mod rustspec;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
@@ -118,6 +119,15 @@ impl Callbacks for HacspecCallbacks {
                     imported_crates,
                 )
             })
+        };
+        let (krate, _typ_dict) = match name_resolution::resolve_crate(&compiler.session(), krate) {
+            Ok(krate) => krate,
+            Err(_) => {
+                &compiler
+                    .session()
+                    .err("found some Hacspec name resolution errors");
+                return Compilation::Stop;
+            }
         };
         let (krate, typ_dict) = match typechecker::typecheck_program(
             &compiler.session(),
