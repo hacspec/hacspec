@@ -50,11 +50,17 @@ const ERROR_OUTPUT_CONFIG: ErrorOutputType =
 
 trait HacspecErrorEmitter {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str);
+
+    fn span_rustspec_warn<S: Into<MultiSpan>>(&self, s: S, msg: &str);
 }
 
 impl HacspecErrorEmitter for Session {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str) {
         self.span_err_with_code(s, msg, DiagnosticId::Error(String::from("Hacspec")));
+    }
+
+    fn span_rustspec_warn<S: Into<MultiSpan>>(&self, s: S, msg: &str) {
+        self.span_warn_with_code(s, msg, DiagnosticId::Error(String::from("Hacspec")));
     }
 }
 
@@ -254,7 +260,7 @@ fn main() -> Result<(), ()> {
 
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => {
-            println!(" > Successfully verified.");
+            println!(" > Successfully typechecked.");
             Ok(())
         }
         Err(_) => Err(()),

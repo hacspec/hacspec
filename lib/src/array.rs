@@ -72,6 +72,14 @@ macro_rules! _array_base {
                 a
             }
 
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn concat<A: SeqTrait<$t>>(&self, next: &A) -> Seq<$t> {
+                let mut out = Seq::new(self.len() + next.len());
+                out = out.update_start(self);
+                out = out.update_slice(self.len(), next, 0, next.len());
+                out
+            }
+
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_slice_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
                 Self::from_slice(input, r.start, r.end - r.start)
@@ -121,7 +129,9 @@ macro_rules! _array_base {
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(
                     input.len() == len,
-                    "the chunk length should match the input. got {}, expected {}", input.len(), len
+                    "the chunk length should match the input. got {}, expected {}",
+                    input.len(),
+                    len
                 );
                 self.update_slice(idx_start, input, 0, len)
             }
@@ -339,7 +349,7 @@ macro_rules! generic_array {
                 a
             }
 
-            #[cfg_attr(feature="use_attributes", in_hacspec)]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
             pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> Seq<T> {
                 let mut out = Seq::new(self.len() + next.len());
                 out = out.update_start(self);
@@ -396,7 +406,11 @@ macro_rules! generic_array {
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(
                     input.len() == len,
-                    format!("the chunk length should match the input. got {}, expected {}", input.len(), len)
+                    format!(
+                        "the chunk length should match the input. got {}, expected {}",
+                        input.len(),
+                        len
+                    )
                 );
                 self.update_slice(idx_start, input, 0, len)
             }

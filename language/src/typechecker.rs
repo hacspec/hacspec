@@ -517,7 +517,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
 #[derive(Clone)]
 struct TopLevelContext {
     functions: HashMap<FnKey, FnValue>,
-    consts: HashMap<String, (Spanned<BaseTyp>, Spanned<Expression>)>,
+    consts: HashMap<String, (Spanned<BaseTyp>, Option<Spanned<Expression>>)>,
 }
 
 type VarContext = HashMap<HacspecId, (Typ, String)>;
@@ -772,6 +772,52 @@ fn typecheck_expression(
                     }
                 }
             }
+        }
+        Expression::InlineConditional(cond, e_t, e_f) => {
+            let (new_cond, t_cond, var_context) = typecheck_expression(
+                sess,
+                cond,
+                top_level_context,
+                typ_dict,
+                &var_context,
+                name_context,
+            )?;
+            unify_types(
+                sess,
+                &t_cond,
+                &(
+                    (Borrowing::Consumed, (t_cond.0).1),
+                    (BaseTyp::Bool, (t_cond.1).1),
+                ),
+                &HashMap::new(),
+                typ_dict,
+            )?;
+            let (new_e_t, t_e_t, var_context) = typecheck_expression(
+                sess,
+                e_t,
+                top_level_context,
+                typ_dict,
+                &var_context,
+                name_context,
+            )?;
+            let (new_e_f, t_e_f, var_context) = typecheck_expression(
+                sess,
+                e_f,
+                top_level_context,
+                typ_dict,
+                &var_context,
+                name_context,
+            )?;
+            unify_types(sess, &t_e_t, &t_e_f, &HashMap::new(), typ_dict)?;
+            Ok((
+                Expression::InlineConditional(
+                    Box::new((new_cond, cond.1.clone())),
+                    Box::new((new_e_t, e_t.1.clone())),
+                    Box::new((new_e_f, e_f.1.clone())),
+                ),
+                t_e_t,
+                var_context,
+            ))
         }
         Expression::Binary((op, op_span), e1, e2, _) => {
             let (new_e1, t1, var_context) = typecheck_expression(
@@ -1486,7 +1532,7 @@ fn typecheck_expression(
                 return Err(());
             }
             if !is_safe_casting(&(e1_typ.1).0, &t1.0) {
-                sess.span_rustspec_err(
+                sess.span_rustspec_warn(
                     span.clone(),
                     format!(
                         "casting from {} to {} is not safe (i.e it can lead to overflow)",
@@ -1494,7 +1540,6 @@ fn typecheck_expression(
                     )
                     .as_str(),
                 );
-                return Err(());
             }
             Ok((
                 Expression::IntegerCasting(
@@ -1798,18 +1843,16 @@ fn typecheck_statement(
                 var_context,
                 name_context,
             )?;
-            match cond_t {
-                ((Borrowing::Consumed, _), (BaseTyp::Bool, _)) => (),
-                _ => sess.span_rustspec_err(
-                    cond.1,
-                    format!(
-                        "if condition should have type bool but has type {}{}",
-                        (cond_t.0).0,
-                        (cond_t.1).0
-                    )
-                    .as_str(),
+            unify_types(
+                sess,
+                &cond_t,
+                &(
+                    (Borrowing::Consumed, (cond_t.0).1),
+                    (BaseTyp::Bool, (cond_t.1).1),
                 ),
-            }
+                &HashMap::new(),
+                typ_dict,
+            )?;
             let (new_b1, var_context_b1) = typecheck_block(
                 sess,
                 (b1.clone(), b1_span.clone()),
@@ -2216,7 +2259,7 @@ fn typecheck_item(
                     (Ident::Original(id), _) => id.clone(),
                     _ => panic!(), // should not happen
                 },
-                (typ.clone(), (new_e.clone(), e.1.clone())),
+                (typ.clone(), Some((new_e.clone(), e.1.clone()))),
             );
             Ok((
                 Item::ConstDecl(id.clone(), typ.clone(), (new_e, (e.1).clone())),
@@ -2289,6 +2332,7 @@ pub fn typecheck_program<
     ) -> (
         HashMap<FnKey, Result<ExternalFuncSig, String>>,
         HashMap<String, BaseTyp>,
+        HashMap<String, BaseTyp>,
     ),
 >(
     sess: &Session,
@@ -2296,10 +2340,10 @@ pub fn typecheck_program<
     external_funcs: &F,
     _allowed_sigs: &AllowedSigs,
 ) -> TypecheckingResult<(Program, TypeDict)> {
-    let (extern_funcs, extern_arrays) = external_funcs(&p.imported_crates);
+    let (extern_funcs, extern_consts, extern_arrays) = external_funcs(&p.imported_crates);
     let mut top_level_context: TopLevelContext = TopLevelContext {
         functions: extern_funcs
-            .iter()
+            .into_iter()
             .map(|(k, v)| {
                 (
                     k.clone(),
@@ -2310,7 +2354,10 @@ pub fn typecheck_program<
                 )
             })
             .collect(),
-        consts: HashMap::new(),
+        consts: extern_consts
+            .into_iter()
+            .map(|(k, v)| (k, ((v, DUMMY_SP), None)))
+            .collect(),
     };
     //TODO: better system, this whitelist is hardcoded
     let mut typ_dict = HashMap::from(

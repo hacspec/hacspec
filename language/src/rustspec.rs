@@ -190,6 +190,11 @@ pub enum Expression {
         Box<Spanned<Expression>>,
         Option<Typ>,
     ),
+    InlineConditional(
+        Box<Spanned<Expression>>,
+        Box<Spanned<Expression>>,
+        Box<Spanned<Expression>>,
+    ),
     Named(Ident),
     // FuncCall(prefix, name, args)
     FuncCall(
