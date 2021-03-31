@@ -16,14 +16,13 @@ pub enum DictEntry {
 
 pub type ResolutionResult<T> = Result<T, ()>;
 
-pub type TypeDict = HashMap<String, (Typ, DictEntry)>;
-
 type NameContext = HashMap<String, Ident>;
 
 #[derive(Clone)]
-struct TopLevelContext {
+pub struct TopLevelContext {
     functions: HashMap<FnKey, FnValue>,
     consts: HashMap<String, Spanned<BaseTyp>>,
+    typ_dict: HashMap<String, (Typ, DictEntry)>,
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
@@ -61,7 +60,6 @@ pub enum FnValue {
 fn resolve_item(
     sess: &Session,
     (i, i_span): Spanned<Item>,
-    typ_dict: &TypeDict,
     top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Item>> {
     match i {
@@ -72,12 +70,11 @@ fn resolve_item(
 fn process_decl_item(
     sess: &Session,
     (i, i_span): &Spanned<Item>,
-    typ_dict: &mut TypeDict,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
     match i {
         Item::ConstDecl(id, typ, _e) => {
-            top_level_context.consts = top_level_context.consts.update(
+            top_level_context.consts.insert(
                 match id {
                     (Ident::Original(id), _) => id.clone(),
                     _ => panic!(), // should not happen
@@ -98,7 +95,7 @@ fn process_decl_item(
                     return Err(());
                 }
             };
-            let _ = typ_dict.update(
+            let _ = top_level_context.typ_dict.insert(
                 match &id.0 {
                     Ident::Original(s) => s.clone(),
                     Ident::Hacspec(_, _) => panic!(),
@@ -115,49 +112,57 @@ fn process_decl_item(
                 ),
             );
             match index_typ {
-                None => typ_dict.clone(),
-                Some(index_typ) => typ_dict.update(
-                    match &index_typ.0 {
-                        Ident::Original(s) => s.clone(),
-                        Ident::Hacspec(_, _) => panic!(),
-                    },
-                    (
+                None => (),
+                Some(index_typ) => {
+                    top_level_context.typ_dict.insert(
+                        match &index_typ.0 {
+                            Ident::Original(s) => s.clone(),
+                            Ident::Hacspec(_, _) => panic!(),
+                        },
                         (
-                            (Borrowing::Consumed, index_typ.1.clone()),
-                            (BaseTyp::Usize, index_typ.1.clone()),
+                            (
+                                (Borrowing::Consumed, index_typ.1.clone()),
+                                (BaseTyp::Usize, index_typ.1.clone()),
+                            ),
+                            DictEntry::Alias,
                         ),
-                        DictEntry::Alias,
-                    ),
-                ),
+                    );
+                }
             };
+            Ok(())
+        }
+        Item::FnDecl((f, _f_span), sig, _b) => {
+            top_level_context
+                .functions
+                .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
             Ok(())
         }
         _ => Ok(()),
     }
 }
 
-pub fn resolve_crate(sess: &Session, p: Program) -> ResolutionResult<(Program, TypeDict)> {
-    let mut typ_dict = HashMap::new();
+pub fn resolve_crate(sess: &Session, p: Program) -> ResolutionResult<(Program, TopLevelContext)> {
     let mut top_level_ctx = TopLevelContext {
         consts: HashMap::new(),
         functions: HashMap::new(),
+        typ_dict: HashMap::new(),
     };
     // We do a first pass that collects types and signatures of top-level
     // items
     for item in p.items.iter() {
-        process_decl_item(sess, item, &mut typ_dict, &mut top_level_ctx)?;
+        process_decl_item(sess, item, &mut top_level_ctx)?;
     }
     Ok((
         Program {
             items: check_vec(
                 p.items
                     .into_iter()
-                    .map(|i| resolve_item(sess, i, &typ_dict, &top_level_ctx))
+                    .map(|i| resolve_item(sess, i, &top_level_ctx))
                     .collect(),
             )?,
             imported_crates: p.imported_crates,
             ty_aliases: p.ty_aliases,
         },
-        typ_dict,
+        top_level_ctx,
     ))
 }
