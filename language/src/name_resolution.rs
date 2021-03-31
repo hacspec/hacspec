@@ -6,6 +6,20 @@ use rustc_session::Session;
 use crate::rustspec::*;
 use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+pub static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+fn fresh_hacspec_id() -> usize {
+    ID_COUNTER.fetch_add(1, Ordering::SeqCst)
+}
+
+pub(crate) fn to_fresh_ident(x: &String) -> Ident {
+    Ident::Local(LocalIdent {
+        id: fresh_hacspec_id(),
+        name: x.clone(),
+    })
+}
 
 #[derive(Debug, Clone)]
 pub enum DictEntry {
@@ -16,19 +30,19 @@ pub enum DictEntry {
 
 pub type ResolutionResult<T> = Result<T, ()>;
 
-type NameContext = HashMap<String, Ident>;
+pub type NameContext = HashMap<String, Ident>;
 
 #[derive(Clone)]
 pub struct TopLevelContext {
-    functions: HashMap<FnKey, FnValue>,
-    consts: HashMap<String, Spanned<BaseTyp>>,
-    typ_dict: HashMap<String, (Typ, DictEntry)>,
+    pub functions: HashMap<FnKey, FnValue>,
+    pub consts: HashMap<TopLevelIdent, Spanned<BaseTyp>>,
+    pub typ_dict: HashMap<TopLevelIdent, (Typ, DictEntry)>,
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum FnKey {
-    Independent(Ident),
-    Impl(BaseTyp, Ident),
+    Independent(TopLevelIdent),
+    Impl(BaseTyp, TopLevelIdent),
 }
 
 impl fmt::Display for FnKey {
@@ -74,19 +88,13 @@ fn process_decl_item(
 ) -> ResolutionResult<()> {
     match i {
         Item::ConstDecl(id, typ, _e) => {
-            top_level_context.consts.insert(
-                match id {
-                    (Ident::Original(id), _) => id.clone(),
-                    _ => panic!(), // should not happen
-                },
-                typ.clone(),
-            );
+            top_level_context.consts.insert(id.0.clone(), typ.clone());
             Ok(())
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let new_size = match &size.0 {
                 Expression::Lit(Literal::Usize(u)) => ArraySize::Integer(u.clone()),
-                Expression::Named(Ident::Original(s)) => ArraySize::Ident(s.clone()),
+                Expression::Named(Ident::TopLevel(s)) => ArraySize::Ident(s.clone()),
                 _ => {
                     sess.span_rustspec_err(
                         size.1.clone(),
@@ -95,11 +103,8 @@ fn process_decl_item(
                     return Err(());
                 }
             };
-            let _ = top_level_context.typ_dict.insert(
-                match &id.0 {
-                    Ident::Original(s) => s.clone(),
-                    Ident::Hacspec(_, _) => panic!(),
-                },
+            top_level_context.typ_dict.insert(
+                id.0.clone(),
                 (
                     (
                         (Borrowing::Consumed, id.1.clone()),
@@ -115,10 +120,7 @@ fn process_decl_item(
                 None => (),
                 Some(index_typ) => {
                     top_level_context.typ_dict.insert(
-                        match &index_typ.0 {
-                            Ident::Original(s) => s.clone(),
-                            Ident::Hacspec(_, _) => panic!(),
-                        },
+                        index_typ.0.clone(),
                         (
                             (
                                 (Borrowing::Consumed, index_typ.1.clone()),

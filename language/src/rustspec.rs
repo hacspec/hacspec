@@ -98,7 +98,7 @@ impl fmt::Debug for Borrowing {
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub enum ArraySize {
     Integer(usize),
-    Ident(String),
+    Ident(TopLevelIdent),
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
@@ -314,7 +314,7 @@ pub struct ExternalFuncSig {
 
 #[derive(Clone)]
 pub enum Item {
-    FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
+    FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
     ArrayDecl(
         Spanned<TopLevelIdent>,         // Name of the array type
         Spanned<Expression>,            // Length

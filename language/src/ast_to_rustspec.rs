@@ -535,10 +535,7 @@ fn translate_expr(
                                             (
                                                 Expression::FuncCall(
                                                     None,
-                                                    (
-                                                        Ident::Original("U8".to_string()),
-                                                        call.span(),
-                                                    ),
+                                                    (TopLevelIdent("U8".to_string()), call.span()),
                                                     vec![(
                                                         i.clone(),
                                                         (Borrowing::Consumed, i.1.clone()),
@@ -606,7 +603,7 @@ fn translate_expr(
                 .first()
                 .map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
             let method_name = match method_name.args {
-                None => Ok(translate_ident(&method_name.ident)),
+                None => Ok(translate_toplevel_ident(&method_name.ident)),
                 Some(_) => {
                     sess.span_rustspec_err(*span, "method type arguments not allowed in Hacspec");
                     Err(())
@@ -1806,7 +1803,7 @@ fn translate_items(
             };
             Ok((
                 ItemTranslationResult::Item(Item::FnDecl(
-                    translate_ident(&i.ident),
+                    translate_toplevel_ident(&i.ident),
                     fn_sig,
                     fn_body,
                 )),
