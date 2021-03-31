@@ -94,10 +94,7 @@ fn translate_base_typ(
                         // We accept all named types from hacspec_lib because of the predefined
                         // array types like U32Word, etc.
                         _ => Ok((
-                            BaseTyp::Named(
-                                (Ident::Original(name.to_ident_string()), DUMMY_SP),
-                                None,
-                            ),
+                            BaseTyp::Named((TopLevelIdent(name.to_ident_string()), DUMMY_SP), None),
                             typ_ctx.clone(),
                         )),
                     },
