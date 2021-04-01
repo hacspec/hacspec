@@ -50,11 +50,17 @@ const ERROR_OUTPUT_CONFIG: ErrorOutputType =
 
 trait HacspecErrorEmitter {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str);
+
+    fn span_rustspec_warn<S: Into<MultiSpan>>(&self, s: S, msg: &str);
 }
 
 impl HacspecErrorEmitter for Session {
     fn span_rustspec_err<S: Into<MultiSpan>>(&self, s: S, msg: &str) {
         self.span_err_with_code(s, msg, DiagnosticId::Error(String::from("Hacspec")));
+    }
+
+    fn span_rustspec_warn<S: Into<MultiSpan>>(&self, s: S, msg: &str) {
+        self.span_warn_with_code(s, msg, DiagnosticId::Error(String::from("Hacspec")));
     }
 }
 
@@ -228,6 +234,11 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
     // This only works with debug builds.
     let deps = manifest.target_directory + "/debug/deps";
     callbacks.target_directory = deps;
+
+    // Add the dependencies as --extern for the hacpsec typechecker.
+    for dependency in package.dependencies.iter() {
+        args.push(format!("--extern={}", dependency.name.replace("-", "_")));
+    }
 }
 
 fn main() -> Result<(), ()> {
@@ -250,11 +261,10 @@ fn main() -> Result<(), ()> {
     read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
-    args.push("--extern=hacspec_lib".to_string());
 
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => {
-            println!(" > Successfully verified.");
+            println!(" > Successfully typechecked.");
             Ok(())
         }
         Err(_) => Err(()),
