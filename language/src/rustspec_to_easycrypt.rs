@@ -1116,6 +1116,9 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                         .append(RcDoc::as_string("int")),
                 )
         }
+        Item::SimplifiedNaturalIntegerDecl(_nat_name, _secrecy, _modulo_power) => {
+            unimplemented!()
+        }
     }
 }
 
@@ -1139,7 +1142,6 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
         Ok(file) => file,
     };
     let width = 80;
-    let mut w = Vec::new();
     write!(
         file,
         "require import List Int IntDiv CoreMap AllCore.\n\
@@ -1163,10 +1165,9 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
     RcDoc::intersperse(i_c_iter, RcDoc::line())
         .append(RcDoc::hardline())
         .append(RcDoc::hardline())
-        .render(width, &mut w)
+        .render(width, &mut file)
         .unwrap();
     translate_program(p, typ_dict)
-        .render(width, &mut w)
+        .render(width, &mut file)
         .unwrap();
-    write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }

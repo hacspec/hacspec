@@ -1876,7 +1876,10 @@ fn typecheck_statement(
                 }
             };
             match &new_b1.return_typ {
-                None => panic!(), // should not happen
+                None => {
+                    // Should not happen
+                    panic!()
+                }
                 Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                 Some(((b_t, _), (t, _))) => {
                     sess.span_rustspec_err(
@@ -2046,7 +2049,7 @@ fn typecheck_block(
     let mut var_context = original_var_context.clone();
     let mut name_context = name_context.clone();
     let mut mutated_vars = HashSet::new();
-    let mut return_typ = None;
+    let mut return_typ = Some(((Borrowing::Consumed, DUMMY_SP), (BaseTyp::Unit, DUMMY_SP)));
     let mut new_stmts = Vec::new();
     let n_stmts = b.stmts.len();
     for (i, s) in b.stmts.into_iter().enumerate() {
@@ -2322,6 +2325,40 @@ fn typecheck_item(
                 ),
             );
             Ok((i.clone(), top_level_context, typ_dict))
+        }
+        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
+            let typ_dict = typ_dict.update(
+                match &typ_ident.0 {
+                    Ident::Original(s) => s.clone(),
+                    Ident::Hacspec(_, _) => panic!(),
+                },
+                match &canvas_size.0 {
+                    Expression::Lit(Literal::Usize(size)) => (
+                        (
+                            (Borrowing::Consumed, (typ_ident.1).clone()),
+                            (
+                                BaseTyp::NaturalInteger(
+                                    secrecy.clone(),
+                                    (String::new(), DUMMY_SP), // TODO: replace with real modulo value
+                                    // For now we can leave this empty because
+                                    // We don't use it in the typechecker
+                                    (size.clone(), (canvas_size.1).clone()),
+                                ),
+                                typ_ident.1.clone(),
+                            ),
+                        ),
+                        DictEntry::NaturalInteger,
+                    ),
+                    _ => {
+                        sess.span_rustspec_err(
+                            (canvas_size.1).clone(),
+                            "the size of the natural integer encoding has to be a usize literal",
+                        );
+                        return Err(());
+                    }
+                },
+            );
+            Ok((i.clone(), top_level_context.clone(), typ_dict))
         }
     }
 }

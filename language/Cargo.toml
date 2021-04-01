@@ -1,6 +1,6 @@
 [package]
 name = "hacspec"
-version = "0.2.0-beta.2"
+version = "0.2.0-beta.4"
 authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>", "Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
@@ -40,3 +40,10 @@ hacspec-sha3 = { path = "../examples/sha3" }
 hacspec-sha256 = { path = "../examples/sha256" }
 hacspec-curve25519 = { path = "../examples/curve25519" }
 hacspec-riot-bootloader = { path = "../examples/riot-bootloader" }
+hacspec-hmac = { path = "../examples/hmac" }
+hacspec-hkdf = { path = "../examples/hkdf" }
+hacspec-p256 = { path = "../examples/p256" }
+
+
+[package.metadata.rust-analyzer]
+rustc_private=true

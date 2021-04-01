@@ -234,6 +234,11 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
     // This only works with debug builds.
     let deps = manifest.target_directory + "/debug/deps";
     callbacks.target_directory = deps;
+
+    // Add the dependencies as --extern for the hacpsec typechecker.
+    for dependency in package.dependencies.iter() {
+        args.push(format!("--extern={}", dependency.name.replace("-", "_")));
+    }
 }
 
 fn main() -> Result<(), ()> {
@@ -256,7 +261,6 @@ fn main() -> Result<(), ()> {
     read_crate(package_name, &mut args, &mut callbacks);
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
-    args.push("--extern=hacspec_lib".to_string());
 
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => {

@@ -1042,6 +1042,26 @@ fn translate_item<'a>(i: &'a Item, typ_dict: &'a TypeDict) -> RcDoc<'a, ()> {
                         ),
                 )
         }
+        Item::SimplifiedNaturalIntegerDecl(nat_name, _secrecy, canvas_size) => {
+            let canvas_size = match &canvas_size.0 {
+                Expression::Lit(Literal::Usize(size)) => size,
+                _ => panic!(), // should not happen by virtue of typchecking
+            };
+            RcDoc::as_string("type")
+                .append(RcDoc::space())
+                .append(translate_ident(nat_name.0.clone()))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("="))
+                .group()
+                .append(
+                    RcDoc::line()
+                        .append(RcDoc::as_string("nat_mod"))
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string(format!("pow2 {}", canvas_size)))
+                        .group()
+                        .nest(2),
+                )
+        }
     }
 }
 
@@ -1064,7 +1084,6 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
         Ok(file) => file,
     };
     let width = 80;
-    let mut w = Vec::new();
     let module_name = path.file_stem().unwrap().to_str().unwrap();
     write!(
         file,
@@ -1102,15 +1121,15 @@ pub fn translate_and_write_to_file(sess: &Session, p: &Program, file: &str, typ_
     RcDoc::intersperse(i_c_iter, RcDoc::hardline())
         .append(RcDoc::hardline())
         .append(RcDoc::hardline())
-        .render(width, &mut w)
+        .render(width, &mut file)
         .unwrap();
     RcDoc::intersperse(t_a_iter, RcDoc::hardline())
         .append(RcDoc::hardline())
         .append(RcDoc::hardline())
-        .render(width, &mut w)
+        .render(width, &mut file)
         .unwrap();
     translate_program(p, typ_dict)
-        .render(width, &mut w)
+        .render(width, &mut file)
         .unwrap();
-    write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
+    file.flush().unwrap();
 }
