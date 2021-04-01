@@ -631,7 +631,7 @@ fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
 
 fn add_name(name: &Ident, var: &Ident, name_context: &NameContext) -> NameContext {
     match name {
-        Ident::Local(LocalIdent { id: _, name }) => name_context.update(name.clone(), var.clone()),
+        Ident::Unresolved(name) => name_context.update(name.clone(), var.clone()),
         _ => panic!("trying to lookup in the name context a Hacspec id"),
     }
 }

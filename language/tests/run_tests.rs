@@ -9,7 +9,7 @@ fn run_test(package_name: &str, output: Option<&str>) -> Result<(), Box<dyn std:
     }
     cmd.arg(format!("{}", package_name));
     println!("Running: {:?}", cmd);
-    cmd.status().expect("Error running typechecker");
+    cmd.assert().success();
     Ok(())
 }
 

@@ -94,7 +94,7 @@ fn process_decl_item(
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let new_size = match &size.0 {
                 Expression::Lit(Literal::Usize(u)) => ArraySize::Integer(u.clone()),
-                Expression::Named(Ident::TopLevel(s)) => ArraySize::Ident(s.clone()),
+                Expression::Named(Ident::Unresolved(s)) => ArraySize::Ident(TopLevelIdent(s.clone())),
                 _ => {
                     sess.span_rustspec_err(
                         size.1.clone(),

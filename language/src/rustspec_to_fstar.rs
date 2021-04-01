@@ -127,7 +127,7 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     let ident_str = match x {
-        Ident::Unresolved(_) => panic!("should not happen"),
+        Ident::Unresolved(s) => s.clone(),
         Ident::TopLevel(TopLevelIdent(s)) => s.clone(),
         Ident::Local(LocalIdent { id, name: s }) => {
             let mut id_map = ID_MAP.lock().unwrap();
