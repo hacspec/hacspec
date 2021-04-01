@@ -1,18 +1,16 @@
 [package]
-name = "evercrypt-provider"
+name = "hacspec-p256"
 version = "0.1.0"
 authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
 edition = "2018"
 
-[features]
-random = []
+[lib]
+path = "src/p256.rs"
 
 [dependencies]
-evercrypt = "0.0.8"
-hacspec-provider = { path = "../../provider" }
-aead = "0.3"
+hacspec-lib = { path = "../../lib" }
 
 [dev-dependencies]
 serde_json = "1.0"
 serde = {version = "1.0", features = ["derive"]}
-rand = "0.7"
+hacspec-dev = { path = "../../utils/dev" }

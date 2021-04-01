@@ -1,6 +1,5 @@
 use hacspec_lib::prelude::*;
-
-use unsafe_hacspec_examples::hkdf::*;
+use hacspec_hkdf::*;
 
 struct HKDFTestVectors<'a> {
     ikm: &'a str,
@@ -50,6 +49,7 @@ fn test_kat() {
             &ByteSeq::from_hex(kat.info),
             kat.l,
         );
-        assert_eq!(kat.okm, okm.to_hex());
+        assert!(okm.0);
+        assert_eq!(kat.okm, okm.1.to_hex());
     }
 }

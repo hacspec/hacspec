@@ -190,6 +190,11 @@ pub enum Expression {
         Box<Spanned<Expression>>,
         Option<Typ>,
     ),
+    InlineConditional(
+        Box<Spanned<Expression>>,
+        Box<Spanned<Expression>>,
+        Box<Spanned<Expression>>,
+    ),
     Named(Ident),
     // FuncCall(prefix, name, args)
     FuncCall(
@@ -282,8 +287,13 @@ pub enum Item {
         Spanned<Ident>, // Element type name
         Spanned<Ident>, // Canvas array type name
         Secrecy,
-        Spanned<Expression>,
-        Spanned<String>,
+        Spanned<Expression>, // Canvas size
+        Spanned<String>,     // Modulo value
+    ),
+    SimplifiedNaturalIntegerDecl(
+        Spanned<Ident>, // Element type name
+        Secrecy,
+        Spanned<Expression>, // If x, then modulo value is 2^x
     ),
 }
 

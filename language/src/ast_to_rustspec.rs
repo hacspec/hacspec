@@ -1,10 +1,11 @@
 use im::HashSet;
 use rustc_ast::{
     ast::{
-        self, AngleBracketedArg, Async, BindingMode, BlockCheckMode, BorrowKind, Const, Crate,
-        Defaultness, Expr, ExprKind, Extern, FnRetTy, FnKind, GenericArg, GenericArgs, IntTy, ItemKind,
-        LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind, RangeLimits, Stmt,
-        StmtKind, StrStyle, Ty, TyKind, TyAliasKind, UintTy, UnOp, Unsafe, UseTreeKind,
+        self, AngleBracketedArg, Async, Attribute, BindingMode, BlockCheckMode, BorrowKind, Const,
+        Crate, Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs,
+        IntTy, ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind,
+        RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe,
+        UseTreeKind,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -124,17 +125,18 @@ pub fn translate_typ_name(
 
 pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResult<Ident> {
     if path.segments.len() > 1 {
+        sess.span_rustspec_err(path.span, "associated constants are not allowed in Hacspec");
         return Err(());
     }
     match path.segments.iter().last() {
         None => {
-            sess.span_rustspec_err(path.span, "empty path are not allowed in Hacspec");
+            sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
             Err(())
         }
         Some(segment) => match &segment.args {
             None => Ok(translate_ident(&segment.ident).0),
             Some(_) => {
-                sess.span_rustspec_err(path.span, "expression paths cannot have arguments");
+                sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
                 Err(())
             }
         },
@@ -521,6 +523,45 @@ fn translate_expr(
                                     return Err(());
                                 }
                             },
+                            ("secret_bytes", None) => match &*call.args {
+                                MacArgs::Delimited(_, _, tokens) => {
+                                    let mut it = tokens.trees();
+                                    let first_arg = it.next().map_or(Err(()), |x| Ok(x))?;
+                                    let array = check_for_literal_array(sess, &first_arg)?;
+                                    let array = array
+                                        .into_iter()
+                                        .map(|i| {
+                                            (
+                                                Expression::FuncCall(
+                                                    None,
+                                                    (
+                                                        Ident::Original("U8".to_string()),
+                                                        call.span(),
+                                                    ),
+                                                    vec![(
+                                                        i.clone(),
+                                                        (Borrowing::Consumed, i.1.clone()),
+                                                    )],
+                                                ),
+                                                i.1.clone(),
+                                            )
+                                        })
+                                        .collect();
+                                    return Ok((
+                                        (ExprTranslationResult::TransExpr(Expression::NewArray(
+                                            func_name, None, array,
+                                        ))),
+                                        e.span,
+                                    ));
+                                }
+                                _ => {
+                                    sess.span_rustspec_err(
+                                        call.args.span().unwrap().clone(),
+                                        "expected parenthesis-delimited args",
+                                    );
+                                    return Err(());
+                                }
+                            },
                             _ => {
                                 sess.span_rustspec_err(
                                     call.path.span.clone(),
@@ -689,9 +730,9 @@ fn translate_expr(
                     Err(())
                 }
                 (ExprTranslationResult::TransExpr(r_cond), span) => Ok((r_cond, span)),
-            };
-            let r_t_e = translate_block(sess, arr_typs, t_e)?;
-            let r_f_e: TranslationResult<Option<Spanned<Block>>> = match f_e {
+            }?;
+            let mut r_t_e = translate_block(sess, arr_typs, t_e)?;
+            let r_f_e = match f_e {
                 None => Ok(None),
                 Some(f_e) => match &f_e.kind {
                     ExprKind::Block(f_e, _) => {
@@ -706,13 +747,42 @@ fn translate_expr(
                         Err(())
                     }
                 },
-            };
-            Ok((
+            }?;
+            let stmt_result = (
                 ExprTranslationResult::TransStmt(Statement::Conditional(
-                    r_cond?, r_t_e, r_f_e?, None,
+                    r_cond.clone(),
+                    r_t_e.clone(),
+                    r_f_e.clone(),
+                    None,
                 )),
                 e.span,
-            ))
+            );
+            // Now, we determine whether what we have translate is an inline conditional
+            // or a statement-like conditional
+            match r_f_e {
+                Some(mut r_f_e) => {
+                    if r_t_e.0.stmts.len() == 1 && r_f_e.0.stmts.len() == 1 {
+                        let r_t_span = r_t_e.1.clone();
+                        let r_f_span = r_f_e.1.clone();
+                        let r_t_e = r_t_e.0.stmts.pop().unwrap();
+                        let r_f_e = r_f_e.0.stmts.pop().unwrap();
+                        match (r_t_e.0, r_f_e.0) {
+                            (Statement::ReturnExp(r_t_e), Statement::ReturnExp(r_f_e)) => Ok((
+                                ExprTranslationResult::TransExpr(Expression::InlineConditional(
+                                    Box::new(r_cond),
+                                    Box::new((r_t_e, r_t_span)),
+                                    Box::new((r_f_e, r_f_span)),
+                                )),
+                                e.span,
+                            )),
+                            _ => Ok(stmt_result),
+                        }
+                    } else {
+                        Ok(stmt_result)
+                    }
+                }
+                _ => Ok(stmt_result),
+            }
         }
         ExprKind::ForLoop(pat, range, b, _) => {
             let id = match &pat.kind {
@@ -1135,6 +1205,7 @@ fn translate_block(
 
 enum ItemTranslationResult {
     Item(Item),
+    Ignored,
     ImportedCrate(String),
     TyAlias(Spanned<String>, Spanned<BaseTyp>),
 }
@@ -1294,6 +1365,41 @@ fn check_for_ident(sess: &Session, arg: &TokenTree) -> TranslationResult<(Spanne
         },
         _ => {
             sess.span_rustspec_err(arg.span().clone(), "expected argument to be a single token");
+            Err(())
+        }
+    }
+}
+
+fn translate_simplified_natural_integer_decl(
+    sess: &Session,
+    i: &ast::Item,
+    arr_types: &ArrayTypes,
+    call: &MacCall,
+    secrecy: Secrecy,
+) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+    match &*call.args {
+        MacArgs::Delimited(_, _, tokens) => {
+            let mut it = tokens.trees();
+            let (first_arg, second_arg, third_arg) = {
+                let first_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let second_arg = it.next().map_or(Err(()), |x| Ok(x));
+                let third_arg = it.next().map_or(Err(()), |x| Ok(x));
+                Ok((first_arg?, second_arg?, third_arg?))
+            }?;
+            let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
+            check_for_comma(sess, &second_arg)?;
+            let canvas_size = check_for_usize(sess, &third_arg)?;
+            Ok((
+                (ItemTranslationResult::Item(Item::SimplifiedNaturalIntegerDecl(
+                    typ_ident,
+                    secrecy,
+                    canvas_size,
+                ))),
+                arr_types.update(typ_ident_string),
+            ))
+        }
+        _ => {
+            sess.span_rustspec_err(i.span.clone(), "expected delimited macro arguments");
             Err(())
         }
     }
@@ -1526,13 +1632,71 @@ fn translate_array_decl(
     }
 }
 
+fn attribute_is_test(attr: &Attribute) -> bool {
+    let attr_name = attr.name_or_empty().to_ident_string();
+    match attr_name.as_str() {
+        "test" => true,
+        "cfg" => {
+            let inner_tokens = attr.tokens();
+            if inner_tokens.len() != 2 {
+                return false;
+            }
+            let mut it = inner_tokens.trees();
+            let first_token = it.next().unwrap();
+            let second_token = it.next().unwrap();
+            match (first_token, second_token) {
+                (TokenTree::Token(first_tok), TokenTree::Delimited(_, _, inner)) => {
+                    match first_tok.kind {
+                        TokenKind::Pound => {
+                            if inner.len() != 2 {
+                                return false;
+                            }
+                            let mut it = inner.trees();
+                            let _first_token = it.next().unwrap();
+                            // First is cfg
+                            let second_token = it.next().unwrap();
+                            match second_token {
+                                TokenTree::Delimited(_, _, inner) => {
+                                    if inner.len() != 1 {
+                                        return false;
+                                    }
+                                    let mut it = inner.trees();
+                                    let first_token = it.next().unwrap();
+                                    match first_token {
+                                        TokenTree::Token(tok) => match tok.kind {
+                                            TokenKind::Ident(ident, _) => {
+                                                ident.to_ident_string() == "test"
+                                            }
+                                            _ => false,
+                                        },
+                                        _ => false,
+                                    }
+                                }
+                                _ => false,
+                            }
+                        }
+                        _ => false,
+                    }
+                }
+                _ => false,
+            }
+        }
+        _ => false,
+    }
+}
+
 fn translate_items(
     sess: &Session,
     i: &ast::Item,
     arr_types: &ArrayTypes,
 ) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+    if i.attrs.iter().any(attribute_is_test) {
+        return Ok((ItemTranslationResult::Ignored, arr_types.clone()));
+    }
     match &i.kind {
         ItemKind::Fn(fn_kind) => {
+            // Foremost we check whether this function is a test, in which case
+            // we ignore it
             let FnKind(defaultness, ref sig, ref generics, ref body) = fn_kind.as_ref();
             // First, checking that no fancy function qualifier is here
             match defaultness {
@@ -1689,6 +1853,13 @@ fn translate_items(
                 ("nat_mod", None) => {
                     translate_natural_integer_decl(sess, i, arr_types, call, Secrecy::Secret)
                 }
+                ("unsigned_public_integer", None) => translate_simplified_natural_integer_decl(
+                    sess,
+                    i,
+                    arr_types,
+                    call,
+                    Secrecy::Public,
+                ),
                 (_, None) => {
                     sess.span_rustspec_err(name.ident.span.clone(), "unknown Hacspec macro");
                     Err(())
@@ -1756,7 +1927,7 @@ fn translate_items(
 }
 
 pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
-    let items = &krate.module.items;
+    let items = &krate.items;
     let mut arr_types = HashSet::new();
     let translated_items = check_vec(
         items
@@ -1771,13 +1942,22 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
     let (items, rest): (Vec<_>, Vec<_>) =
         translated_items.into_iter().partition(|(r, _)| match r {
             ItemTranslationResult::Item(_) => true,
+            ItemTranslationResult::Ignored => true,
             _ => false,
         });
     let (imports, aliases): (Vec<_>, Vec<_>) = rest.into_iter().partition(|(r, _)| match r {
         ItemTranslationResult::Item(_) => panic!(), // should not happen
+        ItemTranslationResult::Ignored => panic!(), // should not happen
         ItemTranslationResult::ImportedCrate(_) => true,
         ItemTranslationResult::TyAlias(_, _) => false,
     });
+    let items: Vec<_> = items
+        .into_iter()
+        .filter(|(r, _)| match r {
+            ItemTranslationResult::Ignored => false,
+            _ => true,
+        })
+        .collect();
     let items = items
         .into_iter()
         .map(|(r, r_span)| {
