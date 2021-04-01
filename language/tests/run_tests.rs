@@ -72,3 +72,8 @@ fn run_hmac_test() -> Result<(), Box<dyn std::error::Error>> {
 fn run_hkdf_test() -> Result<(), Box<dyn std::error::Error>> {
     run_test("hacspec-hkdf", Some("../fstar/Hacspec.Hkdf.fst"))
 }
+
+#[test]
+fn run_bls12_381_test() -> Result<(), Box<dyn std::error::Error>> {
+    run_test("hacspec-bls12-381", None)
+}
