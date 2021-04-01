@@ -1,6 +1,6 @@
 mod provider;
-pub use aead::{Error, Payload};
-pub use provider::{Aead, AeadInPlace, Chacha20Poly1305, Key, NewAead, Nonce, Tag};
+pub use aead::Error;
+pub use provider::{AeadCore, AeadInPlace, Chacha20Poly1305, Key, NewAead, Nonce, Tag};
 
 #[test]
 fn test_rc_provider() {
