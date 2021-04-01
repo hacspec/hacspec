@@ -5,55 +5,50 @@ use hacspec_lib::*;
 use hacspec_chacha20::*;
 use hacspec_poly1305::*;
 
-fn key_gen(key: KeyPoly, iv: IV) -> KeyPoly {
-    let block = chacha20_key_block0(Key::from_seq(&key), iv);
-    KeyPoly::from_slice_range(&block, 0..32)
+pub type ChaChaPolyKey = ChaChaKey;
+pub type ChaChaPolyIV = ChaChaIV;
+
+pub fn init(key: ChaChaPolyKey, iv: ChaChaPolyIV) -> PolyState {
+    let key_block0 = chacha20_key_block0(key, iv);
+    let poly_key = PolyKey::from_slice(&key_block0,0,32);
+    poly1305_init(poly_key)
 }
 
-pub fn poly_mac(m: &ByteSeq, key: KeyPoly, iv: IV) -> Tag {
-    let mac_key = key_gen(key, iv);
-    poly(m, mac_key)
-}
-
-fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
-    let laad = aad.len();
-    let lmsg = msg.len();
-    let mut pad_aad = 16 * ((laad >> 4u32) + 1);
-    let mut pad_msg = 16 * ((lmsg >> 4u32) + 1);
-    if laad % 16 == 0 {
-        pad_aad = laad;
-    };
-    if lmsg % 16 == 0 {
-        pad_msg = lmsg;
+pub fn update_padded (m:&ByteSeq, st:PolyState) -> PolyState {
+    let mut st = st;
+    for i in 0..m.num_chunks(16) {
+        let (_, block) = m.get_chunk(16, i);
+        st = poly1305_update1(16,&block,st); // This is the only line that changes from poly1305_update.
+                                             // And then again it only makes a difference for poly1305_update_last
     }
-    let mut padded_msg = ByteSeq::new(pad_aad + pad_msg + 16);
-    padded_msg = padded_msg.update(0, aad);
-    padded_msg = padded_msg.update(pad_aad, msg);
-    padded_msg = padded_msg.update(pad_aad + pad_msg, &U64_to_le_bytes(U64(laad as u64)));
-    padded_msg = padded_msg.update(pad_aad + pad_msg + 8, &U64_to_le_bytes(U64(lmsg as u64)));
-    padded_msg
+    st
 }
 
-pub fn encrypt(key: Key, iv: IV, aad: &ByteSeq, msg: &ByteSeq) -> (ByteSeq, Tag) {
-    let key_block = chacha20_key_block0(key, iv);
-    let mac_key = Key::from_slice_range(&key_block, 0..32);
-    let cipher_text = chacha20(key, iv, msg);
-    let padded_msg = pad_aad_msg(aad, &cipher_text);
-    let tag = poly(&padded_msg, KeyPoly::from_seq(&mac_key));
+pub fn finish(aadlen:usize, cipherlen:usize, st:PolyState) -> Tag {
+    let mut last_block = PolyBlock::new();
+    last_block = last_block.update(0,&U64_to_le_bytes(U64(aadlen as u64)));
+    last_block = last_block.update(8,&U64_to_le_bytes(U64(cipherlen as u64)));
+    let st = poly1305_update1(16,&SubBlock::from_seq(&last_block),st);
+    poly1305_finish(st)
+}
+
+pub fn encrypt(key: ChaChaPolyKey, iv: ChaChaPolyIV, aad: &ByteSeq, msg: &ByteSeq) -> (ByteSeq, Tag) {
+    let cipher_text = chacha20(key, iv, 1u32, msg);
+    let mut poly_st = init(key,iv);
+    poly_st = update_padded(aad, poly_st);
+    poly_st = update_padded(&cipher_text, poly_st);
+    let tag = finish(aad.len(),cipher_text.len(),poly_st);
     (cipher_text, tag)
 }
 
-pub fn decrypt(
-    key: Key,
-    iv: IV,
-    aad: &ByteSeq,
-    cipher_text: &ByteSeq,
-    tag: Tag,
-) -> (ByteSeq, bool) {
-    let key_block = chacha20_key_block0(key, iv);
-    let mac_key = Key::from_slice_range(&key_block, 0..32);
-    let padded_msg = pad_aad_msg(aad, cipher_text);
-    let my_tag = poly(&padded_msg, KeyPoly::from_seq(&mac_key));
-    let plain_text = chacha20(key, iv, cipher_text);
-    (plain_text, my_tag == tag)
+
+pub fn decrypt(key: ChaChaPolyKey, iv: ChaChaPolyIV, aad: &ByteSeq, cipher_text: &ByteSeq, tag: Tag) ->
+       Option<ByteSeq> {
+    let mut poly_st = init(key,iv);
+    poly_st = update_padded(aad, poly_st);
+    poly_st = update_padded(cipher_text, poly_st);
+    let my_tag = finish(aad.len(),cipher_text.len(),poly_st);
+    if my_tag.declassify_eq(&tag) {
+        Some(chacha20(key, iv, 1u32, cipher_text))
+    } else {None}
 }

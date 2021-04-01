@@ -14,7 +14,7 @@ let riotboot_magic : pub_uint32 =
   pub_u32 0x544f4952
 
 let new_fletcher () : fletcher =
-  (pub_u32 0x0, pub_u32 0x0)
+  (usize 65535, usize 65535)
 
 let max_chunk_size () : uint_size =
   usize 360
@@ -34,7 +34,7 @@ let update_fletcher (f_3 : fletcher) (data_4 : seq pub_uint16) : fletcher =
         b_7
       ) ->
       let (chunk_len_9, chunk_10) =
-        seq_get_chunk (data_4) (i_8) (max_chunk_size_5)
+        seq_get_chunk (data_4) (max_chunk_size_5) (i_8)
       in
       let intermediate_a_11 = a_6 in
       let intermediate_b_12 = b_7 in
@@ -45,9 +45,7 @@ let update_fletcher (f_3 : fletcher) (data_4 : seq pub_uint16) : fletcher =
           ) ->
           let intermediate_a_11 =
             (intermediate_a_11) +. (
-              cast U32 PUB (array_index
-                 (**) #pub_uint16 #chunk_len_9
-                 (chunk_10) (j_13)))
+              cast U32 PUB (array_index (chunk_10) (j_13)))
           in
           let intermediate_b_12 = (intermediate_b_12) +. (intermediate_a_11) in
           (intermediate_a_11, intermediate_b_12))
@@ -83,70 +81,78 @@ let header_as_u16_slice (h_17 : header) : seq pub_uint16 =
   in
   let u16_seq_28 = seq_new_ (pub_u16 0x0) (usize 6) in
   let (u16_seq_28) =
-    foldi (usize 0) (usize 6) (fun i_29 (u16_seq_28) ->
+    foldi (usize 0) (usize 3) (fun i_29 (u16_seq_28) ->
       let u16_word_30 =
         array_from_seq (2) (
-          seq_slice (u8_seq_27) ((i_29) * (usize 2)) (usize 2))
+          seq_slice (u8_seq_27) ((i_29) * (usize 4)) (usize 2))
       in
       let u16_value_31 = u16_from_be_bytes (u16_word_30) in
-      let u16_seq_28 = array_upd u16_seq_28 (i_29) (u16_value_31) in
+      let u16_seq_28 =
+        array_upd u16_seq_28 (((usize 2) * (i_29)) + (usize 1)) (u16_value_31)
+      in
+      let u16_word_32 =
+        array_from_seq (2) (
+          seq_slice (u8_seq_27) (((i_29) * (usize 4)) + (usize 2)) (usize 2))
+      in
+      let u16_value_33 = u16_from_be_bytes (u16_word_32) in
+      let u16_seq_28 =
+        array_upd u16_seq_28 ((usize 2) * (i_29)) (u16_value_33)
+      in
       (u16_seq_28))
     (u16_seq_28)
   in
   u16_seq_28
 
-let is_valid_header (h_32 : header) : bool =
-  let (magic_number_33, seq_number_34, start_addr_35, checksum_36) = h_32 in
-  let slice_37 =
+let is_valid_header (h_34 : header) : bool =
+  let (magic_number_35, seq_number_36, start_addr_37, checksum_38) = h_34 in
+  let slice_39 =
     header_as_u16_slice (
-      (magic_number_33, seq_number_34, start_addr_35, checksum_36))
+      (magic_number_35, seq_number_36, start_addr_37, checksum_38))
   in
-  let result_38 = false in
-  let (result_38) =
-    if (magic_number_33) = (riotboot_magic) then begin
-      let fletcher_39 = new_fletcher () in
-      let fletcher_40 = update_fletcher (fletcher_39) (slice_37) in
-      let sum_41 = value (fletcher_40) in
-      let result_38 = (sum_41) = (checksum_36) in
-      (result_38)
-    end else begin (result_38)
+  let result_40 = false in
+  let (result_40) =
+    if (magic_number_35) = (riotboot_magic) then begin
+      let fletcher_41 = new_fletcher () in
+      let fletcher_42 = update_fletcher (fletcher_41) (slice_39) in
+      let sum_43 = value (fletcher_42) in
+      let result_40 = (sum_43) = (checksum_38) in
+      (result_40)
+    end else begin (result_40)
     end
   in
-  result_38
+  result_40
 
-let choose_image (images_42 : seq header) : (bool & pub_uint32) =
-  let image_43 = pub_u32 0x0 in
-  let image_found_44 = false in
-  let (image_43, image_found_44) =
-    foldi (usize 0) (seq_len (images_42)) (fun i_45 (image_43, image_found_44
+let choose_image (images_44 : seq header) : (bool & pub_uint32) =
+  let image_45 = pub_u32 0x0 in
+  let image_found_46 = false in
+  let (image_45, image_found_46) =
+    foldi (usize 0) (seq_len (images_44)) (fun i_47 (image_45, image_found_46
       ) ->
-      let header_46 = array_index
-        (**) #header #(seq_len images_42)
-        (images_42) (i_45)
+      let header_48 = array_index (images_44) (i_47) in
+      let (magic_number_49, seq_number_50, start_addr_51, checksum_52) =
+        header_48
       in
-      let (magic_number_47, seq_number_48, start_addr_49, checksum_50) =
-        header_46
-      in
-      let (image_43, image_found_44) =
+      let (image_45, image_found_46) =
         if is_valid_header (
-          (magic_number_47, seq_number_48, start_addr_49, checksum_50
+          (magic_number_49, seq_number_50, start_addr_51, checksum_52
           )) then begin
-          let change_image_51 =
-            not ((image_found_44) && ((seq_number_48) <=. (image_43)))
+          let change_image_53 =
+            not ((image_found_46) && ((seq_number_50) <=. (image_45)))
           in
-          let (image_43, image_found_44) =
-            if change_image_51 then begin
-              let image_43 = start_addr_49 in
-              let image_found_44 = true in
-              (image_43, image_found_44)
-            end else begin (image_43, image_found_44)
+          let (image_45, image_found_46) =
+            if change_image_53 then begin
+              let image_45 = start_addr_51 in
+              let image_found_46 = true in
+              (image_45, image_found_46)
+            end else begin (image_45, image_found_46)
             end
           in
-          (image_43, image_found_44)
-        end else begin (image_43, image_found_44)
+          (image_45, image_found_46)
+        end else begin (image_45, image_found_46)
         end
       in
-      (image_43, image_found_44))
-    (image_43, image_found_44)
+      (image_45, image_found_46))
+    (image_45, image_found_46)
   in
-  (image_found_44, image_43)
+  (image_found_46, image_45)
+

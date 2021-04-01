@@ -3,7 +3,7 @@ use aead::{
     consts::{U0, U12, U16, U32},
     generic_array::GenericArray,
 };
-use hacspec_chacha20::{Key as HacspecKey, IV};
+use hacspec_chacha20::{ChaChaKey as HacspecKey, ChaChaIV as IV};
 use hacspec_chacha20poly1305::*;
 use hacspec_lib::prelude::*;
 use hacspec_poly1305::Tag as HacspecTag;
@@ -48,7 +48,7 @@ impl AeadInPlace for Chacha20Poly1305 {
             .iter_mut()
             .zip(ctxt.iter())
             .for_each(|(dst, &src)| *dst = src.declassify());
-        let tag = Tag::clone_from_slice(&tag.iter().map(|&b| b).collect::<Vec<u8>>());
+        let tag = Tag::clone_from_slice(&tag.iter().map(|&b| b.declassify()).collect::<Vec<u8>>());
         Ok(tag)
     }
 
@@ -59,22 +59,21 @@ impl AeadInPlace for Chacha20Poly1305 {
         buffer: &mut [u8],
         tag: &Tag,
     ) -> Result<(), Error> {
-        let (ptxt, valid) = decrypt(
+        let res = decrypt(
             HacspecKey::from_public_slice(self.key.as_slice()),
             IV::from_public_slice(nonce),
             &ByteSeq::from_public_slice(associated_data),
             &ByteSeq::from_public_slice(buffer),
-            HacspecTag::from_native_slice(tag),
+            HacspecTag::from_public_slice(tag),
         );
 
-        buffer
-            .iter_mut()
-            .zip(ptxt.iter())
-            .for_each(|(dst, &src)| *dst = src.declassify());
-        if valid {
-            Ok(())
-        } else {
-            Err(Error)
-        }
+        match res {
+            None => Err(Error),
+            Some(ptxt) => {
+                buffer
+                .iter_mut()
+                .zip(ptxt.iter())
+                .for_each(|(dst, &src)| *dst = src.declassify());
+               Ok(())}}
     }
 }

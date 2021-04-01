@@ -4,8 +4,8 @@ use hacspec_lib::*;
 array!(State, 16, U32, type_for_indexes: StateIdx);
 array!(Constants, 4, U32, type_for_indexes: ConstantsIdx);
 bytes!(Block, 64);
-bytes!(IV, 12);
-bytes!(Key, 32);
+bytes!(ChaChaIV, 12);
+bytes!(ChaChaKey, 32);
 
 fn chacha20_line(a: StateIdx, b: StateIdx, d: StateIdx, s: usize, m: State) -> State {
     let mut state = m;
@@ -74,7 +74,7 @@ pub fn chacha20_constants_init() -> Constants {
     constants
 }
 
-pub fn chacha20_init(key: Key, iv: IV, ctr:U32) -> State {
+pub fn chacha20_init(key: ChaChaKey, iv: ChaChaIV, ctr:U32) -> State {
     let mut st = State::new();
     st = st.update_slice(0,&chacha20_constants_init(),0,4);
     st = st.update_slice(4,&key.to_le_U32s(),0,8);
@@ -88,7 +88,7 @@ pub fn chacha20_key_block(state:State) -> Block {
     Block::from_seq(&state.to_le_bytes())
 }
 
-pub fn chacha20_key_block0(key: Key, iv: IV) -> Block {
+pub fn chacha20_key_block0(key: ChaChaKey, iv: ChaChaIV) -> Block {
     let state = chacha20_init(key,iv,U32(0u32));
     chacha20_key_block(state)
 }
@@ -123,9 +123,8 @@ pub fn chacha20_update(st0:State,m:&ByteSeq) -> ByteSeq {
     blocks_out
 }
 
-pub fn chacha20(key: Key, iv: IV, m: &ByteSeq) -> ByteSeq {
-    let ctr = U32(1u32);
-    let state = chacha20_init(key,iv,ctr);
+pub fn chacha20(key: ChaChaKey, iv: ChaChaIV, ctr:u32, m: &ByteSeq) -> ByteSeq {
+    let state = chacha20_init(key,iv,U32(ctr));
     chacha20_update(state,m)
 }
 

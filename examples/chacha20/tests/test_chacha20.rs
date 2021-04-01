@@ -31,12 +31,12 @@ fn test_quarter_round() {
 
 #[test]
 fn test_block() {
-    let key = Key::from_public_slice(&[
+    let key = ChaChaKey::from_public_slice(&[
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
         0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d,
         0x1e, 0x1f,
     ]);
-    let iv = IV::from_public_slice(&[
+    let iv = ChaChaIV::from_public_slice(&[
         0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00,
     ]);
     let ctr = U32(1);
@@ -96,17 +96,17 @@ fn test_block() {
 }
 
 
-fn enc_dec_test(m: ByteSeq, key: Key, iv: IV) {
-    let c = chacha20(key, iv, &m);
-    let m_dec = chacha20(key, iv, &c);
+fn enc_dec_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV) {
+    let c = chacha20(key, iv, 1u32, &m);
+    let m_dec = chacha20(key, iv, 1u32, &c);
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
     );
 }
 
-fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq) {
-    let enc = chacha20(key, iv, &m);
+fn kat_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV, exp_cipher: ByteSeq) {
+    let enc = chacha20(key, iv, 1u32, &m);
     let c = enc;
     assert_eq!(
         exp_cipher
@@ -115,7 +115,7 @@ fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq) {
             .collect::<Vec<_>>(),
         c.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
     );
-    let m_dec = chacha20(key, iv, &c);
+    let m_dec = chacha20(key, iv, 1u32, &c);
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
@@ -124,20 +124,20 @@ fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq) {
 
 #[test]
 fn test_enc_dec() {
-    let key = Key::from_public_slice(&random_byte_vec(Key::length()));
-    let iv = IV::from_public_slice(&random_byte_vec(IV::length()));
+    let key = ChaChaKey::from_public_slice(&random_byte_vec(ChaChaKey::length()));
+    let iv = ChaChaIV::from_public_slice(&random_byte_vec(ChaChaIV::length()));
     let m = ByteSeq::from_public_slice(&random_byte_vec(40));
     enc_dec_test(m, key, iv);
 }
 
 #[test]
 fn test_kat() {
-    let key = Key::from_public_slice(&[
+    let key = ChaChaKey::from_public_slice(&[
         0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e,
         0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d,
         0x9e, 0x9f,
     ]);
-    let iv = IV::from_public_slice(&[
+    let iv = ChaChaIV::from_public_slice(&[
         0x07, 0x00, 0x00, 0x00, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
     ]);
     let m = ByteSeq::from_public_slice(&[
