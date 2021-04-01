@@ -517,7 +517,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
 #[derive(Clone)]
 struct TopLevelContext {
     functions: HashMap<FnKey, FnValue>,
-    consts: HashMap<String, (Spanned<BaseTyp>, Spanned<Expression>)>,
+    consts: HashMap<String, (Spanned<BaseTyp>, Option<Spanned<Expression>>)>,
 }
 
 type VarContext = HashMap<HacspecId, (Typ, String)>;
@@ -1532,7 +1532,7 @@ fn typecheck_expression(
                 return Err(());
             }
             if !is_safe_casting(&(e1_typ.1).0, &t1.0) {
-                sess.span_rustspec_err(
+                sess.span_rustspec_warn(
                     span.clone(),
                     format!(
                         "casting from {} to {} is not safe (i.e it can lead to overflow)",
@@ -1540,7 +1540,6 @@ fn typecheck_expression(
                     )
                     .as_str(),
                 );
-                return Err(());
             }
             Ok((
                 Expression::IntegerCasting(
@@ -1877,7 +1876,10 @@ fn typecheck_statement(
                 }
             };
             match &new_b1.return_typ {
-                None => panic!(), // should not happen
+                None => {
+                    // Should not happen
+                    panic!()
+                }
                 Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                 Some(((b_t, _), (t, _))) => {
                     sess.span_rustspec_err(
@@ -2047,7 +2049,7 @@ fn typecheck_block(
     let mut var_context = original_var_context.clone();
     let mut name_context = name_context.clone();
     let mut mutated_vars = HashSet::new();
-    let mut return_typ = None;
+    let mut return_typ = Some(((Borrowing::Consumed, DUMMY_SP), (BaseTyp::Unit, DUMMY_SP)));
     let mut new_stmts = Vec::new();
     let n_stmts = b.stmts.len();
     for (i, s) in b.stmts.into_iter().enumerate() {
@@ -2260,7 +2262,7 @@ fn typecheck_item(
                     (Ident::Original(id), _) => id.clone(),
                     _ => panic!(), // should not happen
                 },
-                (typ.clone(), (new_e.clone(), e.1.clone())),
+                (typ.clone(), Some((new_e.clone(), e.1.clone()))),
             );
             Ok((
                 Item::ConstDecl(id.clone(), typ.clone(), (new_e, (e.1).clone())),
@@ -2324,6 +2326,40 @@ fn typecheck_item(
             );
             Ok((i.clone(), top_level_context, typ_dict))
         }
+        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
+            let typ_dict = typ_dict.update(
+                match &typ_ident.0 {
+                    Ident::Original(s) => s.clone(),
+                    Ident::Hacspec(_, _) => panic!(),
+                },
+                match &canvas_size.0 {
+                    Expression::Lit(Literal::Usize(size)) => (
+                        (
+                            (Borrowing::Consumed, (typ_ident.1).clone()),
+                            (
+                                BaseTyp::NaturalInteger(
+                                    secrecy.clone(),
+                                    (String::new(), DUMMY_SP), // TODO: replace with real modulo value
+                                    // For now we can leave this empty because
+                                    // We don't use it in the typechecker
+                                    (size.clone(), (canvas_size.1).clone()),
+                                ),
+                                typ_ident.1.clone(),
+                            ),
+                        ),
+                        DictEntry::NaturalInteger,
+                    ),
+                    _ => {
+                        sess.span_rustspec_err(
+                            (canvas_size.1).clone(),
+                            "the size of the natural integer encoding has to be a usize literal",
+                        );
+                        return Err(());
+                    }
+                },
+            );
+            Ok((i.clone(), top_level_context.clone(), typ_dict))
+        }
     }
 }
 
@@ -2333,6 +2369,7 @@ pub fn typecheck_program<
     ) -> (
         HashMap<FnKey, Result<ExternalFuncSig, String>>,
         HashMap<String, BaseTyp>,
+        HashMap<String, BaseTyp>,
     ),
 >(
     sess: &Session,
@@ -2340,10 +2377,10 @@ pub fn typecheck_program<
     external_funcs: &F,
     _allowed_sigs: &AllowedSigs,
 ) -> TypecheckingResult<(Program, TypeDict)> {
-    let (extern_funcs, extern_arrays) = external_funcs(&p.imported_crates);
+    let (extern_funcs, extern_consts, extern_arrays) = external_funcs(&p.imported_crates);
     let mut top_level_context: TopLevelContext = TopLevelContext {
         functions: extern_funcs
-            .iter()
+            .into_iter()
             .map(|(k, v)| {
                 (
                     k.clone(),
@@ -2354,7 +2391,10 @@ pub fn typecheck_program<
                 )
             })
             .collect(),
-        consts: HashMap::new(),
+        consts: extern_consts
+            .into_iter()
+            .map(|(k, v)| (k, ((v, DUMMY_SP), None)))
+            .collect(),
     };
     //TODO: better system, this whitelist is hardcoded
     let mut typ_dict = HashMap::from(
