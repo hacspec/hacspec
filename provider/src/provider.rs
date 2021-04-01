@@ -1,4 +1,4 @@
-pub use aead::{self, AeadCore, AeadInPlace, Error, NewAead};
+pub use aead::{self, Aead, AeadCore, AeadInPlace, Error, NewAead, Payload};
 use aead::{
     consts::{U0, U12, U16, U32},
     generic_array::GenericArray,

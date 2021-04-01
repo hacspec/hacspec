@@ -10,5 +10,5 @@
 
 mod provider;
 pub use provider::{
-    aead, AeadCore, AeadInPlace, Chacha20Poly1305, Error, Key, NewAead, Nonce, Tag,
+    aead, Aead, AeadCore, AeadInPlace, Chacha20Poly1305, Error, Key, NewAead, Nonce, Payload, Tag,
 };
