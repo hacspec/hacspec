@@ -42,12 +42,11 @@
 <span id="42">42</span>
 <span id="43">43</span>
 <span id="44">44</span>
-<span id="45">45</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">rand</span>::{
     <span class="ident">distributions</span>::<span class="ident">uniform</span>::<span class="ident">SampleBorrow</span>, <span class="ident">distributions</span>::<span class="ident">uniform</span>::<span class="ident">SampleUniform</span>,
-    <span class="ident">distributions</span>::<span class="ident">Distribution</span>, <span class="ident">distributions</span>::<span class="ident">Standard</span>, <span class="ident">AsByteSliceMut</span>, <span class="ident">Rng</span>,
+    <span class="ident">distributions</span>::<span class="ident">Distribution</span>, <span class="ident">distributions</span>::<span class="ident">Standard</span>, <span class="ident">Fill</span>, <span class="ident">Rng</span>,
 };
 
 <span class="doccomment">/// Random public integer</span>
@@ -59,12 +58,11 @@
 }
 
 <span class="doccomment">/// Random public integer in range `[min, max)`</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random_public_integer_range</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span>(<span class="ident">min</span>: <span class="ident">U</span>, <span class="ident">max</span>: <span class="ident">U</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random_public_integer_range</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>(<span class="ident">min</span>: <span class="ident">U</span>, <span class="ident">max</span>: <span class="ident">U</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">U</span>
 <span class="kw">where</span>
-    <span class="ident">U</span>: <span class="ident">SampleBorrow</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sized</span>,
-    <span class="ident">T</span>: <span class="ident">SampleUniform</span>,
+    <span class="ident">U</span>: <span class="ident">SampleBorrow</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">SampleUniform</span> <span class="op">+</span> <span class="ident">PartialOrd</span>,
 {
-    <span class="ident">rand</span>::<span class="ident">thread_rng</span>().<span class="ident">gen_range</span>(<span class="ident">min</span>, <span class="ident">max</span>)
+    <span class="ident">rand</span>::<span class="ident">thread_rng</span>().<span class="ident">gen_range</span>(<span class="ident">min</span>..<span class="ident">max</span>)
 }
 
 <span class="doccomment">/// Random public byte</span>
@@ -79,7 +77,7 @@
 }
 
 <span class="doccomment">/// Random array</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random_bytes</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">Default</span> <span class="op">+</span> <span class="ident">AsByteSliceMut</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">A</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">random_bytes</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">Default</span> <span class="op">+</span> <span class="ident">Fill</span><span class="op">&gt;</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">A</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="ident">A</span>::<span class="ident">default</span>();
     <span class="ident">rand</span>::<span class="ident">thread_rng</span>().<span class="ident">fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">out</span>);
     <span class="ident">out</span>
