@@ -1,4 +1,4 @@
-pub use aead::{self, Aead, AeadInPlace, Error, NewAead, Payload};
+pub use aead::{self, AeadCore, AeadInPlace, Error, NewAead};
 use aead::{
     consts::{U0, U12, U16, U32},
     generic_array::GenericArray,
@@ -24,11 +24,13 @@ impl NewAead for Chacha20Poly1305 {
     }
 }
 
-impl AeadInPlace for Chacha20Poly1305 {
+impl AeadCore for Chacha20Poly1305 {
     type NonceSize = U12;
     type TagSize = U16;
     type CiphertextOverhead = U0;
+}
 
+impl AeadInPlace for Chacha20Poly1305 {
     fn encrypt_in_place_detached(
         &self,
         nonce: &Nonce,
