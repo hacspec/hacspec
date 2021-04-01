@@ -25,6 +25,7 @@ members = [
     "examples/hmac",
     "examples/hkdf",
     "examples/p256",
+    "examples/bls12-381",
 ]
 default-members = [
     "lib",
@@ -48,6 +49,7 @@ default-members = [
     "examples/hmac",
     "examples/hkdf",
     "examples/p256",
+    "examples/bls12-381",
 ]
 
 [profile.release]
