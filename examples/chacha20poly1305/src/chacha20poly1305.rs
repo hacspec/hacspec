@@ -6,7 +6,7 @@ use hacspec_chacha20::*;
 use hacspec_poly1305::*;
 
 fn key_gen(key: KeyPoly, iv: IV) -> KeyPoly {
-    let block = chacha_block(Key::from_seq(&key), U32(0u32), iv);
+    let block = chacha20_key_block0(Key::from_seq(&key), iv);
     KeyPoly::from_slice_range(&block, 0..32)
 }
 
@@ -35,9 +35,9 @@ fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
 }
 
 pub fn encrypt(key: Key, iv: IV, aad: &ByteSeq, msg: &ByteSeq) -> (ByteSeq, Tag) {
-    let key_block = chacha_block(key, U32(0u32), iv);
+    let key_block = chacha20_key_block0(key, iv);
     let mac_key = Key::from_slice_range(&key_block, 0..32);
-    let cipher_text = chacha(key, iv, msg);
+    let cipher_text = chacha20(key, iv, msg);
     let padded_msg = pad_aad_msg(aad, &cipher_text);
     let tag = poly(&padded_msg, KeyPoly::from_seq(&mac_key));
     (cipher_text, tag)
@@ -50,10 +50,10 @@ pub fn decrypt(
     cipher_text: &ByteSeq,
     tag: Tag,
 ) -> (ByteSeq, bool) {
-    let key_block = chacha_block(key, U32(0u32), iv);
+    let key_block = chacha20_key_block0(key, iv);
     let mac_key = Key::from_slice_range(&key_block, 0..32);
     let padded_msg = pad_aad_msg(aad, cipher_text);
     let my_tag = poly(&padded_msg, KeyPoly::from_seq(&mac_key));
-    let plain_text = chacha(key, iv, cipher_text);
+    let plain_text = chacha20(key, iv, cipher_text);
     (plain_text, my_tag == tag)
 }

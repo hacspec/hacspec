@@ -39,8 +39,28 @@ let double_round_equiv (state: New.state)
   =
   ()
 
+val index_createL_lemma: #a:Type -> l:list a -> i:nat{i < List.Tot.length l} ->
+  Lemma (Seq.index 
+
+
+let op_String_Access a b = FStar.Seq.index a b
 let constants_equiv ()
-    : Lemma (forall (i:nat{i < 4}).
+    : Lemma (New.chacha20_constants_init () ==
+             Lib.Sequence.map secret (Orig.chacha20_constants)) =
+    let new_consts = Lib.Sequence.to_lseq (New.chacha20_constants_init ()) in
+    let old_consts = Lib.Sequence.map secret Orig.chacha20_constants in
+    assert (new_consts.[0] == secret Orig.c0);
+    assert (new_consts.[1] == secret Orig.c1);
+    assert (new_consts.[2] == secret Orig.c2);
+    assert (new_consts.[3] == secret Orig.c3);
+    assert (old_consts.[0] == secret Orig.c0);
+    assert (Seq.length new_consts == 4);
+    assert (forall i. (i > 0 /\ i < Seq.length new_consts) ==> new_consts.[i] == old_consts.[i]);
+    admit();
+    FStar.Seq.lemma_eq_intro new_consts old_consts;
+    admit()
+
+    forall (i:nat{i < 4}).
       v (Seq.index #_ #4 (New.chacha20_constants_init ()) i) ==
       v (Seq.index Orig.chacha20_constants i)
     )
@@ -90,6 +110,7 @@ let ctr_to_seq_equiv (ctr: uint32)
   =
   assert(New.chacha20_ctr_to_seq ctr `Seq.equal #_ #1` FStar.Seq.init 1 (fun _ -> ctr))
 
+(*
 #push-options "--z3rlimit 100"
 let chacha_block_init_equiv (key: New.key) (ctr: uint32) (iv: New.iv)
     : Lemma (New.chacha_block_init key ctr iv ==

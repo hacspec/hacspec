@@ -15,7 +15,7 @@ fn test_quarter_round() {
         0xcfacafd2, 0xe46bea80, 0xb00a5631, 0x974c541a, 0x359e9963, 0x5c971061, 0xccc07c79,
         0x2098d9d6, 0x91dbd320,
     ]);
-    state = chacha_quarter_round(2, 7, 8, 13, state);
+    state = chacha20_quarter_round(2, 7, 8, 13, state);
     assert_eq!(
         state
             .iter()
@@ -28,6 +28,7 @@ fn test_quarter_round() {
     );
 }
 
+
 #[test]
 fn test_block() {
     let key = Key::from_public_slice(&[
@@ -39,7 +40,7 @@ fn test_block() {
         0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x4a, 0x00, 0x00, 0x00, 0x00,
     ]);
     let ctr = U32(1);
-    let state = chacha_block_init(key, ctr, iv);
+    let state = chacha20_init(key, iv, ctr);
     let expected_state = State::from_public_slice(&[
         0x61707865, 0x3320646e, 0x79622d32, 0x6b206574, 0x03020100, 0x07060504, 0x0b0a0908,
         0x0f0e0d0c, 0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c, 0x00000001, 0x09000000,
@@ -56,7 +57,7 @@ fn test_block() {
             .collect::<Vec<_>>()
     );
 
-    let state = chacha_block_inner(key, ctr, iv);
+    let state = chacha20_core(U32(0u32),state);
     let expected_state = State::from_public_slice(&[
         0xe4e7f110, 0x15593bd1, 0x1fdd0f50, 0xc47120a3, 0xc7f4d1c7, 0x0368c033, 0x9aaa2204,
         0x4e6cd4c3, 0x466482d2, 0x09aa9f07, 0x05d7c214, 0xa2028bd9, 0xd19c12b5, 0xb94e16de,
@@ -80,7 +81,7 @@ fn test_block() {
         0x8b, 0x02, 0xa2, 0xb5, 0x12, 0x9c, 0xd1, 0xde, 0x16, 0x4e, 0xb9, 0xcb, 0xd0, 0x83, 0xe8,
         0xa2, 0x50, 0x3c, 0x4e
     ]);
-    let serialised = state_to_bytes(state);
+    let serialised = state.to_le_bytes();
     println!("{:?}", serialised.len());
     assert_eq!(
         serialised
@@ -94,9 +95,10 @@ fn test_block() {
     );
 }
 
+
 fn enc_dec_test(m: ByteSeq, key: Key, iv: IV) {
-    let c = chacha(key, iv, &m);
-    let m_dec = chacha(key, iv, &c);
+    let c = chacha20(key, iv, &m);
+    let m_dec = chacha20(key, iv, &c);
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
@@ -104,7 +106,7 @@ fn enc_dec_test(m: ByteSeq, key: Key, iv: IV) {
 }
 
 fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq) {
-    let enc = chacha(key, iv, &m);
+    let enc = chacha20(key, iv, &m);
     let c = enc;
     assert_eq!(
         exp_cipher
@@ -113,7 +115,7 @@ fn kat_test(m: ByteSeq, key: Key, iv: IV, exp_cipher: ByteSeq) {
             .collect::<Vec<_>>(),
         c.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
     );
-    let m_dec = chacha(key, iv, &c);
+    let m_dec = chacha20(key, iv, &c);
     assert_eq!(
         m.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
         m_dec.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()

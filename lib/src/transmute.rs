@@ -2,7 +2,7 @@
 
 use crate::prelude::*;
 
-// U32
+// U16
 
 #[cfg_attr(feature="use_attributes", in_hacspec)]
 pub fn U16_to_le_bytes(x: U16) -> U16Word {
