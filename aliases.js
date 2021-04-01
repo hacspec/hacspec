@@ -6,6 +6,7 @@ ALIASES["cfg_if"] = {};
 ALIASES["generic_array"] = {};
 ALIASES["getrandom"] = {};
 ALIASES["hacspec_attributes"] = {};
+ALIASES["hacspec_bls12_381"] = {};
 ALIASES["hacspec_chacha20"] = {};
 ALIASES["hacspec_chacha20poly1305"] = {};
 ALIASES["hacspec_curve25519"] = {};
