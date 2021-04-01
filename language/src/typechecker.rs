@@ -5,14 +5,11 @@ use crate::rustspec::*;
 use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
 
-use hacspec_util;
 use im::{HashMap, HashSet};
 use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use rustc_span::{Span, DUMMY_SP};
-use std::fmt;
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 // TODO: explain that we need typechecking inference to disambiguate method calls
 
@@ -343,7 +340,6 @@ fn unify_types(
                         (TopLevelIdent(name1), TopLevelIdent(name2)) => {
                             (name1.clone(), name2.clone())
                         }
-                        _ => panic!(),
                     };
                     if name1 == name2 {
                         match (args1, args2) {
@@ -493,7 +489,6 @@ fn find_func(
                         None
                     }
                 }
-                _ => panic!(),
             },
             (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
                 let t1 = match t1 {
@@ -534,7 +529,6 @@ fn find_func(
                                 None
                             }
                         }
-                        _ => panic!(),
                     },
 
                     Ok(None) => None,
@@ -637,7 +631,7 @@ fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
 
 fn add_name(name: &Ident, var: &Ident, name_context: &NameContext) -> NameContext {
     match name {
-        Ident::Local(LocalIdent { id, name }) => name_context.update(name.clone(), var.clone()),
+        Ident::Local(LocalIdent { id: _, name }) => name_context.update(name.clone(), var.clone()),
         _ => panic!("trying to lookup in the name context a Hacspec id"),
     }
 }
@@ -2026,7 +2020,7 @@ fn typecheck_item(
             match index_typ {
                 None => (),
                 Some(index_typ) => {
-                    new_top_level_context.typ_dict.update(
+                    new_top_level_context.typ_dict.insert(
                         index_typ.0.clone(),
                         (
                             (
@@ -2038,7 +2032,7 @@ fn typecheck_item(
                     );
                 }
             };
-            new_top_level_context.typ_dict.update(
+            new_top_level_context.typ_dict.insert(
                 id.0.clone(),
                 (
                     (
@@ -2102,7 +2096,7 @@ fn typecheck_item(
                 ),
                 top_level_context,
             )?;
-            top_level_context.typ_dict.update(
+            top_level_context.typ_dict.insert(
                 typ_ident.0.clone() ,
                 (
                     (
@@ -2133,7 +2127,7 @@ fn typecheck_item(
         }
         Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
             let mut top_level_context = top_level_context.clone();
-            top_level_context.typ_dict.update(
+            top_level_context.typ_dict.insert(
                 typ_ident.0.clone(),
                 match &canvas_size.0 {
                     Expression::Lit(Literal::Usize(size)) => (

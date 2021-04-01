@@ -72,9 +72,9 @@ pub enum FnValue {
 }
 
 fn resolve_item(
-    sess: &Session,
+    _sess: &Session,
     (i, i_span): Spanned<Item>,
-    top_level_ctx: &TopLevelContext,
+    _top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Item>> {
     match i {
         _ => Ok((i, i_span)),
@@ -83,7 +83,7 @@ fn resolve_item(
 
 fn process_decl_item(
     sess: &Session,
-    (i, i_span): &Spanned<Item>,
+    (i, _i_span): &Spanned<Item>,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
     match i {

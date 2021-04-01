@@ -442,7 +442,7 @@ fn translate_expr(
                     Err(())
                 }
             }?;
-            let func_name_string = (func_name.0).0;
+            let func_name_string = (func_name.clone().0).0;
             if arr_typs.contains(&func_name_string) {
                 // Special case for array constructors
                 if args.len() != 1 {
