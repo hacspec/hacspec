@@ -5,11 +5,11 @@ fn run_test(package_name: &str, output: Option<&str>) -> Result<(), Box<dyn std:
     let mut cmd = Command::cargo_bin("cargo-hacspec")?;
     cmd.envs(env::vars());
     if let Some(f) = output {
-        cmd.arg(format!("-o {}", f));
+        cmd.args(&["-o", f]);
     }
     cmd.arg(format!("{}", package_name));
     println!("Running: {:?}", cmd);
-    cmd.assert().success();
+    cmd.status().expect("Error running typechecker");
     Ok(())
 }
 
