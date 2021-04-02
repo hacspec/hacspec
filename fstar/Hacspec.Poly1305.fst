@@ -8,7 +8,6 @@ open FStar.Mul
 
 
 type sub_block = byte_seq
-type poly_state = (field_element & field_element & poly_key)
 
 type poly_key = lseq (uint8) (usize 32)
 
@@ -22,6 +21,7 @@ type tag = lseq (uint8) (usize 16)
 type field_canvas = lseq (pub_uint8) (17)
 
 type field_element = nat_mod 0x03fffffffffffffffffffffffffffffffb
+type poly_state = (field_element & field_element & poly_key)
 
 let poly1305_encode_r (b_0 : poly_block) : field_element =
   let n_1 = uint128_from_le_bytes (array_from_seq (16) (b_0)) in
@@ -29,8 +29,8 @@ let poly1305_encode_r (b_0 : poly_block) : field_element =
   nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (n_1)
 
 let poly1305_encode_block
-  (len_2 : uint_size)
-  (b_3 : sub_block)
+  (len_2 : uint_size{len_2 <= 16})
+  (b_3 : sub_block{seq_len b_3 <= 16})
   : field_element =
   let n_4 =
     uint128_from_le_bytes (
@@ -40,6 +40,7 @@ let poly1305_encode_block
   let f_5 =
     nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (n_4)
   in
+  admit();
   (f_5) +% (
     nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (len_2)))
 
@@ -51,8 +52,8 @@ let poly1305_init (k_6 : poly_key) : poly_state =
   (nat_zero (0x03fffffffffffffffffffffffffffffffb), r_7, k_6)
 
 let poly1305_update1
-  (len_8 : uint_size)
-  (b_9 : sub_block)
+  (len_8 : uint_size{len_8 <= 16})
+  (b_9 : sub_block{seq_len b_9 <= 16})
   (st_10 : poly_state)
   : poly_state =
   let (acc_11, r_12, k_13) = st_10 in
@@ -65,7 +66,7 @@ let poly1305_finish (st_14 : poly_state) : tag =
       array_from_slice (secret (pub_u8 0x8)) (16) (k_16) (usize 16) (usize 16))
   in
   let aby_18 =
-    nat_to_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) (acc_15)
+    nat_to_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) 16 (acc_15)
   in
   let a_19 =
     uint128_from_le_bytes (

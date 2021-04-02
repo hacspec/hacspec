@@ -49,19 +49,11 @@ pub fn chacha20_rounds(state:State) -> State {
     st
 }
 
-pub fn chacha20_sum_state(st0:State, st1:State) -> State {
-    let mut st = st0;
-    for i in 0..16 {
-        st[i] = st0[i] + st1[i];
-    }
-    st
-}
-
 pub fn chacha20_core(ctr:U32, st0:State) -> State {
     let mut state = st0;
     state[12] = state[12] + ctr;
     let k = chacha20_rounds(state);
-    chacha20_sum_state(k,state)
+    k + state
 }
 
 
@@ -76,10 +68,10 @@ pub fn chacha20_constants_init() -> Constants {
 
 pub fn chacha20_init(key: ChaChaKey, iv: ChaChaIV, ctr:U32) -> State {
     let mut st = State::new();
-    st = st.update_slice(0,&chacha20_constants_init(),0,4);
-    st = st.update_slice(4,&key.to_le_U32s(),0,8);
+    st = st.update(0,&chacha20_constants_init());
+    st = st.update(4,&key.to_le_U32s());
     st[12] = ctr;
-    st = st.update_slice(13,&iv.to_le_U32s(),0,3);
+    st = st.update(13,&iv.to_le_U32s());
     st
 }
 
@@ -96,13 +88,13 @@ pub fn chacha20_key_block0(key: ChaChaKey, iv: ChaChaIV) -> Block {
 pub fn chacha20_encrypt_block(st0:State,ctr:U32,plain:&Block) -> Block {
     let st = chacha20_core(ctr,st0);
     let pl = State::from_seq(&plain.to_le_U32s());
-    let st = st ^ pl;
+    let st = pl ^ st;
     Block::from_seq(&st.to_le_bytes())
 }
 
 pub fn chacha20_encrypt_last(st0:State,ctr:U32,plain:&ByteSeq) -> ByteSeq {
     let mut b = Block::new();
-    b = b.update_slice(0,plain,0,plain.len());
+    b = b.update(0,plain);
     b = chacha20_encrypt_block(st0,ctr,&b);
     b.slice(0,plain.len())
 }

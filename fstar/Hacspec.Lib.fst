@@ -103,7 +103,7 @@ let rec foldi_
   if cur_i = hi then cur else
   foldi_ (cur_i + 1) hi f (f cur_i cur)
 
-let foldi
+(*let foldi
   (#acc: Type)
   (lo: uint_size)
   (hi: uint_size{lo <= hi})
@@ -112,6 +112,45 @@ let foldi
     : acc
   =
   foldi_ lo hi f init
+*)
+let fold
+  (#acc: Type)
+  (hi: uint_size)
+  (f: (acc -> acc))
+  (init: acc)
+    : acc
+  =
+  Lib.LoopCombinators.repeat hi f init
+
+val fold_extensionality
+  (#acc: Type)
+  (hi: uint_size)
+  (f: (acc -> acc))
+  (g: (acc -> acc))
+  (init: acc)
+    : Lemma (requires (forall a. f a == g a))
+            (ensures (fold #acc hi f init == fold #acc hi g init))
+
+let fold_extensionality #acc hi f g init = admit()
+
+let foldi0
+  (#acc: Type)
+  (hi: uint_size)
+  (f: (i:uint_size{i < hi} -> acc -> acc))
+  (init: acc)
+    : acc
+  =
+  Lib.LoopCombinators.repeati hi f init
+
+let foldi
+  (#acc: Type)
+  (lo: uint_size)
+  (hi: uint_size{lo <= hi})
+  (f: (i:uint_size{i < hi} -> acc -> acc))
+  (init: acc)
+    : acc
+  =
+  Lib.LoopCombinators.repeat_range lo hi f init
 
 (*** Seq *)
 
@@ -140,12 +179,24 @@ let array_from_list
 
 (**** Array manipulation *)
 
+(* temp *)
+let array_to_le_uint32s (s:seq uint8{4 * seq_len s < pow2 32 /\ seq_len s % 4 = 0}) : seq uint32 =
+    let ulen : size_nat = seq_len s / 4 in
+    let s : lseq uint8 (4*ulen) = LSeq.to_lseq s in
+    Lib.ByteSequence.uints_from_bytes_le #U32 #SEC #ulen s
+
+let array_to_le_bytes (#len:size_nat{len * 4 < pow2 32}) (s:lseq uint32 len) =
+    Lib.ByteSequence.uints_to_bytes_le #U32 #SEC #len s
+
+(* temp end *)
 
 let array_new_ (#a: Type) (init:a) (len: uint_size)  : lseq a len =
   LSeq.create len init
 
 let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a =
   LSeq.index s i
+
+let op_String_Access #a #len s i = array_index #a #len s i
 
 let array_upd (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) (new_v: a) : lseq a len = LSeq.upd s i new_v
 
@@ -212,6 +263,16 @@ let array_update_start
     : lseq a len
   =
   LSeq.update_sub s 0 (Seq.length start_s) start_s
+
+let array_update
+  (#a: Type)
+  (#len: uint_size)
+  (s: lseq a len)
+  (start: size_nat{start <= len})
+  (upd: seq a{Seq.length upd + start <= len})
+    : lseq a len
+  =
+  LSeq.update_sub s start (Seq.length upd) upd
 
 let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 
@@ -325,6 +386,17 @@ let seq_set_chunk
 
 (**** Numeric operations *)
 
+let array_add
+  (#a: Type)
+  (#len: uint_size)
+  (add: a -> a -> a)
+  (s1: lseq a len)
+  (s2 : lseq a len)
+    : lseq a len
+  =
+  LSeq.map2 add s1 s2
+
+
 let array_xor
   (#a: Type)
   (#len: uint_size)
@@ -333,10 +405,7 @@ let array_xor
   (s2 : lseq a len)
     : lseq a len
   =
-  let out = s1 in
-  foldi 0 len (fun i out ->
-    array_upd out i (array_index s1 i `xor` array_index s2 i)
-  ) out
+  LSeq.map2 xor s1 s2
 
 let array_eq
   (#a: Type)
@@ -460,6 +529,7 @@ let (+%) #n a b = (a + b) % n
 val ( *% ) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let ( *% ) #n a b = (a * b) % n
 
+let nat_zero (m:pos) : n:nat_mod m{n == 0} = 0
 let nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n} =
   v x
 
@@ -470,9 +540,22 @@ let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq p
   let n' = n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_le len n'
 
+let nat_to_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq uint8 len =
+  let n' = n % (pow2 (8 * len)) in
+  Lib.ByteSequence.nat_to_bytes_le len n'
+
 let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   let n' = n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n'
 
 
 let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
+
+(* Math lemmas *)
+
+val add_mod_associativity: #t:inttype{unsigned t} -> #l:secrecy_level -> a:uint_t t l -> b:uint_t t l -> c:uint_t t l
+  -> Lemma (a +. b +. c == a +. (b +. c))
+    [SMTPat (a +. b +. c)]
+
+let add_mod_associativity a b c =
+  assume (v (a+.b+.c) == v (a +. (b +. c)))

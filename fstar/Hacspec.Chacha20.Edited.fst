@@ -1,4 +1,4 @@
-module Hacspec.Chacha20
+module Hacspec.Chacha20.Edited
 
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
 
@@ -29,7 +29,7 @@ let chacha20_line
   (a_0 : state_idx)
   (b_1 : state_idx)
   (d_2 : state_idx)
-  (s_3 : uint_size)
+  (s_3 : uint_size{s_3 > 0 /\ s_3 < 32})
   (m_4 : state)
   : state =
   let state_5 = m_4 in
@@ -86,7 +86,7 @@ let chacha20_double_round (state_14 : state) : state =
 let chacha20_rounds (state_22 : state) : state =
   let st_23 = state_22 in
   let (st_23) =
-    foldi (usize 0) (usize 10) (fun i_24 (st_23) ->
+    fold (usize 10) (fun (st_23) ->
       let st_23 = chacha20_double_round (st_23) in
       (st_23))
     (st_23)
@@ -123,7 +123,7 @@ let chacha20_init
   (iv_31 : cha_cha_iv)
   (ctr_32 : uint32)
   : state =
-  let st_33 = array_new_ (secret (pub_u32 0x8)) (16) in
+  let st_33 = array_new_ (secret (pub_u32 0)) (16) in
   let st_33 = array_update (st_33) (usize 0) (chacha20_constants_init ()) in
   let st_33 = array_update (st_33) (usize 4) (array_to_le_uint32s (key_30)) in
   let st_33 = array_upd st_33 (usize 12) (ctr_32) in
@@ -145,21 +145,21 @@ let chacha20_encrypt_block
   : block =
   let st_42 = chacha20_core (ctr_40) (st0_39) in
   let pl_43 = array_from_seq (16) (array_to_le_uint32s (plain_41)) in
-  let st_44 = (st_42) `array_xor (^.)` (pl_43) in
+  let st_44 = pl_43 `array_xor (^.)` (st_42) in
   array_from_seq (64) (array_to_le_bytes (st_44))
 
 let chacha20_encrypt_last
   (st0_45 : state)
   (ctr_46 : uint32)
-  (plain_47 : byte_seq)
+  (plain_47 : byte_seq{seq_len plain_47 < 64})
   : byte_seq =
-  let b_48 = array_new_ (secret (pub_u8 0x8)) (64) in
+  let b_48 = array_new_ (secret (pub_u8 0x0)) (64) in
   let b_48 = array_update (b_48) (usize 0) (plain_47) in
   let b_48 = chacha20_encrypt_block (st0_45) (ctr_46) (b_48) in
   array_slice (b_48) (usize 0) (seq_len (plain_47))
 
 let chacha20_update (st0_49 : state) (m_50 : byte_seq) : byte_seq =
-  let blocks_out_51 = seq_new_ (secret (pub_u8 0x8)) (seq_len (m_50)) in
+  let blocks_out_51 = seq_new_ (secret (pub_u8 0x0)) (seq_len (m_50)) in
   let (blocks_out_51) =
     foldi (usize 0) (seq_num_chunks (m_50) (usize 64)) (fun i_52 (blocks_out_51
       ) ->

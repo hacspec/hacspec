@@ -2,8 +2,8 @@
 ################################################################################
 # Customize these variables for your project
 ################################################################################
-FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 128
-HACL_HOME ?= ~/Desktop/repositories/hacl-star-master
+FSTAR = /Users/bhargava/Desktop/repositories/FStar/bin/fstar.exe --z3rlimit_factor 128
+HACL_HOME = /Users/bhargava/Desktop/repositories/hacl-star-master
 
 # The root files of your project, from which to begin scanning dependences
 FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst Hacspec.Chacha20Poly1305.fst \
@@ -11,7 +11,7 @@ FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst Hacspec.Chacha20Poly130
 
 # The paths to related files which to include for scanning
 #   -- No need to add FSTAR_HOME/ulib; it is included by default
-INCLUDE_PATHS ?= $(HACL_HOME)/lib $(HACL_HOME)/specs
+INCLUDE_PATHS = $(HACL_HOME)/lib $(HACL_HOME)/specs
 
 # The executable file you want to produce
 PROGRAM ?= specs.exe

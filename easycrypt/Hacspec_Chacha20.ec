@@ -65,115 +65,97 @@ op chacha20_rounds (state_22 : state) : state =
   in
   st_23.
 
-op chacha20_sum_state (st0_25 : state) (st1_26 : state) : state =
-  let st_27 = st0_25 in
-  let st_27 =
-    foldi (0) (16) (fun i_28 st_27 =>
-      let st_27 = st_27.[(i_28) <- ((st0_25.[i_28]) + (st1_26.[i_28]))] in
-      st_27)
-    st_27
-  in
-  st_27.
-
-op chacha20_core (ctr_29 : uint32) (st0_30 : state) : state =
-  let state_31 = st0_30 in
-  let state_31 = state_31.[(12) <- ((state_31.[12]) + (ctr_29))] in
-  let k_32 = chacha20_rounds (state_31) in
-  chacha20_sum_state (k_32) (state_31).
+op chacha20_core (ctr_25 : uint32) (st0_26 : state) : state =
+  let state_27 = st0_26 in
+  let state_27 = state_27.[(12) <- ((state_27.[12]) + (ctr_25))] in
+  let k_28 = chacha20_rounds (state_27) in
+  array_16_add Unknown.(+) (k_28) (state_27).
 
 op chacha20_constants_init (_: unit) : constants =
-  let constants_33 = array_4_new_ (secret (pub_u32 8)) in
-  let constants_33 = constants_33.[(0) <- (secret (pub_u32 1634760805))] in
-  let constants_33 = constants_33.[(1) <- (secret (pub_u32 857760878))] in
-  let constants_33 = constants_33.[(2) <- (secret (pub_u32 2036477234))] in
-  let constants_33 = constants_33.[(3) <- (secret (pub_u32 1797285236))] in
-  constants_33.
+  let constants_29 = array_4_new_ (secret (pub_u32 8)) in
+  let constants_29 = constants_29.[(0) <- (secret (pub_u32 1634760805))] in
+  let constants_29 = constants_29.[(1) <- (secret (pub_u32 857760878))] in
+  let constants_29 = constants_29.[(2) <- (secret (pub_u32 2036477234))] in
+  let constants_29 = constants_29.[(3) <- (secret (pub_u32 1797285236))] in
+  constants_29.
 
 op chacha20_init
-  (key_34 : cha_cha_key)
-  (iv_35 : cha_cha_iv)
-  (ctr_36 : uint32)
+  (key_30 : cha_cha_key)
+  (iv_31 : cha_cha_iv)
+  (ctr_32 : uint32)
   : state =
-  let st_37 = array_16_new_ (secret (pub_u32 8)) in
-  let st_37 =
-    array_16_update_slice (st_37) (0) (chacha20_constants_init ()) (0) (4)
-  in
-  let st_37 =
-    array_16_update_slice (st_37) (4) (array_32_to_le_uint32s (key_34)) (0) (8)
-  in
-  let st_37 = st_37.[(12) <- (ctr_36)] in
-  let st_37 =
-    array_16_update_slice (st_37) (13) (array_12_to_le_uint32s (iv_35)) (0) (3)
-  in
-  st_37.
+  let st_33 = array_16_new_ (secret (pub_u32 8)) in
+  let st_33 = array_16_update (st_33) (0) (chacha20_constants_init ()) in
+  let st_33 = array_16_update (st_33) (4) (array_32_to_le_uint32s (key_30)) in
+  let st_33 = st_33.[(12) <- (ctr_32)] in
+  let st_33 = array_16_update (st_33) (13) (array_12_to_le_uint32s (iv_31)) in
+  st_33.
 
-op chacha20_key_block (state_38 : state) : block =
-  let state_39 = chacha20_core (secret (pub_u32 0)) (state_38) in
-  array_64_from_seq (array_16_to_le_bytes (state_39)).
+op chacha20_key_block (state_34 : state) : block =
+  let state_35 = chacha20_core (secret (pub_u32 0)) (state_34) in
+  array_64_from_seq (array_16_to_le_bytes (state_35)).
 
-op chacha20_key_block0 (key_40 : cha_cha_key) (iv_41 : cha_cha_iv) : block =
-  let state_42 = chacha20_init (key_40) (iv_41) (secret (pub_u32 0)) in
-  chacha20_key_block (state_42).
+op chacha20_key_block0 (key_36 : cha_cha_key) (iv_37 : cha_cha_iv) : block =
+  let state_38 = chacha20_init (key_36) (iv_37) (secret (pub_u32 0)) in
+  chacha20_key_block (state_38).
 
 op chacha20_encrypt_block
-  (st0_43 : state)
-  (ctr_44 : uint32)
-  (plain_45 : block)
+  (st0_39 : state)
+  (ctr_40 : uint32)
+  (plain_41 : block)
   : block =
-  let st_46 = chacha20_core (ctr_44) (st0_43) in
-  let pl_47 = array_16_from_seq (array_64_to_le_uint32s (plain_45)) in
-  let st_48 = array_16_xor Unknown.(+^) (st_46) (pl_47) in
-  array_64_from_seq (array_16_to_le_bytes (st_48)).
+  let st_42 = chacha20_core (ctr_40) (st0_39) in
+  let pl_43 = array_16_from_seq (array_64_to_le_uint32s (plain_41)) in
+  let st_44 = array_16_xor Unknown.(+^) (st_42) (pl_43) in
+  array_64_from_seq (array_16_to_le_bytes (st_44)).
 
 op chacha20_encrypt_last
-  (st0_49 : state)
-  (ctr_50 : uint32)
-  (plain_51 : byte_seq)
+  (st0_45 : state)
+  (ctr_46 : uint32)
+  (plain_47 : byte_seq)
   : byte_seq =
-  let b_52 = array_64_new_ (secret (pub_u8 8)) in
-  let b_52 =
-    array_64_update_slice (b_52) (0) (plain_51) (0) (seq_len (plain_51))
-  in
-  let b_52 = chacha20_encrypt_block (st0_49) (ctr_50) (b_52) in
-  array_64_slice (b_52) (0) (seq_len (plain_51)).
+  let b_48 = array_64_new_ (secret (pub_u8 8)) in
+  let b_48 = array_64_update (b_48) (0) (plain_47) in
+  let b_48 = chacha20_encrypt_block (st0_45) (ctr_46) (b_48) in
+  array_64_slice (b_48) (0) (seq_len (plain_47)).
 
-op chacha20_update (st0_53 : state) (m_54 : byte_seq) : byte_seq =
-  let blocks_out_55 = seq_new_ (secret (pub_u8 8)) (seq_len (m_54)) in
-  let blocks_out_55 =
-    foldi (0) (seq_num_chunks (m_54) (64)) (fun i_56 blocks_out_55 =>
-      let (block_len_57, msg_block_58) = seq_get_chunk (m_54) (64) (i_56) in
-      let blocks_out_55 =
-        if (block_len_57) = (64) then begin
-          let b_59 =
-            chacha20_encrypt_block (st0_53) (secret (pub_u32 (i_56))) (
-              array_64_from_seq (msg_block_58))
+op chacha20_update (st0_49 : state) (m_50 : byte_seq) : byte_seq =
+  let blocks_out_51 = seq_new_ (secret (pub_u8 8)) (seq_len (m_50)) in
+  let blocks_out_51 =
+    foldi (0) (seq_num_chunks (m_50) (64)) (fun i_52 blocks_out_51 =>
+      let (block_len_53, msg_block_54) = seq_get_chunk (m_50) (64) (i_52) in
+      let blocks_out_51 =
+        if (block_len_53) = (64) then begin
+          let b_55 =
+            chacha20_encrypt_block (st0_49) (secret (pub_u32 (i_52))) (
+              array_64_from_seq (msg_block_54))
           in
-          let blocks_out_55 =
-            seq_set_chunk (blocks_out_55) (64) (i_56) (b_59)
+          let blocks_out_51 =
+            seq_set_chunk (blocks_out_51) (64) (i_52) (b_55)
           in
-          blocks_out_55
+          blocks_out_51
         end else begin
-          let b_60 =
-            chacha20_encrypt_last (st0_53) (secret (pub_u32 (i_56))) (
-              msg_block_58)
+          let b_56 =
+            chacha20_encrypt_last (st0_49) (secret (pub_u32 (i_52))) (
+              msg_block_54)
           in
-          let blocks_out_55 =
-            seq_set_chunk (blocks_out_55) (64) (i_56) (b_60)
+          let blocks_out_51 =
+            seq_set_chunk (blocks_out_51) (64) (i_52) (b_56)
           in
-          blocks_out_55
+          blocks_out_51
         end
       in
-      blocks_out_55)
-    blocks_out_55
+      blocks_out_51)
+    blocks_out_51
   in
-  blocks_out_55.
+  blocks_out_51.
 
 op chacha20
-  (key_61 : cha_cha_key)
-  (iv_62 : cha_cha_iv)
-  (ctr_63 : pub_uint32)
-  (m_64 : byte_seq)
+  (key_57 : cha_cha_key)
+  (iv_58 : cha_cha_iv)
+  (ctr_59 : pub_uint32)
+  (m_60 : byte_seq)
   : byte_seq =
-  let state_65 = chacha20_init (key_61) (iv_62) (secret (ctr_63)) in
-  chacha20_update (state_65) (m_64).
+  let state_61 = chacha20_init (key_57) (iv_58) (secret (ctr_59)) in
+  chacha20_update (state_61) (m_60).
 
