@@ -145,7 +145,7 @@ let chacha20_encrypt_block
   : block =
   let st_42 = chacha20_core (ctr_40) (st0_39) in
   let pl_43 = array_from_seq (16) (array_to_le_uint32s (plain_41)) in
-  let st_44 = (st_42) `array_xor (^.)` (pl_43) in
+  let st_44 = (pl_43) `array_xor (^.)` (st_42) in
   array_from_seq (64) (array_to_le_bytes (st_44))
 
 let chacha20_encrypt_last

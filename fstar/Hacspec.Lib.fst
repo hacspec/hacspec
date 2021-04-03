@@ -521,7 +521,9 @@ let u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 =
 
 (*** Nats *)
 
-let nat_mod (n: nat) = x:nat{x < n}
+let less_eq (x:nat) (y:nat) = x <= y
+
+let nat_mod (n: pos) = x:nat{x `less_eq` (n - 1)}
 
 val (+%) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let (+%) #n a b = (a + b) % n
@@ -559,3 +561,11 @@ val add_mod_associativity: #t:inttype{unsigned t} -> #l:secrecy_level -> a:uint_
 
 let add_mod_associativity a b c =
   assume (v (a+.b+.c) == v (a +. (b +. c)))
+
+val pow2_le_compat: m:nat -> n:nat -> Lemma
+  (requires (m <= n))
+  (ensures  (pow2 m `less_eq` pow2 n))
+  [SMTPat (pow2 m `less_eq` pow2 n)]
+
+let pow2_le_compat m n = Math.Lemmas.pow2_le_compat n m
+

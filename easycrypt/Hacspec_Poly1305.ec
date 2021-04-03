@@ -26,54 +26,104 @@ op poly1305_encode_r (b_0 : poly_block) : field_element =
   in
   nat_from_secret_literal (n_1).
 
-op poly1305_encode_block (len_2 : uint_size) (b_3 : sub_block) : field_element =
-  let n_4 =
+op poly1305_encode_block (b_2 : poly_block) : field_element =
+  let n_3 = uint128_from_le_bytes (array_16_from_seq (b_2)) in
+  let f_4 = nat_from_secret_literal (n_3) in
+  (f_4) + (nat_pow2 (128)).
+
+op poly1305_encode_last
+  (pad_len_5 : block_index)
+  (b_6 : sub_block)
+  : field_element =
+  let n_7 =
     uint128_from_le_bytes (
-      array_16_from_slice (secret (pub_u8 8)) (b_3) (0) (seq_len (b_3)))
+      array_16_from_slice (secret (pub_u8 8)) (b_6) (0) (seq_len (b_6)))
   in
-  let f_5 = nat_from_secret_literal (n_4) in
-  (f_5) + (nat_pow2 ((8) * (len_2))).
+  let f_8 = nat_from_secret_literal (n_7) in
+  (f_8) + (nat_pow2 ((8) * (pad_len_5))).
 
-op poly1305_init (k_6 : poly_key) : poly_state =
-  let r_7 =
-    poly1305_encode_r (array_16_from_slice (secret (pub_u8 8)) (k_6) (0) (16))
+op poly1305_init (k_9 : poly_key) : poly_state =
+  let r_10 =
+    poly1305_encode_r (array_16_from_slice (secret (pub_u8 8)) (k_9) (0) (16))
   in
-  (nat_zero (), r_7, k_6).
+  (nat_zero (), r_10, k_9).
 
-op poly1305_update1
-  (len_8 : uint_size)
-  (b_9 : sub_block)
-  (st_10 : poly_state)
+op poly1305_update_block (b_11 : poly_block) (st_12 : poly_state) : poly_state =
+  let (acc_13, r_14, k_15) = st_12 in
+  (((poly1305_encode_block (b_11)) + (acc_13)) * (r_14), r_14, k_15).
+
+op get_full_chunk
+  (m_16 : uint8 Sequence.t)
+  (cs_17 : uint_size)
+  (i_18 : uint_size)
+  : uint8 Sequence.t =
+  let (len_19, block_20) = seq_get_chunk (m_16) (cs_17) (i_18) in
+  block_20.
+
+op get_last_chunk
+  (m_21 : uint8 Sequence.t)
+  (cs_22 : uint_size)
+  : uint8 Sequence.t =
+  let nblocks_23 = (seq_len (m_21)) / (cs_22) in
+  let (len_24, block_25) = seq_get_chunk (m_21) (cs_22) (nblocks_23) in
+  block_25.
+
+op poly1305_update_blocks (m_26 : byte_seq) (st_27 : poly_state) : poly_state =
+  let st_28 = st_27 in
+  let nblocks_29 = (seq_len (m_26)) / (blocksize) in
+  let st_28 =
+    foldi (0) (nblocks_29) (fun i_30 st_28 =>
+      let block_31 =
+        array_16_from_seq (get_full_chunk (m_26) (blocksize) (i_30))
+      in
+      let st_28 = poly1305_update_block (block_31) (st_28) in
+      st_28)
+    st_28
+  in
+  st_28.
+
+op poly1305_update_last
+  (pad_len_32 : uint_size)
+  (b_33 : sub_block)
+  (st_34 : poly_state)
   : poly_state =
-  let (acc_11, r_12, k_13) = st_10 in
-  (((poly1305_encode_block (len_8) (b_9)) + (acc_11)) * (r_12), r_12, k_13).
+  let st_35 = st_34 in
+  let st_35 =
+    if (seq_len (b_33)) != (0) then begin
+      let (acc_36, r_37, k_38) = st_35 in
+      let st_35 =
+        (
+          ((poly1305_encode_last (pad_len_32) (b_33)) + (acc_36)) * (r_37),
+          r_37,
+          k_38
+        )
+      in
+      st_35
+    end else begin st_35
+    end
+  in
+  st_35.
 
-op poly1305_finish (st_14 : poly_state) : tag =
-  let (acc_15, _, k_16) = st_14 in
-  let n_17 =
+op poly1305_update (m_39 : byte_seq) (st_40 : poly_state) : poly_state =
+  let st_41 = poly1305_update_blocks (m_39) (st_40) in
+  let last_42 = get_last_chunk (m_39) (blocksize) in
+  poly1305_update_last (seq_len (last_42)) (last_42) (st_41).
+
+op poly1305_finish (st_43 : poly_state) : tag =
+  let (acc_44, _, k_45) = st_43 in
+  let n_46 =
     uint128_from_le_bytes (
-      array_16_from_slice (secret (pub_u8 8)) (k_16) (16) (16))
+      array_16_from_slice (secret (pub_u8 8)) (k_45) (16) (16))
   in
-  let aby_18 = nat_to_byte_seq_le (acc_15) in
-  let a_19 =
+  let aby_47 = nat_to_byte_seq_le (acc_44) in
+  let a_48 =
     uint128_from_le_bytes (
-      array_16_from_slice (secret (pub_u8 8)) (aby_18) (0) (16))
+      array_16_from_slice (secret (pub_u8 8)) (aby_47) (0) (16))
   in
-  array_16_from_seq (uint128_to_le_bytes ((a_19) + (n_17))).
+  array_16_from_seq (uint128_to_le_bytes ((a_48) + (n_46))).
 
-op poly1305_update (m_20 : byte_seq) (st_21 : poly_state) : poly_state =
-  let st_22 = st_21 in
-  let st_22 =
-    foldi (0) (seq_num_chunks (m_20) (blocksize)) (fun i_23 st_22 =>
-      let (len_24, block_25) = seq_get_chunk (m_20) (blocksize) (i_23) in
-      let st_22 = poly1305_update1 (len_24) (block_25) (st_22) in
-      st_22)
-    st_22
-  in
-  st_22.
-
-op poly1305 (m_26 : byte_seq) (key_27 : poly_key) : tag =
-  let st_28 = poly1305_init (key_27) in
-  let st_28 = poly1305_update (m_26) (st_28) in
-  poly1305_finish (st_28).
+op poly1305 (m_49 : byte_seq) (key_50 : poly_key) : tag =
+  let st_51 = poly1305_init (key_50) in
+  let st_51 = poly1305_update (m_49) (st_51) in
+  poly1305_finish (st_51).
 

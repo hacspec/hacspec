@@ -106,7 +106,7 @@ op chacha20_encrypt_block
   : block =
   let st_42 = chacha20_core (ctr_40) (st0_39) in
   let pl_43 = array_16_from_seq (array_64_to_le_uint32s (plain_41)) in
-  let st_44 = array_16_xor Unknown.(+^) (st_42) (pl_43) in
+  let st_44 = array_16_xor Unknown.(+^) (pl_43) (st_42) in
   array_64_from_seq (array_16_to_le_bytes (st_44)).
 
 op chacha20_encrypt_last
