@@ -7,7 +7,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os:
+          - ubuntu-latest
+          - macos-latest
         spec:
           - hacspec-chacha20
           - hacspec-chacha20poly1305
@@ -21,15 +23,14 @@ jobs:
           - hacspec-riot-bootloader
           - hacspec-sha3
           - hacspec-gimli
+          - hacspec-bls12-381
 
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
       - name: Prepare
-        run: |
-          rustup toolchain install nightly-2021-03-11
-          cargo install --path language --verbose
+        run: cargo install --path language --verbose
       - name: Build
         run: cargo build --verbose
       - name: Typecheck
