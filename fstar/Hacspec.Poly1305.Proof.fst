@@ -14,19 +14,24 @@ let poly1305_encode_r_equiv (b:New.poly_block)
            Orig.poly1305_encode_r b)
            [SMTPat (New.poly1305_encode_r b)] =
   let n_1 = uint128_from_le_bytes (array_from_seq (16) (b)) in
-  let n_2 = (n_1) &. (secret (pub_u128 0xffffffc0ffffffc0ffffffc0fffffff)) in
-  let n_3 = nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (n_1) in
+  let lo : uint64 = Lib.ByteSequence.uint_from_bytes_le (Lib.Sequence.sub b 0 8) in
+  let hi : uint64 = Lib.ByteSequence.uint_from_bytes_le (Lib.Sequence.sub b 8 8) in
+  Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U64 #SEC (Lib.Sequence.sub b 0 8);
+  Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U64 #SEC (Lib.Sequence.sub b 8 8);
+  Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U128 #SEC (array_from_seq 16 b);
+  Lib.ByteSequence.nat_from_intseq_le_slice_lemma b 8;
+  assert (v n_1 == v lo + pow2 64 * v hi);
 
-  let lo = Lib.ByteSequence.uint_from_bytes_le (Lib.Sequence.sub b 0 8) in
-  let hi = Lib.ByteSequence.uint_from_bytes_le (Lib.Sequence.sub b 8 8) in
+  let mask128 = (secret (pub_u128 0xffffffc0ffffffc0ffffffc0fffffff)) in
   let mask0 = u64 0x0ffffffc0fffffff in
   let mask1 = u64 0x0ffffffc0ffffffc in
-  let lo = lo &. mask0 in
-  let hi = hi &. mask1 in
-  assert_norm (pow2 128 < pow2 130 - 5);
-  let res = (uint_v hi * pow2 64 + uint_v lo) in
-  admit()
+  assert (v mask128 == v mask0 + pow2 64 * v mask1);
 
+  let n_2 = (n_1) &. mask128 in
+  let lo' = lo &. mask0 in
+  let hi' = hi &. mask1 in
+  assume (v n_2 == v lo' + pow2 64 * v hi');
+  ()
 
 let prime_equiv:_:unit{Orig.prime == 0x03fffffffffffffffffffffffffffffffb} =
   assert_norm(Orig.prime == 0x03fffffffffffffffffffffffffffffffb)
@@ -40,7 +45,14 @@ let poly1305_encode_block_equiv (b:New.poly_block)
 let poly1305_encode_last_equiv (b:New.sub_block)
   : Lemma (New.poly1305_encode_last (seq_len b) b == Orig.encode (seq_len b) b)
            [SMTPat (New.poly1305_encode_last (seq_len b) b)] =
-    admit()
+  let n_1 =
+    uint128_from_le_bytes (
+      array_from_slice (secret (pub_u8 0x0)) (16) (b) (usize 0) (
+        seq_len (b)))
+  in
+  let n_2 = Lib.ByteSequence.nat_from_bytes_le b in
+  assume (v n_1 == n_2);
+  ()
 
 
 let poly1305_init_equiv (k:New.poly_key)
@@ -79,6 +91,8 @@ let poly1305_finish_equiv (st:New.poly_state)
   : Lemma (let (a,r,k) = st in
            New.poly1305_finish st == Orig.poly1305_finish k a)
            [SMTPat (New.poly1305_finish st)] =
+           let (a,r,k) = st in
+           Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U128 #SEC (Lib.Sequence.sub k 16 16);
            admit()
 
 let poly1305_update_equiv (m:byte_seq) (st:New.poly_state)

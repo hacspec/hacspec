@@ -43,7 +43,7 @@ let poly1305_encode_last
   : field_element =
   let n_7 =
     uint128_from_le_bytes (
-      array_from_slice (secret (pub_u8 0x8)) (16) (b_6) (usize 0) (
+      array_from_slice (secret (pub_u8 0x0)) (16) (b_6) (usize 0) (
         seq_len (b_6)))
   in
   let f_8 =
@@ -56,7 +56,7 @@ let poly1305_encode_last
 let poly1305_init (k_9 : poly_key) : poly_state =
   let r_10 =
     poly1305_encode_r (
-      array_from_slice (secret (pub_u8 0x8)) (16) (k_9) (usize 0) (usize 16))
+      array_from_slice (secret (pub_u8 0x0)) (16) (k_9) (usize 0) (usize 16))
   in
   (nat_zero (0x03fffffffffffffffffffffffffffffffb), r_10, k_9)
 
