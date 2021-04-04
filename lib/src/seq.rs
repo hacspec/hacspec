@@ -83,6 +83,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 (self.len() + chunk_size - 1) / chunk_size
             }
 
+            /// Get the number of chunks of `chunk_size` in this array.
+            /// There might be less than `chunk_size` remaining elements in this
+            /// array beyond these.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn num_exact_chunks(&self, chunk_size: usize) -> usize {
+                self.len() / chunk_size
+            }
+
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn get_chunk(
                 &self,
@@ -97,6 +105,42 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 };
                 let out = self.slice(idx_start, len);
                 (len, out)
+            }
+
+            /// Get the `chunk_number` chunk of `chunk_size` from this array
+            /// as `Seq<T>`.
+            /// The resulting sequence is of exactly `chunk_size` length.
+            /// Until #84 is fixed this returns an empty sequence if not enough
+            /// elements are left.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn get_exact_chunk(&self, chunk_size: usize, chunk_number: usize) -> Self {
+                let (len, chunk) = self.get_chunk(chunk_size, chunk_number);
+                if len != chunk_size {
+                   Self::new(0)
+                } else {
+                    chunk
+                }
+            }
+
+            /// Get the remaining chunk of this array of length less than
+            /// `chunk_size`.
+            /// If there's no remainder, i.e. if the length of this array can
+            /// be divided by `chunk_size` without a remainder, the function
+            /// returns an empty sequence (until #84 is fixed).
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn get_remainder_chunk(&self, chunk_size: usize) -> Self {
+                let chunks = self.num_chunks(chunk_size);
+                let last_chunk = if chunks > 0 {
+                    chunks - 1
+                } else {
+                    0
+                };
+                let (len, chunk) = self.get_chunk(chunk_size, last_chunk);
+                if len == chunk_size {
+                    Self::new(0)
+                } else {
+                    chunk
+                }
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]

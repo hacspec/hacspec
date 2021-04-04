@@ -117,17 +117,23 @@ pub fn chacha_block(key: Key, ctr: U32, iv: IV) -> StateBytes {
 pub fn chacha(key: Key, iv: IV, m: &ByteSeq) -> ByteSeq {
     let mut ctr = U32(1u32);
     let mut blocks_out = ByteSeq::new(m.len());
-    for i in 0..m.num_chunks(64) {
-        let (block_len, msg_block) = m.get_chunk(64, i);
+    for i in 0..m.num_exact_chunks(64) {
+        let msg_block = m.get_exact_chunk(64, i);
+        let msg_block = StateBytes::from_seq(&msg_block);
+        let key_block = chacha_block(key, ctr, iv);
+        blocks_out = blocks_out.set_chunk(64, i, &(msg_block ^ key_block));
+        ctr = ctr + U32(1u32);
+    }
+    let last_block = m.get_remainder_chunk(64);
+    if last_block.len() != 0 {
         let key_block = chacha_block(key, ctr, iv);
         let msg_block_padded = StateBytes::new();
-        let msg_block_padded = msg_block_padded.update_start(&msg_block);
+        let msg_block_padded = msg_block_padded.update_start(&last_block);
         blocks_out = blocks_out.set_chunk(
             64,
-            i,
-            &(msg_block_padded ^ key_block).slice_range(0..block_len),
+            m.num_chunks(64) - 1,
+            &(msg_block_padded ^ key_block).slice_range(0..last_block.len()),
         );
-        ctr = ctr + U32(1u32);
     }
     blocks_out
 }
