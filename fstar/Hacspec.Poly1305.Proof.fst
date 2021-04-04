@@ -127,6 +127,14 @@ let poly1305_finish_equiv (st:New.poly_state)
   assert (Orig.poly1305_finish k a == resby1);
   ()
 
+(*
+  The above proof assumes that a.to_byte_seq_le() is changed to a.to_byte_seq_le(16)
+  which is then translated as above. If we instead extract 17 bytes, then we have
+  to use the nat_from_intseq_le_slice lemma, to cut off the bytstream at 16 bytes
+  and then use % pow2 128 etc. This works, but I have removed the proof, since
+  it won't be necessary.
+*)
+
 let poly1305_update_equiv (m:byte_seq) (st:New.poly_state)
   : Lemma (let (a,r,k) = st in
            let a' = Orig.poly1305_update m a r in
