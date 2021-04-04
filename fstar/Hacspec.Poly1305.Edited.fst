@@ -127,8 +127,7 @@ let poly1305_finish (st_43 : poly_state) : tag =
     nat_to_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) 16 (acc_44)
   in
   let a_48 =
-    uint128_from_le_bytes (
-      array_from_slice (secret (pub_u8 0x0)) (16) (aby_47) (usize 0) (usize 16))
+    uint128_from_le_bytes aby_47
   in
   array_from_seq (16) (uint128_to_le_bytes ((a_48) +. (n_46)))
 

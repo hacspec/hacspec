@@ -30,7 +30,13 @@ let poly1305_encode_r_equiv (b:New.poly_block)
   let n_2 = (n_1) &. mask128 in
   let lo' = lo &. mask0 in
   let hi' = hi &. mask1 in
-  assume (v n_2 == v lo' + pow2 64 * v hi');
+  logand_spec n_1 mask128;
+  logand_spec lo mask0;
+  logand_spec hi mask1;
+  assert (v n_2 == UInt.logand #128 (v n_1) (v mask128));
+  assert (v lo' == UInt.logand #64 (v lo) (v mask0));
+  assert (v hi' == UInt.logand #64 (v hi) (v mask1));
+  logand_uint64_uint128 (v lo) (v mask0) (v hi) (v mask1);
   ()
 
 let prime_equiv:_:unit{Orig.prime == 0x03fffffffffffffffffffffffffffffffb} =
@@ -45,13 +51,16 @@ let poly1305_encode_block_equiv (b:New.poly_block)
 let poly1305_encode_last_equiv (b:New.sub_block)
   : Lemma (New.poly1305_encode_last (seq_len b) b == Orig.encode (seq_len b) b)
            [SMTPat (New.poly1305_encode_last (seq_len b) b)] =
-  let n_1 =
-    uint128_from_le_bytes (
-      array_from_slice (secret (pub_u8 0x0)) (16) (b) (usize 0) (
-        seq_len (b)))
-  in
+  let fb = array_from_slice (secret (pub_u8 0x0)) (16) (b) (usize 0) (seq_len (b)) in
+  let n_1 = uint128_from_le_bytes fb in
   let n_2 = Lib.ByteSequence.nat_from_bytes_le b in
-  assume (v n_1 == n_2);
+  assert (Lib.Sequence.sub fb 0 (seq_len b) == b);
+  assert (forall i. i >= seq_len b ==> v fb.[i] == 0);
+  nat_from_zero_bytes (Lib.Sequence.sub fb (seq_len b) (seq_len fb - seq_len b));
+  assert (Lib.ByteSequence.nat_from_intseq_le (Lib.Sequence.sub fb (seq_len b) (seq_len fb - seq_len b)) == 0);
+  Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U128 #SEC fb;
+  Lib.ByteSequence.nat_from_intseq_le_slice_lemma fb (seq_len b);
+  assert (v n_1 == n_2);
   ()
 
 
@@ -91,9 +100,32 @@ let poly1305_finish_equiv (st:New.poly_state)
   : Lemma (let (a,r,k) = st in
            New.poly1305_finish st == Orig.poly1305_finish k a)
            [SMTPat (New.poly1305_finish st)] =
-           let (a,r,k) = st in
-           Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U128 #SEC (Lib.Sequence.sub k 16 16);
-           admit()
+  let (a,r,k) = st in
+  Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U128 #SEC (Lib.Sequence.sub k 16 16);
+  let s : uint128 = Lib.ByteSequence.uint_from_bytes_le #U128 (Lib.Sequence.sub k 16 16) in
+  let aby = nat_to_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) 16 (a) 
+  in
+  Lib.ByteSequence.lemma_reveal_uint_to_bytes_le #U128 #SEC aby;
+  let a' = a % pow2 128 in
+  assert (aby == Lib.ByteSequence.nat_to_bytes_le #SEC 16 a');
+  let afull = Lib.ByteSequence.nat_from_bytes_le aby in
+  let a128 = Lib.ByteSequence.uint_from_bytes_le #U128 aby in
+  Lib.ByteSequence.lemma_nat_to_from_bytes_le_preserves_value aby 16 (a % pow2 128);
+  assert (afull == a % pow2 128);
+  let res1 =  (a + v s) % pow2 128 in
+  let res2 : uint128 = a128 +. s in
+  Math.Lemmas.lemma_mod_add_distr (v s) a (pow2 128);
+  assert ((a + v s) % pow2 128 == (a % pow2 128 + v s) % pow2 128);
+  assert (res1 == v res2);
+  let resby1 = Lib.ByteSequence.nat_to_bytes_le #SEC 16 res1 in
+  let resby2 = Lib.ByteSequence.uint_to_bytes_le #U128 #SEC res2 in
+  Lib.ByteSequence.lemma_uint_to_bytes_le_preserves_value res2;
+  Lib.ByteSequence.lemma_nat_to_from_bytes_le_preserves_value resby1 16 res1;
+  Lib.ByteSequence.nat_from_intseq_le_inj resby1 resby2;
+  assert (resby1 == resby2);
+  assert (New.poly1305_finish st == resby2);
+  assert (Orig.poly1305_finish k a == resby1);
+  ()
 
 let poly1305_update_equiv (m:byte_seq) (st:New.poly_state)
   : Lemma (let (a,r,k) = st in

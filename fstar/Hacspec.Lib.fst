@@ -539,15 +539,15 @@ let nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n} =
   v x
 
 let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
-  let n' = n % (pow2 (8 * len)) in
+  let n' = x % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_le len n'
 
 let nat_to_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq uint8 len =
-  let n' = n % (pow2 (8 * len)) in
+  let n' = x % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_le len n'
 
 let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
-  let n' = n % (pow2 (8 * len)) in
+  let n' = x % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n'
 
 
@@ -562,6 +562,20 @@ val add_mod_associativity: #t:inttype{unsigned t} -> #l:secrecy_level -> a:uint_
 let add_mod_associativity a b c =
   assume (v (a+.b+.c) == v (a +. (b +. c)))
 
+val logand_uint64_uint128 (a a' b b': UInt.uint_t 64)
+  : Lemma (UInt.logand #128 (a + pow2 64 * b) (a' + pow2 64 * b') == UInt.logand #64 a a' + pow2 64 * UInt.logand #64 b b')
+
+let logand_uint64_uint128 a a' b b' = admit()
+
+(*
+val logand_uint64_uint128 (a a' b b': uint64)
+  : Lemma (v ((pub_u128 (v a + pow2 64 * v b)) &. (pub_u128 (v a' + pow2 64 * v b'))) ==
+           (v (a &. a') + pow2 64 * v (b &. b')))
+
+let logand_uint64_uint128 a a' b b' = admit()
+*)
+
+
 val pow2_le_compat: m:nat -> n:nat -> Lemma
   (requires (m <= n))
   (ensures  (pow2 m `less_eq` pow2 n))
@@ -569,3 +583,7 @@ val pow2_le_compat: m:nat -> n:nat -> Lemma
 
 let pow2_le_compat m n = Math.Lemmas.pow2_le_compat n m
 
+val nat_from_zero_bytes (#len:size_nat) (b:Lib.ByteSequence.lbytes len)
+  : Lemma (requires (forall i. v b.[i] == 0))
+          (ensures (Lib.ByteSequence.nat_from_bytes_le b == 0))
+let nat_from_zero_bytes #len b = admit()
