@@ -106,11 +106,8 @@ pub fn poly1305_update (m:&ByteSeq, st:PolyState) -> PolyState {
 pub fn poly1305_finish (st:PolyState) -> Tag {
     let (acc,_,k) = st;
     let n = U128_from_le_bytes(U128Word::from_slice(&k,16,16));
-// For some reason the little-endian version below does not work, but the big-endian version does.
-//    let aby = acc.to_byte_seq_le();
-//    let a = U128_from_le_bytes(U128Word::from_slice(&aby,0,16));
-    let a = acc.to_byte_seq_be().slice(1, BLOCKSIZE);
-    let a = U128_from_be_bytes(U128Word::from_seq(&a));
+    let aby = acc.to_byte_seq_le();
+    let a = U128_from_le_bytes(U128Word::from_slice(&aby,0,16));
     Tag::from_seq(&U128_to_le_bytes(a+n))
 }
 
