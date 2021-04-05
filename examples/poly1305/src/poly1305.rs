@@ -67,22 +67,11 @@ pub fn poly1305_update_block (b:&PolyBlock, st:PolyState) -> PolyState {
     ((poly1305_encode_block(b) + acc) * r,r,k)
 }
 
-pub fn get_full_chunk(m:&Seq<U8>,cs:usize,i:usize) -> Seq<U8> {
-    let (_len,block) = m.get_chunk(cs, i);
-    block
-}
-
-pub fn get_last_chunk(m:&Seq<U8>,cs:usize) -> Seq<U8> {
-    let nblocks = m.len() / cs;
-    let (_len,block) = m.get_chunk(cs, nblocks);
-    block
-}
-
 pub fn poly1305_update_blocks (m:&ByteSeq, st:PolyState) -> PolyState {
     let mut st = st;
     let nblocks = m.len() / BLOCKSIZE;
     for i in 0..nblocks {
-        let block = PolyBlock::from_seq(&get_full_chunk(m,BLOCKSIZE, i));
+        let block = PolyBlock::from_seq(&m.get_exact_chunk(BLOCKSIZE, i));
         st = poly1305_update_block(&block,st);
     }
     st
@@ -99,7 +88,7 @@ pub fn poly1305_update_last (pad_len:usize, b:&SubBlock, st:PolyState) -> PolySt
 
 pub fn poly1305_update (m:&ByteSeq, st:PolyState) -> PolyState {
     let st = poly1305_update_blocks(m,st);
-    let last = get_last_chunk(m,BLOCKSIZE);
+    let last = m.get_remainder_chunk(BLOCKSIZE);
     poly1305_update_last(last.len(),&last,st)
 }
 

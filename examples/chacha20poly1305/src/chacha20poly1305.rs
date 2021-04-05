@@ -16,7 +16,7 @@ pub fn init(key: ChaChaPolyKey, iv: ChaChaPolyIV) -> PolyState {
 
 pub fn poly1305_update_padded (m:&ByteSeq, st:PolyState) -> PolyState {
     let st = poly1305_update_blocks(m,st);
-    let last = get_last_chunk(m,16);
+    let last = m.get_remainder_chunk(16);
     poly1305_update_last(16,&last,st)
 }
 
