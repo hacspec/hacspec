@@ -91,17 +91,13 @@ impl Callbacks for HacspecCallbacks {
         };
         let mut item_list: PathBuf = std::env::temp_dir();
         item_list.push("allowed_list_items.json");
-        let external_funcs = |imported_crates: &Vec<rustspec::Spanned<String>>| {
+        let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
             queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-                hir_to_rustspec::retrieve_external_functions(
-                    &compiler.session(),
-                    &tcx,
-                    imported_crates,
-                )
+                hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
             })
         };
         let (krate, top_ctx) =
-            match typechecker::typecheck_program(&compiler.session(), &krate, &external_funcs) {
+            match typechecker::typecheck_program(&compiler.session(), &krate, &external_data) {
                 Ok(krate) => krate,
                 Err(_) => {
                     &compiler

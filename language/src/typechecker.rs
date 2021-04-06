@@ -1,3 +1,4 @@
+use crate::hir_to_rustspec::ExternalData;
 use crate::name_resolution::{
     to_fresh_ident, DictEntry, FnKey, FnValue, NameContext, TopLevelContext,
 };
@@ -2160,20 +2161,16 @@ fn typecheck_item(
     }
 }
 
-pub fn typecheck_program<
-    F: Fn(
-        &Vec<Spanned<String>>,
-    ) -> (
-        HashMap<FnKey, Result<ExternalFuncSig, String>>,
-        HashMap<String, BaseTyp>,
-        HashMap<String, BaseTyp>,
-    ),
->(
+pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     p: &Program,
-    external_funcs: &F,
+    external_data: &F,
 ) -> TypecheckingResult<(Program, TopLevelContext)> {
-    let (extern_funcs, extern_consts, extern_arrays) = external_funcs(&p.imported_crates);
+    let ExternalData {
+        funcs: extern_funcs,
+        consts: extern_consts,
+        arrays: extern_arrays,
+    } = external_data(&p.imported_crates);
     //TODO: better system, this whitelist is hardcoded
     let mut typ_dict = HashMap::from(
         vec![

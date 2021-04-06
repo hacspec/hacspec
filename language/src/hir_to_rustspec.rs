@@ -361,15 +361,17 @@ fn add_array_type_from_ctor_sig(
     }
 }
 
-pub fn retrieve_external_functions(
+pub struct ExternalData {
+    pub funcs: HashMap<FnKey, Result<ExternalFuncSig, String>>,
+    pub consts: HashMap<String, BaseTyp>,
+    pub arrays: HashMap<String, BaseTyp>,
+}
+
+pub fn retrieve_external_data(
     sess: &Session,
     tcx: &TyCtxt,
     imported_crates: &Vec<Spanned<String>>,
-) -> (
-    HashMap<FnKey, Result<ExternalFuncSig, String>>,
-    HashMap<String, BaseTyp>,
-    HashMap<String, BaseTyp>,
-) {
+) -> ExternalData {
     let mut krates: Vec<_> = tcx.crates().iter().collect();
     krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
@@ -497,5 +499,9 @@ pub fn retrieve_external_functions(
             _ => (),
         }
     }
-    (extern_funcs, extern_consts, extern_arrays)
+    ExternalData {
+        funcs: extern_funcs,
+        consts: extern_consts,
+        arrays: extern_arrays,
+    }
 }
