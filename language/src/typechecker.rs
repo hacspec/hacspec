@@ -1,3 +1,4 @@
+use crate::hir_to_rustspec::ExternalData;
 use crate::name_resolution::{
     to_fresh_ident, DictEntry, FnKey, FnValue, NameContext, TopLevelContext,
 };
@@ -2160,43 +2161,30 @@ fn typecheck_item(
     }
 }
 
-pub fn typecheck_program<
-    F: Fn(
-        &Vec<Spanned<String>>,
-    ) -> (
-        HashMap<FnKey, Result<ExternalFuncSig, String>>,
-        HashMap<String, BaseTyp>,
-        HashMap<String, BaseTyp>,
-    ),
->(
+pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     p: &Program,
-    external_funcs: &F,
+    external_data: &F,
 ) -> TypecheckingResult<(Program, TopLevelContext)> {
-    let (extern_funcs, extern_consts, extern_arrays) = external_funcs(&p.imported_crates);
-    //TODO: better system, this whitelist is hardcoded
-    let mut typ_dict = HashMap::from(
-        vec![
-            // Handle type aliases in a more systematic way, this is another harcoded list
+    let ExternalData {
+        funcs: extern_funcs,
+        consts: extern_consts,
+        arrays: extern_arrays,
+        ty_aliases: extern_aliases,
+    } = external_data(&p.imported_crates);
+    let mut typ_dict = HashMap::new();
+    for (alias_name, alias_ty) in extern_aliases {
+        typ_dict.insert(
+            TopLevelIdent(alias_name.clone()),
             (
-                TopLevelIdent(String::from("ByteSeq")),
                 (
-                    (
-                        (Borrowing::Consumed, DUMMY_SP),
-                        (
-                            BaseTyp::Seq(Box::new((
-                                BaseTyp::Named((TopLevelIdent("U8".to_string()), DUMMY_SP), None),
-                                DUMMY_SP,
-                            ))),
-                            DUMMY_SP,
-                        ),
-                    ),
-                    DictEntry::Alias,
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (alias_ty.clone(), DUMMY_SP),
                 ),
+                DictEntry::Alias,
             ),
-        ]
-        .as_slice(),
-    );
+        );
+    }
     for (alias_name, alias_ty) in &p.ty_aliases {
         typ_dict.insert(
             alias_name.0.clone(),
