@@ -230,7 +230,7 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
     // Add the target source file to the arguments
     args.push(target.src_path.clone());
 
-    // Add dependencies to link path.
+    // Add build artifact path.
     // This only works with debug builds.
     let deps = manifest.target_directory + "/debug/deps";
     callbacks.target_directory = deps;
@@ -249,16 +249,39 @@ fn main() -> Result<(), ()> {
         None => None,
     };
 
-    let mut callbacks = HacspecCallbacks {
-        output_file,
-        target_directory: String::new(),
+    // Optionally an input file can be passed in. This should be mostly used for
+    // testing.
+    let input_file = match args.iter().position(|a| a == "-f") {
+        Some(i) => {
+            args.remove(i);
+            true
+        }
+        None => false,
     };
 
-    let package_name = args
-        .pop()
-        .expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
+    let mut callbacks = HacspecCallbacks {
+        output_file,
+        // This defaults to the default target directory.
+        target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
+            + "/../target/debug/deps",
+    };
 
-    read_crate(package_name, &mut args, &mut callbacks);
+    if !input_file {
+        let package_name = args
+            .pop()
+            .expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
+
+        read_crate(package_name, &mut args, &mut callbacks);
+    } else {
+        // If only a file is provided we add the default dependencies only.
+        args.extend_from_slice(&[
+            "--extern=abstract_integers".to_string(),
+            "--extern=hacspec_derive".to_string(),
+            "--extern=hacspec_lib".to_string(),
+            "--extern=secret_integers".to_string(),
+        ]);
+    }
+
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
 
