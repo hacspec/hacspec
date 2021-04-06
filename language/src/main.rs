@@ -13,13 +13,13 @@ extern crate rustc_span;
 
 mod ast_to_rustspec;
 mod hir_to_rustspec;
+mod name_resolution;
 mod rustspec;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
-use hacspec_util::Signature;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
@@ -32,10 +32,8 @@ use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
 use rustc_span::MultiSpan;
 use serde::Deserialize;
 use serde_json;
-use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::OsStr;
-use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use util::APP_USAGE;
@@ -93,23 +91,6 @@ impl Callbacks for HacspecCallbacks {
         };
         let mut item_list: PathBuf = std::env::temp_dir();
         item_list.push("allowed_list_items.json");
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(item_list.as_path())
-            .unwrap();
-        let key_s = String::from("primitive");
-        let crate_s = String::from("hacspec");
-        let item_list: HashMap<String, HashMap<String, HashSet<Signature>>> =
-            serde_json::from_reader(&file).unwrap_or(HashMap::new());
-        let empty_set = &HashSet::new();
-        let empty_map = &HashMap::new();
-        let hacspec_items = item_list
-            .get(&key_s)
-            .unwrap_or(empty_map)
-            .get(&crate_s)
-            .unwrap_or(empty_set);
         let external_funcs = |imported_crates: &Vec<rustspec::Spanned<String>>| {
             queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
                 hir_to_rustspec::retrieve_external_functions(
@@ -119,20 +100,16 @@ impl Callbacks for HacspecCallbacks {
                 )
             })
         };
-        let (krate, typ_dict) = match typechecker::typecheck_program(
-            &compiler.session(),
-            &krate,
-            &external_funcs,
-            hacspec_items,
-        ) {
-            Ok(krate) => krate,
-            Err(_) => {
-                &compiler
-                    .session()
-                    .err("found some Hacspec typechecking errors");
-                return Compilation::Stop;
-            }
-        };
+        let (krate, top_ctx) =
+            match typechecker::typecheck_program(&compiler.session(), &krate, &external_funcs) {
+                Ok(krate) => krate,
+                Err(_) => {
+                    &compiler
+                        .session()
+                        .err("found some Hacspec typechecking errors");
+                    return Compilation::Stop;
+                }
+            };
 
         match &self.output_file {
             None => return Compilation::Stop,
@@ -141,13 +118,13 @@ impl Callbacks for HacspecCallbacks {
                     &compiler.session(),
                     &krate,
                     &file,
-                    &typ_dict,
+                    &top_ctx,
                 ),
                 "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
                     &file,
-                    &typ_dict,
+                    &top_ctx,
                 ),
                 _ => {
                     &compiler

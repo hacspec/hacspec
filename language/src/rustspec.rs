@@ -8,13 +8,44 @@ use std::fmt;
 
 pub type Spanned<T> = (T, Span);
 
-#[derive(Clone, Hash, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct HacspecId(pub usize);
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LocalIdent {
+    pub id: usize,
+    pub name: String,
+}
+
+impl fmt::Display for LocalIdent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}_{}", self.name, self.id)
+    }
+}
+
+impl fmt::Debug for LocalIdent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TopLevelIdent(pub String);
+
+impl fmt::Display for TopLevelIdent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl fmt::Debug for TopLevelIdent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
 
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Ident {
-    Original(String),
-    Hacspec(HacspecId, String),
+    Unresolved(String),
+    Local(LocalIdent),
+    TopLevel(TopLevelIdent),
 }
 
 impl fmt::Display for Ident {
@@ -23,8 +54,9 @@ impl fmt::Display for Ident {
             f,
             "{}",
             match self {
-                Ident::Original(n) => n.clone(),
-                Ident::Hacspec(x, n) => format!("{}_{}", n, x.0),
+                Ident::Unresolved(n) => n.clone(),
+                Ident::Local(n) => format!("{}", n),
+                Ident::TopLevel(n) => format!("{}", n),
             }
         )
     }
@@ -36,7 +68,7 @@ impl fmt::Debug for Ident {
     }
 }
 
-pub type VarSet = HashSet<Ident>;
+pub type VarSet = HashSet<LocalIdent>;
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Borrowing {
@@ -66,7 +98,7 @@ impl fmt::Debug for Borrowing {
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub enum ArraySize {
     Integer(usize),
-    Ident(String),
+    Ident(TopLevelIdent),
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
@@ -74,6 +106,9 @@ pub enum Secrecy {
     Secret,
     Public,
 }
+
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub struct TypVar(pub usize);
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum BaseTyp {
@@ -94,8 +129,8 @@ pub enum BaseTyp {
     Str,
     Seq(Box<Spanned<BaseTyp>>),
     Array(Spanned<ArraySize>, Box<Spanned<BaseTyp>>),
-    Named(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>),
-    Variable(HacspecId),
+    Named(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>),
+    Variable(TypVar),
     Tuple(Vec<Spanned<BaseTyp>>),
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
@@ -199,18 +234,22 @@ pub enum Expression {
     // FuncCall(prefix, name, args)
     FuncCall(
         Option<Spanned<BaseTyp>>,
-        Spanned<Ident>,
+        Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
     MethodCall(
         Box<(Spanned<Expression>, Spanned<Borrowing>)>,
         Option<Typ>, // Type of self, to be filled by the typechecker
-        Spanned<Ident>,
+        Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
     Lit(Literal),
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
-    NewArray(Spanned<Ident>, Option<BaseTyp>, Vec<Spanned<Expression>>),
+    NewArray(
+        Spanned<TopLevelIdent>,   // Name of array type
+        Option<BaseTyp>,          // Type of cells
+        Vec<Spanned<Expression>>, // Contents
+    ),
     Tuple(Vec<Spanned<Expression>>),
     IntegerCasting(
         Box<Spanned<Expression>>, //expression to cast
@@ -239,16 +278,16 @@ pub enum Statement {
     LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
     Reassignment(Spanned<Ident>, Spanned<Expression>),
     Conditional(
-        Spanned<Expression>,
-        Spanned<Block>,
-        Option<Spanned<Block>>,
-        Fillable<Box<MutatedInfo>>,
+        Spanned<Expression>,        // Condition
+        Spanned<Block>,             // Then block
+        Option<Spanned<Block>>,     // Else block
+        Fillable<Box<MutatedInfo>>, // Variables mutated in either branch
     ),
     ForLoop(
-        Spanned<Ident>,
-        Spanned<Expression>,
-        Spanned<Expression>,
-        Spanned<Block>,
+        Spanned<Ident>,      // Loop variable
+        Spanned<Expression>, // Lower bound
+        Spanned<Expression>, // Upper bound
+        Spanned<Block>,      // Loop body
     ),
     ArrayUpdate(Spanned<Ident>, Spanned<Expression>, Spanned<Expression>),
     ReturnExp(Expression),
@@ -275,23 +314,27 @@ pub struct ExternalFuncSig {
 
 #[derive(Clone)]
 pub enum Item {
-    FnDecl(Spanned<Ident>, FuncSig, Spanned<Block>),
+    FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
     ArrayDecl(
-        Spanned<Ident>,         // Name of the array type
-        Spanned<Expression>,    // Length
-        Spanned<BaseTyp>,       // Cell type
-        Option<Spanned<Ident>>, // Optional type alias for indexes
+        Spanned<TopLevelIdent>,         // Name of the array type
+        Spanned<Expression>,            // Length
+        Spanned<BaseTyp>,               // Cell type
+        Option<Spanned<TopLevelIdent>>, // Optional type alias for indexes
     ),
-    ConstDecl(Spanned<Ident>, Spanned<BaseTyp>, Spanned<Expression>),
+    ConstDecl(
+        Spanned<TopLevelIdent>,
+        Spanned<BaseTyp>,
+        Spanned<Expression>,
+    ),
     NaturalIntegerDecl(
-        Spanned<Ident>, // Element type name
-        Spanned<Ident>, // Canvas array type name
+        Spanned<TopLevelIdent>, // Element type name
+        Spanned<TopLevelIdent>, // Canvas array type name
         Secrecy,
         Spanned<Expression>, // Canvas size
         Spanned<String>,     // Modulo value
     ),
     SimplifiedNaturalIntegerDecl(
-        Spanned<Ident>, // Element type name
+        Spanned<TopLevelIdent>, // Element type name
         Secrecy,
         Spanned<Expression>, // If x, then modulo value is 2^x
     ),
@@ -300,5 +343,5 @@ pub enum Item {
 pub struct Program {
     pub items: Vec<Spanned<Item>>,
     pub imported_crates: Vec<Spanned<String>>,
-    pub ty_aliases: Vec<(Spanned<String>, Spanned<BaseTyp>)>,
+    pub ty_aliases: Vec<(Spanned<TopLevelIdent>, Spanned<BaseTyp>)>,
 }

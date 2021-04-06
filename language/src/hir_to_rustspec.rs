@@ -12,8 +12,8 @@ use rustc_span::{
 };
 use std::sync::atomic::Ordering;
 
+use crate::name_resolution::{FnKey, ID_COUNTER};
 use crate::rustspec::*;
-use crate::typechecker::{FnKey, ID_COUNTER};
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 enum ParamType {
@@ -28,7 +28,7 @@ fn fresh_type_var(
     p: ParamType,
     typ_ctx: &TypVarContext,
 ) -> (BaseTyp, TypVarContext) {
-    let t = BaseTyp::Variable(HacspecId(ID_COUNTER.fetch_add(1, Ordering::SeqCst)));
+    let t = BaseTyp::Variable(TypVar(ID_COUNTER.fetch_add(1, Ordering::SeqCst)));
     (t.clone(), typ_ctx.update((p, rust_id), t))
 }
 
@@ -94,10 +94,7 @@ fn translate_base_typ(
                         // We accept all named types from hacspec_lib because of the predefined
                         // array types like U32Word, etc.
                         _ => Ok((
-                            BaseTyp::Named(
-                                (Ident::Original(name.to_ident_string()), DUMMY_SP),
-                                None,
-                            ),
+                            BaseTyp::Named((TopLevelIdent(name.to_ident_string()), DUMMY_SP), None),
                             typ_ctx.clone(),
                         )),
                     },
@@ -127,7 +124,7 @@ fn translate_base_typ(
                         _ => Err(()),
                     },
                     _ => Ok((
-                        BaseTyp::Named((Ident::Original(name.to_ident_string()), DUMMY_SP), None),
+                        BaseTyp::Named((TopLevelIdent(name.to_ident_string()), DUMMY_SP), None),
                         typ_ctx.clone(),
                     )),
                 },
@@ -253,8 +250,7 @@ fn process_fn_id(
                     let name_segment = def_path.data.last().unwrap();
                     match name_segment.data {
                         DefPathData::ValueNs(name) => {
-                            let fn_key =
-                                FnKey::Independent(Ident::Original(name.to_ident_string()));
+                            let fn_key = FnKey::Independent(TopLevelIdent(name.to_ident_string()));
                             insert_extern_func(extern_funcs, fn_key, sig);
                         }
                         _ => (),
@@ -273,7 +269,7 @@ fn process_fn_id(
                                 Ok((impl_type, typ_ctx)) => {
                                     let fn_key = FnKey::Impl(
                                         impl_type,
-                                        Ident::Original(name.to_ident_string()),
+                                        TopLevelIdent(name.to_ident_string()),
                                     );
                                     let export_sig = tcx.fn_sig(*id);
                                     let sig = match translate_polyfnsig(tcx, &export_sig, &typ_ctx)
@@ -450,9 +446,9 @@ pub fn retrieve_external_functions(
                                                 def_path.data[def_path.data.len() - 2];
                                             match name_segment.data {
                                                 DefPathData::TypeNs(name) => {
-                                                    let fn_key = FnKey::Independent(
-                                                        Ident::Original(name.to_ident_string()),
-                                                    );
+                                                    let fn_key = FnKey::Independent(TopLevelIdent(
+                                                        name.to_ident_string(),
+                                                    ));
                                                     extern_funcs.insert(fn_key, sig);
                                                 }
                                                 _ => (),
