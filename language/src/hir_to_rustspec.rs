@@ -1,5 +1,5 @@
 use im::HashMap;
-use rustc_hir::{definitions::DefPathData, AssocItemKind, ItemKind};
+use rustc_hir::{def::DefKind, definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_metadata::creader::CStore;
 use rustc_middle::mir::interpret::{ConstValue, Scalar};
 use rustc_middle::mir::terminator::Mutability;
@@ -365,6 +365,7 @@ pub struct ExternalData {
     pub funcs: HashMap<FnKey, Result<ExternalFuncSig, String>>,
     pub consts: HashMap<String, BaseTyp>,
     pub arrays: HashMap<String, BaseTyp>,
+    pub ty_aliases: HashMap<String, BaseTyp>,
 }
 
 pub fn retrieve_external_data(
@@ -377,6 +378,7 @@ pub fn retrieve_external_data(
     let mut extern_funcs = HashMap::new();
     let mut extern_consts = HashMap::new();
     let mut extern_arrays = HashMap::new();
+    let mut ty_aliases = HashMap::new();
     let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
     let mut imported_crates = imported_crates.clone();
     // You normally only import hacspec_lib which then reexports the definitions
@@ -414,6 +416,25 @@ pub fn retrieve_external_data(
                                 == original_crate_name.to_ident_string()
                             {
                                 match x.data {
+                                    DefPathData::TypeNs(name) => match tcx.def_kind(def_id) {
+                                        DefKind::TyAlias => {
+                                            if def_path.data.len() <= 2 {
+                                                let typ = tcx.type_of(def_id);
+                                                match translate_base_typ(tcx, &typ, &HashMap::new())
+                                                {
+                                                    Err(_) => (),
+                                                    Ok((hacspec_ty, _)) => {
+                                                        ty_aliases.insert(
+                                                            name.to_ident_string(),
+                                                            hacspec_ty,
+                                                        );
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        _ => (),
+                                    },
                                     DefPathData::ValueNs(_) => process_fn_id(
                                         sess,
                                         tcx,
@@ -503,5 +524,6 @@ pub fn retrieve_external_data(
         funcs: extern_funcs,
         consts: extern_consts,
         arrays: extern_arrays,
+        ty_aliases,
     }
 }
