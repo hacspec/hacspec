@@ -7,14 +7,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os:
+          - ubuntu-latest
+          - macos-latest
 
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Prepare
-        run: rustup toolchain install nightly-2021-03-11 && rustup default nightly-2021-03-11 && rustup component add --toolchain nightly-2021-03-11 rustc-dev && rustup component add --toolchain nightly-2021-03-11 llvm-tools-preview
       - name: Build
         run: cargo build --verbose
       - name: Run tests
@@ -24,4 +24,4 @@ jobs:
       - name: Get hacspec function stats
         run: RUST_NIGHTLY=nightly-2021-03-11 ./lib/get_func_stats.sh
       - name: Build and test F* compiler
-        run: cargo clean && cd language && cargo +nightly-2021-03-11 test --verbose
+        run: cargo clean && cd language && cargo test --verbose
