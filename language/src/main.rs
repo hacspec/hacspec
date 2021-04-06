@@ -100,15 +100,6 @@ impl Callbacks for HacspecCallbacks {
                 )
             })
         };
-        let (krate, _typ_dict) = match name_resolution::resolve_crate(&compiler.session(), krate) {
-            Ok(krate) => krate,
-            Err(_) => {
-                &compiler
-                    .session()
-                    .err("found some Hacspec name resolution errors");
-                return Compilation::Stop;
-            }
-        };
         let (krate, top_ctx) =
             match typechecker::typecheck_program(&compiler.session(), &krate, &external_funcs) {
                 Ok(krate) => krate,
