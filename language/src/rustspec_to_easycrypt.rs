@@ -292,7 +292,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::UInt8(8)), i_s.clone()),
+                    (Expression::Lit(Literal::UInt8(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -300,7 +300,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::Int8(8)), i_s.clone()),
+                    (Expression::Lit(Literal::Int8(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -308,7 +308,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::UInt16(8)), i_s.clone()),
+                    (Expression::Lit(Literal::UInt16(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -316,7 +316,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::Int16(8)), i_s.clone()),
+                    (Expression::Lit(Literal::Int16(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -324,7 +324,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::UInt32(8)), i_s.clone()),
+                    (Expression::Lit(Literal::UInt32(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -332,7 +332,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::Int32(8)), i_s.clone()),
+                    (Expression::Lit(Literal::Int32(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -340,7 +340,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::UInt64(8)), i_s.clone()),
+                    (Expression::Lit(Literal::UInt64(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -348,7 +348,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::Int64(8)), i_s.clone()),
+                    (Expression::Lit(Literal::Int64(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -356,7 +356,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::UInt128(8)), i_s.clone()),
+                    (Expression::Lit(Literal::UInt128(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
@@ -364,7 +364,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                 None,
                 (name.clone(), i_s.clone()),
                 vec![(
-                    (Expression::Lit(Literal::Int128(8)), i_s.clone()),
+                    (Expression::Lit(Literal::Int128(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
             ),
