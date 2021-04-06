@@ -1,11 +1,8 @@
 use std::fmt;
 
 use im::HashMap;
-use rustc_session::Session;
 
 use crate::rustspec::*;
-use crate::util::check_vec;
-use crate::HacspecErrorEmitter;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -27,8 +24,6 @@ pub enum DictEntry {
     Array,
     NaturalInteger,
 }
-
-pub type ResolutionResult<T> = Result<T, ()>;
 
 pub type NameContext = HashMap<String, Ident>;
 
