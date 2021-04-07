@@ -17,7 +17,7 @@
 //! ## Instantiating Arrays
 //! There are several different ways of creating array types.
 //!
-//! ### 
+//! ###
 
 #[macro_export]
 #[doc(hidden)]
@@ -406,11 +406,9 @@ macro_rules! generic_array {
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 debug_assert!(
                     input.len() == len,
-                    format!(
-                        "the chunk length should match the input. got {}, expected {}",
-                        input.len(),
-                        len
-                    )
+                    "the chunk length should match the input. got {}, expected {}",
+                    input.len(),
+                    len
                 );
                 self.update_slice(idx_start, input, 0, len)
             }

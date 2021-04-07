@@ -1,0 +1,23 @@
+name: Typecheck
+
+on: [push, pull_request, release]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Prepare
+        run: cargo install --path language --verbose
+      - name: Build
+        run: cargo build --verbose
+      - name: Typecheck
+        run: examples/typecheck_examples.sh
