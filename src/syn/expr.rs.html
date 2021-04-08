@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.68/src/expr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>expr.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.69/src/expr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>expr.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -3385,6 +3385,91 @@
 <span id="3385">3385</span>
 <span id="3386">3386</span>
 <span id="3387">3387</span>
+<span id="3388">3388</span>
+<span id="3389">3389</span>
+<span id="3390">3390</span>
+<span id="3391">3391</span>
+<span id="3392">3392</span>
+<span id="3393">3393</span>
+<span id="3394">3394</span>
+<span id="3395">3395</span>
+<span id="3396">3396</span>
+<span id="3397">3397</span>
+<span id="3398">3398</span>
+<span id="3399">3399</span>
+<span id="3400">3400</span>
+<span id="3401">3401</span>
+<span id="3402">3402</span>
+<span id="3403">3403</span>
+<span id="3404">3404</span>
+<span id="3405">3405</span>
+<span id="3406">3406</span>
+<span id="3407">3407</span>
+<span id="3408">3408</span>
+<span id="3409">3409</span>
+<span id="3410">3410</span>
+<span id="3411">3411</span>
+<span id="3412">3412</span>
+<span id="3413">3413</span>
+<span id="3414">3414</span>
+<span id="3415">3415</span>
+<span id="3416">3416</span>
+<span id="3417">3417</span>
+<span id="3418">3418</span>
+<span id="3419">3419</span>
+<span id="3420">3420</span>
+<span id="3421">3421</span>
+<span id="3422">3422</span>
+<span id="3423">3423</span>
+<span id="3424">3424</span>
+<span id="3425">3425</span>
+<span id="3426">3426</span>
+<span id="3427">3427</span>
+<span id="3428">3428</span>
+<span id="3429">3429</span>
+<span id="3430">3430</span>
+<span id="3431">3431</span>
+<span id="3432">3432</span>
+<span id="3433">3433</span>
+<span id="3434">3434</span>
+<span id="3435">3435</span>
+<span id="3436">3436</span>
+<span id="3437">3437</span>
+<span id="3438">3438</span>
+<span id="3439">3439</span>
+<span id="3440">3440</span>
+<span id="3441">3441</span>
+<span id="3442">3442</span>
+<span id="3443">3443</span>
+<span id="3444">3444</span>
+<span id="3445">3445</span>
+<span id="3446">3446</span>
+<span id="3447">3447</span>
+<span id="3448">3448</span>
+<span id="3449">3449</span>
+<span id="3450">3450</span>
+<span id="3451">3451</span>
+<span id="3452">3452</span>
+<span id="3453">3453</span>
+<span id="3454">3454</span>
+<span id="3455">3455</span>
+<span id="3456">3456</span>
+<span id="3457">3457</span>
+<span id="3458">3458</span>
+<span id="3459">3459</span>
+<span id="3460">3460</span>
+<span id="3461">3461</span>
+<span id="3462">3462</span>
+<span id="3463">3463</span>
+<span id="3464">3464</span>
+<span id="3465">3465</span>
+<span id="3466">3466</span>
+<span id="3467">3467</span>
+<span id="3468">3468</span>
+<span id="3469">3469</span>
+<span id="3470">3470</span>
+<span id="3471">3471</span>
+<span id="3472">3472</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">punctuated</span>::<span class="ident">Punctuated</span>;
@@ -4882,17 +4967,9 @@
                 }))
             }
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">box</span>]) {
-            <span class="prelude-val">Ok</span>(<span class="ident">Expr</span>::<span class="ident">Box</span>(<span class="ident">ExprBox</span> {
-                <span class="ident">attrs</span>,
-                <span class="ident">box_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">expr</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">unary_expr</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)<span class="question-mark">?</span>),
-            }))
+            <span class="ident">expr_box</span>(<span class="ident">input</span>, <span class="ident">attrs</span>, <span class="ident">allow_struct</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Box</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw-2">*</span>]) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="op">!</span>]) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="op">-</span>]) {
-            <span class="prelude-val">Ok</span>(<span class="ident">Expr</span>::<span class="ident">Unary</span>(<span class="ident">ExprUnary</span> {
-                <span class="ident">attrs</span>,
-                <span class="ident">op</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-                <span class="ident">expr</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">unary_expr</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)<span class="question-mark">?</span>),
-            }))
+            <span class="ident">expr_unary</span>(<span class="ident">input</span>, <span class="ident">attrs</span>, <span class="ident">allow_struct</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Unary</span>)
         } <span class="kw">else</span> {
             <span class="ident">trailer_expr</span>(<span class="ident">attrs</span>, <span class="ident">input</span>, <span class="ident">allow_struct</span>)
         }
@@ -5116,13 +5193,13 @@
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">break</span>]) {
             <span class="ident">expr_break</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Break</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">continue</span>]) {
-            <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">expr_continue</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Continue</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Continue</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">return</span>]) {
             <span class="ident">expr_ret</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Return</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token</span>::<span class="ident">Bracket</span>) {
             <span class="ident">array_or_repeat</span>(<span class="ident">input</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">let</span>]) {
-            <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">expr_let</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Let</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Let</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">if</span>]) {
             <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">If</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">while</span>]) {
@@ -5134,7 +5211,7 @@
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">match</span>]) {
             <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Match</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">yield</span>]) {
-            <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">expr_yield</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Yield</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Yield</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">unsafe</span>]) {
             <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Unsafe</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">const</span>]) {
@@ -5178,7 +5255,7 @@
         <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Lit</span>) {
             <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Lit</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token</span>::<span class="ident">Paren</span>) {
-            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Paren</span>)
+            <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">expr_paren</span>).<span class="ident">map</span>(<span class="ident">Expr</span>::<span class="ident">Paren</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">Ident</span>)
             <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[::])
             <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="op">&lt;</span>])
@@ -5439,16 +5516,21 @@
         })
     }
 
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
     <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprParen</span> {
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-            <span class="kw">let</span> <span class="ident">content</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">ExprParen</span> {
-                <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-                <span class="ident">paren_token</span>: <span class="macro">parenthesized</span><span class="macro">!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>),
-                <span class="ident">expr</span>: <span class="ident">content</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-            })
+            <span class="ident">expr_paren</span>(<span class="ident">input</span>)
         }
+    }
+
+    <span class="kw">fn</span> <span class="ident">expr_paren</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ExprParen</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">content</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">ExprParen</span> {
+            <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            <span class="ident">paren_token</span>: <span class="macro">parenthesized</span><span class="macro">!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>),
+            <span class="ident">expr</span>: <span class="ident">content</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+        })
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
@@ -5467,14 +5549,17 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">expr_let</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ExprLet</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">ExprLet</span> {
-            <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">let_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-            <span class="ident">pat</span>: <span class="ident">pat</span>::<span class="ident">parsing</span>::<span class="ident">multi_pat_with_leading_vert</span>(<span class="ident">input</span>)<span class="question-mark">?</span>,
-            <span class="ident">eq_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-            <span class="ident">expr</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">Expr</span>::<span class="ident">parse_without_eager_brace</span>)<span class="question-mark">?</span>),
-        })
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprLet</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">ExprLet</span> {
+                <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+                <span class="ident">let_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+                <span class="ident">pat</span>: <span class="ident">pat</span>::<span class="ident">parsing</span>::<span class="ident">multi_pat_with_leading_vert</span>(<span class="ident">input</span>)<span class="question-mark">?</span>,
+                <span class="ident">eq_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+                <span class="ident">expr</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">Expr</span>::<span class="ident">parse_without_eager_brace</span>)<span class="question-mark">?</span>),
+            })
+        }
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
@@ -5623,27 +5708,106 @@
     }
 
     <span class="macro">impl_by_parsing_expr</span><span class="macro">!</span> {
-        <span class="ident">ExprBox</span>, <span class="ident">Box</span>, <span class="string">&quot;expected box expression&quot;</span>,
         <span class="ident">ExprCall</span>, <span class="ident">Call</span>, <span class="string">&quot;expected function call expression&quot;</span>,
         <span class="ident">ExprMethodCall</span>, <span class="ident">MethodCall</span>, <span class="string">&quot;expected method call expression&quot;</span>,
         <span class="ident">ExprTuple</span>, <span class="ident">Tuple</span>, <span class="string">&quot;expected tuple expression&quot;</span>,
         <span class="ident">ExprBinary</span>, <span class="ident">Binary</span>, <span class="string">&quot;expected binary operation&quot;</span>,
-        <span class="ident">ExprUnary</span>, <span class="ident">Unary</span>, <span class="string">&quot;expected unary operation&quot;</span>,
         <span class="ident">ExprCast</span>, <span class="ident">Cast</span>, <span class="string">&quot;expected cast expression&quot;</span>,
         <span class="ident">ExprType</span>, <span class="ident">Type</span>, <span class="string">&quot;expected type ascription expression&quot;</span>,
-        <span class="ident">ExprLet</span>, <span class="ident">Let</span>, <span class="string">&quot;expected let guard&quot;</span>,
-        <span class="ident">ExprClosure</span>, <span class="ident">Closure</span>, <span class="string">&quot;expected closure expression&quot;</span>,
         <span class="ident">ExprAssign</span>, <span class="ident">Assign</span>, <span class="string">&quot;expected assignment expression&quot;</span>,
         <span class="ident">ExprAssignOp</span>, <span class="ident">AssignOp</span>, <span class="string">&quot;expected compound assignment expression&quot;</span>,
         <span class="ident">ExprField</span>, <span class="ident">Field</span>, <span class="string">&quot;expected struct field access&quot;</span>,
         <span class="ident">ExprIndex</span>, <span class="ident">Index</span>, <span class="string">&quot;expected indexing expression&quot;</span>,
         <span class="ident">ExprRange</span>, <span class="ident">Range</span>, <span class="string">&quot;expected range expression&quot;</span>,
-        <span class="ident">ExprReference</span>, <span class="ident">Reference</span>, <span class="string">&quot;expected referencing operation&quot;</span>,
-        <span class="ident">ExprBreak</span>, <span class="ident">Break</span>, <span class="string">&quot;expected break expression&quot;</span>,
-        <span class="ident">ExprContinue</span>, <span class="ident">Continue</span>, <span class="string">&quot;expected continue expression&quot;</span>,
-        <span class="ident">ExprReturn</span>, <span class="ident">Return</span>, <span class="string">&quot;expected return expression&quot;</span>,
         <span class="ident">ExprTry</span>, <span class="ident">Try</span>, <span class="string">&quot;expected try expression&quot;</span>,
-        <span class="ident">ExprYield</span>, <span class="ident">Yield</span>, <span class="string">&quot;expected yield expression&quot;</span>,
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprBox</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="kw">let</span> <span class="ident">allow_struct</span> <span class="op">=</span> <span class="ident">AllowStruct</span>(<span class="bool-val">true</span>);
+            <span class="ident">expr_box</span>(<span class="ident">input</span>, <span class="ident">attrs</span>, <span class="ident">allow_struct</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">expr_box</span>(
+        <span class="ident">input</span>: <span class="ident">ParseStream</span>,
+        <span class="ident">attrs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attribute</span><span class="op">&gt;</span>,
+        <span class="ident">allow_struct</span>: <span class="ident">AllowStruct</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ExprBox</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">ExprBox</span> {
+            <span class="ident">attrs</span>,
+            <span class="ident">box_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+            <span class="ident">expr</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">unary_expr</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)<span class="question-mark">?</span>),
+        })
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprUnary</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="kw">let</span> <span class="ident">allow_struct</span> <span class="op">=</span> <span class="ident">AllowStruct</span>(<span class="bool-val">true</span>);
+            <span class="ident">expr_unary</span>(<span class="ident">input</span>, <span class="ident">attrs</span>, <span class="ident">allow_struct</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">expr_unary</span>(
+        <span class="ident">input</span>: <span class="ident">ParseStream</span>,
+        <span class="ident">attrs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attribute</span><span class="op">&gt;</span>,
+        <span class="ident">allow_struct</span>: <span class="ident">AllowStruct</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ExprUnary</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">ExprUnary</span> {
+            <span class="ident">attrs</span>,
+            <span class="ident">op</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+            <span class="ident">expr</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">unary_expr</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)<span class="question-mark">?</span>),
+        })
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprClosure</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">allow_struct</span> <span class="op">=</span> <span class="ident">AllowStruct</span>(<span class="bool-val">true</span>);
+            <span class="ident">expr_closure</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprReference</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">allow_struct</span> <span class="op">=</span> <span class="ident">AllowStruct</span>(<span class="bool-val">true</span>);
+            <span class="prelude-val">Ok</span>(<span class="ident">ExprReference</span> {
+                <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+                <span class="ident">and_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+                <span class="ident">raw</span>: <span class="ident">Reserved</span>::<span class="ident">default</span>(),
+                <span class="ident">mutability</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+                <span class="ident">expr</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">unary_expr</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)<span class="question-mark">?</span>),
+            })
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprBreak</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">allow_struct</span> <span class="op">=</span> <span class="ident">AllowStruct</span>(<span class="bool-val">true</span>);
+            <span class="ident">expr_break</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprReturn</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">allow_struct</span> <span class="op">=</span> <span class="ident">AllowStruct</span>(<span class="bool-val">true</span>);
+            <span class="ident">expr_ret</span>(<span class="ident">input</span>, <span class="ident">allow_struct</span>)
+        }
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
@@ -5659,18 +5823,21 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">expr_yield</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ExprYield</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">ExprYield</span> {
-            <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">yield_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-            <span class="ident">expr</span>: {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">is_empty</span>() <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[,]) <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[;]) {
-                    <span class="prelude-val">Some</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                }
-            },
-        })
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprYield</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">ExprYield</span> {
+                <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+                <span class="ident">yield_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+                <span class="ident">expr</span>: {
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">is_empty</span>() <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[,]) <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[;]) {
+                        <span class="prelude-val">Some</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>)
+                    } <span class="kw">else</span> {
+                        <span class="prelude-val">None</span>
+                    }
+                },
+            })
+        }
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
@@ -5830,12 +5997,15 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">expr_continue</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ExprContinue</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">ExprContinue</span> {
-            <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">continue_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-            <span class="ident">label</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-        })
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;parsing&quot;</span>)))]</span>
+    <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">ExprContinue</span> {
+        <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">ExprContinue</span> {
+                <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+                <span class="ident">continue_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+                <span class="ident">label</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
+            })
+        }
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)]</span>
