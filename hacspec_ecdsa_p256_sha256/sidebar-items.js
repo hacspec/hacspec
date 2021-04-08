@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["sign",""],["verify",""]]});
+initSidebarItems({"fn":[["sign",""],["verify",""]],"type":[["PublicKey",""],["SecretKey",""],["Signature",""]]});
