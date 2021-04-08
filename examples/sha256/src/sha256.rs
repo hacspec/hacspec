@@ -121,28 +121,31 @@ fn compress(block: Block, h_in: Hash) -> Hash {
 
 pub fn hash(msg: &ByteSeq) -> Digest {
     let mut h = HASH_INIT;
+    // FIXME: #96 use exact_chunks
+    let mut last_block = Block::new();
+    let mut last_block_len = 0;
     for i in 0..msg.num_chunks(BLOCK_SIZE) {
         let (block_len, block) = msg.get_chunk(BLOCK_SIZE, i);
         if block_len < BLOCK_SIZE {
-            // Add padding for last block
-            let mut last_block = Block::new();
-            let block = Block::new().update_start(&block);
-            last_block = last_block.update(0, &block);
-            last_block[block_len] = U8(0x80u8);
-            let len_bist = U64((msg.len() * 8) as u64);
-            if block_len < BLOCK_SIZE - LEN_SIZE {
-                last_block = last_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
-                h = compress(last_block, h);
-            } else {
-                let mut pad_block = Block::new();
-                pad_block = pad_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
-                h = compress(last_block, h);
-                h = compress(pad_block, h);
-            }
+            last_block = Block::new().update_start(&block);
+            last_block_len = block_len;
         } else {
-            let compress_input = Block::new().update_start(&block);
+            let compress_input = Block::from_seq(&block);
             h = compress(compress_input, h);
         }
     }
+
+    last_block[last_block_len] = U8(0x80u8);
+    let len_bist = U64((msg.len() * 8) as u64);
+    if last_block_len < BLOCK_SIZE - LEN_SIZE {
+        last_block = last_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
+        h = compress(last_block, h);
+    } else {
+        let mut pad_block = Block::new();
+        pad_block = pad_block.update(BLOCK_SIZE - LEN_SIZE, &U64_to_be_bytes(len_bist));
+        h = compress(last_block, h);
+        h = compress(pad_block, h);
+    }
+
     Digest::from_seq(&h.to_be_bytes())
 }

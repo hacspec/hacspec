@@ -2,15 +2,18 @@ use hacspec_lib::*;
 use hacspec_p256::*;
 use hacspec_sha256::*;
 
-type PublicKey = Affine;
-type SecretKey = Scalar;
-type Signature = (Scalar, Scalar); // (r, s)
+pub type PublicKey = Affine;
+pub type SecretKey = Scalar;
+pub type Signature = (Scalar, Scalar); // (r, s)
 
 pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> (bool, Signature) {
     let mut success = true;
+    if nonce.equal(Scalar::ZERO()) {
+        // We should really return here.
+        success = false;
+    }
     let (b, (k_x, _k_y)) = point_mul_base(nonce);
     success = success && b;
-    // let (mut success, (x, y)) = k;
     let r = Scalar::from_byte_seq_be(k_x.to_byte_seq_be());
     if r.equal(Scalar::ZERO()) {
         // We should really return here.
