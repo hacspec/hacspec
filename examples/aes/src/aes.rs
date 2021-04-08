@@ -3,10 +3,10 @@ use hacspec_lib::*;
 const BLOCKSIZE: usize = 16;
 const IVSIZE: usize = 12;
 
-const KEY_LENGTH: usize = 4;
-const ROUNDS: usize = 10;
-const KEY_SCHEDULE_LENGTH: usize = 176;
-const ITERATIONS: usize = 40;
+pub const KEY_LENGTH: usize = 4;
+pub const ROUNDS: usize = 10;
+pub const KEY_SCHEDULE_LENGTH: usize = 176;
+pub const ITERATIONS: usize = 40;
 
 bytes!(Block, BLOCKSIZE);
 bytes!(Word, KEY_LENGTH);
@@ -250,7 +250,7 @@ pub fn aes128_encrypt_block(
     )
 }
 
-pub(crate) fn aes_ctr_keyblock(
+pub fn aes_ctr_keyblock(
     k: &ByteSeq,
     n: Nonce,
     c: U32,
@@ -274,7 +274,7 @@ pub(crate) fn aes_ctr_keyblock(
     )
 }
 
-pub(crate) fn xor_block(block: Block, keyblock: Block) -> Block {
+pub fn xor_block(block: Block, keyblock: Block) -> Block {
     let mut out = block;
     for i in 0..BLOCKSIZE {
         out[i] = out[i] ^ keyblock[i];
