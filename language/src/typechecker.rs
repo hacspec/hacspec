@@ -91,12 +91,9 @@ fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
         BaseTyp::Str => false,
         BaseTyp::Array(_, _) => true,
         BaseTyp::Named((name, _), arg) => match top_ctxt.typ_dict.get(name) {
-            Some((new_t1, dict_entry)) => {
+            Some((new_t1, _dict_entry)) => {
                 debug_assert!((new_t1.0).0 == Borrowing::Consumed);
-                match dict_entry {
-                    DictEntry::Alias => is_copy(&(new_t1.1).0, top_ctxt),
-                    DictEntry::Array | DictEntry::NaturalInteger => true,
-                }
+                is_copy(&(new_t1.1).0, top_ctxt)
             }
             None => match arg {
                 None => match name.0.as_str() {
@@ -2170,6 +2167,7 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         funcs: extern_funcs,
         consts: extern_consts,
         arrays: extern_arrays,
+        nat_ints: extern_nat_ints,
         ty_aliases: extern_aliases,
     } = external_data(&p.imported_crates);
     let mut typ_dict = HashMap::new();
@@ -2200,6 +2198,15 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             (
                 ((Borrowing::Consumed, DUMMY_SP), (array_typ, DUMMY_SP)),
                 DictEntry::Array,
+            ),
+        );
+    }
+    for (nat_int_name, nat_int_typ) in extern_nat_ints {
+        typ_dict.insert(
+            TopLevelIdent(nat_int_name),
+            (
+                ((Borrowing::Consumed, DUMMY_SP), (nat_int_typ, DUMMY_SP)),
+                DictEntry::NaturalInteger,
             ),
         );
     }
