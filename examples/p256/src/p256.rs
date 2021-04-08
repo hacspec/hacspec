@@ -83,6 +83,7 @@ fn is_point_at_infinity(p: Jacobian) -> bool {
     z.equal(FieldElement::from_literal(0u128))
 }
 
+#[allow(unused_assignments)]
 pub fn point_add(p: Affine, q: Affine) -> (bool, Affine) {
     // TODO: this is pretty ugly but everything else doesn't work in hacspec yet.
     let (mut success, mut result) = (false, p);
