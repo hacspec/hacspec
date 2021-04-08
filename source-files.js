@@ -12,6 +12,7 @@ sourcesIndex["hacspec_chacha20poly1305"] = {"name":"","files":["chacha20poly1305
 sourcesIndex["hacspec_curve25519"] = {"name":"","files":["curve25519.rs"]};
 sourcesIndex["hacspec_derive"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["hacspec_dev"] = {"name":"","files":["lib.rs","prelude.rs","rand.rs","test_vectors.rs"]};
+sourcesIndex["hacspec_ecdsa_p256_sha256"] = {"name":"","files":["ecdsa.rs"]};
 sourcesIndex["hacspec_gimli"] = {"name":"","files":["gimli.rs"]};
 sourcesIndex["hacspec_hkdf"] = {"name":"","files":["hkdf.rs"]};
 sourcesIndex["hacspec_hmac"] = {"name":"","files":["hmac.rs"]};

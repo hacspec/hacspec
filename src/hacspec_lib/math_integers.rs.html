@@ -1387,6 +1387,12 @@
 <span id="1387">1387</span>
 <span id="1388">1388</span>
 <span id="1389">1389</span>
+<span id="1390">1390</span>
+<span id="1391">1391</span>
+<span id="1392">1392</span>
+<span id="1393">1393</span>
+<span id="1394">1394</span>
+<span id="1395">1395</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! # Math Integers</span>
 <span class="doccomment">//!</span>
@@ -1418,6 +1424,34 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">unsigned_public_integer</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>:<span class="ident">literal</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="macro">abstract_unsigned_public_integer</span><span class="macro">!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">n</span>);
+
+        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_be</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_be_bytes</span>(
+                    <span class="ident">s</span>.<span class="ident">iter</span>()
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
+                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                        .<span class="ident">as_slice</span>(),
+                )
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_public_byte_seq_be</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
+                <span class="comment">// XXX: unnecessarily complex</span>
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_be_bytes</span>(<span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">as_slice</span>())
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_byte_seq_be</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
+                <span class="ident">Seq</span>::<span class="ident">from_vec</span>(
+                    <span class="self">self</span>.<span class="ident">to_be_bytes</span>()
+                        .<span class="ident">iter</span>()
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
+                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+                )
+            }
+        }
 
         <span class="kw">impl</span> <span class="ident">NumericCopy</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
         <span class="kw">impl</span> <span class="ident">UnsignedInteger</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {}
@@ -2186,28 +2220,6 @@
 
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_be</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_be_bytes</span>(
-                    <span class="ident">s</span>.<span class="ident">iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
-                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-                        .<span class="ident">as_slice</span>(),
-                )
-            }
-
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_byte_seq_be</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span> {
-                <span class="ident">Seq</span>::<span class="ident">from_vec</span>(
-                    <span class="self">self</span>.<span class="ident">to_be_bytes</span>()
-                        .<span class="ident">iter</span>()
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">classify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
-                        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
-                )
-            }
-        }
-
-        <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_le</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
                 <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_le_bytes</span>(
                     <span class="ident">s</span>.<span class="ident">iter</span>()
@@ -2480,17 +2492,17 @@
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_be</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_be_bytes</span>(
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>::<span class="ident">from_be_bytes</span>(
                     <span class="ident">s</span>.<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
                         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
                         .<span class="ident">as_slice</span>(),
-                )
+                ).<span class="ident">into</span>()
             }
 
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_public_byte_seq_be</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_be_bytes</span>(<span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">as_slice</span>())
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>::<span class="ident">from_be_bytes</span>(<span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">as_slice</span>()).<span class="ident">into</span>()
             }
 
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
@@ -2510,17 +2522,17 @@
 
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_byte_seq_le</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_le_bytes</span>(
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>::<span class="ident">from_le_bytes</span>(
                     <span class="ident">s</span>.<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="kw-2">*</span><span class="ident">x</span>))
                         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
                         .<span class="ident">as_slice</span>(),
-                )
+                ).<span class="ident">into</span>()
             }
 
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_public_byte_seq_le</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">SeqTrait</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="ident">A</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_le_bytes</span>(<span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">as_slice</span>())
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>::<span class="ident">from_le_bytes</span>(<span class="ident">s</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>().<span class="ident">as_slice</span>()).<span class="ident">into</span>()
             }
 
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
@@ -2540,7 +2552,7 @@
 
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">unsafe_hacspec</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_secret_literal</span>(<span class="ident">x</span>: <span class="ident">U128</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span> {
-                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>::<span class="ident">from_literal</span>(<span class="ident">U128</span>::<span class="ident">declassify</span>(<span class="ident">x</span>))
+                <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>::<span class="ident">from_literal</span>(<span class="ident">U128</span>::<span class="ident">declassify</span>(<span class="ident">x</span>)).<span class="ident">into</span>()
             }
         }
 
