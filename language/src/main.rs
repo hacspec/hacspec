@@ -13,13 +13,13 @@ extern crate rustc_span;
 
 mod ast_to_rustspec;
 mod hir_to_rustspec;
+mod name_resolution;
 mod rustspec;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
-use hacspec_util::Signature;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
@@ -32,10 +32,8 @@ use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
 use rustc_span::MultiSpan;
 use serde::Deserialize;
 use serde_json;
-use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi::OsStr;
-use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use util::APP_USAGE;
@@ -93,46 +91,21 @@ impl Callbacks for HacspecCallbacks {
         };
         let mut item_list: PathBuf = std::env::temp_dir();
         item_list.push("allowed_list_items.json");
-        let file = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .open(item_list.as_path())
-            .unwrap();
-        let key_s = String::from("primitive");
-        let crate_s = String::from("hacspec");
-        let item_list: HashMap<String, HashMap<String, HashSet<Signature>>> =
-            serde_json::from_reader(&file).unwrap_or(HashMap::new());
-        let empty_set = &HashSet::new();
-        let empty_map = &HashMap::new();
-        let hacspec_items = item_list
-            .get(&key_s)
-            .unwrap_or(empty_map)
-            .get(&crate_s)
-            .unwrap_or(empty_set);
-        let external_funcs = |imported_crates: &Vec<rustspec::Spanned<String>>| {
+        let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
             queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-                hir_to_rustspec::retrieve_external_functions(
-                    &compiler.session(),
-                    &tcx,
-                    imported_crates,
-                )
+                hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
             })
         };
-        let (krate, typ_dict) = match typechecker::typecheck_program(
-            &compiler.session(),
-            &krate,
-            &external_funcs,
-            hacspec_items,
-        ) {
-            Ok(krate) => krate,
-            Err(_) => {
-                &compiler
-                    .session()
-                    .err("found some Hacspec typechecking errors");
-                return Compilation::Stop;
-            }
-        };
+        let (krate, top_ctx) =
+            match typechecker::typecheck_program(&compiler.session(), &krate, &external_data) {
+                Ok(krate) => krate,
+                Err(_) => {
+                    &compiler
+                        .session()
+                        .err("found some Hacspec typechecking errors");
+                    return Compilation::Stop;
+                }
+            };
 
         match &self.output_file {
             None => return Compilation::Stop,
@@ -141,13 +114,13 @@ impl Callbacks for HacspecCallbacks {
                     &compiler.session(),
                     &krate,
                     &file,
-                    &typ_dict,
+                    &top_ctx,
                 ),
                 "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
                     &file,
-                    &typ_dict,
+                    &top_ctx,
                 ),
                 _ => {
                     &compiler
@@ -230,10 +203,15 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
     // Add the target source file to the arguments
     args.push(target.src_path.clone());
 
-    // Add dependencies to link path.
+    // Add build artifact path.
     // This only works with debug builds.
     let deps = manifest.target_directory + "/debug/deps";
     callbacks.target_directory = deps;
+
+    // Add the dependencies as --extern for the hacpsec typechecker.
+    for dependency in package.dependencies.iter() {
+        args.push(format!("--extern={}", dependency.name.replace("-", "_")));
+    }
 }
 
 fn main() -> Result<(), ()> {
@@ -244,19 +222,41 @@ fn main() -> Result<(), ()> {
         None => None,
     };
 
-    let mut callbacks = HacspecCallbacks {
-        output_file,
-        target_directory: String::new(),
+    // Optionally an input file can be passed in. This should be mostly used for
+    // testing.
+    let input_file = match args.iter().position(|a| a == "-f") {
+        Some(i) => {
+            args.remove(i);
+            true
+        }
+        None => false,
     };
 
-    let package_name = args
-        .pop()
-        .expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
+    let mut callbacks = HacspecCallbacks {
+        output_file,
+        // This defaults to the default target directory.
+        target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
+            + "/../target/debug/deps",
+    };
 
-    read_crate(package_name, &mut args, &mut callbacks);
+    if !input_file {
+        let package_name = args
+            .pop()
+            .expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
+
+        read_crate(package_name, &mut args, &mut callbacks);
+    } else {
+        // If only a file is provided we add the default dependencies only.
+        args.extend_from_slice(&[
+            "--extern=abstract_integers".to_string(),
+            "--extern=hacspec_derive".to_string(),
+            "--extern=hacspec_lib".to_string(),
+            "--extern=secret_integers".to_string(),
+        ]);
+    }
+
     args.push("--crate-type=lib".to_string());
     args.push("--edition=2018".to_string());
-    args.push("--extern=hacspec_lib".to_string());
 
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => {

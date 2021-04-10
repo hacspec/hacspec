@@ -9,6 +9,3 @@ path = "src/curve25519.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
-hacspec-derive = { path = "../../utils/derive" }
-secret_integers = { path = "../../utils/secret-integers" }
-abstract_integers = { path = "../../utils/abstract-integers" }

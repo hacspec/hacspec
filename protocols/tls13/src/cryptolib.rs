@@ -12,6 +12,8 @@ use hacspec_curve25519::{
     scalarmult as x25519_point_mul, secret_to_public as x25519_secret_to_public, SerializedPoint,
     SerializedScalar,
 };
+use hacspec_hkdf::*;
+use hacspec_hmac::{hmac as hacspec_hmac};
 use hacspec_poly1305::Tag as Poly1305Tag;
 use unsafe_hacspec_examples::{
     aes_gcm::{
@@ -26,10 +28,9 @@ use unsafe_hacspec_examples::{
         },
         Affine,
     },
-    hkdf, hmac,
 };
 
-use crate::{mac_failed, unsupported_algorithm};
+use crate::{mac_failed, unsupported_algorithm, hkdf_error};
 
 use backtrace::Backtrace;
 pub type Res<T> = Result<T, usize>;
@@ -182,7 +183,7 @@ pub fn hash(ha: &HashAlgorithm, payload: &Bytes) -> Res<HASH> {
 
 pub fn hmac(ha: &HashAlgorithm, mk: &MACK, payload: &Bytes) -> Res<HMAC> {
     match ha {
-        HashAlgorithm::SHA256 => Ok(HMAC::from_seq(&hmac::hmac(mk, payload))),
+        HashAlgorithm::SHA256 => Ok(HMAC::from_seq(&hacspec_hmac(mk, payload))),
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
     }
 }
@@ -216,14 +217,21 @@ pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> 
 
 pub fn hkdf_extract(ha: &HashAlgorithm, k: &KEY, salt: &KEY) -> Res<KEY> {
     match ha {
-        HashAlgorithm::SHA256 => Ok(KEY::from_seq(&hkdf::extract(salt, k))),
+        HashAlgorithm::SHA256 => Ok(KEY::from_seq(&extract(salt, k))),
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
     }
 }
 
 pub fn hkdf_expand(ha: &HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res<KEY> {
     match ha {
-        HashAlgorithm::SHA256 => Ok(KEY::from_seq(&hkdf::expand(k, info, len))),
+        HashAlgorithm::SHA256 => {
+            let (success, bytes) = expand(k, info, len);
+            if success {
+                Ok(KEY::from_seq(&bytes))
+            } else {
+                Err(hkdf_error)
+            }
+        },
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
     }
 }

@@ -39,6 +39,22 @@ macro_rules! unsigned_public_integer {
                         .as_slice(),
                 )
             }
+
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_public_byte_seq_be<A: SeqTrait<u8>>(s: A) -> $name {
+                // XXX: unnecessarily complex
+                $name::from_be_bytes(s.iter().map(|x| *x).collect::<Vec<_>>().as_slice())
+            }
+
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_byte_seq_be(self) -> Seq<U8> {
+                Seq::from_vec(
+                    self.to_be_bytes()
+                        .iter()
+                        .map(|x| U8::classify(*x))
+                        .collect::<Vec<U8>>(),
+                )
+            }
         }
 
         impl NumericCopy for $name {}
@@ -808,28 +824,6 @@ macro_rules! nat_mod {
 
         impl $name {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: A) -> $name {
-                $name::from_be_bytes(
-                    s.iter()
-                        .map(|x| U8::declassify(*x))
-                        .collect::<Vec<_>>()
-                        .as_slice(),
-                )
-            }
-
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_byte_seq_be(self) -> Seq<U8> {
-                Seq::from_vec(
-                    self.to_be_bytes()
-                        .iter()
-                        .map(|x| U8::classify(*x))
-                        .collect::<Vec<U8>>(),
-                )
-            }
-        }
-
-        impl $name {
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
                 $name::from_le_bytes(
                     s.iter()
@@ -1102,17 +1096,17 @@ macro_rules! public_nat_mod {
         impl $name {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: A) -> $name {
-                $name::from_be_bytes(
+                $base::from_be_bytes(
                     s.iter()
                         .map(|x| U8::declassify(*x))
                         .collect::<Vec<_>>()
                         .as_slice(),
-                )
+                ).into()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn from_public_byte_seq_be<A: SeqTrait<u8>>(s: A) -> $name {
-                $name::from_be_bytes(s.iter().map(|x| *x).collect::<Vec<_>>().as_slice())
+                $base::from_be_bytes(s.iter().map(|x| *x).collect::<Vec<_>>().as_slice()).into()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
@@ -1132,17 +1126,17 @@ macro_rules! public_nat_mod {
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
-                $name::from_le_bytes(
+                $base::from_le_bytes(
                     s.iter()
                         .map(|x| U8::declassify(*x))
                         .collect::<Vec<_>>()
                         .as_slice(),
-                )
+                ).into()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn from_public_byte_seq_le<A: SeqTrait<u8>>(s: A) -> $name {
-                $name::from_le_bytes(s.iter().map(|x| *x).collect::<Vec<_>>().as_slice())
+                $base::from_le_bytes(s.iter().map(|x| *x).collect::<Vec<_>>().as_slice()).into()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
@@ -1162,7 +1156,7 @@ macro_rules! public_nat_mod {
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn from_secret_literal(x: U128) -> $name {
-                $name::from_literal(U128::declassify(x))
+                $base::from_literal(U128::declassify(x)).into()
             }
         }
 

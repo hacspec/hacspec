@@ -1,7 +1,7 @@
 use hacspec_lib::prelude::*;
 use rand::{
     distributions::uniform::SampleBorrow, distributions::uniform::SampleUniform,
-    distributions::Distribution, distributions::Standard, AsByteSliceMut, Rng,
+    distributions::Distribution, distributions::Standard, Fill, Rng,
 };
 
 /// Random public integer
@@ -13,12 +13,11 @@ where
 }
 
 /// Random public integer in range `[min, max)`
-pub fn random_public_integer_range<T, U>(min: U, max: U) -> T
+pub fn random_public_integer_range<U>(min: U, max: U) -> U
 where
-    U: SampleBorrow<T> + Sized,
-    T: SampleUniform,
+    U: SampleBorrow<U> + Sized + SampleUniform + PartialOrd,
 {
-    rand::thread_rng().gen_range(min, max)
+    rand::thread_rng().gen_range(min..max)
 }
 
 /// Random public byte
@@ -33,7 +32,7 @@ pub fn random_byte() -> U8 {
 }
 
 /// Random array
-pub fn random_bytes<A: Default + AsByteSliceMut>() -> A {
+pub fn random_bytes<A: Default + Fill>() -> A {
     let mut out = A::default();
     rand::thread_rng().fill(&mut out);
     out

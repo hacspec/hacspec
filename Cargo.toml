@@ -22,7 +22,12 @@ members = [
     "examples/ntru-prime",
     "examples-unsafe",
     "examples/riot-bootloader",
-    "protocols/tls13"
+    "protocols/tls13",
+    "examples/hmac",
+    "examples/hkdf",
+    "examples/p256",
+    "examples/bls12-381",
+    "examples/ecdsa-p256-sha256",
 ]
 default-members = [
     "lib",
@@ -43,7 +48,12 @@ default-members = [
     "examples/ntru-prime",
     "examples-unsafe",
     "examples/riot-bootloader",
-    "protocols/tls13"
+    "protocols/tls13",
+    "examples/hmac",
+    "examples/hkdf",
+    "examples/p256",
+    "examples/bls12-381",
+    "examples/ecdsa-p256-sha256",
 ]
 
 [profile.release]

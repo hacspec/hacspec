@@ -3,7 +3,7 @@
 
 use hacspec_lib::prelude::*;
 
-use rand::{AsByteSliceMut, Rng};
+use rand::{Fill, Rng};
 
 pub(crate) fn get_expected(op: &'static str, a: &String, b: &String) -> String {
     let expected = std::process::Command::new("python")
@@ -25,7 +25,7 @@ pub(crate) fn random_hex_string(len: usize) -> String {
     let mut res = "".to_string();
     let mut rng = rand::thread_rng();
     for _ in 0..len {
-        res.push(HEX_CHARS[rng.gen_range(0, HEX_CHARS.len())]);
+        res.push(HEX_CHARS[rng.gen_range(0..HEX_CHARS.len())]);
     }
     res = res.trim_start_matches('0').to_string();
     if res.len() == 0 {
@@ -44,7 +44,7 @@ pub(crate) fn get_random_numbers<T: Integer>() -> (String, T, String, T) {
     (a, a_t, b, b_t)
 }
 
-pub(crate) fn random_bytes<A: Default + AsByteSliceMut>() -> A {
+pub(crate) fn random_bytes<A: Default + Fill>() -> A {
     let mut out = A::default();
     rand::thread_rng().fill(&mut out);
     out

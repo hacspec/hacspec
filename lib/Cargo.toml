@@ -19,4 +19,4 @@ hacspec-attributes = { path = "../utils/attributes",  optional = true, version =
 use_attributes = ["hacspec-attributes", "hacspec-attributes/print_attributes"]
 
 [dev-dependencies]
-rand = "0.7"
+rand = "0.8"

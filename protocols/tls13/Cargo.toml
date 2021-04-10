@@ -27,6 +27,8 @@ unsafe-hacspec-examples = { path = "../../examples-unsafe" }
 hacspec-chacha20poly1305 = { path = "../../examples/chacha20poly1305" }
 hacspec-chacha20 = { path = "../../examples/chacha20" }
 hacspec-poly1305 = { path = "../../examples/poly1305" }
+hacspec-hmac = { path = "../../examples/hmac" }
+hacspec-hkdf = { path = "../../examples/hkdf" }
 
 [dev-dependencies]  
 dhat = "0.2.2"
