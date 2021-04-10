@@ -3,7 +3,7 @@ use hacspec_lib::*;
 use crate::cryptolib::*;
 use crate::tls13formats::*;
 use crate::tls13handshake::*;
-// use crate::tls13record::*;
+use crate::tls13record::*;
 
 // Client-Side Handshake API for TLS 1.3 Applications
 // client_init -> (encrypt_zerortt)* -> client_set_params ->
