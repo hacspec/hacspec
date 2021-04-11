@@ -141,8 +141,8 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 start_in: usize,
                 len: usize,
             ) -> Self {
-                debug_assert!(self.len() >= start_out + len);
-                debug_assert!(v.len() >= start_in + len);
+                debug_assert!(self.len() >= start_out + len, "{} < {} + {}", self.len(), start_out, len);
+                debug_assert!(v.len() >= start_in + len, "{} < {} + {}", v.len(), start_in, len);
                 for i in 0..len {
                     self[start_out + i] = v[start_in + i];
                 }

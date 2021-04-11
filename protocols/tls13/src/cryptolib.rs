@@ -12,31 +12,26 @@ use hacspec_curve25519::{
     scalarmult as x25519_point_mul, secret_to_public as x25519_secret_to_public, SerializedPoint,
     SerializedScalar,
 };
+use hacspec_ecdsa_p256_sha256::*;
 use hacspec_hkdf::*;
-use hacspec_hmac::{hmac as hacspec_hmac};
+use hacspec_hmac::hmac as hacspec_hmac;
+use hacspec_p256::*;
 use hacspec_poly1305::Tag as Poly1305Tag;
-use unsafe_hacspec_examples::{
-    aes_gcm::{
-        aes::{Key128, Key256, Nonce as AesNonce},
-        decrypt_aes128, encrypt_aes128,
-        gf128::Tag as GcmTag,
-    },
-    ec::{
-        p256::{
-            point_mul as p256_point_mul, point_mul_base as p256_secret_to_public,
-            FieldElement as P256FieldElement, Scalar as P256Scalar,
-        },
-        Affine,
-    },
+use unsafe_hacspec_examples::aes_gcm::{
+    aes::{Key128, Key256, Nonce as AesNonce},
+    decrypt_aes128, encrypt_aes128,
+    gf128::Tag as GcmTag,
 };
 
-use crate::{mac_failed, unsupported_algorithm, hkdf_error};
+use crate::{
+    crypto_error, hkdf_error, invalid_cert, mac_failed, unsupported_algorithm, verify_failed,
+};
 
 use backtrace::Backtrace;
 pub type Res<T> = Result<T, usize>;
-pub fn err<T>(x:usize) -> Res<T> {
+pub fn err<T>(x: usize) -> Res<T> {
     let bt = Backtrace::new();
-    println!("{:?}",bt);
+    println!("{:?}", bt);
     Err(x)
 }
 pub type Bytes = ByteSeq;
@@ -88,7 +83,7 @@ pub enum AEADAlgorithm {
     AES_256_GCM,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum SignatureScheme {
     ED25519,
     ECDSA_SECP256r1_SHA256,
@@ -148,8 +143,12 @@ pub fn zero_key(ha: &HashAlgorithm) -> KEY {
 pub fn secret_to_public(group_name: &NamedGroup, x: &DHSK) -> Res<DHPK> {
     match group_name {
         NamedGroup::SECP256r1 => {
-            let Affine(X, Y) = p256_secret_to_public(P256Scalar::from_byte_seq_be(x));
-            Ok(X.to_byte_seq_be().concat(&Y.to_byte_seq_be()))
+            let (success, (X, Y)) = p256_point_mul_base(P256Scalar::from_byte_seq_be(x));
+            if success {
+                Ok(X.to_byte_seq_be().concat(&Y.to_byte_seq_be()))
+            } else {
+                Err(crypto_error)
+            }
         }
         NamedGroup::X25519 => Ok(DHPK::from_seq(&x25519_secret_to_public(
             SerializedScalar::from_seq(x),
@@ -160,12 +159,16 @@ pub fn secret_to_public(group_name: &NamedGroup, x: &DHSK) -> Res<DHPK> {
 pub fn ecdh(group_name: &NamedGroup, x: &DHSK, y: &DHPK) -> Res<KEY> {
     match group_name {
         NamedGroup::SECP256r1 => {
-            let pk = Affine(
-                P256FieldElement::from_byte_seq_be(y.slice_range(0..32)),
-                P256FieldElement::from_byte_seq_be(y.slice_range(32..64)),
+            let pk = (
+                P256FieldElement::from_byte_seq_be(&y.slice_range(0..32)),
+                P256FieldElement::from_byte_seq_be(&y.slice_range(32..64)),
             );
-            let Affine(X, Y) = p256_point_mul(P256Scalar::from_byte_seq_be(x), pk);
-            Ok(X.to_byte_seq_be().concat(&Y.to_byte_seq_be()))
+            let (success, (X, Y)) = p256_point_mul(P256Scalar::from_byte_seq_be(x), pk);
+            if success {
+                Ok(X.to_byte_seq_be().concat(&Y.to_byte_seq_be()))
+            } else {
+                Err(crypto_error)
+            }
         }
         NamedGroup::X25519 => Ok(DHPK::from_seq(&x25519_point_mul(
             SerializedScalar::from_seq(x),
@@ -205,14 +208,125 @@ pub fn hmac_verify(ha: &HashAlgorithm, mk: &MACK, payload: &Bytes, m: &HMAC) -> 
 }
 
 pub fn verk_from_cert(cert: &Bytes) -> Res<VERK> {
-    Ok(VERK::new(64))
+    // cert is an ASN.1 sequence. Take the first sequence inside the outer.
+    // Skip 1 + length bytes
+    fn get_length_length(b: &Bytes) -> usize {
+        if U8::declassify(b[0]) >> 7 == 1 {
+            declassify_usize_from_U8(b[0] & U8(0x7fu8))
+        } else {
+            0
+        }
+    }
+    fn get_length(b: &Bytes, len: usize) -> usize {
+        declassify_u32_from_U32(U32_from_be_bytes(U32Word::from_slice(b, 0, len))) as usize
+            >> ((4 - len) * 8)
+    }
+    fn get_short_length(b: &Bytes) -> usize {
+        declassify_usize_from_U8(b[0] & U8(0x7fu8))
+    }
+    let skip = 2 + get_length_length(&cert.slice_range(1..cert.len())) + 1;
+    let seq1_len_len = get_length_length(&cert.slice_range(skip..cert.len()));
+    let skip = skip + 1;
+    let seq1_len = get_length(&cert.slice(skip, cert.len() - skip), seq1_len_len);
+    let mut seq1 = cert.slice_range(skip + seq1_len_len..skip + seq1_len_len + seq1_len);
+
+    // Read sequences until we find the ecPublicKey (we don't support anything else right now)
+    let mut pk = VERK::new(0);
+    while skip < seq1.len() && pk.len() == 0 {
+        let element_type = U8::declassify(seq1[0]);
+        seq1 = seq1.slice(1, seq1.len() - 1);
+        let len_len = get_length_length(&seq1);
+        let mut len = get_short_length(&seq1);
+        seq1 = seq1.slice(1, seq1.len() - 1);
+        if len_len != 0 {
+            len = get_length(&seq1, len_len);
+        }
+        if element_type == 0x30 {
+            // peek into this sequence to see if sequence again with an ecPublicKey
+            // as first element
+            let seq2 = seq1.slice(len_len, len);
+            let element_type = U8::declassify(seq2[0]);
+            let seq2 = seq2.slice(1, seq2.len() - 1);
+            if element_type == 0x30 {
+                let len_len = get_length_length(&seq2);
+                if len_len == 0 {
+                    let oid_len = get_short_length(&seq2);
+                    if oid_len >= 9 {
+                        // ecPublicKey oid incl tag: 06 07 2A 86 48 CE 3D 02 01
+                        let oid = seq2.slice(1, 9);
+                        if oid
+                            == Bytes::from_public_slice(&[
+                                0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01,
+                            ])
+                        {
+                            // We have an ecPublicKey, skip the inner sequences
+                            // and read the public key from the bit string
+                            let bit_string = seq2.slice(oid_len + 1, seq2.len() - oid_len - 1);
+                            // We only support uncompressed points
+                            if U8::declassify(bit_string[0]) == 0x03 {
+                                let pk_len = declassify_usize_from_U8(bit_string[1]); // 42
+                                let _zeroes = declassify_usize_from_U8(bit_string[2]); // 00
+                                let _uncompressed = declassify_usize_from_U8(bit_string[3]); // 04
+                                pk = bit_string.slice(4, pk_len - 2);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        seq1 = seq1.slice(len, seq1.len() - len);
+    }
+    if pk.len() == 0 {
+        Err(invalid_cert)
+    } else {
+        Ok(pk)
+    }
 }
 
-pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes) -> Res<SIG> {
-    return Ok(SIG::new(64));
+pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> Res<SIG> {
+    match sa {
+        SignatureScheme::ECDSA_SECP256r1_SHA256 => {
+            let random = Random::from_seq(&ent.slice_range(0..32));
+            // FIXME: we must do rejection sampling here.
+            let nonce = P256Scalar::from_byte_seq_be(&random);
+            let (success, (r, s)) =
+                ecdsa_p256_sha256_sign(payload, P256Scalar::from_byte_seq_be(ps), nonce);
+            if success {
+                let signature = SIG::new(0)
+                    .concat(&r.to_byte_seq_be())
+                    .concat(&s.to_byte_seq_be());
+                Ok(signature)
+            } else {
+                Err(crypto_error)
+            }
+        }
+        _ => Err(unsupported_algorithm),
+    }
 }
 pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
-    return Ok(());
+    println!("sa: {:?}", sa);
+    println!("sig: {:?}", sig);
+    println!("pk: {:x?}", pk);
+    println!("payload: {:x?}", payload);
+    match sa {
+        SignatureScheme::ECDSA_SECP256r1_SHA256 => {
+            let (pk_x, pk_y) = (
+                P256FieldElement::from_byte_seq_be(&pk.slice(0, 32)),
+                P256FieldElement::from_byte_seq_be(&pk.slice(32, 32)),
+            );
+            let (r, s) = (
+                P256Scalar::from_byte_seq_be(&sig.slice(0, 32)),
+                P256Scalar::from_byte_seq_be(&sig.slice(32, 32)),
+            );
+            if ecdsa_p256_sha256_verify(payload, (pk_x, pk_y), (r, s)) {
+                Ok(())
+            } else {
+                println!("Invalid signature");
+                Err(verify_failed)
+            }
+        }
+        _ => Err(unsupported_algorithm),
+    }
 }
 
 pub fn hkdf_extract(ha: &HashAlgorithm, k: &KEY, salt: &KEY) -> Res<KEY> {
@@ -231,7 +345,7 @@ pub fn hkdf_expand(ha: &HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res
             } else {
                 Err(hkdf_error)
             }
-        },
+        }
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
     }
 }

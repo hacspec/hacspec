@@ -1095,7 +1095,7 @@ macro_rules! public_nat_mod {
 
         impl $name {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: A) -> $name {
+            pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: &A) -> $name {
                 $base::from_be_bytes(
                     s.iter()
                         .map(|x| U8::declassify(*x))

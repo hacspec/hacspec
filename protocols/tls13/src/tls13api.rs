@@ -120,7 +120,7 @@ pub fn server_init(algs:ALGS,db:ServerDB,ch:&HandshakeData,ent:Entropy) -> Res<(
             let sc = server_certificate(&algs,&cert)?;
             payload = handshake_concat(payload,&sc);
             let tx_sc = transcript_server_certificate(tx_sh,&ee,&sc)?;
-            let (sig,sstate) = get_server_signature(&sigk,&tx_sc,sstate)?;
+            let (sig,sstate) = get_server_signature(&sigk,&tx_sc,sstate, ent)?;
             let cv = certificate_verify(&algs,&sig)?;
             payload = handshake_concat(payload,&cv);
             tx_cv = Some(transcript_server_certificate_verify(tx_sc,&cv)?);

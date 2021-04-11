@@ -442,11 +442,12 @@ pub fn get_server_signature(
     sk: &SIGK,
     tx: &TranscriptServerCertificate,
     st: ServerPostServerHello,
+    ent: Entropy,
 ) -> Res<(SIG, ServerPostCertificateVerify)> {
     let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificate(_,_,_,tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
-        let sig = sign(sa, &sk, &bytes(tx_hash))?;
+        let sig = sign(sa, &sk, &bytes(tx_hash), ent)?;
         Ok((sig, ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk)))
     } else {
         Err(psk_mode_mismatch)

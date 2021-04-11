@@ -97,6 +97,8 @@ pub const parse_failed: usize = 9;
 pub const insufficient_entropy: usize = 10;
 pub const insufficient_data: usize = 11;
 pub const hkdf_error: usize = 12;
+pub const crypto_error: usize = 13;
+pub const invalid_cert: usize = 14;
 
 /*
 pub fn check_eq_size(s1: usize, s2: usize) -> Res<()> {

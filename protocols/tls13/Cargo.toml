@@ -29,6 +29,8 @@ hacspec-chacha20 = { path = "../../examples/chacha20" }
 hacspec-poly1305 = { path = "../../examples/poly1305" }
 hacspec-hmac = { path = "../../examples/hmac" }
 hacspec-hkdf = { path = "../../examples/hkdf" }
+hacspec-ecdsa-p256-sha256 = { path = "../../examples/ecdsa-p256-sha256" }
+hacspec-p256 = { path = "../../examples/p256" }
 
 [dev-dependencies]  
 dhat = "0.2.2"
