@@ -258,7 +258,7 @@ pub struct ALGS(
     pub HashAlgorithm,
     pub AEADAlgorithm,
     pub SignatureScheme,
-    pub NamedGroup,
+    pub KEMScheme,
     pub bool,
     pub bool,
 );
@@ -354,7 +354,7 @@ pub fn check_psk_key_exchange_modes(algs: &ALGS, ch: &Bytes) -> Res<()> {
     check_eq(&bytes1(1), &ch.slice_range(1..2))
 }
 
-pub fn key_shares(algs: &ALGS, gx: &DHPK) -> Res<Bytes> {
+pub fn key_shares(algs: &ALGS, gx: &KEMPK) -> Res<Bytes> {
     let ks = supported_group(algs)?.concat(&lbytes2(&bytes(gx))?);
     Ok(bytes2(0, 0x33).concat(&lbytes2(&lbytes2(&ks)?)?))
 }
@@ -366,7 +366,7 @@ pub fn check_key_share(algs: &ALGS, ch: &Bytes) -> Res<Bytes> {
     Ok(ch.slice_range(6..ch.len()))
 }
 
-pub fn server_key_shares(algs: &ALGS, gx: &DHPK) -> Res<Bytes> {
+pub fn server_key_shares(algs: &ALGS, gx: &KEMPK) -> Res<Bytes> {
     let ks = supported_group(algs)?.concat(&lbytes2(&bytes(gx))?);
     Ok(bytes2(0, 0x33).concat(&lbytes2(&ks)?))
 }
@@ -551,7 +551,7 @@ pub fn handshake_concat(msg1:HandshakeData,
 pub fn client_hello(
     algs: &ALGS,
     cr: &Random,
-    gx: &DHPK,
+    gx: &KEMPK,
     sn: &Bytes,
     tkt:&Option<Bytes>,
 ) -> Res<(HandshakeData,usize)> {
@@ -636,7 +636,7 @@ pub fn parse_client_hello(algs: &ALGS, ch: &HandshakeData) -> Res<(Random, Bytes
 
 }
 
-pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<HandshakeData> {
+pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &KEMPK) -> Res<HandshakeData> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let ty = bytes1(hs_type(HandshakeType::ServerHello));
     let ver = bytes2(3, 3);
@@ -660,7 +660,7 @@ pub fn server_hello(algs: &ALGS, sr: &Random, sid: &Bytes, gy: &DHPK) -> Res<Han
     Ok(HandshakeData(sh))
 }
 
-pub fn parse_server_hello(algs: &ALGS, sh: &HandshakeData) -> Res<(Random, DHPK)> {
+pub fn parse_server_hello(algs: &ALGS, sh: &HandshakeData) -> Res<(Random, KEMPK)> {
     let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let HandshakeData(sh) = sh;
     let ty = bytes1(hs_type(HandshakeType::ServerHello));

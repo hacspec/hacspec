@@ -217,7 +217,7 @@ PostServerFinished -> PostClientFinished -> Complete
 There are no optional steps, all states must be traversed, even if the traversals are NOOPS.
 See "put_skip_server_signature" below */
 
-pub struct ClientPostClientHello(Random, ALGS, DHSK, Option<PSK>);
+pub struct ClientPostClientHello(Random, ALGS, KEMSK, Option<PSK>);
 pub struct ClientPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ClientPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
 pub struct ClientPostServerFinished(Random, Random, ALGS, KEY, MACK);
@@ -240,13 +240,12 @@ pub fn get_client_hello(
     algs0:ALGS,
     psk: Option<PSK>,
     ent: Entropy,
-) -> Res<(Random, DHPK, ClientPostClientHello)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs0;
-    if ent.len() < 32 + dh_priv_len(gn) {Err(insufficient_entropy)}
+) -> Res<(Random, KEMPK, ClientPostClientHello)> {
+    let ALGS(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs0;
+    if ent.len() < 32 + dh_priv_len(ks) {Err(insufficient_entropy)}
     else {
         let cr = Random::from_seq(&ent.slice_range(0..32));
-        let x = DHSK::from_seq(&ent.slice_range(32..32+dh_priv_len(gn)));
-        let gx = secret_to_public(gn, &x)?;
+        let (x,gx) = kem_keygen(ks,ent.slice_range(32..32+dh_priv_len(ks)))?;
         Ok((cr, gx, ClientPostClientHello(cr, algs0, x, psk)))
     }
 }
@@ -287,7 +286,7 @@ pub fn client_get_0rtt_keys(
 
 pub fn put_server_hello(
     sr: Random,
-    gy: DHPK,
+    gy: KEMPK,
     algs: ALGS,
     tx: &TranscriptServerHello,
     st: ClientPostClientHello,
@@ -295,8 +294,8 @@ pub fn put_server_hello(
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptServerHello(_,_,_,tx_hash) = tx;
     if algs == algs0 {
-        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
-        let gxy = ecdh(gn, &x, &gy)?;
+        let ALGS(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs;
+        let gxy = kem_decap(ks, &gy, x)?;
         let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
         Ok((
             DuplexCipherStateH(*ae, chk, 0, shk, 0),
@@ -381,19 +380,17 @@ pub fn client_complete(
 pub fn put_client_hello(
     cr: Random,
     algs: ALGS,
-    gx: &DHPK,
+    gx: &KEMPK,
     psk: Option<PSK>,
     tx: TranscriptTruncatedClientHello,
     binder: Option<HMAC>,
     ent: Entropy,
-) -> Res<(Random, DHPK, ServerPostClientHello)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
-    if ent.len() < 32 + dh_priv_len(gn) {Err(insufficient_entropy)}
+) -> Res<(Random, KEMPK, ServerPostClientHello)> {
+    let ALGS(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs;
+    if ent.len() < 32 + dh_priv_len(ks) {Err(insufficient_entropy)}
     else {
         let sr = Random::from_seq(&ent.slice_range(0..32));
-        let y = DHSK::from_seq(&ent.slice_range(32..32+dh_priv_len(gn)));
-        let gy = secret_to_public(gn, &y)?;
-        let gxy = ecdh(gn, &y, &gx)?;
+        let (gxy,gy) = kem_encap(ks,gx,ent.slice_range(32..32+dh_priv_len(ks)))?;
         match (psk_mode, psk, binder) {
             (true, Some(k), Some(binder)) => {
                 let mk = derive_binder_key(ha, &k)?;

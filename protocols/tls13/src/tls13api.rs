@@ -104,7 +104,7 @@ pub fn server_init(algs:ALGS,db:ServerDB,ch:&HandshakeData,ent:Entropy) -> Res<(
     let (cr,sid,sni,gx,tkto, bindero, trunc_len) = parse_client_hello(&algs,&ch)?;
     let tx_trunc = transcript_truncated_client_hello(algs,&ch,trunc_len)?;
     let (cert,sigk,psk_opt) = lookup_db(algs,&db,&sni,&tkto)?;
-    let (sr,gy,sstate) = put_client_hello(cr,algs,&gx,psk_opt,tx_trunc,bindero,ent)?;
+    let (sr,gy,sstate) = put_client_hello(cr,algs,&gx,psk_opt,tx_trunc,bindero,ent.clone())?; // FIXME: don't clone entropy
     let tx_ch = transcript_client_hello(algs,&ch)?;
     let c2s0 = server_get_0rtt_keys(&tx_ch,&sstate)?;
     let sh = server_hello(&algs,&sr,&sid,&gy)?;
