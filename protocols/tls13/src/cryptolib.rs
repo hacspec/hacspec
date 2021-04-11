@@ -30,7 +30,7 @@ use unsafe_hacspec_examples::{
     },
 };
 
-use crate::{mac_failed, unsupported_algorithm, hkdf_error};
+use crate::{mac_failed, unsupported_algorithm, hkdf_error, insufficient_entropy};
 
 use backtrace::Backtrace;
 pub type Res<T> = Result<T, usize>;
@@ -39,6 +39,8 @@ pub fn err<T>(x:usize) -> Res<T> {
     println!("{:?}",bt);
     Err(x)
 }
+
+
 pub type Bytes = ByteSeq;
 pub fn empty() -> Bytes {
     return Seq::new(0);
@@ -52,7 +54,7 @@ pub fn bytes<T: SeqTrait<U8>>(x: &T) -> Bytes {
     return Seq::from_seq(x);
 }
 
-bytes!(Entropy, 64);
+pub type Entropy = Bytes;
 bytes!(Random, 32);
 
 pub type DHSK = Bytes;
@@ -172,6 +174,44 @@ pub fn ecdh(group_name: &NamedGroup, x: &DHSK, y: &DHPK) -> Res<KEY> {
             SerializedPoint::from_seq(y),
         ))),
     }
+}
+
+pub type KEMScheme = NamedGroup;
+pub type KEMSK = Bytes;
+pub type KEMPK = Bytes;
+
+pub fn kem_priv_len(ks: &KEMScheme) -> usize {
+    dh_priv_len(ks)
+}
+
+pub fn kem_pub_len(ks: &KEMScheme) -> usize {
+    dh_pub_len(ks)
+}
+
+pub fn kem_priv_to_pub(ks: &KEMScheme, sk:&KEMSK) -> Res<KEMPK> {
+    secret_to_public(ks,sk)
+}
+
+pub fn kem_keygen(ks: &KEMScheme, ent: Entropy) -> Res<(KEMSK,KEMPK)> {
+    if ent.len() < dh_priv_len(ks) {
+        Err(insufficient_entropy)
+    }
+    else {
+        let sk = KEMSK::from_seq(&ent.slice_range(0..dh_priv_len(ks)));
+        let pk = kem_priv_to_pub(ks,&sk)?;
+        Ok((sk,pk))
+    }
+}
+
+pub fn kem_encap(ks: &KEMScheme, pk:&KEMPK, ent:Entropy) -> Res<(KEY,Bytes)> {
+    let (x,gx) = kem_keygen(ks,ent)?;
+    let gxy = ecdh(ks, &x, pk)?;
+    Ok((gxy,gx))
+}
+
+pub fn kem_decap(ks: &KEMScheme, ct:&Bytes, sk:KEMSK) -> Res<KEY> {
+    let gxy = ecdh(ks, &sk, &ct)?;
+    Ok(gxy)
 }
 
 pub fn hash(ha: &HashAlgorithm, payload: &Bytes) -> Res<HASH> {
