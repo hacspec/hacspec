@@ -11,7 +11,6 @@ members = [
     "utils/rc-bench",
     "utils/rc-tests",
     "utils/util",
-    "language",
     "examples/curve25519",
     "examples/chacha20",
     "examples/poly1305",
@@ -53,6 +52,4 @@ default-members = [
     "examples/bls12-381",
     "examples/ecdsa-p256-sha256",
 ]
-
-[profile.release]
-debug = true
+exclude = [ "language" ]

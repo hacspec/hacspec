@@ -8,18 +8,19 @@ function typecheck {
   if [ "$2" == "ec" ];
   then
     echo "    extracting EC ..."
-    cargo hacspec -o $1.ec $1
+    cargo hacspec -o easycrypt/$1.ec $1
   else
     cargo hacspec $1
   fi
   if [ "$3" == "fst" ];
   then
     echo "    extracting F* ..."
-    cargo hacspec -o $1.fst $1
+    cargo hacspec -o fstar/$1.fst $1
   fi
 }
 
-cargo clean
+
+cd $(dirname "$0")/../
 cargo install --path language
 typecheck hacspec-chacha20             ec      fst
 typecheck hacspec-chacha20poly1305     ec      fst

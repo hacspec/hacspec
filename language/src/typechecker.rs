@@ -566,10 +566,7 @@ fn find_ident<'b>(
                 match top_level_context.consts.get(&x_tl) {
                     Some(_) => Ok(Ident::TopLevel(x_tl)),
                     None => {
-                        sess.span_rustspec_err(
-                            x.1.clone(),
-                            "original id not found in name context",
-                        );
+                        sess.span_rustspec_err(x.1.clone(), "identifier is not a constant");
                         Err(())
                     }
                 }
@@ -1932,7 +1929,7 @@ fn typecheck_item(
     sess: &Session,
     i: &Item,
     top_level_context: &TopLevelContext,
-) -> TypecheckingResult<(Item, TopLevelContext)> {
+) -> TypecheckingResult<Item> {
     match &i {
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {
             let var_context = HashMap::new();
@@ -1968,12 +1965,7 @@ fn typecheck_item(
                     b_span.clone(),
                 ),
             );
-            let new_functions = top_level_context
-                .functions
-                .update(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
-            let mut top_level_context = top_level_context.clone();
-            top_level_context.functions = new_functions;
-            Ok((out, top_level_context))
+            Ok(out)
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let (new_size, size_typ, _) = typecheck_expression(
@@ -2003,47 +1995,12 @@ fn typecheck_item(
                     .as_str(),
                 )
             }
-            let new_size = match new_size {
-                Expression::Lit(Literal::Usize(u)) => ArraySize::Integer(u),
-                Expression::Named(Ident::TopLevel(s)) => ArraySize::Ident(s),
-                _ => {
-                    sess.span_rustspec_err(
-                        size.1.clone(),
-                        "expected identifier or integer literal",
-                    );
-                    return Err(());
-                }
-            };
-            let mut new_top_level_context = top_level_context.clone();
-            match index_typ {
-                None => (),
-                Some(index_typ) => {
-                    new_top_level_context.typ_dict.insert(
-                        index_typ.0.clone(),
-                        (
-                            (
-                                (Borrowing::Consumed, index_typ.1.clone()),
-                                (BaseTyp::Usize, index_typ.1.clone()),
-                            ),
-                            DictEntry::Alias,
-                        ),
-                    );
-                }
-            };
-            new_top_level_context.typ_dict.insert(
-                id.0.clone(),
-                (
-                    (
-                        (Borrowing::Consumed, id.1.clone()),
-                        (
-                            BaseTyp::Array((new_size, size.1.clone()), Box::new(cell_t.clone())),
-                            id.1.clone(),
-                        ),
-                    ),
-                    DictEntry::Array,
-                ),
-            );
-            Ok((i.clone(), new_top_level_context))
+            Ok(Item::ArrayDecl(
+                id.clone(),
+                (new_size, size.1.clone()),
+                cell_t.clone(),
+                index_typ.clone(),
+            ))
         }
         Item::ConstDecl(id, typ, e) => {
             let (new_e, new_t, _) =
@@ -2067,94 +2024,13 @@ fn typecheck_item(
                 );
                 return Err(());
             }
-            let mut top_level_context = top_level_context.clone();
-            top_level_context.consts = top_level_context.consts.update(id.0.clone(), typ.clone());
-            Ok((
-                Item::ConstDecl(id.clone(), typ.clone(), (new_e, (e.1).clone())),
-                top_level_context,
+            Ok(Item::ConstDecl(
+                id.clone(),
+                typ.clone(),
+                (new_e, (e.1).clone()),
             ))
         }
-        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
-            let (_, mut top_level_context) = typecheck_item(
-                sess,
-                &Item::ArrayDecl(
-                    canvas_typ_ident.clone(),
-                    canvas_size.clone(),
-                    match secrecy {
-                        Secrecy::Secret => (
-                            BaseTyp::Named(
-                                (TopLevelIdent("U8".to_string()), canvas_typ_ident.1.clone()),
-                                None,
-                            ),
-                            canvas_typ_ident.1.clone(),
-                        ),
-                        Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
-                    },
-                    None,
-                ),
-                top_level_context,
-            )?;
-            top_level_context.typ_dict.insert(
-                typ_ident.0.clone() ,
-                (
-                    (
-                        (Borrowing::Consumed, (typ_ident.1).clone()),
-                        (
-                            BaseTyp::NaturalInteger(
-                                secrecy.clone(),
-                                mod_string.clone(),
-                                match &canvas_size.0 {
-                                    Expression::Lit(Literal::Usize(size)) => {
-                                        (size.clone(), (canvas_size.1).clone())
-                                    }
-                                    _ => {
-                                        sess.span_rustspec_err(
-                                            (canvas_size.1).clone(), "the size of the natural integer encoding has to be a usize literal"
-                                        );
-                                        return Err(())
-                                    }
-                                },
-                            ),
-                            typ_ident.1.clone(),
-                        ),
-                    ),
-                    DictEntry::NaturalInteger,
-                ),
-            );
-            Ok((i.clone(), top_level_context))
-        }
-        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
-            let mut top_level_context = top_level_context.clone();
-            top_level_context.typ_dict.insert(
-                typ_ident.0.clone(),
-                match &canvas_size.0 {
-                    Expression::Lit(Literal::Usize(size)) => (
-                        (
-                            (Borrowing::Consumed, (typ_ident.1).clone()),
-                            (
-                                BaseTyp::NaturalInteger(
-                                    secrecy.clone(),
-                                    (String::new(), DUMMY_SP), // TODO: replace with real modulo value
-                                    // For now we can leave this empty because
-                                    // We don't use it in the typechecker
-                                    (size.clone(), (canvas_size.1).clone()),
-                                ),
-                                typ_ident.1.clone(),
-                            ),
-                        ),
-                        DictEntry::NaturalInteger,
-                    ),
-                    _ => {
-                        sess.span_rustspec_err(
-                            (canvas_size.1).clone(),
-                            "the size of the natural integer encoding has to be a usize literal",
-                        );
-                        return Err(());
-                    }
-                },
-            );
-            Ok((i.clone(), top_level_context.clone()))
-        }
+        _ => Ok(i.clone()),
     }
 }
 
@@ -2162,7 +2038,8 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     p: &Program,
     external_data: &F,
-) -> TypecheckingResult<(Program, TopLevelContext)> {
+    top_level_ctx: &mut TopLevelContext,
+) -> TypecheckingResult<Program> {
     let ExternalData {
         funcs: extern_funcs,
         consts: extern_consts,
@@ -2170,9 +2047,8 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         nat_ints: extern_nat_ints,
         ty_aliases: extern_aliases,
     } = external_data(&p.imported_crates);
-    let mut typ_dict = HashMap::new();
     for (alias_name, alias_ty) in extern_aliases {
-        typ_dict.insert(
+        top_level_ctx.typ_dict.insert(
             TopLevelIdent(alias_name.clone()),
             (
                 (
@@ -2184,7 +2060,7 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         );
     }
     for (alias_name, alias_ty) in &p.ty_aliases {
-        typ_dict.insert(
+        top_level_ctx.typ_dict.insert(
             alias_name.0.clone(),
             (
                 ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
@@ -2193,7 +2069,7 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         );
     }
     for (array_name, array_typ) in extern_arrays {
-        typ_dict.insert(
+        top_level_ctx.typ_dict.insert(
             TopLevelIdent(array_name),
             (
                 ((Borrowing::Consumed, DUMMY_SP), (array_typ, DUMMY_SP)),
@@ -2202,7 +2078,7 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         );
     }
     for (nat_int_name, nat_int_typ) in extern_nat_ints {
-        typ_dict.insert(
+        top_level_ctx.typ_dict.insert(
             TopLevelIdent(nat_int_name),
             (
                 ((Borrowing::Consumed, DUMMY_SP), (nat_int_typ, DUMMY_SP)),
@@ -2210,41 +2086,29 @@ pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             ),
         );
     }
-    let mut top_level_context: TopLevelContext = TopLevelContext {
-        functions: extern_funcs
-            .into_iter()
-            .map(|(k, v)| {
-                (
-                    k.clone(),
-                    match v {
-                        Ok(v) => FnValue::External(v.clone()),
-                        Err(s) => FnValue::ExternalNotInHacspec(s.clone()),
-                    },
-                )
-            })
-            .collect(),
-        consts: extern_consts
-            .into_iter()
-            .map(|(k, v)| (TopLevelIdent(k), (v, DUMMY_SP)))
-            .collect(),
-        typ_dict,
-    };
-    Ok((
-        Program {
-            items: check_vec(
-                p.items
-                    .iter()
-                    .map(|(i, i_span)| {
-                        let (new_i, new_top_level_context) =
-                            typecheck_item(sess, i, &top_level_context)?;
-                        top_level_context = new_top_level_context;
-                        Ok((new_i, i_span.clone()))
-                    })
-                    .collect(),
-            )?,
-            imported_crates: p.imported_crates.clone(),
-            ty_aliases: p.ty_aliases.clone(),
-        },
-        top_level_context,
-    ))
+    for (k, v) in extern_funcs {
+        top_level_ctx.functions.insert(
+            k.clone(),
+            match v {
+                Ok(v) => FnValue::External(v.clone()),
+                Err(s) => FnValue::ExternalNotInHacspec(s.clone()),
+            },
+        );
+    }
+    for (k, v) in extern_consts {
+        top_level_ctx.consts.insert(TopLevelIdent(k), (v, DUMMY_SP));
+    }
+    Ok(Program {
+        items: check_vec(
+            p.items
+                .iter()
+                .map(|(i, i_span)| {
+                    let new_i = typecheck_item(sess, i, &top_level_ctx)?;
+                    Ok((new_i, i_span.clone()))
+                })
+                .collect(),
+        )?,
+        imported_crates: p.imported_crates.clone(),
+        ty_aliases: p.ty_aliases.clone(),
+    })
 }

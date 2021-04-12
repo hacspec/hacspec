@@ -6,6 +6,7 @@ use rustc_session::Session;
 use crate::rustspec::*;
 use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
+use rustc_span::DUMMY_SP;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -83,7 +84,7 @@ fn resolve_item(
 
 fn process_decl_item(
     sess: &Session,
-    (i, _i_span): &Spanned<Item>,
+    (i, i_span): &Spanned<Item>,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
     match i {
@@ -135,13 +136,95 @@ fn process_decl_item(
             };
             Ok(())
         }
+        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
+            process_decl_item(
+                sess,
+                &(
+                    Item::ArrayDecl(
+                        canvas_typ_ident.clone(),
+                        canvas_size.clone(),
+                        match secrecy {
+                            Secrecy::Secret => (
+                                BaseTyp::Named(
+                                    (TopLevelIdent("U8".to_string()), canvas_typ_ident.1.clone()),
+                                    None,
+                                ),
+                                canvas_typ_ident.1.clone(),
+                            ),
+                            Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
+                        },
+                        None,
+                    ),
+                    *i_span,
+                ),
+                top_level_context,
+            )?;
+            top_level_context.typ_dict.insert(
+                typ_ident.0.clone() ,
+                (
+                    (
+                        (Borrowing::Consumed, (typ_ident.1).clone()),
+                        (
+                            BaseTyp::NaturalInteger(
+                                secrecy.clone(),
+                                mod_string.clone(),
+                                match &canvas_size.0 {
+                                    Expression::Lit(Literal::Usize(size)) => {
+                                        (size.clone(), (canvas_size.1).clone())
+                                    }
+                                    _ => {
+                                        sess.span_rustspec_err(
+                                            (canvas_size.1).clone(), "the size of the natural integer encoding has to be a usize literal"
+                                        );
+                                        return Err(())
+                                    }
+                                },
+                            ),
+                            typ_ident.1.clone(),
+                        ),
+                    ),
+                    DictEntry::NaturalInteger,
+                ),
+            );
+            Ok(())
+        }
+        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
+            top_level_context.typ_dict.insert(
+                typ_ident.0.clone(),
+                match &canvas_size.0 {
+                    Expression::Lit(Literal::Usize(size)) => (
+                        (
+                            (Borrowing::Consumed, (typ_ident.1).clone()),
+                            (
+                                BaseTyp::NaturalInteger(
+                                    secrecy.clone(),
+                                    (String::new(), DUMMY_SP), // TODO: replace with real modulo value
+                                    // For now we can leave this empty because
+                                    // We don't use it in the typechecker
+                                    (size.clone(), (canvas_size.1).clone()),
+                                ),
+                                typ_ident.1.clone(),
+                            ),
+                        ),
+                        DictEntry::NaturalInteger,
+                    ),
+                    _ => {
+                        sess.span_rustspec_err(
+                            (canvas_size.1).clone(),
+                            "the size of the natural integer encoding has to be a usize literal",
+                        );
+                        return Err(());
+                    }
+                },
+            );
+            Ok(())
+        }
         Item::FnDecl((f, _f_span), sig, _b) => {
             top_level_context
                 .functions
                 .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
             Ok(())
         }
-        _ => Ok(()),
     }
 }
 
