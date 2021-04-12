@@ -8,11 +8,13 @@ open FStar.Mul
 open Hacspec.Chacha20
 open Hacspec.Poly1305
 
+
+
 let key_gen (key_0 : key_poly) (iv_1 : iv) : key_poly =
   let block_2 =
     chacha_block (array_from_seq (32) (key_0)) (secret (pub_u32 0x0)) (iv_1)
   in
-  array_from_slice_range (secret (pub_u8 0x8)) (32) (block_2) (
+  array_from_slice_range (secret (pub_u8 0x0)) (32) (block_2) (
     (usize 0, usize 32))
 
 let poly_mac (m_3 : byte_seq) (key_4 : key_poly) (iv_5 : iv) : tag =
@@ -45,7 +47,7 @@ let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq{
     end
   in
   let padded_msg_13 =
-    seq_new_ (secret (pub_u8 0x8)) (((pad_aad_11) + (pad_msg_12)) + (usize 16))
+    seq_new_ (secret (pub_u8 0x0)) (((pad_aad_11) + (pad_msg_12)) + (usize 16))
   in
   let padded_msg_13 = seq_update (padded_msg_13) (usize 0) (aad_7) in
   let padded_msg_13 = seq_update (padded_msg_13) (pad_aad_11) (msg_8) in
@@ -69,7 +71,7 @@ let encrypt
   : (byte_seq & tag) =
   let key_block_18 = chacha_block (key_14) (secret (pub_u32 0x0)) (iv_15) in
   let mac_key_19 =
-    array_from_slice_range (secret (pub_u8 0x8)) (32) (key_block_18) (
+    array_from_slice_range (secret (pub_u8 0x0)) (32) (key_block_18) (
       (usize 0, usize 32))
   in
   let cipher_text_20 = chacha (key_14) (iv_15) (msg_17) in
@@ -81,17 +83,16 @@ let decrypt
   (key_23 : key)
   (iv_24 : iv)
   (aad_25 : byte_seq)
-  (cipher_text_26 : byte_seq{
-    (**) seq_len cipher_text_26 + 16 + seq_len aad_25 + 16 + 16 <= maxint U32
-  })
+  (cipher_text_26 : byte_seq)
   (tag_27 : tag)
   : (byte_seq & bool) =
   let key_block_28 = chacha_block (key_23) (secret (pub_u32 0x0)) (iv_24) in
   let mac_key_29 =
-    array_from_slice_range (secret (pub_u8 0x8)) (32) (key_block_28) (
+    array_from_slice_range (secret (pub_u8 0x0)) (32) (key_block_28) (
       (usize 0, usize 32))
   in
   let padded_msg_30 = pad_aad_msg (aad_25) (cipher_text_26) in
   let my_tag_31 = poly (padded_msg_30) (array_from_seq (32) (mac_key_29)) in
   let plain_text_32 = chacha (key_23) (iv_24) (cipher_text_26) in
   (plain_text_32, (my_tag_31) `array_eq (=)` (tag_27))
+

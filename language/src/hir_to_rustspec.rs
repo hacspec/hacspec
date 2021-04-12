@@ -307,57 +307,102 @@ fn process_fn_id(
     };
 }
 
-fn add_array_type_from_ctor_sig(
-    tcx: &TyCtxt,
-    sig: &PolyFnSig,
-    external_arrays: &mut HashMap<String, BaseTyp>,
-) {
-    let ret = sig.output().skip_binder();
-    match ret.kind() {
+enum SpecialTypeReturn {
+    Array(BaseTyp),
+    NatInt(BaseTyp),
+    RawAbstractInt(BaseTyp),
+    NotSpecial,
+}
+
+fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTypeReturn {
+    match def.kind() {
         TyKind::Adt(adt, substs) => {
             if substs.len() > 0 {
-                return ();
+                return SpecialTypeReturn::NotSpecial;
             }
             if adt.variants.len() != 1 {
-                return ();
+                return SpecialTypeReturn::NotSpecial;
             }
-            for variant in adt.variants.iter() {
-                if variant.fields.len() != 1 {
-                    return ();
+            let variant = adt.variants.iter().next().unwrap();
+            let maybe_abstract_int = match variant.fields.len() {
+                1 => false,
+                3 => true,
+                _ => {
+                    return SpecialTypeReturn::NotSpecial;
                 }
-                for field in variant.fields.iter() {
-                    match tcx.type_of(field.did).kind() {
-                        TyKind::Array(cell_t, size) => {
-                            let (new_cell_t, _) =
-                                match translate_base_typ(tcx, cell_t, &HashMap::new()) {
-                                    Ok(x) => x,
-                                    Err(()) => return (),
-                                };
-                            let new_size = match &size.val {
-                                ConstKind::Value(value) => match value {
-                                    ConstValue::Scalar(scalar) => match scalar {
-                                        Scalar::Int(s) => s.to_bits(s.size()).unwrap() as usize,
-                                        _ => return (),
-                                    },
-                                    _ => return (),
-                                },
-                                _ => return (),
-                            };
-                            let array_typ = BaseTyp::Array(
-                                (ArraySize::Integer(new_size), DUMMY_SP),
-                                Box::new((new_cell_t, DUMMY_SP)),
-                            );
-                            let array_name =
-                                tcx.def_path(adt.did).data.last().unwrap().data.to_string();
-                            external_arrays.insert(array_name, array_typ);
+            };
+            let field = variant.fields.iter().next().unwrap();
+            let field_typ = tcx.type_of(field.did);
+            match &field_typ.kind() {
+                TyKind::Array(cell_t, size) => {
+                    let (new_cell_t, _) = match translate_base_typ(tcx, cell_t, &HashMap::new()) {
+                        Ok(x) => x,
+                        Err(()) => return SpecialTypeReturn::NotSpecial,
+                    };
+                    let new_size = match &size.val {
+                        ConstKind::Value(value) => match value {
+                            ConstValue::Scalar(scalar) => match scalar {
+                                Scalar::Int(s) => Some(s.to_bits(s.size()).unwrap() as usize),
+                                _ => None,
+                            },
+                            _ => None,
+                        },
+                        _ => None,
+                    };
+                    if maybe_abstract_int {
+                        // So here we cannot infer neither the secrecy nor the modulo
+                        // value, nor the size, but its fine for typechecking?
+                        let nat_int_typ = BaseTyp::NaturalInteger(
+                            Secrecy::Secret,
+                            ("unknown".to_string(), DUMMY_SP),
+                            (0, DUMMY_SP),
+                        );
+                        SpecialTypeReturn::RawAbstractInt(nat_int_typ)
+                    } else {
+                        match new_size {
+                            None => SpecialTypeReturn::NotSpecial,
+                            Some(new_size) => {
+                                let array_typ = BaseTyp::Array(
+                                    (ArraySize::Integer(new_size), DUMMY_SP),
+                                    Box::new((new_cell_t, DUMMY_SP)),
+                                );
+                                SpecialTypeReturn::Array(array_typ)
+                            }
                         }
-                        _ => return (),
                     }
                 }
+                _ => {
+                    return match check_special_type_from_struct_shape(tcx, &field_typ) {
+                        SpecialTypeReturn::NotSpecial
+                        | SpecialTypeReturn::NatInt(_)
+                        | SpecialTypeReturn::Array(_) => SpecialTypeReturn::NotSpecial,
+                        SpecialTypeReturn::RawAbstractInt(nat_int_typ) => {
+                            SpecialTypeReturn::NatInt(nat_int_typ)
+                        }
+                    };
+                }
             }
-            ()
         }
-        _ => (),
+        _ => SpecialTypeReturn::NotSpecial,
+    }
+}
+
+fn add_special_type_from_struct_shape(
+    tcx: &TyCtxt,
+    def_id: DefId,
+    def: &ty::Ty,
+    external_arrays: &mut HashMap<String, BaseTyp>,
+    external_nat_ints: &mut HashMap<String, BaseTyp>,
+) {
+    let def_name = tcx.def_path(def_id).data.last().unwrap().data.to_string();
+    match check_special_type_from_struct_shape(tcx, def) {
+        SpecialTypeReturn::Array(array_typ) => {
+            external_arrays.insert(def_name, array_typ);
+        }
+        SpecialTypeReturn::NatInt(nat_int_typ) => {
+            external_nat_ints.insert(def_name, nat_int_typ);
+        }
+        SpecialTypeReturn::NotSpecial | SpecialTypeReturn::RawAbstractInt(_) => {}
     }
 }
 
@@ -365,6 +410,7 @@ pub struct ExternalData {
     pub funcs: HashMap<FnKey, Result<ExternalFuncSig, String>>,
     pub consts: HashMap<String, BaseTyp>,
     pub arrays: HashMap<String, BaseTyp>,
+    pub nat_ints: HashMap<String, BaseTyp>,
     pub ty_aliases: HashMap<String, BaseTyp>,
 }
 
@@ -378,6 +424,7 @@ pub fn retrieve_external_data(
     let mut extern_funcs = HashMap::new();
     let mut extern_consts = HashMap::new();
     let mut extern_arrays = HashMap::new();
+    let mut extern_nat_ints = HashMap::new();
     let mut ty_aliases = HashMap::new();
     let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
     let mut imported_crates = imported_crates.clone();
@@ -417,6 +464,13 @@ pub fn retrieve_external_data(
                             {
                                 match x.data {
                                     DefPathData::TypeNs(name) => match tcx.def_kind(def_id) {
+                                        DefKind::Struct => add_special_type_from_struct_shape(
+                                            tcx,
+                                            def_id,
+                                            &tcx.type_of(def_id),
+                                            &mut extern_arrays,
+                                            &mut extern_nat_ints,
+                                        ),
                                         DefKind::TyAlias => {
                                             if def_path.data.len() <= 2 {
                                                 let typ = tcx.type_of(def_id);
@@ -460,11 +514,6 @@ pub fn retrieve_external_data(
                                                 Ok(sig) => Ok(sig),
                                                 Err(()) => Err(format!("{}", export_sig)),
                                             };
-                                            add_array_type_from_ctor_sig(
-                                                tcx,
-                                                &export_sig,
-                                                &mut extern_arrays,
-                                            );
                                             let name_segment =
                                                 def_path.data[def_path.data.len() - 2];
                                             match name_segment.data {
@@ -524,6 +573,7 @@ pub fn retrieve_external_data(
         funcs: extern_funcs,
         consts: extern_consts,
         arrays: extern_arrays,
+        nat_ints: extern_nat_ints,
         ty_aliases,
     }
 }
