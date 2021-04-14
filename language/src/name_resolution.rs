@@ -73,12 +73,48 @@ pub enum FnValue {
     ExternalNotInHacspec(String),
 }
 
-fn resolve_item(
+fn resolve_expression(
     _sess: &Session,
-    (i, i_span): Spanned<Item>,
+    (e, e_span): Spanned<Expression>,
     _top_level_ctx: &TopLevelContext,
+) -> ResolutionResult<Spanned<Expression>> {
+    match e {
+        _ => Ok((e, e_span)),
+    }
+}
+
+fn resolve_statement(
+    _sess: &Session,
+    (s, s_span): Spanned<Statement>,
+    _top_level_ctx: &TopLevelContext,
+) -> ResolutionResult<Spanned<Statement>> {
+    match s {
+        _ => Ok((s, s_span)),
+    }
+}
+
+fn resolve_block(
+    _sess: &Session,
+    (b, b_span): Spanned<Block>,
+    _top_level_ctx: &TopLevelContext,
+) -> ResolutionResult<Spanned<Block>> {
+    Ok((b, b_span))
+}
+
+fn resolve_item(
+    sess: &Session,
+    (i, i_span): Spanned<Item>,
+    top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Item>> {
     match i {
+        Item::ConstDecl(id, typ, e) => {
+            let new_e = resolve_expression(sess, e, top_level_ctx)?;
+            Ok((Item::ConstDecl(id, typ, new_e), i_span))
+        }
+        Item::ArrayDecl(id, size, cell_t, index_typ) => {
+            let new_size = resolve_expression(sess, size, top_level_ctx)?;
+            Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
+        }
         _ => Ok((i, i_span)),
     }
 }

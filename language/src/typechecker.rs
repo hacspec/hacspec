@@ -1930,6 +1930,76 @@ fn typecheck_item(
     top_level_context: &TopLevelContext,
 ) -> TypecheckingResult<Item> {
     match &i {
+        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
+            let (new_canvas_size, canvas_size_typ, _) = typecheck_expression(
+                sess,
+                canvas_size,
+                top_level_context,
+                &HashMap::new(),
+                &HashMap::new(),
+            )?;
+            if let None = unify_types(
+                sess,
+                &(
+                    (Borrowing::Consumed, canvas_size.1.clone()),
+                    (BaseTyp::Usize, canvas_size.1.clone()),
+                ),
+                &canvas_size_typ,
+                &HashMap::new(),
+                top_level_context,
+            )? {
+                sess.span_rustspec_err(
+                    canvas_size.1.clone(),
+                    format!(
+                        "expected type usize, got {}{}",
+                        (canvas_size_typ.0).0,
+                        (canvas_size_typ.1).0
+                    )
+                    .as_str(),
+                )
+            };
+            Ok(Item::NaturalIntegerDecl(
+                typ_ident.clone(),
+                canvas_typ_ident.clone(),
+                secrecy.clone(),
+                (new_canvas_size, canvas_size.1.clone()),
+                mod_string.clone(),
+            ))
+        }
+        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
+            let (new_canvas_size, canvas_size_typ, _) = typecheck_expression(
+                sess,
+                canvas_size,
+                top_level_context,
+                &HashMap::new(),
+                &HashMap::new(),
+            )?;
+            if let None = unify_types(
+                sess,
+                &(
+                    (Borrowing::Consumed, canvas_size.1.clone()),
+                    (BaseTyp::Usize, canvas_size.1.clone()),
+                ),
+                &canvas_size_typ,
+                &HashMap::new(),
+                top_level_context,
+            )? {
+                sess.span_rustspec_err(
+                    canvas_size.1.clone(),
+                    format!(
+                        "expected type usize, got {}{}",
+                        (canvas_size_typ.0).0,
+                        (canvas_size_typ.1).0
+                    )
+                    .as_str(),
+                )
+            };
+            Ok(Item::SimplifiedNaturalIntegerDecl(
+                typ_ident.clone(),
+                secrecy.clone(),
+                (new_canvas_size, canvas_size.1.clone()),
+            ))
+        }
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {
             let var_context = HashMap::new();
             let name_context = HashMap::new();
@@ -1946,23 +2016,39 @@ fn typecheck_item(
                     (new_sig_acc, var_context, name_context)
                 },
             );
+            let (new_b, _final_var_context) = typecheck_block(
+                sess,
+                (b.clone(), b_span.clone()),
+                top_level_context,
+                &var_context,
+                &name_context,
+            )?;
+            let comp_ret_typ = &new_b.return_typ.clone().unwrap();
+            if let None = unify_types(
+                sess,
+                comp_ret_typ,
+                &((Borrowing::Consumed, DUMMY_SP), sig.ret.clone()),
+                &HashMap::new(),
+                top_level_context,
+            )? {
+                sess.span_rustspec_err(
+                    sig.ret.1.clone(),
+                    format!(
+                        "expected type {}, got {}{}",
+                        sig.ret.0,
+                        (comp_ret_typ.0).0,
+                        (comp_ret_typ.1).0,
+                    )
+                    .as_str(),
+                )
+            }
             let out = Item::FnDecl(
                 (f.clone(), f_span.clone()),
                 FuncSig {
                     args: new_sig_args,
                     ret: sig.ret.clone(),
                 },
-                (
-                    typecheck_block(
-                        sess,
-                        (b.clone(), b_span.clone()),
-                        top_level_context,
-                        &var_context,
-                        &name_context,
-                    )?
-                    .0,
-                    b_span.clone(),
-                ),
+                (new_b, b_span.clone()),
             );
             Ok(out)
         }
@@ -2029,7 +2115,6 @@ fn typecheck_item(
                 (new_e, (e.1).clone()),
             ))
         }
-        _ => Ok(i.clone()),
     }
 }
 
