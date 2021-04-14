@@ -1,4 +1,3 @@
-use crate::hir_to_rustspec::ExternalData;
 use crate::name_resolution::{
     to_fresh_ident, DictEntry, FnKey, FnValue, NameContext, TopLevelContext,
 };
@@ -2034,70 +2033,11 @@ fn typecheck_item(
     }
 }
 
-pub fn typecheck_program<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
+pub fn typecheck_program(
     sess: &Session,
     p: &Program,
-    external_data: &F,
     top_level_ctx: &mut TopLevelContext,
 ) -> TypecheckingResult<Program> {
-    let ExternalData {
-        funcs: extern_funcs,
-        consts: extern_consts,
-        arrays: extern_arrays,
-        nat_ints: extern_nat_ints,
-        ty_aliases: extern_aliases,
-    } = external_data(&p.imported_crates);
-    for (alias_name, alias_ty) in extern_aliases {
-        top_level_ctx.typ_dict.insert(
-            TopLevelIdent(alias_name.clone()),
-            (
-                (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (alias_ty.clone(), DUMMY_SP),
-                ),
-                DictEntry::Alias,
-            ),
-        );
-    }
-    for (alias_name, alias_ty) in &p.ty_aliases {
-        top_level_ctx.typ_dict.insert(
-            alias_name.0.clone(),
-            (
-                ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
-                DictEntry::Alias,
-            ),
-        );
-    }
-    for (array_name, array_typ) in extern_arrays {
-        top_level_ctx.typ_dict.insert(
-            TopLevelIdent(array_name),
-            (
-                ((Borrowing::Consumed, DUMMY_SP), (array_typ, DUMMY_SP)),
-                DictEntry::Array,
-            ),
-        );
-    }
-    for (nat_int_name, nat_int_typ) in extern_nat_ints {
-        top_level_ctx.typ_dict.insert(
-            TopLevelIdent(nat_int_name),
-            (
-                ((Borrowing::Consumed, DUMMY_SP), (nat_int_typ, DUMMY_SP)),
-                DictEntry::NaturalInteger,
-            ),
-        );
-    }
-    for (k, v) in extern_funcs {
-        top_level_ctx.functions.insert(
-            k.clone(),
-            match v {
-                Ok(v) => FnValue::External(v.clone()),
-                Err(s) => FnValue::ExternalNotInHacspec(s.clone()),
-            },
-        );
-    }
-    for (k, v) in extern_consts {
-        top_level_ctx.consts.insert(TopLevelIdent(k), (v, DUMMY_SP));
-    }
     Ok(Program {
         items: check_vec(
             p.items

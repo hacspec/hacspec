@@ -3,6 +3,7 @@ use std::fmt;
 use im::HashMap;
 use rustc_session::Session;
 
+use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
 use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
@@ -228,7 +229,78 @@ fn process_decl_item(
     }
 }
 
-pub fn resolve_crate(sess: &Session, p: Program) -> ResolutionResult<(Program, TopLevelContext)> {
+fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
+    _sess: &Session,
+    p: &Program,
+    top_level_ctx: &mut TopLevelContext,
+    external_data: &F,
+) -> ResolutionResult<()> {
+    let ExternalData {
+        funcs: extern_funcs,
+        consts: extern_consts,
+        arrays: extern_arrays,
+        nat_ints: extern_nat_ints,
+        ty_aliases: extern_aliases,
+    } = external_data(&p.imported_crates);
+    for (alias_name, alias_ty) in extern_aliases {
+        top_level_ctx.typ_dict.insert(
+            TopLevelIdent(alias_name.clone()),
+            (
+                (
+                    (Borrowing::Consumed, DUMMY_SP),
+                    (alias_ty.clone(), DUMMY_SP),
+                ),
+                DictEntry::Alias,
+            ),
+        );
+    }
+    for (alias_name, alias_ty) in &p.ty_aliases {
+        top_level_ctx.typ_dict.insert(
+            alias_name.0.clone(),
+            (
+                ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
+                DictEntry::Alias,
+            ),
+        );
+    }
+    for (array_name, array_typ) in extern_arrays {
+        top_level_ctx.typ_dict.insert(
+            TopLevelIdent(array_name),
+            (
+                ((Borrowing::Consumed, DUMMY_SP), (array_typ, DUMMY_SP)),
+                DictEntry::Array,
+            ),
+        );
+    }
+    for (nat_int_name, nat_int_typ) in extern_nat_ints {
+        top_level_ctx.typ_dict.insert(
+            TopLevelIdent(nat_int_name),
+            (
+                ((Borrowing::Consumed, DUMMY_SP), (nat_int_typ, DUMMY_SP)),
+                DictEntry::NaturalInteger,
+            ),
+        );
+    }
+    for (k, v) in extern_funcs {
+        top_level_ctx.functions.insert(
+            k.clone(),
+            match v {
+                Ok(v) => FnValue::External(v.clone()),
+                Err(s) => FnValue::ExternalNotInHacspec(s.clone()),
+            },
+        );
+    }
+    for (k, v) in extern_consts {
+        top_level_ctx.consts.insert(TopLevelIdent(k), (v, DUMMY_SP));
+    }
+    Ok(())
+}
+
+pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
+    sess: &Session,
+    p: Program,
+    external_data: &F,
+) -> ResolutionResult<(Program, TopLevelContext)> {
     let mut top_level_ctx = TopLevelContext {
         consts: HashMap::new(),
         functions: HashMap::new(),
@@ -239,6 +311,7 @@ pub fn resolve_crate(sess: &Session, p: Program) -> ResolutionResult<(Program, T
     for item in p.items.iter() {
         process_decl_item(sess, item, &mut top_level_ctx)?;
     }
+    enrich_with_external_crates_symbols(sess, &p, &mut top_level_ctx, external_data)?;
     Ok((
         Program {
             items: check_vec(

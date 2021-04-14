@@ -96,22 +96,18 @@ impl Callbacks for HacspecCallbacks {
                 hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
             })
         };
-        let (krate, mut top_ctx) = match name_resolution::resolve_crate(&compiler.session(), krate)
+        let (krate, mut top_ctx) =
+            match name_resolution::resolve_crate(&compiler.session(), krate, &external_data) {
+                Ok(krate) => krate,
+                Err(_) => {
+                    &compiler
+                        .session()
+                        .err("found some Hacspec name resolution errors");
+                    return Compilation::Stop;
+                }
+            };
+        let krate = match typechecker::typecheck_program(&compiler.session(), &krate, &mut top_ctx)
         {
-            Ok(krate) => krate,
-            Err(_) => {
-                &compiler
-                    .session()
-                    .err("found some Hacspec name resolution errors");
-                return Compilation::Stop;
-            }
-        };
-        let krate = match typechecker::typecheck_program(
-            &compiler.session(),
-            &krate,
-            &external_data,
-            &mut top_ctx,
-        ) {
             Ok(krate) => krate,
             Err(_) => {
                 &compiler
