@@ -103,7 +103,7 @@ Inductive secrecy_level :=
 
 Definition sec_int_t := inttype -> Type.
 
-Context {secret : forall {A}, A -> A}.
+Axiom secret : forall {A}, A -> A.
 
 
 (* Definition sec_int_v (t:inttype) := sec_int_t t -> range_t t. *)

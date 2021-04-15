@@ -15,13 +15,11 @@ Definition int_size := N.
 (* Definition int_size := range_t S32. *)
 
 Open Scope N_scope.
-Context {
-  uint_size_to_nat : uint_size -> nat
-}.
+Axiom uint_size_to_nat : uint_size -> nat.
 (* Definition usize (n:range_t U32) : u:uint_size{u == n} := n *)
 (* Definition isize (n:range_t S32) : u:int_size{u == n} := n *)
-Context {usize isize : N -> uint_size}.
-Context {
+Axiom usize isize : N -> uint_size.
+Axiom 
   uint8
   uint16
   uint32
@@ -42,8 +40,7 @@ Context {
   pub_int64 
   pub_uint128 
   pub_int128 
-  : Type
-}.
+  : Type.
 
 (* Definition size_t := uint_t U32 PUB *)
 (* Axiom uint_size : forall (n : inttype), n < U32. *)
@@ -164,9 +161,9 @@ Definition seq (A : Type) := list A.
 
 Definition byte_seq := seq uint8.
 
-Definition nseq (A : Type) (len: nat) := list A.
+Definition nseq (A : Type) (len: N) := list A.
 
-Definition seq_len {A: Type} (s: seq A) : nat := List.length s.
+Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (List.length s).
 
 Definition seq_new_ {A: Type} (init : A) (len: uint_size) : lseq A len :=
   mkLseq _ _ (List.repeat init (N.to_nat len)).
@@ -179,9 +176,14 @@ Definition array_from_list {A: Type} (l: list A) : lseq A (N.of_nat (List.length
 
 Definition array_new_ {A: Type} (init:A) (len: uint_size)  : lseq A len :=
   mkLseq _ _ (List.repeat init (N.to_nat len)).
-  
+
+Definition array_index {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) : A.
+Admitted.
 (* Definition array_index {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) : A :=
   List.nth (N.to_nat i) (lseq_to_list s). *)
+
+Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len.
+Admitted.
 
 (* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v.
 
@@ -370,84 +372,106 @@ Definition array_eq
   ) out *)
 
 (**** Integers to arrays *)
-(* 
-Definition uint32_to_le_bytes (x: uint32) : lseq uint8 4 :=
-  LBSeq.uint_to_bytes_le x.
+Axiom uint32_to_le_bytes : uint32 -> lseq uint8 4.
+(* Definition uint32_to_le_bytes (x: uint32) : lseq uint8 4 :=
+  LBSeq.uint_to_bytes_le x. *)
 
-Definition uint32_to_be_bytes (x: uint32) : lseq uint8 4 :=
-  LBSeq.uint_to_bytes_be x
+Axiom uint32_to_be_bytes : uint32 -> lseq uint8 4.
+(* Definition uint32_to_be_bytes (x: uint32) : lseq uint8 4 :=
+  LBSeq.uint_to_bytes_be x *)
 
-Definition uint32_from_le_bytes (s: lseq uint8 4) : uint32 :=
-  LBSeq.uint_from_bytes_le s
+Axiom uint32_from_le_bytes : lseq uint8 4 -> uint32.
+(* Definition uint32_from_le_bytes (s: lseq uint8 4) : uint32 :=
+  LBSeq.uint_from_bytes_le s *)
 
-Definition uint32_from_be_bytes (s: lseq uint8 4) : uint32 :=
-  LBSeq.uint_from_bytes_be s
+Axiom uint32_from_be_bytes : lseq uint8 4 -> uint32.
+(* Definition uint32_from_be_bytes (s: lseq uint8 4) : uint32 :=
+  LBSeq.uint_from_bytes_be s *)
 
-Definition uint64_to_le_bytes (x: uint64) : lseq uint8 8 :=
-  LBSeq.uint_to_bytes_le x
+Axiom uint64_to_le_bytes : uint64 -> lseq uint8 8.
+(* Definition uint64_to_le_bytes (x: uint64) : lseq uint8 8 :=
+  LBSeq.uint_to_bytes_le x *)
 
-Definition uint64_to_be_bytes (x: uint64) : lseq uint8 8 :=
-  LBSeq.uint_to_bytes_be x
+Axiom uint64_to_be_bytes : uint64 -> lseq uint8 8.
+(* Definition uint64_to_be_bytes (x: uint64) : lseq uint8 8 :=
+  LBSeq.uint_to_bytes_be x *)
 
-Definition uint64_from_le_bytes (s: lseq uint8 8) : uint64 :=
-  LBSeq.uint_from_bytes_le s
+Axiom uint64_from_le_bytes : lseq uint8 8 -> uint64.
+(* Definition uint64_from_le_bytes (s: lseq uint8 8) : uint64 :=
+  LBSeq.uint_from_bytes_le s *)
 
-Definition uint64_from_be_bytes (s: lseq uint8 8) : uint64 :=
-  LBSeq.uint_from_bytes_be s
+Axiom uint64_from_be_bytes : lseq uint8 8 -> uint64.
+(* Definition uint64_from_be_bytes (s: lseq uint8 8) : uint64 :=
+  LBSeq.uint_from_bytes_be s *)
 
-Definition uint128_to_le_bytes (x: uint128) : lseq uint8 16 :=
-  LBSeq.uint_to_bytes_le x
+Axiom uint128_to_le_bytes : uint128 -> lseq uint8 16.
+(* Definition uint128_to_le_bytes (x: uint128) : lseq uint8 16 :=
+  LBSeq.uint_to_bytes_le x *)
 
-Definition uint128_to_be_bytes (x: uint128) : lseq uint8 16 :=
-  LBSeq.uint_to_bytes_be x
+Axiom uint128_to_be_bytes : uint128 -> lseq uint8 16.
+(* Definition uint128_to_be_bytes (x: uint128) : lseq uint8 16 :=
+  LBSeq.uint_to_bytes_be x *)
 
-Definition uint128_from_le_bytes (input: lseq uint8 16) : uint128 :=
-  LBSeq.uint_from_bytes_le input
+Axiom uint128_from_le_bytes : lseq uint8 16 -> uint128.
+(* Definition uint128_from_le_bytes (input: lseq uint8 16) : uint128 :=
+  LBSeq.uint_from_bytes_le input *)
 
-Definition uint128_from_be_bytes (s: lseq uint8 16) : uint128 :=
-  LBSeq.uint_from_bytes_be s
+Axiom uint128_from_be_bytes : lseq uint8 16 -> uint128.
+(* Definition uint128_from_be_bytes (s: lseq uint8 16) : uint128 :=
+  LBSeq.uint_from_bytes_be s *)
 
-Definition u32_to_le_bytes (x: pub_uint32) : lseq pub_uint8 4 :=
-  LBSeq.uint_to_bytes_le x
+Axiom u32_to_le_bytes : pub_uint32 -> lseq pub_uint8 4.
+(* Definition u32_to_le_bytes (x: pub_uint32) : lseq pub_uint8 4 :=
+  LBSeq.uint_to_bytes_le x *)
 
-Definition u32_to_be_bytes (x: pub_uint32) : lseq pub_uint8 4 :=
-  LBSeq.uint_to_bytes_be x
+Axiom u32_to_be_bytes : pub_uint32 -> lseq pub_uint8 4.
+(* Definition u32_to_be_bytes (x: pub_uint32) : lseq pub_uint8 4 :=
+  LBSeq.uint_to_bytes_be x *)
 
-Definition u32_from_le_bytes (s: lseq pub_uint8 4) : pub_uint32 :=
-  LBSeq.uint_from_bytes_le s
+Axiom u32_from_le_bytes : lseq pub_uint8 4 -> pub_uint32.
+(* Definition u32_from_le_bytes (s: lseq pub_uint8 4) : pub_uint32 :=
+  LBSeq.uint_from_bytes_le s *)
 
-Definition u32_from_be_bytes (s: lseq pub_uint8 4) : pub_uint32 :=
-  LBSeq.uint_from_bytes_be s
+Axiom u32_from_be_bytes : lseq pub_uint8 4 -> pub_uint32.
+(* Definition u32_from_be_bytes (s: lseq pub_uint8 4) : pub_uint32 :=
+  LBSeq.uint_from_bytes_be s *)
 
-Definition u64_to_le_bytes (x: pub_uint64) : lseq pub_uint8 8 :=
-  LBSeq.uint_to_bytes_le x
+Axiom u64_to_le_bytes : pub_uint64 -> lseq pub_uint8 8.
+(* Definition u64_to_le_bytes (x: pub_uint64) : lseq pub_uint8 8 :=
+  LBSeq.uint_to_bytes_le x *)
 
-Definition u64_to_be_bytes (x: pub_uint64) : lseq pub_uint8 8 :=
-  LBSeq.uint_to_bytes_be x
+Axiom u64_to_be_bytes : pub_uint64 -> lseq pub_uint8 8.
+(* Definition u64_to_be_bytes (x: pub_uint64) : lseq pub_uint8 8 :=
+  LBSeq.uint_to_bytes_be x *)
 
-Definition u64_from_le_bytes (s: lseq pub_uint8 8) : pub_uint64 :=
-  LBSeq.uint_from_bytes_le s
+Axiom u64_from_le_bytes : lseq pub_uint8 8 -> pub_uint64.
+(* Definition u64_from_le_bytes (s: lseq pub_uint8 8) : pub_uint64 :=
+  LBSeq.uint_from_bytes_le s *)
 
-Definition u64_from_be_bytes (s: lseq pub_uint8 8) : pub_uint64 :=
-  LBSeq.uint_from_bytes_be s
+Axiom u64_from_be_bytes : lseq pub_uint8 8 -> pub_uint64.
+(* Definition u64_from_be_bytes (s: lseq pub_uint8 8) : pub_uint64 :=
+  LBSeq.uint_from_bytes_be s *)
 
-Definition u128_to_le_bytes (x: pub_uint128) : lseq pub_uint8 16 :=
-  LBSeq.uint_to_bytes_le x
+Axiom u128_to_le_bytes : pub_uint128 -> lseq pub_uint8 16.
+(* Definition u128_to_le_bytes (x: pub_uint128) : lseq pub_uint8 16 :=
+  LBSeq.uint_to_bytes_le x *)
 
-Definition u128_to_be_bytes (x: pub_uint128) : lseq pub_uint8 16 :=
-  LBSeq.uint_to_bytes_be x
+Axiom u128_to_be_bytes : pub_uint128 -> lseq pub_uint8 16.
+(* Definition u128_to_be_bytes (x: pub_uint128) : lseq pub_uint8 16 :=
+  LBSeq.uint_to_bytes_be x *)
 
-Definition u128_from_le_bytes (input: lseq pub_uint8 16) : pub_uint128 :=
-  LBSeq.uint_from_bytes_le input
+Axiom u128_from_le_bytes : lseq pub_uint8 16 -> pub_uint128.
+(* Definition u128_from_le_bytes (input: lseq pub_uint8 16) : pub_uint128 :=
+  LBSeq.uint_from_bytes_le input *)
 
-Definition u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 :=
+Axiom u128_from_be_bytes : lseq pub_uint8 16 -> pub_uint128.
+(* Definition u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 :=
   LBSeq.uint_from_bytes_be s *)
 
 (*** Nats *)
-Close Scope N_scope.
 
 (* type representing nats less than n *)
-Definition nat_mod (n: nat) := nat.
+Definition nat_mod (n: N) := N.
 (* Definition nat_mod (n: nat) := {x : nat | x < n}. *)
 
 (* 
@@ -456,42 +480,35 @@ Proof.
   unfold nat_mod. destruct a. destruct b.
   apply (exist _ (x + x0 mod n)).
    *)
-Definition nat_mod_add {n:nat} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
+Definition nat_mod_add {n:N} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
    (a + b) mod n.
 
-Notation "a + b" :=
-  (nat_mod_add)
-  : hacspec_scope.
+Infix "+" := nat_mod_add : hacspec_scope.
 
 
-Definition nat_mod_mul {n:nat} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
+Definition nat_mod_mul {n:N} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
   (a * b) mod n.
 
-Notation "a * b" :=
-  (nat_mod_mul)
-  : hacspec_scope.
+Infix "*" := nat_mod_mul : hacspec_scope.
 
+Axiom uint128_to_N : uint128 -> N.
 
-Axiom uint128_to_nat : uint128 -> nat.
+Definition nat_from_secret_literal (m:N) (x:uint128) : nat_mod m :=
+  uint128_to_N x.
 
-Definition nat_from_secret_literal (m:nat) (x:uint128) : nat_mod m :=
-  uint128_to_nat x.
+Axiom pub_uint128_to_N : pub_uint128 -> N.
 
-Axiom pub_uint128_to_nat : pub_uint128 -> nat.
+Definition nat_from_literal (m:N) (x:pub_uint128) : nat_mod m :=
+  pub_uint128_to_N x.
 
-Definition nat_from_literal (m:nat) (x:pub_uint128) : nat_mod m :=
-  pub_uint128_to_nat x.
-
-  
+(*   
 Definition nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_le len n'
 
 Definition nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   Definition n' := n % (pow2 (8 * len)) in
-  Lib.ByteSequence.nat_to_bytes_be len n'
+  Lib.ByteSequence.nat_to_bytes_be len n' *)
 
 
-Definition nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m := pow2 x
-
-End Lib.
+Definition nat_pow2 (m : N) (x : N) : nat_mod m := pow2 x.
