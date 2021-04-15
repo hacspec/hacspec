@@ -177,7 +177,7 @@ impl Callbacks for HacspecCallbacks {
                     &compiler.session(),
                     &krate,
                     &file,
-                    &typ_dict,
+                    &top_ctx,
                 ),
                 _ => {
                     &compiler
