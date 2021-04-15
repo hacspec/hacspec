@@ -198,13 +198,15 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
                 }))
                 .group()
         }
-        BaseTyp::Named(ident, args) => RcDoc::as_string(ident.0).append(match args {
-            None => RcDoc::nil(),
-            Some(args) => RcDoc::space().append(RcDoc::intersperse(
-                args.iter().map(|arg| translate_base_typ(arg.0.clone())),
-                RcDoc::space(),
-            )),
-        }),
+        BaseTyp::Named((ident, _span), args) => {
+            translate_ident(Ident::TopLevel(ident)).append(match args {
+                None => RcDoc::nil(),
+                Some(args) => RcDoc::space().append(RcDoc::intersperse(
+                    args.iter().map(|arg| translate_base_typ(arg.0.clone())),
+                    RcDoc::space(),
+                )),
+            })
+        }
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
@@ -883,7 +885,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 .append(RcDoc::space())
                 .append(mut_tuple.clone())
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("->"))
+                .append(RcDoc::as_string("=>"))
                 .append(RcDoc::line())
                 .append(translate_block(b, true, top_ctx))
                 .append(RcDoc::hardline())
