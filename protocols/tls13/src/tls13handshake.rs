@@ -315,7 +315,8 @@ pub fn put_server_signature(
     let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificate(_,_,_,tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
-        verify(sa, &pk, &bytes(tx_hash), &sig)?;
+        let sigval = prefix_server_certificate_verify.concat(tx_hash);
+        verify(sa, &pk, &bytes(&sigval), &sig)?;
         Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
     } else {
         Err(psk_mode_mismatch)

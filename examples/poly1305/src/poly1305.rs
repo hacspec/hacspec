@@ -19,6 +19,7 @@ public_bytes!(Tag, 16);
 //
 // XXX: The types are public here but should be secret. But secret BigNums are
 // not implemented yet.
+
 public_nat_mod!(
     type_name: FieldElement,
     type_of_canvas: FieldCanvas,
