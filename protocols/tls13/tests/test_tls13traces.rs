@@ -559,6 +559,7 @@ fn test_finished() {
     assert!(b);
 }
 
+//TODO: PUT A REAL SERVER CERTIFICATE IN SERVERDB TO PASS THE TEST
 #[test]
 fn test_full_round_trip() {
     let mut cr: Random = Random::new();
@@ -573,6 +574,8 @@ fn test_full_round_trip() {
     let y = load_hex(server_x25519_priv);
     let gy = load_hex(server_x25519_pub);
     let ent_s = Entropy::from_seq(&sr.concat(&y));
+
+    //TODO: PUT A REAL SERVER CERTIFICATE IN HERE TO PASS THE TEST
     let db = ServerDB(sn_,Bytes::new(123),SIGK::new(64),None);
     
     let mut b = true;
