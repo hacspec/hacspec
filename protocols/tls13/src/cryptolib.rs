@@ -343,10 +343,10 @@ pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> R
     }
 }
 pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
-    println!("sa: {:?}", sa);
-    println!("sig: {:?}", sig);
-    println!("pk: {:x?}", pk);
-    println!("payload: {:x?}", payload);
+//    println!("sa: {:?}", sa);
+//    println!("sig({}): {:?}", sig.len(), sig);
+//    println!("pk: {:x?}", pk);
+//    println!("payload: {:x?}", payload);
     match sa {
         SignatureScheme::ECDSA_SECP256r1_SHA256 => {
             let (pk_x, pk_y) = (
@@ -354,7 +354,7 @@ pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> 
                 P256FieldElement::from_byte_seq_be(&pk.slice(32, 32)),
             );
             let (r, s) = (
-                P256Scalar::from_byte_seq_be(&sig.slice(0, 32)),
+                P256Scalar::from_byte_seq_be(&sig.slice(0,  32)),
                 P256Scalar::from_byte_seq_be(&sig.slice(32, 32)),
             );
             if ecdsa_p256_sha256_verify(payload, (pk_x, pk_y), (r, s)) {
