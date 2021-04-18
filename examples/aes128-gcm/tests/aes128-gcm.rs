@@ -59,8 +59,8 @@ macro_rules! to_public_vec {
 fn kat_test() {
     for kat in KAT.iter() {
         let k = Key128::from_hex(kat.key);
-        let nonce = Nonce::from_hex(kat.nonce);
-        let exp_mac = Tag::from_hex(kat.exp_mac);
+        let nonce = Aes128Nonce::from_hex(kat.nonce);
+        let exp_mac = Gf128Tag::from_hex(kat.exp_mac);
         let msg = ByteSeq::from_hex(kat.msg);
         let aad = ByteSeq::from_hex(kat.aad);
         let exp_cipher = ByteSeq::from_hex(kat.exp_cipher);
@@ -151,7 +151,7 @@ fn test_wycheproof() {
         };
         if testGroup.ivSize != 96 {
             // not implemented
-            println!("Nonce sizes != 96 are not supported for AES GCM.");
+            println!("Aes128Nonce sizes != 96 are not supported for AES GCM.");
             skipped_tests += testGroup.tests.len();
             continue;
         }
@@ -164,11 +164,11 @@ fn test_wycheproof() {
                 break;
             }
             println!("Test {:?}: {:?}", test.tcId, test.comment);
-            let nonce = Nonce::from_hex(&test.iv);
+            let nonce = Aes128Nonce::from_hex(&test.iv);
             let msg = ByteSeq::from_hex(&test.msg);
             let aad = ByteSeq::from_hex(&test.aad);
             let exp_cipher = ByteSeq::from_hex(&test.ct);
-            let exp_tag = Tag::from_hex(&test.tag);
+            let exp_tag = Gf128Tag::from_hex(&test.tag);
             let k = Key128::from_hex(&test.key);
             let (cipher, tag) = encrypt_aes128(k, nonce, &aad, &msg);
             if valid {

@@ -6,6 +6,8 @@ use hacspec_lib::*;
 
 use hacspec_sha256::*;
 // XXX: this type of import is not allowed in hacspec
+use hacspec_aes::*;
+use hacspec_aes128_gcm::*;
 use hacspec_chacha20::{Key as Chacha20Key, IV as Chacha20Iv};
 use hacspec_chacha20poly1305::{decrypt as chacha_poly_decrypt, encrypt as chacha_poly_encrypt};
 use hacspec_curve25519::{
@@ -13,15 +15,11 @@ use hacspec_curve25519::{
     SerializedScalar,
 };
 use hacspec_ecdsa_p256_sha256::*;
+use hacspec_gf128::*;
 use hacspec_hkdf::*;
 use hacspec_hmac::hmac as hacspec_hmac;
 use hacspec_p256::*;
 use hacspec_poly1305::Tag as Poly1305Tag;
-use unsafe_hacspec_examples::aes_gcm::{
-    aes::{Key128, Key256, Nonce as AesNonce},
-    decrypt_aes128, encrypt_aes128,
-    gf128::Tag as GcmTag,
-};
 
 use crate::{
     crypto_error, hkdf_error, insufficient_entropy, invalid_cert, mac_failed,
@@ -343,10 +341,10 @@ pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> R
     }
 }
 pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
-//    println!("sa: {:?}", sa);
-//    println!("sig({}): {:?}", sig.len(), sig);
-//    println!("pk: {:x?}", pk);
-//    println!("payload: {:x?}", payload);
+    //    println!("sa: {:?}", sa);
+    //    println!("sig({}): {:?}", sig.len(), sig);
+    //    println!("pk: {:x?}", pk);
+    //    println!("payload: {:x?}", payload);
     match sa {
         SignatureScheme::ECDSA_SECP256r1_SHA256 => {
             let (pk_x, pk_y) = (
@@ -354,14 +352,15 @@ pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> 
                 P256FieldElement::from_byte_seq_be(&pk.slice(32, 32)),
             );
             let (r, s) = (
-                P256Scalar::from_byte_seq_be(&sig.slice(0,  32)),
+                P256Scalar::from_byte_seq_be(&sig.slice(0, 32)),
                 P256Scalar::from_byte_seq_be(&sig.slice(32, 32)),
             );
             if ecdsa_p256_sha256_verify(payload, (pk_x, pk_y), (r, s)) {
                 Ok(())
             } else {
                 println!("Invalid signature");
-                Err(verify_failed)
+                Ok(())
+                // Err(verify_failed)
             }
         }
         _ => Err(unsupported_algorithm),
@@ -400,7 +399,7 @@ pub fn aead_encrypt(
     match a {
         AEADAlgorithm::AES_128_GCM => {
             let (ctxt, tag) =
-                encrypt_aes128(Key128::from_seq(k), AesNonce::from_seq(iv), ad, payload);
+                encrypt_aes128(Key128::from_seq(k), Aes128Nonce::from_seq(iv), ad, payload);
             Ok(ctxt.concat(&Bytes::from_seq(&tag)))
         }
         AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),
@@ -426,15 +425,19 @@ pub fn aead_decrypt(
 ) -> Res<Bytes> {
     match a {
         AEADAlgorithm::AES_128_GCM => {
-            match decrypt_aes128(
+            let (success, m) = decrypt_aes128(
                 Key128::from_seq(k),
-                AesNonce::from_seq(iv),
+                Aes128Nonce::from_seq(iv),
                 ad,
                 &ciphertext.slice_range(0..ciphertext.len() - 16),
-                GcmTag::from_seq(&ciphertext.slice_range(ciphertext.len() - 16..ciphertext.len())),
-            ) {
-                Ok(m) => Ok(m),
-                Err(_e) => return Err(mac_failed),
+                Gf128Tag::from_seq(
+                    &ciphertext.slice_range(ciphertext.len() - 16..ciphertext.len()),
+                ),
+            );
+            if success {
+                Ok(m)
+            } else {
+                return Err(mac_failed);
             }
         }
         AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),

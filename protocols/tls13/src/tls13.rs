@@ -156,7 +156,8 @@ fn decrypt_tickets_and_data(
 
 const algs: ALGS = ALGS(
     HashAlgorithm::SHA256,
-    AEADAlgorithm::CHACHA20_POLY1305,
+    // AEADAlgorithm::CHACHA20_POLY1305,
+    AEADAlgorithm::AES_128_GCM,
     SignatureScheme::ECDSA_SECP256r1_SHA256,
     // SignatureScheme::RSA_PSS_RSAE_SHA256,
     NamedGroup::X25519,

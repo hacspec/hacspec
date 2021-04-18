@@ -3,7 +3,7 @@ use hacspec_lib::*;
 
 // Import aes and gcm
 // use super::{self, aes_ctr_keyblock, aes_encrypt, Block};
-// use super::gf128::{gmac, Key, Tag};
+// use super::gf128::{gmac, Key, Gf128Tag};
 use hacspec_aes::*;
 use hacspec_gf128::*;
 
@@ -36,11 +36,11 @@ fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
 
 pub(crate) fn encrypt_aes(
     key: &ByteSeq,
-    iv: Nonce,
+    iv: Aes128Nonce,
     aad: &ByteSeq,
     msg: &ByteSeq,
-) -> (ByteSeq, Tag) {
-    let iv0 = Nonce::new();
+) -> (ByteSeq, Gf128Tag) {
+    let iv0 = Aes128Nonce::new();
 
     let (_success, mac_key) = aes_ctr_keyblock(
         key,
@@ -68,21 +68,21 @@ pub(crate) fn encrypt_aes(
     let tag = gmac(&padded_msg, Gf128Key::from_seq(&mac_key));
     let tag = xor_block(Block::from_seq(&tag), tag_mix);
 
-    (cipher_text, Tag::from_seq(&tag))
+    (cipher_text, Gf128Tag::from_seq(&tag))
 }
 
-pub fn encrypt_aes128(key: Key128, iv: Nonce, aad: &ByteSeq, msg: &ByteSeq) -> (ByteSeq, Tag) {
+pub fn encrypt_aes128(key: Key128, iv: Aes128Nonce, aad: &ByteSeq, msg: &ByteSeq) -> (ByteSeq, Gf128Tag) {
     encrypt_aes(&ByteSeq::from_seq(&key), iv, aad, msg)
 }
 
 pub(crate) fn decrypt_aes(
     key: &ByteSeq,
-    iv: Nonce,
+    iv: Aes128Nonce,
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
-    tag: Tag,
+    tag: Gf128Tag,
 ) -> (bool, ByteSeq) {
-    let iv0 = Nonce::new();
+    let iv0 = Aes128Nonce::new();
 
     let (_success, mac_key) = aes_ctr_keyblock(
         key,
@@ -121,10 +121,10 @@ pub(crate) fn decrypt_aes(
 
 pub fn decrypt_aes128(
     key: Key128,
-    iv: Nonce,
+    iv: Aes128Nonce,
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
-    tag: Tag,
+    tag: Gf128Tag,
 ) -> (bool, ByteSeq) {
     decrypt_aes(&ByteSeq::from_seq(&key), iv, aad, cipher_text, tag)
 }
