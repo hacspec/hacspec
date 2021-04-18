@@ -445,7 +445,8 @@ pub fn get_server_signature(
     let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificate(_,_,_,tx_hash) = tx;
     if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
-        let sig = sign(sa, &sk, &bytes(tx_hash), ent)?;
+        let sigval = prefix_server_certificate_verify.concat(tx_hash);
+        let sig = sign(sa, &sk, &sigval, ent)?;
         Ok((sig, ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk)))
     } else {
         Err(psk_mode_mismatch)

@@ -746,10 +746,22 @@ pub fn parse_server_certificate(algs: &ALGS, sc: &HandshakeData) -> Res<Bytes> {
     Ok(crt)
 }
 
-pub fn certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<HandshakeData> {
-    let ty = bytes1(hs_type(HandshakeType::CertificateVerify));
-    let sig = signature_algorithm(algs)?.concat(&lbytes2(cv)?);
-    Ok(HandshakeData(ty.concat(&lbytes3(&sig)?)))
+fn ecdsa_signature(sv:&Bytes) -> Res<Bytes> {
+    if sv.len() != 64 {return Err (parse_failed);}
+    else {
+        let b0 = bytes1(0x0);
+        let b1 = bytes1(0x30);
+        let b2 = bytes1(0x02);
+        let mut r:Seq<U8> = sv.slice(0,32);
+        let mut s:Seq<U8> = sv.slice(32,32);
+        if (r[0] as U8).declassify() >= 128 {
+            r = b0.concat(&r);
+        }
+        if (s[0] as U8).declassify() >= 128 {
+            s = b0.concat(&s);
+        }
+        Ok(b1.concat(&lbytes1(&b2.concat(&lbytes1(&r)?).concat(&b2).concat(&lbytes1(&s)?))?))
+    }
 }
 
 fn parse_ecdsa_signature(sig:Bytes) -> Res<Bytes> {
@@ -769,6 +781,17 @@ fn parse_ecdsa_signature(sig:Bytes) -> Res<Bytes> {
         }
     }
 }
+pub fn certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<HandshakeData> {
+    let ty = bytes1(hs_type(HandshakeType::CertificateVerify));
+    if cv.len() != 64 {Err(parse_failed)}
+    else {
+        let sv = ecdsa_signature(cv)?;
+        let sig = signature_algorithm(algs)?.concat(&lbytes2(&sv)?);
+        Ok(HandshakeData(ty.concat(&lbytes3(&sig)?)))
+    }
+}
+
+
 
 pub fn parse_certificate_verify(algs: &ALGS, cv: &HandshakeData) -> Res<Bytes> {
     let HandshakeData(cv) = cv;
