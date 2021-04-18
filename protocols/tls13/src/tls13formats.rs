@@ -752,14 +752,47 @@ pub fn certificate_verify(algs: &ALGS, cv: &Bytes) -> Res<HandshakeData> {
     Ok(HandshakeData(ty.concat(&lbytes3(&sig)?)))
 }
 
+fn parse_ecdsa_signature(sig:Bytes) -> Res<Bytes> {
+    if sig.len() < 4 {return Err (parse_failed);}
+    else {
+        check_eq(&bytes1(0x30),&sig.slice_range(0..1))?;
+        check_lbytes1_full(&sig.slice_range(1..sig.len()))?;
+        check_eq(&bytes1(0x02),&sig.slice_range(2..3))?;
+        let rlen = check_lbytes1(&sig.slice_range(3..sig.len()))?;
+        let r = sig.slice(4 + rlen - 32, 32);
+        if sig.len() < 6 + rlen + 32 {return Err (parse_failed);}
+        else {
+            check_eq(&bytes1(0x02),&sig.slice_range(4+rlen..5+rlen))?;
+            check_lbytes1_full(&sig.slice_range(5+rlen..sig.len()))?;
+            let s = sig.slice(sig.len()-32,32);
+            return Ok(r.concat(&s));
+        }
+    }
+}
+
 pub fn parse_certificate_verify(algs: &ALGS, cv: &HandshakeData) -> Res<Bytes> {
     let HandshakeData(cv) = cv;
+    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let ty = bytes1(hs_type(HandshakeType::CertificateVerify));
     check_eq(&ty, &cv.slice_range(0..1))?;
     check_lbytes3_full(&cv.slice_range(1..cv.len()))?;
     check_eq(&signature_algorithm(algs)?, &cv.slice_range(4..6))?;
     check_lbytes2_full(&cv.slice_range(6..cv.len()))?;
-    Ok(cv.slice_range(8..cv.len()))
+    match sa {
+        SignatureScheme::ECDSA_SECP256r1_SHA256 => {
+            parse_ecdsa_signature(cv.slice_range(8..cv.len()))
+        },
+        SignatureScheme::RSA_PSS_RSAE_SHA256 => {
+            Ok(cv.slice_range(8..cv.len()))
+        },
+        SignatureScheme::ED25519 => {
+            if cv.len() - 8 == 64 {
+                Ok(cv.slice_range(8..cv.len()))
+            }
+            else {Err(parse_failed)}
+        }
+    }
+    
 }
 
 pub fn finished(algs: &ALGS, vd: &Bytes) -> Res<HandshakeData> {
