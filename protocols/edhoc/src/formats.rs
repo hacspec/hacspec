@@ -182,7 +182,7 @@ pub struct ALGS(
 );
 
 
-pub fn make_msg1() -> Res<Bytes> {
+pub fn make_msg1(algs:ALGS,corr:usize,c_i:&Bytes,pk:&KEMPK,ad_1:&Bytes) -> Res<Bytes> {
     Err(parse_failed)
 }
 

@@ -121,8 +121,8 @@ pub enum HashAlgorithm {
 pub enum AEADAlgorithm {
     AES_128_GCM,
     AES_256_GCM,
-    AES_CCM_16_64_128,
-    AES_CCM_16_128_128,
+    AES_CCM_16_64_128, //TODO
+    AES_CCM_16_128_128, //TODO
     CHACHA20_POLY1305
 }
 
