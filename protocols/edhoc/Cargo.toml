@@ -1,0 +1,43 @@
+[package]
+name = "hacspec-edhoc"
+version = "0.1.0"
+authors = ["Karthikeyan Bhargavan <karthikeyan.bhargavan@inria.fr>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+documentation = "https://docs.rs/hacspec-edhoc"
+description = "Minimal TLS 1.3 implementation"
+readme = "README.md"
+repository = "https://github.com/hacspec/hacspec"
+
+[lib]
+path = "src/edhoc.rs"
+
+[[bin]]
+name = "edhoc-client"
+path = "src/edhoc.rs"
+
+[dependencies]
+backtrace = "0.3.0"
+rand = "0.8.0"
+hex = "0.4.3"
+hacspec-lib = { path = "../../lib", version = "0.1.0-beta.1" }
+hacspec-sha256 = { path = "../../examples/sha256" }
+hacspec-curve25519 = { path = "../../examples/curve25519" }
+hacspec-chacha20poly1305 = { path = "../../examples/chacha20poly1305" }
+hacspec-chacha20 = { path = "../../examples/chacha20" }
+hacspec-poly1305 = { path = "../../examples/poly1305" }
+hacspec-hmac = { path = "../../examples/hmac" }
+hacspec-hkdf = { path = "../../examples/hkdf" }
+hacspec-ecdsa-p256-sha256 = { path = "../../examples/ecdsa-p256-sha256" }
+hacspec-p256 = { path = "../../examples/p256" }
+hacspec-aes = { path = "../../examples/aes", version = "0.1.0" }
+hacspec-gf128 = { path = "../../examples/gf128", version = "0.1.0" }
+hacspec-aes128-gcm = { path = "../../examples/aes128-gcm", version = "0.1.0" }
+
+[dev-dependencies]  
+dhat = "0.2.2"
+serde_json = "1.0"
+serde_cbor = "0.11.1"
+serde = {version = "1.0", features = ["derive"]}
+rayon = "1.3.0"
+hacspec-dev = { path = "../../utils/dev" }
