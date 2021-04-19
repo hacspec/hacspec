@@ -1,5 +1,5 @@
 use crate::name_resolution::{
-    add_name, to_fresh_ident, DictEntry, FnKey, FnValue, NameContext, TopLevelContext,
+    add_name, find_ident, to_fresh_ident, DictEntry, FnKey, FnValue, NameContext, TopLevelContext,
 };
 use crate::rustspec::*;
 use crate::util::check_vec;
@@ -550,36 +550,6 @@ fn find_func(
         return Ok((sig.clone(), typ_ctx));
     }
     Err(())
-}
-
-fn find_ident<'b>(
-    sess: &Session,
-    x: &Spanned<Ident>,
-    name_context: &NameContext,
-    top_level_context: &TopLevelContext,
-) -> TypecheckingResult<Ident> {
-    match &x.0 {
-        Ident::Unresolved(name) => match name_context.get(name) {
-            None => {
-                let x_tl = TopLevelIdent(name.clone());
-                match top_level_context.consts.get(&x_tl) {
-                    Some(_) => Ok(Ident::TopLevel(x_tl)),
-                    None => {
-                        sess.span_rustspec_err(x.1.clone(), "identifier is not a constant");
-                        Err(())
-                    }
-                }
-            }
-            Some(id) => Ok(id.clone()),
-        },
-        _ => {
-            sess.span_rustspec_err(
-                x.1.clone(),
-                "trying to lookup in the name context an already translated id",
-            );
-            Err(())
-        }
-    }
 }
 
 fn ident_string(x: &Ident) -> &String {

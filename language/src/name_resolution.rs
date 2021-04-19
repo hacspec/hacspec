@@ -72,6 +72,36 @@ pub(crate) fn add_name(name: &Ident, var: &Ident, name_context: NameContext) -> 
     }
 }
 
+pub(crate) fn find_ident<'b>(
+    sess: &Session,
+    x: &Spanned<Ident>,
+    name_context: &NameContext,
+    top_level_context: &TopLevelContext,
+) -> ResolutionResult<Ident> {
+    match &x.0 {
+        Ident::Unresolved(name) => match name_context.get(name) {
+            None => {
+                let x_tl = TopLevelIdent(name.clone());
+                match top_level_context.consts.get(&x_tl) {
+                    Some(_) => Ok(Ident::TopLevel(x_tl)),
+                    None => {
+                        sess.span_rustspec_err(x.1.clone(), "identifier is not a constant");
+                        Err(())
+                    }
+                }
+            }
+            Some(id) => Ok(id.clone()),
+        },
+        _ => {
+            sess.span_rustspec_err(
+                x.1.clone(),
+                "trying to lookup in the name context an already translated id",
+            );
+            Err(())
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum FnValue {
     Local(FuncSig),
@@ -87,6 +117,38 @@ fn resolve_expression(
 ) -> ResolutionResult<Spanned<Expression>> {
     match e {
         _ => Ok((e, e_span)),
+    }
+}
+
+fn resolve_pattern(
+    sess: &Session,
+    (pat, pat_span): &Spanned<Pattern>,
+    top_ctx: &TopLevelContext,
+) -> ResolutionResult<(Pattern, NameContext)> {
+    match pat {
+        Pattern::Tuple(pat_args) => {
+            let (tup_args, acc_name) =
+                pat_args
+                    .iter()
+                    .fold(Ok((Vec::new(), HashMap::new())), |acc, pat_arg| {
+                        let (mut acc_pat, acc_name) = acc?;
+                        let (new_pat, sub_name_context) = resolve_pattern(sess, pat_arg, top_ctx)?;
+                        acc_pat.push((new_pat, pat_arg.1.clone()));
+                        Ok((acc_pat, acc_name.union(sub_name_context)))
+                    })?;
+            Ok((Pattern::Tuple(tup_args), acc_name))
+        }
+        Pattern::WildCard => Ok((Pattern::WildCard, HashMap::new())),
+        Pattern::IdentPat(x) => {
+            let (x_new, s) = match x {
+                Ident::Unresolved(s) => (to_fresh_ident(s), s.clone()),
+                _ => panic!("should not happen"),
+            };
+            Ok((
+                Pattern::IdentPat(x_new.clone()),
+                HashMap::unit(s.clone(), x_new.clone()),
+            ))
+        }
     }
 }
 
@@ -132,7 +194,46 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        _ => Ok(((s, s_span), name_context)),
+        Statement::ReturnExp(e) => {
+            let new_e =
+                resolve_expression(sess, (e, s_span.clone()), &name_context, top_level_ctx)?;
+            Ok(((Statement::ReturnExp(new_e.0), s_span), name_context))
+        }
+        Statement::ArrayUpdate(var, index, e) => {
+            let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
+            let new_index = resolve_expression(sess, index, &name_context, top_level_ctx)?;
+            let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
+            Ok((
+                (
+                    Statement::ArrayUpdate((new_var, var.1.clone()), new_index, new_e),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
+        Statement::Reassignment(var, e) => {
+            let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
+            let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
+            Ok((
+                (
+                    Statement::Reassignment((new_var, var.1.clone()), new_e),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
+        Statement::LetBinding(pat, typ, e) => {
+            let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
+            let (new_pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
+            let name_context = name_context.union(new_name_context);
+            Ok((
+                (
+                    Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
     }
 }
 
