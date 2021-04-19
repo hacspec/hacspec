@@ -5,7 +5,6 @@ use rustc_session::Session;
 
 use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
-use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
 use rustc_span::DUMMY_SP;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -66,6 +65,13 @@ impl fmt::Debug for FnKey {
     }
 }
 
+pub(crate) fn add_name(name: &Ident, var: &Ident, name_context: NameContext) -> NameContext {
+    match name {
+        Ident::Unresolved(name) => name_context.update(name.clone(), var.clone()),
+        _ => panic!("trying to lookup in the name context a Hacspec id"),
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum FnValue {
     Local(FuncSig),
@@ -76,6 +82,7 @@ pub enum FnValue {
 fn resolve_expression(
     _sess: &Session,
     (e, e_span): Spanned<Expression>,
+    _name_context: &NameContext,
     _top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Expression>> {
     match e {
@@ -84,21 +91,72 @@ fn resolve_expression(
 }
 
 fn resolve_statement(
-    _sess: &Session,
+    sess: &Session,
     (s, s_span): Spanned<Statement>,
-    _top_level_ctx: &TopLevelContext,
-) -> ResolutionResult<Spanned<Statement>> {
+    name_context: NameContext,
+    top_level_ctx: &TopLevelContext,
+) -> ResolutionResult<(Spanned<Statement>, NameContext)> {
     match s {
-        _ => Ok((s, s_span)),
+        Statement::Conditional(cond, then_b, else_b, info) => {
+            let new_cond = resolve_expression(sess, cond, &name_context, top_level_ctx)?;
+            let new_then_b = resolve_block(sess, then_b, &name_context, top_level_ctx)?;
+            let new_else_b = match else_b {
+                None => None,
+                Some(else_b) => {
+                    let new_else_b = resolve_block(sess, else_b, &name_context, top_level_ctx)?;
+                    Some(new_else_b)
+                }
+            };
+            Ok((
+                (
+                    Statement::Conditional(new_cond, new_then_b, new_else_b, info),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
+        Statement::ForLoop((var, var_span), lower, upper, body) => {
+            let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
+            let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
+            let new_var = match &var {
+                Ident::Unresolved(s) => to_fresh_ident(s),
+                _ => panic!("should not happen"),
+            };
+            let name_context = add_name(&var, &new_var, name_context);
+            let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
+            Ok((
+                (
+                    Statement::ForLoop((new_var, var_span), new_lower, new_upper, new_body),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
+        _ => Ok(((s, s_span), name_context)),
     }
 }
 
 fn resolve_block(
-    _sess: &Session,
+    sess: &Session,
     (b, b_span): Spanned<Block>,
-    _top_level_ctx: &TopLevelContext,
+    name_context: &NameContext,
+    top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Block>> {
-    Ok((b, b_span))
+    let mut new_stmts = Vec::new();
+    let mut name_context = name_context.clone();
+    for s in b.stmts.into_iter() {
+        let (new_stmt, new_name_context) = resolve_statement(sess, s, name_context, top_level_ctx)?;
+        new_stmts.push(new_stmt);
+        name_context = new_name_context;
+    }
+    Ok((
+        Block {
+            stmts: new_stmts,
+            mutated: None,
+            return_typ: None,
+        },
+        b_span,
+    ))
 }
 
 fn resolve_item(
@@ -108,14 +166,53 @@ fn resolve_item(
 ) -> ResolutionResult<Spanned<Item>> {
     match i {
         Item::ConstDecl(id, typ, e) => {
-            let new_e = resolve_expression(sess, e, top_level_ctx)?;
+            let new_e = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ConstDecl(id, typ, new_e), i_span))
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
-            let new_size = resolve_expression(sess, size, top_level_ctx)?;
+            let new_size = resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
-        _ => Ok((i, i_span)),
+        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
+            let new_canvas_size =
+                resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
+            Ok((
+                Item::NaturalIntegerDecl(
+                    typ_ident,
+                    canvas_typ_ident,
+                    secrecy,
+                    new_canvas_size,
+                    mod_string,
+                ),
+                i_span,
+            ))
+        }
+        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
+            let new_canvas_size =
+                resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
+            Ok((
+                Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, new_canvas_size),
+                i_span,
+            ))
+        }
+        Item::FnDecl((f, f_span), mut sig, (b, b_span)) => {
+            let name_context = HashMap::new();
+            let (new_sig_args, name_context) = sig.args.iter().fold(
+                (Vec::new(), name_context),
+                |(mut new_sig_acc, name_context), ((x, x_span), (t, t_span))| {
+                    let new_x = match x {
+                        Ident::Unresolved(s) => to_fresh_ident(s),
+                        _ => panic!("should not happen"),
+                    };
+                    let name_context = add_name(x, &new_x, name_context);
+                    new_sig_acc.push(((new_x, x_span.clone()), (t.clone(), t_span.clone())));
+                    (new_sig_acc, name_context)
+                },
+            );
+            sig.args = new_sig_args;
+            let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
+            Ok((Item::FnDecl((f, f_span), sig, new_b), i_span))
+        }
     }
 }
 
@@ -350,12 +447,13 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     enrich_with_external_crates_symbols(sess, &p, &mut top_level_ctx, external_data)?;
     Ok((
         Program {
-            items: check_vec(
-                p.items
-                    .into_iter()
-                    .map(|i| resolve_item(sess, i, &top_level_ctx))
-                    .collect(),
-            )?,
+            items: p.items,
+            // check_vec(
+            //     p.items
+            //         .into_iter()
+            //         .map(|i| resolve_item(sess, i, &top_level_ctx))
+            //         .collect(),
+            // )?,
             imported_crates: p.imported_crates,
             ty_aliases: p.ty_aliases,
         },

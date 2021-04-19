@@ -1,5 +1,5 @@
 use crate::name_resolution::{
-    to_fresh_ident, DictEntry, FnKey, FnValue, NameContext, TopLevelContext,
+    add_name, to_fresh_ident, DictEntry, FnKey, FnValue, NameContext, TopLevelContext,
 };
 use crate::rustspec::*;
 use crate::util::check_vec;
@@ -620,13 +620,6 @@ fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
             var_context.update(id.clone(), (typ.clone(), name.clone()))
         }
         _ => panic!("trying to lookup in the var context a non-local id"),
-    }
-}
-
-fn add_name(name: &Ident, var: &Ident, name_context: &NameContext) -> NameContext {
-    match name {
-        Ident::Unresolved(name) => name_context.update(name.clone(), var.clone()),
-        _ => panic!("trying to lookup in the name context a Hacspec id"),
     }
 }
 
@@ -2010,7 +2003,7 @@ fn typecheck_item(
                         Ident::Unresolved(s) => to_fresh_ident(s),
                         _ => x.clone(),
                     };
-                    let name_context = add_name(x, &new_x, &name_context);
+                    let name_context = add_name(x, &new_x, name_context);
                     let var_context = add_var(&new_x, t, &var_context);
                     new_sig_acc.push(((new_x, x_span.clone()), (t.clone(), t_span.clone())));
                     (new_sig_acc, var_context, name_context)
