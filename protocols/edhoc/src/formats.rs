@@ -163,8 +163,18 @@ pub fn check_lbytes3_full(b: &Bytes) -> Res<()> {
     }
 }
 
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum METHOD {
+    SIG_SIG = 0,
+    SIG_STATIC = 1,
+    STATIC_SIG = 2,
+    STATIC_STATIC = 3
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub struct ALGS(
+    pub METHOD,
     pub HashAlgorithm,
     pub AEADAlgorithm,
     pub SignatureScheme,
