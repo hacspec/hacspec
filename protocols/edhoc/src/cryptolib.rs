@@ -60,6 +60,7 @@ pub fn bytes<T: SeqTrait<U8>>(x: &T) -> Bytes {
 }
 
 pub type Entropy = Bytes;
+pub type CONNID = Bytes;
 bytes!(Random, 32);
 
 bytes!(Bytes1, 1);
