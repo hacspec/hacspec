@@ -49,6 +49,8 @@ Definition bits i : N :=
   | S128 => 128
   end.
   
+Axiom bits_numbytes : forall {t : inttype}, (bits t = 8 * numbytes t).
+
 Definition pow2 i := N.pow i 2.
 
 Definition modulus (t:inttype) := pow2 (bits t).
@@ -103,6 +105,7 @@ Inductive secrecy_level :=
 
 Definition sec_int_t := inttype -> Type.
 
+(* TODO: use notation instead (onlyparsing?) *)
 Axiom secret : forall {A}, A -> A.
 
 

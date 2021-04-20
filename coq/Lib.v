@@ -2,23 +2,31 @@
 (* Require Import FStar.Mul. *)
 
 (*** Integers *)
-From Coq Require Import ZArith.
+From Coq Require Import ZArith Vector.
 (* Require Import Int.PArray. *)
 (* From Coq Require Import Numbers.Cyclic.Abstract.CyclicAxioms. *)
 
 Require Import IntTypes.
 
 
-Definition uint_size := N.
+
+Definition uint_size := nat.
 (* Definition uint_size := range_t U32. *)
-Definition int_size := N.
+Definition int_size := nat.
 (* Definition int_size := range_t S32. *)
 
 Open Scope N_scope.
 Axiom uint_size_to_nat : uint_size -> nat.
 (* Definition usize (n:range_t U32) : u:uint_size{u == n} := n *)
 (* Definition isize (n:range_t S32) : u:int_size{u == n} := n *)
-Axiom usize isize : N -> uint_size.
+
+Notation "'usize' n" := n (at level 56) : hacspec_scope.
+Notation "'isize' n" := n (at level 56) : hacspec_scope.
+
+(* Axiom usize isize : N -> uint_size. *)
+
+
+
 Axiom 
   uint8
   uint16
@@ -147,35 +155,36 @@ From Coq Require Import List.
 (* module LSeq := Lib.Sequence *)
 (* module LBSeq := Lib.ByteSequence *)
 
-(* For now the size parameter is just discarded in the type... *)
-Inductive lseq (A : Type) (len : uint_size) : Type := 
-| mkLseq : list A -> lseq A len.
+(* We use vectors to define lseq *)
+Definition lseq := Vector.t.
 
-Definition lseq_to_list {A len} (s : lseq A len) := 
+(* Definition lseq_to_list {A len} (s : lseq A len) := 
   match s with
   | mkLseq _ _ l => l
-  end.
+  end. *)
 
 (* simplification *)
 Definition seq (A : Type) := list A.
 
+Definition list_len := length.
+
 Definition byte_seq := seq uint8.
 
-Definition nseq (A : Type) (len: N) := list A.
+Definition nseq (A : Type) (len: nat) := lseq A len.
 
-Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (List.length s).
+Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 
 Definition seq_new_ {A: Type} (init : A) (len: uint_size) : lseq A len :=
-  mkLseq _ _ (List.repeat init (N.to_nat len)).
+  const init len.
 
-Definition array_from_list {A: Type} (l: list A) : lseq A (N.of_nat (List.length l))
-  := mkLseq _ (N.of_nat (List.length l)) l.
+Definition array_from_list {A: Type} (l: list A) : lseq A (length l)
+  := of_list l.
 
 (**** Array manipulation *)
 
 
 Definition array_new_ {A: Type} (init:A) (len: uint_size)  : lseq A len :=
-  mkLseq _ _ (List.repeat init (N.to_nat len)).
+  const init len.
 
 Definition array_index {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) : A.
 Admitted.
@@ -185,96 +194,255 @@ Admitted.
 Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len.
 Admitted.
 
-(* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v.
+(* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
 
 Definition array_from_seq
-  {A: Type}
+  {a: Type}
   (out_len:uint_size)
-  (input: seq a{Seq.length input ::= out_len})
-    : lseq A out_len
-  := input.
+  (input: seq a)
+    : lseq a out_len. Admitted.
 
 Definition array_from_slice
-  {A: Type}
+  {a: Type}
   (default_value: a)
   (out_len: uint_size)
   (input: seq a)
   (start: uint_size)
-  (slice_len: uint_size{start + slice_len <::= LSeq.length input /\ slice_len <::= out_len})
-    : lseq A out_len
-  :=
-  let out ::= LSeq.create out_len default_value in
-  LSeq.update_sub out 0 slice_len (LSeq.slice #a #(Seq.length input) input start (start + slice_len)).
+  (slice_len: uint_size)
+    : lseq a out_len. Admitted.
 
 Definition array_slice
-  {A: Type}
+  {a: Type}
   (input: seq a)
   (start: uint_size)
-  (slice_len: uint_size{start + slice_len <::= LSeq.length input})
+  (slice_len: uint_size)
+    : lseq a slice_len.
+  Admitted.
+
+Definition array_from_slice_range
+  {a: Type}
+  (default_value: a)
+  (out_len: uint_size)
+  (input: seq a)
+  (start_fin: (uint_size * uint_size))
+    : lseq a out_len. Admitted.
+    
+Definition array_slice_range
+  {a: Type}
+  {len : uint_size}
+  (input: lseq a len)
+  (start_fin:(uint_size * uint_size))
+    : lseq a (snd start_fin - fst start_fin). Admitted.
+
+Definition array_update_start
+  {a: Type}
+  {len: uint_size}
+  (s: lseq a len)
+  (start_s: seq a)
+    : lseq a len. Admitted.
+
+Definition array_len  {a: Type} {len: uint_size} (s: lseq a len) := len.
+
+(**** Seq manipulation *)
+
+Definition seq_slice
+  {a: Type}
+  (s: seq a)
+  (start: uint_size)
+  (len: uint_size)
+    : lseq a len. Admitted.
+
+Definition seq_update
+  {a: Type}
+  (s: seq a)
+  (start: uint_size)
+  (input: seq a)
+    : nseq a (N.of_nat (length s)). Admitted.
+
+Definition seq_concat
+  {a: Type}
+  (s1 :seq a)
+  (s2: seq a)
+  : lseq a (N.of_nat (length s1 + length s2)).
+  Admitted.
+
+(**** Chunking *)
+
+Definition seq_num_chunks {a: Type} (s: seq a) (chunk_len: uint_size) : uint_size :=
+  ((N.of_nat (length s)) + chunk_len - 1) / chunk_len. 
+
+Definition seq_chunk_len
+  {a: Type}
+  (s: seq a)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+    : uint_size :=
+  let idx_start := chunk_len * chunk_num in
+  if N.of_nat (length s) <? idx_start + chunk_len then
+    N.of_nat (length s) - idx_start
+  else
+    chunk_len.
+
+(* Definition seq_chunk_same_len_same_chunk_len
+  {a: Type}
+  (s1 s2: seq a)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  : Lemma
+    (requires (LSeq.length s1 := LSeq.length s2 /\ chunk_len * chunk_num <= Seq.length s1))
+    (ensures (seq_chunk_len s1 chunk_len chunk_lseq. Admitted. *)
+
+(* Definition seq_get_chunk
+  {a: Type}
+  (s: seq a)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  : Pure (uint_size & seq a)
+    (requires (chunk_len * chunk_num <= Seq.length s))
+    (ensures (fun (out_len, chunk) ->
+      out_len := seq_chunk_len s chunk_len chunk_num /\ LSeq.length chunk := out_len
+    ))
+ . :=
+  let idx_start := chunk_len * chunk_num in
+  let out_len := seq_chunk_len s chunk_len chunk_num in
+  (out_len, LSeq.slice #a #(Seq.length s)
+    s idx_start (idx_start + seq_chunk_len s chunk_len chunk_num)) *)
+
+(* Definition seq_set_chunk
+  {a: Type}
+  {len : uint_size} (* change to nseq but update_sub missing for nseq *)
+  (s: lseq a len)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  (chunk: seq a )
+    : Pure (lseq a len)
+      (requires (
+        chunk_len * chunk_num <= Seq.length s /\
+        LSeq.length chunk := seq_chunk_len s chunk_len chunk_num
+      ))
+      (ensures (fun out -> True))
+  :=
+ let idx_start := chunk_len * chunk_num in
+ let out_len := seq_chunk_len s chunk_len chunk_num in
+  LSeq.update_sub s idx_start out_len chunk *)
+
+(**** Numeric operations *)
+
+Definition array_xor
+  {a: Type}
+  {len: uint_size}
+  (xor: a -> a -> a)
+  (s1: lseq a len)
+  (s2 : lseq a len)
+    : lseq a len
+  :=
+  let out := s1 in
+  foldi 0 len (fun i out =>
+    array_upd out i (xor (array_index s1 i) (array_index s2 i))
+  ) out.
+
+Definition array_eq
+  {a: Type}
+  {len: uint_size}
+  (eq: a -> a -> bool)
+  (s1: lseq a len)
+  (s2 : lseq a len)
+    : bool
+  :=
+  let out := true in
+  foldi 0 len (fun i out =>
+    andb out (eq (array_index s1 i) (array_index s2 i))
+  ) out.
+
+(* 
+Definition array_from_seq
+  {a: Type}
+  (out_len:uint_size)
+  (input: seq a{Seq.length input := out_len})
+    : lseq A out_len
+  := input. Admitted.
+
+Definition array_from_slice
+  {a: Type}
+  (default_value: a)
+  (out_len: uint_size)
+  (input: seq a)
+  (start: uint_size)
+  (slice_len: uint_size{start + slice_len <= LSeq.length input /\ slice_len <= out_len})
+    : lseq A out_len
+  :=
+  let out := LSeq.create out_len default_value in
+  LSeq.update_sub out 0 slice_len (LSeq.slice #a #(Seq.length input) input start (start + slice_len)). Admitted.
+
+Definition array_slice
+  {a: Type}
+  (input: seq a)
+  (start: uint_size)
+  (slice_len: uint_size{start + slice_len <= LSeq.length input})
     : lseq A slice_len
   :=
   Seq.slice input start (start + slice_len).
 
 Definition array_from_slice_range
-  {A: Type}
+  {a: Type}
   (default_value: a)
   (out_len: uint_size)
   (input: seq a)
   (start_fin: (uint_size & uint_size){
-     fst start_fin >::= 0 /\ snd start_fin <::= LSeq.length input /\ snd start_fin >::= fst start_fin /\
-     snd start_fin - fst start_fin <::= out_len
+     fst start_fin >= 0 /\ snd start_fin <= LSeq.length input /\ snd start_fin >= fst start_fin /\
+     snd start_fin - fst start_fin <= out_len
    })
     : lseq A out_len
  :=
-  let out ::= array_new_ default_value out_len in
-  let (start, fin) ::= start_fin in
+  let out := array_new_ default_value out_len in
+  let (start, fin) := start_fin in
   LSeq.update_sub out 0 (fin - start) (Seq.slice input start fin).
 
 Definition array_slice_range
-  {A: Type}
+  {a: Type}
   {len : uint_size}
   (input: lseq A len)
   (start_fin:(uint_size & uint_size){
-    fst start_fin >::= 0 /\ snd start_fin <::= len /\ snd start_fin >::= fst start_fin
+    fst start_fin >= 0 /\ snd start_fin <= len /\ snd start_fin >= fst start_fin
   })
     : lseq A (snd start_fin - fst start_fin)uint_size
   :=
-  let (start, fin) ::= start_fin in
+  let (start, fin) := start_fin in
   LSeq.slice input start fin.
 
 Definition array_update_start
-  {A: Type}
-  (#len: uint_size)
+  {a: Type}
+  {len: uint_size}
   (s: lseq A len)
-  (start_s: seq a{Seq.length start_s <::= len})
+  (start_s: seq a{Seq.length start_s <= len})
     : lseq A len
   :=
   LSeq.update_sub s 0 (Seq.length start_s) start_s.
 
-Definition array_len  {A: Type} (#len: uint_size) (s: lseq A len) := len
+Definition array_len  {a: Type} {len: uint_size} (s: lseq A len) := len
 
 (**** Seq manipulation *).
 
 Definition seq_slice
-  {A: Type}
+  {a: Type}
   (s: seq a)
   (start: uint_size)
-  (len: uint_size{start + len <::= LSeq.length s})
+  (len: uint_size{start + len <= LSeq.length s})
     : lseq A len
   :=
   LSeq.slice #a #(Seq.length s) s start (start + len).
 
 Definition seq_update
-  {A: Type}
+  {a: Type}
   (s: seq a)
   (start: uint_size)
-  (input: seq a{start + LSeq.length input <::= LSeq.length s})
+  (input: seq a{start + LSeq.length input <= LSeq.length s})
     : nseq a (LSeq.length s)
   :=
   LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input.
 
 Definition seq_concat
-  {A: Type}
+  {a: Type}
   (s1 :seq a)
   (s2: seq a{range (LSeq.length s1 + LSeq.length s2) U32})
   : lseq A (LSeq.length s1 + LSeq.length s2)
@@ -284,49 +452,49 @@ Definition seq_concat
 
 (**** Chunking *).
 
-Definition seq_num_chunks {A: Type} (s: seq a) (chunk_len: uint_size{chunk_len > 0}) : uint_size :=
+Definition seq_num_chunks {a: Type} (s: seq a) (chunk_len: uint_size{chunk_len > 0}) : uint_size :=
   (Seq.length s + chunk_len - 1) / chunk_len.
 
 Definition seq_chunk_len
-  {A: Type}
+  {a: Type}
   (s: seq a)
   (chunk_len: uint_size)
-  (chunk_num: uint_size{chunk_len * chunk_num <::= Seq.length s})
-    : Tot (out_len:uint_size{out_len <::= chunk_len})
+  (chunk_num: uint_size{chunk_len * chunk_num <= Seq.length s})
+    : Tot (out_len:uint_size{out_len <= chunk_len})
  . :=
-  Definition idx_start ::= chunk_len * chunk_num in
+  Definition idx_start := chunk_len * chunk_num in
   if idx_start + chunk_len > Seq.length s then
     Seq.length s - idx_start
   else
     chunk_len.
 
 Definition seq_chunk_same_len_same_chunk_len
-  {A: Type}
+  {a: Type}
   (s1 s2: seq a)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
   : Lemma
-    (requires (LSeq.length s1 ::= LSeq.length s2 /\ chunk_len * chunk_num <::= Seq.length s1))
+    (requires (LSeq.length s1 := LSeq.length s2 /\ chunk_len * chunk_num <= Seq.length s1))
     (ensures (seq_chunk_len s1 chunk_len chunk_lseq.
 
 Definition seq_get_chunk
-  {A: Type}
+  {a: Type}
   (s: seq a)
   (chunk_len: uint_size)
   (chunk_num: uint_size)
   : Pure (uint_size & seq a)
-    (requires (chunk_len * chunk_num <::= Seq.length s))
+    (requires (chunk_len * chunk_num <= Seq.length s))
     (ensures (fun (out_len, chunk) ->
-      out_len ::= seq_chunk_len s chunk_len chunk_num /\ LSeq.length chunk ::= out_len
+      out_len := seq_chunk_len s chunk_len chunk_num /\ LSeq.length chunk := out_len
     ))
  . :=
-  Definition idx_start ::= chunk_len * chunk_num in
-  Definition out_len ::= seq_chunk_len s chunk_len chunk_num in
+  Definition idx_start := chunk_len * chunk_num in
+  Definition out_len := seq_chunk_len s chunk_len chunk_num in
   (out_len, LSeq.slice #a #(Seq.length s)
     s idx_start (idx_start + seq_chunk_len s chunk_len chunk_num))
 
 Definition seq_set_chunk
-  {A: Type}
+  {a: Type}
   {len : uint_size} (* change to nseq but update_sub missing for nseq *)
   (s: lseq A len)
   (chunk_len: uint_size)
@@ -334,42 +502,43 @@ Definition seq_set_chunk
   (chunk: seq a )
     : Pure (lseq A len)
       (requires (
-        chunk_len * chunk_num <::= Seq.length s /\
-        LSeq.length chunk ::= seq_chunk_len s chunk_len chunk_num
+        chunk_len * chunk_num <= Seq.length s /\
+        LSeq.length chunk := seq_chunk_len s chunk_len chunk_num
       ))
       (ensures (fun out -> True))
   :=
-  Definition idx_start ::= chunk_len * chunk_num in
-  Definition out_len ::= seq_chunk_len s chunk_len chunk_num in
+  Definition idx_start := chunk_len * chunk_num in
+  Definition out_len := seq_chunk_len s chunk_len chunk_num in
   LSeq.update_sub s idx_start out_len chunk
 
 (**** Numeric operations *)
 
 Definition array_xor
-  {A: Type}
-  (#len: uint_size)
+  {a: Type}
+  {len: uint_size}
   (xor: a -> a -> a)
   (s1: lseq A len)
   (s2 : lseq A len)
     : lseq A len
   :=
-  Definition out ::= s1 in
+  Definition out := s1 in
   foldi 0 len (fun i out ->
     array_upd out i (array_index s1 i `xor` array_index s2 i)
   ) out
 
 Definition array_eq
-  {A: Type}
-  (#len: uint_size)
+  {a: Type}
+  {len: uint_size}
   (eq: a -> a -> bool)
   (s1: lseq A len)
   (s2 : lseq A len)
     : bool
   :=
-  Definition out ::= true in
+  Definition out := true in
   foldi 0 len (fun i out ->
     out && (array_index s1 i `eq` array_index s2 i)
   ) out *)
+
 
 (**** Integers to arrays *)
 Axiom uint32_to_le_bytes : uint32 -> lseq uint8 4.
