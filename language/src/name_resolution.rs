@@ -5,6 +5,7 @@ use rustc_session::Session;
 
 use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
+use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
 use rustc_span::DUMMY_SP;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -110,19 +111,109 @@ pub enum FnValue {
 }
 
 fn resolve_expression(
-    _sess: &Session,
+    sess: &Session,
     (e, e_span): Spanned<Expression>,
-    _name_context: &NameContext,
-    _top_level_ctx: &TopLevelContext,
+    name_context: &NameContext,
+    top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Expression>> {
     match e {
-        _ => Ok((e, e_span)),
+        Expression::Unary(op, e1, ty) => {
+            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            Ok((Expression::Unary(op, Box::new(new_e1), ty), e_span))
+        }
+        Expression::Binary(op, e1, e2, ty) => {
+            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            let new_e2 = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
+            Ok((
+                Expression::Binary(op, Box::new(new_e1), Box::new(new_e2), ty),
+                e_span,
+            ))
+        }
+        Expression::InlineConditional(e1, e2, e3) => {
+            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            let new_e2 = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
+            let new_e3 = resolve_expression(sess, *e3, name_context, top_level_ctx)?;
+            Ok((
+                Expression::InlineConditional(Box::new(new_e1), Box::new(new_e2), Box::new(new_e3)),
+                e_span,
+            ))
+        }
+        Expression::Named(i) => {
+            let new_i = find_ident(
+                sess,
+                &(i.clone(), e_span.clone()),
+                name_context,
+                top_level_ctx,
+            )?;
+            Ok((Expression::Named(new_i), e_span))
+        }
+        Expression::FuncCall(ty, f, args) => {
+            let new_args = check_vec(
+                args.into_iter()
+                    .map(|arg| {
+                        let new_arg0 =
+                            resolve_expression(sess, arg.0, name_context, top_level_ctx)?;
+                        Ok((new_arg0, arg.1))
+                    })
+                    .collect(),
+            )?;
+            Ok((Expression::FuncCall(ty, f, new_args), e_span))
+        }
+        Expression::MethodCall(self_, ty, f, args) => {
+            let (self_, self_borrow) = *self_;
+            let new_self = resolve_expression(sess, self_, name_context, top_level_ctx)?;
+            let new_args = check_vec(
+                args.into_iter()
+                    .map(|arg| {
+                        let new_arg0 =
+                            resolve_expression(sess, arg.0, name_context, top_level_ctx)?;
+                        Ok((new_arg0, arg.1))
+                    })
+                    .collect(),
+            )?;
+            Ok((
+                Expression::MethodCall(Box::new((new_self, self_borrow)), ty, f, new_args),
+                e_span,
+            ))
+        }
+        Expression::Lit(_) => Ok((e, e_span)),
+        Expression::ArrayIndex(x, e1) => {
+            let new_x = find_ident(sess, &x, name_context, top_level_ctx)?;
+            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            Ok((
+                Expression::ArrayIndex((new_x, x.1), Box::new(new_e1)),
+                e_span,
+            ))
+        }
+        Expression::NewArray(x, ty, args) => {
+            let new_args = check_vec(
+                args.into_iter()
+                    .map(|arg| resolve_expression(sess, arg, name_context, top_level_ctx))
+                    .collect(),
+            )?;
+            Ok((Expression::NewArray(x, ty, new_args), e_span))
+        }
+        Expression::Tuple(args) => {
+            let new_args = check_vec(
+                args.into_iter()
+                    .map(|arg| resolve_expression(sess, arg, name_context, top_level_ctx))
+                    .collect(),
+            )?;
+            Ok((Expression::Tuple(new_args), e_span))
+        }
+        Expression::IntegerCasting(e1, from, to) => {
+            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            Ok((
+                Expression::IntegerCasting(Box::new(new_e1), from, to),
+                e_span,
+            ))
+        }
     }
 }
 
 fn resolve_pattern(
     sess: &Session,
-    (pat, pat_span): &Spanned<Pattern>,
+    (pat, _pat_span): &Spanned<Pattern>,
     top_ctx: &TopLevelContext,
 ) -> ResolutionResult<(Pattern, NameContext)> {
     match pat {
