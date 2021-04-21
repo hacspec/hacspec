@@ -316,7 +316,7 @@ fn resolve_statement(
         Statement::LetBinding(pat, typ, e) => {
             let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             let (new_pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
-            let name_context = name_context.union(new_name_context);
+            let name_context = new_name_context.union(name_context);
             Ok((
                 (
                     Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e),
@@ -639,13 +639,12 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     enrich_with_external_crates_symbols(sess, &p, &mut top_level_ctx, external_data)?;
     Ok((
         Program {
-            items: p.items,
-            // check_vec(
-            //     p.items
-            //         .into_iter()
-            //         .map(|i| resolve_item(sess, i, &top_level_ctx))
-            //         .collect(),
-            // )?,
+            items: check_vec(
+                p.items
+                    .into_iter()
+                    .map(|i| resolve_item(sess, i, &top_level_ctx))
+                    .collect(),
+            )?,
             imported_crates: p.imported_crates,
             ty_aliases: p.ty_aliases,
         },
