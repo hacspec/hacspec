@@ -1,5 +1,4 @@
-use crate::cryptolib::*;
-use crate::tls13formats::*;
+use super::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
@@ -148,16 +147,16 @@ pub fn transcript_add(ha:HashAlgorithm,tx:HandshakeData,msg:&HandshakeData) -> R
     Ok((HandshakeData(txby),th))
 }
 
-pub fn transcript_truncated_client_hello(algs:ALGS,ch:&HandshakeData,trunc_len:usize) ->
+pub fn transcript_truncated_client_hello(algs:Algorithms,ch:&HandshakeData,trunc_len:usize) ->
     Res<TranscriptTruncatedClientHello> {
-        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+        let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
         let HandshakeData(ch) = ch;
         let th = hash(&ha,&ch.slice_range(0..trunc_len))?;
         Ok(TranscriptTruncatedClientHello(ha,th))
     }
 
-pub fn transcript_client_hello(algs:ALGS,ch:&HandshakeData) -> Res<TranscriptClientHello> {
-        let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+pub fn transcript_client_hello(algs:Algorithms,ch:&HandshakeData) -> Res<TranscriptClientHello> {
+        let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
         let transcript = HandshakeData(empty());
         let (transcript,th) = transcript_add(ha,transcript,ch)?;
         Ok(TranscriptClientHello(ha,psk_mode,transcript,th))
@@ -217,19 +216,19 @@ PostServerFinished -> PostClientFinished -> Complete
 There are no optional steps, all states must be traversed, even if the traversals are NOOPS.
 See "put_skip_server_signature" below */
 
-pub struct ClientPostClientHello(Random, ALGS, KEMSK, Option<PSK>);
-pub struct ClientPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
-pub struct ClientPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
-pub struct ClientPostServerFinished(Random, Random, ALGS, KEY, MACK);
-pub struct ClientPostClientFinished(Random, Random, ALGS, KEY);
-pub struct ClientComplete(Random, Random, ALGS, KEY);
+pub struct ClientPostClientHello(Random, Algorithms, KEMSK, Option<PSK>);
+pub struct ClientPostServerHello(Random, Random, Algorithms, KEY, MACK, MACK);
+pub struct ClientPostCertificateVerify(Random, Random, Algorithms, KEY, MACK, MACK);
+pub struct ClientPostServerFinished(Random, Random, Algorithms, KEY, MACK);
+pub struct ClientPostClientFinished(Random, Random, Algorithms, KEY);
+pub struct ClientComplete(Random, Random, Algorithms, KEY);
 
-pub struct ServerPostClientHello(Random, Random, ALGS, KEY, Option<PSK>);
-pub struct ServerPostServerHello(Random, Random, ALGS, KEY, MACK, MACK);
-pub struct ServerPostCertificateVerify(Random, Random, ALGS, KEY, MACK, MACK);
-pub struct ServerPostServerFinished(Random, Random, ALGS, KEY, MACK);
-pub struct ServerPostClientFinished(Random, Random, ALGS, KEY);
-pub struct ServerComplete(Random, Random, ALGS, KEY);
+pub struct ServerPostClientHello(Random, Random, Algorithms, KEY, Option<PSK>);
+pub struct ServerPostServerHello(Random, Random, Algorithms, KEY, MACK, MACK);
+pub struct ServerPostCertificateVerify(Random, Random, Algorithms, KEY, MACK, MACK);
+pub struct ServerPostServerFinished(Random, Random, Algorithms, KEY, MACK);
+pub struct ServerPostClientFinished(Random, Random, Algorithms, KEY);
+pub struct ServerComplete(Random, Random, Algorithms, KEY);
 
 /* Handshake Core Functions: See RFC 8446 Section 4 */
 /* We delegate all details of message formatting and transcript hashes to the caller */
@@ -237,11 +236,11 @@ pub struct ServerComplete(Random, Random, ALGS, KEY);
 /* TLS 1.3 Client Side Handshake Functions */
 
 pub fn get_client_hello(
-    algs0:ALGS,
+    algs0:Algorithms,
     psk: Option<PSK>,
     ent: Entropy,
 ) -> Res<(Random, KEMPK, ClientPostClientHello)> {
-    let ALGS(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs0;
+    let Algorithms(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs0;
     if ent.len() < 32 + dh_priv_len(ks) {Err(insufficient_entropy)}
     else {
         let cr = Random::from_seq(&ent.slice_range(0..32));
@@ -255,7 +254,7 @@ pub fn get_client_hello_binder(
     st: &ClientPostClientHello,
 ) -> Res<Option<HMAC>> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
     let TranscriptTruncatedClientHello(_,tx_hash) = tx;
     match (psk_mode, psk) {
         (true,Some(k)) => {
@@ -273,7 +272,7 @@ pub fn client_get_0rtt_keys(
 ) -> Res<Option<ClientCipherState0>> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptClientHello(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs0;
     match (psk_mode, zero_rtt, psk) {
         (true,true,Some(k)) => {
             let (aek, key) = derive_0rtt_keys(ha, ae, &k, tx_hash)?;
@@ -287,14 +286,14 @@ pub fn client_get_0rtt_keys(
 pub fn put_server_hello(
     sr: Random,
     gy: KEMPK,
-    algs: ALGS,
+    algs: Algorithms,
     tx: &TranscriptServerHello,
     st: ClientPostClientHello,
 ) -> Res<(DuplexCipherStateH, ClientPostServerHello)> {
     let ClientPostClientHello(cr, algs0, x, psk) = st;
     let TranscriptServerHello(_,_,_,tx_hash) = tx;
     if algs == algs0 {
-        let ALGS(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs;
+        let Algorithms(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs;
         let gxy = kem_decap(ks, &gy, x)?;
         let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
         Ok((
@@ -314,7 +313,7 @@ pub fn put_server_signature(
 ) -> Res<ClientPostCertificateVerify> {
     let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificate(_,_,_,tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
+    if let Algorithms(ha, ae, sa, gn, false, zero_rtt) = &algs {
         let sigval = prefix_server_certificate_verify.concat(tx_hash);
         verify(sa, &pk, &bytes(&sigval), &sig)?;
         Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
@@ -325,7 +324,7 @@ pub fn put_server_signature(
 
 pub fn put_skip_server_signature(st: ClientPostServerHello) -> Res<ClientPostCertificateVerify> {
     let ClientPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
-    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = &algs {
+    if let Algorithms(ha, ae, sa, gn, true, zero_rtt) = &algs {
         Ok(ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
     } else {
         Err(psk_mode_mismatch)
@@ -339,7 +338,7 @@ pub fn put_server_finished(
 ) -> Res<ClientPostServerFinished> {
     let ClientPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificateVerify(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &sfk, &bytes(tx_hash), &vd)?;
     Ok(ClientPostServerFinished(cr, sr, algs, ms, cfk))
 }
@@ -349,7 +348,7 @@ pub fn client_get_1rtt_keys(
 ) -> Res<DuplexCipherState1> {
     let ClientPostServerFinished(_, _, algs, ms, cfk) = st;
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
     Ok(DuplexCipherState1(*ae, cak, 0, sak, 0, exp))
 }
@@ -360,7 +359,7 @@ pub fn get_client_finished(
 ) -> Res<(HMAC, ClientPostClientFinished)> {
     let ClientPostServerFinished(cr, sr, algs, ms, cfk) = st;
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let m = hmac(ha, &cfk, &bytes(tx_hash))?;
     Ok((m, ClientPostClientFinished(cr, sr, algs, ms)))
 }
@@ -371,7 +370,7 @@ pub fn client_complete(
 ) -> Res<ClientComplete> {
     let ClientPostClientFinished(cr, sr, algs, ms) = st;
     let TranscriptClientFinished(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let rms = derive_rms(ha, &ms, tx_hash)?;
     Ok(ClientComplete(cr,sr,algs,rms))
 }
@@ -380,14 +379,14 @@ pub fn client_complete(
 
 pub fn put_client_hello(
     cr: Random,
-    algs: ALGS,
+    algs: Algorithms,
     gx: &KEMPK,
     psk: Option<PSK>,
     tx: TranscriptTruncatedClientHello,
     binder: Option<HMAC>,
     ent: Entropy,
 ) -> Res<(Random, KEMPK, ServerPostClientHello)> {
-    let ALGS(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, ks, psk_mode, zero_rtt) = &algs;
     if ent.len() < 32 + dh_priv_len(ks) {Err(insufficient_entropy)}
     else {
         let sr = Random::from_seq(&ent.slice_range(0..32));
@@ -411,7 +410,7 @@ pub fn server_get_0rtt_keys(
 ) -> Res<Option<ServerCipherState0>> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
     let TranscriptClientHello(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     match (psk_mode, zero_rtt, psk) {
         (true,true,Some(k)) => {
             let (aek, key) = derive_0rtt_keys(ha, ae, &k, tx_hash)?;
@@ -428,7 +427,7 @@ pub fn get_server_hello(
 ) -> Res<(DuplexCipherStateH, ServerPostServerHello)> {
     let ServerPostClientHello(cr, sr, algs, gxy, psk) = st;
     let TranscriptServerHello(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (chk, shk, cfk, sfk, ms) = derive_hk_ms(ha, ae, &gxy, &psk, tx_hash)?;
     Ok((
         DuplexCipherStateH(*ae, shk, 0, chk, 0),
@@ -444,7 +443,7 @@ pub fn get_server_signature(
 ) -> Res<(SIG, ServerPostCertificateVerify)> {
     let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificate(_,_,_,tx_hash) = tx;
-    if let ALGS(ha, ae, sa, gn, false, zero_rtt) = &algs {
+    if let Algorithms(ha, ae, sa, gn, false, zero_rtt) = &algs {
         let sigval = prefix_server_certificate_verify.concat(tx_hash);
         let sig = sign(sa, &sk, &sigval, ent)?;
         Ok((sig, ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk)))
@@ -455,7 +454,7 @@ pub fn get_server_signature(
 
 pub fn get_skip_server_signature(st: ServerPostServerHello) -> Res<ServerPostCertificateVerify> {
     let ServerPostServerHello(cr, sr, algs, ms, cfk, sfk) = st;
-    if let ALGS(ha, ae, sa, gn, true, zero_rtt) = algs {
+    if let Algorithms(ha, ae, sa, gn, true, zero_rtt) = algs {
         Ok(ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk))
     } else {
         Err(psk_mode_mismatch)
@@ -468,7 +467,7 @@ pub fn get_server_finished(
 ) -> Res<(HMAC, ServerPostServerFinished)> {
     let ServerPostCertificateVerify(cr, sr, algs, ms, cfk, sfk) = st;
     let TranscriptServerCertificateVerify(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let m = hmac(ha, &sfk, &bytes(tx_hash))?;
     Ok((m, ServerPostServerFinished(cr, sr, algs, ms, cfk)))
 }
@@ -479,7 +478,7 @@ pub fn server_get_1rtt_keys(
 ) -> Res<DuplexCipherState1> {
     let ServerPostServerFinished(_, _, algs, ms, cfk) = st;
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     let (cak, sak, exp) = derive_app_keys(ha, ae, &ms, tx_hash)?;
     Ok(DuplexCipherState1(*ae, sak, 0, cak, 0, exp))
 }
@@ -491,7 +490,7 @@ pub fn put_client_finished(
 ) -> Res<ServerPostClientFinished> {
     let ServerPostServerFinished(cr, sr, algs, ms, cfk) = st;
     let TranscriptServerFinished(_,_,_,tx_hash) = tx;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     hmac_verify(ha, &cfk, &bytes(tx_hash), &mac)?;
     Ok(ServerPostClientFinished(cr, sr, algs, ms))
 }
@@ -502,7 +501,7 @@ pub fn server_complete(
 ) -> Res<ClientComplete> {
     let TranscriptClientFinished(_,_,_,tx_hash) = tx;
     let ServerPostClientFinished(cr, sr, algs, ms) = st;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let rms = derive_rms(ha, &ms, tx_hash)?;
     Ok(ClientComplete(cr,sr,algs,rms))
 }

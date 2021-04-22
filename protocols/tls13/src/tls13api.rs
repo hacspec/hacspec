@@ -1,21 +1,18 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
-use crate::cryptolib::*;
-use crate::tls13formats::*;
-use crate::tls13handshake::*;
-use crate::tls13record::*;
+use super::*;
 
 // Client-Side Handshake API for TLS 1.3 Applications
 // client_init -> (encrypt_zerortt)* -> client_set_params ->
 // (decrypt_handshake)* -> client_finish -> (encrypt_handhsake) ->
 // (encrypt_data | decrypt_data)*
 
-pub struct Client0(ALGS,TranscriptClientHello,ClientPostClientHello);
-pub struct ClientH(ALGS,TranscriptServerHello,ClientPostServerHello);
-pub struct Client1(ALGS,TranscriptClientFinished,ClientPostClientFinished);
+pub struct Client0(Algorithms,TranscriptClientHello,ClientPostClientHello);
+pub struct ClientH(Algorithms,TranscriptServerHello,ClientPostServerHello);
+pub struct Client1(Algorithms,TranscriptClientFinished,ClientPostClientFinished);
     
-pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Entropy) -> Res<(HandshakeData,Client0,Option<ClientCipherState0>)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+pub fn client_init(algs:Algorithms,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Entropy) -> Res<(HandshakeData,Client0,Option<ClientCipherState0>)> {
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (crand,gx,cstate) = get_client_hello(algs,psk,ent)?;
     let (ch,trunc_len) = client_hello(&algs,&crand,&gx,sn,&tkt)?;
     let tx_trunc = transcript_truncated_client_hello(algs,&ch,trunc_len)?;
@@ -29,7 +26,7 @@ pub fn client_init(algs:ALGS,sn:&Bytes,tkt:Option<Bytes>,psk:Option<KEY>,ent:Ent
 
 pub fn client_set_params(sh:&HandshakeData,st:Client0) -> Res<(ClientH,DuplexCipherStateH)> {
     let Client0(algs,tx_ch,cstate) = st;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (sr,gy) = parse_server_hello(&algs,&sh)?;    
     let tx_sh = transcript_server_hello(tx_ch,&sh)?;
     let (cipher,cstate) = put_server_hello(sr, gy, algs, &tx_sh, cstate)?;
@@ -38,7 +35,7 @@ pub fn client_set_params(sh:&HandshakeData,st:Client0) -> Res<(ClientH,DuplexCip
 
 pub fn client_finish(payload:&HandshakeData,st:ClientH) -> Res<(HandshakeData,Client1,DuplexCipherState1)> {
     let ClientH(algs,tx_sh,cstate) = st;
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let mut next = 0;
     let (ee,len_ee) = check_handshake_message(&payload,0)?;
     parse_encrypted_extensions(&algs,&ee)?;
@@ -80,14 +77,14 @@ pub fn client_finish(payload:&HandshakeData,st:ClientH) -> Res<(HandshakeData,Cl
 // (decrypt_handshake) -> server_finish ->
 // (encrypt data | decrypt data)*
 
-pub struct Server0(ALGS,TranscriptServerFinished,ServerPostServerFinished);
-pub struct Server1(ALGS,TranscriptClientFinished,ServerPostClientFinished);
+pub struct Server0(Algorithms,TranscriptServerFinished,ServerPostServerFinished);
+pub struct Server1(Algorithms,TranscriptClientFinished,ServerPostClientFinished);
 
 pub struct ServerDB(pub Bytes,pub Bytes,pub SIGK,pub Option<(Bytes,PSK)>);
 
-fn lookup_db(algs:ALGS, db:&ServerDB,sni:&Bytes,tkt:&Option<Bytes>) ->
+fn lookup_db(algs:Algorithms, db:&ServerDB,sni:&Bytes,tkt:&Option<Bytes>) ->
              Res<(Bytes,SIGK,Option<PSK>)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let ServerDB(server_name,cert,sk,psk_opt) = db;
     check_eq(sni,server_name)?;
     match (psk_mode,tkt, psk_opt) {
@@ -99,8 +96,8 @@ fn lookup_db(algs:ALGS, db:&ServerDB,sni:&Bytes,tkt:&Option<Bytes>) ->
     }
 }
 
-pub fn server_init(algs:ALGS,db:ServerDB,ch:&HandshakeData,ent:Entropy) -> Res<(HandshakeData,HandshakeData,Server0,DuplexCipherStateH,DuplexCipherState1)> {
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
+pub fn server_init(algs:Algorithms,db:ServerDB,ch:&HandshakeData,ent:Entropy) -> Res<(HandshakeData,HandshakeData,Server0,DuplexCipherStateH,DuplexCipherState1)> {
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = &algs;
     let (cr,sid,sni,gx,tkto, bindero, trunc_len) = parse_client_hello(&algs,&ch)?;
     let tx_trunc = transcript_truncated_client_hello(algs,&ch,trunc_len)?;
     let (cert,sigk,psk_opt) = lookup_db(algs,&db,&sni,&tkto)?;

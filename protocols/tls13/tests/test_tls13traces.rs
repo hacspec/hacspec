@@ -1,19 +1,9 @@
 use hacspec_dev::prelude::*;
 use hacspec_lib::prelude::*;
 
-use bertie::cryptolib::AEADAlgorithm::*;
-use bertie::cryptolib::HashAlgorithm::*;
-use bertie::cryptolib::NamedGroup::*;
-use bertie::cryptolib::SignatureScheme::*;
-use bertie::cryptolib::*;
-use bertie::tls13formats::*;
-use bertie::tls13handshake::*;
-use bertie::tls13record::*;
-use bertie::tls13api::*;
 use bertie::*;
 
 // These are the sample TLS 1.3 traces taken from RFC 8448
-use bertie::cryptolib::*;
 
 fn load_hex(s: &str) -> Bytes {
     let s_no_ws: String = s.split_whitespace().collect();
@@ -197,11 +187,11 @@ const client_finished_record: &str = "17 03 03 00 35 75 ec 4d c2 38 cc e6
 d8 7f 38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7
 26 c4 05 46";
 
-const algs: ALGS = ALGS(
-    SHA256,
-    AES_128_GCM,
-    RSA_PSS_RSAE_SHA256,
-    X25519,
+const default_algs: Algorithms = Algorithms(
+    HashAlgorithm::SHA256,
+    AEADAlgorithm::AES_128_GCM,
+    SignatureScheme::RSA_PSS_RSAE_SHA256,
+    NamedGroup::X25519,
     false,
     false,
 );
@@ -209,8 +199,8 @@ const algs: ALGS = ALGS(
 #[test]
 fn test_parse_client_hello() {
     let ch = HandshakeData(load_hex(client_hello));
-    //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
-    let res = parse_client_hello(&algs, &ch);
+    //   let default_algs = Algorithms(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+    let res = parse_client_hello(&default_algs, &ch);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -232,14 +222,14 @@ fn test_parse_client_hello() {
 fn test_parse_client_hello_record() {
     let mut ch: Bytes = load_hex(client_hello_record);
     ch[2] = U8(3);
-    //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+    //   let default_algs = Algorithms(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
     let mut b = true;
     match check_handshake_record(&ch) {
         Err(x) => {
             println!("Error: {}", x);
             b = false;
         }
-        Ok((hs, len)) => match parse_client_hello(&algs, &hs) {
+        Ok((hs, len)) => match parse_client_hello(&default_algs, &hs) {
             Err(x) => {
                 println!("Error: {}", x);
                 b = false;
@@ -262,7 +252,7 @@ fn test_parse_client_hello_roundtrip() {
     let cr: Random = Random::new();
     let gx = load_hex(client_x25519_pub);
     let sn = Bytes::new(23);
-    let ch = tls13formats::client_hello(&algs,&cr,&gx,&sn,&None);
+    let ch = tls13formats::client_hello(&default_algs,&cr,&gx,&sn,&None);
     let mut b = true;
     match ch {
         Err(x) => {
@@ -270,8 +260,8 @@ fn test_parse_client_hello_roundtrip() {
             b = false;
         },
         Ok((ch,_)) => {
-            //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
-            let res = parse_client_hello(&algs, &ch);
+            //   let default_algs = Algorithms(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+            let res = parse_client_hello(&default_algs, &ch);
             let b = res.is_ok();
             match res {
                 Err(x) => {
@@ -294,8 +284,8 @@ fn test_parse_client_hello_roundtrip() {
 #[test]
 fn test_parse_server_hello() {
     let sh = HandshakeData(load_hex(server_hello));
-    //   let algs = ALGS(SHA256,AES_128_GCM,ECDSA_SECP256r1_SHA256,X25519,false,false);
-    let res = parse_server_hello(&algs, &sh);
+    //   let default_algs = Algorithms(SHA256,AES_128_GCM,ECDSA_SECP256r1_SHA256,X25519,false,false);
+    let res = parse_server_hello(&default_algs, &sh);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -316,7 +306,7 @@ fn test_parse_server_hello_roundtrip() {
     let mut sid = Bytes::new(24);
     sid[0] = U8(255);
     let gy = load_hex(server_x25519_pub);
-    let sh = tls13formats::server_hello(&algs,&sr,&sid,&gy);
+    let sh = tls13formats::server_hello(&default_algs,&sr,&sid,&gy);
     let mut b = true;
     match sh {
         Err(x) => {
@@ -324,8 +314,8 @@ fn test_parse_server_hello_roundtrip() {
             b = false;
         },
         Ok(sh) => {
-            //   let algs = ALGS(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
-            let res = parse_server_hello(&algs, &sh);
+            //   let default_algs = Algorithms(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
+            let res = parse_server_hello(&default_algs, &sh);
             let b = res.is_ok();
             match res {
                 Err(x) => {
@@ -346,7 +336,7 @@ fn test_parse_server_hello_roundtrip() {
 #[test]
 fn test_parse_encrypted_extensions() {
     let ee = HandshakeData(load_hex(encrypted_extensions));
-    let res = parse_encrypted_extensions(&algs, &ee);
+    let res = parse_encrypted_extensions(&default_algs, &ee);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -362,7 +352,7 @@ fn test_parse_encrypted_extensions() {
 #[test]
 fn test_parse_server_certificate() {
     let sc = HandshakeData(load_hex(server_certificate));
-    let res = parse_server_certificate(&algs, &sc);
+    let res = parse_server_certificate(&default_algs, &sc);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -378,7 +368,7 @@ fn test_parse_server_certificate() {
 #[test]
 fn test_parse_server_certificate_verify() {
     let cv = HandshakeData(load_hex(server_certificate_verify));
-    let res = parse_certificate_verify(&algs, &cv);
+    let res = parse_certificate_verify(&default_algs, &cv);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -394,7 +384,7 @@ fn test_parse_server_certificate_verify() {
 #[test]
 fn test_parse_server_finished() {
     let sf = HandshakeData(load_hex(server_finished));
-    let res = parse_finished(&algs, &sf);
+    let res = parse_finished(&default_algs, &sf);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -410,7 +400,7 @@ fn test_parse_server_finished() {
 #[test]
 fn test_parse_client_finished() {
     let cf = HandshakeData(load_hex(client_finished));
-    let res = parse_finished(&algs, &cf);
+    let res = parse_finished(&default_algs, &cf);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -427,7 +417,7 @@ fn test_parse_client_finished() {
 fn test_key_schedule() {
     let sha256_emp_str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
     let sha256_emp = load_hex(sha256_emp_str);
-    match hash(&SHA256, &Bytes::new(0)) {
+    match hash(&HashAlgorithm::SHA256, &Bytes::new(0)) {
         Ok(ha) => {
             println!(
                 "computed hash(empty) {}\nexpected hash(empty) {}",
@@ -444,7 +434,7 @@ fn test_key_schedule() {
     let cv: Bytes = load_hex(server_certificate_verify);
     let sf: Bytes = load_hex(server_finished);
     let gxy: KEY = KEY::from_seq(&load_hex(shared_secret));
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = default_algs;
     let tx = ch.concat(&sh);
     let tx_hash = hash(&ha, &tx);
     let mut b = true;
@@ -503,10 +493,10 @@ fn test_ecdh() {
     let gy = load_hex(server_x25519_pub);
     let gxy = load_hex(shared_secret);
 
-    let my_gx = secret_to_public(&X25519,&x);
-    let my_gy = secret_to_public(&X25519,&x);
-    let my_ss1 = ecdh(&X25519,&x,&gy);
-    let my_ss2 = ecdh(&X25519,&y,&gx);
+    let my_gx = secret_to_public(&NamedGroup::X25519,&x);
+    let my_gy = secret_to_public(&NamedGroup::X25519,&x);
+    let my_ss1 = ecdh(&NamedGroup::X25519,&x,&gy);
+    let my_ss2 = ecdh(&NamedGroup::X25519,&y,&gx);
     
     let mut b = true;
     match (my_gx,my_gy,my_ss1,my_ss2) {
@@ -537,7 +527,7 @@ fn test_finished() {
     let sc: Bytes = load_hex(server_certificate);
     let cv: Bytes = load_hex(server_certificate_verify);
     let sf: Bytes = load_hex(server_finished);
-    let ALGS(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = default_algs;
     let tx1 = ch.concat(&sh).concat(&ee).concat(&sc).concat(&cv);
     let tx_hash1 = hash(&ha, &tx1);
     let tx2 = tx1.concat(&sf);
@@ -579,11 +569,11 @@ fn test_full_round_trip() {
     let db = ServerDB(sn_,Bytes::new(123),SIGK::new(64),None);
     
     let mut b = true;
-    match client_init(algs,&sn,None,None,ent_c) {
+    match client_init(default_algs,&sn,None,None,ent_c) {
         Err(x) => {println!("Client0 Error {}",x);  b = false;},
         Ok((ch,cstate,_)) => {
             println!("Client0 Complete");
-            match server_init(algs,db,&ch,ent_s) {
+            match server_init(default_algs,db,&ch,ent_s) {
                 Err(x) => {println!("Server0 Error {}",x); b = false;},
                 Ok((sh,sf,sstate,_,_)) => {
                         println!("Server0 Complete");

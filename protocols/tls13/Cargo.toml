@@ -33,6 +33,10 @@ hacspec-p256 = { path = "../../examples/p256" }
 hacspec-aes = { path = "../../examples/aes", version = "0.1.0" }
 hacspec-gf128 = { path = "../../examples/gf128", version = "0.1.0" }
 hacspec-aes128-gcm = { path = "../../examples/aes128-gcm", version = "0.1.0" }
+evercrypt = { version = "0.0.8", optional = true }
+
+[features]
+evercrypt-backend = [ "evercrypt" ]
 
 [dev-dependencies]  
 dhat = "0.2.2"

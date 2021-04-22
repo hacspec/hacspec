@@ -8,15 +8,21 @@
 //#![feature(backtrace)]
 
 pub mod tls13formats;
-use tls13formats::*;
+pub use tls13formats::*;
+#[cfg(not(feature = "evercrypt-backend"))]
 pub mod cryptolib;
-use cryptolib::*;
+#[cfg(not(feature = "evercrypt-backend"))]
+pub use cryptolib::*;
+#[cfg(feature = "evercrypt-backend")]
+pub mod cryptolib_evercrypt;
+#[cfg(feature = "evercrypt-backend")]
+pub use cryptolib_evercrypt::*;
 pub mod tls13handshake;
-use tls13handshake::*;
+pub use tls13handshake::*;
 pub mod tls13record;
-use tls13record::*;
+pub use tls13record::*;
 pub mod tls13api;
-use tls13api::*;
+pub use tls13api::*;
 
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
@@ -154,7 +160,7 @@ fn decrypt_tickets_and_data(
     Ok((payload, cipher1))
 }
 
-const algs: ALGS = ALGS(
+const default_algs: Algorithms = Algorithms(
     HashAlgorithm::SHA256,
     // AEADAlgorithm::CHACHA20_POLY1305,
     AEADAlgorithm::AES_128_GCM,
@@ -183,7 +189,7 @@ pub fn tls13client(host: &str, port: &str) -> Res<()> {
     println!("Initiating connection to {}", addr);
 
     /* Initialize TLS 1.3. Client */
-    let (ch, cstate, _) = client_init(algs, &sni, None, None, ent_c)?;
+    let (ch, cstate, _) = client_init(default_algs, &sni, None, None, ent_c)?;
     let mut ch_rec = handshake_record(&ch)?;
     ch_rec[2] = U8(0x01);
     put_record(&mut stream, &ch_rec)?;
@@ -209,7 +215,7 @@ pub fn tls13client(host: &str, port: &str) -> Res<()> {
     /* Process HTTP Response */
     let (http_resp, cipher1) = decrypt_tickets_and_data(&mut stream, &mut in_buf, cipher1)?;
     let html_by = hex::decode(&http_resp.to_hex()).expect("Decoding HTTP Response failed");
-    let html = str::from_utf8(&html_by).unwrap();
+    let html = String::from_utf8_lossy(&html_by);
     println!("Received HTTP Response from {}\n\n{}", host, html);
     Ok(())
 }
