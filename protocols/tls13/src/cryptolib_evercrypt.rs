@@ -5,17 +5,6 @@
 use evercrypt::prelude::*;
 use hacspec_lib::*;
 
-// XXX: REMOVE
-use hacspec_aes::*;
-use hacspec_aes128_gcm::*;
-use hacspec_chacha20::{Key as Chacha20Key, IV as Chacha20Iv};
-use hacspec_chacha20poly1305::{decrypt as chacha_poly_decrypt, encrypt as chacha_poly_encrypt};
-use hacspec_ecdsa_p256_sha256::*;
-use hacspec_gf128::*;
-use hacspec_hkdf::*;
-use hacspec_p256::{P256FieldElement, P256Scalar};
-use hacspec_poly1305::Tag as Poly1305Tag;
-
 use crate::{
     crypto_error, hkdf_error, insufficient_entropy, invalid_cert, mac_failed,
     unsupported_algorithm, verify_failed,
@@ -351,23 +340,31 @@ pub fn verk_from_cert(cert: &Bytes) -> Res<VERK> {
     }
 }
 
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn p256_sha256_sign_unsafe(ps: &SIGK, payload: &Bytes, random: &Random) -> Res<SIG> {
+    let mut sk = [0u8; 32];
+    sk.copy_from_slice(&ps.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    let mut nonce = [0u8; 32];
+    nonce.copy_from_slice(&random.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    match p256_sign(
+        DigestMode::Sha256,
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &sk,
+        &nonce,
+    ) {
+        // FIXME: this must encode the signature with ASN.1
+        Ok(s) => Ok(SIG::from_public_slice(&s.raw())),
+        Err(_e) => Err(crypto_error),
+    }
+}
+
 pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> Res<SIG> {
     match sa {
         SignatureScheme::ECDSA_SECP256r1_SHA256 => {
             let random = Random::from_seq(&ent.slice_range(0..32));
             // FIXME: we must do rejection sampling here.
-            let nonce = P256Scalar::from_byte_seq_be(&random);
-            let (success, (r, s)) =
-                ecdsa_p256_sha256_sign(payload, P256Scalar::from_byte_seq_be(ps), nonce);
-            if success {
-                // FIXME: this must encode the signature with ASN.1
-                let signature = SIG::new(0)
-                    .concat(&r.to_byte_seq_be())
-                    .concat(&s.to_byte_seq_be());
-                Ok(signature)
-            } else {
-                Err(crypto_error)
-            }
+            let nonce = Random::from_slice(&ent, 0, 32);
+            p256_sha256_sign_unsafe(ps, payload, &nonce)
         }
         _ => Err(unsupported_algorithm),
     }
@@ -401,24 +398,68 @@ pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> 
     }
 }
 
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn hkdf_extract_unsafe(k: &KEY, salt: &KEY) -> Res<KEY> {
+    Ok(KEY::from_public_slice(&hkdf::extract(
+        HmacMode::Sha256,
+        &salt.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+    )))
+}
+
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn hkdf_expand_unsafe(k: &KEY, info: &Bytes, len: usize) -> Res<KEY> {
+    Ok(KEY::from_public_slice(&hkdf::expand(
+        HmacMode::Sha256,
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &info.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        len,
+    )))
+}
+
 pub fn hkdf_extract(ha: &HashAlgorithm, k: &KEY, salt: &KEY) -> Res<KEY> {
     match ha {
-        HashAlgorithm::SHA256 => Ok(KEY::from_seq(&extract(salt, k))),
+        HashAlgorithm::SHA256 => hkdf_extract_unsafe(k, salt),
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
     }
 }
 
 pub fn hkdf_expand(ha: &HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res<KEY> {
     match ha {
-        HashAlgorithm::SHA256 => {
-            let (success, bytes) = expand(k, info, len);
-            if success {
-                Ok(KEY::from_seq(&bytes))
-            } else {
-                Err(hkdf_error)
-            }
-        }
+        HashAlgorithm::SHA256 => hkdf_expand_unsafe(k, info, len),
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
+    }
+}
+
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn aesgcm_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
+    let mut nonce = [0u8; 12];
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    match evercrypt::aead::encrypt(
+        AeadMode::Aes128Gcm,
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &nonce,
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+    ) {
+        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat(&Bytes::from_public_slice(&t))),
+        Err(_e) => Err(crypto_error),
+    }
+}
+
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn chachapoly_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
+    let mut nonce = [0u8; 12];
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    match evercrypt::aead::encrypt(
+        AeadMode::Chacha20Poly1305,
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &nonce,
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+    ) {
+        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat(&Bytes::from_public_slice(&t))),
+        Err(_e) => Err(crypto_error),
     }
 }
 
@@ -431,22 +472,59 @@ pub fn aead_encrypt(
 ) -> Res<Bytes> {
     // XXX: the result should be Seq<u8> not Seq<U8>.
     match a {
-        AEADAlgorithm::AES_128_GCM => {
-            let (ctxt, tag) =
-                encrypt_aes128(Key128::from_seq(k), Aes128Nonce::from_seq(iv), ad, payload);
-            Ok(ctxt.concat(&Bytes::from_seq(&tag)))
-        }
+        AEADAlgorithm::AES_128_GCM => aesgcm_encrypt_unsafe(k, iv, payload, ad),
         AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),
-        AEADAlgorithm::CHACHA20_POLY1305 => {
-            // XXX: ctxt should really be Seq<u8> not Seq<U8>.
-            let (ctxt, tag) = chacha_poly_encrypt(
-                Chacha20Key::from_seq(k),
-                Chacha20Iv::from_seq(iv),
-                ad,
-                payload,
-            );
-            Ok(ctxt.concat(&Bytes::from_public_seq(&tag)))
-        }
+        AEADAlgorithm::CHACHA20_POLY1305 => chachapoly_encrypt_unsafe(k, iv, payload, ad),
+    }
+}
+
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
+    let mut nonce = [0u8; 12];
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    match evercrypt::aead::decrypt(
+        AeadMode::Aes128Gcm,
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(0..ciphertext.len() - 16)
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(ciphertext.len() - 16..ciphertext.len())
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
+        &nonce,
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+    ) {
+        Ok(ptxt) => Ok(Bytes::from_public_slice(&ptxt)),
+        Err(_e) => Err(mac_failed),
+    }
+}
+
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn chachapoly_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
+    let mut nonce = [0u8; 12];
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    match evercrypt::aead::decrypt(
+        AeadMode::Chacha20Poly1305,
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(0..ciphertext.len() - 16)
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(ciphertext.len() - 16..ciphertext.len())
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
+        &nonce,
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+    ) {
+        Ok(ptxt) => Ok(Bytes::from_public_slice(&ptxt)),
+        Err(_e) => Err(mac_failed),
     }
 }
 
@@ -458,38 +536,8 @@ pub fn aead_decrypt(
     ad: &Bytes,
 ) -> Res<Bytes> {
     match a {
-        AEADAlgorithm::AES_128_GCM => {
-            let (success, m) = decrypt_aes128(
-                Key128::from_seq(k),
-                Aes128Nonce::from_seq(iv),
-                ad,
-                &ciphertext.slice_range(0..ciphertext.len() - 16),
-                Gf128Tag::from_seq(
-                    &ciphertext.slice_range(ciphertext.len() - 16..ciphertext.len()),
-                ),
-            );
-            if success {
-                Ok(m)
-            } else {
-                return Err(mac_failed);
-            }
-        }
+        AEADAlgorithm::AES_128_GCM => aesgcm_decrypt_unsafe(k, iv, ciphertext, ad),
         AEADAlgorithm::AES_256_GCM => Err(unsupported_algorithm),
-        AEADAlgorithm::CHACHA20_POLY1305 => {
-            // XXX: ciphertext should really be Seq<u8> not Seq<U8>.
-            let (ptxt, success) = chacha_poly_decrypt(
-                Chacha20Key::from_seq(k),
-                Chacha20Iv::from_seq(iv),
-                ad,
-                &ciphertext.slice_range(0..ciphertext.len() - 16),
-                Poly1305Tag::from_seq(
-                    &ciphertext
-                        .slice_range(ciphertext.len() - 16..ciphertext.len())
-                        .declassify(),
-                ),
-            );
-            let result = if success { Ok(ptxt) } else { Err(mac_failed) };
-            result
-        }
+        AEADAlgorithm::CHACHA20_POLY1305 => chachapoly_decrypt_unsafe(k, iv, ciphertext, ad),
     }
 }
