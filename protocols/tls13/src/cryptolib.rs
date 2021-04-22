@@ -329,6 +329,7 @@ pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> R
             let (success, (r, s)) =
                 ecdsa_p256_sha256_sign(payload, P256Scalar::from_byte_seq_be(ps), nonce);
             if success {
+                // FIXME: this must encode the signature with ASN.1
                 let signature = SIG::new(0)
                     .concat(&r.to_byte_seq_be())
                     .concat(&s.to_byte_seq_be());
@@ -341,10 +342,6 @@ pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> R
     }
 }
 pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
-    //    println!("sa: {:?}", sa);
-    //    println!("sig({}): {:?}", sig.len(), sig);
-    //    println!("pk: {:x?}", pk);
-    //    println!("payload: {:x?}", payload);
     match sa {
         SignatureScheme::ECDSA_SECP256r1_SHA256 => {
             let (pk_x, pk_y) = (
@@ -358,9 +355,7 @@ pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> 
             if ecdsa_p256_sha256_verify(payload, (pk_x, pk_y), (r, s)) {
                 Ok(())
             } else {
-                println!("Invalid signature");
-                Ok(())
-                // Err(verify_failed)
+                Err(verify_failed)
             }
         }
         _ => Err(unsupported_algorithm),

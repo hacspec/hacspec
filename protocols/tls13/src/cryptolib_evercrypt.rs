@@ -13,10 +13,8 @@ use hacspec_chacha20poly1305::{decrypt as chacha_poly_decrypt, encrypt as chacha
 use hacspec_ecdsa_p256_sha256::*;
 use hacspec_gf128::*;
 use hacspec_hkdf::*;
-use hacspec_hmac::hmac as hacspec_hmac;
 use hacspec_p256::{P256FieldElement, P256Scalar};
 use hacspec_poly1305::Tag as Poly1305Tag;
-use hacspec_sha256::*;
 
 use crate::{
     crypto_error, hkdf_error, insufficient_entropy, invalid_cert, mac_failed,
@@ -229,16 +227,34 @@ pub fn kem_decap(ks: &KEMScheme, ct: &Bytes, sk: KEMSK) -> Res<KEY> {
     Ok(gxy)
 }
 
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn sha256_unsafe(payload: &Bytes) -> Res<HASH> {
+    Ok(HASH::from_public_slice(&evercrypt::digest::hash(
+        DigestMode::Sha256,
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+    )))
+}
+
 pub fn hash(ha: &HashAlgorithm, payload: &Bytes) -> Res<HASH> {
     match ha {
-        HashAlgorithm::SHA256 => Ok(HASH::from_seq(&sha256(payload))),
+        HashAlgorithm::SHA256 => sha256_unsafe(payload),
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
     }
 }
 
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn hmac_sha256_unsafe(mk: &MACK, payload: &Bytes) -> Res<HMAC> {
+    Ok(HMAC::from_public_slice(&evercrypt::hmac::hmac(
+        HmacMode::Sha256,
+        &mk.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        None,
+    )))
+}
+
 pub fn hmac(ha: &HashAlgorithm, mk: &MACK, payload: &Bytes) -> Res<HMAC> {
     match ha {
-        HashAlgorithm::SHA256 => Ok(HMAC::from_seq(&hacspec_hmac(mk, payload))),
+        HashAlgorithm::SHA256 => hmac_sha256_unsafe(mk, payload),
         HashAlgorithm::SHA384 => Err(unsupported_algorithm),
     }
 }
@@ -344,6 +360,7 @@ pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> R
             let (success, (r, s)) =
                 ecdsa_p256_sha256_sign(payload, P256Scalar::from_byte_seq_be(ps), nonce);
             if success {
+                // FIXME: this must encode the signature with ASN.1
                 let signature = SIG::new(0)
                     .concat(&r.to_byte_seq_be())
                     .concat(&s.to_byte_seq_be());
@@ -355,29 +372,31 @@ pub fn sign(sa: &SignatureScheme, ps: &SIGK, payload: &Bytes, ent: Entropy) -> R
         _ => Err(unsupported_algorithm),
     }
 }
-pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
-    //    println!("sa: {:?}", sa);
-    //    println!("sig({}): {:?}", sig.len(), sig);
-    //    println!("pk: {:x?}", pk);
-    //    println!("payload: {:x?}", payload);
-    match sa {
-        SignatureScheme::ECDSA_SECP256r1_SHA256 => {
-            let (pk_x, pk_y) = (
-                P256FieldElement::from_byte_seq_be(&pk.slice(0, 32)),
-                P256FieldElement::from_byte_seq_be(&pk.slice(32, 32)),
-            );
-            let (r, s) = (
-                P256Scalar::from_byte_seq_be(&sig.slice(0, 32)),
-                P256Scalar::from_byte_seq_be(&sig.slice(32, 32)),
-            );
-            if ecdsa_p256_sha256_verify(payload, (pk_x, pk_y), (r, s)) {
-                Ok(())
-            } else {
-                println!("Invalid signature");
-                Ok(())
-                // Err(verify_failed)
-            }
+
+// FIXME: #98 add #[unsafe_hacspec] attribute
+fn p256_sha256_verify_unsafe(pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
+    let mut sig_bytes = [0u8; 64];
+    sig_bytes.copy_from_slice(&sig.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    let result = p256_verify(
+        DigestMode::Sha256,
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &pk.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &EcdsaSignature::from_bytes(&sig_bytes),
+    );
+    if let Ok(r) = result {
+        if r {
+            Ok(())
+        } else {
+            Err(verify_failed)
         }
+    } else {
+        Err(verify_failed)
+    }
+}
+
+pub fn verify(sa: &SignatureScheme, pk: &VERK, payload: &Bytes, sig: &Bytes) -> Res<()> {
+    match sa {
+        SignatureScheme::ECDSA_SECP256r1_SHA256 => p256_sha256_verify_unsafe(pk, payload, sig),
         _ => Err(unsupported_algorithm),
     }
 }
