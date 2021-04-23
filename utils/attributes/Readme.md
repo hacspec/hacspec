@@ -4,7 +4,7 @@
 [![Docs](https://img.shields.io/badge/docs-master-blue.svg?logo=rust)](https://hacspec.github.io/hacspec/hacspec_attributes/index.html)
 [![Build & Test Status][build-image]][build-link]
 
-This crate holds implements hacspec attributes used in the [hacspec library](../../lib/).
+This crate holds implements hacspec attributes used only in the [hacspec library](../../lib/) as well as attributes that can be used in hacspecs.
 
 ## Features
 ### hacspec_unsafe
