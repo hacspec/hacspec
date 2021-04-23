@@ -6,7 +6,18 @@
 
 This crate holds implements hacspec attributes used in the [hacspec library](../../lib/).
 
-**It should never be necessary to use this outside of the hacspec repository.**
+## Features
+### hacspec_unsafe
+This is a **default feature** that enables the `#[hacspec_unsafe]` attribute.
+The `#[hacspec_unsafe]` attribute can be used to call Rust code from hacspec.
+A function with the `#[hacspec_unsafe]` attribute must have a signature within hacspec but can use Rust in its body.
+A function with `#[hacspec_unsafe(outside)]` is completely ignored by the hacspec typechecker.
+
+### print_attributes
+This feature is used within the hacspec library to mark functions according to their language affiliation.
+
+### update_allowlist
+This feature is used within the hacspec library.
 
 [//]: # (badges)
 
