@@ -1,182 +1,168 @@
-
-(* Require Import FStar.Mul. *)
-
 (*** Integers *)
-From Coq Require Import ZArith Vector.
-(* Require Import Int.PArray. *)
-(* From Coq Require Import Numbers.Cyclic.Abstract.CyclicAxioms. *)
-From compcert Require Import Integers.
+From Coq Require Import ZArith List Vector.
+Import ListNotations.
+(* Require Import IntTypes. *)
 
-Require Import IntTypes.
+Require Import MachineIntegers.
 
 
-Definition uint_size := nat.
-(* Definition uint_size := range_t U32. *)
-Definition int_size := nat.
-(* Definition int_size := range_t S32. *)
 
-Open Scope N_scope.
-(* Definition usize (n:range_t U32) : u:uint_size{u == n} := n *)
-(* Definition isize (n:range_t S32) : u:int_size{u == n} := n *)
+Definition uint_size := int32.
+Definition int_size := int32.
 
-Definition usize {A} (n : A) := id n.
-Definition isize {A} (n : A) := id n.
+(**** Usize  *)
+Definition usize (n : uint_size) := n.
+Definition isize (n : uint_size) := n.
 
-Coercion N.to_nat : N >-> nat. 
-Coercion N.of_nat : nat >-> N. 
-Coercion Z.to_nat : Z >-> nat.
-
-(* Notation "'usize' n" := (id n) (at level 56) : hacspec_scope. *)
-(* Notation "'isize' n" := (id n) (at level 56) : hacspec_scope. *)
-
-Axiom 
-  uint8
-  uint16
-  uint32
-  uint64
-  uint128
-  int8
-  int16
-  int32
-  int64
-  int128 
-  pub_uint8 
-  pub_int8 
-  pub_uint16 
-  pub_int16 
-  pub_uint32 
-  pub_int32 
-  pub_uint64 
-  pub_int64 
-  pub_uint128 
-  pub_int128 
-  : Type.
-
-(* Definition size_t := uint_t U32 PUB *)
-(* Axiom uint_size : forall (n : inttype), n < U32. *)
-(* Axiom size : (n:size_nat) : size_t = uint #U32 #PUB n *)
 
 
 
 (**** Public integers *)
 
+
 (* Definition pub_u8 (n:range_t U8) : u:pub_uint8{v u == n} := uint #U8 #PUB n *)
-Definition pub_u8 (n : N) := n.
+Definition pub_u8 (n : Z) : int8 := repr n.
 
 (* Definition pub_i8 (n:N) : u:pub_int8{v u == n} := sint #S8 #PUB n *)
-Definition pub_i8 (n : N) := n.
+Definition pub_i8 (n : Z) : int8 := repr n.
 
 (* Definition pub_u16 (n:N) : u:pub_uint16{v u == n} := uint #U16 #PUB n *)
-Definition pub_u16 (n : N) := n.
+Definition pub_u16 (n : Z) : int16 := repr n.
 
 (* Definition pub_i16 (n:N) : u:pub_int16{v u == n} := sint #S16 #PUB n *)
-Definition pub_i16 (n : N) := n.
+Definition pub_i16 (n : Z) : int16 := repr n.
 
 (* Definition pub_u32 (n:N) : u:pub_uint32{v u == n} := uint #U32 #PUB n *)
-Definition pub_u32 (n : N) := n.
+Definition pub_u32 (n : Z) : int32 := repr n.
 
 (* Definition pub_i32 (n:N) : u:pub_int32{v u == n} := sint #S32 #PUB n *)
-Definition pub_i32 (n : N) := n.
+Definition pub_i32 (n : Z) : int32 := repr n.
 
 (* Definition pub_u64 (n:N) : u:pub_uint64{v u == n} := uint #U64 #PUB n *)
-Definition pub_u64 (n : N) := n.
+Definition pub_u64 (n : Z) : int64 := repr n.
 
 (* Definition pub_i64 (n:N) : u:pub_int64{v u == n} := sint #S64 #PUB n *)
-Definition pub_i64 (n : N) := n.
+Definition pub_i64 (n : Z) : int64 := repr n.
 
 (* Definition pub_u128 (n:N) : u:pub_uint128{v u == n} := uint #U128 #PUB n *)
-Definition pub_u128 (n : N) := n.
+Definition pub_u128 (n : Z) : int128 := repr n.
 
 (* Definition pub_i128 (n:N) : u:pub_int128{v u == n} := sint #S128 #PUB n *)
-Definition pub_i128 (n : N) := n.
+Definition pub_i128 (n : Z) : int128 := repr n.
 
 (**** Operations *)
 
-Axiom size_t : Type.
-Axiom size : forall {intt : Type}, intt -> size_t.
-(* second argument is size *)
-Axiom rotate_left : forall {inttype : Type}, inttype -> size_t -> inttype.
-Axiom rotate_right : forall {inttype : Type}, inttype -> size_t -> inttype.
-Axiom shift_left : forall {inttype shiftval : Type}, inttype -> shiftval -> inttype.
-Axiom shift_right : forall {inttype shiftval : Type}, inttype -> shiftval -> inttype.
+(* Should maybe use size of s instead? *)
+Definition uint8_rotate_left (u: int8) (s: int8) : int8 := rol u s.
 
-Definition uint8_rotate_left (u: uint8) (s: uint8) : uint8 :=
-  rotate_left u (size s).
+Definition uint8_rotate_right (u: int8) (s: int8) : int8 := ror u s.
 
-Definition uint8_rotate_right (u: uint8) (s: uint8) : uint8 :=
-  rotate_right u (size s).
+Definition uint16_rotate_left (u: int16) (s: int16) : int16 :=
+  rol u s.
 
-Definition uint16_rotate_left (u: uint16) (s: uint16) : uint16 :=
-  rotate_left u (size s).
+Definition uint16_rotate_right (u: int16) (s: int16) : int16 :=
+  ror u s.
 
-Definition uint16_rotate_right (u: uint16) (s: uint16) : uint16 :=
-  rotate_right u (size s).
+Definition uint32_rotate_left (u: int32) (s: int32) : int32 :=
+  rol u s.
 
-Definition uint32_rotate_left (u: uint32) (s: uint32) : uint32 :=
-  rotate_left u (size s).
+Definition uint32_rotate_right (u: int32) (s: int32) : int32 :=
+  ror u s.
 
-Definition uint32_rotate_right (u: uint32) (s: uint32) : uint32 :=
-  rotate_right u (size s).
+Definition uint64_rotate_left (u: int64) (s: int64) : int64 :=
+  rol u s.
 
-Definition uint64_rotate_left (u: uint64) (s: uint64) : uint64 :=
-  rotate_left u (size s).
+Definition uint64_rotate_right (u: int64) (s: int64) : int64 :=
+  ror u s.
 
-Definition uint64_rotate_right (u: uint64) (s: uint64) : uint64 :=
-  rotate_right u (size s).
+Definition uint128_rotate_left (u: int128) (s: int128) : int128 :=
+  rol u s.
 
-Definition uint128_rotate_left (u: uint128) (s: uint128) : uint128 :=
-  rotate_left u (size s).
+Definition uint128_rotate_right (u: int128) (s: int128) : int128 :=
+  ror u s.
 
-Definition uint128_rotate_right (u: uint128) (s: uint128) : uint128 :=
-  rotate_right u (size s).
+(* should use size u instead of u? *)
+Definition usize_shift_right (u: uint_size) (s: int32) : uint_size :=
+  (ror u s).
 
-Axiom to_uint_size : size_t -> uint_size.
+(* should use size u instead of u? *)
+Definition usize_shift_left (u: uint_size) (s: int32) : uint_size :=
+  (rol u s).
 
-Definition usize_shift_right (u: uint_size) (s: pub_uint32) : uint_size :=
-  to_uint_size (shift_right (size u) s).
+Definition pub_uint128_wrapping_add (x y: int128) : int128 :=
+  add x y.
 
-Definition usize_shift_left (u: uint_size) (s: pub_uint32) : uint_size :=
-  to_uint_size (shift_left (size u) s).
-
-
-Axiom pub_uint128_wrapping_add : pub_uint128 -> pub_uint128 -> pub_uint128. 
-  (* x +. y *)
 
 (*** Loops *)
 
-Axiom foldi :
-  forall {acc: Type},
-  uint_size ->
-  uint_size ->
-  (uint_size -> acc -> acc) ->
-  acc -> acc.
+Infix "+" := (@add WORDSIZE32).
+Infix "-" := (@sub WORDSIZE32).
+Infix "==" := (@eq WORDSIZE32) (at level 32).
+Definition one := (@one WORDSIZE32).
+Definition zero := (@zero WORDSIZE32).
 
-(*** Sequences (lists) *)
-From Coq Require Import List.
+(* 
+Fixpoint foldi_
+  {acc: Type}
+  (cur_i: uint_size)
+  (hi: uint_size) (* {cur_i <= hi} *)
+  (f: uint_size -> acc -> acc) (* {i < hi} *)
+  (cur: acc)
+    : acc :=
 
-(* module LSeq := Lib.Sequence *)
-(* module LBSeq := Lib.ByteSequence *)
+  if cur_i == hi then cur else
+  foldi_ (cur_i + one) hi f (f cur_i cur). *)
 
-(* We use vectors to define lseq *)
+Open Scope nat_scope.
+Fixpoint foldi_ 
+  {acc : Type}
+  (fuel : nat)
+  (i : uint_size)
+  (f : uint_size -> acc -> acc)
+  (cur : acc) : acc :=
+  match fuel with
+  | 0 => cur
+  | S n' => foldi_ n' (add i one) f (f i cur)
+  end.
+Close Scope nat_scope.
+Definition foldi
+  {acc: Type}
+  (lo: uint_size)
+  (hi: uint_size) (* {lo <= hi} *)
+  (f: (uint_size) -> acc -> acc) (* {i < hi} *)
+  (init: acc) : acc :=
+  match Z.sub (unsigned hi) (unsigned lo) with
+  | Z0 => init
+  | Zneg p => init
+  | Zpos p => foldi_ (Pos.to_nat p) lo f init
+  end.
+
+(* Coercion Int32.repr : Z >-> int. *)
+(* Definition N_to_int n : int := Z.of_N n. *)
+(* Coercion N_to_int : N >-> int. *)
+
+(* Compute (foldi 1 2 (fun i acc => i + 1) 0). *)
+
+(*** Seq *)
+
+(* module LSeq = Lib.Sequence *)
+(* module LBSeq = Lib.ByteSequence *)
+
 Definition lseq := Vector.t.
 
-(* Definition lseq_to_list {A len} (s : lseq A len) := 
-  match s with
-  | mkLseq _ _ l => l
-  end. *)
-
-(* simplification *)
 Definition seq (A : Type) := list A.
 
+Definition byte_seq := seq int8.
 Definition list_len := length.
-
-Definition byte_seq := seq uint8.
 
 Definition nseq (A : Type) (len: nat) := lseq A len.
 
 Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 
-Definition seq_new_ {A: Type} (init : A) (len: uint_size) : lseq A len :=
+(* Definition uint_size_to_nat (n :uint_size) : nat := Z.to_nat (unsigned n). *)
+
+
+Definition seq_new_ {A: Type} (init : A) (len: nat) : lseq A len :=
   const init len.
 
 Definition array_from_list {A: Type} (l: list A) : lseq A (length l)
@@ -186,219 +172,147 @@ Definition array_from_list {A: Type} (l: list A) : lseq A (length l)
 
 Axiom array_default_val : forall A, A.
 
-Definition array_new_ {A: Type} (init:A) (len: uint_size)  : lseq A len :=
+Definition array_new_ {A: Type} (init:A) (len: nat)  : lseq A len :=
   const init len.
 
 Check (Fin.t 4).
 Open Scope nat_scope.
-Definition array_index {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) {H : i < len} : A :=
+Definition array_index {A: Type} {len : nat} (s: lseq A len) (i: nat) {H : i < len} : A :=
   Vector.nth s (Fin.of_nat_lt H). 
 
   (* Definition array_index {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) : A :=
   List.nth (N.to_nat i) (lseq_to_list s). *)
 
-Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) {H : i < len} : lseq A len :=
+Definition array_upd {A: Type} {len : nat} (s: lseq A len) (i: nat) (new_v: A) {H : i < len} : lseq A len :=
   Vector.replace s (Fin.of_nat_lt H) new_v.
 
 (* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
 
 Definition array_from_seq
   {a: Type}
-  (out_len:uint_size)
+  (out_len:nat)
   (input: seq a)
   (* {H : List.length input = out_len} *)
     : t a (length input) :=
   Vector.of_list input.
 
 Definition slice {A} (l : seq A) (i j : nat) : seq A := 
-  if j <=? i then nil else firstn (j-i+1) (skipn i l).
-Import ListNotations.
+  if j <=? i then [] else firstn (j-i+1) (skipn i l).
 
 (* Compute (slice [1;2;3;4;5] 1 0). *)
+
+Definition lseq_slice {A n} (l : lseq A n) (i j : nat) : lseq A _ :=
+  of_list (slice (to_list l) i j).
+
+
 (* 
+
 Definition update_sub {A len slen} (v : t A len) (i n) (sub : t A slen) :=
   Vector.append
     (Vector.append (slice v 0 start ) sub) *)
 
+Axiom update_sub : forall {A len slen}, t A len -> nat -> nat -> seq A -> t A slen.
 
-(* Definition array_from_slice
+Definition array_from_slice
   {a: Type}
   (default_value: a)
-  (out_len: uint_size)
+  (out_len: nat)
   (input: seq a)
-  (start: uint_size)
-  (*   (slice_len: uint_size{start + slice_len <= LSeq.length input /\ slice_len <= out_len}) *)
-  (slice_len: uint_size)
+  (start: nat)
+  (*   (slice_len: nat{start + slice_len <= LSeq.length input /\ slice_len <= out_len}) *)
+  (slice_len: nat)
     : lseq a out_len :=
-    let out := Vector.const out_len default_value in
-    LSeq.update_sub out 0 slice_len (LSeq.slice  input start (start + slice_len)). Admitted.
-   *)
+    let out := const default_value out_len in
+    update_sub out 0 slice_len (slice input start (start + slice_len)).
+  
 
 Definition array_slice
   {a: Type}
   (input: seq a)
-  (start: uint_size)
-  (slice_len: uint_size)
-    : lseq a slice_len.
-  Admitted.
+  (start: nat)
+  (slice_len: nat)
+    : lseq a _ :=
+  let out := slice input start (start + slice_len) in
+  array_from_seq slice_len out.
+
 
 Definition array_from_slice_range
   {a: Type}
   (default_value: a)
-  (out_len: uint_size)
+  (out_len: nat)
   (input: seq a)
-  (start_fin: (uint_size * uint_size))
-    : lseq a out_len. Admitted.
-    
+  (start_fin: (nat * nat))
+    : lseq a out_len :=
+    let out := array_new_ default_value out_len in
+    let (start, fin) := start_fin in
+    update_sub out 0 (fin - start) (slice input start fin).
+
+  
 Definition array_slice_range
   {a: Type}
-  {len : uint_size}
+  {len : nat}
   (input: lseq a len)
-  (start_fin:(uint_size * uint_size))
-    : lseq a (snd start_fin - fst start_fin). Admitted.
+  (start_fin:(nat * nat))
+    : lseq a _ :=
+  lseq_slice input (fst start_fin) (snd start_fin).
+  
 
 Definition array_update_start
   {a: Type}
-  {len: uint_size}
+  {len: nat}
   (s: lseq a len)
   (start_s: seq a)
-    : lseq a len. Admitted.
+    : lseq a len :=
+    update_sub s 0 (length start_s) start_s.
 
-Definition array_len  {a: Type} {len: uint_size} (s: lseq a len) := len.
+
+Definition array_len  {a: Type} {len: nat} (s: lseq a len) := len.
 
 (**** Seq manipulation *)
 
 Definition seq_slice
   {a: Type}
   (s: seq a)
-  (start: uint_size)
-  (len: uint_size)
-    : lseq a len. Admitted.
+  (start: nat)
+  (len: nat)
+    : lseq a _ :=
+  array_from_seq len (slice s start (start + len)).
+
 
 Definition seq_update
-  {a: Type}Definition nseq (A : Type) (len: nat) := lseq A len.
-
-  Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
-  
-  Definition seq_new_ {A: Type} (init : A) (len: uint_size) : lseq A len :=
-    const init len.
-  
-  Definition array_from_list {A: Type} (l: list A) : lseq A (length l)
-    := of_list l.
-  
-  (**** Array manipulation *)
-  
-  Axiom array_default_val : forall A, A.
-  
-  Definition array_new_ {A: Type} (init:A) (len: uint_size)  : lseq A len :=
-    const init len.
-  
-  Check (Fin.t 4).
-  Open Scope nat_scope.
-  Definition array_index {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) {H : i < len} : A :=
-    Vector.nth s (Fin.of_nat_lt H). 
-  
-    (* Definition array_index {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) : A :=
-    List.nth (N.to_nat i) (lseq_to_list s). *)
-  
-  Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) {H : i < len} : lseq A len :=
-    Vector.replace s (Fin.of_nat_lt H) new_v.
-  
-  (* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
-  
-  Definition array_from_seq
-    {a: Type}
-    (out_len:uint_size)
-    (input: seq a)
-    (* {H : List.length input = out_len} *)
-      : t a (length input) :=
-    Vector.of_list input.
-  
-  Definition slice {A} (l : seq A) (i j : nat) : seq A := 
-    if j <=? i then nil else firstn (j-i+1) (skipn i l).
-  Import ListNotations.
-  
-  (* Compute (slice [1;2;3;4;5] 1 0). *)
-  (* 
-  Definition update_sub {A len slen} (v : t A len) (i n) (sub : t A slen) :=
-    Vector.append
-      (Vector.append (slice v 0 start ) sub) *)
-  
-  
-  (* Definition array_from_slice
-    {a: Type}
-    (default_value: a)
-    (out_len: uint_size)
-    (input: seq a)
-    (start: uint_size)
-    (*   (slice_len: uint_size{start + slice_len <= LSeq.length input /\ slice_len <= out_len}) *)
-    (slice_len: uint_size)
-      : lseq a out_len :=
-      let out := Vector.const out_len default_value in
-      LSeq.update_sub out 0 slice_len (LSeq.slice  input start (start + slice_len)). Admitted.
-     *)
-  
-  Definition array_slice
-    {a: Type}
-    (input: seq a)
-    (start: uint_size)
-    (slice_len: uint_size)
-      : lseq a slice_len.
-    Admitted.
-  
-  Definition array_from_slice_range
-    {a: Type}
-    (default_value: a)
-    (out_len: uint_size)
-    (input: seq a)
-    (start_fin: (uint_size * uint_size))
-      : lseq a out_len. Admitted.
-      
-  Definition array_slice_range
-    {a: Type}
-    {len : uint_size}
-    (input: lseq a len)
-    (start_fin:(uint_size * uint_size))
-      : lseq a (snd start_fin - fst start_fin). Admitted.
-  
-  Definition array_update_start
-    {a: Type}
-    {len: uint_size}
-    (s: lseq a len)
-    (start_s: seq a)
-      : lseq a len. Admitted.
-  
-  Definition array_len  {a: Type} {len: uint_size} (s: lseq a len) := len.
-  
-  (**** Seq manipulation *)
-  
-  Definition seq_slice
-    {a: Type}
-    (s: seq a)
-    (start: uint_size)
-    (len: uint_size)
-      : lseq a len. Admitted.
-  
-  Definition seq_update
-    {a: Type}
-    (s: seq a)
-    (start: uint_size)
-    (input: seq a)
+  {a: Type}
   (s: seq a)
-  (start: uint_size)
+  (start: nat)
   (input: seq a)
-    : nseq a (length s). Admitted.
+    : nseq a (length s) :=
+  update_sub (of_list s) start (length input) input.
+
+Definition sub {a} (s : list a) start n := 
+  slice s start (start + n).
+
+Definition seq_update_slice
+  {a : Type}
+  (out: seq a)
+  (start_out: nat)
+  (input: seq a)
+  (start_in: nat)
+  (len: nat)
+    : nseq a (length out)
+  :=
+  update_sub (of_list out) start_out len
+    (sub input start_in len).
 
 Definition seq_concat
-  {a: Type}
+  {a : Type}
   (s1 :seq a)
   (s2: seq a)
-  : lseq a (length s1 + length s2).
-  Admitted.
+  : lseq a _ :=
+  of_list (List.rev_append s1 s2).
+
 
 (**** Chunking *)
 
-Definition seq_num_chunks {a: Type} (s: seq a) (chunk_len: uint_size) : uint_size :=
+(* Definition seq_num_chunks {a: Type} (s: seq a) (chunk_len: uint_size) : uint_size :=
   ((length s) + chunk_len - 1) / chunk_len. 
 
 Definition seq_chunk_len
@@ -411,7 +325,7 @@ Definition seq_chunk_len
   if (length s) <? idx_start + chunk_len then
     (length s) - idx_start
   else
-    chunk_len.
+    chunk_len. *)
 
 (* Definition seq_chunk_same_len_same_chunk_len
   {a: Type}

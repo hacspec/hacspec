@@ -1,5 +1,9 @@
 (* From https://github.com/project-everest/hacl-star/blob/dev/lib/Lib.IntTypes.fsti *)
 From Coq Require Import ZArith.
+From compcert Require Import Integers.
+
+Print Make.add.
+modulus
 
 Inductive inttype : Type :=
   U1 | U8 | U16 | U32 | U64 | U128 | S8 | S16 | S32 | S64 | S128.
