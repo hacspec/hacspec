@@ -105,7 +105,7 @@ pub fn chacha20_update(st0:State,m:&ByteSeq) -> ByteSeq {
     for i in 0..n_blocks {
         let msg_block = m.get_exact_chunk(64, i);
         let b = chacha20_encrypt_block(st0,U32(i as u32),&Block::from_seq(&msg_block));
-        blocks_out = blocks_out.set_chunk(64,i,&b);
+        blocks_out = blocks_out.set_exact_chunk(64,i,&b);
     }
     let last_block = m.get_remainder_chunk(64);
     if last_block.len() != 0 {

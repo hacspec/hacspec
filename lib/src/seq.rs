@@ -159,6 +159,19 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 debug_assert!(input.len() == len, "the chunk length should match the input. got {}, expected {}", input.len(), len);
                 self.update_slice(idx_start, input, 0, len)
             }
+
+            #[cfg_attr(feature="use_attributes", in_hacspec)]
+            pub fn set_exact_chunk<A: SeqTrait<T>>(
+                self,
+                chunk_size: usize,
+                chunk_number: usize,
+                input: &A,
+            ) -> Self {
+                debug_assert!(input.len() == chunk_size, "the chunk length must match the chunk_size. got {}, expected {}", input.len(), chunk_size);
+                let idx_start = chunk_size * chunk_number;
+                debug_assert!(idx_start + chunk_size <= self.len(), "not enough space for a full chunk. space left: {}, needed {}", input.len(), chunk_size);
+                self.update_slice(idx_start, input, 0, chunk_size)
+            }
         }
 
         impl<T: $bound $(+ $others)*> SeqTrait<T> for $name<T> {
