@@ -4,6 +4,9 @@
 
 _This is the successor of https://github.com/HACS-workshop/hacspec._
 
+For a quick intro, you can look at the [presentation slides](./presentation_slides.pdf). An in-depth
+[technical report](https://hal.inria.fr/hal-03176482) is also available.
+
 ## Crates
 
 | Name             | Crates.io                                                                 |                                                                 Docs                                                                  |                        CI                         |
@@ -27,9 +30,22 @@ Make sure you have at least `rustup 1.23.0`.
 The [`rust-toolchain`](./language/rust-toolchain) automatically picks the correct Rust nightly version and components.
 The compiler version is currently pinned to `nightly-2021-03-11`.
 
+**Installing the typechecker from the repository**
+```
+cargo install --path language
+```
+
+**Installing the typechecker from crates.io (not always up to date)**
+```
+cargo install hacspec --version 0.2.0-beta.4
+```
+
+**Manually installing dependencies**
+
 First ensure that Rust nightly is installed and the typechecker is installed.
 
 ```bash
+cd language
 rustup toolchain install nightly-2021-03-11
 rustup component add --toolchain nightly-2021-03-11 rustc-dev
 cargo +nightly-2021-03-11 install hacspec
@@ -41,13 +57,16 @@ Depending on your system you might also need `llvm-tools-preview`
 rustup component add --toolchain nightly-2021-03-11 llvm-tools-preview
 ```
 
+**Usage**
+
 In a hacspec crate or workspace directory typechecking can be done as follows now:
+(Specifying `+nightly-2021-03-11` is only necessary if it's not specified in the toolchain as it is in this main repository.)
 
 ```bash
 cargo +nightly-2021-03-11 hacspec <crate-name>
 ```
 
-Note that the crate needs to be compiled before it can be typechecked.
+Note that the crate dependencies need to be compiled before it can be typechecked.
 
 ```bash
 cargo +nightly-2021-03-11 build
@@ -67,6 +86,11 @@ To generate F\* or EasyCrypt code from hacspec the typechecker (see above) is re
 cargo +nightly-2021-03-11 hacspec -o <fst-name>.fst <crate-name>
 cargo +nightly-2021-03-11 hacspec -o <ec-name>.ec <crate-name>
 ```
+
+## Publications & Other material
+
+* [📕 Tech report](https://hal.inria.fr/hal-03176482)
+* [📕 Original hacspec paper](https://www.franziskuskiefer.de/publications/hacspec18/)
 
 # Repository Structure
 
@@ -122,6 +146,13 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [Curve25519](examples/curve25519/src/curve25519.rs)
 - [NTRU-prime](examples/hacspec-ntru-prime/src/ntru-prime.rs)
 - [SHA-3](examples/sha3/src/sha3.rs)
+- [HKDF-SHA256](examples/hkdf/src/hkdf.rs)
+- [HMAC-SHA256](examples/hmac/src/hmac.rs)
+- [BLS12-381](examples/bls12-381/src/bls12-381.rs)
+- [RIOT bootloade](examples/riot-bootloader/src/lib.rs)
+- [GIMLI](examples/gimli/src/gimli.rs)
+- [P256](examples/p256/src/p256.rs)
+- [ECDSA-P256-SHA256](examples/ecdsa-p256-sha256/src/ecdsa.rs)
 
 ## Unsafe examples
 
@@ -129,9 +160,6 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [GF 128](examples-unsafe/src/aes_gcm/gf128.rs)
 - [AES-GCM 128/256](examples-unsafe/src/aes_gcm/aesgcm.rs)
 - [Blake2b](examples-unsafe/src/blake2/blake2b.rs)
-- [HKDF-SHA256](examples-unsafe/src/hkdf/hkdf.rs)
-- [HMAC-SHA256](examples-unsafe/src/hmac/hmac.rs)
-- [P256](examples-unsafe/src/p256/p256.rs)
 
 [//]: # "badges"
 [crate-outdated-image]: https://img.shields.io/badge/crate-outdated-red.svg?logo=rust

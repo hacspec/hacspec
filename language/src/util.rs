@@ -14,3 +14,12 @@ OPTIONS:
 ARGS:
     CRATE            The crate to analyse
 ";
+
+#[allow(dead_code)]
+pub(crate) fn check_vec<T>(v: Vec<Result<T, ()>>) -> Result<Vec<T>, ()> {
+    if v.iter().all(|t| t.is_ok()) {
+        Ok(v.into_iter().map(|t| t.unwrap()).collect())
+    } else {
+        Err(())
+    }
+}

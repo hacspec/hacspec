@@ -29,8 +29,12 @@ fn check_vec<T>(v: Vec<TranslationResult<T>>) -> TranslationResult<Vec<T>> {
     }
 }
 
+fn translate_toplevel_ident(i: &symbol::Ident) -> Spanned<TopLevelIdent> {
+    (TopLevelIdent(i.name.to_ident_string()), i.span)
+}
+
 fn translate_ident(i: &symbol::Ident) -> Spanned<Ident> {
-    (Ident::Original(i.name.to_ident_string()), i.span)
+    (Ident::Unresolved(i.name.to_ident_string()), i.span)
 }
 
 fn translate_type_args(
@@ -104,7 +108,7 @@ pub fn translate_use_path(sess: &Session, path: &ast::Path) -> TranslationResult
 pub fn translate_typ_name(
     sess: &Session,
     path: &ast::Path,
-) -> TranslationResult<(Spanned<Ident>, Option<Vec<Spanned<BaseTyp>>>)> {
+) -> TranslationResult<(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>)> {
     if path.segments.len() > 1 {
         return Err(());
     }
@@ -114,9 +118,9 @@ pub fn translate_typ_name(
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok((translate_ident(&segment.ident), None)),
+            None => Ok((translate_toplevel_ident(&segment.ident), None)),
             Some(generic_args) => Ok((
-                translate_ident(&segment.ident),
+                translate_toplevel_ident(&segment.ident),
                 Some(translate_type_args(sess, generic_args, &path.span)?),
             )),
         },
@@ -146,7 +150,7 @@ pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResul
 pub fn translate_func_name(
     sess: &Session,
     path: &ast::Path,
-) -> TranslationResult<(Option<Spanned<BaseTyp>>, Spanned<Ident>)> {
+) -> TranslationResult<(Option<Spanned<BaseTyp>>, Spanned<TopLevelIdent>)> {
     if path.segments.len() > 2 {
         return Err(());
     }
@@ -175,7 +179,7 @@ pub fn translate_func_name(
     };
     Ok((
         prefix,
-        translate_ident(&path.segments.last().unwrap().ident),
+        translate_toplevel_ident(&path.segments.last().unwrap().ident),
     ))
 }
 
@@ -438,11 +442,8 @@ fn translate_expr(
                     Err(())
                 }
             }?;
-            let func_name_string = match func_name.0 {
-                Ident::Original(ref s) => s,
-                _ => panic!(), // should not happen}
-            };
-            if arr_typs.contains(func_name_string) {
+            let func_name_string = (func_name.clone().0).0;
+            if arr_typs.contains(&func_name_string) {
                 // Special case for array constructors
                 if args.len() != 1 {
                     sess.span_rustspec_err(
@@ -489,7 +490,7 @@ fn translate_expr(
                                         let third_arg = it.next().map_or(Err(()), |x| Ok(x));
                                         Ok((first_arg?, second_arg?, third_arg?))
                                     }?;
-                                    let typ_ident = check_for_ident(sess, &first_arg)?;
+                                    let typ_ident = check_for_toplevel_ident(sess, &first_arg)?;
                                     check_for_comma(sess, &second_arg)?;
                                     let array = check_for_literal_array(sess, &third_arg)?;
                                     let array = array
@@ -534,10 +535,7 @@ fn translate_expr(
                                             (
                                                 Expression::FuncCall(
                                                     None,
-                                                    (
-                                                        Ident::Original("U8".to_string()),
-                                                        call.span(),
-                                                    ),
+                                                    (TopLevelIdent("U8".to_string()), call.span()),
                                                     vec![(
                                                         i.clone(),
                                                         (Borrowing::Consumed, i.1.clone()),
@@ -605,7 +603,7 @@ fn translate_expr(
                 .first()
                 .map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
             let method_name = match method_name.args {
-                None => Ok(translate_ident(&method_name.ident)),
+                None => Ok(translate_toplevel_ident(&method_name.ident)),
                 Some(_) => {
                     sess.span_rustspec_err(*span, "method type arguments not allowed in Hacspec");
                     Err(())
@@ -1336,7 +1334,7 @@ fn check_for_usize(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned
                 }
             },
             TokenKind::Ident(name, _) => Ok((
-                Expression::Named(Ident::Original(name.to_ident_string())),
+                Expression::Named(Ident::Unresolved(name.to_ident_string())),
                 tok.span.clone(),
             )),
             _ => {
@@ -1351,11 +1349,14 @@ fn check_for_usize(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned
     }
 }
 
-fn check_for_ident(sess: &Session, arg: &TokenTree) -> TranslationResult<(Spanned<Ident>, String)> {
+fn check_for_toplevel_ident(
+    sess: &Session,
+    arg: &TokenTree,
+) -> TranslationResult<(Spanned<TopLevelIdent>, String)> {
     match arg {
         TokenTree::Token(tok) => match tok.kind {
             TokenKind::Ident(id, _) => Ok((
-                (Ident::Original(id.to_ident_string()), tok.span.clone()),
+                (TopLevelIdent(id.to_ident_string()), tok.span.clone()),
                 id.to_ident_string(),
             )),
             _ => {
@@ -1386,7 +1387,7 @@ fn translate_simplified_natural_integer_decl(
                 let third_arg = it.next().map_or(Err(()), |x| Ok(x));
                 Ok((first_arg?, second_arg?, third_arg?))
             }?;
-            let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
+            let (typ_ident, typ_ident_string) = check_for_toplevel_ident(sess, &first_arg)?;
             check_for_comma(sess, &second_arg)?;
             let canvas_size = check_for_usize(sess, &third_arg)?;
             Ok((
@@ -1465,19 +1466,19 @@ fn translate_natural_integer_decl(
                     fiftheen_arg?,
                 ))
             }?;
-            check_for_ident(sess, &first_arg)?;
+            check_for_toplevel_ident(sess, &first_arg)?;
             check_for_colon(sess, &second_arg)?;
-            let (typ_ident, typ_ident_string) = check_for_ident(sess, &third_arg)?;
+            let (typ_ident, typ_ident_string) = check_for_toplevel_ident(sess, &third_arg)?;
             check_for_comma(sess, &fourth_arg)?;
-            check_for_ident(sess, &fifth_arg)?;
+            check_for_toplevel_ident(sess, &fifth_arg)?;
             check_for_colon(sess, &sixth_arg)?;
-            let (canvas_typ_ident, _) = check_for_ident(sess, &seventh_arg)?;
+            let (canvas_typ_ident, _) = check_for_toplevel_ident(sess, &seventh_arg)?;
             check_for_comma(sess, &eight_arg)?;
-            check_for_ident(sess, &ninth_arg)?;
+            check_for_toplevel_ident(sess, &ninth_arg)?;
             check_for_colon(sess, &tenth_arg)?;
             let canvas_size = check_for_usize(sess, &eleventh_arg)?;
             check_for_comma(sess, &twelveth_arg)?;
-            check_for_ident(sess, &thirteenth_arg)?;
+            check_for_toplevel_ident(sess, &thirteenth_arg)?;
             check_for_colon(sess, &fourteenth_arg)?;
             let modulo_string = match &fiftheen_arg {
                 TokenTree::Token(tok) => match tok.kind {
@@ -1537,7 +1538,7 @@ fn translate_array_decl(
                 let third_arg = it.next().map_or(Err(()), |x| Ok(x));
                 Ok((first_arg?, second_arg?, third_arg?))
             }?;
-            let (typ_ident, typ_ident_string) = check_for_ident(sess, &first_arg)?;
+            let (typ_ident, typ_ident_string) = check_for_toplevel_ident(sess, &first_arg)?;
             check_for_comma(sess, &second_arg)?;
             let size = check_for_usize(sess, &third_arg)?;
             let cell_t = match cell_t {
@@ -1593,12 +1594,12 @@ fn translate_array_decl(
                 match (fourth_arg, fifth_arg, sixth_arg, seventh_arg) {
                     (Some(fourth_arg), Some(fifth_arg), Some(sixth_arg), Some(seventh_arg)) => {
                         check_for_comma(sess, &fourth_arg)?;
-                        check_for_ident(sess, &fifth_arg)?;
+                        check_for_toplevel_ident(sess, &fifth_arg)?;
                         check_for_colon(sess, &sixth_arg)?;
                         match seventh_arg {
                             TokenTree::Token(tok) => match tok.kind {
                                 TokenKind::Ident(id, _) => {
-                                    Some((Ident::Original(id.to_ident_string()), tok.span.clone()))
+                                    Some((TopLevelIdent(id.to_ident_string()), tok.span.clone()))
                                 }
                                 _ => {
                                     sess.span_rustspec_err(
@@ -1802,7 +1803,7 @@ fn translate_items(
             };
             Ok((
                 ItemTranslationResult::Item(Item::FnDecl(
-                    translate_ident(&i.ident),
+                    translate_toplevel_ident(&i.ident),
                     fn_sig,
                     fn_body,
                 )),
@@ -1840,7 +1841,7 @@ fn translate_items(
                     arr_types,
                     call,
                     Some(BaseTyp::Named(
-                        (Ident::Original("U8".into()), i.span.clone()),
+                        (TopLevelIdent("U8".into()), i.span.clone()),
                         None,
                     )),
                 ),
@@ -1876,7 +1877,7 @@ fn translate_items(
         ItemKind::Const(_, ty, Some(e)) => {
             let new_ty = translate_base_typ(sess, ty)?;
             let new_e = translate_expr_expects_exp(sess, arr_types, e)?;
-            let id = translate_ident(&i.ident);
+            let id = translate_toplevel_ident(&i.ident);
             Ok((
                 ItemTranslationResult::Item(Item::ConstDecl(id, new_ty, new_e)),
                 arr_types.clone(),
@@ -1980,7 +1981,9 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
         .into_iter()
         .map(|(r, _)| {
             match r {
-                ItemTranslationResult::TyAlias(name, ty) => (name, ty),
+                ItemTranslationResult::TyAlias((name, span), ty) => {
+                    ((TopLevelIdent(name), span), ty)
+                }
                 _ => panic!(), // should not happen
             }
         })

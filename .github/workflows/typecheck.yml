@@ -1,0 +1,19 @@
+name: Typecheck
+
+on: [push, pull_request, release]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Typecheck
+        run: examples/typecheck_examples.sh
