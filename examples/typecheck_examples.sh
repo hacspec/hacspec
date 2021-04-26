@@ -4,7 +4,6 @@ set -e
 
 function typecheck {
   echo "Typechecking $1 ..."
-  cargo build -p $1
   if [ "$2" == "ec" ];
   then
     echo "    extracting EC ..."
@@ -20,6 +19,7 @@ function typecheck {
 }
 
 cargo clean
+cargo build
 cargo install --path language
 typecheck hacspec-chacha20             ec      fst
 typecheck hacspec-chacha20poly1305     ec      fst
