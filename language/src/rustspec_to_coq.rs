@@ -366,6 +366,11 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Add => return RcDoc::as_string("+%"),
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
+                        BinOpKind::BitXor => return RcDoc::as_string("xor"),
+                        BinOpKind::BitOr => return RcDoc::as_string("or"),
+                        BinOpKind::BitAnd => return RcDoc::as_string("and"),
+                        BinOpKind::Eq => return RcDoc::as_string("eq"),
+                        BinOpKind::Ne => return RcDoc::as_string("neq"),
                         _ => unimplemented!(),
                     },
                     DictEntry::Array | DictEntry::Alias => {
@@ -437,12 +442,12 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::BitOr, _) => RcDoc::as_string("|."),
         (BinOpKind::Shl, _) => RcDoc::as_string("`shift_left`"),
         (BinOpKind::Shr, _) => RcDoc::as_string("`shift_right`"),
-        (BinOpKind::Lt, _) => RcDoc::as_string("<."),
-        (BinOpKind::Le, _) => RcDoc::as_string("<=."),
-        (BinOpKind::Ge, _) => RcDoc::as_string(">=."),
-        (BinOpKind::Gt, _) => RcDoc::as_string(">."),
-        (BinOpKind::Ne, _) => RcDoc::as_string("!="),
-        (BinOpKind::Eq, _) => RcDoc::as_string("="),
+        (BinOpKind::Lt, _) => RcDoc::as_string("<?"),
+        (BinOpKind::Le, _) => RcDoc::as_string("<=?"),
+        (BinOpKind::Ge, _) => RcDoc::as_string(">=?"),
+        (BinOpKind::Gt, _) => RcDoc::as_string(">?"),
+        (BinOpKind::Ne, _) => RcDoc::as_string("!=?"),
+        (BinOpKind::Eq, _) => RcDoc::as_string("=?"),
         (BinOpKind::And, _) => RcDoc::as_string("&&"),
         (BinOpKind::Or, _) => RcDoc::as_string("||"),
     }
@@ -450,7 +455,7 @@ fn translate_binop<'a, 'b>(
 
 fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
     match op {
-        UnOpKind::Not => RcDoc::as_string("not"),
+        UnOpKind::Not => RcDoc::as_string("negb"),
         UnOpKind::Neg => RcDoc::as_string("-"),
     }
 }
@@ -710,7 +715,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .append(make_paren(translate_expression(e2, top_ctx)))
         }
         Expression::NewArray(_, _, args) => {
-            let size = args.len();
+            // let size = args.len();
             RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
                 .append(RcDoc::space())
                 .append(make_paren(
@@ -724,11 +729,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         false,
                     )
                     .append(RcDoc::space())
-                    .append(
-                        RcDoc::as_string(format!("assert_norm (List.length l = {});", size))
-                            .append(RcDoc::space())
-                            .append(RcDoc::as_string("l")),
-                    ),
+                    .append(RcDoc::as_string("l")),
                 ))
         }
         Expression::IntegerCasting(x, new_t, old_t) => {
@@ -1097,6 +1098,7 @@ pub fn translate_and_write_to_file(
         Require Import IntTypes.\n\
         From Coq Require Import ZArith.\n\
         Section {}.\n\
+        Open Scope bool_scope.\n\n
         Open Scope hacspec_scope.\n\n",
         module_name
     )
