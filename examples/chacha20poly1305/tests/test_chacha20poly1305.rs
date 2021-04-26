@@ -42,14 +42,12 @@ fn kat() {
     let (cipher, mac) = encrypt(k, iv, &aad, &msg);
     assert_bytes_eq!(exp_cipher, cipher);
     assert!(exp_mac.declassify_eq(&mac));
-    match decrypt(k, iv, &aad, &cipher, mac){
-        None => assert!(false),
-        Some(decrypted_msg) => assert_bytes_eq!(msg, decrypted_msg)
-            }
+    let (success, decrypted_msg) = decrypt(k, iv, &aad, &cipher, mac);
+    assert!(success);
+    assert_bytes_eq!(msg, decrypted_msg);
 }
 
 #[test]
 fn kat_test() {
     kat();
 }
-

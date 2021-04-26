@@ -39,12 +39,14 @@ pub fn encrypt(key: ChaChaPolyKey, iv: ChaChaPolyIV, aad: &ByteSeq, msg: &ByteSe
 
 
 pub fn decrypt(key: ChaChaPolyKey, iv: ChaChaPolyIV, aad: &ByteSeq, cipher_text: &ByteSeq, tag: Tag) ->
-       Option<ByteSeq> {
+       (bool, ByteSeq) {
     let mut poly_st = init(key,iv);
     poly_st = poly1305_update_padded(aad, poly_st);
     poly_st = poly1305_update_padded(cipher_text, poly_st);
     let my_tag = finish(aad.len(),cipher_text.len(),poly_st);
     if my_tag.declassify_eq(&tag) {
-        Some(chacha20(key, iv, 1u32, cipher_text))
-    } else {None}
+        (true, chacha20(key, iv, 1u32, cipher_text))
+    } else {
+        (false, ByteSeq::new(0))
+    }
 }
