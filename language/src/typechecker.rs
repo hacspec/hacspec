@@ -7,7 +7,7 @@ use im::{HashMap, HashSet};
 use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
-use rustc_span::{Span, DUMMY_SP};
+use rustc_span::DUMMY_SP;
 
 // TODO: explain that we need typechecking inference to disambiguate method calls
 
@@ -111,7 +111,7 @@ fn is_array(
     sess: &Session,
     t: &Typ,
     top_ctxt: &TopLevelContext,
-    span: &Span,
+    span: &RustspecSpan,
 ) -> Result<(Option<Spanned<ArraySize>>, Spanned<BaseTyp>), ()> {
     match &(t.1).0 {
         BaseTyp::Seq(t1) => Ok((None, t1.as_ref().clone())),
@@ -469,7 +469,7 @@ fn find_func(
     sess: &Session,
     key1: &FnKey,
     top_level_context: &TopLevelContext,
-    span: &Span,
+    span: &RustspecSpan,
 ) -> TypecheckingResult<(FnValue, TypeVarCtx)> {
     let candidates = top_level_context.functions.clone();
     let mut has_err = false;
@@ -1426,7 +1426,7 @@ fn typecheck_pattern(
     }
 }
 
-fn var_set_to_tuple(vars: &VarSet, span: &Span) -> Statement {
+fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan) -> Statement {
     Statement::ReturnExp(if vars.len() > 0 {
         Expression::Tuple(
             vars.iter()
@@ -1765,7 +1765,10 @@ fn typecheck_block(
 ) -> TypecheckingResult<(Block, VarContext)> {
     let mut var_context = original_var_context.clone();
     let mut mutated_vars = HashSet::new();
-    let mut return_typ = Some(((Borrowing::Consumed, DUMMY_SP), (BaseTyp::Unit, DUMMY_SP)));
+    let mut return_typ = Some((
+        (Borrowing::Consumed, DUMMY_SP.into()),
+        (BaseTyp::Unit, DUMMY_SP.into()),
+    ));
     let mut new_stmts = Vec::new();
     let n_stmts = b.stmts.len();
     for (i, s) in b.stmts.into_iter().enumerate() {
@@ -1860,7 +1863,7 @@ fn typecheck_item(
             if let None = unify_types(
                 sess,
                 comp_ret_typ,
-                &((Borrowing::Consumed, DUMMY_SP), sig.ret.clone()),
+                &((Borrowing::Consumed, DUMMY_SP.into()), sig.ret.clone()),
                 &HashMap::new(),
                 top_level_context,
             )? {

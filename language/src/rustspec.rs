@@ -3,12 +3,37 @@ use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
 use rustc_ast::ast::BinOpKind;
-use rustc_span::Span;
+use rustc_span::{MultiSpan, Span};
+use serde::{Serialize, Serializer};
 use std::fmt;
 
-pub type Spanned<T> = (T, Span);
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Copy)]
+pub struct RustspecSpan(pub Span);
 
-#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+impl Serialize for RustspecSpan {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_none()
+    }
+}
+
+pub type Spanned<T> = (T, RustspecSpan);
+
+impl From<RustspecSpan> for MultiSpan {
+    fn from(x: RustspecSpan) -> MultiSpan {
+        x.0.into()
+    }
+}
+
+impl From<Span> for RustspecSpan {
+    fn from(x: Span) -> RustspecSpan {
+        RustspecSpan(x)
+    }
+}
+
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct LocalIdent {
     pub id: usize,
     pub name: String,
@@ -26,7 +51,7 @@ impl fmt::Debug for LocalIdent {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct TopLevelIdent(pub String);
 
 impl fmt::Display for TopLevelIdent {
@@ -41,7 +66,7 @@ impl fmt::Debug for TopLevelIdent {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub enum Ident {
     Unresolved(String),
     Local(LocalIdent),
@@ -70,7 +95,7 @@ impl fmt::Debug for Ident {
 
 pub type VarSet = HashSet<LocalIdent>;
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum Borrowing {
     Borrowed,
     Consumed,
@@ -95,22 +120,22 @@ impl fmt::Debug for Borrowing {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Serialize)]
 pub enum ArraySize {
     Integer(usize),
     Ident(TopLevelIdent),
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Serialize)]
 pub enum Secrecy {
     Secret,
     Public,
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub struct TypVar(pub usize);
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum BaseTyp {
     Unit,
     Bool,
@@ -191,7 +216,7 @@ impl fmt::Debug for BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Literal {
     Unit,
     Bool(bool),
@@ -210,7 +235,7 @@ pub enum Literal {
     Str(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum UnOpKind {
     Not,
     Neg,

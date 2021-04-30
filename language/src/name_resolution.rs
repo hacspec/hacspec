@@ -478,9 +478,9 @@ fn process_decl_item(
                     )?;
                     mod_string.clone()
                 }
-                None => (String::new(), DUMMY_SP), // TODO: replace with real modulo value
-                                                   // For now we can leave this empty because
-                                                   // We don't use it in the typechecker
+                None => (String::new(), DUMMY_SP.into()), // TODO: replace with real modulo value
+                                                          // For now we can leave this empty because
+                                                          // We don't use it in the typechecker
             };
             top_level_context.typ_dict.insert(
                 typ_ident.0.clone() ,
@@ -538,8 +538,8 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
             TopLevelIdent(alias_name.clone()),
             (
                 (
-                    (Borrowing::Consumed, DUMMY_SP),
-                    (alias_ty.clone(), DUMMY_SP),
+                    (Borrowing::Consumed, DUMMY_SP.into()),
+                    (alias_ty.clone(), DUMMY_SP.into()),
                 ),
                 DictEntry::Alias,
             ),
@@ -558,7 +558,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         top_level_ctx.typ_dict.insert(
             TopLevelIdent(array_name),
             (
-                ((Borrowing::Consumed, DUMMY_SP), (array_typ, DUMMY_SP)),
+                (
+                    (Borrowing::Consumed, DUMMY_SP.into()),
+                    (array_typ, DUMMY_SP.into()),
+                ),
                 DictEntry::Array,
             ),
         );
@@ -567,7 +570,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         top_level_ctx.typ_dict.insert(
             TopLevelIdent(nat_int_name),
             (
-                ((Borrowing::Consumed, DUMMY_SP), (nat_int_typ, DUMMY_SP)),
+                (
+                    (Borrowing::Consumed, DUMMY_SP.into()),
+                    (nat_int_typ, DUMMY_SP.into()),
+                ),
                 DictEntry::NaturalInteger,
             ),
         );
@@ -582,7 +588,9 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         );
     }
     for (k, v) in extern_consts {
-        top_level_ctx.consts.insert(TopLevelIdent(k), (v, DUMMY_SP));
+        top_level_ctx
+            .consts
+            .insert(TopLevelIdent(k), (v, DUMMY_SP.into()));
     }
     Ok(())
 }
