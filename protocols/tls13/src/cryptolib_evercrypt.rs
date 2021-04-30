@@ -296,7 +296,7 @@ pub fn verk_from_cert(cert: &Bytes) -> Res<VERK> {
         let mut len = get_short_length(&seq1);
         seq1 = seq1.slice(1, seq1.len() - 1);
         if len_len != 0 {
-            len = get_length(&seq1, len_len);
+            len = get_length(&seq1, len_len) + len_len;
         }
         if element_type == 0x30 {
             // peek into this sequence to see if sequence again with an ecPublicKey

@@ -4,13 +4,13 @@ extern crate bertie;
 extern crate rand;
 
 use bertie::*;
-use criterion::Criterion;
+use criterion::{BatchSize, Criterion};
 use hacspec_dev::prelude::*;
 use hacspec_lib::prelude::*;
 
 fn load_hex(s: &str) -> Bytes {
     let s_no_ws: String = s.split_whitespace().collect();
-    (Bytes::from_hex(&s_no_ws))
+    Bytes::from_hex(&s_no_ws)
 }
 
 fn name(alg: &Algorithms) -> &'static str {
@@ -45,17 +45,18 @@ fn bench(c: &mut Criterion) {
         TLS_CHACHA20_POLY1305_SHA256_X25519,
     ];
 
-    const client_x25519_priv: &str = "49 af 42 ba 7f 79 94 85 2d 71 3e f2 78
+    const CLIENT_X25519_PRIV: &str = "49 af 42 ba 7f 79 94 85 2d 71 3e f2 78
     4b cb ca a7 91 1d e2 6a dc 56 42 cb 63 45 40 e7 ea 50 05";
 
-    const client_x25519_pub: &str = "99 38 1d e5 60 e4 bd 43 d2 3d 8e 43 5a 7d
+    const CLIENT_X25519_PUB: &str = "99 38 1d e5 60 e4 bd 43 d2 3d 8e 43 5a 7d
     ba fe b3 c0 6e 51 c1 3c ae 4d 54 13 69 1e 52 9a af 2c";
 
-    const server_x25519_priv: &str = "b1 58 0e ea df 6d d5 89 b8 ef 4f 2d 56
+    const SERVER_X25519_PRIV: &str = "b1 58 0e ea df 6d d5 89 b8 ef 4f 2d 56
     52 57 8c c8 10 e9 98 01 91 ec 8d 05 83 08 ce a2 16 a2 1e";
 
-    const server_x25519_pub: &str = "c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6
+    const SERVER_X25519_PUB: &str = "c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6
     72 e1 56 d6 cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f";
+
     const ECDSA_P256_SHA256_CERT: [u8; 522] = [
         0x30, 0x82, 0x02, 0x06, 0x30, 0x82, 0x01, 0xAC, 0x02, 0x09, 0x00, 0xD1, 0xA2, 0xE4, 0xD5,
         0x78, 0x05, 0x08, 0x61, 0x30, 0x0A, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03,
@@ -100,60 +101,94 @@ fn bench(c: &mut Criterion) {
     ];
 
     for &ciphersuite in CIPHERSUITES.iter() {
-        c.bench_function(&format!("Bulk performance: {}", name(&ciphersuite)), |b| {
-            b.iter(|| {
-                let mut cr: Random = Random::new();
-                cr[0] = U8(1);
-                let x = load_hex(client_x25519_priv);
-                let ent_c = Entropy::from_seq(&cr.concat(&x));
-                let _gx = load_hex(client_x25519_pub);
-                let sn = load_hex("6c 6f 63 61 6c 68 6f 73 74");
-                let sn_ = load_hex("6c 6f 63 61 6c 68 6f 73 74");
-                let mut sr: Random = Random::new();
-                sr[0] = U8(2);
-                let y = load_hex(server_x25519_priv);
-                let _gy = load_hex(server_x25519_pub);
-                let ent_s = Entropy::from_seq(&sr.concat(&y));
+        fn init_tls_session(ciphersuite: Algorithms) -> (DuplexCipherState1, DuplexCipherState1) {
+            let mut cr: Random = Random::new();
+            cr[0] = U8(1);
+            let x = load_hex(CLIENT_X25519_PRIV);
+            let ent_c = Entropy::from_seq(&cr.concat(&x));
+            let _gx = load_hex(CLIENT_X25519_PUB);
+            let sn = load_hex("6c 6f 63 61 6c 68 6f 73 74");
+            let sn_ = load_hex("6c 6f 63 61 6c 68 6f 73 74");
+            let mut sr: Random = Random::new();
+            sr[0] = U8(2);
+            let y = load_hex(SERVER_X25519_PRIV);
+            let _gy = load_hex(SERVER_X25519_PUB);
+            let ent_s = Entropy::from_seq(&sr.concat(&y));
 
-                let db = ServerDB(
-                    sn_,
-                    Bytes::from_public_slice(&ECDSA_P256_SHA256_CERT),
-                    SIGK::from_public_slice(&ECDSA_P256_SHA256_KEY),
-                    None,
-                );
+            let db = ServerDB(
+                sn_,
+                Bytes::from_public_slice(&ECDSA_P256_SHA256_CERT),
+                SIGK::from_public_slice(&ECDSA_P256_SHA256_KEY),
+                None,
+            );
 
-                let mut b = true;
-                match client_init(TLS_AES_128_GCM_SHA256_X25519, &sn, None, None, ent_c) {
-                    Err(_x) => {
-                        b = false;
-                    }
-                    Ok((ch, cstate, _)) => {
-                        match server_init(TLS_AES_128_GCM_SHA256_X25519, db, &ch, ent_s) {
-                            Err(x) => {
-                                b = false;
-                            }
-                            Ok((sh, sf, sstate, _, _)) => match client_set_params(&sh, cstate) {
-                                Err(_x) => {
-                                    b = false;
-                                }
-                                Ok((cstate, _)) => match client_finish(&sf, cstate) {
-                                    Err(_x) => {
-                                        b = false;
-                                    }
-                                    Ok((cf, _cstate, _)) => match server_finish(&cf, sstate) {
-                                        Err(_x) => {
-                                            b = false;
-                                        }
-                                        Ok(_sstate) => (),
-                                    },
-                                },
-                            },
+            let (ch, cstate, _) = client_init(ciphersuite, &sn, None, None, ent_c).unwrap();
+            let (sh, sf, sstate, _, server_cipher) =
+                server_init(ciphersuite, db, &ch, ent_s).unwrap();
+            let (cstate, _) = client_set_params(&sh, cstate).unwrap();
+            let (cf, _cstate, client_cipher) = client_finish(&sf, cstate).unwrap();
+            let _sstate = server_finish(&cf, sstate).unwrap();
+
+            (client_cipher, server_cipher)
+        }
+
+        c.bench_function(
+            &format!("Bulk performance encrypt: {}", name(&ciphersuite)),
+            |b| {
+                b.iter_batched(
+                    || {
+                        let (client_cipher, server_cipher) = init_tls_session(ciphersuite);
+                        // Test on 1024 1 MB chunks
+                        let mut data = Vec::new();
+                        for _ in 0..1024 {
+                            data.push(Bytes::from_public_slice(&random_byte_vec(1024)));
                         }
-                    }
-                }
-                assert!(b);
-            });
-        });
+                        (client_cipher, server_cipher, data)
+                    },
+                    |(mut client_cipher, _server_cipher, mut data)| {
+                        // Send data from client to server.
+                        for chunk in data.drain(..) {
+                            let (_ap, cc) =
+                                encrypt_data(&AppData(chunk), 0, client_cipher).unwrap();
+                            client_cipher = cc;
+                        }
+                    },
+                    BatchSize::SmallInput,
+                );
+            },
+        );
+
+        c.bench_function(
+            &format!("Bulk performance decrypt: {}", name(&ciphersuite)),
+            |b| {
+                b.iter_batched(
+                    || {
+                        let (mut client_cipher, server_cipher) = init_tls_session(ciphersuite);
+                        // Test on 1024 1 MB chunks
+                        let mut data = Vec::new();
+                        for _ in 0..1024 {
+                            data.push(Bytes::from_public_slice(&random_byte_vec(1024)));
+                        }
+                        // encrypt
+                        let mut ctxts = Vec::new();
+                        for chunk in data.drain(..) {
+                            let (ap, cc) = encrypt_data(&AppData(chunk), 0, client_cipher).unwrap();
+                            client_cipher = cc;
+                            ctxts.push(ap);
+                        }
+                        (client_cipher, server_cipher, ctxts)
+                    },
+                    |(_client_cipher, mut server_cipher, mut ctxts)| {
+                        // Send data from client to server.
+                        for chunk in ctxts.drain(..) {
+                            let (_ap, sc) = decrypt_data(&chunk, server_cipher).unwrap();
+                            server_cipher = sc;
+                        }
+                    },
+                    BatchSize::SmallInput,
+                );
+            },
+        );
     }
 }
 
