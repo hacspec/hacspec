@@ -187,7 +187,7 @@ const client_finished_record: &str = "17 03 03 00 35 75 ec 4d c2 38 cc e6
 d8 7f 38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7
 26 c4 05 46";
 
-const default_algs: Algorithms = Algorithms(
+const TLS_AES_128_GCM_SHA256_X25519_RSA: Algorithms = Algorithms(
     HashAlgorithm::SHA256,
     AEADAlgorithm::AES_128_GCM,
     SignatureScheme::RSA_PSS_RSAE_SHA256,
@@ -196,11 +196,31 @@ const default_algs: Algorithms = Algorithms(
     false,
 );
 
+const TLS_AES_128_GCM_SHA256_X25519: Algorithms = Algorithms(
+    HashAlgorithm::SHA256,
+    AEADAlgorithm::AES_128_GCM,
+    SignatureScheme::ECDSA_SECP256r1_SHA256,
+    NamedGroup::X25519,
+    false,
+    false,
+);
+const TLS_CHACHA20_POLY1305_SHA256_X25519: Algorithms = Algorithms(
+    HashAlgorithm::SHA256,
+    AEADAlgorithm::CHACHA20_POLY1305,
+    SignatureScheme::ECDSA_SECP256r1_SHA256,
+    NamedGroup::X25519,
+    false,
+    false,
+);
+
+const ECDSA_P256_SHA256_CERT: [u8; 522] = [0x30, 0x82, 0x02, 0x06, 0x30, 0x82, 0x01, 0xAC, 0x02, 0x09, 0x00, 0xD1, 0xA2, 0xE4, 0xD5, 0x78, 0x05, 0x08, 0x61, 0x30, 0x0A, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03, 0x02, 0x30, 0x81, 0x8A, 0x31, 0x0B, 0x30, 0x09, 0x06, 0x03, 0x55, 0x04, 0x06, 0x13, 0x02, 0x44, 0x45, 0x31, 0x0F, 0x30, 0x0D, 0x06, 0x03, 0x55, 0x04, 0x08, 0x0C, 0x06, 0x42, 0x65, 0x72, 0x6C, 0x69, 0x6E, 0x31, 0x0F, 0x30, 0x0D, 0x06, 0x03, 0x55, 0x04, 0x07, 0x0C, 0x06, 0x42, 0x65, 0x72, 0x6C, 0x69, 0x6E, 0x31, 0x10, 0x30, 0x0E, 0x06, 0x03, 0x55, 0x04, 0x0A, 0x0C, 0x07, 0x68, 0x61, 0x63, 0x73, 0x70, 0x65, 0x63, 0x31, 0x0F, 0x30, 0x0D, 0x06, 0x03, 0x55, 0x04, 0x0B, 0x0C, 0x06, 0x62, 0x65, 0x72, 0x74, 0x69, 0x65, 0x31, 0x17, 0x30, 0x15, 0x06, 0x03, 0x55, 0x04, 0x03, 0x0C, 0x0E, 0x62, 0x65, 0x72, 0x74, 0x69, 0x65, 0x2E, 0x68, 0x61, 0x63, 0x73, 0x70, 0x65, 0x63, 0x31, 0x1D, 0x30, 0x1B, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x01, 0x16, 0x0E, 0x62, 0x65, 0x72, 0x74, 0x69, 0x65, 0x40, 0x68, 0x61, 0x63, 0x73, 0x70, 0x65, 0x63, 0x30, 0x1E, 0x17, 0x0D, 0x32, 0x31, 0x30, 0x34, 0x32, 0x39, 0x31, 0x31, 0x34, 0x37, 0x34, 0x35, 0x5A, 0x17, 0x0D, 0x33, 0x31, 0x30, 0x34, 0x32, 0x37, 0x31, 0x31, 0x34, 0x37, 0x34, 0x35, 0x5A, 0x30, 0x81, 0x8A, 0x31, 0x0B, 0x30, 0x09, 0x06, 0x03, 0x55, 0x04, 0x06, 0x13, 0x02, 0x44, 0x45, 0x31, 0x0F, 0x30, 0x0D, 0x06, 0x03, 0x55, 0x04, 0x08, 0x0C, 0x06, 0x42, 0x65, 0x72, 0x6C, 0x69, 0x6E, 0x31, 0x0F, 0x30, 0x0D, 0x06, 0x03, 0x55, 0x04, 0x07, 0x0C, 0x06, 0x42, 0x65, 0x72, 0x6C, 0x69, 0x6E, 0x31, 0x10, 0x30, 0x0E, 0x06, 0x03, 0x55, 0x04, 0x0A, 0x0C, 0x07, 0x68, 0x61, 0x63, 0x73, 0x70, 0x65, 0x63, 0x31, 0x0F, 0x30, 0x0D, 0x06, 0x03, 0x55, 0x04, 0x0B, 0x0C, 0x06, 0x62, 0x65, 0x72, 0x74, 0x69, 0x65, 0x31, 0x17, 0x30, 0x15, 0x06, 0x03, 0x55, 0x04, 0x03, 0x0C, 0x0E, 0x62, 0x65, 0x72, 0x74, 0x69, 0x65, 0x2E, 0x68, 0x61, 0x63, 0x73, 0x70, 0x65, 0x63, 0x31, 0x1D, 0x30, 0x1B, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x09, 0x01, 0x16, 0x0E, 0x62, 0x65, 0x72, 0x74, 0x69, 0x65, 0x40, 0x68, 0x61, 0x63, 0x73, 0x70, 0x65, 0x63, 0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00, 0x04, 0xD8, 0xE0, 0x74, 0xF7, 0xCB, 0xEF, 0x19, 0xC7, 0x56, 0xA4, 0x52, 0x59, 0x0C, 0x02, 0x70, 0xCC, 0x9B, 0xFC, 0x45, 0x8D, 0x73, 0x28, 0x39, 0x1D, 0x3B, 0xF5, 0x26, 0x17, 0x8B, 0x0D, 0x25, 0x04, 0x91, 0xE8, 0xC8, 0x72, 0x22, 0x59, 0x9A, 0x2C, 0xBB, 0x26, 0x31, 0xB1, 0xCC, 0x6B, 0x6F, 0x5A, 0x10, 0xD9, 0x7D, 0xD7, 0x86, 0x56, 0xFB, 0x89, 0x39, 0x9E, 0x0A, 0x91, 0x9F, 0x35, 0x81, 0xE7, 0x30, 0x0A, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03, 0x02, 0x03, 0x48, 0x00, 0x30, 0x45, 0x02, 0x21, 0x00, 0xA1, 0x81, 0xB3, 0xD6, 0x8C, 0x9F, 0x62, 0x66, 0xC6, 0xB7, 0x3F, 0x26, 0xE7, 0xFD, 0x88, 0xF9, 0x4B, 0xD8, 0x15, 0xD1, 0x45, 0xC7, 0x66, 0x69, 0x40, 0xC2, 0x55, 0x21, 0x84, 0x9F, 0xE6, 0x8C, 0x02, 0x20, 0x10, 0x7E, 0xEF, 0xF3, 0x1D, 0x58, 0x32, 0x6E, 0xF7, 0xCB, 0x0A, 0x47, 0xF2, 0xBA, 0xEB, 0xBC, 0xB7, 0x8F, 0x46, 0x56, 0xF1, 0x5B, 0xCC, 0x2E, 0xD5, 0xB3, 0xC4, 0x0F, 0x5B, 0x22, 0xBD, 0x02];
+const ECDSA_P256_SHA256_KEY: [u8; 32] = [0xA6, 0xDE, 0x48, 0x21, 0x0E, 0x56, 0x12, 0xDD, 0x95, 0x3A, 0x91, 0x4E, 0x9F, 0x56, 0xC3, 0xA2, 0xDB, 0x7A, 0x36, 0x20, 0x08, 0xE9, 0x52, 0xEE, 0xDB, 0xCE, 0xAC, 0x3B, 0x26, 0xF9, 0x20, 0xBD];
+
 #[test]
 fn test_parse_client_hello() {
     let ch = HandshakeData(load_hex(client_hello));
     //   let default_algs = Algorithms(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
-    let res = parse_client_hello(&default_algs, &ch);
+    let res = parse_client_hello(&TLS_AES_128_GCM_SHA256_X25519_RSA, &ch);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -229,7 +249,7 @@ fn test_parse_client_hello_record() {
             println!("Error: {}", x);
             b = false;
         }
-        Ok((hs, len)) => match parse_client_hello(&default_algs, &hs) {
+        Ok((hs, len)) => match parse_client_hello(&TLS_AES_128_GCM_SHA256_X25519_RSA, &hs) {
             Err(x) => {
                 println!("Error: {}", x);
                 b = false;
@@ -252,7 +272,7 @@ fn test_parse_client_hello_roundtrip() {
     let cr: Random = Random::new();
     let gx = load_hex(client_x25519_pub);
     let sn = Bytes::new(23);
-    let ch = tls13formats::client_hello(&default_algs,&cr,&gx,&sn,&None);
+    let ch = tls13formats::client_hello(&TLS_AES_128_GCM_SHA256_X25519_RSA,&cr,&gx,&sn,&None);
     let mut b = true;
     match ch {
         Err(x) => {
@@ -261,7 +281,7 @@ fn test_parse_client_hello_roundtrip() {
         },
         Ok((ch,_)) => {
             //   let default_algs = Algorithms(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
-            let res = parse_client_hello(&default_algs, &ch);
+            let res = parse_client_hello(&TLS_AES_128_GCM_SHA256_X25519_RSA, &ch);
             let b = res.is_ok();
             match res {
                 Err(x) => {
@@ -285,7 +305,7 @@ fn test_parse_client_hello_roundtrip() {
 fn test_parse_server_hello() {
     let sh = HandshakeData(load_hex(server_hello));
     //   let default_algs = Algorithms(SHA256,AES_128_GCM,ECDSA_SECP256r1_SHA256,X25519,false,false);
-    let res = parse_server_hello(&default_algs, &sh);
+    let res = parse_server_hello(&TLS_AES_128_GCM_SHA256_X25519_RSA, &sh);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -306,7 +326,7 @@ fn test_parse_server_hello_roundtrip() {
     let mut sid = Bytes::new(24);
     sid[0] = U8(255);
     let gy = load_hex(server_x25519_pub);
-    let sh = tls13formats::server_hello(&default_algs,&sr,&sid,&gy);
+    let sh = tls13formats::server_hello(&TLS_AES_128_GCM_SHA256_X25519_RSA,&sr,&sid,&gy);
     let mut b = true;
     match sh {
         Err(x) => {
@@ -315,7 +335,7 @@ fn test_parse_server_hello_roundtrip() {
         },
         Ok(sh) => {
             //   let default_algs = Algorithms(SHA256,CHACHA20_POLY1305,ECDSA_SECP256r1_SHA256,X25519,false,false);
-            let res = parse_server_hello(&default_algs, &sh);
+            let res = parse_server_hello(&TLS_AES_128_GCM_SHA256_X25519_RSA, &sh);
             let b = res.is_ok();
             match res {
                 Err(x) => {
@@ -336,7 +356,7 @@ fn test_parse_server_hello_roundtrip() {
 #[test]
 fn test_parse_encrypted_extensions() {
     let ee = HandshakeData(load_hex(encrypted_extensions));
-    let res = parse_encrypted_extensions(&default_algs, &ee);
+    let res = parse_encrypted_extensions(&TLS_AES_128_GCM_SHA256_X25519_RSA, &ee);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -352,7 +372,7 @@ fn test_parse_encrypted_extensions() {
 #[test]
 fn test_parse_server_certificate() {
     let sc = HandshakeData(load_hex(server_certificate));
-    let res = parse_server_certificate(&default_algs, &sc);
+    let res = parse_server_certificate(&TLS_AES_128_GCM_SHA256_X25519_RSA, &sc);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -368,7 +388,7 @@ fn test_parse_server_certificate() {
 #[test]
 fn test_parse_server_certificate_verify() {
     let cv = HandshakeData(load_hex(server_certificate_verify));
-    let res = parse_certificate_verify(&default_algs, &cv);
+    let res = parse_certificate_verify(&TLS_AES_128_GCM_SHA256_X25519_RSA, &cv);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -384,7 +404,7 @@ fn test_parse_server_certificate_verify() {
 #[test]
 fn test_parse_server_finished() {
     let sf = HandshakeData(load_hex(server_finished));
-    let res = parse_finished(&default_algs, &sf);
+    let res = parse_finished(&TLS_AES_128_GCM_SHA256_X25519_RSA, &sf);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -400,7 +420,7 @@ fn test_parse_server_finished() {
 #[test]
 fn test_parse_client_finished() {
     let cf = HandshakeData(load_hex(client_finished));
-    let res = parse_finished(&default_algs, &cf);
+    let res = parse_finished(&TLS_AES_128_GCM_SHA256_X25519_RSA, &cf);
     let b = res.is_ok();
     match res {
         Err(x) => {
@@ -434,7 +454,7 @@ fn test_key_schedule() {
     let cv: Bytes = load_hex(server_certificate_verify);
     let sf: Bytes = load_hex(server_finished);
     let gxy: KEY = KEY::from_seq(&load_hex(shared_secret));
-    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = default_algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = TLS_AES_128_GCM_SHA256_X25519_RSA;
     let tx = ch.concat(&sh);
     let tx_hash = hash(&ha, &tx);
     let mut b = true;
@@ -527,7 +547,7 @@ fn test_finished() {
     let sc: Bytes = load_hex(server_certificate);
     let cv: Bytes = load_hex(server_certificate_verify);
     let sf: Bytes = load_hex(server_finished);
-    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = default_algs;
+    let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = TLS_AES_128_GCM_SHA256_X25519_RSA;
     let tx1 = ch.concat(&sh).concat(&ee).concat(&sc).concat(&cv);
     let tx_hash1 = hash(&ha, &tx1);
     let tx2 = tx1.concat(&sf);
@@ -549,7 +569,6 @@ fn test_finished() {
     assert!(b);
 }
 
-//TODO: PUT A REAL SERVER CERTIFICATE IN SERVERDB TO PASS THE TEST
 #[test]
 fn test_full_round_trip() {
     let mut cr: Random = Random::new();
@@ -565,15 +584,14 @@ fn test_full_round_trip() {
     let gy = load_hex(server_x25519_pub);
     let ent_s = Entropy::from_seq(&sr.concat(&y));
 
-    //TODO: PUT A REAL SERVER CERTIFICATE IN HERE TO PASS THE TEST
-    let db = ServerDB(sn_,Bytes::new(123),SIGK::new(64),None);
+    let db = ServerDB(sn_,Bytes::from_public_slice(&ECDSA_P256_SHA256_CERT),SIGK::from_public_slice(&ECDSA_P256_SHA256_KEY),None);
     
     let mut b = true;
-    match client_init(default_algs,&sn,None,None,ent_c) {
+    match client_init(TLS_AES_128_GCM_SHA256_X25519,&sn,None,None,ent_c) {
         Err(x) => {println!("Client0 Error {}",x);  b = false;},
         Ok((ch,cstate,_)) => {
             println!("Client0 Complete");
-            match server_init(default_algs,db,&ch,ent_s) {
+            match server_init(TLS_AES_128_GCM_SHA256_X25519,db,&ch,ent_s) {
                 Err(x) => {println!("Server0 Error {}",x); b = false;},
                 Ok((sh,sf,sstate,_,_)) => {
                         println!("Server0 Complete");

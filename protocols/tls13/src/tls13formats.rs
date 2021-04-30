@@ -280,7 +280,6 @@ pub struct Algorithms(
     pub bool,
 );
 
-
 pub fn ciphersuite(algs:&Algorithms) -> Res<Bytes> {
     let Algorithms(ha, ae, sa, gn, psk_mode, zero_rtt) = algs;
     match (ha, ae) {
