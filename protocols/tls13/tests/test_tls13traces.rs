@@ -646,7 +646,7 @@ fn test_full_round_trip() {
                     println!("Server0 Error {}", x);
                     b = false;
                 }
-                Ok((sh, sf, sstate, _, _)) => {
+                Ok((sh, sf, sstate, _, server_cipher)) => {
                     println!("Server0 Complete");
                     match client_set_params(&sh, cstate) {
                         Err(x) => {
@@ -658,15 +658,37 @@ fn test_full_round_trip() {
                                 println!("Client1 Error {}", x);
                                 b = false;
                             }
-                            Ok((cf, cstate, _)) => {
+                            Ok((cf, cstate, client_cipher)) => {
                                 println!("Client Complete");
                                 match server_finish(&cf, sstate) {
                                     Err(x) => {
                                         println!("Server1 Error {}", x);
                                         b = false;
                                     }
-                                    Ok(sstate) => {
+                                    Ok(_sstate) => {
                                         println!("Server Complete");
+
+                                        // Send data from client to server.
+                                        let data = Bytes::from_public_slice(
+                                            b"Hello server, here is the client",
+                                        );
+                                        let (ap, client_cipher) =
+                                            encrypt_data(&AppData(data.clone()), 0, client_cipher)
+                                                .unwrap();
+                                        let (ap, server_cipher) =
+                                            decrypt_data(&ap, server_cipher).unwrap();
+                                        assert_bytes_eq!(data, ap.0);
+
+                                        // Send data from server to client.
+                                        let data = Bytes::from_public_slice(
+                                            b"Hello client, here is the server.",
+                                        );
+                                        let (ap, _server_cipher) =
+                                            encrypt_data(&AppData(data.clone()), 0, server_cipher)
+                                                .unwrap();
+                                        let (ap, _client_cipher) =
+                                            decrypt_data(&ap, client_cipher).unwrap();
+                                        assert_bytes_eq!(data, ap.0);
                                     }
                                 }
                             }
