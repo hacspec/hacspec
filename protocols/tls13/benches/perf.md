@@ -33,6 +33,7 @@
 * System:
     * macOS 11.3, i7-1068NG7 @ 2.3GHz
     * rustc 1.51.0
+* *We don't sample fresh reandomness! This is cheating a little.*
 
 ## hacspec backend
 ### client

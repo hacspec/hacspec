@@ -613,17 +613,13 @@ fn test_finished() {
 
 #[test]
 fn test_full_round_trip() {
-    let mut cr: Random = Random::new();
-    cr[0] = U8(1);
+    let cr = Random::from_public_slice(&random_byte_vec(Random::length()));
     let x = load_hex(client_x25519_priv);
     let ent_c = Entropy::from_seq(&cr.concat(&x));
-    let gx = load_hex(client_x25519_pub);
     let sn = load_hex("6c 6f 63 61 6c 68 6f 73 74");
     let sn_ = load_hex("6c 6f 63 61 6c 68 6f 73 74");
-    let mut sr: Random = Random::new();
-    sr[0] = U8(2);
+    let sr = Random::from_public_slice(&random_byte_vec(Random::length()));
     let y = load_hex(server_x25519_priv);
-    let gy = load_hex(server_x25519_pub);
     let ent_s = Entropy::from_seq(&sr.concat(&y));
 
     let db = ServerDB(
