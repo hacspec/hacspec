@@ -14,7 +14,7 @@ impl Serialize for RustspecSpan {
     where
         S: Serializer,
     {
-        serializer.serialize_none()
+        serializer.serialize_unit()
     }
 }
 

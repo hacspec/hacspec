@@ -34,6 +34,7 @@ use serde::Deserialize;
 use serde_json;
 use std::env;
 use std::ffi::OsStr;
+use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use util::APP_USAGE;
@@ -132,6 +133,29 @@ impl Callbacks for HacspecCallbacks {
                     &file,
                     &top_ctx,
                 ),
+                "json" => {
+                    let file = file.trim();
+                    let path = Path::new(file);
+                    let file = match File::create(&path) {
+                        Err(why) => {
+                            &compiler.session().err(
+                                format!("Unable to write to output file {}: \"{}\"", file, why)
+                                    .as_str(),
+                            );
+                            return Compilation::Stop;
+                        }
+                        Ok(file) => file,
+                    };
+                    match serde_json::to_writer_pretty(file, &krate) {
+                        Err(why) => {
+                            &compiler
+                                .session()
+                                .err(format!("Unable to serialize program: \"{}\"", why).as_str());
+                            return Compilation::Stop;
+                        }
+                        Ok(_) => (),
+                    };
+                }
                 _ => {
                     &compiler
                         .session()

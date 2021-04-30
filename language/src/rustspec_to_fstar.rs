@@ -1065,7 +1065,7 @@ pub fn translate_and_write_to_file(
     let path = path::Path::new(file);
     let mut file = match File::create(&path) {
         Err(why) => {
-            sess.err(format!("Unable to write to outuput file {}: \"{}\"", file, why).as_str());
+            sess.err(format!("Unable to write to output file {}: \"{}\"", file, why).as_str());
             return;
         }
         Ok(file) => file,
