@@ -4,6 +4,9 @@
 
 _This is the successor of https://github.com/HACS-workshop/hacspec._
 
+For a quick intro, you can look at the [presentation slides](./presentation_slides.pdf). An in-depth
+[technical report](https://hal.inria.fr/hal-03176482) is also available.
+
 ## Crates
 
 | Name             | Crates.io                                                                 |                                                                 Docs                                                                  |                        CI                         |

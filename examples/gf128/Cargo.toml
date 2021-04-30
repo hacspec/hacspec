@@ -1,0 +1,11 @@
+[package]
+name = "hacspec-gf128"
+version = "0.1.0"
+authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
+edition = "2018"
+
+[lib]
+path = "src/gf128.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
