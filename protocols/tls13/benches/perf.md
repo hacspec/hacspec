@@ -7,6 +7,7 @@
 * System:
     * macOS 11.3, i7-1068NG7 @ 2.3GHz
     * rustc 1.51.0
+* [bulk.rs](./bulk.rs)
 
 ## hacspec backend
 ### encrypt
@@ -34,23 +35,24 @@
     * macOS 11.3, i7-1068NG7 @ 2.3GHz
     * rustc 1.51.0
 * *We don't sample fresh reandomness! This is cheating a little.*
+* [handshake.rs](./handshake.rs)
 
 ## hacspec backend
 ### client
-* TLS_AES_128_GCM_SHA256_X25519:
+* TLS_AES_128_GCM_SHA256_X25519: 295.62 ms
 * TLS_AES_128_GCM_SHA256_SECP256r1:
 
 ### server
-* TLS_AES_128_GCM_SHA256_X25519:
+* TLS_AES_128_GCM_SHA256_X25519: 174.28 ms
 * TLS_AES_128_GCM_SHA256_SECP256r1:
 
 ## evercrypt backend
 ### client
-* TLS_AES_128_GCM_SHA256_X25519:
+* TLS_AES_128_GCM_SHA256_X25519: 1.1614 ms
 * TLS_AES_128_GCM_SHA256_SECP256r1:
 
 ### server
-* TLS_AES_128_GCM_SHA256_X25519:
+* TLS_AES_128_GCM_SHA256_X25519: 471.85 us
 * TLS_AES_128_GCM_SHA256_SECP256r1:
 
 # Links

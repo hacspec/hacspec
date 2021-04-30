@@ -49,3 +49,7 @@ criterion = "0.3"
 [[bench]]
 name = "bulk"
 harness = false
+
+[[bench]]
+name = "handshake"
+harness = false
