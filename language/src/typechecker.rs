@@ -5,7 +5,6 @@ use crate::HacspecErrorEmitter;
 
 use im::{HashMap, HashSet};
 use itertools::Itertools;
-use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use rustc_span::DUMMY_SP;
 
@@ -1427,9 +1426,10 @@ fn typecheck_pattern(
 }
 
 fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan) -> Statement {
-    Statement::ReturnExp(if vars.len() > 0 {
+    Statement::ReturnExp(if vars.0.len() > 0 {
         Expression::Tuple(
-            vars.iter()
+            vars.0
+                .iter()
                 .sorted()
                 .map(|i| (Expression::Named(Ident::Local(i.clone())), span.clone()))
                 .collect(),
@@ -1484,7 +1484,7 @@ fn typecheck_statement(
                 ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 new_var_context.clone().union(pat_var_context),
-                HashSet::new(),
+                VarSet(HashSet::new()),
             ))
         }
         Statement::Reassignment((x, x_span), e) => {
@@ -1512,10 +1512,10 @@ fn typecheck_statement(
                 Statement::Reassignment((x.clone(), x_span.clone()), (new_e, e.1.clone())),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 add_var(&x, &x_typ, &new_var_context),
-                HashSet::unit(match x.clone() {
+                VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
                     _ => panic!(), // should not happen
-                }),
+                })),
             ))
         }
         Statement::ArrayUpdate((x, x_span), e1, e2) => {
@@ -1570,10 +1570,10 @@ fn typecheck_statement(
                 ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 var_context,
-                HashSet::unit(match x.clone() {
+                VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
                     _ => panic!(), // should not happen
-                }),
+                })),
             ))
         }
         Statement::ReturnExp(e) => {
@@ -1583,7 +1583,7 @@ fn typecheck_statement(
                 Statement::ReturnExp(new_e),
                 e_t,
                 var_context,
-                HashSet::new(),
+                VarSet(HashSet::new()),
             ))
         }
         Statement::Conditional(cond, (b1, b1_span), b2, _) => {
@@ -1653,17 +1653,19 @@ fn typecheck_statement(
                     };
                 }
             }
-            let new_mutated = match &new_b1.mutated {
-                None => HashSet::new(),
-                Some(m) => m.vars.clone(),
-            }
-            .union(match &new_b2 {
-                None => HashSet::new(),
-                Some((new_b2, _)) => match &new_b2.mutated {
+            let new_mutated = VarSet(
+                match &new_b1.mutated {
                     None => HashSet::new(),
-                    Some(m) => m.vars.clone(),
-                },
-            });
+                    Some(m) => m.vars.0.clone(),
+                }
+                .union(match &new_b2 {
+                    None => HashSet::new(),
+                    Some((new_b2, _)) => match &new_b2.mutated {
+                        None => HashSet::new(),
+                        Some(m) => m.vars.0.clone(),
+                    },
+                }),
+            );
             let mut_tuple = var_set_to_tuple(&new_mutated, &s_span);
             Ok((
                 Statement::Conditional(
@@ -1764,7 +1766,7 @@ fn typecheck_block(
     original_var_context: &VarContext,
 ) -> TypecheckingResult<(Block, VarContext)> {
     let mut var_context = original_var_context.clone();
-    let mut mutated_vars = HashSet::new();
+    let mut mutated_vars = VarSet(HashSet::new());
     let mut return_typ = Some((
         (Borrowing::Consumed, DUMMY_SP.into()),
         (BaseTyp::Unit, DUMMY_SP.into()),
@@ -1777,7 +1779,7 @@ fn typecheck_block(
             typecheck_statement(sess, s, top_level_context, &var_context)?;
         new_stmts.push((new_stmt, s_span));
         var_context = new_var_context;
-        mutated_vars = mutated_vars.clone().union(new_mutated_vars);
+        mutated_vars = VarSet(mutated_vars.0.clone().union(new_mutated_vars.0));
         if i + 1 < n_stmts {
             // Statement return types should be unit except for the last one
             match stmt_typ {
@@ -1793,7 +1795,9 @@ fn typecheck_block(
     }
     // We only keep in the list of mutated vars of this block the ones that
     // were defined at the beginning of the block
-    mutated_vars.retain(|mut_var| original_var_context.contains_key(&mut_var.id));
+    mutated_vars
+        .0
+        .retain(|mut_var| original_var_context.contains_key(&mut_var.id));
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
     Ok((
         Block {

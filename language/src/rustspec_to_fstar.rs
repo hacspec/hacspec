@@ -6,7 +6,6 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use pretty::RcDoc;
 use regex::Regex;
-use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use std::collections::HashMap;
 use std::fs::File;
@@ -828,6 +827,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 make_tuple(
                     mutated_info
                         .vars
+                        .0
                         .iter()
                         .sorted()
                         .map(|i| translate_ident(Ident::Local(i.clone()))),
@@ -869,6 +869,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
             let mut_tuple = make_tuple(
                 mutated_info
                     .vars
+                    .0
                     .iter()
                     .sorted()
                     .map(|i| translate_ident(Ident::Local(i.clone()))),

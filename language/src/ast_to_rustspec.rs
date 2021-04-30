@@ -393,6 +393,29 @@ fn translate_literal(
     }
 }
 
+fn translate_binop(x: ast::BinOpKind) -> BinOpKind {
+    match x {
+        ast::BinOpKind::Add => BinOpKind::Add,
+        ast::BinOpKind::Sub => BinOpKind::Sub,
+        ast::BinOpKind::Mul => BinOpKind::Mul,
+        ast::BinOpKind::Div => BinOpKind::Div,
+        ast::BinOpKind::Rem => BinOpKind::Rem,
+        ast::BinOpKind::And => BinOpKind::And,
+        ast::BinOpKind::Or => BinOpKind::Or,
+        ast::BinOpKind::BitXor => BinOpKind::BitXor,
+        ast::BinOpKind::BitAnd => BinOpKind::BitAnd,
+        ast::BinOpKind::BitOr => BinOpKind::BitOr,
+        ast::BinOpKind::Shl => BinOpKind::Shl,
+        ast::BinOpKind::Shr => BinOpKind::Shr,
+        ast::BinOpKind::Eq => BinOpKind::Eq,
+        ast::BinOpKind::Lt => BinOpKind::Lt,
+        ast::BinOpKind::Le => BinOpKind::Le,
+        ast::BinOpKind::Ne => BinOpKind::Ne,
+        ast::BinOpKind::Ge => BinOpKind::Ge,
+        ast::BinOpKind::Gt => BinOpKind::Gt,
+    }
+}
+
 fn translate_expr(
     sess: &Session,
     arr_typs: &ArrayTypes,
@@ -402,7 +425,7 @@ fn translate_expr(
     match &e.kind {
         ExprKind::Binary(op, e1, e2) => Ok((
             ExprTranslationResult::TransExpr(Expression::Binary(
-                (op.clone().node, op.clone().span.into()),
+                (translate_binop(op.clone().node), op.clone().span.into()),
                 Box::new(translate_expr_expects_exp(sess, arr_typs, e1)?),
                 Box::new(translate_expr_expects_exp(sess, arr_typs, e2)?),
                 None,

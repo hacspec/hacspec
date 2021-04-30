@@ -2,9 +2,8 @@ use core::cmp::PartialEq;
 use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
-use rustc_ast::ast::BinOpKind;
 use rustc_span::{MultiSpan, Span};
-use serde::{Serialize, Serializer};
+use serde::{ser::SerializeSeq, Serialize, Serializer};
 use std::fmt;
 
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Copy)]
@@ -93,7 +92,21 @@ impl fmt::Debug for Ident {
     }
 }
 
-pub type VarSet = HashSet<LocalIdent>;
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub struct VarSet(pub HashSet<LocalIdent>);
+
+impl Serialize for VarSet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for e in &self.0 {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
 
 #[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum Borrowing {
@@ -241,7 +254,29 @@ pub enum UnOpKind {
     Neg,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Serialize)]
+pub enum BinOpKind {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+    And,
+    Or,
+    BitXor,
+    BitAnd,
+    BitOr,
+    Shl,
+    Shr,
+    Eq,
+    Lt,
+    Le,
+    Ne,
+    Ge,
+    Gt,
+}
+
+#[derive(Clone, Serialize)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
     Binary(
@@ -283,14 +318,14 @@ pub enum Expression {
     ),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Pattern {
     IdentPat(Ident),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct MutatedInfo {
     pub vars: VarSet,
     pub stmt: Statement,
@@ -298,7 +333,7 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Statement {
     LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
     Reassignment(Spanned<Ident>, Spanned<Expression>),
@@ -318,26 +353,26 @@ pub enum Statement {
     ReturnExp(Expression),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct ExternalFuncSig {
     pub args: Vec<Typ>,
     pub ret: BaseTyp,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Item {
     FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
     ArrayDecl(
@@ -359,6 +394,7 @@ pub enum Item {
     ),
 }
 
+#[derive(Clone, Serialize)]
 pub struct Program {
     pub items: Vec<Spanned<Item>>,
     pub imported_crates: Vec<Spanned<String>>,
