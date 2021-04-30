@@ -1811,21 +1811,22 @@ fn typecheck_item(
     top_level_context: &TopLevelContext,
 ) -> TypecheckingResult<Item> {
     match &i {
-        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
+        Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
+            let canvas_size_span = canvas_size.1.clone();
             let (new_canvas_size, canvas_size_typ, _) =
                 typecheck_expression(sess, canvas_size, top_level_context, &HashMap::new())?;
             if let None = unify_types(
                 sess,
                 &(
-                    (Borrowing::Consumed, canvas_size.1.clone()),
-                    (BaseTyp::Usize, canvas_size.1.clone()),
+                    (Borrowing::Consumed, canvas_size_span),
+                    (BaseTyp::Usize, canvas_size_span),
                 ),
                 &canvas_size_typ,
                 &HashMap::new(),
                 top_level_context,
             )? {
                 sess.span_rustspec_err(
-                    canvas_size.1.clone(),
+                    canvas_size_span,
                     format!(
                         "expected type usize, got {}{}",
                         (canvas_size_typ.0).0,
@@ -1836,39 +1837,9 @@ fn typecheck_item(
             };
             Ok(Item::NaturalIntegerDecl(
                 typ_ident.clone(),
-                canvas_typ_ident.clone(),
                 secrecy.clone(),
-                (new_canvas_size, canvas_size.1.clone()),
-                mod_string.clone(),
-            ))
-        }
-        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
-            let (new_canvas_size, canvas_size_typ, _) =
-                typecheck_expression(sess, canvas_size, top_level_context, &HashMap::new())?;
-            if let None = unify_types(
-                sess,
-                &(
-                    (Borrowing::Consumed, canvas_size.1.clone()),
-                    (BaseTyp::Usize, canvas_size.1.clone()),
-                ),
-                &canvas_size_typ,
-                &HashMap::new(),
-                top_level_context,
-            )? {
-                sess.span_rustspec_err(
-                    canvas_size.1.clone(),
-                    format!(
-                        "expected type usize, got {}{}",
-                        (canvas_size_typ.0).0,
-                        (canvas_size_typ.1).0
-                    )
-                    .as_str(),
-                )
-            };
-            Ok(Item::SimplifiedNaturalIntegerDecl(
-                typ_ident.clone(),
-                secrecy.clone(),
-                (new_canvas_size, canvas_size.1.clone()),
+                (new_canvas_size, canvas_size_span),
+                info.clone(),
             ))
         }
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {

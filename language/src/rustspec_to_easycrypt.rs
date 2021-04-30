@@ -1039,7 +1039,7 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             Some(translate_base_typ(ty.0.clone())),
             translate_expression(e.0.clone(), top_ctx),
         ),
-        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, _modulo) => {
+        Item::NaturalIntegerDecl(nat_name, _secrecy, canvas_size, Some((canvas_name, _modulo))) => {
             let canvas_size_bytes = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => {
                     RcDoc::as_string(format!("{}", (size + 7) / 8))
@@ -1075,7 +1075,7 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                         .append(RcDoc::as_string("int")),
                 )
         }
-        Item::SimplifiedNaturalIntegerDecl(_nat_name, _secrecy, _modulo_power) => {
+        Item::NaturalIntegerDecl(_, _, _, _) => {
             unimplemented!()
         }
     }

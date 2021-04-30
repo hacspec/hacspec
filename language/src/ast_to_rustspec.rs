@@ -1391,10 +1391,11 @@ fn translate_simplified_natural_integer_decl(
             check_for_comma(sess, &second_arg)?;
             let canvas_size = check_for_usize(sess, &third_arg)?;
             Ok((
-                (ItemTranslationResult::Item(Item::SimplifiedNaturalIntegerDecl(
+                (ItemTranslationResult::Item(Item::NaturalIntegerDecl(
                     typ_ident,
                     secrecy,
                     canvas_size,
+                    None,
                 ))),
                 arr_types.update(typ_ident_string),
             ))
@@ -1507,10 +1508,9 @@ fn translate_natural_integer_decl(
             Ok((
                 (ItemTranslationResult::Item(Item::NaturalIntegerDecl(
                     typ_ident,
-                    canvas_typ_ident,
                     secrecy,
                     canvas_size,
-                    modulo_string,
+                    Some((canvas_typ_ident, modulo_string)),
                 ))),
                 arr_types.update(typ_ident_string),
             ))

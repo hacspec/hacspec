@@ -996,67 +996,52 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             translate_expression(e.0.clone(), top_ctx),
             true,
         ),
-        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, modulo) => {
-            let canvas_size_bytes = match &canvas_size.0 {
-                Expression::Lit(Literal::Usize(size)) => {
-                    RcDoc::as_string(format!("{}", (size + 7) / 8))
-                }
-                _ => panic!(), // should not happen by virtue of typchecking
-            };
-            RcDoc::as_string("type")
-                .append(RcDoc::space())
-                .append(translate_ident(Ident::TopLevel(canvas_name.0.clone())))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("="))
-                .group()
-                .append(
-                    RcDoc::line()
-                        .append(RcDoc::as_string("lseq"))
-                        .append(RcDoc::space())
-                        .append(make_paren(translate_base_typ(BaseTyp::UInt8)))
-                        .append(RcDoc::space())
-                        .append(make_paren(canvas_size_bytes.clone()))
-                        .group()
-                        .nest(2),
-                )
-                .append(RcDoc::hardline())
-                .append(RcDoc::hardline()) //TODO: add other decl
-                .append(
-                    RcDoc::as_string("type")
-                        .append(RcDoc::space())
-                        .append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
-                        .append(RcDoc::space())
-                        .append(RcDoc::as_string("="))
-                        .group()
-                        .append(
-                            RcDoc::line()
-                                .append(RcDoc::as_string("nat_mod"))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
-                                .group()
-                                .nest(2),
-                        ),
-                )
-        }
-        Item::SimplifiedNaturalIntegerDecl(nat_name, _secrecy, canvas_size) => {
+        Item::NaturalIntegerDecl(nat_name, _secrecy, canvas_size, info) => {
             let canvas_size = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => size,
                 _ => panic!(), // should not happen by virtue of typchecking
             };
-            RcDoc::as_string("type")
-                .append(RcDoc::space())
-                .append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("="))
-                .group()
-                .append(
-                    RcDoc::line()
-                        .append(RcDoc::as_string("nat_mod"))
-                        .append(RcDoc::space())
-                        .append(RcDoc::as_string(format!("pow2 {}", canvas_size)))
-                        .group()
-                        .nest(2),
-                )
+            let canvas_size_bytes = RcDoc::as_string(format!("{}", (canvas_size + 7) / 8));
+            (match info {
+                Some((canvas_name, _modulo)) => RcDoc::as_string("type")
+                    .append(RcDoc::space())
+                    .append(translate_ident(Ident::TopLevel(canvas_name.0.clone())))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("="))
+                    .group()
+                    .append(
+                        RcDoc::line()
+                            .append(RcDoc::as_string("lseq"))
+                            .append(RcDoc::space())
+                            .append(make_paren(translate_base_typ(BaseTyp::UInt8)))
+                            .append(RcDoc::space())
+                            .append(make_paren(canvas_size_bytes.clone()))
+                            .group()
+                            .nest(2),
+                    )
+                    .append(RcDoc::hardline())
+                    .append(RcDoc::hardline()),
+                None => RcDoc::nil(),
+            })
+            .append(
+                RcDoc::as_string("type")
+                    .append(RcDoc::space())
+                    .append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("="))
+                    .group()
+                    .append(
+                        RcDoc::line()
+                            .append(RcDoc::as_string("nat_mod"))
+                            .append(RcDoc::space())
+                            .append(match info {
+                                Some((_, modulo)) => RcDoc::as_string(format!("0x{}", &modulo.0)),
+                                None => RcDoc::as_string(format!("pow2 {}", canvas_size)),
+                            })
+                            .group()
+                            .nest(2),
+                    ),
+            )
         }
     }
 }

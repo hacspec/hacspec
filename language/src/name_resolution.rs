@@ -365,25 +365,11 @@ fn resolve_item(
             let new_size = resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
-        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
+        Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let new_canvas_size =
                 resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
             Ok((
-                Item::NaturalIntegerDecl(
-                    typ_ident,
-                    canvas_typ_ident,
-                    secrecy,
-                    new_canvas_size,
-                    mod_string,
-                ),
-                i_span,
-            ))
-        }
-        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
-            let new_canvas_size =
-                resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
-            Ok((
-                Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, new_canvas_size),
+                Item::NaturalIntegerDecl(typ_ident, secrecy, new_canvas_size, info),
                 i_span,
             ))
         }
@@ -462,29 +448,40 @@ fn process_decl_item(
             };
             Ok(())
         }
-        Item::NaturalIntegerDecl(typ_ident, canvas_typ_ident, secrecy, canvas_size, mod_string) => {
-            process_decl_item(
-                sess,
-                &(
-                    Item::ArrayDecl(
-                        canvas_typ_ident.clone(),
-                        canvas_size.clone(),
-                        match secrecy {
-                            Secrecy::Secret => (
-                                BaseTyp::Named(
-                                    (TopLevelIdent("U8".to_string()), canvas_typ_ident.1.clone()),
-                                    None,
-                                ),
-                                canvas_typ_ident.1.clone(),
+        Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
+            let mod_string = match info {
+                Some((canvas_typ_ident, mod_string)) => {
+                    process_decl_item(
+                        sess,
+                        &(
+                            Item::ArrayDecl(
+                                canvas_typ_ident.clone(),
+                                canvas_size.clone(),
+                                match secrecy {
+                                    Secrecy::Secret => (
+                                        BaseTyp::Named(
+                                            (
+                                                TopLevelIdent("U8".to_string()),
+                                                canvas_typ_ident.1.clone(),
+                                            ),
+                                            None,
+                                        ),
+                                        canvas_typ_ident.1.clone(),
+                                    ),
+                                    Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
+                                },
+                                None,
                             ),
-                            Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
-                        },
-                        None,
-                    ),
-                    *i_span,
-                ),
-                top_level_context,
-            )?;
+                            *i_span,
+                        ),
+                        top_level_context,
+                    )?;
+                    mod_string.clone()
+                }
+                None => (String::new(), DUMMY_SP), // TODO: replace with real modulo value
+                                                   // For now we can leave this empty because
+                                                   // We don't use it in the typechecker
+            };
             top_level_context.typ_dict.insert(
                 typ_ident.0.clone() ,
                 (
@@ -493,7 +490,7 @@ fn process_decl_item(
                         (
                             BaseTyp::NaturalInteger(
                                 secrecy.clone(),
-                                mod_string.clone(),
+                                mod_string,
                                 match &canvas_size.0 {
                                     Expression::Lit(Literal::Usize(size)) => {
                                         (size.clone(), (canvas_size.1).clone())
@@ -511,37 +508,6 @@ fn process_decl_item(
                     ),
                     DictEntry::NaturalInteger,
                 ),
-            );
-            Ok(())
-        }
-        Item::SimplifiedNaturalIntegerDecl(typ_ident, secrecy, canvas_size) => {
-            top_level_context.typ_dict.insert(
-                typ_ident.0.clone(),
-                match &canvas_size.0 {
-                    Expression::Lit(Literal::Usize(size)) => (
-                        (
-                            (Borrowing::Consumed, (typ_ident.1).clone()),
-                            (
-                                BaseTyp::NaturalInteger(
-                                    secrecy.clone(),
-                                    (String::new(), DUMMY_SP), // TODO: replace with real modulo value
-                                    // For now we can leave this empty because
-                                    // We don't use it in the typechecker
-                                    (size.clone(), (canvas_size.1).clone()),
-                                ),
-                                typ_ident.1.clone(),
-                            ),
-                        ),
-                        DictEntry::NaturalInteger,
-                    ),
-                    _ => {
-                        sess.span_rustspec_err(
-                            (canvas_size.1).clone(),
-                            "the size of the natural integer encoding has to be a usize literal",
-                        );
-                        return Err(());
-                    }
-                },
             );
             Ok(())
         }

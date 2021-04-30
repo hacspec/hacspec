@@ -327,16 +327,10 @@ pub enum Item {
         Spanned<Expression>,
     ),
     NaturalIntegerDecl(
-        Spanned<TopLevelIdent>, // Element type name
-        Spanned<TopLevelIdent>, // Canvas array type name
-        Secrecy,
-        Spanned<Expression>, // Canvas size
-        Spanned<String>,     // Modulo value
-    ),
-    SimplifiedNaturalIntegerDecl(
-        Spanned<TopLevelIdent>, // Element type name
-        Secrecy,
-        Spanned<Expression>, // If x, then modulo value is 2^x
+        Spanned<TopLevelIdent>,                            // Element type name
+        Secrecy,                                           // Public or secret
+        Spanned<Expression>,                               // Canvas size
+        Option<(Spanned<TopLevelIdent>, Spanned<String>)>, // Canvas array type name and modulo value
     ),
 }
 
