@@ -127,10 +127,10 @@ fn bench(c: &mut Criterion) {
                 b.iter_batched(
                     || {
                         let (client_cipher, server_cipher) = init_tls_session(ciphersuite);
-                        // Test on 1024 1 MB chunks
+                        // Test on 100 * 64 * 16 KB chunks (100 MB)
                         let mut data = Vec::new();
-                        for _ in 0..1024 {
-                            data.push(Bytes::from_public_slice(&random_byte_vec(1024)));
+                        for _ in 0..(100 * 64) {
+                            data.push(Bytes::from_public_slice(&random_byte_vec(16 * 1024)));
                         }
                         (client_cipher, server_cipher, data)
                     },
@@ -153,10 +153,10 @@ fn bench(c: &mut Criterion) {
                 b.iter_batched(
                     || {
                         let (mut client_cipher, server_cipher) = init_tls_session(ciphersuite);
-                        // Test on 1024 1 MB chunks
+                        // Test on 100 * 64 * 16 KB chunks (100 MB)
                         let mut data = Vec::new();
-                        for _ in 0..1024 {
-                            data.push(Bytes::from_public_slice(&random_byte_vec(1024)));
+                        for _ in 0..(100 * 64) {
+                            data.push(Bytes::from_public_slice(&random_byte_vec(16 * 1024)));
                         }
                         // encrypt
                         let mut ctxts = Vec::new();

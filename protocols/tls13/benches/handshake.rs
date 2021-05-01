@@ -13,10 +13,10 @@ fn load_hex(s: &str) -> Bytes {
 }
 
 fn name(alg: &Algorithms) -> &'static str {
-    if alg.1 == AEADAlgorithm::AES_128_GCM {
+    if alg.3 == NamedGroup::X25519 {
         "TLS_AES_128_GCM_SHA256_X25519"
-    } else if alg.1 == AEADAlgorithm::CHACHA20_POLY1305 {
-        "TLS_CHACHA20_POLY1305_SHA256_X25519"
+    } else if alg.3 == NamedGroup::SECP256r1 {
+        "TLS_AES_128_GCM_SHA256_P256"
     } else {
         " === ERROR: UNKNOWN CIPHER SUITE ==="
     }
@@ -39,16 +39,20 @@ fn bench(c: &mut Criterion) {
         false,
         false,
     );
-    const CIPHERSUITES: [Algorithms; 1] = [
-        TLS_AES_128_GCM_SHA256_X25519,
-        // TLS_AES_128_GCM_SHA256_P256,
-    ];
+    const CIPHERSUITES: [Algorithms; 2] =
+        [TLS_AES_128_GCM_SHA256_X25519, TLS_AES_128_GCM_SHA256_P256];
 
     const CLIENT_X25519_PRIV: &str = "49 af 42 ba 7f 79 94 85 2d 71 3e f2 78
     4b cb ca a7 91 1d e2 6a dc 56 42 cb 63 45 40 e7 ea 50 05";
 
     const SERVER_X25519_PRIV: &str = "b1 58 0e ea df 6d d5 89 b8 ef 4f 2d 56
     52 57 8c c8 10 e9 98 01 91 ec 8d 05 83 08 ce a2 16 a2 1e";
+
+    const CLIENT_P256_PRIV: &str = "06 12 46 5c 89 a0 23 ab 17 85 5b 0a 6b ce
+    bf d3 fe bb 53 ae f8 41 38 64 7b 53 52 e0 2c 10 c3 46";
+
+    const SERVER_P256_PRIV: &str = "0a 0d 62 2a 47 e4 8f 6b c1 03 8a ce 43 8c
+    6f 52 8a a0 0a d2 bd 1d a5 f1 3e e4 6b f5 f6 33 d7 1a";
 
     const ECDSA_P256_SHA256_CERT: [u8; 522] = [
         0x30, 0x82, 0x02, 0x06, 0x30, 0x82, 0x01, 0xAC, 0x02, 0x09, 0x00, 0xD1, 0xA2, 0xE4, 0xD5,
@@ -100,12 +104,18 @@ fn bench(c: &mut Criterion) {
                 b.iter_batched(
                     || {
                         let cr = Random::from_public_slice(&random_byte_vec(Random::length()));
-                        let x = load_hex(CLIENT_X25519_PRIV);
+                        let x = match ciphersuite.3 {
+                            NamedGroup::X25519 => load_hex(CLIENT_X25519_PRIV),
+                            NamedGroup::SECP256r1 => load_hex(CLIENT_P256_PRIV),
+                        };
                         let ent_c = Entropy::from_seq(&cr.concat(&x));
                         let sn = load_hex("6c 6f 63 61 6c 68 6f 73 74");
                         let sn_ = load_hex("6c 6f 63 61 6c 68 6f 73 74");
                         let sr = Random::from_public_slice(&random_byte_vec(Random::length()));
-                        let y = load_hex(SERVER_X25519_PRIV);
+                        let y = match ciphersuite.3 {
+                            NamedGroup::X25519 => load_hex(SERVER_X25519_PRIV),
+                            NamedGroup::SECP256r1 => load_hex(SERVER_P256_PRIV),
+                        };
                         let ent_s = Entropy::from_seq(&sr.concat(&y));
 
                         let db = ServerDB(
@@ -138,12 +148,18 @@ fn bench(c: &mut Criterion) {
                 b.iter_batched(
                     || {
                         let cr = Random::from_public_slice(&random_byte_vec(Random::length()));
-                        let x = load_hex(CLIENT_X25519_PRIV);
+                        let x = match ciphersuite.3 {
+                            NamedGroup::X25519 => load_hex(CLIENT_X25519_PRIV),
+                            NamedGroup::SECP256r1 => load_hex(CLIENT_P256_PRIV),
+                        };
                         let ent_c = Entropy::from_seq(&cr.concat(&x));
                         let sn = load_hex("6c 6f 63 61 6c 68 6f 73 74");
                         let sn_ = load_hex("6c 6f 63 61 6c 68 6f 73 74");
                         let sr = Random::from_public_slice(&random_byte_vec(Random::length()));
-                        let y = load_hex(SERVER_X25519_PRIV);
+                        let y = match ciphersuite.3 {
+                            NamedGroup::X25519 => load_hex(SERVER_X25519_PRIV),
+                            NamedGroup::SECP256r1 => load_hex(SERVER_P256_PRIV),
+                        };
                         let ent_s = Entropy::from_seq(&sr.concat(&y));
 
                         let db = ServerDB(
