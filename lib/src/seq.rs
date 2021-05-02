@@ -50,9 +50,21 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 Self::from_slice(self, start_out, len)
             }
 
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn into_slice(mut self, start_out: usize, len: usize) -> Self {
+                self.b = self.b.drain(start_out..start_out+len).collect();
+                self
+            }
+
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn slice_range(&self, r: Range<usize>) -> Self {
                 self.slice(r.start, r.end - r.start)
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn into_slice_range(mut self, r: Range<usize>) -> Self {
+                self.b = self.b.drain(r).collect();
+                self
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
@@ -68,6 +80,12 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 out = out.update_start(self);
                 out = out.update_slice(self.len(), next, 0, next.len());
                 out
+            }
+
+            #[cfg_attr(feature="use_attributes", in_hacspec)]
+            pub fn concat_owned(mut self, mut next: Self) -> Self {
+                self.b.append(&mut next.b);
+                self
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
