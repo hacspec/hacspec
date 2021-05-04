@@ -4,8 +4,8 @@ use test_util::*;
 use chacha20poly1305::ChaCha20Poly1305 as RustCrypto_ChaCha20Poly1305;
 use evercrypt_provider::Chacha20Poly1305 as Evercrypt_Chacha20Poly1305;
 use hacspec_provider::{
-    aead::consts::U12, Aead, Chacha20Poly1305 as Hacspec_Chacha20Poly1305, Key, NewAead, Nonce,
-    Payload,
+    aead::consts::U12, Aead, AeadCore, Chacha20Poly1305 as Hacspec_Chacha20Poly1305, Key, NewAead,
+    Nonce, Payload,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -91,7 +91,7 @@ fn test_wycheproof() {
                 let exp_tag: [u8; 16] = hex_str_to_array(&test.tag);
                 let key: [u8; 32] = hex_str_to_array(&test.key);
 
-                fn test_case<T>(
+                fn test_case<T: Aead>(
                     cipher: T,
                     nonce: &[u8; 12],
                     msg: &[u8],
@@ -102,7 +102,7 @@ fn test_wycheproof() {
                     invalid_iv: bool,
                     valid: bool,
                 ) where
-                    T: Aead<NonceSize = U12>,
+                    T: AeadCore<NonceSize = U12>,
                 {
                     let nonce = Nonce::from_slice(nonce);
                     let ctxt = match cipher.encrypt(
