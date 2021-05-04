@@ -11,7 +11,6 @@ members = [
     "utils/rc-bench",
     "utils/rc-tests",
     "utils/util",
-    "language",
     "examples/curve25519",
     "examples/chacha20",
     "examples/poly1305",
@@ -59,6 +58,4 @@ default-members = [
     "examples/gf128",
     "examples/aes128-gcm",
 ]
-
-[profile.release]
-debug = true
+exclude = [ "language" ]
