@@ -117,7 +117,7 @@
 <span class="kw">type</span> <span class="ident">Fletcher</span> <span class="op">=</span> (<span class="ident">u32</span>, <span class="ident">u32</span>);
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_fletcher</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fletcher</span> {
-    (<span class="number">0x0000_ffff</span>, <span class="number">0x0000_ffff</span>)
+    (<span class="number">0x0000_ffffu32</span>, <span class="number">0x0000_ffffu32</span>)
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_chunk_size</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
