@@ -1914,6 +1914,13 @@ fn translate_items(
                 arr_types.clone(),
             ))
         }
+        ItemKind::Const(_, _, None) => {
+            sess.span_rustspec_err(
+                i.span.clone(),
+                "uninitialized consts not allowed in Hacspec",
+            );
+            Err(())
+        }
         ItemKind::TyAlias(ty_alias_kind) => {
             let TyAliasKind(defaultness, generics, _, ty) = ty_alias_kind.as_ref();
             match defaultness {
@@ -1951,8 +1958,55 @@ fn translate_items(
                 }
             }
         }
-        _ => {
-            sess.span_rustspec_err(i.span.clone(), "item not allowed in Hacspec");
+        ItemKind::ExternCrate(_) => {
+            sess.span_rustspec_err(
+                i.span.clone(),
+                "external crate declarations not allowed in Hacspec",
+            );
+            Err(())
+        }
+        ItemKind::Static(_, _, _) => {
+            sess.span_rustspec_err(i.span.clone(), "static items not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Mod(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "sub-modules not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::ForeignMod(_) => {
+            sess.span_rustspec_err(i.span.clone(), "foreign modules not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::GlobalAsm(_) => {
+            sess.span_rustspec_err(i.span.clone(), "assembly globals not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Enum(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "enum declarations not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Struct(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "struct declarations not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Union(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "union declarations not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Trait(_) => {
+            sess.span_rustspec_err(i.span.clone(), "trait declarations not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::TraitAlias(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "trait aliases not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Impl(_) => {
+            sess.span_rustspec_err(i.span.clone(), "impl blocks not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::MacroDef(_) => {
+            sess.span_rustspec_err(i.span.clone(), "macro definitions not allowed in Hacspec");
             Err(())
         }
     }
