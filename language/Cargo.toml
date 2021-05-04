@@ -31,7 +31,6 @@ serde = { version = "1.0.125", features = ["derive"] }
 
 [dev-dependencies]
 assert_cmd = "1.0.1"
-hacspec-lib = { path = "../lib" }
 
 [package.metadata.rust-analyzer]
 rustc_private=true

@@ -16,12 +16,17 @@ fn run_test(file_name: &str, output: Option<&str>) {
 }
 
 #[test]
-fn positive() {
+fn positive_enums() {
+    run_test("language-tests/enums.rs", None);
+}
+
+#[test]
+fn positive_arrays() {
     run_test("language-tests/arrays.rs", None);
 }
 
 #[test]
 #[should_panic]
-fn negative() {
+fn negative_arrays() {
     run_test("negative-language-tests/arrays.rs", None);
 }
