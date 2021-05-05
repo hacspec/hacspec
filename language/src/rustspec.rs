@@ -303,6 +303,20 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
+    EnumInject(
+        Spanned<TopLevelIdent>,           // Name of enum
+        Spanned<TopLevelIdent>,           // Name of case
+        Option<Spanned<Box<Expression>>>, // Payload of case
+    ),
+    MatchWith(
+        Box<Spanned<Expression>>, // Expression to match
+        Vec<(
+            Spanned<TopLevelIdent>,   // Name of enum
+            Spanned<TopLevelIdent>,   // Name of case
+            Option<Spanned<Pattern>>, // Payload of case
+            Spanned<Expression>,      // Match arm expression
+        )>,
+    ),
     Lit(Literal),
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
     NewArray(
@@ -375,6 +389,10 @@ pub struct ExternalFuncSig {
 #[derive(Clone, Serialize)]
 pub enum Item {
     FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
+    EnumDecl(
+        Spanned<TopLevelIdent>,
+        Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>,
+    ),
     ArrayDecl(
         Spanned<TopLevelIdent>,         // Name of the array type
         Spanned<Expression>,            // Length

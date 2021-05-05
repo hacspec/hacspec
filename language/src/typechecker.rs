@@ -647,6 +647,12 @@ fn typecheck_expression(
                 }
             }
         }
+        Expression::MatchWith(_arg, _arms) => {
+            unimplemented!()
+        }
+        Expression::EnumInject(_enum_name, _case_name, _payload) => {
+            unimplemented!()
+        }
         Expression::InlineConditional(cond, e_t, e_f) => {
             let (new_cond, t_cond, var_context) =
                 typecheck_expression(sess, cond, top_level_context, &var_context)?;
@@ -1848,6 +1854,9 @@ fn typecheck_item(
                 (new_canvas_size, canvas_size_span),
                 info.clone(),
             ))
+        }
+        Item::EnumDecl(_name, _cases) => {
+            unimplemented!()
         }
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {
             let var_context = HashMap::new();

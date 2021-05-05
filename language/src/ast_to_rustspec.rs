@@ -5,7 +5,7 @@ use rustc_ast::{
         Crate, Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs,
         IntTy, ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind,
         RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe,
-        UseTreeKind,
+        UseTreeKind, VariantData,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -450,6 +450,19 @@ fn translate_expr(
         ExprKind::Path(Some(_), _) => {
             sess.span_rustspec_err(e.span, "trait associated values not allowed in Hacspec");
             Err(())
+        }
+        ExprKind::Path(None, ast::Path { segments, .. }) if segments.len() == 2 => {
+            let mut it = segments.iter();
+            let first_seg = it.next().unwrap();
+            let second_seg = it.next().unwrap();
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::EnumInject(
+                    translate_toplevel_ident(&first_seg.ident),
+                    translate_toplevel_ident(&second_seg.ident),
+                    None,
+                )),
+                e.span.into(),
+            ))
         }
         ExprKind::Path(None, path) => Ok((
             ExprTranslationResult::TransExpr(Expression::Named(translate_expr_name(sess, path)?)),
@@ -961,12 +974,79 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::Match(_, _) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "pattern matching is not supported yet in Hacspec",
-            );
-            Err(())
+        ExprKind::Match(e1, arms) => {
+            let e1 = translate_expr_expects_exp(sess, arr_typs, e1)?;
+            let arms = check_vec(
+                arms.iter()
+                    .map(|arm| {
+                        if arm.guard.is_some() {
+                            sess.span_rustspec_err(
+                                arm.span.clone(),
+                                "pattern matching guards are not allowed in Hacspec",
+                            );
+                            return Err(());
+                        }
+                        let arm_body = translate_expr_expects_exp(sess, arr_typs, &*arm.body)?;
+                        // We only allow for a very specific type of pattern
+                        let (enum_name, case_name, pat) = match &arm.pat.kind {
+                            PatKind::Path(None, ast::Path { segments, .. }) => {
+                                if segments.len() != 2 {
+                                    sess.span_rustspec_err(
+                                        ((arm.pat).span).clone(),
+                                        "expected <name of the enum>::<name of the case>",
+                                    );
+                                    return Err(());
+                                }
+                                let mut it = segments.iter();
+                                let first_seg = it.next().unwrap();
+                                let second_seg = it.next().unwrap();
+                                (
+                                    translate_toplevel_ident(&first_seg.ident),
+                                    translate_toplevel_ident(&second_seg.ident),
+                                    None,
+                                )
+                            }
+                            PatKind::TupleStruct(ast::Path { segments, .. }, args) => {
+                                if segments.len() != 2 {
+                                    sess.span_rustspec_err(
+                                        ((arm.pat).span).clone(),
+                                        "expected <name of the enum>::<name of the case>",
+                                    );
+                                    return Err(());
+                                }
+                                let mut it = segments.iter();
+                                let first_seg = it.next().unwrap();
+                                let second_seg = it.next().unwrap();
+                                (
+                                    translate_toplevel_ident(&first_seg.ident),
+                                    translate_toplevel_ident(&second_seg.ident),
+                                    Some((
+                                        Pattern::Tuple(check_vec(
+                                            args.iter()
+                                                .map(|arg| translate_pattern(sess, arg))
+                                                .collect(),
+                                        )?),
+                                        arm.pat.span.clone().into(),
+                                    )),
+                                )
+                            }
+                            _ => {
+                                sess.span_rustspec_err(
+                                    ((arm.pat).span).clone(),
+                                    "the only types of match pattern allowed in Hacspec start by \
+                                <name of the enum>::<name of the case>",
+                                );
+                                return Err(());
+                            }
+                        };
+                        Ok((enum_name, case_name, pat, arm_body))
+                    })
+                    .collect(),
+            )?;
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::MatchWith(Box::new(e1), arms)),
+                e.span.clone().into(),
+            ))
         }
         ExprKind::Closure(_, _, _, _, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "closures are not allowed in Hacspec");
@@ -1981,9 +2061,46 @@ fn translate_items(
             sess.span_rustspec_err(i.span.clone(), "assembly globals not allowed in Hacspec");
             Err(())
         }
-        ItemKind::Enum(_, _) => {
-            sess.span_rustspec_err(i.span.clone(), "enum declarations not allowed in Hacspec");
-            Err(())
+        ItemKind::Enum(def, generics) => {
+            if generics.params.len() > 0 {
+                sess.span_rustspec_err(
+                    generics.span.clone(),
+                    "type parameters in enum declarations forbidden in Hacspec",
+                );
+                return Err(());
+            }
+            let id = translate_toplevel_ident(&i.ident);
+            let variants = check_vec(
+                def.variants
+                    .iter()
+                    .map(|v| {
+                        let case_id = translate_toplevel_ident(&v.ident);
+                        let case_typ = match &v.data {
+                            VariantData::Unit(_) => Ok(None),
+                            VariantData::Struct(_, _) => {
+                                sess.span_rustspec_err(
+                                    v.span.clone(),
+                                    "struct enum variants not allowed in Hacspec",
+                                );
+                                Err(())
+                            }
+                            VariantData::Tuple(args, _) => {
+                                let args_ty = check_vec(
+                                    args.iter()
+                                        .map(|arg| translate_base_typ(sess, &*arg.ty))
+                                        .collect(),
+                                )?;
+                                Ok(Some((BaseTyp::Tuple(args_ty), v.span.clone().into())))
+                            }
+                        };
+                        Ok((case_id, case_typ?))
+                    })
+                    .collect(),
+            )?;
+            Ok((
+                ItemTranslationResult::Item(Item::EnumDecl(id, variants)),
+                arr_types.clone(),
+            ))
         }
         ItemKind::Struct(_, _) => {
             sess.span_rustspec_err(i.span.clone(), "struct declarations not allowed in Hacspec");

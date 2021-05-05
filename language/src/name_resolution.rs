@@ -129,6 +129,12 @@ fn resolve_expression(
                 e_span,
             ))
         }
+        Expression::MatchWith(_arg, _arms) => {
+            unimplemented!()
+        }
+        Expression::EnumInject(_enum_name, _case_name, _payload) => {
+            unimplemented!()
+        }
         Expression::InlineConditional(e1, e2, e3) => {
             let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             let new_e2 = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
@@ -365,6 +371,9 @@ fn resolve_item(
             let new_size = resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
+        Item::EnumDecl(_name, _cases) => {
+            unimplemented!()
+        }
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let new_canvas_size =
                 resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
@@ -403,6 +412,9 @@ fn process_decl_item(
         Item::ConstDecl(id, typ, _e) => {
             top_level_context.consts.insert(id.0.clone(), typ.clone());
             Ok(())
+        }
+        Item::EnumDecl(_name, _cases) => {
+            unimplemented!()
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let new_size = match &size.0 {

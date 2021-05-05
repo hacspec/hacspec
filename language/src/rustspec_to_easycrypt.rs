@@ -681,6 +681,12 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .append(make_paren(translate_expression(e_f, top_ctx)))
                 .group()
         }
+        Expression::MatchWith(_arg, _arms) => {
+            unimplemented!()
+        }
+        Expression::EnumInject(_enum_name, _case_name, _payload) => {
+            unimplemented!()
+        }
         Expression::Unary(op, e1, op_typ) => {
             let e1 = e1.0;
             translate_unop(op, op_typ.as_ref().unwrap().clone())
@@ -1040,6 +1046,9 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             Some(translate_base_typ(ty.0.clone())),
             translate_expression(e.0.clone(), top_ctx),
         ),
+        Item::EnumDecl(_name, _cases) => {
+            unimplemented!()
+        }
         Item::NaturalIntegerDecl(nat_name, _secrecy, canvas_size, Some((canvas_name, _modulo))) => {
             let canvas_size_bytes = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => {

@@ -631,6 +631,12 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .append(make_paren(translate_expression(e2, top_ctx)))
                 .group()
         }
+        Expression::MatchWith(_arg, _arms) => {
+            unimplemented!()
+        }
+        Expression::EnumInject(_enum_name, _case_name, _payload) => {
+            unimplemented!()
+        }
         Expression::InlineConditional(cond, e_t, e_f) => {
             let cond = cond.0;
             let e_t = e_t.0;
@@ -960,6 +966,9 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                 .group(),
             true,
         ),
+        Item::EnumDecl(_name, _cases) => {
+            unimplemented!()
+        }
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("type")
             .append(RcDoc::space())
             .append(translate_ident(Ident::TopLevel(name.0.clone())))
