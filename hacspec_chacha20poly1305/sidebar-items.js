@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["decrypt",""],["encrypt",""],["poly_mac",""]]});
+initSidebarItems({"fn":[["decrypt",""],["encrypt",""],["finish",""],["init",""],["poly1305_update_padded",""]],"type":[["ChaChaPolyIV",""],["ChaChaPolyKey",""]]});
