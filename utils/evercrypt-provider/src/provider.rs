@@ -3,7 +3,7 @@ use aead::{
     generic_array::{ArrayLength, GenericArray},
     Error,
 };
-pub use aead::{Aead, AeadInPlace, NewAead, Payload};
+pub use aead::{Aead, AeadCore, AeadInPlace, NewAead, Payload};
 use evercrypt::aead::{key_gen, nonce_gen, Aead as EvercryptAead, Mode, Nonce as EvercryptNonce};
 
 pub struct Chacha20Poly1305 {
@@ -32,11 +32,13 @@ impl NewAead for Chacha20Poly1305 {
     }
 }
 
-impl AeadInPlace for Chacha20Poly1305 {
+impl AeadCore for Chacha20Poly1305 {
     type NonceSize = U12;
     type TagSize = U16;
     type CiphertextOverhead = U0;
+}
 
+impl AeadInPlace for Chacha20Poly1305 {
     fn encrypt_in_place_detached(
         &self,
         nonce: &Nonce,
