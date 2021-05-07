@@ -24,4 +24,4 @@ jobs:
       - name: Get hacspec function stats
         run: RUST_NIGHTLY=nightly-2021-03-11 ./lib/get_func_stats.sh
       - name: Build and test F* compiler
-        run: cargo clean && cd language && cargo test --verbose
+        run: cargo clean && cargo build -p hacspec-lib &&  cd language && cargo test --verbose
