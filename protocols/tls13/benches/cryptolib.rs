@@ -10,9 +10,9 @@ use hacspec_lib::prelude::*;
 const PAYLOAD_SIZE: usize = 0x100000;
 
 fn bench(c: &mut Criterion) {
-    const CIPHERSUITES: [AEADAlgorithm; 1] = [
+    const CIPHERSUITES: [AEADAlgorithm; 2] = [
         AEADAlgorithm::AES_128_GCM,
-        // AEADAlgorithm::CHACHA20_POLY1305,
+        AEADAlgorithm::CHACHA20_POLY1305,
     ];
 
     for &ciphersuite in CIPHERSUITES.iter() {

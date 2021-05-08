@@ -505,7 +505,7 @@ fn chachapoly_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes)
         AeadMode::Chacha20Poly1305,
         &k.to_native(),
         &ciphertext.to_native(),
-        &ciphertext.to_native(),
+        &tag.to_native(),
         &nonce,
         &ad.to_native(),
     ) {
