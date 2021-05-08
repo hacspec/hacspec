@@ -389,16 +389,14 @@ fn do_handshake(client: &mut ClientConnection, server: &mut ServerConnection) {
     while do_handshake_step(client, server) {}
 }
 
-fn bench_bulk<SF, CF, C>(
+fn bench_bulk<SF, CF>(
     plaintext_size: u64,
     mut server_send: SF,
     mut client_receive: CF,
-    mut connection: C,
 ) -> (u64, f64, f64)
 where
     SF: FnMut(&[u8]),
     CF: FnMut(&[u8]),
-    C: FnMut() -> f64,
 {
     let mut buf = Vec::new();
     buf.resize(plaintext_size as usize, 0u8);
@@ -414,7 +412,6 @@ where
 
     for _ in 0..rounds {
         time_send += time(|| server_send(&buf));
-        time_recv += connection();
         time_recv += time(|| client_receive(&buf));
     }
 
@@ -440,10 +437,10 @@ fn bench_bulk_rustls(params: &BenchmarkParam, plaintext_size: u64, mtu: Option<u
         plaintext_size,
         |buf| server.writer().write_all(&buf).unwrap(),
         |buf| {
+            transfer(&mut server, &mut client);
             client.process_new_packets().unwrap();
             drain(&mut client, buf.len());
         },
-        || transfer(&mut server, &mut client),
     );
 
     let mtu_str = format!(
