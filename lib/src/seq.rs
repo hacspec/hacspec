@@ -67,6 +67,12 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self
             }
 
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn split_off(mut self, at: usize) -> (Self, Self) {
+                let other = Self::from_vec(self.b.split_off(at));
+                (self, other)
+            }
+
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn from_slice<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new(len);

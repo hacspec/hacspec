@@ -481,22 +481,15 @@ pub fn aead_encrypt(
 // FIXME: #98 add #[unsafe_hacspec] attribute
 fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    nonce.copy_from_slice(&iv.to_native());
+    let (ciphertext, tag) = ciphertext.clone().split_off(ciphertext.len() - 16);
     match evercrypt::aead::decrypt(
         AeadMode::Aes128Gcm,
-        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
-        &ciphertext
-            .slice_range(0..ciphertext.len() - 16)
-            .iter()
-            .map(|&x| x.declassify())
-            .collect::<Vec<u8>>(),
-        &ciphertext
-            .slice_range(ciphertext.len() - 16..ciphertext.len())
-            .iter()
-            .map(|&x| x.declassify())
-            .collect::<Vec<u8>>(),
+        &k.to_native(),
+        &ciphertext.to_native(),
+        &tag.to_native(),
         &nonce,
-        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ad.to_native(),
     ) {
         Ok(ptxt) => Ok(Bytes::from_public_slice(&ptxt)),
         Err(_e) => Err(mac_failed),
@@ -506,22 +499,15 @@ fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> 
 // FIXME: #98 add #[unsafe_hacspec] attribute
 fn chachapoly_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    nonce.copy_from_slice(&iv.to_native());
+    let (ciphertext, tag) = ciphertext.clone().split_off(ciphertext.len() - 16);
     match evercrypt::aead::decrypt(
         AeadMode::Chacha20Poly1305,
-        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
-        &ciphertext
-            .slice_range(0..ciphertext.len() - 16)
-            .iter()
-            .map(|&x| x.declassify())
-            .collect::<Vec<u8>>(),
-        &ciphertext
-            .slice_range(ciphertext.len() - 16..ciphertext.len())
-            .iter()
-            .map(|&x| x.declassify())
-            .collect::<Vec<u8>>(),
+        &k.to_native(),
+        &ciphertext.to_native(),
+        &ciphertext.to_native(),
         &nonce,
-        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ad.to_native(),
     ) {
         Ok(ptxt) => Ok(Bytes::from_public_slice(&ptxt)),
         Err(_e) => Err(mac_failed),
