@@ -60,7 +60,7 @@ pub enum HashAlgorithm {
     SHA384,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum AEADAlgorithm {
     CHACHA20_POLY1305,
     AES_128_GCM,
@@ -434,15 +434,15 @@ pub fn hkdf_expand(ha: &HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res
 // FIXME: #98 add #[unsafe_hacspec] attribute
 fn aesgcm_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    nonce.copy_from_slice(&iv.to_native());
     match evercrypt::aead::encrypt(
         AeadMode::Aes128Gcm,
-        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
-        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &k.to_native(),
+        &payload.to_native(),
         &nonce,
-        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ad.to_native(),
     ) {
-        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat(&Bytes::from_public_slice(&t))),
+        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat_owned(Bytes::from_public_slice(&t))),
         Err(_e) => Err(crypto_error),
     }
 }
@@ -450,15 +450,15 @@ fn aesgcm_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res
 // FIXME: #98 add #[unsafe_hacspec] attribute
 fn chachapoly_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
+    nonce.copy_from_slice(&iv.to_native());
     match evercrypt::aead::encrypt(
         AeadMode::Chacha20Poly1305,
-        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
-        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &k.to_native(),
+        &payload.to_native(),
         &nonce,
-        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ad.to_native(),
     ) {
-        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat(&Bytes::from_public_slice(&t))),
+        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat_owned(Bytes::from_public_slice(&t))),
         Err(_e) => Err(crypto_error),
     }
 }

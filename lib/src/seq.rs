@@ -250,9 +250,9 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> $name<T> {
             #[cfg_attr(feature="use_attributes", not_hacspec)]
-            pub fn from_vec(x: Vec<T>) -> $name<T> {
+            pub fn from_vec(b: Vec<T>) -> $name<T> {
                 Self {
-                    b: x.clone(),
+                    b,
                 }
             }
 
@@ -382,6 +382,14 @@ macro_rules! impl_declassify {
                     tmp[i] = <$st>::declassify(self[i]);
                 }
                 tmp
+            }
+            #[cfg_attr(feature = "use_attributes", not_hacspec)]
+            pub fn into_native(self) -> Vec<$t> {
+                self.b.iter().map(|&x| <$st>::declassify(x)).collect()
+            }
+            #[cfg_attr(feature = "use_attributes", not_hacspec)]
+            pub fn to_native(&self) -> Vec<$t> {
+                self.b.iter().map(|&x| <$st>::declassify(x)).collect()
             }
         }
     };
