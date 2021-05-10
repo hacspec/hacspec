@@ -442,7 +442,10 @@ fn aesgcm_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res
         &nonce,
         &ad.to_native(),
     ) {
-        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat_owned(Bytes::from_public_slice(&t))),
+        Ok((mut c, t)) => {
+            c.extend_from_slice(&t);
+            Ok(Bytes::from_public_slice(&c))
+        },
         Err(_e) => Err(crypto_error),
     }
 }
@@ -458,7 +461,10 @@ fn chachapoly_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) ->
         &nonce,
         &ad.to_native(),
     ) {
-        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat_owned(Bytes::from_public_slice(&t))),
+        Ok((mut c, t)) => {
+            c.extend_from_slice(&t);
+            Ok(Bytes::from_public_slice(&c))
+        },
         Err(_e) => Err(crypto_error),
     }
 }
@@ -479,10 +485,11 @@ pub fn aead_encrypt(
 }
 
 // FIXME: #98 add #[unsafe_hacspec] attribute
-fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
+fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
     nonce.copy_from_slice(&iv.to_native());
-    let (ciphertext, tag) = ciphertext.clone().split_off(ciphertext.len() - 16);
+    let ctxt_len = ciphertext.len();
+    let (ciphertext, tag) = ciphertext.split_off(ctxt_len - 16);
     match evercrypt::aead::decrypt(
         AeadMode::Aes128Gcm,
         &k.to_native(),
@@ -497,10 +504,11 @@ fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> 
 }
 
 // FIXME: #98 add #[unsafe_hacspec] attribute
-fn chachapoly_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
+fn chachapoly_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
     nonce.copy_from_slice(&iv.to_native());
-    let (ciphertext, tag) = ciphertext.clone().split_off(ciphertext.len() - 16);
+    let ctxt_len = ciphertext.len();
+    let (ciphertext, tag) = ciphertext.split_off(ctxt_len - 16);
     match evercrypt::aead::decrypt(
         AeadMode::Chacha20Poly1305,
         &k.to_native(),
@@ -518,7 +526,7 @@ pub fn aead_decrypt(
     a: &AEADAlgorithm,
     k: &AEK,
     iv: &AEIV,
-    ciphertext: &Bytes, // XXX: this should be public, i.e. Seq<u8>/PublicByteSeq
+    ciphertext: Bytes,
     ad: &Bytes,
 ) -> Res<Bytes> {
     match a {

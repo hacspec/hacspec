@@ -39,6 +39,13 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn with_capacity(l: usize) -> Self {
+                Self {
+                    b: Vec::with_capacity(l),
+                }
+            }
+
             /// Get the size of this sequence.
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             pub fn len(&self) -> usize {
@@ -71,6 +78,12 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn split_off(mut self, at: usize) -> (Self, Self) {
                 let other = Self::from_vec(self.b.split_off(at));
                 (self, other)
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn truncate(mut self, len: usize) -> Self  {
+                self.b.truncate(len);
+                self
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
