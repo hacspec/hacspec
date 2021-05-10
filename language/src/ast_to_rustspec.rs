@@ -1362,8 +1362,6 @@ fn translate_block(
 enum ItemTranslationResult {
     Item(Item),
     Ignored,
-    ImportedCrate(String),
-    TyAlias(Spanned<String>, Spanned<BaseTyp>),
 }
 
 fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
@@ -1982,7 +1980,10 @@ fn translate_items(
         ItemKind::Use(ref tree) => match tree.kind {
             // TODO: better system
             UseTreeKind::Glob => Ok((
-                ItemTranslationResult::ImportedCrate(translate_use_path(sess, &tree.prefix)?),
+                ItemTranslationResult::Item(Item::ImportedCrate((
+                    TopLevelIdent(translate_use_path(sess, &tree.prefix)?),
+                    tree.span.clone().into(),
+                ))),
                 specials.clone(),
             )),
             _ => {
@@ -2088,9 +2089,10 @@ fn translate_items(
                 }
                 Some(ty) => {
                     let ty = translate_base_typ(sess, ty)?;
-                    let ty_alias_name = (i.ident.name.to_ident_string(), i.span.into());
+                    let ty_alias_name =
+                        (TopLevelIdent(i.ident.name.to_ident_string()), i.span.into());
                     Ok((
-                        ItemTranslationResult::TyAlias(ty_alias_name, ty),
+                        ItemTranslationResult::Item(Item::AliasDecl(ty_alias_name, ty)),
                         specials.clone(),
                     ))
                 }
@@ -2207,19 +2209,7 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
             })
             .collect(),
     )?;
-    let (items, rest): (Vec<_>, Vec<_>) =
-        translated_items.into_iter().partition(|(r, _)| match r {
-            ItemTranslationResult::Item(_) => true,
-            ItemTranslationResult::Ignored => true,
-            _ => false,
-        });
-    let (imports, aliases): (Vec<_>, Vec<_>) = rest.into_iter().partition(|(r, _)| match r {
-        ItemTranslationResult::Item(_) => panic!(), // should not happen
-        ItemTranslationResult::Ignored => panic!(), // should not happen
-        ItemTranslationResult::ImportedCrate(_) => true,
-        ItemTranslationResult::TyAlias(_, _) => false,
-    });
-    let items: Vec<_> = items
+    let items: Vec<_> = translated_items
         .into_iter()
         .filter(|(r, _)| match r {
             ItemTranslationResult::Ignored => false,
@@ -2235,29 +2225,5 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
             }
         })
         .collect();
-    let imports = imports
-        .into_iter()
-        .map(|(r, r_span)| {
-            match r {
-                ItemTranslationResult::ImportedCrate(i) => (i, r_span.into()),
-                _ => panic!(), // should not happen
-            }
-        })
-        .collect();
-    let aliases = aliases
-        .into_iter()
-        .map(|(r, _)| {
-            match r {
-                ItemTranslationResult::TyAlias((name, span), ty) => {
-                    ((TopLevelIdent(name), span.into()), ty)
-                }
-                _ => panic!(), // should not happen
-            }
-        })
-        .collect();
-    Ok(Program {
-        items,
-        imported_crates: imports,
-        ty_aliases: aliases,
-    })
+    Ok(Program { items })
 }

@@ -1876,9 +1876,7 @@ fn typecheck_item(
                 info.clone(),
             ))
         }
-        Item::EnumDecl(_name, _cases) => {
-            unimplemented!()
-        }
+        Item::AliasDecl(_, _) | Item::ImportedCrate(_) | Item::EnumDecl(_, _) => Ok(i.clone()),
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {
             let var_context = HashMap::new();
             let var_context = sig
@@ -1995,7 +1993,5 @@ pub fn typecheck_program(
                 })
                 .collect(),
         )?,
-        imported_crates: p.imported_crates.clone(),
-        ty_aliases: p.ty_aliases.clone(),
     })
 }

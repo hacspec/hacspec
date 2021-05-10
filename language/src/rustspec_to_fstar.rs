@@ -1059,6 +1059,17 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                     ),
             )
         }
+        Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
+            "open {}",
+            str::replace(&kr.to_title_case(), " ", ".")
+        )),
+        Item::AliasDecl((TopLevelIdent(name), _), (ty, _)) => RcDoc::as_string("type")
+            .append(RcDoc::space())
+            .append(translate_ident_str(name.clone()))
+            .append(RcDoc::space())
+            .append(RcDoc::as_string("="))
+            .append(RcDoc::space())
+            .append(translate_base_typ(ty.clone())),
     }
 }
 
@@ -1097,40 +1108,6 @@ pub fn translate_and_write_to_file(
         module_name
     )
     .unwrap();
-    let i_c_iter: Vec<RcDoc<()>> = p
-        .imported_crates
-        .iter()
-        .skip(1)
-        .map(|(kr, _)| {
-            RcDoc::as_string(format!(
-                "open {}",
-                str::replace(&kr.to_title_case(), " ", ".")
-            ))
-        })
-        .collect();
-    let t_a_iter: Vec<RcDoc<()>> = p
-        .ty_aliases
-        .iter()
-        .map(|((name, _), (ty, _))| {
-            RcDoc::as_string("type")
-                .append(RcDoc::space())
-                .append(translate_ident_str(name.0.clone()))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("="))
-                .append(RcDoc::space())
-                .append(translate_base_typ(ty.clone()))
-        })
-        .collect();
-    RcDoc::intersperse(i_c_iter, RcDoc::hardline())
-        .append(RcDoc::hardline())
-        .append(RcDoc::hardline())
-        .render(width, &mut w)
-        .unwrap();
-    RcDoc::intersperse(t_a_iter, RcDoc::hardline())
-        .append(RcDoc::hardline())
-        .append(RcDoc::hardline())
-        .render(width, &mut w)
-        .unwrap();
     translate_program(p, top_ctx).render(width, &mut w).unwrap();
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }

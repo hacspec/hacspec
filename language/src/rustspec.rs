@@ -410,6 +410,8 @@ pub enum Item {
         Spanned<BaseTyp>,               // Cell type
         Option<Spanned<TopLevelIdent>>, // Optional type alias for indexes
     ),
+    AliasDecl(Spanned<TopLevelIdent>, Spanned<BaseTyp>),
+    ImportedCrate(Spanned<TopLevelIdent>),
     ConstDecl(
         Spanned<TopLevelIdent>,
         Spanned<BaseTyp>,
@@ -426,6 +428,4 @@ pub enum Item {
 #[derive(Clone, Serialize)]
 pub struct Program {
     pub items: Vec<Spanned<Item>>,
-    pub imported_crates: Vec<Spanned<String>>,
-    pub ty_aliases: Vec<(Spanned<TopLevelIdent>, Spanned<BaseTyp>)>,
 }

@@ -372,7 +372,7 @@ fn resolve_item(
             let new_size = resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
-        Item::EnumDecl(_, _) => Ok((i, i_span)),
+        Item::EnumDecl(_, _) | Item::AliasDecl(_, _) | Item::ImportedCrate(_) => Ok((i, i_span)),
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let new_canvas_size =
                 resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
@@ -532,6 +532,20 @@ fn process_decl_item(
             );
             Ok(())
         }
+        Item::AliasDecl(alias_name, alias_ty) => {
+            top_level_context.typ_dict.insert(
+                alias_name.0.clone(),
+                (
+                    ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
+                    DictEntry::Alias,
+                ),
+            );
+            Ok(())
+        }
+        Item::ImportedCrate(_) => {
+            // Foreign items already imported at this point
+            Ok(())
+        }
         Item::FnDecl((f, _f_span), sig, _b) => {
             top_level_context
                 .functions
@@ -539,6 +553,20 @@ fn process_decl_item(
             Ok(())
         }
     }
+}
+
+fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
+    p.items
+        .iter()
+        .filter(|i| match &i.0 {
+            Item::ImportedCrate(_) => true,
+            _ => false,
+        })
+        .map(|i| match &i.0 {
+            Item::ImportedCrate((TopLevelIdent(s), _)) => (s.clone(), i.1.clone()),
+            _ => panic!("should not happen"),
+        })
+        .collect()
 }
 
 fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
@@ -553,7 +581,7 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         arrays: extern_arrays,
         nat_ints: extern_nat_ints,
         ty_aliases: extern_aliases,
-    } = external_data(&p.imported_crates);
+    } = external_data(&get_imported_crates(p));
     for (alias_name, alias_ty) in extern_aliases {
         top_level_ctx.typ_dict.insert(
             TopLevelIdent(alias_name.clone()),
@@ -562,15 +590,6 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
                     (Borrowing::Consumed, DUMMY_SP.into()),
                     (alias_ty.clone(), DUMMY_SP.into()),
                 ),
-                DictEntry::Alias,
-            ),
-        );
-    }
-    for (alias_name, alias_ty) in &p.ty_aliases {
-        top_level_ctx.typ_dict.insert(
-            alias_name.0.clone(),
-            (
-                ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
                 DictEntry::Alias,
             ),
         );
@@ -640,8 +659,6 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     .map(|i| resolve_item(sess, i, &top_level_ctx))
                     .collect(),
             )?,
-            imported_crates: p.imported_crates,
-            ty_aliases: p.ty_aliases,
         },
         top_level_ctx,
     ))

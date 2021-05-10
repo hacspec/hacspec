@@ -1094,6 +1094,13 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
         Item::NaturalIntegerDecl(_, _, _, _) => {
             unimplemented!()
         }
+        Item::AliasDecl(_, _) => {
+            unimplemented!()
+        }
+        Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
+            "open {}",
+            str::replace(&kr.to_title_case(), " ", ".")
+        )),
     }
 }
 
@@ -1132,22 +1139,6 @@ pub fn translate_and_write_to_file(
          require import Hacspec.\n",
     )
     .unwrap();
-    let i_c_iter: Vec<RcDoc<()>> = p
-        .imported_crates
-        .iter()
-        .skip(1)
-        .map(|(kr, _)| {
-            RcDoc::as_string(format!(
-                "open {}",
-                str::replace(&kr.to_title_case(), " ", ".")
-            ))
-        })
-        .collect();
-    RcDoc::intersperse(i_c_iter, RcDoc::line())
-        .append(RcDoc::hardline())
-        .append(RcDoc::hardline())
-        .render(width, &mut w)
-        .unwrap();
     translate_program(p, top_ctx).render(width, &mut w).unwrap();
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }
