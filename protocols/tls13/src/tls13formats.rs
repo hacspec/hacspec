@@ -28,7 +28,7 @@ bytes!(Bytes32, 32);
 bytes!(Bytes98, 98);
 
 pub fn bytes1(x: u8) -> Bytes {
-    bytes(&Bytes1([U8(x)]))
+    Bytes::from_native_slice(&[U8(x)])
 }
 pub fn bytes2(x: u8, y: u8) -> Bytes {
     bytes(&Bytes2([U8(x), U8(y)]))

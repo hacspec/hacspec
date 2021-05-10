@@ -46,6 +46,13 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[inline(always)]
+            pub fn reserve(mut self, additional: usize) -> Self {
+                self.b.reserve(additional);
+                self
+            }
+
             /// Get the size of this sequence.
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             pub fn len(&self) -> usize {
@@ -75,12 +82,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[inline(always)]
             pub fn split_off(mut self, at: usize) -> (Self, Self) {
                 let other = Self::from_vec(self.b.split_off(at));
                 (self, other)
             }
 
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[inline(always)]
             pub fn truncate(mut self, len: usize) -> Self  {
                 self.b.truncate(len);
                 self
@@ -102,6 +111,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
+            #[inline(always)]
             pub fn concat_owned(mut self, mut next: Self) -> Self {
                 self.b.append(&mut next.b);
                 self
@@ -275,7 +285,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
-            #[cfg_attr(feature="use_attributes", not_hacspec)]
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             pub fn from_native_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
@@ -303,7 +313,7 @@ pub type PublicByteSeq = PublicSeq<u8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {
-    #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+    #[cfg_attr(feature = "use_attributes", not_hacspec)]
     pub fn from_hex(s: &str) -> Seq<U8> {
         Seq::from_vec(
             hex_string_to_bytes(s)

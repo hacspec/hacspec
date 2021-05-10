@@ -20,8 +20,7 @@ pub fn derive_iv_ctr(ae: &AEADAlgorithm, iv: &AEIV, n:u64) -> AEIV {
 pub fn encrypt_record_payload(ae:&AEADAlgorithm, kiv: &AEKIV, n:u64, ct:ContentType, payload: Bytes, pad:usize) -> Res<Bytes> {
     let (k,iv) = kiv;
     let iv_ctr = derive_iv_ctr(&ae,&iv,n);
-    let inner_plaintext = Bytes::with_capacity(payload.len() + 1 + pad);
-    let inner_plaintext = inner_plaintext.concat_owned(payload).concat_owned(bytes1(content_type(ct))).concat_owned(zeros(pad));
+    let inner_plaintext = payload.concat_owned(bytes1(content_type(ct))).concat_owned(zeros(pad));
     let clen = inner_plaintext.len() + 16;
     if clen <= 65536 {
         let clen0 = clen as u8;
