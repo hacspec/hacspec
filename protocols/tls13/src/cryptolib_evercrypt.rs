@@ -48,7 +48,7 @@ pub type AEIV = Bytes;
 
 pub type AEKIV = (AEK, AEIV);
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum NamedGroup {
     X25519,
     SECP256r1,
