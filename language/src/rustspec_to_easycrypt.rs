@@ -241,6 +241,9 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
+        BaseTyp::Enum(_cases) => {
+            unimplemented!()
+        }
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
@@ -399,7 +402,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Div => return (RcDoc::as_string("/"), false),
                         _ => unimplemented!(),
                     },
-                    DictEntry::Array | DictEntry::Alias => {
+                    DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
                         return translate_binop(op, inner_ty, top_ctx)
                     }
                 },
@@ -545,6 +548,9 @@ fn translate_prefix_for_func_name<'a>(
             RcDoc::as_string(ARRAY_MODULE),
             FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
         ),
+        BaseTyp::Enum(_cases) => {
+            unimplemented!()
+        }
         BaseTyp::Named(ident, _) => {
             // if the type is an array, we should print the Seq module instead
             let name = &ident.0;

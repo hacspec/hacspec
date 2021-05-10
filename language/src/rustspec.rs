@@ -170,6 +170,7 @@ pub enum BaseTyp {
     Named(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(TypVar),
     Tuple(Vec<Spanned<BaseTyp>>),
+    Enum(Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>),
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
@@ -212,6 +213,16 @@ impl fmt::Display for BaseTyp {
                 f,
                 "({})",
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
+            ),
+            BaseTyp::Enum(args) => write!(
+                f,
+                "[{}]",
+                args.iter()
+                    .map(|((case, _), payload)| match payload {
+                        Some((payload, _)) => format!("{}: {}", case, payload),
+                        None => format!("{}", case),
+                    })
+                    .format(" | ")
             ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
             BaseTyp::NaturalInteger(sec, modulo, bits) => {

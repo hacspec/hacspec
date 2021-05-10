@@ -32,6 +32,7 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
                 assert!((new_t1.0).0 == Borrowing::Consumed);
                 match dict_entry {
                     DictEntry::Alias => is_numeric(new_t1, top_ctxt),
+                    DictEntry::Enum => false,
                     DictEntry::Array | DictEntry::NaturalInteger => true,
                 }
             }
@@ -58,7 +59,7 @@ fn is_bool(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
                 assert!((new_t1.0).0 == Borrowing::Consumed);
                 match dict_entry {
                     DictEntry::Alias => is_numeric(new_t1, top_ctxt),
-                    DictEntry::Array | DictEntry::NaturalInteger => false,
+                    DictEntry::Enum | DictEntry::Array | DictEntry::NaturalInteger => false,
                 }
             }
             None => false,
@@ -102,6 +103,10 @@ fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
         },
         BaseTyp::Variable(_) => false,
         BaseTyp::Tuple(ts) => ts.iter().all(|(t, _)| is_copy(t, top_ctxt)),
+        BaseTyp::Enum(ts) => ts.iter().all(|(_, t)| match t {
+            None => true,
+            Some((t, _)) => is_copy(t, top_ctxt),
+        }),
         BaseTyp::NaturalInteger(_, _, _) => true,
     }
 }
@@ -119,6 +124,14 @@ fn is_array(
             match top_ctxt.typ_dict.get(name) {
                 Some((new_t, dict_entry)) => match dict_entry {
                     DictEntry::Alias => is_array(sess, new_t, top_ctxt, span),
+                    DictEntry::Enum => {
+                        sess.span_rustspec_err(
+                            span.clone(),
+                            format!("expected an array but got type {}{}", &(t.0).0, &(t.1).0)
+                                .as_str(),
+                        );
+                        Err(())
+                    }
                     DictEntry::Array => {
                         match &(new_t.1).0 {
                             BaseTyp::Array(size, cell_t) => {
@@ -486,19 +499,27 @@ fn find_func(
             },
             (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
                 let t1 = match t1 {
-                    BaseTyp::Named((name, _), None) => top_level_context.typ_dict.get(name).map_or(
-                        (
+                    BaseTyp::Named((name, _), None) => match top_level_context.typ_dict.get(name) {
+                        None => (
                             (Borrowing::Consumed, span.clone()),
                             (t1.clone(), span.clone()),
                         ),
-                        |(t_alias, entry_typ)| match entry_typ {
+                        Some((t_alias, entry_typ)) => match entry_typ {
                             DictEntry::Alias => t_alias.clone(),
+                            DictEntry::Enum => {
+                                sess.span_rustspec_err(
+                                    span.clone(),
+                                    "methods attached to enum types are forbidden in Hacspec",
+                                );
+                                has_err = true;
+                                return None;
+                            }
                             DictEntry::Array | DictEntry::NaturalInteger => (
                                 (Borrowing::Consumed, span.clone()),
                                 (t1.clone(), span.clone()),
                             ),
                         },
-                    ),
+                    },
                     _ => (
                         (Borrowing::Consumed, span.clone()),
                         (t1.clone(), span.clone()),

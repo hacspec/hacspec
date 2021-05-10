@@ -28,6 +28,7 @@ pub enum DictEntry {
     Alias,
     Array,
     NaturalInteger,
+    Enum,
 }
 
 pub type ResolutionResult<T> = Result<T, ()>;
@@ -371,9 +372,7 @@ fn resolve_item(
             let new_size = resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
-        Item::EnumDecl(_name, _cases) => {
-            unimplemented!()
-        }
+        Item::EnumDecl(_, _) => Ok((i, i_span)),
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let new_canvas_size =
                 resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
@@ -413,8 +412,18 @@ fn process_decl_item(
             top_level_context.consts.insert(id.0.clone(), typ.clone());
             Ok(())
         }
-        Item::EnumDecl(_name, _cases) => {
-            unimplemented!()
+        Item::EnumDecl(name, cases) => {
+            top_level_context.typ_dict.insert(
+                name.0.clone(),
+                (
+                    (
+                        (Borrowing::Consumed, i_span.clone()),
+                        (BaseTyp::Enum(cases.clone()), i_span.clone()),
+                    ),
+                    DictEntry::Enum,
+                ),
+            );
+            Ok(())
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let new_size = match &size.0 {
