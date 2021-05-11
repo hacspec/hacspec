@@ -783,8 +783,62 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::EnumInject(_enum_name, _case_name, _payload) => {
-            unimplemented!()
+        Expression::EnumInject(enum_name, case_name, payload) => {
+            let enum_cases = match top_level_context.typ_dict.get(&enum_name.0) {
+                Some((((Borrowing::Consumed, _), (BaseTyp::Enum(cases), _)), DictEntry::Enum)) => {
+                    cases
+                }
+                _ => {
+                    sess.span_rustspec_err(enum_name.1.clone(), "enum not found");
+                    return Err(());
+                }
+            };
+            let case_typ = match enum_cases
+                .iter()
+                .find(|((case_name_candidate, _), _)| case_name_candidate == &case_name.0)
+            {
+                Some((_, case_typ)) => case_typ,
+                _ => {
+                    sess.span_rustspec_err(
+                        case_name.1.clone(),
+                        format!("enum case not found for {}", enum_name.0).as_str(),
+                    );
+                    return Err(());
+                }
+            };
+            let mut var_context = var_context.clone();
+            let new_payload = match (case_typ, payload) {
+                (None, None) => None,
+                (Some(case_typ), Some((payload, payload_span))) => {
+                    let (new_payload, payload_type, new_var_context) = typecheck_expression(
+                        sess,
+                        &(*payload.clone(), payload_span.clone()),
+                        top_level_context,
+                        &var_context,
+                    )?;
+                    var_context = new_var_context;
+                    unify_types(
+                        sess,
+                        &((Borrowing::Consumed, case_name.1.clone()), case_typ.clone()),
+                        &payload_type,
+                        &HashMap::new(),
+                        top_level_context,
+                    )?;
+                    Some((Box::new(new_payload), payload_span.clone()))
+                }
+                _ => {
+                    sess.span_rustspec_err(case_name.1.clone(), "incorrect payload");
+                    return Err(());
+                }
+            };
+            Ok((
+                Expression::EnumInject(enum_name.clone(), case_name.clone(), new_payload),
+                (
+                    (Borrowing::Consumed, span.clone()),
+                    (BaseTyp::Named(enum_name.clone(), None), span.clone()),
+                ),
+                var_context,
+            ))
         }
         Expression::InlineConditional(cond, e_t, e_f) => {
             let (new_cond, t_cond, var_context) =
