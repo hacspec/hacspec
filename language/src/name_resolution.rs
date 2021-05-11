@@ -130,12 +130,46 @@ fn resolve_expression(
                 e_span,
             ))
         }
-        Expression::MatchWith(_arg, _arms) => {
-            unimplemented!()
+        Expression::MatchWith(arg, arms) => {
+            let new_arg = resolve_expression(sess, *arg, name_context, top_level_ctx)?;
+            let new_arms = check_vec(
+                arms.into_iter()
+                    .map(|(enum_name, case_name, payload, arm)| {
+                        let (new_payload, new_name_context) = match payload {
+                            None => (None, name_context.clone()),
+                            Some(payload) => {
+                                let (new_pat, new_name_context) =
+                                    resolve_pattern(sess, &payload, top_level_ctx)?;
+                                (Some((new_pat, payload.1.clone())), new_name_context)
+                            }
+                        };
+                        let name_context = new_name_context.union(name_context.clone());
+                        let new_arm = resolve_expression(sess, arm, &name_context, top_level_ctx)?;
+                        Ok((enum_name, case_name, new_payload, new_arm))
+                    })
+                    .collect(),
+            )?;
+            Ok((Expression::MatchWith(Box::new(new_arg), new_arms), e_span))
         }
-        Expression::EnumInject(_enum_name, _case_name, _payload) => {
-            unimplemented!()
-        }
+        Expression::EnumInject(enum_name, case_name, payload) => Ok((
+            Expression::EnumInject(
+                enum_name,
+                case_name,
+                match payload {
+                    None => None,
+                    Some(payload) => {
+                        let (new_payload, new_payload_span) = resolve_expression(
+                            sess,
+                            (*payload.0, payload.1),
+                            &name_context,
+                            top_level_ctx,
+                        )?;
+                        Some((Box::new(new_payload), new_payload_span))
+                    }
+                },
+            ),
+            e_span,
+        )),
         Expression::InlineConditional(e1, e2, e3) => {
             let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             let new_e2 = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
