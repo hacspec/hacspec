@@ -669,8 +669,9 @@ fn typecheck_expression(
             }
         }
         Expression::MatchWith(arg, arms) => {
-            let (new_arg, t_arg, mut var_context) =
+            let (new_arg, t_arg, intermediate_var_context) =
                 typecheck_expression(sess, arg, top_level_context, &var_context)?;
+            let mut acc_var_context = intermediate_var_context.clone();
             let (mut t_arg_cases, t_arg_enum_name) = match (t_arg.1).0.clone() {
                 BaseTyp::Named((name, _), None) => match top_level_context.typ_dict.get(&name) {
                     Some((
@@ -719,8 +720,8 @@ fn typecheck_expression(
                             }
                         };
                         t_arg_cases.remove(case_index);
-                        let new_arm_pattern = match (arm_pattern, case_typ) {
-                            (None, None) => None,
+                        let (new_arm_pattern, new_var_context) = match (arm_pattern, case_typ) {
+                            (None, None) => (None, HashMap::new()),
                             (Some(arm_pattern), Some(case_typ)) => {
                                 let (new_arm_pattern, new_var_context) = typecheck_pattern(
                                     sess,
@@ -728,8 +729,10 @@ fn typecheck_expression(
                                     &(t_arg.0.clone(), case_typ.clone()),
                                     top_level_context,
                                 )?;
-                                var_context = new_var_context;
-                                Some((new_arm_pattern, arm_pattern.1.clone()))
+                                (
+                                    Some((new_arm_pattern, arm_pattern.1.clone())),
+                                    new_var_context,
+                                )
                             }
                             _ => {
                                 sess.span_rustspec_err(
@@ -739,9 +742,13 @@ fn typecheck_expression(
                                 return Err(());
                             }
                         };
-                        let (new_arm_exp, arm_typ, new_var_context) =
-                            typecheck_expression(sess, arm_exp, top_level_context, &var_context)?;
-                        var_context = new_var_context;
+                        let (new_arm_exp, arm_typ, new_var_context) = typecheck_expression(
+                            sess,
+                            arm_exp,
+                            top_level_context,
+                            &intermediate_var_context.clone().union(new_var_context),
+                        )?;
+                        acc_var_context = acc_var_context.clone().intersection(new_var_context);
                         match &out_typ {
                             None => out_typ = Some(arm_typ),
                             Some(out_typ) => {
@@ -780,7 +787,7 @@ fn typecheck_expression(
             Ok((
                 Expression::MatchWith(Box::new((new_arg, arg.1.clone())), new_arms),
                 out_typ.unwrap(),
-                var_context,
+                acc_var_context,
             ))
         }
         Expression::EnumInject(enum_name, case_name, payload) => {
