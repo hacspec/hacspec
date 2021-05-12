@@ -1,24 +1,32 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
+// WARNING:
+// This spec does not provide secret independence, and treats all keys as public.
+// Consequently, it should only be used as a FORMAL SPEC, NOT as a reference implementation.
+
 // Type definitions for use in poly1305.
-bytes!(KeyPoly, 32);
+bytes!(PolyKey, 32);
 
 const BLOCKSIZE: usize = 16;
 
 // These are type aliases for convenience
-bytes!(Block, 16);
+bytes!(PolyBlock, 16);
 
 // These are actual types; fixed-length arrays.
-public_bytes!(Tag, 16);
+bytes!(Tag, 16);
+
+// A byte sequence of length <= BLOCKSIZE
+pub type SubBlock = ByteSeq;
+
+// A length <= BLOCKSIZE
+pub type BlockIndex = usize;
 
 // This defines the field for modulo 2^130-5.
 // In particular `FieldElement` and `FieldCanvas` are defined.
 // The `FieldCanvas` is an integer type with 131-bit (to hold 2*(2^130-5)).
 // The `FieldElement` is a natural integer modulo 2^130-5.
-//
-// XXX: The types are public here but should be secret. But secret BigNums are
-// not implemented yet.
+
 public_nat_mod!(
     type_name: FieldElement,
     type_of_canvas: FieldCanvas,
@@ -26,52 +34,75 @@ public_nat_mod!(
     modulo_value: "03fffffffffffffffffffffffffffffffb"
 );
 
-/// Take a variable length byte array and convert it into a U128 (secret u128).
-pub fn le_bytes_to_num(b: &ByteSeq) -> U128 {
-    let block_as_u128 = U128Word::from_slice(b, 0, min(BLOCKSIZE, b.len()));
-    U128_from_le_bytes(block_as_u128)
+// Internal Poly1305 State
+pub type PolyState = (FieldElement, FieldElement, PolyKey); //(accumulator,r,key)
+
+pub fn poly1305_encode_r (b:&PolyBlock) -> FieldElement {
+    let mut n = U128_from_le_bytes(U128Word::from_seq(b));
+    n = n & U128(0x0fff_fffc_0fff_fffc_0fff_fffc_0fff_ffffu128);
+    FieldElement::from_secret_literal(n)
 }
 
-/// Clamp a block `r` and return the resulting `FieldElement`.
-pub fn clamp(r: U128) -> FieldElement {
-    let r_uint = r & U128(0x0fff_fffc_0fff_fffc_0fff_fffc_0fff_ffffu128);
-    FieldElement::from_secret_literal(r_uint)
+pub fn poly1305_encode_block (b:&PolyBlock) -> FieldElement {
+    let n = U128_from_le_bytes(U128Word::from_seq(b));
+    let f = FieldElement::from_secret_literal(n);
+    f + FieldElement::pow2(128)
 }
 
-/// Convert a block (part of the byte sequence) to a `FieldElement`.
-pub fn encode(block_uint: U128, len: usize) -> FieldElement {
-    let w_elem = FieldElement::from_secret_literal(block_uint);
-    let l_elem = FieldElement::pow2(8 * len);
-    w_elem + l_elem
+// In Poly1305 as used in this spec, pad_len is always the length of b, i.e. there is no padding
+// In Chacha20Poly1305, pad_len is set to BLOCKSIZE
+pub fn poly1305_encode_last (pad_len:BlockIndex,b:&SubBlock) -> FieldElement {
+    let n = U128_from_le_bytes(U128Word::from_slice(b,0,b.len())); 
+    let f = FieldElement::from_secret_literal(n);
+    f + FieldElement::pow2(8 * pad_len)
 }
 
-/// Convert the addition modulo 2^128 of two `FieldElement` to a `Tag` (16-byte array).
-pub fn poly_finish(a: FieldElement, s: FieldElement) -> Tag {
-    // The public slices representing a and s are 17 bytes
-    // using big-endian representation; to get a modulo 2^128
-    // we simply cut-off the left-most byte using slice.
-    let a = a.to_public_byte_seq_be().slice(1, BLOCKSIZE);
-    let a = u128_from_be_bytes(u128Word::from_seq(&a));
-    let s = s.to_public_byte_seq_be().slice(1, BLOCKSIZE);
-    let s = u128_from_be_bytes(u128Word::from_seq(&s));
-    let a = a.wrapping_add(s);
-    Tag::from_seq(&u128_to_le_bytes(a))
+pub fn poly1305_init (k:PolyKey) -> PolyState {
+    let r = poly1305_encode_r(&PolyBlock::from_slice(&k,0,16));
+    (FieldElement::ZERO(), r, k)
 }
 
-pub fn poly(m: &ByteSeq, key: KeyPoly) -> Tag {
-    let r = le_bytes_to_num(&key.slice(0, BLOCKSIZE));
-    let r = clamp(r);
+pub fn poly1305_update_block (b:&PolyBlock, st:PolyState) -> PolyState {
+    let (acc,r,k) = st;
+    ((poly1305_encode_block(b) + acc) * r,r,k)
+}
 
-    let s = le_bytes_to_num(&key.slice(BLOCKSIZE, BLOCKSIZE));
-    let s = FieldElement::from_secret_literal(s);
-
-    let mut a = FieldElement::from_literal(0u128);
-    for i in 0..m.num_chunks(BLOCKSIZE) {
-        let (len, block) = m.get_chunk(BLOCKSIZE, i);
-        let block_uint = le_bytes_to_num(&block);
-        let n = encode(block_uint, len);
-        a = a + n;
-        a = r * a;
+pub fn poly1305_update_blocks (m:&ByteSeq, st:PolyState) -> PolyState {
+    let mut st = st;
+    let nblocks = m.len() / BLOCKSIZE;
+    for i in 0..nblocks {
+        let block = PolyBlock::from_seq(&m.get_exact_chunk(BLOCKSIZE, i));
+        st = poly1305_update_block(&block,st);
     }
-    poly_finish(a, s)
+    st
 }
+
+pub fn poly1305_update_last (pad_len:usize, b:&SubBlock, st:PolyState) -> PolyState {
+    let mut st = st;
+    if b.len() != 0 {
+        let (acc,r,k) = st;
+        st = ((poly1305_encode_last(pad_len,b) + acc) * r,r,k);
+    }
+    st
+}
+
+pub fn poly1305_update (m:&ByteSeq, st:PolyState) -> PolyState {
+    let st = poly1305_update_blocks(m,st);
+    let last = m.get_remainder_chunk(BLOCKSIZE);
+    poly1305_update_last(last.len(),&last,st)
+}
+
+pub fn poly1305_finish (st:PolyState) -> Tag {
+    let (acc,_,k) = st;
+    let n = U128_from_le_bytes(U128Word::from_slice(&k,16,16));
+    let aby = acc.to_byte_seq_le();
+    let a = U128_from_le_bytes(U128Word::from_slice(&aby,0,16)); // Silliness, from_seq should work but it panics
+    Tag::from_seq(&U128_to_le_bytes(a+n))
+}
+
+pub fn poly1305(m: &ByteSeq, key: PolyKey) -> Tag {
+    let mut st = poly1305_init(key);
+    st = poly1305_update(m,st);
+    poly1305_finish(st)
+}
+
