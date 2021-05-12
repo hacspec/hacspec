@@ -1094,9 +1094,15 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
         Item::NaturalIntegerDecl(_, _, _, _) => {
             unimplemented!()
         }
-        Item::AliasDecl(_, _) => {
-            unimplemented!()
-        }
+        Item::AliasDecl(name, ty) => RcDoc::as_string("type")
+            .append(RcDoc::space())
+            .append(translate_ident(Ident::TopLevel(name.0.clone())))
+            .append(RcDoc::as_string("="))
+            .append(RcDoc::space())
+            .append(translate_base_typ(ty.0.clone()))
+            .append(RcDoc::as_string("."))
+            .append(RcDoc::hardline())
+            .append(RcDoc::hardline()),
         Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
             "open {}",
             str::replace(&kr.to_title_case(), " ", ".")
