@@ -348,6 +348,7 @@ pub enum Pattern {
     IdentPat(Ident),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
+    SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }
 
 #[derive(Clone, Serialize)]

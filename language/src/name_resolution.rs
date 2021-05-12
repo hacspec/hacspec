@@ -258,6 +258,16 @@ fn resolve_pattern(
     top_ctx: &TopLevelContext,
 ) -> ResolutionResult<(Pattern, NameContext)> {
     match pat {
+        Pattern::SingleCaseEnum(name, inner_pat) => {
+            let (new_inner_pat, sub_context) = resolve_pattern(sess, &*inner_pat, top_ctx)?;
+            Ok((
+                Pattern::SingleCaseEnum(
+                    name.clone(),
+                    Box::new((new_inner_pat, inner_pat.1.clone())),
+                ),
+                sub_context,
+            ))
+        }
         Pattern::Tuple(pat_args) => {
             let (tup_args, acc_name) =
                 pat_args

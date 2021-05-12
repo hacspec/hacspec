@@ -347,6 +347,11 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
+        Pattern::SingleCaseEnum(name, inner_pat) => {
+            translate_ident(Ident::TopLevel(name.0.clone()))
+                .append(RcDoc::space())
+                .append(make_paren(translate_pattern(&inner_pat.0)))
+        }
         Pattern::IdentPat(x) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat))),

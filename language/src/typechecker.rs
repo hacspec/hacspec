@@ -723,16 +723,13 @@ fn typecheck_expression(
                         let (new_arm_pattern, new_var_context) = match (arm_pattern, case_typ) {
                             (None, None) => (None, HashMap::new()),
                             (Some(arm_pattern), Some(case_typ)) => {
-                                let (new_arm_pattern, new_var_context) = typecheck_pattern(
+                                let new_var_context = typecheck_pattern(
                                     sess,
                                     arm_pattern,
                                     &(t_arg.0.clone(), case_typ.clone()),
                                     top_level_context,
                                 )?;
-                                (
-                                    Some((new_arm_pattern, arm_pattern.1.clone())),
-                                    new_var_context,
-                                )
+                                (Some(arm_pattern.clone()), new_var_context)
                             }
                             _ => {
                                 sess.span_rustspec_err(
@@ -1559,7 +1556,7 @@ fn typecheck_pattern(
     (pat, pat_span): &Spanned<Pattern>,
     (borrowing_typ, typ): &Typ,
     top_ctx: &TopLevelContext,
-) -> TypecheckingResult<(Pattern, VarContext)> {
+) -> TypecheckingResult<VarContext> {
     match &typ.0 {
         BaseTyp::Named((name, _), None) => match top_ctx.typ_dict.get(name) {
             Some((((Borrowing::Consumed, _), (new_ty, _)), DictEntry::Alias)) => {
@@ -1575,6 +1572,85 @@ fn typecheck_pattern(
         _ => (),
     };
     match (pat, &typ.0) {
+        (
+            Pattern::SingleCaseEnum((pat_enum_name, _), inner_pat),
+            BaseTyp::Named((typ_name, _), None),
+        ) if pat_enum_name == typ_name => match top_ctx.typ_dict.get(typ_name) {
+            Some((
+                ((Borrowing::Consumed, _), (BaseTyp::Enum(cases), cases_span)),
+                DictEntry::Enum,
+            )) => {
+                if cases.len() != 1 {
+                    sess.span_rustspec_err(
+                        *pat_span,
+                        format!(
+                            "this pattern is matching the enum {} with multiple cases",
+                            pat_enum_name.0
+                        )
+                        .as_str(),
+                    );
+                    return Err(());
+                }
+                let ((case_name, _), case_typ) = cases.into_iter().next().unwrap();
+                if case_name != pat_enum_name {
+                    sess.span_rustspec_err(
+                        *pat_span,
+                        format!(
+                            "this pattern matches the enum {} with a single case {} instead of the wrapper struct {}",
+                            case_name.0,
+                            pat_enum_name.0,
+                            pat_enum_name.0
+                        )
+                        .as_str(),
+                    );
+                    return Err(());
+                }
+                match case_typ {
+                    None => {
+                        sess.span_rustspec_err(
+                            *pat_span,
+                            format!(
+                                "this pattern is matching the enum {} with one case but no payload",
+                                pat_enum_name.0
+                            )
+                            .as_str(),
+                        );
+                        return Err(());
+                    }
+                    Some((case_typ, _)) => typecheck_pattern(
+                        sess,
+                        inner_pat,
+                        &(
+                            (Borrowing::Consumed, cases_span.clone()),
+                            (case_typ.clone(), cases_span.clone()),
+                        ),
+                        top_ctx,
+                    ),
+                }
+            }
+            _ => {
+                sess.span_rustspec_err(
+                    *pat_span,
+                    format!(
+                        "let-binding pattern expected a {} struct but the type is {}",
+                        pat_enum_name.0, typ.0
+                    )
+                    .as_str(),
+                );
+                Err(())
+            }
+        },
+        (Pattern::SingleCaseEnum(name, _), _) => {
+            sess.span_rustspec_err(
+                *pat_span,
+                format!(
+                    "let-binding pattern expected a {} struct but the type is {}",
+                    name.0, typ.0
+                )
+                .as_str(),
+            );
+            Err(())
+        }
         (Pattern::Tuple(pat_args), BaseTyp::Tuple(ref typ_args)) => {
             if pat_args.len() != typ_args.len() {
                 sess.span_rustspec_err(*pat_span,
@@ -1583,22 +1659,21 @@ fn typecheck_pattern(
                      typ_args.len()).as_str()
                 )
             };
-            let (tup_args, acc_var) = pat_args.iter().zip(typ_args.iter()).fold(
-                Ok((Vec::new(), HashMap::new())),
+            let acc_var = pat_args.iter().zip(typ_args.iter()).fold(
+                Ok(HashMap::new()),
                 |acc, (pat_arg, typ_arg)| {
-                    let (mut acc_pat, acc_var) = acc?;
-                    let (new_pat, sub_var_context) = typecheck_pattern(
+                    let acc_var = acc?;
+                    let sub_var_context = typecheck_pattern(
                         sess,
                         pat_arg,
                         //TODO: changed to propagate borrow to tuple args
                         &((Borrowing::Consumed, *pat_span), typ_arg.clone()),
                         top_ctx,
                     )?;
-                    acc_pat.push((new_pat, pat_arg.1.clone()));
-                    Ok((acc_pat, acc_var.union(sub_var_context)))
+                    Ok(acc_var.union(sub_var_context))
                 },
             )?;
-            Ok((Pattern::Tuple(tup_args), acc_var))
+            Ok(acc_var)
         }
         (Pattern::Tuple(_), _) => {
             sess.span_rustspec_err(
@@ -1611,15 +1686,15 @@ fn typecheck_pattern(
             );
             Err(())
         }
-        (Pattern::WildCard, _) => Ok((Pattern::WildCard, HashMap::new())),
+        (Pattern::WildCard, _) => Ok(HashMap::new()),
         (Pattern::IdentPat(x), _) => {
             let (id, name) = match &x {
                 Ident::Local(LocalIdent { id, name }) => (id.clone(), name.clone()),
                 _ => panic!("should not happen"),
             };
-            Ok((
-                Pattern::IdentPat(x.clone()),
-                HashMap::unit(id, ((borrowing_typ.clone(), typ.clone()), name)),
+            Ok(HashMap::unit(
+                id,
+                ((borrowing_typ.clone(), typ.clone()), name),
             ))
         }
     }
@@ -1670,7 +1745,7 @@ fn typecheck_statement(
                     }
                 }
             };
-            let (new_pat, pat_var_context) = typecheck_pattern(
+            let pat_var_context = typecheck_pattern(
                 sess,
                 &(pat.clone(), pat_span.clone()),
                 &expr_typ,
@@ -1678,7 +1753,7 @@ fn typecheck_statement(
             )?;
             Ok((
                 Statement::LetBinding(
-                    (new_pat, pat_span.clone()),
+                    (pat.clone(), pat_span.clone()),
                     typ.clone(),
                     (new_expr, expr.1.clone()),
                 ),
