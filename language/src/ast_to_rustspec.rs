@@ -494,7 +494,12 @@ fn translate_expr(
             sess.span_rustspec_err(e.span, "trait associated values not allowed in Hacspec");
             Err(())
         }
-        ExprKind::Path(None, ast::Path { segments, .. }) if segments.len() == 2 => {
+        ExprKind::Path(None, ast::Path { segments, .. })
+            if segments.len() == 2
+                && specials
+                    .enums
+                    .contains(&segments.iter().next().unwrap().ident.name.to_ident_string()) =>
+        {
             let mut it = segments.iter();
             let first_seg = it.next().unwrap();
             let second_seg = it.next().unwrap();
@@ -525,6 +530,44 @@ fn translate_expr(
             match func_name_kind {
                 FuncNameResult::TypePrefixed(func_prefix, func_name) => {
                     let func_name_string = (func_name.clone().0).0;
+                    let func_args: Vec<
+                        TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>,
+                    > = args
+                        .iter()
+                        .map(|arg| translate_function_argument(sess, specials, &arg))
+                        .collect();
+                    let func_args = check_vec(func_args)?;
+                    if specials.enums.contains(&func_name_string) {
+                        // Special case for struct constructors
+                        let func_args = check_vec(
+                            func_args
+                                .into_iter()
+                                .map(|(arg, borrow)| match &borrow.0 {
+                                    Borrowing::Consumed => Ok(arg),
+                                    Borrowing::Borrowed => {
+                                        sess.span_rustspec_err(
+                                            borrow.1.clone(),
+                                            "struct arguments cannot be borrowed in Hacspec",
+                                        );
+                                        Err(())
+                                    }
+                                })
+                                .collect(),
+                        )?;
+                        return Ok((
+                            ExprTranslationResult::TransExpr(Expression::EnumInject(
+                                func_name.clone(),
+                                func_name,
+                                Some(if func_args.len() > 1 {
+                                    (Box::new(Expression::Tuple(func_args)), e.span.into())
+                                } else {
+                                    let arg = func_args.into_iter().next().unwrap();
+                                    (Box::new(arg.0), arg.1)
+                                }),
+                            )),
+                            e.span.into(),
+                        ));
+                    }
                     if specials.arrays.contains(&func_name_string) {
                         // Special case for array constructors
                         if args.len() != 1 {
@@ -667,18 +710,11 @@ fn translate_expr(
                             }
                         }
                     }
-                    let func_args: Vec<
-                        TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>,
-                    > = args
-                        .iter()
-                        .map(|arg| translate_function_argument(sess, specials, &arg))
-                        .collect();
-                    let func_args = check_vec(func_args);
                     Ok((
                         ExprTranslationResult::TransExpr(Expression::FuncCall(
                             func_prefix,
                             func_name,
-                            func_args?,
+                            func_args,
                         )),
                         e.span.into(),
                     ))
@@ -2210,9 +2246,64 @@ fn translate_items(
                 },
             ))
         }
-        ItemKind::Struct(_, _) => {
-            sess.span_rustspec_err(i.span.clone(), "struct declarations not allowed in Hacspec");
-            Err(())
+        ItemKind::Struct(data, generics) => {
+            if generics.params.len() > 0 {
+                sess.span_rustspec_err(
+                    generics.span.clone(),
+                    "struct type parameters forbidden in Hacspec",
+                );
+                return Err(());
+            }
+            let id_string = i.ident.name.to_ident_string();
+            let id = translate_toplevel_ident(&i.ident);
+            match data {
+                VariantData::Struct(_, _) => {
+                    sess.span_rustspec_err(
+                        i.span.clone(),
+                        "structs with fields are forbidden in Hacspec",
+                    );
+                    Err(())
+                }
+                VariantData::Unit(_) => Ok((
+                    ItemTranslationResult::Item(Item::EnumDecl(id.clone(), vec![(id, None)])),
+                    SpecialNames {
+                        enums: specials.enums.update(id_string),
+                        ..specials.clone()
+                    },
+                )),
+                VariantData::Tuple(fields, _) => {
+                    let tuple_args = check_vec(
+                        fields
+                            .into_iter()
+                            .map(|field| match field.ident {
+                                None => translate_base_typ(sess, &*field.ty),
+                                Some(_) => {
+                                    sess.span_rustspec_err(
+                                        field.span.clone(),
+                                        "structs fields cannot be named in Hacspec",
+                                    );
+                                    Err(())
+                                }
+                            })
+                            .collect(),
+                    )?;
+                    let payload = if tuple_args.len() > 1 {
+                        (BaseTyp::Tuple(tuple_args), i.span.clone().into())
+                    } else {
+                        tuple_args.into_iter().next().unwrap()
+                    };
+                    Ok((
+                        ItemTranslationResult::Item(Item::EnumDecl(
+                            id.clone(),
+                            vec![(id, Some(payload))],
+                        )),
+                        SpecialNames {
+                            enums: specials.enums.update(id_string),
+                            ..specials.clone()
+                        },
+                    ))
+                }
+            }
         }
         ItemKind::Union(_, _) => {
             sess.span_rustspec_err(i.span.clone(), "union declarations not allowed in Hacspec");

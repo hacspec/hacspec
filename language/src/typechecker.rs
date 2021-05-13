@@ -1521,7 +1521,15 @@ fn typecheck_expression(
                 return Err(());
             }
             if !is_castable_integer(&(e1_typ.1).0) {
-                sess.span_rustspec_err(e1.1.clone(), "this expression cannot be casted");
+                sess.span_rustspec_err(
+                    e1.1.clone(),
+                    format!(
+                        "this expression of type {}{} cannot be casted",
+                        (e1_typ.0).0,
+                        (e1_typ.1).0
+                    )
+                    .as_str(),
+                );
                 return Err(());
             }
             if !is_castable_integer(&t1.0) {
