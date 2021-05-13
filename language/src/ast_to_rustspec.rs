@@ -151,6 +151,26 @@ pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResul
     }
 }
 
+pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationResult<TopLevelIdent> {
+    if path.segments.len() > 1 {
+        sess.span_rustspec_err(path.span, "expected a single-segment struct name");
+        return Err(());
+    }
+    match path.segments.iter().last() {
+        None => {
+            sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
+            Err(())
+        }
+        Some(segment) => match &segment.args {
+            None => Ok(TopLevelIdent(segment.ident.name.to_ident_string())),
+            Some(_) => {
+                sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
+                Err(())
+            }
+        },
+    }
+}
+
 enum FuncNameResult {
     TypePrefixed(Option<Spanned<BaseTyp>>, Spanned<TopLevelIdent>),
     EnumConstructor(Spanned<TopLevelIdent>, Spanned<TopLevelIdent>),
@@ -1245,6 +1265,30 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
     match &pat.kind {
         PatKind::Ident(BindingMode::ByValue(_), id, None) => {
             Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
+        }
+        PatKind::TupleStruct(path, args) => {
+            let struct_name = translate_struct_name(sess, path)?;
+            if args.len() == 1 {
+                let arg = args.into_iter().next().unwrap();
+                let new_arg = translate_pattern(sess, arg)?;
+                Ok((
+                    Pattern::SingleCaseEnum((struct_name, path.span.into()), Box::new(new_arg)),
+                    pat.span.into(),
+                ))
+            } else {
+                let new_args = check_vec(
+                    args.into_iter()
+                        .map(|arg| translate_pattern(sess, arg))
+                        .collect(),
+                )?;
+                Ok((
+                    Pattern::SingleCaseEnum(
+                        (struct_name, path.span.into()),
+                        Box::new((Pattern::Tuple(new_args), pat.span.into())),
+                    ),
+                    pat.span.into(),
+                ))
+            }
         }
         PatKind::Tuple(pats) => {
             let pats = pats
