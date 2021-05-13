@@ -530,15 +530,15 @@ fn translate_expr(
             match func_name_kind {
                 FuncNameResult::TypePrefixed(func_prefix, func_name) => {
                     let func_name_string = (func_name.clone().0).0;
-                    let func_args: Vec<
-                        TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>,
-                    > = args
-                        .iter()
-                        .map(|arg| translate_function_argument(sess, specials, &arg))
-                        .collect();
-                    let func_args = check_vec(func_args)?;
                     if specials.enums.contains(&func_name_string) {
                         // Special case for struct constructors
+                        let func_args: Vec<
+                            TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>,
+                        > = args
+                            .iter()
+                            .map(|arg| translate_function_argument(sess, specials, &arg))
+                            .collect();
+                        let func_args = check_vec(func_args)?;
                         let func_args = check_vec(
                             func_args
                                 .into_iter()
@@ -710,6 +710,13 @@ fn translate_expr(
                             }
                         }
                     }
+                    let func_args: Vec<
+                        TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>,
+                    > = args
+                        .iter()
+                        .map(|arg| translate_function_argument(sess, specials, &arg))
+                        .collect();
+                    let func_args = check_vec(func_args)?;
                     Ok((
                         ExprTranslationResult::TransExpr(Expression::FuncCall(
                             func_prefix,
