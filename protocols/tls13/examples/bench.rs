@@ -6,11 +6,11 @@
 // This file is taken from https://github.com/ctz/rustls and adapted to also work
 // with our TLS implementation.
 
-use std::env;
 use std::fs;
 use std::io::{self, Read, Write};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use std::{env, io::ErrorKind};
 
 use bertie::{
     client_finish, client_init, client_set_params, decrypt_data, encrypt_data, server_finish,
@@ -101,32 +101,32 @@ fn transfer(left: &mut dyn Connection, right: &mut dyn Connection) -> f64 {
     }
 }
 
-fn send(sender: &mut dyn Connection) -> Vec<u8> {
-    let mut buf = [0u8; 262144];
-    let mut sz = 0;
+// fn send(sender: &mut dyn Connection) -> Vec<u8> {
+//     let mut buf = [0u8; 262144];
+//     let mut sz = 0;
 
-    while sender.wants_write() {
-        let written = sender.write_tls(&mut buf[sz..].as_mut()).unwrap();
-        if written == 0 {
-            break;
-        }
+//     while sender.wants_write() {
+//         let written = sender.write_tls(&mut buf[sz..].as_mut()).unwrap();
+//         if written == 0 {
+//             break;
+//         }
 
-        sz += written;
-    }
-    buf.into()
-}
+//         sz += written;
+//     }
+//     buf.into()
+// }
 
-/// XXX: we don't measure the read here. It's done in rustls originally.
-/// I'm not sure why and if it makes a difference.
-fn receive(receiver: &mut dyn Connection, stream: &[u8]) {
-    let mut offs = 0;
-    loop {
-        offs += receiver.read_tls(&mut stream[offs..].as_ref()).unwrap();
-        if offs == stream.len() {
-            break;
-        }
-    }
-}
+// /// XXX: we don't measure the read here. It's done in rustls originally.
+// /// I'm not sure why and if it makes a difference.
+// fn receive(receiver: &mut dyn Connection, stream: &[u8]) {
+//     let mut offs = 0;
+//     loop {
+//         offs += receiver.read_tls(&mut stream[offs..].as_ref()).unwrap();
+//         if offs == stream.len() {
+//             break;
+//         }
+//     }
+// }
 
 #[derive(PartialEq, Clone, Copy)]
 enum ClientAuth {
@@ -433,6 +433,23 @@ fn rounds(plaintext_size: u64) -> u64 {
     total_data / plaintext_size
 }
 
+fn drain(d: &mut dyn Connection, expect_len: usize) {
+    let mut left = expect_len;
+    let mut buf = [0u8; 8192];
+    loop {
+        let sz = d.reader().read(&mut buf);
+        if let Ok(sz) = sz {
+            left -= sz;
+            if left == 0 {
+                break;
+            }
+        } else {
+            // WouldBlock error
+            return;
+        }
+    }
+}
+
 fn bench_bulk_rustls(params: &BenchmarkParam, plaintext_size: u64) {
     let client_config = Arc::new(make_client_config(params, ClientAuth::No, Resumption::No));
     let server_config = Arc::new(make_server_config(
@@ -448,29 +465,29 @@ fn bench_bulk_rustls(params: &BenchmarkParam, plaintext_size: u64) {
 
     do_handshake(&mut client, &mut server);
 
-    // let rounds = 64;
     let rounds = rounds(plaintext_size);
     let mut time_send = 0f64;
     let mut time_recv = 0f64;
 
     for _ in 0..rounds {
         let buf = vec![0u8; plaintext_size as usize];
-        let stream = time(
+        time(
             buf,
             |buf| {
                 server.writer().write_all(&buf).unwrap();
-                send(&mut server)
             },
             &mut time_send,
         );
+        // XXX: time_send is ignored here ...
+        time_recv += transfer(&mut server, &mut client);
         let _ = time(
-            stream,
-            |stream| {
-                receive(&mut client, &stream);
+            (),
+            |_| {
                 client.process_new_packets().unwrap();
             },
             &mut time_recv,
         );
+        drain(&mut client, plaintext_size as usize);
     }
 
     let total_mbs = ((plaintext_size * rounds) as f64) / (1024. * 1024.);
@@ -584,7 +601,7 @@ fn bench_bulk_hacspec(params: &BenchmarkParam, plaintext_size: u64) {
     );
     const MAX_CHUNK_SIZE: usize = 65536 - 32;
 
-    let rounds = 64; // rounds(plaintext_size);
+    let rounds = rounds(plaintext_size);
     let mut time_send = 0f64;
     let mut time_recv = 0f64;
 
@@ -599,14 +616,18 @@ fn bench_bulk_hacspec(params: &BenchmarkParam, plaintext_size: u64) {
             }
             _ => unimplemented!("Please disable these cipher suites."),
         };
+
         let stream = time(
             (buf.clone(), client_cipher),
             |(payload, mut client_cipher)| {
                 let mut stream = Vec::new();
                 for chunk in payload.native_slice().chunks(MAX_CHUNK_SIZE) {
-                    // let (_chunk_len, chunk) = buf.get_chunk(MAX_CHUNK_SIZE, i);
+                    let chunk = Bytes::from_native_slice(chunk);
+                // NOTE: the hacspec native chunks are way too slow.
+                // for i in 0..payload.num_chunks(MAX_CHUNK_SIZE) {
+                //     let (_chunk_len, chunk) = buf.get_chunk(MAX_CHUNK_SIZE, i);
                     let (stream_chunk, new_cipher_state) =
-                        encrypt_data(AppData(Bytes::from_native_slice(chunk)), 0, client_cipher)
+                        encrypt_data(AppData(chunk), 0, client_cipher)
                             .unwrap();
                     stream.push(stream_chunk);
                     client_cipher = new_cipher_state;
@@ -619,7 +640,6 @@ fn bench_bulk_hacspec(params: &BenchmarkParam, plaintext_size: u64) {
             (stream, server_cipher),
             |(mut stream, mut server_cipher)| {
                 for chunk in stream.drain(..) {
-                    // let (_chunk_len, chunk) = stream.get_chunk(MAX_CHUNK_SIZE, i);
                     let (_ap, new_cipher_state) = decrypt_data(chunk, server_cipher).unwrap();
                     server_cipher = new_cipher_state;
                 }
