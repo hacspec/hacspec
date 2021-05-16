@@ -64,6 +64,11 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 Self::from_slice(self, start_out, len)
             }
 
+            #[cfg_attr(feature="use_attributes", not_hacspec)]
+            pub fn native_slice(&self) -> &[T] {
+                &self.b
+            }
+
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             pub fn into_slice(mut self, start_out: usize, len: usize) -> Self {
                 self.b = self.b.drain(start_out..start_out+len).collect();
