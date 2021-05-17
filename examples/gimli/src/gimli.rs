@@ -75,7 +75,13 @@ fn squeeze_block(s: State) -> Block {
 
 fn gimli_hash_state(input: &ByteSeq, mut s: State) -> State {
     let rate = Block::length();
-    for i in 0..input.num_chunks(rate) {
+    let mut chunks = input.num_chunks(rate);
+
+    if input.len() % 16 == 0 {
+        chunks += 1;
+    }
+
+    for i in 0..chunks {
         let (block_len, input_block) = input.get_chunk(rate, i);
         if block_len == rate {
             // Absorb full blocks
