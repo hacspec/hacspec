@@ -2,19 +2,15 @@ use hacspec_gimli::*;
 use hacspec_lib::prelude::*;
 
 /*
-    - Python code to generate a random test case of `inlen` length:
-    
-        inlen = 16 # length of random input
-        inp = array.create_random(inlen, uint8)
-        print("Input Array:", inp)
-        print("Hash:", gimli_hash(inp, inlen))
 
-    - Test cases in this file have been generated randomly
-    - KATs (Known Answer Tests) are not random
+- Non-KAT test cases in this file have been generated randomly
+- Python code to generate a random test case of `inlen` length:
 
-    - These tests illuminate a bug that the hash function does
-      not give the correct output when the length of the input
-      message is a multiple of 16
+    inlen = 16 # length of random input
+    inp = array.create_random(inlen, uint8)
+    print("Input Array:", inp)
+    print("Hash:", gimli_hash(inp, inlen))
+
 */
 
 #[test]
