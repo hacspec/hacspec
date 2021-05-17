@@ -17,7 +17,7 @@ fn run_test(file_name: &str, output: Option<&str>) {
 
 #[test]
 fn positive_enums() {
-    run_test("language-tests/enums.rs", None);
+    run_test("language-tests/enums.rs", Some("tests/Enums.fst"));
 }
 
 #[test]

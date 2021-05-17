@@ -7,7 +7,7 @@ pub enum Foo {
 
 pub struct Bar(pub u32);
 
-pub fn bar(x: Foo) -> Bar {
+pub fn baz(x: Foo) -> Bar {
     let z: Bar = Bar(0u32);
     let Bar(z) = z;
     let y = match x {
