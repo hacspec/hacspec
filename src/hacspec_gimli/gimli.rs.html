@@ -239,6 +239,7 @@
 <span id="239">239</span>
 <span id="240">240</span>
 <span id="241">241</span>
+<span id="242">242</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 
@@ -317,24 +318,25 @@
 
 <span class="kw">fn</span> <span class="ident">gimli_hash_state</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="kw-2">mut</span> <span class="ident">s</span>: <span class="ident">State</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">State</span> {
     <span class="kw">let</span> <span class="ident">rate</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">length</span>();
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">input</span>.<span class="ident">num_chunks</span>(<span class="ident">rate</span>) {
-        <span class="kw">let</span> (<span class="ident">block_len</span>, <span class="ident">input_block</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">get_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>);
-        <span class="kw">if</span> <span class="ident">block_len</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rate</span> {
-            <span class="comment">// Absorb full blocks</span>
-            <span class="kw">let</span> <span class="ident">full_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">input_block</span>);
-            <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">full_block</span>, <span class="ident">s</span>);
-        } <span class="kw">else</span> {
-            <span class="comment">// Absorb last incomplete block</span>
-            <span class="comment">// Note that this would work in all other cases as well, but the above is safer.</span>
-            <span class="kw">let</span> <span class="ident">input_block_padded</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_block_padded</span> <span class="op">=</span> <span class="ident">input_block_padded</span>.<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">input_block</span>);
-            <span class="ident">input_block_padded</span>[<span class="ident">block_len</span>] <span class="op">=</span> <span class="ident">U8</span>(<span class="number">1u8</span>);
+    <span class="kw">let</span> <span class="ident">chunks</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">num_exact_chunks</span>(<span class="ident">rate</span>);
 
-            <span class="comment">// XOR in capacity part</span>
-            <span class="ident">s</span>[<span class="number">11</span>] <span class="op">=</span> <span class="ident">s</span>[<span class="number">11</span>] <span class="op">^</span> <span class="ident">U32</span>(<span class="number">0x01000000u32</span>);
-            <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">input_block_padded</span>, <span class="ident">s</span>);
-        }
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">chunks</span> {
+        <span class="kw">let</span> <span class="ident">input_block</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">get_exact_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>);
+
+        <span class="comment">// Absorb full blocks</span>
+        <span class="kw">let</span> <span class="ident">full_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">input_block</span>);
+        <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">full_block</span>, <span class="ident">s</span>);
     }
+
+    <span class="comment">// Absorb last incomplete block (0 &lt;= bytes &lt;= 15)</span>
+    <span class="kw">let</span> <span class="ident">input_block</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">get_remainder_chunk</span>(<span class="ident">rate</span>);
+    <span class="kw">let</span> <span class="ident">input_block_padded</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_block_padded</span> <span class="op">=</span> <span class="ident">input_block_padded</span>.<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">input_block</span>);
+    <span class="ident">input_block_padded</span>[<span class="ident">input_block</span>.<span class="ident">len</span>()] <span class="op">=</span> <span class="ident">U8</span>(<span class="number">1u8</span>);
+
+    <span class="comment">// XOR in capacity part</span>
+    <span class="ident">s</span>[<span class="number">11</span>] <span class="op">=</span> <span class="ident">s</span>[<span class="number">11</span>] <span class="op">^</span> <span class="ident">U32</span>(<span class="number">0x01000000u32</span>);
+    <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">input_block_padded</span>, <span class="ident">s</span>);
 
     <span class="ident">s</span>
 }
