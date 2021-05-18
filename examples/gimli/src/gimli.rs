@@ -121,7 +121,8 @@ fn process_msg(message: &ByteSeq, mut s: State) -> (State, ByteSeq) {
     let mut ciphertext = ByteSeq::new(message.len());
 
     let rate = Block::length();
-    let num_chunks = message.num_chunks(rate);
+    let num_chunks = message.num_exact_chunks(rate) + 1;
+
     for i in 0..num_chunks {
         let key_block = squeeze_block(s);
         let (block_len, msg_block) = message.get_chunk(rate, i);
@@ -150,7 +151,8 @@ fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
     let mut message = ByteSeq::new(ciphertext.len());
 
     let rate = Block::length();
-    let num_chunks = ciphertext.num_chunks(rate);
+    let num_chunks = ciphertext.num_exact_chunks(rate) + 1;
+
     for i in 0..num_chunks {
         let key_block = squeeze_block(s);
         let (block_len, ct_block) = ciphertext.get_chunk(rate, i);
