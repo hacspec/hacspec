@@ -1,6 +1,8 @@
 extern crate bertie;
 extern crate rand;
 
+use std::convert::TryInto;
+
 use bertie::*;
 use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 use hacspec_dev::prelude::*;
@@ -38,6 +40,41 @@ fn bench(c: &mut Criterion) {
                     |(key, nonce, data, aad)| {
                         let _ctxt_tag =
                             aead_encrypt(&ciphersuite, &key, &nonce, &data, &aad).unwrap();
+                    },
+                    BatchSize::SmallInput,
+                );
+            },
+        );
+
+        c.bench_function(
+            &format!("AEAD performance encrypt (evercrypt): {:?}", ciphersuite),
+            |b| {
+                b.iter_batched(
+                    || {
+                        let nonce = random_byte_vec(12);
+                        let (key, algorithm) = match ciphersuite {
+                            AEADAlgorithm::AES_128_GCM => {
+                                (random_byte_vec(16), evercrypt::aead::Mode::Aes128Gcm)
+                            }
+                            AEADAlgorithm::AES_256_GCM => {
+                                (random_byte_vec(32), evercrypt::aead::Mode::Aes256Gcm)
+                            }
+                            AEADAlgorithm::CHACHA20_POLY1305 => {
+                                (random_byte_vec(32), evercrypt::aead::Mode::Chacha20Poly1305)
+                            }
+                        };
+                        let data = random_byte_vec(PAYLOAD_SIZE);
+                        let aad = random_byte_vec(100);
+                        (algorithm, key, nonce, data, aad)
+                    },
+                    |(algorithm, key, nonce, data, aad)| {
+                        let _ctxt_tag = evercrypt::aead::encrypt(
+                            algorithm,
+                            &key,
+                            &data,
+                            &nonce.try_into().unwrap(),
+                            &aad,
+                        );
                     },
                     BatchSize::SmallInput,
                 );
