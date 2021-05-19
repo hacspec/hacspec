@@ -672,12 +672,12 @@ fn typecheck_expression(
             let (new_arg, t_arg, intermediate_var_context) =
                 typecheck_expression(sess, arg, top_level_context, &var_context)?;
             let mut acc_var_context = intermediate_var_context.clone();
-            let (mut t_arg_cases, t_arg_enum_name) = match (t_arg.1).0.clone() {
-                BaseTyp::Named((name, _), None) => match top_level_context.typ_dict.get(&name) {
+            let (mut t_arg_cases, t_arg_enum_name, t_arg_enum_args) = match (t_arg.1).0.clone() {
+                BaseTyp::Named((name, _), args) => match top_level_context.typ_dict.get(&name) {
                     Some((
                         ((Borrowing::Consumed, _), (BaseTyp::Enum(cases), _)),
                         DictEntry::Enum,
-                    )) => (cases.clone(), name.clone()),
+                    )) => (cases.clone(), name.clone(), args.clone()),
                     _ => {
                         sess.span_rustspec_err(
                             arg.1.clone(),
@@ -699,10 +699,72 @@ fn typecheck_expression(
             let mut out_typ = None;
             let new_arms = check_vec(
                 arms.into_iter()
-                    .map(|(arm_enum_name, arm_case, arm_pattern, arm_exp)| {
-                        if arm_enum_name.0 != t_arg_enum_name {
-                            return Err(());
-                        }
+                    .map(|(arm_enum_ty, arm_case, arm_pattern, arm_exp)| {
+                        let (arm_enum_name, arm_enum_args) = match arm_enum_ty {
+                            BaseTyp::Named((t_arm_ty_name, _), t_arm_ty_args) => {
+                                if &t_arg_enum_name != t_arm_ty_name {
+                                    sess.span_rustspec_err(
+                                        arm_case.1.clone(),
+                                        format!(
+                                            "expected {} type, got {}",
+                                            t_arg_enum_name, arm_enum_ty
+                                        )
+                                        .as_str(),
+                                    );
+                                    return Err(());
+                                }
+                                match top_level_context.typ_dict.get(&t_arm_ty_name) {
+                                    Some((_, DictEntry::Enum)) => {
+                                        (t_arm_ty_name.clone(), t_arm_ty_args.clone())
+                                    }
+                                    _ => {
+                                        sess.span_rustspec_err(
+                                            arm_case.1.clone(),
+                                            format!("expected an enum type, got {}", arm_enum_ty)
+                                                .as_str(),
+                                        );
+                                        return Err(());
+                                    }
+                                }
+                            }
+                            _ => {
+                                sess.span_rustspec_err(
+                                    arm_case.1.clone(),
+                                    format!("expected an enum type, got {}", arm_enum_ty).as_str(),
+                                );
+                                return Err(());
+                            }
+                        };
+                        match (&t_arg_enum_args, &arm_enum_args) {
+                            (None, None) => (),
+                            (Some(arg_args), Some(arms_args)) => {
+                                if arg_args.len() != arms_args.len() {
+                                    sess.span_rustspec_err(
+                                        arm_case.1.clone(),
+                                        "discrepancy between the type arguments \
+                                        of the matched expression and those of the match arm",
+                                    );
+                                    return Err(());
+                                }
+                                for (arg_arg, arm_arg) in arg_args.iter().zip(arms_args) {
+                                    unify_types(
+                                        sess,
+                                        &((Borrowing::Consumed, DUMMY_SP.into()), arg_arg.clone()),
+                                        &((Borrowing::Consumed, DUMMY_SP.into()), arm_arg.clone()),
+                                        &HashMap::new(),
+                                        top_level_context,
+                                    )?;
+                                }
+                            }
+                            _ => {
+                                sess.span_rustspec_err(
+                                    arm_case.1.clone(),
+                                    "discrepancy between the type arguments \
+                                    of the matched expression and those of the match arm",
+                                );
+                                return Err(());
+                            }
+                        };
                         let (case_index, case_typ) = match t_arg_cases
                             .iter()
                             .enumerate()
@@ -759,7 +821,7 @@ fn typecheck_expression(
                             }
                         };
                         Ok((
-                            arm_enum_name.clone(),
+                            arm_enum_ty.clone(),
                             arm_case.clone(),
                             new_arm_pattern,
                             (new_arm_exp, arm_exp.1.clone()),
@@ -787,15 +849,21 @@ fn typecheck_expression(
                 acc_var_context,
             ))
         }
-        Expression::EnumInject(enum_name, case_name, payload) => {
-            let enum_cases = match top_level_context.typ_dict.get(&enum_name.0) {
-                Some((((Borrowing::Consumed, _), (BaseTyp::Enum(cases), _)), DictEntry::Enum)) => {
-                    cases
+        Expression::EnumInject(enum_ty, case_name, payload) => {
+            let (enum_cases, enum_name, enum_args) = match enum_ty {
+                BaseTyp::Named(enum_name, args) => {
+                    match top_level_context.typ_dict.get(&enum_name.0) {
+                        Some((
+                            ((Borrowing::Consumed, _), (BaseTyp::Enum(cases), _)),
+                            DictEntry::Enum,
+                        )) => (cases, enum_name, args),
+                        _ => {
+                            sess.span_rustspec_err(enum_name.1.clone(), "enum not found");
+                            return Err(());
+                        }
+                    }
                 }
-                _ => {
-                    sess.span_rustspec_err(enum_name.1.clone(), "enum not found");
-                    return Err(());
-                }
+                _ => panic!("should not happen"),
             };
             let case_typ = match enum_cases
                 .iter()
@@ -836,10 +904,13 @@ fn typecheck_expression(
                 }
             };
             Ok((
-                Expression::EnumInject(enum_name.clone(), case_name.clone(), new_payload),
+                Expression::EnumInject(enum_ty.clone(), case_name.clone(), new_payload),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Named(enum_name.clone(), None), span.clone()),
+                    (
+                        BaseTyp::Named(enum_name.clone(), enum_args.clone()),
+                        span.clone(),
+                    ),
                 ),
                 var_context,
             ))

@@ -315,14 +315,14 @@ pub enum Expression {
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
     EnumInject(
-        Spanned<TopLevelIdent>,           // Name of enum
+        BaseTyp,                          // Type of enum
         Spanned<TopLevelIdent>,           // Name of case
         Option<Spanned<Box<Expression>>>, // Payload of case
     ),
     MatchWith(
         Box<Spanned<Expression>>, // Expression to match
         Vec<(
-            Spanned<TopLevelIdent>,   // Name of enum
+            BaseTyp,                  // Type of enum
             Spanned<TopLevelIdent>,   // Name of case
             Option<Spanned<Pattern>>, // Payload of case
             Spanned<Expression>,      // Match arm expression

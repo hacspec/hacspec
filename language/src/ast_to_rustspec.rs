@@ -173,7 +173,7 @@ pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationRes
 
 enum FuncNameResult {
     TypePrefixed(Option<Spanned<BaseTyp>>, Spanned<TopLevelIdent>),
-    EnumConstructor(Spanned<TopLevelIdent>, Spanned<TopLevelIdent>),
+    EnumConstructor(BaseTyp, Spanned<TopLevelIdent>),
 }
 
 fn translate_func_name(
@@ -192,9 +192,17 @@ fn translate_func_name(
                 let segment_string = segment.ident.name.to_ident_string();
                 if specials.enums.contains(&segment_string) {
                     Ok(FuncNameResult::EnumConstructor(
-                        (
-                            TopLevelIdent(segment_string),
-                            segment.ident.span.clone().into(),
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent(segment_string),
+                                segment.ident.span.clone().into(),
+                            ),
+                            match segment.args {
+                                None => None,
+                                Some(ref args) => {
+                                    Some(translate_type_args(sess, args, &segment.ident.span)?)
+                                }
+                            },
                         ),
                         base_name,
                     ))
@@ -500,12 +508,28 @@ fn translate_expr(
                     .enums
                     .contains(&segments.iter().next().unwrap().ident.name.to_ident_string()) =>
         {
+            // This is the case of enum injection
             let mut it = segments.iter();
             let first_seg = it.next().unwrap();
             let second_seg = it.next().unwrap();
+            if second_seg.args.is_some() {
+                sess.span_rustspec_err(
+                    second_seg.ident.span,
+                    "the name of the enum case should not have any arguments",
+                );
+                return Err(());
+            }
             Ok((
                 ExprTranslationResult::TransExpr(Expression::EnumInject(
-                    translate_toplevel_ident(&first_seg.ident),
+                    BaseTyp::Named(
+                        translate_toplevel_ident(&first_seg.ident),
+                        match &second_seg.args {
+                            None => None,
+                            Some(args) => {
+                                Some(translate_type_args(sess, &*args, &second_seg.ident.span)?)
+                            }
+                        },
+                    ),
                     translate_toplevel_ident(&second_seg.ident),
                     None,
                 )),
@@ -556,7 +580,7 @@ fn translate_expr(
                         )?;
                         return Ok((
                             ExprTranslationResult::TransExpr(Expression::EnumInject(
-                                func_name.clone(),
+                                BaseTyp::Named(func_name.clone(), None),
                                 func_name,
                                 Some(if func_args.len() > 1 {
                                     (Box::new(Expression::Tuple(func_args)), e.span.into())
@@ -1113,7 +1137,17 @@ fn translate_expr(
                                 let first_seg = it.next().unwrap();
                                 let second_seg = it.next().unwrap();
                                 (
-                                    translate_toplevel_ident(&first_seg.ident),
+                                    BaseTyp::Named(
+                                        translate_toplevel_ident(&first_seg.ident),
+                                        match &first_seg.args {
+                                            None => None,
+                                            Some(args) => Some(translate_type_args(
+                                                sess,
+                                                args,
+                                                &first_seg.ident.span,
+                                            )?),
+                                        },
+                                    ),
                                     translate_toplevel_ident(&second_seg.ident),
                                     None,
                                 )
@@ -1130,7 +1164,17 @@ fn translate_expr(
                                 let first_seg = it.next().unwrap();
                                 let second_seg = it.next().unwrap();
                                 (
-                                    translate_toplevel_ident(&first_seg.ident),
+                                    BaseTyp::Named(
+                                        translate_toplevel_ident(&first_seg.ident),
+                                        match &first_seg.args {
+                                            None => None,
+                                            Some(args) => Some(translate_type_args(
+                                                sess,
+                                                args,
+                                                &first_seg.ident.span,
+                                            )?),
+                                        },
+                                    ),
                                     translate_toplevel_ident(&second_seg.ident),
                                     Some((
                                         Pattern::Tuple(check_vec(

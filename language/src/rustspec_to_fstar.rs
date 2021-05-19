@@ -172,10 +172,10 @@ fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
     translate_toplevel_ident(enum_name)
 }
 
-fn translate_enum_case_name<'a>(enum_name: TopLevelIdent, case_name: TopLevelIdent) -> RcDoc<'a> {
-    translate_constructor(enum_name)
+fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) -> RcDoc<'a> {
+    translate_constructor(case_name)
         .append(RcDoc::as_string("_"))
-        .append(translate_constructor(case_name))
+        .append(translate_base_typ(enum_name))
 }
 
 fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
@@ -365,7 +365,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
         Pattern::SingleCaseEnum(name, inner_pat) => {
-            translate_enum_case_name(name.0.clone(), name.0.clone())
+            translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone())
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
@@ -670,7 +670,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     RcDoc::as_string("|")
                         .append(RcDoc::space())
                         .append(translate_enum_case_name(
-                            enum_name.0.clone(),
+                            enum_name.clone(),
                             case_name.0.clone(),
                         ))
                         .append(match &payload {
@@ -687,8 +687,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 RcDoc::line(),
             )),
         Expression::EnumInject(enum_name, case_name, payload) => {
-            translate_enum_case_name(enum_name.0.clone(), case_name.0.clone()).append(match payload
-            {
+            translate_enum_case_name(enum_name.clone(), case_name.0.clone()).append(match payload {
                 None => RcDoc::nil(),
                 Some(payload) => RcDoc::space().append(make_paren(translate_expression(
                     *payload.0.clone(),
@@ -1033,12 +1032,10 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             .append(RcDoc::line())
             .append(RcDoc::intersperse(
                 cases.into_iter().map(|(case_name, case_typ)| {
+                    let name_ty = BaseTyp::Named(name.clone(), None);
                     RcDoc::as_string("|")
                         .append(RcDoc::space())
-                        .append(translate_enum_case_name(
-                            name.0.clone(),
-                            case_name.0.clone(),
-                        ))
+                        .append(translate_enum_case_name(name_ty, case_name.0.clone()))
                         .append(match case_typ {
                             None => RcDoc::space()
                                 .append(RcDoc::as_string(":"))
