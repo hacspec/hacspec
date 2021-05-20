@@ -10,7 +10,7 @@ random = []
 [dependencies]
 evercrypt = "0.0.8"
 hacspec-provider = { path = "../../provider" }
-aead = "0.3"
+aead = { version = "0.4", features = ["alloc"] }
 
 [dev-dependencies]
 serde_json = "1.0"

@@ -6,7 +6,6 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use pretty::RcDoc;
 use regex::Regex;
-use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use std::collections::HashMap;
 use std::fs::File;
@@ -242,6 +241,9 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
+        BaseTyp::Enum(_cases) => {
+            unimplemented!()
+        }
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
@@ -376,6 +378,11 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
+        Pattern::SingleCaseEnum(name, inner_pat) => {
+            translate_ident(Ident::TopLevel(name.0.clone()))
+                .append(RcDoc::space())
+                .append(make_paren(translate_pattern(&inner_pat.0)))
+        }
         Pattern::IdentPat(x) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat))),
@@ -400,7 +407,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Div => return (RcDoc::as_string("/"), false),
                         _ => unimplemented!(),
                     },
-                    DictEntry::Array | DictEntry::Alias => {
+                    DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
                         return translate_binop(op, inner_ty, top_ctx)
                     }
                 },
@@ -546,6 +553,9 @@ fn translate_prefix_for_func_name<'a>(
             RcDoc::as_string(ARRAY_MODULE),
             FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
         ),
+        BaseTyp::Enum(_cases) => {
+            unimplemented!()
+        }
         BaseTyp::Named(ident, _) => {
             // if the type is an array, we should print the Seq module instead
             let name = &ident.0;
@@ -681,6 +691,12 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e_f, top_ctx)))
                 .group()
+        }
+        Expression::MatchWith(_arg, _arms) => {
+            unimplemented!()
+        }
+        Expression::EnumInject(_enum_name, _case_name, _payload) => {
+            unimplemented!()
         }
         Expression::Unary(op, e1, op_typ) => {
             let e1 = e1.0;
@@ -863,6 +879,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 make_tuple(
                     mutated_info
                         .vars
+                        .0
                         .iter()
                         .sorted()
                         .map(|i| translate_ident(Ident::Local(i.clone()))),
@@ -900,10 +917,11 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
         }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
-            let mutated_num = mutated_info.vars.len();
+            let mutated_num = mutated_info.vars.0.len();
             let mut_tuple = make_tuple(
                 mutated_info
                     .vars
+                    .0
                     .iter()
                     .sorted()
                     .map(|i| translate_ident(Ident::Local(i.clone()))),
@@ -1039,7 +1057,10 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             Some(translate_base_typ(ty.0.clone())),
             translate_expression(e.0.clone(), top_ctx),
         ),
-        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, _modulo) => {
+        Item::EnumDecl(_name, _cases) => {
+            unimplemented!()
+        }
+        Item::NaturalIntegerDecl(nat_name, _secrecy, canvas_size, Some((canvas_name, _modulo))) => {
             let canvas_size_bytes = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => {
                     RcDoc::as_string(format!("{}", (size + 7) / 8))
@@ -1075,9 +1096,22 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                         .append(RcDoc::as_string("int")),
                 )
         }
-        Item::SimplifiedNaturalIntegerDecl(_nat_name, _secrecy, _modulo_power) => {
+        Item::NaturalIntegerDecl(_, _, _, _) => {
             unimplemented!()
         }
+        Item::AliasDecl(name, ty) => RcDoc::as_string("type")
+            .append(RcDoc::space())
+            .append(translate_ident(Ident::TopLevel(name.0.clone())))
+            .append(RcDoc::as_string("="))
+            .append(RcDoc::space())
+            .append(translate_base_typ(ty.0.clone()))
+            .append(RcDoc::as_string("."))
+            .append(RcDoc::hardline())
+            .append(RcDoc::hardline()),
+        Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
+            "open {}",
+            str::replace(&kr.to_title_case(), " ", ".")
+        )),
     }
 }
 
@@ -1100,7 +1134,7 @@ pub fn translate_and_write_to_file(
     let path = path::Path::new(file);
     let mut file = match File::create(&path) {
         Err(why) => {
-            sess.err(format!("Unable to write to outuput file {}: \"{}\"", file, why).as_str());
+            sess.err(format!("Unable to write to output file {}: \"{}\"", file, why).as_str());
             return;
         }
         Ok(file) => file,
@@ -1116,22 +1150,6 @@ pub fn translate_and_write_to_file(
          require import Hacspec.\n",
     )
     .unwrap();
-    let i_c_iter: Vec<RcDoc<()>> = p
-        .imported_crates
-        .iter()
-        .skip(1)
-        .map(|(kr, _)| {
-            RcDoc::as_string(format!(
-                "open {}",
-                str::replace(&kr.to_title_case(), " ", ".")
-            ))
-        })
-        .collect();
-    RcDoc::intersperse(i_c_iter, RcDoc::line())
-        .append(RcDoc::hardline())
-        .append(RcDoc::hardline())
-        .render(width, &mut w)
-        .unwrap();
     translate_program(p, top_ctx).render(width, &mut w).unwrap();
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }

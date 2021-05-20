@@ -2,13 +2,37 @@ use core::cmp::PartialEq;
 use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
-use rustc_ast::ast::BinOpKind;
-use rustc_span::Span;
+use rustc_span::{MultiSpan, Span};
+use serde::{ser::SerializeSeq, Serialize, Serializer};
 use std::fmt;
 
-pub type Spanned<T> = (T, Span);
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Copy)]
+pub struct RustspecSpan(pub Span);
 
-#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+impl Serialize for RustspecSpan {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_unit()
+    }
+}
+
+pub type Spanned<T> = (T, RustspecSpan);
+
+impl From<RustspecSpan> for MultiSpan {
+    fn from(x: RustspecSpan) -> MultiSpan {
+        x.0.into()
+    }
+}
+
+impl From<Span> for RustspecSpan {
+    fn from(x: Span) -> RustspecSpan {
+        RustspecSpan(x)
+    }
+}
+
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct LocalIdent {
     pub id: usize,
     pub name: String,
@@ -26,7 +50,7 @@ impl fmt::Debug for LocalIdent {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub struct TopLevelIdent(pub String);
 
 impl fmt::Display for TopLevelIdent {
@@ -41,7 +65,7 @@ impl fmt::Debug for TopLevelIdent {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub enum Ident {
     Unresolved(String),
     Local(LocalIdent),
@@ -68,9 +92,23 @@ impl fmt::Debug for Ident {
     }
 }
 
-pub type VarSet = HashSet<LocalIdent>;
-
 #[derive(Clone, Hash, PartialEq, Eq)]
+pub struct VarSet(pub HashSet<LocalIdent>);
+
+impl Serialize for VarSet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for e in &self.0 {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+#[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum Borrowing {
     Borrowed,
     Consumed,
@@ -95,22 +133,22 @@ impl fmt::Debug for Borrowing {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Serialize)]
 pub enum ArraySize {
     Integer(usize),
     Ident(TopLevelIdent),
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Serialize)]
 pub enum Secrecy {
     Secret,
     Public,
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub struct TypVar(pub usize);
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum BaseTyp {
     Unit,
     Bool,
@@ -132,6 +170,7 @@ pub enum BaseTyp {
     Named(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(TypVar),
     Tuple(Vec<Spanned<BaseTyp>>),
+    Enum(Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>),
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
@@ -175,6 +214,16 @@ impl fmt::Display for BaseTyp {
                 "({})",
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
+            BaseTyp::Enum(args) => write!(
+                f,
+                "[{}]",
+                args.iter()
+                    .map(|((case, _), payload)| match payload {
+                        Some((payload, _)) => format!("{}: {}", case, payload),
+                        None => format!("{}", case),
+                    })
+                    .format(" | ")
+            ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
             BaseTyp::NaturalInteger(sec, modulo, bits) => {
                 write!(f, "nat[{:?}][modulo {}][bits {}]", sec, modulo.0, bits.0)
@@ -191,7 +240,7 @@ impl fmt::Debug for BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Literal {
     Unit,
     Bool(bool),
@@ -210,13 +259,35 @@ pub enum Literal {
     Str(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum UnOpKind {
     Not,
     Neg,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug, Serialize)]
+pub enum BinOpKind {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+    And,
+    Or,
+    BitXor,
+    BitAnd,
+    BitOr,
+    Shl,
+    Shr,
+    Eq,
+    Lt,
+    Le,
+    Ne,
+    Ge,
+    Gt,
+}
+
+#[derive(Clone, Serialize)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
     Binary(
@@ -243,6 +314,20 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
+    EnumInject(
+        Spanned<TopLevelIdent>,           // Name of enum
+        Spanned<TopLevelIdent>,           // Name of case
+        Option<Spanned<Box<Expression>>>, // Payload of case
+    ),
+    MatchWith(
+        Box<Spanned<Expression>>, // Expression to match
+        Vec<(
+            Spanned<TopLevelIdent>,   // Name of enum
+            Spanned<TopLevelIdent>,   // Name of case
+            Option<Spanned<Pattern>>, // Payload of case
+            Spanned<Expression>,      // Match arm expression
+        )>,
+    ),
     Lit(Literal),
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
     NewArray(
@@ -258,14 +343,15 @@ pub enum Expression {
     ),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Pattern {
     IdentPat(Ident),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
+    SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct MutatedInfo {
     pub vars: VarSet,
     pub stmt: Statement,
@@ -273,7 +359,7 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Statement {
     LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
     Reassignment(Spanned<Ident>, Spanned<Expression>),
@@ -293,55 +379,54 @@ pub enum Statement {
     ReturnExp(Expression),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct ExternalFuncSig {
     pub args: Vec<Typ>,
     pub ret: BaseTyp,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub enum Item {
     FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
+    EnumDecl(
+        Spanned<TopLevelIdent>,
+        Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>,
+    ),
     ArrayDecl(
         Spanned<TopLevelIdent>,         // Name of the array type
         Spanned<Expression>,            // Length
         Spanned<BaseTyp>,               // Cell type
         Option<Spanned<TopLevelIdent>>, // Optional type alias for indexes
     ),
+    AliasDecl(Spanned<TopLevelIdent>, Spanned<BaseTyp>),
+    ImportedCrate(Spanned<TopLevelIdent>),
     ConstDecl(
         Spanned<TopLevelIdent>,
         Spanned<BaseTyp>,
         Spanned<Expression>,
     ),
     NaturalIntegerDecl(
-        Spanned<TopLevelIdent>, // Element type name
-        Spanned<TopLevelIdent>, // Canvas array type name
-        Secrecy,
-        Spanned<Expression>, // Canvas size
-        Spanned<String>,     // Modulo value
-    ),
-    SimplifiedNaturalIntegerDecl(
-        Spanned<TopLevelIdent>, // Element type name
-        Secrecy,
-        Spanned<Expression>, // If x, then modulo value is 2^x
+        Spanned<TopLevelIdent>,                            // Element type name
+        Secrecy,                                           // Public or secret
+        Spanned<Expression>,                               // Canvas size
+        Option<(Spanned<TopLevelIdent>, Spanned<String>)>, // Canvas array type name and modulo value
     ),
 }
 
+#[derive(Clone, Serialize)]
 pub struct Program {
     pub items: Vec<Spanned<Item>>,
-    pub imported_crates: Vec<Spanned<String>>,
-    pub ty_aliases: Vec<(Spanned<TopLevelIdent>, Spanned<BaseTyp>)>,
 }
