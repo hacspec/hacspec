@@ -240,6 +240,20 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 
@@ -364,27 +378,35 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ciphertext</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">message</span>.<span class="ident">len</span>());
 
     <span class="kw">let</span> <span class="ident">rate</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">length</span>();
-    <span class="kw">let</span> <span class="ident">num_chunks</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">num_chunks</span>(<span class="ident">rate</span>);
+    <span class="kw">let</span> <span class="ident">num_chunks</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">num_exact_chunks</span>(<span class="ident">rate</span>);
+
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_chunks</span> {
+        <span class="comment">// Handle Full Block</span>
         <span class="kw">let</span> <span class="ident">key_block</span> <span class="op">=</span> <span class="ident">squeeze_block</span>(<span class="ident">s</span>);
-        <span class="kw">let</span> (<span class="ident">block_len</span>, <span class="ident">msg_block</span>) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">get_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>);
-
-        <span class="comment">// This pads the msg_block if necessary.</span>
-        <span class="kw">let</span> <span class="ident">msg_block_padded</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg_block_padded</span> <span class="op">=</span> <span class="ident">msg_block_padded</span>.<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>);
-
-        <span class="ident">ciphertext</span> <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">set_chunk</span>(
-            <span class="ident">rate</span>,
-            <span class="ident">i</span>,
-            <span class="comment">// the slice_range cuts off the last block if it is padded</span>
-            <span class="kw-2">&amp;</span>(<span class="ident">msg_block_padded</span> <span class="op">^</span> <span class="ident">key_block</span>).<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
-        );
-        <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="ident">num_chunks</span> <span class="op">-</span> <span class="number">1</span> {
-            <span class="ident">msg_block_padded</span>[<span class="ident">block_len</span>] <span class="op">=</span> <span class="ident">msg_block_padded</span>[<span class="ident">block_len</span>] <span class="op">^</span> <span class="ident">U8</span>(<span class="number">1u8</span>);
-            <span class="ident">s</span>[<span class="number">11</span>] <span class="op">=</span> <span class="ident">s</span>[<span class="number">11</span>] <span class="op">^</span> <span class="ident">U32</span>(<span class="number">0x01000000u32</span>); <span class="comment">// s_2,3</span>
-        }
-        <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">msg_block_padded</span>, <span class="ident">s</span>);
+        <span class="kw">let</span> <span class="ident">msg_block</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">get_exact_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>);
+        <span class="kw">let</span> <span class="ident">msg_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>);
+        <span class="ident">ciphertext</span> <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">set_exact_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>, <span class="kw-2">&amp;</span>(<span class="ident">msg_block</span> <span class="op">^</span> <span class="ident">key_block</span>));
+        <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">msg_block</span>, <span class="ident">s</span>);
     }
+
+    <span class="comment">// Handle final non-full block</span>
+    <span class="kw">let</span> <span class="ident">key_block</span> <span class="op">=</span> <span class="ident">squeeze_block</span>(<span class="ident">s</span>);
+    <span class="kw">let</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">get_remainder_chunk</span>(<span class="ident">rate</span>);
+    <span class="kw">let</span> <span class="ident">block_len</span> <span class="op">=</span> <span class="ident">last_block</span>.<span class="ident">len</span>();
+
+    <span class="comment">// This pads the block if necessary</span>
+    <span class="kw">let</span> <span class="ident">msg_block_padded</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg_block_padded</span> <span class="op">=</span> <span class="ident">msg_block_padded</span>.<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">last_block</span>);
+
+    <span class="ident">ciphertext</span> <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">set_chunk</span>(
+        <span class="ident">rate</span>,
+        <span class="ident">num_chunks</span>,
+        <span class="comment">// the slice_range cuts off the last block if it is padded</span>
+        <span class="kw-2">&amp;</span>(<span class="ident">msg_block_padded</span> <span class="op">^</span> <span class="ident">key_block</span>).<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">block_len</span>),
+    );
+    <span class="ident">msg_block_padded</span>[<span class="ident">block_len</span>] <span class="op">=</span> <span class="ident">msg_block_padded</span>[<span class="ident">block_len</span>] <span class="op">^</span> <span class="ident">U8</span>(<span class="number">1u8</span>);
+    <span class="ident">s</span>[<span class="number">11</span>] <span class="op">=</span> <span class="ident">s</span>[<span class="number">11</span>] <span class="op">^</span> <span class="ident">U32</span>(<span class="number">0x01000000u32</span>); <span class="comment">// s_2,3</span>
+    <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">msg_block_padded</span>, <span class="ident">s</span>);
 
     (<span class="ident">s</span>, <span class="ident">ciphertext</span>)
 }
@@ -393,26 +415,32 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">ciphertext</span>.<span class="ident">len</span>());
 
     <span class="kw">let</span> <span class="ident">rate</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">length</span>();
-    <span class="kw">let</span> <span class="ident">num_chunks</span> <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">num_chunks</span>(<span class="ident">rate</span>);
+    <span class="kw">let</span> <span class="ident">num_chunks</span> <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">num_exact_chunks</span>(<span class="ident">rate</span>);
+
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_chunks</span> {
         <span class="kw">let</span> <span class="ident">key_block</span> <span class="op">=</span> <span class="ident">squeeze_block</span>(<span class="ident">s</span>);
-        <span class="kw">let</span> (<span class="ident">block_len</span>, <span class="ident">ct_block</span>) <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">get_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>);
-
-        <span class="comment">// This pads the ct_block if necessary.</span>
-        <span class="kw">let</span> <span class="ident">ct_block_padded</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> <span class="ident">ct_block_padded</span> <span class="op">=</span> <span class="ident">ct_block_padded</span>.<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">ct_block</span>);
-        <span class="kw">let</span> <span class="ident">msg_block</span> <span class="op">=</span> <span class="ident">ct_block_padded</span> <span class="op">^</span> <span class="ident">key_block</span>;
-        <span class="comment">// Zero pad the block if necessary (replace bytes with zeros if block_len != rate).</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">from_slice_range</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>, <span class="number">0</span>..<span class="ident">block_len</span>);
-
-        <span class="comment">// Slice_range cuts off the msg_block to the actual length.</span>
-        <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">set_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">msg_block</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">block_len</span>));
-        <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="ident">num_chunks</span> <span class="op">-</span> <span class="number">1</span> {
-            <span class="ident">msg_block</span>[<span class="ident">block_len</span>] <span class="op">=</span> <span class="ident">msg_block</span>[<span class="ident">block_len</span>] <span class="op">^</span> <span class="ident">U8</span>(<span class="number">1u8</span>);
-            <span class="ident">s</span>[<span class="number">11</span>] <span class="op">=</span> <span class="ident">s</span>[<span class="number">11</span>] <span class="op">^</span> <span class="ident">U32</span>(<span class="number">0x01000000u32</span>); <span class="comment">// s_2,3</span>
-        }
+        <span class="kw">let</span> <span class="ident">ct_block</span> <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">get_exact_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>);
+        <span class="kw">let</span> <span class="ident">ct_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">ct_block</span>);
+        <span class="kw">let</span> <span class="ident">msg_block</span> <span class="op">=</span> <span class="ident">ct_block</span> <span class="op">^</span> <span class="ident">key_block</span>;
+        <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">set_exact_chunk</span>(<span class="ident">rate</span>, <span class="ident">i</span>, <span class="kw-2">&amp;</span>(<span class="ident">ct_block</span> <span class="op">^</span> <span class="ident">key_block</span>));
         <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">msg_block</span>, <span class="ident">s</span>);
     }
+
+    <span class="comment">// Handle final non-full ct_block</span>
+    <span class="kw">let</span> <span class="ident">key_block</span> <span class="op">=</span> <span class="ident">squeeze_block</span>(<span class="ident">s</span>);
+    <span class="kw">let</span> <span class="ident">ct_final</span> <span class="op">=</span> <span class="ident">ciphertext</span>.<span class="ident">get_remainder_chunk</span>(<span class="ident">rate</span>);
+    <span class="kw">let</span> <span class="ident">block_len</span> <span class="op">=</span> <span class="ident">ct_final</span>.<span class="ident">len</span>();
+
+    <span class="kw">let</span> <span class="ident">ct_block_padded</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="ident">ct_block_padded</span> <span class="op">=</span> <span class="ident">ct_block_padded</span>.<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">ct_final</span>);
+
+    <span class="kw">let</span> <span class="ident">msg_block</span> <span class="op">=</span> <span class="ident">ct_block_padded</span> <span class="op">^</span> <span class="ident">key_block</span>;
+    <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">set_chunk</span>(<span class="ident">rate</span>, <span class="ident">num_chunks</span>, <span class="kw-2">&amp;</span><span class="ident">msg_block</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">block_len</span>));
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg_block</span> <span class="op">=</span> <span class="ident">Block</span>::<span class="ident">from_slice_range</span>(<span class="kw-2">&amp;</span><span class="ident">msg_block</span>, <span class="number">0</span>..<span class="ident">block_len</span>);
+    <span class="ident">msg_block</span>[<span class="ident">block_len</span>] <span class="op">=</span> <span class="ident">msg_block</span>[<span class="ident">block_len</span>] <span class="op">^</span> <span class="ident">U8</span>(<span class="number">1u8</span>);
+    <span class="ident">s</span>[<span class="number">11</span>] <span class="op">=</span> <span class="ident">s</span>[<span class="number">11</span>] <span class="op">^</span> <span class="ident">U32</span>(<span class="number">0x01000000u32</span>); <span class="comment">// s_2,3</span>
+    <span class="ident">s</span> <span class="op">=</span> <span class="ident">absorb_block</span>(<span class="ident">msg_block</span>, <span class="ident">s</span>);
 
     (<span class="ident">s</span>, <span class="ident">message</span>)
 }
