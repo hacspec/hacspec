@@ -162,17 +162,10 @@ fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
 
     for i in 0..num_chunks {
         let key_block = squeeze_block(s);
-        let (block_len, ct_block) = ciphertext.get_chunk(rate, i);
-
-        // This pads the ct_block if necessary.
-        let ct_block_padded = Block::new();
-        let ct_block_padded = ct_block_padded.update_start(&ct_block);
-
-        // Zero pad the block if necessary (replace bytes with zeros if block_len != rate).
-        let msg_block = Block::from_slice_range(&(ct_block_padded ^ key_block), 0..block_len);
-
-        // Slice_range cuts off the msg_block to the actual length.
-        message = message.set_chunk(rate, i, &msg_block.slice_range(0..block_len));
+        let ct_block = ciphertext.get_exact_chunk(rate, i);
+        let ct_block = Block::from_seq(&ct_block);
+        let msg_block = ct_block ^ key_block;
+        message = message.set_exact_chunk(rate, i, &(ct_block ^ key_block));
         s = absorb_block(msg_block, s);
     }
 
@@ -183,11 +176,11 @@ fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
 
     let ct_block_padded = Block::new();
     let ct_block_padded = ct_block_padded.update_start(&ct_final);
-    let msg_block = ct_block_padded ^ key_block;
 
-    let mut msg_block = Block::from_slice_range(&msg_block, 0..block_len);
+    let msg_block = ct_block_padded ^ key_block;
     message = message.set_chunk(rate, num_chunks, &msg_block.slice_range(0..block_len));
 
+    let mut msg_block = Block::from_slice_range(&msg_block, 0..block_len);
     msg_block[block_len] = msg_block[block_len] ^ U8(1u8);
     s[11] = s[11] ^ U32(0x01000000u32); // s_2,3
     s = absorb_block(msg_block, s);
