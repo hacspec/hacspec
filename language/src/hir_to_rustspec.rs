@@ -332,6 +332,7 @@ enum SpecialTypeReturn {
     Array(BaseTyp),
     NatInt(BaseTyp),
     RawAbstractInt(BaseTyp),
+    Enum(BaseTyp),
     NotSpecial,
 }
 
@@ -396,7 +397,8 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                     return match check_special_type_from_struct_shape(tcx, &field_typ) {
                         SpecialTypeReturn::NotSpecial
                         | SpecialTypeReturn::NatInt(_)
-                        | SpecialTypeReturn::Array(_) => SpecialTypeReturn::NotSpecial,
+                        | SpecialTypeReturn::Array(_)
+                        | SpecialTypeReturn::Enum(_) => SpecialTypeReturn::NotSpecial,
                         SpecialTypeReturn::RawAbstractInt(nat_int_typ) => {
                             SpecialTypeReturn::NatInt(nat_int_typ)
                         }
@@ -414,6 +416,8 @@ fn add_special_type_from_struct_shape(
     def: &ty::Ty,
     external_arrays: &mut HashMap<String, BaseTyp>,
     external_nat_ints: &mut HashMap<String, BaseTyp>,
+    external_enums: &mut HashMap<String, BaseTyp>, // The usize is the
+                                                   // number of type arguments to the enum
 ) {
     let def_name = tcx.def_path(def_id).data.last().unwrap().data.to_string();
     match check_special_type_from_struct_shape(tcx, def) {
@@ -422,6 +426,9 @@ fn add_special_type_from_struct_shape(
         }
         SpecialTypeReturn::NatInt(nat_int_typ) => {
             external_nat_ints.insert(def_name, nat_int_typ);
+        }
+        SpecialTypeReturn::Enum(enum_typ) => {
+            external_enums.insert(def_name, enum_typ);
         }
         SpecialTypeReturn::NotSpecial | SpecialTypeReturn::RawAbstractInt(_) => {}
     }
@@ -432,6 +439,7 @@ pub struct ExternalData {
     pub consts: HashMap<String, BaseTyp>,
     pub arrays: HashMap<String, BaseTyp>,
     pub nat_ints: HashMap<String, BaseTyp>,
+    pub enums: HashMap<String, BaseTyp>,
     pub ty_aliases: HashMap<String, BaseTyp>,
 }
 
@@ -446,6 +454,7 @@ pub fn retrieve_external_data(
     let mut extern_consts = HashMap::new();
     let mut extern_arrays = HashMap::new();
     let mut extern_nat_ints = HashMap::new();
+    let mut extern_enums = HashMap::new();
     let mut ty_aliases = HashMap::new();
     let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
     let mut imported_crates = imported_crates.clone();
@@ -491,6 +500,7 @@ pub fn retrieve_external_data(
                                             &tcx.type_of(def_id),
                                             &mut extern_arrays,
                                             &mut extern_nat_ints,
+                                            &mut extern_enums,
                                         ),
                                         DefKind::TyAlias => {
                                             if def_path.data.len() <= 2 {
@@ -595,6 +605,7 @@ pub fn retrieve_external_data(
         consts: extern_consts,
         arrays: extern_arrays,
         nat_ints: extern_nat_ints,
+        enums: extern_enums,
         ty_aliases,
     }
 }

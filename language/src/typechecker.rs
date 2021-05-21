@@ -402,6 +402,8 @@ fn unify_types(
                 _ => Ok(None),
             }
         }
+        // We don't need to unify the enum types since they're already dealt
+        // with by the Named case (nominal typing)
         _ => Ok(None),
     }
 }

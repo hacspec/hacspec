@@ -624,6 +624,7 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         consts: extern_consts,
         arrays: extern_arrays,
         nat_ints: extern_nat_ints,
+        enums: extern_enums,
         ty_aliases: extern_aliases,
     } = external_data(&get_imported_crates(p));
     for (alias_name, alias_ty) in extern_aliases {
@@ -645,6 +646,18 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
                     (array_typ, DUMMY_SP.into()),
+                ),
+                DictEntry::Array,
+            ),
+        );
+    }
+    for (enum_name, enum_typ) in extern_enums {
+        top_level_ctx.typ_dict.insert(
+            TopLevelIdent(enum_name),
+            (
+                (
+                    (Borrowing::Consumed, DUMMY_SP.into()),
+                    (enum_typ, DUMMY_SP.into()),
                 ),
                 DictEntry::Array,
             ),
