@@ -21,6 +21,11 @@ fn positive_enums() {
 }
 
 #[test]
+fn positive_option() {
+    run_test("language-tests/option.rs", Some("tests/Option.fst"));
+}
+
+#[test]
 fn positive_arrays() {
     run_test("language-tests/arrays.rs", None);
 }
