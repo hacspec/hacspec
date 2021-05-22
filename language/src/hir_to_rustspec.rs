@@ -89,12 +89,18 @@ fn translate_base_typ(
                             } else {
                                 return Err(());
                             };
-                            Ok((BaseTyp::Seq(Box::new((param_typ, DUMMY_SP))), typ_ctx))
+                            Ok((
+                                BaseTyp::Seq(Box::new((param_typ, DUMMY_SP.into()))),
+                                typ_ctx,
+                            ))
                         }
                         // We accept all named types from hacspec_lib because of the predefined
                         // array types like U32Word, etc.
                         _ => Ok((
-                            BaseTyp::Named((TopLevelIdent(name.to_ident_string()), DUMMY_SP), None),
+                            BaseTyp::Named(
+                                (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                None,
+                            ),
                             typ_ctx.clone(),
                         )),
                     },
@@ -115,8 +121,8 @@ fn translate_base_typ(
                             };
                             Ok((
                                 BaseTyp::Tuple(vec![
-                                    (param_typ.clone(), DUMMY_SP),
-                                    (param_typ, DUMMY_SP),
+                                    (param_typ.clone(), DUMMY_SP.into()),
+                                    (param_typ, DUMMY_SP.into()),
                                 ]),
                                 typ_ctx,
                             ))
@@ -124,7 +130,10 @@ fn translate_base_typ(
                         _ => Err(()),
                     },
                     _ => Ok((
-                        BaseTyp::Named((TopLevelIdent(name.to_ident_string()), DUMMY_SP), None),
+                        BaseTyp::Named(
+                            (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                            None,
+                        ),
                         typ_ctx.clone(),
                     )),
                 },
@@ -151,7 +160,7 @@ fn translate_base_typ(
             let mut new_args = Vec::new();
             let typ_ctx = args.types().fold(Ok(typ_ctx.clone()), |typ_ctx, ty| {
                 let (new_ty, typ_ctx) = translate_base_typ(tcx, &ty, &typ_ctx?)?;
-                new_args.push((new_ty, DUMMY_SP));
+                new_args.push((new_ty, DUMMY_SP.into()));
                 Ok(typ_ctx)
             })?;
             Ok((BaseTyp::Tuple(new_args), typ_ctx))
@@ -168,11 +177,23 @@ fn translate_ty(
     match ty.kind() {
         TyKind::Ref(_, ref_ty, Mutability::Not) => {
             let (ty, typ_ctx) = translate_base_typ(tcx, &ref_ty, typ_ctx)?;
-            Ok((((Borrowing::Borrowed, DUMMY_SP), (ty, DUMMY_SP)), typ_ctx))
+            Ok((
+                (
+                    (Borrowing::Borrowed, DUMMY_SP.into()),
+                    (ty, DUMMY_SP.into()),
+                ),
+                typ_ctx,
+            ))
         }
         _ => {
             let (ty, typ_ctx) = translate_base_typ(tcx, ty, typ_ctx)?;
-            Ok((((Borrowing::Consumed, DUMMY_SP), (ty, DUMMY_SP)), typ_ctx))
+            Ok((
+                (
+                    (Borrowing::Consumed, DUMMY_SP.into()),
+                    (ty, DUMMY_SP.into()),
+                ),
+                typ_ctx,
+            ))
         }
     }
 }
@@ -354,8 +375,8 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                         // value, nor the size, but its fine for typechecking?
                         let nat_int_typ = BaseTyp::NaturalInteger(
                             Secrecy::Secret,
-                            ("unknown".to_string(), DUMMY_SP),
-                            (0, DUMMY_SP),
+                            ("unknown".to_string(), DUMMY_SP.into()),
+                            (0, DUMMY_SP.into()),
                         );
                         SpecialTypeReturn::RawAbstractInt(nat_int_typ)
                     } else {
@@ -363,8 +384,8 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                             None => SpecialTypeReturn::NotSpecial,
                             Some(new_size) => {
                                 let array_typ = BaseTyp::Array(
-                                    (ArraySize::Integer(new_size), DUMMY_SP),
-                                    Box::new((new_cell_t, DUMMY_SP)),
+                                    (ArraySize::Integer(new_size), DUMMY_SP.into()),
+                                    Box::new((new_cell_t, DUMMY_SP.into())),
                                 );
                                 SpecialTypeReturn::Array(array_typ)
                             }
@@ -432,9 +453,9 @@ pub fn retrieve_external_data(
     // from abstract_integers and secret_integers. But we do have to fetch those
     // reexported definitions here and thus need to examine the original crates
     // containing them
-    imported_crates.push(("core".to_string(), DUMMY_SP));
-    imported_crates.push(("abstract_integers".to_string(), DUMMY_SP));
-    imported_crates.push(("secret_integers".to_string(), DUMMY_SP));
+    imported_crates.push(("core".to_string(), DUMMY_SP.into()));
+    imported_crates.push(("abstract_integers".to_string(), DUMMY_SP.into()));
+    imported_crates.push(("secret_integers".to_string(), DUMMY_SP.into()));
     for krate_num in krates {
         let original_crate_name = tcx.original_crate_name(*krate_num);
         if imported_crates

@@ -6,7 +6,6 @@ use itertools::Itertools;
 use lazy_static::lazy_static;
 use pretty::RcDoc;
 use regex::Regex;
-use rustc_ast::ast::BinOpKind;
 use rustc_session::Session;
 use std::collections::HashMap;
 use std::fs::File;
@@ -863,6 +862,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 make_tuple(
                     mutated_info
                         .vars
+                        .0
                         .iter()
                         .sorted()
                         .map(|i| translate_ident(Ident::Local(i.clone()))),
@@ -900,10 +900,11 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
         }
         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
-            let mutated_num = mutated_info.vars.len();
+            let mutated_num = mutated_info.vars.0.len();
             let mut_tuple = make_tuple(
                 mutated_info
                     .vars
+                    .0
                     .iter()
                     .sorted()
                     .map(|i| translate_ident(Ident::Local(i.clone()))),
@@ -1039,7 +1040,7 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             Some(translate_base_typ(ty.0.clone())),
             translate_expression(e.0.clone(), top_ctx),
         ),
-        Item::NaturalIntegerDecl(nat_name, canvas_name, _secrecy, canvas_size, _modulo) => {
+        Item::NaturalIntegerDecl(nat_name, _secrecy, canvas_size, Some((canvas_name, _modulo))) => {
             let canvas_size_bytes = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => {
                     RcDoc::as_string(format!("{}", (size + 7) / 8))
@@ -1075,7 +1076,7 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                         .append(RcDoc::as_string("int")),
                 )
         }
-        Item::SimplifiedNaturalIntegerDecl(_nat_name, _secrecy, _modulo_power) => {
+        Item::NaturalIntegerDecl(_, _, _, _) => {
             unimplemented!()
         }
     }
@@ -1100,7 +1101,7 @@ pub fn translate_and_write_to_file(
     let path = path::Path::new(file);
     let mut file = match File::create(&path) {
         Err(why) => {
-            sess.err(format!("Unable to write to outuput file {}: \"{}\"", file, why).as_str());
+            sess.err(format!("Unable to write to output file {}: \"{}\"", file, why).as_str());
             return;
         }
         Ok(file) => file,
