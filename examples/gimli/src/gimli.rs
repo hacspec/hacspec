@@ -75,25 +75,24 @@ fn squeeze_block(s: State) -> Block {
 
 fn gimli_hash_state(input: &ByteSeq, mut s: State) -> State {
     let rate = Block::length();
-    let chunks = input.num_exact_chunks(rate);
+    for i in 0..input.num_chunks(rate) {
+        let (block_len, input_block) = input.get_chunk(rate, i);
+        if block_len == rate {
+            // Absorb full blocks
+            let full_block = Block::from_seq(&input_block);
+            s = absorb_block(full_block, s);
+        } else {
+            // Absorb last incomplete block
+            // Note that this would work in all other cases as well, but the above is safer.
+            let input_block_padded = Block::new();
+            let mut input_block_padded = input_block_padded.update_start(&input_block);
+            input_block_padded[block_len] = U8(1u8);
 
-    for i in 0..chunks {
-        let input_block = input.get_exact_chunk(rate, i);
-
-        // Absorb full blocks
-        let full_block = Block::from_seq(&input_block);
-        s = absorb_block(full_block, s);
+            // XOR in capacity part
+            s[11] = s[11] ^ U32(0x01000000u32);
+            s = absorb_block(input_block_padded, s);
+        }
     }
-
-    // Absorb last incomplete block (0 <= bytes <= 15)
-    let input_block = input.get_remainder_chunk(rate);
-    let input_block_padded = Block::new();
-    let mut input_block_padded = input_block_padded.update_start(&input_block);
-    input_block_padded[input_block.len()] = U8(1u8);
-
-    // XOR in capacity part
-    s[11] = s[11] ^ U32(0x01000000u32);
-    s = absorb_block(input_block_padded, s);
 
     s
 }

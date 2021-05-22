@@ -9,12 +9,3 @@ path = "src/gf128.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
-
-[dev-dependencies]
-hacspec-dev = { path = "../../utils/dev" }
-criterion = "0.3"
-rand = "0.8"
-
-[[bench]]
-name = "benchmarks"
-harness = false

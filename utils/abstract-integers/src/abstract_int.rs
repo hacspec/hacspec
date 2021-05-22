@@ -386,7 +386,9 @@ macro_rules! abstract_unsigned {
                 let x = BigInt::from_bytes_be(Sign::Plus, &self.b);
                 let (_, x_s) = x.to_bytes_le();
                 let mut repr = [0u8; ($bits + 7) / 8];
-                repr[0..x_s.len()].copy_from_slice(&x_s);
+                let upper = repr.len();
+                let lower = upper - x_s.len();
+                repr[lower..upper].copy_from_slice(&x_s);
                 repr
             }
 

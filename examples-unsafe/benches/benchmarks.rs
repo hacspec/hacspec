@@ -174,6 +174,70 @@ fn criterion_aes_gcm(c: &mut Criterion) {
     });
 }
 
+fn criterion_chacha_poly(c: &mut Criterion) {
+    c.bench_function("Poly1305", |b| {
+        b.iter_batched(
+            || {
+                let key = KeyPoly::from_public_slice(&randombytes(32));
+                let data = Seq::<U8>::from_public_slice(&randombytes(1_000));
+                (data, key)
+            },
+            |(data, key)| {
+                let _tag = poly(&data, key);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+
+    c.bench_function("ChaCha20", |b| {
+        b.iter_batched(
+            || {
+                let key = Key::from_public_slice(&randombytes(32));
+                let nonce = IV::from_public_slice(&randombytes(12));
+                let data = Seq::<U8>::from_public_slice(&randombytes(10_000));
+                (data, nonce, key)
+            },
+            |(data, nonce, key)| {
+                let _c = chacha(key, nonce, &data);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+
+    c.bench_function("ChaCha20Poly1305 encrypt", |b| {
+        b.iter_batched(
+            || {
+                let key = Key::from_public_slice(&randombytes(32));
+                let nonce = IV::from_public_slice(&randombytes(12));
+                let data = Seq::<U8>::from_public_slice(&randombytes(10_000));
+                let aad = Seq::<U8>::from_public_slice(&randombytes(1_000));
+                (data, nonce, aad, key)
+            },
+            |(data, nonce, aad, key)| {
+                let (_cipher, _tag) = encrypt(key, nonce, &aad, &data);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+
+    c.bench_function("ChaCha20Poly1305 decrypt", |b| {
+        b.iter_batched(
+            || {
+                let key = Key::from_public_slice(&randombytes(32));
+                let nonce = IV::from_public_slice(&randombytes(12));
+                let data = Seq::<U8>::from_public_slice(&randombytes(10_000));
+                let aad = Seq::<U8>::from_public_slice(&randombytes(1_000));
+                let (cipher, tag) = encrypt(key, nonce, &aad, &data);
+                (nonce, aad, key, cipher, tag)
+            },
+            |(nonce, aad, key, cipher, tag)| {
+                let _msg = decrypt(key, nonce, &aad, &cipher, tag);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+}
+
 fn criterion_blake2(c: &mut Criterion) {
     c.bench_function("Blake2b", |b| {
         b.iter_batched(
@@ -183,6 +247,22 @@ fn criterion_blake2(c: &mut Criterion) {
             },
             |data| {
                 let _h = blake2b(&data);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+}
+
+fn criterion_curve25519(c: &mut Criterion) {
+    c.bench_function("x25519", |b| {
+        b.iter_batched(
+            || {
+                let s = SerializedScalar::from_public_slice(&randombytes(32));
+                let u = SerializedPoint::from_public_slice(&randombytes(32));
+                (s, u)
+            },
+            |(s, u)| {
+                let _r = scalarmult(s, u);
             },
             BatchSize::SmallInput,
         )
@@ -297,7 +377,9 @@ fn criterion_sha2(c: &mut Criterion) {
 
 fn criterion_benchmark(c: &mut Criterion) {
     criterion_aes_gcm(c);
+    criterion_chacha_poly(c);
     criterion_blake2(c);
+    criterion_curve25519(c);
     criterion_fips202(c);
     criterion_p256(c);
     criterion_p384(c);

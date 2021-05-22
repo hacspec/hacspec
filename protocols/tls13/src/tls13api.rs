@@ -152,47 +152,47 @@ pub fn server_finish(payload:&HandshakeData,st:Server0) -> Res<Server1> {
 
 pub struct AppData(pub Bytes);
 
-pub fn encrypt_zerortt(payload:AppData, pad:usize, st: ClientCipherState0) -> Res<(Bytes,ClientCipherState0)> {
+pub fn encrypt_zerortt(payload:&AppData, pad:usize, st: ClientCipherState0) -> Res<(Bytes,ClientCipherState0)> {
     let ClientCipherState0(ae, kiv, n, exp) = st;
     let AppData(payload) = payload;
     let rec = encrypt_record_payload(&ae,&kiv,n,ContentType::ApplicationData,payload,pad)?;
     Ok((rec,ClientCipherState0(ae,kiv,n+1, exp)))
 }
 
-pub fn decrypt_zerortt(ciphertext:Bytes, st: ServerCipherState0) -> Res<(AppData,ServerCipherState0)> {
+pub fn decrypt_zerortt(ciphertext:&Bytes, st: ServerCipherState0) -> Res<(AppData,ServerCipherState0)> {
     let ServerCipherState0(ae, kiv, n, exp) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
     check(ct == ContentType::ApplicationData)?;
     Ok((AppData(payload),ServerCipherState0(ae,kiv,n+1,exp)))
 }
 
-pub fn encrypt_handshake(payload:HandshakeData, pad:usize, st: DuplexCipherStateH) -> Res<(Bytes,DuplexCipherStateH)> {
+pub fn encrypt_handshake(payload:&HandshakeData, pad:usize, st: DuplexCipherStateH) -> Res<(Bytes,DuplexCipherStateH)> {
     let DuplexCipherStateH(ae, kiv, n, x, y) = st;
     let HandshakeData(payload) = payload;
     let rec = encrypt_record_payload(&ae,&kiv,n,ContentType::Handshake,payload,pad)?;
     Ok((rec,DuplexCipherStateH(ae,kiv,n+1, x, y)))
 }
 
-pub fn decrypt_handshake(ciphertext:Bytes, st: DuplexCipherStateH) -> Res<(HandshakeData,DuplexCipherStateH)> {
+pub fn decrypt_handshake(ciphertext:&Bytes, st: DuplexCipherStateH) -> Res<(HandshakeData,DuplexCipherStateH)> {
     let DuplexCipherStateH(ae, x, y, kiv, n) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
     check(ct == ContentType::Handshake)?;
     Ok((HandshakeData(payload),DuplexCipherStateH(ae, x, y, kiv, n+1)))
 }
 
-pub fn encrypt_data(payload:AppData, pad:usize, st: DuplexCipherState1) -> Res<(Bytes,DuplexCipherState1)> {
+pub fn encrypt_data(payload:&AppData, pad:usize, st: DuplexCipherState1) -> Res<(Bytes,DuplexCipherState1)> {
     let DuplexCipherState1(ae, kiv, n, x, y, exp) = st;
     let AppData(payload) = payload;
     let rec = encrypt_record_payload(&ae,&kiv,n,ContentType::ApplicationData,payload,pad)?;
     Ok((rec,DuplexCipherState1(ae,kiv,n+1,x,y,exp)))
 }
 
-pub fn decrypt_data_or_hs(ciphertext:Bytes, st: DuplexCipherState1) -> Res<(ContentType,Bytes,DuplexCipherState1)> {
+pub fn decrypt_data_or_hs(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(ContentType,Bytes,DuplexCipherState1)> {
     let DuplexCipherState1(ae, x, y, kiv, n, exp) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
     Ok((ct,payload,DuplexCipherState1(ae, x, y, kiv, n+1, exp)))
 }
-pub fn decrypt_data(ciphertext:Bytes, st: DuplexCipherState1) -> Res<(AppData,DuplexCipherState1)> {
+pub fn decrypt_data(ciphertext:&Bytes, st: DuplexCipherState1) -> Res<(AppData,DuplexCipherState1)> {
     let DuplexCipherState1(ae, x, y, kiv, n, exp) = st;
     let (ct,payload) = decrypt_record_payload(&ae,&kiv,n,ciphertext)?;
     check(ct == ContentType::ApplicationData)?;

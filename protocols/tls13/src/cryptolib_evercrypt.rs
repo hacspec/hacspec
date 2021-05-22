@@ -48,7 +48,7 @@ pub type AEIV = Bytes;
 
 pub type AEKIV = (AEK, AEIV);
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum NamedGroup {
     X25519,
     SECP256r1,
@@ -60,7 +60,7 @@ pub enum HashAlgorithm {
     SHA384,
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum AEADAlgorithm {
     CHACHA20_POLY1305,
     AES_128_GCM,
@@ -434,18 +434,15 @@ pub fn hkdf_expand(ha: &HashAlgorithm, k: &KEY, info: &Bytes, len: usize) -> Res
 // FIXME: #98 add #[unsafe_hacspec] attribute
 fn aesgcm_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.to_native());
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
     match evercrypt::aead::encrypt(
         AeadMode::Aes128Gcm,
-        &k.to_native(),
-        &payload.to_native(),
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
         &nonce,
-        &ad.to_native(),
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
     ) {
-        Ok((mut c, t)) => {
-            c.extend_from_slice(&t);
-            Ok(Bytes::from_public_slice(&c))
-        },
+        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat(&Bytes::from_public_slice(&t))),
         Err(_e) => Err(crypto_error),
     }
 }
@@ -453,18 +450,15 @@ fn aesgcm_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res
 // FIXME: #98 add #[unsafe_hacspec] attribute
 fn chachapoly_encrypt_unsafe(k: &AEK, iv: &AEIV, payload: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.to_native());
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
     match evercrypt::aead::encrypt(
         AeadMode::Chacha20Poly1305,
-        &k.to_native(),
-        &payload.to_native(),
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &payload.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
         &nonce,
-        &ad.to_native(),
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
     ) {
-        Ok((mut c, t)) => {
-            c.extend_from_slice(&t);
-            Ok(Bytes::from_public_slice(&c))
-        },
+        Ok((c, t)) => Ok(Bytes::from_public_slice(&c).concat(&Bytes::from_public_slice(&t))),
         Err(_e) => Err(crypto_error),
     }
 }
@@ -485,18 +479,24 @@ pub fn aead_encrypt(
 }
 
 // FIXME: #98 add #[unsafe_hacspec] attribute
-fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: Bytes, ad: &Bytes) -> Res<Bytes> {
+fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.to_native());
-    let ctxt_len = ciphertext.len();
-    let (ciphertext, tag) = ciphertext.split_off(ctxt_len - 16);
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
     match evercrypt::aead::decrypt(
         AeadMode::Aes128Gcm,
-        &k.to_native(),
-        &ciphertext.to_native(),
-        &tag.to_native(),
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(0..ciphertext.len() - 16)
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(ciphertext.len() - 16..ciphertext.len())
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
         &nonce,
-        &ad.to_native(),
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
     ) {
         Ok(ptxt) => Ok(Bytes::from_public_slice(&ptxt)),
         Err(_e) => Err(mac_failed),
@@ -504,18 +504,24 @@ fn aesgcm_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: Bytes, ad: &Bytes) -> R
 }
 
 // FIXME: #98 add #[unsafe_hacspec] attribute
-fn chachapoly_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: Bytes, ad: &Bytes) -> Res<Bytes> {
+fn chachapoly_decrypt_unsafe(k: &AEK, iv: &AEIV, ciphertext: &Bytes, ad: &Bytes) -> Res<Bytes> {
     let mut nonce = [0u8; 12];
-    nonce.copy_from_slice(&iv.to_native());
-    let ctxt_len = ciphertext.len();
-    let (ciphertext, tag) = ciphertext.split_off(ctxt_len - 16);
+    nonce.copy_from_slice(&iv.iter().map(|&x| x.declassify()).collect::<Vec<u8>>());
     match evercrypt::aead::decrypt(
         AeadMode::Chacha20Poly1305,
-        &k.to_native(),
-        &ciphertext.to_native(),
-        &tag.to_native(),
+        &k.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(0..ciphertext.len() - 16)
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
+        &ciphertext
+            .slice_range(ciphertext.len() - 16..ciphertext.len())
+            .iter()
+            .map(|&x| x.declassify())
+            .collect::<Vec<u8>>(),
         &nonce,
-        &ad.to_native(),
+        &ad.iter().map(|&x| x.declassify()).collect::<Vec<u8>>(),
     ) {
         Ok(ptxt) => Ok(Bytes::from_public_slice(&ptxt)),
         Err(_e) => Err(mac_failed),
@@ -526,7 +532,7 @@ pub fn aead_decrypt(
     a: &AEADAlgorithm,
     k: &AEK,
     iv: &AEIV,
-    ciphertext: Bytes,
+    ciphertext: &Bytes, // XXX: this should be public, i.e. Seq<u8>/PublicByteSeq
     ad: &Bytes,
 ) -> Res<Bytes> {
     match a {

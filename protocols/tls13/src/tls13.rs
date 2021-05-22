@@ -129,7 +129,7 @@ fn decrypt_handshake_flight(
     while !finished {
         let len = read_record(stream, buf)?;
         let rec = Bytes::from_public_slice(&buf[0..len]);
-        let (plain, cip) = decrypt_handshake(rec, cipherH)?;
+        let (plain, cip) = decrypt_handshake(&rec, cipherH)?;
         payload = handshake_concat(payload,&plain);
         cipherH = cip;
         finished = find_handshake_message(HandshakeType::Finished,&payload,0);
@@ -148,7 +148,7 @@ fn decrypt_tickets_and_data(
     while !data {
         let len = read_record(stream, buf)?;
         let rec = Bytes::from_public_slice(&buf[0..len]);
-        let (ct, pl, cip) = decrypt_data_or_hs(rec, cipher1)?;
+        let (ct, pl, cip) = decrypt_data_or_hs(&rec, cipher1)?;
         payload = pl;
         cipher1 = cip;
         if ct == ContentType::ApplicationData {
@@ -204,11 +204,11 @@ pub fn tls13client(host: &str, port: &str) -> Res<()> {
 
     /* Complete Connection */
     put_ccs_message(&mut stream)?;
-    let (cf_rec, cipherH) = encrypt_handshake(cf, 0, cipherH)?;
+    let (cf_rec, cipherH) = encrypt_handshake(&cf, 0, cipherH)?;
     put_record(&mut stream, &cf_rec)?;
     println!("Connected to {}:443", host);
     /* Send HTTP GET  */
-    let (ap, cipher1) = encrypt_data(AppData(http_get), 0, cipher1)?;
+    let (ap, cipher1) = encrypt_data(&AppData(http_get), 0, cipher1)?;
     put_record(&mut stream, &ap)?;
     println!("Sent HTTP GET to {}:443", host);
 

@@ -39,20 +39,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            pub fn with_capacity(l: usize) -> Self {
-                Self {
-                    b: Vec::with_capacity(l),
-                }
-            }
-
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            #[inline(always)]
-            pub fn reserve(mut self, additional: usize) -> Self {
-                self.b.reserve(additional);
-                self
-            }
-
             /// Get the size of this sequence.
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             pub fn len(&self) -> usize {
@@ -64,40 +50,9 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 Self::from_slice(self, start_out, len)
             }
 
-            #[cfg_attr(feature="use_attributes", not_hacspec)]
-            pub fn native_slice(&self) -> &[T] {
-                &self.b
-            }
-
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            pub fn into_slice(mut self, start_out: usize, len: usize) -> Self {
-                self.b = self.b.drain(start_out..start_out+len).collect();
-                self
-            }
-
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn slice_range(&self, r: Range<usize>) -> Self {
                 self.slice(r.start, r.end - r.start)
-            }
-
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            pub fn into_slice_range(mut self, r: Range<usize>) -> Self {
-                self.b = self.b.drain(r).collect();
-                self
-            }
-
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            #[inline(always)]
-            pub fn split_off(mut self, at: usize) -> (Self, Self) {
-                let other = Self::from_vec(self.b.split_off(at));
-                (self, other)
-            }
-
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            #[inline(always)]
-            pub fn truncate(mut self, len: usize) -> Self  {
-                self.b.truncate(len);
-                self
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
@@ -116,13 +71,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
-            #[inline(always)]
-            pub fn concat_owned(mut self, mut next: Self) -> Self {
-                self.b.append(&mut next.b);
-                self
-            }
-
-            #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn from_slice_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
                 Self::from_slice(input, r.start, r.end - r.start)
             }
@@ -133,14 +81,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 chunk_size: usize
             ) -> usize {
                 (self.len() + chunk_size - 1) / chunk_size
-            }
-
-            /// Get the number of chunks of `chunk_size` in this array.
-            /// There might be less than `chunk_size` remaining elements in this
-            /// array beyond these.
-            #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            pub fn num_exact_chunks(&self, chunk_size: usize) -> usize {
-                self.len() / chunk_size
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
@@ -159,42 +99,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 (len, out)
             }
 
-            /// Get the `chunk_number` chunk of `chunk_size` from this array
-            /// as `Seq<T>`.
-            /// The resulting sequence is of exactly `chunk_size` length.
-            /// Until #84 is fixed this returns an empty sequence if not enough
-            /// elements are left.
-            #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            pub fn get_exact_chunk(&self, chunk_size: usize, chunk_number: usize) -> Self {
-                let (len, chunk) = self.get_chunk(chunk_size, chunk_number);
-                if len != chunk_size {
-                   Self::new(0)
-                } else {
-                    chunk
-                }
-            }
-
-            /// Get the remaining chunk of this array of length less than
-            /// `chunk_size`.
-            /// If there's no remainder, i.e. if the length of this array can
-            /// be divided by `chunk_size` without a remainder, the function
-            /// returns an empty sequence (until #84 is fixed).
-            #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            pub fn get_remainder_chunk(&self, chunk_size: usize) -> Self {
-                let chunks = self.num_chunks(chunk_size);
-                let last_chunk = if chunks > 0 {
-                    chunks - 1
-                } else {
-                    0
-                };
-                let (len, chunk) = self.get_chunk(chunk_size, last_chunk);
-                if len == chunk_size {
-                    Self::new(0)
-                } else {
-                    chunk
-                }
-            }
-
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn set_chunk<A: SeqTrait<T>>(
                 self,
@@ -210,19 +114,6 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 };
                 debug_assert!(input.len() == len, "the chunk length should match the input. got {}, expected {}", input.len(), len);
                 self.update_slice(idx_start, input, 0, len)
-            }
-
-            #[cfg_attr(feature="use_attributes", in_hacspec)]
-            pub fn set_exact_chunk<A: SeqTrait<T>>(
-                self,
-                chunk_size: usize,
-                chunk_number: usize,
-                input: &A,
-            ) -> Self {
-                debug_assert!(input.len() == chunk_size, "the chunk length must match the chunk_size. got {}, expected {}", input.len(), chunk_size);
-                let idx_start = chunk_size * chunk_number;
-                debug_assert!(idx_start + chunk_size <= self.len(), "not enough space for a full chunk. space left: {}, needed {}", input.len(), chunk_size);
-                self.update_slice(idx_start, input, 0, chunk_size)
             }
         }
 
@@ -341,13 +232,13 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> $name<T> {
             #[cfg_attr(feature="use_attributes", not_hacspec)]
-            pub fn from_vec(b: Vec<T>) -> $name<T> {
+            pub fn from_vec(x: Vec<T>) -> $name<T> {
                 Self {
-                    b,
+                    b: x.clone(),
                 }
             }
 
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[cfg_attr(feature="use_attributes", not_hacspec)]
             pub fn from_native_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
@@ -375,7 +266,7 @@ pub type PublicByteSeq = PublicSeq<u8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {
-    #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
     pub fn from_hex(s: &str) -> Seq<U8> {
         Seq::from_vec(
             hex_string_to_bytes(s)
@@ -473,14 +364,6 @@ macro_rules! impl_declassify {
                     tmp[i] = <$st>::declassify(self[i]);
                 }
                 tmp
-            }
-            #[cfg_attr(feature = "use_attributes", not_hacspec)]
-            pub fn into_native(self) -> Vec<$t> {
-                self.b.iter().map(|&x| <$st>::declassify(x)).collect()
-            }
-            #[cfg_attr(feature = "use_attributes", not_hacspec)]
-            pub fn to_native(&self) -> Vec<$t> {
-                self.b.iter().map(|&x| <$st>::declassify(x)).collect()
             }
         }
     };

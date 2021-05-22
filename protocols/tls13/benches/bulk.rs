@@ -138,7 +138,7 @@ fn bench(c: &mut Criterion) {
                         // Send data from client to server.
                         for chunk in data.drain(..) {
                             let (_ap, cc) =
-                                encrypt_data(AppData(chunk), 0, client_cipher).unwrap();
+                                encrypt_data(&AppData(chunk), 0, client_cipher).unwrap();
                             client_cipher = cc;
                         }
                     },
@@ -161,7 +161,7 @@ fn bench(c: &mut Criterion) {
                         // encrypt
                         let mut ctxts = Vec::new();
                         for chunk in data.drain(..) {
-                            let (ap, cc) = encrypt_data(AppData(chunk), 0, client_cipher).unwrap();
+                            let (ap, cc) = encrypt_data(&AppData(chunk), 0, client_cipher).unwrap();
                             client_cipher = cc;
                             ctxts.push(ap);
                         }
@@ -170,7 +170,7 @@ fn bench(c: &mut Criterion) {
                     |(_client_cipher, mut server_cipher, mut ctxts)| {
                         // Send data from client to server.
                         for chunk in ctxts.drain(..) {
-                            let (_ap, sc) = decrypt_data(chunk, server_cipher).unwrap();
+                            let (_ap, sc) = decrypt_data(&chunk, server_cipher).unwrap();
                             server_cipher = sc;
                         }
                     },

@@ -170,7 +170,6 @@ pub enum BaseTyp {
     Named(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(TypVar),
     Tuple(Vec<Spanned<BaseTyp>>),
-    Enum(Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>),
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
@@ -213,16 +212,6 @@ impl fmt::Display for BaseTyp {
                 f,
                 "({})",
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
-            ),
-            BaseTyp::Enum(args) => write!(
-                f,
-                "[{}]",
-                args.iter()
-                    .map(|((case, _), payload)| match payload {
-                        Some((payload, _)) => format!("{}: {}", case, payload),
-                        None => format!("{}", case),
-                    })
-                    .format(" | ")
             ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
             BaseTyp::NaturalInteger(sec, modulo, bits) => {
@@ -314,20 +303,6 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
-    EnumInject(
-        Spanned<TopLevelIdent>,           // Name of enum
-        Spanned<TopLevelIdent>,           // Name of case
-        Option<Spanned<Box<Expression>>>, // Payload of case
-    ),
-    MatchWith(
-        Box<Spanned<Expression>>, // Expression to match
-        Vec<(
-            Spanned<TopLevelIdent>,   // Name of enum
-            Spanned<TopLevelIdent>,   // Name of case
-            Option<Spanned<Pattern>>, // Payload of case
-            Spanned<Expression>,      // Match arm expression
-        )>,
-    ),
     Lit(Literal),
     ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
     NewArray(
@@ -348,7 +323,6 @@ pub enum Pattern {
     IdentPat(Ident),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
-    SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }
 
 #[derive(Clone, Serialize)]
@@ -401,18 +375,12 @@ pub struct ExternalFuncSig {
 #[derive(Clone, Serialize)]
 pub enum Item {
     FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
-    EnumDecl(
-        Spanned<TopLevelIdent>,
-        Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>,
-    ),
     ArrayDecl(
         Spanned<TopLevelIdent>,         // Name of the array type
         Spanned<Expression>,            // Length
         Spanned<BaseTyp>,               // Cell type
         Option<Spanned<TopLevelIdent>>, // Optional type alias for indexes
     ),
-    AliasDecl(Spanned<TopLevelIdent>, Spanned<BaseTyp>),
-    ImportedCrate(Spanned<TopLevelIdent>),
     ConstDecl(
         Spanned<TopLevelIdent>,
         Spanned<BaseTyp>,
@@ -429,4 +397,6 @@ pub enum Item {
 #[derive(Clone, Serialize)]
 pub struct Program {
     pub items: Vec<Spanned<Item>>,
+    pub imported_crates: Vec<Spanned<String>>,
+    pub ty_aliases: Vec<(Spanned<TopLevelIdent>, Spanned<BaseTyp>)>,
 }
