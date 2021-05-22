@@ -28,6 +28,7 @@ pub enum DictEntry {
     Alias,
     Array,
     NaturalInteger,
+    Enum,
 }
 
 pub type ResolutionResult<T> = Result<T, ()>;
@@ -129,6 +130,46 @@ fn resolve_expression(
                 e_span,
             ))
         }
+        Expression::MatchWith(arg, arms) => {
+            let new_arg = resolve_expression(sess, *arg, name_context, top_level_ctx)?;
+            let new_arms = check_vec(
+                arms.into_iter()
+                    .map(|(enum_name, case_name, payload, arm)| {
+                        let (new_payload, new_name_context) = match payload {
+                            None => (None, name_context.clone()),
+                            Some(payload) => {
+                                let (new_pat, new_name_context) =
+                                    resolve_pattern(sess, &payload, top_level_ctx)?;
+                                (Some((new_pat, payload.1.clone())), new_name_context)
+                            }
+                        };
+                        let name_context = new_name_context.union(name_context.clone());
+                        let new_arm = resolve_expression(sess, arm, &name_context, top_level_ctx)?;
+                        Ok((enum_name, case_name, new_payload, new_arm))
+                    })
+                    .collect(),
+            )?;
+            Ok((Expression::MatchWith(Box::new(new_arg), new_arms), e_span))
+        }
+        Expression::EnumInject(enum_name, case_name, payload) => Ok((
+            Expression::EnumInject(
+                enum_name,
+                case_name,
+                match payload {
+                    None => None,
+                    Some(payload) => {
+                        let (new_payload, new_payload_span) = resolve_expression(
+                            sess,
+                            (*payload.0, payload.1),
+                            &name_context,
+                            top_level_ctx,
+                        )?;
+                        Some((Box::new(new_payload), new_payload_span))
+                    }
+                },
+            ),
+            e_span,
+        )),
         Expression::InlineConditional(e1, e2, e3) => {
             let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             let new_e2 = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
@@ -217,6 +258,16 @@ fn resolve_pattern(
     top_ctx: &TopLevelContext,
 ) -> ResolutionResult<(Pattern, NameContext)> {
     match pat {
+        Pattern::SingleCaseEnum(name, inner_pat) => {
+            let (new_inner_pat, sub_context) = resolve_pattern(sess, &*inner_pat, top_ctx)?;
+            Ok((
+                Pattern::SingleCaseEnum(
+                    name.clone(),
+                    Box::new((new_inner_pat, inner_pat.1.clone())),
+                ),
+                sub_context,
+            ))
+        }
         Pattern::Tuple(pat_args) => {
             let (tup_args, acc_name) =
                 pat_args
@@ -365,6 +416,7 @@ fn resolve_item(
             let new_size = resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
+        Item::EnumDecl(_, _) | Item::AliasDecl(_, _) | Item::ImportedCrate(_) => Ok((i, i_span)),
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let new_canvas_size =
                 resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
@@ -402,6 +454,19 @@ fn process_decl_item(
     match i {
         Item::ConstDecl(id, typ, _e) => {
             top_level_context.consts.insert(id.0.clone(), typ.clone());
+            Ok(())
+        }
+        Item::EnumDecl(name, cases) => {
+            top_level_context.typ_dict.insert(
+                name.0.clone(),
+                (
+                    (
+                        (Borrowing::Consumed, i_span.clone()),
+                        (BaseTyp::Enum(cases.clone()), i_span.clone()),
+                    ),
+                    DictEntry::Enum,
+                ),
+            );
             Ok(())
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
@@ -511,6 +576,20 @@ fn process_decl_item(
             );
             Ok(())
         }
+        Item::AliasDecl(alias_name, alias_ty) => {
+            top_level_context.typ_dict.insert(
+                alias_name.0.clone(),
+                (
+                    ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
+                    DictEntry::Alias,
+                ),
+            );
+            Ok(())
+        }
+        Item::ImportedCrate(_) => {
+            // Foreign items already imported at this point
+            Ok(())
+        }
         Item::FnDecl((f, _f_span), sig, _b) => {
             top_level_context
                 .functions
@@ -518,6 +597,20 @@ fn process_decl_item(
             Ok(())
         }
     }
+}
+
+fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
+    p.items
+        .iter()
+        .filter(|i| match &i.0 {
+            Item::ImportedCrate(_) => true,
+            _ => false,
+        })
+        .map(|i| match &i.0 {
+            Item::ImportedCrate((TopLevelIdent(s), _)) => (s.clone(), i.1.clone()),
+            _ => panic!("should not happen"),
+        })
+        .collect()
 }
 
 fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
@@ -532,7 +625,7 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         arrays: extern_arrays,
         nat_ints: extern_nat_ints,
         ty_aliases: extern_aliases,
-    } = external_data(&p.imported_crates);
+    } = external_data(&get_imported_crates(p));
     for (alias_name, alias_ty) in extern_aliases {
         top_level_ctx.typ_dict.insert(
             TopLevelIdent(alias_name.clone()),
@@ -541,15 +634,6 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
                     (Borrowing::Consumed, DUMMY_SP.into()),
                     (alias_ty.clone(), DUMMY_SP.into()),
                 ),
-                DictEntry::Alias,
-            ),
-        );
-    }
-    for (alias_name, alias_ty) in &p.ty_aliases {
-        top_level_ctx.typ_dict.insert(
-            alias_name.0.clone(),
-            (
-                ((Borrowing::Consumed, alias_ty.1.clone()), alias_ty.clone()),
                 DictEntry::Alias,
             ),
         );
@@ -619,8 +703,6 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     .map(|i| resolve_item(sess, i, &top_level_ctx))
                     .collect(),
             )?,
-            imported_crates: p.imported_crates,
-            ty_aliases: p.ty_aliases,
         },
         top_level_ctx,
     ))

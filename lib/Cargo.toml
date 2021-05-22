@@ -20,3 +20,9 @@ use_attributes = ["hacspec-attributes", "hacspec-attributes/print_attributes"]
 
 [dev-dependencies]
 rand = "0.8"
+hacspec-dev = { path = "../utils/dev" }
+criterion = "0.3"
+
+[[bench]]
+name = "copy"
+harness = false
