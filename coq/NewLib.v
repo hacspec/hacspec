@@ -685,34 +685,34 @@ Axiom u128_from_be_bytes : lseq int8 16 -> int128.
 
 (*** Nats *)
 
-Definition nat_mod (p : Z) : Set := GZnZ.znz p.
+Definition nat_mod (p : N) : Set := GZnZ.znz (Z.of_N p).
 
-Axiom nat_inv : N -> N -> N. 
+(* convenience coercions from nat_mod to Z and N *)
+Coercion GZnZ.val : GZnZ.znz >-> Z.
+Coercion Z.of_N : N >-> Z.
 
-(* Definition nat_mod (n: nat) := {x : nat | x < n}. *)
+Open Scope Z_scope.
 
-(* 
-Definition nat_mod_add {n:nat} (a:nat_mod n) (b:nat_mod n) : nat_mod n.
-Proof.
-  unfold nat_mod. destruct a. destruct b.
-  apply (exist _ (x + x0 mod n)).
-   *)
-Search GZnZ.znz.
-Definition nat_mod_add {n:Z} (a : nat_mod n) (b : nat_mod n) : nat_mod n := GZnZ.add n a b.
+
+Definition nat_mod_add {n : N} (a : nat_mod n) (b : nat_mod n) : nat_mod n := GZnZ.add n a b.
    
 Infix "+" := nat_mod_add : hacspec_scope.
 
-Definition nat_mod_mul {n:Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.add n a b.
+Definition nat_mod_mul {n : N} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.add n a b.
 Infix "*" := nat_mod_mul : hacspec_scope.
 
-Search GZnZ.znz.
-Search "mod".
-Search Zmod.
+Definition nat_mod_sub {n : N} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.sub n a b.
+Infix "-" := nat_mod_mul : hacspec_scope.
 
-Open Scope Z_scope.
-Search Zmod.
+Definition nat_mod_div {n : N} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.div n a b.
+Infix "/" := nat_mod_mul : hacspec_scope.
+
+Definition nat_mod_neg {n : N} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
+
+Definition nat_mod_inv {n : N} (a:nat_mod n) : nat_mod n := GZnZ.inv n a.
+
 (* We assume x < m *)
-Definition nat_from_secret_literal (m:Z) (x:int128) : nat_mod m.
+Definition nat_from_secret_literal (m : N) (x:int128) : nat_mod m.
 Proof.
   unfold nat_mod.
   (* since we assume x < m, it will be true that (unsigned x) = (unsigned x) mod m  *)
@@ -725,7 +725,7 @@ Proof.
 Defined.
 
 
-Definition nat_from_literal (m:Z) (x:int128) : nat_mod m := nat_from_secret_literal m x.
+Definition nat_from_literal (m : N) (x:int128) : nat_mod m := nat_from_secret_literal m x.
 
 (*   
 Definition nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
@@ -737,7 +737,7 @@ Definition nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) :
   Lib.ByteSequence.nat_to_bytes_be len n' *)
 
 (* We assume 2^x < m *)
-Definition nat_pow2 (m : Z) (x : Z) : nat_mod m.
+Definition nat_pow2 (m : N) (x : N) : nat_mod m.
 Proof.
   remember (Z.pow 2 x mod m) as y.
   apply (GZnZ.mkznz m y).

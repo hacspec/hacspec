@@ -1,3 +1,9 @@
 [submodule "utils/rc-tests/wycheproof"]
 	path = utils/rc-tests/wycheproof
 	url = git@github.com:google/wycheproof.git
+[submodule "coq/vendor/array"]
+	path = coq/vendor/array
+	url = https://github.com/tchajed/coq-array
+[submodule "coq/vendor/simple-classes"]
+	path = coq/vendor/simple-classes
+	url = https://github.com/tchajed/coq-simple-classes
