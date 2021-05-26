@@ -166,16 +166,16 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
     match tau {
         BaseTyp::Unit => RcDoc::as_string("()"),
         BaseTyp::Bool => RcDoc::as_string("bool"),
-        BaseTyp::UInt8 => RcDoc::as_string("pub_uint8"),
-        BaseTyp::Int8 => RcDoc::as_string("pub_int8"),
-        BaseTyp::UInt16 => RcDoc::as_string("pub_uint16"),
-        BaseTyp::Int16 => RcDoc::as_string("pub_int16"),
-        BaseTyp::UInt32 => RcDoc::as_string("pub_uint32"),
-        BaseTyp::Int32 => RcDoc::as_string("pub_int32"),
-        BaseTyp::UInt64 => RcDoc::as_string("pub_uint64"),
-        BaseTyp::Int64 => RcDoc::as_string("pub_int64"),
-        BaseTyp::UInt128 => RcDoc::as_string("pub_uint128"),
-        BaseTyp::Int128 => RcDoc::as_string("pub_int128"),
+        BaseTyp::UInt8 => RcDoc::as_string("int8"),
+        BaseTyp::Int8 => RcDoc::as_string("int8"),
+        BaseTyp::UInt16 => RcDoc::as_string("int16"),
+        BaseTyp::Int16 => RcDoc::as_string("int16"),
+        BaseTyp::UInt32 => RcDoc::as_string("int32"),
+        BaseTyp::Int32 => RcDoc::as_string("int32"),
+        BaseTyp::UInt64 => RcDoc::as_string("int64"),
+        BaseTyp::Int64 => RcDoc::as_string("int64"),
+        BaseTyp::UInt128 => RcDoc::as_string("int128"),
+        BaseTyp::Int128 => RcDoc::as_string("int128"),
         BaseTyp::Usize => RcDoc::as_string("uint_size"),
         BaseTyp::Isize => RcDoc::as_string("int_size"),
         BaseTyp::Str => RcDoc::as_string("string"),
@@ -549,7 +549,7 @@ fn translate_func_name<'a>(
                 NAT_MODULE => {
                     match &prefix_info {
                         FuncPrefix::NatMod(modulo, _bits) => {
-                            additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+                            additional_args.push(RcDoc::as_string(modulo));
                         }
                         _ => panic!(), // should not happen
                     }
@@ -1035,7 +1035,7 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                             RcDoc::line()
                                 .append(RcDoc::as_string("nat_mod"))
                                 .append(RcDoc::space())
-                                .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
+                                .append(RcDoc::as_string(format!("{}", &modulo.0)))
                                 .group()
                                 .nest(2),
                         ),
