@@ -1163,6 +1163,16 @@ fn translate_expr(
                                 let mut it = segments.iter();
                                 let first_seg = it.next().unwrap();
                                 let second_seg = it.next().unwrap();
+                                let pat_args = check_vec(
+                                    args.iter()
+                                        .map(|arg| translate_pattern(sess, arg))
+                                        .collect(),
+                                )?;
+                                let pat = if pat_args.len() == 1 {
+                                    pat_args.into_iter().next().unwrap()
+                                } else {
+                                    (Pattern::Tuple(pat_args), arm.pat.span.clone().into())
+                                };
                                 (
                                     BaseTyp::Named(
                                         translate_toplevel_ident(&first_seg.ident),
@@ -1176,14 +1186,7 @@ fn translate_expr(
                                         },
                                     ),
                                     translate_toplevel_ident(&second_seg.ident),
-                                    Some((
-                                        Pattern::Tuple(check_vec(
-                                            args.iter()
-                                                .map(|arg| translate_pattern(sess, arg))
-                                                .collect(),
-                                        )?),
-                                        arm.pat.span.clone().into(),
-                                    )),
+                                    Some(pat),
                                 )
                             }
                             _ => {

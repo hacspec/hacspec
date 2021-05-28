@@ -343,7 +343,7 @@ pub enum Expression {
     ),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Pattern {
     IdentPat(Ident),
     WildCard,
