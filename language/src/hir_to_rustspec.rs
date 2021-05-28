@@ -130,6 +130,66 @@ fn translate_base_typ(
                                 typ_ctx,
                             ))
                         }
+                        "Option" => {
+                            let (param_typ, typ_ctx) = if substs.len() == 1 {
+                                match substs.first().unwrap().unpack() {
+                                    GenericArgKind::Type(arg_ty) => {
+                                        match translate_base_typ(tcx, &arg_ty, typ_ctx) {
+                                            Ok((t, typ_ctx)) => (t, typ_ctx),
+                                            Err(()) => return Err(()),
+                                        }
+                                    }
+                                    _ => return Err(()),
+                                }
+                            } else {
+                                return Err(());
+                            };
+                            Ok((
+                                BaseTyp::Named(
+                                    (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                    Some(vec![(param_typ, DUMMY_SP.into())]),
+                                ),
+                                typ_ctx.clone(),
+                            ))
+                        }
+                        "Result" => {
+                            let (param_typ1, typ_ctx) = if substs.len() == 2 {
+                                match substs.first().unwrap().unpack() {
+                                    GenericArgKind::Type(arg_ty) => {
+                                        match translate_base_typ(tcx, &arg_ty, typ_ctx) {
+                                            Ok((t, typ_ctx)) => (t, typ_ctx),
+                                            Err(()) => return Err(()),
+                                        }
+                                    }
+                                    _ => return Err(()),
+                                }
+                            } else {
+                                return Err(());
+                            };
+                            let (param_typ2, typ_ctx) = if substs.len() == 2 {
+                                match substs.first().unwrap().unpack() {
+                                    GenericArgKind::Type(arg_ty) => {
+                                        match translate_base_typ(tcx, &arg_ty, &typ_ctx) {
+                                            Ok((t, typ_ctx)) => (t, typ_ctx),
+                                            Err(()) => return Err(()),
+                                        }
+                                    }
+                                    _ => return Err(()),
+                                }
+                            } else {
+                                return Err(());
+                            };
+                            Ok((
+                                BaseTyp::Named(
+                                    (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                    Some(vec![
+                                        (param_typ1, DUMMY_SP.into()),
+                                        (param_typ2, DUMMY_SP.into()),
+                                    ]),
+                                ),
+                                typ_ctx.clone(),
+                            ))
+                        }
                         _ => Err(()),
                     },
                     _ => Ok((
@@ -218,7 +278,6 @@ fn translate_polyfnsig(
             new_args.push(new_ty);
             Ok(typ_ctx)
         })?;
-    println!("Coucou 2");
     let (ret, new_typ_var_ctx) = translate_base_typ(tcx, &sig.output().skip_binder(), &typ_ctx)?;
     Ok((
         ExternalFuncSig {
@@ -421,7 +480,6 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
             match adt.adt_kind() {
                 AdtKind::Enum => {
                     // TODO: check whether substs contains only unconstrained type parameters
-                    println!("Going with {}", tcx.def_path_str(adt.did));
                     let cases = check_vec(
                         adt.variants
                             .iter()
@@ -429,7 +487,6 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                                 let name = variant.ident.name.to_ident_string();
                                 let case_id = variant.def_id;
                                 let case_typ = tcx.type_of(case_id);
-                                println!("Type for {} : {}", name, case_typ);
                                 let case_typ = match case_typ.kind() {
                                     TyKind::FnDef(constr_def, _) => {
                                         let constr_sig = tcx.fn_sig(*constr_def);
@@ -439,18 +496,13 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                                         let mut args = sig.args.into_iter().map(|arg| arg.1);
                                         if args.len() == 1 {
                                             let ty = args.next().unwrap();
-                                            println!("One arg {}", ty.0);
                                             Some(ty)
                                         } else {
                                             let ty = BaseTyp::Tuple(args.collect());
-                                            println!("Multiple args {}", ty);
                                             Some((ty, RustspecSpan::from(variant.ident.span)))
                                         }
                                     }
-                                    _ => {
-                                        println!("No payload!");
-                                        None
-                                    } // If the type of the constructor is not a function, then there is no payload
+                                    _ => None, // If the type of the constructor is not a function, then there is no payload
                                 };
                                 Ok((
                                     (TopLevelIdent(name), RustspecSpan::from(variant.ident.span)),
@@ -464,7 +516,6 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                             return SpecialTypeReturn::Enum(BaseTyp::Enum(cases))
                         }
                         _ => {
-                            println!("Not importing this variant !");
                             return SpecialTypeReturn::NotSpecial;
                         }
                     }

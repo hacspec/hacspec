@@ -659,7 +659,7 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
                     (Borrowing::Consumed, DUMMY_SP.into()),
                     (enum_typ, DUMMY_SP.into()),
                 ),
-                DictEntry::Array,
+                DictEntry::Enum,
             ),
         );
     }
