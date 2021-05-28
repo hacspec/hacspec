@@ -241,7 +241,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
-        BaseTyp::Enum(_cases) => {
+        BaseTyp::Enum(_cases, _type_args) => {
             unimplemented!()
         }
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
@@ -553,7 +553,7 @@ fn translate_prefix_for_func_name<'a>(
             RcDoc::as_string(ARRAY_MODULE),
             FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
         ),
-        BaseTyp::Enum(_cases) => {
+        BaseTyp::Enum(_cases, _type_args) => {
             unimplemented!()
         }
         BaseTyp::Named(ident, _) => {

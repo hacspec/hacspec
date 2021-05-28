@@ -202,7 +202,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
                 .append(translate_base_typ(tau))
                 .group()
         }
-        BaseTyp::Enum(_cases) => {
+        BaseTyp::Enum(_cases, _type_args) => {
             unimplemented!()
         }
         BaseTyp::Array(size, tau) => {
@@ -507,7 +507,7 @@ fn translate_prefix_for_func_name<'a>(
         BaseTyp::Usize => (RcDoc::as_string("uint_size"), FuncPrefix::Regular),
         BaseTyp::Isize => (RcDoc::as_string("int_size"), FuncPrefix::Regular),
         BaseTyp::Str => (RcDoc::as_string("string"), FuncPrefix::Regular),
-        BaseTyp::Enum(_cases) => {
+        BaseTyp::Enum(_cases, _type_args) => {
             unimplemented!()
         }
         BaseTyp::Seq(inner_ty) => (

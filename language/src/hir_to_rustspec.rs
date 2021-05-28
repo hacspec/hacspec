@@ -475,7 +475,7 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
     };
     // If it is not a special type, we check whether it is an enum (or wrapper struct)
     match def.kind() {
-        TyKind::Adt(adt, _substs) => {
+        TyKind::Adt(adt, substs) => {
             let mut typ_var_ctx = HashMap::new();
             match adt.adt_kind() {
                 AdtKind::Enum => {
@@ -513,7 +513,27 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                     );
                     match cases {
                         Ok(cases) if cases.len() > 0 => {
-                            return SpecialTypeReturn::Enum(BaseTyp::Enum(cases))
+                            return SpecialTypeReturn::Enum(BaseTyp::Enum(
+                                cases,
+                                match check_vec(
+                                    substs
+                                        .into_iter()
+                                        .map(|subst| match subst.unpack() {
+                                            GenericArgKind::Type(arg_ty) => {
+                                                match translate_base_typ(tcx, &arg_ty, &typ_var_ctx)
+                                                {
+                                                    Ok((BaseTyp::Variable(id), _)) => Ok(id),
+                                                    _ => Err(()),
+                                                }
+                                            }
+                                            _ => Err(()),
+                                        })
+                                        .collect(),
+                                ) {
+                                    Ok(args) => args,
+                                    Err(_) => return SpecialTypeReturn::NotSpecial,
+                                },
+                            ))
                         }
                         _ => {
                             return SpecialTypeReturn::NotSpecial;

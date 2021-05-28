@@ -462,7 +462,7 @@ fn process_decl_item(
                 (
                     (
                         (Borrowing::Consumed, i_span.clone()),
-                        (BaseTyp::Enum(cases.clone()), i_span.clone()),
+                        (BaseTyp::Enum(cases.clone(), Vec::new()), i_span.clone()),
                     ),
                     DictEntry::Enum,
                 ),
