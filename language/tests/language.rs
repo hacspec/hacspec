@@ -16,8 +16,18 @@ fn run_test(file_name: &str, output: Option<&str>) {
 }
 
 #[test]
+fn positive_result() {
+    run_test("language-tests/result.rs", Some("tests/Result.fst"));
+}
+
+#[test]
 fn positive_enums() {
     run_test("language-tests/enums.rs", Some("tests/Enums.fst"));
+}
+
+#[test]
+fn positive_option() {
+    run_test("language-tests/option.rs", Some("tests/Option.fst"));
 }
 
 #[test]

@@ -148,6 +148,18 @@ pub enum Secrecy {
 #[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub struct TypVar(pub usize);
 
+impl fmt::Display for TypVar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "T[{}]", self.0)
+    }
+}
+
+impl fmt::Debug for TypVar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 #[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum BaseTyp {
     Unit,
@@ -170,7 +182,10 @@ pub enum BaseTyp {
     Named(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(TypVar),
     Tuple(Vec<Spanned<BaseTyp>>),
-    Enum(Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>),
+    Enum(
+        Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>,
+        Vec<TypVar>,
+    ), // Cases, type variables
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
@@ -214,7 +229,7 @@ impl fmt::Display for BaseTyp {
                 "({})",
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
-            BaseTyp::Enum(args) => write!(
+            BaseTyp::Enum(args, _) => write!(
                 f,
                 "[{}]",
                 args.iter()
@@ -315,14 +330,14 @@ pub enum Expression {
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
     EnumInject(
-        Spanned<TopLevelIdent>,           // Name of enum
+        BaseTyp,                          // Type of enum
         Spanned<TopLevelIdent>,           // Name of case
         Option<Spanned<Box<Expression>>>, // Payload of case
     ),
     MatchWith(
         Box<Spanned<Expression>>, // Expression to match
         Vec<(
-            Spanned<TopLevelIdent>,   // Name of enum
+            BaseTyp,                  // Type of enum
             Spanned<TopLevelIdent>,   // Name of case
             Option<Spanned<Pattern>>, // Payload of case
             Spanned<Expression>,      // Match arm expression
@@ -343,7 +358,7 @@ pub enum Expression {
     ),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Pattern {
     IdentPat(Ident),
     WildCard,

@@ -450,6 +450,14 @@ let u128_from_le_bytes (input: lseq pub_uint8 16) : pub_uint128 =
 let u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 =
   LBSeq.uint_from_bytes_be s
 
+(**** Casting *)
+
+let uint32_from_uint8 (x: uint8) : uint32 = cast U32 SEC x
+
+(**** Declassification *)
+
+let uint32_declassify (x: uint32) : pub_uint32 = uint (Lib.RawIntTypes.uint_to_nat x)
+
 (*** Nats *)
 
 let nat_mod (n: nat) = x:nat{x < n}
@@ -476,3 +484,15 @@ let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq p
 
 
 let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
+
+(*** Option *)
+
+let option_unwrap (#a: Type) (x: option a{Some? x}) : a =
+  Some?.v x
+
+
+(*** Result *)
+
+type result (a: Type) (b: Type) =
+  | Ok : a -> result a b
+  | Err : b -> result a b
