@@ -173,9 +173,16 @@ fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
 }
 
 fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) -> RcDoc<'a> {
-    translate_constructor(case_name)
-        .append(RcDoc::as_string("_"))
-        .append(translate_base_typ(enum_name))
+    translate_constructor(case_name).append(match enum_name {
+        BaseTyp::Named(name, _) => {
+            if (name.0).0 == "Option" || (name.0).0 == "Result" {
+                RcDoc::nil()
+            } else {
+                RcDoc::as_string("_").append(translate_toplevel_ident(name.0))
+            }
+        }
+        _ => panic!("shoud not happen"),
+    })
 }
 
 fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
@@ -217,15 +224,17 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
                 }))
                 .group()
         }
-        BaseTyp::Named((ident, _span), args) => {
-            translate_ident(Ident::TopLevel(ident)).append(match args {
-                None => RcDoc::nil(),
-                Some(args) => RcDoc::space().append(RcDoc::intersperse(
-                    args.iter().map(|arg| translate_base_typ(arg.0.clone())),
-                    RcDoc::space(),
-                )),
-            })
-        }
+        BaseTyp::Named((ident, _span), args) => match args {
+            None => translate_ident(Ident::TopLevel(ident)),
+            Some(args) => make_paren(
+                translate_ident(Ident::TopLevel(ident))
+                    .append(RcDoc::space())
+                    .append(RcDoc::intersperse(
+                        args.iter().map(|arg| translate_base_typ(arg.0.clone())),
+                        RcDoc::space(),
+                    )),
+            ),
+        },
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
@@ -508,7 +517,7 @@ fn translate_prefix_for_func_name<'a>(
         BaseTyp::Isize => (RcDoc::as_string("int_size"), FuncPrefix::Regular),
         BaseTyp::Str => (RcDoc::as_string("string"), FuncPrefix::Regular),
         BaseTyp::Enum(_cases, _type_args) => {
-            unimplemented!()
+            panic!("Should not happen")
         }
         BaseTyp::Seq(inner_ty) => (
             RcDoc::as_string(SEQ_MODULE),
