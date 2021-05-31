@@ -14,6 +14,7 @@ use rustc_ast::{
 use rustc_session::Session;
 use rustc_span::{symbol, Span};
 
+use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
@@ -2031,10 +2032,11 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     }
 }
 
-fn translate_items(
+fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     i: &ast::Item,
     specials: &SpecialNames,
+    external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
     if i.attrs.iter().any(attribute_is_test) {
         return Ok((ItemTranslationResult::Ignored, specials.clone()));
@@ -2156,14 +2158,21 @@ fn translate_items(
             ))
         }
         ItemKind::Use(ref tree) => match tree.kind {
-            // TODO: better system
-            UseTreeKind::Glob => Ok((
-                ItemTranslationResult::Item(Item::ImportedCrate((
-                    TopLevelIdent(translate_use_path(sess, &tree.prefix)?),
-                    tree.span.clone().into(),
-                ))),
-                specials.clone(),
-            )),
+            UseTreeKind::Glob => {
+                let krate_name = translate_use_path(sess, &tree.prefix)?;
+                let data = external_data(&vec![(krate_name.clone(), i.span.into())]);
+                let mut specials = specials.clone();
+                for (enum_name, _) in data.enums.into_iter() {
+                    specials.enums.insert(enum_name);
+                }
+                Ok((
+                    ItemTranslationResult::Item(Item::ImportedCrate((
+                        TopLevelIdent(krate_name),
+                        tree.span.clone().into(),
+                    ))),
+                    specials,
+                ))
+            }
             _ => {
                 sess.span_rustspec_err(tree.span.clone(), "only ::* uses are allowed in Hacspec");
                 Err(())
@@ -2426,20 +2435,21 @@ fn translate_items(
     }
 }
 
-pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
+pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
+    sess: &Session,
+    krate: &Crate,
+    external_data: &F,
+) -> TranslationResult<Program> {
     let items = &krate.items;
-    let mut enums = HashSet::new(); // TODO: whitelist here, find a better system (with external crate data?)
-    enums.insert("Option".to_string());
-    enums.insert("Result".to_string());
     let mut specials = SpecialNames {
         arrays: HashSet::new(),
-        enums,
+        enums: HashSet::new(),
     };
     let translated_items = check_vec(
         items
             .into_iter()
             .map(|i| {
-                let (new_i, new_specials) = translate_items(sess, &i, &specials)?;
+                let (new_i, new_specials) = translate_items(sess, &i, &specials, external_data)?;
                 specials = new_specials;
                 Ok((new_i, i.span))
             })
