@@ -131,10 +131,52 @@ pub fn translate_typ_name(
     }
 }
 
-pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResult<Ident> {
-    if path.segments.len() > 1 {
-        sess.span_rustspec_err(path.span, "associated constants are not allowed in Hacspec");
+fn translate_expr_name(
+    sess: &Session,
+    path: &ast::Path,
+    span: &Span,
+    specials: &SpecialNames,
+) -> TranslationResult<Spanned<ExprTranslationResult>> {
+    if path.segments.len() > 2 {
+        sess.span_rustspec_err(
+            path.span,
+            "a path that has more than 2 segments is forbidden in Hacspec",
+        );
         return Err(());
+    }
+    if path.segments.len() == 2 {
+        // We're looking here at enum variants without payload like Option::None
+        let mut it = path.segments.iter();
+        let first = it.next().unwrap();
+        let second = it.next().unwrap();
+        println!(
+            "Checking {} among {:?}",
+            &first.ident.name.to_ident_string(),
+            specials.enums.iter().collect::<Vec<_>>()
+        );
+        if specials.enums.contains(&first.ident.name.to_ident_string()) {
+            let args = match &first.args {
+                Some(args) => Some(translate_type_args(sess, &args, &first.ident.span)?),
+                None => None,
+            };
+            let enum_name = TopLevelIdent(first.ident.name.to_ident_string());
+            let variant_name = TopLevelIdent(second.ident.name.to_ident_string());
+            return Ok((
+                ExprTranslationResult::TransExpr(Expression::EnumInject(
+                    BaseTyp::Named((enum_name, first.ident.span.clone().into()), args),
+                    (variant_name, second.ident.span.clone().into()),
+                    None, // No payload for the enum variant
+                )),
+                span.clone().into(),
+            ));
+        } else {
+            sess.span_rustspec_err(
+                first.ident.span,
+                "two-segments paths can only be enum variants in Hacspec, \
+            and this first segments does not designate an enum",
+            );
+            return Err(());
+        }
     }
     match path.segments.iter().last() {
         None => {
@@ -142,7 +184,12 @@ pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResul
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok(translate_ident(&segment.ident).0),
+            None => Ok((
+                ExprTranslationResult::TransExpr(Expression::Named(
+                    translate_ident(&segment.ident).0,
+                )),
+                span.clone().into(),
+            )),
             Some(_) => {
                 sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
                 Err(())
@@ -536,10 +583,7 @@ fn translate_expr(
                 e.span.into(),
             ))
         }
-        ExprKind::Path(None, path) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Named(translate_expr_name(sess, path)?)),
-            e.span.into(),
-        )),
+        ExprKind::Path(None, path) => translate_expr_name(sess, path, &e.span, specials),
         ExprKind::Call(func, args) => {
             let func_name_kind = match &func.kind {
                 ExprKind::Path(None, path) => Ok(translate_func_name(sess, specials, &path)?),
@@ -2384,9 +2428,12 @@ fn translate_items(
 
 pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
     let items = &krate.items;
+    let mut enums = HashSet::new(); // TODO: whitelist here, find a better system (with external crate data?)
+    enums.insert("Option".to_string());
+    enums.insert("Result".to_string());
     let mut specials = SpecialNames {
         arrays: HashSet::new(),
-        enums: HashSet::new(),
+        enums,
     };
     let translated_items = check_vec(
         items
