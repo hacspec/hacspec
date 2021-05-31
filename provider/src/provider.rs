@@ -61,21 +61,22 @@ impl AeadInPlace for Chacha20Poly1305 {
         buffer: &mut [u8],
         tag: &Tag,
     ) -> Result<(), Error> {
-        let (success, ptxt) = decrypt(
+        let ptxt = decrypt(
             HacspecKey::from_public_slice(self.key.as_slice()),
             IV::from_public_slice(nonce),
             &ByteSeq::from_public_slice(associated_data),
             &ByteSeq::from_public_slice(buffer),
             HacspecTag::from_public_slice(tag),
         );
-        if success {
-            buffer
-                .iter_mut()
-                .zip(ptxt.iter())
-                .for_each(|(dst, &src)| *dst = src.declassify());
-            Ok(())
-        } else {
-            Err(Error)
+        match ptxt {
+            Ok(ptxt) => {
+                buffer
+                    .iter_mut()
+                    .zip(ptxt.iter())
+                    .for_each(|(dst, &src)| *dst = src.declassify());
+                Ok(())
+            }
+            Err(_) => Err(Error),
         }
     }
 }
