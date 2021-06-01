@@ -1129,7 +1129,7 @@ fn translate_expr(
                 e.span.into(),
             ))
         }
-        ExprKind::Struct(_, _, _) => {
+        ExprKind::Struct(_) => {
             sess.span_rustspec_err(e.span.clone(), "structs are not supported yet in Hacspec");
             Err(())
         }
@@ -2052,7 +2052,7 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     match attr_name.as_str() {
         "test" => true,
         "cfg" => {
-            let inner_tokens = attr.tokens();
+            let inner_tokens = attr.tokens().to_tokenstream();
             if inner_tokens.len() != 2 {
                 return false;
             }
