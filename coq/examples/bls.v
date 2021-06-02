@@ -1,29 +1,12 @@
-Require Import Lib.
-Require Import IntTypes.
+Require Import NewLib MachineIntegers.
 From Coq Require Import ZArith.
-Require Import List. Import ListNotations.
-Open Scope hacspec_scope.
+Import List.ListNotations.
+Section bls.
 Open Scope bool_scope.
+Open Scope hacspec_scope.
 
-Notation "a >?? b" := (Nat.ltb b a) (at level 79).
-
-(* uint_size = nat *)
-
-
-Module Wordsize_0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
-  Definition wordsize : nat := 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
-  Remark wordsize_not_zero: wordsize <> 0%nat.
-  Proof. Admitted.
-  (* Proof. unfold wordsize; congruence. Qed. *)
-End Wordsize_0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
-Strategy opaque [Wordsize_0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.wordsize].
-
-Module nat_mod_0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab := Integers.Make(Wordsize_0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab).
-Import nat_mod_0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
-
-Definition fp : Type :=
-  nat_mod_0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.int.
-
+Definition fp :=
+  @nat_mod 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
 
 Definition g1 : Type := (fp * fp * bool).
 Definition fp2 : Type := (fp * fp).
@@ -31,134 +14,76 @@ Definition g2 : Type := (fp2 * fp2 * bool).
 Definition fp6 : Type := (fp2 * fp2 * fp2).
 Definition fp12 : Type := (fp6 * fp6).
 
-Definition fp_canvas := lseq (pub_uint8) (48).
+Definition fp_canvas := nseq (int8) ((usize 48)).
 
 
-Definition serialized_fp := lseq (uint8) (usize 48).
+Definition serialized_fp := nseq (uint8) (usize 48).
 
-Definition array_fp := lseq (uint64) (usize 6).
+Definition array_fp := nseq (uint64) (usize 6).
 
-Definition scalar_canvas := lseq (pub_uint8) (32).
-
-Module Wordsize_0x8000000000000000000000000000000000000000000000000000000000000000.
-  Definition wordsize : nat := 0x8000000000000000000000000000000000000000000000000000000000000000.
-  Remark wordsize_not_zero: wordsize <> 0%nat.
-  Proof. Admitted.
-  (* Proof. unfold wordsize; congruence. Qed. *)
-End Wordsize_0x8000000000000000000000000000000000000000000000000000000000000000.
-Strategy opaque [Wordsize_0x8000000000000000000000000000000000000000000000000000000000000000.wordsize].
-
-Module nat_mod_0x8000000000000000000000000000000000000000000000000000000000000000 := Integers.Make(Wordsize_0x8000000000000000000000000000000000000000000000000000000000000000).
-(* Import nat_mod_0x8000000000000000000000000000000000000000000000000000000000000000. *)
+Definition scalar_canvas := nseq (int8) ((usize 32)).
 
 Definition scalar :=
-  nat_mod_0x8000000000000000000000000000000000000000000000000000000000000000.int.
+  @nat_mod 0x8000000000000000000000000000000000000000000000000000000000000000.
 
-(* TODO *)
-Axiom nat_bit : N -> scalar -> uint_size -> bool.
-Axiom most_significant_bit : scalar -> uint_size -> uint_size.
-Axiom N_to_int : N -> int.
-Coercion N_to_int : N >-> int.
-Coercion Z.of_N : N >-> Z.
-
-(* TODO: write a coq-friendly version of this (coq can't find decreasing fix of the body) *)
-(* Fixpoint most_significant_bit (m_0 : scalar) (n_1 : uint_size) : uint_size :=
+(* Definition most_significant_bit (m_0 : scalar) (n_1 : uint_size) : uint_size :=
   if (
-    ((n_1) >?? (usize 0)) && (
+    ((n_1) >.? (usize 0)) && (
       negb (
-        nat_bit (
+        @nat_mod_bit (
           0x8000000000000000000000000000000000000000000000000000000000000000) (
           m_0) (n_1)))) then (
     most_significant_bit (m_0) ((n_1) - (usize 1))) else (n_1). *)
+    Definition fp2fromfp (n_2 : fp) : fp2 :=
+      (n_2, nat_mod_zero ).
+    
+Definition fp2zero  : fp2 :=
+  fp2fromfp (nat_mod_zero ).
 
-Definition nat_zero := zero.
-Definition nat_one := one.
-Definition nat_two := repr 2.
-(* compcert doesn't have modular multiplicative inverse for some reason? *)
-Axiom nat_inv : int -> int.
-Axiom nat_inv_is_multiplicative_inverse : forall (n : int), mul n (nat_inv n) = one.  
-
-
-Definition nat_exp (x y : int) := repr (Z.pow (unsigned x) (unsigned y)).
-
-
-Definition fp2fromfp (n_2 : fp) : fp2 :=
-(
-  n_2,
-  zero
-).
-
-Definition fp2zero : fp2 :=
-  fp2fromfp (
-    nat_zero).
-
-Infix "-" := sub.
-Infix "+" := add.
-Infix "*" := mul.
 
 Definition fp2neg (n_3 : fp2) : fp2 :=
-  let (n1_4, n2_5) := n_3 in
-  (
-    (
-      nat_zero) - (
-      n1_4),
-    (
-      nat_zero) - (
-      n2_5)
-  ).
+  let '(n1_4, n2_5) := n_3 in
+  ((nat_mod_zero ) -% (n1_4), (nat_mod_zero ) -% (n2_5)).
 
 Definition fp2add (n_6 : fp2) (m_7 : fp2) : fp2 :=
-  let (n1_8, n2_9) := n_6 in
-  let (m1_10, m2_11) := m_7 in
-  ((n1_8) + (m1_10), (n2_9) + (m2_11)).
+  let '(n1_8, n2_9) := n_6 in
+  let '(m1_10, m2_11) := m_7 in
+  ((n1_8) +% (m1_10), (n2_9) +% (m2_11)).
 
 Definition fp2sub (n_12 : fp2) (m_13 : fp2) : fp2 :=
   fp2add (n_12) (fp2neg (m_13)).
 
 Definition fp2mul (n_14 : fp2) (m_15 : fp2) : fp2 :=
-  let (n1_16, n2_17) := n_14 in
-  let (m1_18, m2_19) := m_15 in
-  let x1_20 := ((n1_16) * (m1_18)) - ((n2_17) * (m2_19)) in
-  let x2_21 := ((n1_16) * (m2_19)) + ((n2_17) * (m1_18)) in
+  let '(n1_16, n2_17) := n_14 in
+  let '(m1_18, m2_19) := m_15 in
+  let x1_20 := ((n1_16) *% (m1_18)) -% ((n2_17) *% (m2_19)) in
+  let x2_21 := ((n1_16) *% (m2_19)) +% ((n2_17) *% (m1_18)) in
   (x1_20, x2_21).
 
-
 Definition fp2inv (n_22 : fp2) : fp2 :=
-  let (n1_23, n2_24) := n_22 in
-  let t0_25 := ((n1_23) * (n1_23)) + ((n2_24) * (n2_24)) in
-  let t1_26 :=
-    nat_inv (
-      t0_25)
-  in
-  let x1_27 := (n1_23) * (t1_26) in
-  let x2_28 :=
-    (
-      nat_zero) - (
-      (n2_24) * (t1_26))
-  in
+  let '(n1_23, n2_24) := n_22 in
+  let t0_25 := ((n1_23) *% (n1_23)) +% ((n2_24) *% (n2_24)) in
+  let t1_26 := nat_mod_inv (t0_25) in
+  let x1_27 := (n1_23) *% (t1_26) in
+  let x2_28 := (nat_mod_zero ) -% ((n2_24) *% (t1_26)) in
   (x1_27, x2_28).
 
 Definition fp2conjugate (n_29 : fp2) : fp2 :=
-  let (n1_30, n2_31) := n_29 in
-  (
-    n1_30,
-    (
-      nat_zero) - (
-      n2_31)
-  ).
+  let '(n1_30, n2_31) := n_29 in
+  (n1_30, (nat_mod_zero ) -% (n2_31)).
 
 Definition fp6fromfp2 (n_32 : fp2) : fp6 :=
-  (n_32, fp2zero, fp2zero).
+  (n_32, fp2zero , fp2zero ).
 
-Definition fp6zero : fp6 :=
-  fp6fromfp2 (fp2zero).
+Definition fp6zero  : fp6 :=
+  fp6fromfp2 (fp2zero ).
 
 Definition fp6neg (n_33 : fp6) : fp6 :=
   let '(n1_34, n2_35, n3_36) := n_33 in
   (
-    fp2sub (fp2zero) (n1_34),
-    fp2sub (fp2zero) (n2_35),
-    fp2sub (fp2zero) (n3_36)
+    fp2sub (fp2zero ) (n1_34),
+    fp2sub (fp2zero ) (n2_35),
+    fp2sub (fp2zero ) (n3_36)
   ).
 
 Definition fp6add (n_37 : fp6) (m_38 : fp6) : fp6 :=
@@ -172,12 +97,7 @@ Definition fp6sub (n_45 : fp6) (m_46 : fp6) : fp6 :=
 Definition fp6mul (n_47 : fp6) (m_48 : fp6) : fp6 :=
   let '(n1_49, n2_50, n3_51) := n_47 in
   let '(m1_52, m2_53, m3_54) := m_48 in
-  let eps_55 :=
-    (
-      nat_one,
-      nat_one
-    )
-  in
+  let eps_55 := (nat_mod_one , nat_mod_one ) in
   let t1_56 := fp2mul (n1_49) (m1_52) in
   let t2_57 := fp2mul (n2_50) (m2_53) in
   let t3_58 := fp2mul (n3_51) (m3_54) in
@@ -194,12 +114,7 @@ Definition fp6mul (n_47 : fp6) (m_48 : fp6) : fp6 :=
 
 Definition fp6inv (n_68 : fp6) : fp6 :=
   let '(n1_69, n2_70, n3_71) := n_68 in
-  let eps_72 :=
-    (
-      nat_one,
-      nat_one
-    )
-  in
+  let eps_72 := (nat_mod_one , nat_mod_one ) in
   let t1_73 := fp2mul (n1_69) (n1_69) in
   let t2_74 := fp2mul (n2_70) (n2_70) in
   let t3_75 := fp2mul (n3_71) (n3_71) in
@@ -219,7 +134,7 @@ Definition fp6inv (n_68 : fp6) : fp6 :=
   (x_86, y_87, z_88).
 
 Definition fp12fromfp6 (n_89 : fp6) : fp12 :=
-  (n_89, fp6zero).
+  (n_89, fp6zero ).
 
 Definition fp12neg (n_90 : fp12) : fp12 :=
   let '(n1_91, n2_92) := n_90 in
@@ -236,14 +151,7 @@ Definition fp12sub (n_99 : fp12) (m_100 : fp12) : fp12 :=
 Definition fp12mul (n_101 : fp12) (m_102 : fp12) : fp12 :=
   let '(n1_103, n2_104) := n_101 in
   let '(m1_105, m2_106) := m_102 in
-  let gamma_107 :=
-    (
-      fp2zero,
-      fp2fromfp (
-        nat_one),
-      fp2zero
-    )
-  in
+  let gamma_107 := (fp2zero , fp2fromfp (nat_mod_one ), fp2zero ) in
   let t1_108 := fp6mul (n1_103) (m1_105) in
   let t2_109 := fp6mul (n2_104) (m2_106) in
   let x_110 := fp6add (t1_108) (fp6mul (t2_109) (gamma_107)) in
@@ -253,14 +161,7 @@ Definition fp12mul (n_101 : fp12) (m_102 : fp12) : fp12 :=
 
 Definition fp12inv (n_113 : fp12) : fp12 :=
   let '(n1_114, n2_115) := n_113 in
-  let gamma_116 :=
-    (
-      fp2zero,
-      fp2fromfp (
-        nat_one),
-      fp2zero
-    )
-  in
+  let gamma_116 := (fp2zero , fp2fromfp (nat_mod_one ), fp2zero ) in
   let t1_117 := fp6mul (n1_114) (n1_114) in
   let t2_118 := fp6mul (n2_115) (n2_115) in
   let t1_119 := fp6sub (t1_117) (fp6mul (gamma_116) (t2_118)) in
@@ -268,28 +169,23 @@ Definition fp12inv (n_113 : fp12) : fp12 :=
   let x_121 := fp6mul (n1_114) (t2_120) in
   let y_122 := fp6neg (fp6mul (n2_115) (t2_120)) in
   (x_121, y_122).
-
-Definition int_to_nat (n : int) : nat := unsigned n.
-
-Coercion int_to_nat : int >-> nat.
+Axiom most_significant_bit : scalar -> uint_size -> uint_size.
 
 Definition fp12exp (n_123 : fp12) (k_124 : scalar) : fp12 :=
   let l_125 := (usize 255) - (most_significant_bit (k_124) (usize 255)) in
   let c_126 := n_123 in
-  let '(c_126) :=
+  let c_126 :=
     foldi (l_125) (usize 255) (fun i_127 c_126 =>
       let c_126 := fp12mul (c_126) (c_126) in
       let '(c_126) :=
-        if nat_bit (
-          0x8000000000000000000000000000000000000000000000000000000000000000) (
-          k_124) (((usize 255) - (i_127)) - (usize 1)) then (
+        if nat_mod_bit (k_124) (((usize 255) - (i_127)) - (usize 1)) then (
           let c_126 := fp12mul (c_126) (n_123) in
           (c_126)
         ) else ( (c_126)
         )
       in
       (c_126))
-    (c_126)
+    c_126
   in
   c_126.
 
@@ -303,107 +199,68 @@ Definition fp12zero  : fp12 :=
 Definition g1add_a (p_131 : g1) (q_132 : g1) : g1 :=
   let '(x1_133, y1_134, _) := p_131 in
   let '(x2_135, y2_136, _) := q_132 in
-  let x_diff_137 := (x2_135) - (x1_133) in
-  let y_diff_138 := (y2_136) - (y1_134) in
-  let xovery_139 :=
-    (y_diff_138) * (
-      nat_inv (
-        x_diff_137))
-  in
-  let x3_140 :=
-    (
-      (
-        nat_exp (
-          xovery_139) (pub_u32 2)) - (x1_133)) - (x2_135)
-  in
-  let y3_141 := ((xovery_139) * ((x1_133) - (x3_140))) - (y1_134) in
+  let x_diff_137 := (x2_135) -% (x1_133) in
+  let y_diff_138 := (y2_136) -% (y1_134) in
+  let xovery_139 := (y_diff_138) *% (nat_mod_inv (x_diff_137)) in
+  let x3_140 := ((nat_mod_exp (xovery_139) (repr 2)) -% (x1_133)) -% (x2_135) in
+  let y3_141 := ((xovery_139) *% ((x1_133) -% (x3_140))) -% (y1_134) in
   (x3_140, y3_141, false).
 
 Definition g1double_a (p_142 : g1) : g1 :=
   let '(x1_143, y1_144, _) := p_142 in
-  let x12_145 :=
-    nat_exp (
-      x1_143) (pub_u32 2)
-  in
+  let x12_145 := nat_mod_exp (x1_143) (repr 2) in
   let xovery_146 :=
-    ((repr (pub_u128 3)) * (x12_145)) * (
-      nat_inv ((nat_two  * (y1_144)))) in
-  let x3_147 :=
     (
-      nat_exp (
-        xovery_146) (pub_u32 2)) - (
       (
-        nat_two  * (
-        x1_143)))
+        nat_mod_from_literal _ (
+          repr 3)) *% (x12_145)) *% (nat_mod_inv ((nat_mod_two ) *% (y1_144)))
   in
-  let y3_148 := ((xovery_146) * ((x1_143) - (x3_147))) - (y1_144) in
+  let x3_147 :=
+    (nat_mod_exp (xovery_146) (repr 2)) -% ((nat_mod_two ) *% (x1_143))
+  in
+  let y3_148 := ((xovery_146) *% ((x1_143) -% (x3_147))) -% (y1_144) in
   (x3_147, y3_148, false).
-
-(* TODO *)
-Axiom g1_eqb : g1 -> g1 -> bool.
 
 Definition g1add (p_149 : g1) (q_150 : g1) : g1 :=
   let '(x1_151, y1_152, inf1_153) := p_149 in
   let '(x2_154, y2_155, inf2_156) := q_150 in
   if (inf1_153) then (q_150) else (
     if (inf2_156) then (p_149) else (
-      if (g1_eqb (p_149) (q_150)) then (g1double_a (p_149)) else (
+      if ((p_149) =.? (q_150)) then (g1double_a (p_149)) else (
         if (
           negb (
-            (eq (x1_151) (x2_154)) && (
-              eq (y1_152)  (
-                (
-                  nat_zero) - (
-                  y2_155))))) then (g1add_a (p_149) (q_150)) else (
-          (
-            nat_zero,
-            nat_zero,
-            true
-          ))))).
+            ((x1_151) =.? (x2_154)) && (
+              (y1_152) =.? ((nat_mod_zero ) -% (y2_155))))) then (
+          g1add_a (p_149) (q_150)) else (
+          (nat_mod_zero , nat_mod_zero , true))))).
 
 Definition g1double (p_157 : g1) : g1 :=
   let '(x1_158, y1_159, inf1_160) := p_157 in
-  if (
-    (negb (eq
-       (y1_159) (
-        nat_zero))) && (
-      negb (inf1_160))) then (g1double_a (p_157)) else (
-    (
-      nat_zero,
-      nat_zero,
-      true
-    )).
+  if (((y1_159) !=.? (nat_mod_zero )) && (negb (inf1_160))) then (
+    g1double_a (p_157)) else ((nat_mod_zero , nat_mod_zero , true)).
 
 Definition g1mul (m_161 : scalar) (p_162 : g1) : g1 :=
   let n_163 := usize 255 in
   let k_164 := (n_163) - (most_significant_bit (m_161) (n_163)) in
   let t_165 := p_162 in
-  let '(t_165) :=
+  let t_165 :=
     foldi (k_164) (n_163) (fun i_166 t_165 =>
       let t_165 := g1double (t_165) in
       let '(t_165) :=
-        if nat_bit (
-          0x8000000000000000000000000000000000000000000000000000000000000000) (
-          m_161) (((n_163) - (i_166)) - (usize 1)) then (
+        if nat_mod_bit (m_161) (((n_163) - (i_166)) - (usize 1)) then (
           let t_165 := g1add (t_165) (p_162) in
           (t_165)
         ) else ( (t_165)
         )
       in
       (t_165))
-    (t_165)
+    t_165
   in
   t_165.
 
 Definition g1neg (p_167 : g1) : g1 :=
   let '(x_168, y_169, inf_170) := p_167 in
-  (
-    x_168,
-    (
-      nat_zero) - (
-      y_169),
-    inf_170
-  ).
+  (x_168, (nat_mod_zero ) -% (y_169), inf_170).
 
 Definition g2add_a (p_171 : g2) (q_172 : g2) : g2 :=
   let '(x1_173, y1_174, _) := p_171 in
@@ -425,66 +282,51 @@ Definition g2double_a (p_186 : g2) : g2 :=
   let t1_190 :=
     fp2mul (
       fp2fromfp (
-        repr (
-          pub_u128 3))) (x12_189)
+        nat_mod_from_literal _ (
+          repr 3))) (x12_189)
   in
-  let t2_191 :=
-    fp2inv (
-      fp2mul (
-        fp2fromfp nat_two) (y1_188))
-  in
+  let t2_191 := fp2inv (fp2mul (fp2fromfp (nat_mod_two )) (y1_188)) in
   let xovery_192 := fp2mul (t1_190) (t2_191) in
   let t1_193 := fp2mul (xovery_192) (xovery_192) in
-  let t2_194 :=
-    fp2mul (
-      fp2fromfp (
-        nat_two )) (
-      x1_187)
-  in
+  let t2_194 := fp2mul (fp2fromfp (nat_mod_two )) (x1_187) in
   let x3_195 := fp2sub (t1_193) (t2_194) in
   let t1_196 := fp2sub (x1_187) (x3_195) in
   let t2_197 := fp2mul (xovery_192) (t1_196) in
   let y3_198 := fp2sub (t2_197) (y1_188) in
   (x3_195, y3_198, false).
 
-(* TODO *)
-Axiom g2_eqb : g2 -> g2 -> bool.
-Axiom fp2_eqb : fp2 -> fp2 -> bool.
-
 Definition g2add (p_199 : g2) (q_200 : g2) : g2 :=
   let '(x1_201, y1_202, inf1_203) := p_199 in
   let '(x2_204, y2_205, inf2_206) := q_200 in
   if (inf1_203) then (q_200) else (
     if (inf2_206) then (p_199) else (
-      if (g2_eqb (p_199) (q_200)) then (g2double_a (p_199)) else (
+      if ((p_199) =.? (q_200)) then (g2double_a (p_199)) else (
         if (
           negb (
-            (fp2_eqb (x1_201) (x2_204)) && (fp2_eqb (y1_202) (fp2neg (y2_205))))) then (
-          g2add_a (p_199) (q_200)) else ((fp2zero, fp2zero, true))))).
+            ((x1_201) =.? (x2_204)) && ((y1_202) =.? (fp2neg (y2_205))))) then (
+          g2add_a (p_199) (q_200)) else ((fp2zero , fp2zero , true))))).
 
 Definition g2double (p_207 : g2) : g2 :=
   let '(x1_208, y1_209, inf1_210) := p_207 in
-  if ((fp2_eqb (y1_209)  (fp2zero)) && (negb (inf1_210))) then (
-    g2double_a (p_207)) else ((fp2zero, fp2zero, true)).
+  if (((y1_209) !=.? (fp2zero )) && (negb (inf1_210))) then (
+    g2double_a (p_207)) else ((fp2zero , fp2zero , true)).
 
 Definition g2mul (m_211 : scalar) (p_212 : g2) : g2 :=
   let n_213 := usize 255 in
   let k_214 := (n_213) - (most_significant_bit (m_211) (n_213)) in
   let t_215 := p_212 in
-  let '(t_215) :=
+  let t_215 :=
     foldi (k_214) (n_213) (fun i_216 t_215 =>
       let t_215 := g2double (t_215) in
       let '(t_215) :=
-        if nat_bit (
-          0x8000000000000000000000000000000000000000000000000000000000000000) (
-          m_211) (((n_213) - (i_216)) - (usize 1)) then (
+        if nat_mod_bit (m_211) (((n_213) - (i_216)) - (usize 1)) then (
           let t_215 := g2add (t_215) (p_212) in
           (t_215)
         ) else ( (t_215)
         )
       in
       (t_215))
-    (t_215)
+    t_215
   in
   t_215.
 
@@ -494,8 +336,8 @@ Definition g2neg (p_217 : g2) : g2 :=
 
 Definition twist (p_221 : g1) : (fp12 * fp12) :=
   let '(p0_222, p1_223, _) := p_221 in
-  let x_224 := ((fp2zero, fp2fromfp (p0_222), fp2zero), fp6zero ) in
-  let y_225 := (fp6zero , (fp2zero, fp2fromfp (p1_223), fp2zero)) in
+  let x_224 := ((fp2zero , fp2fromfp (p0_222), fp2zero ), fp6zero ) in
+  let y_225 := (fp6zero , (fp2zero , fp2fromfp (p1_223), fp2zero )) in
   (x_224, y_225).
 
 Definition line_double_p (r_226 : g2) (p_227 : g1) : fp12 :=
@@ -503,16 +345,11 @@ Definition line_double_p (r_226 : g2) (p_227 : g1) : fp12 :=
   let a_230 :=
     fp2mul (
       fp2fromfp (
-        repr (
-          pub_u128 3))) (fp2mul (r0_228) (r0_228))
+        nat_mod_from_literal _ (
+          repr 3))) (fp2mul (r0_228) (r0_228))
   in
   let a_231 :=
-    fp2mul (a_230) (
-      fp2inv (
-        fp2mul (
-          fp2fromfp (
-            nat_two )) (
-          r1_229)))
+    fp2mul (a_230) (fp2inv (fp2mul (fp2fromfp (nat_mod_two )) (r1_229)))
   in
   let b_232 := fp2sub (r1_229) (fp2mul (a_231) (r0_228)) in
   let a_233 := fp12fromfp6 (fp6fromfp2 (a_231)) in
@@ -532,48 +369,44 @@ Definition line_add_p (r_237 : g2) (q_238 : g2) (p_239 : g1) : fp12 :=
   let '(x_248, y_249) := twist (p_239) in
   fp12neg (fp12sub (fp12sub (y_249) (fp12mul (a_246) (x_248))) (b_247)).
 
-(* TODO *)
-Axiom array_to_le_bytes : forall {l}, lseq N l  -> int.
-
 Definition frobenius (f_250 : fp12) : fp12 :=
   let '((g0_251, g1_252, g2_253), (h0_254, h1_255, h2_256)) := f_250 in
-  let t1_257 := fp2conjugate (g0_251) in
+  let t1_257  := fp2conjugate (g0_251) in
   let t2_258 := fp2conjugate (h0_254) in
   let t3_259 := fp2conjugate (g1_252) in
   let t4_260 := fp2conjugate (h1_255) in
   let t5_261 := fp2conjugate (g2_253) in
   let t6_262 := fp2conjugate (h2_256) in
   let c1_263 :=
-    array_from_list (
+    array_from_list uint64 (
       let l :=
         [
-          secret (pub_u64 10162220747404304312);
-          secret (pub_u64 17761815663483519293);
-          secret (pub_u64 8873291758750579140);
-          secret (pub_u64 1141103941765652303);
-          secret (pub_u64 13993175198059990303);
-          secret (pub_u64 1802798568193066599)
+          secret (repr 10162220747404304312);
+          secret (repr 17761815663483519293);
+          secret (repr 8873291758750579140);
+          secret (repr 1141103941765652303);
+          secret (repr 13993175198059990303);
+          secret (repr 1802798568193066599)
         ]
       in l)
   in
   let c1_264 := array_to_le_bytes (c1_263) in
-  let c1_265 := c1_264 in
+  let c1_265 := nat_mod_from_byte_seq_le (c1_264) in
   let c2_266 :=
-    array_from_list (
+    array_from_list uint64 (
       let l :=
         [
-          secret (pub_u64 3240210268673559283);
-          secret (pub_u64 2895069921743240898);
-          secret (pub_u64 17009126888523054175);
-          secret (pub_u64 6098234018649060207);
-          secret (pub_u64 9865672654120263608);
-          secret (pub_u64 71000049454473266)
+          secret (repr 3240210268673559283);
+          secret (repr 2895069921743240898);
+          secret (repr 17009126888523054175);
+          secret (repr 6098234018649060207);
+          secret (repr 9865672654120263608);
+          secret (repr 71000049454473266)
         ]
       in l)
   in
   let c2_267 := array_to_le_bytes (c2_266) in
-  let c2_268 := c2_267
-  in
+  let c2_268 := nat_mod_from_byte_seq_le (c2_267) in
   let gamma11_269 := (c1_265, c2_268) in
   let gamma12_270 := fp2mul (gamma11_269) (gamma11_269) in
   let gamma13_271 := fp2mul (gamma12_270) (gamma11_269) in
@@ -586,9 +419,6 @@ Definition frobenius (f_250 : fp12) : fp12 :=
   let t6_278 := fp2mul (t6_262) (gamma15_273) in
   ((t1_257, t3_275, t5_277), (t2_274, t4_276, t6_278)).
 
-Import nat_mod_0x8000000000000000000000000000000000000000000000000000000000000000.
-Infix "/" := divs.
-
 Definition final_exponentiation (f_279 : fp12) : fp12 :=
   let fp6_280 := fp12conjugate (f_279) in
   let finv_281 := fp12inv (f_279) in
@@ -596,17 +426,14 @@ Definition final_exponentiation (f_279 : fp12) : fp12 :=
   let fp8_283 := frobenius (frobenius (fp6_1_282)) in
   let f_284 := fp12mul (fp8_283) (fp6_1_282) in
   let u_285 :=
-    repr (
-      pub_u128 15132376222941642752)
+    nat_mod_from_literal (
+      _) (
+      repr 15132376222941642752)
   in
-  let t0_286 := fp12mul (f_284) (f_284) in
+  let t0_286 : fp12 := fp12mul (f_284) (f_284) in
   let t1_287 := fp12exp (t0_286) (u_285) in
   let t1_288 := fp12conjugate (t1_287) in
-  let t2_289 :=
-    fp12exp (t1_288) (
-      (u_285) / (
-        (repr 2)))
-  in
+  let t2_289 := fp12exp (t1_288) ((u_285) /% (nat_mod_two )) in
   let t2_290 := fp12conjugate (t2_289) in
   let t3_291 := fp12conjugate (f_284) in
   let t1_292 := fp12mul (t3_291) (t1_288) in
@@ -632,25 +459,19 @@ Definition final_exponentiation (f_279 : fp12) : fp12 :=
   t1_311.
 
 Definition pairing (p_312 : g1) (q_313 : g2) : fp12 :=
-  let t_314 :=
-    repr (
-      pub_u128 15132376222941642752)
+  let t_314 : scalar :=
+    nat_mod_from_literal _ (
+      repr 15132376222941642752)
   in
   let r_315 := q_313 in
-  let f_316 :=
-    fp12fromfp6 (
-      fp6fromfp2 (
-        fp2fromfp (
-          nat_one)))
-  in
+  let f_316 := fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_one ))) in
   let '(r_315, f_316) :=
     foldi (usize 1) (usize 64) (fun i_317 '(r_315, f_316) =>
       let lrr_318 := line_double_p (r_315) (p_312) in
       let r_315 := g2double (r_315) in
       let f_316 := fp12mul (fp12mul (f_316) (f_316)) (lrr_318) in
-      let (r_315, f_316) :=
-        if nat_bit (0x8000000000000000000000000000000000000000000000000000000000000000) (
-          t_314) (((usize 64) - (i_317)) - (usize 1)) then (
+      let '(r_315, f_316) :=
+        if nat_mod_bit (t_314) (((usize 64) - (i_317)) - (usize 1)) then (
           let lrq_319 := line_add_p (r_315) (q_313) (p_312) in
           let r_315 := g2add (r_315) (q_313) in
           let f_316 := fp12mul (f_316) (lrq_319) in
