@@ -387,9 +387,9 @@ fn resolve_block(
 ) -> ResolutionResult<Spanned<Block>> {
     let mut new_stmts = Vec::new();
     let mut name_context = name_context.clone();
-    for s in b.stmts.into_iter() {
+    for (s, s_question_mark) in b.stmts.into_iter() {
         let (new_stmt, new_name_context) = resolve_statement(sess, s, name_context, top_level_ctx)?;
-        new_stmts.push(new_stmt);
+        new_stmts.push((new_stmt, s_question_mark));
         name_context = new_name_context;
     }
     Ok((
@@ -397,6 +397,7 @@ fn resolve_block(
             stmts: new_stmts,
             mutated: None,
             return_typ: None,
+            contains_question_mark: None,
         },
         b_span,
     ))

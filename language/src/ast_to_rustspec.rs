@@ -987,8 +987,11 @@ fn translate_expr(
                         let r_f_span = r_f_e.1.clone();
                         let r_t_e = r_t_e.0.stmts.pop().unwrap();
                         let r_f_e = r_f_e.0.stmts.pop().unwrap();
-                        match (r_t_e.0, r_f_e.0) {
-                            (Statement::ReturnExp(r_t_e), Statement::ReturnExp(r_f_e)) => Ok((
+                        match (r_t_e, r_f_e) {
+                            (
+                                ((Statement::ReturnExp(r_t_e), _), false),
+                                ((Statement::ReturnExp(r_f_e), _), false),
+                            ) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::InlineConditional(
                                     Box::new(r_cond),
                                     Box::new((r_t_e, r_t_span)),
@@ -1448,7 +1451,7 @@ fn translate_statement(
     sess: &Session,
     specials: &SpecialNames,
     s: &Stmt,
-) -> TranslationResult<Vec<Spanned<Statement>>> {
+) -> TranslationResult<Vec<(Spanned<Statement>, bool)>> {
     match &s.kind {
         StmtKind::Item(_) => {
             sess.span_rustspec_err(s.span, "block-local items are not allowed in Hacspec");
@@ -1490,14 +1493,17 @@ fn translate_statement(
                     (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
                 },
             }?;
-            Ok(vec![(Statement::LetBinding(pat, ty, init), s.span.into())])
+            Ok(vec![(
+                (Statement::LetBinding(pat, ty, init), s.span.into()),
+                false,
+            )])
         }
         StmtKind::Expr(e) => {
             let t_s = match translate_expr(sess, specials, &e)? {
                 (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e),
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
-            Ok(vec![(t_s, s.span.into())])
+            Ok(vec![((t_s, s.span.into()), false)])
         }
         StmtKind::Semi(e) => {
             let t_s = match translate_expr(sess, specials, &e)? {
@@ -1506,7 +1512,7 @@ fn translate_statement(
                 }
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
-            Ok(vec![(t_s, s.span.into())])
+            Ok(vec![((t_s, s.span.into()), false)])
         }
     }
 }
@@ -1534,6 +1540,7 @@ fn translate_block(
             stmts,
             return_typ: None,
             mutated: None,
+            contains_question_mark: None,
             // We initialize these fields to None as they are
             // to be filled by the typechecker
         },
@@ -2142,6 +2149,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         stmts: Vec::new(),
                         return_typ: None,
                         mutated: None,
+                        contains_question_mark: None,
                     },
                     i.span.into(),
                 ),

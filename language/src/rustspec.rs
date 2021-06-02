@@ -396,9 +396,10 @@ pub enum Statement {
 
 #[derive(Clone, Serialize)]
 pub struct Block {
-    pub stmts: Vec<Spanned<Statement>>,
+    pub stmts: Vec<(Spanned<Statement>, bool)>, // The bool indicates whether the statement ends with a question mark
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
+    pub contains_question_mark: Fillable<bool>,
 }
 
 #[derive(Clone, Debug, Serialize)]

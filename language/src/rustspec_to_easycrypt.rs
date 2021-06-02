@@ -972,7 +972,7 @@ fn translate_block<'a>(
     RcDoc::intersperse(
         b.stmts
             .iter()
-            .map(|(i, _)| translate_statement(i, top_ctx).group()),
+            .map(|((i, _), _)| translate_statement(i, top_ctx).group()),
         RcDoc::hardline(),
     )
     .append(match (&b.return_typ, omit_extra_unit) {

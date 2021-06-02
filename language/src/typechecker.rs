@@ -2224,11 +2224,12 @@ fn typecheck_block(
     ));
     let mut new_stmts = Vec::new();
     let n_stmts = b.stmts.len();
-    for (i, s) in b.stmts.into_iter().enumerate() {
+    for (i, (s, s_question_mark)) in b.stmts.into_iter().enumerate() {
+        // TODO: typecheck the question marks
         let s_span = s.1.clone();
         let (new_stmt, stmt_typ, new_var_context, new_mutated_vars) =
             typecheck_statement(sess, s, top_level_context, &var_context)?;
-        new_stmts.push((new_stmt, s_span));
+        new_stmts.push(((new_stmt, s_span), s_question_mark));
         var_context = new_var_context;
         mutated_vars = VarSet(mutated_vars.0.clone().union(new_mutated_vars.0));
         if i + 1 < n_stmts {
@@ -2258,6 +2259,7 @@ fn typecheck_block(
                 stmt: mut_tuple,
             })),
             return_typ,
+            contains_question_mark: None, // TODO: fill
         },
         var_context.intersection(original_var_context.clone()),
     ))
