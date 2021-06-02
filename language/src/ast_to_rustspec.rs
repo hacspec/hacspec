@@ -1374,7 +1374,10 @@ fn translate_expr(
         }
         ExprKind::Paren(e1) => translate_expr(sess, specials, e1),
         ExprKind::Try(_) => {
-            sess.span_rustspec_err(e.span.clone(), "FOO27");
+            sess.span_rustspec_err(
+                e.span.clone(),
+                "question marks inside expressions are not allowed in Hacspec",
+            );
             Err(())
         }
         ExprKind::Err => {
