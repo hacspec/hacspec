@@ -520,7 +520,6 @@ fn translate_expr(
     specials: &SpecialNames,
     e: &Expr,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
-    #[allow(unreachable_patterns)]
     match &e.kind {
         ExprKind::Binary(op, e1, e2) => Ok((
             ExprTranslationResult::TransExpr(Expression::Binary(
@@ -989,8 +988,8 @@ fn translate_expr(
                         let r_f_e = r_f_e.0.stmts.pop().unwrap();
                         match (r_t_e, r_f_e) {
                             (
-                                ((Statement::ReturnExp(r_t_e), _), false),
-                                ((Statement::ReturnExp(r_f_e), _), false),
+                                (Statement::ReturnExp(r_t_e), _),
+                                (Statement::ReturnExp(r_f_e), _),
                             ) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::InlineConditional(
                                     Box::new(r_cond),
@@ -1395,10 +1394,6 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
             Err(())
         }
-        _ => {
-            sess.span_rustspec_err(e.span.clone(), "this expression is not allowed in Hacspec");
-            Err(())
-        }
     }
 }
 
@@ -1451,7 +1446,7 @@ fn translate_statement(
     sess: &Session,
     specials: &SpecialNames,
     s: &Stmt,
-) -> TranslationResult<Vec<(Spanned<Statement>, bool)>> {
+) -> TranslationResult<Vec<Spanned<Statement>>> {
     match &s.kind {
         StmtKind::Item(_) => {
             sess.span_rustspec_err(s.span, "block-local items are not allowed in Hacspec");
@@ -1494,8 +1489,8 @@ fn translate_statement(
                 },
             }?;
             Ok(vec![(
-                (Statement::LetBinding(pat, ty, init), s.span.into()),
-                false,
+                Statement::LetBinding(pat, ty, init, false),
+                s.span.into(),
             )])
         }
         StmtKind::Expr(e) => {
@@ -1503,16 +1498,16 @@ fn translate_statement(
                 (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e),
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
-            Ok(vec![((t_s, s.span.into()), false)])
+            Ok(vec![(t_s, s.span.into())])
         }
         StmtKind::Semi(e) => {
             let t_s = match translate_expr(sess, specials, &e)? {
                 (ExprTranslationResult::TransExpr(e), span) => {
-                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span))
+                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), false)
                 }
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
-            Ok(vec![((t_s, s.span.into()), false)])
+            Ok(vec![(t_s, s.span.into())])
         }
     }
 }

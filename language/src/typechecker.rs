@@ -1897,7 +1897,8 @@ fn typecheck_statement(
     var_context: &VarContext,
 ) -> TypecheckingResult<(Statement, Typ, VarContext, VarSet)> {
     match &s {
-        Statement::LetBinding((pat, pat_span), typ, ref expr) => {
+        Statement::LetBinding((pat, pat_span), typ, ref expr, question_mark) => {
+            // TODO: Typecheck question mark
             let (new_expr, expr_typ, new_var_context) =
                 typecheck_expression(sess, expr, top_level_context, var_context)?;
             match typ {
@@ -1932,6 +1933,7 @@ fn typecheck_statement(
                     (pat.clone(), pat_span.clone()),
                     typ.clone(),
                     (new_expr, expr.1.clone()),
+                    *question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 new_var_context.clone().union(pat_var_context),
@@ -2224,12 +2226,11 @@ fn typecheck_block(
     ));
     let mut new_stmts = Vec::new();
     let n_stmts = b.stmts.len();
-    for (i, (s, s_question_mark)) in b.stmts.into_iter().enumerate() {
-        // TODO: typecheck the question marks
+    for (i, s) in b.stmts.into_iter().enumerate() {
         let s_span = s.1.clone();
         let (new_stmt, stmt_typ, new_var_context, new_mutated_vars) =
             typecheck_statement(sess, s, top_level_context, &var_context)?;
-        new_stmts.push(((new_stmt, s_span), s_question_mark));
+        new_stmts.push((new_stmt, s_span));
         var_context = new_var_context;
         mutated_vars = VarSet(mutated_vars.0.clone().union(new_mutated_vars.0));
         if i + 1 < n_stmts {

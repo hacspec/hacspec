@@ -364,13 +364,13 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::LetBinding(pat, typ, e) => {
+        Statement::LetBinding(pat, typ, e, question_mark) => {
             let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             let (new_pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
             let name_context = new_name_context.union(name_context);
             Ok((
                 (
-                    Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e),
+                    Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e, question_mark),
                     s_span,
                 ),
                 name_context,
@@ -387,9 +387,9 @@ fn resolve_block(
 ) -> ResolutionResult<Spanned<Block>> {
     let mut new_stmts = Vec::new();
     let mut name_context = name_context.clone();
-    for (s, s_question_mark) in b.stmts.into_iter() {
+    for s in b.stmts.into_iter() {
         let (new_stmt, new_name_context) = resolve_statement(sess, s, name_context, top_level_ctx)?;
-        new_stmts.push((new_stmt, s_question_mark));
+        new_stmts.push(new_stmt);
         name_context = new_name_context;
     }
     Ok((

@@ -376,7 +376,12 @@ pub type Fillable<T> = Option<T>;
 
 #[derive(Clone, Serialize)]
 pub enum Statement {
-    LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
+    LetBinding(
+        Spanned<Pattern>,     // Let-binded pattern
+        Option<Spanned<Typ>>, // Typ of the binded expr
+        Spanned<Expression>,  // Binded expr
+        bool,                 // Presence of a question mark at the end
+    ),
     Reassignment(Spanned<Ident>, Spanned<Expression>),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -396,7 +401,7 @@ pub enum Statement {
 
 #[derive(Clone, Serialize)]
 pub struct Block {
-    pub stmts: Vec<(Spanned<Statement>, bool)>, // The bool indicates whether the statement ends with a question mark
+    pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
     pub contains_question_mark: Fillable<bool>,

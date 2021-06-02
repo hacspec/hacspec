@@ -869,12 +869,16 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
 
 fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match s {
-        Statement::LetBinding((pat, _), typ, (expr, _)) => make_let_binding(
-            translate_pattern(pat.clone()),
-            typ.as_ref().map(|(typ, _)| translate_typ(typ)),
-            translate_expression(expr.clone(), top_ctx),
-            false,
-        ),
+        Statement::LetBinding((pat, _), typ, (expr, _), _question_mark) =>
+        // Translate question mark!
+        {
+            make_let_binding(
+                translate_pattern(pat.clone()),
+                typ.as_ref().map(|(typ, _)| translate_typ(typ)),
+                translate_expression(expr.clone(), top_ctx),
+                false,
+            )
+        }
         Statement::Reassignment((x, _), (e1, _)) => make_let_binding(
             translate_ident(x.clone()),
             None,
@@ -983,7 +987,7 @@ fn translate_block<'a>(
     RcDoc::intersperse(
         b.stmts
             .iter()
-            .map(|((i, _), _)| translate_statement(i, top_ctx).group()),
+            .map(|(i, _)| translate_statement(i, top_ctx).group()),
         RcDoc::hardline(),
     )
     .append(match (&b.return_typ, omit_extra_unit) {
