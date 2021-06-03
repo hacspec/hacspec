@@ -207,7 +207,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
                 )),
             })
         }
-        BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
+        BaseTyp::Variable(id) => RcDoc::as_string(format!("t{}", id.0)),
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
@@ -343,12 +343,19 @@ fn get_type_default(t: &BaseTyp) -> Expression {
     }
 }
 
+fn translate_pattern_tick(p: &Pattern) -> RcDoc<()> {
+    match p {
+        // If the pattern is a tuple, expand it
+        Pattern::Tuple(_) => RcDoc::as_string("'").append(translate_pattern(p)),
+        _ => translate_pattern(p),
+    }
+}
+
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
         Pattern::IdentPat(x) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
-        Pattern::Tuple(pats) => RcDoc::as_string("'")
-        .append(make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat)))),
+        Pattern::Tuple(pats) => make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat))),
     }
 }
 
@@ -546,21 +553,21 @@ fn translate_func_name<'a>(
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
             // We add the modulo value for nat_mod
-            match (
-                format!("{}", module_name.pretty(0)).as_str(),
-                format!("{}", func_ident.pretty(0)).as_str(),
-                ) {
-                (NAT_MODULE, "from_literal") => {
-                    match &prefix_info {
-                        FuncPrefix::NatMod(modulo, _bits) => {
-                            additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
-                        }
-                        _ => panic!(), // should not happen
-                    }
-                }
-                _ => (),
-            };
-            // ANd the encoding length for certain nat_mod related function
+            // match (
+            //     format!("{}", module_name.pretty(0)).as_str(),
+            //     format!("{}", func_ident.pretty(0)).as_str(),
+            // ) {
+            //     (NAT_MODULE, "from_literal") => {
+            //         match &prefix_info {
+            //             FuncPrefix::NatMod(modulo, _bits) => {
+            //                 // additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+            //             }
+            //             _ => panic!(), // should not happen
+            //         }
+            //     }
+            //     _ => (),
+            // };
+            // And the encoding length for certain nat_mod related function
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
@@ -828,8 +835,9 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 
                 fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
                     match s {
-                        Statement::LetBinding((pat, _), typ, (expr, _)) => make_let_binding(
-                            translate_pattern(pat),
+                        Statement::LetBinding((pat, _), typ, (expr, _)) => 
+                        make_let_binding(
+                            translate_pattern_tick(pat),
                             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
                             translate_expression(expr.clone(), top_ctx),
                             false,
@@ -898,25 +906,26 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         }
                         Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
                             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
-                            let mut_tuple = 
-                            // if there is only one element, just print the identifier instead of making a tuple
-                            if mutated_info.vars.len() == 1 {
-                                match mutated_info.vars.iter().next() {
-                                    None => RcDoc::nil(),
-                                    Some(i) => 
-                                    translate_ident(Ident::Local(i.clone()))
+                            let mut_tuple = |prefix: String| -> RcDoc<'a> {
+                                // if there is only one element, just print the identifier instead of making a tuple
+                                if mutated_info.vars.len() == 1 {
+                                    match mutated_info.vars.iter().next() {
+                                        None => RcDoc::nil(),
+                                        Some(i) => 
+                                        translate_ident(Ident::Local(i.clone()))
+                                    }
+                                } 
+                                // print as tuple otherwise
+                                else {
+                                    RcDoc::as_string(prefix)
+                                    .append(make_tuple(mutated_info
+                                        .vars
+                                        .iter()
+                                        .sorted()
+                                        .map(|i| translate_ident(Ident::Local(i.clone())))))
                                 }
-                            } 
-                            // print as tuple otherwise
-                            else {
-                                RcDoc::as_string("'")
-                                .append(make_tuple(mutated_info
-                                    .vars
-                                    .iter()
-                                    .sorted()
-                                    .map(|i| translate_ident(Ident::Local(i.clone())))))
-                                };
-                                let loop_expr = RcDoc::as_string("foldi")
+                            };
+                            let loop_expr = RcDoc::as_string("foldi")
                                 .append(RcDoc::space())
                                 .append(make_paren(translate_expression(e1.clone(), top_ctx)))
                                 .append(RcDoc::space())
@@ -926,7 +935,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                                 .append(RcDoc::space())
                                 .append(translate_ident(x.clone()))
                                 .append(RcDoc::space())
-                                .append(mut_tuple.clone())
+                                .append(mut_tuple("'".to_string()).clone())
                                 .append(RcDoc::space())
                                 .append(RcDoc::as_string("=>"))
                                 .append(RcDoc::line())
@@ -937,8 +946,8 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                                 .group()
                                 .nest(2)
                                 .append(RcDoc::line())
-                                .append(mut_tuple.clone());
-                                make_let_binding(mut_tuple, None, loop_expr, false)
+                                .append(mut_tuple("".to_string()).clone());
+                                make_let_binding(mut_tuple("'".to_string()), None, loop_expr, false)
                             }
                         }
                         .group()
