@@ -553,20 +553,20 @@ fn translate_func_name<'a>(
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
             // We add the modulo value for nat_mod
-            // match (
-            //     format!("{}", module_name.pretty(0)).as_str(),
-            //     format!("{}", func_ident.pretty(0)).as_str(),
-            // ) {
-            //     (NAT_MODULE, "from_literal") => {
-            //         match &prefix_info {
-            //             FuncPrefix::NatMod(modulo, _bits) => {
-            //                 // additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
-            //             }
-            //             _ => panic!(), // should not happen
-            //         }
-            //     }
-            //     _ => (),
-            // };
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                (NAT_MODULE, "from_literal") => {
+                    match &prefix_info {
+                        FuncPrefix::NatMod(modulo, _bits) => {
+                            additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+                        }
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            };
             // And the encoding length for certain nat_mod related function
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
@@ -734,7 +734,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     match top_ctx.typ_dict.get(ident) {
                         Some((alias_typ, DictEntry::Array)) => {
                             match (alias_typ.1).0.clone() {
-                                BaseTyp::Array(size, inner_ty) => {
+                                BaseTyp::Array(_size, inner_ty) => {
                                     inner_ty.as_ref().clone().0
                                 }
                                 _ => panic!(),           
@@ -744,7 +744,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         _ => panic!(),
                     }
                 }
-                Some(BaseTyp::Array(size, inner_ty)) => {
+                Some(BaseTyp::Array(_size, inner_ty)) => {
                     inner_ty.as_ref().clone().0
                 }
                 // Should not happen - array should always have an element type
@@ -1149,6 +1149,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                             From Coq Require Import ZArith.\n\
                             Import List.ListNotations.\n\
                             Section {}.\n\
+                            Open Scope Z_scope.\n\
                             Open Scope bool_scope.\n\
                             Open Scope hacspec_scope.\n",
                             module_name
