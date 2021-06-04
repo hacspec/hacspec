@@ -15,7 +15,7 @@ use std::path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 
-const SEQ_MODULE: &'static str = "list";
+const SEQ_MODULE: &'static str = "seq";
 
 const ARRAY_MODULE: &'static str = "array";
 
@@ -59,6 +59,24 @@ fn make_let_binding<'a>(
     } else {
         RcDoc::line().append(RcDoc::as_string("in"))
     })
+}
+
+fn make_uint_size_coercion<'a>(pat: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
+    RcDoc::as_string("Definition")
+    .append(RcDoc::space())
+    .append(RcDoc::as_string("uint_size_in_"))
+    .append(pat.clone())
+    .append(RcDoc::as_string("(n : uint_size) : "))
+    .append(pat.clone())
+    .append(RcDoc::space())
+    .append(RcDoc::as_string(":= int_in_nat_mod n."))
+    .append(RcDoc::line())
+    .append(RcDoc::as_string("Coercion "))
+    .append(RcDoc::as_string("uint_size_in_"))
+    .append(pat.clone())
+    .append(RcDoc::as_string(" : uint_size >-> "))
+    .append(pat.clone())
+    .append(RcDoc::as_string("."))
 }
 
 fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
@@ -181,7 +199,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Str => RcDoc::as_string("string"),
         BaseTyp::Seq(tau) => {
             let tau: BaseTyp = tau.0;
-            RcDoc::as_string("list")
+            RcDoc::as_string("seq")
             .append(RcDoc::space())
             .append(translate_base_typ(tau))
             .group()
@@ -413,7 +431,7 @@ fn translate_binop<'a, 'b>(
                 _ => panic!("operator: {:?}", op), // should not happen
             };
             RcDoc::as_string(format!(
-                "`{}_{} ({})`",
+                "{}_{}_{}",
                 match &(op_typ.1).0 {
                     BaseTyp::Seq(_) => SEQ_MODULE,
                     BaseTyp::Array(_, _) => ARRAY_MODULE,
@@ -436,18 +454,18 @@ fn translate_binop<'a, 'b>(
             RcDoc::as_string("/")
         }
         (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
-            RcDoc::as_string("%")
+            RcDoc::as_string("%%")
         }
         (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
         (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
-        (BinOpKind::Rem, _) => RcDoc::as_string("%."),
-        (BinOpKind::Sub, _) => RcDoc::as_string("-."),
-        (BinOpKind::Add, _) => RcDoc::as_string("+."),
-        (BinOpKind::Mul, _) => RcDoc::as_string("*."),
-        (BinOpKind::Div, _) => RcDoc::as_string("/."),
-        (BinOpKind::BitXor, _) => RcDoc::as_string("^."),
-        (BinOpKind::BitAnd, _) => RcDoc::as_string("&."),
-        (BinOpKind::BitOr, _) => RcDoc::as_string("|."),
+        (BinOpKind::Rem, _) => RcDoc::as_string(".%"),
+        (BinOpKind::Sub, _) => RcDoc::as_string(".-"),
+        (BinOpKind::Add, _) => RcDoc::as_string(".+"),
+        (BinOpKind::Mul, _) => RcDoc::as_string(".*"),
+        (BinOpKind::Div, _) => RcDoc::as_string("./"),
+        (BinOpKind::BitXor, _) => RcDoc::as_string(".^"),
+        (BinOpKind::BitAnd, _) => RcDoc::as_string(".&"),
+        (BinOpKind::BitOr, _) => RcDoc::as_string(".|"),
         (BinOpKind::Shl, _) => RcDoc::as_string("`shift_left`"),
         (BinOpKind::Shr, _) => RcDoc::as_string("`shift_right`"),
         (BinOpKind::Lt, _) => RcDoc::as_string("<.?"),
@@ -1041,6 +1059,9 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                                         .append(make_paren(translate_expression(size.0.clone(), top_ctx))),
                                         true,
                                     ))
+                                    .append(RcDoc::hardline())
+                                    .append(make_uint_size_coercion(
+                                        translate_ident(Ident::TopLevel(index_typ.0.clone()))))
                                 }
                             }),
                             Item::ConstDecl(name, ty, e) => make_let_binding(
@@ -1145,7 +1166,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         let module_name = path.file_stem().unwrap().to_str().unwrap();
                         write!(
                             file,
-                            "Require Import NewLib MachineIntegers.\n\
+                            "Require Import Lib MachineIntegers.\n\
                             From Coq Require Import ZArith.\n\
                             Import List.ListNotations.\n\
                             Section {}.\n\
