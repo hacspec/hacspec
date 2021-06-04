@@ -1397,6 +1397,49 @@ fn translate_expr(
     }
 }
 
+enum ExprTranslationResultMaybeQuestionMark {
+    TransExpr(Expression, bool), // true if ends with question mark
+    TransStmt(Statement),
+}
+
+fn translate_expr_accepts_question_mark(
+    sess: &Session,
+    specials: &SpecialNames,
+    e: &Expr,
+) -> TranslationResult<Spanned<ExprTranslationResultMaybeQuestionMark>> {
+    match &e.kind {
+        ExprKind::Try(inner_e) => {
+            let (result, span) = translate_expr(sess, specials, &inner_e)?;
+            match result {
+                ExprTranslationResult::TransExpr(e) => Ok((
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, true),
+                    span,
+                )),
+                ExprTranslationResult::TransStmt(_) => {
+                    sess.span_rustspec_err(
+                        inner_e.span,
+                        "question-marked blobs cannot contain statements \
+                    in Hacspec, only pure expressions",
+                    );
+                    Err(())
+                }
+            }
+        }
+        _ => {
+            let (result, span) = translate_expr(sess, specials, e)?;
+            match result {
+                ExprTranslationResult::TransExpr(e) => Ok((
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, false),
+                    span,
+                )),
+                ExprTranslationResult::TransStmt(s) => {
+                    Ok((ExprTranslationResultMaybeQuestionMark::TransStmt(s), span))
+                }
+            }
+        }
+    }
+}
+
 fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pattern>> {
     match &pat.kind {
         PatKind::Ident(BindingMode::ByValue(_), id, None) => {
@@ -1469,7 +1512,7 @@ fn translate_statement(
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
             };
-            let init = match &local.init {
+            let (init, question_mark) = match &local.init {
                 None => {
                     sess.span_rustspec_err(
                         local.span,
@@ -1477,19 +1520,21 @@ fn translate_statement(
                     );
                     Err(())
                 }
-                Some(e) => match translate_expr(sess, specials, &e)? {
-                    (ExprTranslationResult::TransStmt(_), _) => {
+                Some(e) => match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                    (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
                         sess.span_rustspec_err(
                             e.span,
                             "let binding expression should not contain statements in Hacspec",
                         );
                         Err(())
                     }
-                    (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
+                    (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
+                        Ok(((e, span), question_mark))
+                    }
                 },
             }?;
             Ok(vec![(
-                Statement::LetBinding(pat, ty, init, false),
+                Statement::LetBinding(pat, ty, init, question_mark),
                 s.span.into(),
             )])
         }
@@ -1501,11 +1546,11 @@ fn translate_statement(
             Ok(vec![(t_s, s.span.into())])
         }
         StmtKind::Semi(e) => {
-            let t_s = match translate_expr(sess, specials, &e)? {
-                (ExprTranslationResult::TransExpr(e), span) => {
-                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), false)
+            let t_s = match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
+                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), question_mark)
                 }
-                (ExprTranslationResult::TransStmt(s), _) => s,
+                (ExprTranslationResultMaybeQuestionMark::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span.into())])
         }
