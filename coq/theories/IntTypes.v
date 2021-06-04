@@ -1,3 +1,5 @@
+(* -------DEPRECATED------ *)
+
 (* From https://github.com/project-everest/hacl-star/blob/dev/lib/Lib.IntTypes.fsti *)
 From Coq Require Import ZArith.
 From compcert Require Import Integers.

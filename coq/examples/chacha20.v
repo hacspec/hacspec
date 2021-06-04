@@ -1,28 +1,32 @@
-Require Import Lib.
-Require Import IntTypes.
+Require Import Lib MachineIntegers.
 From Coq Require Import ZArith.
+Import List.ListNotations.
 Section chacha20.
+Open Scope Z_scope.
+Open Scope bool_scope.
 Open Scope hacspec_scope.
 
 
 
 
-
-Definition state := lseq (uint32) (usize 16).
+Definition state := nseq (uint32) (usize 16).
 
 Definition state_idx :=
   nat_mod (usize 16).
+  
+Definition uint_size_in_state_idx(n : uint_size) : state_idx := int_in_nat_mod n.
+Coercion uint_size_in_state_idx : uint_size >-> state_idx.
 
-Definition state_bytes := lseq (uint8) (usize 64).
+Definition state_bytes := nseq (uint8) (usize 64).
 
-Definition iv := lseq (uint8) (usize 12).
+Definition iv := nseq (uint8) (usize 12).
 
-Definition key := lseq (uint8) (usize 32).
+Definition key := nseq (uint8) (usize 32).
 
 Definition state_to_bytes (x_0 : state) : state_bytes :=
-  let r_1 := array_new_ (secret (pub_u8 0)) (64) in
-  let (r_1) :=
-    foldi (usize 0) (List.length (x_0)) (fun i_2 r_1 =>
+  let r_1 := array_new_ (secret (repr 0)) (64) in
+  let r_1 :=
+    foldi (usize 0) (array_len (x_0)) (fun i_2 r_1 =>
       let bytes_3 := uint32_to_be_bytes (array_index (x_0) (i_2)) in
       let r_1 :=
         array_upd r_1 ((i_2) * (usize 4)) (array_index (bytes_3) (usize 3))
@@ -40,7 +44,7 @@ Definition state_to_bytes (x_0 : state) : state_bytes :=
           array_index (bytes_3) (usize 0))
       in
       (r_1))
-    (r_1)
+    r_1
   in
   r_1.
 
@@ -54,11 +58,11 @@ Definition chacha_line
   let state_9 := m_8 in
   let state_9 :=
     array_upd state_9 (a_4) (
-      (array_index (state_9) (a_4)) +. (array_index (state_9) (b_5)))
+      (array_index (state_9) (a_4)) .+ (array_index (state_9) (b_5)))
   in
   let state_9 :=
     array_upd state_9 (d_6) (
-      (array_index (state_9) (d_6)) ^. (array_index (state_9) (a_4)))
+      (array_index (state_9) (d_6)) .^ (array_index (state_9) (a_4)))
   in
   let state_9 :=
     array_upd state_9 (d_6) (
@@ -102,98 +106,98 @@ Definition chacha_double_round (state_18 : state) : state :=
   in
   chacha_quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_25).
 
-Definition chacha20_constants_init () : list uint32 :=
-  let constants_26 := list_new_ (secret (pub_u32 0)) (usize 4) in
+Definition chacha20_constants_init  : seq uint32 :=
+  let constants_26 := seq_new_ (secret (repr 0)) (usize 4) in
   let constants_26 :=
-    array_upd constants_26 (usize 0) (secret (pub_u32 1634760805))
+    array_upd constants_26 (usize 0) (secret (repr 1634760805))
   in
   let constants_26 :=
-    array_upd constants_26 (usize 1) (secret (pub_u32 857760878))
+    array_upd constants_26 (usize 1) (secret (repr 857760878))
   in
   let constants_26 :=
-    array_upd constants_26 (usize 2) (secret (pub_u32 2036477234))
+    array_upd constants_26 (usize 2) (secret (repr 2036477234))
   in
   let constants_26 :=
-    array_upd constants_26 (usize 3) (secret (pub_u32 1797285236))
+    array_upd constants_26 (usize 3) (secret (repr 1797285236))
   in
   constants_26.
 
-Definition chacha20_key_to_u32s (key_27 : key) : list uint32 :=
-  let uints_28 := list_new_ (secret (pub_u32 0)) (usize 8) in
+Definition chacha20_key_to_u32s (key_27 : key) : seq uint32 :=
+  let uints_28 := seq_new_ (secret (repr 0)) (usize 8) in
   let uints_28 :=
     array_upd uints_28 (usize 0) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 0, usize 4))))
   in
   let uints_28 :=
     array_upd uints_28 (usize 1) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 4, usize 8))))
   in
   let uints_28 :=
     array_upd uints_28 (usize 2) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 8, usize 12))))
   in
   let uints_28 :=
     array_upd uints_28 (usize 3) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 12, usize 16))))
   in
   let uints_28 :=
     array_upd uints_28 (usize 4) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 16, usize 20))))
   in
   let uints_28 :=
     array_upd uints_28 (usize 5) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 20, usize 24))))
   in
   let uints_28 :=
     array_upd uints_28 (usize 6) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 24, usize 28))))
   in
   let uints_28 :=
     array_upd uints_28 (usize 7) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (key_27) (
+        array_from_slice_range (secret (repr 0)) (4) (key_27) (
           (usize 28, usize 32))))
   in
   uints_28.
 
-Definition chacha20_iv_to_u32s (iv_29 : iv) : list uint32 :=
-  let uints_30 := list_new_ (secret (pub_u32 0)) (usize 3) in
+Definition chacha20_iv_to_u32s (iv_29 : iv) : seq uint32 :=
+  let uints_30 := seq_new_ (secret (repr 0)) (usize 3) in
   let uints_30 :=
     array_upd uints_30 (usize 0) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (iv_29) (
+        array_from_slice_range (secret (repr 0)) (4) (iv_29) (
           (usize 0, usize 4))))
   in
   let uints_30 :=
     array_upd uints_30 (usize 1) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (iv_29) (
+        array_from_slice_range (secret (repr 0)) (4) (iv_29) (
           (usize 4, usize 8))))
   in
   let uints_30 :=
     array_upd uints_30 (usize 2) (
       uint32_from_le_bytes (
-        array_from_slice_range (secret (pub_u8 0)) (4) (iv_29) (
+        array_from_slice_range (secret (repr 0)) (4) (iv_29) (
           (usize 8, usize 12))))
   in
   uints_30.
 
-Definition chacha20_ctr_to_seq (ctr_31 : uint32) : list uint32 :=
-  let uints_32 := list_new_ (secret (pub_u32 0)) (usize 1) in
+Definition chacha20_ctr_to_seq (ctr_31 : uint32) : seq uint32 :=
+  let uints_32 := seq_new_ (secret (repr 0)) (usize 1) in
   let uints_32 := array_upd uints_32 (usize 0) (ctr_31) in
   uints_32.
 
@@ -203,11 +207,10 @@ Definition chacha_block_init
   (iv_35 : iv)
   : state :=
   array_from_seq (16) (
-    list_concat (
-      list_concat (
-        list_concat (chacha20_constants_init ()) (
-          chacha20_key_to_u32s (key_33))) (chacha20_ctr_to_seq (ctr_34))) (
-      chacha20_iv_to_u32s (iv_35))).
+    seq_concat (
+      seq_concat (
+        seq_concat (chacha20_constants_init ) (chacha20_key_to_u32s (key_33))) (
+        chacha20_ctr_to_seq (ctr_34))) (chacha20_iv_to_u32s (iv_35))).
 
 Definition chacha_block_inner
   (key_36 : key)
@@ -216,20 +219,20 @@ Definition chacha_block_inner
   : state :=
   let st_39 := chacha_block_init (key_36) (ctr_37) (iv_38) in
   let state_40 := st_39 in
-  let (state_40) :=
-    foldi (usize 0) (usize 10) (fun i_41 (state_40) ->
+  let state_40 :=
+    foldi (usize 0) (usize 10) (fun i_41 state_40 =>
       let state_40 := chacha_double_round (state_40) in
       (state_40))
-    (state_40)
+    state_40
   in
-  let (state_40) :=
-    foldi (usize 0) (usize 16) (fun i_42 (state_40) ->
+  let state_40 :=
+    foldi (usize 0) (usize 16) (fun i_42 state_40 =>
       let state_40 :=
         array_upd state_40 (i_42) (
-          (array_index (state_40) (i_42)) +. (array_index (st_39) (i_42)))
+          (array_index (state_40) (i_42)) .+ (array_index (st_39) (i_42)))
       in
       (state_40))
-    (state_40)
+    state_40
   in
   state_40.
 
@@ -242,29 +245,30 @@ Definition chacha_block
   state_to_bytes (state_46).
 
 Definition chacha (key_47 : key) (iv_48 : iv) (m_49 : byte_seq) : byte_seq :=
-  let ctr_50 := secret (pub_u32 1) in
-  let blocks_out_51 := list_new_ (secret (pub_u8 0)) (list_len (m_49)) in
-  let (ctr_50, blocks_out_51) :=
-    foldi (usize 0) (list_num_chunks (m_49) (usize 64)) (fun i_52 (
+  let ctr_50 := secret (repr 1) in
+  let blocks_out_51 := seq_new_ (secret (repr 0)) (seq_len (m_49)) in
+  let '(ctr_50, blocks_out_51) :=
+    foldi (usize 0) (seq_num_chunks (m_49) (usize 64)) (fun i_52 '(
         ctr_50,
         blocks_out_51
-      ) ->
-      let (block_len_53, msg_block_54) :=
-        list_get_chunk (m_49) (usize 64) (i_52)
+      ) =>
+      let '(block_len_53, msg_block_54) :=
+        seq_get_chunk (m_49) (usize 64) (i_52)
       in
       let key_block_55 := chacha_block (key_47) (ctr_50) (iv_48) in
-      let msg_block_padded_56 := array_new_ (secret (pub_u8 0)) (64) in
+      let msg_block_padded_56 := array_new_ (secret (repr 0)) (64) in
       let msg_block_padded_57 :=
         array_update_start (msg_block_padded_56) (msg_block_54)
       in
       let blocks_out_51 :=
-        list_set_chunk (blocks_out_51) (usize 64) (i_52) (
+        seq_set_chunk (blocks_out_51) (usize 64) (i_52) (
           array_slice_range (
-            (msg_block_padded_57) `array_xor (^.)` (key_block_55)) (
+            (msg_block_padded_57) array_xor_.^ (key_block_55)) (
             (usize 0, block_len_53)))
       in
-      let ctr_50 := (ctr_50) +. (secret (pub_u32 1)) in
+      let ctr_50 := (ctr_50) .+ (secret (repr 1)) in
       (ctr_50, blocks_out_51))
     (ctr_50, blocks_out_51)
   in
   blocks_out_51.
+

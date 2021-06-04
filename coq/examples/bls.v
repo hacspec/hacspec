@@ -1,12 +1,13 @@
-Require Import NewLib MachineIntegers.
+Require Import Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
 Section bls.
+Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
 
 Definition fp :=
-  @nat_mod 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
+  nat_mod 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
 
 Definition g1 : Type := (fp * fp * bool).
 Definition fp2 : Type := (fp * fp).
@@ -17,6 +18,7 @@ Definition fp12 : Type := (fp6 * fp6).
 Definition fp_canvas := nseq (int8) ((usize 48)).
 
 
+
 Definition serialized_fp := nseq (uint8) (usize 48).
 
 Definition array_fp := nseq (uint64) (usize 6).
@@ -24,19 +26,15 @@ Definition array_fp := nseq (uint64) (usize 6).
 Definition scalar_canvas := nseq (int8) ((usize 32)).
 
 Definition scalar :=
-  @nat_mod 0x8000000000000000000000000000000000000000000000000000000000000000.
+  nat_mod 0x8000000000000000000000000000000000000000000000000000000000000000.
 
 (* Definition most_significant_bit (m_0 : scalar) (n_1 : uint_size) : uint_size :=
-  if (
-    ((n_1) >.? (usize 0)) && (
-      negb (
-        @nat_mod_bit (
-          0x8000000000000000000000000000000000000000000000000000000000000000) (
-          m_0) (n_1)))) then (
+  if (((n_1) >.? (usize 0)) && (negb (nat_mod_bit (m_0) (n_1)))) then (
     most_significant_bit (m_0) ((n_1) - (usize 1))) else (n_1). *)
-    Definition fp2fromfp (n_2 : fp) : fp2 :=
-      (n_2, nat_mod_zero ).
-    
+
+Definition fp2fromfp (n_2 : fp) : fp2 :=
+  (n_2, nat_mod_zero ).
+  
 Definition fp2zero  : fp2 :=
   fp2fromfp (nat_mod_zero ).
 
@@ -169,7 +167,8 @@ Definition fp12inv (n_113 : fp12) : fp12 :=
   let x_121 := fp6mul (n1_114) (t2_120) in
   let y_122 := fp6neg (fp6mul (n2_115) (t2_120)) in
   (x_121, y_122).
-Axiom most_significant_bit : scalar -> uint_size -> uint_size.
+
+
 
 Definition fp12exp (n_123 : fp12) (k_124 : scalar) : fp12 :=
   let l_125 := (usize 255) - (most_significant_bit (k_124) (usize 255)) in
@@ -212,7 +211,8 @@ Definition g1double_a (p_142 : g1) : g1 :=
   let xovery_146 :=
     (
       (
-        nat_mod_from_literal _ (
+        nat_mod_from_literal (
+          0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab) (
           repr 3)) *% (x12_145)) *% (nat_mod_inv ((nat_mod_two ) *% (y1_144)))
   in
   let x3_147 :=
@@ -282,7 +282,8 @@ Definition g2double_a (p_186 : g2) : g2 :=
   let t1_190 :=
     fp2mul (
       fp2fromfp (
-        nat_mod_from_literal _ (
+        nat_mod_from_literal (
+          0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab) (
           repr 3))) (x12_189)
   in
   let t2_191 := fp2inv (fp2mul (fp2fromfp (nat_mod_two )) (y1_188)) in
@@ -345,7 +346,8 @@ Definition line_double_p (r_226 : g2) (p_227 : g1) : fp12 :=
   let a_230 :=
     fp2mul (
       fp2fromfp (
-        nat_mod_from_literal _ (
+        nat_mod_from_literal (
+          0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab) (
           repr 3))) (fp2mul (r0_228) (r0_228))
   in
   let a_231 :=
@@ -371,7 +373,7 @@ Definition line_add_p (r_237 : g2) (q_238 : g2) (p_239 : g1) : fp12 :=
 
 Definition frobenius (f_250 : fp12) : fp12 :=
   let '((g0_251, g1_252, g2_253), (h0_254, h1_255, h2_256)) := f_250 in
-  let t1_257  := fp2conjugate (g0_251) in
+  let t1_257 := fp2conjugate (g0_251) in
   let t2_258 := fp2conjugate (h0_254) in
   let t3_259 := fp2conjugate (g1_252) in
   let t4_260 := fp2conjugate (h1_255) in
@@ -427,10 +429,10 @@ Definition final_exponentiation (f_279 : fp12) : fp12 :=
   let f_284 := fp12mul (fp8_283) (fp6_1_282) in
   let u_285 :=
     nat_mod_from_literal (
-      _) (
+      0x8000000000000000000000000000000000000000000000000000000000000000) (
       repr 15132376222941642752)
   in
-  let t0_286 : fp12 := fp12mul (f_284) (f_284) in
+  let t0_286 := fp12mul (f_284) (f_284) in
   let t1_287 := fp12exp (t0_286) (u_285) in
   let t1_288 := fp12conjugate (t1_287) in
   let t2_289 := fp12exp (t1_288) ((u_285) /% (nat_mod_two )) in
@@ -459,8 +461,9 @@ Definition final_exponentiation (f_279 : fp12) : fp12 :=
   t1_311.
 
 Definition pairing (p_312 : g1) (q_313 : g2) : fp12 :=
-  let t_314 : scalar :=
-    nat_mod_from_literal _ (
+  let t_314 :=
+    nat_mod_from_literal (
+      0x8000000000000000000000000000000000000000000000000000000000000000) (
       repr 15132376222941642752)
   in
   let r_315 := q_313 in
