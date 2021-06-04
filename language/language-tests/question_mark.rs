@@ -10,5 +10,5 @@ pub fn foo(x: bool) -> Result<u32, U8> {
 
 pub fn bar() -> Result<u32, U8> {
     let x = foo(false)?;
-    Ok(x + 1u32)
+    Result::<u32, U8>::Ok(x + 1u32)
 }
