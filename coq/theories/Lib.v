@@ -221,16 +221,13 @@ Definition list_len := length.
 
 Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 
+Axiom seq_num_exact_chunks : forall {l}, seq l -> uint_size -> uint_size.
+Axiom seq_get_exact_chunk : forall {l}, seq l -> uint_size -> uint_size -> seq l.
+Axiom seq_set_exact_chunk : forall {l}, seq l -> uint_size -> uint_size -> seq l -> seq l.
+Axiom seq_get_remainder_chunk : forall {l}, seq l -> uint_size -> seq l.
 
-
-Definition seq_new_ {A: Type} (init : A) (len: nat) : nseq A len :=
+Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
   const init len.
-
-(* Fixpoint of_list {A} (l : list A) : lseq A (usize (length l)) :=
-match l as l' return lseq A (usize (length l')) with
-  |Datatypes.nil => Vector.nil _
-  |(h :: tail)%list => (Vector.cons _ h (usize (1 + length l)) (of_list tail))
-end. *)
 
 Definition array_from_list (A: Type) (l: list A) : nseq A (length l)
   := of_list l.
@@ -238,8 +235,10 @@ Definition array_from_list (A: Type) (l: list A) : nseq A (length l)
 (* automatic conversion from list to array *)
 Global Coercion array_from_list : list >-> nseq.
 
+
 (**** Array manipulation *)
 
+(* Typeclass handling of default elements. We provide instances for the library integer types *)
 Class Default (A : Type) := {
   default : A
 }.
@@ -293,13 +292,22 @@ Defined.
 
 (* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
 
+(* substitutes a sequence (list) into an array (nseq), given index interval  *)
+Axiom update_sub : forall {A len }, nseq A len -> nat -> nat -> seq A -> t A len.
+
+
 Definition array_from_seq
   {a: Type}
+ `{Default a}
   (out_len:nat)
   (input: seq a)
   (* {H : List.length input = out_len} *)
-    : t a (length input) :=
-  Vector.of_list input.
+    : nseq a out_len :=
+    let out := Vector.const default out_len in
+    update_sub out 0 (out_len - 1) input. 
+  (* Vector.of_list input. *)
+
+Global Coercion array_from_seq : seq >-> nseq.
 
 Definition slice {A} (l : seq A) (i j : nat) : seq A := 
   if j <=? i then [] else firstn (j-i+1) (skipn i l).
@@ -316,7 +324,6 @@ Definition update_sub {A len slen} (v : t A len) (i n) (sub : t A slen) :=
   Vector.append
     (Vector.append (slice v 0 start ) sub) *)
 
-Axiom update_sub : forall {A len slen}, t A len -> nat -> nat -> seq A -> t A slen.
 
 Definition array_from_slice
   {a: Type}
@@ -332,6 +339,7 @@ Definition array_from_slice
 
 Definition array_slice
   {a: Type}
+ `{Default a}
   (input: seq a)
   (start: nat)
   (slice_len: nat)
@@ -376,6 +384,7 @@ Definition array_len  {a: Type} {len: nat} (s: nseq a len) := len.
 
 Definition seq_slice
   {a: Type}
+ `{Default a}
   (s: seq a)
   (start: nat)
   (len: nat)
@@ -458,44 +467,49 @@ Definition seq_get_chunk
 
 Definition seq_set_chunk
   {a: Type}
-  {len : nat}
-  (s: nseq a len)
+  (s: seq a)
   (chunk_len: nat)
   (chunk_num: nat)
-  (chunk: seq a )
-    : nseq a len
-  :=
+  (chunk: seq a ) : seq a :=
  let idx_start := chunk_len * chunk_num in
- let out_len := seq_chunk_len (Vector.to_list s) chunk_len chunk_num in
-  update_sub s idx_start out_len chunk.
+ let out_len := seq_chunk_len s chunk_len chunk_num in
+  Vector.to_list (update_sub (of_list s) idx_start out_len chunk).
 
 (**** Numeric operations *)
 
-Definition array_xor
+(* takes two nseq's and joins them using a function op : a -> a -> a *)
+Definition array_join_map
   {a: Type}
  `{Default a}
   {len: nat}
-  (xor: a -> a -> a)
+  (op: a -> a -> a)
   (s1: nseq a len)
-  (s2 : nseq a len)
-    : nseq a len
-  :=
+  (s2 : nseq a len) :=
   let out := s1 in
   foldi (usize 0) (usize len) (fun i out =>
     let i := from_uint_size i in
-    array_upd out i (xor (array_index s1 i) (array_index s2 i))
+    array_upd out i (op (array_index s1 i) (array_index s2 i))
   ) out.
 
-Infix "array_xor_.^" := (array_xor xor) (at level 33) : hacspec_scope.
+Infix "array_xor" := (array_join_map xor) (at level 33) : hacspec_scope.
+Infix "array_add" := (array_join_map add) (at level 33) : hacspec_scope.
+Infix "array_minus" := (array_join_map sub) (at level 33) : hacspec_scope.
+Infix "array_mul" := (array_join_map mul) (at level 33) : hacspec_scope.
+Infix "array_div" := (array_join_map divs) (at level 33) : hacspec_scope.
+Infix "array_or" := (array_join_map or) (at level 33) : hacspec_scope.
+Infix "array_and" := (array_join_map and) (at level 33) : hacspec_scope.
 
-
-Definition array_eq
+Definition array_eq_
   {a: Type}
   {len: nat}
   (eq: a -> a -> bool)
   (s1: nseq a len)
   (s2 : nseq a len)
     : bool := Vector.eqb _ eq s1 s2.
+
+Infix "array_eq" := (array_eq_ eq) (at level 33) : hacspec_scope.
+Infix "array_neq" := (fun s1 s2 => negb (array_eq_ eq s1 s2)) (at level 33) : hacspec_scope.
+
 
 (**** Integers to arrays *)
 Axiom uint32_to_le_bytes : int32 -> nseq int8 4.
@@ -667,7 +681,9 @@ Axiom nat_mod_to_public_byte_seq_be : forall (n : N) (len : uint_size), nat_mod 
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n' *)
 
-Axiom array_to_le_bytes : forall {A l}, nseq A l -> nseq int64 l.
+  
+Axiom array_to_le_uint32s : forall {A l}, nseq A l -> nseq uint32 l.
+Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
 Axiom nat_mod_from_byte_seq_le : forall  {A l n}, nseq A l -> nat_mod n.  
 Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> uint_size.
 
