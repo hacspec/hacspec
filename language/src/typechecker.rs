@@ -1537,7 +1537,18 @@ fn typecheck_expression(
                 }
             }
             let ret_ty = sig_ret(&f_sig);
-            let ret_ty = bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx)?;
+            let ret_ty =
+                match bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx) {
+                    Ok(ret_ty) => ret_ty,
+                    Err(_) => {
+                        sess.span_rustspec_err(
+                            name.1,
+                            "A type variable cannot be unified, please provide \
+                                the type parameters for this function",
+                        );
+                        return Err(());
+                    }
+                };
             Ok((
                 Expression::FuncCall(prefix.clone(), name.clone(), new_args),
                 (
