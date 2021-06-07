@@ -496,3 +496,8 @@ let option_unwrap (#a: Type) (x: option a{Some? x}) : a =
 type result (a: Type) (b: Type) =
   | Ok : a -> result a b
   | Err : b -> result a b
+
+let bind_ok (#a #a' #b: Type) (v: result a b) (kont: a -> result a' b) : result a' b =
+   match v with
+   | Ok x -> kont x
+   | Err y -> Err y
