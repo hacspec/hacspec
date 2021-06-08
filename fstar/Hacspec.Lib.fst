@@ -156,6 +156,17 @@ let array_from_seq
     : lseq a out_len
   = input
 
+let array_update
+  (#a: Type)
+  (#len: uint_size)
+  (s: lseq a len)
+  (start: uint_size)
+  (#input_len: uint_size{start + input_len <= len})
+  (input: lseq a input_len)
+    : lseq a len
+  =
+  LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input
+
 let array_from_slice
   (#a: Type)
   (default_value: a)
@@ -215,6 +226,19 @@ let array_update_start
 
 let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 
+let array_to_le_uint32s (#len: uint_size) (s: lseq uint8 len{len % 4 = 0}) : lseq uint32 (len / 4) =
+  admit()
+
+let array_to_le_bytes
+  (#int_ty: inttype{unsigned int_ty /\ int_ty <> U1})
+  (#len: uint_size{
+    range (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16)) U32
+  })
+  (s: lseq (uint_t int_ty SEC) len)
+    : lseq uint8 (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16))
+  =
+  admit()
+
 (**** Seq manipulation *)
 
 let seq_slice
@@ -264,6 +288,13 @@ let seq_concat
 let seq_num_chunks (#a: Type) (s: seq a) (chunk_len: uint_size{chunk_len > 0}) : uint_size =
   (Seq.length s + chunk_len - 1) / chunk_len
 
+let seq_num_exact_chunks
+  (#a: Type)
+  (s: seq a)
+  (chunk_len: uint_size{chunk_len > 0})
+    : uint_size =
+  Seq.length s / chunk_len
+
 let seq_chunk_len
   (#a: Type)
   (s: seq a)
@@ -305,6 +336,17 @@ let seq_get_chunk
   (out_len, LSeq.slice #a #(Seq.length s)
     s idx_start (idx_start + seq_chunk_len s chunk_len chunk_num))
 
+let seq_get_exact_chunk
+  (#a: Type)
+  (s: seq a)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  : Pure (lseq a chunk_len)
+    (requires (chunk_len * (chunk_num + 1) <= Seq.length s))
+    (ensures (fun chunk -> True))
+  =
+  snd (seq_get_chunk s chunk_len chunk_num)
+
 let seq_set_chunk
   (#a: Type)
   (#len:uint_size) (* change to nseq but update_sub missing for nseq *)
@@ -323,6 +365,23 @@ let seq_set_chunk
   let out_len = seq_chunk_len s chunk_len chunk_num in
   LSeq.update_sub s idx_start out_len chunk
 
+let seq_set_exact_chunk
+  (#a: Type)
+  (#len:uint_size) (* change to nseq but update_sub missing for nseq *)
+  (s: lseq a len)
+  (chunk_len: uint_size)
+  (chunk_num: uint_size)
+  (chunk: seq a )
+    : Pure (lseq a len)
+      (requires (
+        chunk_len * (chunk_num + 1) <= Seq.length s /\
+        LSeq.length chunk = seq_chunk_len s chunk_len chunk_num
+      ))
+      (ensures (fun out -> True))
+  =
+  seq_set_chunk s chunk_len chunk_num chunk
+
+
 (**** Numeric operations *)
 
 let array_xor
@@ -336,6 +395,19 @@ let array_xor
   let out = s1 in
   foldi 0 len (fun i out ->
     array_upd out i (array_index s1 i `xor` array_index s2 i)
+  ) out
+
+let array_add
+  (#a: Type)
+  (#len: uint_size)
+  (add: a -> a -> a)
+  (s1: lseq a len)
+  (s2 : lseq a len)
+    : lseq a len
+  =
+  let out = s1 in
+  foldi 0 len (fun i out ->
+    array_upd out i (array_index s1 i `add` array_index s2 i)
   ) out
 
 let array_eq

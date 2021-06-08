@@ -507,7 +507,7 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Le, _) => RcDoc::as_string("<=."),
         (BinOpKind::Ge, _) => RcDoc::as_string(">=."),
         (BinOpKind::Gt, _) => RcDoc::as_string(">."),
-        (BinOpKind::Ne, _) => RcDoc::as_string("!="),
+        (BinOpKind::Ne, _) => RcDoc::as_string("<>"),
         (BinOpKind::Eq, _) => RcDoc::as_string("="),
         (BinOpKind::And, _) => RcDoc::as_string("&&"),
         (BinOpKind::Or, _) => RcDoc::as_string("||"),
@@ -924,6 +924,8 @@ fn translate_statements<'a>(
                     translate_expression(expr.clone(), top_ctx),
                     false,
                 )
+                .append(RcDoc::hardline())
+                .append(translate_statements(statements, top_ctx))
             }
         }
         Statement::Reassignment((x, _), (e1, _)) => make_let_binding(
