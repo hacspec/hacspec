@@ -554,8 +554,9 @@ let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq p
   let n' = n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n'
 
-
 let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
+
+let nat_zero (m: pos) : nat_mod m = 0
 
 (*** Option *)
 
