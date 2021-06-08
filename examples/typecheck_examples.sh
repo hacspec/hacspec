@@ -12,11 +12,17 @@ function typecheck {
   else
     cargo hacspec $1
   fi
+  if [ -z "$5" ];
+  then
+    mkdir -p target/fstar
+    fstar_file=target/fstar/$1.fst
+  else
+    fstar_file=fstar/$5
+  fi
   if [ "$3" == "fst" ];
   then
-    echo "    extracting F* ..."
-    mkdir -p target/fstar
-    cargo hacspec -o target/fstar/$1.fst $1
+    echo "    extracting F* to $fstar_file..."
+    cargo hacspec -o $fstar_file $1
   fi
   if [ "$4" == "json" ];
   then
@@ -30,7 +36,7 @@ cd $(dirname "$0")/../
 cargo clean
 cargo build
 cargo install --path language
-typecheck hacspec-chacha20             ec      fst    json
+typecheck hacspec-chacha20             ec      fst    json  Hacspec.Chacha20.fst
 typecheck hacspec-chacha20poly1305     ec      fst    json
 typecheck hacspec-poly1305             ec      fst    json
 typecheck hacspec-curve25519           ec      fst    json

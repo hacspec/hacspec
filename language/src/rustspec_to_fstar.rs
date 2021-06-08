@@ -905,7 +905,7 @@ fn translate_statements<'a>(
     top_ctx: &'a TopLevelContext,
 ) -> RcDoc<'a, ()> {
     let s = match statements.next() {
-        None => panic!("should not happen"),
+        None => return RcDoc::nil(),
         Some(s) => s.clone(),
     };
     match s.0 {

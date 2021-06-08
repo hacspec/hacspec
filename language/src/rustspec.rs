@@ -14,7 +14,7 @@ impl Serialize for RustspecSpan {
     where
         S: Serializer,
     {
-        serializer.serialize_unit()
+        serializer.serialize_str(format!("{:?}", self.0).as_str())
     }
 }
 
@@ -92,7 +92,7 @@ impl fmt::Debug for Ident {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct VarSet(pub HashSet<LocalIdent>);
 
 impl Serialize for VarSet {
@@ -255,7 +255,7 @@ impl fmt::Debug for BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Literal {
     Unit,
     Bool(bool),
@@ -274,7 +274,7 @@ pub enum Literal {
     Str(String),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum UnOpKind {
     Not,
     Neg,
@@ -302,7 +302,7 @@ pub enum BinOpKind {
     Gt,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
     Binary(
@@ -366,7 +366,7 @@ pub enum Pattern {
     SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
     pub vars: VarSet,
     pub stmt: Statement,
@@ -374,7 +374,7 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Statement {
     LetBinding(
         Spanned<Pattern>,     // Let-binded pattern
@@ -399,7 +399,7 @@ pub enum Statement {
     ReturnExp(Expression),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
