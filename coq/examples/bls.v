@@ -23,15 +23,15 @@ Definition most_significant_bit (m_0 : scalar) (n_1 : uint_size) : uint_size :=
   if (((n_1) >.? (usize 0)) && (negb (nat_mod_bit (m_0) (n_1)))) then (
     most_significant_bit (m_0) ((n_1) - (usize 1))) else (n_1).
 
-Definition g1 : Type := (fp * fp * bool).
+Notation g1 := ((fp × fp × bool)).
 
-Definition fp2 : Type := (fp * fp).
+Notation fp2 := ((fp × fp)).
 
-Definition g2 : Type := (fp2 * fp2 * bool).
+Notation g2 := ((fp2 × fp2 × bool)).
 
-Definition fp6 : Type := (fp2 * fp2 * fp2).
+Notation fp6 := ((fp2 × fp2 × fp2)).
 
-Definition fp12 : Type := (fp6 * fp6).
+Notation fp12 := ((fp6 × fp6)).
 
 Definition fp2fromfp (n_2 : fp) : fp2 :=
   (n_2, nat_mod_zero ).
@@ -333,7 +333,7 @@ Definition g2neg (p_217 : g2) : g2 :=
   let '(x_218, y_219, inf_220) := p_217 in
   (x_218, fp2neg (y_219), inf_220).
 
-Definition twist (p_221 : g1) : (fp12 * fp12) :=
+Definition twist (p_221 : g1) : (fp12 × fp12) :=
   let '(p0_222, p1_223, _) := p_221 in
   let x_224 := ((fp2zero , fp2fromfp (p0_222), fp2zero ), fp6zero ) in
   let y_225 := (fp6zero , (fp2zero , fp2fromfp (p1_223), fp2zero )) in

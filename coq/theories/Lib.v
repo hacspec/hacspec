@@ -674,7 +674,7 @@ Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_
   
 Axiom array_to_le_uint32s : forall {A l}, nseq A l -> nseq uint32 l.
 Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
-Axiom nat_mod_from_byte_seq_le : forall  {A l n}, nseq A l -> nat_mod n.  
+Axiom nat_mod_from_byte_seq_le : forall  {A n}, seq A -> nat_mod n.  
 Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> uint_size.
 
 
