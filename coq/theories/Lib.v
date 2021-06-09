@@ -136,14 +136,18 @@ Definition uint128_rotate_right (u: int128) (s: int128) : int128 :=
 (* should use size u instead of u? *)
 Definition usize_shift_right (u: uint_size) (s: int32) : uint_size :=
   (ror u s).
+Infix "usize_shift_right" := (usize_shift_right) (at level 77) : hacspec_scope. 
 
 (* should use size u instead of u? *)
 Definition usize_shift_left (u: uint_size) (s: int32) : uint_size :=
   (rol u s).
-
+Infix "usize_shift_left" := (usize_shift_left) (at level 77) : hacspec_scope. 
+  
 Definition pub_uint128_wrapping_add (x y: int128) : int128 :=
   add x y.
 
+Infix "shift_left" := (MachineIntegers.shl) (at level 77) : hacspec_scope. 
+Infix "shift_right" := (MachineIntegers.shr) (at level 77) : hacspec_scope. 
 
 Infix "%%" := Z.rem (at level 40, left associativity) : Z_scope.
 Infix ".+" := (MachineIntegers.add) (at level 77) : hacspec_scope.
@@ -158,18 +162,6 @@ Infix "==" := (MachineIntegers.eq) (at level 32) : hacspec_scope.
 (* Definition zero := (@zero WORDSIZE32). *)
 
 (*** Loops *)
-
-(* 
-Fixpoint foldi_
-  {acc: Type}
-  (cur_i: uint_size)
-  (hi: uint_size) (* {cur_i <= hi} *)
-  (f: uint_size -> acc -> acc) (* {i < hi} *)
-  (cur: acc)
-    : acc :=
-
-  if cur_i == hi then cur else
-  foldi_ (cur_i + one) hi f (f cur_i cur). *)
 
 Open Scope nat_scope.
 Fixpoint foldi_ 
@@ -195,17 +187,7 @@ Definition foldi
   | Zpos p => foldi_ (Pos.to_nat p) lo f init
   end.
 
-(* Coercion Int32.repr : Z >-> int. *)
-(* Definition N_to_int n : int := Z.of_N n. *)
-(* Coercion N_to_int : N >-> int. *)
-
-(* Compute (foldi 1 2 (fun i acc => i + 1) 0). *)
-
 (*** Seq *)
-
-(* module LSeq = Lib.Sequence *)
-(* module LBSeq = Lib.ByteSequence *)
-
 
 Definition nseq := Vector.t.
 (* Definition lseq (A : Type) (len : uint_size) := Vector.t A (from_uint_size len). *)
@@ -312,8 +294,6 @@ Global Coercion array_from_seq : seq >-> nseq.
 Definition slice {A} (l : seq A) (i j : nat) : seq A := 
   if j <=? i then [] else firstn (j-i+1) (skipn i l).
 
-(* Compute (slice [1;2;3;4;5] 1 0). *)
-
 Definition lseq_slice {A n} (l : nseq A n) (i j : nat) : nseq A _ :=
   of_list (slice (to_list l) i j).
 
@@ -368,6 +348,14 @@ Definition array_slice_range
     : nseq a _ :=
   lseq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
   
+Definition array_update
+  {a: Type}
+  {len: nat}
+  (s: nseq a len)
+  (start : nat)
+  (start_s: seq a)
+    : nseq a len :=
+    update_sub s start (length start_s) start_s.
 
 Definition array_update_start
   {a: Type}
@@ -611,35 +599,35 @@ Axiom u128_from_be_bytes : nseq int8 16 -> int128.
 (*** Nats *)
 
 
-Definition nat_mod (p : N) : Set := GZnZ.znz (Z.of_N p).
+Definition nat_mod (p : Z) : Set := GZnZ.znz p.
 (* Definition nat_mod (p : uint_size) := nat_mod (from_uint_size p). *)
 
-Definition nat_mod_zero {p : N} : nat_mod p := GZnZ.zero (Z.of_N p).
-Definition nat_mod_one {p : N} : nat_mod p := GZnZ.one (Z.of_N p).
-Definition nat_mod_two {p : N} : nat_mod p := GZnZ.mkznz (Z.of_N p) _ (GZnZ.modz (Z.of_N p) 2).
+Definition nat_mod_zero {p} : nat_mod p := GZnZ.zero p.
+Definition nat_mod_one {p} : nat_mod p := GZnZ.one p.
+Definition nat_mod_two {p} : nat_mod p := GZnZ.mkznz p _ (GZnZ.modz p 2).
 
 
 (* convenience coercions from nat_mod to Z and N *)
-Coercion Z.of_N : N >-> Z.
+(* Coercion Z.of_N : N >-> Z. *)
 
-Definition nat_mod_add {n : N} (a : nat_mod n) (b : nat_mod n) : nat_mod n := GZnZ.add n a b.
+Definition nat_mod_add {n : Z} (a : nat_mod n) (b : nat_mod n) : nat_mod n := GZnZ.add n a b.
    
 Infix "+%" := nat_mod_add (at level 33) : hacspec_scope.
 
-Definition nat_mod_mul {n : N} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.add n a b.
+Definition nat_mod_mul {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.add n a b.
 Infix "*%" := nat_mod_mul (at level 33) : hacspec_scope.
 
-Definition nat_mod_sub {n : N} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.sub n a b.
+Definition nat_mod_sub {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.sub n a b.
 Infix "-%" := nat_mod_mul (at level 33) : hacspec_scope.
 
-Definition nat_mod_div {n : N} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.div n a b.
+Definition nat_mod_div {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.div n a b.
 Infix "/%" := nat_mod_mul (at level 33) : hacspec_scope.
 
-Definition nat_modeg {n : N} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
+Definition nat_modeg {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
 
-Definition nat_mod_inv {n : N} (a:nat_mod n) : nat_mod n := GZnZ.inv n a.
+Definition nat_mod_inv {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.inv n a.
 
-Definition nat_mod_exp {p : N} (a:nat_mod p) (n : uint_size) : nat_mod p :=
+Definition nat_mod_exp {p : Z} (a:nat_mod p) (n : uint_size) : nat_mod p :=
   let n : nat := Z.to_nat (from_uint_size n) in 
   let fix exp_ (e : nat_mod p) (n : nat) :=
     match n with
@@ -652,7 +640,7 @@ Close Scope nat_scope.
 Open Scope Z_scope.
 
 (* We assume x < m *)
-Definition nat_mod_from_secret_literal {m : N} (x:int128) : nat_mod m.
+Definition nat_mod_from_secret_literal {m : Z} (x:int128) : nat_mod m.
 Proof.
   unfold nat_mod.
   (* since we assume x < m, it will be true that (unsigned x) = (unsigned x) mod m  *)
@@ -663,11 +651,11 @@ Proof.
   reflexivity.
 Defined.
 
-Definition nat_mod_from_literal (m : N) (x:int128) : nat_mod m := nat_mod_from_secret_literal x.
+Definition nat_mod_from_literal (m : Z) (x:int128) : nat_mod m := nat_mod_from_secret_literal x.
 
-Axiom nat_mod_to_public_byte_seq_le : forall (n : N) (len : uint_size), nat_mod n -> nseq int8 (from_uint_size len).
+Axiom nat_mod_to_public_byte_seq_le : forall (n : Z) (len : uint_size), nat_mod n -> nseq int8 (from_uint_size len).
 
-Definition nat_mod_bit {n : N} (a : nat_mod n) (i : uint_size) :=
+Definition nat_mod_bit {n : Z} (a : nat_mod n) (i : uint_size) :=
   Z.testbit (GZnZ.val n a) (from_uint_size i).
 
 
@@ -676,7 +664,7 @@ Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_mod_to_bytes_le len n'*)
 
-Axiom nat_mod_to_public_byte_seq_be : forall (n : N) (len : uint_size), nat_mod n -> nseq int8 (from_uint_size len).
+Axiom nat_mod_to_public_byte_seq_be : forall (n : Z) (len : uint_size), nat_mod n -> nseq int8 (from_uint_size len).
 (* Definition nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n' *)
@@ -689,9 +677,9 @@ Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> uint_size.
 
 
 (* We assume 2^x < m *)
-Definition nat_mod_pow2 (m : N) (x : N) : nat_mod m.
+Definition nat_mod_pow2 (m : Z) (x : N) : nat_mod m.
 Proof.
-  remember (Z.pow 2 x mod m) as y.
+  remember (Z.pow 2 (Z.of_N x) mod m) as y.
   apply (GZnZ.mkznz m y).
   rewrite Heqy.
   rewrite Zmod_mod.
@@ -702,6 +690,11 @@ Section Coercions.
 
   (* Integer coercions *)
   (* We have nat >-> N >-> Z >-> int/int32 *)
+  (* and uint >-> Z *)
+  (* and N >-> nat *)
+
+  Global Coercion N.to_nat : N >-> nat.
+
   Global Coercion repr : Z >-> int.
   
   Definition Z_to_int `{WORDSIZE} (n : Z) : int := repr n.
@@ -715,17 +708,21 @@ Section Coercions.
   Definition N_to_int `{WORDSIZE} (n : N) : int := repr (Z.of_N n).
   Global Coercion N.of_nat : nat >-> N.
   Global Coercion N_to_int : N >-> int.
-  Definition N_to_uint_size (n : N) : uint_size := repr n.
-  Global Coercion N_to_uint_size : N >-> uint_size.
+  Definition N_to_uint_size (n : Z) : uint_size := repr n.
+  Global Coercion N_to_uint_size : Z >-> uint_size.
   Definition nat_to_int `{WORDSIZE} (n : nat) := repr (Z.of_nat n).
   Global Coercion nat_to_int : nat >-> int.  
+
   Definition uint_size_to_nat (n : uint_size) : nat := from_uint_size n.
   Global Coercion uint_size_to_nat : uint_size >-> nat.
+
+  Definition uint_size_to_Z (n : uint_size) : Z := from_uint_size n.
+  Global Coercion uint_size_to_Z : uint_size >-> Z.
 
   Global Coercion GZnZ.val : GZnZ.znz >-> Z.
 
   (* coercions into nat_mod *)
-  Definition Z_in_nat_mod {m : N} (x:Z) : nat_mod m.
+  Definition Z_in_nat_mod {m : Z} (x:Z) : nat_mod m.
   Proof.
     unfold nat_mod.
     remember ((x) mod m) as zmodm.
@@ -734,9 +731,9 @@ Section Coercions.
     rewrite Zmod_mod.
     reflexivity.
   Defined.
-  Global Coercion Z_in_nat_mod : Z >-> nat_mod. 
+  (* Global Coercion Z_in_nat_mod : Z >-> nat_mod.  *)
 
-  Definition int_in_nat_mod {m : N} `{WORDSIZE} (x:int) : nat_mod m.
+  Definition int_in_nat_mod {m : Z} `{WORDSIZE} (x:int) : nat_mod m.
   Proof.
     unfold nat_mod.
     (* since we assume x < m, it will be true that (unsigned x) = (unsigned x) mod m  *)
@@ -750,7 +747,7 @@ Section Coercions.
   Global Coercion int_in_nat_mod : int >-> nat_mod.
    
   Definition uint_size_in_nat_mod (n : uint_size) : nat_mod 16 := int_in_nat_mod n.
-  Coercion uint_size_in_nat_mod : uint_size >-> nat_mod.
+  Global Coercion uint_size_in_nat_mod : uint_size >-> nat_mod.
 
 End Coercions.
 
@@ -831,7 +828,7 @@ Global Instance int_comparable `{WORDSIZE} : Comparable int := {
   geb a b := if eq a b then true else lt b a;
 }.
 
-Definition nat_mod_val (p : N) (a : nat_mod p) : Z := GZnZ.val p a.
+Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := GZnZ.val p a.
 
 Axiom nat_mod_eqb_spec : forall {p} (a b : nat_mod p), Z.eqb (nat_mod_val p a) (nat_mod_val p b) = true -> a = b.
 
@@ -840,7 +837,7 @@ Global Instance nat_mod_eqdec {p} : EqDec (nat_mod p) := {
   eqb_leibniz := nat_mod_eqb_spec;
 }.
 
-Global Instance nat_mod_comparable `{p : N} : Comparable (nat_mod p) := {
+Global Instance nat_mod_comparable `{p : Z} : Comparable (nat_mod p) := {
   ltb a b := Z.ltb (nat_mod_val p a) (nat_mod_val p b);
   leb a b := if Zeq_bool a b then true else Z.ltb (nat_mod_val p a) (nat_mod_val p b) ;
   gtb a b := Z.ltb (nat_mod_val p b) (nat_mod_val p a); 
@@ -913,30 +910,11 @@ Defined.
 
 (* Axiom most_significant_bit : scalar -> uint_size -> uint_size. *)
 
+(*** Result *)
 
+Inductive result (a: Type) (b: Type) :=
+  | Ok : a -> result a b
+  | Err : b -> result a b.
 
-
-(* Require Import DecidableClass.
-Global Instance nat_mod_eq_dec {p : N} (a b : nat_mod p) : Decidable (a = b) := {
-  Decidable_witness := eqb a b;
-  Decidable_spec := eqb_spec a b;
-}.
-
-Global Instance nat_mod_eq_dec {p} (a b : nat_mod p) : Decidable (a = b) := {
-  Decidable_witness := eqb a b;
-  Decidable_spec := eqb_spec a b;
-}.
-
-
-Definition decide_eq {A : Type} (a b : A) `{Decidable (a = b)}  := decide (a = b).
-Infix "==?" := decide_eq (at level 40) : hacspec_scope.
-
-(* Comparable instances have decidable equality *)
-Instance Comparable_to_Decidable {A} `(Comparable A) {a b : A} : Decidable (a = b) := {
-  Decidable_witness := eqb a b;
-  Decidable_spec := eqb_spec a b;
-}.
-
-
-
- *)
+Arguments Ok {_ _}.
+Arguments Err {_ _}.

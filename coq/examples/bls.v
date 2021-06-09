@@ -5,39 +5,39 @@ Section bls.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
+Require Import Hacspec.Lib.
 
+Definition fp_canvas := nseq (int8) (48).
 Definition fp :=
   nat_mod 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab.
-
-Definition g1 : Type := (fp * fp * bool).
-Definition fp2 : Type := (fp * fp).
-Definition g2 : Type := (fp2 * fp2 * bool).
-Definition fp6 : Type := (fp2 * fp2 * fp2).
-Definition fp12 : Type := (fp6 * fp6).
-
-Definition fp_canvas := nseq (int8) ((usize 48)).
-
-
 
 Definition serialized_fp := nseq (uint8) (usize 48).
 
 Definition array_fp := nseq (uint64) (usize 6).
 
-Definition scalar_canvas := nseq (int8) ((usize 32)).
-
+Definition scalar_canvas := nseq (int8) (32).
 Definition scalar :=
   nat_mod 0x8000000000000000000000000000000000000000000000000000000000000000.
 
-(* Definition most_significant_bit (m_0 : scalar) (n_1 : uint_size) : uint_size :=
+Definition most_significant_bit (m_0 : scalar) (n_1 : uint_size) : uint_size :=
   if (((n_1) >.? (usize 0)) && (negb (nat_mod_bit (m_0) (n_1)))) then (
-    most_significant_bit (m_0) ((n_1) - (usize 1))) else (n_1). *)
+    most_significant_bit (m_0) ((n_1) - (usize 1))) else (n_1).
+
+Definition g1 : Type := (fp * fp * bool).
+
+Definition fp2 : Type := (fp * fp).
+
+Definition g2 : Type := (fp2 * fp2 * bool).
+
+Definition fp6 : Type := (fp2 * fp2 * fp2).
+
+Definition fp12 : Type := (fp6 * fp6).
 
 Definition fp2fromfp (n_2 : fp) : fp2 :=
   (n_2, nat_mod_zero ).
-  
+
 Definition fp2zero  : fp2 :=
   fp2fromfp (nat_mod_zero ).
-
 
 Definition fp2neg (n_3 : fp2) : fp2 :=
   let '(n1_4, n2_5) := n_3 in
@@ -167,8 +167,6 @@ Definition fp12inv (n_113 : fp12) : fp12 :=
   let x_121 := fp6mul (n1_114) (t2_120) in
   let y_122 := fp6neg (fp6mul (n2_115) (t2_120)) in
   (x_121, y_122).
-
-
 
 Definition fp12exp (n_123 : fp12) (k_124 : scalar) : fp12 :=
   let l_125 := (usize 255) - (most_significant_bit (k_124) (usize 255)) in
