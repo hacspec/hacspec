@@ -117,7 +117,7 @@ fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'
         .append(RcDoc::intersperse(
             args.into_iter(),
             RcDoc::space()
-            .append(RcDoc::as_string("*"))
+            .append(RcDoc::as_string("×"))
             .append(RcDoc::line()),
         ))
         .group()
@@ -165,7 +165,6 @@ fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     }
 }
 
-// todo
 fn translate_constructor<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
     RcDoc::as_string(enum_name.0)
 }
@@ -174,7 +173,6 @@ fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
     translate_toplevel_ident(enum_name)
 }
 
-// todo
 fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) -> RcDoc<'a> {
     translate_constructor(case_name).append(match enum_name {
         BaseTyp::Named(name, _) => {
@@ -617,7 +615,7 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (NAT_MODULE, "from_literal") => {
+                (NAT_MODULE, "from_literal") | (NAT_MODULE, "pow2") => {
                     match &prefix_info {
                         FuncPrefix::NatMod(modulo, _bits) => {
                             additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
@@ -1198,14 +1196,14 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             "Require Import {}.",
             str::replace(&kr.to_title_case(), " ", ".")
         )),
-        Item::AliasDecl((TopLevelIdent(name), _), (ty, _)) => RcDoc::as_string("Definition")
+        // Aliases are translated to Coq Notations
+        Item::AliasDecl((TopLevelIdent(name), _), (ty, _)) => RcDoc::as_string("Notation")
             .append(RcDoc::space())
             .append(translate_ident_str(name.clone()))
             .append(RcDoc::space())
-            .append(RcDoc::as_string(": Type :="))
-            .append(RcDoc::space())
+            .append(RcDoc::as_string(":= ("))
             .append(translate_base_typ(ty.clone()))
-            .append(RcDoc::as_string(".")),
+            .append(RcDoc::as_string(").")),
     }
 }
     
