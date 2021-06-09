@@ -170,7 +170,6 @@ fn translate_constructor<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
     RcDoc::as_string(enum_name.0)
 }
 
-// todo
 fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
     translate_toplevel_ident(enum_name)
 }
@@ -182,10 +181,12 @@ fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) ->
             if (name.0).0 == "Option" || (name.0).0 == "Result" {
                 RcDoc::nil()
             } else {
-                RcDoc::as_string("_").append(translate_toplevel_ident(name.0))
+                RcDoc::as_string("(")
+                .append(translate_toplevel_ident(name.0))
+                .append(RcDoc::as_string(")"))
             }
         }
-        _ => panic!("shoud not happen"),
+        _ => panic!("should not happen"),
     })
 }
 
@@ -494,8 +495,8 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
             RcDoc::as_string("%%")
         }
-        (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
-        (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
+        (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("usize_shift_left"),
+        (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("usize_shift_right"),
         (BinOpKind::Rem, _) => RcDoc::as_string(".%"),
         (BinOpKind::Sub, _) => RcDoc::as_string(".-"),
         (BinOpKind::Add, _) => RcDoc::as_string(".+"),
@@ -504,8 +505,8 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::BitXor, _) => RcDoc::as_string(".^"),
         (BinOpKind::BitAnd, _) => RcDoc::as_string(".&"),
         (BinOpKind::BitOr, _) => RcDoc::as_string(".|"),
-        (BinOpKind::Shl, _) => RcDoc::as_string("`shift_left`"),
-        (BinOpKind::Shr, _) => RcDoc::as_string("`shift_right`"),
+        (BinOpKind::Shl, _) => RcDoc::as_string("shift_left"),
+        (BinOpKind::Shr, _) => RcDoc::as_string("shift_right"),
         (BinOpKind::Lt, _) => RcDoc::as_string("<.?"),
         (BinOpKind::Le, _) => RcDoc::as_string("<=.?"),
         (BinOpKind::Ge, _) => RcDoc::as_string(">=.?"),
@@ -729,12 +730,13 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         None => RcDoc::nil(),
                     })
                     .append(RcDoc::space())
-                    .append(RcDoc::as_string("->"))
+                    .append(RcDoc::as_string("=>"))
                     .append(RcDoc::space())
                     .append(translate_expression(e1.0, top_ctx))
             }),
             RcDoc::line(),
-        )),
+        ))
+        .append(RcDoc::as_string("end")),
         //todo
         Expression::EnumInject(enum_name, case_name, payload) => {
             translate_enum_case_name(enum_name.clone(), case_name.0.clone()).append(match payload {
@@ -887,44 +889,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(x.0.clone(), top_ctx)))
                 }
-                _ => {
-                    // let new_t_doc = match &new_t.0 {
-                    //     BaseTyp::UInt8 => String::from("U8"),
-                    //     BaseTyp::UInt16 => String::from("U16"),
-                    //     BaseTyp::UInt32 => String::from("U32"),
-                    //     BaseTyp::UInt64 => String::from("U64"),
-                    //     BaseTyp::UInt128 => String::from("U128"),
-                    //     BaseTyp::Usize => String::from("U32"),
-                    //     BaseTyp::Int8 => String::from("I8"),
-                    //     BaseTyp::Int16 => String::from("I16"),
-                    //     BaseTyp::Int32 => String::from("I32"),
-                    //     BaseTyp::Int64 => String::from("I64"),
-                    //     BaseTyp::Int128 => String::from("I128"),
-                    //     BaseTyp::Isize => String::from("I32"),
-                    //     BaseTyp::Named((TopLevelIdent(s), _), None) => s.clone(),
-                    //     _ => panic!(), // should not happen
-                    // };
-                    // let secret = match &new_t.0 {
-                    //     BaseTyp::Named(_, _) => true,
-                    //     _ => false,
-                    // };
-                    // RcDoc::as_string("cast")
-                    //     .append(RcDoc::space())
-                    //     .append(new_t_doc)
-                    //     .append(RcDoc::space())
-                    //     .append(if secret {
-                    //         RcDoc::as_string("SEC")
-                    //     } else {
-                    //         RcDoc::as_string("PUB")
-                    //     })
-                    //     .append(RcDoc::space())
-                    //     .append
-                    (make_paren(translate_expression(
-                        x.as_ref().0.clone(),
-                        top_ctx,
-                    )))
-                    .group()
-                }
+                _ => make_paren(translate_expression(x.as_ref().0.clone(),top_ctx)).group()
             }
         }
     }
@@ -1110,11 +1075,11 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             .group(),
             true,
         ),
-        Item::EnumDecl(name, cases) => RcDoc::as_string("noeq type")
+        Item::EnumDecl(name, cases) => RcDoc::as_string("Inductive")
             .append(RcDoc::space())
             .append(translate_enum_name(name.0.clone()))
             .append(RcDoc::space())
-            .append(RcDoc::as_string("="))
+            .append(RcDoc::as_string(":="))
             .append(RcDoc::line())
             .append(RcDoc::intersperse(
                 cases.into_iter().map(|(case_name, case_typ)| {
@@ -1137,7 +1102,7 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                                 .append(translate_enum_name(name.0.clone())),
                         })
                 }),
-            RcDoc::line(),
+            RcDoc::as_string(".").append(RcDoc::line()),
         )),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("Definition")
         .append(RcDoc::space())
@@ -1233,11 +1198,11 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             "Require Import {}.",
             str::replace(&kr.to_title_case(), " ", ".")
         )),
-        Item::AliasDecl((TopLevelIdent(name), _), (ty, _)) => RcDoc::as_string("type")
+        Item::AliasDecl((TopLevelIdent(name), _), (ty, _)) => RcDoc::as_string("Definition")
             .append(RcDoc::space())
             .append(translate_ident_str(name.clone()))
             .append(RcDoc::space())
-            .append(RcDoc::as_string(" : Type :="))
+            .append(RcDoc::as_string(": Type :="))
             .append(RcDoc::space())
             .append(translate_base_typ(ty.clone()))
             .append(RcDoc::as_string(".")),
