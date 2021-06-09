@@ -752,6 +752,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             RcDoc::as_string("if")
             .append(RcDoc::space())
             .append(make_paren(translate_expression(cond, top_ctx)))
+            .append(RcDoc::as_string(":bool"))
             .append(RcDoc::space())
             .append(RcDoc::as_string("then"))
             .append(RcDoc::space())
