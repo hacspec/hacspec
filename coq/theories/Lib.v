@@ -275,8 +275,16 @@ Defined.
 (* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
 
 (* substitutes a sequence (list) into an array (nseq), given index interval  *)
-Axiom update_sub : forall {A len }, nseq A len -> nat -> nat -> seq A -> t A len.
-
+(* Axiom update_sub : forall {A len }, nseq A len -> nat -> nat -> seq A -> t A len. *)
+Definition update_sub {A len slen} `{Default A} (v : nseq A len) (i : nat) (n : nat) (sub : nseq A slen) : nseq A len :=
+  let fix rec x acc :=
+    match x with
+    | 0 => acc
+    (* | 0 => array_upd acc 0 (array_index sub 0) *)
+    | S x => rec x (array_upd acc (i+x) (array_index sub x))
+    end in
+  rec (n - i + 1) v.
+Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))).
 
 Definition array_from_seq
   {a: Type}
@@ -297,16 +305,9 @@ Definition slice {A} (l : seq A) (i j : nat) : seq A :=
 Definition lseq_slice {A n} (l : nseq A n) (i j : nat) : nseq A _ :=
   of_list (slice (to_list l) i j).
 
-
-(* 
-
-Definition update_sub {A len slen} (v : t A len) (i n) (sub : t A slen) :=
-  Vector.append
-    (Vector.append (slice v 0 start ) sub) *)
-
-
 Definition array_from_slice
   {a: Type}
+ `{Default a}
   (default_value: a)
   (out_len: nat)
   (input: seq a)
@@ -314,7 +315,7 @@ Definition array_from_slice
   (slice_len: nat)
     : nseq a out_len :=
     let out := const default_value out_len in
-    update_sub out 0 slice_len (slice input start (start + slice_len)).
+    update_sub out 0 slice_len (lseq_slice (of_list input) start (start + slice_len)).
   
 
 Definition array_slice
@@ -330,6 +331,7 @@ Definition array_slice
 
 Definition array_from_slice_range
   {a: Type}
+ `{Default a}
   (default_value: a)
   (out_len: nat)
   (input: seq a)
@@ -337,7 +339,7 @@ Definition array_from_slice_range
     : nseq a out_len :=
     let out := array_new_ default_value out_len in
     let (start, fin) := start_fin in
-    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (slice input (from_uint_size start) (from_uint_size fin)).
+    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (of_list (slice input (from_uint_size start) (from_uint_size fin))).
 
   
 Definition array_slice_range
@@ -350,20 +352,22 @@ Definition array_slice_range
   
 Definition array_update
   {a: Type}
+ `{Default a}
   {len: nat}
   (s: nseq a len)
   (start : nat)
   (start_s: seq a)
     : nseq a len :=
-    update_sub s start (length start_s) start_s.
+    update_sub s start (length start_s) (of_list start_s).
 
 Definition array_update_start
   {a: Type}
+ `{Default a}
   {len: nat}
   (s: nseq a len)
   (start_s: seq a)
     : nseq a len :=
-    update_sub s 0 (length start_s) start_s.
+    update_sub s 0 (length start_s) (of_list start_s).
 
 
 Definition array_len  {a: Type} {len: nat} (s: nseq a len) := len.
@@ -382,17 +386,19 @@ Definition seq_slice
 
 Definition seq_update
   {a: Type}
+ `{Default a}
   (s: seq a)
   (start: nat)
   (input: seq a)
     : nseq a (length s) :=
-  update_sub (of_list s) start (length input) input.
+  update_sub (of_list s) start (length input) (of_list input).
 
 Definition sub {a} (s : list a) start n := 
   slice s start (start + n).
 
 Definition seq_update_slice
   {a : Type}
+ `{Default a}
   (out: seq a)
   (start_out: nat)
   (input: seq a)
@@ -401,7 +407,7 @@ Definition seq_update_slice
     : nseq a (length out)
   :=
   update_sub (of_list out) start_out len
-    (sub input start_in len).
+    (of_list (sub input start_in len)).
 
 Definition seq_concat
   {a : Type}
@@ -455,13 +461,14 @@ Definition seq_get_chunk
 
 Definition seq_set_chunk
   {a: Type}
+ `{Default a}
   (s: seq a)
   (chunk_len: nat)
   (chunk_num: nat)
   (chunk: seq a ) : seq a :=
  let idx_start := chunk_len * chunk_num in
  let out_len := seq_chunk_len s chunk_len chunk_num in
-  Vector.to_list (update_sub (of_list s) idx_start out_len chunk).
+  Vector.to_list (update_sub (of_list s) idx_start out_len (of_list chunk)).
 
 (**** Numeric operations *)
 
