@@ -160,7 +160,7 @@ Infix ".|" := (MachineIntegers.or) (at level 77) : hacspec_scope.
 Infix "==" := (MachineIntegers.eq) (at level 32) : hacspec_scope.
 (* Definition one := (@one WORDSIZE32). *)
 (* Definition zero := (@zero WORDSIZE32). *)
-
+Notation "A × B" := (prod A B) (at level 79, left associativity) : hacspec_scope.
 (*** Loops *)
 
 Open Scope nat_scope.
@@ -653,7 +653,10 @@ Defined.
 
 Definition nat_mod_from_literal (m : Z) (x:int128) : nat_mod m := nat_mod_from_secret_literal x.
 
-Axiom nat_mod_to_public_byte_seq_le : forall (n : Z) (len : uint_size), nat_mod n -> nseq int8 (from_uint_size len).
+Axiom nat_mod_to_byte_seq_le : forall {n : Z}, nat_mod n -> seq int8.
+Axiom nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8.
+Axiom nat_mod_to_public_byte_seq_le : forall (n : Z), nat_mod n -> seq int8.
+Axiom nat_mod_to_public_byte_seq_be : forall (n : Z), nat_mod n -> seq int8.
 
 Definition nat_mod_bit {n : Z} (a : nat_mod n) (i : uint_size) :=
   Z.testbit (GZnZ.val n a) (from_uint_size i).
@@ -664,7 +667,6 @@ Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_mod_to_bytes_le len n'*)
 
-Axiom nat_mod_to_public_byte_seq_be : forall (n : Z) (len : uint_size), nat_mod n -> nseq int8 (from_uint_size len).
 (* Definition nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n' *)
@@ -694,6 +696,7 @@ Section Coercions.
   (* and N >-> nat *)
 
   Global Coercion N.to_nat : N >-> nat.
+  Global Coercion Z.of_N : N >-> Z.
 
   Global Coercion repr : Z >-> int.
   
