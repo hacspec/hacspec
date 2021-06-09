@@ -203,10 +203,6 @@ Definition list_len := length.
 
 Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 
-Axiom seq_num_exact_chunks : forall {l}, seq l -> uint_size -> uint_size.
-Axiom seq_get_exact_chunk : forall {l}, seq l -> uint_size -> uint_size -> seq l.
-Axiom seq_set_exact_chunk : forall {l}, seq l -> uint_size -> uint_size -> seq l -> seq l.
-Axiom seq_get_remainder_chunk : forall {l}, seq l -> uint_size -> seq l.
 
 Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
   const init len.
@@ -469,6 +465,28 @@ Definition seq_set_chunk
  let idx_start := chunk_len * chunk_num in
  let out_len := seq_chunk_len s chunk_len chunk_num in
   Vector.to_list (update_sub (of_list s) idx_start out_len (of_list chunk)).
+
+
+Definition seq_num_exact_chunks {a} (l : seq a) (chunk_size : uint_size) : uint_size :=
+  divs (repr (Z.of_nat (length l))) chunk_size.
+
+(* Until #84 is fixed this returns an empty sequence if not enough *)
+Definition seq_get_exact_chunk {a} (l : seq a) (chunk_size chunk_num: uint_size) : seq a :=
+  let '(len, chunk) := seq_get_chunk l (from_uint_size chunk_size) (from_uint_size chunk_num) in
+  if eq len chunk_size then [] else chunk.
+
+Definition seq_set_exact_chunk {a} := @seq_get_chunk a.
+
+Definition seq_get_remainder_chunk : forall {a}, seq a -> uint_size -> seq a :=
+  fun _ l chunk_size =>
+    let chunks := seq_num_chunks l (from_uint_size chunk_size) in
+    let last_chunk := if 0 <? chunks then
+      chunks - 1
+    else 0 in
+    let (len, chunk) := seq_get_chunk l (from_uint_size chunk_size) last_chunk in
+    if eq len chunk_size then
+      []
+    else chunk.
 
 (**** Numeric operations *)
 
