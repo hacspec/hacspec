@@ -1,14 +1,34 @@
 use hacspec_lib::*;
 
-pub fn foo(x: bool) -> Result<u32, U8> {
+pub fn foo(x: bool) -> Result<u64, U8> {
     if x {
-        Result::<u32, U8>::Ok(42u32)
+        Result::<u64, U8>::Ok(42u64)
     } else {
-        Result::<u32, U8>::Err(U8(0u8))
+        Result::<u64, U8>::Err(U8(0u8))
     }
 }
 
-pub fn bar() -> Result<u32, U8> {
+pub fn bar() -> Result<u64, U8> {
     let x = foo(false)?;
-    Result::<u32, U8>::Ok(x + 1u32)
+    Result::<u64, U8>::Ok(x + 1u64)
+}
+
+pub fn fizzbaz() -> Result<u64, U8> {
+    let x = foo(false)?;
+    let y = foo(true)?;
+    Result::<u64, U8>::Ok(x + y)
+}
+
+pub fn baz() -> Result<u32, U8> {
+    let x = foo(false)?;
+    let mut out = 0u32;
+    if true || false {
+        let y = foo(true)?;
+        out = y as u32 + 1u32;
+        foo(false || true)?;
+    } else {
+        foo(false && true)?;
+        out = x as u32 + 1u32;
+    }
+    Result::<u32, U8>::Ok(out)
 }
