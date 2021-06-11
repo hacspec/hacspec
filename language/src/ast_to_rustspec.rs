@@ -520,7 +520,6 @@ fn translate_expr(
     specials: &SpecialNames,
     e: &Expr,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
-    #[allow(unreachable_patterns)]
     match &e.kind {
         ExprKind::Binary(op, e1, e2) => Ok((
             ExprTranslationResult::TransExpr(Expression::Binary(
@@ -987,8 +986,11 @@ fn translate_expr(
                         let r_f_span = r_f_e.1.clone();
                         let r_t_e = r_t_e.0.stmts.pop().unwrap();
                         let r_f_e = r_f_e.0.stmts.pop().unwrap();
-                        match (r_t_e.0, r_f_e.0) {
-                            (Statement::ReturnExp(r_t_e), Statement::ReturnExp(r_f_e)) => Ok((
+                        match (r_t_e, r_f_e) {
+                            (
+                                (Statement::ReturnExp(r_t_e), _),
+                                (Statement::ReturnExp(r_f_e), _),
+                            ) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::InlineConditional(
                                     Box::new(r_cond),
                                     Box::new((r_t_e, r_t_span)),
@@ -1374,7 +1376,10 @@ fn translate_expr(
         }
         ExprKind::Paren(e1) => translate_expr(sess, specials, e1),
         ExprKind::Try(_) => {
-            sess.span_rustspec_err(e.span.clone(), "FOO27");
+            sess.span_rustspec_err(
+                e.span.clone(),
+                "question marks inside expressions are not allowed in Hacspec",
+            );
             Err(())
         }
         ExprKind::Err => {
@@ -1389,9 +1394,48 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
             Err(())
         }
+    }
+}
+
+enum ExprTranslationResultMaybeQuestionMark {
+    TransExpr(Expression, bool), // true if ends with question mark
+    TransStmt(Statement),
+}
+
+fn translate_expr_accepts_question_mark(
+    sess: &Session,
+    specials: &SpecialNames,
+    e: &Expr,
+) -> TranslationResult<Spanned<ExprTranslationResultMaybeQuestionMark>> {
+    match &e.kind {
+        ExprKind::Try(inner_e) => {
+            let (result, span) = translate_expr(sess, specials, &inner_e)?;
+            match result {
+                ExprTranslationResult::TransExpr(e) => Ok((
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, true),
+                    span,
+                )),
+                ExprTranslationResult::TransStmt(_) => {
+                    sess.span_rustspec_err(
+                        inner_e.span,
+                        "question-marked blobs cannot contain statements \
+                    in Hacspec, only pure expressions",
+                    );
+                    Err(())
+                }
+            }
+        }
         _ => {
-            sess.span_rustspec_err(e.span.clone(), "this expression is not allowed in Hacspec");
-            Err(())
+            let (result, span) = translate_expr(sess, specials, e)?;
+            match result {
+                ExprTranslationResult::TransExpr(e) => Ok((
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, false),
+                    span,
+                )),
+                ExprTranslationResult::TransStmt(s) => {
+                    Ok((ExprTranslationResultMaybeQuestionMark::TransStmt(s), span))
+                }
+            }
         }
     }
 }
@@ -1468,7 +1512,7 @@ fn translate_statement(
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
             };
-            let init = match &local.init {
+            let (init, question_mark) = match &local.init {
                 None => {
                     sess.span_rustspec_err(
                         local.span,
@@ -1476,18 +1520,23 @@ fn translate_statement(
                     );
                     Err(())
                 }
-                Some(e) => match translate_expr(sess, specials, &e)? {
-                    (ExprTranslationResult::TransStmt(_), _) => {
+                Some(e) => match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                    (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
                         sess.span_rustspec_err(
                             e.span,
                             "let binding expression should not contain statements in Hacspec",
                         );
                         Err(())
                     }
-                    (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
+                    (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
+                        Ok(((e, span), question_mark))
+                    }
                 },
             }?;
-            Ok(vec![(Statement::LetBinding(pat, ty, init), s.span.into())])
+            Ok(vec![(
+                Statement::LetBinding(pat, ty, init, question_mark),
+                s.span.into(),
+            )])
         }
         StmtKind::Expr(e) => {
             let t_s = match translate_expr(sess, specials, &e)? {
@@ -1497,11 +1546,11 @@ fn translate_statement(
             Ok(vec![(t_s, s.span.into())])
         }
         StmtKind::Semi(e) => {
-            let t_s = match translate_expr(sess, specials, &e)? {
-                (ExprTranslationResult::TransExpr(e), span) => {
-                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span))
+            let t_s = match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
+                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), question_mark)
                 }
-                (ExprTranslationResult::TransStmt(s), _) => s,
+                (ExprTranslationResultMaybeQuestionMark::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span.into())])
         }
@@ -1531,6 +1580,7 @@ fn translate_block(
             stmts,
             return_typ: None,
             mutated: None,
+            contains_question_mark: None,
             // We initialize these fields to None as they are
             // to be filled by the typechecker
         },
@@ -2139,6 +2189,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         stmts: Vec::new(),
                         return_typ: None,
                         mutated: None,
+                        contains_question_mark: None,
                     },
                     i.span.into(),
                 ),

@@ -16,6 +16,6 @@ pub fn baz(x: Foo) -> Bar {
     };
     match y {
         Foo::CaseX => Bar(0u32),
-        Foo::CaseY(a, b) => Bar(U32_from_U8(a).declassify()),
+        Foo::CaseY(a, _b) => Bar(U32_from_U8(a).declassify()),
     }
 }

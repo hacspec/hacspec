@@ -16,6 +16,14 @@ fn run_test(file_name: &str, output: Option<&str>) {
 }
 
 #[test]
+fn positive_question_mark() {
+    run_test(
+        "language-tests/question_mark.rs",
+        Some("tests/QuestionMark.fst"),
+    );
+}
+
+#[test]
 fn positive_result() {
     run_test("language-tests/result.rs", Some("tests/Result.fst"));
 }

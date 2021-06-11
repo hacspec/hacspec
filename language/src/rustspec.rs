@@ -14,7 +14,7 @@ impl Serialize for RustspecSpan {
     where
         S: Serializer,
     {
-        serializer.serialize_unit()
+        serializer.serialize_str(format!("{:?}", self.0).as_str())
     }
 }
 
@@ -92,7 +92,7 @@ impl fmt::Debug for Ident {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct VarSet(pub HashSet<LocalIdent>);
 
 impl Serialize for VarSet {
@@ -255,7 +255,7 @@ impl fmt::Debug for BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Literal {
     Unit,
     Bool(bool),
@@ -274,7 +274,7 @@ pub enum Literal {
     Str(String),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum UnOpKind {
     Not,
     Neg,
@@ -302,7 +302,7 @@ pub enum BinOpKind {
     Gt,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
     Binary(
@@ -366,7 +366,7 @@ pub enum Pattern {
     SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
     pub vars: VarSet,
     pub stmt: Statement,
@@ -374,9 +374,14 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Statement {
-    LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
+    LetBinding(
+        Spanned<Pattern>,     // Let-binded pattern
+        Option<Spanned<Typ>>, // Typ of the binded expr
+        Spanned<Expression>,  // Binded expr
+        bool,                 // Presence of a question mark at the end
+    ),
     Reassignment(Spanned<Ident>, Spanned<Expression>),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -394,11 +399,12 @@ pub enum Statement {
     ReturnExp(Expression),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
+    pub contains_question_mark: Fillable<bool>,
 }
 
 #[derive(Clone, Debug, Serialize)]

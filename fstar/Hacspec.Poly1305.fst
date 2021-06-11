@@ -2,86 +2,116 @@ module Hacspec.Poly1305
 
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
 
-open Hacspec.Lib
 open FStar.Mul
 
+open Hacspec.Lib
 
+type poly_key = lseq (uint8) (usize 32)
 
-type key_poly = lseq (uint8) (usize 32)
+let blocksize:uint_size = usize 16
 
-let blocksize : uint_size =
-  usize 16
+type poly_block = lseq (uint8) (usize 16)
 
-type block = lseq (uint8) (usize 16)
+type tag = lseq (uint8) (usize 16)
 
-type tag = lseq (pub_uint8) (usize 16)
+type sub_block = byte_seq
+
+type block_index = uint_size
 
 type field_canvas = lseq (pub_uint8) (17)
 
 type field_element = nat_mod 0x03fffffffffffffffffffffffffffffffb
 
-let le_bytes_to_num (b_0 : byte_seq) : uint128 =
-  let block_as_u128_1 =
-    array_from_slice (secret (pub_u8 0x8)) (16) (b_0) (usize 0) (
-      min (blocksize) (seq_len (b_0)))
-  in
-  uint128_from_le_bytes (block_as_u128_1)
+type poly_state = (field_element & field_element & poly_key)
 
-let clamp (r_2 : uint128) : field_element =
-  let r_uint_3 =
-    (r_2) &. (secret (pub_u128 0xffffffc0ffffffc0ffffffc0fffffff))
-  in
-  nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (r_uint_3)
+let poly1305_encode_r (b_0: poly_block) : field_element =
+  let n_1 = uint128_from_le_bytes (array_from_seq (16) (b_0)) in
+  let n_1 = (n_1) &. (secret (pub_u128 0xffffffc0ffffffc0ffffffc0fffffff)) in
+  nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (n_1)
 
-let encode (block_uint_4 : uint128) (len_5 : uint_size{
-  (**) len_5 < 17
-  }) : field_element =
-  let w_elem_6 =
-    nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (
-      block_uint_4)
+let poly1305_encode_block (b_2: poly_block) : field_element =
+  let n_3 = uint128_from_le_bytes (array_from_seq (16) (b_2)) in
+  let f_4 = nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (n_3) in
+  (f_4) +% (nat_pow2 (0x03fffffffffffffffffffffffffffffffb) (usize 128))
+
+let poly1305_encode_last
+      (pad_len_5: block_index{(**) pad_len_5 <= 16})
+      (b_6: sub_block{(**) Seq.length b_6 = pad_len_5})
+    :
+    field_element =
+  let n_7 =
+    uint128_from_le_bytes (array_from_slice (secret (pub_u8 0x0))
+          (16)
+          (b_6)
+          (usize 0)
+          (seq_len (b_6)))
   in
+  let f_8 = nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (n_7) in
   (**) assert_norm (pow2 128 < 0x03fffffffffffffffffffffffffffffffb);
-  (**) Math.Lemmas.pow2_le_compat 128 (8 * len_5);
-  let l_elem_7 =
-    nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (len_5))
-  in
-  (w_elem_6) +% (l_elem_7)
+  (**) Math.Lemmas.pow2_le_compat 128 (8 * pad_len_5);
+  (f_8) +% (nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (pad_len_5)))
 
-let poly_finish (a_8 : field_element) (s_9 : field_element) : tag =
-  let a_10 =
-    seq_slice (
-      nat_to_public_byte_seq_be (0x03fffffffffffffffffffffffffffffffb) (17) (
-        a_8)) (usize 1) (blocksize)
+let poly1305_init (k_9: poly_key) : poly_state =
+  let r_10 =
+    poly1305_encode_r (array_from_slice (secret (pub_u8 0x0)) (16) (k_9) (usize 0) (usize 16))
   in
-  let a_11 = u128_from_be_bytes (array_from_seq (16) (a_10)) in
-  let s_12 =
-    seq_slice (
-      nat_to_public_byte_seq_be (0x03fffffffffffffffffffffffffffffffb) (17) (
-        s_9)) (usize 1) (blocksize)
-  in
-  let s_13 = u128_from_be_bytes (array_from_seq (16) (s_12)) in
-  let a_14 = pub_uint128_wrapping_add (a_11) (s_13) in
-  array_from_seq (16) (u128_to_le_bytes (a_14))
+  (nat_zero (0x03fffffffffffffffffffffffffffffffb), r_10, k_9)
 
-let poly (m_15 : byte_seq) (key_16 : key_poly) : tag =
-  let r_17 = le_bytes_to_num (array_slice (key_16) (usize 0) (blocksize)) in
-  let r_18 = clamp (r_17) in
-  let s_19 = le_bytes_to_num (array_slice (key_16) (blocksize) (blocksize)) in
-  let s_20 =
-    nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (s_19)
-  in
-  let a_21 =
-    nat_from_literal (0x03fffffffffffffffffffffffffffffffb) (pub_u128 0x0)
-  in
-  let (a_21) =
-    foldi (usize 0) (seq_num_chunks (m_15) (blocksize)) (fun i_22 (a_21) ->
-      let (len_23, block_24) = seq_get_chunk (m_15) (blocksize) (i_22) in
-      let block_uint_25 = le_bytes_to_num (block_24) in
-      let n_26 = encode (block_uint_25) (len_23) in
-      let a_21 = (a_21) +% (n_26) in
-      let a_21 = (r_18) *% (a_21) in
-      (a_21))
-    (a_21)
-  in
-  poly_finish (a_21) (s_20)
+let poly1305_update_block (b_11: poly_block) (st_12: poly_state) : poly_state =
+  let acc_13, r_14, k_15 = st_12 in
+  (((poly1305_encode_block (b_11)) +% (acc_13)) *% (r_14), r_14, k_15)
 
+let poly1305_update_blocks (m_16: byte_seq) (st_17: poly_state) : poly_state =
+  let st_18 = st_17 in
+  let nblocks_19 = (seq_len (m_16)) / (blocksize) in
+  let st_18 =
+    foldi (usize 0)
+      (nblocks_19)
+      (fun i_20 st_18 ->
+          let block_21 = array_from_seq (16) (seq_get_exact_chunk (m_16) (blocksize) (i_20)) in
+          let st_18 = poly1305_update_block (block_21) (st_18) in
+          (st_18))
+      (st_18)
+  in
+  st_18
+
+let poly1305_update_last
+      (pad_len_22: uint_size{(**) pad_len_22 <= 16})
+      (b_23: sub_block{(**) Seq.length b_23 = pad_len_22})
+      (st_24: poly_state)
+    :
+    poly_state =
+  let st_25 = st_24 in
+  let st_25 =
+    if (seq_len (b_23)) <> (usize 0)
+    then
+      let acc_26, r_27, k_28 = st_25 in
+      let st_25 =
+        (((poly1305_encode_last (pad_len_22) (b_23)) +% (acc_26)) *% (r_27), r_27, k_28)
+      in
+      (st_25)
+    else (st_25)
+  in
+  st_25
+
+let poly1305_update (m_29: byte_seq) (st_30: poly_state) : poly_state =
+  let st_31 = poly1305_update_blocks (m_29) (st_30) in
+  let last_32 = seq_get_remainder_chunk (m_29) (blocksize) in
+  poly1305_update_last (seq_len (last_32)) (last_32) (st_31)
+
+let poly1305_finish (st_33: poly_state) : tag =
+  let acc_34, _, k_35 = st_33 in
+  let n_36 =
+    uint128_from_le_bytes (array_from_slice (secret (pub_u8 0x0)) (16) (k_35) (usize 16) (usize 16))
+  in
+  let aby_37 = nat_to_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) (acc_34) in
+  let a_38 =
+    uint128_from_le_bytes (array_from_slice (secret (pub_u8 0x0)) (16) (aby_37) (usize 0) (usize 16)
+      )
+  in
+  array_from_seq (16) (uint128_to_le_bytes ((a_38) +. (n_36)))
+
+let poly1305 (m_39: byte_seq) (key_40: poly_key) : tag =
+  let st_41 = poly1305_init (key_40) in
+  let st_41 = poly1305_update (m_39) (st_41) in
+  poly1305_finish (st_41)

@@ -845,7 +845,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
 
 fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match s {
-        Statement::LetBinding((pat, _), typ, (expr, _)) => make_let_binding(
+        Statement::LetBinding((pat, _), typ, (expr, _), _question_mark) => make_let_binding(
             translate_pattern(pat),
             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
             translate_expression(expr.clone(), top_ctx),
