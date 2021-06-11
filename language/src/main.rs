@@ -35,7 +35,7 @@ use serde_json;
 use std::env;
 use std::ffi::OsStr;
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
 
@@ -81,7 +81,12 @@ impl Callbacks for HacspecCallbacks {
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
         let krate = queries.parse().unwrap().take();
-        let krate = match ast_to_rustspec::translate(&compiler.session(), &krate) {
+        let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
+            queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
+                hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
+            })
+        };
+        let krate = match ast_to_rustspec::translate(&compiler.session(), &krate, &external_data) {
             Ok(krate) => krate,
             Err(_) => {
                 &compiler
@@ -89,13 +94,6 @@ impl Callbacks for HacspecCallbacks {
                     .err("unable to translate to Hacspec due to out-of-language errors");
                 return Compilation::Stop;
             }
-        };
-        let mut item_list: PathBuf = std::env::temp_dir();
-        item_list.push("allowed_list_items.json");
-        let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
-            queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-                hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
-            })
         };
         let (krate, mut top_ctx) =
             match name_resolution::resolve_crate(&compiler.session(), krate, &external_data) {

@@ -5,7 +5,7 @@
 FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 32
 
 # The root files of your project, from which to begin scanning dependences
-FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst Hacspec.Chacha20Poly1305.fst
+FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst Hacspec.Chacha20Poly1305.fst Hacspec.Riot.fst
 
 # The paths to related files which to include for scanning
 #   -- No need to add FSTAR_HOME/ulib; it is included by default
@@ -92,3 +92,8 @@ verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
 
 %.fst-in %.fsti-in:
 	@echo --cache_checked_modules $(addprefix --include , $(INCLUDE_PATHS))
+
+%.fst-formatted: %.fst
+	$(FSTAR) --print_in_place $*.fst
+
+format: $(subst .fst,.fst-formatted,$(FSTAR_FILES))

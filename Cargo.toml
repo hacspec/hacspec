@@ -59,5 +59,6 @@ default-members = [
     "examples/aes",
     "examples/gf128",
     "examples/aes128-gcm",
+    "protocols/tls13",
 ]
 exclude = [ "language" ]

@@ -241,6 +241,9 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
+        BaseTyp::Enum(_cases, _type_args) => {
+            unimplemented!()
+        }
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
@@ -375,6 +378,11 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
+        Pattern::SingleCaseEnum(name, inner_pat) => {
+            translate_ident(Ident::TopLevel(name.0.clone()))
+                .append(RcDoc::space())
+                .append(make_paren(translate_pattern(&inner_pat.0)))
+        }
         Pattern::IdentPat(x) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat))),
@@ -399,7 +407,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Div => return (RcDoc::as_string("/"), false),
                         _ => unimplemented!(),
                     },
-                    DictEntry::Array | DictEntry::Alias => {
+                    DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
                         return translate_binop(op, inner_ty, top_ctx)
                     }
                 },
@@ -545,6 +553,9 @@ fn translate_prefix_for_func_name<'a>(
             RcDoc::as_string(ARRAY_MODULE),
             FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
         ),
+        BaseTyp::Enum(_cases, _type_args) => {
+            unimplemented!()
+        }
         BaseTyp::Named(ident, _) => {
             // if the type is an array, we should print the Seq module instead
             let name = &ident.0;
@@ -680,6 +691,12 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e_f, top_ctx)))
                 .group()
+        }
+        Expression::MatchWith(_arg, _arms) => {
+            unimplemented!()
+        }
+        Expression::EnumInject(_enum_name, _case_name, _payload) => {
+            unimplemented!()
         }
         Expression::Unary(op, e1, op_typ) => {
             let e1 = e1.0;
@@ -828,7 +845,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
 
 fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match s {
-        Statement::LetBinding((pat, _), typ, (expr, _)) => make_let_binding(
+        Statement::LetBinding((pat, _), typ, (expr, _), _question_mark) => make_let_binding(
             translate_pattern(pat),
             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
             translate_expression(expr.clone(), top_ctx),
@@ -1040,6 +1057,9 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             Some(translate_base_typ(ty.0.clone())),
             translate_expression(e.0.clone(), top_ctx),
         ),
+        Item::EnumDecl(_name, _cases) => {
+            unimplemented!()
+        }
         Item::NaturalIntegerDecl(nat_name, _secrecy, canvas_size, Some((canvas_name, _modulo))) => {
             let canvas_size_bytes = match &canvas_size.0 {
                 Expression::Lit(Literal::Usize(size)) => {
@@ -1079,6 +1099,19 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
         Item::NaturalIntegerDecl(_, _, _, _) => {
             unimplemented!()
         }
+        Item::AliasDecl(name, ty) => RcDoc::as_string("type")
+            .append(RcDoc::space())
+            .append(translate_ident(Ident::TopLevel(name.0.clone())))
+            .append(RcDoc::as_string("="))
+            .append(RcDoc::space())
+            .append(translate_base_typ(ty.0.clone()))
+            .append(RcDoc::as_string("."))
+            .append(RcDoc::hardline())
+            .append(RcDoc::hardline()),
+        Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
+            "open {}",
+            str::replace(&kr.to_title_case(), " ", ".")
+        )),
     }
 }
 
@@ -1117,22 +1150,6 @@ pub fn translate_and_write_to_file(
          require import Hacspec.\n",
     )
     .unwrap();
-    let i_c_iter: Vec<RcDoc<()>> = p
-        .imported_crates
-        .iter()
-        .skip(1)
-        .map(|(kr, _)| {
-            RcDoc::as_string(format!(
-                "open {}",
-                str::replace(&kr.to_title_case(), " ", ".")
-            ))
-        })
-        .collect();
-    RcDoc::intersperse(i_c_iter, RcDoc::line())
-        .append(RcDoc::hardline())
-        .append(RcDoc::hardline())
-        .render(width, &mut w)
-        .unwrap();
     translate_program(p, top_ctx).render(width, &mut w).unwrap();
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }

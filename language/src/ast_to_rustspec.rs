@@ -5,7 +5,7 @@ use rustc_ast::{
         Crate, Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs,
         IntTy, ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind,
         RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe,
-        UseTreeKind,
+        UseTreeKind, VariantData,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -14,10 +14,15 @@ use rustc_ast::{
 use rustc_session::Session;
 use rustc_span::{symbol, Span};
 
+use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
-type ArrayTypes = HashSet<String>;
+#[derive(Clone)]
+struct SpecialNames {
+    arrays: HashSet<String>,
+    enums: HashSet<String>,
+}
 
 type TranslationResult<T> = Result<T, ()>;
 
@@ -127,10 +132,52 @@ pub fn translate_typ_name(
     }
 }
 
-pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResult<Ident> {
-    if path.segments.len() > 1 {
-        sess.span_rustspec_err(path.span, "associated constants are not allowed in Hacspec");
+fn translate_expr_name(
+    sess: &Session,
+    path: &ast::Path,
+    span: &Span,
+    specials: &SpecialNames,
+) -> TranslationResult<Spanned<ExprTranslationResult>> {
+    if path.segments.len() > 2 {
+        sess.span_rustspec_err(
+            path.span,
+            "a path that has more than 2 segments is forbidden in Hacspec",
+        );
         return Err(());
+    }
+    if path.segments.len() == 2 {
+        // We're looking here at enum variants without payload like Option::None
+        let mut it = path.segments.iter();
+        let first = it.next().unwrap();
+        let second = it.next().unwrap();
+        println!(
+            "Checking {} among {:?}",
+            &first.ident.name.to_ident_string(),
+            specials.enums.iter().collect::<Vec<_>>()
+        );
+        if specials.enums.contains(&first.ident.name.to_ident_string()) {
+            let args = match &first.args {
+                Some(args) => Some(translate_type_args(sess, &args, &first.ident.span)?),
+                None => None,
+            };
+            let enum_name = TopLevelIdent(first.ident.name.to_ident_string());
+            let variant_name = TopLevelIdent(second.ident.name.to_ident_string());
+            return Ok((
+                ExprTranslationResult::TransExpr(Expression::EnumInject(
+                    BaseTyp::Named((enum_name, first.ident.span.clone().into()), args),
+                    (variant_name, second.ident.span.clone().into()),
+                    None, // No payload for the enum variant
+                )),
+                span.clone().into(),
+            ));
+        } else {
+            sess.span_rustspec_err(
+                first.ident.span,
+                "two-segments paths can only be enum variants in Hacspec, \
+            and this first segments does not designate an enum",
+            );
+            return Err(());
+        }
     }
     match path.segments.iter().last() {
         None => {
@@ -138,7 +185,12 @@ pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResul
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok(translate_ident(&segment.ident).0),
+            None => Ok((
+                ExprTranslationResult::TransExpr(Expression::Named(
+                    translate_ident(&segment.ident).0,
+                )),
+                span.clone().into(),
+            )),
             Some(_) => {
                 sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
                 Err(())
@@ -147,40 +199,87 @@ pub fn translate_expr_name(sess: &Session, path: &ast::Path) -> TranslationResul
     }
 }
 
-pub fn translate_func_name(
+pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationResult<TopLevelIdent> {
+    if path.segments.len() > 1 {
+        sess.span_rustspec_err(path.span, "expected a single-segment struct name");
+        return Err(());
+    }
+    match path.segments.iter().last() {
+        None => {
+            sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
+            Err(())
+        }
+        Some(segment) => match &segment.args {
+            None => Ok(TopLevelIdent(segment.ident.name.to_ident_string())),
+            Some(_) => {
+                sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
+                Err(())
+            }
+        },
+    }
+}
+
+enum FuncNameResult {
+    TypePrefixed(Option<Spanned<BaseTyp>>, Spanned<TopLevelIdent>),
+    EnumConstructor(BaseTyp, Spanned<TopLevelIdent>),
+}
+
+fn translate_func_name(
     sess: &Session,
+    specials: &SpecialNames,
     path: &ast::Path,
-) -> TranslationResult<(Option<Spanned<BaseTyp>>, Spanned<TopLevelIdent>)> {
+) -> TranslationResult<FuncNameResult> {
     if path.segments.len() > 2 {
         return Err(());
     }
-    let prefix = if path.segments.len() == 2 {
+    let base_name = translate_toplevel_ident(&path.segments.last().unwrap().ident);
+    if path.segments.len() == 2 {
         match path.segments.first() {
             None => panic!(), // should not happen
-            Some(segment) => Some(translate_base_typ(
-                sess,
-                &ast::Ty {
-                    tokens: path.tokens.clone(),
-                    span: path.span,
-                    id: NodeId::MAX,
-                    kind: TyKind::Path(
-                        None,
-                        ast::Path {
-                            tokens: path.tokens.clone(),
-                            span: path.span,
-                            segments: vec![segment.clone()],
-                        },
-                    ),
-                },
-            )?),
+            Some(segment) => {
+                let segment_string = segment.ident.name.to_ident_string();
+                if specials.enums.contains(&segment_string) {
+                    Ok(FuncNameResult::EnumConstructor(
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent(segment_string),
+                                segment.ident.span.clone().into(),
+                            ),
+                            match segment.args {
+                                None => None,
+                                Some(ref args) => {
+                                    Some(translate_type_args(sess, args, &segment.ident.span)?)
+                                }
+                            },
+                        ),
+                        base_name,
+                    ))
+                } else {
+                    Ok(FuncNameResult::TypePrefixed(
+                        Some(translate_base_typ(
+                            sess,
+                            &ast::Ty {
+                                tokens: path.tokens.clone(),
+                                span: path.span,
+                                id: NodeId::MAX,
+                                kind: TyKind::Path(
+                                    None,
+                                    ast::Path {
+                                        tokens: path.tokens.clone(),
+                                        span: path.span,
+                                        segments: vec![segment.clone()],
+                                    },
+                                ),
+                            },
+                        )?),
+                        base_name,
+                    ))
+                }
+            }
         }
     } else {
-        None
-    };
-    Ok((
-        prefix,
-        translate_toplevel_ident(&path.segments.last().unwrap().ident),
-    ))
+        Ok(FuncNameResult::TypePrefixed(None, base_name))
+    }
 }
 
 fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<BaseTyp>> {
@@ -280,10 +379,10 @@ enum ExprTranslationResult {
 
 fn translate_expr_expects_exp(
     sess: &Session,
-    arr_typs: &ArrayTypes,
+    specials: &SpecialNames,
     e: &Expr,
 ) -> TranslationResult<Spanned<Expression>> {
-    match translate_expr(sess, arr_typs, e)? {
+    match translate_expr(sess, specials, e)? {
         (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
         (ExprTranslationResult::TransStmt(_), span) => {
             sess.span_rustspec_err(
@@ -297,7 +396,7 @@ fn translate_expr_expects_exp(
 
 fn translate_function_argument(
     sess: &Session,
-    arr_typs: &ArrayTypes,
+    specials: &SpecialNames,
     e: &Expr,
 ) -> TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)> {
     match &e.kind {
@@ -307,12 +406,12 @@ fn translate_function_argument(
                 Err(())
             }
             Mutability::Not => Ok((
-                translate_expr_expects_exp(sess, arr_typs, e1)?,
+                translate_expr_expects_exp(sess, specials, e1)?,
                 (Borrowing::Borrowed, e.span.clone().into()),
             )),
         },
         _ => Ok((
-            translate_expr_expects_exp(sess, arr_typs, e)?,
+            translate_expr_expects_exp(sess, specials, e)?,
             (Borrowing::Consumed, e.span.clone().into()),
         )),
     }
@@ -418,16 +517,15 @@ fn translate_binop(x: ast::BinOpKind) -> BinOpKind {
 
 fn translate_expr(
     sess: &Session,
-    arr_typs: &ArrayTypes,
+    specials: &SpecialNames,
     e: &Expr,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
-    #[allow(unreachable_patterns)]
     match &e.kind {
         ExprKind::Binary(op, e1, e2) => Ok((
             ExprTranslationResult::TransExpr(Expression::Binary(
                 (translate_binop(op.clone().node), op.clone().span.into()),
-                Box::new(translate_expr_expects_exp(sess, arr_typs, e1)?),
-                Box::new(translate_expr_expects_exp(sess, arr_typs, e2)?),
+                Box::new(translate_expr_expects_exp(sess, specials, e1)?),
+                Box::new(translate_expr_expects_exp(sess, specials, e2)?),
                 None,
             )),
             e.span.into(),
@@ -442,7 +540,7 @@ fn translate_expr(
                         return Err(());
                     }
                 },
-                Box::new(translate_expr_expects_exp(sess, arr_typs, e1)?),
+                Box::new(translate_expr_expects_exp(sess, specials, e1)?),
                 None,
             )),
             e.span.into(),
@@ -451,15 +549,44 @@ fn translate_expr(
             sess.span_rustspec_err(e.span, "trait associated values not allowed in Hacspec");
             Err(())
         }
-        ExprKind::Path(None, path) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Named(translate_expr_name(sess, path)?)),
-            e.span.into(),
-        )),
+        ExprKind::Path(None, ast::Path { segments, .. })
+            if segments.len() == 2
+                && specials
+                    .enums
+                    .contains(&segments.iter().next().unwrap().ident.name.to_ident_string()) =>
+        {
+            // This is the case of enum injection
+            let mut it = segments.iter();
+            let first_seg = it.next().unwrap();
+            let second_seg = it.next().unwrap();
+            if second_seg.args.is_some() {
+                sess.span_rustspec_err(
+                    second_seg.ident.span,
+                    "the name of the enum case should not have any arguments",
+                );
+                return Err(());
+            }
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::EnumInject(
+                    BaseTyp::Named(
+                        translate_toplevel_ident(&first_seg.ident),
+                        match &second_seg.args {
+                            None => None,
+                            Some(args) => {
+                                Some(translate_type_args(sess, &*args, &second_seg.ident.span)?)
+                            }
+                        },
+                    ),
+                    translate_toplevel_ident(&second_seg.ident),
+                    None,
+                )),
+                e.span.into(),
+            ))
+        }
+        ExprKind::Path(None, path) => translate_expr_name(sess, path, &e.span, specials),
         ExprKind::Call(func, args) => {
-            let ((func_prefix, func_name), _) = match &func.kind {
-                ExprKind::Path(None, path) => {
-                    Ok((translate_func_name(sess, &path)?, RustspecSpan(path.span)))
-                }
+            let func_name_kind = match &func.kind {
+                ExprKind::Path(None, path) => Ok(translate_func_name(sess, specials, &path)?),
                 _ => {
                     sess.span_rustspec_err(
                         func.span,
@@ -468,163 +595,229 @@ fn translate_expr(
                     Err(())
                 }
             }?;
-            let func_name_string = (func_name.clone().0).0;
-            if arr_typs.contains(&func_name_string) {
-                // Special case for array constructors
-                if args.len() != 1 {
-                    sess.span_rustspec_err(
-                        e.span,
-                        "array constructor called with more than one arguments",
-                    );
-                    return Err(());
-                }
-                match &args.first().unwrap().kind {
-                    // First case: the array itself
-                    ExprKind::Array(cells) => {
-                        let new_cells: Vec<TranslationResult<Spanned<Expression>>> = cells
+            match func_name_kind {
+                FuncNameResult::TypePrefixed(func_prefix, func_name) => {
+                    let func_name_string = (func_name.clone().0).0;
+                    if specials.enums.contains(&func_name_string) {
+                        // Special case for struct constructors
+                        let func_args: Vec<
+                            TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>,
+                        > = args
                             .iter()
-                            .map(|cell| translate_expr_expects_exp(sess, arr_typs, &cell))
+                            .map(|arg| translate_function_argument(sess, specials, &arg))
                             .collect();
-                        let new_cells = check_vec(new_cells)?;
+                        let func_args = check_vec(func_args)?;
+                        let func_args = check_vec(
+                            func_args
+                                .into_iter()
+                                .map(|(arg, borrow)| match &borrow.0 {
+                                    Borrowing::Consumed => Ok(arg),
+                                    Borrowing::Borrowed => {
+                                        sess.span_rustspec_err(
+                                            borrow.1.clone(),
+                                            "struct arguments cannot be borrowed in Hacspec",
+                                        );
+                                        Err(())
+                                    }
+                                })
+                                .collect(),
+                        )?;
                         return Ok((
-                            (ExprTranslationResult::TransExpr(Expression::NewArray(
-                                func_name, None, new_cells,
-                            ))),
+                            ExprTranslationResult::TransExpr(Expression::EnumInject(
+                                BaseTyp::Named(func_name.clone(), None),
+                                func_name,
+                                Some(if func_args.len() > 1 {
+                                    (Box::new(Expression::Tuple(func_args)), e.span.into())
+                                } else {
+                                    let arg = func_args.into_iter().next().unwrap();
+                                    (Box::new(arg.0), arg.1)
+                                }),
+                            )),
                             e.span.into(),
                         ));
                     }
-                    // Second case: a call to the secret_array! macro
-                    ExprKind::MacCall(call) => {
-                        if call.path.segments.len() > 1 {
+                    if specials.arrays.contains(&func_name_string) {
+                        // Special case for array constructors
+                        if args.len() != 1 {
                             sess.span_rustspec_err(
-                                call.path.span,
-                                "cannot use macros other than the ones defined by Hacspec",
+                                e.span,
+                                "array constructor called with more than one arguments",
                             );
                             return Err(());
                         }
-                        let name = call.path.segments.first().unwrap();
-                        match (
-                            name.ident.name.to_ident_string().as_str(),
-                            name.args.as_ref(),
-                        ) {
-                            ("secret_array", None) => match &*call.args {
-                                MacArgs::Delimited(_, _, tokens) => {
-                                    let mut it = tokens.trees();
-                                    let (first_arg, second_arg, third_arg) = {
-                                        let first_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                        let second_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                        let third_arg = it.next().map_or(Err(()), |x| Ok(x));
-                                        Ok((first_arg?, second_arg?, third_arg?))
-                                    }?;
-                                    let typ_ident = check_for_toplevel_ident(sess, &first_arg)?;
-                                    check_for_comma(sess, &second_arg)?;
-                                    let array = check_for_literal_array(sess, &third_arg)?;
-                                    let array = array
-                                        .into_iter()
-                                        .map(|i| {
-                                            (
-                                                Expression::FuncCall(
-                                                    None,
-                                                    typ_ident.0.clone(),
-                                                    vec![(
-                                                        i.clone(),
-                                                        (Borrowing::Consumed, i.1.clone()),
-                                                    )],
-                                                ),
-                                                i.1.clone(),
-                                            )
-                                        })
-                                        .collect();
-                                    return Ok((
-                                        (ExprTranslationResult::TransExpr(Expression::NewArray(
-                                            func_name, None, array,
-                                        ))),
-                                        e.span.into(),
-                                    ));
-                                }
-                                _ => {
+                        match &args.first().unwrap().kind {
+                            // First case: the array itself
+                            ExprKind::Array(cells) => {
+                                let new_cells: Vec<TranslationResult<Spanned<Expression>>> = cells
+                                    .iter()
+                                    .map(|cell| translate_expr_expects_exp(sess, specials, &cell))
+                                    .collect();
+                                let new_cells = check_vec(new_cells)?;
+                                return Ok((
+                                    (ExprTranslationResult::TransExpr(Expression::NewArray(
+                                        func_name, None, new_cells,
+                                    ))),
+                                    e.span.into(),
+                                ));
+                            }
+                            // Second case: a call to the secret_array! macro
+                            ExprKind::MacCall(call) => {
+                                if call.path.segments.len() > 1 {
                                     sess.span_rustspec_err(
-                                        call.args.span().unwrap().clone(),
-                                        "expected parenthesis-delimited args",
+                                        call.path.span,
+                                        "cannot use macros other than the ones defined by Hacspec",
                                     );
                                     return Err(());
                                 }
-                            },
-                            ("secret_bytes", None) => match &*call.args {
-                                MacArgs::Delimited(_, _, tokens) => {
-                                    let mut it = tokens.trees();
-                                    let first_arg = it.next().map_or(Err(()), |x| Ok(x))?;
-                                    let array = check_for_literal_array(sess, &first_arg)?;
-                                    let array = array
-                                        .into_iter()
-                                        .map(|i| {
-                                            (
-                                                Expression::FuncCall(
-                                                    None,
+                                let name = call.path.segments.first().unwrap();
+                                match (
+                                    name.ident.name.to_ident_string().as_str(),
+                                    name.args.as_ref(),
+                                ) {
+                                    ("secret_array", None) => match &*call.args {
+                                        MacArgs::Delimited(_, _, tokens) => {
+                                            let mut it = tokens.trees();
+                                            let (first_arg, second_arg, third_arg) = {
+                                                let first_arg =
+                                                    it.next().map_or(Err(()), |x| Ok(x));
+                                                let second_arg =
+                                                    it.next().map_or(Err(()), |x| Ok(x));
+                                                let third_arg =
+                                                    it.next().map_or(Err(()), |x| Ok(x));
+                                                Ok((first_arg?, second_arg?, third_arg?))
+                                            }?;
+                                            let typ_ident =
+                                                check_for_toplevel_ident(sess, &first_arg)?;
+                                            check_for_comma(sess, &second_arg)?;
+                                            let array = check_for_literal_array(sess, &third_arg)?;
+                                            let array = array
+                                                .into_iter()
+                                                .map(|i| {
                                                     (
-                                                        TopLevelIdent("U8".to_string()),
-                                                        call.span().into(),
-                                                    ),
-                                                    vec![(
-                                                        i.clone(),
-                                                        (Borrowing::Consumed, i.1.clone()),
-                                                    )],
-                                                ),
-                                                i.1.clone(),
-                                            )
-                                        })
-                                        .collect();
-                                    return Ok((
-                                        (ExprTranslationResult::TransExpr(Expression::NewArray(
-                                            func_name, None, array,
-                                        ))),
-                                        e.span.into(),
-                                    ));
+                                                        Expression::FuncCall(
+                                                            None,
+                                                            typ_ident.0.clone(),
+                                                            vec![(
+                                                                i.clone(),
+                                                                (Borrowing::Consumed, i.1.clone()),
+                                                            )],
+                                                        ),
+                                                        i.1.clone(),
+                                                    )
+                                                })
+                                                .collect();
+                                            return Ok((
+                                                (ExprTranslationResult::TransExpr(
+                                                    Expression::NewArray(func_name, None, array),
+                                                )),
+                                                e.span.into(),
+                                            ));
+                                        }
+                                        _ => {
+                                            sess.span_rustspec_err(
+                                                call.args.span().unwrap().clone(),
+                                                "expected parenthesis-delimited args",
+                                            );
+                                            return Err(());
+                                        }
+                                    },
+                                    ("secret_bytes", None) => match &*call.args {
+                                        MacArgs::Delimited(_, _, tokens) => {
+                                            let mut it = tokens.trees();
+                                            let first_arg = it.next().map_or(Err(()), |x| Ok(x))?;
+                                            let array = check_for_literal_array(sess, &first_arg)?;
+                                            let array = array
+                                                .into_iter()
+                                                .map(|i| {
+                                                    (
+                                                        Expression::FuncCall(
+                                                            None,
+                                                            (
+                                                                TopLevelIdent("U8".to_string()),
+                                                                call.span().into(),
+                                                            ),
+                                                            vec![(
+                                                                i.clone(),
+                                                                (Borrowing::Consumed, i.1.clone()),
+                                                            )],
+                                                        ),
+                                                        i.1.clone(),
+                                                    )
+                                                })
+                                                .collect();
+                                            return Ok((
+                                                (ExprTranslationResult::TransExpr(
+                                                    Expression::NewArray(func_name, None, array),
+                                                )),
+                                                e.span.into(),
+                                            ));
+                                        }
+                                        _ => {
+                                            sess.span_rustspec_err(
+                                                call.args.span().unwrap().clone(),
+                                                "expected parenthesis-delimited args",
+                                            );
+                                            return Err(());
+                                        }
+                                    },
+                                    _ => {
+                                        sess.span_rustspec_err(
+                                            call.path.span.clone(),
+                                            "only the secret_array! macro can be called here",
+                                        );
+                                        return Err(());
+                                    }
                                 }
-                                _ => {
-                                    sess.span_rustspec_err(
-                                        call.args.span().unwrap().clone(),
-                                        "expected parenthesis-delimited args",
-                                    );
-                                    return Err(());
-                                }
-                            },
+                            }
                             _ => {
                                 sess.span_rustspec_err(
-                                    call.path.span.clone(),
-                                    "only the secret_array! macro can be called here",
+                                    args.first().unwrap().span.clone(),
+                                    "expected an array literal",
                                 );
                                 return Err(());
                             }
                         }
                     }
-                    _ => {
-                        sess.span_rustspec_err(
-                            args.first().unwrap().span.clone(),
-                            "expected an array literal",
-                        );
-                        return Err(());
-                    }
+                    let func_args: Vec<
+                        TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>,
+                    > = args
+                        .iter()
+                        .map(|arg| translate_function_argument(sess, specials, &arg))
+                        .collect();
+                    let func_args = check_vec(func_args)?;
+                    Ok((
+                        ExprTranslationResult::TransExpr(Expression::FuncCall(
+                            func_prefix,
+                            func_name,
+                            func_args,
+                        )),
+                        e.span.into(),
+                    ))
+                }
+                FuncNameResult::EnumConstructor(enum_name, enum_case) => {
+                    let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
+                        .iter()
+                        .map(|arg| translate_expr_expects_exp(sess, specials, &arg))
+                        .collect();
+                    let func_args = check_vec(func_args);
+                    Ok((
+                        ExprTranslationResult::TransExpr(Expression::EnumInject(
+                            enum_name,
+                            enum_case,
+                            Some((
+                                Box::new(Expression::Tuple(func_args?)),
+                                e.span.clone().into(),
+                            )),
+                        )),
+                        e.span.into(),
+                    ))
                 }
             }
-            let func_args: Vec<TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>> = args
-                .iter()
-                .map(|arg| translate_function_argument(sess, arr_typs, &arg))
-                .collect();
-            let func_args = check_vec(func_args);
-            Ok((
-                ExprTranslationResult::TransExpr(Expression::FuncCall(
-                    func_prefix,
-                    func_name,
-                    func_args?,
-                )),
-                e.span.into(),
-            ))
         }
         ExprKind::MethodCall(method_name, args, span) => {
             let func_args: Vec<TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>> = args
                 .iter()
-                .map(|arg| translate_function_argument(sess, arr_typs, &arg))
+                .map(|arg| translate_function_argument(sess, specials, &arg))
                 .collect();
             let func_args = check_vec(func_args)?;
             let (method_arg, rest_args) = func_args.split_at(1);
@@ -652,7 +845,7 @@ fn translate_expr(
         }
         ExprKind::Lit(lit) => translate_literal(sess, lit, e.span.clone()),
         ExprKind::Assign(lhs, rhs_e, _) => {
-            let r_e = translate_expr(sess, arr_typs, rhs_e)?;
+            let r_e = translate_expr(sess, specials, rhs_e)?;
             match &lhs.kind {
                 ExprKind::Path(None, path) => match &path.segments.as_slice() {
                     [var] => match &var.args {
@@ -687,7 +880,7 @@ fn translate_expr(
                     }
                 },
                 ExprKind::Index(a, index) => {
-                    let r_index = translate_expr(sess, arr_typs, index)?;
+                    let r_index = translate_expr(sess, specials, index)?;
                     let r_index = match r_index {
                         (ExprTranslationResult::TransStmt(_), span) => {
                             sess.span_rustspec_err(
@@ -748,7 +941,7 @@ fn translate_expr(
             }
         }
         ExprKind::If(cond, t_e, f_e) => {
-            let r_cond = match translate_expr(sess, arr_typs, cond)? {
+            let r_cond = match translate_expr(sess, specials, cond)? {
                 (ExprTranslationResult::TransStmt(_), span) => {
                     sess.span_rustspec_err(
                         span,
@@ -758,12 +951,12 @@ fn translate_expr(
                 }
                 (ExprTranslationResult::TransExpr(r_cond), span) => Ok((r_cond, span)),
             }?;
-            let mut r_t_e = translate_block(sess, arr_typs, t_e)?;
+            let mut r_t_e = translate_block(sess, specials, t_e)?;
             let r_f_e = match f_e {
                 None => Ok(None),
                 Some(f_e) => match &f_e.kind {
                     ExprKind::Block(f_e, _) => {
-                        let r_f_e = translate_block(sess, arr_typs, f_e)?;
+                        let r_f_e = translate_block(sess, specials, f_e)?;
                         Ok(Some(r_f_e))
                     }
                     _ => {
@@ -793,8 +986,11 @@ fn translate_expr(
                         let r_f_span = r_f_e.1.clone();
                         let r_t_e = r_t_e.0.stmts.pop().unwrap();
                         let r_f_e = r_f_e.0.stmts.pop().unwrap();
-                        match (r_t_e.0, r_f_e.0) {
-                            (Statement::ReturnExp(r_t_e), Statement::ReturnExp(r_f_e)) => Ok((
+                        match (r_t_e, r_f_e) {
+                            (
+                                (Statement::ReturnExp(r_t_e), _),
+                                (Statement::ReturnExp(r_f_e), _),
+                            ) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::InlineConditional(
                                     Box::new(r_cond),
                                     Box::new((r_t_e, r_t_span)),
@@ -826,8 +1022,8 @@ fn translate_expr(
             };
             let e_begin_end = match &range.kind {
                 ExprKind::Range(Some(r_begin), Some(r_end), RangeLimits::HalfOpen) => {
-                    let e_begin = translate_expr(sess, arr_typs, r_begin)?;
-                    let e_end = translate_expr(sess, arr_typs, r_end)?;
+                    let e_begin = translate_expr(sess, specials, r_begin)?;
+                    let e_end = translate_expr(sess, specials, r_end)?;
                     match (e_begin, e_end) {
                         (
                             (ExprTranslationResult::TransExpr(e_begin), span_begin),
@@ -851,7 +1047,7 @@ fn translate_expr(
                 }
             };
             let (e_begin, e_end) = e_begin_end?;
-            let r_b = translate_block(sess, arr_typs, b)?;
+            let r_b = translate_block(sess, specials, b)?;
             Ok((
                 ExprTranslationResult::TransStmt(Statement::ForLoop(id?, e_begin, e_end, r_b)),
                 e.span.into(),
@@ -862,7 +1058,7 @@ fn translate_expr(
                 [var] => match &var.args {
                     None => {
                         let id = translate_ident(&var.ident);
-                        let r_e2 = translate_expr(sess, arr_typs, e2)?;
+                        let r_e2 = translate_expr(sess, specials, e2)?;
                         match r_e2 {
                             (ExprTranslationResult::TransExpr(r_e2), r_e2_span) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::ArrayIndex(
@@ -898,7 +1094,7 @@ fn translate_expr(
         ExprKind::Tup(args) => {
             let r_args = args
                 .into_iter()
-                .map(|arg| match translate_expr(sess, arr_typs, arg)? {
+                .map(|arg| match translate_expr(sess, specials, arg)? {
                     (ExprTranslationResult::TransExpr(r_arg), r_span) => Ok((r_arg, r_span)),
                     (ExprTranslationResult::TransStmt(_), r_span) => {
                         sess.span_rustspec_err(
@@ -928,7 +1124,7 @@ fn translate_expr(
             Err(())
         }
         ExprKind::Cast(e1, t1) => {
-            let new_e1 = translate_expr_expects_exp(sess, arr_typs, e1)?;
+            let new_e1 = translate_expr_expects_exp(sess, specials, e1)?;
             let new_t1 = translate_base_typ(sess, t1)?;
             Ok((
                 ExprTranslationResult::TransExpr(Expression::IntegerCasting(
@@ -961,12 +1157,102 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::Match(_, _) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "pattern matching is not supported yet in Hacspec",
-            );
-            Err(())
+        ExprKind::Match(e1, arms) => {
+            let e1 = translate_expr_expects_exp(sess, specials, e1)?;
+            let arms = check_vec(
+                arms.iter()
+                    .map(|arm| {
+                        if arm.guard.is_some() {
+                            sess.span_rustspec_err(
+                                arm.span.clone(),
+                                "pattern matching guards are not allowed in Hacspec",
+                            );
+                            return Err(());
+                        }
+                        let arm_body = translate_expr_expects_exp(sess, specials, &*arm.body)?;
+                        // We only allow for a very specific type of pattern
+                        let (enum_name, case_name, pat) = match &arm.pat.kind {
+                            PatKind::Path(None, ast::Path { segments, .. }) => {
+                                if segments.len() != 2 {
+                                    sess.span_rustspec_err(
+                                        ((arm.pat).span).clone(),
+                                        "expected <name of the enum>::<name of the case>",
+                                    );
+                                    return Err(());
+                                }
+                                let mut it = segments.iter();
+                                let first_seg = it.next().unwrap();
+                                let second_seg = it.next().unwrap();
+                                (
+                                    BaseTyp::Named(
+                                        translate_toplevel_ident(&first_seg.ident),
+                                        match &first_seg.args {
+                                            None => None,
+                                            Some(args) => Some(translate_type_args(
+                                                sess,
+                                                args,
+                                                &first_seg.ident.span,
+                                            )?),
+                                        },
+                                    ),
+                                    translate_toplevel_ident(&second_seg.ident),
+                                    None,
+                                )
+                            }
+                            PatKind::TupleStruct(ast::Path { segments, .. }, args) => {
+                                if segments.len() != 2 {
+                                    sess.span_rustspec_err(
+                                        ((arm.pat).span).clone(),
+                                        "expected <name of the enum>::<name of the case>",
+                                    );
+                                    return Err(());
+                                }
+                                let mut it = segments.iter();
+                                let first_seg = it.next().unwrap();
+                                let second_seg = it.next().unwrap();
+                                let pat_args = check_vec(
+                                    args.iter()
+                                        .map(|arg| translate_pattern(sess, arg))
+                                        .collect(),
+                                )?;
+                                let pat = if pat_args.len() == 1 {
+                                    pat_args.into_iter().next().unwrap()
+                                } else {
+                                    (Pattern::Tuple(pat_args), arm.pat.span.clone().into())
+                                };
+                                (
+                                    BaseTyp::Named(
+                                        translate_toplevel_ident(&first_seg.ident),
+                                        match &first_seg.args {
+                                            None => None,
+                                            Some(args) => Some(translate_type_args(
+                                                sess,
+                                                args,
+                                                &first_seg.ident.span,
+                                            )?),
+                                        },
+                                    ),
+                                    translate_toplevel_ident(&second_seg.ident),
+                                    Some(pat),
+                                )
+                            }
+                            _ => {
+                                sess.span_rustspec_err(
+                                    ((arm.pat).span).clone(),
+                                    "the only types of match pattern allowed in Hacspec start by \
+                                <name of the enum>::<name of the case>",
+                                );
+                                return Err(());
+                            }
+                        };
+                        Ok((enum_name, case_name, pat, arm_body))
+                    })
+                    .collect(),
+            )?;
+            Ok((
+                ExprTranslationResult::TransExpr(Expression::MatchWith(Box::new(e1), arms)),
+                e.span.clone().into(),
+            ))
         }
         ExprKind::Closure(_, _, _, _, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "closures are not allowed in Hacspec");
@@ -1024,8 +1310,8 @@ fn translate_expr(
                     return Err(());
                 }
             };
-            let new_e1 = translate_expr_expects_exp(sess, arr_typs, e1)?;
-            let new_e2 = translate_expr_expects_exp(sess, arr_typs, e2)?;
+            let new_e1 = translate_expr_expects_exp(sess, specials, e1)?;
+            let new_e2 = translate_expr_expects_exp(sess, specials, e2)?;
             Ok((
                 ExprTranslationResult::TransExpr(Expression::Tuple(vec![new_e1, new_e2])),
                 e.span.into(),
@@ -1088,9 +1374,12 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::Paren(e1) => translate_expr(sess, arr_typs, e1),
+        ExprKind::Paren(e1) => translate_expr(sess, specials, e1),
         ExprKind::Try(_) => {
-            sess.span_rustspec_err(e.span.clone(), "FOO27");
+            sess.span_rustspec_err(
+                e.span.clone(),
+                "question marks inside expressions are not allowed in Hacspec",
+            );
             Err(())
         }
         ExprKind::Err => {
@@ -1105,9 +1394,48 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
             Err(())
         }
+    }
+}
+
+enum ExprTranslationResultMaybeQuestionMark {
+    TransExpr(Expression, bool), // true if ends with question mark
+    TransStmt(Statement),
+}
+
+fn translate_expr_accepts_question_mark(
+    sess: &Session,
+    specials: &SpecialNames,
+    e: &Expr,
+) -> TranslationResult<Spanned<ExprTranslationResultMaybeQuestionMark>> {
+    match &e.kind {
+        ExprKind::Try(inner_e) => {
+            let (result, span) = translate_expr(sess, specials, &inner_e)?;
+            match result {
+                ExprTranslationResult::TransExpr(e) => Ok((
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, true),
+                    span,
+                )),
+                ExprTranslationResult::TransStmt(_) => {
+                    sess.span_rustspec_err(
+                        inner_e.span,
+                        "question-marked blobs cannot contain statements \
+                    in Hacspec, only pure expressions",
+                    );
+                    Err(())
+                }
+            }
+        }
         _ => {
-            sess.span_rustspec_err(e.span.clone(), "this expression is not allowed in Hacspec");
-            Err(())
+            let (result, span) = translate_expr(sess, specials, e)?;
+            match result {
+                ExprTranslationResult::TransExpr(e) => Ok((
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, false),
+                    span,
+                )),
+                ExprTranslationResult::TransStmt(s) => {
+                    Ok((ExprTranslationResultMaybeQuestionMark::TransStmt(s), span))
+                }
+            }
         }
     }
 }
@@ -1116,6 +1444,30 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
     match &pat.kind {
         PatKind::Ident(BindingMode::ByValue(_), id, None) => {
             Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
+        }
+        PatKind::TupleStruct(path, args) => {
+            let struct_name = translate_struct_name(sess, path)?;
+            if args.len() == 1 {
+                let arg = args.into_iter().next().unwrap();
+                let new_arg = translate_pattern(sess, arg)?;
+                Ok((
+                    Pattern::SingleCaseEnum((struct_name, path.span.into()), Box::new(new_arg)),
+                    pat.span.into(),
+                ))
+            } else {
+                let new_args = check_vec(
+                    args.into_iter()
+                        .map(|arg| translate_pattern(sess, arg))
+                        .collect(),
+                )?;
+                Ok((
+                    Pattern::SingleCaseEnum(
+                        (struct_name, path.span.into()),
+                        Box::new((Pattern::Tuple(new_args), pat.span.into())),
+                    ),
+                    pat.span.into(),
+                ))
+            }
         }
         PatKind::Tuple(pats) => {
             let pats = pats
@@ -1135,7 +1487,7 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
 
 fn translate_statement(
     sess: &Session,
-    arr_typs: &ArrayTypes,
+    specials: &SpecialNames,
     s: &Stmt,
 ) -> TranslationResult<Vec<Spanned<Statement>>> {
     match &s.kind {
@@ -1160,7 +1512,7 @@ fn translate_statement(
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
             };
-            let init = match &local.init {
+            let (init, question_mark) = match &local.init {
                 None => {
                     sess.span_rustspec_err(
                         local.span,
@@ -1168,32 +1520,37 @@ fn translate_statement(
                     );
                     Err(())
                 }
-                Some(e) => match translate_expr(sess, arr_typs, &e)? {
-                    (ExprTranslationResult::TransStmt(_), _) => {
+                Some(e) => match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                    (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
                         sess.span_rustspec_err(
                             e.span,
                             "let binding expression should not contain statements in Hacspec",
                         );
                         Err(())
                     }
-                    (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
+                    (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
+                        Ok(((e, span), question_mark))
+                    }
                 },
             }?;
-            Ok(vec![(Statement::LetBinding(pat, ty, init), s.span.into())])
+            Ok(vec![(
+                Statement::LetBinding(pat, ty, init, question_mark),
+                s.span.into(),
+            )])
         }
         StmtKind::Expr(e) => {
-            let t_s = match translate_expr(sess, arr_typs, &e)? {
+            let t_s = match translate_expr(sess, specials, &e)? {
                 (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e),
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span.into())])
         }
         StmtKind::Semi(e) => {
-            let t_s = match translate_expr(sess, arr_typs, &e)? {
-                (ExprTranslationResult::TransExpr(e), span) => {
-                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span))
+            let t_s = match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
+                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), question_mark)
                 }
-                (ExprTranslationResult::TransStmt(s), _) => s,
+                (ExprTranslationResultMaybeQuestionMark::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span.into())])
         }
@@ -1202,7 +1559,7 @@ fn translate_statement(
 
 fn translate_block(
     sess: &Session,
-    arr_typs: &ArrayTypes,
+    specials: &SpecialNames,
     b: &ast::Block,
 ) -> TranslationResult<Spanned<Block>> {
     match b.rules {
@@ -1215,7 +1572,7 @@ fn translate_block(
     let stmts = b
         .stmts
         .iter()
-        .map(|s| translate_statement(sess, arr_typs, &s))
+        .map(|s| translate_statement(sess, specials, &s))
         .collect();
     let stmts = check_vec(stmts)?.into_iter().flatten().collect();
     Ok((
@@ -1223,6 +1580,7 @@ fn translate_block(
             stmts,
             return_typ: None,
             mutated: None,
+            contains_question_mark: None,
             // We initialize these fields to None as they are
             // to be filled by the typechecker
         },
@@ -1233,8 +1591,6 @@ fn translate_block(
 enum ItemTranslationResult {
     Item(Item),
     Ignored,
-    ImportedCrate(String),
-    TyAlias(Spanned<String>, Spanned<BaseTyp>),
 }
 
 fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
@@ -1403,10 +1759,10 @@ fn check_for_toplevel_ident(
 fn translate_simplified_natural_integer_decl(
     sess: &Session,
     i: &ast::Item,
-    arr_types: &ArrayTypes,
+    specials: &SpecialNames,
     call: &MacCall,
     secrecy: Secrecy,
-) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
     match &*call.args {
         MacArgs::Delimited(_, _, tokens) => {
             let mut it = tokens.trees();
@@ -1426,7 +1782,10 @@ fn translate_simplified_natural_integer_decl(
                     canvas_size,
                     None,
                 ))),
-                arr_types.update(typ_ident_string),
+                SpecialNames {
+                    arrays: specials.arrays.update(typ_ident_string),
+                    ..specials.clone()
+                },
             ))
         }
         _ => {
@@ -1439,10 +1798,10 @@ fn translate_simplified_natural_integer_decl(
 fn translate_natural_integer_decl(
     sess: &Session,
     i: &ast::Item,
-    arr_types: &ArrayTypes,
+    specials: &SpecialNames,
     call: &MacCall,
     secrecy: Secrecy,
-) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
     match &*call.args {
         MacArgs::Delimited(_, _, tokens) => {
             let mut it = tokens.trees();
@@ -1542,7 +1901,10 @@ fn translate_natural_integer_decl(
                     canvas_size,
                     Some((canvas_typ_ident, modulo_string)),
                 ))),
-                arr_types.update(typ_ident_string),
+                SpecialNames {
+                    arrays: specials.arrays.update(typ_ident_string),
+                    ..specials.clone()
+                },
             ))
         }
         _ => {
@@ -1555,10 +1917,10 @@ fn translate_natural_integer_decl(
 fn translate_array_decl(
     sess: &Session,
     i: &ast::Item,
-    arr_types: &ArrayTypes,
+    specials: &SpecialNames,
     call: &MacCall,
     cell_t: Option<BaseTyp>,
-) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
     match &*call.args {
         MacArgs::Delimited(_, _, tokens) => {
             let mut it = tokens.trees();
@@ -1654,7 +2016,10 @@ fn translate_array_decl(
             };
             Ok((
                 (ItemTranslationResult::Item(Item::ArrayDecl(typ_ident, size, cell_t, index_typ))),
-                arr_types.update(typ_ident_string),
+                SpecialNames {
+                    arrays: specials.arrays.update(typ_ident_string),
+                    ..specials.clone()
+                },
             ))
         }
         _ => {
@@ -1717,13 +2082,14 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     }
 }
 
-fn translate_items(
+fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     i: &ast::Item,
-    arr_types: &ArrayTypes,
-) -> TranslationResult<(ItemTranslationResult, ArrayTypes)> {
+    specials: &SpecialNames,
+    external_data: &F,
+) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
     if i.attrs.iter().any(attribute_is_test) {
-        return Ok((ItemTranslationResult::Ignored, arr_types.clone()));
+        return Ok((ItemTranslationResult::Ignored, specials.clone()));
     }
     match &i.kind {
         ItemKind::Fn(fn_kind) => {
@@ -1823,10 +2189,11 @@ fn translate_items(
                         stmts: Vec::new(),
                         return_typ: None,
                         mutated: None,
+                        contains_question_mark: None,
                     },
                     i.span.into(),
                 ),
-                Some(b) => translate_block(sess, arr_types, &b)?,
+                Some(b) => translate_block(sess, specials, &b)?,
             };
             let fn_sig = FuncSig {
                 args: fn_inputs,
@@ -1838,15 +2205,25 @@ fn translate_items(
                     fn_sig,
                     fn_body,
                 )),
-                arr_types.clone(),
+                specials.clone(),
             ))
         }
         ItemKind::Use(ref tree) => match tree.kind {
-            // TODO: better system
-            UseTreeKind::Glob => Ok((
-                ItemTranslationResult::ImportedCrate(translate_use_path(sess, &tree.prefix)?),
-                arr_types.clone(),
-            )),
+            UseTreeKind::Glob => {
+                let krate_name = translate_use_path(sess, &tree.prefix)?;
+                let data = external_data(&vec![(krate_name.clone(), i.span.into())]);
+                let mut specials = specials.clone();
+                for (enum_name, _) in data.enums.into_iter() {
+                    specials.enums.insert(enum_name);
+                }
+                Ok((
+                    ItemTranslationResult::Item(Item::ImportedCrate((
+                        TopLevelIdent(krate_name),
+                        tree.span.clone().into(),
+                    ))),
+                    specials,
+                ))
+            }
             _ => {
                 sess.span_rustspec_err(tree.span.clone(), "only ::* uses are allowed in Hacspec");
                 Err(())
@@ -1865,11 +2242,11 @@ fn translate_items(
                 name.ident.name.to_ident_string().as_str(),
                 name.args.as_ref(),
             ) {
-                ("array", None) => translate_array_decl(sess, i, arr_types, call, None),
+                ("array", None) => translate_array_decl(sess, i, specials, call, None),
                 ("bytes", None) => translate_array_decl(
                     sess,
                     i,
-                    arr_types,
+                    specials,
                     call,
                     Some(BaseTyp::Named(
                         (TopLevelIdent("U8".into()), i.span.clone().into()),
@@ -1877,18 +2254,18 @@ fn translate_items(
                     )),
                 ),
                 ("public_bytes", None) => {
-                    translate_array_decl(sess, i, arr_types, call, Some(BaseTyp::UInt8))
+                    translate_array_decl(sess, i, specials, call, Some(BaseTyp::UInt8))
                 }
                 ("public_nat_mod", None) => {
-                    translate_natural_integer_decl(sess, i, arr_types, call, Secrecy::Public)
+                    translate_natural_integer_decl(sess, i, specials, call, Secrecy::Public)
                 }
                 ("nat_mod", None) => {
-                    translate_natural_integer_decl(sess, i, arr_types, call, Secrecy::Secret)
+                    translate_natural_integer_decl(sess, i, specials, call, Secrecy::Secret)
                 }
                 ("unsigned_public_integer", None) => translate_simplified_natural_integer_decl(
                     sess,
                     i,
-                    arr_types,
+                    specials,
                     call,
                     Secrecy::Public,
                 ),
@@ -1907,12 +2284,19 @@ fn translate_items(
         }
         ItemKind::Const(_, ty, Some(e)) => {
             let new_ty = translate_base_typ(sess, ty)?;
-            let new_e = translate_expr_expects_exp(sess, arr_types, e)?;
+            let new_e = translate_expr_expects_exp(sess, specials, e)?;
             let id = translate_toplevel_ident(&i.ident);
             Ok((
                 ItemTranslationResult::Item(Item::ConstDecl(id, new_ty, new_e)),
-                arr_types.clone(),
+                specials.clone(),
             ))
+        }
+        ItemKind::Const(_, _, None) => {
+            sess.span_rustspec_err(
+                i.span.clone(),
+                "uninitialized consts not allowed in Hacspec",
+            );
+            Err(())
         }
         ItemKind::TyAlias(ty_alias_kind) => {
             let TyAliasKind(defaultness, generics, _, ty) = ty_alias_kind.as_ref();
@@ -1943,47 +2327,186 @@ fn translate_items(
                 }
                 Some(ty) => {
                     let ty = translate_base_typ(sess, ty)?;
-                    let ty_alias_name = (i.ident.name.to_ident_string(), i.span.into());
+                    let ty_alias_name =
+                        (TopLevelIdent(i.ident.name.to_ident_string()), i.span.into());
                     Ok((
-                        ItemTranslationResult::TyAlias(ty_alias_name, ty),
-                        arr_types.clone(),
+                        ItemTranslationResult::Item(Item::AliasDecl(ty_alias_name, ty)),
+                        specials.clone(),
                     ))
                 }
             }
         }
-        _ => {
-            sess.span_rustspec_err(i.span.clone(), "item not allowed in Hacspec");
+        ItemKind::ExternCrate(_) => {
+            sess.span_rustspec_err(
+                i.span.clone(),
+                "external crate declarations not allowed in Hacspec",
+            );
+            Err(())
+        }
+        ItemKind::Static(_, _, _) => {
+            sess.span_rustspec_err(i.span.clone(), "static items not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Mod(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "sub-modules not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::ForeignMod(_) => {
+            sess.span_rustspec_err(i.span.clone(), "foreign modules not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::GlobalAsm(_) => {
+            sess.span_rustspec_err(i.span.clone(), "assembly globals not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Enum(def, generics) => {
+            if generics.params.len() > 0 {
+                sess.span_rustspec_err(
+                    generics.span.clone(),
+                    "type parameters in enum declarations forbidden in Hacspec",
+                );
+                return Err(());
+            }
+            let id_string = i.ident.name.to_ident_string();
+            let id = translate_toplevel_ident(&i.ident);
+            let variants = check_vec(
+                def.variants
+                    .iter()
+                    .map(|v| {
+                        let case_id = translate_toplevel_ident(&v.ident);
+                        let case_typ = match &v.data {
+                            VariantData::Unit(_) => Ok(None),
+                            VariantData::Struct(_, _) => {
+                                sess.span_rustspec_err(
+                                    v.span.clone(),
+                                    "struct enum variants not allowed in Hacspec",
+                                );
+                                Err(())
+                            }
+                            VariantData::Tuple(args, _) => {
+                                let args_ty = check_vec(
+                                    args.iter()
+                                        .map(|arg| translate_base_typ(sess, &*arg.ty))
+                                        .collect(),
+                                )?;
+                                Ok(Some((BaseTyp::Tuple(args_ty), v.span.clone().into())))
+                            }
+                        };
+                        Ok((case_id, case_typ?))
+                    })
+                    .collect(),
+            )?;
+            Ok((
+                ItemTranslationResult::Item(Item::EnumDecl(id, variants)),
+                SpecialNames {
+                    enums: specials.enums.update(id_string),
+                    ..specials.clone()
+                },
+            ))
+        }
+        ItemKind::Struct(data, generics) => {
+            if generics.params.len() > 0 {
+                sess.span_rustspec_err(
+                    generics.span.clone(),
+                    "struct type parameters forbidden in Hacspec",
+                );
+                return Err(());
+            }
+            let id_string = i.ident.name.to_ident_string();
+            let id = translate_toplevel_ident(&i.ident);
+            match data {
+                VariantData::Struct(_, _) => {
+                    sess.span_rustspec_err(
+                        i.span.clone(),
+                        "structs with fields are forbidden in Hacspec",
+                    );
+                    Err(())
+                }
+                VariantData::Unit(_) => Ok((
+                    ItemTranslationResult::Item(Item::EnumDecl(id.clone(), vec![(id, None)])),
+                    SpecialNames {
+                        enums: specials.enums.update(id_string),
+                        ..specials.clone()
+                    },
+                )),
+                VariantData::Tuple(fields, _) => {
+                    let tuple_args = check_vec(
+                        fields
+                            .into_iter()
+                            .map(|field| match field.ident {
+                                None => translate_base_typ(sess, &*field.ty),
+                                Some(_) => {
+                                    sess.span_rustspec_err(
+                                        field.span.clone(),
+                                        "structs fields cannot be named in Hacspec",
+                                    );
+                                    Err(())
+                                }
+                            })
+                            .collect(),
+                    )?;
+                    let payload = if tuple_args.len() > 1 {
+                        (BaseTyp::Tuple(tuple_args), i.span.clone().into())
+                    } else {
+                        tuple_args.into_iter().next().unwrap()
+                    };
+                    Ok((
+                        ItemTranslationResult::Item(Item::EnumDecl(
+                            id.clone(),
+                            vec![(id, Some(payload))],
+                        )),
+                        SpecialNames {
+                            enums: specials.enums.update(id_string),
+                            ..specials.clone()
+                        },
+                    ))
+                }
+            }
+        }
+        ItemKind::Union(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "union declarations not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Trait(_) => {
+            sess.span_rustspec_err(i.span.clone(), "trait declarations not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::TraitAlias(_, _) => {
+            sess.span_rustspec_err(i.span.clone(), "trait aliases not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::Impl(_) => {
+            sess.span_rustspec_err(i.span.clone(), "impl blocks not allowed in Hacspec");
+            Err(())
+        }
+        ItemKind::MacroDef(_) => {
+            sess.span_rustspec_err(i.span.clone(), "macro definitions not allowed in Hacspec");
             Err(())
         }
     }
 }
 
-pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
+pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
+    sess: &Session,
+    krate: &Crate,
+    external_data: &F,
+) -> TranslationResult<Program> {
     let items = &krate.items;
-    let mut arr_types = HashSet::new();
+    let mut specials = SpecialNames {
+        arrays: HashSet::new(),
+        enums: HashSet::new(),
+    };
     let translated_items = check_vec(
         items
             .into_iter()
             .map(|i| {
-                let (new_i, new_arr_typs) = translate_items(sess, &i, &arr_types)?;
-                arr_types = new_arr_typs;
+                let (new_i, new_specials) = translate_items(sess, &i, &specials, external_data)?;
+                specials = new_specials;
                 Ok((new_i, i.span))
             })
             .collect(),
     )?;
-    let (items, rest): (Vec<_>, Vec<_>) =
-        translated_items.into_iter().partition(|(r, _)| match r {
-            ItemTranslationResult::Item(_) => true,
-            ItemTranslationResult::Ignored => true,
-            _ => false,
-        });
-    let (imports, aliases): (Vec<_>, Vec<_>) = rest.into_iter().partition(|(r, _)| match r {
-        ItemTranslationResult::Item(_) => panic!(), // should not happen
-        ItemTranslationResult::Ignored => panic!(), // should not happen
-        ItemTranslationResult::ImportedCrate(_) => true,
-        ItemTranslationResult::TyAlias(_, _) => false,
-    });
-    let items: Vec<_> = items
+    let items: Vec<_> = translated_items
         .into_iter()
         .filter(|(r, _)| match r {
             ItemTranslationResult::Ignored => false,
@@ -1999,29 +2522,5 @@ pub fn translate(sess: &Session, krate: &Crate) -> TranslationResult<Program> {
             }
         })
         .collect();
-    let imports = imports
-        .into_iter()
-        .map(|(r, r_span)| {
-            match r {
-                ItemTranslationResult::ImportedCrate(i) => (i, r_span.into()),
-                _ => panic!(), // should not happen
-            }
-        })
-        .collect();
-    let aliases = aliases
-        .into_iter()
-        .map(|(r, _)| {
-            match r {
-                ItemTranslationResult::TyAlias((name, span), ty) => {
-                    ((TopLevelIdent(name), span.into()), ty)
-                }
-                _ => panic!(), // should not happen
-            }
-        })
-        .collect();
-    Ok(Program {
-        items,
-        imported_crates: imports,
-        ty_aliases: aliases,
-    })
+    Ok(Program { items })
 }
