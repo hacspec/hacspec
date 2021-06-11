@@ -90,6 +90,23 @@ let usize_shift_left (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
 let pub_uint128_wrapping_add (x y: pub_uint128) : pub_uint128 =
   x +. y
 
+(*** Option *)
+
+let option_unwrap (#a: Type) (x: option a{Some? x}) : a =
+  Some?.v x
+
+
+(*** Result *)
+
+type result (a: Type) (b: Type) =
+  | Ok : a -> result a b
+  | Err : b -> result a b
+
+let bind_ok (#a #a' #b: Type) (v: result a b) (kont: a -> result a' b) : result a' b =
+   match v with
+   | Ok x -> kont x
+   | Err y -> Err y
+
 (*** Loops *)
 
 let rec foldi_
@@ -112,6 +129,31 @@ let foldi
     : acc
   =
   foldi_ lo hi f init
+
+let rec foldi_result_
+  (#acc_ok: Type)
+  (#err: Type)
+  (cur_i: uint_size)
+  (hi: uint_size{cur_i <= hi})
+  (f: (i:uint_size{i < hi}) -> acc_ok -> (result acc_ok err))
+  (cur: acc_ok)
+    : Tot (result acc_ok err) (decreases (hi - cur_i))
+  =
+  if cur_i = hi then Ok cur else
+  match f cur_i cur with
+  | Err x -> Err x
+  | Ok y -> foldi_result_ (cur_i + 1) hi f y
+
+let foldi_result
+  (#acc_ok: Type)
+  (#err: Type)
+  (lo: uint_size)
+  (hi: uint_size{lo <= hi})
+  (f: (i:uint_size{i < hi}) -> acc_ok -> (result acc_ok err))
+  (init: acc_ok)
+    : result acc_ok err
+  =
+  foldi_result_ lo hi f init
 
 (*** Seq *)
 
@@ -557,20 +599,3 @@ let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq p
 let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
 
 let nat_zero (m: pos) : nat_mod m = 0
-
-(*** Option *)
-
-let option_unwrap (#a: Type) (x: option a{Some? x}) : a =
-  Some?.v x
-
-
-(*** Result *)
-
-type result (a: Type) (b: Type) =
-  | Ok : a -> result a b
-  | Err : b -> result a b
-
-let bind_ok (#a #a' #b: Type) (v: result a b) (kont: a -> result a' b) : result a' b =
-   match v with
-   | Ok x -> kont x
-   | Err y -> Err y

@@ -900,6 +900,26 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
     }
 }
 
+fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> {
+    (
+        if question_mark {
+            // If b has an early return, then we must prefix the returned
+            // mutated variables by Ok
+            match stmt {
+                Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
+                    BaseTyp::Named((TopLevelIdent("Result".to_string()), DUMMY_SP.into()), None),
+                    (TopLevelIdent("Ok".to_string()), DUMMY_SP.into()),
+                    Some((Box::new(e.clone()), DUMMY_SP.into())),
+                )),
+                _ => panic!("should not happen"),
+            }
+        } else {
+            stmt.clone()
+        },
+        DUMMY_SP.into(),
+    )
+}
+
 fn translate_statements<'a>(
     mut statements: Iter<Spanned<Statement>>,
     top_ctx: &'a TopLevelContext,
@@ -967,25 +987,9 @@ fn translate_statements<'a>(
                 Some(b2) => *b2.0.contains_question_mark.as_ref().unwrap(),
             };
             let either_blocks_contains_question_mark = b1_question_mark || b2_question_mark;
-            b1.stmts.push((
-                if b1_question_mark {
-                    // If b1 has an early return, then we must prefix the returned
-                    // mutated variables by Ok
-                    match &mutated_info.stmt {
-                        Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
-                            BaseTyp::Named(
-                                (TopLevelIdent("Result".to_string()), DUMMY_SP.into()),
-                                None,
-                            ),
-                            (TopLevelIdent("Ok".to_string()), DUMMY_SP.into()),
-                            Some((Box::new(e.clone()), DUMMY_SP.into())),
-                        )),
-                        _ => panic!("should not happen"),
-                    }
-                } else {
-                    mutated_info.stmt.clone()
-                },
-                DUMMY_SP.into(),
+            b1.stmts.push(add_ok_if_result(
+                mutated_info.stmt.clone(),
+                b1_question_mark,
             ));
             let expr = RcDoc::as_string("if")
                 .append(RcDoc::space())
@@ -1003,30 +1007,9 @@ fn translate_statements<'a>(
                             top_ctx,
                         ))),
                     Some((mut b2, _)) => {
-                        b2.stmts.push((
-                            if b2_question_mark {
-                                // If b2 has an early return, then we must prefix the returned
-                                // mutated variables by Ok
-                                match &mutated_info.stmt {
-                                    Statement::ReturnExp(e) => {
-                                        Statement::ReturnExp(Expression::EnumInject(
-                                            BaseTyp::Named(
-                                                (
-                                                    TopLevelIdent("Result".to_string()),
-                                                    DUMMY_SP.into(),
-                                                ),
-                                                None,
-                                            ),
-                                            (TopLevelIdent("Ok".to_string()), DUMMY_SP.into()),
-                                            Some((Box::new(e.clone()), DUMMY_SP.into())),
-                                        ))
-                                    }
-                                    _ => panic!("should not happen"),
-                                }
-                            } else {
-                                mutated_info.stmt.clone()
-                            },
-                            DUMMY_SP.into(),
+                        b2.stmts.push(add_ok_if_result(
+                            mutated_info.stmt.clone(),
+                            b2_question_mark,
                         ));
                         RcDoc::space()
                             .append(RcDoc::as_string("else"))
@@ -1044,8 +1027,11 @@ fn translate_statements<'a>(
                     .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
+        Statement::ForLoop((x, _), (e1, _), (e2, _), (mut b, _)) => {
             let mutated_info = b.mutated.clone().unwrap();
+            let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
+            b.stmts
+                .push(add_ok_if_result(mutated_info.stmt.clone(), b_question_mark));
             let mut_tuple = make_tuple(
                 mutated_info
                     .vars
@@ -1055,6 +1041,11 @@ fn translate_statements<'a>(
                     .map(|i| translate_ident(Ident::Local(i.clone()))),
             );
             let loop_expr = RcDoc::as_string("foldi")
+                .append(if b_question_mark {
+                    RcDoc::as_string("_result")
+                } else {
+                    RcDoc::nil()
+                })
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e1.clone(), top_ctx)))
                 .append(RcDoc::space())
@@ -1069,19 +1060,20 @@ fn translate_statements<'a>(
                 .append(RcDoc::as_string("->"))
                 .append(RcDoc::line())
                 .append(translate_block(b, true, top_ctx))
-                .append(RcDoc::hardline())
-                .append(translate_statements(
-                    [(mutated_info.stmt, DUMMY_SP.into())].iter(),
-                    top_ctx,
-                ))
                 .append(RcDoc::as_string(")"))
                 .group()
                 .nest(2)
                 .append(RcDoc::line())
                 .append(mut_tuple.clone());
-            make_let_binding(mut_tuple, None, loop_expr, false)
-                .append(RcDoc::hardline())
-                .append(translate_statements(statements, top_ctx))
+            if b_question_mark {
+                make_error_returning_let_binding(mut_tuple, None, loop_expr, || {
+                    translate_statements(statements, top_ctx)
+                })
+            } else {
+                make_let_binding(mut_tuple, None, loop_expr, false)
+                    .append(RcDoc::hardline())
+                    .append(translate_statements(statements, top_ctx))
+            }
         }
     }
     .group()
