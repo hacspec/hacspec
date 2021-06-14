@@ -1,4 +1,4 @@
-use im::HashSet;
+use im::{HashMap, HashSet};
 use rustc_ast::{
     ast::{
         self, AngleBracketedArg, Async, Attribute, BindingMode, BlockCheckMode, BorrowKind, Const,
@@ -22,6 +22,30 @@ use crate::HacspecErrorEmitter;
 struct SpecialNames {
     arrays: HashSet<String>,
     enums: HashSet<String>,
+    aliases: HashMap<String, BaseTyp>,
+}
+
+fn dealias_probable_enum_name(
+    s: String,
+    specials: &SpecialNames,
+    incoming_args: Option<Vec<Spanned<BaseTyp>>>,
+) -> Option<(String, Option<Vec<Spanned<BaseTyp>>>)> {
+    match specials.aliases.get(&s) {
+        None => (),
+        Some(t) => match t {
+            BaseTyp::Named((TopLevelIdent(name), _), args) => {
+                if *name != s {
+                    return dealias_probable_enum_name(name.clone(), specials, args.clone());
+                }
+            }
+            _ => (),
+        },
+    };
+    if specials.enums.contains(&s) {
+        Some((s, incoming_args))
+    } else {
+        None
+    }
 }
 
 type TranslationResult<T> = Result<T, ()>;
@@ -150,11 +174,6 @@ fn translate_expr_name(
         let mut it = path.segments.iter();
         let first = it.next().unwrap();
         let second = it.next().unwrap();
-        println!(
-            "Checking {} among {:?}",
-            &first.ident.name.to_ident_string(),
-            specials.enums.iter().collect::<Vec<_>>()
-        );
         if specials.enums.contains(&first.ident.name.to_ident_string()) {
             let args = match &first.args {
                 Some(args) => Some(translate_type_args(sess, &args, &first.ident.span)?),
@@ -238,15 +257,14 @@ fn translate_func_name(
             None => panic!(), // should not happen
             Some(segment) => {
                 let segment_string = segment.ident.name.to_ident_string();
-                if specials.enums.contains(&segment_string) {
+                if let Some((enum_name, enum_args)) =
+                    dealias_probable_enum_name(segment_string, specials, None)
+                {
                     Ok(FuncNameResult::EnumConstructor(
                         BaseTyp::Named(
-                            (
-                                TopLevelIdent(segment_string),
-                                segment.ident.span.clone().into(),
-                            ),
+                            (TopLevelIdent(enum_name), segment.ident.span.clone().into()),
                             match segment.args {
-                                None => None,
+                                None => enum_args,
                                 Some(ref args) => {
                                     Some(translate_type_args(sess, args, &segment.ident.span)?)
                                 }
@@ -2216,6 +2234,9 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 for (enum_name, _) in data.enums.into_iter() {
                     specials.enums.insert(enum_name);
                 }
+                for (alias_name, alias_ty) in data.ty_aliases.into_iter() {
+                    specials.aliases.insert(alias_name, alias_ty);
+                }
                 Ok((
                     ItemTranslationResult::Item(Item::ImportedCrate((
                         TopLevelIdent(krate_name),
@@ -2327,11 +2348,15 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 }
                 Some(ty) => {
                     let ty = translate_base_typ(sess, ty)?;
-                    let ty_alias_name =
-                        (TopLevelIdent(i.ident.name.to_ident_string()), i.span.into());
+                    let mut specials = specials.clone();
+                    let ty_alias_name_string = i.ident.name.to_ident_string();
+                    specials
+                        .aliases
+                        .insert(ty_alias_name_string.clone(), ty.0.clone());
+                    let ty_alias_name = (TopLevelIdent(ty_alias_name_string), i.span.into());
                     Ok((
                         ItemTranslationResult::Item(Item::AliasDecl(ty_alias_name, ty)),
-                        specials.clone(),
+                        specials,
                     ))
                 }
             }
@@ -2495,6 +2520,7 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     let mut specials = SpecialNames {
         arrays: HashSet::new(),
         enums: HashSet::new(),
+        aliases: HashMap::new(),
     };
     let translated_items = check_vec(
         items
