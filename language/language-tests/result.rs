@@ -16,10 +16,24 @@ fn other() -> Result<SimpleOutput, u8> {
     Result::<SimpleOutput, u8>::Err(1u8)
 }
 
+fn other_result_alias() -> SimpleOutputResult {
+    Result::<SimpleOutput, u8>::Err(1u8)
+}
+
 pub fn type_confusion() -> Result<SimpleOutput, u8> {
     other()
 }
 
 pub fn return_type_alias() -> Result<SimpleOutput, u8> {
+    SimpleOutputResult::Err(1u8)
+}
+
+pub fn type_alias_question_mark() -> Result<SimpleOutput, u8> {
+    let other_result = other_result_alias()?;
+    SimpleOutputResult::Err(1u8)
+}
+
+pub fn type_alias_question_mark_return() -> SimpleOutputResult {
+    let other_result = other()?;
     SimpleOutputResult::Err(1u8)
 }
