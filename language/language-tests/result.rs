@@ -1,5 +1,8 @@
 use hacspec_lib::*;
 
+bytes!(SimpleOutput, 3);
+type SimpleOutputResult = Result<SimpleOutput, u8>;
+
 pub fn foo(x: Result<Result<U32, usize>, usize>) -> U32 {
     let _y = Result::<U32, usize>::Ok(U32(1u32));
     let _z = Result::<U32, usize>::Err(8);
@@ -8,9 +11,6 @@ pub fn foo(x: Result<Result<U32, usize>, usize>) -> U32 {
         Result::<Result<U32, usize>, usize>::Err(x) => U32(x as u32),
     }
 }
-
-bytes!(SimpleOutput, 3);
-type SimpleOutputResult = Result::<SimpleOutput, u8>;
 
 fn other() -> Result<SimpleOutput, u8> {
     Result::<SimpleOutput, u8>::Err(1u8)

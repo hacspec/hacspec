@@ -703,12 +703,14 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         functions: HashMap::new(),
         typ_dict: HashMap::new(),
     };
-    // We do a first pass that collects types and signatures of top-level
+    // First we fill the context with external symbols
+    enrich_with_external_crates_symbols(sess, &p, &mut top_level_ctx, external_data)?;
+    // Then we do a first pass that collects types and signatures of top-level
     // items
     for item in p.items.iter() {
         process_decl_item(sess, item, &mut top_level_ctx)?;
     }
-    enrich_with_external_crates_symbols(sess, &p, &mut top_level_ctx, external_data)?;
+    // And finally a second pass that performs the actual name resolution
     Ok((
         Program {
             items: check_vec(
