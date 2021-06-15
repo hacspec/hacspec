@@ -1901,6 +1901,18 @@ fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan) -> Statement {
     })
 }
 
+fn dealias_type(ty: BaseTyp, top_level_context: &TopLevelContext) -> BaseTyp {
+    match &ty {
+        BaseTyp::Named((name, _), None) => match top_level_context.typ_dict.get(name) {
+            Some((((Borrowing::Consumed, _), (aliased_ty, _)), DictEntry::Alias)) => {
+                dealias_type(aliased_ty.clone(), top_level_context)
+            }
+            _ => ty,
+        },
+        _ => ty,
+    }
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -1910,8 +1922,19 @@ fn typecheck_statement(
 ) -> TypecheckingResult<(Statement, Typ, VarContext, VarSet)> {
     match &s {
         Statement::LetBinding((pat, pat_span), typ, ref expr, question_mark) => {
-            let (new_expr, mut expr_typ, new_var_context) =
+            let (new_expr, expr_typ, new_var_context) =
                 typecheck_expression(sess, expr, top_level_context, var_context)?;
+            let mut expr_typ = (
+                expr_typ.0,
+                (
+                    dealias_type(expr_typ.1 .0, top_level_context),
+                    expr_typ.1 .1,
+                ),
+            );
+            let return_typ = &(
+                dealias_type(return_typ.0.clone(), top_level_context),
+                return_typ.1.clone(),
+            );
             if *question_mark {
                 match expr_typ {
                     (
