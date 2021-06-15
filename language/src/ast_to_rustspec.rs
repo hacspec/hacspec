@@ -1217,7 +1217,7 @@ fn translate_expr(
                                     None,
                                 )
                             }
-                            PatKind::TupleStruct(ast::Path { segments, .. }, args) => {
+                            PatKind::TupleStruct(None, ast::Path { segments, .. }, args) => {
                                 if segments.len() != 2 {
                                     sess.span_rustspec_err(
                                         ((arm.pat).span).clone(),
@@ -1463,7 +1463,7 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
         PatKind::Ident(BindingMode::ByValue(_), id, None) => {
             Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
         }
-        PatKind::TupleStruct(path, args) => {
+        PatKind::TupleStruct(None, path, args) => {
             let struct_name = translate_struct_name(sess, path)?;
             if args.len() == 1 {
                 let arg = args.into_iter().next().unwrap();
