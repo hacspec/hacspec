@@ -44,3 +44,7 @@ pub fn type_double_alias_question_mark_return() -> SResult {
     let _other_result = other()?;
     SResult::Err(1u8)
 }
+
+pub fn unwrap_result() -> SimpleOutput {
+    other().unwrap()
+}

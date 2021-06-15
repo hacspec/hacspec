@@ -167,7 +167,7 @@ fn translate_base_typ(
                                 return Err(());
                             };
                             let (param_typ2, typ_ctx) = if substs.len() == 2 {
-                                match substs.first().unwrap().unpack() {
+                                match substs[1].unpack() {
                                     GenericArgKind::Type(arg_ty) => {
                                         match translate_base_typ(tcx, &arg_ty, &typ_ctx) {
                                             Ok((t, typ_ctx)) => (t, typ_ctx),
