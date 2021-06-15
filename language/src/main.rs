@@ -20,6 +20,7 @@ mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
+use itertools::Itertools;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
@@ -115,6 +116,23 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
+        let imported_crates = name_resolution::get_imported_crates(&krate);
+        let imported_crates = imported_crates
+            .into_iter()
+            .filter(|(x, _)| x != "hacspec_lib")
+            .map(|(x, _)| x)
+            .collect::<Vec<_>>();
+        println!(
+            " > Successfully typechecked{}",
+            if imported_crates.len() == 0 {
+                ".".to_string()
+            } else {
+                format!(
+                    ", assuming that the code in crates {} has also been Hacspec-typechecked",
+                    imported_crates.iter().format(", ")
+                )
+            }
+        );
 
         match &self.output_file {
             None => return Compilation::Stop,
@@ -291,10 +309,7 @@ fn main() -> Result<(), ()> {
     args.push("--edition=2018".to_string());
 
     match RunCompiler::new(&args, &mut callbacks).run() {
-        Ok(_) => {
-            println!(" > Successfully typechecked.");
-            Ok(())
-        }
+        Ok(_) => Ok(()),
         Err(_) => Err(()),
     }
 }

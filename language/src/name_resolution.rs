@@ -600,7 +600,7 @@ fn process_decl_item(
     }
 }
 
-fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
+pub fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
     p.items
         .iter()
         .filter(|i| match &i.0 {
