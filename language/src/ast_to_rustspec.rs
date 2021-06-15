@@ -1129,7 +1129,7 @@ fn translate_expr(
                 e.span.into(),
             ))
         }
-        ExprKind::Struct(_, _, _) => {
+        ExprKind::Struct(_) => {
             sess.span_rustspec_err(e.span.clone(), "structs are not supported yet in Hacspec");
             Err(())
         }
@@ -1217,7 +1217,7 @@ fn translate_expr(
                                     None,
                                 )
                             }
-                            PatKind::TupleStruct(ast::Path { segments, .. }, args) => {
+                            PatKind::TupleStruct(None, ast::Path { segments, .. }, args) => {
                                 if segments.len() != 2 {
                                     sess.span_rustspec_err(
                                         ((arm.pat).span).clone(),
@@ -1463,7 +1463,7 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
         PatKind::Ident(BindingMode::ByValue(_), id, None) => {
             Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
         }
-        PatKind::TupleStruct(path, args) => {
+        PatKind::TupleStruct(None, path, args) => {
             let struct_name = translate_struct_name(sess, path)?;
             if args.len() == 1 {
                 let arg = args.into_iter().next().unwrap();
@@ -2052,7 +2052,7 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     match attr_name.as_str() {
         "test" => true,
         "cfg" => {
-            let inner_tokens = attr.tokens();
+            let inner_tokens = attr.tokens().to_tokenstream();
             if inner_tokens.len() != 2 {
                 return false;
             }

@@ -28,7 +28,7 @@ In order to ensure that the code is a hacspec one can use the typecheker.
 
 Make sure you have at least `rustup 1.23.0`.
 The [`rust-toolchain`](./language/rust-toolchain) automatically picks the correct Rust nightly version and components.
-The compiler version is currently pinned to `nightly-2021-03-11`.
+The compiler version is currently pinned to `nightly-2021-06-15`.
 
 **Installing the typechecker from the repository**
 ```
@@ -46,30 +46,30 @@ First ensure that Rust nightly is installed and the typechecker is installed.
 
 ```bash
 cd language
-rustup toolchain install nightly-2021-03-11
-rustup component add --toolchain nightly-2021-03-11 rustc-dev
-cargo +nightly-2021-03-11 install hacspec
+rustup toolchain install nightly-2021-06-15
+rustup component add --toolchain nightly-2021-06-15 rustc-dev
+cargo +nightly-2021-06-15 install hacspec
 ```
 
 Depending on your system you might also need `llvm-tools-preview`
 
 ```bash
-rustup component add --toolchain nightly-2021-03-11 llvm-tools-preview
+rustup component add --toolchain nightly-2021-06-15 llvm-tools-preview
 ```
 
 **Usage**
 
 In a hacspec crate or workspace directory typechecking can be done as follows now:
-(Specifying `+nightly-2021-03-11` is only necessary if it's not specified in the toolchain as it is in this main repository.)
+(Specifying `+nightly-2021-06-15` is only necessary if it's not specified in the toolchain as it is in this main repository.)
 
 ```bash
-cargo +nightly-2021-03-11 hacspec <crate-name>
+cargo +nightly-2021-06-15 hacspec <crate-name>
 ```
 
 Note that the crate dependencies need to be compiled before it can be typechecked.
 
 ```bash
-cargo +nightly-2021-03-11 build
+cargo +nightly-2021-06-15 build
 ```
 
 If typechecking succeeds, it should show
@@ -83,8 +83,8 @@ If typechecking succeeds, it should show
 To generate F\* or EasyCrypt code from hacspec the typechecker (see above) is required.
 
 ```bash
-cargo +nightly-2021-03-11 hacspec -o <fst-name>.fst <crate-name>
-cargo +nightly-2021-03-11 hacspec -o <ec-name>.ec <crate-name>
+cargo +nightly-2021-06-15 hacspec -o <fst-name>.fst <crate-name>
+cargo +nightly-2021-06-15 hacspec -o <ec-name>.ec <crate-name>
 ```
 
 ## Publications & Other material

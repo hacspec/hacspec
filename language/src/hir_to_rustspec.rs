@@ -73,7 +73,7 @@ fn translate_base_typ(
             // be ambiguities)
             match adt_def_path.data.last().unwrap().data {
                 DefPathData::TypeNs(name) => match tcx
-                    .original_crate_name(adt_def_path.krate)
+                    .crate_name(adt_def_path.krate)
                     .to_ident_string()
                     .as_str()
                 {
@@ -604,20 +604,19 @@ pub fn retrieve_external_data(
     imported_crates.push(("abstract_integers".to_string(), DUMMY_SP.into()));
     imported_crates.push(("secret_integers".to_string(), DUMMY_SP.into()));
     for krate_num in krates {
-        let original_crate_name = tcx.original_crate_name(*krate_num);
+        let crate_name = tcx.crate_name(*krate_num);
         if imported_crates
             .iter()
             .filter(|(imported_crate, _)| {
-                *imported_crate == original_crate_name.to_ident_string()
-                    || original_crate_name.to_ident_string()
-                        == tcx.original_crate_name(LOCAL_CRATE).to_ident_string()
+                *imported_crate == crate_name.to_ident_string()
+                    || crate_name.to_ident_string() == tcx.crate_name(LOCAL_CRATE).to_ident_string()
             })
             .collect::<Vec<_>>()
             .len()
             > 0
         {
             if *krate_num != LOCAL_CRATE {
-                let num_def_ids = crate_store.num_def_ids(*krate_num);
+                let num_def_ids = crate_store.num_def_ids_untracked(*krate_num);
                 let def_ids = (0..num_def_ids).into_iter().map(|id| DefId {
                     krate: *krate_num,
                     index: DefIndex::from_usize(id),
@@ -627,8 +626,8 @@ pub fn retrieve_external_data(
                     match &def_path.data.last() {
                         Some(x) => {
                             // We only import things really defined in the crate
-                            if tcx.original_crate_name(def_path.krate).to_ident_string()
-                                == original_crate_name.to_ident_string()
+                            if tcx.crate_name(def_path.krate).to_ident_string()
+                                == crate_name.to_ident_string()
                             {
                                 match x.data {
                                     DefPathData::TypeNs(name) => match tcx.def_kind(def_id) {
@@ -710,7 +709,7 @@ pub fn retrieve_external_data(
             }
         }
     }
-    let items = &tcx.hir_crate(LOCAL_CRATE).items;
+    let items = &tcx.hir_crate(()).items;
     for (item_id, item) in items {
         let item_id = tcx.hir().local_def_id(item_id.hir_id()).to_def_id();
         match &item.kind {
