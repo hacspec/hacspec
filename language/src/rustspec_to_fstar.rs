@@ -1,5 +1,6 @@
 use crate::name_resolution::{DictEntry, TopLevelContext};
 use crate::rustspec::*;
+use crate::typechecker::dealias_type;
 use core::iter::IntoIterator;
 use core::slice::Iter;
 use heck::{SnakeCase, TitleCase};
@@ -810,9 +811,11 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
                 })))
         }
-        Expression::ArrayIndex(x, e2) => {
+        Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
-            RcDoc::as_string("array_index")
+            let array_or_seq = array_or_seq(typ, top_ctx);
+            array_or_seq
+                .append(RcDoc::as_string("_index"))
                 .append(RcDoc::space())
                 .append(make_paren(translate_ident(x.0.clone())))
                 .append(RcDoc::space())
@@ -924,6 +927,21 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
     )
 }
 
+fn array_or_seq<'a>(typ: Option<Typ>, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
+    match typ {
+        Some((_, (t, _))) => {
+            let t = dealias_type(t, top_ctx);
+            // TODO: dealiasing is not enough, replace with typechecker::is_array
+            match t {
+                BaseTyp::Array(_, _) => RcDoc::as_string("array"),
+                BaseTyp::Seq(_) => RcDoc::as_string("seq"),
+                t => panic!("should not happen {}", t),
+            }
+        }
+        _ => panic!("should not happen"),
+    }
+}
+
 fn translate_statements<'a>(
     mut statements: Iter<Spanned<Statement>>,
     top_ctx: &'a TopLevelContext,
@@ -971,13 +989,15 @@ fn translate_statements<'a>(
                 .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark) => {
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
+            let array_or_seq = array_or_seq(typ, top_ctx);
             if question_mark {
                 let tmp_ident = Ident::Local(LocalIdent {
                     name: "tmp".to_string(),
                     id: fresh_codegen_id(),
                 });
-                let array_upd_payload = RcDoc::as_string("array_upd")
+                let array_upd_payload = array_or_seq
+                    .append(RcDoc::as_string("_upd"))
                     .append(RcDoc::space())
                     .append(translate_ident(x.clone()))
                     .append(RcDoc::space())
@@ -995,7 +1015,8 @@ fn translate_statements<'a>(
                     },
                 )
             } else {
-                let array_upd_payload = RcDoc::as_string("array_upd")
+                let array_upd_payload = array_or_seq
+                    .append(RcDoc::as_string("_upd"))
                     .append(RcDoc::space())
                     .append(translate_ident(x.clone()))
                     .append(RcDoc::space())

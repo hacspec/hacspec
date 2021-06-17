@@ -344,7 +344,11 @@ pub enum Expression {
         )>,
     ),
     Lit(Literal),
-    ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
+    ArrayIndex(
+        Spanned<Ident>,           // Array variable
+        Box<Spanned<Expression>>, // Index
+        Fillable<Typ>,            // Type of the array
+    ),
     NewArray(
         Spanned<TopLevelIdent>,   // Name of array type
         Option<BaseTyp>,          // Type of cells
@@ -404,6 +408,7 @@ pub enum Statement {
         Spanned<Expression>, // Index value
         Spanned<Expression>, // Cell value
         bool,                // Presence of a question mark at the end of the cell value expression
+        Fillable<Typ>,       // Type of the array
     ),
     ReturnExp(Expression),
 }

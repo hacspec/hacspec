@@ -926,6 +926,7 @@ fn translate_expr(
                                             r_index?,
                                             r_e,
                                             r_e_question_mark,
+                                            None,
                                         )),
                                         e.span.into(),
                                     ))
@@ -1085,6 +1086,7 @@ fn translate_expr(
                                 ExprTranslationResult::TransExpr(Expression::ArrayIndex(
                                     id,
                                     Box::new((r_e2, r_e2_span)),
+                                    None,
                                 )),
                                 e.span.into(),
                             )),

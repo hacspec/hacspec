@@ -750,7 +750,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
                 })))
         }
-        Expression::ArrayIndex(x, e2) => {
+        Expression::ArrayIndex(x, e2, _typ) => {
             let e2 = e2.0;
             translate_ident(x.0.clone())
                 .append(RcDoc::as_string("."))
@@ -855,7 +855,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
             None,
             translate_expression(e1.clone(), top_ctx),
         ),
-        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), _question_mark) => make_let_binding(
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), _question_mark, _typ) => make_let_binding(
             translate_ident(x.clone()),
             None,
             translate_ident(x.clone())

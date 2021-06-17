@@ -218,11 +218,11 @@ fn resolve_expression(
             ))
         }
         Expression::Lit(_) => Ok((e, e_span)),
-        Expression::ArrayIndex(x, e1) => {
+        Expression::ArrayIndex(x, e1, typ) => {
             let new_x = find_ident(sess, &x, name_context, top_level_ctx)?;
             let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             Ok((
-                Expression::ArrayIndex((new_x, x.1), Box::new(new_e1)),
+                Expression::ArrayIndex((new_x, x.1), Box::new(new_e1), typ),
                 e_span,
             ))
         }
@@ -341,7 +341,7 @@ fn resolve_statement(
                 resolve_expression(sess, (e, s_span.clone()), &name_context, top_level_ctx)?;
             Ok(((Statement::ReturnExp(new_e.0), s_span), name_context))
         }
-        Statement::ArrayUpdate(var, index, e, question_mark) => {
+        Statement::ArrayUpdate(var, index, e, question_mark, typ) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
             let new_index = resolve_expression(sess, index, &name_context, top_level_ctx)?;
             let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
@@ -352,6 +352,7 @@ fn resolve_statement(
                         new_index,
                         new_e,
                         question_mark,
+                        typ,
                     ),
                     s_span,
                 ),
