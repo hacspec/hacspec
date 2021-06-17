@@ -1913,6 +1913,100 @@ fn dealias_type(ty: BaseTyp, top_level_context: &TopLevelContext) -> BaseTyp {
     }
 }
 
+// This function returns the type in the OK branch of the result return type
+// if there is a question mark
+fn typecheck_question_mark(
+    sess: &Session,
+    question_mark: bool,
+    expr_typ: Typ,
+    return_typ: &Spanned<BaseTyp>,
+    expr_span: RustspecSpan,
+    top_level_context: &TopLevelContext,
+) -> TypecheckingResult<Typ> {
+    let mut expr_typ = (
+        expr_typ.0,
+        (
+            dealias_type(expr_typ.1 .0, top_level_context),
+            expr_typ.1 .1,
+        ),
+    );
+    let return_typ = &(
+        dealias_type(return_typ.0.clone(), top_level_context),
+        return_typ.1.clone(),
+    );
+    if question_mark {
+        match expr_typ {
+            (
+                (Borrowing::Consumed, _),
+                (BaseTyp::Named((TopLevelIdent(name), _), Some(args)), _),
+            ) if name == "Result" && args.len() == 2 => {
+                let ok_typ = &args[0];
+                let err_typ = &args[1];
+                match return_typ {
+                    (BaseTyp::Named((TopLevelIdent(return_name), _), Some(return_args)), _)
+                        if return_name == "Result" && return_args.len() == 2 =>
+                    {
+                        let err_typ_ret = &args[1];
+                        match unify_types(
+                            sess,
+                            &((Borrowing::Consumed, err_typ.1.clone()), err_typ.clone()),
+                            &(
+                                (Borrowing::Consumed, err_typ_ret.1.clone()),
+                                err_typ_ret.clone(),
+                            ),
+                            &HashMap::new(),
+                            top_level_context,
+                        )? {
+                            Some(_) => {
+                                expr_typ =
+                                    ((Borrowing::Consumed, ok_typ.1.clone()), ok_typ.clone());
+                            }
+                            None => {
+                                sess.span_rustspec_err(
+                                    expr_span,
+                                    format!(
+                                        "the type returned in case of error by this \
+                                        expression is {}, expected {}",
+                                        err_typ.0, err_typ_ret.0,
+                                    )
+                                    .as_str(),
+                                );
+                                return Err(());
+                            }
+                        }
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            return_typ.1,
+                            format!(
+                                "expected a result type for this \
+                    return type because of a question mark in the function, got {}",
+                                return_typ.0,
+                            )
+                            .as_str(),
+                        );
+                        return Err(());
+                    }
+                }
+            }
+            _ => {
+                sess.span_rustspec_err(
+                    expr_span,
+                    format!(
+                        "expected a result type for this \
+            expression ending with a question mark, got {}{}",
+                        (expr_typ.0).0,
+                        (expr_typ.1).0
+                    )
+                    .as_str(),
+                );
+                return Err(());
+            }
+        }
+    }
+    Ok(expr_typ)
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -1924,90 +2018,14 @@ fn typecheck_statement(
         Statement::LetBinding((pat, pat_span), typ, ref expr, question_mark) => {
             let (new_expr, expr_typ, new_var_context) =
                 typecheck_expression(sess, expr, top_level_context, var_context)?;
-            let mut expr_typ = (
-                expr_typ.0,
-                (
-                    dealias_type(expr_typ.1 .0, top_level_context),
-                    expr_typ.1 .1,
-                ),
-            );
-            let return_typ = &(
-                dealias_type(return_typ.0.clone(), top_level_context),
-                return_typ.1.clone(),
-            );
-            if *question_mark {
-                match expr_typ {
-                    (
-                        (Borrowing::Consumed, _),
-                        (BaseTyp::Named((TopLevelIdent(name), _), Some(args)), _),
-                    ) if name == "Result" && args.len() == 2 => {
-                        let ok_typ = &args[0];
-                        let err_typ = &args[1];
-                        match return_typ {
-                            (
-                                BaseTyp::Named((TopLevelIdent(return_name), _), Some(return_args)),
-                                _,
-                            ) if return_name == "Result" && return_args.len() == 2 => {
-                                let err_typ_ret = &args[1];
-                                match unify_types(
-                                    sess,
-                                    &((Borrowing::Consumed, err_typ.1.clone()), err_typ.clone()),
-                                    &(
-                                        (Borrowing::Consumed, err_typ_ret.1.clone()),
-                                        err_typ_ret.clone(),
-                                    ),
-                                    &HashMap::new(),
-                                    top_level_context,
-                                )? {
-                                    Some(_) => {
-                                        expr_typ = (
-                                            (Borrowing::Consumed, ok_typ.1.clone()),
-                                            ok_typ.clone(),
-                                        );
-                                    }
-                                    None => {
-                                        sess.span_rustspec_err(
-                                            expr.1,
-                                            format!(
-                                                "the type returned in case of error by this \
-                                                expression is {}, expected {}",
-                                                err_typ.0, err_typ_ret.0,
-                                            )
-                                            .as_str(),
-                                        );
-                                        return Err(());
-                                    }
-                                }
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    return_typ.1,
-                                    format!(
-                                        "expected a result type for this \
-                            return type because of a question mark in the function, got {}",
-                                        return_typ.0,
-                                    )
-                                    .as_str(),
-                                );
-                                return Err(());
-                            }
-                        }
-                    }
-                    _ => {
-                        sess.span_rustspec_err(
-                            expr.1,
-                            format!(
-                                "expected a result type for this \
-                    expression ending with a question mark, got {}{}",
-                                (expr_typ.0).0,
-                                (expr_typ.1).0
-                            )
-                            .as_str(),
-                        );
-                        return Err(());
-                    }
-                }
-            }
+            let expr_typ = typecheck_question_mark(
+                sess,
+                *question_mark,
+                expr_typ,
+                return_typ,
+                expr.1.clone(),
+                top_level_context,
+            )?;
             match typ {
                 None => (),
                 Some((typ, _)) => {
@@ -2047,9 +2065,17 @@ fn typecheck_statement(
                 VarSet(HashSet::new()),
             ))
         }
-        Statement::Reassignment((x, x_span), e) => {
+        Statement::Reassignment((x, x_span), e, question_mark) => {
             let (new_e, e_typ, new_var_context) =
                 typecheck_expression(sess, &e, top_level_context, var_context)?;
+            let e_typ = typecheck_question_mark(
+                sess,
+                *question_mark,
+                e_typ,
+                return_typ,
+                e.1.clone(),
+                top_level_context,
+            )?;
             let x_typ = find_typ(&x, var_context, top_level_context);
             let x_typ = match x_typ {
                 Some(t) => t,
@@ -2069,7 +2095,11 @@ fn typecheck_statement(
                 return Err(());
             };
             Ok((
-                Statement::Reassignment((x.clone(), x_span.clone()), (new_e, e.1.clone())),
+                Statement::Reassignment(
+                    (x.clone(), x_span.clone()),
+                    (new_e, e.1.clone()),
+                    *question_mark,
+                ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 add_var(&x, &x_typ, &new_var_context),
                 VarSet(HashSet::unit(match x.clone() {
@@ -2078,11 +2108,19 @@ fn typecheck_statement(
                 })),
             ))
         }
-        Statement::ArrayUpdate((x, x_span), e1, e2) => {
+        Statement::ArrayUpdate((x, x_span), e1, e2, question_mark) => {
             let (new_e1, e1_t, var_context) =
                 typecheck_expression(sess, &e1, top_level_context, var_context)?;
             let (new_e2, e2_t, var_context) =
                 typecheck_expression(sess, &e2, top_level_context, &var_context)?;
+            let e2_t = typecheck_question_mark(
+                sess,
+                *question_mark,
+                e2_t,
+                return_typ,
+                e2.1.clone(),
+                top_level_context,
+            )?;
             if !is_index(&(e1_t.1).0, top_level_context) {
                 sess.span_rustspec_err(
                     e1.1,
@@ -2127,6 +2165,7 @@ fn typecheck_statement(
                     (x.clone(), x_span.clone()),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
+                    *question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 var_context,

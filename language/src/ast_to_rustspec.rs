@@ -863,26 +863,32 @@ fn translate_expr(
         }
         ExprKind::Lit(lit) => translate_literal(sess, lit, e.span.clone()),
         ExprKind::Assign(lhs, rhs_e, _) => {
-            let r_e = translate_expr(sess, specials, rhs_e)?;
+            let (r_e, r_e_question_mark) =
+                match translate_expr_accepts_question_mark(sess, specials, &rhs_e)? {
+                    (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
+                        sess.span_rustspec_err(
+                            e.span,
+                            "assignment expressions should not contain statements in Hacspec",
+                        );
+                        return Err(());
+                    }
+                    (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
+                        ((e, span), question_mark)
+                    }
+                };
             match &lhs.kind {
                 ExprKind::Path(None, path) => match &path.segments.as_slice() {
                     [var] => match &var.args {
                         None => {
                             let id = translate_ident(&var.ident);
-
-                            match r_e {
-                                (ExprTranslationResult::TransStmt(_), span) => {
-                                    sess.span_rustspec_err(span, "statements not allowed in Hacspec for assignments right-hand-sides");
-                                    Err(())
-                                }
-                                (ExprTranslationResult::TransExpr(r_e), span) => Ok((
-                                    ExprTranslationResult::TransStmt(Statement::Reassignment(
-                                        id,
-                                        (r_e, span),
-                                    )),
-                                    e.span.into(),
+                            Ok((
+                                ExprTranslationResult::TransStmt(Statement::Reassignment(
+                                    id,
+                                    r_e,
+                                    r_e_question_mark,
                                 )),
-                            }
+                                e.span.into(),
+                            ))
                         }
                         Some(_) => {
                             sess.span_rustspec_err(path.span, "no arguments expected in Hacspec");
@@ -914,18 +920,15 @@ fn translate_expr(
                             [var] => match &var.args {
                                 None => {
                                     let id = translate_ident(&var.ident);
-                                    match r_e {
-                                        (ExprTranslationResult::TransStmt(_), span) => {
-                                            sess.span_rustspec_err(span, "statements not allowed in Hacspec for assignments right-hand-sides");
-                                            Err(())
-                                        }
-                                        (ExprTranslationResult::TransExpr(r_e), span) => Ok((
-                                            ExprTranslationResult::TransStmt(
-                                                Statement::ArrayUpdate(id, r_index?, (r_e, span)),
-                                            ),
-                                            e.span.into(),
+                                    Ok((
+                                        ExprTranslationResult::TransStmt(Statement::ArrayUpdate(
+                                            id,
+                                            r_index?,
+                                            r_e,
+                                            r_e_question_mark,
                                         )),
-                                    }
+                                        e.span.into(),
+                                    ))
                                 }
                                 Some(_) => {
                                     sess.span_rustspec_err(

@@ -948,28 +948,47 @@ fn translate_statements<'a>(
                 .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _)) => make_let_binding(
-            translate_ident(x.clone()),
-            None,
-            translate_expression(e1.clone(), top_ctx),
-            false,
-        )
-        .append(RcDoc::hardline())
-        .append(translate_statements(statements, top_ctx)),
-        Statement::ArrayUpdate((x, _), (e1, _), (e2, _)) => make_let_binding(
-            translate_ident(x.clone()),
-            None,
-            RcDoc::as_string("array_upd")
+        Statement::Reassignment((x, _), (e1, _), question_mark) => {
+            if question_mark {
+                make_error_returning_let_binding(
+                    translate_ident(x.clone()),
+                    None,
+                    translate_expression(e1.clone(), top_ctx),
+                    || translate_statements(statements, top_ctx),
+                )
+            } else {
+                make_let_binding(
+                    translate_ident(x.clone()),
+                    None,
+                    translate_expression(e1.clone(), top_ctx),
+                    false,
+                )
+                .append(RcDoc::hardline())
+                .append(translate_statements(statements, top_ctx))
+            }
+        }
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark) => {
+            let array_upd_payload = RcDoc::as_string("array_upd")
                 .append(RcDoc::space())
                 .append(translate_ident(x.clone()))
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e1.clone(), top_ctx)))
                 .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2.clone(), top_ctx))),
-            false,
-        )
-        .append(RcDoc::hardline())
-        .append(translate_statements(statements, top_ctx)),
+                .append(make_paren(translate_expression(e2.clone(), top_ctx)));
+            if question_mark {
+                // TODO: fix bug
+                make_error_returning_let_binding(
+                    translate_ident(x.clone()),
+                    None,
+                    array_upd_payload,
+                    || translate_statements(statements, top_ctx),
+                )
+            } else {
+                make_let_binding(translate_ident(x.clone()), None, array_upd_payload, false)
+                    .append(RcDoc::hardline())
+                    .append(translate_statements(statements, top_ctx))
+            }
+        }
         Statement::ReturnExp(e1) => translate_expression(e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (mut b1, _), b2, mutated) => {
             let mutated_info = mutated.unwrap();

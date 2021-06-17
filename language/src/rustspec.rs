@@ -382,7 +382,11 @@ pub enum Statement {
         Spanned<Expression>,  // Binded expr
         bool,                 // Presence of a question mark at the end
     ),
-    Reassignment(Spanned<Ident>, Spanned<Expression>),
+    Reassignment(
+        Spanned<Ident>,      // Variable reassigned
+        Spanned<Expression>, // New value
+        bool,                // Presence of a question mark at the end
+    ),
     Conditional(
         Spanned<Expression>,        // Condition
         Spanned<Block>,             // Then block
@@ -395,7 +399,12 @@ pub enum Statement {
         Spanned<Expression>, // Upper bound
         Spanned<Block>,      // Loop body
     ),
-    ArrayUpdate(Spanned<Ident>, Spanned<Expression>, Spanned<Expression>),
+    ArrayUpdate(
+        Spanned<Ident>,      // Array variable
+        Spanned<Expression>, // Index value
+        Spanned<Expression>, // Cell value
+        bool,                // Presence of a question mark at the end of the cell value expression
+    ),
     ReturnExp(Expression),
 }
 

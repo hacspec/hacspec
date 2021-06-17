@@ -341,24 +341,29 @@ fn resolve_statement(
                 resolve_expression(sess, (e, s_span.clone()), &name_context, top_level_ctx)?;
             Ok(((Statement::ReturnExp(new_e.0), s_span), name_context))
         }
-        Statement::ArrayUpdate(var, index, e) => {
+        Statement::ArrayUpdate(var, index, e, question_mark) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
             let new_index = resolve_expression(sess, index, &name_context, top_level_ctx)?;
             let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             Ok((
                 (
-                    Statement::ArrayUpdate((new_var, var.1.clone()), new_index, new_e),
+                    Statement::ArrayUpdate(
+                        (new_var, var.1.clone()),
+                        new_index,
+                        new_e,
+                        question_mark,
+                    ),
                     s_span,
                 ),
                 name_context,
             ))
         }
-        Statement::Reassignment(var, e) => {
+        Statement::Reassignment(var, e, question_mark) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
             let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             Ok((
                 (
-                    Statement::Reassignment((new_var, var.1.clone()), new_e),
+                    Statement::Reassignment((new_var, var.1.clone()), new_e, question_mark),
                     s_span,
                 ),
                 name_context,
