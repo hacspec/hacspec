@@ -38,12 +38,16 @@ fn make_error_returning_let_binding<'a, F: FnOnce() -> RcDoc<'a, ()>>(
     expr: RcDoc<'a, ()>,
     kont: F,
 ) -> RcDoc<'a, ()> {
-    RcDoc::as_string("bind_ok")
+    RcDoc::as_string("match")
         .append(RcDoc::space())
         .append(make_paren(expr.group()))
         .append(RcDoc::space())
-        .append(make_paren(
-            RcDoc::as_string("fun")
+        .append(RcDoc::as_string("with"))
+        .append(RcDoc::line())
+        .append(RcDoc::as_string("| Err x -> Err x"))
+        .append(RcDoc::line())
+        .append(
+            RcDoc::as_string("| Ok ")
                 .append(RcDoc::space())
                 .append(
                     pat.append(match typ {
@@ -60,7 +64,7 @@ fn make_error_returning_let_binding<'a, F: FnOnce() -> RcDoc<'a, ()>>(
                 .group()
                 .append(RcDoc::line().append(kont()))
                 .nest(2),
-        ))
+        )
 }
 
 fn make_let_binding<'a>(
@@ -968,22 +972,36 @@ fn translate_statements<'a>(
             }
         }
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark) => {
-            let array_upd_payload = RcDoc::as_string("array_upd")
-                .append(RcDoc::space())
-                .append(translate_ident(x.clone()))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e1.clone(), top_ctx)))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2.clone(), top_ctx)));
             if question_mark {
-                // TODO: fix bug
+                let tmp_ident = Ident::Local(LocalIdent {
+                    name: "tmp".to_string(),
+                    id: fresh_codegen_id(),
+                });
+                let array_upd_payload = RcDoc::as_string("array_upd")
+                    .append(RcDoc::space())
+                    .append(translate_ident(x.clone()))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e1.clone(), top_ctx)))
+                    .append(RcDoc::space())
+                    .append(translate_ident(tmp_ident.clone()));
                 make_error_returning_let_binding(
-                    translate_ident(x.clone()),
+                    translate_ident(tmp_ident),
                     None,
-                    array_upd_payload,
-                    || translate_statements(statements, top_ctx),
+                    translate_expression(e2.clone(), top_ctx),
+                    || {
+                        make_let_binding(translate_ident(x.clone()), None, array_upd_payload, false)
+                            .append(RcDoc::hardline())
+                            .append(translate_statements(statements, top_ctx))
+                    },
                 )
             } else {
+                let array_upd_payload = RcDoc::as_string("array_upd")
+                    .append(RcDoc::space())
+                    .append(translate_ident(x.clone()))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e1.clone(), top_ctx)))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e2.clone(), top_ctx)));
                 make_let_binding(translate_ident(x.clone()), None, array_upd_payload, false)
                     .append(RcDoc::hardline())
                     .append(translate_statements(statements, top_ctx))
