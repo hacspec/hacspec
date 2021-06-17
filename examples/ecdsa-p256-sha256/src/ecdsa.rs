@@ -5,19 +5,25 @@ use hacspec_sha256::*;
 pub type PublicKey = Affine;
 pub type SecretKey = Scalar;
 pub type Signature = (Scalar, Scalar); // (r, s)
+pub type SignatureResult = Result<Signature, u8>;
+pub type VerifyResult = Result<(), u8>;
 
-pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> (bool, Signature) {
-    let mut success = true;
+pub const ZERO_NONCE: u8 = 1;
+pub const INVALID_NONCE: u8 = 2;
+pub const INVALID_SIGNATURE: u8 = 3;
+
+pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> SignatureResult {
     if nonce.equal(Scalar::ZERO()) {
         // We should really return here.
-        success = false;
+        // success = false;
+        return SignatureResult::Err(ZERO_NONCE);
     }
-    let (b, (k_x, _k_y)) = point_mul_base(nonce);
-    success = success && b;
+    let (k_x, _k_y) = point_mul_base(nonce)?;
     let r = Scalar::from_byte_seq_be(k_x.to_byte_seq_be());
     if r.equal(Scalar::ZERO()) {
         // We should really return here.
-        success = false;
+        // success = false;
+        return SignatureResult::Err(INVALID_NONCE);
     }
     let payload_hash = hash(payload);
     let payload_hash = Scalar::from_byte_seq_be(payload_hash);
@@ -26,29 +32,29 @@ pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> (bool, Signature
     let nonce_inv = nonce.inv();
     let s = nonce_inv * hash_rsk;
 
-    (success, (r, s))
+    SignatureResult::Ok((r, s))
 }
 
-pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> bool {
+pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyResult {
     // signature = (r, s) must be in [1, n-1] because they are Scalars
     let (r, s) = signature;
-    let mut success = true;
     let payload_hash = hash(payload);
     let payload_hash = Scalar::from_byte_seq_be(payload_hash);
     let s_inv = s.inv();
 
     // R' = (h * s1) * G + (r * s1) * pubKey
     let u1 = payload_hash * s_inv;
-    let (b, u1) = point_mul_base(u1);
-    success = success && b;
+    let u1 = point_mul_base(u1)?;
 
     let u2 = r * s_inv;
-    let (b, u2) = point_mul(u2, pk);
-    success = success && b;
-    let (b, (x, _y)) = point_add(u1, u2);
-    success = success && b;
+    let u2 = point_mul(u2, pk)?;
+    let (x, _y) = point_add(u1, u2)?;
     let x = Scalar::from_byte_seq_be(x.to_byte_seq_be());
-    success && x == r
+    if x == r {
+        VerifyResult::Ok(())
+    } else {
+        VerifyResult::Err(INVALID_SIGNATURE)
+    }
 }
 
 #[cfg(test)]
@@ -70,9 +76,8 @@ mod tests {
         let msg = ByteSeq::from_public_slice(b"hacspec ecdsa p256 sha256 self test");
         let nonce = Scalar::from_be_bytes(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
 
-        let (success, signature) = sign(&msg, sk, nonce);
-        assert!(success);
-        assert!(verify(&msg, pk, signature));
+        let signature = sign(&msg, sk, nonce).expect("Error signing");
+        assert!(verify(&msg, pk, signature).is_ok());
     }
 
     #[test]
@@ -90,6 +95,6 @@ mod tests {
             Scalar::from_hex("2ba3a8be6b94d5ec80a6d9d1190a436effe50d85a1eee859b8cc6af9bd5c2e18"),
             Scalar::from_hex("b329f479a2bbd0a5c384ee1493b1f5186a87139cac5df4087c134b49156847db"),
         );
-        assert!(verify(&msg, pk, sig));
+        assert!(verify(&msg, pk, sig).is_ok());
     }
 }

@@ -1,25 +1,31 @@
 use hacspec_lib::*;
 
 pub type Affine = (FieldElement, FieldElement);
+pub type AffineResult = Result<Affine, u8>;
 type Jacobian = (FieldElement, FieldElement, FieldElement);
+type JacobianResult = Result<Jacobian, u8>;
+
+pub const INVALID_ADDITION: u8 = 1u8;
+
+const BITS: usize = 256;
 
 public_nat_mod!(
     type_name: FieldElement,
     type_of_canvas: FieldCanvas,
-    bit_size_of_field: 256,
+    bit_size_of_field: 256, // XXX: Unfortunately we can't use constants here.
     modulo_value: "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 
 public_nat_mod!(
     type_name: Scalar,
     type_of_canvas: ScalarCanvas,
-    bit_size_of_field: 256,
+    bit_size_of_field: 256, // XXX: Unfortunately we can't use constants here.
     modulo_value: "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551"
 );
 
 bytes!(Element, 32);
 
-pub fn point_mul_base(k: Scalar) -> (bool, Affine) {
+pub fn point_mul_base(k: Scalar) -> AffineResult {
     let base_point = (
         FieldElement::from_byte_seq_be(Element(secret_bytes!([
             0x6Bu8, 0x17u8, 0xD1u8, 0xF2u8, 0xE1u8, 0x2Cu8, 0x42u8, 0x47u8, 0xF8u8, 0xBCu8, 0xE6u8,
@@ -35,9 +41,9 @@ pub fn point_mul_base(k: Scalar) -> (bool, Affine) {
     point_mul(k, base_point)
 }
 
-pub fn point_mul(k: Scalar, p: Affine) -> (bool, Affine) {
-    let (success, jac) = ltr_mul(k, affine_to_jacobian(p));
-    (success, jacobian_to_affine(jac))
+pub fn point_mul(k: Scalar, p: Affine) -> AffineResult {
+    let jac = ltr_mul(k, affine_to_jacobian(p))?;
+    AffineResult::Ok(jacobian_to_affine(jac))
 }
 
 fn jacobian_to_affine(p: Jacobian) -> Affine {
@@ -84,22 +90,17 @@ fn is_point_at_infinity(p: Jacobian) -> bool {
 }
 
 #[allow(unused_assignments)]
-pub fn point_add(p: Affine, q: Affine) -> (bool, Affine) {
-    // TODO: this is pretty ugly but everything else doesn't work in hacspec yet.
-    let (mut success, mut result) = (false, p);
+pub fn point_add(p: Affine, q: Affine) -> AffineResult {
+    let r = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q))?;
     if p != q {
-        let (s, r) = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q));
-        result = jacobian_to_affine(r);
-        success = s;
+        AffineResult::Ok(jacobian_to_affine(r))
     } else {
-        result = jacobian_to_affine(point_double(affine_to_jacobian(p)));
-        success = true;
-    };
-    (success, result)
+        AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))))
+    }
 }
 
-fn point_add_jacob(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
-    let mut result = (true, q);
+fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
+    let mut result = JacobianResult::Ok(q);
     if is_point_at_infinity(p) {
         // result = (true, q);
         // TODO: #85 needs to get fixed for this.
@@ -107,7 +108,7 @@ fn point_add_jacob(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
         //     (true, p)
     } else {
         if is_point_at_infinity(q) {
-            result = (true, p);
+            result = JacobianResult::Ok(p);
         } else {
             let (x1, y1, z1) = p;
             let (x2, y2, z2) = q;
@@ -119,16 +120,15 @@ fn point_add_jacob(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
             let s2 = (y2 * z1) * z1z1;
 
             if u1.equal(u2) {
-                // assert!(!s1.equal(s2));
-                let success = if s1.equal(s2) { false } else { true };
-                result = (
-                    success,
-                    (
+                if s1.equal(s2) {
+                    result = JacobianResult::Err(INVALID_ADDITION);
+                } else {
+                    result = JacobianResult::Ok((
                         FieldElement::from_literal(0u128),
                         FieldElement::from_literal(1u128),
                         FieldElement::from_literal(0u128),
-                    ),
-                )
+                    ))
+                }
             } else {
                 let h = u2 - u1;
                 let i = (FieldElement::from_literal(2u128) * h).exp(2u32);
@@ -146,27 +146,26 @@ fn point_add_jacob(p: Jacobian, q: Jacobian) -> (bool, Jacobian) {
 
                 let z3_ = (z1 + z2).exp(2u32);
                 let z3 = (z3_ - (z1z1 + z2z2)) * h;
-                result = (true, (x3, y3, z3));
+                result = JacobianResult::Ok((x3, y3, z3));
             }
         }
     };
     result
 }
 
-fn ltr_mul(k: Scalar, p: Jacobian) -> (bool, Jacobian) {
+fn ltr_mul(k: Scalar, p: Jacobian) -> JacobianResult {
     let mut q = (
         FieldElement::from_literal(0u128),
         FieldElement::from_literal(1u128),
         FieldElement::from_literal(0u128),
     );
-    let mut success = true;
-    for i in 0..256 {
-        q = point_double(q);
-        if k.get_bit(256 - 1 - i).equal(Scalar::ONE()) {
-            let (s, r) = point_add_jacob(q, p);
-            q = r;
-            success = success && s;
+    for i in 0..BITS {
+        let tmp_q = point_double(q);
+        q = tmp_q;
+        if k.get_bit(BITS - 1 - i).equal(Scalar::ONE()) {
+            let tmp_q = point_add_jacob(q, p)?;
+            q = tmp_q;
         }
     }
-    (success, q)
+    JacobianResult::Ok(q)
 }

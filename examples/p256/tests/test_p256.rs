@@ -10,8 +10,7 @@ fn test_p256_base() {
         FieldElement::from_hex("76E49B6DE2F73234AE6A5EB9D612B75C9F2202BB6923F54FF8240AAA86F640B8"),
     );
 
-    let (success, point_computed) = point_mul_base(sk);
-    assert!(success);
+    let point_computed = point_mul_base(sk).expect("Error point_mul_base");
     assert_eq!(point_computed.0, point_expected.0);
     assert_eq!(point_computed.1, point_expected.1);
 
@@ -21,8 +20,7 @@ fn test_p256_base() {
         FieldElement::from_hex("B1C14DDFDC8EC1B2583F51E85A5EB3A155840F2034730E9B5ADA38B674336A21"),
     );
 
-    let (success, point_computed) = point_mul_base(sk);
-    assert!(success);
+    let point_computed = point_mul_base(sk).expect("Error point_mul_base");
     assert_eq!(point_computed.0, point_expected.0);
     assert_eq!(point_computed.1, point_expected.1);
 
@@ -32,8 +30,7 @@ fn test_p256_base() {
         FieldElement::from_hex("B01CBD1C01E58065711814B583F061E9D431CCA994CEA1313449BF97C840AE0A"),
     );
 
-    let (success, point_computed) = point_mul_base(sk);
-    assert!(success);
+    let point_computed = point_mul_base(sk).expect("Error point_mul_base");
     assert_eq!(point_computed.0, point_expected.0);
     assert_eq!(point_computed.1, point_expected.1);
 }
@@ -104,8 +101,7 @@ fn test_wycheproof_plain() {
                 FieldElement::from_hex(&test.public[66..]),
             );
             let expected = FieldElement::from_hex(&test.shared);
-            let (success, shared) = point_mul(k, p);
-            assert!(success);
+            let shared = point_mul(k, p).expect("Unexpected error in point_mul");
             assert_eq!(shared.0, expected);
             tests_run += 1;
         }

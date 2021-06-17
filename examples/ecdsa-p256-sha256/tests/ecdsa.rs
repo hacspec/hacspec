@@ -121,7 +121,7 @@ fn test_wycheproof() {
             // The signature is ASN.1 encoded.
             let signature = decode_signature(&sig);
 
-            assert!(verify(&msg, pk, signature));
+            assert!(verify(&msg, pk, signature).is_ok());
 
             tests_run += 1;
         }
