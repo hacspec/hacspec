@@ -91,12 +91,15 @@ fn is_point_at_infinity(p: Jacobian) -> bool {
 
 #[allow(unused_assignments)]
 pub fn point_add(p: Affine, q: Affine) -> AffineResult {
-    let r = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q))?;
+    // XXX: Unfortunately we can't do any better here in hacspec :(
+    let mut result = AffineResult::Err(0);
     if p != q {
-        AffineResult::Ok(jacobian_to_affine(r))
+        let r = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q))?;
+        result = AffineResult::Ok(jacobian_to_affine(r));
     } else {
-        AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))))
+        result = AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))));
     }
+    result
 }
 
 fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {

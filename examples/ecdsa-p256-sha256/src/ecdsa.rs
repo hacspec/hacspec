@@ -7,24 +7,24 @@ pub type SecretKey = Scalar;
 pub type Signature = (Scalar, Scalar); // (r, s)
 pub type SignatureResult = Result<Signature, u8>;
 pub type VerifyResult = Result<(), u8>;
+type CheckResult = Result<(), u8>;
 
-pub const ZERO_NONCE: u8 = 1;
-pub const INVALID_NONCE: u8 = 2;
-pub const INVALID_SIGNATURE: u8 = 3;
+pub const INVALID_SCALAR: u8 = 1u8;
+pub const INVALID_SIGNATURE: u8 = 2u8;
+
+fn check_scalar_zero(r: Scalar) -> CheckResult {
+    if r.equal(Scalar::ZERO()) {
+        CheckResult::Err(INVALID_SCALAR)
+    } else {
+        CheckResult::Ok(())
+    }
+}
 
 pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> SignatureResult {
-    if nonce.equal(Scalar::ZERO()) {
-        // We should really return here.
-        // success = false;
-        return SignatureResult::Err(ZERO_NONCE);
-    }
+    check_scalar_zero(nonce)?;
     let (k_x, _k_y) = point_mul_base(nonce)?;
     let r = Scalar::from_byte_seq_be(k_x.to_byte_seq_be());
-    if r.equal(Scalar::ZERO()) {
-        // We should really return here.
-        // success = false;
-        return SignatureResult::Err(INVALID_NONCE);
-    }
+    check_scalar_zero(r)?;
     let payload_hash = hash(payload);
     let payload_hash = Scalar::from_byte_seq_be(payload_hash);
     let rsk = r * sk;
@@ -50,6 +50,7 @@ pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyR
     let u2 = point_mul(u2, pk)?;
     let (x, _y) = point_add(u1, u2)?;
     let x = Scalar::from_byte_seq_be(x.to_byte_seq_be());
+
     if x == r {
         VerifyResult::Ok(())
     } else {
