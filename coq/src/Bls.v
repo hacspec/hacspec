@@ -1,7 +1,6 @@
 Require Import Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
-Section bls.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
@@ -20,18 +19,18 @@ Definition scalar :=
   nat_mod 0x8000000000000000000000000000000000000000000000000000000000000000.
 
 Definition most_significant_bit (m_0 : scalar) (n_1 : uint_size) : uint_size :=
-  if (((n_1) >.? (usize 0)) && (negb (nat_mod_bit (m_0) (n_1)))) then (
+  if (((n_1) >.? (usize 0)) && (negb (nat_mod_bit (m_0) (n_1)))):bool then (
     most_significant_bit (m_0) ((n_1) - (usize 1))) else (n_1).
 
-Notation g1 := ((fp × fp × bool)).
+Notation "'g1'" := ((fp × fp × bool)) : hacspec_scope.
 
-Notation fp2 := ((fp × fp)).
+Notation "'fp2'" := ((fp × fp)) : hacspec_scope.
 
-Notation g2 := ((fp2 × fp2 × bool)).
+Notation "'g2'" := ((fp2 × fp2 × bool)) : hacspec_scope.
 
-Notation fp6 := ((fp2 × fp2 × fp2)).
+Notation "'fp6'" := ((fp2 × fp2 × fp2)) : hacspec_scope.
 
-Notation fp12 := ((fp6 × fp6)).
+Notation "'fp12'" := ((fp6 × fp6)) : hacspec_scope.
 
 Definition fp2fromfp (n_2 : fp) : fp2 :=
   (n_2, nat_mod_zero ).
@@ -222,19 +221,19 @@ Definition g1double_a (p_142 : g1) : g1 :=
 Definition g1add (p_149 : g1) (q_150 : g1) : g1 :=
   let '(x1_151, y1_152, inf1_153) := p_149 in
   let '(x2_154, y2_155, inf2_156) := q_150 in
-  if (inf1_153) then (q_150) else (
-    if (inf2_156) then (p_149) else (
-      if ((p_149) =.? (q_150)) then (g1double_a (p_149)) else (
+  if (inf1_153):bool then (q_150) else (
+    if (inf2_156):bool then (p_149) else (
+      if ((p_149) =.? (q_150)):bool then (g1double_a (p_149)) else (
         if (
           negb (
             ((x1_151) =.? (x2_154)) && (
-              (y1_152) =.? ((nat_mod_zero ) -% (y2_155))))) then (
+              (y1_152) =.? ((nat_mod_zero ) -% (y2_155))))):bool then (
           g1add_a (p_149) (q_150)) else (
           (nat_mod_zero , nat_mod_zero , true))))).
 
 Definition g1double (p_157 : g1) : g1 :=
   let '(x1_158, y1_159, inf1_160) := p_157 in
-  if (((y1_159) !=.? (nat_mod_zero )) && (negb (inf1_160))) then (
+  if (((y1_159) !=.? (nat_mod_zero )) && (negb (inf1_160))):bool then (
     g1double_a (p_157)) else ((nat_mod_zero , nat_mod_zero , true)).
 
 Definition g1mul (m_161 : scalar) (p_162 : g1) : g1 :=
@@ -297,17 +296,18 @@ Definition g2double_a (p_186 : g2) : g2 :=
 Definition g2add (p_199 : g2) (q_200 : g2) : g2 :=
   let '(x1_201, y1_202, inf1_203) := p_199 in
   let '(x2_204, y2_205, inf2_206) := q_200 in
-  if (inf1_203) then (q_200) else (
-    if (inf2_206) then (p_199) else (
-      if ((p_199) =.? (q_200)) then (g2double_a (p_199)) else (
+  if (inf1_203):bool then (q_200) else (
+    if (inf2_206):bool then (p_199) else (
+      if ((p_199) =.? (q_200)):bool then (g2double_a (p_199)) else (
         if (
           negb (
-            ((x1_201) =.? (x2_204)) && ((y1_202) =.? (fp2neg (y2_205))))) then (
+            ((x1_201) =.? (x2_204)) && (
+              (y1_202) =.? (fp2neg (y2_205))))):bool then (
           g2add_a (p_199) (q_200)) else ((fp2zero , fp2zero , true))))).
 
 Definition g2double (p_207 : g2) : g2 :=
   let '(x1_208, y1_209, inf1_210) := p_207 in
-  if (((y1_209) !=.? (fp2zero )) && (negb (inf1_210))) then (
+  if (((y1_209) !=.? (fp2zero )) && (negb (inf1_210))):bool then (
     g2double_a (p_207)) else ((fp2zero , fp2zero , true)).
 
 Definition g2mul (m_211 : scalar) (p_212 : g2) : g2 :=
@@ -485,4 +485,3 @@ Definition pairing (p_312 : g1) (q_313 : g2) : fp12 :=
   in
   final_exponentiation (fp12conjugate (f_316)).
 
-End bls.

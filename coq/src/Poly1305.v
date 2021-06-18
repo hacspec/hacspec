@@ -22,7 +22,8 @@ Notation "'block_index'" := (uint_size) : hacspec_scope.
 Definition field_canvas := nseq (int8) (17).
 Definition field_element := nat_mod 0x03fffffffffffffffffffffffffffffffb.
 
-Notation "'poly_state'" := ((field_element × field_element × poly_key)) : hacspec_scope.
+Notation "'poly_state'" := ((field_element × field_element × poly_key
+)) : hacspec_scope.
 
 Definition poly1305_encode_r (b_0 : poly_block) : field_element :=
   let n_1 := uint128_from_le_bytes (array_from_seq (16) (b_0)) in
@@ -85,7 +86,7 @@ Definition poly1305_update_last
   : poly_state :=
   let st_25 := st_24 in
   let '(st_25) :=
-    if (seq_len (b_23)) !=.? (usize 0) then (
+    if (seq_len (b_23)) !=.? (usize 0):bool then (
       let '(acc_26, r_27, k_28) := st_25 in
       let st_25 :=
         (
@@ -125,3 +126,4 @@ Definition poly1305 (m_39 : byte_seq) (key_40 : poly_key) : tag :=
   let st_41 := poly1305_init (key_40) in
   let st_41 := poly1305_update (m_39) (st_41) in
   poly1305_finish (st_41).
+

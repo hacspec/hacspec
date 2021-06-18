@@ -3463,8 +3463,6 @@ Section Int64.
   }.
   
   Definition int64 := @int WORDSIZE64.
-  Print Instances WORDSIZE.
-  Check modulus.
 End Int64.
 
 

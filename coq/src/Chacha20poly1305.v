@@ -1,7 +1,6 @@
 Require Import Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
-Section hacspecchacha20poly1305.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
@@ -11,9 +10,9 @@ Require Import Hacspec.Chacha20.
 
 Require Import Hacspec.Poly1305.
 
-Notation cha_cha_poly_key := (cha_cha_key).
+Notation "'cha_cha_poly_key'" := (cha_cha_key) : hacspec_scope.
 
-Notation cha_cha_poly_iv := (cha_cha_iv).
+Notation "'cha_cha_poly_iv'" := (cha_cha_iv) : hacspec_scope.
 
 Definition init
   (key_0 : cha_cha_poly_key)
@@ -78,7 +77,7 @@ Definition decrypt
   let my_tag_26 :=
     finish (seq_len (aad_22)) (seq_len (cipher_text_23)) (poly_st_25)
   in
-  if (array_declassify_eq (my_tag_26) (tag_24)) then (
+  if (array_declassify_eq (my_tag_26) (tag_24)):bool then (
     (true, chacha20 (key_20) (iv_21) (repr 1) (cipher_text_23))) else (
     (false, seq_new_ (secret (repr 0)) (usize 0))).
 

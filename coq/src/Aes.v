@@ -1,7 +1,6 @@
 Require Import Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
-Section aes.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
@@ -327,7 +326,6 @@ Definition rcon : r_con :=
         secret (repr 77)
       ]
     in l).
-    Axiom uint8_declassify : forall {A}, A.
 
 Definition sub_bytes (state_0 : block) : block :=
   let st_1 := state_0 in
@@ -510,9 +508,9 @@ Definition key_expansion_word
   let k_64 := w1_60 in
   let success_65 := false in
   let '(k_64, success_65) :=
-    if (i_61) <.? ((usize 4) * ((nr_63) + (usize 1))) then (
+    if (i_61) <.? ((usize 4) * ((nr_63) + (usize 1))):bool then (
       let '(k_64) :=
-        if ((i_61) %% (nk_62)) =.? (usize 0) then (
+        if ((i_61) %% (nk_62)) =.? (usize 0):bool then (
           let k_64 :=
             aes_keygen_assist (k_64) (array_index (rcon) ((i_61) / (nk_62)))
           in
@@ -520,7 +518,7 @@ Definition key_expansion_word
         ) else (
           let '(k_64) :=
             if ((nk_62) >.? (usize 6)) && (
-              ((i_61) %% (nk_62)) =.? (usize 4)) then (
+              ((i_61) %% (nk_62)) =.? (usize 4)):bool then (
               let k_64 := slice_word (k_64) in
               (k_64)
             ) else ( (k_64)
@@ -562,7 +560,7 @@ Definition key_expansion_aes
   let '(key_ex_73, success_75) :=
     foldi (usize 0) (iterations_72) (fun j_76 '(key_ex_73, success_75) =>
       let '(key_ex_73, success_75) :=
-        if (success_75:bool) then (
+        if success_75:bool then (
           let i_77 := (j_76) + (word_size_74) in
           let '(exp_success_78, word_79) :=
             key_expansion_word (
@@ -573,7 +571,7 @@ Definition key_expansion_aes
               nr_69)
           in
           let '(key_ex_73, success_75) :=
-            if negb (exp_success_78) then (
+            if negb (exp_success_78):bool then (
               let success_75 := false in
               let key_ex_73 := seq_new_ (secret (repr 0)) (usize 0) in
               (key_ex_73, success_75)
@@ -606,7 +604,7 @@ Definition aes_encrypt_block
       key_length_85) (iterations_86)
   in
   let result_89 :=
-    if (success_87) then (
+    if (success_87):bool then (
       (true, block_cipher_aes (input_81) (key_ex_88) (nr_83))) else (
       (false, array_new_ (secret (repr 0)) (blocksize)))
   in
@@ -681,7 +679,7 @@ Definition aes_counter_mode
               key_schedule_length_111) (key_length_112) (iterations_113)
           in
           let '(blocks_out_115, success_116) :=
-            if negb (kb_success_120) then (
+            if negb (kb_success_120):bool then (
               let success_116 := false in
               let blocks_out_115 := seq_new_ (secret (repr 0)) (usize 0) in
               (blocks_out_115, success_116)
@@ -689,7 +687,7 @@ Definition aes_counter_mode
             )
           in
           let '(ctr_114, blocks_out_115) :=
-            if (seq_len (msg_block_119)) =.? (blocksize) then (
+            if (seq_len (msg_block_119)) =.? (blocksize):bool then (
               let blocks_out_115 :=
                 seq_set_chunk (blocks_out_115) (blocksize) (i_117) (
                   xor_block (array_from_seq (blocksize) (msg_block_119)) (
@@ -745,5 +743,4 @@ Definition aes128_decrypt
       iterations)
   in
   result_134.
-  
 

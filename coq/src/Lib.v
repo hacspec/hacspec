@@ -1,3 +1,7 @@
+Global Set Warnings "-ambiguous-paths".
+Global Set Warnings "-uniform-inheritance".
+Global Set Warnings "-auto-template".
+Global Set Warnings "-disj-pattern-notation".
 (*** Integers *)
 From Coq Require Import ZArith List Vector.
 Import ListNotations.
@@ -6,7 +10,31 @@ Import ListNotations.
 Require Import MachineIntegers.
 From Coqprime Require GZnZ.
 
+Declare Scope hacspec_scope.
+
 Axiom secret : forall {WS : WORDSIZE},  (@int WS) -> (@int WS). 
+
+Axiom uint8_declassify : int8 -> int8.
+Axiom int8_declassify : int8 -> int8.
+Axiom uint16_declassify : int16 -> int16.
+Axiom int16_declassify : int16 -> int16.
+Axiom uint32_declassify : int32 -> int32.
+Axiom int32_declassify : int32 -> int32.
+Axiom uint64_declassify : int64 -> int64.
+Axiom int64_declassify : int64 -> int64.
+Axiom uint128_declassify : int128 -> int128.
+Axiom int128_declassify : int128 -> int128.
+
+Axiom uint8_classify : int8 -> int8.
+Axiom int8_classify : int8 -> int8.
+Axiom uint16_classify : int16 -> int16.
+Axiom int16_classify : int16 -> int16.
+Axiom uint32_classify : int32 -> int32.
+Axiom int32_classify : int32 -> int32.
+Axiom uint64_classify : int64 -> int64.
+Axiom int64_classify : int64 -> int64.
+Axiom uint128_classify : int128 -> int128.
+Axiom int128_classify : int128 -> int128.
 
 
 (* CompCert integers' signedness is only interpreted through 'signed' and 'unsigned',
@@ -210,7 +238,6 @@ Definition list_len := length.
 
 Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 
-
 Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
   const init len.
 
@@ -287,7 +314,9 @@ Definition update_sub {A len slen} `{Default A} (v : nseq A len) (i : nat) (n : 
     | S x => rec x (array_upd acc (i+x) (array_index sub x))
     end in
   rec (n - i + 1) v.
-Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))).
+
+(* Sanity check *)
+(* Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))). *)
 
 Definition array_from_seq
   {a: Type}
@@ -374,6 +403,8 @@ Definition array_update_start
 
 
 Definition array_len  {a: Type} {len: nat} (s: nseq a len) := len.
+(* May also come up as 'length' instead of 'len' *)
+Definition array_length  {a: Type} {len: nat} (s: nseq a len) := len.
 
 (**** Seq manipulation *)
 
@@ -386,7 +417,14 @@ Definition seq_slice
     : nseq a _ :=
   array_from_seq len (slice s start (start + len)).
 
-
+Definition seq_slice_range
+  {a: Type}
+ `{Default a}
+  (input: seq a)
+  (start_fin:(uint_size * uint_size))
+    : nseq a _ :=
+  seq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
+  
 Definition seq_update
   {a: Type}
  `{Default a}
@@ -406,6 +444,20 @@ Definition seq_update_start
   (start_s: seq a)
     : seq a :=
     update_sub (of_list s) 0 (length start_s) (of_list start_s).
+
+Definition array_update_slice
+  {a : Type}
+ `{Default a}
+  {l : nat}
+  (out: nseq a l)
+  (start_out: nat)
+  (input: nseq a l)
+  (start_in: nat)
+  (len: nat)
+    : nseq a (length out)
+  :=
+  update_sub (of_list out) start_out len
+    (of_list (sub input start_in len)).
 
 Definition seq_update_slice
   {a : Type}
@@ -648,6 +700,7 @@ Axiom u128_from_be_bytes : nseq int8 16 -> int128.
 (* Definition u128_from_be_bytes (s: nseq int8 16) : pub_uint128 :=
   LBSeq.uint_from_bytes_be s *)
 
+
 (*** Nats *)
 
 
@@ -687,6 +740,8 @@ Definition nat_mod_exp {p : Z} (a:nat_mod p) (n : uint_size) : nat_mod p :=
     | S n => nat_mod_mul a (exp_ a n)
     end in
   exp_ a n.
+
+Definition nat_mod_pow {p} := @nat_mod_exp p.
 
 Close Scope nat_scope.
 Open Scope Z_scope.
@@ -778,6 +833,41 @@ Section Coercions.
 
   Global Coercion GZnZ.val : GZnZ.znz >-> Z.
 
+  Definition int8_to_nat (n : int8) : nat := unsigned n.
+  Global Coercion int8_to_nat : int8 >-> nat.
+  Definition int16_to_nat (n : int16) : nat := unsigned n.
+  Global Coercion int16_to_nat : int16 >-> nat.
+  Definition int32_to_nat (n : int32) : nat := unsigned n.
+  Global Coercion int32_to_nat : int32 >-> nat.
+  Definition int64_to_nat (n : int64) : nat := unsigned n.
+  Global Coercion int64_to_nat : int64 >-> nat.
+  Definition int128_to_nat (n : int128) : nat := unsigned n.
+  Global Coercion int128_to_nat : int128 >-> nat.
+
+  (* coercions int8 >-> int16 >-> ... int128 *)
+
+  Definition int8_to_int16 (n : int8) : int16 := repr n.
+  Global Coercion int8_to_int16 : int8 >-> int16.
+
+  Definition int8_to_int32 (n : int8) : int32 := repr n.
+  Global Coercion int8_to_int32 : int8 >-> int32.
+
+  Definition int16_to_int32 (n : int16) : int32 := repr n.
+  Global Coercion int16_to_int32 : int16 >-> int32.
+
+  Definition int32_to_int64 (n : int32) : int64 := repr n.
+  Global Coercion int32_to_int64 : int32 >-> int64.
+
+  Definition int64_to_int128 (n : int64) : int128 := repr n.
+  Global Coercion int64_to_int128 : int64 >-> int128.
+
+  Definition int32_to_int128 (n : int32) : int128 := repr n.
+  Global Coercion int32_to_int128 : int32 >-> int128.
+
+  Definition uint_size_to_int64 (n : uint_size) : int64 := repr n.
+  Global Coercion uint_size_to_int64 : uint_size >-> int64.
+  
+
   (* coercions into nat_mod *)
   Definition Z_in_nat_mod {m : Z} (x:Z) : nat_mod m.
   Proof.
@@ -808,6 +898,10 @@ Section Coercions.
 
 End Coercions.
 
+
+(*** Casting *)
+Definition uint64_from_uint8 (n : int8) : int64 := repr n.
+Definition uint8_from_uint64 (n : int8) : int64 := repr n.
 
 
 (* Comparisons, boolean equality, and notation *)
@@ -963,9 +1057,6 @@ Next Obligation.
   symmetry in H2. apply (eqb_leibniz b0 b) in H2.
   rewrite H1, H2. reflexivity.
 Defined.
-
-
-(* Axiom most_significant_bit : scalar -> uint_size -> uint_size. *)
 
 (*** Result *)
 

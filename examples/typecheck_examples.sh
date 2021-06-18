@@ -34,8 +34,11 @@ function typecheck {
   then
     echo "    extracting coq ..."
     mkdir -p target/coq
-    fname=$(echo $1|tr -d '-')
-    cargo hacspec -o target/coq/${fname}.v $1
+    cratename=$1
+  #  fname=$(echo $1| "hacspec-")
+    prefix="hacspec-"
+    outname=${cratename#"$prefix"}
+    cargo hacspec -o target/coq/${outname^}.v $1
   fi
 }
 
@@ -43,21 +46,21 @@ cd $(dirname "$0")/../
 cargo clean
 cargo build
 cargo install --path language
-typecheck hacspec-chacha20             ec      fst    json      coq  Hacspec.Chacha20.fst
-typecheck hacspec-chacha20poly1305  no-ec      fst    json      coq  Hacspec.Chacha20Poly1305.fst
-typecheck hacspec-poly1305             ec      fst    json      coq  Hacspec.Poly1305.fst
-typecheck hacspec-curve25519           ec      fst    json      coq
-typecheck hacspec-hkdf              no-ec      fst    json      coq
-typecheck hacspec-hmac              no-ec      fst    json      coq
+typecheck hacspec-chacha20             ec      fst    json      coq     Hacspec.Chacha20.fst
+typecheck hacspec-chacha20poly1305  no-ec      fst    json      coq     Hacspec.Chacha20Poly1305.fst
+typecheck hacspec-poly1305             ec      fst    json      coq     Hacspec.Poly1305.fst
+typecheck hacspec-curve25519           ec      fst    json      no-coq
+typecheck hacspec-hkdf              no-ec      fst    json      no-coq
+typecheck hacspec-hmac              no-ec      fst    json      no-coq
 typecheck hacspec-sha256            no-ec      fst    json      coq
-typecheck hacspec-ntru-prime           ec      fst    json      coq
-typecheck hacspec-p256              no-ec      fst    json      coq
-typecheck hacspec-riot-bootloader      ec      fst    json      coq  Hacspec.Riot.Bootloader.fst
-typecheck hacspec-riot-runqueue     no-ec      fst    no-json   coq  Hacspec.Riot.Runqueue.fst
-typecheck hacspec-sha3              no-ec      fst    json      coq
-typecheck hacspec-gimli                ec      fst    json      coq
+typecheck hacspec-ntru-prime           ec      fst    json      no-coq
+typecheck hacspec-p256              no-ec      fst    json      no-coq
+typecheck hacspec-riot-bootloader      ec      fst    json      no-coq  Hacspec.Riot.Bootloader.fst
+typecheck hacspec-riot-runqueue     no-ec      fst    no-json   no-coq  Hacspec.Riot.Runqueue.fst
+typecheck hacspec-sha3              no-ec      fst    json      no-coq
+typecheck hacspec-gimli                ec      fst    json      no-coq
 typecheck hacspec-bls12-381         no-ec   no-fst    json      coq
-typecheck hacspec-ecdsa-p256-sha256 no-ec   no-fst    json      coq
+typecheck hacspec-ecdsa-p256-sha256 no-ec   no-fst    json      no-coq
 typecheck hacspec-aes               no-ec      fst    json      coq
-typecheck hacspec-gf128             no-ec      fst    json      coq
-typecheck hacspec-aes128-gcm        no-ec      fst    json      coq
+typecheck hacspec-gf128             no-ec      fst    json      no-coq
+typecheck hacspec-aes128-gcm        no-ec      fst    json      no-coq

@@ -1,7 +1,6 @@
 Require Import Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
-Section chacha20.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
@@ -181,7 +180,7 @@ Definition chacha20_update (st0_49 : state) (m_50 : byte_seq) : byte_seq :=
   in
   let last_block_56 := seq_get_remainder_chunk (m_50) (usize 64) in
   let '(blocks_out_51) :=
-    if (seq_len (last_block_56)) !=.? (usize 0) then (
+    if (seq_len (last_block_56)) !=.? (usize 0):bool then (
       let b_57 :=
         chacha20_encrypt_last (st0_49) (secret (pub_u32 (n_blocks_52))) (
           last_block_56)
@@ -204,4 +203,3 @@ Definition chacha20
   let state_62 := chacha20_init (key_58) (iv_59) (secret (ctr_60)) in
   chacha20_update (state_62) (m_61).
 
-End chacha20.
