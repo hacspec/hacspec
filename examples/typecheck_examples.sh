@@ -44,9 +44,6 @@ function typecheck {
 }
 
 cd $(dirname "$0")/../
-#cargo clean
-#cargo build
-#cargo install --path language
 cargo clean
 cargo build
 cargo install --path language
