@@ -57,7 +57,7 @@ fn test_kat() {
 #[test]
 #[should_panic]
 fn test_invalid_output_len() {
-    let okm = expand(
+    let _okm = expand(
         &ByteSeq::from_hex("deadbeef"),
         &ByteSeq::from_hex("deadbeef"),
         10000,
