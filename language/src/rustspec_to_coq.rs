@@ -401,7 +401,6 @@ fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
 }
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
-        // todo
         Pattern::SingleCaseEnum(name, inner_pat) => {
             translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone())
                 .append(RcDoc::space())
@@ -518,7 +517,7 @@ fn translate_binop<'a, 'b>(
 
 fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
     match op {
-        UnOpKind::Not => RcDoc::as_string("negb"),
+        UnOpKind::Not => RcDoc::as_string("not"),
         UnOpKind::Neg => RcDoc::as_string("-"),
     }
 }
@@ -571,6 +570,8 @@ fn translate_prefix_for_func_name<'a>(
                 | Some((alias_typ, DictEntry::NaturalInteger)) => {
                     translate_prefix_for_func_name((alias_typ.1).0.clone(), top_ctx)
                 }
+                // TODO: doesn't work if the alias uses a definition from another library
+                // Needs fixing in the frontend
                 _ => (translate_ident_str(name.0.clone()), FuncPrefix::Regular),
             }
         }
@@ -1282,5 +1283,6 @@ pub fn translate_and_write_to_file(
     // .render(width, &mut w)
     // .unwrap();
     translate_program(p, top_ctx).render(width, &mut w).unwrap();
+    write!(file, "End {}.", module_name);
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }
