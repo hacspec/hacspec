@@ -104,7 +104,7 @@ pub fn point_add(p: Affine, q: Affine) -> AffineResult {
 
 fn s1_equal_s2(s1: FieldElement, s2: FieldElement) -> JacobianResult {
     if s1.equal(s2) {
-        JacobianResult::Err(INVALID_ADDITION);
+        JacobianResult::Err(INVALID_ADDITION)
     } else {
         JacobianResult::Ok((
             FieldElement::from_literal(0u128),
@@ -135,8 +135,7 @@ fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
             let s2 = (y2 * z1) * z1z1;
 
             if u1.equal(u2) {
-                let result_tmp = s1_equal_s2(s1, 2)?;
-                result = result_tmp;
+                result = s1_equal_s2(s1, s2);
             } else {
                 let h = u2 - u1;
                 let i = (FieldElement::from_literal(2u128) * h).exp(2u32);
@@ -168,11 +167,9 @@ fn ltr_mul(k: Scalar, p: Jacobian) -> JacobianResult {
         FieldElement::from_literal(0u128),
     );
     for i in 0..BITS {
-        let tmp_q = point_double(q);
-        q = tmp_q;
+        q = point_double(q);
         if k.get_bit(BITS - 1 - i).equal(Scalar::ONE()) {
-            let tmp_q = point_add_jacob(q, p)?;
-            q = tmp_q;
+            q = point_add_jacob(q, p)?;
         }
     }
     JacobianResult::Ok(q)
