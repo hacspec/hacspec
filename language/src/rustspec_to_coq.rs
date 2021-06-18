@@ -434,7 +434,6 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Ne => return RcDoc::as_string("!=.?"),
                         _ => unimplemented!(),
                     },
-                    // todo
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
                         return translate_binop(op, inner_ty, top_ctx)
                     }
@@ -445,7 +444,7 @@ fn translate_binop<'a, 'b>(
         _ => (),
     };
     match (op, &(op_typ.1).0) {
-        (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, inner_ty)) => {
+        (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, _inner_ty)) => {
             let inner_ty_op = translate_binop(
                 op,
                 &(
@@ -516,9 +515,10 @@ fn translate_binop<'a, 'b>(
 }
 
 fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
-    match op {
-        UnOpKind::Not => RcDoc::as_string("not"),
-        UnOpKind::Neg => RcDoc::as_string("-"),
+    match (op, &(_op_typ.1).0) {
+        (UnOpKind::Not, BaseTyp::Bool) => RcDoc::as_string("negb"),
+        (UnOpKind::Not, _) => RcDoc::as_string("not"),
+        (UnOpKind::Neg, _) => RcDoc::as_string("-"),
     }
 }
 
@@ -659,12 +659,12 @@ fn translate_func_name<'a>(
                 }
                 _ => (),
             };
-            // Then we add the size for arrays
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (ARRAY_MODULE, "new_")
+                // Then we add the size for arrays
+                  (ARRAY_MODULE, "new_")
                 | (ARRAY_MODULE, "from_seq")
                 | (ARRAY_MODULE, "from_slice")
                 | (ARRAY_MODULE, "from_slice_range") => {
@@ -939,6 +939,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 RcDoc::as_string("if")
                 .append(RcDoc::space())
                 .append(translate_expression(cond.clone(), top_ctx))
+                .append(RcDoc::as_string(":bool"))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("then"))
                 .append(RcDoc::space())
@@ -1201,11 +1202,13 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
         // Aliases are translated to Coq Notations
         Item::AliasDecl((TopLevelIdent(name), _), (ty, _)) => RcDoc::as_string("Notation")
             .append(RcDoc::space())
+            .append(RcDoc::as_string("\"'"))
             .append(translate_ident_str(name.clone()))
+            .append(RcDoc::as_string("'\""))
             .append(RcDoc::space())
             .append(RcDoc::as_string(":= ("))
             .append(translate_base_typ(ty.clone()))
-            .append(RcDoc::as_string(").")),
+            .append(RcDoc::as_string(") : hacspec_scope.")),
     }
 }
     
@@ -1234,55 +1237,17 @@ pub fn translate_and_write_to_file(
     };
     let width = 80;
     let mut w = Vec::new();
-    let module_name = path.file_stem().unwrap().to_str().unwrap();
+    // let module_name = path.file_stem().unwrap().to_str().unwrap();
     write!(
         file,
         "Require Import Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\
-        Section {}.\n\
         Open Scope Z_scope.\n\
         Open Scope bool_scope.\n\
-        Open Scope hacspec_scope.\n",
-        module_name
+        Open Scope hacspec_scope.\n"
     )
     .unwrap();
-    // let i_c_iter: Vec<RcDoc<()>> = p
-    // .imported_crates
-    // .iter()
-    // .skip(1)
-    // .map(|(kr, _)| {
-    //     RcDoc::as_string(format!(
-    //         "Require Import {}.",
-    //         str::replace(&kr.to_title_case(), " ", ".")
-    //     ))
-    // })
-    // .collect();
-    // let t_a_iter: Vec<RcDoc<()>> = p
-    // .ty_aliases
-    // .iter()
-    // .map(|((name, _), (ty, _))| {
-    //     RcDoc::as_string("Definition")
-    //     .append(RcDoc::space())
-    //     .append(translate_ident_str(name.0.clone()))
-    //     .append(RcDoc::space())
-    //     .append(RcDoc::as_string(": Type :="))
-    //     .append(RcDoc::space())
-    //     .append(translate_base_typ(ty.clone()))
-    //     .append(RcDoc::as_string("."))
-    // })
-    // .collect();
-    // RcDoc::intersperse(i_c_iter, RcDoc::hardline())
-    // .append(RcDoc::hardline())
-    // .append(RcDoc::hardline())
-    // .render(width, &mut w)
-    // .unwrap();
-    // RcDoc::intersperse(t_a_iter, RcDoc::hardline())
-    // .append(RcDoc::hardline())
-    // .append(RcDoc::hardline())
-    // .render(width, &mut w)
-    // .unwrap();
     translate_program(p, top_ctx).render(width, &mut w).unwrap();
-    write!(file, "End {}.", module_name);
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
 }
