@@ -100,16 +100,11 @@ let chacha20_encrypt_block (st0_39: state) (ctr_40: uint32) (plain_41: block) : 
 let chacha20_encrypt_last
       (st0_45: state)
       (ctr_46: uint32)
-      (plain_47: byte_seq{(**) Seq.length plain_47 <= 64})
+      (plain_47: byte_seq{(**)Seq.length plain_47 <= 64})
     :
     byte_seq =
   let b_48 = array_new_ (secret (pub_u8 0x0)) (64) in
-  let b_48 =
-    array_update (b_48)
-      (usize 0)
-      (**) #(Seq.length plain_47)
-      (plain_47)
-  in
+  let b_48 = array_update (b_48) (usize 0) (plain_47) in
   let b_48 = chacha20_encrypt_block (st0_45) (ctr_46) (b_48) in
   array_slice (b_48) (usize 0) (seq_len (plain_47))
 

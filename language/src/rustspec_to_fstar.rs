@@ -1,6 +1,5 @@
 use crate::name_resolution::{DictEntry, TopLevelContext};
 use crate::rustspec::*;
-use crate::typechecker::dealias_type;
 use core::iter::IntoIterator;
 use core::slice::Iter;
 use heck::{SnakeCase, TitleCase};
@@ -813,7 +812,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         }
         Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
-            let array_or_seq = array_or_seq(typ, top_ctx);
+            let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
             array_or_seq
                 .append(RcDoc::as_string("_index"))
                 .append(RcDoc::space())
@@ -927,17 +926,28 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
     )
 }
 
-fn array_or_seq<'a>(typ: Option<Typ>, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
-    match typ {
-        Some((_, (t, _))) => {
-            let t = dealias_type(t, top_ctx);
-            // TODO: dealiasing is not enough, replace with typechecker::is_array
-            match t {
-                BaseTyp::Array(_, _) => RcDoc::as_string("array"),
-                BaseTyp::Seq(_) => RcDoc::as_string("seq"),
-                t => panic!("should not happen {}", t),
+fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
+    match &(t.1).0 {
+        BaseTyp::Seq(_) => RcDoc::as_string("seq"),
+        BaseTyp::Named(id, None) => {
+            let name = &id.0;
+            match top_ctxt.typ_dict.get(name) {
+                Some((new_t, dict_entry)) => match dict_entry {
+                    DictEntry::Alias => array_or_seq(new_t.clone(), top_ctxt),
+                    DictEntry::Enum => panic!("should not happen"),
+                    DictEntry::Array => {
+                        match &(new_t.1).0 {
+                            BaseTyp::Array(_, _) => RcDoc::as_string("array"),
+                            _ => panic!(), // shouldd not happen
+                        }
+                    }
+                    DictEntry::NaturalInteger => panic!("should not happen"),
+                },
+                None => panic!("should not happen"),
             }
         }
+        BaseTyp::Named(_, Some(_)) => panic!("should not happen"),
+        BaseTyp::Array(_, _) => RcDoc::as_string("array"),
         _ => panic!("should not happen"),
     }
 }
@@ -990,7 +1000,7 @@ fn translate_statements<'a>(
             }
         }
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
-            let array_or_seq = array_or_seq(typ, top_ctx);
+            let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
             if question_mark {
                 let tmp_ident = Ident::Local(LocalIdent {
                     name: "tmp".to_string(),

@@ -210,8 +210,7 @@ let array_update
   (#len: uint_size)
   (s: lseq a len)
   (start: uint_size)
-  (#input_len: uint_size{start + input_len <= len})
-  (input: lseq a input_len)
+  (input: seq a {start + Seq.length input <= len})
     : lseq a len
   =
   LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input

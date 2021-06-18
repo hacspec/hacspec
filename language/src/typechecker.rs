@@ -114,7 +114,7 @@ fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
     }
 }
 
-pub fn is_array(
+fn is_array(
     sess: &Session,
     t: &Typ,
     top_ctxt: &TopLevelContext,
@@ -1902,7 +1902,7 @@ fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan) -> Statement {
     })
 }
 
-pub fn dealias_type(ty: BaseTyp, top_level_context: &TopLevelContext) -> BaseTyp {
+fn dealias_type(ty: BaseTyp, top_level_context: &TopLevelContext) -> BaseTyp {
     match &ty {
         BaseTyp::Named((name, _), None) => match top_level_context.typ_dict.get(name) {
             Some((((Borrowing::Consumed, _), (aliased_ty, _)), DictEntry::Alias)) => {
