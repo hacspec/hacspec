@@ -89,17 +89,18 @@ fn is_point_at_infinity(p: Jacobian) -> bool {
     z.equal(FieldElement::from_literal(0u128))
 }
 
+fn point_add_distinct(p: Affine, q: Affine) -> AffineResult {
+    let r = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q))?;
+    AffineResult::Ok(jacobian_to_affine(r))
+}
+
 #[allow(unused_assignments)]
 pub fn point_add(p: Affine, q: Affine) -> AffineResult {
-    // XXX: Unfortunately we can't do any better here in hacspec :(
-    let mut result = AffineResult::Err(0);
     if p != q {
-        let r = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q))?;
-        result = AffineResult::Ok(jacobian_to_affine(r));
+        point_add_distinct(p, q)
     } else {
-        result = AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))));
+        AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))))
     }
-    result
 }
 
 fn s1_equal_s2(s1: FieldElement, s2: FieldElement) -> JacobianResult {
@@ -116,12 +117,7 @@ fn s1_equal_s2(s1: FieldElement, s2: FieldElement) -> JacobianResult {
 
 fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
     let mut result = JacobianResult::Ok(q);
-    if is_point_at_infinity(p) {
-        // result = (true, q);
-        // TODO: #85 needs to get fixed for this.
-        // } else if is_point_at_infinity(q) {
-        //     (true, p)
-    } else {
+    if !is_point_at_infinity(p) {
         if is_point_at_infinity(q) {
             result = JacobianResult::Ok(p);
         } else {
