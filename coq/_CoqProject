@@ -3,5 +3,8 @@
 -arg all
 src/MachineIntegers.v
 src/Lib.v
+src/Bls.v
 src/Sha256.v
-src/hacspechmac.v
+src/Chacha20.v
+src/Poly1305.v
+src/Chacha20poly1305.v

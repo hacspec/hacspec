@@ -502,7 +502,7 @@ Definition seq_get_exact_chunk {a} (l : seq a) (chunk_size chunk_num: uint_size)
   let '(len, chunk) := seq_get_chunk l (from_uint_size chunk_size) (from_uint_size chunk_num) in
   if eq len chunk_size then [] else chunk.
 
-Definition seq_set_exact_chunk {a} := @seq_get_chunk a.
+Definition seq_set_exact_chunk {a} `{H : Default a} := @seq_set_chunk a H.
 
 Definition seq_get_remainder_chunk : forall {a}, seq a -> uint_size -> seq a :=
   fun _ l chunk_size =>
@@ -723,7 +723,7 @@ Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n' *)
 
-  
+Axiom array_declassify_eq : forall  {A l}, nseq A l -> nseq A l -> bool.
 Axiom array_to_le_uint32s : forall {A l}, nseq A l -> nseq uint32 l.
 Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> nseq uint32 (l/4).
 Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
