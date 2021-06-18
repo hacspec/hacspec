@@ -35,14 +35,18 @@ function typecheck {
     echo "    extracting coq ..."
     mkdir -p target/coq
     cratename=$1
-  #  fname=$(echo $1| "hacspec-")
     prefix="hacspec-"
     outname=${cratename#"$prefix"}
-    cargo hacspec -o target/coq/${outname^}.v $1
+    # capitalize first letter - macOS safe version (bash <= 3.2)
+    outname=$(tr '[:lower:]' '[:upper:]' <<<"${outname:0:1}")${outname:1}
+    cargo hacspec -o target/coq/${outname}.v $1
   fi
 }
 
 cd $(dirname "$0")/../
+#cargo clean
+#cargo build
+#cargo install --path language
 cargo clean
 cargo build
 cargo install --path language
