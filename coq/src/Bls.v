@@ -485,3 +485,4 @@ Definition pairing (p_312 : g1) (q_313 : g2) : fp12 :=
   in
   final_exponentiation (fp12conjugate (f_316)).
 
+End bls.

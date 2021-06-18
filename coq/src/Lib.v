@@ -146,12 +146,19 @@ Infix "usize_shift_left" := (usize_shift_left) (at level 77) : hacspec_scope.
 Definition pub_uint128_wrapping_add (x y: int128) : int128 :=
   add x y.
 
-Infix "shift_left" := (MachineIntegers.shl) (at level 77) : hacspec_scope. 
-Infix "shift_right" := (MachineIntegers.shr) (at level 77) : hacspec_scope. 
+Definition shift_left_ `{WS : WORDSIZE} (i : @int WS) (j : uint_size) :=
+  MachineIntegers.shl i (repr (from_uint_size j)).
+
+Definition shift_right_ `{WS : WORDSIZE} (i : @int WS) (j : uint_size) :=
+  MachineIntegers.shr i (repr (from_uint_size j)) .
+
+Infix "shift_left" := (shift_left_) (at level 77) : hacspec_scope. 
+Infix "shift_right" := (shift_right_) (at level 77) : hacspec_scope. 
 
 Infix "%%" := Z.rem (at level 40, left associativity) : Z_scope.
 Infix ".+" := (MachineIntegers.add) (at level 77) : hacspec_scope.
 Infix ".-" := (MachineIntegers.sub) (at level 77) : hacspec_scope.
+Infix ".*" := (MachineIntegers.mul) (at level 77) : hacspec_scope.
 Infix "./" := (MachineIntegers.divs) (at level 77) : hacspec_scope.
 Infix ".%" := (MachineIntegers.mods) (at level 77) : hacspec_scope.
 Infix ".^" := (MachineIntegers.xor) (at level 77) : hacspec_scope.
@@ -386,11 +393,19 @@ Definition seq_update
   (s: seq a)
   (start: nat)
   (input: seq a)
-    : nseq a (length s) :=
+    : seq a :=
   update_sub (of_list s) start (length input) (of_list input).
 
 Definition sub {a} (s : list a) start n := 
   slice s start (start + n).
+
+Definition seq_update_start
+  {a: Type}
+ `{Default a}
+  (s: seq a)
+  (start_s: seq a)
+    : seq a :=
+    update_sub (of_list s) 0 (length start_s) (of_list start_s).
 
 Definition seq_update_slice
   {a : Type}
@@ -411,6 +426,18 @@ Definition seq_concat
   (s2: seq a)
   : nseq a _ :=
   of_list (List.rev_append s1 s2).
+
+Definition seq_from_slice_range
+  {a: Type}
+ `{Default a}
+  (input: seq a)
+  (start_fin: (uint_size * uint_size))
+  : seq a :=
+  let out := array_new_ (default) (length input) in
+  let (start, fin) := start_fin in
+    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (of_list (slice input (from_uint_size start) (from_uint_size fin))).
+
+Definition seq_from_seq {A} (l : seq A) := l.
 
 
 (**** Chunking *)
@@ -698,7 +725,9 @@ Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_
 
   
 Axiom array_to_le_uint32s : forall {A l}, nseq A l -> nseq uint32 l.
+Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> nseq uint32 (l/4).
 Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
+Axiom array_to_be_bytes : forall {A l}, nseq A l -> seq uint8.
 Axiom nat_mod_from_byte_seq_le : forall  {A n}, seq A -> nat_mod n.  
 Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> uint_size.
 

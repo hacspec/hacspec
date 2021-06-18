@@ -1,3 +1,7 @@
--R theories/ Hacspec
-theories/MachineIntegers.v
-theories/Lib.v
+-R src/ Hacspec
+-arg -w
+-arg all
+src/MachineIntegers.v
+src/Lib.v
+src/Sha256.v
+src/hacspechmac.v
