@@ -102,6 +102,18 @@ pub fn point_add(p: Affine, q: Affine) -> AffineResult {
     result
 }
 
+fn s1_equal_s2(s1: FieldElement, s2: FieldElement) -> JacobianResult {
+    if s1.equal(s2) {
+        JacobianResult::Err(INVALID_ADDITION);
+    } else {
+        JacobianResult::Ok((
+            FieldElement::from_literal(0u128),
+            FieldElement::from_literal(1u128),
+            FieldElement::from_literal(0u128),
+        ))
+    }
+}
+
 fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
     let mut result = JacobianResult::Ok(q);
     if is_point_at_infinity(p) {
@@ -123,15 +135,8 @@ fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
             let s2 = (y2 * z1) * z1z1;
 
             if u1.equal(u2) {
-                if s1.equal(s2) {
-                    result = JacobianResult::Err(INVALID_ADDITION);
-                } else {
-                    result = JacobianResult::Ok((
-                        FieldElement::from_literal(0u128),
-                        FieldElement::from_literal(1u128),
-                        FieldElement::from_literal(0u128),
-                    ))
-                }
+                let result_tmp = s1_equal_s2(s1, 2)?;
+                result = result_tmp;
             } else {
                 let h = u2 - u1;
                 let i = (FieldElement::from_literal(2u128) * h).exp(2u32);
