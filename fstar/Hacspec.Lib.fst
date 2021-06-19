@@ -173,6 +173,13 @@ let seq_len (#a: Type) (s: seq a) : nat = Seq.length s
 let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
   Seq.create len init
 
+let seq_index (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) : a =
+  Seq.index s i
+
+let seq_upd (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) (new_v: a)
+    : (s':seq a{seq_len s' = seq_len s})  =
+  Seq.upd s i new_v
+
 let array_from_list
   (#a: Type)
   (l: list a{List.Tot.length l <= max_size_t})
@@ -203,8 +210,7 @@ let array_update
   (#len: uint_size)
   (s: lseq a len)
   (start: uint_size)
-  (#input_len: uint_size{start + input_len <= len})
-  (input: lseq a input_len)
+  (input: seq a {start + Seq.length input <= len})
     : lseq a len
   =
   LSeq.update_sub #a #(LSeq.length s) s start (LSeq.length input) input

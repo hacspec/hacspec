@@ -115,3 +115,4 @@ let poly1305 (m_39: byte_seq) (key_40: poly_key) : tag =
   let st_41 = poly1305_init (key_40) in
   let st_41 = poly1305_update (m_39) (st_41) in
   poly1305_finish (st_41)
+

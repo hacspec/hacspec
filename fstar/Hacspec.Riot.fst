@@ -35,13 +35,7 @@ let update_fletcher (f_3: fletcher) (data_4: seq pub_uint16) : fletcher =
               (chunk_len_9)
               (fun j_13 (intermediate_a_11, intermediate_b_12) ->
                   let intermediate_a_11 =
-                    (intermediate_a_11) +.
-                    (cast U32
-                        PUB
-                        (array_index #_
-                            (**) #(Seq.length chunk_10)
-                            (chunk_10)
-                            (j_13)))
+                    (intermediate_a_11) +. (cast U32 PUB (seq_index (chunk_10) (j_13)))
                   in
                   let intermediate_b_12 = (intermediate_b_12) +. (intermediate_a_11) in
                   (intermediate_a_11, intermediate_b_12))
@@ -75,17 +69,17 @@ let header_as_u16_slice (h_17: header) : seq pub_uint16 =
   let u16_seq_28 =
     foldi (usize 0)
       (usize 3)
-      (fun i_29 u16_seq_28 ->
+      (fun i_29 (u16_seq_28: (**) lseq pub_uint16 6) ->
           let u16_word_30 =
             array_from_seq (2) (seq_slice (u8_seq_27) ((i_29) * (usize 4)) (usize 2))
           in
           let u16_value_31 = u16_from_be_bytes (u16_word_30) in
-          let u16_seq_28 = array_upd u16_seq_28 (((usize 2) * (i_29)) + (usize 1)) (u16_value_31) in
+          let u16_seq_28 = seq_upd u16_seq_28 (((usize 2) * (i_29)) + (usize 1)) (u16_value_31) in
           let u16_word_32 =
             array_from_seq (2) (seq_slice (u8_seq_27) (((i_29) * (usize 4)) + (usize 2)) (usize 2))
           in
           let u16_value_33 = u16_from_be_bytes (u16_word_32) in
-          let u16_seq_28 = array_upd u16_seq_28 ((usize 2) * (i_29)) (u16_value_33) in
+          let u16_seq_28 = seq_upd u16_seq_28 ((usize 2) * (i_29)) (u16_value_33) in
           (u16_seq_28))
       (u16_seq_28)
   in
@@ -116,12 +110,7 @@ let choose_image (images_44: seq header) : (bool & pub_uint32) =
     foldi (usize 0)
       (seq_len (images_44))
       (fun i_47 (image_45, image_found_46) ->
-          let header_48 =
-            array_index #_
-              (**) #(Seq.length images_44)
-              (images_44)
-              (i_47)
-          in
+          let header_48 = seq_index (images_44) (i_47) in
           let magic_number_49, seq_number_50, start_addr_51, checksum_52 = header_48 in
           let image_45, image_found_46 =
             if is_valid_header ((magic_number_49, seq_number_50, start_addr_51, checksum_52))

@@ -1390,7 +1390,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::ArrayIndex((x, x_span), e2) => {
+        Expression::ArrayIndex((x, x_span), e2, _) => {
             let t1 = match find_typ(&x, var_context, top_level_context) {
                 None => {
                     sess.span_rustspec_err(
@@ -1414,6 +1414,7 @@ fn typecheck_expression(
                     Expression::ArrayIndex(
                         (x.clone(), x_span.clone()),
                         Box::new((new_e2, e2.1.clone())),
+                        Some(t1.clone()),
                     ),
                     (
                         (Borrowing::Consumed, (t1.0).1),
@@ -2108,7 +2109,7 @@ fn typecheck_statement(
                 })),
             ))
         }
-        Statement::ArrayUpdate((x, x_span), e1, e2, question_mark) => {
+        Statement::ArrayUpdate((x, x_span), e1, e2, question_mark, _) => {
             let (new_e1, e1_t, var_context) =
                 typecheck_expression(sess, &e1, top_level_context, var_context)?;
             let (new_e2, e2_t, var_context) =
@@ -2166,6 +2167,7 @@ fn typecheck_statement(
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
                     *question_mark,
+                    Some(x_typ),
                 ),
                 ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
                 var_context,
