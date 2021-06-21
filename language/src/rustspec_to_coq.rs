@@ -58,7 +58,9 @@ fn make_let_binding<'a>(
     .append(if toplevel {
         RcDoc::as_string(".")
     } else {
-        RcDoc::line().append(RcDoc::as_string("in"))
+        RcDoc::space()
+        .append(RcDoc::as_string("in"))
+        .append(RcDoc::space())
     })
 }
 
@@ -603,6 +605,7 @@ fn translate_func_name<'a>(
                     // int constructor. The value it is applied to is
                     // a public integer of the same kind. So in Coq, that
                     // will amount to a classification operation
+                    // TODO: may need to add type annotation here
                     (RcDoc::as_string("secret"), vec![])
                 }
                 _ => (name, vec![]),
@@ -818,13 +821,15 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
             })))
         }
-        Expression::ArrayIndex(x, e2) => {
+        Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
-            RcDoc::as_string("array_index")
-            .append(RcDoc::space())
-            .append(make_paren(translate_ident(x.0.clone())))
-            .append(RcDoc::space())
-            .append(make_paren(translate_expression(e2, top_ctx)))
+            let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
+            array_or_seq
+                .append(RcDoc::as_string("_index"))
+                .append(RcDoc::space())
+                .append(make_paren(translate_ident(x.0.clone())))
+                .append(RcDoc::space())
+                .append(make_paren(translate_expression(e2, top_ctx)))
         }
         Expression::NewArray(_, typ, args) => {
             // retrieves the element type of the array. For named types (aliases), it looks up
@@ -897,6 +902,34 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
     }
 }
 
+// taken from rustspec_to_coq
+fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
+    match &(t.1).0 {
+        BaseTyp::Seq(_) => RcDoc::as_string("seq"),
+        BaseTyp::Named(id, None) => {
+            let name = &id.0;
+            match top_ctxt.typ_dict.get(name) {
+                Some((new_t, dict_entry)) => match dict_entry {
+                    DictEntry::Alias => array_or_seq(new_t.clone(), top_ctxt),
+                    DictEntry::Enum => panic!("should not happen"),
+                    DictEntry::Array => {
+                        match &(new_t.1).0 {
+                            BaseTyp::Array(_, _) => RcDoc::as_string("array"),
+                            _ => panic!(), // shouldd not happen
+                        }
+                    }
+                    DictEntry::NaturalInteger => panic!("should not happen"),
+                },
+                None => panic!("should not happen"),
+            }
+        }
+        BaseTyp::Named(_, Some(_)) => panic!("should not happen"),
+        BaseTyp::Array(_, _) => RcDoc::as_string("array"),
+        _ => panic!("should not happen"),
+    }
+}
+
+// taken from rustspec_to_coq
 fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> {
     (
         if question_mark {
@@ -956,8 +989,10 @@ fn translate_statements<'a>(
             .append(RcDoc::hardline())
             .append(translate_statements(statements, top_ctx))
         }
-        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark) => {
-            let array_upd_payload = RcDoc::as_string("array_upd")
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
+            let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
+            let array_upd_payload = array_or_seq
+                .append(RcDoc::as_string("_upd"))
                 .append(RcDoc::space())
                 .append(translate_ident(x.clone()))
                 .append(RcDoc::space())

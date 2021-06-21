@@ -222,35 +222,8 @@ Definition foldi
   | Zpos p => foldi_ (Pos.to_nat p) lo f init
   end.
 
-(*** Seq *)
-
-Definition nseq := Vector.t.
-(* Definition lseq (A : Type) (len : uint_size) := Vector.t A (from_uint_size len). *)
-
-Definition seq (A : Type) := list A.
-
-(* Automatic conversion from nseq/vector/array to seq/list *)
-Global Coercion Vector.to_list : Vector.t >-> list.
-
-Definition byte_seq := seq int8.
-Definition list_len := length.
-
-
-Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
-
-Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
-  const init len.
-
-Definition array_from_list (A: Type) (l: list A) : nseq A (length l)
-  := of_list l.
-
-(* automatic conversion from list to array *)
-Global Coercion array_from_list : list >-> nseq.
-
-
-(**** Array manipulation *)
-
-(* Typeclass handling of default elements. We provide instances for the library integer types *)
+(* Typeclass handling of default elements, for use in sequences/arrays. 
+   We provide instances for the library integer types *)
 Class Default (A : Type) := {
   default : A
 }.
@@ -275,6 +248,35 @@ Global Instance int_default {WS : WORDSIZE} : Default int := {
   default := repr 0
 }.
 Global Arguments default {_} {_}.
+
+(*** Seq *)
+
+Definition nseq := Vector.t.
+
+Definition seq (A : Type) := list A.
+
+(* Automatic conversion from nseq/vector/array to seq/list *)
+Global Coercion Vector.to_list : Vector.t >-> list.
+
+Definition byte_seq := seq int8.
+Definition list_len := length.
+
+Definition seq_index {A: Type} `{Default A} (s: seq A) (i : nat) :=
+  List.nth i s default.
+
+Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
+
+Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
+  const init len.
+
+Definition array_from_list (A: Type) (l: list A) : nseq A (length l)
+  := of_list l.
+
+(* automatic conversion from list to array *)
+Global Coercion array_from_list : list >-> nseq.
+
+
+(**** Array manipulation *)
 
 
 Definition array_new_ {A: Type} (init:A) (len: nat)  : nseq A len :=
@@ -424,7 +426,8 @@ Definition seq_slice_range
   (start_fin:(uint_size * uint_size))
     : nseq a _ :=
   seq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
-  
+
+(* updating a subsequence in a sequence *)
 Definition seq_update
   {a: Type}
  `{Default a}
@@ -433,6 +436,16 @@ Definition seq_update
   (input: seq a)
     : seq a :=
   update_sub (of_list s) start (length input) (of_list input).
+
+(* updating only a single value in a sequence*)
+Definition seq_upd 
+  {a: Type}
+ `{Default a}
+  (s: seq a)
+  (start: nat)
+  (v: a)
+    : seq a :=
+  update_sub (of_list s) start 1 (of_list [v]).
 
 Definition sub {a} (s : list a) start n := 
   slice s start (start + n).
@@ -705,7 +718,10 @@ Axiom u128_from_be_bytes : nseq int8 16 -> int128.
 
 
 Definition nat_mod (p : Z) : Set := GZnZ.znz p.
-(* Definition nat_mod (p : uint_size) := nat_mod (from_uint_size p). *)
+
+
+Definition nat_mod_equal {p} (a b : nat_mod p) : bool :=
+  Z.eqb (GZnZ.val p a) (GZnZ.val p b).
 
 Definition nat_mod_zero {p} : nat_mod p := GZnZ.zero p.
 Definition nat_mod_one {p} : nat_mod p := GZnZ.one p.
@@ -768,7 +784,8 @@ Axiom nat_mod_to_public_byte_seq_be : forall (n : Z), nat_mod n -> seq int8.
 Definition nat_mod_bit {n : Z} (a : nat_mod n) (i : uint_size) :=
   Z.testbit (GZnZ.val n a) (from_uint_size i).
 
-
+(* Alias for nat_mod_bit *)
+Definition nat_get_mod_bit {p} (a : nat_mod p) := nat_mod_bit a.
 (*   
 Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_mod n) : lseq pub_uint8 len =
   Definition n' := n % (pow2 (8 * len)) in

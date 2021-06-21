@@ -302,8 +302,7 @@ Definition sbox : s_box :=
         secret (repr 84);
         secret (repr 187);
         secret (repr 22)
-      ]
-    in l).
+      ] in  l).
 
 Definition rcon : r_con :=
   array_from_list uint8 (
@@ -324,22 +323,19 @@ Definition rcon : r_con :=
         secret (repr 216);
         secret (repr 171);
         secret (repr 77)
-      ]
-    in l).
+      ] in  l).
 
 Definition sub_bytes (state_0 : block) : block :=
   let st_1 :=
-    state_0
-  in
+    state_0 in 
   let st_1 :=
     foldi (usize 0) (blocksize) (fun i_2 st_1 =>
       let st_1 :=
         array_upd st_1 (i_2) (
-          array_index (sbox) (uint8_declassify (array_index (state_0) (i_2))))
-      in
+          array_index (sbox) (
+            uint8_declassify (array_index (state_0) (i_2)))) in 
       (st_1))
-    st_1
-  in
+    st_1 in 
   st_1.
 
 Definition shift_row
@@ -348,156 +344,120 @@ Definition shift_row
   (state_5 : block)
   : block :=
   let out_6 :=
-    state_5
-  in
+    state_5 in 
   let out_6 :=
     array_upd out_6 (i_3) (
-      array_index (state_5) ((i_3) + ((usize 4) * ((shift_4) %% (usize 4)))))
-  in
+      array_index (state_5) (
+        (i_3) + ((usize 4) * ((shift_4) %% (usize 4))))) in 
   let out_6 :=
     array_upd out_6 ((i_3) + (usize 4)) (
       array_index (state_5) (
-        (i_3) + ((usize 4) * (((shift_4) + (usize 1)) %% (usize 4)))))
-  in
+        (i_3) + ((usize 4) * (((shift_4) + (usize 1)) %% (usize 4))))) in 
   let out_6 :=
     array_upd out_6 ((i_3) + (usize 8)) (
       array_index (state_5) (
-        (i_3) + ((usize 4) * (((shift_4) + (usize 2)) %% (usize 4)))))
-  in
+        (i_3) + ((usize 4) * (((shift_4) + (usize 2)) %% (usize 4))))) in 
   let out_6 :=
     array_upd out_6 ((i_3) + (usize 12)) (
       array_index (state_5) (
-        (i_3) + ((usize 4) * (((shift_4) + (usize 3)) %% (usize 4)))))
-  in
+        (i_3) + ((usize 4) * (((shift_4) + (usize 3)) %% (usize 4))))) in 
   out_6.
 
 Definition shift_rows (state_7 : block) : block :=
   let state_8 :=
-    shift_row (usize 1) (usize 1) (state_7)
-  in
+    shift_row (usize 1) (usize 1) (state_7) in 
   let state_9 :=
-    shift_row (usize 2) (usize 2) (state_8)
-  in
+    shift_row (usize 2) (usize 2) (state_8) in 
   shift_row (usize 3) (usize 3) (state_9).
 
 Definition xtime (x_10 : uint8) : uint8 :=
   let x1_11 :=
-    (x_10) shift_left (usize 1)
-  in
+    (x_10) shift_left (usize 1) in 
   let x7_12 :=
-    (x_10) shift_right (usize 7)
-  in
+    (x_10) shift_right (usize 7) in 
   let x71_13 :=
-    (x7_12) .& (secret (repr 1))
-  in
+    (x7_12) .& (secret (repr 1)) in 
   let x711b_14 :=
-    (x71_13) .* (secret (repr 27))
-  in
+    (x71_13) .* (secret (repr 27)) in 
   (x1_11) .^ (x711b_14).
 
 Definition mix_column (c_15 : uint_size) (state_16 : block) : block :=
   let i0_17 :=
-    (usize 4) * (c_15)
-  in
+    (usize 4) * (c_15) in 
   let s0_18 :=
-    array_index (state_16) (i0_17)
-  in
+    array_index (state_16) (i0_17) in 
   let s1_19 :=
-    array_index (state_16) ((i0_17) + (usize 1))
-  in
+    array_index (state_16) ((i0_17) + (usize 1)) in 
   let s2_20 :=
-    array_index (state_16) ((i0_17) + (usize 2))
-  in
+    array_index (state_16) ((i0_17) + (usize 2)) in 
   let s3_21 :=
-    array_index (state_16) ((i0_17) + (usize 3))
-  in
+    array_index (state_16) ((i0_17) + (usize 3)) in 
   let st_22 :=
-    state_16
-  in
+    state_16 in 
   let tmp_23 :=
-    (((s0_18) .^ (s1_19)) .^ (s2_20)) .^ (s3_21)
-  in
+    (((s0_18) .^ (s1_19)) .^ (s2_20)) .^ (s3_21) in 
   let st_22 :=
     array_upd st_22 (i0_17) (
-      ((s0_18) .^ (tmp_23)) .^ (xtime ((s0_18) .^ (s1_19))))
-  in
+      ((s0_18) .^ (tmp_23)) .^ (xtime ((s0_18) .^ (s1_19)))) in 
   let st_22 :=
     array_upd st_22 ((i0_17) + (usize 1)) (
-      ((s1_19) .^ (tmp_23)) .^ (xtime ((s1_19) .^ (s2_20))))
-  in
+      ((s1_19) .^ (tmp_23)) .^ (xtime ((s1_19) .^ (s2_20)))) in 
   let st_22 :=
     array_upd st_22 ((i0_17) + (usize 2)) (
-      ((s2_20) .^ (tmp_23)) .^ (xtime ((s2_20) .^ (s3_21))))
-  in
+      ((s2_20) .^ (tmp_23)) .^ (xtime ((s2_20) .^ (s3_21)))) in 
   let st_22 :=
     array_upd st_22 ((i0_17) + (usize 3)) (
-      ((s3_21) .^ (tmp_23)) .^ (xtime ((s3_21) .^ (s0_18))))
-  in
+      ((s3_21) .^ (tmp_23)) .^ (xtime ((s3_21) .^ (s0_18)))) in 
   st_22.
 
 Definition mix_columns (state_24 : block) : block :=
   let state_25 :=
-    mix_column (usize 0) (state_24)
-  in
+    mix_column (usize 0) (state_24) in 
   let state_26 :=
-    mix_column (usize 1) (state_25)
-  in
+    mix_column (usize 1) (state_25) in 
   let state_27 :=
-    mix_column (usize 2) (state_26)
-  in
+    mix_column (usize 2) (state_26) in 
   mix_column (usize 3) (state_27).
 
 Definition add_round_key (state_28 : block) (key_29 : round_key) : block :=
   let out_30 :=
-    state_28
-  in
+    state_28 in 
   let out_30 :=
     foldi (usize 0) (blocksize) (fun i_31 out_30 =>
       let out_30 :=
         array_upd out_30 (i_31) (
-          (array_index (out_30) (i_31)) .^ (array_index (key_29) (i_31)))
-      in
+          (array_index (out_30) (i_31)) .^ (array_index (key_29) (i_31))) in 
       (out_30))
-    out_30
-  in
+    out_30 in 
   out_30.
 
 Definition aes_enc (state_32 : block) (round_key_33 : round_key) : block :=
   let state_34 :=
-    sub_bytes (state_32)
-  in
+    sub_bytes (state_32) in 
   let state_35 :=
-    shift_rows (state_34)
-  in
+    shift_rows (state_34) in 
   let state_36 :=
-    mix_columns (state_35)
-  in
+    mix_columns (state_35) in 
   add_round_key (state_36) (round_key_33).
 
 Definition aes_enc_last (state_37 : block) (round_key_38 : round_key) : block :=
   let state_39 :=
-    sub_bytes (state_37)
-  in
+    sub_bytes (state_37) in 
   let state_40 :=
-    shift_rows (state_39)
-  in
+    shift_rows (state_39) in 
   add_round_key (state_40) (round_key_38).
 
 Definition rounds_aes (state_41 : block) (key_42 : byte_seq) : block :=
   let out_43 :=
-    state_41
-  in
+    state_41 in 
   let out_43 :=
     foldi (usize 0) (seq_num_chunks (key_42) (blocksize)) (fun i_44 out_43 =>
       let '(_, key_block_45) :=
-        seq_get_chunk (key_42) (blocksize) (i_44)
-      in
+        seq_get_chunk (key_42) (blocksize) (i_44) in 
       let out_43 :=
-        aes_enc (out_43) (array_from_seq (blocksize) (key_block_45))
-      in
+        aes_enc (out_43) (array_from_seq (blocksize) (key_block_45)) in 
       (out_43))
-    out_43
-  in
+    out_43 in 
   out_43.
 
 Definition block_cipher_aes
@@ -507,21 +467,16 @@ Definition block_cipher_aes
   : block :=
   let k0_49 :=
     array_from_slice_range (secret (repr 0)) (blocksize) (key_47) (
-      (usize 0, usize 16))
-  in
+      (usize 0, usize 16)) in 
   let k_50 :=
-    seq_from_slice_range (key_47) ((usize 16, (nr_48) .* (usize 16)))
-  in
+    seq_from_slice_range (key_47) ((usize 16, repr ((nr_48) * (usize 16)))) in 
   let kn_51 :=
     array_from_slice (secret (repr 0)) (blocksize) (key_47) (
-      (nr_48) * (usize 16)) (usize 16)
-  in
+      (nr_48) * (usize 16)) (usize 16) in 
   let state_52 :=
-    add_round_key (input_46) (k0_49)
-  in
+    add_round_key (input_46) (k0_49) in 
   let state_53 :=
-    rounds_aes (state_52) (k_50)
-  in
+    rounds_aes (state_52) (k_50) in 
   aes_enc_last (state_53) (kn_51).
 
 Definition rotate_word (w_54 : word) : word :=
@@ -532,8 +487,7 @@ Definition rotate_word (w_54 : word) : word :=
         array_index (w_54) (usize 2);
         array_index (w_54) (usize 3);
         array_index (w_54) (usize 0)
-      ]
-    in l).
+      ] in  l).
 
 Definition slice_word (w_55 : word) : word :=
   array_from_list uint8 (
@@ -543,19 +497,15 @@ Definition slice_word (w_55 : word) : word :=
         array_index (sbox) ((uint8_declassify (array_index (w_55) (usize 1))));
         array_index (sbox) ((uint8_declassify (array_index (w_55) (usize 2))));
         array_index (sbox) ((uint8_declassify (array_index (w_55) (usize 3))))
-      ]
-    in l).
+      ] in  l).
 
 Definition aes_keygen_assist (w_56 : word) (rcon_57 : uint8) : word :=
   let k_58 :=
-    rotate_word (w_56)
-  in
+    rotate_word (w_56) in 
   let k_58 :=
-    slice_word (k_58)
-  in
+    slice_word (k_58) in 
   let k_58 :=
-    array_upd k_58 (usize 0) ((array_index (k_58) (usize 0)) .^ (rcon_57))
-  in
+    array_upd k_58 (usize 0) ((array_index (k_58) (usize 0)) .^ (rcon_57)) in 
   k_58.
 
 Definition key_expansion_word
@@ -566,53 +516,42 @@ Definition key_expansion_word
   (nr_63 : uint_size)
   : (bool × word) :=
   let k_64 :=
-    w1_60
-  in
+    w1_60 in 
   let success_65 :=
-    false
-  in
+    false in 
   let '(k_64, success_65) :=
     if (i_61) <.? ((usize 4) * ((nr_63) + (usize 1))):bool then (
       let '(k_64) :=
         if ((i_61) %% (nk_62)) =.? (usize 0):bool then (
           let k_64 :=
-            aes_keygen_assist (k_64) (array_index (rcon) ((i_61) / (nk_62)))
-          in
+            aes_keygen_assist (k_64) (array_index (rcon) ((i_61) / (nk_62))) in 
           (k_64)
         ) else (
           let '(k_64) :=
             if ((nk_62) >.? (usize 6)) && (
               ((i_61) %% (nk_62)) =.? (usize 4)):bool then (
               let k_64 :=
-                slice_word (k_64)
-              in
+                slice_word (k_64) in 
               (k_64)
             ) else ( (k_64)
-            )
-          in
+            ) in 
           (k_64)
-        )
-      in
+        ) in 
       let k_64 :=
         foldi (usize 0) (usize 4) (fun i_66 k_64 =>
           let k_64 :=
             array_upd k_64 (i_66) (
-              (array_index (k_64) (i_66)) .^ (array_index (w0_59) (i_66)))
-          in
+              (array_index (k_64) (i_66)) .^ (array_index (w0_59) (i_66))) in 
           (k_64))
-        k_64
-      in
+        k_64 in 
       let success_65 :=
-        true
-      in
+        true in 
       (k_64, success_65)
     ) else (
       let k_64 :=
-        array_new_ (secret (repr 0)) (key_length)
-      in
+        array_new_ (secret (repr 0)) (key_length) in 
       (k_64, success_65)
-    )
-  in
+    ) in 
   (success_65, k_64).
 
 Definition key_expansion_aes
@@ -624,54 +563,42 @@ Definition key_expansion_aes
   (iterations_72 : uint_size)
   : (bool × byte_seq) :=
   let key_ex_73 :=
-    seq_new_ (secret (repr 0)) (key_schedule_length_70)
-  in
+    seq_new_ (secret (repr 0)) (key_schedule_length_70) in 
   let key_ex_73 :=
-    seq_update_start (key_ex_73) (key_67)
-  in
+    seq_update_start (key_ex_73) (key_67) in 
   let word_size_74 :=
-    key_length_71
-  in
+    key_length_71 in 
   let success_75 :=
-    true
-  in
+    true in 
   let '(key_ex_73, success_75) :=
     foldi (usize 0) (iterations_72) (fun j_76 '(key_ex_73, success_75) =>
       let '(key_ex_73, success_75) :=
         if success_75:bool then (
           let i_77 :=
-            (j_76) + (word_size_74)
-          in
+            (j_76) + (word_size_74) in 
           let '(exp_success_78, word_79) :=
             key_expansion_word (
               array_from_slice (secret (repr 0)) (key_length) (key_ex_73) (
                 (usize 4) * ((i_77) - (word_size_74))) (usize 4)) (
               array_from_slice (secret (repr 0)) (key_length) (key_ex_73) (
                 ((usize 4) * (i_77)) - (usize 4)) (usize 4)) (i_77) (nk_68) (
-              nr_69)
-          in
+              nr_69) in 
           let '(key_ex_73, success_75) :=
             if negb (exp_success_78):bool then (
               let success_75 :=
-                false
-              in
+                false in 
               let key_ex_73 :=
-                seq_new_ (secret (repr 0)) (usize 0)
-              in
+                seq_new_ (secret (repr 0)) (usize 0) in 
               (key_ex_73, success_75)
             ) else ( (key_ex_73, success_75)
-            )
-          in
+            ) in 
           let key_ex_73 :=
-            seq_update (key_ex_73) ((usize 4) * (i_77)) (word_79)
-          in
+            seq_update (key_ex_73) ((usize 4) * (i_77)) (word_79) in 
           (key_ex_73, success_75)
         ) else ( (key_ex_73, success_75)
-        )
-      in
+        ) in 
       (key_ex_73, success_75))
-    (key_ex_73, success_75)
-  in
+    (key_ex_73, success_75) in 
   (success_75, key_ex_73).
 
 Definition aes_encrypt_block
@@ -685,13 +612,11 @@ Definition aes_encrypt_block
   : (bool × block) :=
   let '(success_87, key_ex_88) :=
     key_expansion_aes (k_80) (nk_82) (nr_83) (key_schedule_length_84) (
-      key_length_85) (iterations_86)
-  in
+      key_length_85) (iterations_86) in 
   let result_89 :=
     if (success_87):bool then (
       (true, block_cipher_aes (input_81) (key_ex_88) (nr_83))) else (
-      (false, array_new_ (secret (repr 0)) (blocksize)))
-  in
+      (false, array_new_ (secret (repr 0)) (blocksize))) in 
   result_89.
 
 Definition aes128_encrypt_block
@@ -712,31 +637,25 @@ Definition aes_ctr_keyblock
   (iterations_99 : uint_size)
   : (bool × block) :=
   let input_100 :=
-    array_new_ (secret (repr 0)) (blocksize)
-  in
+    array_new_ (secret (repr 0)) (blocksize) in 
   let input_100 :=
-    array_update (input_100) (usize 0) (n_93)
-  in
+    array_update (input_100) (usize 0) (n_93) in 
   let input_100 :=
-    array_update (input_100) (usize 12) (uint32_to_be_bytes (c_94))
-  in
+    array_update (input_100) (usize 12) (uint32_to_be_bytes (c_94)) in 
   aes_encrypt_block (k_92) (input_100) (nk_95) (nr_96) (
     key_schedule_length_97) (key_length_98) (iterations_99).
 
 Definition xor_block (block_101 : block) (keyblock_102 : block) : block :=
   let out_103 :=
-    block_101
-  in
+    block_101 in 
   let out_103 :=
     foldi (usize 0) (blocksize) (fun i_104 out_103 =>
       let out_103 :=
         array_upd out_103 (i_104) (
           (array_index (out_103) (i_104)) .^ (
-            array_index (keyblock_102) (i_104)))
-      in
+            array_index (keyblock_102) (i_104))) in 
       (out_103))
-    out_103
-  in
+    out_103 in 
   out_103.
 
 Definition aes_counter_mode
@@ -751,14 +670,11 @@ Definition aes_counter_mode
   (iterations_113 : uint_size)
   : (bool × byte_seq) :=
   let ctr_114 :=
-    counter_107
-  in
+    counter_107 in 
   let blocks_out_115 :=
-    seq_new_ (secret (repr 0)) (seq_len (msg_108))
-  in
+    seq_new_ (secret (repr 0)) (seq_len (msg_108)) in 
   let success_116 :=
-    true
-  in
+    true in 
   let '(ctr_114, blocks_out_115, success_116) :=
     foldi (usize 0) (seq_num_chunks (msg_108) (blocksize)) (fun i_117 '(
         ctr_114,
@@ -768,56 +684,44 @@ Definition aes_counter_mode
       let '(ctr_114, blocks_out_115, success_116) :=
         if success_116:bool then (
           let '(block_len_118, msg_block_119) :=
-            seq_get_chunk (msg_108) (blocksize) (i_117)
-          in
+            seq_get_chunk (msg_108) (blocksize) (i_117) in 
           let '(kb_success_120, key_block_121) :=
             aes_ctr_keyblock (key_105) (nonce_106) (ctr_114) (nk_109) (nr_110) (
-              key_schedule_length_111) (key_length_112) (iterations_113)
-          in
+              key_schedule_length_111) (key_length_112) (iterations_113) in 
           let '(blocks_out_115, success_116) :=
             if negb (kb_success_120):bool then (
               let success_116 :=
-                false
-              in
+                false in 
               let blocks_out_115 :=
-                seq_new_ (secret (repr 0)) (usize 0)
-              in
+                seq_new_ (secret (repr 0)) (usize 0) in 
               (blocks_out_115, success_116)
             ) else ( (blocks_out_115, success_116)
-            )
-          in
+            ) in 
           let '(ctr_114, blocks_out_115) :=
             if (seq_len (msg_block_119)) =.? (blocksize):bool then (
               let blocks_out_115 :=
                 seq_set_chunk (blocks_out_115) (blocksize) (i_117) (
                   xor_block (array_from_seq (blocksize) (msg_block_119)) (
-                    key_block_121))
-              in
+                    key_block_121)) in 
               let ctr_114 :=
-                (ctr_114) .+ (secret (repr 1))
-              in
+                (ctr_114) .+ (secret (repr 1)) in 
               (ctr_114, blocks_out_115)
             ) else (
               let last_block_122 :=
                 array_update_start (array_new_ (secret (repr 0)) (blocksize)) (
-                  msg_block_119)
-              in
+                  msg_block_119) in 
               let blocks_out_115 :=
                 seq_set_chunk (blocks_out_115) (blocksize) (i_117) (
                   array_slice_range (
                     xor_block (last_block_122) (key_block_121)) (
-                    (usize 0, block_len_118)))
-              in
+                    (usize 0, block_len_118))) in 
               (ctr_114, blocks_out_115)
-            )
-          in
+            ) in 
           (ctr_114, blocks_out_115, success_116)
         ) else ( (ctr_114, blocks_out_115, success_116)
-        )
-      in
+        ) in 
       (ctr_114, blocks_out_115, success_116))
-    (ctr_114, blocks_out_115, success_116)
-  in
+    (ctr_114, blocks_out_115, success_116) in 
   (success_116, blocks_out_115).
 
 Definition aes128_encrypt
@@ -829,8 +733,7 @@ Definition aes128_encrypt
   let '(success_127, result_128) :=
     aes_counter_mode (seq_from_seq (key_123)) (nonce_124) (counter_125) (
       msg_126) (key_length) (rounds) (key_schedule_length) (key_length) (
-      iterations)
-  in
+      iterations) in 
   result_128.
 
 Definition aes128_decrypt
@@ -842,7 +745,6 @@ Definition aes128_decrypt
   let '(success_133, result_134) :=
     aes_counter_mode (seq_from_seq (key_129)) (nonce_130) (counter_131) (
       ctxt_132) (key_length) (rounds) (key_schedule_length) (key_length) (
-      iterations)
-  in
+      iterations) in 
   result_134.
 
