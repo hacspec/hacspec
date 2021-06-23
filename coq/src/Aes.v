@@ -469,7 +469,7 @@ Definition block_cipher_aes
     array_from_slice_range (secret (repr 0)) (blocksize) (key_47) (
       (usize 0, usize 16)) in 
   let k_50 :=
-    seq_from_slice_range (key_47) ((usize 16, repr ((nr_48) * (usize 16)))) in 
+    seq_from_slice_range (key_47) ((usize 16, (nr_48) * (usize 16))) in 
   let kn_51 :=
     array_from_slice (secret (repr 0)) (blocksize) (key_47) (
       (nr_48) * (usize 16)) (usize 16) in 
@@ -493,10 +493,14 @@ Definition slice_word (w_55 : word) : word :=
   array_from_list uint8 (
     let l :=
       [
-        array_index (sbox) ((uint8_declassify (array_index (w_55) (usize 0))));
-        array_index (sbox) ((uint8_declassify (array_index (w_55) (usize 1))));
-        array_index (sbox) ((uint8_declassify (array_index (w_55) (usize 2))));
-        array_index (sbox) ((uint8_declassify (array_index (w_55) (usize 3))))
+        array_index (sbox) (
+          @cast _ uint32 _ (uint8_declassify (array_index (w_55) (usize 0))));
+        array_index (sbox) (
+          @cast _ uint32 _ (uint8_declassify (array_index (w_55) (usize 1))));
+        array_index (sbox) (
+          @cast _ uint32 _ (uint8_declassify (array_index (w_55) (usize 2))));
+        array_index (sbox) (
+          @cast _ uint32 _ (uint8_declassify (array_index (w_55) (usize 3))))
       ] in  l).
 
 Definition aes_keygen_assist (w_56 : word) (rcon_57 : uint8) : word :=

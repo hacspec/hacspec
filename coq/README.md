@@ -12,4 +12,4 @@ opam install coq-compcert coq-coqprime
 In folder `/coq`, type `make`. This compiles the coq libraries and the compiled examples, as defined in `_CoqProject`.
 This requires the coq compiler to be installed (only tested on coq 8.13.1)
 
-If you want to add a new example to `_CoqProject`, such that it is compiled through `make`, you should run `coq_makefile -f _CoqProject -o CoqMakefile` in `/coq` to update the makefile.
+If you want to add a new example to `_CoqProject`, such that it is compiled through `make`, you should run `coq_makefile -f _CoqProject -o Makefile` in `/coq` to update the makefile.

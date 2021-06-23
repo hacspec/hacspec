@@ -476,8 +476,7 @@ fn translate_binop<'a, 'b>(
                     BaseTyp::Array(_, _) => ARRAY_MODULE,
                     _ => panic!(), // should not happen
                 },
-                op_str,
-                // inner_ty_op.pretty(0)
+                op_str
             ))
         }
         (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
@@ -896,13 +895,45 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(x.0.clone(), top_ctx)))
                 }
-                _ => make_paren(translate_expression(x.as_ref().0.clone(),top_ctx)).group()
+                _ => {
+                    let new_t_doc = match &new_t.0 {
+                        BaseTyp::UInt8 => String::from("uint8"),
+                        BaseTyp::UInt16 => String::from("uint16"),
+                        BaseTyp::UInt32 => String::from("uint32"),
+                        BaseTyp::UInt64 => String::from("uint64"),
+                        BaseTyp::UInt128 => String::from("uint128"),
+                        BaseTyp::Usize => String::from("uint32"),
+                        BaseTyp::Int8 => String::from("int8"),
+                        BaseTyp::Int16 => String::from("int16"),
+                        BaseTyp::Int32 => String::from("int32"),
+                        BaseTyp::Int64 => String::from("int64"),
+                        BaseTyp::Int128 => String::from("int128"),
+                        BaseTyp::Isize => String::from("int32"),
+                        BaseTyp::Named((TopLevelIdent(s), _), None) => s.clone(),
+                        _ => panic!(), // should not happen
+                    };
+                    let _secret = match &new_t.0 {
+                        BaseTyp::Named(_, _) => true,
+                        _ => false,
+                    };
+                    RcDoc::as_string("@cast _")
+                        .append(RcDoc::space())
+                        .append(new_t_doc)
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string("_"))
+                        .append(RcDoc::space())
+                        .append(make_paren(translate_expression(
+                            x.as_ref().0.clone(),
+                            top_ctx,
+                        )))
+                        .group()
+                }
             }
         }
     }
 }
 
-// taken from rustspec_to_coq
+// taken from rustspec_to_fstar
 fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match &(t.1).0 {
         BaseTyp::Seq(_) => RcDoc::as_string("seq"),
@@ -929,7 +960,7 @@ fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
     }
 }
 
-// taken from rustspec_to_coq
+// taken from rustspec_to_fstar
 fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> {
     (
         if question_mark {

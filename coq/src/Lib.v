@@ -49,6 +49,7 @@ Definition uint128 := int128.
 Definition uint_size := int32.
 Definition int_size := int32.
 
+
 (* Represents any type that can be converted to uint_size and back *)
 Class UInt_sizable (A : Type) := {
   usize : A -> uint_size;
@@ -814,7 +815,80 @@ Proof.
   reflexivity.
 Defined.
 
+
+Section Casting.
+
+  (* Type casts, as defined in Section 4.5 in https://arxiv.org/pdf/1106.3448.pdf *)
+  Class Cast A B := cast : A -> B.
+
+  Arguments cast {_} _ {_}.
+
+  Notation "' x" := (cast _ x) (at level 20) : hacspec_scope. 
+  Open Scope hacspec_scope.
+
+  (* Casting to self is always possible *)
+  Global Instance cast_self {A} : Cast A A := {
+    cast a := a
+  }.
+
+  Global Instance cast_transitive {A B C} `{Hab: Cast A B} `{Hbc: Cast B C} : Cast A C := {
+    cast a := Hbc (Hab a)
+  }.
+
+  Global Instance cast_prod {A B C D} `{Cast A B} `{Cast C D} : Cast (A * C) (B * D) := {
+    cast '(a, c) := ('a, 'c)
+  }.
+
+  Global Instance cast_option {A B} `{Cast A B} : Cast (option A) (option B) := {
+    cast a := match a with Some a => Some ('a) | None => None end
+  }.
+
+  Global Instance cast_option_b {A B} `{Cast A B} : Cast A (option B) := {
+    cast a := Some ('a)
+  }.
+
+  (* Global Instances for common types *)
+
+  Global Instance cast_nat_to_N : Cast nat N := {
+    cast := N.of_nat
+  }.
+
+  Global Instance cast_N_to_Z : Cast N Z := {
+    cast := Z.of_N
+  }.
+  
+  Global Instance cast_Z_to_int {WORDSIZE} : Cast Z (@int WORDSIZE) := {
+    cast n := repr n
+  }.
+
+  Global Instance cast_natmod_to_Z {p} : Cast (nat_mod p) Z := {
+    cast n := GZnZ.val p n
+  }.
+
+  (* Note: should be aware of typeclass resolution with int/uint since they are just aliases of each other currently *)
+  Global Instance cast_int8_to_uint32 : Cast int8 uint32 := {
+    cast n := repr (unsigned n)
+  }.
+  Global Instance cast_int8_to_int32 : Cast int8 int32 := {
+    cast n := repr (signed n)
+  }.
+
+  Global Instance cast_uint8_to_uint32 : Cast uint8 uint32 := {
+    cast n := repr (unsigned n)
+  }.
+
+  Global Instance cast_int_to_nat `{WORDSIZE} : Cast int nat := {
+    cast n := Z.to_nat (signed n)
+  }.
+
+  Close Scope hacspec_scope.
+End Casting.
+
+
+Global Arguments pair {_ _} & _ _.
+Global Arguments id {_} & _. 
 Section Coercions.
+  (* First, in order to have automatic coercions for tuples, we add bidirectionality hints: *)
 
   (* Integer coercions *)
   (* We have nat >-> N >-> Z >-> int/int32 *)
@@ -847,6 +921,10 @@ Section Coercions.
 
   Definition uint_size_to_Z (n : uint_size) : Z := from_uint_size n.
   Global Coercion uint_size_to_Z : uint_size >-> Z.
+
+  Definition uint32_to_nat (n : uint32) : nat := unsigned n.
+  Global Coercion uint32_to_nat : uint32 >-> nat.
+  
 
   Global Coercion GZnZ.val : GZnZ.znz >-> Z.
 
@@ -917,6 +995,8 @@ End Coercions.
 
 
 (*** Casting *)
+
+
 Definition uint64_from_uint8 (n : int8) : int64 := repr n.
 Definition uint8_from_uint64 (n : int8) : int64 := repr n.
 
