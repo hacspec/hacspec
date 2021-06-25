@@ -37,6 +37,7 @@ pub fn clist_is_empty(x: &Clist, rq: RunqueueId) -> bool {
 pub fn clist_push(x: Clist, n: ThreadId, rq: RunqueueId) -> Clist {
     let RunqueueId(rq) = rq;
     let ThreadId(n) = n;
+    // assert!(n < SENTINEL);
     let Clist(mut tail, mut next_idxs) = x;
     if next_idxs[n] == SENTINEL {
         if tail[rq] == SENTINEL {
@@ -82,7 +83,7 @@ pub fn clist_pop_head(x: Clist, rq: RunqueueId) -> (Clist, Option<u8>) {
     (Clist(tail, next_idxs), out)
 }
 
-pub fn clist_peek_head(x: Clist, rq: RunqueueId) -> Option<u8> {
+pub fn clist_peek_head(x: &Clist, rq: RunqueueId) -> Option<u8> {
     let RunqueueId(rq) = rq;
     let Clist(tail, next_idxs) = x;
     if tail[rq] == SENTINEL {
@@ -99,4 +100,61 @@ pub fn clist_advance(x: Clist, rq: RunqueueId) -> Clist {
         tail[rq] = next_idxs[tail[rq]];
     }
     Clist(tail, next_idxs)
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct RunQueue(u32, Clist);
+
+pub fn runqueue_new() -> RunQueue {
+    RunQueue(0u32, clist_new())
+}
+
+pub fn runqueue_add(y: RunQueue, n: ThreadId, rq: RunqueueId) -> RunQueue {
+    // debug_assert!(n < N_THREADS);
+    // debug_assert!(rq < N_QUEUES);
+    let RunqueueId(rq_u8) = rq;
+    let RunQueue(mut bitcache, mut queues) = y;
+    bitcache = bitcache | (1u32 << (rq_u8 as usize));
+    queues = clist_push(queues, n, rq);
+    RunQueue(bitcache, queues)
+}
+
+pub fn del(y: RunQueue, _n: ThreadId, rq: RunqueueId) -> RunQueue {
+    // debug_assert!(n < N_THREADS);
+    // debug_assert!(rq < N_QUEUES);
+    let RunqueueId(rq_u8) = rq;
+    let RunQueue(mut bitcache, queues) = y;
+    let (queues, _popped) = clist_pop_head(queues, rq);
+    // assert_eq!(popped, Some(n as u8));
+    if clist_is_empty(&queues, rq) {
+        bitcache = bitcache & !(1u32 << (rq_u8 as usize));
+    }
+    RunQueue(bitcache, queues)
+}
+
+pub fn runqueue_ffs(val: u32) -> u32 {
+    U32_BITS as u32 - val.leading_zeros()
+}
+
+/// get pid that should run next
+/// returns the next runnable thread of
+/// the runqueue with the highest index
+pub fn runqueue_get_next(y: &RunQueue) -> Option<u8> {
+    let RunQueue(bitcache, queues) = y;
+    let rq_ffs = runqueue_ffs(bitcache.clone());
+    let mut out = Option::<u8>::None;
+    if rq_ffs > 0u32 {
+        let rq = RunqueueId((rq_ffs - 1u32) as u8);
+        out = clist_peek_head(&queues, rq) // TODO: fix compiler bug, we shouldn't need & here
+    }
+    out
+}
+
+/// advance runqueue number rq
+/// (this is used to "yield" to another thread of *the same* priority)
+pub fn runqueue_advance(y: RunQueue, rq: RunqueueId) -> RunQueue {
+    // debug_assert!(rq < N_QUEUES);
+    let RunQueue(bitcache, mut queues) = y;
+    queues = clist_advance(queues, rq);
+    RunQueue(bitcache, queues)
 }
