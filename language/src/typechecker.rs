@@ -233,7 +233,8 @@ fn is_safe_casting(t1: &BaseTyp, t2: &BaseTyp) -> bool {
         (BaseTyp::UInt32, BaseTyp::UInt16)
         | (BaseTyp::UInt32, BaseTyp::Usize)
         | (BaseTyp::UInt32, BaseTyp::UInt8) => true,
-        (BaseTyp::UInt16, BaseTyp::UInt8) | (BaseTyp::UInt16, BaseTyp::Usize) => true,
+        (BaseTyp::UInt16, BaseTyp::UInt8) => true,
+        (BaseTyp::Usize, BaseTyp::UInt16) | (BaseTyp::Usize, BaseTyp::UInt8) => true,
         (BaseTyp::Int128, BaseTyp::Int64)
         | (BaseTyp::Int128, BaseTyp::Int32)
         | (BaseTyp::Int128, BaseTyp::Int16)
@@ -246,7 +247,8 @@ fn is_safe_casting(t1: &BaseTyp, t2: &BaseTyp) -> bool {
         (BaseTyp::Int32, BaseTyp::Int16)
         | (BaseTyp::Int32, BaseTyp::Isize)
         | (BaseTyp::Int32, BaseTyp::Int8) => true,
-        (BaseTyp::Int16, BaseTyp::Int8) | (BaseTyp::Int16, BaseTyp::Isize) => true,
+        (BaseTyp::Int16, BaseTyp::Int8) => true,
+        (BaseTyp::Isize, BaseTyp::UInt16) | (BaseTyp::Isize, BaseTyp::UInt8) => true,
         _ => false,
     }
 }
@@ -945,9 +947,26 @@ fn typecheck_expression(
                 BaseTyp::Named(enum_name, args) => {
                     match top_level_context.typ_dict.get(&enum_name.0) {
                         Some((
-                            ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, _type_args), _)),
+                            ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, type_args), _)),
                             DictEntry::Enum,
-                        )) => (cases, enum_name, args),
+                        )) => {
+                            if (args.is_none() && type_args.len() != 0)
+                                || (args.is_some()
+                                    && args.as_ref().unwrap().len() != type_args.len())
+                            {
+                                sess.span_rustspec_err(
+                                    enum_name.1.clone(),
+                                    format!(
+                                        "wrong number of type arguments: got {:?}, expected {:?}",
+                                        args, type_args
+                                    )
+                                    .as_str(),
+                                );
+                                return Err(());
+                            }
+                            // No need to unify the type_args here
+                            (cases, enum_name, args)
+                        }
                         _ => {
                             sess.span_rustspec_err(enum_name.1.clone(), "enum not found");
                             return Err(());

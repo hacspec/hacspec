@@ -160,7 +160,7 @@ fn translate_expr_name(
     sess: &Session,
     path: &ast::Path,
     span: &Span,
-    specials: &SpecialNames,
+    _specials: &SpecialNames,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
     if path.segments.len() > 2 {
         sess.span_rustspec_err(
@@ -168,35 +168,6 @@ fn translate_expr_name(
             "a path that has more than 2 segments is forbidden in Hacspec",
         );
         return Err(());
-    }
-    if path.segments.len() == 2 {
-        // We're looking here at enum variants without payload like Option::None
-        let mut it = path.segments.iter();
-        let first = it.next().unwrap();
-        let second = it.next().unwrap();
-        if specials.enums.contains(&first.ident.name.to_ident_string()) {
-            let args = match &first.args {
-                Some(args) => Some(translate_type_args(sess, &args, &first.ident.span)?),
-                None => None,
-            };
-            let enum_name = TopLevelIdent(first.ident.name.to_ident_string());
-            let variant_name = TopLevelIdent(second.ident.name.to_ident_string());
-            return Ok((
-                ExprTranslationResult::TransExpr(Expression::EnumInject(
-                    BaseTyp::Named((enum_name, first.ident.span.clone().into()), args),
-                    (variant_name, second.ident.span.clone().into()),
-                    None, // No payload for the enum variant
-                )),
-                span.clone().into(),
-            ));
-        } else {
-            sess.span_rustspec_err(
-                first.ident.span,
-                "two-segments paths can only be enum variants in Hacspec, \
-            and this first segments does not designate an enum",
-            );
-            return Err(());
-        }
     }
     match path.segments.iter().last() {
         None => {
@@ -588,10 +559,10 @@ fn translate_expr(
                 ExprTranslationResult::TransExpr(Expression::EnumInject(
                     BaseTyp::Named(
                         translate_toplevel_ident(&first_seg.ident),
-                        match &second_seg.args {
+                        match &first_seg.args {
                             None => None,
                             Some(args) => {
-                                Some(translate_type_args(sess, &*args, &second_seg.ident.span)?)
+                                Some(translate_type_args(sess, &*args, &first_seg.ident.span)?)
                             }
                         },
                     ),
