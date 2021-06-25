@@ -36,16 +36,17 @@ cd $(dirname "$0")/../
 cargo clean
 cargo build
 cargo install --path language
-typecheck hacspec-chacha20             ec      fst    json  Hacspec.Chacha20.fst
-typecheck hacspec-chacha20poly1305     ec      fst    json  Hacspec.Chacha20Poly1305.fst
-typecheck hacspec-poly1305             ec      fst    json  Hacspec.Poly1305.fst
+typecheck hacspec-chacha20             ec      fst    json     Hacspec.Chacha20.fst
+typecheck hacspec-chacha20poly1305     ec      fst    json     Hacspec.Chacha20Poly1305.fst
+typecheck hacspec-poly1305             ec      fst    json     Hacspec.Poly1305.fst
 typecheck hacspec-curve25519           ec      fst    json
 typecheck hacspec-hkdf                 ec      fst    json
 typecheck hacspec-hmac              no-ec      fst    json
 typecheck hacspec-sha256            no-ec      fst    json
 typecheck hacspec-ntru-prime           ec      fst    json
 typecheck hacspec-p256                 ec      fst    json
-typecheck hacspec-riot-bootloader      ec      fst    json  Hacspec.Riot.fst
+typecheck hacspec-riot-bootloader      ec      fst    json     Hacspec.Riot.Bootloader.fst
+typecheck hacspec-riot-runqueue     no-ec   no-fst    no-json  Hacspec.Riot.Runqueue.fst
 typecheck hacspec-sha3              no-ec      fst    json
 typecheck hacspec-gimli                ec      fst    json
 typecheck hacspec-bls12-381         no-ec   no-fst    json
