@@ -31,7 +31,7 @@ pub fn clist_new() -> Clist {
 pub fn clist_is_empty(x: &Clist, rq: RunqueueId) -> bool {
     let RunqueueId(rq) = rq;
     let Clist(tail, _next_ids) = x;
-    tail[rq] == SENTINEL
+    tail[rq as usize] == SENTINEL
 }
 
 pub fn clist_push(x: Clist, n: ThreadId, rq: RunqueueId) -> Clist {
@@ -39,19 +39,19 @@ pub fn clist_push(x: Clist, n: ThreadId, rq: RunqueueId) -> Clist {
     let ThreadId(n) = n;
     // assert!(n < SENTINEL);
     let Clist(mut tail, mut next_idxs) = x;
-    if next_idxs[n] == SENTINEL {
-        if tail[rq] == SENTINEL {
+    if next_idxs[n as usize] == SENTINEL {
+        if tail[rq as usize] == SENTINEL {
             // rq is empty, link both tail and n.next to n
-            tail[rq] = n;
-            next_idxs[n] = n;
+            tail[rq as usize] = n;
+            next_idxs[n as usize] = n;
         } else {
             // rq has an entry already, so
             // 1. n.next = old_tail.next ("first" in list)
-            next_idxs[n] = next_idxs[tail[rq]];
+            next_idxs[n as usize] = next_idxs[tail[rq as usize] as usize];
             // 2. old_tail.next = n
-            next_idxs[tail[rq]] = n;
+            next_idxs[tail[rq as usize] as usize] = n;
             // 3. tail = n
-            tail[rq] = n;
+            tail[rq as usize] = n;
         }
     }
     Clist(tail, next_idxs)
@@ -64,16 +64,16 @@ pub fn clist_pop_head(x: Clist, rq: RunqueueId) -> (Clist, Option<u8>) {
     if tail[rq] == SENTINEL {
         // rq is empty, do nothing
     } else {
-        let head = next_idxs[tail[rq]];
-        if head == tail[rq] {
+        let head = next_idxs[tail[rq as usize] as usize];
+        if head == tail[rq as usize] {
             // rq's tail bites itself, so there's only one entry.
             // so, clear tail.
-            tail[rq] = SENTINEL;
+            tail[rq as usize] = SENTINEL;
             // rq is now empty
         } else {
             // rq has multiple entries,
             // so set tail.next to head.next (second in list)
-            next_idxs[tail[rq]] = next_idxs[head];
+            next_idxs[tail[rq as usize] as usize] = next_idxs[head as usize];
         }
 
         // now clear head's next value
@@ -86,18 +86,18 @@ pub fn clist_pop_head(x: Clist, rq: RunqueueId) -> (Clist, Option<u8>) {
 pub fn clist_peek_head(x: &Clist, rq: RunqueueId) -> Option<u8> {
     let RunqueueId(rq) = rq;
     let Clist(tail, next_idxs) = x;
-    if tail[rq] == SENTINEL {
+    if tail[rq as usize] == SENTINEL {
         Option::<u8>::None
     } else {
-        Option::<u8>::Some(next_idxs[tail[rq]])
+        Option::<u8>::Some(next_idxs[tail[rq as usize] as usize])
     }
 }
 
 pub fn clist_advance(x: Clist, rq: RunqueueId) -> Clist {
     let RunqueueId(rq) = rq;
     let Clist(mut tail, next_idxs) = x;
-    if tail[rq] != SENTINEL {
-        tail[rq] = next_idxs[tail[rq]];
+    if tail[rq as usize] != SENTINEL {
+        tail[rq as usize] = next_idxs[tail[rq as usize] as usize];
     }
     Clist(tail, next_idxs)
 }

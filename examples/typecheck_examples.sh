@@ -46,7 +46,7 @@ typecheck hacspec-sha256            no-ec      fst    json
 typecheck hacspec-ntru-prime           ec      fst    json
 typecheck hacspec-p256                 ec      fst    json
 typecheck hacspec-riot-bootloader      ec      fst    json     Hacspec.Riot.Bootloader.fst
-typecheck hacspec-riot-runqueue     no-ec   no-fst    no-json  Hacspec.Riot.Runqueue.fst
+typecheck hacspec-riot-runqueue     no-ec      fst    no-json  Hacspec.Riot.Runqueue.fst
 typecheck hacspec-sha3              no-ec      fst    json
 typecheck hacspec-gimli                ec      fst    json
 typecheck hacspec-bls12-381         no-ec   no-fst    json
