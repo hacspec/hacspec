@@ -518,10 +518,13 @@ fn translate_binop<'a, 'b>(
     }
 }
 
-fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
-    match op {
-        UnOpKind::Not => RcDoc::as_string("not"),
-        UnOpKind::Neg => RcDoc::as_string("-"),
+fn translate_unop<'a>(op: UnOpKind, (_, (op_typ, _)): Typ) -> RcDoc<'a, ()> {
+    match (op, op_typ) {
+        (UnOpKind::Not, BaseTyp::Bool) => RcDoc::as_string("not"),
+        (UnOpKind::Not, BaseTyp::Usize | BaseTyp::Isize) => RcDoc::as_string("~"),
+        (UnOpKind::Not, _) => RcDoc::as_string("~."),
+        (UnOpKind::Neg, BaseTyp::Usize | BaseTyp::Isize) => RcDoc::as_string("-"),
+        (UnOpKind::Neg, _) => RcDoc::as_string("-."),
     }
 }
 

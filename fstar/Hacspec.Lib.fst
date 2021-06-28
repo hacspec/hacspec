@@ -90,6 +90,12 @@ let usize_shift_left (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
 let pub_uint128_wrapping_add (x y: pub_uint128) : pub_uint128 =
   x +. y
 
+let pub_uint32_leading_zeros (x: pub_uint32) : pub_uint32 =
+  admit()
+
+let pub_uint32_clone(x: pub_uint32) : pub_uint32 =
+  x
+
 (*** Option *)
 
 let option_unwrap (#a: Type) (x: option a{Some? x}) : a =

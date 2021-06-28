@@ -61,7 +61,7 @@ pub fn clist_pop_head(x: Clist, rq: RunqueueId) -> (Clist, Option<u8>) {
     let RunqueueId(rq) = rq;
     let Clist(mut tail, mut next_idxs) = x;
     let mut out: Option<u8> = Option::<u8>::None;
-    if tail[rq] == SENTINEL {
+    if tail[rq as usize] == SENTINEL {
         // rq is empty, do nothing
     } else {
         let head = next_idxs[tail[rq as usize] as usize];
@@ -77,7 +77,7 @@ pub fn clist_pop_head(x: Clist, rq: RunqueueId) -> (Clist, Option<u8>) {
         }
 
         // now clear head's next value
-        next_idxs[head] = SENTINEL;
+        next_idxs[head as usize] = SENTINEL;
         out = Option::<u8>::Some(head);
     }
     (Clist(tail, next_idxs), out)
@@ -114,12 +114,12 @@ pub fn runqueue_add(y: RunQueue, n: ThreadId, rq: RunqueueId) -> RunQueue {
     // debug_assert!(rq < N_QUEUES);
     let RunqueueId(rq_u8) = rq;
     let RunQueue(mut bitcache, mut queues) = y;
-    bitcache = bitcache | (1u32 << (rq_u8 as usize));
+    bitcache = bitcache | (1u32 << (rq_u8 as u32));
     queues = clist_push(queues, n, rq);
     RunQueue(bitcache, queues)
 }
 
-pub fn del(y: RunQueue, _n: ThreadId, rq: RunqueueId) -> RunQueue {
+pub fn runqueue_del(y: RunQueue, _n: ThreadId, rq: RunqueueId) -> RunQueue {
     // debug_assert!(n < N_THREADS);
     // debug_assert!(rq < N_QUEUES);
     let RunqueueId(rq_u8) = rq;
@@ -127,7 +127,7 @@ pub fn del(y: RunQueue, _n: ThreadId, rq: RunqueueId) -> RunQueue {
     let (queues, _popped) = clist_pop_head(queues, rq);
     // assert_eq!(popped, Some(n as u8));
     if clist_is_empty(&queues, rq) {
-        bitcache = bitcache & !(1u32 << (rq_u8 as usize));
+        bitcache = bitcache & !(1u32 << (rq_u8 as u32));
     }
     RunQueue(bitcache, queues)
 }
