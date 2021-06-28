@@ -1828,7 +1828,7 @@ fn typecheck_pattern(
                         sess,
                         inner_pat,
                         &(
-                            (Borrowing::Consumed, cases_span.clone()),
+                            borrowing_typ.clone(), // This propagates the borrowing down the enum
                             (case_typ.clone(), cases_span.clone()),
                         ),
                         top_ctx,
@@ -1873,8 +1873,7 @@ fn typecheck_pattern(
                     let sub_var_context = typecheck_pattern(
                         sess,
                         pat_arg,
-                        //TODO: changed to propagate borrow to tuple args
-                        &((Borrowing::Consumed, *pat_span), typ_arg.clone()),
+                        &(borrowing_typ.clone(), typ_arg.clone()),
                         top_ctx,
                     )?;
                     Ok(acc_var.union(sub_var_context))

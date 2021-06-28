@@ -145,7 +145,7 @@ pub fn runqueue_get_next(y: &RunQueue) -> Option<u8> {
     let mut out = Option::<u8>::None;
     if rq_ffs > 0u32 {
         let rq = RunqueueId((rq_ffs - 1u32) as u8);
-        out = clist_peek_head(&queues, rq) // TODO: fix compiler bug, we shouldn't need & here
+        out = clist_peek_head(queues, rq)
     }
     out
 }
