@@ -25,6 +25,7 @@ ALIASES["hacspec_p256"] = {};
 ALIASES["hacspec_poly1305"] = {};
 ALIASES["hacspec_provider"] = {};
 ALIASES["hacspec_riot_bootloader"] = {};
+ALIASES["hacspec_riot_runqueue"] = {};
 ALIASES["hacspec_sha256"] = {};
 ALIASES["hacspec_sha3"] = {};
 ALIASES["hacspec_util"] = {};

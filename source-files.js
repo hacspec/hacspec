@@ -25,6 +25,7 @@ sourcesIndex["hacspec_p256"] = {"name":"","files":["p256.rs"]};
 sourcesIndex["hacspec_poly1305"] = {"name":"","files":["poly1305.rs"]};
 sourcesIndex["hacspec_provider"] = {"name":"","files":["lib.rs","provider.rs"]};
 sourcesIndex["hacspec_riot_bootloader"] = {"name":"","files":["lib.rs"]};
+sourcesIndex["hacspec_riot_runqueue"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["hacspec_sha256"] = {"name":"","files":["sha256.rs"]};
 sourcesIndex["hacspec_sha3"] = {"name":"","files":["sha3.rs"]};
 sourcesIndex["hacspec_util"] = {"name":"","files":["lib.rs"]};
