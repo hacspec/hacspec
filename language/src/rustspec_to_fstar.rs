@@ -518,10 +518,13 @@ fn translate_binop<'a, 'b>(
     }
 }
 
-fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
-    match op {
-        UnOpKind::Not => RcDoc::as_string("not"),
-        UnOpKind::Neg => RcDoc::as_string("-"),
+fn translate_unop<'a>(op: UnOpKind, (_, (op_typ, _)): Typ) -> RcDoc<'a, ()> {
+    match (op, op_typ) {
+        (UnOpKind::Not, BaseTyp::Bool) => RcDoc::as_string("not"),
+        (UnOpKind::Not, BaseTyp::Usize | BaseTyp::Isize) => RcDoc::as_string("~"),
+        (UnOpKind::Not, _) => RcDoc::as_string("~."),
+        (UnOpKind::Neg, BaseTyp::Usize | BaseTyp::Isize) => RcDoc::as_string("-"),
+        (UnOpKind::Neg, _) => RcDoc::as_string("-."),
     }
 }
 
@@ -885,7 +888,11 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         BaseTyp::Named(_, _) => true,
                         _ => false,
                     };
-                    RcDoc::as_string("cast")
+                    let target_size = match &new_t.0 {
+                        BaseTyp::Usize | BaseTyp::Isize => true,
+                        _ => false,
+                    };
+                    let cast_doc = RcDoc::as_string("cast")
                         .append(RcDoc::space())
                         .append(new_t_doc)
                         .append(RcDoc::space())
@@ -899,7 +906,14 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                             x.as_ref().0.clone(),
                             top_ctx,
                         )))
-                        .group()
+                        .group();
+                    if target_size {
+                        RcDoc::as_string("v")
+                            .append(RcDoc::space())
+                            .append(make_paren(cast_doc))
+                    } else {
+                        cast_doc
+                    }
                 }
             }
         }
