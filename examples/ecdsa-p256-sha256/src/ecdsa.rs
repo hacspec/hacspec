@@ -2,27 +2,51 @@ use hacspec_lib::*;
 use hacspec_p256::*;
 use hacspec_sha256::*;
 
+pub enum Error {
+    InvalidScalar = 1,
+    InvalidSignature = 2,
+}
+
 pub type PublicKey = Affine;
 pub type SecretKey = Scalar;
 pub type Signature = (Scalar, Scalar); // (r, s)
-pub type SignatureResult = Result<Signature, u8>;
-pub type VerifyResult = Result<(), u8>;
-type CheckResult = Result<(), u8>;
-
-pub const INVALID_SCALAR: u8 = 1u8;
-pub const INVALID_SIGNATURE: u8 = 2u8;
+pub type SignatureResult = Result<Signature, Error>;
+pub type VerifyResult = Result<(), Error>;
+type CheckResult = Result<(), Error>;
+type AffineResult = Result<Affine, Error>;
 
 fn check_scalar_zero(r: Scalar) -> CheckResult {
     if r.equal(Scalar::ZERO()) {
-        CheckResult::Err(INVALID_SCALAR)
+        CheckResult::Err(Error::InvalidScalar)
     } else {
         CheckResult::Ok(())
     }
 }
 
+fn ecdsa_point_mul_base(x: Scalar) -> AffineResult {
+    match point_mul_base(x) {
+        Ok(s) => Ok(s),
+        Err(_) => AffineResult::Err(Error::InvalidScalar),
+    }
+}
+
+fn ecdsa_point_mul(k: Scalar, p: Affine) -> AffineResult {
+    match point_mul(k, p) {
+        Ok(s) => Ok(s),
+        Err(_) => AffineResult::Err(Error::InvalidScalar),
+    }
+}
+
+fn ecdsa_point_add(p: Affine, q: Affine) -> AffineResult {
+    match point_add(p, q) {
+        Ok(s) => Ok(s),
+        Err(_) => AffineResult::Err(Error::InvalidScalar),
+    }
+}
+
 pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> SignatureResult {
     check_scalar_zero(nonce)?;
-    let (k_x, _k_y) = point_mul_base(nonce)?;
+    let (k_x, _k_y) = ecdsa_point_mul_base(nonce)?;
     let r = Scalar::from_byte_seq_be(k_x.to_byte_seq_be());
     check_scalar_zero(r)?;
     let payload_hash = hash(payload);
@@ -44,17 +68,17 @@ pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyR
 
     // R' = (h * s1) * G + (r * s1) * pubKey
     let u1 = payload_hash * s_inv;
-    let u1 = point_mul_base(u1)?;
+    let u1 = ecdsa_point_mul_base(u1)?;
 
     let u2 = r * s_inv;
-    let u2 = point_mul(u2, pk)?;
-    let (x, _y) = point_add(u1, u2)?;
+    let u2 = ecdsa_point_mul(u2, pk)?;
+    let (x, _y) = ecdsa_point_add(u1, u2)?;
     let x = Scalar::from_byte_seq_be(x.to_byte_seq_be());
 
     if x == r {
         VerifyResult::Ok(())
     } else {
-        VerifyResult::Err(INVALID_SIGNATURE)
+        VerifyResult::Err(Error::InvalidSignature)
     }
 }
 
@@ -77,7 +101,10 @@ mod tests {
         let msg = ByteSeq::from_public_slice(b"hacspec ecdsa p256 sha256 self test");
         let nonce = Scalar::from_be_bytes(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
 
-        let signature = sign(&msg, sk, nonce).expect("Error signing");
+        let signature = match sign(&msg, sk, nonce) {
+            Ok(s) => s,
+            Err(_) => panic!("Error signing"),
+        };
         assert!(verify(&msg, pk, signature).is_ok());
     }
 

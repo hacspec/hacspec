@@ -44,12 +44,14 @@ fn test_kat() {
         let prk = extract(&ByteSeq::from_hex(kat.salt), &ByteSeq::from_hex(kat.ikm));
         assert_eq!(kat.prk, prk.to_hex());
 
-        let okm = expand(
+        let okm = match expand(
             &ByteSeq::from_seq(&prk),
             &ByteSeq::from_hex(kat.info),
             kat.l,
-        )
-        .expect("Invalid HKDF output length");
+        ) {
+            Ok(okm) => okm,
+            Err(_) => panic!("Invalid HKDF output length"),
+        };
         assert_eq!(kat.okm, okm.to_hex());
     }
 }
@@ -57,10 +59,12 @@ fn test_kat() {
 #[test]
 #[should_panic]
 fn test_invalid_output_len() {
-    let _okm = expand(
+    match expand(
         &ByteSeq::from_hex("deadbeef"),
         &ByteSeq::from_hex("deadbeef"),
         10000,
-    )
-    .expect("The output should have been too long");
+    ) {
+        Ok(_okm) => panic!("The output should have been too long"),
+        Err(_) => (),
+    };
 }

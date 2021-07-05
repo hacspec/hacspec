@@ -42,7 +42,10 @@ fn kat() {
     let (cipher, mac) = encrypt(k, iv, &aad, &msg);
     assert_bytes_eq!(exp_cipher, cipher);
     assert!(exp_mac.declassify_eq(&mac));
-    let decrypted_msg = decrypt(k, iv, &aad, &cipher, mac).expect("Error decrypting");
+    let decrypted_msg = match decrypt(k, iv, &aad, &cipher, mac) {
+        Ok(m) => m,
+        Err(_) => panic!("Error decrypting"),
+    };
     assert_bytes_eq!(msg, decrypted_msg);
 }
 

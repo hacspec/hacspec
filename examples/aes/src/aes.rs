@@ -208,7 +208,7 @@ fn key_expansion_aes(
         )?;
         key_ex = key_ex.update(4 * i, &word);
     }
-    Result::<Seq<U8>, u8>::Ok(key_ex)
+    ByteSeqResult::Ok(key_ex)
 }
 
 pub(crate) fn aes_encrypt_block(

@@ -5,11 +5,13 @@ use hacspec_lib::*;
 use hacspec_chacha20::*;
 use hacspec_poly1305::*;
 
+pub enum Error {
+    InvalidTag = 1,
+}
+
 pub type ChaChaPolyKey = ChaChaKey;
 pub type ChaChaPolyIV = ChaChaIV;
-pub type ByteSeqResult = Result<ByteSeq, u8>;
-
-pub const INVALID_TAG: u8 = 1u8;
+pub type ByteSeqResult = Result<ByteSeq, Error>;
 
 pub fn init(key: ChaChaPolyKey, iv: ChaChaPolyIV) -> PolyState {
     let key_block0 = chacha20_key_block0(key, iv);
@@ -59,6 +61,6 @@ pub fn decrypt(
     if my_tag.declassify_eq(&tag) {
         ByteSeqResult::Ok(chacha20(key, iv, 1u32, cipher_text))
     } else {
-        ByteSeqResult::Err(INVALID_TAG)
+        ByteSeqResult::Err(Error::InvalidTag)
     }
 }

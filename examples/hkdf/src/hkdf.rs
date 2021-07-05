@@ -5,8 +5,11 @@ use hacspec_lib::*;
 // XXX: HMAC should probably expose this
 const HASH_LEN: usize = 256 / 8;
 
-pub type ByteSeqResult = Result<ByteSeq, u8>;
-pub const INVALID_OUTPUT_LENGTH: u8 = 1u8;
+pub enum Error {
+    InvalidOutputLength = 1,
+}
+
+pub type ByteSeqResult = Result<ByteSeq, Error>;
 
 /// Extract a pseudo-random key from input key material (IKM) and optionally a salt.
 /// Note that salt can be empty Bytes.
@@ -35,12 +38,12 @@ fn div_ceil(a: usize, b: usize) -> usize {
     q
 }
 
-fn check_output_limit(l: usize) -> Result<usize, u8> {
+fn check_output_limit(l: usize) -> Result<usize, Error> {
     let n = div_ceil(l, HASH_LEN);
     if n <= 255 {
-        Result::<usize, u8>::Ok(n)
+        Result::<usize, Error>::Ok(n)
     } else {
-        Result::<usize, u8>::Err(INVALID_OUTPUT_LENGTH)
+        Result::<usize, Error>::Err(Error::InvalidOutputLength)
     }
 }
 

@@ -1,11 +1,13 @@
 use hacspec_lib::*;
 
-pub type Affine = (FieldElement, FieldElement);
-pub type AffineResult = Result<Affine, u8>;
-type Jacobian = (FieldElement, FieldElement, FieldElement);
-type JacobianResult = Result<Jacobian, u8>;
+pub enum Error {
+    InvalidAddition,
+}
 
-pub const INVALID_ADDITION: u8 = 1u8;
+pub type Affine = (FieldElement, FieldElement);
+pub type AffineResult = Result<Affine, Error>;
+type Jacobian = (FieldElement, FieldElement, FieldElement);
+type JacobianResult = Result<Jacobian, Error>;
 
 const BITS: usize = 256;
 
@@ -105,7 +107,7 @@ pub fn point_add(p: Affine, q: Affine) -> AffineResult {
 
 fn s1_equal_s2(s1: FieldElement, s2: FieldElement) -> JacobianResult {
     if s1.equal(s2) {
-        JacobianResult::Err(INVALID_ADDITION)
+        JacobianResult::Err(Error::InvalidAddition)
     } else {
         JacobianResult::Ok((
             FieldElement::from_literal(0u128),

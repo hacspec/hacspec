@@ -122,7 +122,6 @@ fn test_wycheproof() {
             let signature = decode_signature(&sig);
 
             let result = verify(&msg, pk, signature);
-            println!("Verify result: {:?}", result);
             assert!(result.is_ok());
 
             tests_run += 1;
