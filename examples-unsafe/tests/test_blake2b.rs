@@ -97,9 +97,10 @@ fn test_official_kat() {
         if test.hash == "blake2b" && test.key == "" {
             println!("expected: {}", test.out);
             let h = blake2b(&ByteSeq::from_hex(&test.r#in));
-            assert_eq!(
+            assert_secret_seq_eq!(
                 ByteSeq::from_hex(&test.out),
-                ByteSeq::from_slice(&h, 0, h.len())
+                ByteSeq::from_slice(&h, 0, h.len()),
+                U8
             );
         }
     }
