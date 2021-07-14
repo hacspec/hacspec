@@ -32,3 +32,34 @@ fn test_sequences_comparison() {
     let b = ByteSeq::from_public_slice(&[1, 2, 3]);
     assert_secret_seq_eq!(a, b, U8);
 }
+
+#[test]
+fn test_seq_not() {
+    let seq = ByteSeq::from_hex("ae125f62bd263edc");
+    let expected = ByteSeq::from_hex("51eda09d42d9c123");
+    assert_secret_seq_eq!(expected, !seq, U8);
+}
+
+#[test]
+fn test_seq_or() {
+    let seq1 = ByteSeq::from_hex("ae125f62bd263edc");
+    let seq2 = ByteSeq::from_hex("51eda09d42d9c123");
+    let expected = ByteSeq::from_hex("ffffffffffffffff");
+    assert_secret_seq_eq!(expected, seq1 | seq2, U8);
+}
+
+#[test]
+fn test_seq_xor() {
+    let seq1 = ByteSeq::from_hex("296519d609eb2ab2");
+    let seq2 = ByteSeq::from_hex("5a37737caae626c7");
+    let expected = ByteSeq::from_hex("73526aaaa30d0c75");
+    assert_secret_seq_eq!(expected, seq1 ^ seq2, U8);
+}
+
+#[test]
+fn test_seq_and() {
+    let seq1 = ByteSeq::from_hex("ae125f62bd263edc");
+    let seq2 = ByteSeq::from_hex("51eda09d42d9c123");
+    let expected = ByteSeq::from_hex("0000000000000000");
+    assert_secret_seq_eq!(expected, seq1 & seq2, U8);
+}

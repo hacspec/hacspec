@@ -138,7 +138,11 @@ impl<T: Numeric + PublicInteger + Copy> Not for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn not(self) -> Self::Output {
-        unimplemented!();
+        let mut out = Self::new(self.len());
+        for (a, b) in out.b.iter_mut().zip(self.b.iter()) {
+            *a = !*b;
+        }
+        out
     }
 }
 
@@ -146,7 +150,11 @@ impl<T: Numeric + PublicInteger + Copy> BitOr for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitor(self, rhs: Self) -> Self::Output {
-        unimplemented!();
+        let mut out = Self::new(self.len());
+        for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
+            *a = *b | *c;
+        }
+        out
     }
 }
 
@@ -154,7 +162,7 @@ impl<T: Numeric + PublicInteger + Copy> BitXor for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitxor(self, rhs: Self) -> Self::Output {
-        let mut out = Self::default();
+        let mut out = Self::new(self.len());
         for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
             *a = *b ^ *c;
         }
@@ -166,7 +174,11 @@ impl<T: Numeric + PublicInteger + Copy> BitAnd for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitand(self, rhs: Self) -> Self::Output {
-        unimplemented!();
+        let mut out = Self::new(self.len());
+        for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
+            *a = *b & *c;
+        }
+        out
     }
 }
 
