@@ -752,7 +752,8 @@ fn typecheck_expression(
             let new_arms = check_vec(
                 arms.into_iter()
                     .map(|(arm_enum_ty, arm_case, arm_pattern, arm_exp)| {
-                        let (arm_enum_name, arm_enum_args) = match arm_enum_ty {
+                        let arm_enum_ty = dealias_type(arm_enum_ty.clone(), top_level_context);
+                        let (arm_enum_name, arm_enum_args) = match &arm_enum_ty {
                             BaseTyp::Named((t_arm_ty_name, _), t_arm_ty_args) => {
                                 if &t_arg_enum_name != t_arm_ty_name {
                                     sess.span_rustspec_err(
