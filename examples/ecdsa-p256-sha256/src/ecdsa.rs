@@ -25,21 +25,21 @@ fn check_scalar_zero(r: Scalar) -> CheckResult {
 
 fn ecdsa_point_mul_base(x: Scalar) -> ArithmeticResult {
     match point_mul_base(x) {
-        AffineResult::Ok(s) => Ok(s),
+        AffineResult::Ok(s) => ArithmeticResult::Ok(s),
         AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
 }
 
 fn ecdsa_point_mul(k: Scalar, p: Affine) -> ArithmeticResult {
     match point_mul(k, p) {
-        AffineResult::Ok(s) => Ok(s),
+        AffineResult::Ok(s) => ArithmeticResult::Ok(s),
         AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
 }
 
 fn ecdsa_point_add(p: Affine, q: Affine) -> ArithmeticResult {
     match point_add(p, q) {
-        AffineResult::Ok(s) => Ok(s),
+        AffineResult::Ok(s) => ArithmeticResult::Ok(s),
         AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
 }
