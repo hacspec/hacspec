@@ -2,6 +2,7 @@ use hacspec_lib::*;
 use hacspec_p256::*;
 use hacspec_sha256::*;
 
+#[derive(Debug)]
 pub enum Error {
     InvalidScalar,
     InvalidSignature,

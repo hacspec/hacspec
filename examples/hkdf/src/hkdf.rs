@@ -5,6 +5,7 @@ use hacspec_lib::*;
 // XXX: HMAC should probably expose this
 const HASH_LEN: usize = 256 / 8;
 
+#[derive(Debug)]
 pub enum Error {
     InvalidOutputLength,
 }

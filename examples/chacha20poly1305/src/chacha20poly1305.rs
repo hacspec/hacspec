@@ -5,6 +5,7 @@ use hacspec_lib::*;
 use hacspec_chacha20::*;
 use hacspec_poly1305::*;
 
+#[derive(Debug)]
 pub enum Error {
     InvalidTag,
 }

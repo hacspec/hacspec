@@ -57,14 +57,11 @@ fn test_kat() {
 }
 
 #[test]
-#[should_panic]
 fn test_invalid_output_len() {
-    match expand(
+    expand(
         &ByteSeq::from_hex("deadbeef"),
         &ByteSeq::from_hex("deadbeef"),
         10000,
-    ) {
-        Ok(_okm) => panic!("The output should have been too long"),
-        Err(_) => (),
-    };
+    )
+    .expect_err("The output should have been too long");
 }
