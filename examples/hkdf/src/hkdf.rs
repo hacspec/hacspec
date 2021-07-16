@@ -6,7 +6,7 @@ use hacspec_lib::*;
 const HASH_LEN: usize = 256 / 8;
 
 pub enum Error {
-    InvalidOutputLength = 1,
+    InvalidOutputLength,
 }
 
 pub type ByteSeqResult = Result<ByteSeq, Error>;

@@ -3,8 +3,8 @@ use hacspec_p256::*;
 use hacspec_sha256::*;
 
 pub enum Error {
-    InvalidScalar = 1,
-    InvalidSignature = 2,
+    InvalidScalar,
+    InvalidSignature,
 }
 
 pub type PublicKey = Affine;
@@ -13,7 +13,7 @@ pub type Signature = (Scalar, Scalar); // (r, s)
 pub type SignatureResult = Result<Signature, Error>;
 pub type VerifyResult = Result<(), Error>;
 type CheckResult = Result<(), Error>;
-type AffineResult = Result<Affine, Error>;
+type ArithmeticResult = Result<Affine, Error>;
 
 fn check_scalar_zero(r: Scalar) -> CheckResult {
     if r.equal(Scalar::ZERO()) {
@@ -23,24 +23,24 @@ fn check_scalar_zero(r: Scalar) -> CheckResult {
     }
 }
 
-fn ecdsa_point_mul_base(x: Scalar) -> AffineResult {
+fn ecdsa_point_mul_base(x: Scalar) -> ArithmeticResult {
     match point_mul_base(x) {
-        Ok(s) => Ok(s),
-        Err(_) => AffineResult::Err(Error::InvalidScalar),
+        AffineResult::Ok(s) => Ok(s),
+        AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
 }
 
-fn ecdsa_point_mul(k: Scalar, p: Affine) -> AffineResult {
+fn ecdsa_point_mul(k: Scalar, p: Affine) -> ArithmeticResult {
     match point_mul(k, p) {
-        Ok(s) => Ok(s),
-        Err(_) => AffineResult::Err(Error::InvalidScalar),
+        AffineResult::Ok(s) => Ok(s),
+        AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
 }
 
-fn ecdsa_point_add(p: Affine, q: Affine) -> AffineResult {
+fn ecdsa_point_add(p: Affine, q: Affine) -> ArithmeticResult {
     match point_add(p, q) {
-        Ok(s) => Ok(s),
-        Err(_) => AffineResult::Err(Error::InvalidScalar),
+        AffineResult::Ok(s) => Ok(s),
+        AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
 }
 

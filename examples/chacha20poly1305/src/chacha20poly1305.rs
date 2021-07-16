@@ -6,7 +6,7 @@ use hacspec_chacha20::*;
 use hacspec_poly1305::*;
 
 pub enum Error {
-    InvalidTag = 1,
+    InvalidTag,
 }
 
 pub type ChaChaPolyKey = ChaChaKey;
