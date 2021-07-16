@@ -27,7 +27,7 @@ fn self_gimli_aead() {
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
 
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -74,11 +74,11 @@ fn kat_gimli_aead() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 // Randomly Generated Cipher Tests
@@ -114,11 +114,11 @@ fn tg_gimli_aead_1_106() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -142,11 +142,11 @@ fn tg_gimli_aead_2_8() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -179,11 +179,11 @@ fn tg_gimli_aead_3_111() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -225,11 +225,11 @@ fn tg_gimli_aead_4_249() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -269,11 +269,11 @@ fn tg_gimli_aead_5_220() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -309,11 +309,11 @@ fn tg_gimli_aead_6_152() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -346,11 +346,11 @@ fn tg_gimli_aead_7_109() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -387,11 +387,11 @@ fn tg_gimli_aead_8_174() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -426,11 +426,11 @@ fn tg_gimli_aead_9_122() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -460,11 +460,11 @@ fn tg_gimli_aead_10_50() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -509,11 +509,11 @@ fn tg_gimli_aead_11_237() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -549,11 +549,11 @@ fn tg_gimli_aead_12_97() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -591,11 +591,11 @@ fn tg_gimli_aead_13_132() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -640,11 +640,11 @@ fn tg_gimli_aead_14_247() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -683,11 +683,11 @@ fn tg_gimli_aead_15_137() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -725,11 +725,11 @@ fn tg_gimli_aead_16_94() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -766,11 +766,11 @@ fn tg_gimli_aead_17_82() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -809,11 +809,11 @@ fn tg_gimli_aead_18_115() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -853,11 +853,11 @@ fn tg_gimli_aead_19_133() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -894,11 +894,11 @@ fn tg_gimli_aead_20_77() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -945,11 +945,11 @@ fn tg_gimli_aead_21_227() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -988,11 +988,11 @@ fn tg_gimli_aead_22_110() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1036,11 +1036,11 @@ fn tg_gimli_aead_23_191() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1082,11 +1082,11 @@ fn tg_gimli_aead_24_157() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1132,11 +1132,11 @@ fn tg_gimli_aead_25_217() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1166,11 +1166,11 @@ fn tg_gimli_aead_26_5() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1206,11 +1206,11 @@ fn tg_gimli_aead_27_69() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1258,11 +1258,11 @@ fn tg_gimli_aead_28_244() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1292,11 +1292,11 @@ fn tg_gimli_aead_29_1() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1329,11 +1329,11 @@ fn tg_gimli_aead_30_16() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1373,11 +1373,11 @@ fn tg_gimli_aead_31_96() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1414,11 +1414,11 @@ fn tg_gimli_aead_32_48() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1455,11 +1455,11 @@ fn tg_gimli_aead_33_52() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1498,11 +1498,11 @@ fn tg_gimli_aead_34_77() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1546,11 +1546,11 @@ fn tg_gimli_aead_35_156() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1586,11 +1586,11 @@ fn tg_gimli_aead_36_35() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1635,11 +1635,11 @@ fn tg_gimli_aead_37_172() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1685,11 +1685,11 @@ fn tg_gimli_aead_38_210() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1734,11 +1734,11 @@ fn tg_gimli_aead_39_207() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1781,11 +1781,11 @@ fn tg_gimli_aead_40_139() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1828,11 +1828,11 @@ fn tg_gimli_aead_41_140() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1871,11 +1871,11 @@ fn tg_gimli_aead_42_83() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1922,11 +1922,11 @@ fn tg_gimli_aead_43_204() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -1964,11 +1964,11 @@ fn tg_gimli_aead_44_82() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2011,11 +2011,11 @@ fn tg_gimli_aead_45_145() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2056,11 +2056,11 @@ fn tg_gimli_aead_46_76() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2111,11 +2111,11 @@ fn tg_gimli_aead_47_233() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2167,11 +2167,11 @@ fn tg_gimli_aead_48_249() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2208,11 +2208,11 @@ fn tg_gimli_aead_49_17() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2257,11 +2257,11 @@ fn tg_gimli_aead_50_152() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2308,11 +2308,11 @@ fn tg_gimli_aead_51_172() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2351,11 +2351,11 @@ fn tg_gimli_aead_52_66() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2389,11 +2389,11 @@ fn tg_gimli_aead_53_7() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2440,11 +2440,11 @@ fn tg_gimli_aead_54_176() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2486,11 +2486,11 @@ fn tg_gimli_aead_55_105() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2537,11 +2537,11 @@ fn tg_gimli_aead_56_177() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2579,11 +2579,11 @@ fn tg_gimli_aead_57_34() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2617,11 +2617,11 @@ fn tg_gimli_aead_58_6() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2661,11 +2661,11 @@ fn tg_gimli_aead_59_73() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2712,11 +2712,11 @@ fn tg_gimli_aead_60_179() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2759,11 +2759,11 @@ fn tg_gimli_aead_61_77() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2807,11 +2807,11 @@ fn tg_gimli_aead_62_95() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2860,11 +2860,11 @@ fn tg_gimli_aead_63_178() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2903,11 +2903,11 @@ fn tg_gimli_aead_64_17() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -2949,11 +2949,11 @@ fn tg_gimli_aead_65_70() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3005,11 +3005,11 @@ fn tg_gimli_aead_66_222() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3058,11 +3058,11 @@ fn tg_gimli_aead_67_174() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3111,11 +3111,11 @@ fn tg_gimli_aead_68_171() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3163,11 +3163,11 @@ fn tg_gimli_aead_69_175() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3212,11 +3212,11 @@ fn tg_gimli_aead_70_106() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3268,11 +3268,11 @@ fn tg_gimli_aead_71_212() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3316,11 +3316,11 @@ fn tg_gimli_aead_72_114() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3360,11 +3360,11 @@ fn tg_gimli_aead_73_31() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3408,11 +3408,11 @@ fn tg_gimli_aead_74_99() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3456,11 +3456,11 @@ fn tg_gimli_aead_75_97() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3508,11 +3508,11 @@ fn tg_gimli_aead_76_131() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3555,11 +3555,11 @@ fn tg_gimli_aead_77_53() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3598,11 +3598,11 @@ fn tg_gimli_aead_78_10() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3644,11 +3644,11 @@ fn tg_gimli_aead_79_51() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3698,11 +3698,11 @@ fn tg_gimli_aead_80_154() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3745,11 +3745,11 @@ fn tg_gimli_aead_81_47() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3791,11 +3791,11 @@ fn tg_gimli_aead_82_37() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3850,11 +3850,11 @@ fn tg_gimli_aead_83_253() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3908,11 +3908,11 @@ fn tg_gimli_aead_84_212() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -3962,11 +3962,11 @@ fn tg_gimli_aead_85_156() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4017,11 +4017,11 @@ fn tg_gimli_aead_86_178() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4068,11 +4068,11 @@ fn tg_gimli_aead_87_106() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4110,11 +4110,11 @@ fn tg_gimli_aead_88_6() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4165,11 +4165,11 @@ fn tg_gimli_aead_89_169() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4213,11 +4213,11 @@ fn tg_gimli_aead_90_68() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4275,11 +4275,11 @@ fn tg_gimli_aead_91_247() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4331,11 +4331,11 @@ fn tg_gimli_aead_92_171() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4384,11 +4384,11 @@ fn tg_gimli_aead_93_132() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4441,11 +4441,11 @@ fn tg_gimli_aead_94_175() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4494,11 +4494,11 @@ fn tg_gimli_aead_95_115() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4545,11 +4545,11 @@ fn tg_gimli_aead_96_81() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4593,11 +4593,11 @@ fn tg_gimli_aead_97_39() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4655,11 +4655,11 @@ fn tg_gimli_aead_98_243() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4705,11 +4705,11 @@ fn tg_gimli_aead_99_61() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4749,11 +4749,11 @@ fn tg_gimli_aead_100_3() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4808,11 +4808,11 @@ fn tg_gimli_aead_101_203() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4869,11 +4869,11 @@ fn tg_gimli_aead_102_234() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4918,11 +4918,11 @@ fn tg_gimli_aead_103_49() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -4975,11 +4975,11 @@ fn tg_gimli_aead_104_172() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5032,11 +5032,11 @@ fn tg_gimli_aead_105_176() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5085,11 +5085,11 @@ fn tg_gimli_aead_106_81() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5137,11 +5137,11 @@ fn tg_gimli_aead_107_69() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5193,11 +5193,11 @@ fn tg_gimli_aead_108_136() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5249,11 +5249,11 @@ fn tg_gimli_aead_109_124() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5307,11 +5307,11 @@ fn tg_gimli_aead_110_164() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5357,11 +5357,11 @@ fn tg_gimli_aead_111_33() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5407,11 +5407,11 @@ fn tg_gimli_aead_112_35() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5468,11 +5468,11 @@ fn tg_gimli_aead_113_207() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5530,11 +5530,11 @@ fn tg_gimli_aead_114_225() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5588,11 +5588,11 @@ fn tg_gimli_aead_115_154() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5642,11 +5642,11 @@ fn tg_gimli_aead_116_104() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5693,11 +5693,11 @@ fn tg_gimli_aead_117_52() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5750,11 +5750,11 @@ fn tg_gimli_aead_118_160() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5800,11 +5800,11 @@ fn tg_gimli_aead_119_49() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5857,11 +5857,11 @@ fn tg_gimli_aead_120_148() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5916,11 +5916,11 @@ fn tg_gimli_aead_121_151() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -5974,11 +5974,11 @@ fn tg_gimli_aead_122_129() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -6038,11 +6038,11 @@ fn tg_gimli_aead_123_220() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -6088,11 +6088,11 @@ fn tg_gimli_aead_124_13() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -6149,11 +6149,11 @@ fn tg_gimli_aead_125_166() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -6207,11 +6207,11 @@ fn tg_gimli_aead_126_145() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -6262,11 +6262,11 @@ fn tg_gimli_aead_127_93() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }
 
 #[test]
@@ -6314,9 +6314,9 @@ fn tg_gimli_aead_128_36() {
     ]);
 
     let (ct, tag) = gimli_aead_encrypt(&msg, &ad, nonce, key);
-    assert_eq!(expected_ct, ct);
+    assert_secret_seq_eq!(expected_ct, ct, U8);
     assert_secret_array_eq!(expected_tag, tag, U8);
 
     let msg_out = gimli_aead_decrypt(&ct, &ad, tag, nonce, key);
-    assert_eq!(msg, msg_out);
+    assert_secret_seq_eq!(msg, msg_out, U8);
 }

@@ -344,18 +344,32 @@ impl Seq<U8> {
     }
 }
 
-impl PartialEq for Seq<U8> {
+impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for PublicSeq<T> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     fn eq(&self, other: &Self) -> bool {
-        self.b[..]
-            .iter()
-            .map(|x| <U8>::declassify(*x))
-            .collect::<Vec<_>>()
-            == other.b[..]
-                .iter()
-                .map(|x| <U8>::declassify(*x))
-                .collect::<Vec<_>>()
+        self.b == other.b
     }
+}
+
+impl<T: Copy + Default + PartialEq + PublicInteger> Eq for PublicSeq<T> {}
+
+impl<T: Copy + Default + PartialEq + SecretInteger> PartialEq for Seq<T> {
+    #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    fn eq(&self, other: &Self) -> bool {
+        self.b == other.b
+    }
+}
+
+impl<T: Copy + Default + PartialEq + SecretInteger> Eq for Seq<T> {}
+
+#[macro_export]
+macro_rules! assert_secret_seq_eq {
+    ( $a1: expr, $a2: expr, $si: ident) => {
+        assert_eq!(
+            $a1.iter().map(|x| $si::declassify(*x)).collect::<Vec<_>>(),
+            $a2.iter().map(|x| $si::declassify(*x)).collect::<Vec<_>>()
+        );
+    };
 }
 
 impl PublicSeq<u8> {
