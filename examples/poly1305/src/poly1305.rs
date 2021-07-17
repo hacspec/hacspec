@@ -69,8 +69,8 @@ pub fn poly1305_update_block (b:&PolyBlock, st:PolyState) -> PolyState {
 
 pub fn poly1305_update_blocks (m:&ByteSeq, st:PolyState) -> PolyState {
     let mut st = st;
-    let nblocks = m.len() / BLOCKSIZE;
-    for i in 0..nblocks {
+    let n_blocks = m.len() / BLOCKSIZE;
+    for i in 0..n_blocks {
         let block = PolyBlock::from_seq(&m.get_exact_chunk(BLOCKSIZE, i));
         st = poly1305_update_block(&block,st);
     }
@@ -96,7 +96,8 @@ pub fn poly1305_finish (st:PolyState) -> Tag {
     let (acc,_,k) = st;
     let n = U128_from_le_bytes(U128Word::from_slice(&k,16,16));
     let aby = acc.to_byte_seq_le();
-    let a = U128_from_le_bytes(U128Word::from_slice(&aby,0,16)); // Silliness, from_seq should work but it panics
+    // We can't use from_seq here because the accumulator is larger than 16 bytes.
+    let a = U128_from_le_bytes(U128Word::from_slice(&aby,0,16));
     Tag::from_seq(&U128_to_le_bytes(a+n))
 }
 
