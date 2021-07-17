@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["sign",""],["verify",""]],"type":[["PublicKey",""],["SecretKey",""],["Signature",""]]});
+initSidebarItems({"enum":[["Error",""]],"fn":[["sign",""],["verify",""]],"type":[["PublicKey",""],["SecretKey",""],["Signature",""],["SignatureResult",""],["VerifyResult",""]]});

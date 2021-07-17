@@ -55,6 +55,17 @@
 <span id="55">55</span>
 <span id="56">56</span>
 <span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">hacspec_hmac</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
@@ -63,7 +74,13 @@
 <span class="comment">// XXX: HMAC should probably expose this</span>
 <span class="kw">const</span> <span class="ident">HASH_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span> <span class="op">/</span> <span class="number">8</span>;
 
-<span class="comment">// TODO: add Option when supported</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="ident">InvalidOutputLength</span>,
+}
+
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ByteSeqResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+
 <span class="doccomment">/// Extract a pseudo-random key from input key material (IKM) and optionally a salt.</span>
 <span class="doccomment">/// Note that salt can be empty Bytes.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract</span>(<span class="ident">salt</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">ikm</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PRK</span> {
@@ -91,27 +108,32 @@
     <span class="ident">q</span>
 }
 
+<span class="kw">fn</span> <span class="ident">check_output_limit</span>(<span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">div_ceil</span>(<span class="ident">l</span>, <span class="ident">HASH_LEN</span>);
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">255</span> {
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">Error</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">n</span>)
+    } <span class="kw">else</span> {
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">Error</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidOutputLength</span>)
+    }
+}
+
 <span class="doccomment">/// Expand a key prk, using potentially empty info, and output length l.</span>
 <span class="doccomment">/// Key prk must be at least of length HASH_LEN.</span>
 <span class="doccomment">/// Output length l can be at most 255*HASH_LEN.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">prk</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">bool</span>, <span class="ident">ByteSeq</span>) {
-    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">div_ceil</span>(<span class="ident">l</span>, <span class="ident">HASH_LEN</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> (<span class="bool-val">false</span>, <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="number">0</span>));
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">255</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t_i</span> <span class="op">=</span> <span class="ident">PRK</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">n</span> <span class="op">*</span> <span class="ident">PRK</span>::<span class="ident">capacity</span>());
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
-            <span class="kw">let</span> <span class="ident">hmac_txt_in</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">build_hmac_txt</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="number">0</span>), <span class="ident">info</span>, <span class="ident">U8</span>((<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">+</span> <span class="number">1u8</span>))
-            } <span class="kw">else</span> {
-                <span class="ident">build_hmac_txt</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">t_i</span>), <span class="ident">info</span>, <span class="ident">U8</span>((<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">+</span> <span class="number">1u8</span>))
-            };
-            <span class="ident">t_i</span> <span class="op">=</span> <span class="ident">hmac</span>(<span class="ident">prk</span>, <span class="kw-2">&amp;</span><span class="ident">hmac_txt_in</span>);
-            <span class="ident">t</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="op">*</span> <span class="ident">t_i</span>.<span class="ident">len</span>(), <span class="kw-2">&amp;</span><span class="ident">t_i</span>);
-        }
-        <span class="ident">result</span> <span class="op">=</span> (<span class="bool-val">true</span>, <span class="ident">t</span>.<span class="ident">slice</span>(<span class="number">0</span>, <span class="ident">l</span>));
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">prk</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">l</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeqResult</span> {
+    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">check_output_limit</span>(<span class="ident">l</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t_i</span> <span class="op">=</span> <span class="ident">PRK</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">n</span> <span class="op">*</span> <span class="ident">PRK</span>::<span class="ident">capacity</span>());
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
+        <span class="kw">let</span> <span class="ident">hmac_txt_in</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="ident">build_hmac_txt</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="number">0</span>), <span class="ident">info</span>, <span class="ident">U8</span>((<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">+</span> <span class="number">1u8</span>))
+        } <span class="kw">else</span> {
+            <span class="ident">build_hmac_txt</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">t_i</span>), <span class="ident">info</span>, <span class="ident">U8</span>((<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">+</span> <span class="number">1u8</span>))
+        };
+        <span class="ident">t_i</span> <span class="op">=</span> <span class="ident">hmac</span>(<span class="ident">prk</span>, <span class="kw-2">&amp;</span><span class="ident">hmac_txt_in</span>);
+        <span class="ident">t</span> <span class="op">=</span> <span class="ident">t</span>.<span class="ident">update</span>(<span class="ident">i</span> <span class="op">*</span> <span class="ident">t_i</span>.<span class="ident">len</span>(), <span class="kw-2">&amp;</span><span class="ident">t_i</span>);
     }
-    <span class="ident">result</span>
+    <span class="ident">ByteSeqResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">t</span>.<span class="ident">slice</span>(<span class="number">0</span>, <span class="ident">l</span>))
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "hacspec_hkdf";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

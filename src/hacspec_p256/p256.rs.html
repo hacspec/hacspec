@@ -170,29 +170,39 @@
 <span id="170">170</span>
 <span id="171">171</span>
 <span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="ident">InvalidAddition</span>,
+}
+
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Affine</span> <span class="op">=</span> (<span class="ident">FieldElement</span>, <span class="ident">FieldElement</span>);
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AffineResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Affine</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 <span class="kw">type</span> <span class="ident">Jacobian</span> <span class="op">=</span> (<span class="ident">FieldElement</span>, <span class="ident">FieldElement</span>, <span class="ident">FieldElement</span>);
+<span class="kw">type</span> <span class="ident">JacobianResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Jacobian</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+
+<span class="kw">const</span> <span class="ident">BITS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span>;
 
 <span class="macro">public_nat_mod</span><span class="macro">!</span>(
     <span class="ident">type_name</span>: <span class="ident">FieldElement</span>,
     <span class="ident">type_of_canvas</span>: <span class="ident">FieldCanvas</span>,
-    <span class="ident">bit_size_of_field</span>: <span class="number">256</span>,
+    <span class="ident">bit_size_of_field</span>: <span class="number">256</span>, <span class="comment">// XXX: Unfortunately we can&#39;t use constants here.</span>
     <span class="ident">modulo_value</span>: <span class="string">&quot;ffffffff00000001000000000000000000000000ffffffffffffffffffffffff&quot;</span>
 );
 
 <span class="macro">public_nat_mod</span><span class="macro">!</span>(
     <span class="ident">type_name</span>: <span class="ident">Scalar</span>,
     <span class="ident">type_of_canvas</span>: <span class="ident">ScalarCanvas</span>,
-    <span class="ident">bit_size_of_field</span>: <span class="number">256</span>,
+    <span class="ident">bit_size_of_field</span>: <span class="number">256</span>, <span class="comment">// XXX: Unfortunately we can&#39;t use constants here.</span>
     <span class="ident">modulo_value</span>: <span class="string">&quot;ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551&quot;</span>
 );
 
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Element</span>, <span class="number">32</span>);
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_mul_base</span>(<span class="ident">k</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">bool</span>, <span class="ident">Affine</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_mul_base</span>(<span class="ident">k</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
     <span class="kw">let</span> <span class="ident">base_point</span> <span class="op">=</span> (
         <span class="ident">FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">Element</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>([
             <span class="number">0x6Bu8</span>, <span class="number">0x17u8</span>, <span class="number">0xD1u8</span>, <span class="number">0xF2u8</span>, <span class="number">0xE1u8</span>, <span class="number">0x2Cu8</span>, <span class="number">0x42u8</span>, <span class="number">0x47u8</span>, <span class="number">0xF8u8</span>, <span class="number">0xBCu8</span>, <span class="number">0xE6u8</span>,
@@ -208,9 +218,9 @@
     <span class="ident">point_mul</span>(<span class="ident">k</span>, <span class="ident">base_point</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_mul</span>(<span class="ident">k</span>: <span class="ident">Scalar</span>, <span class="ident">p</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">bool</span>, <span class="ident">Affine</span>) {
-    <span class="kw">let</span> (<span class="ident">success</span>, <span class="ident">jac</span>) <span class="op">=</span> <span class="ident">ltr_mul</span>(<span class="ident">k</span>, <span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>));
-    (<span class="ident">success</span>, <span class="ident">jacobian_to_affine</span>(<span class="ident">jac</span>))
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_mul</span>(<span class="ident">k</span>: <span class="ident">Scalar</span>, <span class="ident">p</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
+    <span class="kw">let</span> <span class="ident">jac</span> <span class="op">=</span> <span class="ident">ltr_mul</span>(<span class="ident">k</span>, <span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>))<span class="question-mark">?</span>;
+    <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">jac</span>))
 }
 
 <span class="kw">fn</span> <span class="ident">jacobian_to_affine</span>(<span class="ident">p</span>: <span class="ident">Jacobian</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Affine</span> {
@@ -256,31 +266,37 @@
     <span class="ident">z</span>.<span class="ident">equal</span>(<span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>))
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_assignments</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_add</span>(<span class="ident">p</span>: <span class="ident">Affine</span>, <span class="ident">q</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">bool</span>, <span class="ident">Affine</span>) {
-    <span class="comment">// TODO: this is pretty ugly but everything else doesn&#39;t work in hacspec yet.</span>
-    <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">success</span>, <span class="kw-2">mut</span> <span class="ident">result</span>) <span class="op">=</span> (<span class="bool-val">false</span>, <span class="ident">p</span>);
-    <span class="kw">if</span> <span class="ident">p</span> <span class="op">!</span><span class="op">=</span> <span class="ident">q</span> {
-        <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="ident">point_add_jacob</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>), <span class="ident">affine_to_jacobian</span>(<span class="ident">q</span>));
-        <span class="ident">result</span> <span class="op">=</span> <span class="ident">jacobian_to_affine</span>(<span class="ident">r</span>);
-        <span class="ident">success</span> <span class="op">=</span> <span class="ident">s</span>;
-    } <span class="kw">else</span> {
-        <span class="ident">result</span> <span class="op">=</span> <span class="ident">jacobian_to_affine</span>(<span class="ident">point_double</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>)));
-        <span class="ident">success</span> <span class="op">=</span> <span class="bool-val">true</span>;
-    };
-    (<span class="ident">success</span>, <span class="ident">result</span>)
+<span class="kw">fn</span> <span class="ident">point_add_distinct</span>(<span class="ident">p</span>: <span class="ident">Affine</span>, <span class="ident">q</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">point_add_jacob</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>), <span class="ident">affine_to_jacobian</span>(<span class="ident">q</span>))<span class="question-mark">?</span>;
+    <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">r</span>))
 }
 
-<span class="kw">fn</span> <span class="ident">point_add_jacob</span>(<span class="ident">p</span>: <span class="ident">Jacobian</span>, <span class="ident">q</span>: <span class="ident">Jacobian</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">bool</span>, <span class="ident">Jacobian</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> (<span class="bool-val">true</span>, <span class="ident">q</span>);
-    <span class="kw">if</span> <span class="ident">is_point_at_infinity</span>(<span class="ident">p</span>) {
-        <span class="comment">// result = (true, q);</span>
-        <span class="comment">// TODO: #85 needs to get fixed for this.</span>
-        <span class="comment">// } else if is_point_at_infinity(q) {</span>
-        <span class="comment">//     (true, p)</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_assignments</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_add</span>(<span class="ident">p</span>: <span class="ident">Affine</span>, <span class="ident">q</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
+    <span class="kw">if</span> <span class="ident">p</span> <span class="op">!</span><span class="op">=</span> <span class="ident">q</span> {
+        <span class="ident">point_add_distinct</span>(<span class="ident">p</span>, <span class="ident">q</span>)
     } <span class="kw">else</span> {
+        <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">point_double</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>))))
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">s1_equal_s2</span>(<span class="ident">s1</span>: <span class="ident">FieldElement</span>, <span class="ident">s2</span>: <span class="ident">FieldElement</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">JacobianResult</span> {
+    <span class="kw">if</span> <span class="ident">s1</span>.<span class="ident">equal</span>(<span class="ident">s2</span>) {
+        <span class="ident">JacobianResult</span>::<span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidAddition</span>)
+    } <span class="kw">else</span> {
+        <span class="ident">JacobianResult</span>::<span class="prelude-val">Ok</span>((
+            <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>),
+            <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">1u128</span>),
+            <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>),
+        ))
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">point_add_jacob</span>(<span class="ident">p</span>: <span class="ident">Jacobian</span>, <span class="ident">q</span>: <span class="ident">Jacobian</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">JacobianResult</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">JacobianResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">q</span>);
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">is_point_at_infinity</span>(<span class="ident">p</span>) {
         <span class="kw">if</span> <span class="ident">is_point_at_infinity</span>(<span class="ident">q</span>) {
-            <span class="ident">result</span> <span class="op">=</span> (<span class="bool-val">true</span>, <span class="ident">p</span>);
+            <span class="ident">result</span> <span class="op">=</span> <span class="ident">JacobianResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">p</span>);
         } <span class="kw">else</span> {
             <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="ident">z1</span>) <span class="op">=</span> <span class="ident">p</span>;
             <span class="kw">let</span> (<span class="ident">x2</span>, <span class="ident">y2</span>, <span class="ident">z2</span>) <span class="op">=</span> <span class="ident">q</span>;
@@ -292,16 +308,7 @@
             <span class="kw">let</span> <span class="ident">s2</span> <span class="op">=</span> (<span class="ident">y2</span> <span class="op">*</span> <span class="ident">z1</span>) <span class="op">*</span> <span class="ident">z1z1</span>;
 
             <span class="kw">if</span> <span class="ident">u1</span>.<span class="ident">equal</span>(<span class="ident">u2</span>) {
-                <span class="comment">// assert!(!s1.equal(s2));</span>
-                <span class="kw">let</span> <span class="ident">success</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">s1</span>.<span class="ident">equal</span>(<span class="ident">s2</span>) { <span class="bool-val">false</span> } <span class="kw">else</span> { <span class="bool-val">true</span> };
-                <span class="ident">result</span> <span class="op">=</span> (
-                    <span class="ident">success</span>,
-                    (
-                        <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>),
-                        <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">1u128</span>),
-                        <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>),
-                    ),
-                )
+                <span class="ident">result</span> <span class="op">=</span> <span class="ident">s1_equal_s2</span>(<span class="ident">s1</span>, <span class="ident">s2</span>);
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">u2</span> <span class="op">-</span> <span class="ident">u1</span>;
                 <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> (<span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">2u128</span>) <span class="op">*</span> <span class="ident">h</span>).<span class="ident">exp</span>(<span class="number">2u32</span>);
@@ -319,29 +326,26 @@
 
                 <span class="kw">let</span> <span class="ident">z3_</span> <span class="op">=</span> (<span class="ident">z1</span> <span class="op">+</span> <span class="ident">z2</span>).<span class="ident">exp</span>(<span class="number">2u32</span>);
                 <span class="kw">let</span> <span class="ident">z3</span> <span class="op">=</span> (<span class="ident">z3_</span> <span class="op">-</span> (<span class="ident">z1z1</span> <span class="op">+</span> <span class="ident">z2z2</span>)) <span class="op">*</span> <span class="ident">h</span>;
-                <span class="ident">result</span> <span class="op">=</span> (<span class="bool-val">true</span>, (<span class="ident">x3</span>, <span class="ident">y3</span>, <span class="ident">z3</span>));
+                <span class="ident">result</span> <span class="op">=</span> <span class="ident">JacobianResult</span>::<span class="prelude-val">Ok</span>((<span class="ident">x3</span>, <span class="ident">y3</span>, <span class="ident">z3</span>));
             }
         }
     };
     <span class="ident">result</span>
 }
 
-<span class="kw">fn</span> <span class="ident">ltr_mul</span>(<span class="ident">k</span>: <span class="ident">Scalar</span>, <span class="ident">p</span>: <span class="ident">Jacobian</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">bool</span>, <span class="ident">Jacobian</span>) {
+<span class="kw">fn</span> <span class="ident">ltr_mul</span>(<span class="ident">k</span>: <span class="ident">Scalar</span>, <span class="ident">p</span>: <span class="ident">Jacobian</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">JacobianResult</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">q</span> <span class="op">=</span> (
         <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>),
         <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">1u128</span>),
         <span class="ident">FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>),
     );
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">success</span> <span class="op">=</span> <span class="bool-val">true</span>;
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">BITS</span> {
         <span class="ident">q</span> <span class="op">=</span> <span class="ident">point_double</span>(<span class="ident">q</span>);
-        <span class="kw">if</span> <span class="ident">k</span>.<span class="ident">get_bit</span>(<span class="number">256</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">i</span>).<span class="ident">equal</span>(<span class="ident">Scalar</span>::<span class="ident">ONE</span>()) {
-            <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">r</span>) <span class="op">=</span> <span class="ident">point_add_jacob</span>(<span class="ident">q</span>, <span class="ident">p</span>);
-            <span class="ident">q</span> <span class="op">=</span> <span class="ident">r</span>;
-            <span class="ident">success</span> <span class="op">=</span> <span class="ident">success</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">s</span>;
+        <span class="kw">if</span> <span class="ident">k</span>.<span class="ident">get_bit</span>(<span class="ident">BITS</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">i</span>).<span class="ident">equal</span>(<span class="ident">Scalar</span>::<span class="ident">ONE</span>()) {
+            <span class="ident">q</span> <span class="op">=</span> <span class="ident">point_add_jacob</span>(<span class="ident">q</span>, <span class="ident">p</span>)<span class="question-mark">?</span>;
         }
     }
-    (<span class="ident">success</span>, <span class="ident">q</span>)
+    <span class="ident">JacobianResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">q</span>)
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "hacspec_p256";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

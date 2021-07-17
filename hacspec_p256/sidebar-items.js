@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["point_add",""],["point_mul",""],["point_mul_base",""]],"struct":[["Element","Fixed length byte array."],["FieldCanvas",""],["FieldElement",""],["Scalar",""],["ScalarCanvas",""]],"type":[["Affine",""]]});
+initSidebarItems({"enum":[["Error",""]],"fn":[["point_add",""],["point_mul",""],["point_mul_base",""]],"struct":[["Element","Fixed length byte array."],["FieldCanvas",""],["FieldElement",""],["Scalar",""],["ScalarCanvas",""]],"type":[["Affine",""],["AffineResult",""]]});
