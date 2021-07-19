@@ -48,3 +48,11 @@ pub fn type_double_alias_question_mark_return() -> SResult {
 pub fn unwrap_result() -> SimpleOutput {
     other().unwrap()
 }
+
+pub fn match_result() -> SimpleOutput {
+    let result_value = type_double_alias_question_mark_return();
+    match result_value {
+        SResult::Ok(r) => r,
+        SResult::Err(_) => SimpleOutput::new(),
+    }
+}

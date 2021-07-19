@@ -2,10 +2,12 @@
 use hacspec_lib::*;
 
 // Import aes and gcm
-// use super::{self, aes_ctr_keyblock, aes_encrypt, Block};
-// use super::gf128::{gmac, Key, Tag};
 use hacspec_aes::*;
 use hacspec_gf128::*;
+
+type ByteSeqResult = Result<ByteSeq, u8>;
+
+pub const INVALID_TAG: u8 = 1u8;
 
 fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
     let laad = aad.len();
@@ -42,7 +44,9 @@ pub(crate) fn encrypt_aes(
 ) -> (ByteSeq, Tag) {
     let iv0 = Nonce::new();
 
-    let (_success, mac_key) = aes_ctr_keyblock(
+    // We can unwrap here because the iteration count is such that the error
+    // case can't happen.
+    let mac_key = aes_ctr_key_block(
         key,
         iv0,
         U32(0u32),
@@ -51,8 +55,8 @@ pub(crate) fn encrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
-    let (_success, tag_mix) = aes_ctr_keyblock(
+    ).unwrap();
+    let tag_mix = aes_ctr_key_block(
         key,
         iv.clone(), // FIXME: is not necessary.
         U32(1u32),
@@ -61,7 +65,7 @@ pub(crate) fn encrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
+    ).unwrap();
 
     let cipher_text = aes128_encrypt(Key128::from_seq(key), iv, U32(2u32), msg);
     let padded_msg = pad_aad_msg(aad, &cipher_text);
@@ -81,10 +85,10 @@ pub(crate) fn decrypt_aes(
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
     tag: Tag,
-) -> (bool, ByteSeq) {
+) -> ByteSeqResult {
     let iv0 = Nonce::new();
 
-    let (_success, mac_key) = aes_ctr_keyblock(
+    let mac_key = aes_ctr_key_block(
         key,
         iv0,
         U32(0u32),
@@ -93,8 +97,8 @@ pub(crate) fn decrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
-    let (_success, tag_mix) = aes_ctr_keyblock(
+    )?;
+    let tag_mix = aes_ctr_key_block(
         key,
         iv.clone(), // FIXME: is not necessary.
         U32(1u32),
@@ -103,19 +107,17 @@ pub(crate) fn decrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
+    )?;
 
     let padded_msg = pad_aad_msg(aad, cipher_text);
     let my_tag = gmac(&padded_msg, Gf128Key::from_seq(&mac_key));
     let my_tag = xor_block(Block::from_seq(&my_tag), tag_mix);
 
+    let ptxt = aes128_decrypt(Key128::from_seq(key), iv, U32(2u32), cipher_text);
     if my_tag.declassify_eq(&Block::from_seq(&tag)) {
-        (
-            true,
-            aes128_decrypt(Key128::from_seq(key), iv, U32(2u32), cipher_text),
-        )
+        ByteSeqResult::Ok(ptxt)
     } else {
-        (false, ByteSeq::new(0))
+        ByteSeqResult::Err(INVALID_TAG)
     }
 }
 
@@ -125,6 +127,6 @@ pub fn decrypt_aes128(
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
     tag: Tag,
-) -> (bool, ByteSeq) {
+) -> ByteSeqResult {
     decrypt_aes(&ByteSeq::from_seq(&key), iv, aad, cipher_text, tag)
 }

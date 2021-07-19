@@ -84,8 +84,7 @@ fn kat_test() {
             mac.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>()
         );
 
-        let (success, decrypted_msg) = decrypt_aes128(k, nonce, &aad, &cipher, mac);
-        assert!(success);
+        let decrypted_msg = decrypt_aes128(k, nonce, &aad, &cipher, mac).unwrap();
         assert_eq!(
             msg.iter().map(|x| U8::declassify(*x)).collect::<Vec<_>>(),
             decrypted_msg
