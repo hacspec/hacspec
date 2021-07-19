@@ -4,7 +4,7 @@ use aead::{
     Error,
 };
 pub use aead::{Aead, AeadCore, AeadInPlace, NewAead, Payload};
-use evercrypt::aead::{key_gen, nonce_gen, Aead as EvercryptAead, Mode, Nonce as EvercryptNonce};
+use evercrypt::aead::{key_gen, nonce_gen, Aead as EvercryptAead, Mode};
 
 pub struct Chacha20Poly1305 {
     aead: Option<EvercryptAead>,
@@ -15,7 +15,7 @@ impl Chacha20Poly1305 {
         Key::clone_from_slice(&key_gen(Mode::Chacha20Poly1305))
     }
     pub fn nonce_gen() -> Nonce {
-        Nonce::from(nonce_gen(Mode::Chacha20Poly1305))
+        Nonce::clone_from_slice(&nonce_gen(Mode::Chacha20Poly1305))
     }
 }
 
@@ -45,7 +45,6 @@ impl AeadInPlace for Chacha20Poly1305 {
         associated_data: &[u8],
         buffer: &mut [u8],
     ) -> Result<Tag, Error> {
-        let nonce: EvercryptNonce = into_array(&nonce);
         let (ctxt, tag) = match &self.aead {
             Some(cipher) => match cipher.encrypt(buffer, &nonce, associated_data) {
                 Ok(r) => r,
@@ -66,7 +65,6 @@ impl AeadInPlace for Chacha20Poly1305 {
         buffer: &mut [u8],
         tag: &Tag,
     ) -> Result<(), Error> {
-        let nonce: EvercryptNonce = into_array(&nonce);
         let tag: Tag = into_array(&tag);
         let ptxt = match &self.aead {
             Some(cipher) => match cipher.decrypt(buffer, &tag, &nonce, associated_data) {
