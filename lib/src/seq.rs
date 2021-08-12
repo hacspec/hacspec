@@ -39,6 +39,20 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn with_capacity(l: usize) -> Self {
+                Self {
+                    b: Vec::with_capacity(l),
+                }
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[inline(always)]
+            pub fn reserve(mut self, additional: usize) -> Self {
+                self.b.reserve(additional);
+                self
+            }
+
             /// Get the size of this sequence.
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             pub fn len(&self) -> usize {
@@ -50,9 +64,40 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 Self::from_slice(self, start_out, len)
             }
 
+            #[cfg_attr(feature="use_attributes", not_hacspec)]
+            pub fn native_slice(&self) -> &[T] {
+                &self.b
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn into_slice(mut self, start_out: usize, len: usize) -> Self {
+                self.b = self.b.drain(start_out..start_out+len).collect();
+                self
+            }
+
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn slice_range(&self, r: Range<usize>) -> Self {
                 self.slice(r.start, r.end - r.start)
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            pub fn into_slice_range(mut self, r: Range<usize>) -> Self {
+                self.b = self.b.drain(r).collect();
+                self
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[inline(always)]
+            pub fn split_off(mut self, at: usize) -> (Self, Self) {
+                let other = Self::from_vec(self.b.split_off(at));
+                (self, other)
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[inline(always)]
+            pub fn truncate(mut self, len: usize) -> Self  {
+                self.b.truncate(len);
+                self
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
@@ -68,6 +113,13 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 out = out.update_start(self);
                 out = out.update_slice(self.len(), next, 0, next.len());
                 out
+            }
+
+            #[cfg_attr(feature="use_attributes", in_hacspec)]
+            #[inline(always)]
+            pub fn concat_owned(mut self, mut next: Self) -> Self {
+                self.b.append(&mut next.b);
+                self
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
@@ -198,8 +250,8 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 start_in: usize,
                 len: usize,
             ) -> Self {
-                debug_assert!(self.len() >= start_out + len);
-                debug_assert!(v.len() >= start_in + len);
+                debug_assert!(self.len() >= start_out + len, "{} < {} + {}", self.len(), start_out, len);
+                debug_assert!(v.len() >= start_in + len, "{} < {} + {}", v.len(), start_in, len);
                 for i in 0..len {
                     self[start_out + i] = v[start_in + i];
                 }
@@ -289,13 +341,13 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> $name<T> {
             #[cfg_attr(feature="use_attributes", not_hacspec)]
-            pub fn from_vec(x: Vec<T>) -> $name<T> {
+            pub fn from_vec(b: Vec<T>) -> $name<T> {
                 Self {
-                    b: x.clone(),
+                    b,
                 }
             }
 
-            #[cfg_attr(feature="use_attributes", not_hacspec)]
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             pub fn from_native_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
@@ -323,7 +375,7 @@ pub type PublicByteSeq = PublicSeq<u8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {
-    #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+    #[cfg_attr(feature = "use_attributes", not_hacspec)]
     pub fn from_hex(s: &str) -> Seq<U8> {
         Seq::from_vec(
             hex_string_to_bytes(s)
@@ -353,14 +405,19 @@ impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for PublicSeq<T> {
 
 impl<T: Copy + Default + PartialEq + PublicInteger> Eq for PublicSeq<T> {}
 
-impl<T: Copy + Default + PartialEq + SecretInteger> PartialEq for Seq<T> {
+impl PartialEq for Seq<U8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     fn eq(&self, other: &Self) -> bool {
-        self.b == other.b
+        self.b[..]
+            .iter()
+            .map(|x| <U8>::declassify(*x))
+            .collect::<Vec<_>>()
+            == other.b[..]
+                .iter()
+                .map(|x| <U8>::declassify(*x))
+                .collect::<Vec<_>>()
     }
 }
-
-impl<T: Copy + Default + PartialEq + SecretInteger> Eq for Seq<T> {}
 
 #[macro_export]
 macro_rules! assert_secret_seq_eq {
@@ -406,6 +463,15 @@ macro_rules! impl_from_public_slice {
                         .collect::<Vec<$st>>(),
                 )
             }
+
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn from_public_seq<U: SeqTrait<$t>>(x: &U) -> Seq<$st> {
+                let mut tmp = Self::new(x.len());
+                for i in 0..x.len() {
+                    tmp[i] = <$st>::classify(x[i]);
+                }
+                tmp
+            }
         }
     };
 }
@@ -415,6 +481,35 @@ impl_from_public_slice!(u16, U16);
 impl_from_public_slice!(u32, U32);
 impl_from_public_slice!(u64, U64);
 impl_from_public_slice!(u128, U128);
+
+macro_rules! impl_declassify {
+    ($t:ty,$st:ty) => {
+        impl Seq<$st> {
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn declassify(self) -> Seq<$t> {
+                let mut tmp = <Seq<$t>>::new(self.len());
+                for i in 0..self.len() {
+                    tmp[i] = <$st>::declassify(self[i]);
+                }
+                tmp
+            }
+            #[cfg_attr(feature = "use_attributes", not_hacspec)]
+            pub fn into_native(self) -> Vec<$t> {
+                self.b.iter().map(|&x| <$st>::declassify(x)).collect()
+            }
+            #[cfg_attr(feature = "use_attributes", not_hacspec)]
+            pub fn to_native(&self) -> Vec<$t> {
+                self.b.iter().map(|&x| <$st>::declassify(x)).collect()
+            }
+        }
+    };
+}
+
+impl_declassify!(u8, U8);
+impl_declassify!(u16, U16);
+impl_declassify!(u32, U32);
+impl_declassify!(u64, U64);
+impl_declassify!(u128, U128);
 
 impl Seq<U8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
