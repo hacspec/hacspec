@@ -48,10 +48,10 @@ fn ecdsa_point_add(p: Affine, q: Affine) -> ArithmeticResult {
 pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> SignatureResult {
     check_scalar_zero(nonce)?;
     let (k_x, _k_y) = ecdsa_point_mul_base(nonce)?;
-    let r = Scalar::from_byte_seq_be(k_x.to_byte_seq_be());
+    let r = Scalar::from_byte_seq_be(&k_x.to_byte_seq_be());
     check_scalar_zero(r)?;
     let payload_hash = hash(payload);
-    let payload_hash = Scalar::from_byte_seq_be(payload_hash);
+    let payload_hash = Scalar::from_byte_seq_be(&payload_hash);
     let rsk = r * sk;
     let hash_rsk = payload_hash + rsk;
     let nonce_inv = nonce.inv();
@@ -64,7 +64,7 @@ pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyR
     // signature = (r, s) must be in [1, n-1] because they are Scalars
     let (r, s) = signature;
     let payload_hash = hash(payload);
-    let payload_hash = Scalar::from_byte_seq_be(payload_hash);
+    let payload_hash = Scalar::from_byte_seq_be(&payload_hash);
     let s_inv = s.inv();
 
     // R' = (h * s1) * G + (r * s1) * pubKey
@@ -74,7 +74,7 @@ pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyR
     let u2 = r * s_inv;
     let u2 = ecdsa_point_mul(u2, pk)?;
     let (x, _y) = ecdsa_point_add(u1, u2)?;
-    let x = Scalar::from_byte_seq_be(x.to_byte_seq_be());
+    let x = Scalar::from_byte_seq_be(&x.to_byte_seq_be());
 
     if x == r {
         VerifyResult::Ok(())

@@ -67,7 +67,7 @@ macro_rules! _array_base {
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
-                debug_assert!(len <= a.len());
+                debug_assert!(len <= a.len(), "{} > {}", len, a.len());
                 a = a.update_slice(0, input, start, len);
                 a
             }
