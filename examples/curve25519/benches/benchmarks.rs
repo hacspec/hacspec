@@ -9,12 +9,12 @@ fn benchmark(c: &mut Criterion) {
     c.bench_function("x25519", |b| {
         b.iter_batched(
             || {
-                let s = SerializedScalar::from_public_slice(&random_byte_vec(32));
-                let u = SerializedPoint::from_public_slice(&random_byte_vec(32));
+                let s = X25519SerializedScalar::from_public_slice(&random_byte_vec(32));
+                let u = X25519SerializedPoint::from_public_slice(&random_byte_vec(32));
                 (s, u)
             },
             |(s, u)| {
-                let _r = scalarmult(s, u);
+                let _r = x25519_scalarmult(s, u);
             },
             BatchSize::SmallInput,
         )

@@ -14,7 +14,7 @@ const BLOCKSIZE: usize = 16;
 bytes!(PolyBlock, 16);
 
 // These are actual types; fixed-length arrays.
-bytes!(Tag, 16);
+bytes!(Poly1305Tag, 16);
 
 // A byte sequence of length <= BLOCKSIZE
 pub type SubBlock = ByteSeq;
@@ -92,16 +92,16 @@ pub fn poly1305_update (m:&ByteSeq, st:PolyState) -> PolyState {
     poly1305_update_last(last.len(),&last,st)
 }
 
-pub fn poly1305_finish (st:PolyState) -> Tag {
+pub fn poly1305_finish (st:PolyState) -> Poly1305Tag {
     let (acc,_,k) = st;
     let n = U128_from_le_bytes(U128Word::from_slice(&k,16,16));
     let aby = acc.to_byte_seq_le();
     // We can't use from_seq here because the accumulator is larger than 16 bytes.
     let a = U128_from_le_bytes(U128Word::from_slice(&aby,0,16));
-    Tag::from_seq(&U128_to_le_bytes(a+n))
+    Poly1305Tag::from_seq(&U128_to_le_bytes(a+n))
 }
 
-pub fn poly1305(m: &ByteSeq, key: PolyKey) -> Tag {
+pub fn poly1305(m: &ByteSeq, key: PolyKey) -> Poly1305Tag {
     let mut st = poly1305_init(key);
     st = poly1305_update(m,st);
     poly1305_finish(st)

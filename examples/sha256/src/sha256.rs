@@ -149,3 +149,7 @@ pub fn hash(msg: &ByteSeq) -> Digest {
 
     Digest::from_seq(&h.to_be_bytes())
 }
+
+pub fn sha256(msg: &ByteSeq) -> Digest {
+    hash(msg)
+}
