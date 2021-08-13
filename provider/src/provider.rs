@@ -6,7 +6,7 @@ use aead::{
 use hacspec_chacha20::{ChaChaIV as IV, ChaChaKey as HacspecKey};
 use hacspec_chacha20poly1305::*;
 use hacspec_lib::prelude::*;
-use hacspec_poly1305::Tag as HacspecTag;
+use hacspec_poly1305::Poly1305Tag as HacspecTag;
 
 pub struct Chacha20Poly1305 {
     key: Key,
@@ -39,7 +39,7 @@ impl AeadInPlace for Chacha20Poly1305 {
     ) -> Result<Tag, Error> {
         let nonce = IV::from_public_slice(&(nonce.as_slice()));
         let key = HacspecKey::from_public_slice(&self.key.as_slice());
-        let (ctxt, tag) = encrypt(
+        let (ctxt, tag) = chacha20_poly1305_encrypt(
             key,
             nonce,
             &ByteSeq::from_public_slice(&associated_data),
@@ -61,7 +61,7 @@ impl AeadInPlace for Chacha20Poly1305 {
         buffer: &mut [u8],
         tag: &Tag,
     ) -> Result<(), Error> {
-        let ptxt = decrypt(
+        let ptxt = chacha20_poly1305_decrypt(
             HacspecKey::from_public_slice(self.key.as_slice()),
             IV::from_public_slice(nonce),
             &ByteSeq::from_public_slice(associated_data),

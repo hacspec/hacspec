@@ -1,0 +1,21 @@
+[package]
+name = "tls_cryptolib"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hacspec-lib = { path = "../../lib", version = "0.1.0-beta.1" }
+hacspec-sha256 = { path = "../../examples/sha256" }
+hacspec-curve25519 = { path = "../../examples/curve25519" }
+hacspec-chacha20poly1305 = { path = "../../examples/chacha20poly1305" }
+hacspec-chacha20 = { path = "../../examples/chacha20" }
+hacspec-poly1305 = { path = "../../examples/poly1305" }
+hacspec-hmac = { path = "../../examples/hmac" }
+hacspec-hkdf = { path = "../../examples/hkdf" }
+hacspec-ecdsa-p256-sha256 = { path = "../../examples/ecdsa-p256-sha256" }
+hacspec-p256 = { path = "../../examples/p256" }
+hacspec-aes = { path = "../../examples/aes", version = "0.1.0" }
+hacspec-gf128 = { path = "../../examples/gf128", version = "0.1.0" }
+hacspec-aes128-gcm = { path = "../../examples/aes128-gcm", version = "0.1.0" }

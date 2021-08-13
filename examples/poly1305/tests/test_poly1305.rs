@@ -15,12 +15,12 @@ fn basic_test() {
         0xa8, 0x01, 0x03, 0x80, 0x8a, 0xfb, 0x0d, 0xb2, 0xfd, 0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49,
         0xf5, 0x1b,
     ]);
-    let expected = Tag::from_public_slice(&[
+    let expected = Poly1305Tag::from_public_slice(&[
         0xa8, 0x06, 0x1d, 0xc1, 0x30, 0x51, 0x36, 0xc6, 0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27,
         0xa9,
     ]);
     let computed = poly1305(&msg, k);
-    assert!(Tag::declassify_eq(&expected, &computed))
+    assert!(Poly1305Tag::declassify_eq(&expected, &computed))
 }
 
 #[test]
@@ -34,9 +34,9 @@ fn corner_case_test() {
         0x2d, 0x25, 0xec, 0x44, 0xc2, 0x08, 0xe1, 0x32, 0x23, 0xca, 0x8c, 0x5b, 0x89, 0x11, 0xbf,
         0x59, 0xe8,
     ]);
-    let expected = Tag::from_public_slice(&[
+    let expected = Poly1305Tag::from_public_slice(&[
         1, 66, 72, 238, 152, 119, 158, 102, 3, 127, 38, 148, 173, 28, 215, 205,
     ]);
     let computed = poly1305(&msg, k);
-    assert!(Tag::declassify_eq(&expected, &computed))
+    assert!(Poly1305Tag::declassify_eq(&expected, &computed))
 }

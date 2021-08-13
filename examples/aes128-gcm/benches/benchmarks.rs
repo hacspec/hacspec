@@ -12,7 +12,7 @@ fn benchmark(c: &mut Criterion) {
         b.iter_batched(
             || {
                 let key = Key128::from_public_slice(&random_byte_vec(16));
-                let nonce = Nonce::from_public_slice(&random_byte_vec(12));
+                let nonce = AesNonce::from_public_slice(&random_byte_vec(12));
                 let data = Seq::<U8>::from_public_slice(&random_byte_vec(1_000));
                 let aad = Seq::<U8>::from_public_slice(&random_byte_vec(1_000));
                 (data, nonce, aad, key)
@@ -28,7 +28,7 @@ fn benchmark(c: &mut Criterion) {
         b.iter_batched(
             || {
                 let key = Key128::from_public_slice(&random_byte_vec(16));
-                let nonce = Nonce::from_public_slice(&random_byte_vec(12));
+                let nonce = AesNonce::from_public_slice(&random_byte_vec(12));
                 let data = Seq::<U8>::from_public_slice(&random_byte_vec(1_000));
                 let aad = Seq::<U8>::from_public_slice(&random_byte_vec(1_000));
                 let (cipher, tag) = encrypt_aes128(key, nonce, &aad, &data);

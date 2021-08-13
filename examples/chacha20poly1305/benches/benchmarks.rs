@@ -18,7 +18,7 @@ fn benchmark(c: &mut Criterion) {
                 (data, nonce, aad, key)
             },
             |(data, nonce, aad, key)| {
-                let (_cipher, _tag) = encrypt(key, nonce, &aad, &data);
+                let (_cipher, _tag) = chacha20_poly1305_encrypt(key, nonce, &aad, &data);
             },
             BatchSize::SmallInput,
         )
@@ -31,11 +31,11 @@ fn benchmark(c: &mut Criterion) {
                 let nonce = ChaChaIV::from_public_slice(&random_byte_vec(12));
                 let data = ByteSeq::from_public_slice(&random_byte_vec(10_000));
                 let aad = ByteSeq::from_public_slice(&random_byte_vec(1_000));
-                let (cipher, tag) = encrypt(key, nonce, &aad, &data);
+                let (cipher, tag) = chacha20_poly1305_encrypt(key, nonce, &aad, &data);
                 (nonce, aad, key, cipher, tag)
             },
             |(nonce, aad, key, cipher, tag)| {
-                let _msg = decrypt(key, nonce, &aad, &cipher, tag);
+                let _msg = chacha20_poly1305_decrypt(key, nonce, &aad, &cipher, tag);
             },
             BatchSize::SmallInput,
         )
