@@ -178,10 +178,10 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(<span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">sk</span>: <span class="ident">SecretKey</span>, <span class="ident">nonce</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SignatureResult</span> {
     <span class="ident">check_scalar_zero</span>(<span class="ident">nonce</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> (<span class="ident">k_x</span>, <span class="ident">_k_y</span>) <span class="op">=</span> <span class="ident">ecdsa_point_mul_base</span>(<span class="ident">nonce</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">k_x</span>.<span class="ident">to_byte_seq_be</span>());
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">k_x</span>.<span class="ident">to_byte_seq_be</span>());
     <span class="ident">check_scalar_zero</span>(<span class="ident">r</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">payload_hash</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="ident">payload</span>);
-    <span class="kw">let</span> <span class="ident">payload_hash</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">payload_hash</span>);
+    <span class="kw">let</span> <span class="ident">payload_hash</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">payload_hash</span>);
     <span class="kw">let</span> <span class="ident">rsk</span> <span class="op">=</span> <span class="ident">r</span> <span class="op">*</span> <span class="ident">sk</span>;
     <span class="kw">let</span> <span class="ident">hash_rsk</span> <span class="op">=</span> <span class="ident">payload_hash</span> <span class="op">+</span> <span class="ident">rsk</span>;
     <span class="kw">let</span> <span class="ident">nonce_inv</span> <span class="op">=</span> <span class="ident">nonce</span>.<span class="ident">inv</span>();
@@ -194,7 +194,7 @@
     <span class="comment">// signature = (r, s) must be in [1, n-1] because they are Scalars</span>
     <span class="kw">let</span> (<span class="ident">r</span>, <span class="ident">s</span>) <span class="op">=</span> <span class="ident">signature</span>;
     <span class="kw">let</span> <span class="ident">payload_hash</span> <span class="op">=</span> <span class="ident">hash</span>(<span class="ident">payload</span>);
-    <span class="kw">let</span> <span class="ident">payload_hash</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">payload_hash</span>);
+    <span class="kw">let</span> <span class="ident">payload_hash</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">payload_hash</span>);
     <span class="kw">let</span> <span class="ident">s_inv</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">inv</span>();
 
     <span class="comment">// R&#39; = (h * s1) * G + (r * s1) * pubKey</span>
@@ -204,7 +204,7 @@
     <span class="kw">let</span> <span class="ident">u2</span> <span class="op">=</span> <span class="ident">r</span> <span class="op">*</span> <span class="ident">s_inv</span>;
     <span class="kw">let</span> <span class="ident">u2</span> <span class="op">=</span> <span class="ident">ecdsa_point_mul</span>(<span class="ident">u2</span>, <span class="ident">pk</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">_y</span>) <span class="op">=</span> <span class="ident">ecdsa_point_add</span>(<span class="ident">u1</span>, <span class="ident">u2</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">x</span>.<span class="ident">to_byte_seq_be</span>());
+    <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>.<span class="ident">to_byte_seq_be</span>());
 
     <span class="kw">if</span> <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="ident">r</span> {
         <span class="ident">VerifyResult</span>::<span class="prelude-val">Ok</span>(())
