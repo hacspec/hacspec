@@ -72,7 +72,7 @@ pub enum HashAlgorithm {
 }
 
 #[derive(Clone, Copy, PartialEq)]
-pub enum AEADAlgorithm {
+pub enum AeadAlgorithm {
     Chacha20Poly1305,
     Aes128Gcm,
     Aes256Gcm,
@@ -100,19 +100,19 @@ pub fn hmac_key_len(ha: &HashAlgorithm) -> usize {
         HashAlgorithm::SHA384 => 48,
     }
 }
-pub fn ae_key_len(ae: &AEADAlgorithm) -> usize {
+pub fn ae_key_len(ae: &AeadAlgorithm) -> usize {
     match ae {
-        AEADAlgorithm::Chacha20Poly1305 => 32,
-        AEADAlgorithm::Aes128Gcm => 16,
-        AEADAlgorithm::Aes256Gcm => 16,
+        AeadAlgorithm::Chacha20Poly1305 => 32,
+        AeadAlgorithm::Aes128Gcm => 16,
+        AeadAlgorithm::Aes256Gcm => 16,
     }
 }
 
-pub fn ae_iv_len(ae: &AEADAlgorithm) -> usize {
+pub fn ae_iv_len(ae: &AeadAlgorithm) -> usize {
     match ae {
-        AEADAlgorithm::Chacha20Poly1305 => 12,
-        AEADAlgorithm::Aes128Gcm => 12,
-        AEADAlgorithm::Aes256Gcm => 12,
+        AeadAlgorithm::Chacha20Poly1305 => 12,
+        AeadAlgorithm::Aes128Gcm => 12,
+        AeadAlgorithm::Aes256Gcm => 12,
     }
 }
 
@@ -140,22 +140,35 @@ pub fn zero_key(ha: &HashAlgorithm) -> Key {
 pub fn secret_to_public(group_name: &NamedGroup, x: &DhSk) -> Result<DhPk, CryptoError> {
     match group_name {
         NamedGroup::Secp256r1 => match p256_point_mul_base(P256Scalar::from_byte_seq_be(x)) {
-            AffineResult::Ok((x, y)) => Result::<DhPk, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be())),
+            AffineResult::Ok((x, y)) => {
+                Result::<DhPk, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be()))
+            }
             AffineResult::Err(_) => Result::<DhPk, CryptoError>::Err(CryptoError::CryptoError),
         },
-        NamedGroup::X25519 => Result::<DhPk, CryptoError>::Ok(DhPk::from_seq(&x25519_secret_to_public(
-            X25519SerializedScalar::from_seq(x),
-        ))),
+        NamedGroup::X25519 => Result::<DhPk, CryptoError>::Ok(DhPk::from_seq(
+            &x25519_secret_to_public(X25519SerializedScalar::from_seq(x)),
+        )),
+    }
+}
+
+fn p256_check_point_len(p: &DhPk) -> Result<(), CryptoError> {
+    if p.len() != 64 {
+        Result::<(), CryptoError>::Err(CryptoError::CryptoError)
+    } else {
+        Result::<(), CryptoError>::Ok(())
     }
 }
 
 fn p256_ecdh(x: &DhSk, y: &DhPk) -> Result<Key, CryptoError> {
+    p256_check_point_len(y)?;
     let pk = (
         P256FieldElement::from_byte_seq_be(&y.slice_range(0..32)),
         P256FieldElement::from_byte_seq_be(&y.slice_range(32..64)),
     );
     match p256_point_mul(P256Scalar::from_byte_seq_be(x), pk) {
-        AffineResult::Ok((x, y)) => Result::<Key, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be())),
+        AffineResult::Ok((x, y)) => {
+            Result::<Key, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be()))
+        }
         AffineResult::Err(_) => Result::<Key, CryptoError>::Err(CryptoError::CryptoError),
     }
 }
@@ -217,8 +230,12 @@ pub fn kem_decap(ks: &KemScheme, ct: &ByteSeq, sk: KemSk) -> Result<Key, CryptoE
 
 pub fn hash(ha: &HashAlgorithm, payload: &ByteSeq) -> Result<Digest, CryptoError> {
     match ha {
-        HashAlgorithm::SHA256 => Result::<Digest, CryptoError>::Ok(Digest::from_seq(&sha256(payload))),
-        HashAlgorithm::SHA384 => Result::<Digest, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        HashAlgorithm::SHA256 => {
+            Result::<Digest, CryptoError>::Ok(Digest::from_seq(&sha256(payload)))
+        }
+        HashAlgorithm::SHA384 => {
+            Result::<Digest, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -226,8 +243,12 @@ pub fn hash(ha: &HashAlgorithm, payload: &ByteSeq) -> Result<Digest, CryptoError
 
 pub fn hmac_tag(ha: &HashAlgorithm, mk: &MacKey, payload: &ByteSeq) -> Result<HMAC, CryptoError> {
     match ha {
-        HashAlgorithm::SHA256 => Result::<HMAC, CryptoError>::Ok(HMAC::from_seq(&hmac(mk, payload))),
-        HashAlgorithm::SHA384 => Result::<HMAC, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        HashAlgorithm::SHA256 => {
+            Result::<HMAC, CryptoError>::Ok(HMAC::from_seq(&hmac(mk, payload)))
+        }
+        HashAlgorithm::SHA384 => {
+            Result::<HMAC, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -293,7 +314,7 @@ pub fn verification_key_from_cert(cert: &ByteSeq) -> Result<VerificationKey, Cry
 
     // Read sequences until we find the ecPublicKey (we don't support anything else right now)
     let mut pk = VerificationKey::new(0);
-    // XXX: the typechecker should allow _ here. We don't need the counter.
+    // XXX: the typechecker should allow _ here. We don't need the counter.  #135
     for _i in 0..seq1.len() {
         // FIXME: we really need a break statement.
         if seq1.len() > 0 {
@@ -320,14 +341,16 @@ pub fn verification_key_from_cert(cert: &ByteSeq) -> Result<VerificationKey, Cry
                         if oid_len >= 9 {
                             // ecPublicKey oid incl tag: 06 07 2A 86 48 CE 3D 02 01
                             // FIXME: This shouldn't be necessary. Instead public_byte_seq!
-                            //        should be added to the typechecker.
+                            //        should be added to the typechecker. #136
                             let expected = ByteSeq::from_seq(&EcOidTag(secret_bytes!([
-                                0x06u8, 0x07u8, 0x2Au8, 0x86u8, 0x48u8, 0xCEu8, 0x3Du8, 0x02u8, 0x01u8
+                                0x06u8, 0x07u8, 0x2Au8, 0x86u8, 0x48u8, 0xCEu8, 0x3Du8, 0x02u8,
+                                0x01u8
                             ])));
                             let oid = seq2.slice(1, 9);
                             let mut ec_pk_oid = true;
                             for i in 0..9 {
-                                let oid_byte_equal = U8::declassify(oid[i]) == U8::declassify(expected[i]);
+                                let oid_byte_equal =
+                                    U8::declassify(oid[i]) == U8::declassify(expected[i]);
                                 ec_pk_oid = ec_pk_oid && oid_byte_equal;
                             }
                             if ec_pk_oid {
@@ -360,12 +383,12 @@ fn concat_signature(r: P256Scalar, s: P256Scalar) -> Result<Signature, CryptoErr
     let signature = Signature::new(0)
         .concat(&r.to_byte_seq_be())
         .concat(&s.to_byte_seq_be());
-        Result::<Signature, CryptoError>::Ok(signature)
+    Result::<Signature, CryptoError>::Ok(signature)
 }
 
 fn p256_sign(ps: &SignatureKey, payload: &ByteSeq, ent: Entropy) -> Result<Signature, CryptoError> {
     let random = Random::from_seq(&ent.slice_range(0..32));
-    // FIXME: return an error when nonce is not a valid scalar value.
+    // FIXME: #138 return an error when nonce is not a valid scalar value.
     let nonce = P256Scalar::from_byte_seq_be(&random);
     match ecdsa_p256_sha256_sign(payload, P256Scalar::from_byte_seq_be(ps), nonce) {
         // The ASN.1 encoding happens later on the outside.
@@ -382,8 +405,12 @@ pub fn sign(
 ) -> Result<Signature, CryptoError> {
     match sa {
         SignatureScheme::EcdsaSecp256r1Sha256 => p256_sign(ps, payload, ent),
-        SignatureScheme::ED25519 => Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
-        SignatureScheme::RsaPssRsaSha256 => Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        SignatureScheme::ED25519 => {
+            Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
+        SignatureScheme::RsaPssRsaSha256 => {
+            Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -410,8 +437,12 @@ pub fn verify(
 ) -> Result<(), CryptoError> {
     match sa {
         SignatureScheme::EcdsaSecp256r1Sha256 => p256_verify(pk, payload, sig),
-        SignatureScheme::ED25519 => Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
-        SignatureScheme::RsaPssRsaSha256 => Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        SignatureScheme::ED25519 => {
+            Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
+        SignatureScheme::RsaPssRsaSha256 => {
+            Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -459,20 +490,22 @@ fn chacha_encrypt(
 ) -> Result<ByteSeq, CryptoError> {
     let (ctxt, tag) =
         chacha20_poly1305_encrypt(ChaChaKey::from_seq(k), ChaChaIV::from_seq(iv), ad, payload);
-        Result::<ByteSeq, CryptoError>::Ok(ctxt.concat(&tag))
+    Result::<ByteSeq, CryptoError>::Ok(ctxt.concat(&tag))
 }
 
 pub fn aead_encrypt(
-    a: &AEADAlgorithm,
+    a: &AeadAlgorithm,
     k: &AeadKey,
     iv: &AeadIv,
     payload: &ByteSeq,
     ad: &ByteSeq,
 ) -> Result<ByteSeq, CryptoError> {
     match a {
-        AEADAlgorithm::Aes128Gcm => aes128_encrypt(k, iv, payload, ad),
-        AEADAlgorithm::Aes256Gcm => Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
-        AEADAlgorithm::Chacha20Poly1305 => chacha_encrypt(k, iv, payload, ad),
+        AeadAlgorithm::Aes128Gcm => aes128_encrypt(k, iv, payload, ad),
+        AeadAlgorithm::Aes256Gcm => {
+            Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
+        AeadAlgorithm::Chacha20Poly1305 => chacha_encrypt(k, iv, payload, ad),
     }
 }
 
@@ -515,15 +548,17 @@ fn chacha_decrypt(
 }
 
 pub fn aead_decrypt(
-    a: &AEADAlgorithm,
+    a: &AeadAlgorithm,
     k: &AeadKey,
     iv: &AeadIv,
     ciphertext: &ByteSeq,
     ad: &ByteSeq,
 ) -> Result<ByteSeq, CryptoError> {
     match a {
-        AEADAlgorithm::Aes128Gcm => aes128_decrypt(k, iv, ciphertext, ad),
-        AEADAlgorithm::Aes256Gcm => Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
-        AEADAlgorithm::Chacha20Poly1305 => chacha_decrypt(k, iv, ciphertext, ad),
+        AeadAlgorithm::Aes128Gcm => aes128_decrypt(k, iv, ciphertext, ad),
+        AeadAlgorithm::Aes256Gcm => {
+            Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
+        AeadAlgorithm::Chacha20Poly1305 => chacha_decrypt(k, iv, ciphertext, ad),
     }
 }
