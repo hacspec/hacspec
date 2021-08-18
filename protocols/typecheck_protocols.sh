@@ -33,7 +33,7 @@ function typecheck {
 }
 
 cd $(dirname "$0")/../
-cargo clean -p tls_cryptolib
+cargo clean
 cargo build -p tls_cryptolib
 cargo install --path language
 typecheck tls_cryptolib             no-ec      fst    json  Hacspec.Tls.Cryptolib.fst
