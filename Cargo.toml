@@ -28,6 +28,7 @@ members = [
     "examples/bls12-381",
     "examples/ecdsa-p256-sha256",
     "examples/aes",
+    "examples/aes-ccm",
     "examples/gf128",
     "examples/aes128-gcm",
 ]
@@ -57,6 +58,7 @@ default-members = [
     "examples/bls12-381",
     "examples/ecdsa-p256-sha256",
     "examples/aes",
+    "examples/aes-ccm",
     "examples/gf128",
     "examples/aes128-gcm",
 ]
