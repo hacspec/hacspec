@@ -105,12 +105,12 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
 fn get_t(b: &ByteSeq, key: Key128, num: usize) -> ByteSeq {
     let b0 = b.get_exact_chunk(16, 0);
     let bloc = Block::from_seq(&b0);
-    let mut y_curr = (aes128_encrypt_block(key, bloc)).1;
+    let mut y_curr = aes128_encrypt_block(key, bloc);
 
     for i in 1..b.len()/16 {
         let mut b_curr = Block::from_seq(&b.get_exact_chunk(16, i));
         b_curr = y_curr ^ b_curr;
-        y_curr = (aes128_encrypt_block(key, b_curr)).1;
+        y_curr = aes128_encrypt_block(key, b_curr);
     }
 
     ByteSeq::from_seq(&(y_curr.slice(0, num)))
@@ -145,12 +145,12 @@ fn counter_func(n: &ByteSeq, nlen: u64, m: u64) -> ByteSeq {
 
 fn ctr_cipher(ctr: &ByteSeq, key: Key128, m: u64) -> (ByteSeq, ByteSeq) {
     let ctr_zero = Block::from_seq(&ctr.get_exact_chunk(16, 0));
-    let s0 = ByteSeq::from_seq(&(aes128_encrypt_block(key, ctr_zero)).1);
+    let s0 = ByteSeq::from_seq(&aes128_encrypt_block(key, ctr_zero));
     let mut s = ByteSeq::new((16*m).try_into().unwrap());
 
     for i in 1..m+1 {
         let ctr_block = Block::from_seq(&ctr.get_exact_chunk(16, i.try_into().unwrap()));
-        let s_curr = (aes128_encrypt_block(key, ctr_block)).1;
+        let s_curr = aes128_encrypt_block(key, ctr_block);
         let seq_s = ByteSeq::from_seq(&s_curr);
         s = s.set_exact_chunk(16, (i-1).try_into().unwrap(), &seq_s);
     }
@@ -159,8 +159,8 @@ fn ctr_cipher(ctr: &ByteSeq, key: Key128, m: u64) -> (ByteSeq, ByteSeq) {
 }
 
 pub fn encrypt_ccm(a: ByteSeq, n: ByteSeq, pay: ByteSeq, key: Key128, tlen: u8, alen: u64, nlen: u8, plen: u64) -> ByteSeq {
-    let b = format_func(&a, &n, &pay, tlen, alen, nlen, plen);
-    let t = get_t(&b, key, tlen.into());
+    let b = format_func(&a, &n, &pay, tlen, alen, nlen, plen); // step 1
+    let t = get_t(&b, key, tlen.into()); // steps 2 to 4
 
     let m = (plen+15)/16; // round up
     let counter = counter_func(&n, nlen.into(), m.into());
