@@ -32,7 +32,6 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
     }
 
     let andy: u64 = 255; // 0xFF
-    let zero = ByteSeq::from_public_slice(&[0x0]);
     let mut copy: u64 = plen;
 
     for i in (16-qlen..16).rev() {
@@ -79,7 +78,7 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
             break
         } else {
             // add zero padding for Associated Data
-            b = b.set_exact_chunk(1, k as usize, &zero);
+            b[k as usize] = U8(0x0);
             k = k + 1;
         }
     }
@@ -97,7 +96,7 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
             break
         } else {
             // add zero padding for Payload
-            b = b.set_exact_chunk(1, k as usize, &zero);
+            b[k as usize] = U8(0x0);
             k = k + 1;
         }
     }
@@ -121,13 +120,13 @@ fn get_t(b: &ByteSeq, key: Key128, num: usize) -> ByteSeq {
 
 fn counter_func(n: &ByteSeq, nlen: u8, m: u64) -> ByteSeq {
     let qlen: u8 = 15 - nlen;
-    let flag = ByteSeq::from_public_slice(&[qlen-1]);
+    let flag = qlen - 1;
     let mut ctr = ByteSeq::new((16 * (m+1)) as usize);
     let high: u64 = 255; // 0xFF
 
     for i in 0..m+1 {
-        let k = 16*i;
-        ctr = ctr.set_exact_chunk(1, k as usize, &flag);
+        let k = 16 * i;
+        ctr[k as usize] = U8(flag);
 
         for j in 0..nlen.into() {
             let tmp2 = n.get_exact_chunk(1, j as usize);
