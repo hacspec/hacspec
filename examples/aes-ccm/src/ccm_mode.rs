@@ -73,10 +73,8 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
 
     k = k + alen;
 
-    for _ in 0..16 {
-        if k % 16 == 0 {
-            break
-        } else {
+    for _t in 0..16 {
+        if k % 16 != 0 {
             // add zero padding for Associated Data
             b[k as usize] = U8(0x0);
             k = k + 1;
@@ -91,10 +89,8 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
 
     k = k + plen;
 
-    for _ in 0..16 {
-        if k % 16 == 0 {
-            break
-        } else {
+    for _t in 0..16 {
+        if k % 16 != 0 {
             // add zero padding for Payload
             b[k as usize] = U8(0x0);
             k = k + 1;
@@ -191,10 +187,10 @@ pub fn decrypt_ccm(adata: ByteSeq, nonce: ByteSeq, ciph: ByteSeq, clen: u8, key:
         let counter = counter_func(&nonce, nlen.into(), m.into());
         let (s0, s) = ctr_cipher(&counter, key, m.into());
 
-        let x = clen-tlen;
+        let x = clen - tlen;
         let p = ciph.get_exact_chunk(x.into(), 0) ^ s.get_exact_chunk(x.into(), 0);
         p
     } else {
-        ByteSeq::from_public_slice(&[]) // TODO: Return "Invalid" instead
+        ByteSeq::new(0) // TODO: Return "Invalid" instead
     }
 }
