@@ -25,9 +25,7 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
 
     flags = flags | (((t-2)/2) << 3);
     flags = flags | (qlen-1);
-    let f = ByteSeq::from_public_slice(&[flags]);
-
-    b = b.set_exact_chunk(1, 0, &f);
+    b[0] = U8(flags);
 
     for i in 0..nlen {
         let tmp2 = n.get_exact_chunk(1, i.into());
@@ -45,21 +43,21 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
     }
 
     // creation of b(1) to b(u)
-    let x = ByteSeq::from_public_slice(&[0xff]);
-    let y = ByteSeq::from_public_slice(&[0xfe]);
-    let mut k = 16;
+    let x: u8 = 0xff;
+    let y: u8 = 0xfe;
+
+    let mut k = 16; // byte number to set next
     let mut copy2 = alen;
 
     if alen >= 0x800000 {
-        if alen < 0x100000000 {
-            b = b.set_exact_chunk(1, 16, &x);
-            b = b.set_exact_chunk(1, 17, &y);
-        } else {
-            b = b.set_exact_chunk(1, 16, &x);
-            b = b.set_exact_chunk(1, 17, &x);
-        }
-
+        b[16] = U8(x);
         k = k + 2;
+
+        if alen < 0x100000000 {
+            b[17] = U8(y);
+        } else {
+            b[17] = U8(x);
+        }
     }
 
     for i in (k..k+tmp).rev() {
@@ -75,26 +73,34 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
         b = b.set_exact_chunk(1, (i+k).try_into().unwrap(), &tmp2);
     }
 
-    k = k + alen-1;
+    k = k + alen;
 
-    while k % 16 != 15 {
-        // add zero padding for Associated Data
-        k = k + 1;
-        b = b.set_exact_chunk(1, k.try_into().unwrap(), &zero);
+    for _ in 0..16 {
+        if k % 16 == 0 {
+            break
+        } else {
+            // add zero padding for Associated Data
+            b = b.set_exact_chunk(1, k.try_into().unwrap(), &zero);
+            k = k + 1;
+        }
     }
 
     // creation of b(u+1) to b(r)
     for i in 0..plen {
         let tmp2 = p.get_exact_chunk(1, i.try_into().unwrap());
-        b = b.set_exact_chunk(1, (i+k+1).try_into().unwrap(), &tmp2);
+        b = b.set_exact_chunk(1, (i+k).try_into().unwrap(), &tmp2);
     }
 
     k = k + plen;
 
-    while k % 16 != 15 {
-        // add zero padding for Payload
-        k = k + 1;
-        b = b.set_exact_chunk(1, k.try_into().unwrap(), &zero);
+    for _ in 0..16 {
+        if k % 16 == 0 {
+            break
+        } else {
+            // add zero padding for Payload
+            b = b.set_exact_chunk(1, k.try_into().unwrap(), &zero);
+            k = k + 1;
+        }
     }
 
     b
