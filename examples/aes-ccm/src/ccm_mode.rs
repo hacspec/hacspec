@@ -1,4 +1,3 @@
-use std::convert::TryInto;
 use hacspec_lib::*;
 use hacspec_aes::*;
 
@@ -13,7 +12,7 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
     }
 
     r = r + ((tmp+alen+15)/16)+((plen+15)/16); // ceiling operation used
-    let mut b = ByteSeq::new((16*(r+1)).try_into().unwrap());
+    let mut b = ByteSeq::new((16*(r+1)) as usize);
 
     // creation of b(0)
     let qlen: u8 = 15 - nlen;
@@ -62,15 +61,15 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
 
     for i in (k..k+tmp).rev() {
         let smth2 = ByteSeq::from_public_slice(&[(copy2 & andy) as u8]);
-        b = b.set_exact_chunk(1, i.try_into().unwrap(), &smth2);
+        b = b.set_exact_chunk(1, i as usize, &smth2);
         copy2 = copy2 >> 8;
     }
 
     k = k + tmp;
 
     for i in 0..alen {
-        let tmp2 = a.get_exact_chunk(1, i.try_into().unwrap());
-        b = b.set_exact_chunk(1, (i+k).try_into().unwrap(), &tmp2);
+        let tmp2 = a.get_exact_chunk(1, i as usize);
+        b = b.set_exact_chunk(1, (i+k) as usize, &tmp2);
     }
 
     k = k + alen;
@@ -80,15 +79,15 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
             break
         } else {
             // add zero padding for Associated Data
-            b = b.set_exact_chunk(1, k.try_into().unwrap(), &zero);
+            b = b.set_exact_chunk(1, k as usize, &zero);
             k = k + 1;
         }
     }
 
     // creation of b(u+1) to b(r)
     for i in 0..plen {
-        let tmp2 = p.get_exact_chunk(1, i.try_into().unwrap());
-        b = b.set_exact_chunk(1, (i+k).try_into().unwrap(), &tmp2);
+        let tmp2 = p.get_exact_chunk(1, i as usize);
+        b = b.set_exact_chunk(1, (i+k) as usize, &tmp2);
     }
 
     k = k + plen;
@@ -98,7 +97,7 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
             break
         } else {
             // add zero padding for Payload
-            b = b.set_exact_chunk(1, k.try_into().unwrap(), &zero);
+            b = b.set_exact_chunk(1, k as usize, &zero);
             k = k + 1;
         }
     }
@@ -120,26 +119,27 @@ fn get_t(b: &ByteSeq, key: Key128, num: usize) -> ByteSeq {
     ByteSeq::from_seq(&(y_curr.slice(0, num)))
 }
 
-fn counter_func(n: &ByteSeq, nlen: u64, m: u64) -> ByteSeq {
-    let qlen: u8 = (15 - nlen).try_into().unwrap();
+fn counter_func(n: &ByteSeq, nlen: u8, m: u64) -> ByteSeq {
+    let qlen: u8 = 15 - nlen;
     let flag = ByteSeq::from_public_slice(&[qlen-1]);
-    let mut ctr = ByteSeq::new((16 * (m+1)).try_into().unwrap());
+    let mut ctr = ByteSeq::new((16 * (m+1)) as usize);
     let high: u64 = 255; // 0xFF
 
     for i in 0..m+1 {
         let k = 16*i;
-        ctr = ctr.set_exact_chunk(1, k.try_into().unwrap(), &flag);
+        ctr = ctr.set_exact_chunk(1, k as usize, &flag);
 
-        for j in 0..nlen {
-            let tmp2 = n.get_exact_chunk(1, j.try_into().unwrap());
-            ctr = ctr.set_exact_chunk(1, (k+j+1).try_into().unwrap(), &tmp2);
+        for j in 0..nlen.into() {
+            let tmp2 = n.get_exact_chunk(1, j as usize);
+            ctr = ctr.set_exact_chunk(1, (k+j+1) as usize, &tmp2);
         }
 
         let mut icopy = i;
+        let ncopy: u64 = nlen.into();
 
-        for x in (k+nlen+1..k+16).rev() {
+        for x in (k+ncopy+1..k+16).rev() {
             let curr = ByteSeq::from_public_slice(&[(icopy & high) as u8]);
-            ctr = ctr.set_exact_chunk(1, x.try_into().unwrap(), &curr);
+            ctr = ctr.set_exact_chunk(1, x as usize, &curr);
             icopy = icopy >> 8;
         }
     }
@@ -150,13 +150,13 @@ fn counter_func(n: &ByteSeq, nlen: u64, m: u64) -> ByteSeq {
 fn ctr_cipher(ctr: &ByteSeq, key: Key128, m: u64) -> (ByteSeq, ByteSeq) {
     let ctr_zero = Block::from_seq(&ctr.get_exact_chunk(16, 0));
     let s0 = ByteSeq::from_seq(&aes128_encrypt_block(key, ctr_zero));
-    let mut s = ByteSeq::new((16*m).try_into().unwrap());
+    let mut s = ByteSeq::new((16*m) as usize);
 
     for i in 1..m+1 {
-        let ctr_block = Block::from_seq(&ctr.get_exact_chunk(16, i.try_into().unwrap()));
+        let ctr_block = Block::from_seq(&ctr.get_exact_chunk(16, i as usize));
         let s_curr = aes128_encrypt_block(key, ctr_block);
         let seq_s = ByteSeq::from_seq(&s_curr);
-        s = s.set_exact_chunk(16, (i-1).try_into().unwrap(), &seq_s);
+        s = s.set_exact_chunk(16, (i-1) as usize, &seq_s);
     }
 
     (s0, s)
@@ -167,14 +167,14 @@ pub fn encrypt_ccm(a: ByteSeq, n: ByteSeq, pay: ByteSeq, key: Key128, tlen: u8, 
     let t = get_t(&b, key, tlen.into()); // steps 2 to 4
 
     let m = (plen+15)/16; // round up
-    let counter = counter_func(&n, nlen.into(), m.into());
+    let counter = counter_func(&n, nlen, m.into());
     let (s0, s) = ctr_cipher(&counter, key, m.into());
 
     let cipherlen = t.len()+pay.len(); let pl = pay.len();
     let mut ciphertext = ByteSeq::new(cipherlen);
 
-    let pay_xor = pay ^ s.get_exact_chunk(plen.try_into().unwrap(), 0);
-    ciphertext = ciphertext.set_exact_chunk(plen.try_into().unwrap(), 0, &pay_xor);
+    let pay_xor = pay ^ s.get_exact_chunk(plen as usize, 0);
+    ciphertext = ciphertext.set_exact_chunk(plen as usize, 0, &pay_xor);
 
     let t_xor = t ^ s0.get_exact_chunk(tlen.into(), 0);
 
