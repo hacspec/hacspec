@@ -4,17 +4,15 @@ use hacspec_aes::*;
 
 fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8, plen: u64) -> ByteSeq {
     let mut r = 0;
-    let mut tmp = 0;
+    let mut tmp = 10;
 
-    if alen < (1<<16 - 1<<8) {
+    if alen < 0x800000 {
         tmp = 2;
-    } else if alen < (1<<32) {
+    } else if alen < 0x100000000 {
         tmp = 6;
-    } else {
-        tmp = 10;
     }
 
-    r += ((tmp+alen+15)/16)+((plen+15)/16); // ceiling operation used
+    r = r + ((tmp+alen+15)/16)+((plen+15)/16); // ceiling operation used
     let mut b = ByteSeq::new((16*(r+1)).try_into().unwrap());
 
     // creation of b(0)
@@ -52,8 +50,8 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
     let mut k = 16;
     let mut copy2 = alen;
 
-    if alen >= (1<<16 - 1<<8) {
-        if alen < (1<<32) {
+    if alen >= 0x800000 {
+        if alen < 0x100000000 {
             b = b.set_exact_chunk(1, 16, &x);
             b = b.set_exact_chunk(1, 17, &y);
         } else {
