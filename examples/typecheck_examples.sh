@@ -52,5 +52,6 @@ typecheck hacspec-gimli                ec      fst    json
 typecheck hacspec-bls12-381         no-ec   no-fst    json
 typecheck hacspec-ecdsa-p256-sha256 no-ec   no-fst    json
 typecheck hacspec-aes               no-ec      fst    json
+typecheck hacspec-aes-ccm           no-ec      fst    json
 typecheck hacspec-gf128             no-ec      fst    json
 typecheck hacspec-aes128-gcm        no-ec      fst    json
