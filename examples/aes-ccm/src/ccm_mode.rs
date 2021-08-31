@@ -3,12 +3,16 @@ use hacspec_aes::*;
 
 fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8, plen: u64) -> ByteSeq {
     let mut r = 0;
-    let mut tmp = 10;
+    let mut tmp = 0;
 
     if alen < 0x800000 {
         tmp = 2;
-    } else if alen < 0x100000000 {
-        tmp = 6;
+    } else {
+        if alen < 0x100000000 {
+            tmp = 6;
+        } else {
+            tmp = 10;
+        }
     }
 
     r = r + ((tmp+alen+15)/16)+((plen+15)/16); // ceiling operation used
@@ -34,9 +38,9 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
     let andy: u64 = 255; // 0xFF
     let mut copy: u64 = plen;
 
-    for i in (16-qlen..16).rev() {
-        let smth = ByteSeq::from_public_slice(&[(copy & andy) as u8]);
-        b = b.set_exact_chunk(1, i.into(), &smth);
+    for i in 1..qlen+1 {
+        let curr = (copy & andy) as u8;
+        b[16-i] = U8(curr);
         copy = copy >> 8;
     }
 
@@ -58,9 +62,9 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
         }
     }
 
-    for i in (k..k+tmp).rev() {
-        let smth2 = ByteSeq::from_public_slice(&[(copy2 & andy) as u8]);
-        b = b.set_exact_chunk(1, i as usize, &smth2);
+    for i in 1..tmp+1 {
+        let curr = (copy2 & andy) as u8;
+        b[(k+tmp-i) as usize] = U8(curr);
         copy2 = copy2 >> 8;
     }
 
@@ -132,9 +136,9 @@ fn counter_func(n: &ByteSeq, nlen: u8, m: u64) -> ByteSeq {
         let mut icopy = i;
         let ncopy: u64 = nlen.into();
 
-        for x in (k+ncopy+1..k+16).rev() {
-            let curr = ByteSeq::from_public_slice(&[(icopy & high) as u8]);
-            ctr = ctr.set_exact_chunk(1, x as usize, &curr);
+        for x in 1..16-ncopy-1 {
+            let curr = (icopy & high) as u8;
+            ctr[(k+16-x) as usize] = U8(curr);
             icopy = icopy >> 8;
         }
     }
