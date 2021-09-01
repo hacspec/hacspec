@@ -8,7 +8,7 @@ pub const HASH_SIZE: usize = 256 / 8;
 
 bytes!(Block, BLOCK_SIZE);
 array!(OpTableType, 12, usize);
-bytes!(Digest, HASH_SIZE);
+bytes!(Sha256Digest, HASH_SIZE);
 array!(RoundConstantsTable, K_SIZE, U32);
 array!(Hash, 8, U32);
 
@@ -119,7 +119,7 @@ fn compress(block: Block, h_in: Hash) -> Hash {
     h
 }
 
-pub fn hash(msg: &ByteSeq) -> Digest {
+pub fn hash(msg: &ByteSeq) -> Sha256Digest {
     let mut h = HASH_INIT;
     // FIXME: #96 use exact_chunks
     let mut last_block = Block::new();
@@ -147,9 +147,9 @@ pub fn hash(msg: &ByteSeq) -> Digest {
         h = compress(pad_block, h);
     }
 
-    Digest::from_seq(&h.to_be_bytes())
+    Sha256Digest::from_seq(&h.to_be_bytes())
 }
 
-pub fn sha256(msg: &ByteSeq) -> Digest {
+pub fn sha256(msg: &ByteSeq) -> Sha256Digest {
     hash(msg)
 }
