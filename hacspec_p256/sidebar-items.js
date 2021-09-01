@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error",""]],"fn":[["point_add",""],["point_mul",""],["point_mul_base",""]],"struct":[["Element","Fixed length byte array."],["FieldCanvas",""],["FieldElement",""],["Scalar",""],["ScalarCanvas",""]],"type":[["Affine",""],["AffineResult",""]]});
+initSidebarItems({"enum":[["Error",""]],"fn":[["p256_point_mul",""],["p256_point_mul_base",""],["point_add",""]],"struct":[["Element","Fixed length byte array."],["FieldCanvas",""],["P256FieldElement",""],["P256Scalar",""],["ScalarCanvas",""]],"type":[["Affine",""],["AffineResult",""]]});

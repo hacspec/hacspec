@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["gmac",""]],"struct":[["Gf128Block","Fixed length byte array."],["Gf128Key","Fixed length byte array."],["Tag","Fixed length byte array."]]});
+initSidebarItems({"fn":[["gmac",""]],"struct":[["Gf128Block","Fixed length byte array."],["Gf128Key","Fixed length byte array."],["Gf128Tag","Fixed length byte array."]]});

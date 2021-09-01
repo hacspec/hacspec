@@ -58,6 +58,7 @@ ALIASES["serde"] = {};
 ALIASES["serde_derive"] = {};
 ALIASES["serde_json"] = {};
 ALIASES["syn"] = {};
+ALIASES["tls_cryptolib"] = {};
 ALIASES["typenum"] = {};
 ALIASES["unicode_xid"] = {};
 ALIASES["unsafe_hacspec_examples"] = {};

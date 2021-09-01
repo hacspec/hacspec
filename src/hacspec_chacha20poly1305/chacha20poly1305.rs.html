@@ -94,7 +94,7 @@
     <span class="ident">poly1305_update_last</span>(<span class="number">16</span>, <span class="kw-2">&amp;</span><span class="ident">last</span>, <span class="ident">st</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="ident">aad_len</span>: <span class="ident">usize</span>, <span class="ident">cipher_len</span>: <span class="ident">usize</span>, <span class="ident">st</span>: <span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Tag</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="ident">aad_len</span>: <span class="ident">usize</span>, <span class="ident">cipher_len</span>: <span class="ident">usize</span>, <span class="ident">st</span>: <span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poly1305Tag</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">PolyBlock</span>::<span class="ident">new</span>();
     <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">last_block</span>.<span class="ident">update</span>(<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">U64_to_le_bytes</span>(<span class="ident">U64</span>(<span class="ident">aad_len</span> <span class="kw">as</span> <span class="ident">u64</span>)));
     <span class="ident">last_block</span> <span class="op">=</span> <span class="ident">last_block</span>.<span class="ident">update</span>(<span class="number">8</span>, <span class="kw-2">&amp;</span><span class="ident">U64_to_le_bytes</span>(<span class="ident">U64</span>(<span class="ident">cipher_len</span> <span class="kw">as</span> <span class="ident">u64</span>)));
@@ -102,12 +102,12 @@
     <span class="ident">poly1305_finish</span>(<span class="ident">st</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">encrypt</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chacha20_poly1305_encrypt</span>(
     <span class="ident">key</span>: <span class="ident">ChaChaPolyKey</span>,
     <span class="ident">iv</span>: <span class="ident">ChaChaPolyIV</span>,
     <span class="ident">aad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">ByteSeq</span>, <span class="ident">Tag</span>) {
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">ByteSeq</span>, <span class="ident">Poly1305Tag</span>) {
     <span class="kw">let</span> <span class="ident">cipher_text</span> <span class="op">=</span> <span class="ident">chacha20</span>(<span class="ident">key</span>, <span class="ident">iv</span>, <span class="number">1u32</span>, <span class="ident">msg</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">poly_st</span> <span class="op">=</span> <span class="ident">init</span>(<span class="ident">key</span>, <span class="ident">iv</span>);
     <span class="ident">poly_st</span> <span class="op">=</span> <span class="ident">poly1305_update_padded</span>(<span class="ident">aad</span>, <span class="ident">poly_st</span>);
@@ -116,12 +116,12 @@
     (<span class="ident">cipher_text</span>, <span class="ident">tag</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decrypt</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chacha20_poly1305_decrypt</span>(
     <span class="ident">key</span>: <span class="ident">ChaChaPolyKey</span>,
     <span class="ident">iv</span>: <span class="ident">ChaChaPolyIV</span>,
     <span class="ident">aad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">cipher_text</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-    <span class="ident">tag</span>: <span class="ident">Tag</span>,
+    <span class="ident">tag</span>: <span class="ident">Poly1305Tag</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeqResult</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">poly_st</span> <span class="op">=</span> <span class="ident">init</span>(<span class="ident">key</span>, <span class="ident">iv</span>);
     <span class="ident">poly_st</span> <span class="op">=</span> <span class="ident">poly1305_update_padded</span>(<span class="ident">aad</span>, <span class="ident">poly_st</span>);

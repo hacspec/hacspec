@@ -405,7 +405,7 @@
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Block</span>, <span class="ident">BLOCKSIZE</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Word</span>, <span class="ident">KEY_LENGTH</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">RoundKey</span>, <span class="ident">BLOCKSIZE</span>);
-<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Nonce</span>, <span class="ident">IVSIZE</span>);
+<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">AesNonce</span>, <span class="ident">IVSIZE</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">SBox</span>, <span class="number">256</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">RCon</span>, <span class="number">15</span>);
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Bytes144</span>, <span class="number">144</span>);
@@ -630,7 +630,7 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes_ctr_key_block</span>(
     <span class="ident">k</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-    <span class="ident">n</span>: <span class="ident">Nonce</span>,
+    <span class="ident">n</span>: <span class="ident">AesNonce</span>,
     <span class="ident">c</span>: <span class="ident">U32</span>,
     <span class="ident">nk</span>: <span class="ident">usize</span>,
     <span class="ident">nr</span>: <span class="ident">usize</span>,
@@ -662,7 +662,7 @@
 
 <span class="kw">fn</span> <span class="ident">aes_counter_mode</span>(
     <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-    <span class="ident">nonce</span>: <span class="ident">Nonce</span>,
+    <span class="ident">nonce</span>: <span class="ident">AesNonce</span>,
     <span class="ident">counter</span>: <span class="ident">U32</span>,
     <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">nk</span>: <span class="ident">usize</span>,
@@ -717,7 +717,7 @@
     <span class="ident">ByteSeqResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">blocks_out</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_encrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_encrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">AesNonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="ident">aes_counter_mode</span>(
         <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>),
         <span class="ident">nonce</span>,
@@ -731,7 +731,7 @@
     ).<span class="ident">unwrap</span>()
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_decrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">Nonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">ctxt</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aes128_decrypt</span>(<span class="ident">key</span>: <span class="ident">Key128</span>, <span class="ident">nonce</span>: <span class="ident">AesNonce</span>, <span class="ident">counter</span>: <span class="ident">U32</span>, <span class="ident">ctxt</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
     <span class="ident">aes_counter_mode</span>(
         <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>),
         <span class="ident">nonce</span>,
