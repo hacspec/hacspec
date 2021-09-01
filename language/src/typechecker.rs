@@ -520,6 +520,11 @@ fn find_func(
     top_level_context: &TopLevelContext,
     span: &RustspecSpan,
 ) -> TypecheckingResult<(FnValue, TypeVarCtx)> {
+    // First we dealias the method type
+    let key1 = &match key1 {
+        FnKey::Independent(_) => key1.clone(),
+        FnKey::Impl(t1, n1) => FnKey::Impl(dealias_type(t1.clone(), top_level_context), n1.clone()),
+    };
     let candidates = top_level_context.functions.clone();
     let mut has_err = false;
     let candidates: Vec<_> = candidates
