@@ -839,12 +839,12 @@
 
 
 <span class="comment">/* Arithmetic for FP2 elements */</span>
-<span class="kw">fn</span> <span class="ident">fp2zero</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp2</span> {
-    <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>())
-}
-
 <span class="kw">fn</span> <span class="ident">fp2fromfp</span>(<span class="ident">n</span>: <span class="ident">Fp</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp2</span> {
     (<span class="ident">n</span>, <span class="ident">Fp</span>::<span class="ident">ZERO</span>())
+}
+
+<span class="kw">fn</span> <span class="ident">fp2zero</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp2</span> {
+    <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>())
 }
 
 <span class="kw">fn</span> <span class="ident">fp2neg</span>(<span class="ident">n</span>: <span class="ident">Fp2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp2</span> {
