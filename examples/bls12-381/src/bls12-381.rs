@@ -44,12 +44,12 @@ pub type Fp12 = (Fp6, Fp6); //w² = v
 
 
 /* Arithmetic for FP2 elements */
-fn fp2zero() -> Fp2 {
-    fp2fromfp(Fp::ZERO())
-}
-
 fn fp2fromfp(n: Fp) -> Fp2 {
     (n, Fp::ZERO())
+}
+
+fn fp2zero() -> Fp2 {
+    fp2fromfp(Fp::ZERO())
 }
 
 fn fp2neg(n: Fp2) -> Fp2 {
