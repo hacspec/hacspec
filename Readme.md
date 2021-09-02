@@ -91,7 +91,7 @@ cargo +nightly-2021-06-15 hacspec -o <coq-name>.v <crate-name>
 ## Publications & Other material
 
 * [📕 Tech report](https://hal.inria.fr/hal-03176482)
-* [📕 Original hacspec paper](https://www.franziskuskiefer.de/publications/hacspec18/)
+* [📕 Original hacspec paper](https://www.franziskuskiefer.de/publications/hacspec-ssr18-paper.pdf)
 
 # Repository Structure
 
