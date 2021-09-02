@@ -3,17 +3,17 @@ use hacspec_aes::*;
 
 fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8, plen: u64) -> ByteSeq {
     let mut r = 0u64;
-    let mut tmp = 10u64;
+    let mut a_octets = 10u64;
 
     if alen < 0x800000u64 {
-        tmp = 2u64;
+        a_octets = 2u64;
     } else {
         if alen < 0x100000000u64 {
-            tmp = 6u64;
+            a_octets = 6u64;
         }
     }
 
-    r = r + ((tmp+alen+15u64)/16u64)+((plen+15u64)/16u64); // ceiling operation used
+    r = r + ((a_octets+alen+15u64)/16u64)+((plen+15u64)/16u64); // ceiling operation used
     let mut b = ByteSeq::new((16u64*(r+1u64)) as usize);
 
     // creation of b(0)
@@ -29,25 +29,23 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
     b[0] = U8(flags);
 
     for i in 0..(nlen as usize) {
-        let tmp2 = n.get_exact_chunk(1, i);
-        b = b.set_exact_chunk(1, i+1, &tmp2);
+        b[i+1] = n[i];
     }
 
-    let andy: u64 = 255u64; // 0xFF
-    let mut copy: u64 = plen;
+    let mut plen_copy = plen;
 
     for i in 1..(qlen as usize)+1 {
-        let curr = (copy & andy) as u8;
+        let curr = (plen_copy & 0xFFu64) as u8;
         b[16-i] = U8(curr);
-        copy = copy >> 8;
+        plen_copy = plen_copy >> 8;
     }
 
     // creation of b(1) to b(u)
-    let x: u8 = 0xffu8;
-    let y: u8 = 0xfeu8;
+    let x = 0xffu8;
+    let y = 0xfeu8;
 
     let mut k = 16u64; // byte number to set next
-    let mut copy2 = alen;
+    let mut alen_copy = alen;
 
     if alen >= 0x800000u64 {
         b[16] = U8(x);
@@ -60,17 +58,16 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
         }
     }
 
-    for i in 1..(tmp as usize)+1 {
-        let curr = (copy2 & andy) as u8;
-        b[((k+tmp) as usize)-i] = U8(curr);
-        copy2 = copy2 >> 8;
+    for i in 1..(a_octets as usize)+1 {
+        let curr = (alen_copy & 0xFFu64) as u8;
+        b[((k+a_octets) as usize)-i] = U8(curr);
+        alen_copy = alen_copy >> 8;
     }
 
-    k = k + tmp;
+    k = k + a_octets;
 
     for i in 0..(alen as usize) {
-        let tmp2 = a.get_exact_chunk(1, i);
-        b = b.set_exact_chunk(1, i+(k as usize), &tmp2);
+        b[i+(k as usize)] = a[i];
     }
 
     k = k + alen;
@@ -85,8 +82,7 @@ fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8
 
     // creation of b(u+1) to b(r)
     for i in 0..(plen as usize) {
-        let tmp2 = p.get_exact_chunk(1, i);
-        b = b.set_exact_chunk(1, i+(k as usize), &tmp2);
+        b[i+(k as usize)] = p[i];
     }
 
     k = k + plen;
@@ -117,10 +113,9 @@ fn get_t(b: &ByteSeq, key: Key128, num: u8) -> ByteSeq {
 }
 
 fn counter_func(n: &ByteSeq, nlen: u8, m: u64) -> ByteSeq {
+    let mut ctr = ByteSeq::new((16u64 * (m+1u64)) as usize);
     let qlen: u8 = 15u8 - nlen;
     let flag = qlen - 1u8;
-    let mut ctr = ByteSeq::new((16u64 * (m+1u64)) as usize);
-    let high = 255u64; // 0xFF
 
     for i in 0..(m as usize)+1 {
         let mut icopy = i as u64;
@@ -129,12 +124,11 @@ fn counter_func(n: &ByteSeq, nlen: u8, m: u64) -> ByteSeq {
         ctr[k] = U8(flag);
 
         for j in 0..(nlen as usize) {
-            let tmp2 = n.get_exact_chunk(1, j);
-            ctr = ctr.set_exact_chunk(1, ((k+j) as usize)+1, &tmp2);
+            ctr[((k+j) as usize)+1] = n[j];
         }
 
         for x in 1..16-(nlen as usize)-1 {
-            let curr = icopy & high;
+            let curr = icopy & 0xFFu64;
             ctr[k+16-x] = U8(curr as u8);
             icopy = icopy >> 8;
         }
@@ -145,12 +139,14 @@ fn counter_func(n: &ByteSeq, nlen: u8, m: u64) -> ByteSeq {
 
 fn ctr_cipher(ctr: &ByteSeq, key: Key128, m: u64) -> (ByteSeq, ByteSeq) {
     let ctr_zero = Block::from_seq(&ctr.get_exact_chunk(16, 0));
+    let key_copy = key.clone();
     let s0 = ByteSeq::from_seq(&aes128_encrypt_block(key, ctr_zero));
     let mut s = ByteSeq::new((16u64*m) as usize);
 
     for i in 1..(m as usize)+1 {
+        let new_copy = key_copy.clone();
         let ctr_block = Block::from_seq(&ctr.get_exact_chunk(16, i));
-        let s_curr = aes128_encrypt_block(key, ctr_block);
+        let s_curr = aes128_encrypt_block(new_copy, ctr_block);
         let seq_s = ByteSeq::from_seq(&s_curr);
         s = s.set_exact_chunk(16, i-1, &seq_s);
     }
@@ -159,12 +155,13 @@ fn ctr_cipher(ctr: &ByteSeq, key: Key128, m: u64) -> (ByteSeq, ByteSeq) {
 }
 
 pub fn encrypt_ccm(a: ByteSeq, n: ByteSeq, pay: ByteSeq, key: Key128, tlen: u8, alen: u64, nlen: u8, plen: u64) -> ByteSeq {
+    let key_copy = key.clone();
     let b = format_func(&a, &n, &pay, tlen, alen, nlen, plen); // step 1
     let t = get_t(&b, key, tlen); // steps 2 to 4
 
     let m = (plen+15u64)/16u64; // round up
     let counter = counter_func(&n, nlen, m);
-    let (s0, s) = ctr_cipher(&counter, key, m);
+    let (s0, s) = ctr_cipher(&counter, key_copy, m);
 
     let cipherlen = t.len()+pay.len(); let pl = pay.len();
     let mut ciphertext = ByteSeq::new(cipherlen);
@@ -175,8 +172,7 @@ pub fn encrypt_ccm(a: ByteSeq, n: ByteSeq, pay: ByteSeq, key: Key128, tlen: u8, 
     let t_xor = t ^ s0.get_exact_chunk(tlen as usize, 0);
 
     for i in pl..cipherlen {
-        let curr_chunk = t_xor.get_exact_chunk(1, i-pl);
-        ciphertext = ciphertext.set_exact_chunk(1, i, &curr_chunk);
+        ciphertext[i] = t_xor[i-pl];
     }
 
     ciphertext
