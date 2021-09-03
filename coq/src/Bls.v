@@ -298,26 +298,26 @@ Definition g1double_a (p_142 : g1) : g1 :=
     ((xovery_146) *% ((x1_143) -% (x3_147))) -% (y1_144) in 
   (x3_147, y3_148, false).
 
-Definition g1add (p_149 : g1) (q_150 : g1) : g1 :=
-  let '(x1_151, y1_152, inf1_153) :=
+Definition g1double (p_149 : g1) : g1 :=
+  let '(x1_150, y1_151, inf1_152) :=
     p_149 in 
-  let '(x2_154, y2_155, inf2_156) :=
-    q_150 in 
-  if (inf1_153):bool then (q_150) else (
-    if (inf2_156):bool then (p_149) else (
-      if ((p_149) =.? (q_150)):bool then (g1double_a (p_149)) else (
+  if (((y1_151) !=.? (nat_mod_zero )) && (negb (inf1_152))):bool then (
+    g1double_a (p_149)) else ((nat_mod_zero , nat_mod_zero , true)).
+
+Definition g1add (p_153 : g1) (q_154 : g1) : g1 :=
+  let '(x1_155, y1_156, inf1_157) :=
+    p_153 in 
+  let '(x2_158, y2_159, inf2_160) :=
+    q_154 in 
+  if (inf1_157):bool then (q_154) else (
+    if (inf2_160):bool then (p_153) else (
+      if ((p_153) =.? (q_154)):bool then (g1double (p_153)) else (
         if (
           negb (
-            ((x1_151) =.? (x2_154)) && (
-              (y1_152) =.? ((nat_mod_zero ) -% (y2_155))))):bool then (
-          g1add_a (p_149) (q_150)) else (
+            ((x1_155) =.? (x2_158)) && (
+              (y1_156) =.? ((nat_mod_zero ) -% (y2_159))))):bool then (
+          g1add_a (p_153) (q_154)) else (
           (nat_mod_zero , nat_mod_zero , true))))).
-
-Definition g1double (p_157 : g1) : g1 :=
-  let '(x1_158, y1_159, inf1_160) :=
-    p_157 in 
-  if (((y1_159) !=.? (nat_mod_zero )) && (negb (inf1_160))):bool then (
-    g1double_a (p_157)) else ((nat_mod_zero , nat_mod_zero , true)).
 
 Definition g1mul (m_161 : scalar) (p_162 : g1) : g1 :=
   let n_163 :=
@@ -400,25 +400,25 @@ Definition g2double_a (p_186 : g2) : g2 :=
     fp2sub (t2_197) (y1_188) in 
   (x3_195, y3_198, false).
 
-Definition g2add (p_199 : g2) (q_200 : g2) : g2 :=
-  let '(x1_201, y1_202, inf1_203) :=
+Definition g2double (p_199 : g2) : g2 :=
+  let '(x1_200, y1_201, inf1_202) :=
     p_199 in 
-  let '(x2_204, y2_205, inf2_206) :=
-    q_200 in 
-  if (inf1_203):bool then (q_200) else (
-    if (inf2_206):bool then (p_199) else (
-      if ((p_199) =.? (q_200)):bool then (g2double_a (p_199)) else (
+  if (((y1_201) !=.? (fp2zero )) && (negb (inf1_202))):bool then (
+    g2double_a (p_199)) else ((fp2zero , fp2zero , true)).
+
+Definition g2add (p_203 : g2) (q_204 : g2) : g2 :=
+  let '(x1_205, y1_206, inf1_207) :=
+    p_203 in 
+  let '(x2_208, y2_209, inf2_210) :=
+    q_204 in 
+  if (inf1_207):bool then (q_204) else (
+    if (inf2_210):bool then (p_203) else (
+      if ((p_203) =.? (q_204)):bool then (g2double (p_203)) else (
         if (
           negb (
-            ((x1_201) =.? (x2_204)) && (
-              (y1_202) =.? (fp2neg (y2_205))))):bool then (
-          g2add_a (p_199) (q_200)) else ((fp2zero , fp2zero , true))))).
-
-Definition g2double (p_207 : g2) : g2 :=
-  let '(x1_208, y1_209, inf1_210) :=
-    p_207 in 
-  if (((y1_209) !=.? (fp2zero )) && (negb (inf1_210))):bool then (
-    g2double_a (p_207)) else ((fp2zero , fp2zero , true)).
+            ((x1_205) =.? (x2_208)) && (
+              (y1_206) =.? (fp2neg (y2_209))))):bool then (
+          g2add_a (p_203) (q_204)) else ((fp2zero , fp2zero , true))))).
 
 Definition g2mul (m_211 : scalar) (p_212 : g2) : g2 :=
   let n_213 :=

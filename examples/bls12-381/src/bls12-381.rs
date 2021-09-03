@@ -258,6 +258,15 @@ fn g1double_a(p: G1) -> G1
     (x3, y3, false)
 }
 /* Wrapper functions with Point of Infinity */
+pub fn g1double(p: G1) -> G1 {
+    let (_x1, y1, inf1) = p;
+    if y1 != Fp::ZERO() && !inf1 {
+        g1double_a(p)
+    } else {
+        (Fp::ZERO(), Fp::ZERO(), true)
+    }
+}
+
 pub fn g1add(p: G1, q: G1) -> G1 {
     let (x1, y1, inf1) = p;
     let (x2, y2, inf2) = q;
@@ -267,21 +276,12 @@ pub fn g1add(p: G1, q: G1) -> G1 {
     } else { if inf2 {
         p
     } else { if p == q {
-        g1double_a(p)
+        g1double(p)
     } else { if !(x1 == x2 && y1 == Fp::ZERO() - y2) {
         g1add_a(p, q)
     } else {
         (Fp::ZERO(), Fp::ZERO(), true)
     }}}}
-}
-
-pub fn g1double(p: G1) -> G1 {
-    let (_x1, y1, inf1) = p;
-    if y1 != Fp::ZERO() && !inf1 {
-        g1double_a(p)
-    } else {
-        (Fp::ZERO(), Fp::ZERO(), true)
-    }
 }
 
 pub fn g1mul(m: Scalar, p: G1) -> G1
@@ -342,6 +342,15 @@ fn g2double_a(p: G2) -> G2
 }
 
 /* Wrapper functions with Point at Infinity */
+pub fn g2double(p: G2) -> G2 {
+    let (_x1, y1, inf1) = p;
+    if y1 != fp2zero() && !inf1 {
+        g2double_a(p)
+    } else {
+        (fp2zero(), fp2zero(), true)
+    }
+}
+
 pub fn g2add(p: G2, q: G2) -> G2 {
     let (x1, y1, inf1) = p;
     let (x2, y2, inf2) = q;
@@ -351,21 +360,12 @@ pub fn g2add(p: G2, q: G2) -> G2 {
     } else { if inf2 {
         p
     } else { if p == q {
-        g2double_a(p)
+        g2double(p)
     } else { if !(x1 == x2 && y1 == fp2neg(y2)) {
         g2add_a(p, q)
     } else {
         (fp2zero(), fp2zero(), true)
     }}}}
-}
-
-pub fn g2double(p: G2) -> G2 {
-    let (_x1, y1, inf1) = p;
-    if y1 != fp2zero() && !inf1 {
-        g2double_a(p)
-    } else {
-        (fp2zero(), fp2zero(), true)
-    }
 }
 
 pub fn g2mul(m: Scalar, p: G2) -> G2
