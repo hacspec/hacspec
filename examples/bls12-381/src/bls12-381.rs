@@ -664,6 +664,23 @@ mod test {
         QuickCheck::new().tests(5).quickcheck(test_g1_mul as fn(Scalar) -> bool);
     }
 
+    #[test]
+    fn test_g1_add_double_equiv() {
+        fn test_g1_mul(a: Scalar) -> bool
+        {
+            let g = g1mul(a, g1());
+            g1add(g, g) == g1double(g)
+        }
+        //Only needing 5 successes, slow because affine
+        QuickCheck::new().tests(5).quickcheck(test_g1_mul as fn(Scalar) -> bool);
+    }
+
+    #[test]
+    fn test_g1_add_double_special_case() {
+        let g = (Fp::TWO(), Fp::ZERO(), false);
+        assert_eq!(g1add(g, g), g1double(g));
+    }
+
     //G2 tests
     #[test]
     fn test_g2_arithmetic()
@@ -688,6 +705,23 @@ mod test {
         }
         //Only needing 5 successes, slow because affine
         QuickCheck::new().tests(5).quickcheck(test_g2_mul as fn(Scalar) -> bool);
+    }
+
+    #[test]
+    fn test_g2_add_double_equiv() {
+        fn test_g1_mul(a: Scalar) -> bool
+        {
+            let g = g2mul(a, g2());
+            g2add(g, g) == g2double(g)
+        }
+        //Only needing 5 successes, slow because affine
+        QuickCheck::new().tests(5).quickcheck(test_g1_mul as fn(Scalar) -> bool);
+    }
+
+    #[test]
+    fn test_g2_add_double_special_case() {
+        let g = (fp2fromfp(Fp::TWO()), fp2zero(), false);
+        assert_eq!(g2add(g, g), g2double(g));
     }
 
 
