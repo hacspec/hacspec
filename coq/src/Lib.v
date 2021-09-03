@@ -736,16 +736,16 @@ Definition nat_mod_add {n : Z} (a : nat_mod n) (b : nat_mod n) : nat_mod n := GZ
    
 Infix "+%" := nat_mod_add (at level 33) : hacspec_scope.
 
-Definition nat_mod_mul {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.add n a b.
+Definition nat_mod_mul {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.mul n a b.
 Infix "*%" := nat_mod_mul (at level 33) : hacspec_scope.
 
 Definition nat_mod_sub {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.sub n a b.
-Infix "-%" := nat_mod_mul (at level 33) : hacspec_scope.
+Infix "-%" := nat_mod_sub (at level 33) : hacspec_scope.
 
 Definition nat_mod_div {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.div n a b.
-Infix "/%" := nat_mod_mul (at level 33) : hacspec_scope.
+Infix "/%" := nat_mod_div (at level 33) : hacspec_scope.
 
-Definition nat_modeg {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
+Definition nat_mod_neg {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
 
 Definition nat_mod_inv {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.inv n a.
 
