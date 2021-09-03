@@ -80,17 +80,18 @@ If typechecking succeeds, it should show
 
 ### Generating code
 
-To generate F\* or EasyCrypt code from hacspec the typechecker (see above) is required.
+To generate F\*, EasyCrypt, or Coq code from hacspec the typechecker (see above) is required.
 
 ```bash
 cargo +nightly-2021-06-15 hacspec -o <fst-name>.fst <crate-name>
 cargo +nightly-2021-06-15 hacspec -o <ec-name>.ec <crate-name>
+cargo +nightly-2021-06-15 hacspec -o <coq-name>.v <crate-name>
 ```
 
 ## Publications & Other material
 
 * [📕 Tech report](https://hal.inria.fr/hal-03176482)
-* [📕 Original hacspec paper](https://www.franziskuskiefer.de/publications/hacspec18/)
+* [📕 Original hacspec paper](https://www.franziskuskiefer.de/publications/hacspec-ssr18-paper.pdf)
 
 # Repository Structure
 
@@ -115,6 +116,7 @@ Compiled code:
 
 - [fstar](fstar/): contains F\* translations of the cryptographic specs, produced by the hacspec compiler
 - [easycrypt](easycrypt/): contains EasyCrypt translations of the cryptographic specs, produced by the hacspec compiler
+- [coq](coq/): contains Coq translations of the cryptographic specs, produced by the hacspec compiler
 
 ## Contributing
 

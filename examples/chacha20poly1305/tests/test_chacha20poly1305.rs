@@ -35,14 +35,14 @@ fn kat() {
         0x80, 0x8b, 0x48, 0x31, 0xd7, 0xbc, 0x3f, 0xf4, 0xde, 0xf0, 0x8e, 0x4b, 0x7a, 0x9d, 0xe5,
         0x76, 0xd2, 0x65, 0x86, 0xce, 0xc6, 0x4b, 0x61, 0x16,
     ]);
-    let exp_mac = Tag::from_public_slice(&[
+    let exp_mac = Poly1305Tag::from_public_slice(&[
         0x1a, 0xe1, 0x0b, 0x59, 0x4f, 0x09, 0xe2, 0x6a, 0x7e, 0x90, 0x2e, 0xcb, 0xd0, 0x60, 0x06,
         0x91,
     ]);
-    let (cipher, mac) = encrypt(k, iv, &aad, &msg);
+    let (cipher, mac) = chacha20_poly1305_encrypt(k, iv, &aad, &msg);
     assert_bytes_eq!(exp_cipher, cipher);
     assert!(exp_mac.declassify_eq(&mac));
-    let decrypted_msg = match decrypt(k, iv, &aad, &cipher, mac) {
+    let decrypted_msg = match chacha20_poly1305_decrypt(k, iv, &aad, &cipher, mac) {
         Ok(m) => m,
         Err(_) => panic!("Error decrypting"),
     };

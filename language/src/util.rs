@@ -9,7 +9,7 @@ FLAGS:
     -v               Verbosity
 
 OPTIONS:
-    -o <FILE>        Name of the F* (.fst) or Easycrypt (.ec) output file
+    -o <FILE>        Name of the F* (.fst), Easycrypt (.ec), or Coq (.v) output file
 
 ARGS:
     CRATE            The crate to analyse

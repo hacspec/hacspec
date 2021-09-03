@@ -5,7 +5,7 @@ const BLOCKSIZE: usize = 16;
 
 bytes!(Gf128Block, BLOCKSIZE);
 bytes!(Gf128Key, BLOCKSIZE);
-bytes!(Tag, BLOCKSIZE);
+bytes!(Gf128Tag, BLOCKSIZE);
 
 type Element = U128;
 const IRRED: Element = U128(0xE100_0000_0000_0000_0000_0000_0000_0000u128);
@@ -66,18 +66,18 @@ fn poly(msg: &ByteSeq, r: Element) -> Element {
     acc
 }
 
-pub fn gmac(text: &ByteSeq, k: Gf128Key) -> Tag {
+pub fn gmac(text: &ByteSeq, k: Gf128Key) -> Gf128Tag {
     let s = Gf128Block::new();
     let r = encode(Gf128Block::from_seq(&k));
     let a = poly(text, r);
-    Tag::from_seq(&decode(fadd(a, encode(s))))
+    Gf128Tag::from_seq(&decode(fadd(a, encode(s))))
 }
 
 #[test]
 fn test_gmac() {
     let msg = ByteSeq::from_hex("feedfacedeadbeeffeedfacedeadbeefabaddad20000000000000000000000005a8def2f0c9e53f1f75d7853659e2a20eeb2b22aafde6419a058ab4f6f746bf40fc0c3b780f244452da3ebf1c5d82cdea2418997200ef82e44ae7e3f");
     let key = Gf128Key::from_hex("acbef20579b4b8ebce889bac8732dad7");
-    let output = Tag::from_hex("cc9ae9175729a649936e890bd971a8bf");
+    let output = Gf128Tag::from_hex("cc9ae9175729a649936e890bd971a8bf");
     let tag = gmac(&msg, key);
     assert!(output.declassify_eq(&tag));
 }

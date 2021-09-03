@@ -347,7 +347,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 }
             }
 
-            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[cfg_attr(feature="use_attributes", not_hacspec)]
             pub fn from_native_slice(x: &[T]) -> $name<T> {
                 Self {
                     b: x.to_vec(),
@@ -525,4 +525,30 @@ impl PublicSeq<u8> {
         let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
     }
+}
+
+#[macro_export]
+macro_rules! public_byte_seq {
+    ($( $b:expr ),+) => {
+        PublicByteSeq::from_vec(
+            vec![
+                $(
+                    $b
+                ),+
+            ]
+        )
+    };
+}
+
+#[macro_export]
+macro_rules! byte_seq {
+    ($( $b:expr ),+) => {
+        ByteSeq::from_vec(
+            vec![
+                $(
+                    U8($b)
+                ),+
+            ]
+        )
+    };
 }

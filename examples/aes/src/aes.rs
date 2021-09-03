@@ -13,7 +13,7 @@ pub const INVALID_KEY_EXPANSION_INDEX: u8 = 1u8;
 bytes!(Block, BLOCKSIZE);
 bytes!(Word, KEY_LENGTH);
 bytes!(RoundKey, BLOCKSIZE);
-bytes!(Nonce, IVSIZE);
+bytes!(AesNonce, IVSIZE);
 bytes!(SBox, 256);
 bytes!(RCon, 15);
 bytes!(Bytes144, 144);
@@ -238,7 +238,7 @@ pub fn aes128_encrypt_block(k: Key128, input: Block) -> Block {
 
 pub fn aes_ctr_key_block(
     k: &ByteSeq,
-    n: Nonce,
+    n: AesNonce,
     c: U32,
     nk: usize,
     nr: usize,
@@ -270,7 +270,7 @@ pub fn xor_block(block: Block, key_block: Block) -> Block {
 
 fn aes_counter_mode(
     key: &ByteSeq,
-    nonce: Nonce,
+    nonce: AesNonce,
     counter: U32,
     msg: &ByteSeq,
     nk: usize,
@@ -325,7 +325,7 @@ fn aes_counter_mode(
     ByteSeqResult::Ok(blocks_out)
 }
 
-pub fn aes128_encrypt(key: Key128, nonce: Nonce, counter: U32, msg: &ByteSeq) -> ByteSeq {
+pub fn aes128_encrypt(key: Key128, nonce: AesNonce, counter: U32, msg: &ByteSeq) -> ByteSeq {
     aes_counter_mode(
         &ByteSeq::from_seq(&key),
         nonce,
@@ -339,7 +339,7 @@ pub fn aes128_encrypt(key: Key128, nonce: Nonce, counter: U32, msg: &ByteSeq) ->
     ).unwrap()
 }
 
-pub fn aes128_decrypt(key: Key128, nonce: Nonce, counter: U32, ctxt: &ByteSeq) -> ByteSeq {
+pub fn aes128_decrypt(key: Key128, nonce: AesNonce, counter: U32, ctxt: &ByteSeq) -> ByteSeq {
     aes_counter_mode(
         &ByteSeq::from_seq(&key),
         nonce,

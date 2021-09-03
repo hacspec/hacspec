@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "lib",
+    "protocols/tls_cryptolib",
     "provider",
     "utils/dev",
     "utils/derive",
@@ -34,6 +35,7 @@ members = [
 ]
 default-members = [
     "lib",
+    "protocols/tls_cryptolib",
     "provider",
     "utils/dev",
     "utils/derive",

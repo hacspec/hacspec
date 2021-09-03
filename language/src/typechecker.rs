@@ -520,6 +520,10 @@ fn find_func(
     top_level_context: &TopLevelContext,
     span: &RustspecSpan,
 ) -> TypecheckingResult<(FnValue, TypeVarCtx)> {
+    let key1 = &match key1 {
+        FnKey::Independent(_) => key1.clone(),
+        FnKey::Impl(t1, n1) => FnKey::Impl(dealias_type(t1.clone(), top_level_context), n1.clone()),
+    };
     let candidates = top_level_context.functions.clone();
     let mut has_err = false;
     let candidates: Vec<_> = candidates
@@ -535,39 +539,15 @@ fn find_func(
                 }
             },
             (FnKey::Impl(t1, n1), FnKey::Impl(t2, n2)) => {
-                let t1 = match t1 {
-                    BaseTyp::Named((name, _), None) => match top_level_context.typ_dict.get(name) {
-                        None => (
-                            (Borrowing::Consumed, span.clone()),
-                            (t1.clone(), span.clone()),
-                        ),
-                        Some((t_alias, entry_typ)) => match entry_typ {
-                            DictEntry::Alias => t_alias.clone(),
-                            DictEntry::Enum => {
-                                sess.span_rustspec_err(
-                                    span.clone(),
-                                    "methods attached to enum types are forbidden in Hacspec",
-                                );
-                                has_err = true;
-                                return None;
-                            }
-                            DictEntry::Array | DictEntry::NaturalInteger => (
-                                (Borrowing::Consumed, span.clone()),
-                                (t1.clone(), span.clone()),
-                            ),
-                        },
-                    },
-                    _ => (
+                let unification: TypecheckingResult<Option<TypeVarCtx>> = unify_types(
+                    sess,
+                    &(
                         (Borrowing::Consumed, span.clone()),
                         (t1.clone(), span.clone()),
                     ),
-                };
-                let unification: TypecheckingResult<Option<TypeVarCtx>> = unify_types(
-                    sess,
-                    &t1,
                     &(
                         (Borrowing::Consumed, span.clone()),
-                        (t2.clone(), span.clone()),
+                        (dealias_type(t2.clone(), top_level_context), span.clone()),
                     ),
                     &HashMap::new(),
                     top_level_context,
@@ -582,7 +562,6 @@ fn find_func(
                             }
                         }
                     },
-
                     Ok(None) => None,
                     Err(_) => {
                         has_err = true;

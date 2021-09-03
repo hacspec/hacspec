@@ -4,22 +4,22 @@ pub enum Error {
     InvalidAddition,
 }
 
-pub type Affine = (FieldElement, FieldElement);
+pub type Affine = (P256FieldElement, P256FieldElement);
 pub type AffineResult = Result<Affine, Error>;
-type Jacobian = (FieldElement, FieldElement, FieldElement);
-type JacobianResult = Result<Jacobian, Error>;
+type P256Jacobian = (P256FieldElement, P256FieldElement, P256FieldElement);
+type JacobianResult = Result<P256Jacobian, Error>;
 
 const BITS: usize = 256;
 
 public_nat_mod!(
-    type_name: FieldElement,
+    type_name: P256FieldElement,
     type_of_canvas: FieldCanvas,
     bit_size_of_field: 256, // XXX: Unfortunately we can't use constants here.
     modulo_value: "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff"
 );
 
 public_nat_mod!(
-    type_name: Scalar,
+    type_name: P256Scalar,
     type_of_canvas: ScalarCanvas,
     bit_size_of_field: 256, // XXX: Unfortunately we can't use constants here.
     modulo_value: "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551"
@@ -27,28 +27,28 @@ public_nat_mod!(
 
 bytes!(Element, 32);
 
-pub fn point_mul_base(k: Scalar) -> AffineResult {
+pub fn p256_point_mul_base(k: P256Scalar) -> AffineResult {
     let base_point = (
-        FieldElement::from_byte_seq_be(&Element(secret_bytes!([
+        P256FieldElement::from_byte_seq_be(&Element(secret_bytes!([
             0x6Bu8, 0x17u8, 0xD1u8, 0xF2u8, 0xE1u8, 0x2Cu8, 0x42u8, 0x47u8, 0xF8u8, 0xBCu8, 0xE6u8,
             0xE5u8, 0x63u8, 0xA4u8, 0x40u8, 0xF2u8, 0x77u8, 0x03u8, 0x7Du8, 0x81u8, 0x2Du8, 0xEBu8,
             0x33u8, 0xA0u8, 0xF4u8, 0xA1u8, 0x39u8, 0x45u8, 0xD8u8, 0x98u8, 0xC2u8, 0x96u8
         ]))),
-        FieldElement::from_byte_seq_be(&Element(secret_bytes!([
+        P256FieldElement::from_byte_seq_be(&Element(secret_bytes!([
             0x4Fu8, 0xE3u8, 0x42u8, 0xE2u8, 0xFEu8, 0x1Au8, 0x7Fu8, 0x9Bu8, 0x8Eu8, 0xE7u8, 0xEBu8,
             0x4Au8, 0x7Cu8, 0x0Fu8, 0x9Eu8, 0x16u8, 0x2Bu8, 0xCEu8, 0x33u8, 0x57u8, 0x6Bu8, 0x31u8,
             0x5Eu8, 0xCEu8, 0xCBu8, 0xB6u8, 0x40u8, 0x68u8, 0x37u8, 0xBFu8, 0x51u8, 0xF5u8
         ]))),
     );
-    point_mul(k, base_point)
+    p256_point_mul(k, base_point)
 }
 
-pub fn point_mul(k: Scalar, p: Affine) -> AffineResult {
+pub fn p256_point_mul(k: P256Scalar, p: Affine) -> AffineResult {
     let jac = ltr_mul(k, affine_to_jacobian(p))?;
     AffineResult::Ok(jacobian_to_affine(jac))
 }
 
-fn jacobian_to_affine(p: Jacobian) -> Affine {
+fn jacobian_to_affine(p: P256Jacobian) -> Affine {
     let (x, y, z) = p;
     let z2 = z.exp(2u32);
     let z2i = z2.inv();
@@ -59,12 +59,12 @@ fn jacobian_to_affine(p: Jacobian) -> Affine {
     (x, y)
 }
 
-fn affine_to_jacobian(p: Affine) -> Jacobian {
+fn affine_to_jacobian(p: Affine) -> P256Jacobian {
     let (x, y) = p;
-    (x, y, FieldElement::from_literal(1u128))
+    (x, y, P256FieldElement::from_literal(1u128))
 }
 
-fn point_double(p: Jacobian) -> Jacobian {
+fn point_double(p: P256Jacobian) -> P256Jacobian {
     let (x1, y1, z1) = p;
     let delta = z1.exp(2u32);
     let gamma = y1.exp(2u32);
@@ -73,22 +73,22 @@ fn point_double(p: Jacobian) -> Jacobian {
 
     let alpha_1 = x1 - delta;
     let alpha_2 = x1 + delta;
-    let alpha = FieldElement::from_literal(3u128) * (alpha_1 * alpha_2);
+    let alpha = P256FieldElement::from_literal(3u128) * (alpha_1 * alpha_2);
 
-    let x3 = alpha.exp(2u32) - (FieldElement::from_literal(8u128) * beta);
+    let x3 = alpha.exp(2u32) - (P256FieldElement::from_literal(8u128) * beta);
 
     let z3_ = (y1 + z1).exp(2u32);
     let z3 = z3_ - (gamma + delta);
 
-    let y3_1 = (FieldElement::from_literal(4u128) * beta) - x3;
-    let y3_2 = FieldElement::from_literal(8u128) * (gamma * gamma);
+    let y3_1 = (P256FieldElement::from_literal(4u128) * beta) - x3;
+    let y3_2 = P256FieldElement::from_literal(8u128) * (gamma * gamma);
     let y3 = (alpha * y3_1) - y3_2;
     (x3, y3, z3)
 }
 
-fn is_point_at_infinity(p: Jacobian) -> bool {
+fn is_point_at_infinity(p: P256Jacobian) -> bool {
     let (_x, _y, z) = p;
-    z.equal(FieldElement::from_literal(0u128))
+    z.equal(P256FieldElement::from_literal(0u128))
 }
 
 fn point_add_distinct(p: Affine, q: Affine) -> AffineResult {
@@ -105,19 +105,19 @@ pub fn point_add(p: Affine, q: Affine) -> AffineResult {
     }
 }
 
-fn s1_equal_s2(s1: FieldElement, s2: FieldElement) -> JacobianResult {
+fn s1_equal_s2(s1: P256FieldElement, s2: P256FieldElement) -> JacobianResult {
     if s1.equal(s2) {
         JacobianResult::Err(Error::InvalidAddition)
     } else {
         JacobianResult::Ok((
-            FieldElement::from_literal(0u128),
-            FieldElement::from_literal(1u128),
-            FieldElement::from_literal(0u128),
+            P256FieldElement::from_literal(0u128),
+            P256FieldElement::from_literal(1u128),
+            P256FieldElement::from_literal(0u128),
         ))
     }
 }
 
-fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
+fn point_add_jacob(p: P256Jacobian, q: P256Jacobian) -> JacobianResult {
     let mut result = JacobianResult::Ok(q);
     if !is_point_at_infinity(p) {
         if is_point_at_infinity(q) {
@@ -136,16 +136,16 @@ fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
                 result = s1_equal_s2(s1, s2);
             } else {
                 let h = u2 - u1;
-                let i = (FieldElement::from_literal(2u128) * h).exp(2u32);
+                let i = (P256FieldElement::from_literal(2u128) * h).exp(2u32);
                 let j = h * i;
-                let r = FieldElement::from_literal(2u128) * (s2 - s1);
+                let r = P256FieldElement::from_literal(2u128) * (s2 - s1);
                 let v = u1 * i;
 
-                let x3_1 = FieldElement::from_literal(2u128) * v;
+                let x3_1 = P256FieldElement::from_literal(2u128) * v;
                 let x3_2 = r.exp(2u32) - j;
                 let x3 = x3_2 - x3_1;
 
-                let y3_1 = (FieldElement::from_literal(2u128) * s1) * j;
+                let y3_1 = (P256FieldElement::from_literal(2u128) * s1) * j;
                 let y3_2 = r * (v - x3);
                 let y3 = y3_2 - y3_1;
 
@@ -158,15 +158,15 @@ fn point_add_jacob(p: Jacobian, q: Jacobian) -> JacobianResult {
     result
 }
 
-fn ltr_mul(k: Scalar, p: Jacobian) -> JacobianResult {
+fn ltr_mul(k: P256Scalar, p: P256Jacobian) -> JacobianResult {
     let mut q = (
-        FieldElement::from_literal(0u128),
-        FieldElement::from_literal(1u128),
-        FieldElement::from_literal(0u128),
+        P256FieldElement::from_literal(0u128),
+        P256FieldElement::from_literal(1u128),
+        P256FieldElement::from_literal(0u128),
     );
     for i in 0..BITS {
         q = point_double(q);
-        if k.get_bit(BITS - 1 - i).equal(Scalar::ONE()) {
+        if k.get_bit(BITS - 1 - i).equal(P256Scalar::ONE()) {
             q = point_add_jacob(q, p)?;
         }
     }

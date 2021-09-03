@@ -9,30 +9,30 @@ pub enum Error {
 }
 
 pub type PublicKey = Affine;
-pub type SecretKey = Scalar;
-pub type Signature = (Scalar, Scalar); // (r, s)
+pub type SecretKey = P256Scalar;
+pub type Signature = (P256Scalar, P256Scalar); // (r, s)
 pub type SignatureResult = Result<Signature, Error>;
 pub type VerifyResult = Result<(), Error>;
 type CheckResult = Result<(), Error>;
 type ArithmeticResult = Result<Affine, Error>;
 
-fn check_scalar_zero(r: Scalar) -> CheckResult {
-    if r.equal(Scalar::ZERO()) {
+fn check_scalar_zero(r: P256Scalar) -> CheckResult {
+    if r.equal(P256Scalar::ZERO()) {
         CheckResult::Err(Error::InvalidScalar)
     } else {
         CheckResult::Ok(())
     }
 }
 
-fn ecdsa_point_mul_base(x: Scalar) -> ArithmeticResult {
-    match point_mul_base(x) {
+fn ecdsa_point_mul_base(x: P256Scalar) -> ArithmeticResult {
+    match p256_point_mul_base(x) {
         AffineResult::Ok(s) => ArithmeticResult::Ok(s),
         AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
 }
 
-fn ecdsa_point_mul(k: Scalar, p: Affine) -> ArithmeticResult {
-    match point_mul(k, p) {
+fn ecdsa_point_mul(k: P256Scalar, p: Affine) -> ArithmeticResult {
+    match p256_point_mul(k, p) {
         AffineResult::Ok(s) => ArithmeticResult::Ok(s),
         AffineResult::Err(_) => ArithmeticResult::Err(Error::InvalidScalar),
     }
@@ -45,13 +45,13 @@ fn ecdsa_point_add(p: Affine, q: Affine) -> ArithmeticResult {
     }
 }
 
-pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> SignatureResult {
+pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: P256Scalar) -> SignatureResult {
     check_scalar_zero(nonce)?;
     let (k_x, _k_y) = ecdsa_point_mul_base(nonce)?;
-    let r = Scalar::from_byte_seq_be(&k_x.to_byte_seq_be());
+    let r = P256Scalar::from_byte_seq_be(&k_x.to_byte_seq_be());
     check_scalar_zero(r)?;
     let payload_hash = hash(payload);
-    let payload_hash = Scalar::from_byte_seq_be(&payload_hash);
+    let payload_hash = P256Scalar::from_byte_seq_be(&payload_hash);
     let rsk = r * sk;
     let hash_rsk = payload_hash + rsk;
     let nonce_inv = nonce.inv();
@@ -60,11 +60,19 @@ pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: Scalar) -> SignatureResult 
     SignatureResult::Ok((r, s))
 }
 
+pub fn ecdsa_p256_sha256_sign(
+    payload: &ByteSeq,
+    sk: SecretKey,
+    nonce: P256Scalar,
+) -> SignatureResult {
+    sign(payload, sk, nonce)
+}
+
 pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyResult {
     // signature = (r, s) must be in [1, n-1] because they are Scalars
     let (r, s) = signature;
     let payload_hash = hash(payload);
-    let payload_hash = Scalar::from_byte_seq_be(&payload_hash);
+    let payload_hash = P256Scalar::from_byte_seq_be(&payload_hash);
     let s_inv = s.inv();
 
     // R' = (h * s1) * G + (r * s1) * pubKey
@@ -74,7 +82,7 @@ pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyR
     let u2 = r * s_inv;
     let u2 = ecdsa_point_mul(u2, pk)?;
     let (x, _y) = ecdsa_point_add(u1, u2)?;
-    let x = Scalar::from_byte_seq_be(&x.to_byte_seq_be());
+    let x = P256Scalar::from_byte_seq_be(&x.to_byte_seq_be());
 
     if x == r {
         VerifyResult::Ok(())
@@ -83,24 +91,33 @@ pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyR
     }
 }
 
+pub fn ecdsa_p256_sha256_verify(
+    payload: &ByteSeq,
+    pk: PublicKey,
+    signature: Signature,
+) -> VerifyResult {
+    verify(payload, pk, signature)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn self_test() {
-        let sk =
-            Scalar::from_hex("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632550");
+        let sk = P256Scalar::from_hex(
+            "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632550",
+        );
         let pk = (
-            FieldElement::from_hex(
+            P256FieldElement::from_hex(
                 "6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296",
             ),
-            FieldElement::from_hex(
+            P256FieldElement::from_hex(
                 "B01CBD1C01E58065711814B583F061E9D431CCA994CEA1313449BF97C840AE0A",
             ),
         );
         let msg = ByteSeq::from_public_slice(b"hacspec ecdsa p256 sha256 self test");
-        let nonce = Scalar::from_be_bytes(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
+        let nonce = P256Scalar::from_be_bytes(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
 
         let signature = match sign(&msg, sk, nonce) {
             Ok(s) => s,
@@ -112,17 +129,21 @@ mod tests {
     #[test]
     fn kat_sign() {
         let pk = (
-            FieldElement::from_hex(
+            P256FieldElement::from_hex(
                 "2927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838",
             ),
-            FieldElement::from_hex(
+            P256FieldElement::from_hex(
                 "c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e",
             ),
         );
         let msg = ByteSeq::from_hex("313233343030");
         let sig = (
-            Scalar::from_hex("2ba3a8be6b94d5ec80a6d9d1190a436effe50d85a1eee859b8cc6af9bd5c2e18"),
-            Scalar::from_hex("b329f479a2bbd0a5c384ee1493b1f5186a87139cac5df4087c134b49156847db"),
+            P256Scalar::from_hex(
+                "2ba3a8be6b94d5ec80a6d9d1190a436effe50d85a1eee859b8cc6af9bd5c2e18",
+            ),
+            P256Scalar::from_hex(
+                "b329f479a2bbd0a5c384ee1493b1f5186a87139cac5df4087c134b49156847db",
+            ),
         );
         assert!(verify(&msg, pk, sig).is_ok());
     }

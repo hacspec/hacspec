@@ -26,7 +26,7 @@ pub fn poly1305_update_padded(m: &ByteSeq, st: PolyState) -> PolyState {
     poly1305_update_last(16, &last, st)
 }
 
-pub fn finish(aad_len: usize, cipher_len: usize, st: PolyState) -> Tag {
+pub fn finish(aad_len: usize, cipher_len: usize, st: PolyState) -> Poly1305Tag {
     let mut last_block = PolyBlock::new();
     last_block = last_block.update(0, &U64_to_le_bytes(U64(aad_len as u64)));
     last_block = last_block.update(8, &U64_to_le_bytes(U64(cipher_len as u64)));
@@ -34,12 +34,12 @@ pub fn finish(aad_len: usize, cipher_len: usize, st: PolyState) -> Tag {
     poly1305_finish(st)
 }
 
-pub fn encrypt(
+pub fn chacha20_poly1305_encrypt(
     key: ChaChaPolyKey,
     iv: ChaChaPolyIV,
     aad: &ByteSeq,
     msg: &ByteSeq,
-) -> (ByteSeq, Tag) {
+) -> (ByteSeq, Poly1305Tag) {
     let cipher_text = chacha20(key, iv, 1u32, msg);
     let mut poly_st = init(key, iv);
     poly_st = poly1305_update_padded(aad, poly_st);
@@ -48,12 +48,12 @@ pub fn encrypt(
     (cipher_text, tag)
 }
 
-pub fn decrypt(
+pub fn chacha20_poly1305_decrypt(
     key: ChaChaPolyKey,
     iv: ChaChaPolyIV,
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
-    tag: Tag,
+    tag: Poly1305Tag,
 ) -> ByteSeqResult {
     let mut poly_st = init(key, iv);
     poly_st = poly1305_update_padded(aad, poly_st);
