@@ -1,18 +1,18 @@
 use hacspec_lib::prelude::*;
-
 use hacspec_aes::*;
 use hacspec_aes_ccm::*;
 
 // These tests have been taken from pages 23-24 of https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38c.pdf
-// alen, nlen, plen, tlen are the length of the sequences and not the bit lengths
+// alen, nlen, plen, tlen are the octet (byte = 8 bit) lengths of the sequences and not the bit lengths
 
 #[test]
 fn kat_aes_ccm_1() {
     let ad = ByteSeq::from_public_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);
-    let ad2 = ByteSeq::from_public_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);
     let n = ByteSeq::from_public_slice(&[0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16]);
-    let n2 = ByteSeq::from_public_slice(&[0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16]);
     let pay = ByteSeq::from_public_slice(&[0x20, 0x21, 0x22, 0x23]);
+
+    let ad2 = ByteSeq::from_public_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);
+    let n2 = ByteSeq::from_public_slice(&[0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16]);
     let pay2 = ByteSeq::from_public_slice(&[0x20, 0x21, 0x22, 0x23]);
 
     let alen = 8; let nlen = 7; let plen = 4; let tlen = 4;
@@ -27,7 +27,9 @@ fn kat_aes_ccm_1() {
 
     let out_ct = encrypt_ccm(ad, n, pay, key, tlen, alen, nlen, plen);
     assert_eq!(expected_ct, out_ct);
-    assert_eq!(pay2, decrypt_ccm(ad2, n2, out_ct, 8, key, tlen, nlen));
+
+    let out_pay = decrypt_ccm(ad2, n2, out_ct, 8u8, key, tlen, alen, nlen);
+    assert_eq!(pay2, out_pay.unwrap());
 }
 
 #[test]
@@ -66,7 +68,9 @@ fn kat_aes_ccm_2() {
 
     let out_ct = encrypt_ccm(ad, n, pay, key, tlen, alen, nlen, plen);
     assert_eq!(expected_ct, out_ct);
-    assert_eq!(pay2, decrypt_ccm(ad2, n2, out_ct, 22, key, tlen, nlen));
+
+    let out_pay = decrypt_ccm(ad2, n2, out_ct, 22u8, key, tlen, alen, nlen);
+    assert_eq!(pay2, out_pay.unwrap());
 }
 
 #[test]
@@ -116,5 +120,7 @@ fn kat_aes_ccm_3() {
 
     let out_ct = encrypt_ccm(ad, n, pay, key, tlen, alen, nlen, plen);
     assert_eq!(expected_ct, out_ct);
-    assert_eq!(pay2, decrypt_ccm(ad2, n2, out_ct, 32, key, tlen, nlen));
+
+    let out_pay = decrypt_ccm(ad2, n2, out_ct, 32u8, key, tlen, alen, nlen);
+    assert_eq!(pay2, out_pay.unwrap());
 }
