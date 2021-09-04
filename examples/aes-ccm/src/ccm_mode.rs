@@ -1,6 +1,9 @@
 use hacspec_lib::*;
 use hacspec_aes::*;
 
+pub type AesCcmResult = Result<ByteSeq, u8>;
+pub const INVALID: u8 = 0u8;
+
 fn format_func(a: &ByteSeq, n: &ByteSeq, p: &ByteSeq, t: u8, alen: u64, nlen: u8, plen: u64) -> ByteSeq {
     let mut r = 0u64;
     let mut a_octets = 10u64;
@@ -168,7 +171,6 @@ pub fn encrypt_ccm(a: ByteSeq, n: ByteSeq, pay: ByteSeq, key: Key128, tlen: u8, 
 
     let pay_xor = pay ^ s.get_exact_chunk(plen as usize, 0);
     ciphertext = ciphertext.set_exact_chunk(plen as usize, 0, &pay_xor);
-
     let t_xor = t ^ s0.get_exact_chunk(tlen as usize, 0);
 
     for i in pl..cipherlen {
@@ -178,7 +180,7 @@ pub fn encrypt_ccm(a: ByteSeq, n: ByteSeq, pay: ByteSeq, key: Key128, tlen: u8, 
     ciphertext
 }
 
-pub fn decrypt_ccm(adata: ByteSeq, nonce: ByteSeq, ciph: ByteSeq, clen: u8, key: Key128, tlen: u8, nlen: u8) -> ByteSeq {
+pub fn decrypt_ccm(adata: ByteSeq, nonce: ByteSeq, ciph: ByteSeq, clen: u8, key: Key128, tlen: u8, alen: u64, nlen: u8) -> AesCcmResult {
     if clen > tlen {
         let m = (clen-tlen+15u8) / 16u8;
         let counter = counter_func(&nonce, nlen, m as u64);
@@ -186,8 +188,17 @@ pub fn decrypt_ccm(adata: ByteSeq, nonce: ByteSeq, ciph: ByteSeq, clen: u8, key:
 
         let x = (clen - tlen) as usize;
         let p = ciph.get_exact_chunk(x, 0) ^ s.get_exact_chunk(x, 0);
-        p
+
+        let u_tlen = tlen as usize;
+        let t = ciph.slice_range(ciph.len()-u_tlen..ciph.len()) ^ s0.get_exact_chunk(u_tlen, 0);
+        let b = format_func(&adata, &nonce, &p, tlen, alen, nlen, p.len() as u64);
+
+        if get_t(&b, key, tlen) == t {
+            AesCcmResult::Ok(p)
+        } else {
+            AesCcmResult::Err(INVALID)
+        }
     } else {
-        ByteSeq::new(0) // TODO: Return "Invalid" instead
+        AesCcmResult::Err(INVALID)
     }
 }
