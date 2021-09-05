@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.75/src/stmt.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>stmt.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.76/src/stmt.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>stmt.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -320,6 +320,27 @@
 <span id="320">320</span>
 <span id="321">321</span>
 <span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
@@ -488,7 +509,7 @@
         }
 
         <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">let</span>]) {
-            <span class="ident">stmt_local</span>(<span class="ident">input</span>, <span class="ident">attrs</span>).<span class="ident">map</span>(<span class="ident">Stmt</span>::<span class="ident">Local</span>)
+            <span class="ident">stmt_local</span>(<span class="ident">input</span>, <span class="ident">attrs</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">pub</span>])
             <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">crate</span>]) <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="op">!</span><span class="ident">input</span>.<span class="ident">peek2</span>(<span class="macro">Token</span><span class="macro">!</span>[::])
             <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">extern</span>])
@@ -542,35 +563,51 @@
         })))
     }
 
-    <span class="kw">fn</span> <span class="ident">stmt_local</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>, <span class="ident">attrs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attribute</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Local</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">Local</span> {
+    <span class="kw">fn</span> <span class="ident">stmt_local</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>, <span class="ident">attrs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Attribute</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Stmt</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">begin</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">fork</span>();
+
+        <span class="kw">let</span> <span class="ident">let_token</span>: <span class="macro">Token</span><span class="macro">!</span>[<span class="kw">let</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pat</span>: <span class="ident">Pat</span> <span class="op">=</span> <span class="ident">pat</span>::<span class="ident">parsing</span>::<span class="ident">multi_pat_with_leading_vert</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[:]) {
+            <span class="kw">let</span> <span class="ident">colon_token</span>: <span class="macro">Token</span><span class="macro">!</span>[:] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">ty</span>: <span class="ident">Type</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+            <span class="ident">pat</span> <span class="op">=</span> <span class="ident">Pat</span>::<span class="ident">Type</span>(<span class="ident">PatType</span> {
+                <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+                <span class="ident">pat</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">pat</span>),
+                <span class="ident">colon_token</span>,
+                <span class="ident">ty</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ty</span>),
+            });
+        }
+
+        <span class="kw">let</span> <span class="ident">init</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>]) {
+            <span class="kw">let</span> <span class="ident">eq_token</span>: <span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">init</span>: <span class="ident">Expr</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+
+            <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">else</span>]) {
+                <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">Token</span><span class="macro">!</span>[<span class="kw">else</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">content</span>;
+                <span class="macro">braced</span><span class="macro">!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>);
+                <span class="ident">content</span>.<span class="ident">call</span>(<span class="ident">Block</span>::<span class="ident">parse_within</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">verbatim</span> <span class="op">=</span> <span class="ident">Expr</span>::<span class="ident">Verbatim</span>(<span class="ident">verbatim</span>::<span class="ident">between</span>(<span class="ident">begin</span>, <span class="ident">input</span>));
+                <span class="kw">let</span> <span class="ident">semi_token</span>: <span class="macro">Token</span><span class="macro">!</span>[;] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Stmt</span>::<span class="ident">Semi</span>(<span class="ident">verbatim</span>, <span class="ident">semi_token</span>));
+            }
+
+            <span class="prelude-val">Some</span>((<span class="ident">eq_token</span>, <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">init</span>)))
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        };
+
+        <span class="kw">let</span> <span class="ident">semi_token</span>: <span class="macro">Token</span><span class="macro">!</span>[;] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="ident">Stmt</span>::<span class="ident">Local</span>(<span class="ident">Local</span> {
             <span class="ident">attrs</span>,
-            <span class="ident">let_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-            <span class="ident">pat</span>: {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pat</span>: <span class="ident">Pat</span> <span class="op">=</span> <span class="ident">pat</span>::<span class="ident">parsing</span>::<span class="ident">multi_pat_with_leading_vert</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[:]) {
-                    <span class="kw">let</span> <span class="ident">colon_token</span>: <span class="macro">Token</span><span class="macro">!</span>[:] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">ty</span>: <span class="ident">Type</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                    <span class="ident">pat</span> <span class="op">=</span> <span class="ident">Pat</span>::<span class="ident">Type</span>(<span class="ident">PatType</span> {
-                        <span class="ident">attrs</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-                        <span class="ident">pat</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">pat</span>),
-                        <span class="ident">colon_token</span>,
-                        <span class="ident">ty</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ty</span>),
-                    });
-                }
-                <span class="ident">pat</span>
-            },
-            <span class="ident">init</span>: {
-                <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>]) {
-                    <span class="kw">let</span> <span class="ident">eq_token</span>: <span class="macro">Token</span><span class="macro">!</span>[<span class="op">=</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">init</span>: <span class="ident">Expr</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
-                    <span class="prelude-val">Some</span>((<span class="ident">eq_token</span>, <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">init</span>)))
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                }
-            },
-            <span class="ident">semi_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
-        })
+            <span class="ident">let_token</span>,
+            <span class="ident">pat</span>,
+            <span class="ident">init</span>,
+            <span class="ident">semi_token</span>,
+        }))
     }
 
     <span class="kw">fn</span> <span class="ident">stmt_expr</span>(
@@ -581,8 +618,13 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">expr</span>::<span class="ident">parsing</span>::<span class="ident">expr_early</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attr_target</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">e</span>;
-        <span class="kw">while</span> <span class="kw">let</span> <span class="ident">Expr</span>::<span class="ident">Binary</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">attr_target</span> {
-            <span class="ident">attr_target</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">e</span>.<span class="ident">left</span>;
+        <span class="kw">loop</span> {
+            <span class="ident">attr_target</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">attr_target</span> {
+                <span class="ident">Expr</span>::<span class="ident">Assign</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">e</span>.<span class="ident">left</span>,
+                <span class="ident">Expr</span>::<span class="ident">AssignOp</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">e</span>.<span class="ident">left</span>,
+                <span class="ident">Expr</span>::<span class="ident">Binary</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">e</span>.<span class="ident">left</span>,
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+            };
         }
         <span class="ident">attrs</span>.<span class="ident">extend</span>(<span class="ident">attr_target</span>.<span class="ident">replace_attrs</span>(<span class="ident">Vec</span>::<span class="ident">new</span>()));
         <span class="ident">attr_target</span>.<span class="ident">replace_attrs</span>(<span class="ident">attrs</span>);
