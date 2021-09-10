@@ -1227,11 +1227,13 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 		    .append(RcDoc::as_string("QuickChick"))
 		    .append(RcDoc::space())
 		    .append(make_paren(
-			RcDoc::as_string("forAll _")
-			.append(RcDoc::space())
+			RcDoc::nil()
 			// Map should be fold!
-			.append(RcDoc::intersperse(sig.args.iter().map(|((x, _), (tau, _))| {
-				make_paren(
+			    .append(RcDoc::intersperse(sig.args.iter().map(|((x, _), (tau, _))| {
+				RcDoc::as_string("forAll g_")
+				.append(translate_typ(tau.clone()))
+				.append(RcDoc::space())
+				.append(make_paren(
 				    RcDoc::as_string("fun")
 					.append(RcDoc::space())
 					.append(translate_ident(x.clone()))
@@ -1245,7 +1247,7 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 					.append(translate_ident(Ident::TopLevel(f.clone())))
 					.append(RcDoc::space())
 					.append(translate_ident(x.clone())),
-				)
+				))
 			    }),
 			    RcDoc::line())
 		    ))),
@@ -1380,28 +1382,27 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 		.append(RcDoc::space())
 		.append(RcDoc::as_string("Show ("))
 		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
-		.append(RcDoc::as_string(") := Build_Show ("))
-		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
-		.append(RcDoc::as_string(") (fun x => show (GZnZ.val "))
-		.append(RcDoc::as_string("_"))
-		// .append(match info {
-                //     Some((_, modulo)) => RcDoc::as_string(format!("0x{}", &modulo.0)),
-                //     None => RcDoc::as_string(format!("pow2 {}", canvas_size)),
-		// })
-		.append(RcDoc::as_string(" x))."))
-		.append(RcDoc::hardline())
+                .append(RcDoc::as_string(") := Build_Show ("))
+                .append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+                .append(RcDoc::as_string(") (fun x => show (GZnZ.val "))
+                .append(RcDoc::as_string("_"))
+                // .append(match info {
+                 //     Some((_, modulo)) => RcDoc::as_string(format!("0x{}", &modulo.0)),
+                 //     None => RcDoc::as_string(format!("pow2 {}", canvas_size)),
+                // })
+                .append(RcDoc::as_string(" x))."))
 
 		.append(RcDoc::hardline())
 		.append(RcDoc::as_string("Definition"))
 		.append(RcDoc::space())
-		.append(RcDoc::as_string("gen_"))
+		.append(RcDoc::as_string("g_"))
 		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
 		.append(RcDoc::space())
 		.append(RcDoc::as_string(":"))
 		.append(RcDoc::space())
 		.append(RcDoc::as_string("G ("))
 		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
-		.append(RcDoc::as_string(") := @bindGen Z ("))    
+		.append(RcDoc::as_string(") := @bindGen Z ("))
 		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
 		.append(RcDoc::as_string(") (arbitrary) (fun x => returnGen (@Z_in_nat_mod "))
 		.append(RcDoc::as_string("_"))
@@ -1410,6 +1411,24 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
                 //     None => RcDoc::as_string(format!("pow2 {}", canvas_size)),
 		// })
 		.append(RcDoc::as_string(" x))."))
+
+		.append(RcDoc::hardline())
+		.append(RcDoc::as_string("Instance"))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string("gen_"))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string(":"))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string("Gen ("))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::as_string(") := Build_Gen"))
+		.append(RcDoc::space())
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string("g_"))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::as_string("."))
 		.append(RcDoc::hardline()),
             )
 	}
@@ -1429,7 +1448,7 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
             .append(RcDoc::as_string(") : hacspec_scope."))
 	    .append(// match item {
 		// DecoratedItem::Code(_) => RcDoc::nil(),
-		// DecoratedItem::Test(_) => 
+		// DecoratedItem::Test(_) =>
 		    RcDoc::hardline()
 		    .append(RcDoc::as_string("Instance"))
 		    .append(RcDoc::space())
@@ -1440,20 +1459,99 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 		    .append(RcDoc::space())
 		    .append(RcDoc::as_string("Show ("))
 		    .append(translate_ident_str(name.clone()))
-		    .append(RcDoc::as_string(") := ()."))
+		    .append(RcDoc::as_string(") :="))
+		    .append(RcDoc::line())
+		    .append(match ty.clone() {
+		        BaseTyp::Tuple(args) => {
+			    RcDoc::as_string("Build_Show")
+				.append(RcDoc::space())
+				.append(translate_ident_str(name.clone()))
+				.append(RcDoc::space())
+				.append(RcDoc::as_string("(fun x =>"))
+				.append(RcDoc::line())
+				.append((0..args.len()-1).fold(RcDoc::nil(),|s,n| {
+				    s.append(RcDoc::as_string("let (x, x"))
+					.append(RcDoc::as_string(n.to_string()))
+					.append(RcDoc::as_string(") := x in"))
+					.append(RcDoc::line())
+				}))
+				.append(RcDoc::as_string("append (show x) ("))
+				.append((0..args.len()-2).fold(RcDoc::nil(),|s,n| {
+				    s.append(RcDoc::as_string("append (show x"))
+					.append(RcDoc::as_string(n.to_string()))
+					.append(RcDoc::as_string(") ("))
+				}))
+				.append(RcDoc::as_string("show x"))
+				.append(RcDoc::as_string((args.len()-2).to_string()))
+				.append((0..args.len()-1).fold(RcDoc::nil(),|s,_| {
+				    s.append(RcDoc::as_string(")"))
+				}))
+				.append(RcDoc::as_string(")"))
+			},
+			_ => RcDoc::nil(),
+		    })
+		    .append(RcDoc::as_string("."))
 		    .append(RcDoc::hardline())
 
-		    .append(RcDoc::hardline())
 		    .append(RcDoc::as_string("Definition"))
 		    .append(RcDoc::space())
-		    .append(RcDoc::as_string("gen_"))
+		    .append(RcDoc::as_string("g_"))
 		    .append(translate_ident_str(name.clone()))
 		    .append(RcDoc::space())
 		    .append(RcDoc::as_string(":"))
 		    .append(RcDoc::space())
 		    .append(RcDoc::as_string("G ("))
 		    .append(translate_ident_str(name.clone()))
-		    .append(RcDoc::as_string(") := ()."))
+		    .append(RcDoc::as_string(") :="))
+		    .append(RcDoc::line())
+		    .append(match ty.clone() {
+		        BaseTyp::Tuple(args) => {
+			    let answer = args.into_iter().fold((RcDoc::nil(), 0),|(s, n),(arg, _)| {
+				(s.append(RcDoc::as_string("bindGen arbitrary (fun x"))
+				 .append(RcDoc::as_string(n.to_string()))
+				 .append(RcDoc::space())
+				 .append(RcDoc::as_string(":"))
+				 .append(RcDoc::space())
+				 .append(translate_base_typ(arg))
+				 .append(RcDoc::space())
+				 .append(RcDoc::as_string("=>"))
+				 .append(RcDoc::line()),
+				 n + 1)
+			    });
+			    answer.0
+				.append(RcDoc::as_string("returnGen ("))
+				.append((1..answer.1).fold(RcDoc::as_string("x0"),|s,n| {
+				    s.append(RcDoc::as_string(","))
+				    .append(RcDoc::as_string("x"))
+				    .append(RcDoc::as_string(n.to_string()))
+
+				}))
+				.append(RcDoc::as_string(")"))
+				.append((0..answer.1).fold(RcDoc::nil(),|s,_| {
+				    s.append(RcDoc::as_string(")"))
+				}))
+			},
+			_ => RcDoc::nil(),
+		    })
+		    .append(RcDoc::as_string("."))
+		    .append(RcDoc::hardline())
+
+		    .append(RcDoc::as_string("Instance"))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string("gen_"))
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string(":"))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string("Gen ("))
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::as_string(") := Build_Gen"))
+		    .append(RcDoc::space())
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string("g_"))
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::as_string("."))
 		    .append(RcDoc::hardline()),
 	    // }
 	    ),
