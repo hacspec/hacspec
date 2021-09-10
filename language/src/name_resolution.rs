@@ -411,10 +411,14 @@ fn resolve_block(
 
 fn resolve_item(
     sess: &Session,
-    (i, i_span): Spanned<Item>,
+    (item, i_span): Spanned<DecoratedItem>,
     top_level_ctx: &TopLevelContext,
-) -> ResolutionResult<Spanned<Item>> {
-    match i {
+) -> ResolutionResult<Spanned<DecoratedItem>> {
+    let i = match item.clone() {
+	DecoratedItem::Code(i) => i,
+	DecoratedItem::Test(i) => i,
+    };
+    let i = match i {
         Item::ConstDecl(id, typ, e) => {
             let new_e = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ConstDecl(id, typ, new_e), i_span))
@@ -450,14 +454,26 @@ fn resolve_item(
             let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
             Ok((Item::FnDecl((f, f_span), sig, new_b), i_span))
         }
+    };
+    match i {
+	Ok ((i,i_span)) => match item {
+	    DecoratedItem::Code(_) => Ok((DecoratedItem::Code(i),i_span)),
+	    DecoratedItem::Test(_) => Ok((DecoratedItem::Test(i),i_span)),
+	},
+	Err (a) => Err (a), 
     }
+    
 }
 
 fn process_decl_item(
     sess: &Session,
-    (i, i_span): &Spanned<Item>,
+    (i, i_span): &Spanned<DecoratedItem>,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
+    let i = match i {
+	DecoratedItem::Code(i) => i,
+	DecoratedItem::Test(i) => i,
+    };
     match i {
         Item::ConstDecl(id, typ, _e) => {
             top_level_context.consts.insert(id.0.clone(), typ.clone());
@@ -526,24 +542,26 @@ fn process_decl_item(
                     process_decl_item(
                         sess,
                         &(
-                            Item::ArrayDecl(
-                                canvas_typ_ident.clone(),
-                                canvas_size.clone(),
-                                match secrecy {
-                                    Secrecy::Secret => (
-                                        BaseTyp::Named(
-                                            (
-                                                TopLevelIdent("U8".to_string()),
-                                                canvas_typ_ident.1.clone(),
+			    DecoratedItem::Code(
+				Item::ArrayDecl(
+                                    canvas_typ_ident.clone(),
+                                    canvas_size.clone(),
+                                    match secrecy {
+					Secrecy::Secret => (
+                                            BaseTyp::Named(
+						(
+                                                    TopLevelIdent("U8".to_string()),
+                                                    canvas_typ_ident.1.clone(),
+						),
+						None,
                                             ),
-                                            None,
-                                        ),
-                                        canvas_typ_ident.1.clone(),
-                                    ),
-                                    Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
-                                },
-                                None,
-                            ),
+                                            canvas_typ_ident.1.clone(),
+					),
+					Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
+                                    },
+                                    None,
+				)
+			    ),
                             *i_span,
                         ),
                         top_level_context,
@@ -609,6 +627,10 @@ fn process_decl_item(
 pub fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
     p.items
         .iter()
+	.map(|i| match &i.0 {
+	    DecoratedItem::Code(item) => (item, &i.1),
+	    DecoratedItem::Test(item) => (item, &i.1),
+	})
         .filter(|i| match &i.0 {
             Item::ImportedCrate(_) => true,
             _ => false,
@@ -683,6 +705,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         );
     }
     for (k, v) in extern_funcs {
+    // 	println!("Extern funcs {} .. {}", match v {
+    // 	    Ok(_) => "ok",
+    // 	    Err(_) => "err",
+    // 	}, k);
         top_level_ctx.functions.insert(
             k.clone(),
             match v {

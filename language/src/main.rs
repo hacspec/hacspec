@@ -96,7 +96,7 @@ impl Callbacks for HacspecCallbacks {
                     .err("unable to translate to Hacspec due to out-of-language errors");
                 return Compilation::Stop;
             }
-        };
+        };	
         let (krate, mut top_ctx) =
             match name_resolution::resolve_crate(&compiler.session(), krate, &external_data) {
                 Ok(krate) => krate,
