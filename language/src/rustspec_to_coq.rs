@@ -1475,18 +1475,18 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 					.append(RcDoc::as_string(") := x in"))
 					.append(RcDoc::line())
 				}))
+				.append(RcDoc::as_string("append (\"(\"%string) ("))
 				.append(RcDoc::as_string("append (show x) ("))
-				.append((0..args.len()-2).fold(RcDoc::nil(),|s,n| {
-				    s.append(RcDoc::as_string("append (show x"))
+				.append((0..args.len()-1).fold(RcDoc::nil(),|s,n| {
+				    s.append(RcDoc::as_string("append (\",\"%string) (append (show x"))
 					.append(RcDoc::as_string(n.to_string()))
 					.append(RcDoc::as_string(") ("))
 				}))
-				.append(RcDoc::as_string("show x"))
-				.append(RcDoc::as_string((args.len()-2).to_string()))
+				.append(RcDoc::as_string("\")\"%string)"))
 				.append((0..args.len()-1).fold(RcDoc::nil(),|s,_| {
-				    s.append(RcDoc::as_string(")"))
+				    s.append(RcDoc::as_string("))"))
 				}))
-				.append(RcDoc::as_string(")"))
+				.append(RcDoc::as_string("))"))
 			},
 			_ => RcDoc::nil(),
 		    })
