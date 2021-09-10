@@ -583,6 +583,7 @@ fn find_func(
     for (typ_ctx, sig) in candidates {
         return Ok((sig.clone(), typ_ctx));
     }
+
     Err(())
 }
 
@@ -2435,10 +2436,14 @@ fn typecheck_block(
 
 fn typecheck_item(
     sess: &Session,
-    i: &Item,
+    item: &DecoratedItem,
     top_level_context: &TopLevelContext,
-) -> TypecheckingResult<Item> {
-    match &i {
+) -> TypecheckingResult<DecoratedItem> {
+    let i = match item {
+	DecoratedItem::Code(i) => i,
+	DecoratedItem::Test(i) => i,
+    };
+    let i = match &i {
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let canvas_size_span = canvas_size.1.clone();
             let (new_canvas_size, canvas_size_typ, _) =
@@ -2570,6 +2575,14 @@ fn typecheck_item(
                 (new_e, (e.1).clone()),
             ))
         }
+    };
+    match i {
+	Ok(i) =>
+	    match item {
+		DecoratedItem::Code(_) => Ok(DecoratedItem::Code(i)),
+		DecoratedItem::Test(_) => Ok(DecoratedItem::Test(i)),
+	    },
+	Err(a) => Err(a),
     }
 }
 

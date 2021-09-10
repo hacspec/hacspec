@@ -462,6 +462,13 @@ pub enum Item {
 }
 
 #[derive(Clone, Serialize)]
+pub enum DecoratedItem {
+    Code(Item),
+    Test(Item),
+    // Proof
+}
+
+#[derive(Clone, Serialize)]
 pub struct Program {
-    pub items: Vec<Spanned<Item>>,
+    pub items: Vec<Spanned<DecoratedItem>>,
 }

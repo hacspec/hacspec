@@ -56,11 +56,11 @@ fn make_let_binding<'a>(
     .append(RcDoc::line().append(expr.group()))
     .nest(2)
     .append(if toplevel {
-        RcDoc::as_string(".")
+	RcDoc::as_string(".")
     } else {
-        RcDoc::space()
-        .append(RcDoc::as_string("in"))
-        .append(RcDoc::space())
+	RcDoc::space()
+	.append(RcDoc::as_string("in"))
+	.append(RcDoc::space())
     })
 }
 
@@ -206,6 +206,7 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
     if snake_case_ident == "new" {
         snake_case_ident = "new_".to_string();
     }
+
     RcDoc::as_string(snake_case_ident)
 }
 
@@ -266,7 +267,8 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         }
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
         .append(RcDoc::space())
-        .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
+        .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
+	.append(RcDoc::hardline()),
     }
 }
 
@@ -616,6 +618,7 @@ fn translate_func_name<'a>(
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
             // We add the modulo value for nat_mod
+
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
@@ -842,7 +845,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                                 BaseTyp::Array(_size, inner_ty) => {
                                     inner_ty.as_ref().clone().0
                                 }
-                                _ => panic!(),           
+                                _ => panic!(),
                             }
                             // translate_prefix_for_func_name((alias_typ.1).0.clone(), top_ctx)
                         }
@@ -1006,7 +1009,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _), question_mark) => 
+        Statement::Reassignment((x, _), (e1, _), question_mark) =>
         //TODO: not yet handled
         if question_mark {
             unimplemented!()
@@ -1107,16 +1110,16 @@ fn translate_statements<'a>(
             let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
             b.stmts
                 .push(add_ok_if_result(mutated_info.stmt.clone(), b_question_mark));
-            
+
             let mut_tuple = |prefix: String| -> RcDoc<'a> {
                 // if there is only one element, just print the identifier instead of making a tuple
                 if mutated_info.vars.0.len() == 1 {
                     match mutated_info.vars.0.iter().next() {
                         None => RcDoc::nil(),
-                        Some(i) => 
+                        Some(i) =>
                         translate_ident(Ident::Local(i.clone()))
                     }
-                } 
+                }
                 // print as tuple otherwise
                 else {
                     RcDoc::as_string(prefix)
@@ -1148,11 +1151,11 @@ fn translate_statements<'a>(
                 .nest(2)
                 .append(RcDoc::line())
                 .append(mut_tuple("".to_string()).clone());
-                
+
                 make_let_binding(mut_tuple("'".to_string()), None, loop_expr, false)
                 .append(RcDoc::hardline())
                 .append(translate_statements(statements, top_ctx))
-                
+
         }
     }
     .group()
@@ -1177,7 +1180,11 @@ fn translate_block<'a>(
     translate_statements(statements.iter(), top_ctx).group()
 }
 
-fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
+fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
+    let i = match item {
+	DecoratedItem::Code(i) => i,
+	DecoratedItem::Test(i) => i,
+    };
     match i {
         Item::FnDecl((f, _), sig, (b, _)) => make_let_binding(
             translate_ident(Ident::TopLevel(f.clone()))
@@ -1212,7 +1219,37 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             } else {
                 RcDoc::nil()
             })
-            .group(),
+	    .group()
+	    .append(match item {
+		DecoratedItem::Code(_) => RcDoc::nil(),
+		DecoratedItem::Test(_) => RcDoc::as_string(".")
+		    .append(RcDoc::hardline())
+		    .append(RcDoc::as_string("QuickChick"))
+		    .append(RcDoc::space())
+		    .append(make_paren(
+			RcDoc::as_string("forAll _")
+			.append(RcDoc::space())
+			// Map should be fold!
+			.append(RcDoc::intersperse(sig.args.iter().map(|((x, _), (tau, _))| {
+				make_paren(
+				    RcDoc::as_string("fun")
+					.append(RcDoc::space())
+					.append(translate_ident(x.clone()))
+					.append(RcDoc::space())
+					.append(RcDoc::as_string(":"))
+					.append(RcDoc::space())
+					.append(translate_typ(tau.clone()))
+					.append(RcDoc::space())
+					.append(RcDoc::as_string("=>"))
+					.append(RcDoc::space())
+					.append(translate_ident(Ident::TopLevel(f.clone())))
+					.append(RcDoc::space())
+					.append(translate_ident(x.clone())),
+				)
+			    }),
+			    RcDoc::line())
+		    ))),
+	    }),
             true,
         ),
         Item::EnumDecl(name, cases) => RcDoc::as_string("Inductive")
@@ -1331,9 +1368,51 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
                     .append(RcDoc::as_string("."))
                     .group()
                     .nest(2),
-                ),
+                )
+
+		.append(RcDoc::hardline())
+		.append(RcDoc::as_string("Instance"))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string("show_"))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string(":"))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string("Show ("))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::as_string(") := Build_Show ("))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::as_string(") (fun x => show (GZnZ.val "))
+		.append(RcDoc::as_string("_"))
+		// .append(match info {
+                //     Some((_, modulo)) => RcDoc::as_string(format!("0x{}", &modulo.0)),
+                //     None => RcDoc::as_string(format!("pow2 {}", canvas_size)),
+		// })
+		.append(RcDoc::as_string(" x))."))
+		.append(RcDoc::hardline())
+
+		.append(RcDoc::hardline())
+		.append(RcDoc::as_string("Definition"))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string("gen_"))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string(":"))
+		.append(RcDoc::space())
+		.append(RcDoc::as_string("G ("))
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::as_string(") := @bindGen Z ("))    
+		.append(translate_ident(Ident::TopLevel(nat_name.0.clone())))
+		.append(RcDoc::as_string(") (arbitrary) (fun x => returnGen (@Z_in_nat_mod "))
+		.append(RcDoc::as_string("_"))
+		// .append(match info {
+                //     Some((_, modulo)) => RcDoc::as_string(format!("0x{}", &modulo.0)),
+                //     None => RcDoc::as_string(format!("pow2 {}", canvas_size)),
+		// })
+		.append(RcDoc::as_string(" x))."))
+		.append(RcDoc::hardline()),
             )
-        }
+	}
         Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
             "Require Import {}.",
             str::replace(&kr.to_title_case(), " ", ".")
@@ -1347,10 +1426,40 @@ fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()
             .append(RcDoc::space())
             .append(RcDoc::as_string(":= ("))
             .append(translate_base_typ(ty.clone()))
-            .append(RcDoc::as_string(") : hacspec_scope.")),
+            .append(RcDoc::as_string(") : hacspec_scope."))
+	    .append(// match item {
+		// DecoratedItem::Code(_) => RcDoc::nil(),
+		// DecoratedItem::Test(_) => 
+		    RcDoc::hardline()
+		    .append(RcDoc::as_string("Instance"))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string("show_"))
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string(":"))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string("Show ("))
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::as_string(") := ()."))
+		    .append(RcDoc::hardline())
+
+		    .append(RcDoc::hardline())
+		    .append(RcDoc::as_string("Definition"))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string("gen_"))
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string(":"))
+		    .append(RcDoc::space())
+		    .append(RcDoc::as_string("G ("))
+		    .append(translate_ident_str(name.clone()))
+		    .append(RcDoc::as_string(") := ()."))
+		    .append(RcDoc::hardline()),
+	    // }
+	    ),
     }
 }
-    
+
 fn translate_program<'a>(p: &'a Program, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     RcDoc::concat(p.items.iter().map(|(i, _)| {
         translate_item(i, top_ctx)
@@ -1358,7 +1467,7 @@ fn translate_program<'a>(p: &'a Program, top_ctx: &'a TopLevelContext) -> RcDoc<
         .append(RcDoc::hardline())
     }))
 }
-    
+
 pub fn translate_and_write_to_file(
     sess: &Session,
     p: &Program,
@@ -1379,12 +1488,22 @@ pub fn translate_and_write_to_file(
     // let module_name = path.file_stem().unwrap().to_str().unwrap();
     write!(
         file,
-        "Require Import Lib MachineIntegers.\n\
-        From Coq Require Import ZArith.\n\
-        Import List.ListNotations.\n\
-        Open Scope Z_scope.\n\
-        Open Scope bool_scope.\n\
-        Open Scope hacspec_scope.\n"
+	"Require Import Lib MachineIntegers.\n\
+         From Coq Require Import ZArith.\n\
+         Import List.ListNotations.\n\
+         Open Scope Z_scope.\n\
+         Open Scope bool_scope.\n\
+         Open Scope hacspec_scope.\n\
+	 {}",
+	if p.items.iter().any(|i| {
+	    match &i.0 {
+		DecoratedItem::Code(_) => false,
+		DecoratedItem::Test(_) => true,
+	    }}) {
+	    "From QuickChick Require Import QuickChick.\n"
+	} else {
+	    ""
+	}
     )
     .unwrap();
     translate_program(p, top_ctx).render(width, &mut w).unwrap();

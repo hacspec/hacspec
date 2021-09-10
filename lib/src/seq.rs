@@ -375,7 +375,7 @@ pub type PublicByteSeq = PublicSeq<u8>;
 
 /// Read hex string to Bytes.
 impl Seq<U8> {
-    #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)] // not_hacspec
     pub fn from_hex(s: &str) -> Seq<U8> {
         Seq::from_vec(
             hex_string_to_bytes(s)
@@ -430,7 +430,7 @@ macro_rules! assert_secret_seq_eq {
 }
 
 impl PublicSeq<u8> {
-    #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+    #[cfg_attr(feature = "use_attributes", in_hacspec)] // not_hacspec
     pub fn from_hex(s: &str) -> PublicSeq<u8> {
         PublicSeq::from_vec(
             hex_string_to_bytes(s)
