@@ -723,7 +723,7 @@ Definition nat_mod (p : Z) : Set := GZnZ.znz p.
 Definition nat_mod_equal {p} (a b : nat_mod p) : bool :=
   Z.eqb (GZnZ.val p a) (GZnZ.val p b).
 
-Definition nat_mod_zero {p} : nat_mod p := GZnZ.zero ep.
+Definition nat_mod_zero {p} : nat_mod p := GZnZ.zero p.
 Definition nat_mod_one {p} : nat_mod p := GZnZ.one p.
 Definition nat_mod_two {p} : nat_mod p := GZnZ.mkznz p _ (GZnZ.modz p 2).
 

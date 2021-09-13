@@ -2138,7 +2138,7 @@ fn attribute_is_proof(attr: &Attribute) -> bool {
 	_ => false,
     }
 }
-									     
+
 fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     i: &ast::Item,
@@ -2148,8 +2148,8 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     let is_quickcheck = i.attrs.iter().any(attribute_is_proof);
 
     println!("IsQuickCheck: {}", is_quickcheck);
-    
-    if i.attrs.iter().any(attribute_is_test) && !is_quickcheck {	
+
+    if i.attrs.iter().any(attribute_is_test) && !is_quickcheck {
         return Ok((ItemTranslationResult::Ignored, specials.clone()));
     }
     match &i.kind {
@@ -2265,7 +2265,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
 		fn_sig,
 		fn_body,
             );
-	    
+
             Ok((
                 ItemTranslationResult::Item(
 		    DecoratedItem {
@@ -2599,7 +2599,7 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             })
             .collect(),
     )?;
-    
+
     let items: Vec<_> = translated_items
         .into_iter()
         .filter(|(r, _)| match r {
@@ -2616,6 +2616,6 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             }
         })
         .collect();
-    
+
     Ok(Program { items })
 }

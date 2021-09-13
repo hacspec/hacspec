@@ -27,11 +27,11 @@ public_nat_mod!( //Custom Macro - defining a new type with some functions - well
 //Returns index of left-most bit, set to 1
 fn most_significant_bit(m: Scalar, n: usize) -> usize //usize does not have a secret integer implementation
 {
-    
+
     if n > 0 && !m.bit(n) {
         most_significant_bit(m, n-1)
-    } else { n }    
-     
+    } else { n }
+
 }
 //bool is "isPointAtInfinity"
 pub type G1 = (Fp, Fp, bool);
@@ -126,11 +126,11 @@ fn fp6mul(n: Fp6, m: Fp6) -> Fp6 {
     let t4 = fp2mul(fp2add(n2, n3), fp2add(m2, m3)); // (n2 + n3) * (m2 + m3)
     let t5 = fp2sub(fp2sub(t4, t2), t3); //t4 - t2 - t3
     let x = fp2add(fp2mul(t5, eps), t1); // t5 * eps + t1
-    
+
     let t4 = fp2mul(fp2add(n1, n2), fp2add(m1, m2)); //(n1 + n2) * (m1 + m2)
     let t5 = fp2sub(fp2sub(t4, t1), t2); //t4 - t1 - t2
     let y = fp2add(t5, fp2mul(eps, t3)); //t5 + (eps * t3)
-     
+
     let t4 = fp2mul(fp2add(n1, n3), fp2add(m1, m3)); //(n1 + n3) * (m1 + m3)
     let t5 = fp2sub(fp2sub(t4, t1), t3); //t4 - t1 - t3
     let z = fp2add(t5, t2); //t5 + t2
@@ -157,7 +157,7 @@ fn fp6inv(n: Fp6) -> Fp6 {
     let y = fp2mul(y0, t0); // y0 * t0
     let z = fp2mul(z0, t0); // z0 * t0
     (x, y, z)
-    
+
 
 }
 
@@ -187,7 +187,7 @@ pub fn fp12mul(n: Fp12, m: Fp12) -> Fp12 {
     let (n1, n2) = n;
     let (m1, m2) = m;
     let gamma = (fp2zero(), fp2fromfp(Fp::ONE()), fp2zero()); //0 + v + 0 (c0, c1v, c2v^2)
-    
+
     let t1 = fp6mul(n1, m1); //n1 * n2
     let t2 = fp6mul(n2, m2); //n2 * m2
     let x = fp6add(t1, fp6mul(t2, gamma)); //t1 + (t2 * gamma)
@@ -199,7 +199,7 @@ pub fn fp12mul(n: Fp12, m: Fp12) -> Fp12 {
 pub fn fp12inv(n: Fp12) -> Fp12 {
     let (n1, n2) = n;
     let gamma = (fp2zero(), fp2fromfp(Fp::ONE()), fp2zero()); //0 + v + 0 (c0, c1v, c2v^2)
-    
+
     let t1 = fp6mul(n1, n1); //n1^2
     let t2 = fp6mul(n2, n2); //n2^2
     let t1 = fp6sub(t1, fp6mul(gamma, t2)); //t1 - (gamma * t2)
@@ -238,7 +238,7 @@ fn g1add_a(p: G1, q: G1) -> G1
     let (x1, y1, _) = p;
     let (x2, y2, _) = q;
 
-    let x_diff = x2 - x1; 
+    let x_diff = x2 - x1;
     let y_diff = y2 - y1;
     let xovery = y_diff * x_diff.inv(); //  x / y = x * y^-1
     let x3 = xovery.exp(2u32) - x1 - x2;
@@ -250,7 +250,7 @@ fn g1add_a(p: G1, q: G1) -> G1
 fn g1double_a(p: G1) -> G1
 {
     let (x1, y1, _) = p;
-    
+
     let x12 = x1.exp(2u32);
     let xovery = (Fp::from_literal(3u128) * x12) * (Fp::TWO() * y1).inv();
     let x3 = xovery.exp(2u32) - Fp::TWO()*x1;
@@ -312,25 +312,25 @@ fn g2add_a(p: G2, q: G2) -> G2
     let (x1, y1, _) = p;
     let (x2, y2, _) = q;
 
-    let x_diff = fp2sub(x2, x1); 
-    let y_diff = fp2sub(y2, y1); 
+    let x_diff = fp2sub(x2, x1);
+    let y_diff = fp2sub(y2, y1);
     let xovery = fp2mul(y_diff, fp2inv(x_diff)); //  x / y = x * y^-1
     let t1 = fp2mul(xovery, xovery);
     let t2 = fp2sub(t1, x1);
-    let x3 = fp2sub(t2, x2); 
-    let t1 = fp2sub(x1, x3); 
+    let x3 = fp2sub(t2, x2);
+    let t1 = fp2sub(x1, x3);
     let t2 = fp2mul(xovery, t1);
-    let y3 = fp2sub(t2, y1); 
+    let y3 = fp2sub(t2, y1);
     (x3, y3, false)
 }
 //g2 double without dealing with Point at Infinity
 fn g2double_a(p: G2) -> G2
 {
     let (x1, y1, _) = p;
-    
+
     let x12 = fp2mul(x1, x1);
     let t1 = fp2mul(fp2fromfp(Fp::from_literal(3u128)), x12);
-    let t2 = fp2inv(fp2mul(fp2fromfp(Fp::TWO()), y1));    
+    let t2 = fp2inv(fp2mul(fp2fromfp(Fp::TWO()), y1));
     let xovery = fp2mul(t1, t2);
     let t1 = fp2mul(xovery, xovery);
     let t2 = fp2mul(fp2fromfp(Fp::TWO()), x1);
@@ -428,11 +428,11 @@ fn frobenius(f: Fp12) -> Fp12 {
     let t3 = fp2conjugate(g1);
     let t4 = fp2conjugate(h1);
     let t5 = fp2conjugate(g2);
-    let t6 = fp2conjugate(h2); 
+    let t6 = fp2conjugate(h2);
 
 
     /* Funky way of storing gamma11 */
-    
+
     //1904D3BF02BB0667 C231BEB4202C0D1F 0FD603FD3CBD5F4F 7B2443D784BAB9C4 F67EA53D63E7813D 8D0775ED92235FB8
     let c1 = ArrayFp(secret_array!(
         U64,
@@ -458,7 +458,7 @@ fn frobenius(f: Fp12) -> Fp12 {
     ));
     let c2 = ArrayFp::to_le_bytes(&c2);
     let c2 = Fp::from_byte_seq_le(c2);
-    
+
     // gamma11 = (1+u)^((p-1) / 6)
     let gamma11 = (c1, c2);
     let gamma12 = fp2mul(gamma11, gamma11);
@@ -477,7 +477,7 @@ fn frobenius(f: Fp12) -> Fp12 {
 
 
 fn final_exponentiation(f: Fp12) -> Fp12 {
-    let fp6 = fp12conjugate(f); // f^p⁶ 
+    let fp6 = fp12conjugate(f); // f^p⁶
     let finv = fp12inv(f); //f^-1
     let fp6_1 = fp12mul(fp6, finv); //f^(p⁶-1)
     let fp8 = frobenius(frobenius(fp6_1)); //f^((p⁶-1)p²)
@@ -488,9 +488,9 @@ fn final_exponentiation(f: Fp12) -> Fp12 {
     //Algorithm 2 from https://eprint.iacr.org/2016/130.pdf
     //Conjugations whenever u is used, since u is actually negative - and conjugation is enough (no inversion needed)
     let t0 = fp12mul(f, f); //f²
-    let t1 = fp12exp(t0, u); 
+    let t1 = fp12exp(t0, u);
     let t1 = fp12conjugate(t1); //t0^u
-    let t2 = fp12exp(t1, u / Scalar::TWO()); 
+    let t2 = fp12exp(t1, u / Scalar::TWO());
     let t2 = fp12conjugate(t2); //t1^(u/2)
     let t3 = fp12conjugate(f); //f^-1
     let t1 = fp12mul(t3, t1); //t3t1
@@ -498,10 +498,10 @@ fn final_exponentiation(f: Fp12) -> Fp12 {
     let t1 = fp12conjugate(t1); //t1^-1
     let t1 = fp12mul(t1, t2); //t1t2
 
-    let t2 = fp12exp(t1, u); 
-    let t2 = fp12conjugate(t2); //t1^u 
+    let t2 = fp12exp(t1, u);
+    let t2 = fp12conjugate(t2); //t1^u
 
-    let t3 = fp12exp(t2, u);  
+    let t3 = fp12exp(t2, u);
     let t3 = fp12conjugate(t3); //t2^u
     let t1 = fp12conjugate(t1); //t1^-1
     let t3 = fp12mul(t1, t3); //t1t3
@@ -511,7 +511,7 @@ fn final_exponentiation(f: Fp12) -> Fp12 {
     let t2 = frobenius(frobenius(t2)); //t2^p²
     let t1 = fp12mul(t1, t2); //t1t2
 
-    let t2 = fp12exp(t3, u); 
+    let t2 = fp12exp(t3, u);
     let t2 = fp12conjugate(t2); //t3^u
     let t2 = fp12mul(t2, t0); //t2t0
     let t2 = fp12mul(t2, f); //t2f
@@ -523,7 +523,7 @@ fn final_exponentiation(f: Fp12) -> Fp12 {
 }
 //ate-pairing used for BLS
 pub fn pairing(p: G1, q: G2) -> Fp12 {
-    let t = Scalar::from_literal(0xd201000000010000u128); 
+    let t = Scalar::from_literal(0xd201000000010000u128);
     let mut r = q;
     let mut f = fp12fromfp6(fp6fromfp2(fp2fromfp(Fp::ONE())));
     for i in 1..64 {
@@ -559,7 +559,7 @@ impl Arbitrary for Fp {
         let mut a: [u64; 6] = [0; 6];
         for i in 0..6 {
             a[i] = u64::arbitrary(g);
-        }        
+        }
         let mut b: [u8; 48] = [0; 48];
         for i in 0..6 {
             let val: u64 = a[i];
@@ -568,7 +568,7 @@ impl Arbitrary for Fp {
         Fp::from_byte_seq_le(Seq::<U8>::from_public_slice(&b))
     }
 }
-    
+
 /* Arbitrary Implementation used for Property Based Tests */
 #[cfg(test)]
 impl Arbitrary for Scalar {
@@ -586,7 +586,7 @@ impl Arbitrary for Scalar {
     }
 }
 
-    
+
 #[cfg(test)]
 #[cfg(proof)]
 #[quickcheck] //Using the fp arbitraty implementation from above to generate fp2 elements.
@@ -594,7 +594,7 @@ fn test_fp2_prop_add_neg(a: Fp2) -> bool {
     let b = fp2neg(a);
     fp2fromfp(Fp::ZERO()) == fp2add(a, b)
 }
-    
+
 
 //Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
 #[cfg(test)]
@@ -760,8 +760,8 @@ fn g1() -> G1 {
 #[cfg(test)]
 fn g2() -> G2 {
     ((Fp::from_hex("24aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8"),
-      Fp::from_hex("13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e")), 
-     (Fp::from_hex("0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801"), 
+      Fp::from_hex("13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e")),
+     (Fp::from_hex("0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801"),
       Fp::from_hex("0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be")), false)
 }
 
@@ -803,13 +803,13 @@ fn test_pairing_bilinearity() {
     let a = Scalar::from_literal(9483274923u128);
     let b = Scalar::from_literal(124959043234u128);
     let c = a * b;
-    
+
     let p = pairing(g1mul(a, g1()), g2mul(b, g2()));
     //e(a*g1, b*g2) = e(c*g1, g2) = e(g1, g1)*c with c = a * b
     assert_eq!(p, pairing(g1mul(c, g1()), g2()));
     //e(a*g1, b*g2) = e(g1, g2)^(a*b)
-    assert_eq!(p, fp12exp(pairing(g1(), g2()), c)); 
-}   
+    assert_eq!(p, fp12exp(pairing(g1(), g2()), c));
+}
 
 #[cfg(test)]
 #[test]
@@ -827,7 +827,7 @@ fn test_pairing_unitary() {
 //Just a valid Fp12 point... Nothing special
 fn fp12point() -> Fp12 {
     (((Fp::from_hex("12afbc6d6c71900c6228f0ec4a5ae91aa7747a0ddf39cde0062f71e950e716a8ae27ad686e700608f35e3f6c0fe0cf11"),
-       Fp::from_hex("1660f8efaccc7a77268d7e17a31926b2d58879922f0d430c39c891867c64bc5baa8ed0f8350626ffb592eefa8248e536")), 
+       Fp::from_hex("1660f8efaccc7a77268d7e17a31926b2d58879922f0d430c39c891867c64bc5baa8ed0f8350626ffb592eefa8248e536")),
       (Fp::from_hex("13792df9b2c7e814fc6308f1ae6d641d7ae658d99725318b86104868ea3cbf8b94b0c2d4393c86a9d36641d22d0464e8"),
        Fp::from_hex("16544b2b2595abd69b014bb2974cbc110787f2c4752b82c5460aaf9030eea1bce7ca11ebea791ba3622feb024b198431")),
       (Fp::from_hex("12236e4849c69ecded8037549af297183f7be830f54e417e7970dd014027bc7aafc6485397113e65cc3079d1cf6fb1ba"),
@@ -852,4 +852,3 @@ fn test_final_exponentiation_rth_root() {
     let fr = fp12exp(ffinal, r);
     assert_eq!(fr, one);
 }
-

@@ -283,7 +283,7 @@ macro_rules! _array_base {
             }
 
             /// Read hex string to Bytes.
-            #[cfg_attr(feature = "use_attributes", in_hacspec)] // unsafe_hacspec($name)
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn from_hex(s: &str) -> $name {
                 let v = $name::hex_string_to_vec(s);
                 let mut o = $name::new();
