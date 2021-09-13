@@ -1217,7 +1217,7 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
             })
 	    .group()
 	    .append(match item.tag {
-		ItemTag::Test =>
+		ItemTag::QuickCheck =>
 		    RcDoc::as_string(".")
 		    .append(RcDoc::hardline())
 		    .append(RcDoc::hardline())
@@ -1601,8 +1601,8 @@ pub fn translate_and_write_to_file(
 	 {}",
 	if p.items.iter().any(|i| {
 	    match &i.0.tag {
-		Code => false,
-		Test => true,
+		ItemTag::QuickCheck => true,
+		_ => false,
 	    }}) {
 	    "From QuickChick Require Import QuickChick.\n"
 	} else {
