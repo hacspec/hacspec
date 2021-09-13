@@ -1222,36 +1222,38 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 	    .group()
 	    .append(match item {
 		DecoratedItem::Code(_) => RcDoc::nil(),
-		DecoratedItem::Test(_) => RcDoc::as_string(".")
+		DecoratedItem::Test(_) =>
+		    RcDoc::as_string(".")
+		    .append(RcDoc::hardline())
 		    .append(RcDoc::hardline())
 		    .append(RcDoc::as_string("QuickChick"))
 		    .append(RcDoc::space())
 		    .append(make_paren(
-			RcDoc::nil()
-			// Map should be fold!
-			    .append(RcDoc::intersperse(sig.args.iter().map(|((x, _), (tau, _))| {
-				RcDoc::as_string("forAll g_")
+			sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (tau, _))| {
+			    rcdoc
+				.append(RcDoc::as_string("forAll g_"))
 				.append(translate_typ(tau.clone()))
 				.append(RcDoc::space())
-				.append(make_paren(
-				    RcDoc::as_string("fun")
-					.append(RcDoc::space())
-					.append(translate_ident(x.clone()))
-					.append(RcDoc::space())
-					.append(RcDoc::as_string(":"))
-					.append(RcDoc::space())
-					.append(translate_typ(tau.clone()))
-					.append(RcDoc::space())
-					.append(RcDoc::as_string("=>"))
-					.append(RcDoc::space())
-					.append(translate_ident(Ident::TopLevel(f.clone())))
-					.append(RcDoc::space())
-					.append(translate_ident(x.clone())),
-				))
-			    }),
-			    RcDoc::line())
-		    ))),
-	    }),
+				.append("(")
+				.append(RcDoc::as_string("fun"))
+				.append(RcDoc::space())
+				.append(translate_ident(x.clone()))
+				.append(RcDoc::space())
+				.append(RcDoc::as_string(":"))
+				.append(RcDoc::space())
+				.append(translate_typ(tau.clone()))
+				.append(RcDoc::space())
+				.append(RcDoc::as_string("=>"))
+			})
+			.append(translate_ident(Ident::TopLevel(f.clone())))
+			.append(
+			    sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (_, _))| {
+				rcdoc
+				    .append(RcDoc::space())
+				    .append(translate_ident(x.clone()))
+				    .append(RcDoc::as_string(")"))
+			    }))
+	    ))}),
             true,
         ),
         Item::EnumDecl(name, cases) => RcDoc::as_string("Inductive")
@@ -1487,10 +1489,13 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 				    s.append(RcDoc::as_string("))"))
 				}))
 				.append(RcDoc::as_string("))"))
+				.group()
+				.nest(2)
 			},
 			_ => RcDoc::nil(),
 		    })
 		    .append(RcDoc::as_string("."))
+		    .group()
 		    .append(RcDoc::hardline())
 
 		    .append(RcDoc::as_string("Definition"))
@@ -1530,10 +1535,13 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 				.append((0..answer.1).fold(RcDoc::nil(),|s,_| {
 				    s.append(RcDoc::as_string(")"))
 				}))
+				.group()
+				.nest(2)
 			},
 			_ => RcDoc::nil(),
 		    })
 		    .append(RcDoc::as_string("."))
+		    .group()
 		    .append(RcDoc::hardline())
 
 		    .append(RcDoc::as_string("Instance"))
@@ -1552,6 +1560,7 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 		    .append(RcDoc::as_string("g_"))
 		    .append(translate_ident_str(name.clone()))
 		    .append(RcDoc::as_string("."))
+		    .group()
 		    .append(RcDoc::hardline()),
 	    // }
 	    ),
