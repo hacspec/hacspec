@@ -454,9 +454,9 @@ fn resolve_item(
     };
     match i {
 	Ok ((i,i_span)) => Ok((DecoratedItem { item : i, tag : item.tag },i_span)),
-	Err (a) => Err (a), 
+	Err (a) => Err (a),
     }
-    
+
 }
 
 fn process_decl_item(
