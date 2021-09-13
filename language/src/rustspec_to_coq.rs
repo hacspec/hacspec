@@ -1181,11 +1181,7 @@ fn translate_block<'a>(
 }
 
 fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
-    let i = match item {
-	DecoratedItem::Code(i) => i,
-	DecoratedItem::Test(i) => i,
-    };
-    match i {
+    match &item.item {
         Item::FnDecl((f, _), sig, (b, _)) => make_let_binding(
             translate_ident(Ident::TopLevel(f.clone()))
             .append(RcDoc::line())
@@ -1220,9 +1216,8 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
                 RcDoc::nil()
             })
 	    .group()
-	    .append(match item {
-		DecoratedItem::Code(_) => RcDoc::nil(),
-		DecoratedItem::Test(_) =>
+	    .append(match item.tag {
+		ItemTag::Test =>
 		    RcDoc::as_string(".")
 		    .append(RcDoc::hardline())
 		    .append(RcDoc::hardline())
@@ -1253,7 +1248,9 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> 
 				    .append(translate_ident(x.clone()))
 				    .append(RcDoc::as_string(")"))
 			    }))
-	    ))}),
+		    )),
+		_ => RcDoc::nil(),
+	    }),
             true,
         ),
         Item::EnumDecl(name, cases) => RcDoc::as_string("Inductive")
@@ -1603,9 +1600,9 @@ pub fn translate_and_write_to_file(
          Open Scope hacspec_scope.\n\
 	 {}",
 	if p.items.iter().any(|i| {
-	    match &i.0 {
-		DecoratedItem::Code(_) => false,
-		DecoratedItem::Test(_) => true,
+	    match &i.0.tag {
+		Code => false,
+		Test => true,
 	    }}) {
 	    "From QuickChick Require Import QuickChick.\n"
 	} else {

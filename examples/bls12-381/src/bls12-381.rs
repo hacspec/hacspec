@@ -586,6 +586,7 @@ impl Arbitrary for Scalar {
 }
 
 #[cfg(test)]
+#[cfg(proof)]
 #[quickcheck]
 //Using the fp arbitraty implementation from above to generate fp2 elements.
 fn test_fp2_prop_add_neg(a: Fp2) -> bool {
@@ -594,6 +595,7 @@ fn test_fp2_prop_add_neg(a: Fp2) -> bool {
 }
 
 #[cfg(test)]    
+#[cfg(proof)]
 //Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
 #[quickcheck]
 //Using the fp arbitraty implementation from above to generate fp2 elements.
@@ -601,6 +603,28 @@ fn test_fp2_prop_mul_inv(a: Fp2) -> bool {
     let b = fp2inv(a);
     fp2fromfp(Fp::ONE()) == fp2mul(a, b)
 }
+
+#[cfg(test)]    
+#[cfg(proof)]
+//Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
+#[quickcheck]
+//Using the fp arbitraty implementation from above to generate fp2 elements.
+fn test_fp2_prop_mul_inv_zero() -> bool {
+    let b = fp2inv((Fp::ZERO(), Fp::ZERO()));
+    fp2fromfp(Fp::ONE()) == fp2mul((Fp::ZERO(), Fp::ZERO()), b)
+}
+
+
+#[cfg(test)]    
+//Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
+#[quickcheck]
+//Using the fp arbitraty implementation from above to generate fp2 elements.
+fn test_fp2_prop_mul_inv_one() -> bool {
+    let b = fp2inv((Fp::ONE(), Fp::ONE()));
+    fp2fromfp(Fp::ONE()) == fp2mul((Fp::ONE(), Fp::ONE()), b)
+}
+
+
 #[cfg(test)]
 //Fp6 tests
 #[quickcheck]
@@ -740,7 +764,7 @@ fn test_fp12_prop_exp(a: Fp12) -> bool {
 #[cfg(test)]
 //Generators taken from:
 //https://tools.ietf.org/id/draft-yonezawa-pairing-friendly-curves-02.html#rfc.section.4.2.2
-#[proof]
+// #[proof]
 //THIS IS A CORRECT G1 GENERATOR :)
 fn g1()
       -> G1 {

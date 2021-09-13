@@ -1770,12 +1770,15 @@ fn translate_simplified_natural_integer_decl(
             check_for_comma(sess, &second_arg)?;
             let canvas_size = check_for_usize(sess, &third_arg)?;
             Ok((
-                (ItemTranslationResult::Item(DecoratedItem::Code(Item::NaturalIntegerDecl(
-                    typ_ident,
-                    secrecy,
-                    canvas_size,
-                    None,
-                )))),
+                (ItemTranslationResult::Item(
+		    DecoratedItem {
+			item : Item::NaturalIntegerDecl(
+			    typ_ident,
+			    secrecy,
+			    canvas_size,
+			    None,
+			),
+			tag : ItemTag::Code })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -1889,12 +1892,15 @@ fn translate_natural_integer_decl(
                 }
             };
             Ok((
-                (ItemTranslationResult::Item(DecoratedItem::Code(Item::NaturalIntegerDecl(
-                    typ_ident,
-                    secrecy,
-                    canvas_size,
-                    Some((canvas_typ_ident, modulo_string)),
-                )))),
+                (ItemTranslationResult::Item(DecoratedItem {
+		    item : Item::NaturalIntegerDecl(
+			typ_ident,
+			secrecy,
+			canvas_size,
+			Some((canvas_typ_ident, modulo_string)),
+                    ),
+		    tag: ItemTag::Code
+		})),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -2009,7 +2015,10 @@ fn translate_array_decl(
                 }
             };
             Ok((
-                (ItemTranslationResult::Item(DecoratedItem::Code(Item::ArrayDecl(typ_ident, size, cell_t, index_typ)))),
+                (ItemTranslationResult::Item(DecoratedItem {
+		    item : Item::ArrayDecl(typ_ident, size, cell_t, index_typ),
+		    tag : ItemTag::Code
+		})),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -2259,10 +2268,9 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
 	    
             Ok((
                 ItemTranslationResult::Item(
-		    if is_quickcheck {
-			DecoratedItem::Test(fn_item)
-		    } else {
-			DecoratedItem::Code(fn_item)
+		    DecoratedItem {
+			item : fn_item ,
+			tag : if is_quickcheck { ItemTag::Test } else { ItemTag::Code }
 		    })
 	       ,
                 specials.clone(),
@@ -2280,10 +2288,13 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     specials.aliases.insert(alias_name, alias_ty);
                 }
                 Ok((
-                    ItemTranslationResult::Item(DecoratedItem::Code(Item::ImportedCrate((
-                        TopLevelIdent(krate_name),
-                        tree.span.clone().into(),
-                    )))),
+                    ItemTranslationResult::Item(DecoratedItem {
+			item : Item::ImportedCrate((
+                            TopLevelIdent(krate_name),
+                            tree.span.clone().into(),
+			)),
+			tag : ItemTag::Code
+		    }),
                     specials,
                 ))
             }
@@ -2350,7 +2361,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             let new_e = translate_expr_expects_exp(sess, specials, e)?;
             let id = translate_toplevel_ident(&i.ident);
             Ok((
-                ItemTranslationResult::Item(DecoratedItem::Code(Item::ConstDecl(id, new_ty, new_e))),
+                ItemTranslationResult::Item(DecoratedItem {
+		    item : Item::ConstDecl(id, new_ty, new_e),
+		    tag : ItemTag::Code
+		}),
                 specials.clone(),
             ))
         }
@@ -2397,7 +2411,9 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         .insert(ty_alias_name_string.clone(), ty.0.clone());
                     let ty_alias_name = (TopLevelIdent(ty_alias_name_string), i.span.into());
                     Ok((
-                        ItemTranslationResult::Item(DecoratedItem::Code(Item::AliasDecl(ty_alias_name, ty))),
+                        ItemTranslationResult::Item(DecoratedItem {
+			    item : Item::AliasDecl(ty_alias_name, ty),
+			    tag : ItemTag::Code }),
                         specials,
                     ))
                 }
@@ -2464,7 +2480,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     .collect(),
             )?;
             Ok((
-                ItemTranslationResult::Item(DecoratedItem::Code(Item::EnumDecl(id, variants))),
+                ItemTranslationResult::Item(DecoratedItem {
+		    item : Item::EnumDecl(id, variants),
+		    tag : ItemTag::Code
+		}),
                 SpecialNames {
                     enums: specials.enums.update(id_string),
                     ..specials.clone()
@@ -2490,7 +2509,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     Err(())
                 }
                 VariantData::Unit(_) => Ok((
-                    ItemTranslationResult::Item(DecoratedItem::Code(Item::EnumDecl(id.clone(), vec![(id, None)]))),
+                    ItemTranslationResult::Item(DecoratedItem {
+			item : Item::EnumDecl(id.clone(), vec![(id, None)]),
+			tag : ItemTag::Code
+		    }),
                     SpecialNames {
                         enums: specials.enums.update(id_string),
                         ..specials.clone()
@@ -2518,10 +2540,13 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         tuple_args.into_iter().next().unwrap()
                     };
                     Ok((
-                        ItemTranslationResult::Item(DecoratedItem::Code(Item::EnumDecl(
-                            id.clone(),
-                            vec![(id, Some(payload))],
-                        ))),
+                        ItemTranslationResult::Item(DecoratedItem {
+			    item : Item::EnumDecl(
+				id.clone(),
+				vec![(id, Some(payload))],
+                            ),
+			    tag : ItemTag::Code
+			}),
                         SpecialNames {
                             enums: specials.enums.update(id_string),
                             ..specials.clone()
