@@ -2270,7 +2270,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 ItemTranslationResult::Item(
 		    DecoratedItem {
 			item : fn_item ,
-			tag : if is_quickcheck { ItemTag::Test } else { ItemTag::Code }
+			tag : if is_quickcheck { ItemTag::QuickCheck } else { ItemTag::Code }
 		    })
 	       ,
                 specials.clone(),
