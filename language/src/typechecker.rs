@@ -2439,10 +2439,7 @@ fn typecheck_item(
     item: &DecoratedItem,
     top_level_context: &TopLevelContext,
 ) -> TypecheckingResult<DecoratedItem> {
-    let i = match item {
-	DecoratedItem::Code(i) => i,
-	DecoratedItem::Test(i) => i,
-    };
+    let i = &item.item;
     let i = match &i {
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let canvas_size_span = canvas_size.1.clone();
@@ -2577,11 +2574,7 @@ fn typecheck_item(
         }
     };
     match i {
-	Ok(i) =>
-	    match item {
-		DecoratedItem::Code(_) => Ok(DecoratedItem::Code(i)),
-		DecoratedItem::Test(_) => Ok(DecoratedItem::Test(i)),
-	    },
+	Ok(i) => Ok(DecoratedItem { item : i , tag : item.tag } ),
 	Err(a) => Err(a),
     }
 }

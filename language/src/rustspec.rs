@@ -461,11 +461,18 @@ pub enum Item {
     ),
 }
 
+#[derive(Clone, Serialize, Copy)]
+pub enum ItemTag {
+    Code,
+    Test,
+    QuickCheck,
+    Proof,
+}
+
 #[derive(Clone, Serialize)]
-pub enum DecoratedItem {
-    Code(Item),
-    Test(Item),
-    // Proof
+pub struct DecoratedItem {
+    pub item: Item,
+    pub tag: ItemTag
 }
 
 #[derive(Clone, Serialize)]

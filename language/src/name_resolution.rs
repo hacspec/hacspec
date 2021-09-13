@@ -414,10 +414,7 @@ fn resolve_item(
     (item, i_span): Spanned<DecoratedItem>,
     top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<DecoratedItem>> {
-    let i = match item.clone() {
-	DecoratedItem::Code(i) => i,
-	DecoratedItem::Test(i) => i,
-    };
+    let i = item.clone().item;
     let i = match i {
         Item::ConstDecl(id, typ, e) => {
             let new_e = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
@@ -456,10 +453,7 @@ fn resolve_item(
         }
     };
     match i {
-	Ok ((i,i_span)) => match item {
-	    DecoratedItem::Code(_) => Ok((DecoratedItem::Code(i),i_span)),
-	    DecoratedItem::Test(_) => Ok((DecoratedItem::Test(i),i_span)),
-	},
+	Ok ((i,i_span)) => Ok((DecoratedItem { item : i, tag : item.tag },i_span)),
 	Err (a) => Err (a), 
     }
     
@@ -470,11 +464,7 @@ fn process_decl_item(
     (i, i_span): &Spanned<DecoratedItem>,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
-    let i = match i {
-	DecoratedItem::Code(i) => i,
-	DecoratedItem::Test(i) => i,
-    };
-    match i {
+    match &i.item {
         Item::ConstDecl(id, typ, _e) => {
             top_level_context.consts.insert(id.0.clone(), typ.clone());
             Ok(())
@@ -542,8 +532,8 @@ fn process_decl_item(
                     process_decl_item(
                         sess,
                         &(
-			    DecoratedItem::Code(
-				Item::ArrayDecl(
+			    DecoratedItem {
+				item : Item::ArrayDecl(
                                     canvas_typ_ident.clone(),
                                     canvas_size.clone(),
                                     match secrecy {
@@ -560,8 +550,9 @@ fn process_decl_item(
 					Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
                                     },
                                     None,
-				)
-			    ),
+				),
+				tag : ItemTag::Code
+			    },
                             *i_span,
                         ),
                         top_level_context,
@@ -627,10 +618,7 @@ fn process_decl_item(
 pub fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
     p.items
         .iter()
-	.map(|i| match &i.0 {
-	    DecoratedItem::Code(item) => (item, &i.1),
-	    DecoratedItem::Test(item) => (item, &i.1),
-	})
+	.map(|i| ((&i.0.item), &i.1))
         .filter(|i| match &i.0 {
             Item::ImportedCrate(_) => true,
             _ => false,
