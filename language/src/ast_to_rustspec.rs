@@ -2145,9 +2145,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     specials: &SpecialNames,
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
-    let is_quickcheck = i.attrs.iter().any(attribute_is_proof);
-
-    println!("IsQuickCheck: {}", is_quickcheck);
+    let is_quickcheck = i.attrs.iter().any(attribute_is_proof) && i.attrs.iter().any(|attr| match attr.name_or_empty().to_ident_string().as_str() {"quickcheck" => true, _ => false,});
 
     if i.attrs.iter().any(attribute_is_test) && !is_quickcheck {
         return Ok((ItemTranslationResult::Ignored, specials.clone()));

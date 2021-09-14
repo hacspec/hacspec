@@ -464,9 +464,9 @@ pub enum Item {
 #[derive(Clone, Serialize, Copy)]
 pub enum ItemTag {
     Code,
-    Test,
+    // Test,
     QuickCheck,
-    Proof,
+    // Proof,
 }
 
 #[derive(Clone, Serialize)]
