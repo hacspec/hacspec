@@ -649,7 +649,6 @@ fn test_fp12_prop_mul_inv(a: Fp12) -> bool {
 }
 
 #[cfg(test)]
-#[cfg(proof)]
 #[quickcheck]
 fn test_fp12_prop_exp(a: Fp12) -> bool {
     let m = Scalar::from_literal(3u128);
@@ -798,7 +797,6 @@ fn test_g2_generator() {
 }
 
 #[cfg(test)]
-#[cfg(proof)]
 #[quickcheck] //To Do: Property Quick-test
 fn test_frob(a: Fp12) -> bool {
     let b = frobenius(frobenius(frobenius(frobenius(frobenius(frobenius(frobenius(frobenius(frobenius(frobenius(frobenius(frobenius(a))))))))))));
