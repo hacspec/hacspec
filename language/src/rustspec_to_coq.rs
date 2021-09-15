@@ -1216,7 +1216,7 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext, exp
             })
             .group()
             .append({
-                if export_quick_check {
+                if item.tags.0.contains(&ItemTag::QuickCheck) {
                      RcDoc::as_string(".")
 		        .append(RcDoc::hardline())
 			.append(RcDoc::hardline())
