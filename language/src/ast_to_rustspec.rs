@@ -1778,7 +1778,7 @@ fn translate_simplified_natural_integer_decl(
 			    canvas_size,
 			    None,
 			),
-			tag : ItemTag::Code })),
+			tags : ItemTagSet([ItemTag::Code].iter().cloned().collect()) })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -1899,7 +1899,7 @@ fn translate_natural_integer_decl(
 			canvas_size,
 			Some((canvas_typ_ident, modulo_string)),
                     ),
-		    tag: ItemTag::Code
+		    tags : ItemTagSet([ItemTag::Code].iter().cloned().collect() )
 		})),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2017,7 +2017,7 @@ fn translate_array_decl(
             Ok((
                 (ItemTranslationResult::Item(DecoratedItem {
 		    item : Item::ArrayDecl(typ_ident, size, cell_t, index_typ),
-		    tag : ItemTag::Code
+		    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
 		})),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2085,14 +2085,15 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     }
 }
 
-fn attribute_is_proof(attr: &Attribute) -> bool {
+fn attribute_tag(attr: &Attribute) -> Option<ItemTag> {
     let attr_name = attr.name_or_empty().to_ident_string();
     match attr_name.as_str() {
-	// "quickcheck" => true, // proof
+	"quickcheck" => Some (ItemTag::QuickCheck),
+	"test" => Some (ItemTag::Test),
 	"cfg" => {
             let inner_tokens = attr.tokens().to_tokenstream();
             if inner_tokens.len() != 2 {
-                return false;
+                return None;
             }
             let mut it = inner_tokens.trees();
             let first_token = it.next().unwrap();
@@ -2102,7 +2103,7 @@ fn attribute_is_proof(attr: &Attribute) -> bool {
                     match first_tok.kind {
                         TokenKind::Pound => {
                             if inner.len() != 2 {
-                                return false;
+                                return None;
                             }
                             let mut it = inner.trees();
                             let _first_token = it.next().unwrap();
@@ -2111,31 +2112,36 @@ fn attribute_is_proof(attr: &Attribute) -> bool {
                             match second_token {
                                 TokenTree::Delimited(_, _, inner) => {
                                     if inner.len() != 1 {
-                                        return false;
+                                        return None;
                                     }
                                     let mut it = inner.trees();
                                     let first_token = it.next().unwrap();
                                     match first_token {
                                         TokenTree::Token(tok) => match tok.kind {
                                             TokenKind::Ident(ident, _) => {
-                                                ident.to_ident_string() == "proof"
+						let ident_string = ident.to_ident_string();
+                                                match ident_string.as_str() {
+						    "proof" => Some (ItemTag::Proof),
+						    "test" => Some (ItemTag::Test),
+						    _ => None,
+						}
                                             }
-                                            _ => false,
+                                            _ => None,
                                         },
-                                        _ => false,
+                                        _ => None,
                                     }
                                 }
-                                _ => false,
+                                _ => None,
                             }
                         }
-                        _ => false,
+                        _ => None,
                     }
                 }
-                _ => false,
+                _ => None,
             }
         }
 	// "test" => true, // proof
-	_ => false,
+	_ => None,
     }
 }
 
@@ -2145,9 +2151,15 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     specials: &SpecialNames,
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
-    let is_quickcheck = i.attrs.iter().any(attribute_is_proof) && i.attrs.iter().any(|attr| match attr.name_or_empty().to_ident_string().as_str() {"quickcheck" => true, _ => false,});
+    let mut tags = HashSet::new();
+    tags.insert(ItemTag::Code);
+    let export = i.attrs.iter().fold(false, |b, attr| {
+	match attribute_tag(attr) {
+	    Some (a) => { tags.insert(a); b || a == ItemTag::Proof },
+	    None => b,
+	}});
 
-    if i.attrs.iter().any(attribute_is_test) && !is_quickcheck {
+    if i.attrs.iter().any(attribute_is_test) && !export {
         return Ok((ItemTranslationResult::Ignored, specials.clone()));
     }
     match &i.kind {
@@ -2268,7 +2280,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 ItemTranslationResult::Item(
 		    DecoratedItem {
 			item : fn_item ,
-			tag : if is_quickcheck { ItemTag::QuickCheck } else { ItemTag::Code }
+			tags : ItemTagSet(tags)
 		    })
 	       ,
                 specials.clone(),
@@ -2291,7 +2303,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                             TopLevelIdent(krate_name),
                             tree.span.clone().into(),
 			)),
-			tag : ItemTag::Code
+			tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
 		    }),
                     specials,
                 ))
@@ -2361,7 +2373,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
 		    item : Item::ConstDecl(id, new_ty, new_e),
-		    tag : ItemTag::Code
+		    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
 		}),
                 specials.clone(),
             ))
@@ -2411,7 +2423,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
 			    item : Item::AliasDecl(ty_alias_name, ty),
-			    tag : ItemTag::Code }),
+			    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() ) }),
                         specials,
                     ))
                 }
@@ -2480,7 +2492,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
 		    item : Item::EnumDecl(id, variants),
-		    tag : ItemTag::Code
+		    tags : ItemTagSet([ItemTag::Code].iter().cloned().collect())
 		}),
                 SpecialNames {
                     enums: specials.enums.update(id_string),
@@ -2509,7 +2521,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 VariantData::Unit(_) => Ok((
                     ItemTranslationResult::Item(DecoratedItem {
 			item : Item::EnumDecl(id.clone(), vec![(id, None)]),
-			tag : ItemTag::Code
+			tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
 		    }),
                     SpecialNames {
                         enums: specials.enums.update(id_string),
@@ -2543,7 +2555,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
 				id.clone(),
 				vec![(id, Some(payload))],
                             ),
-			    tag : ItemTag::Code
+			    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
 			}),
                         SpecialNames {
                             enums: specials.enums.update(id_string),

@@ -453,7 +453,7 @@ fn resolve_item(
         }
     };
     match i {
-	Ok ((i,i_span)) => Ok((DecoratedItem { item : i, tag : item.tag },i_span)),
+	Ok ((i,i_span)) => Ok((DecoratedItem { item : i, tags : item.tags },i_span)),
 	Err (a) => Err (a),
     }
 
@@ -551,7 +551,7 @@ fn process_decl_item(
                                     },
                                     None,
 				),
-				tag : ItemTag::Code
+				tags : ItemTagSet([ItemTag::Code].iter().cloned().collect())
 			    },
                             *i_span,
                         ),
@@ -693,10 +693,6 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         );
     }
     for (k, v) in extern_funcs {
-    // 	println!("Extern funcs {} .. {}", match v {
-    // 	    Ok(_) => "ok",
-    // 	    Err(_) => "err",
-    // 	}, k);
         top_level_ctx.functions.insert(
             k.clone(),
             match v {
