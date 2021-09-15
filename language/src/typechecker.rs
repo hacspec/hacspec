@@ -583,7 +583,6 @@ fn find_func(
     for (typ_ctx, sig) in candidates {
         return Ok((sig.clone(), typ_ctx));
     }
-
     Err(())
 }
 
@@ -2574,7 +2573,7 @@ fn typecheck_item(
         }
     };
     match i {
-	Ok(i) => Ok(DecoratedItem { item : i , tag : item.tag } ),
+	Ok(i) => Ok(DecoratedItem { item : i , tags : item.tags.clone() } ),
 	Err(a) => Err(a),
     }
 }

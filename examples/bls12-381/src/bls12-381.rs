@@ -606,7 +606,6 @@ fn test_fp2_prop_mul_inv(a: Fp2) -> bool {
 }
 
 
-//Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
 #[cfg(test)]
 #[cfg(proof)]
 #[quickcheck] //Using the fp arbitraty implementation from above to generate fp2 elements.
@@ -614,7 +613,6 @@ fn test_extraction_issue() -> bool {
     let b = fp2inv((Fp::ONE(),Fp::ONE()));
     fp2fromfp(Fp::ONE()) == fp2mul((Fp::ONE(),Fp::ONE()), b)
 }
-
 
 //Fp6 tests
 #[cfg(test)]
