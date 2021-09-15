@@ -1,6 +1,6 @@
 use std::fmt;
 
-use im::HashMap;
+use im::{HashMap, HashSet};
 use rustc_session::Session;
 
 use crate::hir_to_rustspec::ExternalData;
@@ -551,7 +551,7 @@ fn process_decl_item(
                                     },
                                     None,
 				),
-				tags : ItemTagSet([ItemTag::Code].iter().cloned().collect())
+				tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 			    },
                             *i_span,
                         ),

@@ -1778,7 +1778,7 @@ fn translate_simplified_natural_integer_decl(
 			    canvas_size,
 			    None,
 			),
-			tags : ItemTagSet([ItemTag::Code].iter().cloned().collect()) })),
+			tags : ItemTagSet(HashSet::unit(ItemTag::Code)) })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -1899,7 +1899,7 @@ fn translate_natural_integer_decl(
 			canvas_size,
 			Some((canvas_typ_ident, modulo_string)),
                     ),
-		    tags : ItemTagSet([ItemTag::Code].iter().cloned().collect() )
+		    tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 		})),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2017,7 +2017,7 @@ fn translate_array_decl(
             Ok((
                 (ItemTranslationResult::Item(DecoratedItem {
 		    item : Item::ArrayDecl(typ_ident, size, cell_t, index_typ),
-		    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
+		    tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 		})),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2303,7 +2303,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                             TopLevelIdent(krate_name),
                             tree.span.clone().into(),
 			)),
-			tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
+			tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 		    }),
                     specials,
                 ))
@@ -2373,7 +2373,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
 		    item : Item::ConstDecl(id, new_ty, new_e),
-		    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
+		    tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 		}),
                 specials.clone(),
             ))
@@ -2423,7 +2423,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
 			    item : Item::AliasDecl(ty_alias_name, ty),
-			    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() ) }),
+			    tags : ItemTagSet(HashSet::unit(ItemTag::Code)) }),
                         specials,
                     ))
                 }
@@ -2492,7 +2492,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
 		    item : Item::EnumDecl(id, variants),
-		    tags : ItemTagSet([ItemTag::Code].iter().cloned().collect())
+		    tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 		}),
                 SpecialNames {
                     enums: specials.enums.update(id_string),
@@ -2521,7 +2521,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 VariantData::Unit(_) => Ok((
                     ItemTranslationResult::Item(DecoratedItem {
 			item : Item::EnumDecl(id.clone(), vec![(id, None)]),
-			tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
+			tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 		    }),
                     SpecialNames {
                         enums: specials.enums.update(id_string),
@@ -2555,7 +2555,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
 				id.clone(),
 				vec![(id, Some(payload))],
                             ),
-			    tags : ItemTagSet( [ItemTag::Code].iter().cloned().collect() )
+			    tags : ItemTagSet(HashSet::unit(ItemTag::Code))
 			}),
                         SpecialNames {
                             enums: specials.enums.update(id_string),
