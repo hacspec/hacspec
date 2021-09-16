@@ -826,6 +826,39 @@
 <span id="826">826</span>
 <span id="827">827</span>
 <span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// BLS: y^2 = x^3 + 4</span>
 
@@ -856,11 +889,11 @@
 <span class="comment">//Returns index of left-most bit, set to 1</span>
 <span class="kw">fn</span> <span class="ident">most_significant_bit</span>(<span class="ident">m</span>: <span class="ident">Scalar</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> <span class="comment">//usize does not have a secret integer implementation</span>
 {
-    
+
     <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="op">!</span><span class="ident">m</span>.<span class="ident">bit</span>(<span class="ident">n</span>) {
         <span class="ident">most_significant_bit</span>(<span class="ident">m</span>, <span class="ident">n</span><span class="op">-</span><span class="number">1</span>)
-    } <span class="kw">else</span> { <span class="ident">n</span> }    
-     
+    } <span class="kw">else</span> { <span class="ident">n</span> }
+
 }
 <span class="comment">//bool is &quot;isPointAtInfinity&quot;</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">G1</span> <span class="op">=</span> (<span class="ident">Fp</span>, <span class="ident">Fp</span>, <span class="ident">bool</span>);
@@ -955,11 +988,11 @@
     <span class="kw">let</span> <span class="ident">t4</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">fp2add</span>(<span class="ident">n2</span>, <span class="ident">n3</span>), <span class="ident">fp2add</span>(<span class="ident">m2</span>, <span class="ident">m3</span>)); <span class="comment">// (n2 + n3) * (m2 + m3)</span>
     <span class="kw">let</span> <span class="ident">t5</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">fp2sub</span>(<span class="ident">t4</span>, <span class="ident">t2</span>), <span class="ident">t3</span>); <span class="comment">//t4 - t2 - t3</span>
     <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">fp2add</span>(<span class="ident">fp2mul</span>(<span class="ident">t5</span>, <span class="ident">eps</span>), <span class="ident">t1</span>); <span class="comment">// t5 * eps + t1</span>
-    
+
     <span class="kw">let</span> <span class="ident">t4</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">fp2add</span>(<span class="ident">n1</span>, <span class="ident">n2</span>), <span class="ident">fp2add</span>(<span class="ident">m1</span>, <span class="ident">m2</span>)); <span class="comment">//(n1 + n2) * (m1 + m2)</span>
     <span class="kw">let</span> <span class="ident">t5</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">fp2sub</span>(<span class="ident">t4</span>, <span class="ident">t1</span>), <span class="ident">t2</span>); <span class="comment">//t4 - t1 - t2</span>
     <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">fp2add</span>(<span class="ident">t5</span>, <span class="ident">fp2mul</span>(<span class="ident">eps</span>, <span class="ident">t3</span>)); <span class="comment">//t5 + (eps * t3)</span>
-     
+
     <span class="kw">let</span> <span class="ident">t4</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">fp2add</span>(<span class="ident">n1</span>, <span class="ident">n3</span>), <span class="ident">fp2add</span>(<span class="ident">m1</span>, <span class="ident">m3</span>)); <span class="comment">//(n1 + n3) * (m1 + m3)</span>
     <span class="kw">let</span> <span class="ident">t5</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">fp2sub</span>(<span class="ident">t4</span>, <span class="ident">t1</span>), <span class="ident">t3</span>); <span class="comment">//t4 - t1 - t3</span>
     <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">fp2add</span>(<span class="ident">t5</span>, <span class="ident">t2</span>); <span class="comment">//t5 + t2</span>
@@ -986,7 +1019,7 @@
     <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">y0</span>, <span class="ident">t0</span>); <span class="comment">// y0 * t0</span>
     <span class="kw">let</span> <span class="ident">z</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">z0</span>, <span class="ident">t0</span>); <span class="comment">// z0 * t0</span>
     (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>)
-    
+
 
 }
 
@@ -1016,7 +1049,7 @@
     <span class="kw">let</span> (<span class="ident">n1</span>, <span class="ident">n2</span>) <span class="op">=</span> <span class="ident">n</span>;
     <span class="kw">let</span> (<span class="ident">m1</span>, <span class="ident">m2</span>) <span class="op">=</span> <span class="ident">m</span>;
     <span class="kw">let</span> <span class="ident">gamma</span> <span class="op">=</span> (<span class="ident">fp2zero</span>(), <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()), <span class="ident">fp2zero</span>()); <span class="comment">//0 + v + 0 (c0, c1v, c2v^2)</span>
-    
+
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp6mul</span>(<span class="ident">n1</span>, <span class="ident">m1</span>); <span class="comment">//n1 * n2</span>
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp6mul</span>(<span class="ident">n2</span>, <span class="ident">m2</span>); <span class="comment">//n2 * m2</span>
     <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">fp6add</span>(<span class="ident">t1</span>, <span class="ident">fp6mul</span>(<span class="ident">t2</span>, <span class="ident">gamma</span>)); <span class="comment">//t1 + (t2 * gamma)</span>
@@ -1028,7 +1061,7 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fp12inv</span>(<span class="ident">n</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp12</span> {
     <span class="kw">let</span> (<span class="ident">n1</span>, <span class="ident">n2</span>) <span class="op">=</span> <span class="ident">n</span>;
     <span class="kw">let</span> <span class="ident">gamma</span> <span class="op">=</span> (<span class="ident">fp2zero</span>(), <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()), <span class="ident">fp2zero</span>()); <span class="comment">//0 + v + 0 (c0, c1v, c2v^2)</span>
-    
+
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp6mul</span>(<span class="ident">n1</span>, <span class="ident">n1</span>); <span class="comment">//n1^2</span>
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp6mul</span>(<span class="ident">n2</span>, <span class="ident">n2</span>); <span class="comment">//n2^2</span>
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp6sub</span>(<span class="ident">t1</span>, <span class="ident">fp6mul</span>(<span class="ident">gamma</span>, <span class="ident">t2</span>)); <span class="comment">//t1 - (gamma * t2)</span>
@@ -1067,7 +1100,7 @@
     <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">p</span>;
     <span class="kw">let</span> (<span class="ident">x2</span>, <span class="ident">y2</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">q</span>;
 
-    <span class="kw">let</span> <span class="ident">x_diff</span> <span class="op">=</span> <span class="ident">x2</span> <span class="op">-</span> <span class="ident">x1</span>; 
+    <span class="kw">let</span> <span class="ident">x_diff</span> <span class="op">=</span> <span class="ident">x2</span> <span class="op">-</span> <span class="ident">x1</span>;
     <span class="kw">let</span> <span class="ident">y_diff</span> <span class="op">=</span> <span class="ident">y2</span> <span class="op">-</span> <span class="ident">y1</span>;
     <span class="kw">let</span> <span class="ident">xovery</span> <span class="op">=</span> <span class="ident">y_diff</span> <span class="op">*</span> <span class="ident">x_diff</span>.<span class="ident">inv</span>(); <span class="comment">//  x / y = x * y^-1</span>
     <span class="kw">let</span> <span class="ident">x3</span> <span class="op">=</span> <span class="ident">xovery</span>.<span class="ident">exp</span>(<span class="number">2u32</span>) <span class="op">-</span> <span class="ident">x1</span> <span class="op">-</span> <span class="ident">x2</span>;
@@ -1079,7 +1112,7 @@
 <span class="kw">fn</span> <span class="ident">g1double_a</span>(<span class="ident">p</span>: <span class="ident">G1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G1</span>
 {
     <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">p</span>;
-    
+
     <span class="kw">let</span> <span class="ident">x12</span> <span class="op">=</span> <span class="ident">x1</span>.<span class="ident">exp</span>(<span class="number">2u32</span>);
     <span class="kw">let</span> <span class="ident">xovery</span> <span class="op">=</span> (<span class="ident">Fp</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>) <span class="op">*</span> <span class="ident">x12</span>) <span class="op">*</span> (<span class="ident">Fp</span>::<span class="ident">TWO</span>() <span class="op">*</span> <span class="ident">y1</span>).<span class="ident">inv</span>();
     <span class="kw">let</span> <span class="ident">x3</span> <span class="op">=</span> <span class="ident">xovery</span>.<span class="ident">exp</span>(<span class="number">2u32</span>) <span class="op">-</span> <span class="ident">Fp</span>::<span class="ident">TWO</span>()<span class="kw-2">*</span><span class="ident">x1</span>;
@@ -1141,25 +1174,25 @@
     <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">p</span>;
     <span class="kw">let</span> (<span class="ident">x2</span>, <span class="ident">y2</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">q</span>;
 
-    <span class="kw">let</span> <span class="ident">x_diff</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">x2</span>, <span class="ident">x1</span>); 
-    <span class="kw">let</span> <span class="ident">y_diff</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">y2</span>, <span class="ident">y1</span>); 
+    <span class="kw">let</span> <span class="ident">x_diff</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">x2</span>, <span class="ident">x1</span>);
+    <span class="kw">let</span> <span class="ident">y_diff</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">y2</span>, <span class="ident">y1</span>);
     <span class="kw">let</span> <span class="ident">xovery</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">y_diff</span>, <span class="ident">fp2inv</span>(<span class="ident">x_diff</span>)); <span class="comment">//  x / y = x * y^-1</span>
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">xovery</span>, <span class="ident">xovery</span>);
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">t1</span>, <span class="ident">x1</span>);
-    <span class="kw">let</span> <span class="ident">x3</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">t2</span>, <span class="ident">x2</span>); 
-    <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">x1</span>, <span class="ident">x3</span>); 
+    <span class="kw">let</span> <span class="ident">x3</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">t2</span>, <span class="ident">x2</span>);
+    <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">x1</span>, <span class="ident">x3</span>);
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">xovery</span>, <span class="ident">t1</span>);
-    <span class="kw">let</span> <span class="ident">y3</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">t2</span>, <span class="ident">y1</span>); 
+    <span class="kw">let</span> <span class="ident">y3</span> <span class="op">=</span> <span class="ident">fp2sub</span>(<span class="ident">t2</span>, <span class="ident">y1</span>);
     (<span class="ident">x3</span>, <span class="ident">y3</span>, <span class="bool-val">false</span>)
 }
 <span class="comment">//g2 double without dealing with Point at Infinity</span>
 <span class="kw">fn</span> <span class="ident">g2double_a</span>(<span class="ident">p</span>: <span class="ident">G2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G2</span>
 {
     <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">p</span>;
-    
+
     <span class="kw">let</span> <span class="ident">x12</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">x1</span>, <span class="ident">x1</span>);
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>)), <span class="ident">x12</span>);
-    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp2inv</span>(<span class="ident">fp2mul</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">TWO</span>()), <span class="ident">y1</span>));    
+    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp2inv</span>(<span class="ident">fp2mul</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">TWO</span>()), <span class="ident">y1</span>));
     <span class="kw">let</span> <span class="ident">xovery</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">t1</span>, <span class="ident">t2</span>);
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">xovery</span>, <span class="ident">xovery</span>);
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">TWO</span>()), <span class="ident">x1</span>);
@@ -1257,11 +1290,11 @@
     <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> <span class="ident">fp2conjugate</span>(<span class="ident">g1</span>);
     <span class="kw">let</span> <span class="ident">t4</span> <span class="op">=</span> <span class="ident">fp2conjugate</span>(<span class="ident">h1</span>);
     <span class="kw">let</span> <span class="ident">t5</span> <span class="op">=</span> <span class="ident">fp2conjugate</span>(<span class="ident">g2</span>);
-    <span class="kw">let</span> <span class="ident">t6</span> <span class="op">=</span> <span class="ident">fp2conjugate</span>(<span class="ident">h2</span>); 
+    <span class="kw">let</span> <span class="ident">t6</span> <span class="op">=</span> <span class="ident">fp2conjugate</span>(<span class="ident">h2</span>);
 
 
     <span class="comment">/* Funky way of storing gamma11 */</span>
-    
+
     <span class="comment">//1904D3BF02BB0667 C231BEB4202C0D1F 0FD603FD3CBD5F4F 7B2443D784BAB9C4 F67EA53D63E7813D 8D0775ED92235FB8</span>
     <span class="kw">let</span> <span class="ident">c1</span> <span class="op">=</span> <span class="ident">ArrayFp</span>(<span class="macro">secret_array</span><span class="macro">!</span>(
         <span class="ident">U64</span>,
@@ -1287,7 +1320,7 @@
     ));
     <span class="kw">let</span> <span class="ident">c2</span> <span class="op">=</span> <span class="ident">ArrayFp</span>::<span class="ident">to_le_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">c2</span>);
     <span class="kw">let</span> <span class="ident">c2</span> <span class="op">=</span> <span class="ident">Fp</span>::<span class="ident">from_byte_seq_le</span>(<span class="ident">c2</span>);
-    
+
     <span class="comment">// gamma11 = (1+u)^((p-1) / 6)</span>
     <span class="kw">let</span> <span class="ident">gamma11</span> <span class="op">=</span> (<span class="ident">c1</span>, <span class="ident">c2</span>);
     <span class="kw">let</span> <span class="ident">gamma12</span> <span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">gamma11</span>, <span class="ident">gamma11</span>);
@@ -1306,7 +1339,7 @@
 
 
 <span class="kw">fn</span> <span class="ident">final_exponentiation</span>(<span class="ident">f</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp12</span> {
-    <span class="kw">let</span> <span class="ident">fp6</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">f</span>); <span class="comment">// f^p⁶ </span>
+    <span class="kw">let</span> <span class="ident">fp6</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">f</span>); <span class="comment">// f^p⁶</span>
     <span class="kw">let</span> <span class="ident">finv</span> <span class="op">=</span> <span class="ident">fp12inv</span>(<span class="ident">f</span>); <span class="comment">//f^-1</span>
     <span class="kw">let</span> <span class="ident">fp6_1</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">fp6</span>, <span class="ident">finv</span>); <span class="comment">//f^(p⁶-1)</span>
     <span class="kw">let</span> <span class="ident">fp8</span> <span class="op">=</span> <span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">fp6_1</span>)); <span class="comment">//f^((p⁶-1)p²)</span>
@@ -1317,9 +1350,9 @@
     <span class="comment">//Algorithm 2 from https://eprint.iacr.org/2016/130.pdf</span>
     <span class="comment">//Conjugations whenever u is used, since u is actually negative - and conjugation is enough (no inversion needed)</span>
     <span class="kw">let</span> <span class="ident">t0</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">f</span>, <span class="ident">f</span>); <span class="comment">//f²</span>
-    <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t0</span>, <span class="ident">u</span>); 
+    <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t0</span>, <span class="ident">u</span>);
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t1</span>); <span class="comment">//t0^u</span>
-    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t1</span>, <span class="ident">u</span> <span class="op">/</span> <span class="ident">Scalar</span>::<span class="ident">TWO</span>()); 
+    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t1</span>, <span class="ident">u</span> <span class="op">/</span> <span class="ident">Scalar</span>::<span class="ident">TWO</span>());
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t2</span>); <span class="comment">//t1^(u/2)</span>
     <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">f</span>); <span class="comment">//f^-1</span>
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">t3</span>, <span class="ident">t1</span>); <span class="comment">//t3t1</span>
@@ -1327,10 +1360,10 @@
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t1</span>); <span class="comment">//t1^-1</span>
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">t1</span>, <span class="ident">t2</span>); <span class="comment">//t1t2</span>
 
-    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t1</span>, <span class="ident">u</span>); 
-    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t2</span>); <span class="comment">//t1^u </span>
+    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t1</span>, <span class="ident">u</span>);
+    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t2</span>); <span class="comment">//t1^u</span>
 
-    <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t2</span>, <span class="ident">u</span>);  
+    <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t2</span>, <span class="ident">u</span>);
     <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t3</span>); <span class="comment">//t2^u</span>
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t1</span>); <span class="comment">//t1^-1</span>
     <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">t1</span>, <span class="ident">t3</span>); <span class="comment">//t1t3</span>
@@ -1340,7 +1373,7 @@
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">t2</span>)); <span class="comment">//t2^p²</span>
     <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">t1</span>, <span class="ident">t2</span>); <span class="comment">//t1t2</span>
 
-    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t3</span>, <span class="ident">u</span>); 
+    <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">t3</span>, <span class="ident">u</span>);
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">t2</span>); <span class="comment">//t3^u</span>
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">t2</span>, <span class="ident">t0</span>); <span class="comment">//t2t0</span>
     <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">t2</span>, <span class="ident">f</span>); <span class="comment">//t2f</span>
@@ -1352,7 +1385,7 @@
 }
 <span class="comment">//ate-pairing used for BLS</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pairing</span>(<span class="ident">p</span>: <span class="ident">G1</span>, <span class="ident">q</span>: <span class="ident">G2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp12</span> {
-    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">0xd201000000010000u128</span>); 
+    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">0xd201000000010000u128</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">q</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>())));
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="number">64</span> {
@@ -1377,283 +1410,316 @@
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">quickcheck_macros</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
+<span class="kw">use</span> <span class="ident">quickcheck</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="comment">//Arbitrary implementation is needed to randomly generate arbitrary elements of the specified type. Used in Property based testing to generate random tests</span>
 
-    <span class="kw">use</span> <span class="ident">quickcheck</span>::<span class="kw-2">*</span>;
-
-    <span class="comment">//Arbitrary implementation is needed to randomly generate arbitrary elements of the specified type. Used in Property based testing to generate random tests</span>
-
-    <span class="comment">/* Arbitrary Implementation used for Property Based Tests */</span>
-    <span class="kw">impl</span> <span class="ident">Arbitrary</span> <span class="kw">for</span> <span class="ident">Fp</span> {
-        <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Gen</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">6</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">6</span>];
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-                <span class="ident">a</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">arbitrary</span>(<span class="ident">g</span>);
-            }        
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: [<span class="ident">u8</span>; <span class="number">48</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">48</span>];
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-                <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">a</span>[<span class="ident">i</span>];
-                <span class="ident">b</span>[(<span class="ident">i</span><span class="kw-2">*</span><span class="number">8</span>)..((<span class="ident">i</span><span class="op">+</span><span class="number">1</span>)<span class="kw-2">*</span><span class="number">8</span>)].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span>(<span class="ident">val</span>.<span class="ident">to_le_bytes</span>()));
-            }
-            <span class="ident">Fp</span>::<span class="ident">from_byte_seq_le</span>(<span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">from_public_slice</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>))
+<span class="comment">/* Arbitrary Implementation used for Property Based Tests */</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">impl</span> <span class="ident">Arbitrary</span> <span class="kw">for</span> <span class="ident">Fp</span> {
+    <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Gen</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">6</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">6</span>];
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
+            <span class="ident">a</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">arbitrary</span>(<span class="ident">g</span>);
         }
-    }
-    
-    <span class="comment">/* Arbitrary Implementation used for Property Based Tests */</span>
-    <span class="kw">impl</span> <span class="ident">Arbitrary</span> <span class="kw">for</span> <span class="ident">Scalar</span> {
-        <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Gen</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scalar</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">4</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">4</span>];
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">4</span> {
-                <span class="ident">a</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">arbitrary</span>(<span class="ident">g</span>);
-            }
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">4</span> {
-                <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">a</span>[<span class="ident">i</span>];
-                <span class="ident">b</span>[(<span class="ident">i</span><span class="kw-2">*</span><span class="number">8</span>)..((<span class="ident">i</span><span class="op">+</span><span class="number">1</span>)<span class="kw-2">*</span><span class="number">8</span>)].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span>(<span class="ident">val</span>.<span class="ident">to_le_bytes</span>()));
-            }
-            <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_le</span>(<span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">from_public_slice</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>))
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: [<span class="ident">u8</span>; <span class="number">48</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">48</span>];
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
+            <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">a</span>[<span class="ident">i</span>];
+            <span class="ident">b</span>[(<span class="ident">i</span><span class="kw-2">*</span><span class="number">8</span>)..((<span class="ident">i</span><span class="op">+</span><span class="number">1</span>)<span class="kw-2">*</span><span class="number">8</span>)].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span>(<span class="ident">val</span>.<span class="ident">to_le_bytes</span>()));
         }
+        <span class="ident">Fp</span>::<span class="ident">from_byte_seq_le</span>(<span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">from_public_slice</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>))
     }
-
-    
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
-    <span class="kw">fn</span> <span class="ident">test_fp2_prop_add_neg</span>(<span class="ident">a</span>: <span class="ident">Fp2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp2neg</span>(<span class="ident">a</span>);
-        <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">fp2add</span>(<span class="ident">a</span>, <span class="ident">b</span>)
-    }
-    
-
-    <span class="comment">//Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one</span>
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
-    <span class="kw">fn</span> <span class="ident">test_fp2_prop_mul_inv</span>(<span class="ident">a</span>: <span class="ident">Fp2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp2inv</span>(<span class="ident">a</span>);
-        <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">a</span>, <span class="ident">b</span>)
-    }
-
-    <span class="comment">//Fp6 tests</span>
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
-    <span class="kw">fn</span> <span class="ident">test_fp6_prop_mul_inv</span>(<span class="ident">a</span>: <span class="ident">Fp6</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp6inv</span>(<span class="ident">a</span>);
-        <span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>())) <span class="op">=</span><span class="op">=</span> <span class="ident">fp6mul</span>(<span class="ident">a</span>, <span class="ident">b</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
-    <span class="kw">fn</span> <span class="ident">test_fp6_prop_add_neg</span>(<span class="ident">a</span>: <span class="ident">Fp6</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp6neg</span>(<span class="ident">a</span>);
-        <span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>())) <span class="op">=</span><span class="op">=</span> <span class="ident">fp6add</span>(<span class="ident">a</span>, <span class="ident">b</span>)
-    }
-
-    <span class="comment">//Fp12 tests</span>
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
-    <span class="kw">fn</span> <span class="ident">test_fp12_prop_add_neg</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp12neg</span>(<span class="ident">a</span>);
-        <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>()))) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12add</span>(<span class="ident">a</span>, <span class="ident">b</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
-    <span class="kw">fn</span> <span class="ident">test_fp12_prop_mul_inv</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp12inv</span>(<span class="ident">a</span>);
-        <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()))) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">a</span>, <span class="ident">b</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_fp12_prop_exp</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>);
-        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">4u128</span>);
-        <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">12u128</span>);
-        <span class="ident">fp12exp</span>(<span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">m</span>), <span class="ident">n</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">k</span>)
-    }
-
-    <span class="comment">/* G1 tests */</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g1_arithmetic</span>()
-    {
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1</span>();
-
-        <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">g</span>);
-        <span class="kw">let</span> <span class="ident">g4a</span> <span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">g2</span>);
-        <span class="kw">let</span> <span class="ident">g3</span> <span class="op">=</span> <span class="ident">g1add</span>(<span class="ident">g2</span>, <span class="ident">g</span>);
-        <span class="kw">let</span> <span class="ident">g4b</span> <span class="op">=</span> <span class="ident">g1add</span>(<span class="ident">g3</span>, <span class="ident">g</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g4a</span>, <span class="ident">g4b</span>);
-    }
-
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g1_mul_prop</span>() {
-        <span class="kw">fn</span> <span class="ident">test_g1_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
-        {
-            <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">a</span>, <span class="ident">g1</span>());
-            <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
-            <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">r</span>, <span class="ident">g</span>);
-            <span class="ident">h</span>.<span class="number">2</span>
-        }
-        <span class="comment">//Only needing 5 successes, slow because affine</span>
-        <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g1_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g1_add_double_equiv</span>() {
-        <span class="kw">fn</span> <span class="ident">test_g1_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
-        {
-            <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">a</span>, <span class="ident">g1</span>());
-            <span class="ident">g1add</span>(<span class="ident">g</span>, <span class="ident">g</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">g</span>)
-        }
-        <span class="comment">//Only needing 5 successes, slow because affine</span>
-        <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g1_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g1_add_double_special_case</span>() {
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> (<span class="ident">Fp</span>::<span class="ident">TWO</span>(), <span class="ident">Fp</span>::<span class="ident">ZERO</span>(), <span class="bool-val">false</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g1add</span>(<span class="ident">g</span>, <span class="ident">g</span>), <span class="ident">g1double</span>(<span class="ident">g</span>));
-    }
-
-    <span class="comment">//G2 tests</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g2_arithmetic</span>()
-    {
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2</span>();
-
-        <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g</span>);
-        <span class="kw">let</span> <span class="ident">g4a</span> <span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g2</span>);
-        <span class="kw">let</span> <span class="ident">g3</span> <span class="op">=</span> <span class="ident">g2add</span>(<span class="ident">g2</span>, <span class="ident">g</span>);
-        <span class="kw">let</span> <span class="ident">g4b</span> <span class="op">=</span> <span class="ident">g2add</span>(<span class="ident">g3</span>, <span class="ident">g</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g4a</span>, <span class="ident">g4b</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g2_mul_prop</span>() {
-        <span class="kw">fn</span> <span class="ident">test_g2_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
-        {
-            <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">a</span>, <span class="ident">g2</span>());
-            <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
-            <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">r</span>, <span class="ident">g</span>);
-            <span class="ident">h</span>.<span class="number">2</span>
-        }
-        <span class="comment">//Only needing 5 successes, slow because affine</span>
-        <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g2_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g2_add_double_equiv</span>() {
-        <span class="kw">fn</span> <span class="ident">test_g1_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
-        {
-            <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">a</span>, <span class="ident">g2</span>());
-            <span class="ident">g2add</span>(<span class="ident">g</span>, <span class="ident">g</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g</span>)
-        }
-        <span class="comment">//Only needing 5 successes, slow because affine</span>
-        <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g1_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g2_add_double_special_case</span>() {
-        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> (<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">TWO</span>()), <span class="ident">fp2zero</span>(), <span class="bool-val">false</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g2add</span>(<span class="ident">g</span>, <span class="ident">g</span>), <span class="ident">g2double</span>(<span class="ident">g</span>));
-    }
-
-
-
-    <span class="comment">//Generators taken from:</span>
-    <span class="comment">//https://tools.ietf.org/id/draft-yonezawa-pairing-friendly-curves-02.html#rfc.section.4.2.2</span>
-
-    <span class="comment">//THIS IS A CORRECT G1 GENERATOR :)</span>
-    <span class="kw">fn</span> <span class="ident">g1</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G1</span> {
-        (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1&quot;</span>), <span class="bool-val">false</span>)
-    }
-
-    <span class="comment">//THIS IS A CORRECT G2 GENERATOR :)</span>
-    <span class="kw">fn</span> <span class="ident">g2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G2</span> {
-        ((<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;24aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e&quot;</span>)), 
-        (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801&quot;</span>), 
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be&quot;</span>)), <span class="bool-val">false</span>)
-    }
-
-
-    <span class="comment">//Testing the cofactor multiplication and integer times group element</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g1_generator</span>() {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
-
-        <span class="kw">let</span> <span class="ident">aa</span> <span class="op">=</span> <span class="ident">g1</span>();
-        <span class="kw">let</span> <span class="ident">dd</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">r</span>, <span class="ident">aa</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">dd</span>.<span class="number">2</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_g2_generator</span>() {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
-
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">g2</span>();
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">r</span>, <span class="ident">a</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">b</span>.<span class="number">2</span>);
-
-    }
-
-    <span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//To Do: Property Quick-test</span>
-    <span class="kw">fn</span> <span class="ident">test_frob</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">a</span>))))))))))));
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">a</span>))))));
-        <span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">b</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">c</span>)
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_pairing_bilinearity</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">9483274923u128</span>);
-        <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">124959043234u128</span>);
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">a</span> <span class="op">*</span> <span class="ident">b</span>;
-        
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">pairing</span>(<span class="ident">g1mul</span>(<span class="ident">a</span>, <span class="ident">g1</span>()), <span class="ident">g2mul</span>(<span class="ident">b</span>, <span class="ident">g2</span>()));
-        <span class="comment">//e(a*g1, b*g2) = e(c*g1, g2) = e(g1, g1)*c with c = a * b</span>
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">p</span>, <span class="ident">pairing</span>(<span class="ident">g1mul</span>(<span class="ident">c</span>, <span class="ident">g1</span>()), <span class="ident">g2</span>()));
-        <span class="comment">//e(a*g1, b*g2) = e(g1, g2)^(a*b)</span>
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">p</span>, <span class="ident">fp12exp</span>(<span class="ident">pairing</span>(<span class="ident">g1</span>(), <span class="ident">g2</span>()), <span class="ident">c</span>)); 
-    }   
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_pairing_unitary</span>() {
-        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">pairing</span>(<span class="ident">g1</span>(), <span class="ident">g2</span>()));
-        <span class="kw">let</span> <span class="ident">q</span> <span class="op">=</span> <span class="ident">pairing</span>(<span class="ident">g1</span>(), <span class="ident">g2neg</span>(<span class="ident">g2</span>()));
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">pairing</span>(<span class="ident">g1neg</span>(<span class="ident">g1</span>()), <span class="ident">g2</span>());
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">p</span>, <span class="ident">q</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">q</span>, <span class="ident">r</span>);
-    }
-
-
-
-    <span class="comment">//Just a valid Fp12 point... Nothing special</span>
-    <span class="kw">fn</span> <span class="ident">fp12point</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp12</span> {
-        (((<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;12afbc6d6c71900c6228f0ec4a5ae91aa7747a0ddf39cde0062f71e950e716a8ae27ad686e700608f35e3f6c0fe0cf11&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;1660f8efaccc7a77268d7e17a31926b2d58879922f0d430c39c891867c64bc5baa8ed0f8350626ffb592eefa8248e536&quot;</span>)), 
-        (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;13792df9b2c7e814fc6308f1ae6d641d7ae658d99725318b86104868ea3cbf8b94b0c2d4393c86a9d36641d22d0464e8&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;16544b2b2595abd69b014bb2974cbc110787f2c4752b82c5460aaf9030eea1bce7ca11ebea791ba3622feb024b198431&quot;</span>)),
-        (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;12236e4849c69ecded8037549af297183f7be830f54e417e7970dd014027bc7aafc6485397113e65cc3079d1cf6fb1ba&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0934eeb51f85c8f0f34cb411a049ed9fe6215f775bebea5d757fb589dbd1821b2eb7c026f779ea0705b984764bbc3e22&quot;</span>))),
-        ((<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;149f6bdeb04b4be589c319b54a03b43960dd59a9f1a27c575caa5bc95614db83fc2ac87b521c7a37573e85ae9cc11284&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;10bea874008cbcdf99d6f7e3dd03ee47106f2cf83597795795a30c2cc5a818af7ae2e6d0b00f0a0cd563c3d592332a7a&quot;</span>)),
-        (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0edda465a41e2be599242c5e78280ced388f4d7fb5d77c8b87bcc2665f024ede6c29cbaff8b710391d0fcde8d02618e1&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0e8edc9ff2b93b5af140ff42e1b2998fd15dcb07d1af0e3b6a844c8b521c7885886ede9bff112cb5a35b4d9898ef65f9&quot;</span>)),
-        (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0b362f9cb09944d3f759991bfc72aafd9930f719cf5390164b32d859b4090cc251b8117255a8358ed19ba3026e45c5c0&quot;</span>),
-        <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;005ffbaef16f69b249e9f9c81a913a9f1cc1c96154cfb89d00f769efcad52ef81aba95e1e3de33912e7a0f97b83972e5&quot;</span>))))
-    }
-
-
-    <span class="comment">//  (f^((p^12-1)/r))^r = f^(p^12-1) = f^p^12*f^-1 = f*f^-1 = 1</span>
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_final_exponentiation_rth_root</span>() {
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
-        <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>())));
-        <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">fp12point</span>();
-        <span class="kw">let</span> <span class="ident">ffinal</span> <span class="op">=</span> <span class="ident">final_exponentiation</span>(<span class="ident">f</span>);
-        <span class="kw">let</span> <span class="ident">fr</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">ffinal</span>, <span class="ident">r</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">fr</span>, <span class="ident">one</span>);
-    }
-
-    
 }
 
+<span class="comment">/* Arbitrary Implementation used for Property Based Tests */</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">impl</span> <span class="ident">Arbitrary</span> <span class="kw">for</span> <span class="ident">Scalar</span> {
+    <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Gen</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scalar</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span>: [<span class="ident">u64</span>; <span class="number">4</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">4</span>];
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">4</span> {
+            <span class="ident">a</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">arbitrary</span>(<span class="ident">g</span>);
+        }
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">4</span> {
+            <span class="kw">let</span> <span class="ident">val</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">a</span>[<span class="ident">i</span>];
+            <span class="ident">b</span>[(<span class="ident">i</span><span class="kw-2">*</span><span class="number">8</span>)..((<span class="ident">i</span><span class="op">+</span><span class="number">1</span>)<span class="kw-2">*</span><span class="number">8</span>)].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span>(<span class="ident">val</span>.<span class="ident">to_le_bytes</span>()));
+        }
+        <span class="ident">Scalar</span>::<span class="ident">from_byte_seq_le</span>(<span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>::<span class="ident">from_public_slice</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>))
+    }
+}
+
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">proof</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
+<span class="kw">fn</span> <span class="ident">test_fp2_prop_add_neg</span>(<span class="ident">a</span>: <span class="ident">Fp2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp2neg</span>(<span class="ident">a</span>);
+    <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">fp2add</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+}
+
+
+<span class="comment">//Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">proof</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
+<span class="kw">fn</span> <span class="ident">test_fp2_prop_mul_inv</span>(<span class="ident">a</span>: <span class="ident">Fp2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp2inv</span>(<span class="ident">a</span>);
+    <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">fp2mul</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+}
+
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">proof</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
+<span class="kw">fn</span> <span class="ident">test_extraction_issue</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp2inv</span>((<span class="ident">Fp</span>::<span class="ident">ONE</span>(),<span class="ident">Fp</span>::<span class="ident">ONE</span>()));
+    <span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">fp2mul</span>((<span class="ident">Fp</span>::<span class="ident">ONE</span>(),<span class="ident">Fp</span>::<span class="ident">ONE</span>()), <span class="ident">b</span>)
+}
+
+<span class="comment">//Fp6 tests</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">proof</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
+<span class="kw">fn</span> <span class="ident">test_fp6_prop_mul_inv</span>(<span class="ident">a</span>: <span class="ident">Fp6</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp6inv</span>(<span class="ident">a</span>);
+    <span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>())) <span class="op">=</span><span class="op">=</span> <span class="ident">fp6mul</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">proof</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
+<span class="kw">fn</span> <span class="ident">test_fp6_prop_add_neg</span>(<span class="ident">a</span>: <span class="ident">Fp6</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp6neg</span>(<span class="ident">a</span>);
+    <span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>())) <span class="op">=</span><span class="op">=</span> <span class="ident">fp6add</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+}
+
+<span class="comment">//Fp12 tests</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">proof</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
+<span class="kw">fn</span> <span class="ident">test_fp12_prop_add_neg</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp12neg</span>(<span class="ident">a</span>);
+    <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ZERO</span>()))) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12add</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">proof</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//Using the fp arbitraty implementation from above to generate fp2 elements.</span>
+<span class="kw">fn</span> <span class="ident">test_fp12_prop_mul_inv</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">fp12inv</span>(<span class="ident">a</span>);
+    <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()))) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">a</span>, <span class="ident">b</span>)
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_fp12_prop_exp</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>);
+    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">4u128</span>);
+    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">12u128</span>);
+    <span class="ident">fp12exp</span>(<span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">m</span>), <span class="ident">n</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">k</span>)
+}
+
+<span class="comment">/* G1 tests */</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g1_arithmetic</span>()
+{
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1</span>();
+
+    <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">g</span>);
+    <span class="kw">let</span> <span class="ident">g4a</span> <span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">g2</span>);
+    <span class="kw">let</span> <span class="ident">g3</span> <span class="op">=</span> <span class="ident">g1add</span>(<span class="ident">g2</span>, <span class="ident">g</span>);
+    <span class="kw">let</span> <span class="ident">g4b</span> <span class="op">=</span> <span class="ident">g1add</span>(<span class="ident">g3</span>, <span class="ident">g</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g4a</span>, <span class="ident">g4b</span>);
+}
+
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g1_mul_prop</span>() {
+    <span class="kw">fn</span> <span class="ident">test_g1_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
+    {
+        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">a</span>, <span class="ident">g1</span>());
+        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
+        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">r</span>, <span class="ident">g</span>);
+        <span class="ident">h</span>.<span class="number">2</span>
+    }
+    <span class="comment">//Only needing 5 successes, slow because affine</span>
+    <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g1_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g1_add_double_equiv</span>() {
+    <span class="kw">fn</span> <span class="ident">test_g1_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
+    {
+        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">a</span>, <span class="ident">g1</span>());
+        <span class="ident">g1add</span>(<span class="ident">g</span>, <span class="ident">g</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">g</span>)
+    }
+    <span class="comment">//Only needing 5 successes, slow because affine</span>
+    <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g1_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g1_add_double_special_case</span>() {
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> (<span class="ident">Fp</span>::<span class="ident">TWO</span>(), <span class="ident">Fp</span>::<span class="ident">ZERO</span>(), <span class="bool-val">false</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g1add</span>(<span class="ident">g</span>, <span class="ident">g</span>), <span class="ident">g1double</span>(<span class="ident">g</span>));
+}
+
+<span class="comment">//G2 tests</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g2_arithmetic</span>()
+{
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2</span>();
+
+    <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g</span>);
+    <span class="kw">let</span> <span class="ident">g4a</span> <span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g2</span>);
+    <span class="kw">let</span> <span class="ident">g3</span> <span class="op">=</span> <span class="ident">g2add</span>(<span class="ident">g2</span>, <span class="ident">g</span>);
+    <span class="kw">let</span> <span class="ident">g4b</span> <span class="op">=</span> <span class="ident">g2add</span>(<span class="ident">g3</span>, <span class="ident">g</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g4a</span>, <span class="ident">g4b</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g2_mul_prop</span>() {
+    <span class="kw">fn</span> <span class="ident">test_g2_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
+    {
+        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">a</span>, <span class="ident">g2</span>());
+        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
+        <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">r</span>, <span class="ident">g</span>);
+        <span class="ident">h</span>.<span class="number">2</span>
+    }
+    <span class="comment">//Only needing 5 successes, slow because affine</span>
+    <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g2_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g2_add_double_equiv</span>() {
+    <span class="kw">fn</span> <span class="ident">test_g1_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>
+    {
+        <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">a</span>, <span class="ident">g2</span>());
+        <span class="ident">g2add</span>(<span class="ident">g</span>, <span class="ident">g</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g</span>)
+    }
+    <span class="comment">//Only needing 5 successes, slow because affine</span>
+    <span class="ident">QuickCheck</span>::<span class="ident">new</span>().<span class="ident">tests</span>(<span class="number">5</span>).<span class="ident">quickcheck</span>(<span class="ident">test_g1_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g2_add_double_special_case</span>() {
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> (<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">TWO</span>()), <span class="ident">fp2zero</span>(), <span class="bool-val">false</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g2add</span>(<span class="ident">g</span>, <span class="ident">g</span>), <span class="ident">g2double</span>(<span class="ident">g</span>));
+}
+
+
+
+<span class="comment">//Generators taken from:</span>
+<span class="comment">//https://tools.ietf.org/id/draft-yonezawa-pairing-friendly-curves-02.html#rfc.section.4.2.2</span>
+
+<span class="comment">//THIS IS A CORRECT G1 GENERATOR :)</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">fn</span> <span class="ident">g1</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G1</span> {
+    (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb&quot;</span>),
+     <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1&quot;</span>), <span class="bool-val">false</span>)
+}
+
+<span class="comment">//THIS IS A CORRECT G2 GENERATOR :)</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">fn</span> <span class="ident">g2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G2</span> {
+    ((<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;24aa2b2f08f0a91260805272dc51051c6e47ad4fa403b02b4510b647ae3d1770bac0326a805bbefd48056c8c121bdb8&quot;</span>),
+      <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;13e02b6052719f607dacd3a088274f65596bd0d09920b61ab5da61bbdc7f5049334cf11213945d57e5ac7d055d042b7e&quot;</span>)),
+     (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0ce5d527727d6e118cc9cdc6da2e351aadfd9baa8cbdd3a76d429a695160d12c923ac9cc3baca289e193548608b82801&quot;</span>),
+      <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be&quot;</span>)), <span class="bool-val">false</span>)
+}
+
+
+<span class="comment">//Testing the cofactor multiplication and integer times group element</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g1_generator</span>() {
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
+
+    <span class="kw">let</span> <span class="ident">aa</span> <span class="op">=</span> <span class="ident">g1</span>();
+    <span class="kw">let</span> <span class="ident">dd</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">r</span>, <span class="ident">aa</span>);
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">dd</span>.<span class="number">2</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g2_generator</span>() {
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
+
+    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">g2</span>();
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">r</span>, <span class="ident">a</span>);
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">b</span>.<span class="number">2</span>);
+
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">quickcheck</span>]</span> <span class="comment">//To Do: Property Quick-test</span>
+<span class="kw">fn</span> <span class="ident">test_frob</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">a</span>))))))))))));
+    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">frobenius</span>(<span class="ident">a</span>))))));
+    <span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">b</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">c</span>)
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_pairing_bilinearity</span>() {
+    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">9483274923u128</span>);
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">124959043234u128</span>);
+    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">a</span> <span class="op">*</span> <span class="ident">b</span>;
+
+    <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">pairing</span>(<span class="ident">g1mul</span>(<span class="ident">a</span>, <span class="ident">g1</span>()), <span class="ident">g2mul</span>(<span class="ident">b</span>, <span class="ident">g2</span>()));
+    <span class="comment">//e(a*g1, b*g2) = e(c*g1, g2) = e(g1, g1)*c with c = a * b</span>
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">p</span>, <span class="ident">pairing</span>(<span class="ident">g1mul</span>(<span class="ident">c</span>, <span class="ident">g1</span>()), <span class="ident">g2</span>()));
+    <span class="comment">//e(a*g1, b*g2) = e(g1, g2)^(a*b)</span>
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">p</span>, <span class="ident">fp12exp</span>(<span class="ident">pairing</span>(<span class="ident">g1</span>(), <span class="ident">g2</span>()), <span class="ident">c</span>));
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_pairing_unitary</span>() {
+    <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">fp12conjugate</span>(<span class="ident">pairing</span>(<span class="ident">g1</span>(), <span class="ident">g2</span>()));
+    <span class="kw">let</span> <span class="ident">q</span> <span class="op">=</span> <span class="ident">pairing</span>(<span class="ident">g1</span>(), <span class="ident">g2neg</span>(<span class="ident">g2</span>()));
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">pairing</span>(<span class="ident">g1neg</span>(<span class="ident">g1</span>()), <span class="ident">g2</span>());
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">p</span>, <span class="ident">q</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">q</span>, <span class="ident">r</span>);
+}
+
+
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="comment">//Just a valid Fp12 point... Nothing special</span>
+<span class="kw">fn</span> <span class="ident">fp12point</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp12</span> {
+    (((<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;12afbc6d6c71900c6228f0ec4a5ae91aa7747a0ddf39cde0062f71e950e716a8ae27ad686e700608f35e3f6c0fe0cf11&quot;</span>),
+       <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;1660f8efaccc7a77268d7e17a31926b2d58879922f0d430c39c891867c64bc5baa8ed0f8350626ffb592eefa8248e536&quot;</span>)),
+      (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;13792df9b2c7e814fc6308f1ae6d641d7ae658d99725318b86104868ea3cbf8b94b0c2d4393c86a9d36641d22d0464e8&quot;</span>),
+       <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;16544b2b2595abd69b014bb2974cbc110787f2c4752b82c5460aaf9030eea1bce7ca11ebea791ba3622feb024b198431&quot;</span>)),
+      (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;12236e4849c69ecded8037549af297183f7be830f54e417e7970dd014027bc7aafc6485397113e65cc3079d1cf6fb1ba&quot;</span>),
+       <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0934eeb51f85c8f0f34cb411a049ed9fe6215f775bebea5d757fb589dbd1821b2eb7c026f779ea0705b984764bbc3e22&quot;</span>))),
+     ((<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;149f6bdeb04b4be589c319b54a03b43960dd59a9f1a27c575caa5bc95614db83fc2ac87b521c7a37573e85ae9cc11284&quot;</span>),
+       <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;10bea874008cbcdf99d6f7e3dd03ee47106f2cf83597795795a30c2cc5a818af7ae2e6d0b00f0a0cd563c3d592332a7a&quot;</span>)),
+      (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0edda465a41e2be599242c5e78280ced388f4d7fb5d77c8b87bcc2665f024ede6c29cbaff8b710391d0fcde8d02618e1&quot;</span>),
+       <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0e8edc9ff2b93b5af140ff42e1b2998fd15dcb07d1af0e3b6a844c8b521c7885886ede9bff112cb5a35b4d9898ef65f9&quot;</span>)),
+      (<span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;0b362f9cb09944d3f759991bfc72aafd9930f719cf5390164b32d859b4090cc251b8117255a8358ed19ba3026e45c5c0&quot;</span>),
+       <span class="ident">Fp</span>::<span class="ident">from_hex</span>(<span class="string">&quot;005ffbaef16f69b249e9f9c81a913a9f1cc1c96154cfb89d00f769efcad52ef81aba95e1e3de33912e7a0f97b83972e5&quot;</span>))))
+}
+
+
+<span class="comment">//  (f^((p^12-1)/r))^r = f^(p^12-1) = f^p^12*f^-1 = f*f^-1 = 1</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_final_exponentiation_rth_root</span>() {
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_hex</span>(<span class="string">&quot;73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001&quot;</span>); <span class="comment">//r</span>
+    <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>())));
+    <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">fp12point</span>();
+    <span class="kw">let</span> <span class="ident">ffinal</span> <span class="op">=</span> <span class="ident">final_exponentiation</span>(<span class="ident">f</span>);
+    <span class="kw">let</span> <span class="ident">fr</span> <span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">ffinal</span>, <span class="ident">r</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">fr</span>, <span class="ident">one</span>);
+}
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "hacspec_bls12_381";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
