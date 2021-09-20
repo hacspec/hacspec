@@ -7,6 +7,12 @@ opam install coq-compcert coq-coqprime
 ```
 (assuming you have coq installed through opam).
 
+Note that this requires the coq repository, which you can add as follows.
+
+```
+opam repo add coq-released https://coq.inria.fr/opam/released --all-switches
+```
+
 ## Compiling the coq files
 
 In folder `/coq`, type `make`. This compiles the coq libraries and the compiled examples, as defined in `_CoqProject`.
