@@ -1,4 +1,4 @@
-module Hacspec.Riot
+module Hacspec.Riot.Bootloader
 
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
 

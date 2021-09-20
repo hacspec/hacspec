@@ -401,6 +401,27 @@ let seq_get_exact_chunk
   =
   snd (seq_get_chunk s chunk_len chunk_num)
 
+let seq_get_remainder_chunk
+  (#a: Type)
+  (s: seq a)
+  (chunk_len: uint_size{chunk_len > 0})
+  : Pure (uint_size & seq a)
+    (requires (chunk_len <= Seq.length s))
+    (ensures (fun (out_len, chunk) ->
+      LSeq.length chunk = out_len
+    ))
+  =
+  let num_exact_chunks = seq_num_exact_chunks s chunk_len in
+  let num_chunks = seq_num_chunks s chunk_len in
+  let (out_len, chunk_idx) = if num_chunks = num_exact_chunks then
+      (0, 0)
+    else
+      (seq_chunk_len s chunk_len (num_chunks - 1), num_chunks - 1)
+    in
+  let idx_start = chunk_len * chunk_idx in
+  (out_len, LSeq.slice #a #(Seq.length s)
+    s idx_start (idx_start + out_len))
+
 let seq_set_chunk
   (#a: Type)
   (#len:uint_size) (* change to nseq but update_sub missing for nseq *)
