@@ -1,16 +1,10 @@
 pub type Res = (usize, usize);
 pub enum ResTyp {
     Ok (Res),
-    Err,
 }
 
-fn simpl(p : Res) -> Res {
-    p
-}
-
-pub fn test_simpl_fails () -> bool {
+pub fn test_simpl_fails () -> Res {
     match ResTyp::Ok ((42,42)) {
-	ResTyp::Ok (res) => simpl (res) == (42,42),
-	ResTyp::Err => false,
+	ResTyp::Ok (res) => res,
     }
 }
