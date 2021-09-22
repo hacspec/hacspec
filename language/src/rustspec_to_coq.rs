@@ -183,13 +183,13 @@ fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) ->
             match opts {
                 None => RcDoc::nil(),
                 Some (_) => 
-                    // if (name.0).0 == "Option" || (name.0).0 == "Result"  { // generalize
-                    //     RcDoc::nil()
-                    // } else {
+                    if (name.0).0 == "Option" || (name.0).0 == "Result"  {
+                        RcDoc::nil()
+                    } else {
                         RcDoc::as_string("(")
                             .append(translate_toplevel_ident(name.0))
                             .append(RcDoc::as_string(")"))
-                    // },
+                    },
             }
         }
         _ => panic!("should not happen"),
@@ -1300,7 +1300,6 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext, exp
                 .append(RcDoc::as_string("Proof. Admitted."))
                 .append(RcDoc::hardline())
                 .group()
-                // .nest(-1)
         }
         else {
             RcDoc::nil()
