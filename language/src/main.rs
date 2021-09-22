@@ -376,7 +376,7 @@ fn main() -> Result<(), ()> {
     args.push("--edition=2018".to_string());
 
     match RunCompiler::new(&args, &mut callbacks).run() {
-        Ok(_) =>  Ok(()),
+        Ok(_) => Ok(()),
         Err(_) => Err(()),
     }
 }
