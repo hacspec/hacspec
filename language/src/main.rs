@@ -43,6 +43,7 @@ use util::APP_USAGE;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
+    copy_template : bool,
     output_template_file: Option<String>,
     target_directory: String,
 }
@@ -197,11 +198,15 @@ impl Callbacks for HacspecCallbacks {
 		};
 		
 		match &self.output_template_file {
-		    None => Command::new("cp")
-			.arg(write_file.clone())
-			.arg(write_file.clone() + "_template")
-			.spawn()
-			.expect("Failed copy to template"),
+		    None => if self.copy_template {
+			Command::new("cp")
+			    .arg(write_file.clone())
+			    .arg(write_file.clone() + "_template")
+			    .spawn()
+			    .expect("Failed copy to template")
+		    } else {
+			return Compilation::Stop;
+		    },
 		    Some(template_file) => {
 			Command::new("git")
 			    .arg("merge-file")
@@ -323,6 +328,14 @@ fn main() -> Result<(), ()> {
 	},
         None => None,
     };
+
+    let copy_template = match args.iter().position(|a| a == "--init") {
+        Some(i) => {
+            args.remove(i);
+            true
+        }
+        None => false,
+    };
     
     // Optionally an input file can be passed in. This should be mostly used for
     // testing.
@@ -336,6 +349,7 @@ fn main() -> Result<(), ()> {
 
     let mut callbacks = HacspecCallbacks {
         output_file,
+	copy_template,
 	output_template_file,
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
