@@ -43,8 +43,7 @@ use util::APP_USAGE;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
-    copy_template : bool,
-    output_template_file: Option<String>,
+    do_output_template_file: bool,
     target_directory: String,
 }
 
@@ -137,16 +136,11 @@ impl Callbacks for HacspecCallbacks {
             }
         );
 
-        let do_merge = match &self.output_template_file {
-            None => false,
-            Some(_) => true,
-        };
-
         match &self.output_file {
             None => return Compilation::Stop,
             Some(file) =>
             {
-                let write_file = if do_merge {file.clone() + "_temp"} else {file.clone()};
+                let write_file = if self.do_output_template_file {file.clone() + "_temp"} else {file.clone()};
                 match Path::new(&file).extension().and_then(OsStr::to_str).unwrap() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
@@ -195,32 +189,6 @@ impl Callbacks for HacspecCallbacks {
                         .err("unknown backend extension for output file");
                     return Compilation::Stop;
                 }
-                };
-                
-                match &self.output_template_file {
-                    None => if self.copy_template {
-                        Command::new("cp")
-                            .arg(write_file.clone())
-                            .arg(write_file.clone() + "_template")
-                            .spawn()
-                            .expect("Failed copy to template")
-                    } else {
-                        return Compilation::Stop;
-                    },
-                    Some(template_file) => {
-                        Command::new("git")
-                            .arg("merge-file")
-                            .arg(file)
-                            .arg(template_file)
-                            .arg(&write_file)
-                            .spawn()
-                            .expect("Failed git-merge");
-                        Command::new("mv")
-                            .arg(&write_file)
-                            .arg(template_file)
-                            .spawn()
-                            .expect("Failed overwriting template")
-                    },
                 };
             },
         }
@@ -347,10 +315,12 @@ fn main() -> Result<(), ()> {
         None => false,
     };
 
+    let output_file_clone = output_file.clone();
+    let do_output_template_file = match output_template_file {Some (_) => true, _ => false};
+    
     let mut callbacks = HacspecCallbacks {
         output_file,
-        copy_template,
-        output_template_file,
+        do_output_template_file,
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",
@@ -378,5 +348,36 @@ fn main() -> Result<(), ()> {
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => Ok(()),
         Err(_) => Err(()),
-    }
+    }?;
+    
+    match output_file_clone.clone() {
+        Some (file) => {
+            match &output_template_file {
+                None => {
+                    if copy_template {
+                        std::fs::copy(file.clone(), file.clone() + "_template").expect("Copy failed");
+                    };
+                    ()
+                }
+                Some(template_file) => {
+                    Command::new("git")
+                        .output()
+                        .except("Could not find 'git'. Please install git and try again.");
+                    Command::new("git")
+                        .arg("merge-file")
+                        .arg(file.clone())
+                        .arg(template_file)
+                        .arg(file.clone() + "_temp")
+                        .output()
+                        .expect("git-merge failed");
+                    std::fs::copy(file.clone() + "_temp", template_file).expect("Copy failed");
+                    std::fs::remove_file(file.clone() + "_temp").expect("Remove failed");
+                    ()
+                }
+            }
+        }
+        None => ()
+    };
+
+    Ok(())
 }
