@@ -137,17 +137,17 @@ impl Callbacks for HacspecCallbacks {
             }
         );
 
-	let do_merge = match &self.output_template_file {
-	    None => false,
-	    Some(_) => true,
-	};
+        let do_merge = match &self.output_template_file {
+            None => false,
+            Some(_) => true,
+        };
 
         match &self.output_file {
             None => return Compilation::Stop,
             Some(file) =>
-	    {
-		let write_file = if do_merge {file.clone() + "_temp"} else {file.clone()};
-		match Path::new(&file).extension().and_then(OsStr::to_str).unwrap() {
+            {
+                let write_file = if do_merge {file.clone() + "_temp"} else {file.clone()};
+                match Path::new(&file).extension().and_then(OsStr::to_str).unwrap() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
@@ -195,34 +195,34 @@ impl Callbacks for HacspecCallbacks {
                         .err("unknown backend extension for output file");
                     return Compilation::Stop;
                 }
-		};
-		
-		match &self.output_template_file {
-		    None => if self.copy_template {
-			Command::new("cp")
-			    .arg(write_file.clone())
-			    .arg(write_file.clone() + "_template")
-			    .spawn()
-			    .expect("Failed copy to template")
-		    } else {
-			return Compilation::Stop;
-		    },
-		    Some(template_file) => {
-			Command::new("git")
-			    .arg("merge-file")
-			    .arg(file)
-			    .arg(template_file)
-			    .arg(&write_file)
-			    .spawn()
-			    .expect("Failed git-merge");
-			Command::new("mv")
-			    .arg(&write_file)
-			    .arg(template_file)
-			    .spawn()
-			    .expect("Failed overwriting template")
-		    },
-		};
-	    },
+                };
+                
+                match &self.output_template_file {
+                    None => if self.copy_template {
+                        Command::new("cp")
+                            .arg(write_file.clone())
+                            .arg(write_file.clone() + "_template")
+                            .spawn()
+                            .expect("Failed copy to template")
+                    } else {
+                        return Compilation::Stop;
+                    },
+                    Some(template_file) => {
+                        Command::new("git")
+                            .arg("merge-file")
+                            .arg(file)
+                            .arg(template_file)
+                            .arg(&write_file)
+                            .spawn()
+                            .expect("Failed git-merge");
+                        Command::new("mv")
+                            .arg(&write_file)
+                            .arg(template_file)
+                            .spawn()
+                            .expect("Failed overwriting template")
+                    },
+                };
+            },
         }
 
         Compilation::Stop
@@ -320,12 +320,12 @@ fn main() -> Result<(), ()> {
     let output_template_file_index = args.iter().position(|a| a == "--update");
     let output_template_file = match output_template_file_index {
         Some(i) => {
-	    args.remove(i);
-	    match &output_file {
-		Some (file) => Some (file.clone() + "_template"),
-		None => None, // Error?
-	    }
-	},
+            args.remove(i);
+            match &output_file {
+                Some (file) => Some (file.clone() + "_template"),
+                None => None, // Error?
+            }
+        },
         None => None,
     };
 
@@ -349,8 +349,8 @@ fn main() -> Result<(), ()> {
 
     let mut callbacks = HacspecCallbacks {
         output_file,
-	copy_template,
-	output_template_file,
+        copy_template,
+        output_template_file,
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",
