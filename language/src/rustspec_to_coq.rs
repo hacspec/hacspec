@@ -168,7 +168,7 @@ fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
         }
     }
 }
-    
+
 fn translate_constructor<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
     RcDoc::as_string(enum_name.0)
 }
@@ -182,7 +182,7 @@ fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) ->
         BaseTyp::Named(name, opts) => {
             match opts {
                 None => RcDoc::nil(),
-                Some (_) => 
+                Some (_) =>
                     if (name.0).0 == "Option" || (name.0).0 == "Result"  {
                         RcDoc::nil()
                     } else {
