@@ -49,6 +49,41 @@ fn main() {
 
     let environment: HashMap<String, String> = env::vars().collect();
 
+    let file_paths = match args.iter().position(|a| a == "-o") {
+        Some(j) => {
+            match args.get(j + 1).cloned() {
+                Some (file) => {
+                    let file_parent = std::path::Path::new(&file).parent().and_then(|x| std::ffi::OsStr::to_str(x.as_os_str())).unwrap();
+                    let file_stem = std::path::Path::new(&file).file_stem().and_then(std::ffi::OsStr::to_str).unwrap();
+                    let file_extension = std::path::Path::new(&file).extension().and_then(std::ffi::OsStr::to_str).unwrap();
+                    
+                    let template_path = file_parent.to_string() + "/" + file_stem + "_template." + file_extension;
+                    let temp_path = file_parent.to_string() + "/" + file_stem + "_temp." + file_extension;
+
+                    match args.iter().position(|a| a == "--init") {
+                        Some(i) => {
+                            args.remove(i);
+                            Some ((file, temp_path, template_path, true))
+                        }
+                        None => {
+                            match args.iter().position(|a| a == "--update") {
+                                Some(i) => {
+                                    args.remove(i);
+                                    args.remove(j+1);
+                                    args.insert(j+1, temp_path.clone());
+                                    Some ((file, temp_path, template_path, false))
+                                }
+                                None => None,
+                            }
+                        }
+                    }
+                }
+                None => None,
+            }
+        },
+        None => None
+    };
+
     let hacspec_out = std::process::Command::new(driver())
         .env(library_path_variable, sysroot_lib)
         .envs(&environment)
@@ -56,5 +91,31 @@ fn main() {
         .args(args)
         .status()
         .expect("Couldn't run hacspec");
+    
+    match file_paths {
+        Some ((file, _, template, true)) => {
+            std::fs::copy(file.clone(), template.clone())
+                .expect(format!("Failed to copy file '{}' to '{}'", file.clone(), template.clone()).as_str());
+            ()
+        }
+        Some ((file, temp, template, false)) => {
+            println!("git {} to {} to {}", file, temp, template);
+            std::process::Command::new("git")
+                .output()
+                .expect("Could not find 'git'. Please install git and try again.");
+            std::process::Command::new("git")
+                .arg("merge-file")
+                .arg(file.clone())
+                .arg(template.clone())
+                .arg(temp.clone())
+                .output()
+                .expect("git-merge failed");
+            std::fs::copy(temp.clone(), template.clone()).expect(format!("Failed to copy file '{}' to '{}'", temp.clone(), template.clone()).as_str());
+            std::fs::remove_file(temp.clone()).expect(format!("Failed to remove file '{}'", file.clone()).as_str());
+            ()
+        }
+        None => ()
+    };
+    
     std::process::exit(hacspec_out.code().unwrap());
 }

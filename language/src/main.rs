@@ -43,7 +43,6 @@ use util::APP_USAGE;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
-    do_output_template_file: bool,
     target_directory: String,
 }
 
@@ -138,24 +137,21 @@ impl Callbacks for HacspecCallbacks {
 
         match &self.output_file {
             None => return Compilation::Stop,
-            Some(file) =>
-            {
-                let write_file = if self.do_output_template_file {file.clone() + "_temp"} else {file.clone()};
-                match Path::new(&file).extension().and_then(OsStr::to_str).unwrap() {
+            Some(file) => match Path::new(file).extension().and_then(OsStr::to_str).unwrap() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
-                    &write_file,
+                    &file,
                     &top_ctx,
                 ),
                 "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
-                    &write_file,
+                    &file,
                     &top_ctx,
                 ),
                 "json" => {
-                    let file = write_file.trim();
+                    let file = file.trim();
                     let path = Path::new(file);
                     let file = match File::create(&path) {
                         Err(why) => {
@@ -180,7 +176,7 @@ impl Callbacks for HacspecCallbacks {
                 "v" => rustspec_to_coq::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
-                    &write_file,
+                    &file,
                     &top_ctx,
                 ),
                 _ => {
@@ -189,10 +185,8 @@ impl Callbacks for HacspecCallbacks {
                         .err("unknown backend extension for output file");
                     return Compilation::Stop;
                 }
-                };
             },
         }
-
         Compilation::Stop
     }
 }
@@ -284,27 +278,7 @@ fn main() -> Result<(), ()> {
         Some(i) => args.get(i + 1).cloned(),
         None => None,
     };
-    
-    let output_template_file_index = args.iter().position(|a| a == "--update");
-    let output_template_file = match output_template_file_index {
-        Some(i) => {
-            args.remove(i);
-            match &output_file {
-                Some (file) => Some (file.clone() + "_template"),
-                None => None, // Error?
-            }
-        },
-        None => None,
-    };
 
-    let copy_template = match args.iter().position(|a| a == "--init") {
-        Some(i) => {
-            args.remove(i);
-            true
-        }
-        None => false,
-    };
-    
     // Optionally an input file can be passed in. This should be mostly used for
     // testing.
     let input_file = match args.iter().position(|a| a == "-f") {
@@ -315,12 +289,8 @@ fn main() -> Result<(), ()> {
         None => false,
     };
 
-    let output_file_clone = output_file.clone();
-    let do_output_template_file = match output_template_file {Some (_) => true, _ => false};
-    
     let mut callbacks = HacspecCallbacks {
         output_file,
-        do_output_template_file,
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",
@@ -348,36 +318,5 @@ fn main() -> Result<(), ()> {
     match RunCompiler::new(&args, &mut callbacks).run() {
         Ok(_) => Ok(()),
         Err(_) => Err(()),
-    }?;
-    
-    match output_file_clone.clone() {
-        Some (file) => {
-            match &output_template_file {
-                None => {
-                    if copy_template {
-                        std::fs::copy(file.clone(), file.clone() + "_template").expect("Copy failed");
-                    };
-                    ()
-                }
-                Some(template_file) => {
-                    Command::new("git")
-                        .output()
-                        .expect("Could not find 'git'. Please install git and try again.");
-                    Command::new("git")
-                        .arg("merge-file")
-                        .arg(file.clone())
-                        .arg(template_file)
-                        .arg(file.clone() + "_temp")
-                        .output()
-                        .expect("git-merge failed");
-                    std::fs::copy(file.clone() + "_temp", template_file).expect("Copy failed");
-                    std::fs::remove_file(file.clone() + "_temp").expect("Remove failed");
-                    ()
-                }
-            }
-        }
-        None => ()
-    };
-
-    Ok(())
+    }
 }
