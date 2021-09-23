@@ -362,7 +362,7 @@ fn main() -> Result<(), ()> {
                 Some(template_file) => {
                     Command::new("git")
                         .output()
-                        .except("Could not find 'git'. Please install git and try again.");
+                        .expect("Could not find 'git'. Please install git and try again.");
                     Command::new("git")
                         .arg("merge-file")
                         .arg(file.clone())
