@@ -649,15 +649,6 @@ fn test_fp12_prop_mul_inv(a: Fp12) -> bool {
 }
 
 #[cfg(test)]
-#[cfg(proof)]
-#[quickcheck] //Using the fp arbitraty implementation from above to generate fp2 elements.
-fn test_fp12_prop_mul_inv(a: Fp12) -> bool {
-    let b = fp12inv(a);
-    fp12fromfp6(fp6fromfp2(fp2fromfp(Fp::ZERO()))) == a ||
-    fp12fromfp6(fp6fromfp2(fp2fromfp(Fp::ONE()))) == fp12mul(a, b)
-}
-
-#[cfg(test)]
 #[quickcheck]
 fn test_fp12_prop_exp(a: Fp12) -> bool {
     let m = Scalar::from_literal(3u128);
