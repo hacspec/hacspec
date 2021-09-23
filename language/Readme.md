@@ -34,3 +34,12 @@ already compiled in the `target/` folder. A simple `cargo clean` followed by
 
 The compiler can be tested by launching `cargo test`. It typechecks and compile to F* all 
 the specs in [examples/](../examples/).
+
+## Updating exported files
+To be able to update exported files you should use the `--init` flag when you first 
+build you files, this will create a `<output>_template` file with the historical view. 
+Whenever you then make changes to the source and want to update the exported file with
+just these changes, instead of overwriting it, you should add the `--update` flag. This
+will use the git command `merge-file`, to update the file with the changes, and then 
+overwrite the template file, with the new historical view.
+
