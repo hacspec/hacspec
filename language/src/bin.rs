@@ -53,8 +53,8 @@ fn main() {
         Some(j) => {
             match args.get(j + 1).cloned() {
                 Some (file) => {
-                    let file_parent = std::path::Path::new(&file).parent().unwrap(); // .and_then(|x| std::ffi::OsStr::to_str(x.as_os_str()))
-                    let file_stem = std::path::Path::new(&file).file_stem().unwrap(); // .and_then(std::ffi::OsStr::to_str)
+                    let file_parent = std::path::Path::new(&file).parent().unwrap();
+                    let file_stem = std::path::Path::new(&file).file_stem().unwrap();
                     let file_extension = std::path::Path::new(&file).extension().and_then(std::ffi::OsStr::to_str).unwrap();
 
                     let file_prefix = file_parent.join(file_stem);
