@@ -53,12 +53,15 @@ fn main() {
         Some(j) => {
             match args.get(j + 1).cloned() {
                 Some (file) => {
-                    let file_parent = std::path::Path::new(&file).parent().and_then(|x| std::ffi::OsStr::to_str(x.as_os_str())).unwrap();
-                    let file_stem = std::path::Path::new(&file).file_stem().and_then(std::ffi::OsStr::to_str).unwrap();
+                    let file_parent = std::path::Path::new(&file).parent().unwrap(); // .and_then(|x| std::ffi::OsStr::to_str(x.as_os_str()))
+                    let file_stem = std::path::Path::new(&file).file_stem().unwrap(); // .and_then(std::ffi::OsStr::to_str)
                     let file_extension = std::path::Path::new(&file).extension().and_then(std::ffi::OsStr::to_str).unwrap();
+
+                    let file_prefix = file_parent.join(file_stem);
+                    let file_prefix = file_prefix.to_str().unwrap();
                     
-                    let template_path = file_parent.to_string() + "/" + file_stem + "_template." + file_extension;
-                    let temp_path = file_parent.to_string() + "/" + file_stem + "_temp." + file_extension;
+                    let template_path = file_prefix.to_string() + "_template." + file_extension;
+                    let temp_path = file_prefix.to_string() + "_temp." + file_extension;
 
                     match args.iter().position(|a| a == "--init") {
                         Some(i) => {
@@ -99,7 +102,6 @@ fn main() {
             ()
         }
         Some ((file, temp, template, false)) => {
-            println!("git {} to {} to {}", file, temp, template);
             std::process::Command::new("git")
                 .output()
                 .expect("Could not find 'git'. Please install git and try again.");
