@@ -1,3 +1,4 @@
+#![no_std]
 use hacspec_lib::*;
 
 const U32_BITS: usize = 4 * 8;
