@@ -688,6 +688,8 @@ fn typecheck_expression(
             let (new_arg, t_arg, intermediate_var_context) =
                 typecheck_expression(sess, arg, top_level_context, &var_context)?;
             let mut acc_var_context = intermediate_var_context.clone();
+            // First we retrieve the enum type that's being matched on as well
+            // as diverse infos related to it
             let (mut t_arg_cases, t_arg_enum_name, t_arg_enum_args, enum_type_var_args) =
                 match (t_arg.1).0.clone() {
                     BaseTyp::Named((name, _), args) => {
@@ -728,10 +730,13 @@ fn typecheck_expression(
                     }
                 };
             let mut out_typ = None;
+            // Then we typecheck each match arm
             let new_arms = check_vec(
                 arms.into_iter()
                     .map(|(arm_enum_ty, arm_case, arm_pattern, arm_exp)| {
                         let arm_enum_ty = dealias_type(arm_enum_ty.clone(), top_level_context);
+                        // The enum name is repeated in each match arm so we
+                        // make sure it's the good one
                         let (arm_enum_name, arm_enum_args) = match &arm_enum_ty {
                             BaseTyp::Named((t_arm_ty_name, _), t_arm_ty_args) => {
                                 if &t_arg_enum_name != t_arm_ty_name {
@@ -767,6 +772,10 @@ fn typecheck_expression(
                                 return Err(());
                             }
                         };
+                        // Then we proceed with the typechecking, first
+                        // by checking correctness of the enum generic
+                        // arguments between those in the match arm and those
+                        // coming from the expression being matched
                         let mut typ_var_ctx = HashMap::new();
                         match (&t_arg_enum_args, &arm_enum_args) {
                             (None, None) => (),
@@ -831,6 +840,9 @@ fn typecheck_expression(
                                 return Err(());
                             }
                         };
+                        // Then we finally proceed with typechecking the arm
+                        // expression, for that we retrieve the type of this arm's
+                        // payload
                         let (case_index, case_typ) = match t_arg_cases
                             .iter()
                             .enumerate()
@@ -855,6 +867,8 @@ fn typecheck_expression(
                             None => None,
                         };
                         t_arg_cases.remove(case_index);
+                        // t_arg_cases stores the arms not covered by the match
+                        // yet
                         let (new_arm_pattern, new_var_context) = match (arm_pattern, case_typ) {
                             (None, None) => (None, HashMap::new()),
                             (Some(arm_pattern), Some(case_typ)) => {
@@ -902,6 +916,7 @@ fn typecheck_expression(
                     })
                     .collect(),
             )?;
+            // Finally, we check whether all match arms have been included
             if t_arg_cases.len() > 0 {
                 sess.span_rustspec_err(
                     span.clone(),
@@ -2573,8 +2588,11 @@ fn typecheck_item(
         }
     };
     match i {
-	Ok(i) => Ok(DecoratedItem { item : i , tags : item.tags.clone() } ),
-	Err(a) => Err(a),
+        Ok(i) => Ok(DecoratedItem {
+            item: i,
+            tags: item.tags.clone(),
+        }),
+        Err(a) => Err(a),
     }
 }
 
