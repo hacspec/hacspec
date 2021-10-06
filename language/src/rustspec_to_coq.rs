@@ -179,13 +179,17 @@ fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
 
 fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) -> RcDoc<'a> {
     translate_constructor(case_name).append(match enum_name {
-        BaseTyp::Named(name, _) => {
-            if (name.0).0 == "Option" || (name.0).0 == "Result" {
-                RcDoc::nil()
-            } else {
-                RcDoc::as_string("(")
-                .append(translate_toplevel_ident(name.0))
-                .append(RcDoc::as_string(")"))
+        BaseTyp::Named(name, opts) => {
+            match opts {
+                None => RcDoc::nil(),
+                Some (_) =>
+                    if (name.0).0 == "Option" || (name.0).0 == "Result"  {
+                        RcDoc::nil()
+                    } else {
+                        RcDoc::as_string("(")
+                            .append(translate_toplevel_ident(name.0))
+                            .append(RcDoc::as_string(")"))
+                    },
             }
         }
         _ => panic!("should not happen"),
@@ -741,6 +745,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             }),
             RcDoc::line(),
         ))
+        .append(RcDoc::space())
         .append(RcDoc::as_string("end")),
         //todo
         Expression::EnumInject(enum_name, case_name, payload) => {
@@ -1214,47 +1219,91 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext, exp
             } else {
                 RcDoc::nil()
             })
-            .group()
-            .append({
-                if item.tags.0.contains(&ItemTag::QuickCheck) {
-                     RcDoc::as_string(".")
-		        .append(RcDoc::hardline())
-			.append(RcDoc::hardline())
-			.append(RcDoc::as_string("QuickChick"))
-			.append(RcDoc::space())
-			.append(make_paren(
-			    sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (tau, _))| {
-				rcdoc
-				    .append(RcDoc::as_string("forAll g_"))
-				    .append(translate_typ(tau.clone()))
-				    .append(RcDoc::space())
-				    .append("(")
-				    .append(RcDoc::as_string("fun"))
-				    .append(RcDoc::space())
-				    .append(translate_ident(x.clone()))
-				    .append(RcDoc::space())
-				    .append(RcDoc::as_string(":"))
-				    .append(RcDoc::space())
-				    .append(translate_typ(tau.clone()))
-				    .append(RcDoc::space())
-				    .append(RcDoc::as_string("=>"))
-			    })
-				.append(translate_ident(Ident::TopLevel(f.clone())))
-				.append(
-				    sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (_, _))| {
-					rcdoc
-					    .append(RcDoc::space())
-					    .append(translate_ident(x.clone()))
-					    .append(RcDoc::as_string(")"))
-				    }))
-			))
-		}
-		else {
-		    RcDoc::nil()
-		}
-	    }),
+            .group(),
             true,
-        ),
+        )
+        .append({
+            if item.tags.0.contains(&ItemTag::QuickCheck) {
+                RcDoc::hardline()
+                    .append(RcDoc::as_string("QuickChick"))
+                    .append(RcDoc::space())
+                    .append(make_paren(
+                        sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (tau, _))| {
+                            rcdoc
+                                .append(RcDoc::as_string("forAll g_"))
+                                .append(translate_typ(tau.clone()))
+                                .append(RcDoc::space())
+                                .append("(")
+                                .append(RcDoc::as_string("fun"))
+                                .append(RcDoc::space())
+                                .append(translate_ident(x.clone()))
+                                .append(RcDoc::space())
+                                .append(RcDoc::as_string(":"))
+                                .append(RcDoc::space())
+                                .append(translate_typ(tau.clone()))
+                                .append(RcDoc::space())
+                                .append(RcDoc::as_string("=>"))
+                        })
+                            .append(translate_ident(Ident::TopLevel(f.clone())))
+                            .append(
+                                sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (_, _))| {
+                                    rcdoc
+                                        .append(RcDoc::space())
+                                        .append(translate_ident(x.clone()))
+                                        .append(RcDoc::as_string(")"))
+                                }))
+                    ))
+                    .append(RcDoc::as_string("."))
+                    .append(RcDoc::hardline())
+                    .group()
+            }
+            else {
+                RcDoc::nil()
+            }
+        })
+        .append(if item.tags.0.contains(&ItemTag::Test) {
+            RcDoc::hardline()
+                .append(RcDoc::hardline())
+                .append(RcDoc::as_string("Theorem"))
+                .append(RcDoc::space())
+                .append(translate_ident(Ident::TopLevel(f.clone())))
+                .append(RcDoc::as_string("_correct"))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string(":"))
+                .append(RcDoc::space())
+                .append(
+                    sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (tau, _))| {
+                        rcdoc
+                            .append(RcDoc::as_string("forall"))
+                            .append(RcDoc::space())
+                            .append(translate_ident(x.clone()))
+                            .append(RcDoc::space())
+                            .append(RcDoc::as_string(":"))
+                            .append(RcDoc::space())
+                            .append(translate_typ(tau.clone()))
+                            .append(RcDoc::space())
+                            .append(RcDoc::as_string(","))
+                    })
+                        .append(translate_ident(Ident::TopLevel(f.clone())))
+                        .append(
+                            sig.args.iter().fold(RcDoc::nil(), |rcdoc, ((x, _), (_, _))| {
+                                rcdoc
+                                    .append(RcDoc::space())
+                                    .append(translate_ident(x.clone()))
+                            }))
+                )
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("="))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("true."))
+                .append(RcDoc::line())
+                .append(RcDoc::as_string("Proof. Admitted."))
+                .append(RcDoc::hardline())
+                .group()
+        }
+        else {
+            RcDoc::nil()
+        }),
         Item::EnumDecl(name, cases) => RcDoc::as_string("Inductive")
             .append(RcDoc::space())
             .append(translate_enum_name(name.0.clone()))
@@ -1282,8 +1331,9 @@ fn translate_item<'a>(item: &'a DecoratedItem, top_ctx: &'a TopLevelContext, exp
                                 .append(translate_enum_name(name.0.clone())),
                         })
                 }),
-            RcDoc::as_string(".").append(RcDoc::line()),
-        )),
+            RcDoc::line(),
+        ))
+        .append(RcDoc::as_string(".")),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("Definition")
         .append(RcDoc::space())
         .append(translate_ident(Ident::TopLevel(name.0.clone())))
@@ -1592,7 +1642,8 @@ pub fn translate_and_write_to_file(
     let export_quick_check = p.items.iter().any(|i| {i.0.tags.0.contains(&ItemTag::QuickCheck)});
     write!(
         file,
-        "Require Import Lib MachineIntegers.\n\
+        "(** This file was automatically generated using Hacspec **)\n\
+        Require Import Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\
         Open Scope Z_scope.\n\
