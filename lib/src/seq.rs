@@ -12,19 +12,19 @@ macro_rules! declare_seq {
     ($name:ident, $constraint:ident) => {
         /// Variable length byte arrays.
         #[derive(Debug, Clone, Default)]
-        pub struct $name<T: Copy + Default + $constraint> {
+        pub struct $name<T: Default + $constraint> {
             pub(crate) b: Vec<T>,
         }
-        declare_seq_with_contents_constraints_impl!($name, Copy + Default + $constraint);
+        declare_seq_with_contents_constraints_impl!($name, Clone + Default + $constraint);
     };
     ($name:ident) => {
         /// Variable length byte arrays.
         #[derive(Debug, Clone, Default)]
-        pub struct $name<T: Copy + Default> {
+        pub struct $name<T: Default> {
             pub(crate) b: Vec<T>,
         }
 
-        declare_seq_with_contents_constraints_impl!($name, Copy + Default);
+        declare_seq_with_contents_constraints_impl!($name, Clone + Default);
     };
 }
 
@@ -253,7 +253,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 debug_assert!(self.len() >= start_out + len, "{} < {} + {}", self.len(), start_out, len);
                 debug_assert!(v.len() >= start_in + len, "{} < {} + {}", v.len(), start_in, len);
                 for i in 0..len {
-                    self[start_out + i] = v[start_in + i];
+                    self[start_out + i] = v[start_in + i].clone();
                 }
                 self
             }
@@ -358,7 +358,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn from_seq<U: SeqTrait<T>>(x: &U) -> $name<T> {
                 let mut tmp = $name::new(x.len());
                 for i in 0..x.len() {
-                    tmp[i] = x[i];
+                    tmp[i] = x[i].clone();
                 }
                 tmp
             }
