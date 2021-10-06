@@ -44,6 +44,11 @@ fn positive_arrays() {
 }
 
 #[test]
+fn positive_tuples() {
+    run_test("language-tests/tuples.rs", None);
+}
+
+#[test]
 #[should_panic]
 fn negative_arrays() {
     run_test("negative-language-tests/arrays.rs", None);
