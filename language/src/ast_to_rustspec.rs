@@ -1256,6 +1256,27 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "closures are not allowed in Hacspec");
             Err(())
         }
+        ExprKind::Block(block, _)
+            if block.stmts.len() == 1 && block.rules == BlockCheckMode::Default =>
+        {
+            let translated_statements =
+                translate_statement(sess, specials, block.stmts.iter().next().unwrap())?;
+            match (
+                translated_statements.len(),
+                translated_statements.iter().next().unwrap(),
+            ) {
+                (1, (Statement::ReturnExp(e), span)) => {
+                    Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
+                }
+                _ => {
+                    sess.span_rustspec_err(
+                        e.span.clone(),
+                        "only inline block with a simple return expression are allowed in Hacspec",
+                    );
+                    Err(())
+                }
+            }
+        }
         ExprKind::Block(_, _) => {
             sess.span_rustspec_err(e.span.clone(), "inline blocks are not allowed in Hacspec");
             Err(())
