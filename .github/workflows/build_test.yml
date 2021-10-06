@@ -5,6 +5,7 @@ on: [push, pull_request, release]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
     strategy:
       matrix:
         os:
@@ -22,6 +23,6 @@ jobs:
       - name: Test Provider
         run: cargo test --verbose -p rc-tests
       - name: Get hacspec function stats
-        run: RUST_NIGHTLY=nightly-2021-03-11 ./lib/get_func_stats.sh
+        run: RUST_NIGHTLY=nightly-2021-06-15 ./lib/get_func_stats.sh
       - name: Build and test F* compiler
         run: cargo clean && cargo build -p hacspec-lib &&  cd language && cargo test --verbose

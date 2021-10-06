@@ -7,9 +7,11 @@ USAGE:
 
 FLAGS:
     -v               Verbosity
+    --init           Creates a '<output>_template' file along with the output
+    --update         Merges changes into output file based on the template file
 
 OPTIONS:
-    -o <FILE>        Name of the F* (.fst) or Easycrypt (.ec) output file
+    -o <FILE>        Name of the F* (.fst), Easycrypt (.ec), or Coq (.v) output file
 
 ARGS:
     CRATE            The crate to analyse

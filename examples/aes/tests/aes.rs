@@ -3,7 +3,7 @@ use hacspec_lib::prelude::*;
 
 use hacspec_aes::*;
 
-fn aes_128_enc_dec_test(m: &ByteSeq, key: Key128, iv: Nonce, ctr: U32, ctxt: Option<&ByteSeq>) {
+fn aes_128_enc_dec_test(m: &ByteSeq, key: Key128, iv: AesNonce, ctr: U32, ctxt: Option<&ByteSeq>) {
     let c = aes128_encrypt(key, iv, ctr, m);
     let m_dec = aes128_decrypt(key, iv, ctr, &c);
     assert_bytes_eq!(m, m_dec);
@@ -15,7 +15,7 @@ fn aes_128_enc_dec_test(m: &ByteSeq, key: Key128, iv: Nonce, ctr: U32, ctxt: Opt
 #[test]
 fn test_enc_dec() {
     let key = Key128::from_public_slice(&random_byte_vec(Key128::length()));
-    let iv = Nonce::from_public_slice(&random_byte_vec(Nonce::length()));
+    let iv = AesNonce::from_public_slice(&random_byte_vec(AesNonce::length()));
     let m = ByteSeq::from_public_slice(&random_byte_vec(40));
     aes_128_enc_dec_test(&m, key, iv, U32(0), None);
 }
@@ -30,7 +30,7 @@ fn test_kat1() {
         0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f,
         0x3c,
     ]);
-    let nonce = Nonce::from_public_slice(&[
+    let nonce = AesNonce::from_public_slice(&[
         0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb,
     ]);
     let ctr = U32(0xfcfdfeff);
@@ -52,7 +52,7 @@ fn test_kat2() {
         0x7E, 0x24, 0x06, 0x78, 0x17, 0xFA, 0xE0, 0xD7, 0x43, 0xD6, 0xCE, 0x1F, 0x32, 0x53, 0x91,
         0x63,
     ]);
-    let nonce = Nonce::from_public_slice(&[
+    let nonce = AesNonce::from_public_slice(&[
         0x00, 0x6C, 0xB6, 0xDB, 0xC0, 0x54, 0x3B, 0x59, 0xDA, 0x48, 0xD9, 0x0B,
     ]);
     let ctr = 0x00000001;

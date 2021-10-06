@@ -2,10 +2,12 @@
 use hacspec_lib::*;
 
 // Import aes and gcm
-// use super::{self, aes_ctr_keyblock, aes_encrypt, Block};
-// use super::gf128::{gmac, Key, Tag};
 use hacspec_aes::*;
 use hacspec_gf128::*;
+
+pub type AesGcmByteSeqResult = Result<ByteSeq, u8>;
+
+pub const INVALID_TAG: u8 = 1u8;
 
 fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
     let laad = aad.len();
@@ -36,13 +38,15 @@ fn pad_aad_msg(aad: &ByteSeq, msg: &ByteSeq) -> ByteSeq {
 
 pub(crate) fn encrypt_aes(
     key: &ByteSeq,
-    iv: Nonce,
+    iv: AesNonce,
     aad: &ByteSeq,
     msg: &ByteSeq,
-) -> (ByteSeq, Tag) {
-    let iv0 = Nonce::new();
+) -> (ByteSeq, Gf128Tag) {
+    let iv0 = AesNonce::new();
 
-    let (_success, mac_key) = aes_ctr_keyblock(
+    // We can unwrap here because the iteration count is such that the error
+    // case can't happen.
+    let mac_key = aes_ctr_key_block(
         key,
         iv0,
         U32(0u32),
@@ -51,8 +55,9 @@ pub(crate) fn encrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
-    let (_success, tag_mix) = aes_ctr_keyblock(
+    )
+    .unwrap();
+    let tag_mix = aes_ctr_key_block(
         key,
         iv.clone(), // FIXME: is not necessary.
         U32(1u32),
@@ -61,30 +66,36 @@ pub(crate) fn encrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
+    )
+    .unwrap();
 
     let cipher_text = aes128_encrypt(Key128::from_seq(key), iv, U32(2u32), msg);
     let padded_msg = pad_aad_msg(aad, &cipher_text);
     let tag = gmac(&padded_msg, Gf128Key::from_seq(&mac_key));
     let tag = xor_block(Block::from_seq(&tag), tag_mix);
 
-    (cipher_text, Tag::from_seq(&tag))
+    (cipher_text, Gf128Tag::from_seq(&tag))
 }
 
-pub fn encrypt_aes128(key: Key128, iv: Nonce, aad: &ByteSeq, msg: &ByteSeq) -> (ByteSeq, Tag) {
+pub fn encrypt_aes128(
+    key: Key128,
+    iv: AesNonce,
+    aad: &ByteSeq,
+    msg: &ByteSeq,
+) -> (ByteSeq, Gf128Tag) {
     encrypt_aes(&ByteSeq::from_seq(&key), iv, aad, msg)
 }
 
 pub(crate) fn decrypt_aes(
     key: &ByteSeq,
-    iv: Nonce,
+    iv: AesNonce,
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
-    tag: Tag,
-) -> (bool, ByteSeq) {
-    let iv0 = Nonce::new();
+    tag: Gf128Tag,
+) -> AesGcmByteSeqResult {
+    let iv0 = AesNonce::new();
 
-    let (_success, mac_key) = aes_ctr_keyblock(
+    let mac_key = aes_ctr_key_block(
         key,
         iv0,
         U32(0u32),
@@ -93,8 +104,8 @@ pub(crate) fn decrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
-    let (_success, tag_mix) = aes_ctr_keyblock(
+    )?;
+    let tag_mix = aes_ctr_key_block(
         key,
         iv.clone(), // FIXME: is not necessary.
         U32(1u32),
@@ -103,28 +114,26 @@ pub(crate) fn decrypt_aes(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
+    )?;
 
     let padded_msg = pad_aad_msg(aad, cipher_text);
     let my_tag = gmac(&padded_msg, Gf128Key::from_seq(&mac_key));
     let my_tag = xor_block(Block::from_seq(&my_tag), tag_mix);
 
+    let ptxt = aes128_decrypt(Key128::from_seq(key), iv, U32(2u32), cipher_text);
     if my_tag.declassify_eq(&Block::from_seq(&tag)) {
-        (
-            true,
-            aes128_decrypt(Key128::from_seq(key), iv, U32(2u32), cipher_text),
-        )
+        AesGcmByteSeqResult::Ok(ptxt)
     } else {
-        (false, ByteSeq::new(0))
+        AesGcmByteSeqResult::Err(INVALID_TAG)
     }
 }
 
 pub fn decrypt_aes128(
     key: Key128,
-    iv: Nonce,
+    iv: AesNonce,
     aad: &ByteSeq,
     cipher_text: &ByteSeq,
-    tag: Tag,
-) -> (bool, ByteSeq) {
+    tag: Gf128Tag,
+) -> AesGcmByteSeqResult {
     decrypt_aes(&ByteSeq::from_seq(&key), iv, aad, cipher_text, tag)
 }

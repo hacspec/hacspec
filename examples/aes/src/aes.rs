@@ -8,15 +8,21 @@ pub const ROUNDS: usize = 10;
 pub const KEY_SCHEDULE_LENGTH: usize = 176;
 pub const ITERATIONS: usize = 40;
 
+pub const INVALID_KEY_EXPANSION_INDEX: u8 = 1u8;
+
 bytes!(Block, BLOCKSIZE);
 bytes!(Word, KEY_LENGTH);
 bytes!(RoundKey, BLOCKSIZE);
-bytes!(Nonce, IVSIZE);
+bytes!(AesNonce, IVSIZE);
 bytes!(SBox, 256);
 bytes!(RCon, 15);
 bytes!(Bytes144, 144);
 bytes!(Bytes176, KEY_SCHEDULE_LENGTH);
 bytes!(Key128, BLOCKSIZE);
+
+type ByteSeqResult = Result<ByteSeq, u8>;
+type BlockResult = Result<Block, u8>;
+type WordResult = Result<Word, u8>;
 
 const SBOX: SBox = SBox(secret_bytes!([
     0x63u8, 0x7Cu8, 0x77u8, 0x7Bu8, 0xF2u8, 0x6Bu8, 0x6Fu8, 0xC5u8, 0x30u8, 0x01u8, 0x67u8, 0x2Bu8,
@@ -146,10 +152,10 @@ fn rotate_word(w: Word) -> Word {
 
 fn slice_word(w: Word) -> Word {
     Word([
-        SBOX[U8::declassify(w[0]) as usize],
-        SBOX[U8::declassify(w[1]) as usize],
-        SBOX[U8::declassify(w[2]) as usize],
-        SBOX[U8::declassify(w[3]) as usize],
+        SBOX[declassify_usize_from_U8(w[0])],
+        SBOX[declassify_usize_from_U8(w[1])],
+        SBOX[declassify_usize_from_U8(w[2])],
+        SBOX[declassify_usize_from_U8(w[3])],
     ])
 }
 
@@ -160,9 +166,9 @@ fn aes_keygen_assist(w: Word, rcon: U8) -> Word {
     k
 }
 
-fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> (bool, Word) {
+fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> WordResult {
     let mut k = w1;
-    let mut success = false;
+    let mut result = WordResult::Err(INVALID_KEY_EXPANSION_INDEX);
     if i < (4 * (nr + 1)) {
         if i % nk == 0 {
             k = aes_keygen_assist(k, RCON[i / nk]);
@@ -175,12 +181,9 @@ fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> (bo
         for i in 0..4 {
             k[i] = k[i] ^ w0[i];
         }
-        success = true;
-    } else {
-        // In the error case return an all zero word.
-        k = Word::new();
+        result = WordResult::Ok(k);
     }
-    (success, k)
+    result
 }
 
 fn key_expansion_aes(
@@ -190,30 +193,22 @@ fn key_expansion_aes(
     key_schedule_length: usize,
     key_length: usize,
     iterations: usize,
-) -> (bool, ByteSeq) {
+) -> ByteSeqResult {
     let mut key_ex = ByteSeq::new(key_schedule_length);
     key_ex = key_ex.update_start(key);
     let word_size = key_length;
-    let mut success = true;
     for j in 0..iterations {
-        if success {
-            let i = j + word_size;
-            let (exp_success, word) = key_expansion_word(
-                Word::from_slice(&key_ex, 4 * (i - word_size), 4),
-                Word::from_slice(&key_ex, 4 * i - 4, 4),
-                i,
-                nk,
-                nr,
-            );
-            if !exp_success {
-                // In the error case return an empty byte sequence.
-                success = false;
-                key_ex = ByteSeq::new(0);
-            }
-            key_ex = key_ex.update(4 * i, &word);
-        }
+        let i = j + word_size;
+        let word = key_expansion_word(
+            Word::from_slice(&key_ex, 4 * (i - word_size), 4),
+            Word::from_slice(&key_ex, 4 * i - 4, 4),
+            i,
+            nk,
+            nr,
+        )?;
+        key_ex = key_ex.update(4 * i, &word);
     }
-    (success, key_ex)
+    ByteSeqResult::Ok(key_ex)
 }
 
 pub(crate) fn aes_encrypt_block(
@@ -224,21 +219,12 @@ pub(crate) fn aes_encrypt_block(
     key_schedule_length: usize,
     key_length: usize,
     iterations: usize,
-) -> (bool, Block) {
-    let (success, key_ex) =
-        key_expansion_aes(k, nk, nr, key_schedule_length, key_length, iterations);
-    let result = if success {
-        (true, block_cipher_aes(input, key_ex, nr))
-    } else {
-        (false, Block::new())
-    };
-    result
+) -> BlockResult {
+    let key_ex = key_expansion_aes(k, nk, nr, key_schedule_length, key_length, iterations)?;
+    BlockResult::Ok(block_cipher_aes(input, key_ex, nr))
 }
 
-pub fn aes128_encrypt_block(
-    k: Key128,
-    input: Block,
-) -> (bool, Block) {
+pub fn aes128_encrypt_block(k: Key128, input: Block) -> Block {
     aes_encrypt_block(
         &ByteSeq::from_seq(&k),
         input,
@@ -247,19 +233,19 @@ pub fn aes128_encrypt_block(
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    )
+    ).unwrap()
 }
 
-pub fn aes_ctr_keyblock(
+pub fn aes_ctr_key_block(
     k: &ByteSeq,
-    n: Nonce,
+    n: AesNonce,
     c: U32,
     nk: usize,
     nr: usize,
     key_schedule_length: usize,
     key_length: usize,
     iterations: usize,
-) -> (bool, Block) {
+) -> BlockResult {
     let mut input = Block::new();
     input = input.update(0, &n);
     input = input.update(12, &U32_to_be_bytes(c));
@@ -274,17 +260,17 @@ pub fn aes_ctr_keyblock(
     )
 }
 
-pub fn xor_block(block: Block, keyblock: Block) -> Block {
+pub fn xor_block(block: Block, key_block: Block) -> Block {
     let mut out = block;
     for i in 0..BLOCKSIZE {
-        out[i] = out[i] ^ keyblock[i];
+        out[i] = out[i] ^ key_block[i];
     }
     out
 }
 
 fn aes_counter_mode(
     key: &ByteSeq,
-    nonce: Nonce,
+    nonce: AesNonce,
     counter: U32,
     msg: &ByteSeq,
     nk: usize,
@@ -292,51 +278,55 @@ fn aes_counter_mode(
     key_schedule_length: usize,
     key_length: usize,
     iterations: usize,
-) -> (bool, ByteSeq) {
+) -> ByteSeqResult {
     let mut ctr = counter;
     let mut blocks_out = ByteSeq::new(msg.len());
-    let mut success = true;
-    for i in 0..msg.num_chunks(BLOCKSIZE) {
-        if success {
-            let (block_len, msg_block) = msg.get_chunk(BLOCKSIZE, i);
-            let (kb_success, key_block) = aes_ctr_keyblock(
-                key,
-                nonce,
-                ctr,
-                nk,
-                nr,
-                key_schedule_length,
-                key_length,
-                iterations,
-            );
-            if !kb_success {
-                // Return an empty byte sequence in the error case.
-                success = false;
-                blocks_out = ByteSeq::new(0);
-            }
-            if msg_block.len() == BLOCKSIZE {
-                blocks_out = blocks_out.set_chunk(
-                    BLOCKSIZE,
-                    i,
-                    &xor_block(Block::from_seq(&msg_block), key_block),
-                );
-                ctr = ctr + U32(1u32);
-            } else {
-                // Last block that needs padding
-                let last_block = Block::new().update_start(&msg_block);
-                blocks_out = blocks_out.set_chunk(
-                    BLOCKSIZE,
-                    i,
-                    &xor_block(last_block, key_block).slice_range(0..block_len),
-                );
-            }
-        }
+    let n_blocks = msg.num_exact_chunks(BLOCKSIZE);
+    for i in 0..n_blocks {
+        let msg_block = msg.get_exact_chunk(BLOCKSIZE, i);
+        let key_block = aes_ctr_key_block(
+            key,
+            nonce,
+            ctr,
+            nk,
+            nr,
+            key_schedule_length,
+            key_length,
+            iterations,
+        )?;
+        blocks_out = blocks_out.set_chunk(
+            BLOCKSIZE,
+            i,
+            &xor_block(Block::from_seq(&msg_block), key_block),
+        );
+        ctr = ctr + U32(1u32);
     }
-    (success, blocks_out)
+    let last_block = msg.get_remainder_chunk(BLOCKSIZE);
+    let last_block_len = last_block.len();
+    if last_block_len != 0 {
+        // Last block that needs padding
+        let last_block = Block::new().update_start(&last_block);
+        let key_block = aes_ctr_key_block(
+            key,
+            nonce,
+            ctr,
+            nk,
+            nr,
+            key_schedule_length,
+            key_length,
+            iterations,
+        )?;
+        blocks_out = blocks_out.set_chunk(
+            BLOCKSIZE,
+            n_blocks,
+            &xor_block(last_block, key_block).slice_range(0..last_block_len),
+        );
+    }
+    ByteSeqResult::Ok(blocks_out)
 }
 
-pub fn aes128_encrypt(key: Key128, nonce: Nonce, counter: U32, msg: &ByteSeq) -> ByteSeq {
-    let (_success, result) = aes_counter_mode(
+pub fn aes128_encrypt(key: Key128, nonce: AesNonce, counter: U32, msg: &ByteSeq) -> ByteSeq {
+    aes_counter_mode(
         &ByteSeq::from_seq(&key),
         nonce,
         counter,
@@ -346,12 +336,11 @@ pub fn aes128_encrypt(key: Key128, nonce: Nonce, counter: U32, msg: &ByteSeq) ->
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
-    result
+    ).unwrap()
 }
 
-pub fn aes128_decrypt(key: Key128, nonce: Nonce, counter: U32, ctxt: &ByteSeq) -> ByteSeq {
-    let (_success, result) = aes_counter_mode(
+pub fn aes128_decrypt(key: Key128, nonce: AesNonce, counter: U32, ctxt: &ByteSeq) -> ByteSeq {
+    aes_counter_mode(
         &ByteSeq::from_seq(&key),
         nonce,
         counter,
@@ -361,8 +350,7 @@ pub fn aes128_decrypt(key: Key128, nonce: Nonce, counter: U32, ctxt: &ByteSeq) -
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    );
-    result
+    ).unwrap()
 }
 
 #[test]
@@ -380,8 +368,7 @@ fn test_kat_block1() {
         0xf3u8, 0x24u8, 0x66u8, 0xefu8, 0x97u8
     ]);
 
-    let (success, c) = aes128_encrypt_block(key, msg);
-    assert!(success);
+    let c = aes128_encrypt_block(key, msg);
     assert_bytes_eq!(ctxt, c);
 }
 
@@ -399,7 +386,6 @@ fn test_kat_block2() {
         0x61u8, 0x5fu8, 0x09u8, 0xfbu8, 0x35u8, 0x3fu8, 0x61u8, 0x3bu8, 0xa2u8, 0x8fu8, 0xf3u8,
         0xa3u8, 0x0cu8, 0x64u8, 0x75u8, 0x2du8,
     ]);
-    let (success, c) = aes128_encrypt_block(key, msg);
-    assert!(success);
+    let c = aes128_encrypt_block(key, msg);
     assert_bytes_eq!(ctxt, c);
 }

@@ -17,9 +17,11 @@ mod name_resolution;
 mod rustspec;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
+mod rustspec_to_coq;
 mod typechecker;
 mod util;
 
+use itertools::Itertools;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
@@ -35,7 +37,7 @@ use serde_json;
 use std::env;
 use std::ffi::OsStr;
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
 
@@ -81,7 +83,12 @@ impl Callbacks for HacspecCallbacks {
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
         let krate = queries.parse().unwrap().take();
-        let krate = match ast_to_rustspec::translate(&compiler.session(), &krate) {
+        let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
+            queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
+                hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
+            })
+        };
+        let krate = match ast_to_rustspec::translate(&compiler.session(), &krate, &external_data) {
             Ok(krate) => krate,
             Err(_) => {
                 &compiler
@@ -89,13 +96,6 @@ impl Callbacks for HacspecCallbacks {
                     .err("unable to translate to Hacspec due to out-of-language errors");
                 return Compilation::Stop;
             }
-        };
-        let mut item_list: PathBuf = std::env::temp_dir();
-        item_list.push("allowed_list_items.json");
-        let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
-            queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-                hir_to_rustspec::retrieve_external_data(&compiler.session(), &tcx, imported_crates)
-            })
         };
         let (krate, mut top_ctx) =
             match name_resolution::resolve_crate(&compiler.session(), krate, &external_data) {
@@ -117,6 +117,23 @@ impl Callbacks for HacspecCallbacks {
                 return Compilation::Stop;
             }
         };
+        let imported_crates = name_resolution::get_imported_crates(&krate);
+        let imported_crates = imported_crates
+            .into_iter()
+            .filter(|(x, _)| x != "hacspec_lib")
+            .map(|(x, _)| x)
+            .collect::<Vec<_>>();
+        println!(
+            " > Successfully typechecked{}",
+            if imported_crates.len() == 0 {
+                ".".to_string()
+            } else {
+                format!(
+                    ", assuming that the code in crates {} has also been Hacspec-typechecked",
+                    imported_crates.iter().format(", ")
+                )
+            }
+        );
 
         match &self.output_file {
             None => return Compilation::Stop,
@@ -155,7 +172,13 @@ impl Callbacks for HacspecCallbacks {
                         }
                         Ok(_) => (),
                     };
-                }
+                },
+                "v" => rustspec_to_coq::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx,
+                ),
                 _ => {
                     &compiler
                         .session()
@@ -293,10 +316,7 @@ fn main() -> Result<(), ()> {
     args.push("--edition=2018".to_string());
 
     match RunCompiler::new(&args, &mut callbacks).run() {
-        Ok(_) => {
-            println!(" > Successfully typechecked.");
-            Ok(())
-        }
+        Ok(_) => Ok(()),
         Err(_) => Err(()),
     }
 }

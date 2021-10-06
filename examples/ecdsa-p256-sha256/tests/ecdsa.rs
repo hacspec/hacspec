@@ -1,5 +1,5 @@
 use hacspec_ecdsa_p256_sha256::*;
-use hacspec_p256::{FieldElement, Scalar};
+use hacspec_p256::{P256FieldElement, P256Scalar};
 
 use hacspec_dev::prelude::*;
 use hacspec_lib::prelude::*;
@@ -77,8 +77,8 @@ fn decode_signature(sig: &[u8]) -> Signature {
     assert_eq!(sig.len(), index);
 
     (
-        Scalar::from_be_bytes(&make_fixed_length(r)),
-        Scalar::from_be_bytes(&make_fixed_length(s)),
+        P256Scalar::from_be_bytes(&make_fixed_length(r)),
+        P256Scalar::from_be_bytes(&make_fixed_length(s)),
     )
 }
 
@@ -101,8 +101,8 @@ fn test_wycheproof() {
         assert_eq!(testGroup.sha, "SHA-256");
 
         let pk = (
-            FieldElement::from_hex(&testGroup.key.wx),
-            FieldElement::from_hex(&testGroup.key.wy),
+            P256FieldElement::from_hex(&testGroup.key.wx),
+            P256FieldElement::from_hex(&testGroup.key.wy),
         );
 
         for test in testGroup.tests.iter() {
@@ -121,7 +121,8 @@ fn test_wycheproof() {
             // The signature is ASN.1 encoded.
             let signature = decode_signature(&sig);
 
-            assert!(verify(&msg, pk, signature));
+            let result = verify(&msg, pk, signature);
+            assert!(result.is_ok());
 
             tests_run += 1;
         }

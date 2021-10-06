@@ -2,97 +2,61 @@ module Hacspec.Chacha20Poly1305
 
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
 
-open Hacspec.Lib
 open FStar.Mul
 
+open Hacspec.Lib
+
 open Hacspec.Chacha20
+
 open Hacspec.Poly1305
 
+type cha_cha_poly_key = cha_cha_key
 
+type cha_cha_poly_iv = cha_cha_iv
 
-let key_gen (key_0 : key_poly) (iv_1 : iv) : key_poly =
-  let block_2 =
-    chacha_block (array_from_seq (32) (key_0)) (secret (pub_u32 0x0)) (iv_1)
+let init (key_0: cha_cha_poly_key) (iv_1: cha_cha_poly_iv) : poly_state =
+  let key_block0_2 = chacha20_key_block0 (key_0) (iv_1) in
+  let poly_key_3 =
+    array_from_slice (secret (pub_u8 0x0)) (32) (key_block0_2) (usize 0) (usize 32)
   in
-  array_from_slice_range (secret (pub_u8 0x0)) (32) (block_2) (
-    (usize 0, usize 32))
+  poly1305_init (poly_key_3)
 
-let poly_mac (m_3 : byte_seq) (key_4 : key_poly) (iv_5 : iv) : tag =
-  let mac_key_6 = key_gen (key_4) (iv_5) in
-  poly (m_3) (mac_key_6)
+let poly1305_update_padded (m_4: byte_seq) (st_5: poly_state) : poly_state =
+  let st_6 = poly1305_update_blocks (m_4) (st_5) in
+  let last_7 = seq_get_remainder_chunk (m_4) (usize 16) in
+  poly1305_update_last (usize 16) (last_7) (st_6)
 
-let pad_aad_msg (aad_7 : byte_seq) (msg_8 : byte_seq{
-    (**) seq_len msg_8 + 16 + seq_len aad_7 + 16 + 16 <= maxint U32
-  }) : byte_seq =
-  let laad_9 = seq_len (aad_7) in
-  let lmsg_10 = seq_len (msg_8) in
-  let pad_aad_11 =
-    (usize 16) * (((laad_9) `usize_shift_right` (pub_u32 0x4)) + (usize 1))
+let finish (aadlen_8 cipherlen_9: uint_size) (st_10: poly_state) : tag =
+  let last_block_11 = array_new_ (secret (pub_u8 0x0)) (16) in
+  let last_block_11 =
+    array_update (last_block_11) (usize 0) (uint64_to_le_bytes (secret (pub_u64 (aadlen_8))))
   in
-  let pad_msg_12 =
-    (usize 16) * (((lmsg_10) `usize_shift_right` (pub_u32 0x4)) + (usize 1))
+  let last_block_11 =
+    array_update (last_block_11) (usize 8) (uint64_to_le_bytes (secret (pub_u64 (cipherlen_9))))
   in
-  let (pad_aad_11) =
-    if ((laad_9) % (usize 16)) = (usize 0) then begin
-      let pad_aad_11 = laad_9 in
-      (pad_aad_11)
-    end else begin (pad_aad_11)
-    end
-  in
-  let (pad_msg_12) =
-    if ((lmsg_10) % (usize 16)) = (usize 0) then begin
-      let pad_msg_12 = lmsg_10 in
-      (pad_msg_12)
-    end else begin (pad_msg_12)
-    end
-  in
-  let padded_msg_13 =
-    seq_new_ (secret (pub_u8 0x0)) (((pad_aad_11) + (pad_msg_12)) + (usize 16))
-  in
-  let padded_msg_13 = seq_update (padded_msg_13) (usize 0) (aad_7) in
-  let padded_msg_13 = seq_update (padded_msg_13) (pad_aad_11) (msg_8) in
-  let padded_msg_13 =
-    seq_update (padded_msg_13) ((pad_aad_11) + (pad_msg_12)) (
-      uint64_to_le_bytes (secret (pub_u64 (laad_9))))
-  in
-  let padded_msg_13 =
-    seq_update (padded_msg_13) (((pad_aad_11) + (pad_msg_12)) + (usize 8)) (
-      uint64_to_le_bytes (secret (pub_u64 (lmsg_10))))
-  in
-  padded_msg_13
+  let st_12 = poly1305_update_block (last_block_11) (st_10) in
+  poly1305_finish (st_12)
 
-let encrypt
-  (key_14 : key)
-  (iv_15 : iv)
-  (aad_16 : byte_seq)
-  (msg_17 : byte_seq{
-    (**) seq_len msg_17 + 16 + seq_len aad_16 + 16 + 16 <= maxint U32
-  })
-  : (byte_seq & tag) =
-  let key_block_18 = chacha_block (key_14) (secret (pub_u32 0x0)) (iv_15) in
-  let mac_key_19 =
-    array_from_slice_range (secret (pub_u8 0x0)) (32) (key_block_18) (
-      (usize 0, usize 32))
-  in
-  let cipher_text_20 = chacha (key_14) (iv_15) (msg_17) in
-  let padded_msg_21 = pad_aad_msg (aad_16) (cipher_text_20) in
-  let tag_22 = poly (padded_msg_21) (array_from_seq (32) (mac_key_19)) in
-  (cipher_text_20, tag_22)
+let encrypt (key_13: cha_cha_poly_key) (iv_14: cha_cha_poly_iv) (aad_15 msg_16: byte_seq)
+    : (byte_seq & tag) =
+  let cipher_text_17 = chacha20 (key_13) (iv_14) (pub_u32 0x1) (msg_16) in
+  let poly_st_18 = init (key_13) (iv_14) in
+  let poly_st_18 = poly1305_update_padded (aad_15) (poly_st_18) in
+  let poly_st_18 = poly1305_update_padded (cipher_text_17) (poly_st_18) in
+  let tag_19 = finish (seq_len (aad_15)) (seq_len (cipher_text_17)) (poly_st_18) in
+  (cipher_text_17, tag_19)
 
 let decrypt
-  (key_23 : key)
-  (iv_24 : iv)
-  (aad_25 : byte_seq)
-  (cipher_text_26 : byte_seq)
-  (tag_27 : tag)
-  : (byte_seq & bool) =
-  let key_block_28 = chacha_block (key_23) (secret (pub_u32 0x0)) (iv_24) in
-  let mac_key_29 =
-    array_from_slice_range (secret (pub_u8 0x0)) (32) (key_block_28) (
-      (usize 0, usize 32))
-  in
-  let padded_msg_30 = pad_aad_msg (aad_25) (cipher_text_26) in
-  let my_tag_31 = poly (padded_msg_30) (array_from_seq (32) (mac_key_29)) in
-  let plain_text_32 = chacha (key_23) (iv_24) (cipher_text_26) in
-  (plain_text_32, (my_tag_31) `array_eq (=)` (tag_27))
+      (key_20: cha_cha_poly_key)
+      (iv_21: cha_cha_poly_iv)
+      (aad_22 cipher_text_23: byte_seq)
+      (tag_24: tag)
+    : (bool & byte_seq) =
+  let poly_st_25 = init (key_20) (iv_21) in
+  let poly_st_25 = poly1305_update_padded (aad_22) (poly_st_25) in
+  let poly_st_25 = poly1305_update_padded (cipher_text_23) (poly_st_25) in
+  let my_tag_26 = finish (seq_len (aad_22)) (seq_len (cipher_text_23)) (poly_st_25) in
+  if (array_declassify_eq (my_tag_26) (tag_24))
+  then ((true, chacha20 (key_20) (iv_21) (pub_u32 0x1) (cipher_text_23)))
+  else ((false, seq_new_ (secret (pub_u8 0x0)) (usize 0)))
 

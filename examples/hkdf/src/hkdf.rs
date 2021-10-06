@@ -5,7 +5,13 @@ use hacspec_lib::*;
 // XXX: HMAC should probably expose this
 const HASH_LEN: usize = 256 / 8;
 
-// TODO: add Option when supported
+#[derive(Debug)]
+pub enum HkdfError {
+    InvalidOutputLength,
+}
+
+pub type HkdfByteSeqResult = Result<ByteSeq, HkdfError>;
+
 /// Extract a pseudo-random key from input key material (IKM) and optionally a salt.
 /// Note that salt can be empty Bytes.
 pub fn extract(salt: &ByteSeq, ikm: &ByteSeq) -> PRK {
@@ -33,25 +39,30 @@ fn div_ceil(a: usize, b: usize) -> usize {
     q
 }
 
+fn check_output_limit(l: usize) -> Result<usize, HkdfError> {
+    let n = div_ceil(l, HASH_LEN);
+    if n <= 255 {
+        Result::<usize, HkdfError>::Ok(n)
+    } else {
+        Result::<usize, HkdfError>::Err(HkdfError::InvalidOutputLength)
+    }
+}
+
 /// Expand a key prk, using potentially empty info, and output length l.
 /// Key prk must be at least of length HASH_LEN.
 /// Output length l can be at most 255*HASH_LEN.
-pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> (bool, ByteSeq) {
-    let n = div_ceil(l, HASH_LEN);
-    let mut result = (false, ByteSeq::new(0));
-    if n <= 255 {
-        let mut t_i = PRK::new();
-        let mut t = ByteSeq::new(n * PRK::capacity());
-        for i in 0..n {
-            let hmac_txt_in = if i == 0 {
-                build_hmac_txt(&ByteSeq::new(0), info, U8((i as u8) + 1u8))
-            } else {
-                build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8((i as u8) + 1u8))
-            };
-            t_i = hmac(prk, &hmac_txt_in);
-            t = t.update(i * t_i.len(), &t_i);
-        }
-        result = (true, t.slice(0, l));
+pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> HkdfByteSeqResult {
+    let n = check_output_limit(l)?;
+    let mut t_i = PRK::new();
+    let mut t = ByteSeq::new(n * PRK::capacity());
+    for i in 0..n {
+        let hmac_txt_in = if i == 0 {
+            build_hmac_txt(&ByteSeq::new(0), info, U8((i as u8) + 1u8))
+        } else {
+            build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8((i as u8) + 1u8))
+        };
+        t_i = hmac(prk, &hmac_txt_in);
+        t = t.update(i * t_i.len(), &t_i);
     }
-    result
+    HkdfByteSeqResult::Ok(t.slice(0, l))
 }

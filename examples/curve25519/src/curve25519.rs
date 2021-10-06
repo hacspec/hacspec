@@ -1,7 +1,7 @@
 use hacspec_lib::*;
 
 public_nat_mod!(
-    type_name: FieldElement,
+    type_name: X25519FieldElement,
     type_of_canvas: FieldCanvas,
     bit_size_of_field: 256,
     modulo_value: "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
@@ -13,12 +13,12 @@ public_nat_mod!(
     modulo_value: "8000000000000000000000000000000000000000000000000000000000000000"
 );
 
-type Point = (FieldElement, FieldElement);
+type Point = (X25519FieldElement, X25519FieldElement);
 
-bytes!(SerializedPoint, 32);
-bytes!(SerializedScalar, 32);
+bytes!(X25519SerializedPoint, 32);
+bytes!(X25519SerializedScalar, 32);
 
-fn mask_scalar(s: SerializedScalar) -> SerializedScalar {
+fn mask_scalar(s: X25519SerializedScalar) -> X25519SerializedScalar {
     let mut k = s;
     k[0] = k[0] & U8(248u8);
     k[31] = k[31] & U8(127u8);
@@ -26,24 +26,24 @@ fn mask_scalar(s: SerializedScalar) -> SerializedScalar {
     k
 }
 
-fn decode_scalar(s: SerializedScalar) -> Scalar {
+fn decode_scalar(s: X25519SerializedScalar) -> Scalar {
     let k = mask_scalar(s);
     Scalar::from_byte_seq_le(k)
 }
 
-fn decode_point(u: SerializedPoint) -> Point {
+fn decode_point(u: X25519SerializedPoint) -> Point {
     let mut u_ = u;
     u_[31] = u_[31] & U8(127u8);
     (
-        FieldElement::from_byte_seq_le(u_),
-        FieldElement::from_literal(1u128),
+        X25519FieldElement::from_byte_seq_le(u_),
+        X25519FieldElement::from_literal(1u128),
     )
 }
 
-fn encode_point(p: Point) -> SerializedPoint {
+fn encode_point(p: Point) -> X25519SerializedPoint {
     let (x, y) = p;
     let b = x * y.inv();
-    SerializedPoint::new().update_start(&b.to_byte_seq_le())
+    X25519SerializedPoint::new().update_start(&b.to_byte_seq_le())
 }
 
 fn point_add_and_double(q: Point, np: (Point, Point)) -> (Point, Point) {
@@ -64,7 +64,7 @@ fn point_add_and_double(q: Point, np: (Point, Point)) -> (Point, Point) {
     let x_3 = (da + cb).pow(2u128);
     let z_3 = x_1 * ((da - cb).pow(2u128));
     let x_2 = aa * bb;
-    let e121665 = FieldElement::from_literal(121_665u128);
+    let e121665 = X25519FieldElement::from_literal(121_665u128);
     let z_2 = e * (aa + (e121665 * e));
     ((x_2, z_2), (x_3, z_3))
 }
@@ -76,8 +76,8 @@ fn swap(x: (Point, Point)) -> (Point, Point) {
 
 fn montgomery_ladder(k: Scalar, init: Point) -> Point {
     let inf = (
-        FieldElement::from_literal(1u128),
-        FieldElement::from_literal(0u128),
+        X25519FieldElement::from_literal(1u128),
+        X25519FieldElement::from_literal(0u128),
     );
     let mut acc: (Point, Point) = (inf, init);
     for i in 0..256 {
@@ -93,15 +93,18 @@ fn montgomery_ladder(k: Scalar, init: Point) -> Point {
     out
 }
 
-pub fn scalarmult(s: SerializedScalar, p: SerializedPoint) -> SerializedPoint {
+pub fn x25519_scalarmult(
+    s: X25519SerializedScalar,
+    p: X25519SerializedPoint,
+) -> X25519SerializedPoint {
     let s_ = decode_scalar(s);
     let p_ = decode_point(p);
     let r = montgomery_ladder(s_, p_);
     encode_point(r)
 }
 
-pub fn secret_to_public(s: SerializedScalar) -> SerializedPoint {
-    let mut base = SerializedPoint::new();
+pub fn x25519_secret_to_public(s: X25519SerializedScalar) -> X25519SerializedPoint {
+    let mut base = X25519SerializedPoint::new();
     base[0] = U8(0x09u8);
-    scalarmult(s, base)
+    x25519_scalarmult(s, base)
 }

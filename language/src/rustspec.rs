@@ -14,7 +14,7 @@ impl Serialize for RustspecSpan {
     where
         S: Serializer,
     {
-        serializer.serialize_unit()
+        serializer.serialize_str(format!("{:?}", self.0).as_str())
     }
 }
 
@@ -92,7 +92,7 @@ impl fmt::Debug for Ident {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct VarSet(pub HashSet<LocalIdent>);
 
 impl Serialize for VarSet {
@@ -148,6 +148,18 @@ pub enum Secrecy {
 #[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub struct TypVar(pub usize);
 
+impl fmt::Display for TypVar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "T[{}]", self.0)
+    }
+}
+
+impl fmt::Debug for TypVar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 #[derive(Clone, Hash, PartialEq, Eq, Serialize)]
 pub enum BaseTyp {
     Unit,
@@ -170,6 +182,10 @@ pub enum BaseTyp {
     Named(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(TypVar),
     Tuple(Vec<Spanned<BaseTyp>>),
+    Enum(
+        Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>,
+        Vec<TypVar>,
+    ), // Cases, type variables
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
@@ -213,6 +229,16 @@ impl fmt::Display for BaseTyp {
                 "({})",
                 args.iter().map(|(arg, _)| format!("{}", arg)).format(", ")
             ),
+            BaseTyp::Enum(args, _) => write!(
+                f,
+                "[{}]",
+                args.iter()
+                    .map(|((case, _), payload)| match payload {
+                        Some((payload, _)) => format!("{}: {}", case, payload),
+                        None => format!("{}", case),
+                    })
+                    .format(" | ")
+            ),
             BaseTyp::Variable(id) => write!(f, "T[{}]", id.0),
             BaseTyp::NaturalInteger(sec, modulo, bits) => {
                 write!(f, "nat[{:?}][modulo {}][bits {}]", sec, modulo.0, bits.0)
@@ -229,7 +255,7 @@ impl fmt::Debug for BaseTyp {
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Literal {
     Unit,
     Bool(bool),
@@ -248,7 +274,7 @@ pub enum Literal {
     Str(String),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum UnOpKind {
     Not,
     Neg,
@@ -276,7 +302,7 @@ pub enum BinOpKind {
     Gt,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
     Binary(
@@ -303,8 +329,26 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
     ),
+    EnumInject(
+        BaseTyp,                          // Type of enum
+        Spanned<TopLevelIdent>,           // Name of case
+        Option<Spanned<Box<Expression>>>, // Payload of case
+    ),
+    MatchWith(
+        Box<Spanned<Expression>>, // Expression to match
+        Vec<(
+            BaseTyp,                  // Type of enum
+            Spanned<TopLevelIdent>,   // Name of case
+            Option<Spanned<Pattern>>, // Payload of case
+            Spanned<Expression>,      // Match arm expression
+        )>,
+    ),
     Lit(Literal),
-    ArrayIndex(Spanned<Ident>, Box<Spanned<Expression>>),
+    ArrayIndex(
+        Spanned<Ident>,           // Array variable
+        Box<Spanned<Expression>>, // Index
+        Fillable<Typ>,            // Type of the array
+    ),
     NewArray(
         Spanned<TopLevelIdent>,   // Name of array type
         Option<BaseTyp>,          // Type of cells
@@ -318,14 +362,15 @@ pub enum Expression {
     ),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Pattern {
     IdentPat(Ident),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
+    SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
     pub vars: VarSet,
     pub stmt: Statement,
@@ -333,10 +378,19 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Statement {
-    LetBinding(Spanned<Pattern>, Option<Spanned<Typ>>, Spanned<Expression>),
-    Reassignment(Spanned<Ident>, Spanned<Expression>),
+    LetBinding(
+        Spanned<Pattern>,     // Let-binded pattern
+        Option<Spanned<Typ>>, // Typ of the binded expr
+        Spanned<Expression>,  // Binded expr
+        bool,                 // Presence of a question mark at the end
+    ),
+    Reassignment(
+        Spanned<Ident>,      // Variable reassigned
+        Spanned<Expression>, // New value
+        bool,                // Presence of a question mark at the end
+    ),
     Conditional(
         Spanned<Expression>,        // Condition
         Spanned<Block>,             // Then block
@@ -349,15 +403,22 @@ pub enum Statement {
         Spanned<Expression>, // Upper bound
         Spanned<Block>,      // Loop body
     ),
-    ArrayUpdate(Spanned<Ident>, Spanned<Expression>, Spanned<Expression>),
+    ArrayUpdate(
+        Spanned<Ident>,      // Array variable
+        Spanned<Expression>, // Index value
+        Spanned<Expression>, // Cell value
+        bool,                // Presence of a question mark at the end of the cell value expression
+        Fillable<Typ>,       // Type of the array
+    ),
     ReturnExp(Expression),
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
+    pub contains_question_mark: Fillable<bool>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -375,12 +436,18 @@ pub struct ExternalFuncSig {
 #[derive(Clone, Serialize)]
 pub enum Item {
     FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
+    EnumDecl(
+        Spanned<TopLevelIdent>,
+        Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>,
+    ),
     ArrayDecl(
         Spanned<TopLevelIdent>,         // Name of the array type
         Spanned<Expression>,            // Length
         Spanned<BaseTyp>,               // Cell type
         Option<Spanned<TopLevelIdent>>, // Optional type alias for indexes
     ),
+    AliasDecl(Spanned<TopLevelIdent>, Spanned<BaseTyp>),
+    ImportedCrate(Spanned<TopLevelIdent>),
     ConstDecl(
         Spanned<TopLevelIdent>,
         Spanned<BaseTyp>,
@@ -394,9 +461,39 @@ pub enum Item {
     ),
 }
 
+#[derive(Clone, Hash, Copy, PartialEq, Eq, Serialize)]
+pub enum ItemTag {
+    Code,
+    Test,
+    QuickCheck,
+    Proof,
+}
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub struct ItemTagSet(pub HashSet<ItemTag>);
+
+impl Serialize for ItemTagSet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for e in &self.0 {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+
+#[derive(Clone, Serialize)]
+pub struct DecoratedItem {
+    pub item: Item,
+    pub tags: ItemTagSet
+}
+
+
+
 #[derive(Clone, Serialize)]
 pub struct Program {
-    pub items: Vec<Spanned<Item>>,
-    pub imported_crates: Vec<Spanned<String>>,
-    pub ty_aliases: Vec<(Spanned<TopLevelIdent>, Spanned<BaseTyp>)>,
+    pub items: Vec<Spanned<DecoratedItem>>,
 }

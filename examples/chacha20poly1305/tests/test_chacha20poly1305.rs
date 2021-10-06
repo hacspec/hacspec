@@ -1,17 +1,15 @@
-use hacspec_dev::prelude::*;
 use hacspec_lib::prelude::*;
 
-use hacspec_chacha20::*;
 use hacspec_chacha20poly1305::*;
 use hacspec_poly1305::*;
 
 fn kat() {
-    let k = Key::from_public_slice(&[
+    let k = ChaChaPolyKey::from_public_slice(&[
         0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e,
         0x8f, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d,
         0x9e, 0x9f,
     ]);
-    let iv = IV::from_public_slice(&[
+    let iv = ChaChaPolyIV::from_public_slice(&[
         0x07, 0x00, 0x00, 0x00, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
     ]);
     let msg = ByteSeq::from_public_slice(&[
@@ -37,23 +35,21 @@ fn kat() {
         0x80, 0x8b, 0x48, 0x31, 0xd7, 0xbc, 0x3f, 0xf4, 0xde, 0xf0, 0x8e, 0x4b, 0x7a, 0x9d, 0xe5,
         0x76, 0xd2, 0x65, 0x86, 0xce, 0xc6, 0x4b, 0x61, 0x16,
     ]);
-    let exp_mac = Tag::from_native_slice(&[
+    let exp_mac = Poly1305Tag::from_public_slice(&[
         0x1a, 0xe1, 0x0b, 0x59, 0x4f, 0x09, 0xe2, 0x6a, 0x7e, 0x90, 0x2e, 0xcb, 0xd0, 0x60, 0x06,
         0x91,
     ]);
-    let (cipher, mac) = encrypt(k, iv, &aad, &msg);
+    let (cipher, mac) = chacha20_poly1305_encrypt(k, iv, &aad, &msg);
     assert_bytes_eq!(exp_cipher, cipher);
-    assert_eq!(exp_mac, mac);
-    let (decrypted_msg, ok) = decrypt(k, iv, &aad, &cipher, mac);
-    assert!(ok);
+    assert!(exp_mac.declassify_eq(&mac));
+    let decrypted_msg = match chacha20_poly1305_decrypt(k, iv, &aad, &cipher, mac) {
+        Ok(m) => m,
+        Err(_) => panic!("Error decrypting"),
+    };
     assert_bytes_eq!(msg, decrypted_msg);
 }
 
 #[test]
 fn kat_test() {
-    let key = KeyPoly::from_public_slice(&random_byte_vec(Key::length()));
-    let iv = IV::from_public_slice(&random_byte_vec(IV::length()));
-    let m = ByteSeq::from_public_slice(&random_byte_vec(40));
-    poly_mac(&m, key, iv);
     kat();
 }
