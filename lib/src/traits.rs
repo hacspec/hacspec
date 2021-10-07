@@ -5,7 +5,7 @@
 use crate::prelude::*;
 
 /// Common trait for all byte arrays and sequences.
-pub trait SeqTrait<T: Copy>:
+pub trait SeqTrait<T: Clone>:
     Index<usize, Output = T> + IndexMut<usize, Output = T> + Sized
 {
     fn len(&self) -> usize;
