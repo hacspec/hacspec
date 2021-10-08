@@ -16,7 +16,7 @@ enum Expression {
     TwoArgsMethod(TokenStream, TokenStream, TokenStream),
     OneArgsMethod(TokenStream, TokenStream),
     OneArgsMethodWithBaseTypeArg(TokenStream, TokenStream),
-    ZeroArgsMethod(TokenStream)
+    ZeroArgsMethod(TokenStream),
 }
 
 fn make_impl_body(name: &Ident, data: &Data, inner_expression: Expression) -> TokenStream {
@@ -41,12 +41,14 @@ fn make_impl_body(name: &Ident, data: &Data, inner_expression: Expression) -> To
                         Expression::OneArgsMethod(func, e1) => quote_spanned! {f.span() =>
                             #name: self.#name.#func(#e1.#name)
                         },
-                        Expression::OneArgsMethodWithBaseTypeArg(func, e1) => quote_spanned! {f.span() =>
-                            #name: self.#name.#func(#e1)
-                        },
+                        Expression::OneArgsMethodWithBaseTypeArg(func, e1) => {
+                            quote_spanned! {f.span() =>
+                                #name: self.#name.#func(#e1)
+                            }
+                        }
                         Expression::ZeroArgsMethod(func) => quote_spanned! {f.span() =>
                             #name: self.#name.#func()
-                        }
+                        },
                     }
                 });
                 let expanded = quote! {
@@ -73,12 +75,14 @@ fn make_impl_body(name: &Ident, data: &Data, inner_expression: Expression) -> To
                         Expression::OneArgsMethod(func, e1) => quote_spanned! {f.span() =>
                             self.#index.#func(#e1.#index)
                         },
-                        Expression::OneArgsMethodWithBaseTypeArg(func, e1) => quote_spanned! {f.span() =>
-                            self.#index.#func(#e1)
-                        },
+                        Expression::OneArgsMethodWithBaseTypeArg(func, e1) => {
+                            quote_spanned! {f.span() =>
+                                self.#index.#func(#e1)
+                            }
+                        }
                         Expression::ZeroArgsMethod(func) => quote_spanned! {f.span() =>
                             self.#index.#func()
-                        }
+                        },
                     }
                 });
                 quote! {
@@ -145,84 +149,83 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
     let not = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::Unop(quote!{ ! }, quote! { self} )
+        Expression::Unop(quote! { ! }, quote! { self}),
     );
     let sub_mod = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::TwoArgsMethod(quote!{ sub_mod }, quote! { rhs }, quote! { n })
+        Expression::TwoArgsMethod(quote! { sub_mod }, quote! { rhs }, quote! { n }),
     );
     let add_mod = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::TwoArgsMethod(quote!{ add_mod }, quote! { rhs }, quote! { n })
+        Expression::TwoArgsMethod(quote! { add_mod }, quote! { rhs }, quote! { n }),
     );
     let mul_mod = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::TwoArgsMethod(quote!{ mul_mod }, quote! { rhs }, quote! { n })
+        Expression::TwoArgsMethod(quote! { mul_mod }, quote! { rhs }, quote! { n }),
     );
     let pow_mod = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::TwoArgsMethod(quote!{ pow_mod }, quote! { exp }, quote! { n })
+        Expression::TwoArgsMethod(quote! { pow_mod }, quote! { exp }, quote! { n }),
     );
     let modulo = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ modulo }, quote! { n })
+        Expression::OneArgsMethod(quote! { modulo }, quote! { n }),
     );
     let signed_modulo = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ signed_modulo }, quote! { n })
+        Expression::OneArgsMethod(quote! { signed_modulo }, quote! { n }),
     );
     let wrap_add = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ wrap_add }, quote! { rhs })
+        Expression::OneArgsMethod(quote! { wrap_add }, quote! { rhs }),
     );
     let wrap_sub = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ wrap_sub }, quote! { rhs })
+        Expression::OneArgsMethod(quote! { wrap_sub }, quote! { rhs }),
     );
     let wrap_mul = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ wrap_mul }, quote! { rhs })
+        Expression::OneArgsMethod(quote! { wrap_mul }, quote! { rhs }),
     );
     let wrap_div = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ wrap_div }, quote! { rhs })
+        Expression::OneArgsMethod(quote! { wrap_div }, quote! { rhs }),
     );
     let pow_self = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ pow_self }, quote! { exp })
+        Expression::OneArgsMethod(quote! { pow_self }, quote! { exp }),
     );
     let divide = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ divide }, quote! { rhs })
+        Expression::OneArgsMethod(quote! { divide }, quote! { rhs }),
     );
     let inv = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethod(quote!{ inv }, quote! { n })
+        Expression::OneArgsMethod(quote! { inv }, quote! { n }),
     );
     let absolute = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::ZeroArgsMethod(quote!{ absolute })
+        Expression::ZeroArgsMethod(quote! { absolute }),
     );
     let exp = make_impl_body(
         &name,
         &input_ast.data,
-        Expression::OneArgsMethodWithBaseTypeArg(quote!{ exp }, quote! { exp })
+        Expression::OneArgsMethodWithBaseTypeArg(quote! { exp }, quote! { exp }),
     );
-
 
     let expanded = quote! {
         impl #impl_generics Add for #name #ty_generics #where_clause {

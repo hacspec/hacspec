@@ -1,5 +1,5 @@
-use hacspec_lib::prelude::*;
 use hacspec_derive::*;
+use hacspec_lib::prelude::*;
 
 #[allow(dead_code)]
 #[derive(Default, Clone, Debug, Numeric)]
