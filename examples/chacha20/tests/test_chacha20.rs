@@ -28,7 +28,6 @@ fn test_quarter_round() {
     );
 }
 
-
 #[test]
 fn test_block() {
     let key = ChaChaKey::from_public_slice(&[
@@ -57,7 +56,7 @@ fn test_block() {
             .collect::<Vec<_>>()
     );
 
-    let state = chacha20_core(U32(0u32),state);
+    let state = chacha20_core(U32(0u32), state);
     let expected_state = State::from_public_slice(&[
         0xe4e7f110, 0x15593bd1, 0x1fdd0f50, 0xc47120a3, 0xc7f4d1c7, 0x0368c033, 0x9aaa2204,
         0x4e6cd4c3, 0x466482d2, 0x09aa9f07, 0x05d7c214, 0xa2028bd9, 0xd19c12b5, 0xb94e16de,
@@ -94,7 +93,6 @@ fn test_block() {
             .collect::<Vec<_>>()
     );
 }
-
 
 fn enc_dec_test(m: ByteSeq, key: ChaChaKey, iv: ChaChaIV) {
     let c = chacha20(key, iv, 1u32, &m);

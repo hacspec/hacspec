@@ -1,5 +1,5 @@
-use hacspec_lib::prelude::*;
 use hacspec_dev::prelude::*;
+use hacspec_lib::prelude::*;
 
 use unsafe_hacspec_examples::ntru_prime::*;
 

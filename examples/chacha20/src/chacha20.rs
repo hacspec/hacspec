@@ -41,7 +41,7 @@ fn chacha20_double_round(state: State) -> State {
     chacha20_quarter_round(3, 4, 9, 14, state)
 }
 
-pub fn chacha20_rounds(state:State) -> State {
+pub fn chacha20_rounds(state: State) -> State {
     let mut st = state;
     for _i in 0..10 {
         st = chacha20_double_round(st);
@@ -49,13 +49,12 @@ pub fn chacha20_rounds(state:State) -> State {
     st
 }
 
-pub fn chacha20_core(ctr:U32, st0:State) -> State {
+pub fn chacha20_core(ctr: U32, st0: State) -> State {
     let mut state = st0;
     state[12] = state[12] + ctr;
     let k = chacha20_rounds(state);
     k + state
 }
-
 
 pub fn chacha20_constants_init() -> Constants {
     let mut constants = Constants::new();
@@ -66,57 +65,56 @@ pub fn chacha20_constants_init() -> Constants {
     constants
 }
 
-pub fn chacha20_init(key: ChaChaKey, iv: ChaChaIV, ctr:U32) -> State {
+pub fn chacha20_init(key: ChaChaKey, iv: ChaChaIV, ctr: U32) -> State {
     let mut st = State::new();
-    st = st.update(0,&chacha20_constants_init());
-    st = st.update(4,&key.to_le_U32s());
+    st = st.update(0, &chacha20_constants_init());
+    st = st.update(4, &key.to_le_U32s());
     st[12] = ctr;
-    st = st.update(13,&iv.to_le_U32s());
+    st = st.update(13, &iv.to_le_U32s());
     st
 }
 
-pub fn chacha20_key_block(state:State) -> Block {
-    let state = chacha20_core(U32(0u32),state);
+pub fn chacha20_key_block(state: State) -> Block {
+    let state = chacha20_core(U32(0u32), state);
     Block::from_seq(&state.to_le_bytes())
 }
 
 pub fn chacha20_key_block0(key: ChaChaKey, iv: ChaChaIV) -> Block {
-    let state = chacha20_init(key,iv,U32(0u32));
+    let state = chacha20_init(key, iv, U32(0u32));
     chacha20_key_block(state)
 }
 
-pub fn chacha20_encrypt_block(st0:State,ctr:U32,plain:&Block) -> Block {
-    let st = chacha20_core(ctr,st0);
+pub fn chacha20_encrypt_block(st0: State, ctr: U32, plain: &Block) -> Block {
+    let st = chacha20_core(ctr, st0);
     let pl = State::from_seq(&plain.to_le_U32s());
     let st = pl ^ st;
     Block::from_seq(&st.to_le_bytes())
 }
 
-pub fn chacha20_encrypt_last(st0:State,ctr:U32,plain:&ByteSeq) -> ByteSeq {
+pub fn chacha20_encrypt_last(st0: State, ctr: U32, plain: &ByteSeq) -> ByteSeq {
     let mut b = Block::new();
-    b = b.update(0,plain);
-    b = chacha20_encrypt_block(st0,ctr,&b);
-    b.slice(0,plain.len())
+    b = b.update(0, plain);
+    b = chacha20_encrypt_block(st0, ctr, &b);
+    b.slice(0, plain.len())
 }
 
-pub fn chacha20_update(st0:State,m:&ByteSeq) -> ByteSeq {
+pub fn chacha20_update(st0: State, m: &ByteSeq) -> ByteSeq {
     let mut blocks_out = ByteSeq::new(m.len());
     let n_blocks = m.num_exact_chunks(64);
     for i in 0..n_blocks {
         let msg_block = m.get_exact_chunk(64, i);
-        let b = chacha20_encrypt_block(st0,U32(i as u32),&Block::from_seq(&msg_block));
-        blocks_out = blocks_out.set_exact_chunk(64,i,&b);
+        let b = chacha20_encrypt_block(st0, U32(i as u32), &Block::from_seq(&msg_block));
+        blocks_out = blocks_out.set_exact_chunk(64, i, &b);
     }
     let last_block = m.get_remainder_chunk(64);
     if last_block.len() != 0 {
-        let b = chacha20_encrypt_last(st0,U32(n_blocks as u32),&last_block);
-        blocks_out = blocks_out.set_chunk(64,n_blocks,&b);
+        let b = chacha20_encrypt_last(st0, U32(n_blocks as u32), &last_block);
+        blocks_out = blocks_out.set_chunk(64, n_blocks, &b);
     }
     blocks_out
 }
 
-pub fn chacha20(key: ChaChaKey, iv: ChaChaIV, ctr:u32, m: &ByteSeq) -> ByteSeq {
-    let state = chacha20_init(key,iv,U32(ctr));
-    chacha20_update(state,m)
+pub fn chacha20(key: ChaChaKey, iv: ChaChaIV, ctr: u32, m: &ByteSeq) -> ByteSeq {
+    let state = chacha20_init(key, iv, U32(ctr));
+    chacha20_update(state, m)
 }
-
