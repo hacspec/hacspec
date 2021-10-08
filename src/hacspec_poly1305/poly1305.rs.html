@@ -106,7 +106,6 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
-<span id="109">109</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Import hacspec and all needed definitions.</span>
 <span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
@@ -147,13 +146,13 @@
 <span class="comment">// Internal Poly1305 State</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PolyState</span> <span class="op">=</span> (<span class="ident">FieldElement</span>, <span class="ident">FieldElement</span>, <span class="ident">PolyKey</span>); <span class="comment">//(accumulator,r,key)</span>
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_encode_r</span> (<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FieldElement</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_encode_r</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FieldElement</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_seq</span>(<span class="ident">b</span>));
     <span class="ident">n</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">&amp;</span> <span class="ident">U128</span>(<span class="number">0x0fff_fffc_0fff_fffc_0fff_fffc_0fff_ffffu128</span>);
     <span class="ident">FieldElement</span>::<span class="ident">from_secret_literal</span>(<span class="ident">n</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_encode_block</span> (<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FieldElement</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_encode_block</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FieldElement</span> {
     <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_seq</span>(<span class="ident">b</span>));
     <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">FieldElement</span>::<span class="ident">from_secret_literal</span>(<span class="ident">n</span>);
     <span class="ident">f</span> <span class="op">+</span> <span class="ident">FieldElement</span>::<span class="ident">pow2</span>(<span class="number">128</span>)
@@ -161,61 +160,60 @@
 
 <span class="comment">// In Poly1305 as used in this spec, pad_len is always the length of b, i.e. there is no padding</span>
 <span class="comment">// In Chacha20Poly1305, pad_len is set to BLOCKSIZE</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_encode_last</span> (<span class="ident">pad_len</span>:<span class="ident">BlockIndex</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">SubBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FieldElement</span> {
-    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="ident">b</span>,<span class="number">0</span>,<span class="ident">b</span>.<span class="ident">len</span>())); 
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_encode_last</span>(<span class="ident">pad_len</span>: <span class="ident">BlockIndex</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">SubBlock</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FieldElement</span> {
+    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="ident">b</span>, <span class="number">0</span>, <span class="ident">b</span>.<span class="ident">len</span>()));
     <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">FieldElement</span>::<span class="ident">from_secret_literal</span>(<span class="ident">n</span>);
     <span class="ident">f</span> <span class="op">+</span> <span class="ident">FieldElement</span>::<span class="ident">pow2</span>(<span class="number">8</span> <span class="op">*</span> <span class="ident">pad_len</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_init</span> (<span class="ident">k</span>:<span class="ident">PolyKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">poly1305_encode_r</span>(<span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>,<span class="number">0</span>,<span class="number">16</span>));
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_init</span>(<span class="ident">k</span>: <span class="ident">PolyKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">poly1305_encode_r</span>(<span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>, <span class="number">0</span>, <span class="number">16</span>));
     (<span class="ident">FieldElement</span>::<span class="ident">ZERO</span>(), <span class="ident">r</span>, <span class="ident">k</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update_block</span> (<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>, <span class="ident">st</span>:<span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
-    <span class="kw">let</span> (<span class="ident">acc</span>,<span class="ident">r</span>,<span class="ident">k</span>) <span class="op">=</span> <span class="ident">st</span>;
-    ((<span class="ident">poly1305_encode_block</span>(<span class="ident">b</span>) <span class="op">+</span> <span class="ident">acc</span>) <span class="op">*</span> <span class="ident">r</span>,<span class="ident">r</span>,<span class="ident">k</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update_block</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">PolyBlock</span>, <span class="ident">st</span>: <span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
+    <span class="kw">let</span> (<span class="ident">acc</span>, <span class="ident">r</span>, <span class="ident">k</span>) <span class="op">=</span> <span class="ident">st</span>;
+    ((<span class="ident">poly1305_encode_block</span>(<span class="ident">b</span>) <span class="op">+</span> <span class="ident">acc</span>) <span class="op">*</span> <span class="ident">r</span>, <span class="ident">r</span>, <span class="ident">k</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update_blocks</span> (<span class="ident">m</span>:<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">st</span>:<span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update_blocks</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">st</span>: <span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">st</span> <span class="op">=</span> <span class="ident">st</span>;
     <span class="kw">let</span> <span class="ident">n_blocks</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="ident">BLOCKSIZE</span>;
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n_blocks</span> {
         <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">PolyBlock</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">get_exact_chunk</span>(<span class="ident">BLOCKSIZE</span>, <span class="ident">i</span>));
-        <span class="ident">st</span> <span class="op">=</span> <span class="ident">poly1305_update_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>,<span class="ident">st</span>);
+        <span class="ident">st</span> <span class="op">=</span> <span class="ident">poly1305_update_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>, <span class="ident">st</span>);
     }
     <span class="ident">st</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update_last</span> (<span class="ident">pad_len</span>:<span class="ident">usize</span>, <span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">SubBlock</span>, <span class="ident">st</span>:<span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update_last</span>(<span class="ident">pad_len</span>: <span class="ident">usize</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">SubBlock</span>, <span class="ident">st</span>: <span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">st</span> <span class="op">=</span> <span class="ident">st</span>;
     <span class="kw">if</span> <span class="ident">b</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> (<span class="ident">acc</span>,<span class="ident">r</span>,<span class="ident">k</span>) <span class="op">=</span> <span class="ident">st</span>;
-        <span class="ident">st</span> <span class="op">=</span> ((<span class="ident">poly1305_encode_last</span>(<span class="ident">pad_len</span>,<span class="ident">b</span>) <span class="op">+</span> <span class="ident">acc</span>) <span class="op">*</span> <span class="ident">r</span>,<span class="ident">r</span>,<span class="ident">k</span>);
+        <span class="kw">let</span> (<span class="ident">acc</span>, <span class="ident">r</span>, <span class="ident">k</span>) <span class="op">=</span> <span class="ident">st</span>;
+        <span class="ident">st</span> <span class="op">=</span> ((<span class="ident">poly1305_encode_last</span>(<span class="ident">pad_len</span>, <span class="ident">b</span>) <span class="op">+</span> <span class="ident">acc</span>) <span class="op">*</span> <span class="ident">r</span>, <span class="ident">r</span>, <span class="ident">k</span>);
     }
     <span class="ident">st</span>
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update</span> (<span class="ident">m</span>:<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">st</span>:<span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
-    <span class="kw">let</span> <span class="ident">st</span> <span class="op">=</span> <span class="ident">poly1305_update_blocks</span>(<span class="ident">m</span>,<span class="ident">st</span>);
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_update</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">st</span>: <span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PolyState</span> {
+    <span class="kw">let</span> <span class="ident">st</span> <span class="op">=</span> <span class="ident">poly1305_update_blocks</span>(<span class="ident">m</span>, <span class="ident">st</span>);
     <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">get_remainder_chunk</span>(<span class="ident">BLOCKSIZE</span>);
-    <span class="ident">poly1305_update_last</span>(<span class="ident">last</span>.<span class="ident">len</span>(),<span class="kw-2">&amp;</span><span class="ident">last</span>,<span class="ident">st</span>)
+    <span class="ident">poly1305_update_last</span>(<span class="ident">last</span>.<span class="ident">len</span>(), <span class="kw-2">&amp;</span><span class="ident">last</span>, <span class="ident">st</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_finish</span> (<span class="ident">st</span>:<span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poly1305Tag</span> {
-    <span class="kw">let</span> (<span class="ident">acc</span>,<span class="kw">_</span>,<span class="ident">k</span>) <span class="op">=</span> <span class="ident">st</span>;
-    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>,<span class="number">16</span>,<span class="number">16</span>));
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305_finish</span>(<span class="ident">st</span>: <span class="ident">PolyState</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poly1305Tag</span> {
+    <span class="kw">let</span> (<span class="ident">acc</span>, <span class="kw">_</span>, <span class="ident">k</span>) <span class="op">=</span> <span class="ident">st</span>;
+    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>, <span class="number">16</span>, <span class="number">16</span>));
     <span class="kw">let</span> <span class="ident">aby</span> <span class="op">=</span> <span class="ident">acc</span>.<span class="ident">to_byte_seq_le</span>();
     <span class="comment">// We can&#39;t use from_seq here because the accumulator is larger than 16 bytes.</span>
-    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">aby</span>,<span class="number">0</span>,<span class="number">16</span>));
-    <span class="ident">Poly1305Tag</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">U128_to_le_bytes</span>(<span class="ident">a</span><span class="op">+</span><span class="ident">n</span>))
+    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">U128_from_le_bytes</span>(<span class="ident">U128Word</span>::<span class="ident">from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">aby</span>, <span class="number">0</span>, <span class="number">16</span>));
+    <span class="ident">Poly1305Tag</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">U128_to_le_bytes</span>(<span class="ident">a</span> <span class="op">+</span> <span class="ident">n</span>))
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poly1305</span>(<span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">key</span>: <span class="ident">PolyKey</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Poly1305Tag</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">st</span> <span class="op">=</span> <span class="ident">poly1305_init</span>(<span class="ident">key</span>);
-    <span class="ident">st</span> <span class="op">=</span> <span class="ident">poly1305_update</span>(<span class="ident">m</span>,<span class="ident">st</span>);
+    <span class="ident">st</span> <span class="op">=</span> <span class="ident">poly1305_update</span>(<span class="ident">m</span>, <span class="ident">st</span>);
     <span class="ident">poly1305_finish</span>(<span class="ident">st</span>)
 }
-
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "hacspec_poly1305";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

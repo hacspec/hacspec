@@ -405,6 +405,9 @@
 <span id="405">405</span>
 <span id="406">406</span>
 <span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">hacspec_lib</span>;
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">proc_macro</span>;
@@ -424,7 +427,7 @@
     <span class="ident">TwoArgsMethod</span>(<span class="ident">TokenStream</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenStream</span>),
     <span class="ident">OneArgsMethod</span>(<span class="ident">TokenStream</span>, <span class="ident">TokenStream</span>),
     <span class="ident">OneArgsMethodWithBaseTypeArg</span>(<span class="ident">TokenStream</span>, <span class="ident">TokenStream</span>),
-    <span class="ident">ZeroArgsMethod</span>(<span class="ident">TokenStream</span>)
+    <span class="ident">ZeroArgsMethod</span>(<span class="ident">TokenStream</span>),
 }
 
 <span class="kw">fn</span> <span class="ident">make_impl_body</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">Ident</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Data</span>, <span class="ident">inner_expression</span>: <span class="ident">Expression</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
@@ -449,12 +452,14 @@
                         <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="ident">func</span>, <span class="ident">e1</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
                             #<span class="ident">name</span>: <span class="self">self</span>.#<span class="ident">name</span>.#<span class="ident">func</span>(#<span class="ident">e1</span>.#<span class="ident">name</span>)
                         },
-                        <span class="ident">Expression</span>::<span class="ident">OneArgsMethodWithBaseTypeArg</span>(<span class="ident">func</span>, <span class="ident">e1</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
-                            #<span class="ident">name</span>: <span class="self">self</span>.#<span class="ident">name</span>.#<span class="ident">func</span>(#<span class="ident">e1</span>)
-                        },
+                        <span class="ident">Expression</span>::<span class="ident">OneArgsMethodWithBaseTypeArg</span>(<span class="ident">func</span>, <span class="ident">e1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
+                                #<span class="ident">name</span>: <span class="self">self</span>.#<span class="ident">name</span>.#<span class="ident">func</span>(#<span class="ident">e1</span>)
+                            }
+                        }
                         <span class="ident">Expression</span>::<span class="ident">ZeroArgsMethod</span>(<span class="ident">func</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
                             #<span class="ident">name</span>: <span class="self">self</span>.#<span class="ident">name</span>.#<span class="ident">func</span>()
-                        }
+                        },
                     }
                 });
                 <span class="kw">let</span> <span class="ident">expanded</span> <span class="op">=</span> <span class="macro">quote</span><span class="macro">!</span> {
@@ -481,12 +486,14 @@
                         <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="ident">func</span>, <span class="ident">e1</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
                             <span class="self">self</span>.#<span class="ident">index</span>.#<span class="ident">func</span>(#<span class="ident">e1</span>.#<span class="ident">index</span>)
                         },
-                        <span class="ident">Expression</span>::<span class="ident">OneArgsMethodWithBaseTypeArg</span>(<span class="ident">func</span>, <span class="ident">e1</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
-                            <span class="self">self</span>.#<span class="ident">index</span>.#<span class="ident">func</span>(#<span class="ident">e1</span>)
-                        },
+                        <span class="ident">Expression</span>::<span class="ident">OneArgsMethodWithBaseTypeArg</span>(<span class="ident">func</span>, <span class="ident">e1</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
+                                <span class="self">self</span>.#<span class="ident">index</span>.#<span class="ident">func</span>(#<span class="ident">e1</span>)
+                            }
+                        }
                         <span class="ident">Expression</span>::<span class="ident">ZeroArgsMethod</span>(<span class="ident">func</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">quote_spanned</span><span class="macro">!</span> {<span class="ident">f</span>.<span class="ident">span</span>() <span class="op">=</span><span class="op">&gt;</span>
                             <span class="self">self</span>.#<span class="ident">index</span>.#<span class="ident">func</span>()
-                        }
+                        },
                     }
                 });
                 <span class="macro">quote</span><span class="macro">!</span> {
@@ -553,84 +560,83 @@
     <span class="kw">let</span> <span class="ident">not</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">Unop</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="op">!</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="self">self</span>} )
+        <span class="ident">Expression</span>::<span class="ident">Unop</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="op">!</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="self">self</span>}),
     );
     <span class="kw">let</span> <span class="ident">sub_mod</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">sub_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> })
+        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">sub_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> }),
     );
     <span class="kw">let</span> <span class="ident">add_mod</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">add_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> })
+        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">add_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> }),
     );
     <span class="kw">let</span> <span class="ident">mul_mod</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">mul_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> })
+        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">mul_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> }),
     );
     <span class="kw">let</span> <span class="ident">pow_mod</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">pow_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">exp</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> })
+        <span class="ident">Expression</span>::<span class="ident">TwoArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">pow_mod</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">exp</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> }),
     );
     <span class="kw">let</span> <span class="ident">modulo</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">modulo</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">modulo</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> }),
     );
     <span class="kw">let</span> <span class="ident">signed_modulo</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">signed_modulo</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">signed_modulo</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> }),
     );
     <span class="kw">let</span> <span class="ident">wrap_add</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">wrap_add</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">wrap_add</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }),
     );
     <span class="kw">let</span> <span class="ident">wrap_sub</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">wrap_sub</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">wrap_sub</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }),
     );
     <span class="kw">let</span> <span class="ident">wrap_mul</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">wrap_mul</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">wrap_mul</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }),
     );
     <span class="kw">let</span> <span class="ident">wrap_div</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">wrap_div</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">wrap_div</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }),
     );
     <span class="kw">let</span> <span class="ident">pow_self</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">pow_self</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">exp</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">pow_self</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">exp</span> }),
     );
     <span class="kw">let</span> <span class="ident">divide</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">divide</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">divide</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">rhs</span> }),
     );
     <span class="kw">let</span> <span class="ident">inv</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">inv</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">inv</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">n</span> }),
     );
     <span class="kw">let</span> <span class="ident">absolute</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">ZeroArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">absolute</span> })
+        <span class="ident">Expression</span>::<span class="ident">ZeroArgsMethod</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">absolute</span> }),
     );
     <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="ident">make_impl_body</span>(
         <span class="kw-2">&amp;</span><span class="ident">name</span>,
         <span class="kw-2">&amp;</span><span class="ident">input_ast</span>.<span class="ident">data</span>,
-        <span class="ident">Expression</span>::<span class="ident">OneArgsMethodWithBaseTypeArg</span>(<span class="macro">quote</span><span class="macro">!</span>{ <span class="ident">exp</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">exp</span> })
+        <span class="ident">Expression</span>::<span class="ident">OneArgsMethodWithBaseTypeArg</span>(<span class="macro">quote</span><span class="macro">!</span> { <span class="ident">exp</span> }, <span class="macro">quote</span><span class="macro">!</span> { <span class="ident">exp</span> }),
     );
-
 
     <span class="kw">let</span> <span class="ident">expanded</span> <span class="op">=</span> <span class="macro">quote</span><span class="macro">!</span> {
         <span class="kw">impl</span> #<span class="ident">impl_generics</span> <span class="ident">Add</span> <span class="kw">for</span> #<span class="ident">name</span> #<span class="ident">ty_generics</span> #<span class="ident">where_clause</span> {

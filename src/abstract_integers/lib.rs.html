@@ -116,9 +116,9 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! use abstract_integers::*;</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! abstract_public_nat_mod!(SizeNatFieldExample, SizeNatExample, 64, &quot;1fffffffffffffff&quot;);</span>
-<span class="doccomment">//! </span>
+<span class="doccomment">//!</span>
 <span class="doccomment">//! let x1 = SizeNatExample::from_literal(687165654266415);</span>
 <span class="doccomment">//! let x2 = SizeNatExample::from_literal(4298832000156);</span>
 <span class="doccomment">//! let x3 = x1 + x2;</span>
@@ -134,10 +134,10 @@
 <span class="doccomment">//!</span>
 
 <span class="comment">// Re-exports</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">num</span>::{<span class="ident">BigUint</span>, <span class="ident">BigInt</span>, <span class="ident">bigint</span>::<span class="ident">Sign</span>, <span class="ident">CheckedSub</span>, <span class="ident">Zero</span>, <span class="ident">traits</span>, <span class="ident">traits</span>::<span class="ident">identities</span>::<span class="kw-2">*</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">num</span>::{<span class="ident">bigint</span>::<span class="ident">Sign</span>, <span class="ident">traits</span>, <span class="ident">traits</span>::<span class="ident">identities</span>::<span class="kw-2">*</span>, <span class="ident">BigInt</span>, <span class="ident">BigUint</span>, <span class="ident">CheckedSub</span>, <span class="ident">Zero</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">Ordering</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">num</span>::<span class="ident">ParseIntError</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">Ordering</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">abstract_int</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">nat_mod</span>;
