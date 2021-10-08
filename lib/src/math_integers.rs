@@ -1101,7 +1101,8 @@ macro_rules! public_nat_mod {
                         .map(|x| U8::declassify(*x))
                         .collect::<Vec<_>>()
                         .as_slice(),
-                ).into()
+                )
+                .into()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
@@ -1131,7 +1132,8 @@ macro_rules! public_nat_mod {
                         .map(|x| U8::declassify(*x))
                         .collect::<Vec<_>>()
                         .as_slice(),
-                ).into()
+                )
+                .into()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]

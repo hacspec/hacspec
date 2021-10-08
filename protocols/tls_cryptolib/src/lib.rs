@@ -140,8 +140,9 @@ pub fn zero_key(ha: &HashAlgorithm) -> Key {
 pub fn secret_to_public(group_name: &NamedGroup, x: &DhSk) -> Result<DhPk, CryptoError> {
     match group_name {
         NamedGroup::Secp256r1 => match p256_point_mul_base(P256Scalar::from_byte_seq_be(x)) {
-            AffineResult::Ok((x, y)) =>
-                Result::<DhPk, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be())),
+            AffineResult::Ok((x, y)) => {
+                Result::<DhPk, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be()))
+            }
             AffineResult::Err(_) => Result::<DhPk, CryptoError>::Err(CryptoError::CryptoError),
         },
         NamedGroup::X25519 => Result::<DhPk, CryptoError>::Ok(DhPk::from_seq(
@@ -165,8 +166,9 @@ fn p256_ecdh(x: &DhSk, y: &DhPk) -> Result<Key, CryptoError> {
         P256FieldElement::from_byte_seq_be(&y.slice_range(32..64)),
     );
     match p256_point_mul(P256Scalar::from_byte_seq_be(x), pk) {
-        AffineResult::Ok((x, y)) =>
-            Result::<Key, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be())),
+        AffineResult::Ok((x, y)) => {
+            Result::<Key, CryptoError>::Ok(x.to_byte_seq_be().concat(&y.to_byte_seq_be()))
+        }
         AffineResult::Err(_) => Result::<Key, CryptoError>::Err(CryptoError::CryptoError),
     }
 }
@@ -228,10 +230,12 @@ pub fn kem_decap(ks: &KemScheme, ct: &ByteSeq, sk: KemSk) -> Result<Key, CryptoE
 
 pub fn hash(ha: &HashAlgorithm, payload: &ByteSeq) -> Result<Digest, CryptoError> {
     match ha {
-        HashAlgorithm::SHA256 =>
-            Result::<Digest, CryptoError>::Ok(Digest::from_seq(&sha256(payload))),
-        HashAlgorithm::SHA384 =>
-            Result::<Digest, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        HashAlgorithm::SHA256 => {
+            Result::<Digest, CryptoError>::Ok(Digest::from_seq(&sha256(payload)))
+        }
+        HashAlgorithm::SHA384 => {
+            Result::<Digest, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -239,10 +243,12 @@ pub fn hash(ha: &HashAlgorithm, payload: &ByteSeq) -> Result<Digest, CryptoError
 
 pub fn hmac_tag(ha: &HashAlgorithm, mk: &MacKey, payload: &ByteSeq) -> Result<HMAC, CryptoError> {
     match ha {
-        HashAlgorithm::SHA256 =>
-            Result::<HMAC, CryptoError>::Ok(HMAC::from_seq(&hmac(mk, payload))),
-        HashAlgorithm::SHA384 =>
-            Result::<HMAC, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        HashAlgorithm::SHA256 => {
+            Result::<HMAC, CryptoError>::Ok(HMAC::from_seq(&hmac(mk, payload)))
+        }
+        HashAlgorithm::SHA384 => {
+            Result::<HMAC, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -399,10 +405,12 @@ pub fn sign(
 ) -> Result<Signature, CryptoError> {
     match sa {
         SignatureScheme::EcdsaSecp256r1Sha256 => p256_sign(ps, payload, ent),
-        SignatureScheme::ED25519 => 
-            Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
-        SignatureScheme::RsaPssRsaSha256 => 
-            Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        SignatureScheme::ED25519 => {
+            Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
+        SignatureScheme::RsaPssRsaSha256 => {
+            Result::<Signature, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -429,10 +437,12 @@ pub fn verify(
 ) -> Result<(), CryptoError> {
     match sa {
         SignatureScheme::EcdsaSecp256r1Sha256 => p256_verify(pk, payload, sig),
-        SignatureScheme::ED25519 =>
-            Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
-        SignatureScheme::RsaPssRsaSha256 =>
-            Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        SignatureScheme::ED25519 => {
+            Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
+        SignatureScheme::RsaPssRsaSha256 => {
+            Result::<(), CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
     }
 }
 
@@ -492,8 +502,9 @@ pub fn aead_encrypt(
 ) -> Result<ByteSeq, CryptoError> {
     match a {
         AeadAlgorithm::Aes128Gcm => aes128_encrypt(k, iv, payload, ad),
-        AeadAlgorithm::Aes256Gcm =>
-            Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        AeadAlgorithm::Aes256Gcm => {
+            Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
         AeadAlgorithm::Chacha20Poly1305 => chacha_encrypt(k, iv, payload, ad),
     }
 }
@@ -545,8 +556,9 @@ pub fn aead_decrypt(
 ) -> Result<ByteSeq, CryptoError> {
     match a {
         AeadAlgorithm::Aes128Gcm => aes128_decrypt(k, iv, ciphertext, ad),
-        AeadAlgorithm::Aes256Gcm =>
-            Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm),
+        AeadAlgorithm::Aes256Gcm => {
+            Result::<ByteSeq, CryptoError>::Err(CryptoError::UnsupportedAlgorithm)
+        }
         AeadAlgorithm::Chacha20Poly1305 => chacha_decrypt(k, iv, ciphertext, ad),
     }
 }

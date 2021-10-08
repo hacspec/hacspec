@@ -1,10 +1,10 @@
 use hacspec_lib::*;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct Jacobian<T: UnsignedIntegerCopy> (pub T, pub T, pub T);
+pub struct Jacobian<T: UnsignedIntegerCopy>(pub T, pub T, pub T);
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub struct Affine<T: UnsignedIntegerCopy> (pub T, pub T);
+pub struct Affine<T: UnsignedIntegerCopy>(pub T, pub T);
 
 fn jacobian_to_affine<T: UnsignedIntegerCopy>(p: Jacobian<T>) -> Affine<T> {
     let (x, y, z) = (p.0, p.1, p.2);
@@ -65,11 +65,7 @@ fn point_add<T: UnsignedIntegerCopy>(p: Jacobian<T>, q: Jacobian<T>) -> Jacobian
 
     if u1.equal(u2) {
         assert!(!s1.equal(s2));
-        return Jacobian(
-            T::from_literal(0),
-            T::from_literal(1),
-            T::from_literal(0),
-        );
+        return Jacobian(T::from_literal(0), T::from_literal(1), T::from_literal(0));
     }
 
     let h = u2 - u1;
@@ -92,13 +88,12 @@ fn point_add<T: UnsignedIntegerCopy>(p: Jacobian<T>, q: Jacobian<T>) -> Jacobian
 }
 
 #[allow(dead_code)]
-fn montgomery_ladder<T: UnsignedIntegerCopy, I: UnsignedIntegerCopy>(k: I, init: Jacobian<T>) -> Jacobian<T> {
+fn montgomery_ladder<T: UnsignedIntegerCopy, I: UnsignedIntegerCopy>(
+    k: I,
+    init: Jacobian<T>,
+) -> Jacobian<T> {
     let mut p_working = (
-        Jacobian(
-            T::from_literal(0),
-            T::from_literal(1),
-            T::from_literal(0),
-        ),
+        Jacobian(T::from_literal(0), T::from_literal(1), T::from_literal(0)),
         init,
     );
     for i in 0..T::NUM_BITS {
@@ -117,11 +112,7 @@ fn montgomery_ladder<T: UnsignedIntegerCopy, I: UnsignedIntegerCopy>(k: I, init:
 }
 
 fn ltr_mul<T: UnsignedIntegerCopy, I: UnsignedIntegerCopy>(k: I, p: Jacobian<T>) -> Jacobian<T> {
-    let mut q = Jacobian(
-        T::from_literal(0),
-        T::from_literal(1),
-        T::from_literal(0),
-    );
+    let mut q = Jacobian(T::from_literal(0), T::from_literal(1), T::from_literal(0));
     for i in 0..T::NUM_BITS {
         q = point_double(q);
         if k.get_bit(T::NUM_BITS - 1 - i).equal(I::ONE()) {

@@ -15,7 +15,6 @@ fn test_public_array_u32() {
 
 // ==== Test Array Numeric Implementation ==== //
 
-
 #[test]
 fn test_ops_u8() {
     array!(Array55, 55, u8);
