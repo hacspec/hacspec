@@ -2301,7 +2301,7 @@ fn typecheck_statement(
                 new_mutated,
             ))
         }
-        Statement::ForLoop((x, x_span), e1, e2, (b, b_span)) => {
+        Statement::ForLoop(x, e1, e2, (b, b_span)) => {
             let original_var_context = var_context;
             let (new_e1, t_e1, var_context) =
                 typecheck_expression(sess, e1, top_level_context, var_context)?;
@@ -2337,11 +2337,14 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            let var_context = add_var(
-                &x,
-                &((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
-                &var_context,
-            );
+            let var_context = match x {
+                None => var_context,
+                Some((x, x_span)) => add_var(
+                    &x,
+                    &((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
+                    &var_context,
+                ),
+            };
             let (new_b, var_context) = typecheck_block(
                 sess,
                 (b.clone(), b_span.clone()),
@@ -2363,7 +2366,7 @@ fn typecheck_statement(
             }
             Ok((
                 Statement::ForLoop(
-                    (x.clone(), *x_span),
+                    x.clone(),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
                     (new_b, *b_span),

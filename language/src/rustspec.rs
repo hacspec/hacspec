@@ -398,10 +398,10 @@ pub enum Statement {
         Fillable<Box<MutatedInfo>>, // Variables mutated in either branch
     ),
     ForLoop(
-        Spanned<Ident>,      // Loop variable
-        Spanned<Expression>, // Lower bound
-        Spanned<Expression>, // Upper bound
-        Spanned<Block>,      // Loop body
+        Option<Spanned<Ident>>, // Loop variable
+        Spanned<Expression>,    // Lower bound
+        Spanned<Expression>,    // Upper bound
+        Spanned<Block>,         // Loop body
     ),
     ArrayUpdate(
         Spanned<Ident>,      // Array variable
@@ -484,14 +484,11 @@ impl Serialize for ItemTagSet {
     }
 }
 
-
 #[derive(Clone, Serialize)]
 pub struct DecoratedItem {
     pub item: Item,
-    pub tags: ItemTagSet
+    pub tags: ItemTagSet,
 }
-
-
 
 #[derive(Clone, Serialize)]
 pub struct Program {
