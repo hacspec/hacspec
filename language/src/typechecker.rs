@@ -44,6 +44,10 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
             },
         },
         BaseTyp::Array(_, _) => true,
+        BaseTyp::Seq(t1) => is_numeric(
+            &((Borrowing::Consumed, DUMMY_SP.into()), *t1.clone()),
+            top_ctxt,
+        ),
         _ => false,
     }
 }
