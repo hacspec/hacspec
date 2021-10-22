@@ -559,12 +559,15 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                     }
                     let variant = adt.variants.iter().next().unwrap();
                     let name = variant.ident.name.to_ident_string();
-                    // Secret integer types are wrappers that are hardcoded
-                    // into hacspec so we list them here not to import
-                    // them twice
-                    match name.as_str() {
-                        "U128" | "U64" | "U32" | "U16" | "U8" | "I128" | "I64" | "I32" | "I16"
-                        | "I8" => return SpecialTypeReturn::NotSpecial,
+                    // Some wrapper structs are defined in std, core or
+                    // hacspec_lib but we don't want to import them
+                    // so we special case them out here
+                    let crate_name = &*tcx.crate_name(tcx.def_path(adt.did).krate).as_str();
+                    match crate_name {
+                        "core" | "std" | "hacspec_lib" | "secret_integers"
+                        | "abstract_integers" => {
+                            return SpecialTypeReturn::NotSpecial;
+                        }
                         _ => (),
                     }
                     let fields_typ = match check_vec(
