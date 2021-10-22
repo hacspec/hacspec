@@ -402,7 +402,7 @@ enum SpecialTypeReturn {
     NotSpecial,
 }
 
-fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTypeReturn {
+fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTypeReturn {
     // First we check whether the type is a special Hacspec type (array, abstract int, etc.)
     match def.kind() {
         TyKind::Adt(adt, substs) if adt.is_struct() => {
@@ -426,7 +426,9 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                 TyKind::Array(cell_t, size) => {
                     let (new_cell_t, _) = match translate_base_typ(tcx, cell_t, &HashMap::new()) {
                         Ok(x) => x,
-                        Err(()) => return SpecialTypeReturn::NotSpecial,
+                        Err(()) => {
+                            return SpecialTypeReturn::NotSpecial;
+                        }
                     };
                     let new_size = match &size.val {
                         ConstKind::Value(value) => match value {
@@ -464,15 +466,22 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                     SpecialTypeReturn::NotSpecial
                     | SpecialTypeReturn::NatInt(_)
                     | SpecialTypeReturn::Array(_)
-                    | SpecialTypeReturn::Enum(_) => (),
+                    | SpecialTypeReturn::Enum(_) => return SpecialTypeReturn::NotSpecial,
                     SpecialTypeReturn::RawAbstractInt(nat_int_typ) => {
                         return SpecialTypeReturn::NatInt(nat_int_typ)
                     }
                 },
             }
         }
-        _ => (),
+        _ => return SpecialTypeReturn::NotSpecial,
     };
+}
+
+fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTypeReturn {
+    match check_non_enum_special_type_from_struct_shape(tcx, def) {
+        SpecialTypeReturn::NotSpecial => (),
+        ret => return ret,
+    }
     // If it is not a special type, we check whether it is an enum (or wrapper struct)
     match def.kind() {
         TyKind::Adt(adt, substs) => {
@@ -540,12 +549,66 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                         }
                     }
                 }
-                _ => (), //TODO wrapper structs
+                AdtKind::Struct => {
+                    // This case imports non-generic wrapper structs
+                    if substs.len() > 0 {
+                        return SpecialTypeReturn::NotSpecial;
+                    }
+                    if adt.variants.len() != 1 {
+                        return SpecialTypeReturn::NotSpecial;
+                    }
+                    let variant = adt.variants.iter().next().unwrap();
+                    let name = variant.ident.name.to_ident_string();
+                    // Some wrapper structs are defined in std, core or
+                    // hacspec_lib but we don't want to import them
+                    // so we special case them out here
+                    let crate_name = &*tcx.crate_name(tcx.def_path(adt.did).krate).as_str();
+                    match crate_name {
+                        "core" | "std" | "hacspec_lib" | "secret_integers"
+                        | "abstract_integers" => {
+                            return SpecialTypeReturn::NotSpecial;
+                        }
+                        _ => (),
+                    }
+                    let fields_typ = match check_vec(
+                        variant
+                            .fields
+                            .iter()
+                            .map(|field| {
+                                // We only allow fields without names
+                                match field.ident.name.to_ident_string().parse::<i32>() {
+                                    Ok(_) => (),
+                                    Err(_) => return Err(()),
+                                }
+                                let field_typ = tcx.type_of(field.did);
+                                let (ty, _) = translate_base_typ(tcx, &field_typ, &HashMap::new())?;
+                                Ok((ty, RustspecSpan::from(variant.ident.span)))
+                            })
+                            .collect(),
+                    ) {
+                        Ok(x) => x,
+                        Err(_) => return SpecialTypeReturn::NotSpecial,
+                    };
+                    let case_typ = if fields_typ.len() == 1 {
+                        let ty = fields_typ.into_iter().next().unwrap();
+                        Some(ty)
+                    } else {
+                        let ty = BaseTyp::Tuple(fields_typ);
+                        Some((ty, RustspecSpan::from(variant.ident.span)))
+                    };
+                    return SpecialTypeReturn::Enum(BaseTyp::Enum(
+                        vec![(
+                            (TopLevelIdent(name), RustspecSpan::from(variant.ident.span)),
+                            case_typ,
+                        )],
+                        vec![],
+                    ));
+                }
+                _ => return SpecialTypeReturn::NotSpecial,
             }
         }
         _ => return SpecialTypeReturn::NotSpecial,
-    };
-    SpecialTypeReturn::NotSpecial
+    }
 }
 
 fn add_special_type_from_struct_shape(
