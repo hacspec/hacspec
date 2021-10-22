@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/object-0.26.2/src/elf.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elf.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../object/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/object-0.27.1/src/elf.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>elf.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../object/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -6246,6 +6246,14 @@
 <span id="6246">6246</span>
 <span id="6247">6247</span>
 <span id="6248">6248</span>
+<span id="6249">6249</span>
+<span id="6250">6250</span>
+<span id="6251">6251</span>
+<span id="6252">6252</span>
+<span id="6253">6253</span>
+<span id="6254">6254</span>
+<span id="6255">6255</span>
+<span id="6256">6256</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! ELF definitions.</span>
 <span class="doccomment">//!</span>
@@ -7066,7 +7074,7 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">GRP_COMDAT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
 
 <span class="doccomment">/// Symbol table entry.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sym32</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Symbol name.</span>
@@ -7116,7 +7124,7 @@
 }
 
 <span class="doccomment">/// Symbol table entry.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sym64</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Symbol name.</span>
@@ -7943,6 +7951,11 @@
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Versym</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">U16</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>);
 
+<span class="doccomment">/// Symbol is hidden.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VERSYM_HIDDEN</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0x8000</span>;
+<span class="doccomment">/// Symbol version index.</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VERSYM_VERSION</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0x7fff</span>;
+
 <span class="doccomment">/// Version definition sections</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
@@ -7969,9 +7982,10 @@
 <span class="doccomment">/// Current version</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VER_DEF_CURRENT</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">1</span>;
 
-<span class="comment">// Legal values for vd_flags and vna_flags (version information flags).</span>
+<span class="comment">// Legal values for vd_flags (version information flags).</span>
 <span class="doccomment">/// Version definition of file itself</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VER_FLG_BASE</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0x1</span>;
+<span class="comment">// Legal values for vd_flags and vna_flags (version information flags).</span>
 <span class="doccomment">/// Weak version identifier</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VER_FLG_WEAK</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0x2</span>;
 
@@ -7980,8 +7994,6 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VER_NDX_LOCAL</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0</span>;
 <span class="doccomment">/// Symbol is global.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VER_NDX_GLOBAL</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="doccomment">/// Symbol is hidden.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VER_NDX_HIDDEN</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0x8000</span>;
 
 <span class="doccomment">/// Auxiliary version information.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
@@ -8636,6 +8648,10 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EF_MIPS_ARCH_32R2</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x7000_0000</span>;
 <span class="doccomment">/// MIPS64r2 code.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EF_MIPS_ARCH_64R2</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x8000_0000</span>;
+<span class="doccomment">/// MIPS32r6 code</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EF_MIPS_ARCH_32R6</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x9000_0000</span>;
+<span class="doccomment">/// MIPS64r6 code</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EF_MIPS_ARCH_64R6</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xa000_0000</span>;
 
 <span class="comment">// MIPS values for `Sym32::st_shndx`.</span>
 
@@ -8821,7 +8837,7 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">OHW_R8KPFETCH</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x2</span>;
 <span class="doccomment">/// R5000 end-of-page patch.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">OHW_R5KEOP</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x4</span>;
-<span class="doccomment">/// R5000 cvt.[ds].l bug.  clean=1.</span>
+<span class="doccomment">/// R5000 cvt.\[ds\].l bug.  clean=1.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">OHW_R5KCVTL</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x8</span>;
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
