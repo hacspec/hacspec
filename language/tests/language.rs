@@ -59,6 +59,11 @@ fn positive_seq_ops() {
 }
 
 #[test]
+fn positive_loops() {
+    run_test("language-tests/loops.rs", None);
+}
+
+#[test]
 #[should_panic]
 fn negative_arrays() {
     run_test("negative-language-tests/arrays.rs", None);
