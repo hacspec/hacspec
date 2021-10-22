@@ -915,7 +915,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                     }),
             )
         }
-        Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
+        Statement::ForLoop(x, (e1, _), (e2, _), (b, _)) => {
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
             let mutated_num = mutated_info.vars.0.len();
             let mut_tuple = make_tuple(
@@ -934,7 +934,10 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(fun"))
                 .append(RcDoc::space())
-                .append(translate_ident(x.clone()))
+                .append(match x {
+                    Some((x, _)) => translate_ident(x.clone()),
+                    None => RcDoc::as_string("_"),
+                })
                 .append(RcDoc::space())
                 .append(if mutated_num > 1 {
                     RcDoc::as_string("acc")
