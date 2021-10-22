@@ -319,7 +319,19 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::ForLoop((var, var_span), lower, upper, body) => {
+        Statement::ForLoop(None, lower, upper, body) => {
+            let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
+            let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
+            let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
+            Ok((
+                (
+                    Statement::ForLoop(None, new_lower, new_upper, new_body),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
+        Statement::ForLoop(Some((var, var_span)), lower, upper, body) => {
             let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
             let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
             let new_var = match &var {
@@ -330,7 +342,7 @@ fn resolve_statement(
             let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
             Ok((
                 (
-                    Statement::ForLoop((new_var, var_span), new_lower, new_upper, new_body),
+                    Statement::ForLoop(Some((new_var, var_span)), new_lower, new_upper, new_body),
                     s_span,
                 ),
                 name_context,
@@ -453,10 +465,15 @@ fn resolve_item(
         }
     };
     match i {
-	Ok ((i,i_span)) => Ok((DecoratedItem { item : i, tags : item.tags },i_span)),
-	Err (a) => Err (a),
+        Ok((i, i_span)) => Ok((
+            DecoratedItem {
+                item: i,
+                tags: item.tags,
+            },
+            i_span,
+        )),
+        Err(a) => Err(a),
     }
-
 }
 
 fn process_decl_item(
@@ -532,27 +549,29 @@ fn process_decl_item(
                     process_decl_item(
                         sess,
                         &(
-			    DecoratedItem {
-				item : Item::ArrayDecl(
+                            DecoratedItem {
+                                item: Item::ArrayDecl(
                                     canvas_typ_ident.clone(),
                                     canvas_size.clone(),
                                     match secrecy {
-					Secrecy::Secret => (
+                                        Secrecy::Secret => (
                                             BaseTyp::Named(
-						(
+                                                (
                                                     TopLevelIdent("U8".to_string()),
                                                     canvas_typ_ident.1.clone(),
-						),
-						None,
+                                                ),
+                                                None,
                                             ),
                                             canvas_typ_ident.1.clone(),
-					),
-					Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
+                                        ),
+                                        Secrecy::Public => {
+                                            (BaseTyp::UInt8, canvas_typ_ident.1.clone())
+                                        }
                                     },
                                     None,
-				),
-				tags : ItemTagSet(HashSet::unit(ItemTag::Code))
-			    },
+                                ),
+                                tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                            },
                             *i_span,
                         ),
                         top_level_context,
@@ -618,7 +637,7 @@ fn process_decl_item(
 pub fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
     p.items
         .iter()
-	.map(|i| ((&i.0.item), &i.1))
+        .map(|i| ((&i.0.item), &i.1))
         .filter(|i| match &i.0 {
             Item::ImportedCrate(_) => true,
             _ => false,
