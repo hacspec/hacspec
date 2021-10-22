@@ -1007,8 +1007,9 @@ fn translate_expr(
         ExprKind::ForLoop(pat, range, b, _) => {
             let id = match &pat.kind {
                 PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
-                    Ok(translate_ident(id))
+                    Ok(Some(translate_ident(id)))
                 }
+                PatKind::Wild => Ok(None),
                 _ => {
                     sess.span_rustspec_err(
                         pat.span,

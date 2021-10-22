@@ -49,6 +49,11 @@ fn positive_tuples() {
 }
 
 #[test]
+fn positive_loops() {
+    run_test("language-tests/loops.rs", None);
+}
+
+#[test]
 fn positive_expr_block() {
     run_test("language-tests/expr_block.rs", None);
 }
