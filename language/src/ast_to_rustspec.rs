@@ -9,7 +9,7 @@ use rustc_ast::{
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
-    tokenstream::TokenTree,
+    tokenstream::{TokenStream, TokenTree},
 };
 use rustc_session::Session;
 use rustc_span::{symbol, Span};
@@ -1386,9 +1386,80 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::MacCall(_) => {
-            sess.span_rustspec_err(e.span.clone(), "this macro call is not allowed in Hacspec");
-            Err(())
+        ExprKind::MacCall(call) => {
+            if call.path.segments.len() > 1 {
+                sess.span_rustspec_err(
+                    call.path.span,
+                    "cannot use macros other than the ones defined by Hacspec",
+                );
+                return Err(());
+            }
+            let name = call.path.segments.first().unwrap();
+            match (
+                name.ident.name.to_ident_string().as_str(),
+                name.args.as_ref(),
+            ) {
+                ("byte_seq", None) => match &*call.args {
+                    MacArgs::Delimited(_, _, tokens) => {
+                        let array = check_for_literal_array_from_macro_args(sess, &tokens)?;
+                        return Ok((
+                            (ExprTranslationResult::TransExpr(Expression::NewArray(
+                                None,
+                                None,
+                                array
+                                    .into_iter()
+                                    .map(|i| {
+                                        (
+                                            Expression::FuncCall(
+                                                None,
+                                                (TopLevelIdent("U8".to_string()), e.span.into()),
+                                                vec![(
+                                                    i.clone(),
+                                                    (Borrowing::Consumed, i.1.clone()),
+                                                )],
+                                            ),
+                                            i.1.clone(),
+                                        )
+                                    })
+                                    .collect(),
+                            ))),
+                            e.span.into(),
+                        ));
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            call.args.span().unwrap().clone(),
+                            "expected parenthesis-delimited args",
+                        );
+                        return Err(());
+                    }
+                },
+                ("public_byte_seq", None) => match &*call.args {
+                    MacArgs::Delimited(_, _, tokens) => {
+                        let array = check_for_literal_array_from_macro_args(sess, &tokens)?;
+                        return Ok((
+                            (ExprTranslationResult::TransExpr(Expression::NewArray(
+                                None, None, array,
+                            ))),
+                            e.span.into(),
+                        ));
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            call.args.span().unwrap().clone(),
+                            "expected parenthesis-delimited args",
+                        );
+                        return Err(());
+                    }
+                },
+                _ => {
+                    sess.span_rustspec_err(
+                        e.span.clone(),
+                        "this macro call is not allowed in Hacspec",
+                    );
+                    Err(())
+                }
+            }
         }
         ExprKind::Repeat(_, _) => {
             sess.span_rustspec_err(
@@ -1668,6 +1739,26 @@ fn check_for_literal(sess: &Session, arg: &TokenTree) -> TranslationResult<Spann
             Err(())
         }
     }
+}
+
+fn check_for_literal_array_from_macro_args(
+    sess: &Session,
+    inside: &TokenStream,
+) -> TranslationResult<Vec<Spanned<Expression>>> {
+    let commas_and_exprs: Vec<TranslationResult<Option<Spanned<Expression>>>> = inside
+        .trees()
+        .enumerate()
+        .map(|(i, tok)| {
+            if i % 2 == 1 {
+                check_for_comma(sess, &tok)?;
+                Ok(None)
+            } else {
+                Ok(Some(check_for_literal(sess, &tok)?))
+            }
+        })
+        .collect();
+    let commas_and_exprs = check_vec(commas_and_exprs)?;
+    Ok(commas_and_exprs.into_iter().filter_map(|x| x).collect())
 }
 
 fn check_for_literal_array(
