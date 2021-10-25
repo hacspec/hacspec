@@ -44,6 +44,26 @@ fn positive_arrays() {
 }
 
 #[test]
+fn positive_tuples() {
+    run_test("language-tests/tuples.rs", None);
+}
+
+#[test]
+fn positive_loops() {
+    run_test("language-tests/loops.rs", None);
+}
+
+#[test]
+fn positive_expr_block() {
+    run_test("language-tests/expr_block.rs", None);
+}
+
+#[test]
+fn positive_seq_ops() {
+    run_test("language-tests/seq_ops.rs", None);
+}
+
+#[test]
 #[should_panic]
 fn negative_arrays() {
     run_test("negative-language-tests/arrays.rs", None);

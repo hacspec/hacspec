@@ -788,13 +788,17 @@ fn translate_expr(
                         .iter()
                         .map(|arg| translate_expr_expects_exp(sess, specials, &arg))
                         .collect();
-                    let func_args = check_vec(func_args);
+                    let func_args = check_vec(func_args)?;
                     Ok((
                         ExprTranslationResult::TransExpr(Expression::EnumInject(
                             enum_name,
                             enum_case,
                             Some((
-                                Box::new(Expression::Tuple(func_args?)),
+                                Box::new(if func_args.len() == 1 {
+                                    func_args.iter().next().unwrap().0.clone()
+                                } else {
+                                    Expression::Tuple(func_args)
+                                }),
                                 e.span.clone().into(),
                             )),
                         )),
@@ -1003,8 +1007,9 @@ fn translate_expr(
         ExprKind::ForLoop(pat, range, b, _) => {
             let id = match &pat.kind {
                 PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
-                    Ok(translate_ident(id))
+                    Ok(Some(translate_ident(id)))
                 }
+                PatKind::Wild => Ok(None),
                 _ => {
                     sess.span_rustspec_err(
                         pat.span,
@@ -1251,6 +1256,27 @@ fn translate_expr(
         ExprKind::Closure(_, _, _, _, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "closures are not allowed in Hacspec");
             Err(())
+        }
+        ExprKind::Block(block, _)
+            if block.stmts.len() == 1 && block.rules == BlockCheckMode::Default =>
+        {
+            let translated_statements =
+                translate_statement(sess, specials, block.stmts.iter().next().unwrap())?;
+            match (
+                translated_statements.len(),
+                translated_statements.iter().next().unwrap(),
+            ) {
+                (1, (Statement::ReturnExp(e), span)) => {
+                    Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
+                }
+                _ => {
+                    sess.span_rustspec_err(
+                        e.span.clone(),
+                        "only inline block with a simple return expression are allowed in Hacspec",
+                    );
+                    Err(())
+                }
+            }
         }
         ExprKind::Block(_, _) => {
             sess.span_rustspec_err(e.span.clone(), "inline blocks are not allowed in Hacspec");
@@ -1583,7 +1609,7 @@ fn translate_block(
 }
 
 enum ItemTranslationResult {
-    Item(Item),
+    Item(DecoratedItem),
     Ignored,
 }
 
@@ -1770,12 +1796,10 @@ fn translate_simplified_natural_integer_decl(
             check_for_comma(sess, &second_arg)?;
             let canvas_size = check_for_usize(sess, &third_arg)?;
             Ok((
-                (ItemTranslationResult::Item(Item::NaturalIntegerDecl(
-                    typ_ident,
-                    secrecy,
-                    canvas_size,
-                    None,
-                ))),
+                (ItemTranslationResult::Item(DecoratedItem {
+                    item: Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, None),
+                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -1889,12 +1913,15 @@ fn translate_natural_integer_decl(
                 }
             };
             Ok((
-                (ItemTranslationResult::Item(Item::NaturalIntegerDecl(
-                    typ_ident,
-                    secrecy,
-                    canvas_size,
-                    Some((canvas_typ_ident, modulo_string)),
-                ))),
+                (ItemTranslationResult::Item(DecoratedItem {
+                    item: Item::NaturalIntegerDecl(
+                        typ_ident,
+                        secrecy,
+                        canvas_size,
+                        Some((canvas_typ_ident, modulo_string)),
+                    ),
+                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -2009,7 +2036,10 @@ fn translate_array_decl(
                 }
             };
             Ok((
-                (ItemTranslationResult::Item(Item::ArrayDecl(typ_ident, size, cell_t, index_typ))),
+                (ItemTranslationResult::Item(DecoratedItem {
+                    item: Item::ArrayDecl(typ_ident, size, cell_t, index_typ),
+                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
                     ..specials.clone()
@@ -2076,13 +2106,86 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     }
 }
 
+fn attribute_tag(attr: &Attribute) -> Option<ItemTag> {
+    let attr_name = attr.name_or_empty().to_ident_string();
+    match attr_name.as_str() {
+        "quickcheck" => Some(ItemTag::QuickCheck),
+        "test" => Some(ItemTag::Test),
+        "cfg" => {
+            let inner_tokens = attr.tokens().to_tokenstream();
+            if inner_tokens.len() != 2 {
+                return None;
+            }
+            let mut it = inner_tokens.trees();
+            let first_token = it.next().unwrap();
+            let second_token = it.next().unwrap();
+            match (first_token, second_token) {
+                (TokenTree::Token(first_tok), TokenTree::Delimited(_, _, inner)) => {
+                    match first_tok.kind {
+                        TokenKind::Pound => {
+                            if inner.len() != 2 {
+                                return None;
+                            }
+                            let mut it = inner.trees();
+                            let _first_token = it.next().unwrap();
+                            // First is cfg
+                            let second_token = it.next().unwrap();
+                            match second_token {
+                                TokenTree::Delimited(_, _, inner) => {
+                                    if inner.len() != 1 {
+                                        return None;
+                                    }
+                                    let mut it = inner.trees();
+                                    let first_token = it.next().unwrap();
+                                    match first_token {
+                                        TokenTree::Token(tok) => match tok.kind {
+                                            TokenKind::Ident(ident, _) => {
+                                                let ident_string = ident.to_ident_string();
+                                                match ident_string.as_str() {
+                                                    "proof" => Some(ItemTag::Proof),
+                                                    "test" => Some(ItemTag::Test),
+                                                    _ => None,
+                                                }
+                                            }
+                                            _ => None,
+                                        },
+                                        _ => None,
+                                    }
+                                }
+                                _ => None,
+                            }
+                        }
+                        _ => None,
+                    }
+                }
+                _ => None,
+            }
+        }
+        // "test" => true, // proof
+        _ => None,
+    }
+}
+
 fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     i: &ast::Item,
     specials: &SpecialNames,
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
-    if i.attrs.iter().any(attribute_is_test) {
+    let mut tags = HashSet::new();
+    tags.insert(ItemTag::Code);
+    let export = i
+        .attrs
+        .iter()
+        .fold(false, |b, attr| match attribute_tag(attr) {
+            Some(a) => {
+                tags.insert(a);
+                b || a == ItemTag::Proof
+            }
+            None => b,
+        });
+
+    if i.attrs.iter().any(attribute_is_test) && !export {
         return Ok((ItemTranslationResult::Ignored, specials.clone()));
     }
     match &i.kind {
@@ -2193,12 +2296,13 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 args: fn_inputs,
                 ret: fn_output,
             };
+            let fn_item = Item::FnDecl(translate_toplevel_ident(&i.ident), fn_sig, fn_body);
+
             Ok((
-                ItemTranslationResult::Item(Item::FnDecl(
-                    translate_toplevel_ident(&i.ident),
-                    fn_sig,
-                    fn_body,
-                )),
+                ItemTranslationResult::Item(DecoratedItem {
+                    item: fn_item,
+                    tags: ItemTagSet(tags),
+                }),
                 specials.clone(),
             ))
         }
@@ -2214,10 +2318,13 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     specials.aliases.insert(alias_name, alias_ty);
                 }
                 Ok((
-                    ItemTranslationResult::Item(Item::ImportedCrate((
-                        TopLevelIdent(krate_name),
-                        tree.span.clone().into(),
-                    ))),
+                    ItemTranslationResult::Item(DecoratedItem {
+                        item: Item::ImportedCrate((
+                            TopLevelIdent(krate_name),
+                            tree.span.clone().into(),
+                        )),
+                        tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    }),
                     specials,
                 ))
             }
@@ -2284,7 +2391,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             let new_e = translate_expr_expects_exp(sess, specials, e)?;
             let id = translate_toplevel_ident(&i.ident);
             Ok((
-                ItemTranslationResult::Item(Item::ConstDecl(id, new_ty, new_e)),
+                ItemTranslationResult::Item(DecoratedItem {
+                    item: Item::ConstDecl(id, new_ty, new_e),
+                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                }),
                 specials.clone(),
             ))
         }
@@ -2331,7 +2441,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         .insert(ty_alias_name_string.clone(), ty.0.clone());
                     let ty_alias_name = (TopLevelIdent(ty_alias_name_string), i.span.into());
                     Ok((
-                        ItemTranslationResult::Item(Item::AliasDecl(ty_alias_name, ty)),
+                        ItemTranslationResult::Item(DecoratedItem {
+                            item: Item::AliasDecl(ty_alias_name, ty),
+                            tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                        }),
                         specials,
                     ))
                 }
@@ -2385,12 +2498,18 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                                 Err(())
                             }
                             VariantData::Tuple(args, _) => {
-                                let args_ty = check_vec(
-                                    args.iter()
-                                        .map(|arg| translate_base_typ(sess, &*arg.ty))
-                                        .collect(),
-                                )?;
-                                Ok(Some((BaseTyp::Tuple(args_ty), v.span.clone().into())))
+                                if args.len() == 1 {
+                                    let arg = args.iter().next().unwrap();
+                                    let arg_ty = translate_base_typ(sess, &arg.ty)?;
+                                    Ok(Some(arg_ty))
+                                } else {
+                                    let args_ty = check_vec(
+                                        args.iter()
+                                            .map(|arg| translate_base_typ(sess, &*arg.ty))
+                                            .collect(),
+                                    )?;
+                                    Ok(Some((BaseTyp::Tuple(args_ty), v.span.clone().into())))
+                                }
                             }
                         };
                         Ok((case_id, case_typ?))
@@ -2398,7 +2517,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     .collect(),
             )?;
             Ok((
-                ItemTranslationResult::Item(Item::EnumDecl(id, variants)),
+                ItemTranslationResult::Item(DecoratedItem {
+                    item: Item::EnumDecl(id, variants),
+                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                }),
                 SpecialNames {
                     enums: specials.enums.update(id_string),
                     ..specials.clone()
@@ -2424,7 +2546,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     Err(())
                 }
                 VariantData::Unit(_) => Ok((
-                    ItemTranslationResult::Item(Item::EnumDecl(id.clone(), vec![(id, None)])),
+                    ItemTranslationResult::Item(DecoratedItem {
+                        item: Item::EnumDecl(id.clone(), vec![(id, None)]),
+                        tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    }),
                     SpecialNames {
                         enums: specials.enums.update(id_string),
                         ..specials.clone()
@@ -2452,10 +2577,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         tuple_args.into_iter().next().unwrap()
                     };
                     Ok((
-                        ItemTranslationResult::Item(Item::EnumDecl(
-                            id.clone(),
-                            vec![(id, Some(payload))],
-                        )),
+                        ItemTranslationResult::Item(DecoratedItem {
+                            item: Item::EnumDecl(id.clone(), vec![(id, Some(payload))]),
+                            tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                        }),
                         SpecialNames {
                             enums: specials.enums.update(id_string),
                             ..specials.clone()
@@ -2508,11 +2633,12 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             })
             .collect(),
     )?;
+
     let items: Vec<_> = translated_items
         .into_iter()
         .filter(|(r, _)| match r {
-            ItemTranslationResult::Ignored => false,
-            _ => true,
+            ItemTranslationResult::Item(_) => true,
+            _ => false,
         })
         .collect();
     let items = items
@@ -2524,5 +2650,6 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             }
         })
         .collect();
+
     Ok(Program { items })
 }

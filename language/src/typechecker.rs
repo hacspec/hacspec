@@ -44,6 +44,10 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
             },
         },
         BaseTyp::Array(_, _) => true,
+        BaseTyp::Seq(t1) => is_numeric(
+            &((Borrowing::Consumed, DUMMY_SP.into()), *t1.clone()),
+            top_ctxt,
+        ),
         _ => false,
     }
 }
@@ -201,7 +205,8 @@ fn is_index(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
     }
 }
 
-fn is_castable_integer(t: &BaseTyp) -> bool {
+fn is_castable_integer(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
+    let t = dealias_type(t.clone(), top_ctxt);
     match t {
         BaseTyp::UInt128 => true,
         BaseTyp::Int128 => true,
@@ -688,6 +693,8 @@ fn typecheck_expression(
             let (new_arg, t_arg, intermediate_var_context) =
                 typecheck_expression(sess, arg, top_level_context, &var_context)?;
             let mut acc_var_context = intermediate_var_context.clone();
+            // First we retrieve the enum type that's being matched on as well
+            // as diverse infos related to it
             let (mut t_arg_cases, t_arg_enum_name, t_arg_enum_args, enum_type_var_args) =
                 match (t_arg.1).0.clone() {
                     BaseTyp::Named((name, _), args) => {
@@ -728,10 +735,13 @@ fn typecheck_expression(
                     }
                 };
             let mut out_typ = None;
+            // Then we typecheck each match arm
             let new_arms = check_vec(
                 arms.into_iter()
                     .map(|(arm_enum_ty, arm_case, arm_pattern, arm_exp)| {
                         let arm_enum_ty = dealias_type(arm_enum_ty.clone(), top_level_context);
+                        // The enum name is repeated in each match arm so we
+                        // make sure it's the good one
                         let (arm_enum_name, arm_enum_args) = match &arm_enum_ty {
                             BaseTyp::Named((t_arm_ty_name, _), t_arm_ty_args) => {
                                 if &t_arg_enum_name != t_arm_ty_name {
@@ -767,6 +777,10 @@ fn typecheck_expression(
                                 return Err(());
                             }
                         };
+                        // Then we proceed with the typechecking, first
+                        // by checking correctness of the enum generic
+                        // arguments between those in the match arm and those
+                        // coming from the expression being matched
                         let mut typ_var_ctx = HashMap::new();
                         match (&t_arg_enum_args, &arm_enum_args) {
                             (None, None) => (),
@@ -831,6 +845,9 @@ fn typecheck_expression(
                                 return Err(());
                             }
                         };
+                        // Then we finally proceed with typechecking the arm
+                        // expression, for that we retrieve the type of this arm's
+                        // payload
                         let (case_index, case_typ) = match t_arg_cases
                             .iter()
                             .enumerate()
@@ -855,6 +872,8 @@ fn typecheck_expression(
                             None => None,
                         };
                         t_arg_cases.remove(case_index);
+                        // t_arg_cases stores the arms not covered by the match
+                        // yet
                         let (new_arm_pattern, new_var_context) = match (arm_pattern, case_typ) {
                             (None, None) => (None, HashMap::new()),
                             (Some(arm_pattern), Some(case_typ)) => {
@@ -902,6 +921,7 @@ fn typecheck_expression(
                     })
                     .collect(),
             )?;
+            // Finally, we check whether all match arms have been included
             if t_arg_cases.len() > 0 {
                 sess.span_rustspec_err(
                     span.clone(),
@@ -1018,10 +1038,14 @@ fn typecheck_expression(
                 &HashMap::new(),
                 top_level_context,
             )?;
-            let (new_e_t, t_e_t, var_context) =
+            let (new_e_t, t_e_t, var_context_true_branch) =
                 typecheck_expression(sess, e_t, top_level_context, &var_context)?;
-            let (new_e_f, t_e_f, var_context) =
+            let (new_e_f, t_e_f, var_context_false_branch) =
                 typecheck_expression(sess, e_f, top_level_context, &var_context)?;
+            let final_var_context = var_context
+                .clone()
+                .intersection(var_context_true_branch)
+                .intersection(var_context_false_branch);
             unify_types_default_error_message(
                 sess,
                 &t_e_t,
@@ -1036,7 +1060,7 @@ fn typecheck_expression(
                     Box::new((new_e_f, e_f.1.clone())),
                 ),
                 t_e_t,
-                var_context,
+                final_var_context,
             ))
         }
         Expression::Binary((op, op_span), e1, e2, _) => {
@@ -1699,7 +1723,7 @@ fn typecheck_expression(
                 sess.span_rustspec_err(e1.1.clone(), "cannot cast borrowed expression");
                 return Err(());
             }
-            if !is_castable_integer(&(e1_typ.1).0) {
+            if !is_castable_integer(&(e1_typ.1).0, top_level_context) {
                 sess.span_rustspec_err(
                     e1.1.clone(),
                     format!(
@@ -1711,7 +1735,7 @@ fn typecheck_expression(
                 );
                 return Err(());
             }
-            if !is_castable_integer(&t1.0) {
+            if !is_castable_integer(&t1.0, top_level_context) {
                 sess.span_rustspec_err(e1.1.clone(), "impossible to cast to this type");
                 return Err(());
             }
@@ -2286,19 +2310,22 @@ fn typecheck_statement(
                 new_mutated,
             ))
         }
-        Statement::ForLoop((x, x_span), e1, e2, (b, b_span)) => {
+        Statement::ForLoop(x, e1, e2, (b, b_span)) => {
             let original_var_context = var_context;
             let (new_e1, t_e1, var_context) =
                 typecheck_expression(sess, e1, top_level_context, var_context)?;
             let (new_e2, t_e2, var_context) =
                 typecheck_expression(sess, e2, top_level_context, &var_context)?;
-            match &t_e1 {
-                ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
+            match (
+                t_e1.0.clone(),
+                dealias_type(t_e1.1 .0.clone(), top_level_context),
+            ) {
+                ((Borrowing::Consumed, _), BaseTyp::Usize) => (),
                 _ => {
                     sess.span_rustspec_err(
                         e1.1,
                         format!(
-                            "loop range bound should be an integer but has type {}{}",
+                            "loop range bound should be an usize but has type {}{}",
                             (t_e1.0).0,
                             (t_e1.1).0
                         )
@@ -2307,13 +2334,16 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            match &t_e2 {
-                ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
+            match (
+                t_e2.0.clone(),
+                dealias_type(t_e2.1 .0.clone(), top_level_context),
+            ) {
+                ((Borrowing::Consumed, _), BaseTyp::Usize) => (),
                 _ => {
                     sess.span_rustspec_err(
                         e2.1,
                         format!(
-                            "loop range bound should be an integer but has type {}{}",
+                            "loop range bound should be an usize but has type {}{}",
                             (t_e2.0).0,
                             (t_e2.1).0
                         )
@@ -2322,11 +2352,14 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            let var_context = add_var(
-                &x,
-                &((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
-                &var_context,
-            );
+            let var_context = match x {
+                None => var_context,
+                Some((x, x_span)) => add_var(
+                    &x,
+                    &((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
+                    &var_context,
+                ),
+            };
             let (new_b, var_context) = typecheck_block(
                 sess,
                 (b.clone(), b_span.clone()),
@@ -2348,7 +2381,7 @@ fn typecheck_statement(
             }
             Ok((
                 Statement::ForLoop(
-                    (x.clone(), *x_span),
+                    x.clone(),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
                     (new_b, *b_span),
@@ -2435,10 +2468,11 @@ fn typecheck_block(
 
 fn typecheck_item(
     sess: &Session,
-    i: &Item,
+    item: &DecoratedItem,
     top_level_context: &TopLevelContext,
-) -> TypecheckingResult<Item> {
-    match &i {
+) -> TypecheckingResult<DecoratedItem> {
+    let i = &item.item;
+    let i = match &i {
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let canvas_size_span = canvas_size.1.clone();
             let (new_canvas_size, canvas_size_typ, _) =
@@ -2570,6 +2604,13 @@ fn typecheck_item(
                 (new_e, (e.1).clone()),
             ))
         }
+    };
+    match i {
+        Ok(i) => Ok(DecoratedItem {
+            item: i,
+            tags: item.tags.clone(),
+        }),
+        Err(a) => Err(a),
     }
 }
 

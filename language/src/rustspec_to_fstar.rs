@@ -1109,7 +1109,7 @@ fn translate_statements<'a>(
                     .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::ForLoop((x, _), (e1, _), (e2, _), (mut b, _)) => {
+        Statement::ForLoop(x, (e1, _), (e2, _), (mut b, _)) => {
             let mutated_info = b.mutated.clone().unwrap();
             let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
             b.stmts
@@ -1135,7 +1135,10 @@ fn translate_statements<'a>(
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(fun"))
                 .append(RcDoc::space())
-                .append(translate_ident(x.clone()))
+                .append(match x {
+                    Some((x, _)) => translate_ident(x.clone()),
+                    None => RcDoc::as_string("_"),
+                })
                 .append(RcDoc::space())
                 .append(mut_tuple.clone())
                 .append(RcDoc::space())
@@ -1180,8 +1183,8 @@ fn translate_block<'a>(
     translate_statements(statements.iter(), top_ctx).group()
 }
 
-fn translate_item<'a>(i: &'a Item, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
-    match i {
+fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
+    match &i.item {
         Item::FnDecl((f, _), sig, (b, _)) => make_let_binding(
             translate_ident(Ident::TopLevel(f.clone()))
                 .append(RcDoc::line())

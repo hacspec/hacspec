@@ -18,19 +18,18 @@ fn g2() -> G2 {
     Fp::from_hex("0606c4a02ea734cc32acd2b02bc28b99cb3e287e85a763af267492ab572e99ab3f370d275cec1da1aaa9075ff05f79be")), false)
 }
 
-
 #[test]
 fn test_pairing_bilinearity() {
     let a = Scalar::from_literal(9483274923u128);
     let b = Scalar::from_literal(124959043234u128);
     let c = a * b;
-    
+
     let p = pairing(g1mul(a, g1()), g2mul(b, g2()));
     //e(a*g1, b*g2) = e(c*g1, g2) = e(g1, g1)*c with c = a * b
     assert_eq!(p, pairing(g1mul(c, g1()), g2()));
     //e(a*g1, b*g2) = e(g1, g2)^(a*b)
-    assert_eq!(p, fp12exp(pairing(g1(), g2()), c)); 
-}   
+    assert_eq!(p, fp12exp(pairing(g1(), g2()), c));
+}
 
 #[test]
 fn test_pairing_unitary() {
@@ -40,4 +39,3 @@ fn test_pairing_unitary() {
     assert_eq!(p, q);
     assert_eq!(q, r);
 }
-

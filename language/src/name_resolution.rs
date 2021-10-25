@@ -1,6 +1,6 @@
 use std::fmt;
 
-use im::HashMap;
+use im::{HashMap, HashSet};
 use rustc_session::Session;
 
 use crate::hir_to_rustspec::ExternalData;
@@ -319,7 +319,19 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::ForLoop((var, var_span), lower, upper, body) => {
+        Statement::ForLoop(None, lower, upper, body) => {
+            let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
+            let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
+            let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
+            Ok((
+                (
+                    Statement::ForLoop(None, new_lower, new_upper, new_body),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
+        Statement::ForLoop(Some((var, var_span)), lower, upper, body) => {
             let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
             let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
             let new_var = match &var {
@@ -330,7 +342,7 @@ fn resolve_statement(
             let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
             Ok((
                 (
-                    Statement::ForLoop((new_var, var_span), new_lower, new_upper, new_body),
+                    Statement::ForLoop(Some((new_var, var_span)), new_lower, new_upper, new_body),
                     s_span,
                 ),
                 name_context,
@@ -411,10 +423,11 @@ fn resolve_block(
 
 fn resolve_item(
     sess: &Session,
-    (i, i_span): Spanned<Item>,
+    (item, i_span): Spanned<DecoratedItem>,
     top_level_ctx: &TopLevelContext,
-) -> ResolutionResult<Spanned<Item>> {
-    match i {
+) -> ResolutionResult<Spanned<DecoratedItem>> {
+    let i = item.clone().item;
+    let i = match i {
         Item::ConstDecl(id, typ, e) => {
             let new_e = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ConstDecl(id, typ, new_e), i_span))
@@ -450,15 +463,25 @@ fn resolve_item(
             let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
             Ok((Item::FnDecl((f, f_span), sig, new_b), i_span))
         }
+    };
+    match i {
+        Ok((i, i_span)) => Ok((
+            DecoratedItem {
+                item: i,
+                tags: item.tags,
+            },
+            i_span,
+        )),
+        Err(a) => Err(a),
     }
 }
 
 fn process_decl_item(
     sess: &Session,
-    (i, i_span): &Spanned<Item>,
+    (i, i_span): &Spanned<DecoratedItem>,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
-    match i {
+    match &i.item {
         Item::ConstDecl(id, typ, _e) => {
             top_level_context.consts.insert(id.0.clone(), typ.clone());
             Ok(())
@@ -526,24 +549,29 @@ fn process_decl_item(
                     process_decl_item(
                         sess,
                         &(
-                            Item::ArrayDecl(
-                                canvas_typ_ident.clone(),
-                                canvas_size.clone(),
-                                match secrecy {
-                                    Secrecy::Secret => (
-                                        BaseTyp::Named(
-                                            (
-                                                TopLevelIdent("U8".to_string()),
-                                                canvas_typ_ident.1.clone(),
+                            DecoratedItem {
+                                item: Item::ArrayDecl(
+                                    canvas_typ_ident.clone(),
+                                    canvas_size.clone(),
+                                    match secrecy {
+                                        Secrecy::Secret => (
+                                            BaseTyp::Named(
+                                                (
+                                                    TopLevelIdent("U8".to_string()),
+                                                    canvas_typ_ident.1.clone(),
+                                                ),
+                                                None,
                                             ),
-                                            None,
+                                            canvas_typ_ident.1.clone(),
                                         ),
-                                        canvas_typ_ident.1.clone(),
-                                    ),
-                                    Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
-                                },
-                                None,
-                            ),
+                                        Secrecy::Public => {
+                                            (BaseTyp::UInt8, canvas_typ_ident.1.clone())
+                                        }
+                                    },
+                                    None,
+                                ),
+                                tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                            },
                             *i_span,
                         ),
                         top_level_context,
@@ -609,6 +637,7 @@ fn process_decl_item(
 pub fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
     p.items
         .iter()
+        .map(|i| ((&i.0.item), &i.1))
         .filter(|i| match &i.0 {
             Item::ImportedCrate(_) => true,
             _ => false,

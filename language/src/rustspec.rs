@@ -398,10 +398,10 @@ pub enum Statement {
         Fillable<Box<MutatedInfo>>, // Variables mutated in either branch
     ),
     ForLoop(
-        Spanned<Ident>,      // Loop variable
-        Spanned<Expression>, // Lower bound
-        Spanned<Expression>, // Upper bound
-        Spanned<Block>,      // Loop body
+        Option<Spanned<Ident>>, // Loop variable
+        Spanned<Expression>,    // Lower bound
+        Spanned<Expression>,    // Upper bound
+        Spanned<Block>,         // Loop body
     ),
     ArrayUpdate(
         Spanned<Ident>,      // Array variable
@@ -461,7 +461,36 @@ pub enum Item {
     ),
 }
 
+#[derive(Clone, Hash, Copy, PartialEq, Eq, Serialize)]
+pub enum ItemTag {
+    Code,
+    Test,
+    QuickCheck,
+    Proof,
+}
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub struct ItemTagSet(pub HashSet<ItemTag>);
+
+impl Serialize for ItemTagSet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for e in &self.0 {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+#[derive(Clone, Serialize)]
+pub struct DecoratedItem {
+    pub item: Item,
+    pub tags: ItemTagSet,
+}
+
 #[derive(Clone, Serialize)]
 pub struct Program {
-    pub items: Vec<Spanned<Item>>,
+    pub items: Vec<Spanned<DecoratedItem>>,
 }
