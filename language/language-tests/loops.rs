@@ -7,6 +7,7 @@ pub fn foo(mut x: MyIntegerType) -> usize {
         x = i
     }
     x
+}
 
 // https://github.com/hacspec/hacspec/issues/135
 pub fn bar(x: U32) -> U32 {
