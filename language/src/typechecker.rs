@@ -1037,10 +1037,14 @@ fn typecheck_expression(
                 &HashMap::new(),
                 top_level_context,
             )?;
-            let (new_e_t, t_e_t, var_context) =
+            let (new_e_t, t_e_t, var_context_true_branch) =
                 typecheck_expression(sess, e_t, top_level_context, &var_context)?;
-            let (new_e_f, t_e_f, var_context) =
+            let (new_e_f, t_e_f, var_context_false_branch) =
                 typecheck_expression(sess, e_f, top_level_context, &var_context)?;
+            let final_var_context = var_context
+                .clone()
+                .intersection(var_context_true_branch)
+                .intersection(var_context_false_branch);
             unify_types_default_error_message(
                 sess,
                 &t_e_t,
@@ -1055,7 +1059,7 @@ fn typecheck_expression(
                     Box::new((new_e_f, e_f.1.clone())),
                 ),
                 t_e_t,
-                var_context,
+                final_var_context,
             ))
         }
         Expression::Binary((op, op_span), e1, e2, _) => {
