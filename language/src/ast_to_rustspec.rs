@@ -297,7 +297,7 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                         _ => (),
                     },
                     Some(args) => match t.ident.name.to_ident_string().as_str() {
-                        "Seq" => {
+                        "Seq" | "PublicSeq" | "SecretSeq" => {
                             let args = translate_type_args(sess, args, &path.span.into())?;
                             if args.len() > 1 {
                                 sess.span_rustspec_err(
@@ -307,7 +307,15 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                                 return Err(());
                             }
                             return Ok((
-                                BaseTyp::Seq(Box::new(args.first().unwrap().clone())),
+                                BaseTyp::Seq(
+                                    Box::new(args.first().unwrap().clone()),
+                                    match t.ident.name.to_ident_string().as_str() {
+                                        "Seq" => None,
+                                        "PublicSeq" => Some(Secrecy::Public),
+                                        "SecretSeq" => Some(Secrecy::Secret),
+                                        _ => panic!("should not happen"),
+                                    },
+                                ),
                                 path.span.into(),
                             ));
                         }

@@ -177,7 +177,7 @@ pub enum BaseTyp {
     Usize,
     Isize,
     Str,
-    Seq(Box<Spanned<BaseTyp>>),
+    Seq(Box<Spanned<BaseTyp>>, Option<Secrecy>), // Seq, PublicSeq, SecretSeq
     Array(Spanned<ArraySize>, Box<Spanned<BaseTyp>>),
     Named(Spanned<TopLevelIdent>, Option<Vec<Spanned<BaseTyp>>>),
     Variable(TypVar),
@@ -211,9 +211,17 @@ impl fmt::Display for BaseTyp {
                 let mu = &mu.0;
                 write!(f, "Array<{:?}, {}>", size.0, mu)
             }
-            BaseTyp::Seq(mu) => {
+            BaseTyp::Seq(mu, None) => {
                 let mu = &mu.0;
                 write!(f, "Seq<{}>", mu)
+            }
+            BaseTyp::Seq(mu, Some(Secrecy::Public)) => {
+                let mu = &mu.0;
+                write!(f, "PublicSeq<{}>", mu)
+            }
+            BaseTyp::Seq(mu, Some(Secrecy::Secret)) => {
+                let mu = &mu.0;
+                write!(f, "SecretSeq<{}>", mu)
             }
             BaseTyp::Named(ident, args) => write!(
                 f,

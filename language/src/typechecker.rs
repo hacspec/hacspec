@@ -44,7 +44,7 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
             },
         },
         BaseTyp::Array(_, _) => true,
-        BaseTyp::Seq(t1) => is_numeric(
+        BaseTyp::Seq(t1, _) => is_numeric(
             &((Borrowing::Consumed, DUMMY_SP.into()), *t1.clone()),
             top_ctxt,
         ),
@@ -88,7 +88,7 @@ fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
         BaseTyp::Int8 => true,
         BaseTyp::Usize => true,
         BaseTyp::Isize => true,
-        BaseTyp::Seq(_) => false,
+        BaseTyp::Seq(_, _) => false,
         BaseTyp::Str => false,
         BaseTyp::Array(_, _) => true,
         BaseTyp::Named((name, _), arg) => match top_ctxt.typ_dict.get(name) {
@@ -125,7 +125,7 @@ fn is_array(
     span: &RustspecSpan,
 ) -> Result<(Option<Spanned<ArraySize>>, Spanned<BaseTyp>), ()> {
     match &(t.1).0 {
-        BaseTyp::Seq(t1) => Ok((None, t1.as_ref().clone())),
+        BaseTyp::Seq(t1, _) => Ok((None, t1.as_ref().clone())),
         BaseTyp::Named(id, None) => {
             let name = &id.0;
             match top_ctxt.typ_dict.get(name) {
@@ -346,13 +346,31 @@ fn unify_types(
                 (BaseTyp::Int8, BaseTyp::Int8) => Ok(Some(typ_ctx.clone())),
                 (BaseTyp::Usize, BaseTyp::Usize) => Ok(Some(typ_ctx.clone())),
                 (BaseTyp::Isize, BaseTyp::Isize) => Ok(Some(typ_ctx.clone())),
-                (BaseTyp::Seq(tc1), BaseTyp::Seq(tc2)) => unify_types(
-                    sess,
-                    &(((Borrowing::Consumed, (t1.1).1)), *tc1.clone()),
-                    &(((Borrowing::Consumed, (t2.1).1)), *tc2.clone()),
-                    typ_ctx,
-                    top_ctx,
-                ),
+                (BaseTyp::Seq(tc1, sec1), BaseTyp::Seq(tc2, sec2)) => match (sec1, sec2) {
+                    (None, None)
+                    | (Some(Secrecy::Public), Some(Secrecy::Public))
+                    | (Some(Secrecy::Secret), Some(Secrecy::Secret))
+                    | (Some(_), Some(_)) // TODO: remove this because it's causing bugs?
+                    | (None, _)
+                    | (_, None) => unify_types(
+                        sess,
+                        &(((Borrowing::Consumed, (t1.1).1)), *tc1.clone()),
+                        &(((Borrowing::Consumed, (t2.1).1)), *tc2.clone()),
+                        typ_ctx,
+                        top_ctx,
+                    ),
+                    _ => {
+                        sess.span_rustspec_err(
+                            (t2.0).1.clone(),
+                            format!(
+                                "mismatch between public and secret sequences {:?} {:?}",
+                                sec1, sec2
+                            )
+                            .as_str(),
+                        );
+                        return Err(());
+                    }
+                },
                 (BaseTyp::Named(name1, args1), BaseTyp::Named(name2, args2)) => {
                     let (name1, name2) = match (&name1.0, &name2.0) {
                         (TopLevelIdent(name1), TopLevelIdent(name2)) => {
@@ -462,10 +480,13 @@ fn bind_variable_type(
             }
             Some(new_ty) => Ok(new_ty.clone()),
         },
-        BaseTyp::Seq(arg_ty) => Ok(BaseTyp::Seq(Box::new((
-            bind_variable_type(sess, arg_ty.as_ref(), typ_ctx)?,
-            arg_ty.as_ref().1.clone(),
-        )))),
+        BaseTyp::Seq(arg_ty, sec) => Ok(BaseTyp::Seq(
+            Box::new((
+                bind_variable_type(sess, arg_ty.as_ref(), typ_ctx)?,
+                arg_ty.as_ref().1.clone(),
+            )),
+            sec.clone(),
+        )),
         BaseTyp::Named(name, args) => Ok(BaseTyp::Named(
             name.clone(),
             match args
@@ -1499,7 +1520,13 @@ fn typecheck_expression(
                         Expression::NewArray(None, Some(cell_type.0.clone()), new_elements),
                         (
                             (Borrowing::Consumed, span.clone()),
-                            (BaseTyp::Seq(Box::new(cell_type)), span.clone()),
+                            (
+                                BaseTyp::Seq(
+                                    Box::new(cell_type),
+                                    None, //TODO: implement PublicSeq/SecretSeq distinction here
+                                ),
+                                span.clone(),
+                            ),
                         ),
                         var_context,
                     ))

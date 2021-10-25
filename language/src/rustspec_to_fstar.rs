@@ -239,7 +239,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::Usize => RcDoc::as_string("uint_size"),
         BaseTyp::Isize => RcDoc::as_string("int_size"),
         BaseTyp::Str => RcDoc::as_string("string"),
-        BaseTyp::Seq(tau) => {
+        BaseTyp::Seq(tau, _) => {
             let tau: BaseTyp = tau.0;
             RcDoc::as_string("seq")
                 .append(RcDoc::space())
@@ -448,7 +448,7 @@ fn translate_binop<'a, 'b>(
         _ => (),
     };
     match (op, &(op_typ.1).0) {
-        (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, inner_ty)) => {
+        (_, BaseTyp::Seq(inner_ty, _)) | (_, BaseTyp::Array(_, inner_ty)) => {
             let inner_ty_op = translate_binop(
                 op,
                 &(
@@ -472,7 +472,7 @@ fn translate_binop<'a, 'b>(
             RcDoc::as_string(format!(
                 "`{}_{} ({})`",
                 match &(op_typ.1).0 {
-                    BaseTyp::Seq(_) => SEQ_MODULE,
+                    BaseTyp::Seq(_, _) => SEQ_MODULE,
                     BaseTyp::Array(_, _) => ARRAY_MODULE,
                     _ => panic!(), // should not happen
                 },
@@ -559,7 +559,7 @@ fn translate_prefix_for_func_name<'a>(
         BaseTyp::Enum(_cases, _type_args) => {
             panic!("Should not happen")
         }
-        BaseTyp::Seq(inner_ty) => (
+        BaseTyp::Seq(inner_ty, _) => (
             RcDoc::as_string(SEQ_MODULE),
             FuncPrefix::Seq(inner_ty.as_ref().0.clone()),
         ),
@@ -942,7 +942,7 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
 
 fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match &(t.1).0 {
-        BaseTyp::Seq(_) => RcDoc::as_string("seq"),
+        BaseTyp::Seq(_, _) => RcDoc::as_string("seq"),
         BaseTyp::Named(id, None) => {
             let name = &id.0;
             match top_ctxt.typ_dict.get(name) {
