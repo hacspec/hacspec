@@ -9,6 +9,15 @@ pub fn foo(mut x: MyIntegerType) -> usize {
     x
 }
 
+type MyU32IntegerType = u32;
+
+pub fn baz(mut x: MyU32IntegerType) -> MyU32IntegerType {
+    for i in 0..(x as usize) {
+        x = i as u32;
+    }
+    x
+}
+
 // https://github.com/hacspec/hacspec/issues/135
 pub fn bar(x: U32) -> U32 {
     let mut y = x;

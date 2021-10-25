@@ -205,7 +205,8 @@ fn is_index(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
     }
 }
 
-fn is_castable_integer(t: &BaseTyp) -> bool {
+fn is_castable_integer(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
+    let t = dealias_type(t.clone(), top_ctxt);
     match t {
         BaseTyp::UInt128 => true,
         BaseTyp::Int128 => true,
@@ -1722,7 +1723,7 @@ fn typecheck_expression(
                 sess.span_rustspec_err(e1.1.clone(), "cannot cast borrowed expression");
                 return Err(());
             }
-            if !is_castable_integer(&(e1_typ.1).0) {
+            if !is_castable_integer(&(e1_typ.1).0, top_level_context) {
                 sess.span_rustspec_err(
                     e1.1.clone(),
                     format!(
@@ -1734,7 +1735,7 @@ fn typecheck_expression(
                 );
                 return Err(());
             }
-            if !is_castable_integer(&t1.0) {
+            if !is_castable_integer(&t1.0, top_level_context) {
                 sess.span_rustspec_err(e1.1.clone(), "impossible to cast to this type");
                 return Err(());
             }
