@@ -350,9 +350,9 @@ pub enum Expression {
         Fillable<Typ>,            // Type of the array
     ),
     NewArray(
-        Spanned<TopLevelIdent>,   // Name of array type
-        Option<BaseTyp>,          // Type of cells
-        Vec<Spanned<Expression>>, // Contents
+        Option<Spanned<TopLevelIdent>>, // Name of array type, None if Seq
+        Option<BaseTyp>,                // Type of cells
+        Vec<Spanned<Expression>>,       // Contents
     ),
     Tuple(Vec<Spanned<Expression>>),
     IntegerCasting(

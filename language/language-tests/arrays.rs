@@ -20,3 +20,11 @@ pub fn linear_manipulations(a: Seq<u8>) -> Seq<u8> {
     }
     c
 }
+
+pub fn creating_public_byte_seq() -> PublicSeq<u8> {
+    public_byte_seq!(0u8, 1u8, 2u8, 3u8)
+}
+
+pub fn creating_byte_seq() -> Seq<U8> {
+    byte_seq!(0u8, 1u8, 2u8, 3u8)
+}

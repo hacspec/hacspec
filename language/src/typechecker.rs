@@ -139,14 +139,12 @@ fn is_array(
                         );
                         Err(())
                     }
-                    DictEntry::Array => {
-                        match &(new_t.1).0 {
-                            BaseTyp::Array(size, cell_t) => {
-                                Ok((Some(size.clone()), cell_t.as_ref().clone()))
-                            }
-                            _ => panic!(), // shouldd not happen
+                    DictEntry::Array => match &(new_t.1).0 {
+                        BaseTyp::Array(size, cell_t) => {
+                            Ok((Some(size.clone()), cell_t.as_ref().clone()))
                         }
-                    }
+                        _ => panic!("should not happen"),
+                    },
                     DictEntry::NaturalInteger => {
                         sess.span_rustspec_err(
                             span.clone(),
@@ -507,7 +505,7 @@ fn sig_args(sig: &FnValue) -> Vec<Typ> {
     match sig {
         FnValue::Local(sig) => sig.args.clone().into_iter().map(|(_, (x, _))| x).collect(),
         FnValue::External(sig) => sig.args.clone(),
-        FnValue::ExternalNotInHacspec(_) => panic!(),
+        FnValue::ExternalNotInHacspec(_) => panic!("should not happen"),
     }
 }
 
@@ -515,7 +513,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
     match sig {
         FnValue::Local(sig) => sig.ret.0.clone(),
         FnValue::External(sig) => sig.ret.clone(),
-        FnValue::ExternalNotInHacspec(_) => panic!(),
+        FnValue::ExternalNotInHacspec(_) => panic!("should not happen"),
     }
 }
 
@@ -597,7 +595,7 @@ fn find_typ(
     top_level_context: &TopLevelContext,
 ) -> Option<Typ> {
     match x {
-        Ident::Unresolved(_) => panic!(), // name resolution should have already happened
+        Ident::Unresolved(_) => panic!("name resolution should have already happened"),
         Ident::TopLevel(name) => top_level_context.consts.get(name).map(|(t, span)| {
             (
                 (Borrowing::Consumed, span.clone()),
@@ -1319,46 +1317,56 @@ fn typecheck_expression(
             )),
         },
         Expression::NewArray(array_type, _, elements) => {
-            let (array_len, (cell_type, cell_type_span)) = is_array(
-                sess,
-                &(
-                    (Borrowing::Consumed, array_type.1.clone()),
-                    (
-                        BaseTyp::Named(array_type.clone(), None),
-                        array_type.1.clone(),
-                    ),
-                ),
-                top_level_context,
-                &array_type.1,
-            )?;
-            let array_len = match array_len {
-                Some(len) => len,
-                None => {
-                    sess.span_rustspec_err(
-                        array_type.1.clone(),
-                        "type should be an array but is Seq",
-                    );
-                    return Err(());
-                }
-            };
-            match &array_len.0 {
-                ArraySize::Integer(array_len) => {
-                    if elements.len() != *array_len {
-                        sess.span_rustspec_err(
-                            span.clone(),
-                            format!(
-                                "array {} initializer expected {} elements but got {}",
-                                array_type.0,
-                                array_len,
-                                elements.len()
-                            )
-                            .as_str(),
-                        )
+            let (cell_type, cell_type_span) = {
+                match array_type {
+                    Some(array_type) => {
+                        let (array_len, (cell_type, cell_type_span)) = is_array(
+                            sess,
+                            &(
+                                (Borrowing::Consumed, array_type.1.clone()),
+                                (
+                                    BaseTyp::Named(array_type.clone(), None),
+                                    array_type.1.clone(),
+                                ),
+                            ),
+                            top_level_context,
+                            &array_type.1,
+                        )?;
+                        let array_len = match array_len {
+                            Some(len) => len,
+                            None => {
+                                sess.span_rustspec_err(
+                                    array_type.1.clone(),
+                                    "type should be an array but is Seq",
+                                );
+                                return Err(());
+                            }
+                        };
+                        match &array_len.0 {
+                            ArraySize::Integer(array_len) => {
+                                if elements.len() != *array_len {
+                                    sess.span_rustspec_err(
+                                        span.clone(),
+                                        format!(
+                                            "array {} initializer expected {} elements but got {}",
+                                            array_type.0,
+                                            array_len,
+                                            elements.len()
+                                        )
+                                        .as_str(),
+                                    )
+                                }
+                            }
+                            ArraySize::Ident(_) => (), // we trust Rust typechecking for this case,
+                                                       // in order to avoid redoing here a const computation engine
+                        };
+                        (cell_type, cell_type_span)
+                    }
+                    None => {
+                        panic!()
                     }
                 }
-                ArraySize::Ident(_) => (), // we trust Rust typechecking for this case,
-                                           // in order to avoid redoing here a const computation engine
-            }
+            };
             let mut var_context = var_context.clone();
             let new_elements = check_vec(
                 elements
@@ -1399,17 +1407,19 @@ fn typecheck_expression(
                     })
                     .collect(),
             )?;
-            let new_array_typ = BaseTyp::Named(array_type.clone(), None);
-            Ok((
-                Expression::NewArray(
-                    array_type.clone(),
-                    Some(new_array_typ.clone()),
-                    new_elements,
-                ),
-                (
+            let new_array_typ = match array_type {
+                Some(array_type) => (
                     (Borrowing::Consumed, array_type.1.clone()),
-                    (new_array_typ, array_type.1.clone()),
+                    (
+                        BaseTyp::Named(array_type.clone(), None),
+                        array_type.1.clone(),
+                    ),
                 ),
+                None => panic!(),
+            };
+            Ok((
+                Expression::NewArray(array_type.clone(), Some(cell_type), new_elements),
+                new_array_typ,
                 var_context,
             ))
         }
@@ -2127,7 +2137,7 @@ fn typecheck_statement(
                 add_var(&x, &x_typ, &new_var_context),
                 VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
-                    _ => panic!(), // should not happen
+                    _ => panic!("should not happen"),
                 })),
             ))
         }
@@ -2195,7 +2205,7 @@ fn typecheck_statement(
                 var_context,
                 VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
-                    _ => panic!(), // should not happen
+                    _ => panic!("should not happen"),
                 })),
             ))
         }
@@ -2244,10 +2254,7 @@ fn typecheck_statement(
                 }
             };
             match &new_b1.return_typ {
-                None => {
-                    // Should not happen
-                    panic!()
-                }
+                None => panic!("should not happen"),
                 Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                 Some(((b_t, _), (t, _))) => {
                     sess.span_rustspec_err(
@@ -2262,7 +2269,7 @@ fn typecheck_statement(
                 None => (),
                 Some((new_b2, _)) => {
                     match &new_b2.return_typ {
-                        None => panic!(), // should not happen
+                        None => panic!("should not happen"),
                         Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                         Some(((b_t, _), (t, _))) => {
                             sess.span_rustspec_err(

@@ -644,7 +644,9 @@ fn translate_expr(
                                 let new_cells = check_vec(new_cells)?;
                                 return Ok((
                                     (ExprTranslationResult::TransExpr(Expression::NewArray(
-                                        func_name, None, new_cells,
+                                        Some(func_name),
+                                        None,
+                                        new_cells,
                                     ))),
                                     e.span.into(),
                                 ));
@@ -697,7 +699,11 @@ fn translate_expr(
                                                 .collect();
                                             return Ok((
                                                 (ExprTranslationResult::TransExpr(
-                                                    Expression::NewArray(func_name, None, array),
+                                                    Expression::NewArray(
+                                                        Some(func_name),
+                                                        None,
+                                                        array,
+                                                    ),
                                                 )),
                                                 e.span.into(),
                                             ));
@@ -736,7 +742,11 @@ fn translate_expr(
                                                 .collect();
                                             return Ok((
                                                 (ExprTranslationResult::TransExpr(
-                                                    Expression::NewArray(func_name, None, array),
+                                                    Expression::NewArray(
+                                                        Some(func_name),
+                                                        None,
+                                                        array,
+                                                    ),
                                                 )),
                                                 e.span.into(),
                                             ));
