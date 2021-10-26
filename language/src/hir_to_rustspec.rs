@@ -93,15 +93,7 @@ fn translate_base_typ(
                                 return Err(());
                             };
                             Ok((
-                                BaseTyp::Seq(
-                                    Box::new((param_typ, DUMMY_SP.into())),
-                                    match name.to_ident_string().as_str() {
-                                        "Seq" => None,
-                                        "PublicSeq" => Some(Secrecy::Public),
-                                        "SecretSeq" => Some(Secrecy::Secret),
-                                        _ => panic!("should not happen"),
-                                    },
-                                ),
+                                BaseTyp::Seq(Box::new((param_typ, DUMMY_SP.into()))),
                                 typ_ctx,
                             ))
                         }

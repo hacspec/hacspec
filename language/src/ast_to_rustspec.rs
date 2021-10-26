@@ -307,15 +307,7 @@ fn translate_base_typ(sess: &Session, ty: &Ty) -> TranslationResult<Spanned<Base
                                 return Err(());
                             }
                             return Ok((
-                                BaseTyp::Seq(
-                                    Box::new(args.first().unwrap().clone()),
-                                    match t.ident.name.to_ident_string().as_str() {
-                                        "Seq" => None,
-                                        "PublicSeq" => Some(Secrecy::Public),
-                                        "SecretSeq" => Some(Secrecy::Secret),
-                                        _ => panic!("should not happen"),
-                                    },
-                                ),
+                                BaseTyp::Seq(Box::new(args.first().unwrap().clone())),
                                 path.span.into(),
                             ));
                         }
