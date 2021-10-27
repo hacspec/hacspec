@@ -1977,7 +1977,7 @@ fn translate_simplified_natural_integer_decl(
             Ok((
                 (ItemTranslationResult::Item(DecoratedItem {
                     item: Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, None),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(HashSet::unit("code".to_string())),
                 })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2101,7 +2101,7 @@ fn translate_natural_integer_decl(
                         canvas_size,
                         Some((canvas_typ_ident, modulo_string)),
                     ),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(HashSet::unit("code".to_string())),
                 })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2223,7 +2223,7 @@ fn translate_array_decl(
             Ok((
                 (ItemTranslationResult::Item(DecoratedItem {
                     item: Item::ArrayDecl(typ_ident, size, cell_t, index_typ),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(HashSet::unit("code".to_string())),
                 })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2291,11 +2291,53 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     }
 }
 
-fn attribute_tag(attr: &Attribute) -> Option<ItemTag> {
+fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
     let attr_name = attr.name_or_empty().to_ident_string();
     match attr_name.as_str() {
-        "quickcheck" => Some(ItemTag::QuickCheck),
-        "test" => Some(ItemTag::Test),
+        "quickcheck" => Some(vec!["quickcheck".to_string()]),
+        "test" => Some(vec!["test".to_string()]),
+        "derive" => {
+            let inner_tokens = attr.tokens().to_tokenstream();
+            if inner_tokens.len() != 2 {
+                return None;
+            }
+            let mut it = inner_tokens.trees();
+            let first_token = it.next().unwrap();
+            let second_token = it.next().unwrap();
+            match (first_token, second_token) {
+                (TokenTree::Token(first_tok), TokenTree::Delimited(_, _, inner)) => {
+                    match first_tok.kind {
+                        TokenKind::Pound => {
+                            if inner.len() != 2 {
+                                return None;
+                            }
+                            let mut it = inner.trees();
+                            let _first_token = it.next().unwrap();
+                            // First is derive
+                            let second_token = it.next().unwrap();
+                            match second_token {
+                                TokenTree::Delimited(_, _, inner) => {
+                                    Some(inner.trees().fold(Vec::new(), |mut a, x| match x {
+                                        TokenTree::Token(tok) => match tok.kind {
+                                            TokenKind::Ident(ident, _) => {
+                                                println!("{}", ident.to_ident_string());
+                                                a.push(ident.to_ident_string());
+                                                a
+                                            }
+                                            _ => a,
+                                        },
+                                        _ => a,
+                                    }))
+                                }
+                                _ => None,
+                            }
+                        }
+                        _ => None,
+                    }
+                }
+                _ => None,
+            }
+        }
         "cfg" => {
             let inner_tokens = attr.tokens().to_tokenstream();
             if inner_tokens.len() != 2 {
@@ -2327,8 +2369,8 @@ fn attribute_tag(attr: &Attribute) -> Option<ItemTag> {
                                             TokenKind::Ident(ident, _) => {
                                                 let ident_string = ident.to_ident_string();
                                                 match ident_string.as_str() {
-                                                    "proof" => Some(ItemTag::Proof),
-                                                    "test" => Some(ItemTag::Test),
+                                                    "proof" => Some(vec!["proof".to_string()]),
+                                                    "test" => Some(vec!["test".to_string()]),
                                                     _ => None,
                                                 }
                                             }
@@ -2358,14 +2400,15 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
     let mut tags = HashSet::new();
-    tags.insert(ItemTag::Code);
+    tags.insert("code".to_string());
     let export = i
         .attrs
         .iter()
         .fold(false, |b, attr| match attribute_tag(attr) {
             Some(a) => {
-                tags.insert(a);
-                b || a == ItemTag::Proof
+                tags.extend(a.iter());
+                // tags.insert(a);
+                b || a.contains(&"proof".to_string())
             }
             None => b,
         });
@@ -2520,7 +2563,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                             },
                             tree.span.clone().into(),
                         )),
-                        tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                        tags: ItemTagSet(tags),
                     }),
                     specials,
                 ))
@@ -2587,7 +2630,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
                     item: Item::ConstDecl(id, new_ty, new_e),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(tags),
                 }),
                 specials.clone(),
             ))
@@ -2648,7 +2691,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
                             item: Item::AliasDecl(ty_alias_name, ty),
-                            tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                            tags: ItemTagSet(tags),
                         }),
                         specials,
                     ))
@@ -2725,7 +2768,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
                     item: Item::EnumDecl(id, variants),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(tags),
                 }),
                 SpecialNames {
                     enums: specials.enums.update(id_string),
@@ -2766,7 +2809,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                                 None,
                             )],
                         ),
-                        tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                        tags: ItemTagSet(tags),
                     }),
                     SpecialNames {
                         enums: specials.enums.update(id_string),
@@ -2809,7 +2852,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                                     Some(payload),
                                 )],
                             ),
-                            tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                            tags: ItemTagSet(tags),
                         }),
                         SpecialNames {
                             enums: specials.enums.update(id_string),
