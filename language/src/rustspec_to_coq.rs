@@ -822,22 +822,28 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 })
         }
         Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
-            let (func_name, additional_args) =
-                translate_func_name(sel_typ.clone().map(|x| x.1), Ident::TopLevel(f), top_ctx);
-            func_name // We append implicit arguments first
-                .append(RcDoc::concat(
-                    additional_args
-                        .into_iter()
-                        .map(|arg| RcDoc::space().append(make_paren(arg))),
-                ))
-                // Then the self argument
-                .append(
-                    RcDoc::space().append(make_paren(translate_expression((sel_arg.0).0, top_ctx))),
-                )
-                // And finally the rest of the arguments
-                .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
-                    RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
-                })))
+            if f.clone() == TopLevelIdent("clone".to_string()) {
+                RcDoc::nil()
+            } else {
+                let (func_name, additional_args) = translate_func_name(
+                    sel_typ.clone().map(|x| x.1),
+                    Ident::TopLevel(f.clone()),
+                    top_ctx,
+                );
+                func_name // We append implicit arguments first
+                    .append(RcDoc::concat(
+                        additional_args
+                            .into_iter()
+                            .map(|arg| RcDoc::space().append(make_paren(arg))),
+                    ))
+                    .append(RcDoc::space())
+            }
+            // Then the self argument
+            .append(make_paren(translate_expression((sel_arg.0).0, top_ctx)))
+            // And finally the rest of the arguments
+            .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
+                RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
+            })))
         }
         Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
