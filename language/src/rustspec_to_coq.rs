@@ -1252,11 +1252,7 @@ fn translate_item<'a>(
                 ),
             None,
             translate_block(b.clone(), false, top_ctx)
-                .append(if let BaseTyp::Unit = sig.ret.0 {
-                    RcDoc::hardline().append(RcDoc::as_string("()"))
-                } else {
-                    RcDoc::nil()
-                })
+                .append(RcDoc::nil())
                 .group(),
             true,
         )
