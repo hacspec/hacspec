@@ -265,7 +265,11 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         },
         BaseTyp::Variable(id) => RcDoc::as_string(format!("t{}", id.0)),
         BaseTyp::Tuple(args) => {
-            make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
+            if args.len() == 0 {
+                RcDoc::as_string("unit")
+            } else {
+                make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
+            }
         }
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
             .append(RcDoc::space())
