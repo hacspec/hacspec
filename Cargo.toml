@@ -1,8 +1,11 @@
+cargo-features = ["edition2021"]
+
 [workspace]
 members = [
     "lib",
     "protocols/tls_cryptolib",
     "provider",
+    "concordium-provider",
     "utils/dev",
     "utils/derive",
     "utils/evercrypt-provider",
@@ -11,6 +14,7 @@ members = [
     "utils/attributes",
     "utils/rc-bench",
     "utils/rc-tests",
+    "utils/concordium-bench",
     "utils/util",
     "examples/curve25519",
     "examples/chacha20",
@@ -31,11 +35,16 @@ members = [
     "examples/aes",
     "examples/gf128",
     "examples/aes128-gcm",
+    "examples/piggybank",
+    "examples/auction",
+    "examples/concordium-impls",
+    "examples/typecheck",
 ]
 default-members = [
     "lib",
     "protocols/tls_cryptolib",
     "provider",
+    "concordium-provider",
     "utils/dev",
     "utils/derive",
     "utils/secret-integers",
@@ -61,5 +70,9 @@ default-members = [
     "examples/aes",
     "examples/gf128",
     "examples/aes128-gcm",
+    "examples/piggybank",
+    "examples/auction",
+    "examples/concordium-impls",
+    "examples/typecheck",
 ]
 exclude = [ "language" ]
