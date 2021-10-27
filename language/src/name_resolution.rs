@@ -571,7 +571,7 @@ fn process_decl_item(
                                     },
                                     None,
                                 ),
-                                tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                                tags: ItemTagSet(HashSet::unit("code".to_string())),
                             },
                             *i_span,
                         ),
