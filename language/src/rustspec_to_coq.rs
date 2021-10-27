@@ -83,19 +83,23 @@ fn make_uint_size_coercion<'a>(pat: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
-    RcDoc::as_string("(")
-        .append(
-            RcDoc::line_()
-                .append(RcDoc::intersperse(
-                    args.into_iter(),
-                    RcDoc::as_string(",").append(RcDoc::line()),
-                ))
-                .group()
-                .nest(2),
-        )
-        .append(RcDoc::line_())
-        .append(RcDoc::as_string(")"))
-        .group()
+    let iter = args.into_iter();
+    match &iter.size_hint().1 {
+        Some(0) => RcDoc::as_string("tt"),
+        _ => RcDoc::as_string("(")
+            .append(
+                RcDoc::line_()
+                    .append(RcDoc::intersperse(
+                        iter,
+                        RcDoc::as_string(",").append(RcDoc::line()),
+                    ))
+                    .group()
+                    .nest(2),
+            )
+            .append(RcDoc::line_())
+            .append(RcDoc::as_string(")"))
+            .group(),
+    }
 }
 
 fn make_list<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
