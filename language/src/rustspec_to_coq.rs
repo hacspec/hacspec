@@ -1380,8 +1380,6 @@ fn translate_item<'a>(
             ))
             .append(RcDoc::as_string("."))
             .append(if item.tags.0.contains(&"PartialEq".to_string()) {
-                println!("PartialEq");
-
                 RcDoc::hardline()
                     .append(RcDoc::hardline())
                     .append(RcDoc::as_string("Definition"))
@@ -1498,7 +1496,6 @@ fn translate_item<'a>(
 
 
             } else {
-                println!("Not PartialEq {:?}", item.tags.0);
                 RcDoc::nil()
             }),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("Definition")
