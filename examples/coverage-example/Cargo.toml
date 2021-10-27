@@ -1,0 +1,14 @@
+[package]
+name = "hacspec-coverage"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+
+[dev-dependencies]
+quickcheck = "1"
+quickcheck_macros = "1"
+
+[lib]
+path = "src/lib.rs"
