@@ -767,19 +767,21 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             let cond = cond.0;
             let e_t = e_t.0;
             let e_f = e_f.0;
-            RcDoc::as_string("if")
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(cond, top_ctx)))
-                .append(RcDoc::as_string(":bool"))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("then"))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e_t, top_ctx)))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("else"))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e_f, top_ctx)))
-                .group()
+            make_paren(
+                RcDoc::as_string("if")
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(cond, top_ctx)))
+                    .append(RcDoc::as_string(":bool"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("then"))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e_t, top_ctx)))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("else"))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e_f, top_ctx))),
+            )
+            .group()
         }
         Expression::Unary(op, e1, op_typ) => {
             let e1 = e1.0;
