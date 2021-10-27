@@ -840,23 +840,34 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             let inner_ty = inner_ty.unwrap();
             // inner_ty is the type of the cell elements
             // TODO: do the case when _array_name is None (the Seq case)
-            RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
-                .append(RcDoc::space())
-                .append(translate_base_typ(inner_ty.clone()))
-                .append(RcDoc::space())
-                .append(make_paren(
-                    make_let_binding(
-                        RcDoc::as_string("l"),
-                        None,
-                        make_list(
-                            args.into_iter()
-                                .map(|(e, _)| translate_expression(e.clone(), top_ctx)),
-                        ),
-                        false,
-                    )
-                    .append(RcDoc::space())
-                    .append(RcDoc::as_string("l")),
-                ))
+            match _array_name {
+                // Seq case
+                None => make_list(
+                    args.into_iter()
+                        .map(|(e, _)| translate_expression(e.clone(), top_ctx)),
+                ),
+                Some(_) =>
+                // Array case
+                {
+                    RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
+                        .append(RcDoc::space())
+                        .append(translate_base_typ(inner_ty.clone()))
+                        .append(RcDoc::space())
+                        .append(make_paren(
+                            make_let_binding(
+                                RcDoc::as_string("l"),
+                                None,
+                                make_list(
+                                    args.into_iter()
+                                        .map(|(e, _)| translate_expression(e.clone(), top_ctx)),
+                                ),
+                                false,
+                            )
+                            .append(RcDoc::space())
+                            .append(RcDoc::as_string("l")),
+                        ))
+                }
+            }
         }
         Expression::IntegerCasting(x, new_t, old_t) => {
             let old_t = old_t.unwrap();
