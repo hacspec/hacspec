@@ -2320,7 +2320,6 @@ fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
                                     Some(inner.trees().fold(Vec::new(), |mut a, x| match x {
                                         TokenTree::Token(tok) => match tok.kind {
                                             TokenKind::Ident(ident, _) => {
-                                                println!("{}", ident.to_ident_string());
                                                 a.push(ident.to_ident_string());
                                                 a
                                             }
