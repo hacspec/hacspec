@@ -259,6 +259,7 @@ Definition seq (A : Type) := list A.
 (* Automatic conversion from nseq/vector/array to seq/list *)
 Global Coercion Vector.to_list : Vector.t >-> list.
 
+Definition public_byte_seq := seq int8.
 Definition byte_seq := seq int8.
 Definition list_len := length.
 
