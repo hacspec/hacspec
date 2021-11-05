@@ -123,6 +123,20 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
+            pub fn push(&self, next: &T) -> Self {
+                let mut out = Self::new(self.len() + 1);
+                out = out.update_start(self);
+                out[self.len()] = next.clone();
+                out
+            }
+
+            #[cfg_attr(feature="use_attributes", in_hacspec)]
+            pub fn push_owned(mut self, next: T) -> Self {
+                self.b.push(next);
+                self
+            }
+
+            #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn from_slice_range<A: SeqTrait<T>>(input: &A, r: Range<usize>) -> Self {
                 Self::from_slice(input, r.start, r.end - r.start)
             }
