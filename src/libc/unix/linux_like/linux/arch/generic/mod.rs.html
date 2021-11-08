@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.106/src/unix/linux_like/linux/arch/generic/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../../../../../light.css" id="themeStyle"><script src="../../../../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../../../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../../../../libc/index.html'><div class='logo-container'><img src='../../../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../../../../../settings.html"><img src="../../../../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.107/src/unix/linux_like/linux/arch/generic/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../../../../../light.css" id="themeStyle"><script src="../../../../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../../../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../../../../libc/index.html'><div class='logo-container'><img src='../../../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../../../../../settings.html"><img src="../../../../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -98,7 +98,38 @@
 <span id="98"> 98</span>
 <span id="99"> 99</span>
 <span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="macro">s</span><span class="macro">!</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">termios2</span> {
+        <span class="kw">pub</span> <span class="ident">c_iflag</span>: ::<span class="ident">tcflag_t</span>,
+        <span class="kw">pub</span> <span class="ident">c_oflag</span>: ::<span class="ident">tcflag_t</span>,
+        <span class="kw">pub</span> <span class="ident">c_cflag</span>: ::<span class="ident">tcflag_t</span>,
+        <span class="kw">pub</span> <span class="ident">c_lflag</span>: ::<span class="ident">tcflag_t</span>,
+        <span class="kw">pub</span> <span class="ident">c_line</span>: ::<span class="ident">cc_t</span>,
+        <span class="kw">pub</span> <span class="ident">c_cc</span>: [::<span class="ident">cc_t</span>; <span class="number">19</span>],
+        <span class="kw">pub</span> <span class="ident">c_ispeed</span>: ::<span class="ident">speed_t</span>,
+        <span class="kw">pub</span> <span class="ident">c_ospeed</span>: ::<span class="ident">speed_t</span>,
+    }
+}
+
 <span class="comment">// include/uapi/asm-generic/socket.h</span>
 <span class="comment">// arch/alpha/include/uapi/asm/socket.h</span>
 <span class="comment">// tools/include/uapi/asm-generic/socket.h</span>
@@ -199,5 +230,10 @@
 <span class="comment">// pub const SCM_TIMESTAMP: ::c_int = SO_TIMESTAMP;</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCM_TIMESTAMPNS</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="ident">SO_TIMESTAMPNS</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCM_TIMESTAMPING</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="ident">SO_TIMESTAMPING</span>;
+
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TCGETS2</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x802c542a</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TCSETS2</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x402c542b</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TCSETSW2</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x402c542c</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TCSETSF2</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x402c542d</span>;
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../../../../../";window.currentCrate = "libc";</script><script src="../../../../../../../aliases.js"></script><script src="../../../../../../../main.js"></script><script src="../../../../../../../source-script.js"></script><script src="../../../../../../../source-files.js"></script><script defer src="../../../../../../../search-index.js"></script></body></html>

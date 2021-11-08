@@ -552,6 +552,20 @@
 <span id="552">552</span>
 <span id="553">553</span>
 <span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Sequences</span>
@@ -674,6 +688,20 @@
             <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">concat_owned</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">next</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">append</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">next</span>.<span class="ident">b</span>);
+                <span class="self">self</span>
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">next</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>);
+                <span class="ident">out</span> <span class="op">=</span> <span class="ident">out</span>.<span class="ident">update_start</span>(<span class="self">self</span>);
+                <span class="ident">out</span>[<span class="self">self</span>.<span class="ident">len</span>()] <span class="op">=</span> <span class="ident">next</span>.<span class="ident">clone</span>();
+                <span class="ident">out</span>
+            }
+
+            <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_owned</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">next</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+                <span class="self">self</span>.<span class="ident">b</span>.<span class="ident">push</span>(<span class="ident">next</span>);
                 <span class="self">self</span>
             }
 
