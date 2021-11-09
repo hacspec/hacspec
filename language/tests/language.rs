@@ -44,6 +44,11 @@ fn positive_arrays() {
 }
 
 #[test]
+fn positive_copy() {
+    run_test("language-tests/copy.rs", None);
+}
+
+#[test]
 fn positive_tuples() {
     run_test("language-tests/tuples.rs", None);
 }
