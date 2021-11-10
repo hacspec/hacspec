@@ -11,7 +11,7 @@ pub fn baz(x: Foo) -> Bar {
     let z: Bar = Bar(0u32);
     let Bar(z) = z;
     let y = match x {
-        Foo::CaseX => Foo::CaseY(U8(z as u8), Seq::<u32>::new(1)),
+        Foo::CaseX => Foo::CaseY(U8(z as u8), Seq::<u32>::init(1)),
         Foo::CaseY(a, b) => Foo::CaseY(a + U8(1u8), b),
     };
     match y {
