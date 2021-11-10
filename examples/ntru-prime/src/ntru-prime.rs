@@ -2,7 +2,7 @@
 use hacspec_lib::*;
 
 fn build_irreducible(p: usize) -> Seq<i128> {
-    let mut irr = Seq::<i128>::new(p + 1);
+    let mut irr = Seq::<i128>::init(p + 1);
     irr[0] = -1i128;
     irr[1] = -1i128;
     irr[p] = 1i128;
@@ -76,7 +76,7 @@ pub fn ntru_prime_653_decrypt(
     }
 
     // lift f_3_c to R_3
-    let mut e = Seq::<i128>::new(f_3_c.len());
+    let mut e = Seq::<i128>::init(f_3_c.len());
     for i in 0..e.len() {
         e[i] = f_3_c[i] % 3i128;
     }

@@ -194,7 +194,7 @@ fn key_expansion_aes(
     key_length: usize,
     iterations: usize,
 ) -> ByteSeqResult {
-    let mut key_ex = ByteSeq::new(key_schedule_length);
+    let mut key_ex = ByteSeq::init(key_schedule_length);
     key_ex = key_ex.update_start(key);
     let word_size = key_length;
     for j in 0..iterations {
@@ -281,7 +281,7 @@ fn aes_counter_mode(
     iterations: usize,
 ) -> ByteSeqResult {
     let mut ctr = counter;
-    let mut blocks_out = ByteSeq::new(msg.len());
+    let mut blocks_out = ByteSeq::init(msg.len());
     let n_blocks = msg.num_exact_chunks(BLOCKSIZE);
     for i in 0..n_blocks {
         let msg_block = msg.get_exact_chunk(BLOCKSIZE, i);

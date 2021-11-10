@@ -118,7 +118,7 @@ fn process_ad(ad: &ByteSeq, s: State) -> State {
 }
 
 fn process_msg(message: &ByteSeq, mut s: State) -> (State, ByteSeq) {
-    let mut ciphertext = ByteSeq::new(message.len());
+    let mut ciphertext = ByteSeq::init(message.len());
 
     let rate = Block::length();
     let num_chunks = message.num_exact_chunks(rate);
@@ -155,7 +155,7 @@ fn process_msg(message: &ByteSeq, mut s: State) -> (State, ByteSeq) {
 }
 
 fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
-    let mut message = ByteSeq::new(ciphertext.len());
+    let mut message = ByteSeq::init(ciphertext.len());
 
     let rate = Block::length();
     let num_chunks = ciphertext.num_exact_chunks(rate);
@@ -190,7 +190,7 @@ fn process_ct(ciphertext: &ByteSeq, mut s: State) -> (State, ByteSeq) {
 
 // XXX: These two functions should maybe get a helper in the library.
 pub fn nonce_to_u32s(nonce: Nonce) -> Seq<U32> {
-    let mut uints = Seq::<U32>::new(4);
+    let mut uints = Seq::<U32>::init(4);
     uints[0] = U32_from_le_bytes(U32Word::from_slice_range(&nonce, 0..4));
     uints[1] = U32_from_le_bytes(U32Word::from_slice_range(&nonce, 4..8));
     uints[2] = U32_from_le_bytes(U32Word::from_slice_range(&nonce, 8..12));
@@ -199,7 +199,7 @@ pub fn nonce_to_u32s(nonce: Nonce) -> Seq<U32> {
 }
 
 pub fn key_to_u32s(key: Key) -> Seq<U32> {
-    let mut uints = Seq::<U32>::new(8);
+    let mut uints = Seq::<U32>::init(8);
     uints[0] = U32_from_le_bytes(U32Word::from_slice_range(&key, 0..4));
     uints[1] = U32_from_le_bytes(U32Word::from_slice_range(&key, 4..8));
     uints[2] = U32_from_le_bytes(U32Word::from_slice_range(&key, 8..12));
@@ -247,7 +247,7 @@ pub fn gimli_aead_decrypt(
     let my_tag = squeeze_block(s);
     let my_tag = Tag::from_seq(&my_tag);
 
-    let mut out = ByteSeq::new(0);
+    let mut out = ByteSeq::init(0);
     if my_tag.equal(tag) {
         out = message;
     };

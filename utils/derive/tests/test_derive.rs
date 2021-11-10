@@ -19,12 +19,12 @@ struct NumericEmpty {}
 #[test]
 fn test_struct() -> () {
     let s1 = NumericStruct {
-        fst: PublicSeq::from_vec(vec![1, 2]),
-        snd: PublicSeq::from_vec(vec![0, 1, 2]),
+        fst: PublicSeq::from_default_vec(vec![1, 2]),
+        snd: PublicSeq::from_default_vec(vec![0, 1, 2]),
     };
     let s2 = NumericStruct {
-        fst: PublicSeq::from_vec(vec![1, 2]),
-        snd: PublicSeq::from_vec(vec![0, 1, 2]),
+        fst: PublicSeq::from_default_vec(vec![1, 2]),
+        snd: PublicSeq::from_default_vec(vec![0, 1, 2]),
     };
     let s3 = s1.clone() + s2.clone();
     let s4 = s3 - s1;
@@ -34,12 +34,12 @@ fn test_struct() -> () {
 #[test]
 fn test_pair() -> () {
     let s1 = NumericPair(
-        PublicSeq::from_vec(vec![1, 2]),
-        PublicSeq::from_vec(vec![0, 1, 2]),
+        PublicSeq::from_default_vec(vec![1, 2]),
+        PublicSeq::from_default_vec(vec![0, 1, 2]),
     );
     let s2 = NumericPair(
-        PublicSeq::from_vec(vec![1, 2]),
-        PublicSeq::from_vec(vec![0, 1, 2]),
+        PublicSeq::from_default_vec(vec![1, 2]),
+        PublicSeq::from_default_vec(vec![0, 1, 2]),
     );
     let s3 = s1.clone() + s2.clone();
     let s4 = s3 - s1;

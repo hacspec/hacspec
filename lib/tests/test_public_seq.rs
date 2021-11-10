@@ -4,7 +4,7 @@ use hacspec_lib::prelude::*;
 fn test_byte_sequences() {
     let msg = PublicByteSeq::from_hex("0388dace60b6a392f328c2b971b2fe78");
     let msg_u32 =
-        PublicSeq::<u32>::from_native_slice(&[0x0388dace, 0x60b6a392, 0xf328c2b9, 0x71b2fe78]);
+        PublicSeq::<u32>::from_native_slice(&[0x0388dace, 0x60b6a392, 0xf328c2b9, 0x71b2fe78], 0);
     for i in 0..msg.num_chunks(4) {
         let (l, chunk) = msg.clone().get_chunk(4, i);
         assert_eq!(l, 4);
@@ -17,8 +17,8 @@ fn test_byte_sequences() {
 
 #[test]
 fn test_seq_poly() {
-    let x = PublicSeq::<u128>::from_native_slice(&[5, 2, 7, 8, 9]);
-    let y = PublicSeq::<u128>::from_native_slice(&[2, 1, 0, 2, 4]);
+    let x = PublicSeq::<u128>::from_native_slice(&[5, 2, 7, 8, 9], 0);
+    let y = PublicSeq::<u128>::from_native_slice(&[2, 1, 0, 2, 4], 0);
     let z = x.clone() + y.clone();
     let z = z.clone() - x.clone();
     assert_eq!(z[0..y.len()], y[0..y.len()]);
@@ -28,8 +28,8 @@ fn test_seq_poly() {
 
 #[test]
 fn test_sequences_comparison() {
-    let a = PublicByteSeq::from_native_slice(&[1, 2, 3]);
-    let b = PublicByteSeq::from_native_slice(&[1, 2, 3]);
+    let a = PublicByteSeq::from_native_slice(&[1, 2, 3], 0);
+    let b = PublicByteSeq::from_native_slice(&[1, 2, 3], 0);
     assert_eq!(a, b);
 }
 

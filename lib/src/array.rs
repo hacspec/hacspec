@@ -74,7 +74,7 @@ macro_rules! _array_base {
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             pub fn concat<A: SeqTrait<$t>>(&self, next: &A) -> Seq<$t> {
-                let mut out = Seq::new(self.len() + next.len());
+                let mut out = Seq::new(self.len() + next.len(), <$t>::default());
                 out = out.update_start(self);
                 out = out.update_slice(self.len(), next, 0, next.len());
                 out
@@ -145,9 +145,14 @@ macro_rules! _array_base {
         }
         impl SeqTrait<$t> for $name {
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            fn create(x: usize) -> Self {
+            fn create(x: usize, _default: $t) -> Self {
                 assert_eq!(x, $l);
                 Self::new()
+            }
+
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            fn default(&self) -> $t {
+                <$t>::default()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
@@ -351,7 +356,7 @@ macro_rules! generic_array {
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> Seq<T> {
-                let mut out = Seq::new(self.len() + next.len());
+                let mut out = Seq::new(self.len() + next.len(), T::default());
                 out = out.update_start(self);
                 out = out.update_slice(self.len(), next, 0, next.len());
                 out
@@ -422,9 +427,14 @@ macro_rules! generic_array {
         }
         impl<T: Numeric + Copy> SeqTrait<T> for $name<T> {
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            fn create(x: usize) -> Self {
+            fn create(x: usize, _default: T) -> Self {
                 assert_eq!(x, $l);
                 Self::new()
+            }
+
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            fn default(&self) -> T {
+                T::default()
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
@@ -596,7 +606,7 @@ macro_rules! _secret_array {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn to_be_bytes(&self) -> Seq<U8> {
                 const FACTOR: usize = core::mem::size_of::<$t>();
-                let mut out: Seq<U8> = Seq::new($l * FACTOR);
+                let mut out: Seq<U8> = Seq::new($l * FACTOR, U8(0u8));
                 for i in 0..$l {
                     let tmp: $t = self[i];
                     let tmp = <$t>::to_be_bytes(&[tmp]);
@@ -610,7 +620,7 @@ macro_rules! _secret_array {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_le_bytes(&self) -> Seq<U8> {
                 const FACTOR: usize = core::mem::size_of::<$t>();
-                let mut out: Seq<U8> = Seq::new($l * FACTOR);
+                let mut out: Seq<U8> = Seq::new($l * FACTOR, U8(0u8));
                 for i in 0..$l {
                     let tmp: $t = self[i];
                     let tmp = <$t>::to_le_bytes(&[tmp]);
@@ -689,7 +699,7 @@ macro_rules! _implement_secret_u8_array {
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_be_U32s(&self) -> Seq<U32> {
-                let mut out = Seq::new($l / 4);
+                let mut out = Seq::new($l / 4, U32(0u32));
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
                     out[i] = U32_from_be_bytes(U32Word::from_native_slice(block));
@@ -699,7 +709,7 @@ macro_rules! _implement_secret_u8_array {
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_le_U32s(&self) -> Seq<U32> {
-                let mut out = Seq::new($l / 4);
+                let mut out = Seq::new($l / 4, U32(0u32));
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
                     out[i] = U32_from_le_bytes(U32Word::from_native_slice(block));
@@ -709,7 +719,7 @@ macro_rules! _implement_secret_u8_array {
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_be_U64s(&self) -> Seq<U64> {
-                let mut out = Seq::new($l / 8);
+                let mut out = Seq::new($l / 8, U64(0u64));
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
                     out[i] = U64_from_be_bytes(U64Word::from_native_slice(block));
@@ -719,7 +729,7 @@ macro_rules! _implement_secret_u8_array {
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_le_U64s(&self) -> Seq<U64> {
-                let mut out = Seq::new($l / 8);
+                let mut out = Seq::new($l / 8, U64(0u64));
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
                     out[i] = U64_from_le_bytes(U64Word::from_native_slice(block));
@@ -729,7 +739,7 @@ macro_rules! _implement_secret_u8_array {
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_U128s_be(&self) -> Seq<U128> {
-                let mut out = Seq::new($l / 16);
+                let mut out = Seq::new($l / 16, U128(0u128));
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
                     out[i] = U128_from_be_bytes(U128Word::from_native_slice(block));
@@ -739,7 +749,7 @@ macro_rules! _implement_secret_u8_array {
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_U128s_le(&self) -> Seq<U128> {
-                let mut out = Seq::new($l / 16);
+                let mut out = Seq::new($l / 16, U128(0u128));
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
                     out[i] = U128_from_le_bytes(U128Word::from_native_slice(block));
@@ -765,7 +775,7 @@ macro_rules! _implement_public_u8_array {
         impl $name {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_be_u32s(&self) -> Seq<u32> {
-                let mut out = Seq::new($l / 4);
+                let mut out = Seq::new($l / 4, 0u32);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
                     out[i] = u32::from_be_bytes(to_array(block));
@@ -774,7 +784,7 @@ macro_rules! _implement_public_u8_array {
             }
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_le_u32s(&self) -> Seq<u32> {
-                let mut out = Seq::new($l / 4);
+                let mut out = Seq::new($l / 4, 0u32);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
                     out[i] = u32::from_le_bytes(to_array(block));
@@ -783,7 +793,7 @@ macro_rules! _implement_public_u8_array {
             }
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_be_u64s(&self) -> Seq<u64> {
-                let mut out = Seq::new($l / 8);
+                let mut out = Seq::new($l / 8, 0u64);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
                     out[i] = u64::from_be_bytes(to_array(block));
@@ -792,7 +802,7 @@ macro_rules! _implement_public_u8_array {
             }
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_le_u64s(&self) -> Seq<u64> {
-                let mut out = Seq::new($l / 8);
+                let mut out = Seq::new($l / 8, 0u64);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
                     out[i] = u64::from_le_bytes(to_array(block));
@@ -801,7 +811,7 @@ macro_rules! _implement_public_u8_array {
             }
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_u128s_be(&self) -> Seq<u128> {
-                let mut out = Seq::new($l / 16);
+                let mut out = Seq::new($l / 16, 0u128);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
                     out[i] = u128::from_be_bytes(to_array(block));
@@ -810,7 +820,7 @@ macro_rules! _implement_public_u8_array {
             }
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn to_u128s_le(&self) -> Seq<u128> {
-                let mut out = Seq::new($l / 16);
+                let mut out = Seq::new($l / 16, 0u128);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
                     out[i] = u128::from_le_bytes(to_array(block));

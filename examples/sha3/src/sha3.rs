@@ -109,7 +109,7 @@ fn absorb_block(mut s: State, block: &ByteSeq) -> State {
 }
 
 fn squeeze(mut s: State, nbytes: usize, rate: usize) -> ByteSeq {
-    let mut out = ByteSeq::new(nbytes);
+    let mut out = ByteSeq::init(nbytes);
     for i in 0..nbytes {
         let pos = i % rate;
         let w = pos >> 3u32;
@@ -124,7 +124,7 @@ fn squeeze(mut s: State, nbytes: usize, rate: usize) -> ByteSeq {
 }
 
 fn keccak(rate: usize, data: &ByteSeq, p: u8, outbytes: usize) -> ByteSeq {
-    let mut buf = ByteSeq::new(rate);
+    let mut buf = ByteSeq::init(rate);
     let mut last_block_len = 0;
     let mut s = State::new();
 

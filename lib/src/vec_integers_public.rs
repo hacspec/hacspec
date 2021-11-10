@@ -33,6 +33,11 @@ impl<T: Numeric + PublicInteger + Copy> ModNumeric for PublicSeq<T> {
         unimplemented!();
     }
 }
+impl<T: PublicInteger + Default> Default for PublicSeq<T> {
+    fn default() -> Self {
+        Self::new(0, T::default())
+    }
+}
 impl<T: Numeric + PublicInteger + Copy> Numeric for PublicSeq<T> {
     /// Return largest value that can be represented.
     fn max_val() -> Self {
@@ -138,7 +143,7 @@ impl<T: Numeric + PublicInteger + Copy> Not for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn not(self) -> Self::Output {
-        let mut out = Self::new(self.len());
+        let mut out = Self::new(self.len(), self.default());
         for (a, b) in out.b.iter_mut().zip(self.b.iter()) {
             *a = !*b;
         }
@@ -150,7 +155,7 @@ impl<T: Numeric + PublicInteger + Copy> BitOr for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitor(self, rhs: Self) -> Self::Output {
-        let mut out = Self::new(self.len());
+        let mut out = Self::new(self.len(), self.default());
         for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
             *a = *b | *c;
         }
@@ -162,7 +167,7 @@ impl<T: Numeric + PublicInteger + Copy> BitXor for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitxor(self, rhs: Self) -> Self::Output {
-        let mut out = Self::new(self.len());
+        let mut out = Self::new(self.len(), self.default());
         for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
             *a = *b ^ *c;
         }
@@ -174,7 +179,7 @@ impl<T: Numeric + PublicInteger + Copy> BitAnd for PublicSeq<T> {
     type Output = PublicSeq<T>;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn bitand(self, rhs: Self) -> Self::Output {
-        let mut out = Self::new(self.len());
+        let mut out = Self::new(self.len(), self.default());
         for (a, (b, c)) in out.b.iter_mut().zip(self.b.iter().zip(rhs.b.iter())) {
             *a = *b & *c;
         }

@@ -10,7 +10,9 @@ pub trait SeqTrait<T: Clone>:
 {
     fn len(&self) -> usize;
     fn iter(&self) -> std::slice::Iter<T>;
-    fn create(len: usize) -> Self;
+    fn create(len: usize, default: T) -> Self;
+    /// Get the default value of `T`.
+    fn default(&self) -> T;
     /// Update this sequence with `l` elements of `v`, starting at `start_in`,
     /// at `start_out`.
     ///
@@ -19,10 +21,10 @@ pub trait SeqTrait<T: Clone>:
     /// ```
     /// use hacspec_lib::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
-    /// let tmp = Seq::<u8>::from_native_slice(&[2, 3]);
+    /// let mut s = Seq::<u8>::new(5, 0);
+    /// let tmp = Seq::<u8>::from_native_slice(&[2, 3], 0);
     /// s = s.update_slice(2, &tmp, 1, 1);
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0]));
+    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 3, 0, 0], 0));
     /// ```
     fn update_slice<A: SeqTrait<T>>(
         self,
@@ -39,10 +41,10 @@ pub trait SeqTrait<T: Clone>:
     /// ```
     /// use hacspec_lib::prelude::*;
     ///
-    /// let mut s = Seq::<u8>::new(5);
-    /// let tmp = Seq::<u8>::from_native_slice(&[2, 3]);
+    /// let mut s = Seq::<u8>::new(5, 0);
+    /// let tmp = Seq::<u8>::from_native_slice(&[2, 3], 0);
     /// s = s.update(2, &tmp);
-    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0]));
+    /// // assert_eq!(s, Seq::<u8>::from_array(&[0, 0, 2, 3, 0], 0));
     /// ```
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn update<A: SeqTrait<T>>(self, start: usize, v: &A) -> Self {

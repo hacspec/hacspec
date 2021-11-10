@@ -12,7 +12,7 @@
 //! ```
 //! use hacspec_lib::prelude::*;
 //! let x = Seq::<U128>::from_public_slice(&[5, 2, 7, 8, 9]);
-//! let x = Seq::<u128>::from_native_slice(&[5, 2, 7, 8, 9]);
+//! let x = Seq::<u128>::from_native_slice(&[5, 2, 7, 8, 9], 0);
 //! let y = ByteSeq::from_hex("0388dace60b6a392f328c2b971b2fe78");
 //! ```
 //!

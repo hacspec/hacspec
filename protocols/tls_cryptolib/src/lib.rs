@@ -31,11 +31,11 @@ pub enum CryptoError {
 
 // === An alias for bytes and some helper functions. === //
 pub fn empty() -> ByteSeq {
-    ByteSeq::new(0)
+    ByteSeq::init(0)
 }
 
 pub fn zeros(u: usize) -> ByteSeq {
-    ByteSeq::new(u)
+    ByteSeq::init(u)
 }
 
 pub type Entropy = ByteSeq;
@@ -131,7 +131,7 @@ pub fn dh_pub_len(gn: &NamedGroup) -> usize {
 }
 
 pub fn zero_key(ha: &HashAlgorithm) -> Key {
-    Key::new(hash_len(ha) as usize)
+    Key::init(hash_len(ha) as usize)
 }
 
 // === ECDH === //
@@ -313,7 +313,7 @@ pub fn verification_key_from_cert(cert: &ByteSeq) -> Result<VerificationKey, Cry
     let mut seq1 = cert.slice_range(skip + seq1_len_len..skip + seq1_len_len + seq1_len);
 
     // Read sequences until we find the ecPublicKey (we don't support anything else right now)
-    let mut pk = VerificationKey::new(0);
+    let mut pk = VerificationKey::init(0);
     // XXX: the typechecker should allow _ here. We don't need the counter.  #135
     for _i in 0..seq1.len() {
         // FIXME: we really need a break statement.
@@ -380,7 +380,7 @@ pub fn verification_key_from_cert(cert: &ByteSeq) -> Result<VerificationKey, Cry
 }
 
 fn concat_signature(r: P256Scalar, s: P256Scalar) -> Result<Signature, CryptoError> {
-    let signature = Signature::new(0)
+    let signature = Signature::init(0)
         .concat(&r.to_byte_seq_be())
         .concat(&s.to_byte_seq_be());
     Result::<Signature, CryptoError>::Ok(signature)

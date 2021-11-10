@@ -614,13 +614,13 @@ implement_secret_signed_mi!(I128, i128, 128);
 impl UnsignedPublicInteger for u8 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
-        let mut x = Seq::new(1);
+        let mut x = Seq::new(1, 0u8);
         x[0] = self;
         x
     }
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<u8> {
-        let mut x = Seq::new(1);
+        let mut x = Seq::new(1, 0u8);
         x[0] = self;
         x
     }
@@ -966,13 +966,13 @@ impl SecretInteger for I128 {
 impl UnsignedSecretInteger for U8 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
-        let mut x = Seq::new(1);
+        let mut x = Seq::new(1,U8(0u8));
         x[0] = self;
         x
     }
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_be_bytes(self) -> Seq<U8> {
-        let mut x = Seq::new(1);
+        let mut x = Seq::new(1, U8(0u8));
         x[0] = self;
         x
     }

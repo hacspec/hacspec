@@ -73,7 +73,7 @@ fn test_keccakf1600() {
 #[test]
 fn test_sha3224() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3224(&ByteSeq::from_native_slice(
+    let h = sha3224(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -89,7 +89,7 @@ fn test_sha3224() {
     );
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3224(&ByteSeq::from_native_slice(
+    let h = sha3224(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -108,7 +108,7 @@ fn test_sha3224() {
 #[test]
 fn test_sha3256() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3256(&ByteSeq::from_native_slice(
+    let h = sha3256(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -125,7 +125,7 @@ fn test_sha3256() {
     );
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3256(&ByteSeq::from_native_slice(
+    let h = sha3256(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -145,7 +145,7 @@ fn test_sha3256() {
 #[test]
 fn test_sha3384() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3384(&ByteSeq::from_native_slice(
+    let h = sha3384(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -163,7 +163,7 @@ fn test_sha3384() {
     );
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3384(&ByteSeq::from_native_slice(
+    let h = sha3384(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -184,7 +184,7 @@ fn test_sha3384() {
 #[test]
 fn test_sha3512() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3512(&ByteSeq::from_native_slice(
+    let h = sha3512(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -203,7 +203,7 @@ fn test_sha3512() {
     );
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
-    let h = sha3512(&ByteSeq::from_native_slice(
+    let h = sha3512(&ByteSeq::from_default_native_slice(
         &m.into_bytes()
             .iter()
             .map(|x| U8::classify(*x))
@@ -226,7 +226,7 @@ fn test_sha3512() {
 fn test_shake128() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake128(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -255,7 +255,7 @@ fn test_shake128() {
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake128(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -299,7 +299,7 @@ fn test_shake128() {
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake128(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -328,7 +328,7 @@ fn test_shake128() {
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake128(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -375,7 +375,7 @@ fn test_shake128() {
 fn test_shake256() {
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake256(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -402,7 +402,7 @@ fn test_shake256() {
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake256(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -446,7 +446,7 @@ fn test_shake256() {
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake256(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))
@@ -473,7 +473,7 @@ fn test_shake256() {
 
     let m = String::from("qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789qwertzuiopasdfghjklyxcvbnm123456789");
     let h = shake256(
-        &ByteSeq::from_native_slice(
+        &ByteSeq::from_default_native_slice(
             &m.into_bytes()
                 .iter()
                 .map(|x| U8::classify(*x))

@@ -62,11 +62,11 @@ fn header_as_u16_slice(h: Header) -> Seq<u16> {
     let magic = u32_to_be_bytes(magic);
     let seq_number = u32_to_be_bytes(seq_number);
     let start_addr = u32_to_be_bytes(start_addr);
-    let u8_seq = Seq::<u8>::new(12);
+    let u8_seq = Seq::<u8>::init(12);
     let u8_seq = u8_seq.update_slice(0, &magic, 0, 4);
     let u8_seq = u8_seq.update_slice(4, &seq_number, 0, 4);
     let u8_seq = u8_seq.update_slice(8, &start_addr, 0, 4);
-    let mut u16_seq = Seq::<u16>::new(6);
+    let mut u16_seq = Seq::<u16>::init(6);
     for i in 0..3 {
         let u16_word = u16Word::from_seq(&u8_seq.slice(i * 4, 2));
         let u16_value = u16_from_be_bytes(u16_word);

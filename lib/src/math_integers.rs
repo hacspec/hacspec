@@ -53,6 +53,7 @@ macro_rules! unsigned_public_integer {
                         .iter()
                         .map(|x| U8::classify(*x))
                         .collect::<Vec<U8>>(),
+                    U8(0u8),
                 )
             }
         }
@@ -840,6 +841,7 @@ macro_rules! nat_mod {
                         .iter()
                         .map(|x| U8::classify(*x))
                         .collect::<Vec<U8>>(),
+                    U8(0u8),
                 )
             }
         }
@@ -1117,12 +1119,13 @@ macro_rules! public_nat_mod {
                         .iter()
                         .map(|x| U8::classify(*x))
                         .collect::<Vec<U8>>(),
+                    U8(0u8),
                 )
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn to_public_byte_seq_be(self) -> Seq<u8> {
-                Seq::from_vec(self.to_be_bytes())
+                Seq::from_vec(self.to_be_bytes(), 0u8)
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
@@ -1148,12 +1151,13 @@ macro_rules! public_nat_mod {
                         .iter()
                         .map(|x| U8::classify(*x))
                         .collect::<Vec<U8>>(),
+                    U8(0u8),
                 )
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
             pub fn to_public_byte_seq_le(self) -> Seq<u8> {
-                Seq::from_vec(self.to_le_bytes())
+                Seq::from_vec(self.to_le_bytes(), 0u8)
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]

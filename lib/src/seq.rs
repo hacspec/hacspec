@@ -11,20 +11,22 @@ use crate::prelude::*;
 macro_rules! declare_seq {
     ($name:ident, $constraint:ident) => {
         /// Variable length byte arrays.
-        #[derive(Debug, Clone, Default)]
-        pub struct $name<T: Default + $constraint> {
+        #[derive(Debug, Clone)]
+        pub struct $name<T: $constraint> {
+            pub(crate) default: T,
             pub(crate) b: Vec<T>,
         }
-        declare_seq_with_contents_constraints_impl!($name, Clone + Default + $constraint);
+        declare_seq_with_contents_constraints_impl!($name, Clone + $constraint);
     };
     ($name:ident) => {
         /// Variable length byte arrays.
         #[derive(Debug, Clone, Default)]
-        pub struct $name<T: Default> {
+        pub struct $name<T> {
+            pub(crate) default: T,
             pub(crate) b: Vec<T>,
         }
 
-        declare_seq_with_contents_constraints_impl!($name, Clone + Default);
+        declare_seq_with_contents_constraints_impl!($name, Clone);
     };
 }
 
@@ -33,16 +35,18 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> $name<T> {
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            pub fn new(l: usize) -> Self {
+            pub fn new(l: usize, default: T) -> Self {
                 Self {
-                    b: vec![T::default(); l],
+                    default: default.clone(),
+                    b: vec![default; l],
                 }
             }
 
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
-            pub fn with_capacity(l: usize) -> Self {
+            pub fn init(l: usize) -> Self where T: Default {
                 Self {
-                    b: Vec::with_capacity(l),
+                    default: T::default(),
+                    b: vec![T::default(); l],
                 }
             }
 
@@ -89,7 +93,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
             #[inline(always)]
             pub fn split_off(mut self, at: usize) -> (Self, Self) {
-                let other = Self::from_vec(self.b.split_off(at));
+                let other = Self::from_vec(self.b.split_off(at), self.default.clone());
                 (self, other)
             }
 
@@ -102,14 +106,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn from_slice<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
-                let mut a = Self::new(len);
+                let mut a = Self::new(len, input.default());
                 a = a.update_slice(0, input, start, len);
                 a
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> Self {
-                let mut out = Self::new(self.len() + next.len());
+                let mut out = Self::new(self.len() + next.len(), self.default.clone());
                 out = out.update_start(self);
                 out = out.update_slice(self.len(), next, 0, next.len());
                 out
@@ -124,7 +128,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn push(&self, next: &T) -> Self {
-                let mut out = Self::new(self.len() + 1);
+                let mut out = Self::new(self.len() + 1, self.default.clone());
                 out = out.update_start(self);
                 out[self.len()] = next.clone();
                 out
@@ -182,7 +186,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn get_exact_chunk(&self, chunk_size: usize, chunk_number: usize) -> Self {
                 let (len, chunk) = self.get_chunk(chunk_size, chunk_number);
                 if len != chunk_size {
-                   Self::new(0)
+                   Self::new(0, self.default.clone())
                 } else {
                     chunk
                 }
@@ -203,7 +207,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 };
                 let (len, chunk) = self.get_chunk(chunk_size, last_chunk);
                 if len == chunk_size {
-                    Self::new(0)
+                    Self::new(0, self.default.clone())
                 } else {
                     chunk
                 }
@@ -243,8 +247,8 @@ macro_rules! declare_seq_with_contents_constraints_impl {
         impl<T: $bound $(+ $others)*> SeqTrait<T> for $name<T> {
             /// Get a new sequence of capacity `l`.
             #[cfg_attr(feature="use_attributes", in_hacspec)]
-            fn create(l: usize) -> Self {
-                Self::new(l)
+            fn create(l: usize, default: T) -> Self {
+                Self::new(l, default)
             }
 
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
@@ -282,6 +286,11 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             fn update_start<A: SeqTrait<T>>(self, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(0, v, 0, len)
+            }
+
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            fn default(&self) -> T {
+                self.default.clone()
             }
         }
 
@@ -355,22 +364,39 @@ macro_rules! declare_seq_with_contents_constraints_impl {
 
         impl<T: $bound $(+ $others)*> $name<T> {
             #[cfg_attr(feature="use_attributes", not_hacspec)]
-            pub fn from_vec(b: Vec<T>) -> $name<T> {
+            pub fn from_vec(b: Vec<T>, default: T) -> $name<T> {
                 Self {
+                    default,
+                    b,
+                }
+            }
+            #[cfg_attr(feature="use_attributes", not_hacspec)]
+            pub fn from_default_vec(b: Vec<T>) -> $name<T> where T: Default{
+                Self {
+                    default: T::default(),
                     b,
                 }
             }
 
             #[cfg_attr(feature="use_attributes", not_hacspec)]
-            pub fn from_native_slice(x: &[T]) -> $name<T> {
+            pub fn from_native_slice(x: &[T], default: T) -> $name<T> {
                 Self {
+                    default,
+                    b: x.to_vec(),
+                }
+            }
+
+            #[cfg_attr(feature="use_attributes", not_hacspec)]
+            pub fn from_default_native_slice(x: &[T]) -> $name<T> where T: Default {
+                Self {
+                    default: T::default(),
                     b: x.to_vec(),
                 }
             }
 
             #[cfg_attr(feature="use_attributes", in_hacspec)]
             pub fn from_seq<U: SeqTrait<T>>(x: &U) -> $name<T> {
-                let mut tmp = $name::new(x.len());
+                let mut tmp = $name::new(x.len(), x.default());
                 for i in 0..x.len() {
                     tmp[i] = x[i].clone();
                 }
@@ -396,6 +422,7 @@ impl Seq<U8> {
                 .iter()
                 .map(|x| U8::classify(*x))
                 .collect::<Vec<_>>(),
+            U8(0u8),
         )
     }
 
@@ -406,6 +433,7 @@ impl Seq<U8> {
                 .iter()
                 .map(|x| U8::classify(*x))
                 .collect::<Vec<_>>(),
+            U8(0u8),
         )
     }
 }
@@ -451,6 +479,7 @@ impl PublicSeq<u8> {
                 .iter()
                 .map(|x| *x)
                 .collect::<Vec<_>>(),
+            0u8,
         )
     }
 
@@ -461,6 +490,7 @@ impl PublicSeq<u8> {
                 .iter()
                 .map(|x| *x)
                 .collect::<Vec<_>>(),
+            0u8,
         )
     }
 }
@@ -475,12 +505,13 @@ macro_rules! impl_from_public_slice {
                         .iter()
                         .map(|x| <$st>::classify(*x))
                         .collect::<Vec<$st>>(),
+                    <$st>::classify(0 as $t),
                 )
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             pub fn from_public_seq<U: SeqTrait<$t>>(x: &U) -> Seq<$st> {
-                let mut tmp = Self::new(x.len());
+                let mut tmp = Self::new(x.len(), <$st>::classify(x.default()));
                 for i in 0..x.len() {
                     tmp[i] = <$st>::classify(x[i]);
                 }
@@ -501,7 +532,7 @@ macro_rules! impl_declassify {
         impl Seq<$st> {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             pub fn declassify(self) -> Seq<$t> {
-                let mut tmp = <Seq<$t>>::new(self.len());
+                let mut tmp = <Seq<$t>>::new(self.len(), <$st>::declassify(self.default));
                 for i in 0..self.len() {
                     tmp[i] = <$st>::declassify(self[i]);
                 }
@@ -544,7 +575,7 @@ impl PublicSeq<u8> {
 #[macro_export]
 macro_rules! public_byte_seq {
     ($( $b:expr ),+) => {
-        PublicByteSeq::from_vec(
+        PublicByteSeq::from_default_vec(
             vec![
                 $(
                     $b
@@ -557,7 +588,7 @@ macro_rules! public_byte_seq {
 #[macro_export]
 macro_rules! byte_seq {
     ($( $b:expr ),+) => {
-        ByteSeq::from_vec(
+        ByteSeq::from_default_vec(
             vec![
                 $(
                     U8($b)

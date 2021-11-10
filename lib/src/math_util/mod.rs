@@ -14,20 +14,20 @@ use poly::*;
 /// polynomial subtraction, calculates a - b mod modulo
 #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn sub_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
-    let result = Seq::from_native_slice(&poly_sub(&a.b, &b.b, modulo));
+    let result = Seq::from_native_slice(&poly_sub(&a.b, &b.b, modulo), T::default());
     make_positive(&result, modulo)
 }
 
 /// Polynomial Addition, calculates a + b mod modulo
 #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn add_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, modulo: T) -> Seq<T> {
-    let result = Seq::from_native_slice(&poly_add(&a.b, &b.b, modulo));
+    let result = Seq::from_native_slice(&poly_add(&a.b, &b.b, modulo), T::default());
     make_positive(&result, modulo)
 }
 
 /// Simple polynomial multiplication for two fixed size polynomials O(n²) with `a * b mod n`
 pub fn mul_poly<T: Numeric + Copy>(a: &Seq<T>, b: &Seq<T>, n: T) -> Seq<T> {
-    Seq::from_native_slice(&poly_mul(&a.b, &b.b, n))
+    Seq::from_native_slice(&poly_mul(&a.b, &b.b, n), T::default())
 }
 
 /// Euclidean polynomial division, calculates `a/b` in `R_n`.
@@ -38,14 +38,17 @@ pub fn div_poly<T: Integer + Copy>(
     n: T,
 ) -> Result<(Seq<T>, Seq<T>), &'static str> {
     let (q, r) = poly_div(&a.b, &b.b, n);
-    Ok((Seq::from_native_slice(&q), Seq::from_native_slice(&r)))
+    Ok((
+        Seq::from_native_slice(&q, T::default()),
+        Seq::from_native_slice(&r, T::default()),
+    ))
 }
 
 /// Scalar division in `R_p`.
 /// Returns `a / scalar mod p`.
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
 pub fn div_scalar<T: Integer + Copy>(a: &Seq<T>, scalar: T, p: T) -> Seq<T> {
-    Seq::from_native_slice(&scalar_div(&a.b, scalar, p))
+    Seq::from_native_slice(&scalar_div(&a.b, scalar, p), T::default())
 }
 
 /// Returns degree of polynomial, e.g. for  3x² + 2x + 1 -> 2
@@ -62,7 +65,7 @@ pub fn extended_euclid<T: Integer + Copy>(
     n: T,
 ) -> Result<Seq<T>, &'static str> {
     let result = extended_euclid_internal(&x.b, &irr.b, n)?;
-    Ok(Seq::from_native_slice(&result))
+    Ok(Seq::from_native_slice(&result, T::default()))
 }
 
 /// Returns number of coefficient != 0, e.g. for  -3x⁵ + 3x² + 2x + 1 -> 4
@@ -79,7 +82,7 @@ pub fn weight<T: Integer + Copy>(poly: &Seq<T>) -> usize {
 
 /// makes coefficients positiv, e.g. -3 mod 4 = 1
 pub fn make_positive<T: Numeric + Copy>(poly: &Seq<T>, q: T) -> Seq<T> {
-    Seq::from_native_slice(&make_positive_internal(&poly.b, q))
+    Seq::from_native_slice(&make_positive_internal(&poly.b, q), T::default())
 }
 
 /// Extended euclidean algorithm to compute the inverse of x in ℤ/n
@@ -140,14 +143,14 @@ pub fn poly_to_ring<T: Integer + Copy>(irr: &Seq<T>, poly: &Seq<T>, modulus: T) 
             let pre = pre.1;
             (make_positive(&pre, modulus), true)
         }
-        Err(_) => (Seq::new(1usize), false),
+        Err(_) => (Seq::new(1usize, T::default()), false),
     }
 }
 
 /// Polynomial multiplication of two size fixed polynomials in R_modulo \ irr
 #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
 pub fn mul_poly_irr<T: Integer + Copy>(a: &Seq<T>, b: &Seq<T>, irr: &Seq<T>, modulo: T) -> Seq<T> {
-    let mut result: Seq<T> = Seq::new(a.len());
+    let mut result: Seq<T> = Seq::new(a.len(), T::default());
     for i in 0..a.len() {
         if a[i].equal(T::default()) {
             continue;

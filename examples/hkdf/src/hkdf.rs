@@ -15,7 +15,7 @@ pub type HkdfByteSeqResult = Result<ByteSeq, HkdfError>;
 /// Extract a pseudo-random key from input key material (IKM) and optionally a salt.
 /// Note that salt can be empty Bytes.
 pub fn extract(salt: &ByteSeq, ikm: &ByteSeq) -> PRK {
-    let mut salt_or_zero = ByteSeq::new(HASH_LEN);
+    let mut salt_or_zero = ByteSeq::init(HASH_LEN);
     if salt.len() > 0 {
         salt_or_zero = ByteSeq::from_seq(salt)
     };
@@ -23,7 +23,7 @@ pub fn extract(salt: &ByteSeq, ikm: &ByteSeq) -> PRK {
 }
 
 fn build_hmac_txt(t: &ByteSeq, info: &ByteSeq, iteration: U8) -> ByteSeq {
-    let mut out = ByteSeq::new(t.len() + info.len() + 1);
+    let mut out = ByteSeq::init(t.len() + info.len() + 1);
     out = out.update(0, t);
     out = out.update(t.len(), info);
     out[t.len() + info.len()] = iteration;
@@ -54,10 +54,10 @@ fn check_output_limit(l: usize) -> Result<usize, HkdfError> {
 pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> HkdfByteSeqResult {
     let n = check_output_limit(l)?;
     let mut t_i = PRK::new();
-    let mut t = ByteSeq::new(n * PRK::capacity());
+    let mut t = ByteSeq::init(n * PRK::capacity());
     for i in 0..n {
         let hmac_txt_in = if i == 0 {
-            build_hmac_txt(&ByteSeq::new(0), info, U8((i as u8) + 1u8))
+            build_hmac_txt(&ByteSeq::init(0), info, U8((i as u8) + 1u8))
         } else {
             build_hmac_txt(&ByteSeq::from_seq(&t_i), info, U8((i as u8) + 1u8))
         };

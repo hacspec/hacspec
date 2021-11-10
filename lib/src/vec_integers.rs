@@ -1076,7 +1076,7 @@ macro_rules! _implement_numeric_signed_secret {
 #[cfg_attr(feature = "use_attributes", in_hacspec)]
 pub fn vec_poly_mul<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
     debug_assert!(x.len() == y.len());
-    let mut out = U::create(x.len());
+    let mut out = U::create(x.len(), T::default());
     for i in 0..x.len() {
         if !n.equal(T::default()) {
             out[i] = x[i].mul_mod(y[i], n);
@@ -1091,7 +1091,7 @@ pub fn vec_poly_mul<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
 #[cfg_attr(feature = "use_attributes", in_hacspec)]
 pub fn vec_poly_add<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
     debug_assert!(x.len() == y.len());
-    let mut out = U::create(x.len());
+    let mut out = U::create(x.len(), T::default());
     for i in 0..x.len() {
         if !n.equal(T::default()) {
             out[i] = x[i].add_mod(y[i], n);
@@ -1106,7 +1106,7 @@ pub fn vec_poly_add<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
 #[cfg_attr(feature = "use_attributes", in_hacspec)]
 pub fn vec_poly_sub<T: Numeric + Copy, U: SeqTrait<T>>(x: U, y: U, n: T) -> U {
     debug_assert!(x.len() == y.len());
-    let mut out = U::create(x.len());
+    let mut out = U::create(x.len(), T::default());
     for i in 0..x.len() {
         if !n.equal(T::default()) {
             out[i] = x[i].sub_mod(y[i], n);
