@@ -855,6 +855,58 @@
 <span id="855">855</span>
 <span id="856">856</span>
 <span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// BLS: y^2 = x^3 + 4</span>
 
@@ -877,15 +929,6 @@
     <span class="ident">modulo_value</span>: <span class="string">&quot;8000000000000000000000000000000000000000000000000000000000000000&quot;</span> <span class="comment">//0x8000000000000000000000000000000000000000000000000000000000000000</span>
 );
 
-<span class="comment">//Returns index of left-most bit, set to 1</span>
-<span class="kw">fn</span> <span class="ident">most_significant_bit</span>(<span class="ident">m</span>: <span class="ident">Scalar</span>, <span class="ident">n</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> <span class="comment">//usize does not have a secret integer implementation</span>
-{
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="op">!</span><span class="ident">m</span>.<span class="ident">bit</span>(<span class="ident">n</span>) {
-        <span class="ident">most_significant_bit</span>(<span class="ident">m</span>, <span class="ident">n</span> <span class="op">-</span> <span class="number">1</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">n</span>
-    }
-}
 <span class="comment">//bool is &quot;isPointAtInfinity&quot;</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">G1</span> <span class="op">=</span> (<span class="ident">Fp</span>, <span class="ident">Fp</span>, <span class="ident">bool</span>);
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Fp2</span> <span class="op">=</span> (<span class="ident">Fp</span>, <span class="ident">Fp</span>); <span class="comment">//(10, 8) = (10+8u) : u² = -1</span>
@@ -1061,12 +1104,11 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fp12exp</span>(<span class="ident">n</span>: <span class="ident">Fp12</span>, <span class="ident">k</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Fp12</span> {
-    <span class="kw">let</span> <span class="ident">l</span> <span class="op">=</span> <span class="number">255</span> <span class="op">-</span> <span class="ident">most_significant_bit</span>(<span class="ident">k</span>, <span class="number">255</span>); <span class="comment">//has a timing side channel issue</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">n</span>;
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">l</span>..<span class="number">255</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>())));
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {
         <span class="comment">//starting from second most significant bit</span>
         <span class="ident">c</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">c</span>, <span class="ident">c</span>);
-        <span class="kw">if</span> <span class="ident">k</span>.<span class="ident">bit</span>(<span class="number">255</span> <span class="op">-</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>) {
+        <span class="kw">if</span> <span class="ident">k</span>.<span class="ident">bit</span>(<span class="number">255</span> <span class="op">-</span> <span class="ident">i</span>) {
             <span class="ident">c</span> <span class="op">=</span> <span class="ident">fp12mul</span>(<span class="ident">c</span>, <span class="ident">n</span>);
         }
     }
@@ -1141,13 +1183,11 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">g1mul</span>(<span class="ident">m</span>: <span class="ident">Scalar</span>, <span class="ident">p</span>: <span class="ident">G1</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G1</span> {
-    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">255</span>;
-    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">-</span> <span class="ident">most_significant_bit</span>(<span class="ident">m</span>, <span class="ident">n</span>); <span class="comment">//has a timing side channel issue</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">p</span>;
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">k</span>..<span class="ident">n</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> (<span class="ident">Fp</span>::<span class="ident">ZERO</span>(), <span class="ident">Fp</span>::<span class="ident">ZERO</span>(), <span class="bool-val">true</span>);
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {
         <span class="comment">//starting from second most significant bit</span>
         <span class="ident">t</span> <span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">t</span>);
-        <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">bit</span>(<span class="ident">n</span> <span class="op">-</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>) {
+        <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">bit</span>(<span class="number">255</span> <span class="op">-</span> <span class="ident">i</span>) {
             <span class="ident">t</span> <span class="op">=</span> <span class="ident">g1add</span>(<span class="ident">t</span>, <span class="ident">p</span>);
         }
     }
@@ -1227,13 +1267,11 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">g2mul</span>(<span class="ident">m</span>: <span class="ident">Scalar</span>, <span class="ident">p</span>: <span class="ident">G2</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">G2</span> {
-    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">255</span>;
-    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">n</span> <span class="op">-</span> <span class="ident">most_significant_bit</span>(<span class="ident">m</span>, <span class="ident">n</span>); <span class="comment">//has a timing side channel issue</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">p</span>;
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">k</span>..<span class="ident">n</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> (<span class="ident">fp2zero</span>(), <span class="ident">fp2zero</span>(), <span class="bool-val">true</span>);
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {
         <span class="comment">//starting from second most significant bit</span>
         <span class="ident">t</span> <span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">t</span>);
-        <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">bit</span>(<span class="ident">n</span> <span class="op">-</span> <span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>) {
+        <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">bit</span>(<span class="number">255</span> <span class="op">-</span> <span class="ident">i</span>) {
             <span class="ident">t</span> <span class="op">=</span> <span class="ident">g2add</span>(<span class="ident">t</span>, <span class="ident">p</span>);
         }
     }
@@ -1505,12 +1543,28 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">quickcheck</span>]</span>
-<span class="kw">fn</span> <span class="ident">test_fp12_prop_exp</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>);
-    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">4u128</span>);
-    <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">12u128</span>);
-    <span class="ident">fp12exp</span>(<span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">m</span>), <span class="ident">n</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">k</span>)
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_fp12_exp_zero</span>() {
+    <span class="kw">fn</span> <span class="ident">test_fp12_exp</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="ident">fp12fromfp6</span>(<span class="ident">fp6fromfp2</span>(<span class="ident">fp2fromfp</span>(<span class="ident">Fp</span>::<span class="ident">ONE</span>()))) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">Scalar</span>::<span class="ident">ZERO</span>())
+    }
+    <span class="ident">QuickCheck</span>::<span class="ident">new</span>()
+        .<span class="ident">tests</span>(<span class="number">5</span>)
+        .<span class="ident">quickcheck</span>(<span class="ident">test_fp12_exp</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_fp12_prop_exp</span>() {
+    <span class="kw">fn</span> <span class="ident">test_fp12_exp</span>(<span class="ident">a</span>: <span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>);
+        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">4u128</span>);
+        <span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">12u128</span>);
+        <span class="ident">fp12exp</span>(<span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">m</span>), <span class="ident">n</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">fp12exp</span>(<span class="ident">a</span>, <span class="ident">k</span>)
+    }
+    <span class="ident">QuickCheck</span>::<span class="ident">new</span>()
+        .<span class="ident">tests</span>(<span class="number">5</span>)
+        .<span class="ident">quickcheck</span>(<span class="ident">test_fp12_exp</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Fp12</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
 }
 
 <span class="comment">/* G1 tests */</span>
@@ -1525,6 +1579,31 @@
     <span class="kw">let</span> <span class="ident">g4b</span> <span class="op">=</span> <span class="ident">g1add</span>(<span class="ident">g3</span>, <span class="ident">g</span>);
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g4a</span>, <span class="ident">g4b</span>);
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g1_mul_standard</span>()
+{
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1</span>();
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">ONE</span>();
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g</span>, <span class="ident">g1mul</span>(<span class="ident">m</span>, <span class="ident">g</span>));
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">2u128</span>);
+    <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="ident">g1double</span>(<span class="ident">g</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g2</span>, <span class="ident">g1mul</span>(<span class="ident">m</span>, <span class="ident">g</span>));
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>);
+    <span class="kw">let</span> <span class="ident">g3</span> <span class="op">=</span> <span class="ident">g1add</span>(<span class="ident">g</span>, <span class="ident">g2</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g3</span>, <span class="ident">g1mul</span>(<span class="ident">m</span>, <span class="ident">g</span>));
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g1_mul_zero</span>()
+{
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g1</span>();
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">ZERO</span>();
+    <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">g1mul</span>(<span class="ident">m</span>, <span class="ident">g</span>);
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">h</span>.<span class="number">2</span>);
+} 
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1577,6 +1656,31 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g2_mul_standard</span>()
+{
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2</span>();
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">ONE</span>();
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g</span>, <span class="ident">g2mul</span>(<span class="ident">m</span>, <span class="ident">g</span>));
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">2u128</span>);
+    <span class="kw">let</span> <span class="ident">g2</span> <span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g2</span>, <span class="ident">g2mul</span>(<span class="ident">m</span>, <span class="ident">g</span>));
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">from_literal</span>(<span class="number">3u128</span>);
+    <span class="kw">let</span> <span class="ident">g3</span> <span class="op">=</span> <span class="ident">g2add</span>(<span class="ident">g</span>, <span class="ident">g2</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">g3</span>, <span class="ident">g2mul</span>(<span class="ident">m</span>, <span class="ident">g</span>));
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">test_g2_mul_zero</span>()
+{
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2</span>();
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">Scalar</span>::<span class="ident">ZERO</span>();
+    <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">m</span>, <span class="ident">g</span>);
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">h</span>.<span class="number">2</span>);
+} 
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_g2_mul_prop</span>() {
     <span class="kw">fn</span> <span class="ident">test_g2_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">a</span>, <span class="ident">g2</span>());
@@ -1594,14 +1698,14 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_g2_add_double_equiv</span>() {
-    <span class="kw">fn</span> <span class="ident">test_g1_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">test_g2_mul</span>(<span class="ident">a</span>: <span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">g2mul</span>(<span class="ident">a</span>, <span class="ident">g2</span>());
         <span class="ident">g2add</span>(<span class="ident">g</span>, <span class="ident">g</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">g2double</span>(<span class="ident">g</span>)
     }
     <span class="comment">//Only needing 5 successes, slow because affine</span>
     <span class="ident">QuickCheck</span>::<span class="ident">new</span>()
         .<span class="ident">tests</span>(<span class="number">5</span>)
-        .<span class="ident">quickcheck</span>(<span class="ident">test_g1_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
+        .<span class="ident">quickcheck</span>(<span class="ident">test_g2_mul</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>);
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
