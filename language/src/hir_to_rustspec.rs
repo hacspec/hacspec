@@ -657,11 +657,11 @@ pub fn retrieve_external_data(
     let mut extern_nat_ints = HashMap::new();
     let mut extern_enums = HashMap::new();
     let mut ty_aliases = HashMap::new();
-    // TODO: the Rust compiler still changed `TyCtxt::cstore_as_any` to
-    // `TyCtxt::cstore_untracked` that only exposes the `CrateStore` trait,
-    // while the `num_def_ids_untracked()` method we need is in
-    // `CStore` that implements `CrateStore`.
-    let crate_store = tcx.cstore_untracked();
+    let crate_store = tcx
+        .cstore_untracked()
+        .as_any()
+        .downcast_ref::<CStore>()
+        .unwrap();
     let mut imported_crates = imported_crates.clone();
     // You normally only import hacspec_lib which then reexports the definitions
     // from abstract_integers and secret_integers. But we do have to fetch those
