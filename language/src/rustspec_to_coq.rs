@@ -1028,7 +1028,6 @@ fn translate_statements<'a>(
     };
     match s.0 {
         Statement::LetBinding((pat, _), typ, (expr, _), question_mark) => {
-            //TODO: not yet handled
             if question_mark {
                 RcDoc::as_string("match ")
                     .append(translate_expression(expr.clone(), top_ctx))
