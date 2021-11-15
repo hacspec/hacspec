@@ -1029,7 +1029,29 @@ fn translate_statements<'a>(
         Statement::LetBinding((pat, _), typ, (expr, _), question_mark) => {
             //TODO: not yet handled
             if question_mark {
-                unimplemented!()
+                RcDoc::as_string("match ")
+                    .append(translate_expression(expr.clone(), top_ctx))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string(" : result "))
+                    .append(RcDoc::intersperse(
+                        typ.map(|(typ, _)| translate_typ(typ)),
+                        RcDoc::space(),
+                    ))
+                    .append(RcDoc::as_string(" _ with"))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string(" | Err a => Err a"))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string(" | Ok "))
+                    .append(match pat.clone() {
+                        Pattern::SingleCaseEnum(_, _) => RcDoc::as_string("'"),
+                        _ => RcDoc::nil(),
+                    })
+                    .append(translate_pattern_tick(pat.clone()))
+                    .append(RcDoc::as_string(" =>"))
+                    .append(RcDoc::softline())
+                    .append(translate_statements(statements, top_ctx))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string("end"))
             } else {
                 make_let_binding(
                     match pat.clone() {
@@ -1037,7 +1059,10 @@ fn translate_statements<'a>(
                         _ => RcDoc::nil(),
                     }
                     .append(translate_pattern_tick(pat.clone())),
-                    typ.map(|(typ, _)| translate_typ(typ)),
+                    match pat.clone() {
+                        Pattern::SingleCaseEnum(_, _) | Pattern::Tuple(_) => None,
+                        _ => typ.map(|(typ, _)| translate_typ(typ)),
+                    },
                     translate_expression(expr.clone(), top_ctx),
                     false,
                 )
@@ -1108,8 +1133,8 @@ fn translate_statements<'a>(
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("then"))
                 .append(RcDoc::space())
-                .append(make_begin_paren(translate_block(b1, true, top_ctx)))
-                .append(match b2 {
+                .append(make_begin_paren(translate_block(b1.clone(), true, top_ctx)))
+                .append(match b2.clone() {
                     None => RcDoc::space()
                         .append(RcDoc::as_string("else"))
                         .append(RcDoc::space())
@@ -1129,15 +1154,64 @@ fn translate_statements<'a>(
                     }
                 });
             if either_blocks_contains_question_mark {
-                // TODO
-                unimplemented!()
-                // make_error_returning_let_binding(pat, None, expr, || {
-                // translate_statements(statements, top_ctx)
-                // })
+                let block1 = make_paren(translate_block(b1.clone(), true, top_ctx));
+                // RcDoc::as_string("let f a :=")
+                //     .append(RcDoc::line()) // softline
+                //     .append(translate_statements(statements.clone(), top_ctx))
+                //     .append(RcDoc::line()) // softline
+                //     .append(RcDoc::as_string("in"))
+                //     .append(RcDoc::line())
+                // .append(
+                RcDoc::as_string("ifbnd") // )
+                    .append(RcDoc::space())
+                    .append(translate_expression(cond.clone(), top_ctx))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string(": bool"))
+                    .append(RcDoc::line())
+                    .append(if b1_question_mark {
+                        RcDoc::as_string("thenbnd")
+                    } else {
+                        RcDoc::as_string("then")
+                    })
+                    .append(RcDoc::space())
+                    .append(block1)
+                    .append(RcDoc::line())
+                    .append(match b2 {
+                        None => RcDoc::as_string("else")
+                            .append(RcDoc::space())
+                            // .append("f")
+                            // .append(RcDoc::space())
+                            .append(make_paren(translate_statements(
+                                [(mutated_info.stmt.clone(), DUMMY_SP.into())].iter(),
+                                top_ctx,
+                            ))),
+                        Some((mut b2, _)) => {
+                            b2.stmts.push(add_ok_if_result(
+                                mutated_info.stmt.clone(),
+                                b2_question_mark,
+                            ));
+                            let block2 = make_paren(translate_block(b2, true, top_ctx));
+                            (if b2_question_mark {
+                                RcDoc::as_string("elsebnd")
+                            } else {
+                                RcDoc::as_string("else")
+                            })
+                            .append(block2)
+                        }
+                    })
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string(">> (fun"))
+                    .append(RcDoc::space())
+                    .append(pat)
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("=>"))
+                    .append(RcDoc::line())
+                    .append(translate_statements(statements.clone(), top_ctx))
+                    .append(RcDoc::as_string(")"))
             } else {
                 make_let_binding(pat, None, expr, false)
                     .append(RcDoc::hardline())
-                    .append(translate_statements(statements, top_ctx))
+                    .append(translate_statements(statements.clone(), top_ctx))
             }
         }
         Statement::ForLoop(x, (e1, _), (e2, _), (mut b, _)) => {
@@ -1167,33 +1241,83 @@ fn translate_statements<'a>(
                     ))
                 }
             };
-            let loop_expr = RcDoc::as_string("foldi")
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e1.clone(), top_ctx)))
-                .append(RcDoc::space())
-                .append(make_paren(translate_expression(e2.clone(), top_ctx)))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("(fun"))
-                .append(RcDoc::space())
-                .append(match x {
-                    Some((x, _)) => translate_ident(x.clone()),
-                    None => RcDoc::as_string("_"),
-                })
-                .append(RcDoc::space())
-                .append(mut_tuple("'".to_string()).clone())
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("=>"))
-                .append(RcDoc::line())
-                .append(translate_block(b, true, top_ctx))
-                .append(RcDoc::as_string(")"))
-                .group()
-                .nest(2)
-                .append(RcDoc::line())
-                .append(mut_tuple("".to_string()).clone());
+            if b_question_mark {
+                let loop_expr = RcDoc::as_string("foldibnd")
+                // .append(RcDoc::space())
+                // .append(translate_typ())
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e1.clone(), top_ctx)))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("to"))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e2.clone(), top_ctx)))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("for"))
+                    .append(RcDoc::space())
+                    .append(mut_tuple("".to_string()).clone())
+                    .append(">> (fun")
+                    .append(RcDoc::space())
+                    .append(match x {
+                        Some((x, _)) => translate_ident(x.clone()),
+                        None => RcDoc::as_string("_"),
+                    })
+                    .append(RcDoc::space())
+                    .append(mut_tuple("'".to_string()).clone())
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("=>"))
+                    .append(RcDoc::softline())
+                    .append(translate_block(b, true, top_ctx))
+                    .append(RcDoc::as_string(")"));
+                
+                RcDoc::as_string("match")
+                    .append(RcDoc::softline())
+                    .append(make_paren(loop_expr))
+                    .append(RcDoc::softline())
+                    .append(RcDoc::as_string("with"))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string("| Err e => Err e"))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string("| Ok "))
+                    .append(if mutated_info.vars.0.iter().len() == 0 {
+                        RcDoc::as_string("_")
+                    } else {
+                        mut_tuple("".to_string()).clone()
+                    }) // Issue here with patterns (eg. 'tt)
+                    .append(RcDoc::as_string(" => "))
+                    .append(RcDoc::softline())
+                    .append(translate_statements(statements, top_ctx))
+                    .append(RcDoc::softline())
+                    .append(RcDoc::as_string("end"))
 
-            make_let_binding(mut_tuple("'".to_string()), None, loop_expr, false)
-                .append(RcDoc::hardline())
-                .append(translate_statements(statements, top_ctx))
+            } else {
+                let loop_expr = RcDoc::as_string("foldi")
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e1.clone(), top_ctx)))
+                    .append(RcDoc::space())
+                    .append(make_paren(translate_expression(e2.clone(), top_ctx)))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("(fun"))
+                    .append(RcDoc::space())
+                    .append(match x {
+                        Some((x, _)) => translate_ident(x.clone()),
+                        None => RcDoc::as_string("_"),
+                    })
+                    .append(RcDoc::space())
+                    .append(mut_tuple("'".to_string()).clone())
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("=>"))
+                    .append(RcDoc::line())
+                    .append(translate_block(b, true, top_ctx))
+                    .append(RcDoc::as_string(")"))
+                    .group()
+                    .nest(2)
+                    .append(RcDoc::line())
+                    .append(mut_tuple("".to_string()).clone());
+
+                make_let_binding(mut_tuple("'".to_string()), None, loop_expr, false)
+                    .append(RcDoc::hardline())
+                    .append(translate_statements(statements, top_ctx))
+            }
         }
     }
     .group()
