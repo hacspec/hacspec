@@ -1101,13 +1101,9 @@ Axiom nat_mod_eqb_spec : forall {p} (a b : nat_mod p), Z.eqb (nat_mod_val p a) (
   eqb_leibniz := String.eqb_eq ;
 }.
 
-Lemma list_eqdec_sound : true = true <-> tt = tt.
-  apply (fun _ => eq_refl, fun _ => eq_refl).
-Qed.
-
 #[global] Instance unit_eqdec : EqDec unit := {
   eqb := fun _ _ => true ;
-  eqb_leibniz := fun 'tt 'tt => eq_refl ; (* (fun 'tt 'tt _ => eq_refl , fun 'tt 'tt _ => eq_refl) *)
+  eqb_leibniz := (fun 'tt 'tt => conj (fun _ => eq_refl) (fun _ => eq_refl)) ;
 }.
 
 Require Import Sumbool.
@@ -1290,8 +1286,6 @@ Set Printing Coercions.
 #[global] Coercion result_uint_size_unit_to_result_int64_unit : result_uint_size_unit >-> result_int64_unit.
 
 (*** Notation *)
-
-(* Notation "'ifbnd' b 'then' x 'else' y '>>' f" := (if b then bind x f else f y) (at level 200). *)
 
 Notation "'ifbnd' b 'then' x 'else' y '>>' f" := (if b then f x else f y) (at level 200).
 Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then bind x f else f y) (at level 200).
