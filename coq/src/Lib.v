@@ -1134,7 +1134,7 @@ Global Instance string_eqdec : EqDec String.string := {
 
 Global Instance unit_eqdec : EqDec unit := {
   eqb := fun _ _ => true ;
-  eqb_leibniz := (fun 'tt 'tt => conj (fun _ => eq_refl) (fun _ => eq_refl)) ;
+  eqb_leibniz := fun 'tt 'tt => (conj (fun _ => eq_refl) (fun _ => eq_refl)) ;
 }.
 
 Require Import Sumbool.
@@ -1259,14 +1259,14 @@ Class Monad (M : Type -> Type) :=
     ret {A} (x : A) : M A ;
   }.
 
-Definition result2 (b: Type) (a: Type) := result a b.
-
-Definition result_bind {A B C} (r : result2 C A) (f : A -> result2 C B) : result2 C B :=
+Definition result_bind {A B C} (r : result A C) (f : A -> result B C) : result B C :=
   match r with
     Ok a => f a
   | Err e => Err e
   end.
 
+Definition result2 C A := result A C.
+ 
 Definition result_ret {A C} (a : A) : result2 C A := Ok a.
  
 Global Instance result_monad {C} : Monad (result2 C) :=

@@ -1289,8 +1289,6 @@ fn translate_statements<'a>(
             };
             if b_question_mark {
                 let loop_expr = RcDoc::as_string("foldibnd")
-                    // .append(RcDoc::space())
-                    // .append(translate_typ())
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e1.clone(), top_ctx)))
                     .append(RcDoc::space())
