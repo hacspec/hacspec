@@ -115,9 +115,9 @@ pub fn check_if_max(instance: TupleStructTyp, increase: u64, entry: ArrTyp) -> T
 
 // TODO: should check for name clash
 
-pub type ResType = Result<usize, ()>;
+pub type ResType = Result<u64, ()>; // TODO: try with usize
 pub fn loop_with_early_return(amount: usize) -> ResType {
-    let mut res = ResType::Ok (0);
+    let mut res = ResType::Ok (0_u64);
 
     for x in 0..100 {
         if x + amount > 200 {
@@ -125,7 +125,7 @@ pub fn loop_with_early_return(amount: usize) -> ResType {
         }
 
         if x < 50 {
-            res = ResType::Ok (x);
+            res = ResType::Ok (x as u64);
         }
     }
 

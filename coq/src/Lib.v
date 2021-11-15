@@ -1288,8 +1288,8 @@ Set Printing Coercions.
 (*** Notation *)
 
 Notation "'ifbnd' b 'then' x 'else' y '>>' f" := (if b then f x else f y) (at level 200).
-Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then bind x f else f y) (at level 200).
-Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else bind y f) (at level 200).
-Notation "'ifbnd' b 'thenbnd' x 'elsebnd' y '>>' f" := (if b then bind x f else bind y f) (at level 200).
+Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then result_bind x f else f y) (at level 200).
+Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else result_bind y f) (at level 200).
+Notation "'ifbnd' b 'thenbnd' x 'elsebnd' y '>>' f" := (if b then result_bind x f else result_bind y f) (at level 200).
 
 Notation "'foldibnd' s 'to' e 'for' z '>>' f" := (foldi s e (fun x y => result_bind y (f x)) (Ok z)) (at level 50).

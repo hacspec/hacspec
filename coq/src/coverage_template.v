@@ -90,7 +90,7 @@ Build_EqDec (map_entry) (eqb_map_entry) (eqb_leibniz_map_entry).
 Definition map_get_entry (m_0 : map) (entry_1 : arr_typ) : map_entry :=
   let 'Map ((m0_2, m1_3)) :=
     m_0 in 
-  let res_4 :=
+  let res_4 : map_entry :=
     Entry (
       (
         @repr WORDSIZE64 0,
@@ -132,7 +132,7 @@ Definition map_update_entry
   : map_update :=
   let 'Map ((m0_9, m1_10)) :=
     m_6 in 
-  let res_11 :=
+  let res_11 : map_update :=
     Update (
       (
         amount_8,
@@ -181,7 +181,7 @@ Definition check_if_max
     match map_update_entry (map_20) (entry_15) (
       (increase_14) .+ (curr_val_19)) with
     | Update (res_val_25, map_26) => (res_val_25, map_26) end in 
-  let enum_typ_27 :=
+  let enum_typ_27 : enum_typ :=
     match (enum_typ_17) with
     | Empty => ZeroArg (tt)
     | ZeroArg tt => OneArg (entry_15)
@@ -206,21 +206,24 @@ Definition check_if_max
         ((increase_14) .+ (res_val_23), enum_typ_27, map_24))) else (
       TupleStructTyp ((max_16, enum_typ_27, map_24)))).
 
-Notation "'res_type'" := ((result uint_size unit)) : hacspec_scope.
+Notation "'res_type'" := ((result int64 unit)) : hacspec_scope.
 
 Definition loop_with_early_return (amount_31 : uint_size) : res_type :=
-  let res_32 :=
-    Ok (usize 0) in 
+  let res_32 : (result int64 unit) :=
+    Ok (@repr WORDSIZE64 0) in 
   match (
     foldibnd (usize 0) to (usize 100) for res_32>> (fun x_33 res_32 => ifbnd (
       (x_33) + (amount_31)) >.? (usize 200) : bool
     thenbnd (
-      match Err (tt)  : result  _ with  | Err a => Err a  | Ok _ => Ok (tt) end)
+      match Err (tt)  : result int64 _ with
+       | Err a => Err a
+       | Ok _ => Ok (tt)
+      end)
     else (tt) >> (fun 'tt =>
     let '(res_32) :=
       if (x_33) <.? (usize 50):bool then (
         let res_32 :=
-          Ok (x_33) in 
+          Ok (pub_u64 (x_33)) in 
         (res_32)
       ) else ( (res_32)
       ) in 
