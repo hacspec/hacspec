@@ -583,6 +583,7 @@ fn find_func(
         return Err(());
     }
     // TODO: figure out why we need this
+    // https://github.com/hacspec/hacspec/issues/194
     let candidates = if candidates.iter().all(|(_, candidate)| match candidate {
         FnValue::ExternalNotInHacspec(_) => true,
         _ => false,
