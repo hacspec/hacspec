@@ -23,8 +23,8 @@ match x with
    | ZeroArg a => match y with | ZeroArg b => a =.? b | _ => false end
    end.
 
-Definition eqb_leibniz_enum_typ (x y : enum_typ) : eqb_enum_typ x y = true -> x = y.
-Proof. intros. destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. Qed.
+Definition eqb_leibniz_enum_typ (x y : enum_typ) : eqb_enum_typ x y = true <-> x = y.
+Proof. split. intros; destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. intros ; subst ; destruct y ; try reflexivity ; try (apply eqb_refl). Qed.
 
 Instance eq_dec_enum_typ : EqDec (enum_typ) :=
 Build_EqDec (enum_typ) (eqb_enum_typ) (eqb_leibniz_enum_typ).
@@ -38,8 +38,8 @@ match x with
    | Map a => match y with | Map b => a =.? b end
    end.
 
-Definition eqb_leibniz_map (x y : map) : eqb_map x y = true -> x = y.
-Proof. intros. destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. Qed.
+Definition eqb_leibniz_map (x y : map) : eqb_map x y = true <-> x = y.
+Proof. split. intros; destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. intros ; subst ; destruct y ; try reflexivity ; try (apply eqb_refl). Qed.
 
 Instance eq_dec_map : EqDec (map) :=
 Build_EqDec (map) (eqb_map) (eqb_leibniz_map).
@@ -53,8 +53,8 @@ match x with
    | TupleStructTyp a => match y with | TupleStructTyp b => a =.? b end
    end.
 
-Definition eqb_leibniz_tuple_struct_typ (x y : tuple_struct_typ) : eqb_tuple_struct_typ x y = true -> x = y.
-Proof. intros. destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. Qed.
+Definition eqb_leibniz_tuple_struct_typ (x y : tuple_struct_typ) : eqb_tuple_struct_typ x y = true <-> x = y.
+Proof. split. intros; destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. intros ; subst ; destruct y ; try reflexivity ; try (apply eqb_refl). Qed.
 
 Instance eq_dec_tuple_struct_typ : EqDec (tuple_struct_typ) :=
 Build_EqDec (tuple_struct_typ) (eqb_tuple_struct_typ) (eqb_leibniz_tuple_struct_typ).
@@ -80,8 +80,8 @@ match x with
    | Entry a => match y with | Entry b => a =.? b end
    end.
 
-Definition eqb_leibniz_map_entry (x y : map_entry) : eqb_map_entry x y = true -> x = y.
-Proof. intros. destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. Qed.
+Definition eqb_leibniz_map_entry (x y : map_entry) : eqb_map_entry x y = true <-> x = y.
+Proof. split. intros; destruct x ; destruct y ; try (f_equal ; apply eqb_leibniz) ; easy. intros ; subst ; destruct y ; try reflexivity ; try (apply eqb_refl). Qed.
 
 Instance eq_dec_map_entry : EqDec (map_entry) :=
 Build_EqDec (map_entry) (eqb_map_entry) (eqb_leibniz_map_entry).
