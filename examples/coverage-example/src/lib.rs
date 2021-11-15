@@ -98,14 +98,14 @@ pub fn check_if_max(instance: TupleStructTyp, increase: u64, entry: ArrTyp) -> T
     };
 
     if enum_typ.clone() == EnumTyp::TwoArg(entry, 100_u8) {
-        
+
     };
-    
+
     if TupleStructTyp(increase + res_val, enum_typ.clone(), map.clone()) ==
         TupleStructTyp(max, enum_typ.clone(), map.clone()){
-            
+
     };
-    
+
     if max < increase + res_val {
         TupleStructTyp(increase + res_val, enum_typ, map)
     } else {
@@ -114,3 +114,20 @@ pub fn check_if_max(instance: TupleStructTyp, increase: u64, entry: ArrTyp) -> T
 }
 
 // TODO: should check for name clash
+
+pub type ResType = Result<usize, ()>;
+pub fn loop_with_early_return(amount: usize) -> ResType {
+    let mut res = ResType::Ok (0);
+
+    for x in 0..100 {
+        if x + amount > 200 {
+            let _ = ResType::Err(())?;
+        }
+
+        if x < 50 {
+            res = ResType::Ok (x);
+        }
+    }
+
+    res
+}
