@@ -582,7 +582,25 @@ fn find_func(
         sess.span_rustspec_err(*span, format!("function {} cannot be found", key1).as_str());
         return Err(());
     }
-    // If there are multiple candidates we just take the first one
+    // TODO: figure out why we need this
+    let candidates = if candidates.iter().all(|(_, candidate)| match candidate {
+        FnValue::ExternalNotInHacspec(_) => true,
+        _ => false,
+    }) {
+        // If all candidates are not in hacspec we return one
+        candidates
+    } else {
+        // If not we discard the not in hacspec candidates and return
+        // one in hacspec
+        candidates
+            .into_iter()
+            .filter(|(_, candidate)| match candidate {
+                FnValue::ExternalNotInHacspec(_) => false,
+                _ => true,
+            })
+            .collect()
+    };
+
     for (typ_ctx, sig) in candidates {
         return Ok((sig.clone(), typ_ctx));
     }
@@ -1689,13 +1707,14 @@ fn typecheck_expression(
                 f_span,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
-            if let FnValue::ExternalNotInHacspec(_) = f_sig {
+            if let FnValue::ExternalNotInHacspec(sig_str) = f_sig {
                 sess.span_rustspec_err(
                     *f_span,
                     format!(
-                        "function {}::{} is known but its signature is not in Hacspec",
+                        "function {}::{} is known but its signature is not in Hacspec: {}",
                         (sel_typ.1).0,
-                        f
+                        f,
+                        sig_str
                     )
                     .as_str(),
                 );
