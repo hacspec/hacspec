@@ -1132,9 +1132,15 @@ Global Instance string_eqdec : EqDec String.string := {
   eqb_leibniz := String.eqb_eq ;
 }.
 
+<<<<<<< HEAD
 Global Instance unit_eqdec : EqDec unit := {
   eqb := fun _ _ => true ;
   eqb_leibniz := fun 'tt 'tt => (conj (fun _ => eq_refl) (fun _ => eq_refl)) ;
+=======
+#[global] Instance unit_eqdec : EqDec unit := {
+  eqb := fun _ _ => true ;
+  eqb_leibniz := (fun 'tt 'tt => conj (fun _ => eq_refl) (fun _ => eq_refl)) ;
+>>>>>>> 221d1fe5d (Added some missing features)
 }.
 
 Require Import Sumbool.
