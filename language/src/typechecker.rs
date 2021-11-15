@@ -2172,18 +2172,18 @@ fn typecheck_statement(
                 expr.1.clone(),
                 top_level_context,
             )?;
-            match typ {
-                None => (),
-                Some((typ, _)) => {
-                    if unify_types(sess, typ, &expr_typ, &HashMap::new(), top_level_context)?
+            let typ = match typ {
+                None => Some ((expr_typ.clone(), expr.1.clone())),
+                Some((inner_typ, _)) => {
+                    if unify_types(sess, inner_typ, &expr_typ, &HashMap::new(), top_level_context)?
                         .is_none()
                     {
                         sess.span_rustspec_err(
                             *pat_span,
                             format!(
                                 "wrong type declared for variable: expected {}{}, found {}{}",
-                                (typ.0).0,
-                                (typ.1).0,
+                                (inner_typ.0).0,
+                                (inner_typ.1).0,
                                 (expr_typ.0).0,
                                 (expr_typ.1).0
                             )
@@ -2191,6 +2191,8 @@ fn typecheck_statement(
                         );
                         return Err(());
                     }
+
+                    typ.clone()
                 }
             };
             let pat_var_context = typecheck_pattern(
