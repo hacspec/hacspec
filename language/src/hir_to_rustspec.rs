@@ -649,7 +649,7 @@ pub fn retrieve_external_data(
     tcx: &TyCtxt,
     imported_crates: &Vec<Spanned<String>>,
 ) -> ExternalData {
-    let mut krates: Vec<_> = tcx.crates().iter().collect();
+    let mut krates: Vec<_> = tcx.crates(()).iter().collect();
     krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
     let mut extern_consts = HashMap::new();
@@ -657,7 +657,11 @@ pub fn retrieve_external_data(
     let mut extern_nat_ints = HashMap::new();
     let mut extern_enums = HashMap::new();
     let mut ty_aliases = HashMap::new();
-    let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
+    // TODO: the Rust compiler still changed `TyCtxt::cstore_as_any` to
+    // `TyCtxt::cstore_untracked` that only exposes the `CrateStore` trait,
+    // while the `num_def_ids_untracked()` method we need is in
+    // `CStore` that implements `CrateStore`.
+    let crate_store = tcx.cstore_untracked();
     let mut imported_crates = imported_crates.clone();
     // You normally only import hacspec_lib which then reexports the definitions
     // from abstract_integers and secret_integers. But we do have to fetch those
@@ -772,9 +776,8 @@ pub fn retrieve_external_data(
             }
         }
     }
-    let items = &tcx.hir_crate(()).items;
-    for (item_id, item) in items {
-        let item_id = tcx.hir().local_def_id(item_id.hir_id()).to_def_id();
+    for item in tcx.hir().items() {
+        let item_id = tcx.hir().local_def_id(item.hir_id()).to_def_id();
         match &item.kind {
             ItemKind::Fn(_, _, _) => process_fn_id(
                 sess,

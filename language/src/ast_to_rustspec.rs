@@ -2,10 +2,10 @@ use im::{HashMap, HashSet};
 use rustc_ast::{
     ast::{
         self, AngleBracketedArg, Async, Attribute, BindingMode, BlockCheckMode, BorrowKind, Const,
-        Crate, Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs,
-        IntTy, ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind,
-        RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe,
-        UseTreeKind, VariantData,
+        Crate, Defaultness, Expr, ExprKind, Extern, Fn as FnKind, FnRetTy, GenericArg, GenericArgs,
+        IntTy, ItemKind, LitIntType, LitKind, LocalKind, MacArgs, MacCall, Mutability, Pat,
+        PatKind, RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAlias as TyAliasKind, TyKind, UintTy,
+        UnOp, Unsafe, UseTreeKind, VariantData,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -1151,7 +1151,7 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::Let(_, _) => {
+        ExprKind::Let(_, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "inline lets are not allowed in Hacspec");
             Err(())
         }
@@ -1613,26 +1613,29 @@ fn translate_statement(
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
             };
-            let (init, question_mark) = match &local.init {
-                None => {
+            let (init, question_mark) = match &local.kind {
+                LocalKind::Decl | LocalKind::InitElse(_, _) => {
                     sess.span_rustspec_err(
                         local.span,
                         "let-bindings without initialization are not allowed in Hacspec",
                     );
                     Err(())
                 }
-                Some(e) => match translate_expr_accepts_question_mark(sess, specials, &e)? {
-                    (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
-                        sess.span_rustspec_err(
-                            e.span,
-                            "let binding expression should not contain statements in Hacspec",
-                        );
-                        Err(())
+                LocalKind::Init(e) => {
+                    match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                        (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
+                            sess.span_rustspec_err(
+                                e.span,
+                                "let binding expression should not contain statements in Hacspec",
+                            );
+                            Err(())
+                        }
+                        (
+                            ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark),
+                            span,
+                        ) => Ok(((e, span), question_mark)),
                     }
-                    (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
-                        Ok(((e, span), question_mark))
-                    }
-                },
+                }
             }?;
             Ok(vec![(
                 Statement::LetBinding(pat, ty, init, question_mark),
@@ -2293,7 +2296,12 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         ItemKind::Fn(fn_kind) => {
             // Foremost we check whether this function is a test, in which case
             // we ignore it
-            let FnKind(defaultness, ref sig, ref generics, ref body) = fn_kind.as_ref();
+            let FnKind {
+                defaultness,
+                ref sig,
+                ref generics,
+                ref body,
+            } = fn_kind.as_ref();
             // First, checking that no fancy function qualifier is here
             match defaultness {
                 Defaultness::Default(span) => {
@@ -2507,7 +2515,12 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Err(())
         }
         ItemKind::TyAlias(ty_alias_kind) => {
-            let TyAliasKind(defaultness, generics, _, ty) = ty_alias_kind.as_ref();
+            let TyAliasKind {
+                defaultness,
+                generics,
+                ty,
+                ..
+            } = ty_alias_kind.as_ref();
             match defaultness {
                 Defaultness::Final => (),
                 Defaultness::Default(span) => {
