@@ -35,6 +35,10 @@ KREMLIN_EXE=$(PROGRAM).exe
 	$(MY_FSTAR) $*.fst
 	touch -c $@
 
+%.fst.checked.lax: %.fst
+	$(MY_FSTAR) --lax $*.fst
+	touch -c $@
+
 # a.fsti.checked is the binary, checked version of a.fsti
 %.fsti.checked: %.fsti
 	$(MY_FSTAR) $*.fsti
