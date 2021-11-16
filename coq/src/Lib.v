@@ -1108,8 +1108,7 @@ Proof.
     apply Z.eqb_eq.
     reflexivity.
 Qed.
-    
-  
+
 Global Instance nat_mod_eqdec {p} : EqDec (nat_mod p) := {
   eqb a b := Z.eqb (nat_mod_val p a) (nat_mod_val p b);
   eqb_leibniz := nat_mod_eqb_spec;
