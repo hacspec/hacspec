@@ -186,18 +186,17 @@ let seq_upd (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) (new_v: a)
     : (s':seq a{seq_len s' = seq_len s})  =
   Seq.upd s i new_v
 
+(**** Array manipulation *)
+
+let array_new_ (#a: Type) (init:a) (len: uint_size)  : lseq a len =
+  LSeq.create len init
+
 let array_from_list
   (#a: Type)
   (l: list a{List.Tot.length l <= max_size_t})
     : lseq a (List.Tot.length l)
   =
   LSeq.of_list l
-
-(**** Array manipulation *)
-
-
-let array_new_ (#a: Type) (init:a) (len: uint_size)  : lseq a len =
-  LSeq.create len init
 
 let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a =
   LSeq.index s i
@@ -292,6 +291,9 @@ let array_to_le_bytes
     : lseq uint8 (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16))
   =
   admit()
+
+let array_declassify_eq (#a: eqtype) (#len: uint_size) (x y: lseq a len) : bool =
+  Seq.Properties.for_all (fun (x, y) -> x = y) (Lib.Sequence.map2 (fun x y -> (x,y)) x y)
 
 (**** Seq manipulation *)
 
@@ -400,6 +402,17 @@ let seq_get_exact_chunk
     (ensures (fun chunk -> True))
   =
   snd (seq_get_chunk s chunk_len chunk_num)
+
+let seq_get_remainder_chunk
+  (#a: Type)
+  (s: seq a)
+  (chunk_len: uint_size{chunk_len > 0})
+  : Pure (seq a)
+    (requires (chunk_len <= Seq.length s))
+    (ensures (fun chunk -> True))
+  =
+  snd (seq_get_chunk s chunk_len ((seq_num_chunks s chunk_len) - 1))
+
 
 let seq_set_chunk
   (#a: Type)
@@ -599,6 +612,14 @@ let nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n}
 
 let nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n} =
   v x
+
+let nat_to_byte_seq_le (n: pos) (len: uint_size) (x: nat_mod n) : lseq uint8 len =
+  let n' = n % (pow2 (8 * len)) in
+  Lib.ByteSequence.nat_to_bytes_le len n'
+
+let nat_to_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq uint8 len =
+  let n' = n % (pow2 (8 * len)) in
+  Lib.ByteSequence.nat_to_bytes_be len n'
 
 let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   let n' = n % (pow2 (8 * len)) in
