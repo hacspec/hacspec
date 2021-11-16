@@ -2294,8 +2294,7 @@ fn attribute_is_test(attr: &Attribute) -> bool {
 fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
     let attr_name = attr.name_or_empty().to_ident_string();
     match attr_name.as_str() {
-        "quickcheck" => Some(vec!["quickcheck".to_string()]),
-        "test" => Some(vec!["test".to_string()]),
+        "quickcheck" | "test" => Some(vec![attr_name]),
         "derive" => {
             let inner_tokens = attr.tokens().to_tokenstream();
             if inner_tokens.len() != 2 {
@@ -2368,8 +2367,7 @@ fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
                                             TokenKind::Ident(ident, _) => {
                                                 let ident_string = ident.to_ident_string();
                                                 match ident_string.as_str() {
-                                                    "proof" => Some(vec!["proof".to_string()]),
-                                                    "test" => Some(vec!["test".to_string()]),
+                                                    "proof" | "test" => Some(vec![ident_string]),
                                                     _ => None,
                                                 }
                                             }
@@ -2406,7 +2404,6 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         .fold(false, |b, attr| match attribute_tag(attr) {
             Some(a) => {
                 tags.extend(a.iter());
-                // tags.insert(a);
                 b || a.contains(&"proof".to_string())
             }
             None => b,

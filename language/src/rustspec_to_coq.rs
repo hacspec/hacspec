@@ -856,44 +856,39 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e2, top_ctx)))
         }
-        Expression::NewArray(_, typ, args) => {
-            // retrieves the element type of the array. For named types (aliases), it looks up
-            // the original definition in the typ_dict.
-            let inner_ty = match typ {
-                Some(BaseTyp::Named(ident, _)) => {
-                    let ident = &ident.0;
-                    match top_ctx.typ_dict.get(ident) {
-                        Some((alias_typ, DictEntry::Array)) => {
-                            match (alias_typ.1).0.clone() {
-                                BaseTyp::Array(_size, inner_ty) => inner_ty.as_ref().clone().0,
-                                _ => panic!(),
-                            }
-                            // translate_prefix_for_func_name((alias_typ.1).0.clone(), top_ctx)
-                        }
-                        _ => panic!(),
-                    }
+        // Expression::NewArray(_array_name, inner_ty, args) => {
+        Expression::NewArray(_array_name, inner_ty, args) => {
+            let inner_ty = inner_ty.unwrap();
+            // inner_ty is the type of the cell elements
+            // TODO: do the case when _array_name is None (the Seq case)
+            match _array_name {
+                // Seq case
+                None => make_list(
+                    args.into_iter()
+                        .map(|(e, _)| translate_expression(e.clone(), top_ctx)),
+                ),
+                Some(_) =>
+                // Array case
+                {
+                    RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
+                        .append(RcDoc::space())
+                        .append(translate_base_typ(inner_ty.clone()))
+                        .append(RcDoc::space())
+                        .append(make_paren(
+                            make_let_binding(
+                                RcDoc::as_string("l"),
+                                None,
+                                make_list(
+                                    args.into_iter()
+                                        .map(|(e, _)| translate_expression(e, top_ctx)),
+                                ),
+                                false,
+                            )
+                            .append(RcDoc::space())
+                            .append(RcDoc::as_string("l")),
+                        ))
                 }
-                Some(BaseTyp::Array(_size, inner_ty)) => inner_ty.as_ref().clone().0,
-                // Should not happen - array should always have an element type
-                _ => panic!(),
-            };
-            RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
-                .append(RcDoc::space())
-                .append(translate_base_typ(inner_ty.clone()))
-                .append(RcDoc::space())
-                .append(make_paren(
-                    make_let_binding(
-                        RcDoc::as_string("l"),
-                        None,
-                        make_list(
-                            args.into_iter()
-                                .map(|(e, _)| translate_expression(e, top_ctx)),
-                        ),
-                        false,
-                    )
-                    .append(RcDoc::space())
-                    .append(RcDoc::as_string("l")),
-                ))
+            }
         }
         Expression::IntegerCasting(x, new_t, old_t) => {
             let old_t = old_t.unwrap();
