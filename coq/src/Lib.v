@@ -1,7 +1,7 @@
-#[global] Set Warnings "-ambiguous-paths".
-#[global] Set Warnings "-uniform-inheritance".
-#[global] Set Warnings "-auto-template".
-#[global] Set Warnings "-disj-pattern-notation".
+Global Set Warnings "-ambiguous-paths".
+Global Set Warnings "-uniform-inheritance".
+Global Set Warnings "-auto-template".
+Global Set Warnings "-disj-pattern-notation".
 (*** Integers *)
 From Coq Require Import ZArith List Vector.
 Import ListNotations.
@@ -58,17 +58,17 @@ Class UInt_sizable (A : Type) := {
 Arguments usize {_} {_}.
 Arguments from_uint_size {_} {_}.
 
-#[global] Instance nat_uint_sizable : UInt_sizable nat := {
+Global Instance nat_uint_sizable : UInt_sizable nat := {
   usize n := repr (Z.of_nat n);
   from_uint_size n := Z.to_nat (unsigned n);
 }.
 
-#[global] Instance N_uint_sizable : UInt_sizable N := {
+Global Instance N_uint_sizable : UInt_sizable N := {
   usize n := repr (Z.of_N n);
   from_uint_size n := Z.to_N (unsigned n);
 }.
 
-#[global] Instance Z_uint_sizable : UInt_sizable Z := {
+Global Instance Z_uint_sizable : UInt_sizable Z := {
   usize n := repr n;
   from_uint_size n := unsigned n;
 }.
@@ -83,17 +83,17 @@ Class Int_sizable (A : Type) := {
 Arguments isize {_} {_}.
 Arguments from_int_size {_} {_}.
 
-#[global] Instance nat_Int_sizable : Int_sizable nat := {
+Global Instance nat_Int_sizable : Int_sizable nat := {
   isize n := repr (Z.of_nat n);
   from_int_size n := Z.to_nat (signed n);
 }.
 
-#[global] Instance N_Int_sizable : Int_sizable N := {
+Global Instance N_Int_sizable : Int_sizable N := {
   isize n := repr (Z.of_N n);
   from_int_size n := Z.to_N (signed n);
 }.
 
-#[global] Instance Z_Int_sizable : Int_sizable Z := {
+Global Instance Z_Int_sizable : Int_sizable Z := {
   isize n := repr n;
   from_int_size n := signed n;
 }.
@@ -230,25 +230,25 @@ Class Default (A : Type) := {
 }.
 
 (* Default instances for common types *)
-#[global] Instance nat_default : Default nat := {
+Global Instance nat_default : Default nat := {
   default := 0%nat
 }.
-#[global] Instance N_default : Default N := {
+Global Instance N_default : Default N := {
   default := 0%N
 }.
-#[global] Instance Z_default : Default Z := {
+Global Instance Z_default : Default Z := {
   default := 0%Z
 }.
-#[global] Instance uint_size_default : Default uint_size := {
+Global Instance uint_size_default : Default uint_size := {
   default := zero
 }.
-#[global] Instance int_size_default : Default int_size := {
+Global Instance int_size_default : Default int_size := {
   default := zero
 }.
-#[global] Instance int_default {WS : WORDSIZE} : Default int := {
+Global Instance int_default {WS : WORDSIZE} : Default int := {
   default := repr 0
 }.
-#[global] Arguments default {_} {_}.
+Global Arguments default {_} {_}.
 
 (*** Seq *)
 
@@ -257,7 +257,7 @@ Definition nseq := Vector.t.
 Definition seq (A : Type) := list A.
 
 (* Automatic conversion from nseq/vector/array to seq/list *)
-#[global] Coercion Vector.to_list : Vector.t >-> list.
+Global Coercion Vector.to_list : Vector.t >-> list.
 
 Definition public_byte_seq := seq int8.
 Definition byte_seq := seq int8.
@@ -275,7 +275,7 @@ Definition array_from_list (A: Type) (l: list A) : nseq A (length l)
   := of_list l.
 
 (* automatic conversion from list to array *)
-#[global] Coercion array_from_list : list >-> nseq.
+Global Coercion array_from_list : list >-> nseq.
 
 
 (**** Array manipulation *)
@@ -333,7 +333,7 @@ Definition array_from_seq
     update_sub out 0 (out_len - 1) input.
   (* Vector.of_list input. *)
 
-#[global] Coercion array_from_seq : seq >-> nseq.
+Global Coercion array_from_seq : seq >-> nseq.
 
 Definition slice {A} (l : seq A) (i j : nat) : seq A :=
   if j <=? i then [] else firstn (j-i+1) (skipn i l).
@@ -820,57 +820,57 @@ Section Casting.
   Open Scope hacspec_scope.
 
   (* Casting to self is always possible *)
-  #[global] Instance cast_self {A} : Cast A A := {
+  Global Instance cast_self {A} : Cast A A := {
     cast a := a
   }.
 
-  #[global] Instance cast_transitive {A B C} `{Hab: Cast A B} `{Hbc: Cast B C} : Cast A C := {
+  Global Instance cast_transitive {A B C} `{Hab: Cast A B} `{Hbc: Cast B C} : Cast A C := {
     cast a := Hbc (Hab a)
   }.
 
-  #[global] Instance cast_prod {A B C D} `{Cast A B} `{Cast C D} : Cast (A * C) (B * D) := {
+  Global Instance cast_prod {A B C D} `{Cast A B} `{Cast C D} : Cast (A * C) (B * D) := {
     cast '(a, c) := ('a, 'c)
   }.
 
-  #[global] Instance cast_option {A B} `{Cast A B} : Cast (option A) (option B) := {
+  Global Instance cast_option {A B} `{Cast A B} : Cast (option A) (option B) := {
     cast a := match a with Some a => Some ('a) | None => None end
   }.
 
-  #[global] Instance cast_option_b {A B} `{Cast A B} : Cast A (option B) := {
+  Global Instance cast_option_b {A B} `{Cast A B} : Cast A (option B) := {
     cast a := Some ('a)
   }.
 
-  (* #[global] Instances for common types *)
+  (* Global Instances for common types *)
 
-  #[global] Instance cast_nat_to_N : Cast nat N := {
+  Global Instance cast_nat_to_N : Cast nat N := {
     cast := N.of_nat
   }.
 
-  #[global] Instance cast_N_to_Z : Cast N Z := {
+  Global Instance cast_N_to_Z : Cast N Z := {
     cast := Z.of_N
   }.
 
-  #[global] Instance cast_Z_to_int {WORDSIZE} : Cast Z (@int WORDSIZE) := {
+  Global Instance cast_Z_to_int {WORDSIZE} : Cast Z (@int WORDSIZE) := {
     cast n := repr n
   }.
 
-  #[global] Instance cast_natmod_to_Z {p} : Cast (nat_mod p) Z := {
+  Global Instance cast_natmod_to_Z {p} : Cast (nat_mod p) Z := {
     cast n := GZnZ.val p n
   }.
 
   (* Note: should be aware of typeclass resolution with int/uint since they are just aliases of each other currently *)
-  #[global] Instance cast_int8_to_uint32 : Cast int8 uint32 := {
+  Global Instance cast_int8_to_uint32 : Cast int8 uint32 := {
     cast n := repr (unsigned n)
   }.
-  #[global] Instance cast_int8_to_int32 : Cast int8 int32 := {
+  Global Instance cast_int8_to_int32 : Cast int8 int32 := {
     cast n := repr (signed n)
   }.
 
-  #[global] Instance cast_uint8_to_uint32 : Cast uint8 uint32 := {
+  Global Instance cast_uint8_to_uint32 : Cast uint8 uint32 := {
     cast n := repr (unsigned n)
   }.
 
-  #[global] Instance cast_int_to_nat `{WORDSIZE} : Cast int nat := {
+  Global Instance cast_int_to_nat `{WORDSIZE} : Cast int nat := {
     cast n := Z.to_nat (signed n)
   }.
 
@@ -878,8 +878,8 @@ Section Casting.
 End Casting.
 
 
-#[global] Arguments pair {_ _} & _ _.
-#[global] Arguments id {_} & _.
+Global Arguments pair {_ _} & _ _.
+Global Arguments id {_} & _.
 Section Coercions.
   (* First, in order to have automatic coercions for tuples, we add bidirectionality hints: *)
 
@@ -888,72 +888,72 @@ Section Coercions.
   (* and uint >-> Z *)
   (* and N >-> nat *)
 
-  #[global] Coercion N.to_nat : N >-> nat.
-  #[global] Coercion Z.of_N : N >-> Z.
+  Global Coercion N.to_nat : N >-> nat.
+  Global Coercion Z.of_N : N >-> Z.
 
-  #[global] Coercion repr : Z >-> int.
+  Global Coercion repr : Z >-> int.
 
   Definition Z_to_int `{WORDSIZE} (n : Z) : int := repr n.
-  #[global] Coercion  Z_to_int : Z >-> int.
+  Global Coercion  Z_to_int : Z >-> int.
 
   Definition Z_to_uint_size (n : Z) : uint_size := repr n.
-  #[global] Coercion Z_to_uint_size : Z >-> uint_size.
+  Global Coercion Z_to_uint_size : Z >-> uint_size.
   Definition Z_to_int_size (n : Z) : int_size := repr n.
-  #[global] Coercion Z_to_int_size : Z >-> int_size.
+  Global Coercion Z_to_int_size : Z >-> int_size.
 
   Definition N_to_int `{WORDSIZE} (n : N) : int := repr (Z.of_N n).
-  #[global] Coercion N.of_nat : nat >-> N.
-  #[global] Coercion N_to_int : N >-> int.
+  Global Coercion N.of_nat : nat >-> N.
+  Global Coercion N_to_int : N >-> int.
   Definition N_to_uint_size (n : Z) : uint_size := repr n.
-  #[global] Coercion N_to_uint_size : Z >-> uint_size.
+  Global Coercion N_to_uint_size : Z >-> uint_size.
   Definition nat_to_int `{WORDSIZE} (n : nat) := repr (Z.of_nat n).
-  #[global] Coercion nat_to_int : nat >-> int.
+  Global Coercion nat_to_int : nat >-> int.
 
   Definition uint_size_to_nat (n : uint_size) : nat := from_uint_size n.
-  #[global] Coercion uint_size_to_nat : uint_size >-> nat.
+  Global Coercion uint_size_to_nat : uint_size >-> nat.
 
   Definition uint_size_to_Z (n : uint_size) : Z := from_uint_size n.
-  #[global] Coercion uint_size_to_Z : uint_size >-> Z.
+  Global Coercion uint_size_to_Z : uint_size >-> Z.
 
   Definition uint32_to_nat (n : uint32) : nat := unsigned n.
-  #[global] Coercion uint32_to_nat : uint32 >-> nat.
+  Global Coercion uint32_to_nat : uint32 >-> nat.
 
 
-  #[global] Coercion GZnZ.val : GZnZ.znz >-> Z.
+  Global Coercion GZnZ.val : GZnZ.znz >-> Z.
 
   Definition int8_to_nat (n : int8) : nat := unsigned n.
-  #[global] Coercion int8_to_nat : int8 >-> nat.
+  Global Coercion int8_to_nat : int8 >-> nat.
   Definition int16_to_nat (n : int16) : nat := unsigned n.
-  #[global] Coercion int16_to_nat : int16 >-> nat.
+  Global Coercion int16_to_nat : int16 >-> nat.
   Definition int32_to_nat (n : int32) : nat := unsigned n.
-  #[global] Coercion int32_to_nat : int32 >-> nat.
+  Global Coercion int32_to_nat : int32 >-> nat.
   Definition int64_to_nat (n : int64) : nat := unsigned n.
-  #[global] Coercion int64_to_nat : int64 >-> nat.
+  Global Coercion int64_to_nat : int64 >-> nat.
   Definition int128_to_nat (n : int128) : nat := unsigned n.
-  #[global] Coercion int128_to_nat : int128 >-> nat.
+  Global Coercion int128_to_nat : int128 >-> nat.
 
   (* coercions int8 >-> int16 >-> ... int128 *)
 
   Definition int8_to_int16 (n : int8) : int16 := repr n.
-  #[global] Coercion int8_to_int16 : int8 >-> int16.
+  Global Coercion int8_to_int16 : int8 >-> int16.
 
   Definition int8_to_int32 (n : int8) : int32 := repr n.
-  #[global] Coercion int8_to_int32 : int8 >-> int32.
+  Global Coercion int8_to_int32 : int8 >-> int32.
 
   Definition int16_to_int32 (n : int16) : int32 := repr n.
-  #[global] Coercion int16_to_int32 : int16 >-> int32.
+  Global Coercion int16_to_int32 : int16 >-> int32.
 
   Definition int32_to_int64 (n : int32) : int64 := repr n.
-  #[global] Coercion int32_to_int64 : int32 >-> int64.
+  Global Coercion int32_to_int64 : int32 >-> int64.
 
   Definition int64_to_int128 (n : int64) : int128 := repr n.
-  #[global] Coercion int64_to_int128 : int64 >-> int128.
+  Global Coercion int64_to_int128 : int64 >-> int128.
 
   Definition int32_to_int128 (n : int32) : int128 := repr n.
-  #[global] Coercion int32_to_int128 : int32 >-> int128.
+  Global Coercion int32_to_int128 : int32 >-> int128.
 
   Definition uint_size_to_int64 (n : uint_size) : int64 := repr n.
-  #[global] Coercion uint_size_to_int64 : uint_size >-> int64.
+  Global Coercion uint_size_to_int64 : uint_size >-> int64.
 
 
   (* coercions into nat_mod *)
@@ -966,7 +966,7 @@ Section Coercions.
     rewrite Zmod_mod.
     reflexivity.
   Defined.
-  (* #[global] Coercion Z_in_nat_mod : Z >-> nat_mod.  *)
+  (* Global Coercion Z_in_nat_mod : Z >-> nat_mod.  *)
 
   Definition int_in_nat_mod {m : Z} `{WORDSIZE} (x:int) : nat_mod m.
   Proof.
@@ -979,10 +979,10 @@ Section Coercions.
     reflexivity.
     Show Proof.
   Defined.
-  #[global] Coercion int_in_nat_mod : int >-> nat_mod.
+  Global Coercion int_in_nat_mod : int >-> nat_mod.
 
   Definition uint_size_in_nat_mod (n : uint_size) : nat_mod 16 := int_in_nat_mod n.
-  #[global] Coercion uint_size_in_nat_mod : uint_size >-> nat_mod.
+  Global Coercion uint_size_in_nat_mod : uint_size >-> nat_mod.
 
 End Coercions.
 
@@ -1020,36 +1020,36 @@ Proof.
   now rewrite eqb_leibniz.
 Qed.
 
-#[global] Program Instance nat_eqdec : EqDec nat := {
+Global Program Instance nat_eqdec : EqDec nat := {
   eqb := Nat.eqb;
   eqb_leibniz := Nat.eqb_eq ;
 }.
 
-#[global] Instance nat_comparable : Comparable nat := {
+Global Instance nat_comparable : Comparable nat := {
   ltb := Nat.ltb;
   leb := Nat.leb;
   gtb a b := Nat.ltb b a;
   geb a b := Nat.leb b a;
 }.
 
-#[global] Instance N_eqdec : EqDec N := {
+Global Instance N_eqdec : EqDec N := {
   eqb := N.eqb;
     eqb_leibniz := N.eqb_eq ;
 }.
 
-#[global] Instance N_comparable : Comparable N := {
+Global Instance N_comparable : Comparable N := {
   ltb := N.ltb;
   leb := N.leb;
   gtb a b := N.ltb b a;
   geb a b := N.leb b a;
 }.
 
-#[global] Instance Z_eqdec : EqDec Z := {
+Global Instance Z_eqdec : EqDec Z := {
   eqb := Z.eqb;
   eqb_leibniz := Z.eqb_eq ;
 }.
 
-#[global] Instance Z_comparable : Comparable Z := {
+Global Instance Z_comparable : Comparable Z := {
   ltb := Z.ltb;
   leb := Z.leb;
   gtb a b := Z.ltb b a;
@@ -1063,12 +1063,12 @@ Proof.
   - intros. rewrite H. apply eq_true.
 Qed.
 
-#[global] Instance int_eqdec `{WORDSIZE}: EqDec int := {
+Global Instance int_eqdec `{WORDSIZE}: EqDec int := {
   eqb := eq;
   eqb_leibniz := int_eqb_eq ;
 }.
 
-#[global] Instance int_comparable `{WORDSIZE} : Comparable int := {
+Global Instance int_comparable `{WORDSIZE} : Comparable int := {
   ltb := lt;
   leb a b := if eq a b then true else lt a b ;
   gtb a b := lt b a;
@@ -1079,29 +1079,29 @@ Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := GZnZ.val p a.
 
 Axiom nat_mod_eqb_spec : forall {p} (a b : nat_mod p), Z.eqb (nat_mod_val p a) (nat_mod_val p b) = true <-> a = b.
 
-#[global] Instance nat_mod_eqdec {p} : EqDec (nat_mod p) := {
+Global Instance nat_mod_eqdec {p} : EqDec (nat_mod p) := {
   eqb a b := Z.eqb (nat_mod_val p a) (nat_mod_val p b);
   eqb_leibniz := nat_mod_eqb_spec;
 }.
 
-#[global] Instance nat_mod_comparable `{p : Z} : Comparable (nat_mod p) := {
+Global Instance nat_mod_comparable `{p : Z} : Comparable (nat_mod p) := {
   ltb a b := Z.ltb (nat_mod_val p a) (nat_mod_val p b);
   leb a b := if Zeq_bool a b then true else Z.ltb (nat_mod_val p a) (nat_mod_val p b) ;
   gtb a b := Z.ltb (nat_mod_val p b) (nat_mod_val p a);
   geb a b := if Zeq_bool b a then true else Z.ltb (nat_mod_val p b) (nat_mod_val p a) ;
 }.
 
-#[global] Instance bool_eqdec : EqDec bool := {
+Global Instance bool_eqdec : EqDec bool := {
   eqb := Bool.eqb;
   eqb_leibniz := Bool.eqb_true_iff;
 }.
 
-#[global] Instance string_eqdec : EqDec String.string := {
+Global Instance string_eqdec : EqDec String.string := {
   eqb := String.eqb;
   eqb_leibniz := String.eqb_eq ;
 }.
 
-#[global] Instance unit_eqdec : EqDec unit := {
+Global Instance unit_eqdec : EqDec unit := {
   eqb := fun _ _ => true ;
   eqb_leibniz := (fun 'tt 'tt => conj (fun _ => eq_refl) (fun _ => eq_refl)) ;
 }.
@@ -1136,7 +1136,7 @@ Proof.
     apply list_eqdec_refl.
 Qed.
 
-#[global] Instance List_eqdec {A} `{EqDec A} : EqDec (list A) := {
+Global Instance List_eqdec {A} `{EqDec A} : EqDec (list A) := {
   eqb := list_eqdec;
   eqb_leibniz := list_eqdec_sound;
 }.
@@ -1156,12 +1156,12 @@ Proof.
     assumption.
 Qed.
 
-#[global] Program Instance Vector_eqdec {A n} `{EqDec A}: EqDec (Vector.t A n) := {
+Global Program Instance Vector_eqdec {A n} `{EqDec A}: EqDec (Vector.t A n) := {
   eqb := Vector.eqb _ eqb;
   eqb_leibniz := vector_eqb_sound;
 }.
 
-#[global] Program Instance Dec_eq_prod (A B : Type) `{EqDec A} `{EqDec B} : EqDec (A * B) := {
+Global Program Instance Dec_eq_prod (A B : Type) `{EqDec A} `{EqDec B} : EqDec (A * B) := {
   eqb '(a0, b0) '(a1, b1) := andb (eqb a0 a1) (eqb b0 b1)
 }.
 Next Obligation.
@@ -1244,7 +1244,7 @@ Definition result_bind {A B C} (r : result A C) (f : A -> result B C) : result B
 
 Definition result_ret {A C} (a : A) : result A C := Ok a.
 
-#[global] Instance result_monad {C} : Monad (fun A => result A C) :=
+Global Instance result_monad {C} : Monad (fun A => result A C) :=
   Build_Monad (fun A => result A C) (fun A B => @result_bind A B C) (fun A => @result_ret A C).
 
 Definition option_bind {A B} (r : option A) (f : A -> option B) : option B :=
@@ -1257,7 +1257,7 @@ Definition option_bind {A B} (r : option A) (f : A -> option B) : option B :=
 
 Definition option_ret {A} (a : A) : option A := Some a.
 
-#[global] Instance option_monad : Monad option :=
+Global Instance option_monad : Monad option :=
   Build_Monad option (@option_bind) (@option_ret).
 
 Definition option_is_none {A} (x : option A) : bool :=
@@ -1281,9 +1281,9 @@ Definition result_int64_unit := (result int64 unit).
 Definition result_uint_size_unit_to_result_int64_unit (r : result_uint_size_unit) : result_int64_unit := result_uint_size_to_result_int64 r.
 
 Set Printing Coercions.
-#[global] Coercion lift_to_result_coerce {A B C} (f : A -> B) := (fun (r : result A C) => lift_to_result r f).
+Global Coercion lift_to_result_coerce {A B C} (f : A -> B) := (fun (r : result A C) => lift_to_result r f).
 
-#[global] Coercion result_uint_size_unit_to_result_int64_unit : result_uint_size_unit >-> result_int64_unit.
+Global Coercion result_uint_size_unit_to_result_int64_unit : result_uint_size_unit >-> result_int64_unit.
 
 (*** Notation *)
 
