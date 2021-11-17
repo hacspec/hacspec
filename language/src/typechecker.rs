@@ -36,7 +36,7 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
                     DictEntry::Array | DictEntry::NaturalInteger => true,
                 }
             }
-            None => match name.0.as_str() {
+            None => match name.string.as_str() {
                 "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64" | "I128" => {
                     true
                 }
@@ -97,7 +97,7 @@ fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
                 is_copy(&(new_t1.1).0, top_ctxt)
             }
             None => match arg {
-                None => match name.0.as_str() {
+                None => match name.string.as_str() {
                     "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64"
                     | "I128" => true,
                     _ => false,
@@ -355,9 +355,10 @@ fn unify_types(
                 ),
                 (BaseTyp::Named(name1, args1), BaseTyp::Named(name2, args2)) => {
                     let (name1, name2) = match (&name1.0, &name2.0) {
-                        (TopLevelIdent(name1), TopLevelIdent(name2)) => {
-                            (name1.clone(), name2.clone())
-                        }
+                        (
+                            TopLevelIdent { string: name1, .. },
+                            TopLevelIdent { string: name2, .. },
+                        ) => (name1.clone(), name2.clone()),
                     };
                     if name1 == name2 {
                         match (args1, args2) {
@@ -533,7 +534,7 @@ fn find_func(
         .iter()
         .filter_map(|(key2, sig)| match (key1, key2) {
             (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
-                (TopLevelIdent(n1), TopLevelIdent(n2)) => {
+                (TopLevelIdent { string: n1, .. }, TopLevelIdent { string: n2, .. }) => {
                     if n1 == n2 {
                         Some((HashMap::new(), sig))
                     } else {
@@ -557,7 +558,7 @@ fn find_func(
                 );
                 match unification {
                     Ok(Some(new_typ_ctx)) => match (n1, n2) {
-                        (TopLevelIdent(n1), TopLevelIdent(n2)) => {
+                        (TopLevelIdent { string: n1, .. }, TopLevelIdent { string: n2, .. }) => {
                             if n1 == n2 {
                                 Some((new_typ_ctx, sig))
                             } else {
@@ -865,22 +866,22 @@ fn typecheck_expression(
                         // Then we finally proceed with typechecking the arm
                         // expression, for that we retrieve the type of this arm's
                         // payload
-                        let (case_index, case_typ) = match t_arg_cases
-                            .iter()
-                            .enumerate()
-                            .find(|(_, ((t_arg_case_name, _), _))| &arm_case.0 == t_arg_case_name)
-                        {
-                            Some((case_index, (_, t_arg_case_typ))) => {
-                                (case_index, t_arg_case_typ.clone())
-                            }
-                            None => {
-                                sess.span_rustspec_err(
-                                    arm_case.1.clone(),
-                                    format!("enum case not found for {}", arm_enum_name.0).as_str(),
-                                );
-                                return Err(());
-                            }
-                        };
+                        let (case_index, case_typ) =
+                            match t_arg_cases.iter().enumerate().find(
+                                |(_, ((t_arg_case_name, _), _))| &arm_case.0 == t_arg_case_name,
+                            ) {
+                                Some((case_index, (_, t_arg_case_typ))) => {
+                                    (case_index, t_arg_case_typ.clone())
+                                }
+                                None => {
+                                    sess.span_rustspec_err(
+                                        arm_case.1.clone(),
+                                        format!("enum case not found for {}", arm_enum_name.string)
+                                            .as_str(),
+                                    );
+                                    return Err(());
+                                }
+                            };
                         let case_typ = match case_typ {
                             Some(case_typ) => Some((
                                 bind_variable_type(sess, &case_typ, &typ_var_ctx)?,
@@ -962,6 +963,10 @@ fn typecheck_expression(
         Expression::EnumInject(enum_ty, case_name, payload) => {
             let (enum_cases, enum_name, enum_args) = match enum_ty {
                 BaseTyp::Named(enum_name, args) => {
+                    println!(
+                        "Trying to get {} {:?}",
+                        enum_name.0.string, enum_name.0.kind
+                    );
                     match top_level_context.typ_dict.get(&enum_name.0) {
                         Some((
                             ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, type_args), _)),
@@ -1909,7 +1914,7 @@ fn typecheck_pattern(
                         *pat_span,
                         format!(
                             "this pattern is matching the enum {} with multiple cases",
-                            pat_enum_name.0
+                            pat_enum_name
                         )
                         .as_str(),
                     );
@@ -1921,9 +1926,9 @@ fn typecheck_pattern(
                         *pat_span,
                         format!(
                             "this pattern matches the enum {} with a single case {} instead of the wrapper struct {}",
-                            case_name.0,
-                            pat_enum_name.0,
-                            pat_enum_name.0
+                            case_name,
+                            pat_enum_name,
+                            pat_enum_name
                         )
                         .as_str(),
                     );
@@ -1935,7 +1940,7 @@ fn typecheck_pattern(
                             *pat_span,
                             format!(
                                 "this pattern is matching the enum {} with one case but no payload",
-                                pat_enum_name.0
+                                pat_enum_name
                             )
                             .as_str(),
                         );
@@ -1957,7 +1962,7 @@ fn typecheck_pattern(
                     *pat_span,
                     format!(
                         "let-binding pattern expected a {} struct but the type is {}",
-                        pat_enum_name.0, typ.0
+                        pat_enum_name, typ.0
                     )
                     .as_str(),
                 );
@@ -2074,14 +2079,24 @@ fn typecheck_question_mark(
         match expr_typ {
             (
                 (Borrowing::Consumed, _),
-                (BaseTyp::Named((TopLevelIdent(name), _), Some(args)), _),
+                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
             ) if name == "Result" && args.len() == 2 => {
                 let ok_typ = &args[0];
                 let err_typ = &args[1];
                 match return_typ {
-                    (BaseTyp::Named((TopLevelIdent(return_name), _), Some(return_args)), _)
-                        if return_name == "Result" && return_args.len() == 2 =>
-                    {
+                    (
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: return_name,
+                                    ..
+                                },
+                                _,
+                            ),
+                            Some(return_args),
+                        ),
+                        _,
+                    ) if return_name == "Result" && return_args.len() == 2 => {
                         let err_typ_ret = &args[1];
                         match unify_types(
                             sess,

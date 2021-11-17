@@ -83,7 +83,10 @@ pub(crate) fn find_ident<'b>(
     match &x.0 {
         Ident::Unresolved(name) => match name_context.get(name) {
             None => {
-                let x_tl = TopLevelIdent(name.clone());
+                let x_tl = TopLevelIdent {
+                    string: name.clone(),
+                    kind: TopLevelIdentKind::Constant,
+                };
                 match top_level_context.consts.get(&x_tl) {
                     Some(_) => Ok(Ident::TopLevel(x_tl)),
                     None => {
@@ -502,9 +505,10 @@ fn process_decl_item(
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let new_size = match &size.0 {
                 Expression::Lit(Literal::Usize(u)) => ArraySize::Integer(u.clone()),
-                Expression::Named(Ident::Unresolved(s)) => {
-                    ArraySize::Ident(TopLevelIdent(s.clone()))
-                }
+                Expression::Named(Ident::Unresolved(s)) => ArraySize::Ident(TopLevelIdent {
+                    string: s.clone(),
+                    kind: TopLevelIdentKind::Constant,
+                }),
                 _ => {
                     sess.span_rustspec_err(
                         size.1.clone(),
@@ -556,10 +560,7 @@ fn process_decl_item(
                                     match secrecy {
                                         Secrecy::Secret => (
                                             BaseTyp::Named(
-                                                (
-                                                    TopLevelIdent("U8".to_string()),
-                                                    canvas_typ_ident.1.clone(),
-                                                ),
+                                                (U8_TYP(), canvas_typ_ident.1.clone()),
                                                 None,
                                             ),
                                             canvas_typ_ident.1.clone(),
@@ -643,7 +644,13 @@ pub fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
             _ => false,
         })
         .map(|i| match &i.0 {
-            Item::ImportedCrate((TopLevelIdent(s), _)) => (s.clone(), i.1.clone()),
+            Item::ImportedCrate((
+                TopLevelIdent {
+                    string: s,
+                    kind: TopLevelIdentKind::Crate,
+                },
+                _,
+            )) => (s.clone(), i.1.clone()),
             _ => panic!("should not happen"),
         })
         .collect()
@@ -665,7 +672,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     } = external_data(&get_imported_crates(p));
     for (alias_name, alias_ty) in extern_aliases {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(alias_name.clone()),
+            TopLevelIdent {
+                string: alias_name.clone(),
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -677,7 +687,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     }
     for (array_name, array_typ) in extern_arrays {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(array_name),
+            TopLevelIdent {
+                string: array_name,
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -689,7 +702,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     }
     for (enum_name, enum_typ) in extern_enums {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(enum_name),
+            TopLevelIdent {
+                string: enum_name,
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -701,7 +717,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     }
     for (nat_int_name, nat_int_typ) in extern_nat_ints {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(nat_int_name),
+            TopLevelIdent {
+                string: nat_int_name,
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -721,9 +740,13 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         );
     }
     for (k, v) in extern_consts {
-        top_level_ctx
-            .consts
-            .insert(TopLevelIdent(k), (v, DUMMY_SP.into()));
+        top_level_ctx.consts.insert(
+            TopLevelIdent {
+                string: k,
+                kind: TopLevelIdentKind::Constant,
+            },
+            (v, DUMMY_SP.into()),
+        );
     }
     Ok(())
 }

@@ -50,12 +50,24 @@ impl fmt::Debug for LocalIdent {
     }
 }
 
+#[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Debug)]
+pub enum TopLevelIdentKind {
+    Type,
+    Function,
+    Constant,
+    Crate,
+    EnumConstructor,
+}
+
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-pub struct TopLevelIdent(pub String);
+pub struct TopLevelIdent {
+    pub string: String,
+    pub kind: TopLevelIdentKind,
+}
 
 impl fmt::Display for TopLevelIdent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.string)
     }
 }
 
@@ -493,4 +505,14 @@ pub struct DecoratedItem {
 #[derive(Clone, Serialize)]
 pub struct Program {
     pub items: Vec<Spanned<DecoratedItem>>,
+}
+
+// Helpers
+
+#[allow(non_snake_case)]
+pub fn U8_TYP() -> TopLevelIdent {
+    TopLevelIdent {
+        string: "U8".into(),
+        kind: TopLevelIdentKind::Type,
+    }
 }

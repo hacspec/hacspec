@@ -162,7 +162,10 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
-    translate_ident_str(x.0)
+    match x.kind {
+        TopLevelIdentKind::Type => translate_ident_str(format!("{}_t", x.string)),
+        _ => translate_ident_str(x.string),
+    }
 }
 
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
@@ -202,7 +205,7 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
 }
 
 fn translate_constructor<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
-    RcDoc::as_string(enum_name.0)
+    RcDoc::as_string(enum_name.string)
 }
 
 fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
@@ -212,7 +215,7 @@ fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
 fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) -> RcDoc<'a> {
     translate_constructor(case_name).append(match enum_name {
         BaseTyp::Named(name, _) => {
-            if (name.0).0 == "Option" || (name.0).0 == "Result" {
+            if (name.0).string == "Option" || (name.0).string == "Result" {
                 RcDoc::nil()
             } else {
                 RcDoc::as_string("_").append(translate_toplevel_ident(name.0))
@@ -321,7 +324,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
         BaseTyp::Int128 => Expression::Lit(Literal::Int128(0)),
         BaseTyp::Usize => Expression::Lit(Literal::Usize(0)),
         BaseTyp::Isize => Expression::Lit(Literal::Isize(0)),
-        BaseTyp::Named((name, i_s), None) => match name.0.as_str() {
+        BaseTyp::Named((name, i_s), None) => match name.string.as_str() {
             "U8" => Expression::FuncCall(
                 None,
                 (name.clone(), i_s.clone()),
@@ -496,13 +499,9 @@ fn translate_binop<'a, 'b>(
             RcDoc::as_string("%")
         }
         (BinOpKind::Lt, BaseTyp::Usize) | (BinOpKind::Lt, BaseTyp::Isize) => RcDoc::as_string("<"),
-        (BinOpKind::Lte, BaseTyp::Usize) | (BinOpKind::Lte, BaseTyp::Isize) => {
-            RcDoc::as_string("<=")
-        }
+        (BinOpKind::Le, BaseTyp::Usize) | (BinOpKind::Le, BaseTyp::Isize) => RcDoc::as_string("<="),
         (BinOpKind::Gt, BaseTyp::Usize) | (BinOpKind::Gt, BaseTyp::Isize) => RcDoc::as_string(">"),
-        (BinOpKind::Gte, BaseTyp::Usize) | (BinOpKind::Gte, BaseTyp::Isize) => {
-            RcDoc::as_string(">=")
-        }
+        (BinOpKind::Ge, BaseTyp::Usize) | (BinOpKind::Ge, BaseTyp::Isize) => RcDoc::as_string(">="),
         (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
         (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
         (BinOpKind::Rem, _) => RcDoc::as_string("%."),
@@ -584,7 +583,10 @@ fn translate_prefix_for_func_name<'a>(
                 | Some((alias_typ, DictEntry::NaturalInteger)) => {
                     translate_prefix_for_func_name((alias_typ.1).0.clone(), top_ctx)
                 }
-                _ => (translate_ident_str(name.0.clone()), FuncPrefix::Regular),
+                _ => (
+                    translate_ident_str(name.string.clone()),
+                    FuncPrefix::Regular,
+                ),
             }
         }
         BaseTyp::Variable(_) => panic!(), // shoult not happen
@@ -682,7 +684,7 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
-                            additional_args.push(translate_ident_str(s.0.clone()))
+                            additional_args.push(translate_ident_str(s.string.clone()))
                         }
                         FuncPrefix::Array(ArraySize::Integer(i), _) => {
                             additional_args.push(RcDoc::as_string(format!("{}", i)))
@@ -892,7 +894,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         BaseTyp::Int64 => String::from("I64"),
                         BaseTyp::Int128 => String::from("I128"),
                         BaseTyp::Isize => String::from("I32"),
-                        BaseTyp::Named((TopLevelIdent(s), _), None) => s.clone(),
+                        BaseTyp::Named((TopLevelIdent { string: s, .. }, _), None) => s.clone(),
                         _ => panic!(), // should not happen
                     };
                     let secret = match &new_t.0 {
@@ -938,8 +940,23 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
             // mutated variables by Ok
             match stmt {
                 Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
-                    BaseTyp::Named((TopLevelIdent("Result".to_string()), DUMMY_SP.into()), None),
-                    (TopLevelIdent("Ok".to_string()), DUMMY_SP.into()),
+                    BaseTyp::Named(
+                        (
+                            TopLevelIdent {
+                                string: "Result".to_string(),
+                                kind: TopLevelIdentKind::Type,
+                            },
+                            DUMMY_SP.into(),
+                        ),
+                        None,
+                    ),
+                    (
+                        TopLevelIdent {
+                            string: "Ok".to_string(),
+                            kind: TopLevelIdentKind::EnumConstructor,
+                        },
+                        DUMMY_SP.into(),
+                    ),
                     Some((Box::new(e.clone()), DUMMY_SP.into())),
                 )),
                 _ => panic!("should not happen"),
@@ -1345,17 +1362,19 @@ fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcD
                     ),
             )
         }
-        Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
+        Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => RcDoc::as_string(format!(
             "open {}",
             str::replace(&kr.to_title_case(), " ", ".")
         )),
-        Item::AliasDecl((TopLevelIdent(name), _), (ty, _)) => RcDoc::as_string("type")
-            .append(RcDoc::space())
-            .append(translate_ident_str(name.clone()))
-            .append(RcDoc::space())
-            .append(RcDoc::as_string("="))
-            .append(RcDoc::space())
-            .append(translate_base_typ(ty.clone())),
+        Item::AliasDecl((TopLevelIdent { string: name, .. }, _), (ty, _)) => {
+            RcDoc::as_string("type")
+                .append(RcDoc::space())
+                .append(translate_ident_str(name.clone()))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("="))
+                .append(RcDoc::space())
+                .append(translate_base_typ(ty.clone()))
+        }
     }
 }
 
