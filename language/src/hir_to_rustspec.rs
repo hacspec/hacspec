@@ -101,7 +101,13 @@ fn translate_base_typ(
                         // array types like U32Word, etc.
                         _ => Ok((
                             BaseTyp::Named(
-                                (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                (
+                                    TopLevelIdent {
+                                        string: name.to_ident_string(),
+                                        kind: TopLevelIdentKind::Type,
+                                    },
+                                    DUMMY_SP.into(),
+                                ),
                                 None,
                             ),
                             typ_ctx.clone(),
@@ -146,7 +152,13 @@ fn translate_base_typ(
                             };
                             Ok((
                                 BaseTyp::Named(
-                                    (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                    (
+                                        TopLevelIdent {
+                                            string: name.to_ident_string(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        DUMMY_SP.into(),
+                                    ),
                                     Some(vec![(param_typ, DUMMY_SP.into())]),
                                 ),
                                 typ_ctx.clone(),
@@ -181,7 +193,13 @@ fn translate_base_typ(
                             };
                             Ok((
                                 BaseTyp::Named(
-                                    (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                    (
+                                        TopLevelIdent {
+                                            string: name.to_ident_string(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        DUMMY_SP.into(),
+                                    ),
                                     Some(vec![
                                         (param_typ1, DUMMY_SP.into()),
                                         (param_typ2, DUMMY_SP.into()),
@@ -194,7 +212,13 @@ fn translate_base_typ(
                     },
                     _ => Ok((
                         BaseTyp::Named(
-                            (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                            (
+                                TopLevelIdent {
+                                    string: name.to_ident_string(),
+                                    kind: TopLevelIdentKind::Type,
+                                },
+                                DUMMY_SP.into(),
+                            ),
                             None,
                         ),
                         typ_ctx.clone(),
@@ -337,7 +361,10 @@ fn process_fn_id(
                     let name_segment = def_path.data.last().unwrap();
                     match name_segment.data {
                         DefPathData::ValueNs(name) => {
-                            let fn_key = FnKey::Independent(TopLevelIdent(name.to_ident_string()));
+                            let fn_key = FnKey::Independent(TopLevelIdent {
+                                string: name.to_ident_string(),
+                                kind: TopLevelIdentKind::Function,
+                            });
                             insert_extern_func(extern_funcs, fn_key, sig);
                         }
                         _ => (),
@@ -356,7 +383,10 @@ fn process_fn_id(
                                 Ok((impl_type, typ_ctx)) => {
                                     let fn_key = FnKey::Impl(
                                         impl_type,
-                                        TopLevelIdent(name.to_ident_string()),
+                                        TopLevelIdent {
+                                            string: name.to_ident_string(),
+                                            kind: TopLevelIdentKind::Function,
+                                        },
                                     );
                                     let export_sig = tcx.fn_sig(*id);
                                     let sig = match translate_polyfnsig(tcx, &export_sig, &typ_ctx)
@@ -514,7 +544,13 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                                     _ => None, // If the type of the constructor is not a function, then there is no payload
                                 };
                                 Ok((
-                                    (TopLevelIdent(name), RustspecSpan::from(variant.ident.span)),
+                                    (
+                                        TopLevelIdent {
+                                            string: name,
+                                            kind: TopLevelIdentKind::EnumConstructor,
+                                        },
+                                        RustspecSpan::from(variant.ident.span),
+                                    ),
                                     case_typ,
                                 ))
                             })
@@ -598,7 +634,13 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                     };
                     return SpecialTypeReturn::Enum(BaseTyp::Enum(
                         vec![(
-                            (TopLevelIdent(name), RustspecSpan::from(variant.ident.span)),
+                            (
+                                TopLevelIdent {
+                                    string: name,
+                                    kind: TopLevelIdentKind::EnumConstructor,
+                                },
+                                RustspecSpan::from(variant.ident.span),
+                            ),
                             case_typ,
                         )],
                         vec![],
@@ -755,9 +797,11 @@ pub fn retrieve_external_data(
                                                 def_path.data[def_path.data.len() - 2];
                                             match name_segment.data {
                                                 DefPathData::TypeNs(name) => {
-                                                    let fn_key = FnKey::Independent(TopLevelIdent(
-                                                        name.to_ident_string(),
-                                                    ));
+                                                    let fn_key =
+                                                        FnKey::Independent(TopLevelIdent {
+                                                            string: name.to_ident_string(),
+                                                            kind: TopLevelIdentKind::Function,
+                                                        });
                                                     extern_funcs.insert(fn_key, sig);
                                                 }
                                                 _ => (),
