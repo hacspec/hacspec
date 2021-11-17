@@ -243,10 +243,6 @@ fn translate_func_name(
     if path.segments.len() > 2 {
         return Err(());
     }
-    let base_name = translate_toplevel_ident(
-        &path.segments.last().unwrap().ident,
-        TopLevelIdentKind::Function,
-    );
     if path.segments.len() == 2 {
         match path.segments.first() {
             None => panic!(), // should not happen
@@ -271,7 +267,10 @@ fn translate_func_name(
                                 }
                             },
                         ),
-                        base_name,
+                        translate_toplevel_ident(
+                            &path.segments.last().unwrap().ident,
+                            TopLevelIdentKind::EnumConstructor,
+                        ),
                     ))
                 } else {
                     Ok(FuncNameResult::TypePrefixed(
@@ -291,13 +290,22 @@ fn translate_func_name(
                                 ),
                             },
                         )?),
-                        base_name,
+                        translate_toplevel_ident(
+                            &path.segments.last().unwrap().ident,
+                            TopLevelIdentKind::Function,
+                        ),
                     ))
                 }
             }
         }
     } else {
-        Ok(FuncNameResult::TypePrefixed(None, base_name))
+        Ok(FuncNameResult::TypePrefixed(
+            None,
+            translate_toplevel_ident(
+                &path.segments.last().unwrap().ident,
+                TopLevelIdentKind::Function,
+            ),
+        ))
     }
 }
 
@@ -643,8 +651,23 @@ fn translate_expr(
                         )?;
                         return Ok((
                             ExprTranslationResult::TransExpr(Expression::EnumInject(
-                                BaseTyp::Named(func_name.clone(), None),
-                                func_name,
+                                BaseTyp::Named(
+                                    (
+                                        TopLevelIdent {
+                                            string: func_name.0.string.clone(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        func_name.1,
+                                    ),
+                                    None,
+                                ),
+                                (
+                                    TopLevelIdent {
+                                        string: func_name.0.string.clone(),
+                                        kind: TopLevelIdentKind::EnumConstructor,
+                                    },
+                                    func_name.1,
+                                ),
                                 Some(if func_args.len() > 1 {
                                     (Box::new(Expression::Tuple(func_args)), e.span.into())
                                 } else {
@@ -2731,7 +2754,19 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 }
                 VariantData::Unit(_) => Ok((
                     ItemTranslationResult::Item(DecoratedItem {
-                        item: Item::EnumDecl(id.clone(), vec![(id, None)]),
+                        item: Item::EnumDecl(
+                            id.clone(),
+                            vec![(
+                                (
+                                    TopLevelIdent {
+                                        string: id.0.string,
+                                        kind: TopLevelIdentKind::EnumConstructor,
+                                    },
+                                    id.1,
+                                ),
+                                None,
+                            )],
+                        ),
                         tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
                     }),
                     SpecialNames {
@@ -2762,7 +2797,19 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     };
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
-                            item: Item::EnumDecl(id.clone(), vec![(id, Some(payload))]),
+                            item: Item::EnumDecl(
+                                id.clone(),
+                                vec![(
+                                    (
+                                        TopLevelIdent {
+                                            string: id.0.string,
+                                            kind: TopLevelIdentKind::EnumConstructor,
+                                        },
+                                        id.1,
+                                    ),
+                                    Some(payload),
+                                )],
+                            ),
                             tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
                         }),
                         SpecialNames {

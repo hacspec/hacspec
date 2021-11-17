@@ -963,10 +963,6 @@ fn typecheck_expression(
         Expression::EnumInject(enum_ty, case_name, payload) => {
             let (enum_cases, enum_name, enum_args) = match enum_ty {
                 BaseTyp::Named(enum_name, args) => {
-                    println!(
-                        "Trying to get {} {:?}",
-                        enum_name.0.string, enum_name.0.kind
-                    );
                     match top_level_context.typ_dict.get(&enum_name.0) {
                         Some((
                             ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, type_args), _)),
@@ -1921,14 +1917,13 @@ fn typecheck_pattern(
                     return Err(());
                 }
                 let ((case_name, _), case_typ) = cases.into_iter().next().unwrap();
-                if case_name != pat_enum_name {
+                if case_name.string != pat_enum_name.string {
                     sess.span_rustspec_err(
                         *pat_span,
                         format!(
-                            "this pattern matches the enum {} with a single case {} instead of the wrapper struct {}",
+                            "this pattern matches the enum {} with a single case instead of the wrapper struct {}",
                             case_name,
                             pat_enum_name,
-                            pat_enum_name
                         )
                         .as_str(),
                     );
