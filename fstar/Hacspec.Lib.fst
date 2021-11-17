@@ -282,7 +282,20 @@ let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 let array_to_le_uint32s (#len: uint_size) (s: lseq uint8 len{len % 4 = 0}) : lseq uint32 (len / 4) =
   admit()
 
+let array_to_be_uint32s (#len: uint_size) (s: lseq uint8 len{len % 4 = 0}) : lseq uint32 (len / 4) =
+  admit()
+
 let array_to_le_bytes
+  (#int_ty: inttype{unsigned int_ty /\ int_ty <> U1})
+  (#len: uint_size{
+    range (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16)) U32
+  })
+  (s: lseq (uint_t int_ty SEC) len)
+    : lseq uint8 (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16))
+  =
+  admit()
+
+let array_to_be_bytes
   (#int_ty: inttype{unsigned int_ty /\ int_ty <> U1})
   (#len: uint_size{
     range (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16)) U32
