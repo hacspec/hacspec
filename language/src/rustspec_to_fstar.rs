@@ -495,6 +495,14 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
             RcDoc::as_string("%")
         }
+        (BinOpKind::Lt, BaseTyp::Usize) | (BinOpKind::Lt, BaseTyp::Isize) => RcDoc::as_string("<"),
+        (BinOpKind::Lte, BaseTyp::Usize) | (BinOpKind::Lte, BaseTyp::Isize) => {
+            RcDoc::as_string("<=")
+        }
+        (BinOpKind::Gt, BaseTyp::Usize) | (BinOpKind::Gt, BaseTyp::Isize) => RcDoc::as_string(">"),
+        (BinOpKind::Gte, BaseTyp::Usize) | (BinOpKind::Gte, BaseTyp::Isize) => {
+            RcDoc::as_string(">=")
+        }
         (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_left`"),
         (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("`usize_shift_right`"),
         (BinOpKind::Rem, _) => RcDoc::as_string("%."),
