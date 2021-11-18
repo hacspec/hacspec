@@ -8,9 +8,9 @@ open Hacspec.Lib
 
 let riotboot_magic:pub_uint32 = pub_u32 0x544f4952
 
-type fletcher = (pub_uint32 & pub_uint32)
+type fletcher_t = (pub_uint32 & pub_uint32)
 
-let new_fletcher () : fletcher = (pub_u32 0xffff, pub_u32 0xffff)
+let new_fletcher () : fletcher_t = (pub_u32 0xffff, pub_u32 0xffff)
 
 let max_chunk_size () : uint_size = usize 360
 
@@ -20,7 +20,7 @@ let reduce_u32 (x_0: pub_uint32) : pub_uint32 =
 let combine (lower_1 upper_2: pub_uint32) : pub_uint32 =
   (lower_1) |. ((upper_2) `shift_left` (pub_u32 0x10))
 
-let update_fletcher (f_3: fletcher) (data_4: seq pub_uint16) : fletcher =
+let update_fletcher (f_3: fletcher_t) (data_4: seq pub_uint16) : fletcher_t =
   let max_chunk_size_5 = max_chunk_size () in
   let a_6, b_7 = f_3 in
   let a_6, b_7 =
@@ -50,13 +50,13 @@ let update_fletcher (f_3: fletcher) (data_4: seq pub_uint16) : fletcher =
   let b_7 = reduce_u32 (b_7) in
   (a_6, b_7)
 
-let value (x_14: fletcher) : pub_uint32 =
+let value (x_14: fletcher_t) : pub_uint32 =
   let a_15, b_16 = x_14 in
   combine (a_15) (b_16)
 
-type header = (pub_uint32 & pub_uint32 & pub_uint32 & pub_uint32)
+type header_t = (pub_uint32 & pub_uint32 & pub_uint32 & pub_uint32)
 
-let header_as_u16_slice (h_17: header) : seq pub_uint16 =
+let header_as_u16_slice (h_17: header_t) : seq pub_uint16 =
   let magic_18, seq_number_19, start_addr_20, _ = h_17 in
   let magic_21 = u32_to_be_bytes (magic_18) in
   let seq_number_22 = u32_to_be_bytes (seq_number_19) in
@@ -85,7 +85,7 @@ let header_as_u16_slice (h_17: header) : seq pub_uint16 =
   in
   u16_seq_28
 
-let is_valid_header (h_34: header) : bool =
+let is_valid_header (h_34: header_t) : bool =
   let magic_number_35, seq_number_36, start_addr_37, checksum_38 = h_34 in
   let slice_39 =
     header_as_u16_slice ((magic_number_35, seq_number_36, start_addr_37, checksum_38))
@@ -103,7 +103,7 @@ let is_valid_header (h_34: header) : bool =
   in
   result_40
 
-let choose_image (images_44: seq header) : (bool & pub_uint32) =
+let choose_image (images_44: seq header_t) : (bool & pub_uint32) =
   let image_45 = pub_u32 0x0 in
   let image_found_46 = false in
   let image_45, image_found_46 =
