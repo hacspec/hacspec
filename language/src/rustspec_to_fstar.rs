@@ -687,7 +687,11 @@ fn translate_func_name<'a>(
                 (NAT_MODULE, "to_public_byte_seq_le")
                 | (NAT_MODULE, "to_public_byte_seq_be")
                 | (NAT_MODULE, "to_byte_seq_le")
-                | (NAT_MODULE, "to_byte_seq_be") => {
+                | (NAT_MODULE, "to_byte_seq_be")
+                | (NAT_MODULE, "from_public_byte_seq_le")
+                | (NAT_MODULE, "from_public_byte_seq_be")
+                | (NAT_MODULE, "from_byte_seq_le")
+                | (NAT_MODULE, "from_byte_seq_be") => {
                     match &prefix_info {
                         FuncPrefix::NatMod(_, encoding_bits) => additional_args
                             .push(RcDoc::as_string(format!("{}", (encoding_bits + 7) / 8))),
