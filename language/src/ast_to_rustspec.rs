@@ -625,6 +625,20 @@ fn translate_expr(
             match func_name_kind {
                 FuncNameResult::TypePrefixed(func_prefix, func_name) => {
                     let func_name_string = (func_name.clone().0).string;
+                    let func_name_but_as_type = (
+                        TopLevelIdent {
+                            string: func_name.0.string.clone(),
+                            kind: TopLevelIdentKind::Type,
+                        },
+                        func_name.1,
+                    );
+                    let func_name_but_as_enum_constructor = (
+                        TopLevelIdent {
+                            string: func_name.0.string.clone(),
+                            kind: TopLevelIdentKind::EnumConstructor,
+                        },
+                        func_name.1,
+                    );
                     if specials.enums.contains(&func_name_string) {
                         // Special case for struct constructors
                         let func_args: Vec<
@@ -651,23 +665,8 @@ fn translate_expr(
                         )?;
                         return Ok((
                             ExprTranslationResult::TransExpr(Expression::EnumInject(
-                                BaseTyp::Named(
-                                    (
-                                        TopLevelIdent {
-                                            string: func_name.0.string.clone(),
-                                            kind: TopLevelIdentKind::Type,
-                                        },
-                                        func_name.1,
-                                    ),
-                                    None,
-                                ),
-                                (
-                                    TopLevelIdent {
-                                        string: func_name.0.string.clone(),
-                                        kind: TopLevelIdentKind::EnumConstructor,
-                                    },
-                                    func_name.1,
-                                ),
+                                BaseTyp::Named(func_name_but_as_type, None),
+                                func_name_but_as_enum_constructor,
                                 Some(if func_args.len() > 1 {
                                     (Box::new(Expression::Tuple(func_args)), e.span.into())
                                 } else {
@@ -697,7 +696,7 @@ fn translate_expr(
                                 let new_cells = check_vec(new_cells)?;
                                 return Ok((
                                     (ExprTranslationResult::TransExpr(Expression::NewArray(
-                                        Some(func_name),
+                                        Some(func_name_but_as_type),
                                         None,
                                         new_cells,
                                     ))),
@@ -756,7 +755,7 @@ fn translate_expr(
                                             return Ok((
                                                 (ExprTranslationResult::TransExpr(
                                                     Expression::NewArray(
-                                                        Some(func_name),
+                                                        Some(func_name_but_as_type),
                                                         None,
                                                         array,
                                                     ),
@@ -796,7 +795,7 @@ fn translate_expr(
                                             return Ok((
                                                 (ExprTranslationResult::TransExpr(
                                                     Expression::NewArray(
-                                                        Some(func_name),
+                                                        Some(func_name_but_as_type),
                                                         None,
                                                         array,
                                                     ),

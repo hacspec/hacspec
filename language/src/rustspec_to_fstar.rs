@@ -163,7 +163,6 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 
 fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
     match x.kind {
-        TopLevelIdentKind::Type => translate_ident_str(format!("{}_t", x.string)),
         _ => translate_ident_str(x.string),
     }
 }

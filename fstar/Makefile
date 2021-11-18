@@ -96,6 +96,9 @@ include .depend
 # It needs to be here, because it reads the variable ALL_FST_FILES in .depend
 verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
 
+lax-all: $(addsuffix .checked.lax, $(ALL_FST_FILES))
+
+
 %.fst-in %.fsti-in:
 	@echo --cache_checked_modules $(addprefix --include , $(INCLUDE_PATHS))
 
