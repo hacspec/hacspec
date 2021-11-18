@@ -14,20 +14,19 @@ let k_size:uint_size = usize 64
 
 let hash_size:uint_size = (usize 256) / (usize 8)
 
-type block_t = lseq (uint8_t) (block_size)
+type block_t = lseq (uint8) (block_size)
 
 type op_table_type_t = lseq (uint_size) (usize 12)
 
-type sha256_digest_t = lseq (uint8_t) (hash_size)
+type sha256_digest_t = lseq (uint8) (hash_size)
 
-type round_constants_table_t = lseq (uint32_t) (k_size)
+type round_constants_table_t = lseq (uint32) (k_size)
 
-type hash_t = lseq (uint32_t) (usize 8)
+type hash_t = lseq (uint32) (usize 8)
 
-let ch (x_0 y_1 z_2: uint32_t) : uint32_t = ((x_0) &. (y_1)) ^. ((~.(x_0)) &. (z_2))
+let ch (x_0 y_1 z_2: uint32) : uint32 = ((x_0) &. (y_1)) ^. ((~.(x_0)) &. (z_2))
 
-let maj (x_3 y_4 z_5: uint32_t) : uint32_t =
-  ((x_3) &. (y_4)) ^. (((x_3) &. (z_5)) ^. ((y_4) &. (z_5)))
+let maj (x_3 y_4 z_5: uint32) : uint32 = ((x_3) &. (y_4)) ^. (((x_3) &. (z_5)) ^. ((y_4) &. (z_5)))
 
 let op_table:op_table_type_t =
   array_from_list (let l =
@@ -42,37 +41,28 @@ let op_table:op_table_type_t =
 let k_table:round_constants_table_t =
   array_from_list (let l =
         [
-          uint32_t (pub_u32 0x428a2f98); uint32_t (pub_u32 0x71374491);
-          uint32_t (pub_u32 0xb5c0fbcf); uint32_t (pub_u32 0xe9b5dba5);
-          uint32_t (pub_u32 0x3956c25b); uint32_t (pub_u32 0x59f111f1);
-          uint32_t (pub_u32 0x923f82a4); uint32_t (pub_u32 0xab1c5ed5);
-          uint32_t (pub_u32 0xd807aa98); uint32_t (pub_u32 0x12835b01);
-          uint32_t (pub_u32 0x243185be); uint32_t (pub_u32 0x550c7dc3);
-          uint32_t (pub_u32 0x72be5d74); uint32_t (pub_u32 0x80deb1fe);
-          uint32_t (pub_u32 0x9bdc06a7); uint32_t (pub_u32 0xc19bf174);
-          uint32_t (pub_u32 0xe49b69c1); uint32_t (pub_u32 0xefbe4786); uint32_t (pub_u32 0xfc19dc6);
-          uint32_t (pub_u32 0x240ca1cc); uint32_t (pub_u32 0x2de92c6f);
-          uint32_t (pub_u32 0x4a7484aa); uint32_t (pub_u32 0x5cb0a9dc);
-          uint32_t (pub_u32 0x76f988da); uint32_t (pub_u32 0x983e5152);
-          uint32_t (pub_u32 0xa831c66d); uint32_t (pub_u32 0xb00327c8);
-          uint32_t (pub_u32 0xbf597fc7); uint32_t (pub_u32 0xc6e00bf3);
-          uint32_t (pub_u32 0xd5a79147); uint32_t (pub_u32 0x6ca6351); uint32_t (pub_u32 0x14292967);
-          uint32_t (pub_u32 0x27b70a85); uint32_t (pub_u32 0x2e1b2138);
-          uint32_t (pub_u32 0x4d2c6dfc); uint32_t (pub_u32 0x53380d13);
-          uint32_t (pub_u32 0x650a7354); uint32_t (pub_u32 0x766a0abb);
-          uint32_t (pub_u32 0x81c2c92e); uint32_t (pub_u32 0x92722c85);
-          uint32_t (pub_u32 0xa2bfe8a1); uint32_t (pub_u32 0xa81a664b);
-          uint32_t (pub_u32 0xc24b8b70); uint32_t (pub_u32 0xc76c51a3);
-          uint32_t (pub_u32 0xd192e819); uint32_t (pub_u32 0xd6990624);
-          uint32_t (pub_u32 0xf40e3585); uint32_t (pub_u32 0x106aa070);
-          uint32_t (pub_u32 0x19a4c116); uint32_t (pub_u32 0x1e376c08);
-          uint32_t (pub_u32 0x2748774c); uint32_t (pub_u32 0x34b0bcb5);
-          uint32_t (pub_u32 0x391c0cb3); uint32_t (pub_u32 0x4ed8aa4a);
-          uint32_t (pub_u32 0x5b9cca4f); uint32_t (pub_u32 0x682e6ff3);
-          uint32_t (pub_u32 0x748f82ee); uint32_t (pub_u32 0x78a5636f);
-          uint32_t (pub_u32 0x84c87814); uint32_t (pub_u32 0x8cc70208);
-          uint32_t (pub_u32 0x90befffa); uint32_t (pub_u32 0xa4506ceb);
-          uint32_t (pub_u32 0xbef9a3f7); uint32_t (pub_u32 0xc67178f2)
+          secret (pub_u32 0x428a2f98); secret (pub_u32 0x71374491); secret (pub_u32 0xb5c0fbcf);
+          secret (pub_u32 0xe9b5dba5); secret (pub_u32 0x3956c25b); secret (pub_u32 0x59f111f1);
+          secret (pub_u32 0x923f82a4); secret (pub_u32 0xab1c5ed5); secret (pub_u32 0xd807aa98);
+          secret (pub_u32 0x12835b01); secret (pub_u32 0x243185be); secret (pub_u32 0x550c7dc3);
+          secret (pub_u32 0x72be5d74); secret (pub_u32 0x80deb1fe); secret (pub_u32 0x9bdc06a7);
+          secret (pub_u32 0xc19bf174); secret (pub_u32 0xe49b69c1); secret (pub_u32 0xefbe4786);
+          secret (pub_u32 0xfc19dc6); secret (pub_u32 0x240ca1cc); secret (pub_u32 0x2de92c6f);
+          secret (pub_u32 0x4a7484aa); secret (pub_u32 0x5cb0a9dc); secret (pub_u32 0x76f988da);
+          secret (pub_u32 0x983e5152); secret (pub_u32 0xa831c66d); secret (pub_u32 0xb00327c8);
+          secret (pub_u32 0xbf597fc7); secret (pub_u32 0xc6e00bf3); secret (pub_u32 0xd5a79147);
+          secret (pub_u32 0x6ca6351); secret (pub_u32 0x14292967); secret (pub_u32 0x27b70a85);
+          secret (pub_u32 0x2e1b2138); secret (pub_u32 0x4d2c6dfc); secret (pub_u32 0x53380d13);
+          secret (pub_u32 0x650a7354); secret (pub_u32 0x766a0abb); secret (pub_u32 0x81c2c92e);
+          secret (pub_u32 0x92722c85); secret (pub_u32 0xa2bfe8a1); secret (pub_u32 0xa81a664b);
+          secret (pub_u32 0xc24b8b70); secret (pub_u32 0xc76c51a3); secret (pub_u32 0xd192e819);
+          secret (pub_u32 0xd6990624); secret (pub_u32 0xf40e3585); secret (pub_u32 0x106aa070);
+          secret (pub_u32 0x19a4c116); secret (pub_u32 0x1e376c08); secret (pub_u32 0x2748774c);
+          secret (pub_u32 0x34b0bcb5); secret (pub_u32 0x391c0cb3); secret (pub_u32 0x4ed8aa4a);
+          secret (pub_u32 0x5b9cca4f); secret (pub_u32 0x682e6ff3); secret (pub_u32 0x748f82ee);
+          secret (pub_u32 0x78a5636f); secret (pub_u32 0x84c87814); secret (pub_u32 0x8cc70208);
+          secret (pub_u32 0x90befffa); secret (pub_u32 0xa4506ceb); secret (pub_u32 0xbef9a3f7);
+          secret (pub_u32 0xc67178f2)
         ]
       in
       assert_norm (List.Tot.length l == 64);
@@ -81,21 +71,21 @@ let k_table:round_constants_table_t =
 let hash_init:hash_t =
   array_from_list (let l =
         [
-          uint32_t (pub_u32 0x6a09e667);
-          uint32_t (pub_u32 0xbb67ae85);
-          uint32_t (pub_u32 0x3c6ef372);
-          uint32_t (pub_u32 0xa54ff53a);
-          uint32_t (pub_u32 0x510e527f);
-          uint32_t (pub_u32 0x9b05688c);
-          uint32_t (pub_u32 0x1f83d9ab);
-          uint32_t (pub_u32 0x5be0cd19)
+          secret (pub_u32 0x6a09e667);
+          secret (pub_u32 0xbb67ae85);
+          secret (pub_u32 0x3c6ef372);
+          secret (pub_u32 0xa54ff53a);
+          secret (pub_u32 0x510e527f);
+          secret (pub_u32 0x9b05688c);
+          secret (pub_u32 0x1f83d9ab);
+          secret (pub_u32 0x5be0cd19)
         ]
       in
       assert_norm (List.Tot.length l == 8);
       l)
 
-let sigma (x_6: uint32_t) (i_7 op_8: uint_size) : uint32_t =
-  let tmp_9:uint32_t =
+let sigma (x_6: uint32) (i_7 op_8: uint_size) : uint32 =
+  let tmp_9:uint32 =
     uint32_rotate_right (x_6) (array_index (op_table) (((usize 3) * (i_7)) + (usize 2)))
   in
   let tmp_9 =
@@ -111,7 +101,7 @@ let sigma (x_6: uint32_t) (i_7 op_8: uint_size) : uint32_t =
 
 let schedule (block_10: block_t) : round_constants_table_t =
   let b_11 = array_to_be_uint32s (block_10) in
-  let s_12 = array_new_ (uint32_t (pub_u32 0x0)) (k_size) in
+  let s_12 = array_new_ (secret (pub_u32 0x0)) (k_size) in
   let s_12 =
     foldi (usize 0)
       (k_size)
@@ -149,7 +139,7 @@ let shuffle (ws_20: round_constants_table_t) (hashi_21: hash_t) : hash_t =
           let e0_28 = array_index (h_22) (usize 4) in
           let f0_29 = array_index (h_22) (usize 5) in
           let g0_30 = array_index (h_22) (usize 6) in
-          let h0_31:uint32_t = array_index (h_22) (usize 7) in
+          let h0_31:uint32 = array_index (h_22) (usize 7) in
           let t1_32 =
             ((((h0_31) +. (sigma (e0_28) (usize 1) (usize 1))) +. (ch (e0_28) (f0_29) (g0_30))) +.
               (array_index (k_table) (i_23))) +.
@@ -184,9 +174,9 @@ let compress (block_34: block_t) (h_in_35: hash_t) : hash_t =
   in
   h_37
 
-let hash (msg_39: byte_seq_t) : sha256_digest_t =
+let hash (msg_39: byte_seq) : sha256_digest_t =
   let h_40 = hash_init in
-  let last_block_41 = array_new_ (uint8_t (pub_u8 0x0)) (block_size) in
+  let last_block_41 = array_new_ (secret (pub_u8 0x0)) (block_size) in
   let last_block_len_42 = usize 0 in
   let h_40, last_block_41, last_block_len_42 =
     foldi (usize 0)
@@ -197,7 +187,7 @@ let hash (msg_39: byte_seq_t) : sha256_digest_t =
             if (block_len_44) < (block_size)
             then
               let last_block_41 =
-                array_update_start (array_new_ (uint8_t (pub_u8 0x0)) (block_size)) (block_45)
+                array_update_start (array_new_ (secret (pub_u8 0x0)) (block_size)) (block_45)
               in
               let last_block_len_42 = block_len_44 in
               (h_40, last_block_41, last_block_len_42)
@@ -220,7 +210,7 @@ let hash (msg_39: byte_seq_t) : sha256_digest_t =
       let h_40 = compress (last_block_41) (h_40) in
       (h_40, last_block_41)
     else
-      let pad_block_48 = array_new_ (uint8_t (pub_u8 0x0)) (block_size) in
+      let pad_block_48 = array_new_ (secret (pub_u8 0x0)) (block_size) in
       let pad_block_48 =
         array_update (pad_block_48) ((block_size) - (len_size)) (uint64_to_be_bytes (len_bist_47))
       in
@@ -230,5 +220,5 @@ let hash (msg_39: byte_seq_t) : sha256_digest_t =
   in
   array_from_seq (hash_size) (array_to_be_bytes (h_40))
 
-let sha256 (msg_49: byte_seq_t) : sha256_digest_t = hash (msg_49)
+let sha256 (msg_49: byte_seq) : sha256_digest_t = hash (msg_49)
 

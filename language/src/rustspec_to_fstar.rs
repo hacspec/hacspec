@@ -163,6 +163,29 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 
 fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
     match x.kind {
+        TopLevelIdentKind::Type => {
+            // If x is a type name identifier, then we add a _t suffix
+            // unless it is a lib-defined type name. This is made to avoid conflicts
+            // with function names sharing the same lowercase string as type
+            // names
+            match format!("{}", translate_ident_str(x.string).pretty(0)).as_str() {
+                s @ "uint128"
+                | s @ "uint64"
+                | s @ "uint32"
+                | s @ "uint16"
+                | s @ "uint8"
+                | s @ "int128"
+                | s @ "int64"
+                | s @ "int32"
+                | s @ "int16"
+                | s @ "int8"
+                | s @ "byte_seq"
+                | s @ "public_byte_seq"
+                | s @ "option"
+                | s @ "result" => RcDoc::as_string(s),
+                s => RcDoc::as_string(format!("{}_t", s)),
+            }
+        }
         _ => translate_ident_str(x.string),
     }
 }
@@ -1365,15 +1388,13 @@ fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcD
             "open {}",
             str::replace(&kr.to_title_case(), " ", ".")
         )),
-        Item::AliasDecl((TopLevelIdent { string: name, .. }, _), (ty, _)) => {
-            RcDoc::as_string("type")
-                .append(RcDoc::space())
-                .append(translate_ident_str(name.clone()))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("="))
-                .append(RcDoc::space())
-                .append(translate_base_typ(ty.clone()))
-        }
+        Item::AliasDecl((name, _), (ty, _)) => RcDoc::as_string("type")
+            .append(RcDoc::space())
+            .append(translate_ident(Ident::TopLevel(name.clone())))
+            .append(RcDoc::space())
+            .append(RcDoc::as_string("="))
+            .append(RcDoc::space())
+            .append(translate_base_typ(ty.clone())),
     }
 }
 
