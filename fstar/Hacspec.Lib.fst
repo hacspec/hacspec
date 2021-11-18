@@ -638,8 +638,25 @@ let nat_mod (n: nat) = x:nat{x < n}
 val (+%) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let (+%) #n a b = (a + b) % n
 
+val (-%) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
+let (-%) #n a b = (a - b) % n
+
+
 val ( *% ) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let ( *% ) #n a b = (a * b) % n
+
+let nat_exp (m: pos) (n: nat_mod m) (exponent: pub_uint32) : nat_mod m =
+  admit()
+
+let nat_inv (m: pos) (n: nat_mod m) : nat_mod m =
+  admit()
+
+let nat_one (m: pos) : nat_mod m = 1 % m
+
+let nat_equal (m: pos) (n n': nat_mod m) : bool = n = n'
+
+let nat_get_bit (m: pos) (n: nat_mod m) (bit: uint_size) : nat_mod m =
+  admit()
 
 let nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n} =
   v x
@@ -662,6 +679,11 @@ let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq p
 let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   let n' = n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n'
+
+let nat_from_byte_seq_be (n : pos) (len: uint_size) (x: lseq uint8 len) : nat_mod n =
+  let out = Lib.ByteSequence.nat_from_bytes_be x in
+  admit();
+  out
 
 let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
 
