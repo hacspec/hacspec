@@ -186,6 +186,8 @@ fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
                 s => RcDoc::as_string(format!("{}_t", s)),
             }
         }
+        // We add also _v to constant values
+        TopLevelIdentKind::Constant => translate_ident_str(format!("{}_v", x.string)),
         _ => translate_ident_str(x.string),
     }
 }
