@@ -202,7 +202,7 @@ let absorb_block (s_23: state_t) (block_24: byte_seq) : state_t =
       (seq_len (block_24))
       (fun i_25 s_23 ->
           let w_26 = (i_25) `usize_shift_right` (pub_u32 0x3) in
-          let o_27 = (usize 8) * ((i_25) &. (usize 7)) in
+          let o_27 = (usize 8) * ((i_25) `usize_bit_and` (usize 7)) in
           let s_23 =
             array_upd s_23
               (w_26)
@@ -222,7 +222,7 @@ let squeeze (s_28: state_t) (nbytes_29 rate_30: uint_size) : byte_seq =
       (fun i_32 (s_28, out_31) ->
           let pos_33 = (i_32) % (rate_30) in
           let w_34 = (pos_33) `usize_shift_right` (pub_u32 0x3) in
-          let o_35 = (usize 8) * ((pos_33) &. (usize 7)) in
+          let o_35 = (usize 8) * ((pos_33) `usize_bit_and` (usize 7)) in
           let b_36 =
             ((array_index (s_28) (w_34)) `shift_right` (o_35)) &. (uint64_classify (pub_u64 0xff))
           in
