@@ -606,9 +606,15 @@ let u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 =
 
 let uint32_from_uint8 (x: uint8) : uint32 = cast U32 SEC x
 
+let uint64_from_uint8 (x: uint8) : uint64 = cast U64 SEC x
+
 (**** Declassification *)
 
 let uint32_declassify (x: uint32) : pub_uint32 = uint (Lib.RawIntTypes.uint_to_nat x)
+
+(**** Classification *)
+
+let uint64_classify (x: pub_uint64) : uint64 = uint (Lib.RawIntTypes.uint_to_nat x)
 
 (*** Nats *)
 
