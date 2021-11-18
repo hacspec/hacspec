@@ -87,6 +87,9 @@ let usize_shift_right (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
 let usize_shift_left (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
   v (shift_left (size u) s)
 
+let usize_bit_and (u: uint_size) (s: uint_size) : uint_size =
+  v ((size u) &. (size s))
+
 let pub_uint128_wrapping_add (x y: pub_uint128) : pub_uint128 =
   x +. y
 
@@ -185,6 +188,15 @@ let seq_index (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) : a =
 let seq_upd (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) (new_v: a)
     : (s':seq a{seq_len s' = seq_len s})  =
   Seq.upd s i new_v
+
+let seq_update_start
+  (#a: Type)
+  (s: seq a)
+  (start_s: seq a{Seq.length start_s <= Seq.length s})
+    : seq a
+  =
+  LSeq.update_sub #_ #(Seq.length s) s 0 (Seq.length start_s) start_s
+
 
 (**** Array manipulation *)
 
@@ -607,6 +619,9 @@ let u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 =
 let uint32_from_uint8 (x: uint8) : uint32 = cast U32 SEC x
 
 let uint64_from_uint8 (x: uint8) : uint64 = cast U64 SEC x
+
+let uint8_from_uint64 (x: uint64) : uint8 = cast U8 SEC x
+
 
 (**** Declassification *)
 
