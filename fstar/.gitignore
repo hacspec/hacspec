@@ -3,4 +3,4 @@
 \#*
 .depend
 _output/
-*.checked
+*.checked*
