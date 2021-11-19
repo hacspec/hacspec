@@ -197,6 +197,8 @@ let seq_update_start
   =
   LSeq.update_sub #_ #(Seq.length s) s 0 (Seq.length start_s) start_s
 
+let seq_from_seq (#a: Type) (s: seq a) : seq a = s
+
 
 (**** Array manipulation *)
 

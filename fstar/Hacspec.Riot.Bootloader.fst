@@ -6,7 +6,7 @@ open FStar.Mul
 
 open Hacspec.Lib
 
-let riotboot_magic:pub_uint32 = pub_u32 0x544f4952
+let riotboot_magic_v:pub_uint32 = pub_u32 0x544f4952
 
 type fletcher_t = (pub_uint32 & pub_uint32)
 
@@ -92,7 +92,7 @@ let is_valid_header (h_34: header_t) : bool =
   in
   let result_40 = false in
   let result_40 =
-    if (magic_number_35) = (riotboot_magic)
+    if (magic_number_35) = (riotboot_magic_v)
     then
       let fletcher_41 = new_fletcher () in
       let fletcher_42 = update_fletcher (fletcher_41) (slice_39) in

@@ -227,3 +227,4 @@ let hash (msg_39: byte_seq) : sha256_digest_t =
   array_from_seq (hash_size_v) (array_to_be_bytes (h_40))
 
 let sha256 (msg_49: byte_seq) : sha256_digest_t = hash (msg_49)
+
