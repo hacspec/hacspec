@@ -1,4 +1,4 @@
-module Hacspec.SHA256
+module Hacspec.Sha256
 
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
 
@@ -6,21 +6,21 @@ open FStar.Mul
 
 open Hacspec.Lib
 
-let block_size:uint_size = usize 64
+let block_size_v:uint_size = usize 64
 
-let len_size:uint_size = usize 8
+let len_size_v:uint_size = usize 8
 
-let k_size:uint_size = usize 64
+let k_size_v:uint_size = usize 64
 
-let hash_size:uint_size = (usize 256) / (usize 8)
+let hash_size_v:uint_size = (usize 256) / (usize 8)
 
-type block_t = lseq (uint8) (block_size)
+type block_t = lseq (uint8) (block_size_v)
 
 type op_table_type_t = lseq (uint_size) (usize 12)
 
-type sha256_digest_t = lseq (uint8) (hash_size)
+type sha256_digest_t = lseq (uint8) (hash_size_v)
 
-type round_constants_table_t = lseq (uint32) (k_size)
+type round_constants_table_t = lseq (uint32) (k_size_v)
 
 type hash_t = lseq (uint32) (usize 8)
 
@@ -28,7 +28,7 @@ let ch (x_0 y_1 z_2: uint32) : uint32 = ((x_0) &. (y_1)) ^. ((~.(x_0)) &. (z_2))
 
 let maj (x_3 y_4 z_5: uint32) : uint32 = ((x_3) &. (y_4)) ^. (((x_3) &. (z_5)) ^. ((y_4) &. (z_5)))
 
-let op_table:op_table_type_t =
+let op_table_v:op_table_type_t =
   array_from_list (let l =
         [
           usize 2; usize 13; usize 22; usize 6; usize 11; usize 25; usize 7; usize 18; usize 3;
@@ -38,7 +38,7 @@ let op_table:op_table_type_t =
       assert_norm (List.Tot.length l == 12);
       l)
 
-let k_table:round_constants_table_t =
+let k_table_v:round_constants_table_t =
   array_from_list (let l =
         [
           secret (pub_u32 0x428a2f98); secret (pub_u32 0x71374491); secret (pub_u32 0xb5c0fbcf);
@@ -68,7 +68,7 @@ let k_table:round_constants_table_t =
       assert_norm (List.Tot.length l == 64);
       l)
 
-let hash_init:hash_t =
+let hash_init_v:hash_t =
   array_from_list (let l =
         [
           secret (pub_u32 0x6a09e667);
@@ -86,25 +86,27 @@ let hash_init:hash_t =
 
 let sigma (x_6: uint32) (i_7 op_8: uint_size) : uint32 =
   let tmp_9:uint32 =
-    uint32_rotate_right (x_6) (array_index (op_table) (((usize 3) * (i_7)) + (usize 2)))
+    uint32_rotate_right (x_6) (array_index (op_table_v) (((usize 3) * (i_7)) + (usize 2)))
   in
   let tmp_9 =
     if (op_8) = (usize 0)
     then
-      let tmp_9 = (x_6) `shift_right` (array_index (op_table) (((usize 3) * (i_7)) + (usize 2))) in
+      let tmp_9 =
+        (x_6) `shift_right` (array_index (op_table_v) (((usize 3) * (i_7)) + (usize 2)))
+      in
       (tmp_9)
     else (tmp_9)
   in
-  ((uint32_rotate_right (x_6) (array_index (op_table) ((usize 3) * (i_7)))) ^.
-    (uint32_rotate_right (x_6) (array_index (op_table) (((usize 3) * (i_7)) + (usize 1))))) ^.
+  ((uint32_rotate_right (x_6) (array_index (op_table_v) ((usize 3) * (i_7)))) ^.
+    (uint32_rotate_right (x_6) (array_index (op_table_v) (((usize 3) * (i_7)) + (usize 1))))) ^.
   (tmp_9)
 
 let schedule (block_10: block_t) : round_constants_table_t =
   let b_11 = array_to_be_uint32s (block_10) in
-  let s_12 = array_new_ (secret (pub_u32 0x0)) (k_size) in
+  let s_12 = array_new_ (secret (pub_u32 0x0)) (k_size_v) in
   let s_12 =
     foldi (usize 0)
-      (k_size)
+      (k_size_v)
       (fun i_13 s_12 ->
           let s_12 =
             if (i_13) < (usize 16)
@@ -130,7 +132,7 @@ let shuffle (ws_20: round_constants_table_t) (hashi_21: hash_t) : hash_t =
   let h_22 = hashi_21 in
   let h_22 =
     foldi (usize 0)
-      (k_size)
+      (k_size_v)
       (fun i_23 h_22 ->
           let a0_24 = array_index (h_22) (usize 0) in
           let b0_25 = array_index (h_22) (usize 1) in
@@ -142,7 +144,7 @@ let shuffle (ws_20: round_constants_table_t) (hashi_21: hash_t) : hash_t =
           let h0_31:uint32 = array_index (h_22) (usize 7) in
           let t1_32 =
             ((((h0_31) +. (sigma (e0_28) (usize 1) (usize 1))) +. (ch (e0_28) (f0_29) (g0_30))) +.
-              (array_index (k_table) (i_23))) +.
+              (array_index (k_table_v) (i_23))) +.
             (array_index (ws_20) (i_23))
           in
           let t2_33 = (sigma (a0_24) (usize 0) (usize 1)) +. (maj (a0_24) (b0_25) (c0_26)) in
@@ -175,24 +177,24 @@ let compress (block_34: block_t) (h_in_35: hash_t) : hash_t =
   h_37
 
 let hash (msg_39: byte_seq) : sha256_digest_t =
-  let h_40 = hash_init in
-  let last_block_41 = array_new_ (secret (pub_u8 0x0)) (block_size) in
+  let h_40 = hash_init_v in
+  let last_block_41 = array_new_ (secret (pub_u8 0x0)) (block_size_v) in
   let last_block_len_42 = usize 0 in
   let h_40, last_block_41, last_block_len_42 =
     foldi (usize 0)
-      (seq_num_chunks (msg_39) (block_size))
+      (seq_num_chunks (msg_39) (block_size_v))
       (fun i_43 (h_40, last_block_41, last_block_len_42) ->
-          let block_len_44, block_45 = seq_get_chunk (msg_39) (block_size) (i_43) in
+          let block_len_44, block_45 = seq_get_chunk (msg_39) (block_size_v) (i_43) in
           let h_40, last_block_41, last_block_len_42 =
-            if (block_len_44) < (block_size)
+            if (block_len_44) < (block_size_v)
             then
               let last_block_41 =
-                array_update_start (array_new_ (secret (pub_u8 0x0)) (block_size)) (block_45)
+                array_update_start (array_new_ (secret (pub_u8 0x0)) (block_size_v)) (block_45)
               in
               let last_block_len_42 = block_len_44 in
               (h_40, last_block_41, last_block_len_42)
             else
-              let compress_input_46 = array_from_seq (block_size) (block_45) in
+              let compress_input_46 = array_from_seq (block_size_v) (block_45) in
               let h_40 = compress (compress_input_46) (h_40) in
               (h_40, last_block_41, last_block_len_42)
           in
@@ -202,23 +204,26 @@ let hash (msg_39: byte_seq) : sha256_digest_t =
   let last_block_41 = array_upd last_block_41 (last_block_len_42) (secret (pub_u8 0x80)) in
   let len_bist_47 = secret (pub_u64 ((seq_len (msg_39)) * (usize 8))) in
   let h_40, last_block_41 =
-    if (last_block_len_42) < ((block_size) - (len_size))
+    if (last_block_len_42) < ((block_size_v) - (len_size_v))
     then
       let last_block_41 =
-        array_update (last_block_41) ((block_size) - (len_size)) (uint64_to_be_bytes (len_bist_47))
+        array_update (last_block_41)
+          ((block_size_v) - (len_size_v))
+          (uint64_to_be_bytes (len_bist_47))
       in
       let h_40 = compress (last_block_41) (h_40) in
       (h_40, last_block_41)
     else
-      let pad_block_48 = array_new_ (secret (pub_u8 0x0)) (block_size) in
+      let pad_block_48 = array_new_ (secret (pub_u8 0x0)) (block_size_v) in
       let pad_block_48 =
-        array_update (pad_block_48) ((block_size) - (len_size)) (uint64_to_be_bytes (len_bist_47))
+        array_update (pad_block_48)
+          ((block_size_v) - (len_size_v))
+          (uint64_to_be_bytes (len_bist_47))
       in
       let h_40 = compress (last_block_41) (h_40) in
       let h_40 = compress (pad_block_48) (h_40) in
       (h_40, last_block_41)
   in
-  array_from_seq (hash_size) (array_to_be_bytes (h_40))
+  array_from_seq (hash_size_v) (array_to_be_bytes (h_40))
 
 let sha256 (msg_49: byte_seq) : sha256_digest_t = hash (msg_49)
-
