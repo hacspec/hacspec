@@ -653,10 +653,22 @@ let nat_inv (m: pos) (n: nat_mod m) : nat_mod m =
 
 let nat_one (m: pos) : nat_mod m = 1 % m
 
+let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
+
+let nat_pow (m: pos) (x: nat_mod m) (exponent: pub_uint128) : nat_mod m =
+  admit()
+
+let nat_zero (m: pos) : nat_mod m = 0
+
+
 let nat_equal (m: pos) (n n': nat_mod m) : bool = n = n'
 
 let nat_get_bit (m: pos) (n: nat_mod m) (bit: uint_size) : nat_mod m =
   admit()
+
+let nat_bit (m: pos) (n: nat_mod m) (bit: uint_size) : bool =
+  admit()
+
 
 let nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n} =
   v x
@@ -685,6 +697,7 @@ let nat_from_byte_seq_be (n : pos) (len: uint_size) (x: lseq uint8 len) : nat_mo
   admit();
   out
 
-let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
-
-let nat_zero (m: pos) : nat_mod m = 0
+let nat_from_byte_seq_le (n : pos) (len: uint_size) (x: lseq uint8 len) : nat_mod n =
+  let out = Lib.ByteSequence.nat_from_bytes_be x in
+  admit();
+  out

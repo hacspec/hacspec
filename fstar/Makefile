@@ -8,6 +8,7 @@ FSTAR ?= $(FSTAR_HOME)/bin/fstar.exe --z3rlimit_factor 32
 FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst \
 	Hacspec.Chacha20Poly1305.fst \
 	Hacspec.SHA256.fst Hacspec.SHA3.fst Hacspec.P256.fst \
+	Hacspec.Curve25519.fst \
 	Hacspec.Riot.Bootloader.fst Hacspec.Riot.Runqueue.fst
 
 # The paths to related files which to include for scanning
