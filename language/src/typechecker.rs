@@ -2561,7 +2561,9 @@ fn typecheck_block(
         .retain(|mut_var| original_var_context.contains_key(&mut_var.id));
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
     let contains_question_mark = Some(new_stmts.iter().any(|s| match s {
-        (Statement::LetBinding(_, _, _, true), _) => true,
+        (Statement::Reassignment(_, _, true), _) | (Statement::LetBinding(_, _, _, true), _) => {
+            true
+        }
         (Statement::Conditional(_, then_b, else_b, _), _) => {
             then_b.0.contains_question_mark.unwrap()
                 || (match else_b {

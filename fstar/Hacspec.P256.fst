@@ -216,28 +216,31 @@ let ltr_mul (k_63: p256_scalar_t) (p_64: p256_jacobian_t) : jacobian_result_t =
       nat_from_literal (0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff)
         (pub_u128 0x0))
   in
-  let q_65 =
-    foldi (usize 0)
-      (bits_v)
-      (fun i_66 q_65 ->
-          let q_65 = point_double (q_65) in
-          let q_65 =
-            if
-              nat_equal (0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551)
-                (nat_get_bit (0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551)
-                    (k_63)
-                    (((bits_v) - (usize 1)) - (i_66)))
-                (nat_one (0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551))
-            then
-              match (point_add_jacob (q_65) (p_64)) with
-              | Err x -> Err x
-              | Ok q_65 -> (q_65)
-            else (q_65)
-          in
-          (q_65))
-      (q_65)
-  in
-  Ok (q_65)
+  match
+    (foldi_result (usize 0)
+        (bits_v)
+        (fun i_66 q_65 ->
+            let q_65 = point_double (q_65) in
+            match
+              (if
+                  nat_equal (0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551)
+                    (nat_get_bit (0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
+                        )
+                        (k_63)
+                        (((bits_v) - (usize 1)) - (i_66)))
+                    (nat_one (0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551))
+                then
+                  match (point_add_jacob (q_65) (p_64)) with
+                  | Err x -> Err x
+                  | Ok q_65 -> Ok ((q_65))
+                else Ok ((q_65)))
+            with
+            | Err x -> Err x
+            | Ok q_65 -> Ok ((q_65)))
+        (q_65))
+  with
+  | Err x -> Err x
+  | Ok q_65 -> Ok (q_65)
 
 let p256_point_mul (k_67: p256_scalar_t) (p_68: affine_t) : affine_result_t =
   match (ltr_mul (k_67) (affine_to_jacobian (p_68))) with

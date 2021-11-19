@@ -1165,7 +1165,7 @@ fn translate_statements<'a>(
             let either_blocks_contains_question_mark = b1_question_mark || b2_question_mark;
             b1.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
-                b1_question_mark,
+                either_blocks_contains_question_mark,
             ));
             let expr = RcDoc::as_string("if")
                 .append(RcDoc::space())
@@ -1180,13 +1180,17 @@ fn translate_statements<'a>(
                         .append(RcDoc::space())
                         .append(make_begin_paren(translate_statements(
                             sess,
-                            [(mutated_info.stmt.clone(), DUMMY_SP.into())].iter(),
+                            [add_ok_if_result(
+                                mutated_info.stmt.clone(),
+                                either_blocks_contains_question_mark,
+                            )]
+                            .iter(),
                             top_ctx,
                         ))),
                     Some((mut b2, _)) => {
                         b2.stmts.push(add_ok_if_result(
                             mutated_info.stmt.clone(),
-                            b2_question_mark,
+                            either_blocks_contains_question_mark,
                         ));
                         RcDoc::space()
                             .append(RcDoc::as_string("else"))
