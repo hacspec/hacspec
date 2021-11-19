@@ -1,4 +1,4 @@
-module Hacspec.SHA3
+module Hacspec.Sha3
 
 #set-options "--fuel 0 --ifuel 1 --z3rlimit 15"
 

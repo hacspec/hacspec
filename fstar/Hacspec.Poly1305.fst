@@ -8,7 +8,7 @@ open Hacspec.Lib
 
 type poly_key_t = lseq (uint8) (usize 32)
 
-let blocksize:uint_size = usize 16
+let blocksize_v:uint_size = usize 16
 
 type poly_block_t = lseq (uint8) (usize 16)
 
@@ -57,12 +57,12 @@ let poly1305_update_block (b_11: poly_block_t) (st_12: poly_state_t) : poly_stat
 
 let poly1305_update_blocks (m_16: byte_seq) (st_17: poly_state_t) : poly_state_t =
   let st_18 = st_17 in
-  let n_blocks_19 = (seq_len (m_16)) / (blocksize) in
+  let n_blocks_19 = (seq_len (m_16)) / (blocksize_v) in
   let st_18 =
     foldi (usize 0)
       (n_blocks_19)
       (fun i_20 st_18 ->
-          let block_21 = array_from_seq (16) (seq_get_exact_chunk (m_16) (blocksize) (i_20)) in
+          let block_21 = array_from_seq (16) (seq_get_exact_chunk (m_16) (blocksize_v) (i_20)) in
           let st_18 = poly1305_update_block (block_21) (st_18) in
           (st_18))
       (st_18)
@@ -86,7 +86,7 @@ let poly1305_update_last (pad_len_22: uint_size) (b_23: sub_block_t) (st_24: pol
 
 let poly1305_update (m_29: byte_seq) (st_30: poly_state_t) : poly_state_t =
   let st_31 = poly1305_update_blocks (m_29) (st_30) in
-  let last_32 = seq_get_remainder_chunk (m_29) (blocksize) in
+  let last_32 = seq_get_remainder_chunk (m_29) (blocksize_v) in
   poly1305_update_last (seq_len (last_32)) (last_32) (st_31)
 
 let poly1305_finish (st_33: poly_state_t) : poly1305_tag_t =
