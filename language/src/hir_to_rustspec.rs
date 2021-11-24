@@ -468,6 +468,7 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
                             },
                             _ => None,
                         },
+                        // TODO: add case where size is a constant
                         _ => None,
                     };
                     if maybe_abstract_int {
@@ -487,6 +488,7 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
                                     (ArraySize::Integer(new_size), DUMMY_SP.into()),
                                     Box::new((new_cell_t, DUMMY_SP.into())),
                                 );
+                                println!("Importing array {}", array_typ);
                                 return SpecialTypeReturn::Array(array_typ);
                             }
                         }
