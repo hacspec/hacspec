@@ -674,8 +674,7 @@ fn translate_func_name<'a>(
             }
         }
         Some((prefix, _)) => {
-            let (module_name, prefix_info) =
-                translate_prefix_for_func_name(prefix.clone(), top_ctx);
+            let (module_name, prefix_info) = translate_prefix_for_func_name(prefix, top_ctx);
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
             // We add the modulo value for nat_mod
