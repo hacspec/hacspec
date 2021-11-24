@@ -54,7 +54,7 @@ typecheck hacspec-curve25519           ec      fst    json      coq  Hacspec.Cur
 typecheck hacspec-hkdf              no-ec      fst    json      no-coq
 typecheck hacspec-hmac              no-ec      fst    json      no-coq  Hacspec.Hmac.fst
 typecheck hacspec-sha256            no-ec      fst    json      coq     Hacspec.Sha256.fst
-typecheck hacspec-ntru-prime           ec      fst    json      no-coq
+typecheck hacspec-ntru-prime           ec      fst    json      no-coq  Hacspec.NtruPrime.fst
 typecheck hacspec-p256              no-ec      fst    json      no-coq  Hacspec.P256.fst
 typecheck hacspec-riot-bootloader      ec      fst    json      no-coq  Hacspec.Riot.Bootloader.fst
 typecheck hacspec-riot-runqueue     no-ec      fst    no-json   no-coq  Hacspec.Riot.Runqueue.fst
