@@ -182,6 +182,8 @@ let seq_len (#a: Type) (s: seq a) : nat = Seq.length s
 let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
   Seq.create len init
 
+let seq_clone (#a: Type) (s: seq a) : seq a = s
+
 let seq_index (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) : a =
   Seq.index s i
 
@@ -703,3 +705,33 @@ let nat_from_byte_seq_le (n : pos) (len: uint_size) (x: lseq uint8 len) : nat_mo
   let out = Lib.ByteSequence.nat_from_bytes_be x in
   admit();
   out
+
+(**** Math utils *)
+
+let mul_poly_irr
+  (#t: inttype)
+  (#l: secrecy_level)
+  (a b irr: seq (int_t t l))
+  (modulo: int_t t l) : seq (int_t t l) =
+    admit()
+
+let add_poly
+  (#t: inttype)
+  (#l: secrecy_level)
+  (a b: seq (int_t t l))
+  (modulo: int_t t l) : seq (int_t t l) =
+    admit()
+
+let poly_to_ring
+  (#t: inttype)
+  (#l: secrecy_level)
+  (irr poly: seq (int_t t l))
+  (modulo: int_t t l) : seq (int_t t l) & bool =
+    admit()
+
+let make_positive
+  (#t: inttype)
+  (#l: secrecy_level)
+  (poly: seq (int_t t l))
+  (q: int_t t l) : seq (int_t t l) =
+    admit()

@@ -566,13 +566,24 @@ fn translate_binop<'a, 'b>(
     }
 }
 
-fn translate_unop<'a>(op: UnOpKind, (_, (op_typ, _)): Typ) -> RcDoc<'a, ()> {
-    match (op, op_typ) {
+fn translate_unop<'a>(
+    sess: &Session,
+    op: UnOpKind,
+    (_, (op_typ, _)): Typ,
+    top_ctxt: &'a TopLevelContext,
+) -> RcDoc<'a, ()> {
+    match (op, &op_typ) {
         (UnOpKind::Not, BaseTyp::Bool) => RcDoc::as_string("not"),
         (UnOpKind::Not, BaseTyp::Usize | BaseTyp::Isize) => RcDoc::as_string("~"),
         (UnOpKind::Not, _) => RcDoc::as_string("~."),
-        (UnOpKind::Neg, BaseTyp::Usize | BaseTyp::Isize) => RcDoc::as_string("-"),
-        (UnOpKind::Neg, _) => RcDoc::as_string("-."),
+        (UnOpKind::Neg, BaseTyp::Usize | BaseTyp::Isize) => RcDoc::as_string("0 -"),
+        (UnOpKind::Neg, _) => make_paren(translate_expression(
+            sess,
+            get_type_default(&op_typ),
+            top_ctxt,
+        ))
+        .append(RcDoc::space())
+        .append(RcDoc::as_string("-.")),
     }
 }
 
@@ -830,7 +841,7 @@ fn translate_expression<'a>(
         }
         Expression::Unary(op, e1, op_typ) => {
             let e1 = e1.0;
-            translate_unop(op, op_typ.as_ref().unwrap().clone())
+            translate_unop(sess, op, op_typ.as_ref().unwrap().clone(), top_ctx)
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(sess, e1, top_ctx)))
                 .group()

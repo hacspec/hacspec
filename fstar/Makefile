@@ -9,6 +9,7 @@ FSTAR_FILES ?= Hacspec.Poly1305.fst Hacspec.Chacha20.fst \
 	Hacspec.Chacha20Poly1305.fst \
 	Hacspec.Sha256.fst Hacspec.Sha3.fst Hacspec.P256.fst \
 	Hacspec.Curve25519.fst Hacspec.Hmac.fst \
+	Hacspec.NtruPrime.fst \
 	Hacspec.Riot.Bootloader.fst Hacspec.Riot.Runqueue.fst
 
 # The paths to related files which to include for scanning
