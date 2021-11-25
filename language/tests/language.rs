@@ -77,7 +77,7 @@ fn positive_arrays() {
 
 #[test]
 fn positive_copy() {
-    run_test("language-tests/copy.rs", None);
+    run_test("language-tests/copy.rs");
 }
 
 #[test]
