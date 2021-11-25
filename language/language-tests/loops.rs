@@ -26,3 +26,15 @@ pub fn bar(x: U32) -> U32 {
     }
     y
 }
+
+pub fn foobar(x: u32) -> Result<u32, u32> {
+    let mut y = x;
+    for _ in 0..5 {
+        if y > 100u32 {
+            Result::<u32, u32>::Err(y)?;
+        }
+        
+        y = y + 1u32
+    }
+    Result::<u32, u32>::Ok (y)
+}
