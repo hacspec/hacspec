@@ -989,10 +989,30 @@ End Coercions.
 
 (*** Casting *)
 
-
+Definition uint128_from_uint8 (n : int8) : int128 := repr n.
 Definition uint64_from_uint8 (n : int8) : int64 := repr n.
-Definition uint8_from_uint64 (n : int8) : int64 := repr n.
+Definition uint32_from_uint8 (n : int8) : int32 := repr n.
+Definition uint16_from_uint8 (n : int8) : int16 := repr n.
 
+Definition uint128_from_uint16 (n : int16) : int128 := repr n.
+Definition uint64_from_uint16 (n : int16) : int64 := repr n.
+Definition uint32_from_uint16 (n : int16) : int32 := repr n.
+Definition uint8_from_uint16 (n : int16) : int8 := repr n.
+
+Definition uint128_from_uint32 (n : int32) : int128 := repr n.
+Definition uint64_from_uint32 (n : int32) : int64 := repr n.
+Definition uint16_from_uint32 (n : int32) : int16 := repr n.
+Definition uint8_from_uint32 (n : int32) : int8 := repr n.
+
+Definition uint128_from_uint64 (n : int64) : int128 := repr n.
+Definition uint32_from_uint64 (n : int64) : int32 := repr n.
+Definition uint16_from_uint64 (n : int64) : int16 := repr n.
+Definition uint8_from_uint64 (n : int64) : int8 := repr n.
+
+Definition uint64_from_uint128 (n : int128) : int64 := repr n.
+Definition uint32_from_uint128 (n : int128) : int32 := repr n.
+Definition uint16_from_uint128 (n : int128) : int16 := repr n.
+Definition uint8_from_uint128 (n : int128) : int8 := repr n.
 
 (* Comparisons, boolean equality, and notation *)
 
@@ -1180,15 +1200,14 @@ Defined.
 
 (*** Result *)
 
-Inductive result (a: Type) (b: Type) :=
+Inductive result (a: Type) (b: Type) := 
   | Ok : a -> result a b
   | Err : b -> result a b.
 
 Arguments Ok {_ _}.
 Arguments Err {_ _}.
-
-
-(** Be Bytes *)
+  
+(*** Be Bytes *)
 
 
 Fixpoint nat_be_range_at_position (k : nat) (z : Z) (n : Z) : list bool :=
@@ -1233,23 +1252,25 @@ Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat × int64) : nat × int
 Definition u64_to_be_bytes : int64 -> nseq int8 8 := u64_to_be_bytes'.
 Definition u64_from_be_bytes : nseq int8 8 -> int64 := u64_from_be_bytes'.
 
-(** End of be bytes *)
+(*** Monad / Bind *)
 
 Class Monad (M : Type -> Type) :=
   { bind {A B} (x : M A) (f : A -> M B) : M B ;
     ret {A} (x : A) : M A ;
   }.
 
-Definition result_bind {A B C} (r : result A C) (f : A -> result B C) : result B C :=
+Definition result2 (b: Type) (a: Type) := result a b.
+
+Definition result_bind {A B C} (r : result2 C A) (f : A -> result2 C B) : result2 C B :=
   match r with
     Ok a => f a
   | Err e => Err e
   end.
 
-Definition result_ret {A C} (a : A) : result A C := Ok a.
-
-Global Instance result_monad {C} : Monad (fun A => result A C) :=
-  Build_Monad (fun A => result A C) (fun A B => @result_bind A B C) (fun A => @result_ret A C).
+Definition result_ret {A C} (a : A) : result2 C A := Ok a.
+ 
+Global Instance result_monad {C} : Monad (result2 C) :=
+  Build_Monad (result2 C) (fun A B => @result_bind A B C) (fun A => @result_ret A C).
 
 Definition option_bind {A B} (r : option A) (f : A -> option B) : option B :=
   match r with
@@ -1273,7 +1294,8 @@ Definition option_is_none {A} (x : option A) : bool :=
 Definition foldi_bind {A : Type} {M : Type -> Type} `{Monad M} (a : uint_size) (b : uint_size) (f : uint_size -> A -> M A) (init : M A) : M A :=
   @foldi (M A) a b (fun x y => bind y (f x)) init.
 
-Definition lift_to_result {A B C} (r : result A C) (f : A -> B) : result B C := result_bind r (fun x => result_ret (f x)).
+Definition lift_to_result {A B C} (r : result A C) (f : A -> B) : result B C :=
+  result_bind r (fun x => result_ret (f x)).
 
 Definition result_uint_size_to_result_int64 {C} (r : result uint_size C) := lift_to_result r uint_size_to_int64.
 
