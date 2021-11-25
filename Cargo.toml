@@ -31,7 +31,6 @@ members = [
     "examples/aes",
     "examples/gf128",
     "examples/aes128-gcm",
-    "examples/coverage-example",
 ]
 default-members = [
     "lib",
@@ -62,6 +61,5 @@ default-members = [
     "examples/aes",
     "examples/gf128",
     "examples/aes128-gcm",
-    "examples/coverage-example",
 ]
 exclude = [ "language" ]
