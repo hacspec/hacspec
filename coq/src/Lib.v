@@ -1077,8 +1077,19 @@ Global Instance int_comparable `{WORDSIZE} : Comparable int := {
 
 Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := GZnZ.val p a.
 
-Axiom nat_mod_eqb_spec : forall {p} (a b : nat_mod p), Z.eqb (nat_mod_val p a) (nat_mod_val p b) = true <-> a = b.
-
+Theorem nat_mod_eqb_spec : forall {p} (a b : nat_mod p), Z.eqb (nat_mod_val p a) (nat_mod_val p b) = true <-> a = b.
+Proof.
+  split ; intros.
+  - apply Z.eqb_eq in H.
+    destruct a, b.
+    cbn in H.
+    apply (GZnZ.zirr p val val0 inZnZ inZnZ0 H).
+  - subst.
+    apply Z.eqb_eq.
+    reflexivity.
+Qed.
+    
+  
 Global Instance nat_mod_eqdec {p} : EqDec (nat_mod p) := {
   eqb a b := Z.eqb (nat_mod_val p a) (nat_mod_val p b);
   eqb_leibniz := nat_mod_eqb_spec;
@@ -1140,20 +1151,13 @@ Global Instance List_eqdec {A} `{EqDec A} : EqDec (list A) := {
   eqb := list_eqdec;
   eqb_leibniz := list_eqdec_sound;
 }.
-Require Import Program.Equality.
+
 Lemma vector_eqb_sound : forall {A : Type} {n : nat} `{EqDec A} (v1 v2 : t A n), Vector.eqb _ eqb v1 v2 = true <-> v1 = v2.
 Proof.
-  intros A n H v1. induction v1; split ; intros; simpl in *; dependent destruction v2.
-  - reflexivity.
-  - reflexivity.
-  - f_equal; rewrite Bool.andb_true_iff in H0; destruct H0.
-    + apply eqb_leibniz. assumption.
-    + apply IHv1. assumption.
-  - inversion H0. subst.
-    rewrite eqb_refl.
-    apply IHv1.
-    apply Eqdep.EqdepTheory.inj_pair2.
-    assumption.
+  intros.
+  apply Vector.eqb_eq.
+  intros.
+  apply eqb_leibniz.
 Qed.
 
 Global Program Instance Vector_eqdec {A n} `{EqDec A}: EqDec (Vector.t A n) := {
@@ -1266,8 +1270,6 @@ Definition option_is_none {A} (x : option A) : bool :=
   | _ => false
   end.
 
-Check foldi.
-
 Definition foldi_bind {A : Type} {M : Type -> Type} `{Monad M} (a : uint_size) (b : uint_size) (f : uint_size -> A -> M A) (init : M A) : M A :=
   @foldi (M A) a b (fun x y => bind y (f x)) init.
 
@@ -1280,7 +1282,6 @@ Definition result_int64_unit := (result int64 unit).
 
 Definition result_uint_size_unit_to_result_int64_unit (r : result_uint_size_unit) : result_int64_unit := result_uint_size_to_result_int64 r.
 
-Set Printing Coercions.
 Global Coercion lift_to_result_coerce {A B C} (f : A -> B) := (fun (r : result A C) => lift_to_result r f).
 
 Global Coercion result_uint_size_unit_to_result_int64_unit : result_uint_size_unit >-> result_int64_unit.
@@ -1288,8 +1289,14 @@ Global Coercion result_uint_size_unit_to_result_int64_unit : result_uint_size_un
 (*** Notation *)
 
 Notation "'ifbnd' b 'then' x 'else' y '>>' f" := (if b then f x else f y) (at level 200).
-Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then result_bind x f else f y) (at level 200).
-Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else result_bind y f) (at level 200).
+Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then match x with
+    Ok a => f a
+  | Err e => Err e
+  end else f y) (at level 200).
+Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else match y with
+    Ok a => f a
+  | Err e => Err e
+  end) (at level 200).
 Notation "'ifbnd' b 'thenbnd' x 'elsebnd' y '>>' f" := (if b then result_bind x f else result_bind y f) (at level 200).
 
 Notation "'foldibnd' s 'to' e 'for' z '>>' f" := (foldi s e (fun x y => result_bind y (f x)) (Ok z)) (at level 50).
