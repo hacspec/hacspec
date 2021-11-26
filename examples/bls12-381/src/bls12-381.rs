@@ -27,31 +27,31 @@ pub type Fp6 = (Fp2, Fp2, Fp2); //v³ = u + 1
 pub type Fp12 = (Fp6, Fp6); //w² = v
 
 /* Arithmetic for FP2 elements */
-fn fp2fromfp(n: Fp) -> Fp2 {
+pub fn fp2fromfp(n: Fp) -> Fp2 {
     (n, Fp::ZERO())
 }
 
-fn fp2zero() -> Fp2 {
+pub fn fp2zero() -> Fp2 {
     fp2fromfp(Fp::ZERO())
 }
 
-fn fp2neg(n: Fp2) -> Fp2 {
+pub fn fp2neg(n: Fp2) -> Fp2 {
     let (n1, n2) = n;
     (Fp::ZERO() - n1, Fp::ZERO() - n2)
 }
 
-fn fp2add(n: Fp2, m: Fp2) -> Fp2 {
+pub fn fp2add(n: Fp2, m: Fp2) -> Fp2 {
     //Coordinate wise
     let (n1, n2) = n;
     let (m1, m2) = m;
     (n1 + m1, n2 + m2)
 }
 
-fn fp2sub(n: Fp2, m: Fp2) -> Fp2 {
+pub fn fp2sub(n: Fp2, m: Fp2) -> Fp2 {
     fp2add(n, fp2neg(m))
 }
 
-fn fp2mul(n: Fp2, m: Fp2) -> Fp2 {
+pub fn fp2mul(n: Fp2, m: Fp2) -> Fp2 {
     //(a+bu)*(c+du) = ac + adu + bcu + bdu^2 = ac - bd + (ad + bc)u
     let (n1, n2) = n;
     let (m1, m2) = m;
@@ -60,7 +60,7 @@ fn fp2mul(n: Fp2, m: Fp2) -> Fp2 {
     (x1, x2)
 }
 
-fn fp2inv(n: Fp2) -> Fp2 {
+pub fn fp2inv(n: Fp2) -> Fp2 {
     let (n1, n2) = n;
     let t0 = n1 * n1 + (n2 * n2);
     let t1 = t0.inv();
@@ -69,7 +69,7 @@ fn fp2inv(n: Fp2) -> Fp2 {
     (x1, x2)
 }
 
-fn fp2conjugate(n: Fp2) -> Fp2 {
+pub fn fp2conjugate(n: Fp2) -> Fp2 {
     let (n1, n2) = n;
     (n1, Fp::ZERO() - n2)
 }
