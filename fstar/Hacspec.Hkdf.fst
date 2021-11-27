@@ -8,6 +8,8 @@ open Hacspec.Hmac
 
 open Hacspec.Lib
 
+open Hacspec.Sha256
+
 let hash_len_v:uint_size = (usize 256) / (usize 8)
 noeq
 type hkdf_error_t = | InvalidOutputLength_hkdf_error_t : hkdf_error_t
@@ -23,7 +25,7 @@ let extract (salt_0 ikm_1: byte_seq) : prk_t =
       (salt_or_zero_2)
     else (salt_or_zero_2)
   in
-  prk_from_seq (hmac (salt_or_zero_2) (ikm_1))
+  array_from_seq (0) (hmac (salt_or_zero_2) (ikm_1))
 
 let build_hmac_txt (t_3 info_4: byte_seq) (iteration_5: uint8) : byte_seq =
   let out_6 = seq_new_ (secret (pub_u8 0x0)) (((seq_len (t_3)) + (seq_len (info_4))) + (usize 1)) in
@@ -51,8 +53,8 @@ let expand (prk_12 info_13: byte_seq) (l_14: uint_size) : hkdf_byte_seq_result_t
   match (check_output_limit (l_14)) with
   | Err x -> Err x
   | Ok n_15 ->
-    let t_i_16 = prk_new_ () in
-    let t_17 = seq_new_ (secret (pub_u8 0x0)) ((n_15) * (prk_capacity ())) in
+    let t_i_16 = array_new_ (secret (pub_u8 0x0)) (0) in
+    let t_17 = seq_new_ (secret (pub_u8 0x0)) ((n_15) * (hash_size_v)) in
     let t_i_16, t_17 =
       foldi (usize 0)
         (n_15)
@@ -69,7 +71,7 @@ let expand (prk_12 info_13: byte_seq) (l_14: uint_size) : hkdf_byte_seq_result_t
                     (secret ((pub_u8 (i_18)) +. (pub_u8 0x1))))
             in
             let t_i_16 = hmac (prk_12) (hmac_txt_in_19) in
-            let t_17 = seq_update (t_17) ((i_18) * (prk_len (t_i_16))) (t_i_16) in
+            let t_17 = seq_update (t_17) ((i_18) * (array_len (t_i_16))) (t_i_16) in
             (t_i_16, t_17))
         (t_i_16, t_17)
     in

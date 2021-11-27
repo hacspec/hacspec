@@ -1,5 +1,6 @@
 use hacspec_hmac::*;
 use hacspec_lib::*;
+use hacspec_sha256::*;
 
 // HASH_LEN for SHA256
 // XXX: HMAC should probably expose this
@@ -53,8 +54,8 @@ fn check_output_limit(l: usize) -> Result<usize, HkdfError> {
 /// Output length l can be at most 255*HASH_LEN.
 pub fn expand(prk: &ByteSeq, info: &ByteSeq, l: usize) -> HkdfByteSeqResult {
     let n = check_output_limit(l)?;
-    let mut t_i = PRK::new();
-    let mut t = ByteSeq::new(n * PRK::capacity());
+    let mut t_i = PRK::new(); // PRK is of length HASH_SIZE
+    let mut t = ByteSeq::new(n * HASH_SIZE);
     for i in 0..n {
         let hmac_txt_in = if i == 0 {
             build_hmac_txt(&ByteSeq::new(0), info, U8((i as u8) + 1u8))
