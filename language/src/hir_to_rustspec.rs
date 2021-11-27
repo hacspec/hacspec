@@ -461,15 +461,19 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
                         }
                     };
                     let new_size = match &size.val {
+                        // We can only retrieve the actual size of the array
+                        // when the size has been declared as a literal value,
+                        // not a reference to another const value
                         ConstKind::Value(value) => match value {
                             ConstValue::Scalar(scalar) => match scalar {
                                 Scalar::Int(s) => Some(s.to_bits(s.size()).unwrap() as usize),
-                                _ => None,
+                                _ => Some(0),
                             },
-                            _ => None,
+                            // TODO: replace placeholder value by indication
+                            // that we could not retrieve the size
+                            _ => Some(0),
                         },
-                        // TODO: add case where size is a constant
-                        _ => None,
+                        _ => Some(0),
                     };
                     if maybe_abstract_int {
                         // So here we cannot infer neither the secrecy nor the modulo
@@ -488,7 +492,6 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
                                     (ArraySize::Integer(new_size), DUMMY_SP.into()),
                                     Box::new((new_cell_t, DUMMY_SP.into())),
                                 );
-                                println!("Importing array {}", array_typ);
                                 return SpecialTypeReturn::Array(array_typ);
                             }
                         }
