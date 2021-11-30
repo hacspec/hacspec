@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.107/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../../../../../../light.css" id="themeStyle"><script src="../../../../../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../../../../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../../../../../libc/index.html'><div class='logo-container'><img src='../../../../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../../../../../../settings.html"><img src="../../../../../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.108/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../../../../../../light.css" id="themeStyle"><script src="../../../../../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../../../../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../../../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../../../../../libc/index.html'><div class='logo-container'><img src='../../../../../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../../../../../../settings.html"><img src="../../../../../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -845,18 +845,6 @@
 <span id="845">845</span>
 <span id="846">846</span>
 <span id="847">847</span>
-<span id="848">848</span>
-<span id="849">849</span>
-<span id="850">850</span>
-<span id="851">851</span>
-<span id="852">852</span>
-<span id="853">853</span>
-<span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! x86_64-specific definitions for 64-bit linux-like values</span>
 
@@ -1432,18 +1420,7 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCNXCL</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x540D</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCSCTTY</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x540E</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCSTI</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x5412</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCMGET</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x5415</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCMBIS</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x5416</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCMBIC</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x5417</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCMSET</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x5418</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCCONS</span>: ::<span class="ident">c_ulong</span> <span class="op">=</span> <span class="number">0x541D</span>;
-
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCM_ST</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x008</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCM_SR</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x010</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCM_CTS</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x020</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCM_CAR</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x040</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCM_RNG</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x080</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCM_DSR</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x100</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SFD_CLOEXEC</span>: ::<span class="ident">c_int</span> <span class="op">=</span> <span class="number">0x080000</span>;
 
@@ -1593,7 +1570,6 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B38400</span>: ::<span class="ident">speed_t</span> <span class="op">=</span> <span class="number">0o000017</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTA</span>: ::<span class="ident">speed_t</span> <span class="op">=</span> <span class="ident">B19200</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EXTB</span>: ::<span class="ident">speed_t</span> <span class="op">=</span> <span class="ident">B38400</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BOTHER</span>: ::<span class="ident">speed_t</span> <span class="op">=</span> <span class="number">0o010000</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B57600</span>: ::<span class="ident">speed_t</span> <span class="op">=</span> <span class="number">0o010001</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B115200</span>: ::<span class="ident">speed_t</span> <span class="op">=</span> <span class="number">0o010002</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">B230400</span>: ::<span class="ident">speed_t</span> <span class="op">=</span> <span class="number">0o010003</span>;

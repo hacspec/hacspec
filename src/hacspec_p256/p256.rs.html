@@ -179,11 +179,6 @@
     <span class="ident">InvalidAddition</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Affine</span> <span class="op">=</span> (<span class="ident">P256FieldElement</span>, <span class="ident">P256FieldElement</span>);
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AffineResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Affine</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
-<span class="kw">type</span> <span class="ident">P256Jacobian</span> <span class="op">=</span> (<span class="ident">P256FieldElement</span>, <span class="ident">P256FieldElement</span>, <span class="ident">P256FieldElement</span>);
-<span class="kw">type</span> <span class="ident">JacobianResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">P256Jacobian</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
-
 <span class="kw">const</span> <span class="ident">BITS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span>;
 
 <span class="macro">public_nat_mod</span><span class="macro">!</span>(
@@ -200,28 +195,12 @@
     <span class="ident">modulo_value</span>: <span class="string">&quot;ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551&quot;</span>
 );
 
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Affine</span> <span class="op">=</span> (<span class="ident">P256FieldElement</span>, <span class="ident">P256FieldElement</span>);
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AffineResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Affine</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">P256Jacobian</span> <span class="op">=</span> (<span class="ident">P256FieldElement</span>, <span class="ident">P256FieldElement</span>, <span class="ident">P256FieldElement</span>);
+<span class="kw">type</span> <span class="ident">JacobianResult</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">P256Jacobian</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+
 <span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Element</span>, <span class="number">32</span>);
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p256_point_mul_base</span>(<span class="ident">k</span>: <span class="ident">P256Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
-    <span class="kw">let</span> <span class="ident">base_point</span> <span class="op">=</span> (
-        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">Element</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>([
-            <span class="number">0x6Bu8</span>, <span class="number">0x17u8</span>, <span class="number">0xD1u8</span>, <span class="number">0xF2u8</span>, <span class="number">0xE1u8</span>, <span class="number">0x2Cu8</span>, <span class="number">0x42u8</span>, <span class="number">0x47u8</span>, <span class="number">0xF8u8</span>, <span class="number">0xBCu8</span>, <span class="number">0xE6u8</span>,
-            <span class="number">0xE5u8</span>, <span class="number">0x63u8</span>, <span class="number">0xA4u8</span>, <span class="number">0x40u8</span>, <span class="number">0xF2u8</span>, <span class="number">0x77u8</span>, <span class="number">0x03u8</span>, <span class="number">0x7Du8</span>, <span class="number">0x81u8</span>, <span class="number">0x2Du8</span>, <span class="number">0xEBu8</span>,
-            <span class="number">0x33u8</span>, <span class="number">0xA0u8</span>, <span class="number">0xF4u8</span>, <span class="number">0xA1u8</span>, <span class="number">0x39u8</span>, <span class="number">0x45u8</span>, <span class="number">0xD8u8</span>, <span class="number">0x98u8</span>, <span class="number">0xC2u8</span>, <span class="number">0x96u8</span>
-        ]))),
-        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">Element</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>([
-            <span class="number">0x4Fu8</span>, <span class="number">0xE3u8</span>, <span class="number">0x42u8</span>, <span class="number">0xE2u8</span>, <span class="number">0xFEu8</span>, <span class="number">0x1Au8</span>, <span class="number">0x7Fu8</span>, <span class="number">0x9Bu8</span>, <span class="number">0x8Eu8</span>, <span class="number">0xE7u8</span>, <span class="number">0xEBu8</span>,
-            <span class="number">0x4Au8</span>, <span class="number">0x7Cu8</span>, <span class="number">0x0Fu8</span>, <span class="number">0x9Eu8</span>, <span class="number">0x16u8</span>, <span class="number">0x2Bu8</span>, <span class="number">0xCEu8</span>, <span class="number">0x33u8</span>, <span class="number">0x57u8</span>, <span class="number">0x6Bu8</span>, <span class="number">0x31u8</span>,
-            <span class="number">0x5Eu8</span>, <span class="number">0xCEu8</span>, <span class="number">0xCBu8</span>, <span class="number">0xB6u8</span>, <span class="number">0x40u8</span>, <span class="number">0x68u8</span>, <span class="number">0x37u8</span>, <span class="number">0xBFu8</span>, <span class="number">0x51u8</span>, <span class="number">0xF5u8</span>
-        ]))),
-    );
-    <span class="ident">p256_point_mul</span>(<span class="ident">k</span>, <span class="ident">base_point</span>)
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p256_point_mul</span>(<span class="ident">k</span>: <span class="ident">P256Scalar</span>, <span class="ident">p</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
-    <span class="kw">let</span> <span class="ident">jac</span> <span class="op">=</span> <span class="ident">ltr_mul</span>(<span class="ident">k</span>, <span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>))<span class="question-mark">?</span>;
-    <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">jac</span>))
-}
 
 <span class="kw">fn</span> <span class="ident">jacobian_to_affine</span>(<span class="ident">p</span>: <span class="ident">P256Jacobian</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Affine</span> {
     <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">z</span>) <span class="op">=</span> <span class="ident">p</span>;
@@ -264,20 +243,6 @@
 <span class="kw">fn</span> <span class="ident">is_point_at_infinity</span>(<span class="ident">p</span>: <span class="ident">P256Jacobian</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">let</span> (<span class="ident">_x</span>, <span class="ident">_y</span>, <span class="ident">z</span>) <span class="op">=</span> <span class="ident">p</span>;
     <span class="ident">z</span>.<span class="ident">equal</span>(<span class="ident">P256FieldElement</span>::<span class="ident">from_literal</span>(<span class="number">0u128</span>))
-}
-
-<span class="kw">fn</span> <span class="ident">point_add_distinct</span>(<span class="ident">p</span>: <span class="ident">Affine</span>, <span class="ident">q</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
-    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">point_add_jacob</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>), <span class="ident">affine_to_jacobian</span>(<span class="ident">q</span>))<span class="question-mark">?</span>;
-    <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">r</span>))
-}
-
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_assignments</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_add</span>(<span class="ident">p</span>: <span class="ident">Affine</span>, <span class="ident">q</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
-    <span class="kw">if</span> <span class="ident">p</span> <span class="op">!</span><span class="op">=</span> <span class="ident">q</span> {
-        <span class="ident">point_add_distinct</span>(<span class="ident">p</span>, <span class="ident">q</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">point_double</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>))))
-    }
 }
 
 <span class="kw">fn</span> <span class="ident">s1_equal_s2</span>(<span class="ident">s1</span>: <span class="ident">P256FieldElement</span>, <span class="ident">s2</span>: <span class="ident">P256FieldElement</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">JacobianResult</span> {
@@ -346,6 +311,41 @@
         }
     }
     <span class="ident">JacobianResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">q</span>)
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p256_point_mul</span>(<span class="ident">k</span>: <span class="ident">P256Scalar</span>, <span class="ident">p</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
+    <span class="kw">let</span> <span class="ident">jac</span> <span class="op">=</span> <span class="ident">ltr_mul</span>(<span class="ident">k</span>, <span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>))<span class="question-mark">?</span>;
+    <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">jac</span>))
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p256_point_mul_base</span>(<span class="ident">k</span>: <span class="ident">P256Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
+    <span class="kw">let</span> <span class="ident">base_point</span> <span class="op">=</span> (
+        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">Element</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>([
+            <span class="number">0x6Bu8</span>, <span class="number">0x17u8</span>, <span class="number">0xD1u8</span>, <span class="number">0xF2u8</span>, <span class="number">0xE1u8</span>, <span class="number">0x2Cu8</span>, <span class="number">0x42u8</span>, <span class="number">0x47u8</span>, <span class="number">0xF8u8</span>, <span class="number">0xBCu8</span>, <span class="number">0xE6u8</span>,
+            <span class="number">0xE5u8</span>, <span class="number">0x63u8</span>, <span class="number">0xA4u8</span>, <span class="number">0x40u8</span>, <span class="number">0xF2u8</span>, <span class="number">0x77u8</span>, <span class="number">0x03u8</span>, <span class="number">0x7Du8</span>, <span class="number">0x81u8</span>, <span class="number">0x2Du8</span>, <span class="number">0xEBu8</span>,
+            <span class="number">0x33u8</span>, <span class="number">0xA0u8</span>, <span class="number">0xF4u8</span>, <span class="number">0xA1u8</span>, <span class="number">0x39u8</span>, <span class="number">0x45u8</span>, <span class="number">0xD8u8</span>, <span class="number">0x98u8</span>, <span class="number">0xC2u8</span>, <span class="number">0x96u8</span>
+        ]))),
+        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">Element</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>([
+            <span class="number">0x4Fu8</span>, <span class="number">0xE3u8</span>, <span class="number">0x42u8</span>, <span class="number">0xE2u8</span>, <span class="number">0xFEu8</span>, <span class="number">0x1Au8</span>, <span class="number">0x7Fu8</span>, <span class="number">0x9Bu8</span>, <span class="number">0x8Eu8</span>, <span class="number">0xE7u8</span>, <span class="number">0xEBu8</span>,
+            <span class="number">0x4Au8</span>, <span class="number">0x7Cu8</span>, <span class="number">0x0Fu8</span>, <span class="number">0x9Eu8</span>, <span class="number">0x16u8</span>, <span class="number">0x2Bu8</span>, <span class="number">0xCEu8</span>, <span class="number">0x33u8</span>, <span class="number">0x57u8</span>, <span class="number">0x6Bu8</span>, <span class="number">0x31u8</span>,
+            <span class="number">0x5Eu8</span>, <span class="number">0xCEu8</span>, <span class="number">0xCBu8</span>, <span class="number">0xB6u8</span>, <span class="number">0x40u8</span>, <span class="number">0x68u8</span>, <span class="number">0x37u8</span>, <span class="number">0xBFu8</span>, <span class="number">0x51u8</span>, <span class="number">0xF5u8</span>
+        ]))),
+    );
+    <span class="ident">p256_point_mul</span>(<span class="ident">k</span>, <span class="ident">base_point</span>)
+}
+
+<span class="kw">fn</span> <span class="ident">point_add_distinct</span>(<span class="ident">p</span>: <span class="ident">Affine</span>, <span class="ident">q</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
+    <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">point_add_jacob</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>), <span class="ident">affine_to_jacobian</span>(<span class="ident">q</span>))<span class="question-mark">?</span>;
+    <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">r</span>))
+}
+
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_assignments</span>)]</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">point_add</span>(<span class="ident">p</span>: <span class="ident">Affine</span>, <span class="ident">q</span>: <span class="ident">Affine</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AffineResult</span> {
+    <span class="kw">if</span> <span class="ident">p</span> <span class="op">!</span><span class="op">=</span> <span class="ident">q</span> {
+        <span class="ident">point_add_distinct</span>(<span class="ident">p</span>, <span class="ident">q</span>)
+    } <span class="kw">else</span> {
+        <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">point_double</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>))))
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "hacspec_p256";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
