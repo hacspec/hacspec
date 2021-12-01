@@ -5,29 +5,68 @@ use hacspec_lib::*;
 
 
 
+
 #[test]
-fn test_expand_message() {
-    let msg = ByteSeq::from_public_slice(b"hello_world");
-    let dst = ByteSeq::from_public_slice(b"hacspec_dst"); 
-    let len_in_bytes = 64;
-    let expm = expand_message_xmd(&msg, &dst, len_in_bytes);
-    let result = ByteSeq::from_hex("ffe3dc533040dcffab4967f737e56c80ffaeba9c76b66f3bdc66de805a1b2211672d5c4ec5e4d18ca6284e9464e2b2db8595f19190f2c96dcfcbf357a972e4c4");
-    assert_eq!(expm.len(), len_in_bytes);
-    assert_eq!(expm.to_hex(), result.to_hex());
+fn test_g1_hash_to_curve() {
+    let dst = ByteSeq::from_public_slice(b"hacspec_v0.1.0_BLS12381G1_XMD:SHA-256_SVDW_RO_");
+    let msg1 = ByteSeq::from_public_slice(b"hello world");
+    let p1 = g1_hash_to_curve(&msg1, &dst);
+    let r = Scalar::from_hex("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001"); //r
+    let h = g1mul(r, p1);
+    assert!(h.2); // in the correct sub-group
+    let msg2 = ByteSeq::from_public_slice(b"hello world");
+    let p2 = g1_hash_to_curve(&msg2, &dst);
+    assert_eq!(p1, p2); // deterministic
+    let msg3 = ByteSeq::from_public_slice(b"hello world2");
+    let p3 = g1_hash_to_curve(&msg3, &dst);
+    assert!(p1 != p3); // not trivial
 }
 
 #[test]
-fn test_fp_hash_to_field() {
-    let msg = ByteSeq::from_public_slice(b"hello_world");
-    let count = 2;
-    let fps = fp_hash_to_field(&msg, count);
-    assert_eq!(fps[0], Fp::ZERO());
+fn test_g1_encode_to_curve() {
+    let dst = ByteSeq::from_public_slice(b"hacspec_v0.1.0_BLS12381G1_XMD:SHA-256_SVDW_NU_");
+    let msg1 = ByteSeq::from_public_slice(b"hello world");
+    let p1 = g1_encode_to_curve(&msg1, &dst);
+    let r = Scalar::from_hex("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001"); //r
+    let h = g1mul(r, p1);
+    assert!(h.2); // in the correct sub-group
+    let msg2 = ByteSeq::from_public_slice(b"hello world");
+    let p2 = g1_encode_to_curve(&msg2, &dst);
+    assert_eq!(p1, p2); // deterministic
+    let msg3 = ByteSeq::from_public_slice(b"hello world2");
+    let p3 = g1_encode_to_curve(&msg3, &dst);
+    assert!(p1 != p3); // not trivial
+}
+
+
+#[test]
+fn test_g2_hash_to_curve() {
+    let dst = ByteSeq::from_public_slice(b"hacspec_v0.1.0_BLS12381G2_XMD:SHA-256_SVDW_RO_");
+    let msg1 = ByteSeq::from_public_slice(b"hello world");
+    let p1 = g2_hash_to_curve(&msg1, &dst); 
+    let r = Scalar::from_hex("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001"); //r
+    let h = g2mul(r, p1);
+    assert!(h.2); // in the correct sub-group
+    let msg2 = ByteSeq::from_public_slice(b"hello world");
+    let p2 = g2_hash_to_curve(&msg2, &dst);
+    assert_eq!(p1, p2); // deterministic
+    let msg3 = ByteSeq::from_public_slice(b"hello world2");
+    let p3 = g2_hash_to_curve(&msg3, &dst);
+    assert!(p1 != p3); // not trivial  
 }
 
 #[test]
-fn test_fp2_hash_to_field() {
-    let msg = ByteSeq::from_public_slice(b"hello_world");
-    let count = 2;
-    let fps = fp2_hash_to_field(&msg, count);
-    assert_eq!(fps[0], fp2zero());
+fn test_g2_encode_to_curve() {
+    let dst = ByteSeq::from_public_slice(b"hacspec_v0.1.0_BLS12381G2_XMD:SHA-256_SVDW_NU_");
+    let msg1 = ByteSeq::from_public_slice(b"hello world");
+    let p1 = g2_encode_to_curve(&msg1, &dst); 
+    let r = Scalar::from_hex("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001"); //r
+    let h = g2mul(r, p1);
+    assert!(h.2); // in the correct sub-group
+    let msg2 = ByteSeq::from_public_slice(b"hello world");
+    let p2 = g2_encode_to_curve(&msg2, &dst);
+    assert_eq!(p1, p2); // deterministic
+    let msg3 = ByteSeq::from_public_slice(b"hello world2");
+    let p3 = g2_encode_to_curve(&msg3, &dst);
+    assert!(p1 != p3); // not trivial  
 }
