@@ -1463,53 +1463,6 @@ fn translate_item<'a>(
             } else {
                 RcDoc::nil()
             }
-        })
-        .append(if item.tags.0.contains(&"test".to_string()) {
-            RcDoc::hardline()
-                .append(RcDoc::hardline())
-                .append(RcDoc::as_string("Theorem"))
-                .append(RcDoc::space())
-                .append(translate_ident(Ident::TopLevel(f.clone())))
-                .append(RcDoc::as_string("_correct"))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string(":"))
-                .append(RcDoc::space())
-                .append(
-                    sig.args
-                        .iter()
-                        .fold(RcDoc::nil(), |rcdoc, ((x, _), (tau, _))| {
-                            rcdoc
-                                .append(RcDoc::as_string("forall"))
-                                .append(RcDoc::space())
-                                .append(translate_ident(x.clone()))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string(":"))
-                                .append(RcDoc::space())
-                                .append(translate_typ(tau.clone()))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string(","))
-                        })
-                        .append(translate_ident(Ident::TopLevel(f.clone())))
-                        .append(
-                            sig.args
-                                .iter()
-                                .fold(RcDoc::nil(), |rcdoc, ((x, _), (_, _))| {
-                                    rcdoc
-                                        .append(RcDoc::space())
-                                        .append(translate_ident(x.clone()))
-                                }),
-                        ),
-                )
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("="))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("true."))
-                .append(RcDoc::line())
-                .append(RcDoc::as_string("Proof. Admitted."))
-                .append(RcDoc::hardline())
-                .group()
-        } else {
-            RcDoc::nil()
         }),
         Item::EnumDecl(name, cases) => RcDoc::as_string("Inductive")
             .append(RcDoc::space())
