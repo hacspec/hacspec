@@ -9,7 +9,7 @@ use rustc_ast::{
     },
     node_id::NodeId,
     ptr::P,
-    token::{DelimToken, LitKind as TokenLitKind, TokenKind},
+    token::{Delimiter, LitKind as TokenLitKind, TokenKind},
     tokenstream::{TokenStream, TokenTree},
 };
 use rustc_session::Session;
