@@ -188,13 +188,15 @@ fn translate_enum_case_name<'a>(
                 RcDoc::nil()
             }
             .append(translate_constructor(case_name))
-            .append(if (name.0).string == "Option" || (name.0).string == "Result" {
-                RcDoc::nil()
-            } else {
-                RcDoc::as_string("(")
-                    .append(translate_toplevel_ident(name.0))
-                    .append(RcDoc::as_string(")"))
-            })
+            .append(
+                if (name.0).string == "Option" || (name.0).string == "Result" {
+                    RcDoc::nil()
+                } else {
+                    RcDoc::as_string("(")
+                        .append(translate_toplevel_ident(name.0))
+                        .append(RcDoc::as_string(")"))
+                },
+            )
             .append(if explicit && tyvec.len() != 0 {
                 RcDoc::space().append(RcDoc::intersperse(
                     tyvec.into_iter().map(|(x, _)| translate_base_typ(x)),
@@ -1324,8 +1326,8 @@ fn translate_statements<'a>(
                             .append(if mutated_info.vars.0.iter().len() == 0 {
                                 RcDoc::as_string("_")
                             } else {
-                                mut_tuple("".to_string()).clone()
-                            }) // Issue here with patterns (eg. 'tt)
+                                mut_tuple("'".to_string()).clone()
+                            }) // TODO: Issue here with patterns (eg. 'tt)
                             .append(RcDoc::space())
                             .append(RcDoc::as_string("=>"))
                             .append(RcDoc::softline())
@@ -1427,12 +1429,11 @@ fn translate_item<'a>(
                 RcDoc::hardline()
                     .append(RcDoc::as_string("QuickChick"))
                     .append(RcDoc::space())
-                    .append(make_paren(
+                    .append(make_paren(RcDoc::concat(
                         sig.args
                             .iter()
-                            .fold(RcDoc::nil(), |rcdoc, ((x, _), (tau, _))| {
-                                rcdoc
-                                    .append(RcDoc::as_string("forAll g_"))
+                            .map(|((x, _), (tau, _))| {
+                                RcDoc::as_string("forAll g_")
                                     .append(translate_typ(tau.clone()))
                                     .append(RcDoc::space())
                                     .append("(")
@@ -1445,17 +1446,14 @@ fn translate_item<'a>(
                                     .append(translate_typ(tau.clone()))
                                     .append(RcDoc::space())
                                     .append(RcDoc::as_string("=>"))
-                            })
+                            }))
                             .append(translate_ident(Ident::TopLevel(f.clone())))
-                            .append(sig.args.iter().fold(
-                                RcDoc::nil(),
-                                |rcdoc, ((x, _), (_, _))| {
-                                    rcdoc
-                                        .append(RcDoc::space())
+                            .append(RcDoc::concat(sig.args.iter().map(|((x, _), (_, _))| {
+                                        RcDoc::space()
                                         .append(translate_ident(x.clone()))
-                                        .append(RcDoc::as_string(")"))
-                                },
-                            )),
+                                }
+                            )))
+                            .append(RcDoc::concat(sig.args.iter().map(|_| RcDoc::as_string(")")))),
                     ))
                     .append(RcDoc::as_string("."))
                     .append(RcDoc::hardline())
@@ -1608,10 +1606,139 @@ fn translate_item<'a>(
                             .nest(2)
                     )
                     .append(RcDoc::hardline())
-
-
             } else {
                 RcDoc::nil()
+            })
+            .append(if export_quick_check {
+                RcDoc::hardline()
+                    .append(RcDoc::as_string("Global Instance"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("show_"))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string(":"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("Show ("))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::as_string(") :="))
+                    .group()
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string(" @Build_Show ("))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::as_string(")"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("(fun x =>"))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string("match x with"))
+                    .append(RcDoc::line())
+                    .append(RcDoc::intersperse(
+                        cases.into_iter().map(|(case_name, case_typ)| {
+                            let name_ty = BaseTyp::Named(name.clone(), None);
+                            translate_enum_case_name(
+                                name_ty.clone(),
+                                case_name.0.clone(),
+                                false,
+                            )
+                                .append(RcDoc::space())
+                                .append(match case_typ {
+                                    None => RcDoc::nil(),
+                                    Some(_) => RcDoc::as_string("a").append(RcDoc::space()),
+                                })
+                                .append(RcDoc::as_string("=>"))
+                                .append(RcDoc::space())
+                                .append(make_paren(
+                                    RcDoc::as_string("\"")
+                                        .append(
+                                            translate_enum_case_name(
+                                                name_ty.clone(),
+                                                case_name.0.clone(),
+                                                false
+                                            )
+                                        )
+                                        .append(RcDoc::as_string("\""))
+                                        .append(match case_typ {
+                                            None => RcDoc::nil(),
+                                            Some(_) => RcDoc::space().append(RcDoc::as_string("++ show a")),
+                                        })
+                                ))
+                                .append(RcDoc::as_string("%string"))
+                        }),
+                        RcDoc::line().append(RcDoc::as_string("|")).append(RcDoc::space())))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string("end)."))
+                    .nest(1)
+                    .append(RcDoc::hardline())
+                    .append(RcDoc::as_string("Definition"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("g_"))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string(":"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("G ("))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::as_string(") := oneOf_ ("))
+                    .append(match cases.into_iter().next() {
+                        Some ((case_name, case_typ)) => {
+                            let name_ty = BaseTyp::Named(name.clone(), None);
+                            match case_typ {
+                                None => RcDoc::as_string("returnGen "),
+                                Some(_) => RcDoc::as_string("bindGen arbitrary (fun a => returnGen ("),
+                            }
+                            .append(
+                                translate_enum_case_name(
+                                    name_ty.clone(),
+                                    case_name.0.clone(),
+                                    false
+                                ))
+                                .append(match case_typ {
+                                    None => RcDoc::nil(),
+                                    Some(_) => RcDoc::as_string(" a))"),
+                                })
+                        }
+                        None => RcDoc::nil(),
+                    })
+                    .append(RcDoc::as_string(") ["))
+                    .append(RcDoc::intersperse(
+                        cases.into_iter().map(|(case_name, case_typ)| {
+                            let name_ty = BaseTyp::Named(name.clone(), None);
+                            match case_typ {
+                                None => RcDoc::as_string("returnGen "),
+                                Some(_) => RcDoc::as_string("bindGen arbitrary (fun a => returnGen ("),
+                            }
+                            .append(
+                                translate_enum_case_name(
+                                    name_ty.clone(),
+                                    case_name.0.clone(),
+                                    false,
+                                ))
+                                .append(match case_typ {
+                                    None => RcDoc::nil(),
+                                    Some(_) => RcDoc::as_string(" a))"),
+                                })
+                        }),
+                        RcDoc::as_string(";")))
+                    .append(RcDoc::as_string("]."))
+                    .append(RcDoc::hardline())
+                    .append(RcDoc::as_string("#[global] Instance"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("gen_"))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string(":"))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("Gen ("))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::as_string(") := Build_Gen"))
+                    .append(RcDoc::space())
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("g_"))
+                    .append(translate_ident(Ident::TopLevel(name.0.clone())))
+                    .append(RcDoc::as_string("."))
+                    .append(RcDoc::hardline())
+             } else {
+                 RcDoc::nil()
             }),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("Definition")
             .append(RcDoc::space())
@@ -1771,6 +1898,8 @@ fn translate_item<'a>(
                 .append(translate_base_typ(ty.clone()))
                 .append(RcDoc::as_string(") : hacspec_scope."))
                 .append(if export_quick_check {
+                    match ty.clone() {
+                        BaseTyp::Tuple(args) => {
                     RcDoc::hardline()
                         .append(RcDoc::as_string("Instance"))
                         .append(RcDoc::space())
@@ -1783,39 +1912,39 @@ fn translate_item<'a>(
                         .append(translate_ident_str(name.clone()))
                         .append(RcDoc::as_string(") :="))
                         .append(RcDoc::line())
-                        .append(match ty.clone() {
-                            BaseTyp::Tuple(args) => {
-                                RcDoc::as_string("Build_Show")
+                        .append(
+                            RcDoc::as_string("Build_Show")
                                     .append(RcDoc::space())
                                     .append(translate_ident_str(name.clone()))
                                     .append(RcDoc::space())
                                     .append(RcDoc::as_string("(fun x =>"))
                                     .append(RcDoc::line())
-                                    .append((0..args.len() - 1).fold(RcDoc::nil(), |s, n| {
-                                        s.append(RcDoc::as_string("let (x, x"))
+                                    .append(RcDoc::concat((0..args.len() - 1).map(|n| {
+                                        RcDoc::as_string("let (x, x")
                                             .append(RcDoc::as_string(n.to_string()))
                                             .append(RcDoc::as_string(") := x in"))
                                             .append(RcDoc::line())
-                                    }))
-                                    .append(RcDoc::as_string("append (\"(\"%string) ("))
-                                    .append(RcDoc::as_string("append (show x) ("))
-                                    .append((0..args.len() - 1).fold(RcDoc::nil(), |s, n| {
-                                        s.append(RcDoc::as_string(
-                                            "append (\",\"%string) (append (show x",
-                                        ))
-                                        .append(RcDoc::as_string(n.to_string()))
-                                        .append(RcDoc::as_string(") ("))
-                                    }))
-                                    .append(RcDoc::as_string("\")\"%string)"))
-                                    .append((0..args.len() - 1).fold(RcDoc::nil(), |s, _| {
-                                        s.append(RcDoc::as_string("))"))
-                                    }))
-                                    .append(RcDoc::as_string("))"))
-                                    .group()
-                                    .nest(2)
-                            }
-                            _ => RcDoc::nil(),
-                        })
+                                    })))
+                                .append(make_paren(
+                                    RcDoc::as_string("(\"(\") ++ (")
+                                        .append(RcDoc::as_string("(show x) ++ ("))
+                                        .append(RcDoc::concat((0..args.len() - 1).map(|n| {
+                                            RcDoc::as_string(
+                                                "(\",\") ++ ((show x",
+                                            )
+                                                .append(RcDoc::as_string(n.to_string()))
+                                                .append(RcDoc::as_string(") ++ ("))
+                                        })))
+                                        .append(RcDoc::as_string("\")\")"))
+                                        .append(RcDoc::concat((0..args.len() - 1).map(|_| {
+                                            RcDoc::as_string("))")
+                                        })))
+                                        .append(RcDoc::as_string("))"))
+                                ))
+                                .append(RcDoc::as_string("%string"))
+                                .group()
+                                .nest(2)
+                        )
                         .append(RcDoc::as_string("."))
                         .group()
                         .append(RcDoc::hardline())
@@ -1833,12 +1962,11 @@ fn translate_item<'a>(
                         .append(match ty.clone() {
                             BaseTyp::Tuple(args) => {
                                 let answer =
-                                    args.into_iter()
-                                        .fold((RcDoc::nil(), 0), |(s, n), (arg, _)| {
-                                            (
-                                                s.append(RcDoc::as_string(
-                                                    "bindGen arbitrary (fun x",
-                                                ))
+                                    RcDoc::concat(args.clone().into_iter().enumerate()
+                                        .map (|(n, (arg, _))| {
+                                            RcDoc::as_string(
+                                                "bindGen arbitrary (fun x",
+                                            )
                                                 .append(RcDoc::as_string(n.to_string()))
                                                 .append(RcDoc::space())
                                                 .append(RcDoc::as_string(":"))
@@ -1846,23 +1974,20 @@ fn translate_item<'a>(
                                                 .append(translate_base_typ(arg))
                                                 .append(RcDoc::space())
                                                 .append(RcDoc::as_string("=>"))
-                                                .append(RcDoc::line()),
-                                                n + 1,
-                                            )
-                                        });
+                                                .append(RcDoc::line())
+                                        }));
                                 answer
-                                    .0
-                                    .append(RcDoc::as_string("returnGen ("))
-                                    .append((1..answer.1).fold(RcDoc::as_string("x0"), |s, n| {
-                                        s.append(RcDoc::as_string(","))
+                                    .append(RcDoc::as_string("returnGen (x0"))
+                                    .append(RcDoc::concat((1..args.len()).map(|n| {
+                                        RcDoc::as_string(",")
                                             .append(RcDoc::as_string("x"))
                                             .append(RcDoc::as_string(n.to_string()))
-                                    }))
+                                    })))
                                     .append(RcDoc::as_string(")"))
-                                    .append(
-                                        (0..answer.1).fold(RcDoc::nil(), |s, _| {
-                                            s.append(RcDoc::as_string(")"))
-                                        }),
+                                    .append(RcDoc::concat(
+                                        (0..args.len()).map(|_| {
+                                            RcDoc::as_string(")")
+                                        }))
                                     )
                                     .group()
                                     .nest(2)
@@ -1889,7 +2014,10 @@ fn translate_item<'a>(
                         .append(translate_ident_str(name.clone()))
                         .append(RcDoc::as_string("."))
                         .group()
-                        .append(RcDoc::hardline())
+                                .append(RcDoc::hardline())
+                            }
+                        _ => RcDoc::nil(),
+                    }
                 } else {
                     RcDoc::nil()
                 })
@@ -1942,7 +2070,8 @@ pub fn translate_and_write_to_file(
         Open Scope hacspec_scope.\n\
         {}",
         if export_quick_check {
-            "From QuickChick Require Import QuickChick.\n"
+            "From QuickChick Require Import QuickChick.\n\
+            Require Import QuickChickLib.\n"
         } else {
             ""
         }

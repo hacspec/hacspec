@@ -4,6 +4,7 @@
 
 ../../../coq/src/MachineIntegers.v
 ../../../coq/src/Lib.v
+../../../coq/src/QuickChickLib.v
 
 QuestionMark.v
 Loops.v
