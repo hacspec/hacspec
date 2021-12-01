@@ -138,16 +138,9 @@ fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'
 
 fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
     RcDoc::as_string("(")
-        .append(RcDoc::softline().append(e).group().nest(2))
+        .append(RcDoc::softline_().append(e).group().nest(2))
         .append(RcDoc::as_string(")"))
         .group()
-}
-
-fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
-    RcDoc::as_string("(")
-        .append(RcDoc::softline().append(e).group().nest(2))
-        .append(RcDoc::line())
-        .append(RcDoc::as_string(")"))
 }
 
 fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
@@ -455,15 +448,24 @@ fn translate_binop<'a, 'b>(
             match top_ctx.typ_dict.get(ident) {
                 Some((inner_ty, entry)) => match entry {
                     DictEntry::NaturalInteger => match op {
-                        BinOpKind::Sub => return RcDoc::as_string("-%"),
                         BinOpKind::Add => return RcDoc::as_string("+%"),
+                        BinOpKind::Sub => return RcDoc::as_string("-%"),
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
+                        // Rem,
+                        // And,
+                        // Or,
                         BinOpKind::BitXor => return RcDoc::as_string("xor"),
                         BinOpKind::BitOr => return RcDoc::as_string("or"),
                         BinOpKind::BitAnd => return RcDoc::as_string("and"),
+                        // Shl,
+                        // Shr,
                         BinOpKind::Eq => return RcDoc::as_string("=.?"),
+                        // Lt,
+                        // Le,
                         BinOpKind::Ne => return RcDoc::as_string("!=.?"),
+                        // Ge,
+                        // Gt,
                         _ => unimplemented!(),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
@@ -1107,7 +1109,6 @@ fn translate_statements<'a>(
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
             if question_mark {
-                // unimplemented!()
                 RcDoc::as_string("bind")
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e2.clone(), top_ctx)))
@@ -1179,12 +1180,12 @@ fn translate_statements<'a>(
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("then"))
                 .append(RcDoc::space())
-                .append(make_begin_paren(translate_block(b1.clone(), true, top_ctx)))
+                .append(make_paren(translate_block(b1.clone(), true, top_ctx)))
                 .append(match b2.clone() {
                     None => RcDoc::space()
                         .append(RcDoc::as_string("else"))
                         .append(RcDoc::space())
-                        .append(make_begin_paren(translate_statements(
+                        .append(make_paren(translate_statements(
                             [(mutated_info.stmt.clone(), DUMMY_SP.into())].iter(),
                             top_ctx,
                         ))),
@@ -1196,7 +1197,7 @@ fn translate_statements<'a>(
                         RcDoc::space()
                             .append(RcDoc::as_string("else"))
                             .append(RcDoc::space())
-                            .append(make_begin_paren(translate_block(b2, true, top_ctx)))
+                            .append(make_paren(translate_block(b2, true, top_ctx)))
                     }
                 });
             if either_blocks_contains_question_mark {

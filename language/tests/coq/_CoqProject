@@ -6,7 +6,5 @@
 ../../../coq/src/Lib.v
 
 QuestionMark.v
-Result.v
-Enums.v
-Option.v
 Loops.v
+Types.v
