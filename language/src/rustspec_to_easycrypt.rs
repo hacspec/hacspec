@@ -1011,7 +1011,7 @@ fn translate_block<'a>(
 
 fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match &i.item {
-        Item::FnDecl((f, _), sig, (b, _)) => make_op_binding(
+        Item::FnDecl((f, _), sig, (b, _),_requires,_ensures) => make_op_binding(
             translate_ident(Ident::TopLevel(f.clone()))
                 .append(RcDoc::line())
                 .append(if sig.args.len() > 0 {

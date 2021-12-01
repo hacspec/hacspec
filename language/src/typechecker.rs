@@ -12,6 +12,8 @@ use itertools::Itertools;
 use rustc_session::Session;
 use rustc_span::DUMMY_SP;
 
+use rustc_ast::node_id::NodeId;
+
 // TODO: explain that we need typechecking inference to disambiguate method calls
 
 fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
@@ -1660,6 +1662,90 @@ fn typecheck_expression(
     }
 }
 
+fn typecheck_quantified_expression(
+    sess: &Session,
+    qe: Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>,
+    top_level_context: &TopLevelContext,
+    var_context: &VarContext,
+) -> Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>> {
+    match qe {
+        Quantified::Unquantified(e) => Quantified::Unquantified((
+            typecheck_expression(sess, &e.clone(), top_level_context, var_context)
+                .unwrap()
+                .0,
+            e.1,
+        )),
+        Quantified::Forall(ids, qe2) => {
+            let var_context = ids
+                .iter()
+                .fold(var_context.clone(), |ctx, (x, (t, t_span))| {
+                    add_var(
+                        x,
+                        &((Borrowing::Consumed, *t_span), (t.clone(), *t_span)),
+                        &ctx,
+                    )
+                });
+            Quantified::Forall(
+                ids,
+                Box::new(typecheck_quantified_expression(
+                    sess,
+                    *qe2,
+                    top_level_context,
+                    &var_context,
+                )),
+            )
+        }
+        Quantified::Exists(ids, qe2) => {
+            let var_context = ids
+                .iter()
+                .fold(var_context.clone(), |ctx, (x, (t, t_span))| {
+                    add_var(
+                        x,
+                        &((Borrowing::Consumed, *t_span), (t.clone(), *t_span)),
+                        &ctx,
+                    )
+                });
+            Quantified::Exists(
+                ids,
+                Box::new(typecheck_quantified_expression(
+                    sess,
+                    *qe2,
+                    top_level_context,
+                    &var_context,
+                )),
+            )
+        }
+        Quantified::Implication(a, b) => Quantified::Implication(
+            Box::new(typecheck_quantified_expression(
+                sess,
+                *a,
+                top_level_context,
+                var_context,
+            )),
+            Box::new(typecheck_quantified_expression(
+                sess,
+                *b,
+                top_level_context,
+                var_context,
+            )),
+        ),
+        Quantified::Eq(a, b) => Quantified::Eq(
+            Box::new(typecheck_quantified_expression(
+                sess,
+                *a,
+                top_level_context,
+                var_context,
+            )),
+            Box::new(typecheck_quantified_expression(
+                sess,
+                *b,
+                top_level_context,
+                var_context,
+            )),
+        ),
+    }
+}
+
 fn typecheck_pattern(
     sess: &Session,
     (pat, pat_span): &Spanned<Pattern>,
@@ -2595,7 +2681,7 @@ fn typecheck_item(
             ))
         }
         Item::AliasDecl(_, _) | Item::ImportedCrate(_) | Item::EnumDecl(_, _) => Ok(i.clone()),
-        Item::FnDecl((f, f_span), sig, (b, b_span)) => {
+        Item::FnDecl((f, f_span), sig, (b, b_span), requires, ensures) => {
             log::trace!("   Item::FnDecl");
             let var_context = HashMap::new();
             let var_context = sig
@@ -2604,6 +2690,9 @@ fn typecheck_item(
                 .fold(var_context, |var_context, ((x, _x_span), (t, _t_span))| {
                     add_var(&x, t, &var_context)
                 });
+
+            let attribute_var_context = var_context.clone();
+
             let (new_b, _final_var_context) = typecheck_block(
                 sess,
                 (b.clone(), b_span.clone()),
@@ -2630,10 +2719,46 @@ fn typecheck_item(
                     .as_str(),
                 )
             }
+
+            // TODO: Check variable propagation for var_context (some might leek to function body, or between requires and/or ensures)
+            let new_requires = requires
+                .iter()
+                .map(|x| {
+                    typecheck_quantified_expression(
+                        sess,
+                        x.clone(),
+                        top_level_context,
+                        &attribute_var_context.clone(),
+                    )
+                })
+                .collect();
+            let result_var_context = add_var(
+                &Ident::Local(LocalIdent {
+                    id: NodeId::MAX.as_usize(),
+                    name: "result".to_string(),
+                }),
+                &((Borrowing::Consumed, DUMMY_SP.into()), sig.ret.clone()),
+                &attribute_var_context.clone(),
+            );
+
+            let new_ensures = ensures
+                .iter()
+                .map(|x| {
+                    typecheck_quantified_expression(
+                        sess,
+                        x.clone(),
+                        top_level_context,
+                        &result_var_context.clone(),
+                    )
+                })
+                .collect();
+
             let out = Item::FnDecl(
                 (f.clone(), f_span.clone()),
                 sig.clone(),
                 (new_b, b_span.clone()),
+                new_requires,
+                new_ensures,
             );
             Ok(out)
         }

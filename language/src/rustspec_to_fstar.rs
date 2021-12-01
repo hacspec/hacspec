@@ -1421,7 +1421,7 @@ fn translate_item<'a>(
     top_ctx: &'a TopLevelContext,
 ) -> RcDoc<'a, ()> {
     match &i.item {
-        Item::FnDecl((f, _), sig, (b, _)) => make_let_binding(
+        Item::FnDecl((f, _), sig, (b, _),_requires,_ensures) => make_let_binding(
             translate_ident(Ident::TopLevel(f.clone()))
                 .append(RcDoc::line())
                 .append(if sig.args.len() > 0 {

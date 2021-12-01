@@ -496,9 +496,24 @@ pub struct ExternalFuncSig {
     pub ret: BaseTyp,
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub enum Quantified<I, T> {
+    Unquantified(T),
+    Forall(Vec<I>, Box<Quantified<I, T>>),
+    Exists(Vec<I>, Box<Quantified<I, T>>),
+    Implication(Box<Quantified<I, T>>, Box<Quantified<I, T>>),
+    Eq(Box<Quantified<I, T>>, Box<Quantified<I, T>>),
+}
+
 #[derive(Clone, Serialize, Debug)]
 pub enum Item {
-    FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
+    FnDecl(
+        Spanned<TopLevelIdent>,
+        FuncSig,
+        Spanned<Block>,
+        Vec<Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>>,
+        Vec<Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>>,
+    ),
     EnumDecl(
         Spanned<TopLevelIdent>,
         Vec<(Spanned<TopLevelIdent>, Option<Spanned<BaseTyp>>)>,
