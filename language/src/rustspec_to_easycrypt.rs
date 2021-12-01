@@ -157,7 +157,7 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     let ident_str = match x {
-        Ident::TopLevel(s) => s.0.clone(),
+        Ident::TopLevel(s) => s.string.clone(),
         Ident::Local(LocalIdent { id, name: s }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
@@ -289,7 +289,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
         BaseTyp::Int128 => Expression::Lit(Literal::Int128(0)),
         BaseTyp::Usize => Expression::Lit(Literal::Usize(0)),
         BaseTyp::Isize => Expression::Lit(Literal::Isize(0)),
-        BaseTyp::Named((name, i_s), None) => match name.0.as_str() {
+        BaseTyp::Named((name, i_s), None) => match name.string.as_str() {
             "U8" => Expression::FuncCall(
                 None,
                 (name.clone(), i_s.clone()),
@@ -449,10 +449,11 @@ fn translate_binop<'a, 'b>(
                     },
                     op_str,
                     match &inner_ty.0 {
-                        BaseTyp::Named((TopLevelIdent(name), _), None) => match name.as_str() {
-                            "U8" => "W8",
-                            _ => "Unknown",
-                        },
+                        BaseTyp::Named((TopLevelIdent { string: name, .. }, _), None) =>
+                            match name.as_str() {
+                                "U8" => "W8",
+                                _ => "Unknown",
+                            },
                         _ => "Unknown",
                     },
                     inner_ty_op.pretty(0)
@@ -478,7 +479,7 @@ fn translate_binop<'a, 'b>(
         (BinOpKind::Shl, BaseTyp::Usize) => (RcDoc::as_string("usize_shift_left"), true),
         (BinOpKind::Shr, BaseTyp::Usize) => (RcDoc::as_string("usize_shift_right"), true),
         (BinOpKind::BitAnd, BaseTyp::UInt128) => (RcDoc::as_string("W128.(&)"), false),
-        (BinOpKind::BitAnd, BaseTyp::Named((TopLevelIdent(name), _), None))
+        (BinOpKind::BitAnd, BaseTyp::Named((TopLevelIdent { string: name, .. }, _), None))
             if (match name.as_str() {
                 "U8" | "U16" | "U64" | "U128" => true,
                 _ => false,
@@ -565,7 +566,10 @@ fn translate_prefix_for_func_name<'a>(
                 | Some((alias_typ, DictEntry::NaturalInteger)) => {
                     translate_prefix_for_func_name((alias_typ.1).0.clone(), top_ctx)
                 }
-                _ => (translate_ident_str(name.0.clone()), FuncPrefix::Regular),
+                _ => (
+                    translate_ident_str(name.string.clone()),
+                    FuncPrefix::Regular,
+                ),
             }
         }
         BaseTyp::Variable(_) => panic!(), // shoult not happen
@@ -815,7 +819,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         BaseTyp::Int64 => String::from("I64"),
                         BaseTyp::Int128 => String::from("I128"),
                         BaseTyp::Isize => String::from("I32"),
-                        BaseTyp::Named((TopLevelIdent(s), _), None) => s.clone(),
+                        BaseTyp::Named((TopLevelIdent { string: s, .. }, _), None) => s.clone(),
                         _ => panic!(), // should not happen
                     };
                     let secret = match &new_t.0 {
@@ -915,7 +919,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                     }),
             )
         }
-        Statement::ForLoop((x, _), (e1, _), (e2, _), (b, _)) => {
+        Statement::ForLoop(x, (e1, _), (e2, _), (b, _)) => {
             let mutated_info = b.mutated.as_ref().unwrap().as_ref();
             let mutated_num = mutated_info.vars.0.len();
             let mut_tuple = make_tuple(
@@ -934,7 +938,10 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(fun"))
                 .append(RcDoc::space())
-                .append(translate_ident(x.clone()))
+                .append(match x {
+                    Some((x, _)) => translate_ident(x.clone()),
+                    None => RcDoc::as_string("_"),
+                })
                 .append(RcDoc::space())
                 .append(if mutated_num > 1 {
                     RcDoc::as_string("acc")
@@ -1108,7 +1115,7 @@ fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcD
             .append(RcDoc::as_string("."))
             .append(RcDoc::hardline())
             .append(RcDoc::hardline()),
-        Item::ImportedCrate((TopLevelIdent(kr), _)) => RcDoc::as_string(format!(
+        Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => RcDoc::as_string(format!(
             "open {}",
             str::replace(&kr.to_title_case(), " ", ".")
         )),

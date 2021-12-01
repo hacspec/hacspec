@@ -15,9 +15,9 @@ mod ast_to_rustspec;
 mod hir_to_rustspec;
 mod name_resolution;
 mod rustspec;
+mod rustspec_to_coq;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
-mod rustspec_to_coq;
 mod typechecker;
 mod util;
 
@@ -91,7 +91,7 @@ impl Callbacks for HacspecCallbacks {
         let krate = match ast_to_rustspec::translate(&compiler.session(), &krate, &external_data) {
             Ok(krate) => krate,
             Err(_) => {
-                &compiler
+                compiler
                     .session()
                     .err("unable to translate to Hacspec due to out-of-language errors");
                 return Compilation::Stop;
@@ -101,7 +101,7 @@ impl Callbacks for HacspecCallbacks {
             match name_resolution::resolve_crate(&compiler.session(), krate, &external_data) {
                 Ok(krate) => krate,
                 Err(_) => {
-                    &compiler
+                    compiler
                         .session()
                         .err("found some Hacspec name resolution errors");
                     return Compilation::Stop;
@@ -111,7 +111,7 @@ impl Callbacks for HacspecCallbacks {
         {
             Ok(krate) => krate,
             Err(_) => {
-                &compiler
+                compiler
                     .session()
                     .err("found some Hacspec typechecking errors");
                 return Compilation::Stop;
@@ -155,7 +155,7 @@ impl Callbacks for HacspecCallbacks {
                     let path = Path::new(file);
                     let file = match File::create(&path) {
                         Err(why) => {
-                            &compiler.session().err(
+                            compiler.session().err(
                                 format!("Unable to write to output file {}: \"{}\"", file, why)
                                     .as_str(),
                             );
@@ -165,14 +165,14 @@ impl Callbacks for HacspecCallbacks {
                     };
                     match serde_json::to_writer_pretty(file, &krate) {
                         Err(why) => {
-                            &compiler
+                            compiler
                                 .session()
                                 .err(format!("Unable to serialize program: \"{}\"", why).as_str());
                             return Compilation::Stop;
                         }
                         Ok(_) => (),
                     };
-                },
+                }
                 "v" => rustspec_to_coq::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
@@ -180,7 +180,7 @@ impl Callbacks for HacspecCallbacks {
                     &top_ctx,
                 ),
                 _ => {
-                    &compiler
+                    compiler
                         .session()
                         .err("unknown backend extension for output file");
                     return Compilation::Stop;
@@ -196,12 +196,15 @@ impl Callbacks for HacspecCallbacks {
 #[derive(Debug, Default, Deserialize)]
 struct Dependency {
     name: String,
+    #[allow(dead_code)]
     kind: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
 struct Target {
+    #[allow(dead_code)]
     name: String,
+    #[allow(dead_code)]
     kind: Vec<String>,
     crate_types: Vec<String>,
     src_path: String,

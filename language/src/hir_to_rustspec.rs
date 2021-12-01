@@ -101,7 +101,13 @@ fn translate_base_typ(
                         // array types like U32Word, etc.
                         _ => Ok((
                             BaseTyp::Named(
-                                (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                (
+                                    TopLevelIdent {
+                                        string: name.to_ident_string(),
+                                        kind: TopLevelIdentKind::Type,
+                                    },
+                                    DUMMY_SP.into(),
+                                ),
                                 None,
                             ),
                             typ_ctx.clone(),
@@ -146,7 +152,13 @@ fn translate_base_typ(
                             };
                             Ok((
                                 BaseTyp::Named(
-                                    (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                    (
+                                        TopLevelIdent {
+                                            string: name.to_ident_string(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        DUMMY_SP.into(),
+                                    ),
                                     Some(vec![(param_typ, DUMMY_SP.into())]),
                                 ),
                                 typ_ctx.clone(),
@@ -181,7 +193,13 @@ fn translate_base_typ(
                             };
                             Ok((
                                 BaseTyp::Named(
-                                    (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                                    (
+                                        TopLevelIdent {
+                                            string: name.to_ident_string(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        DUMMY_SP.into(),
+                                    ),
                                     Some(vec![
                                         (param_typ1, DUMMY_SP.into()),
                                         (param_typ2, DUMMY_SP.into()),
@@ -194,7 +212,13 @@ fn translate_base_typ(
                     },
                     _ => Ok((
                         BaseTyp::Named(
-                            (TopLevelIdent(name.to_ident_string()), DUMMY_SP.into()),
+                            (
+                                TopLevelIdent {
+                                    string: name.to_ident_string(),
+                                    kind: TopLevelIdentKind::Type,
+                                },
+                                DUMMY_SP.into(),
+                            ),
                             None,
                         ),
                         typ_ctx.clone(),
@@ -337,7 +361,10 @@ fn process_fn_id(
                     let name_segment = def_path.data.last().unwrap();
                     match name_segment.data {
                         DefPathData::ValueNs(name) => {
-                            let fn_key = FnKey::Independent(TopLevelIdent(name.to_ident_string()));
+                            let fn_key = FnKey::Independent(TopLevelIdent {
+                                string: name.to_ident_string(),
+                                kind: TopLevelIdentKind::Function,
+                            });
                             insert_extern_func(extern_funcs, fn_key, sig);
                         }
                         _ => (),
@@ -356,7 +383,10 @@ fn process_fn_id(
                                 Ok((impl_type, typ_ctx)) => {
                                     let fn_key = FnKey::Impl(
                                         impl_type,
-                                        TopLevelIdent(name.to_ident_string()),
+                                        TopLevelIdent {
+                                            string: name.to_ident_string(),
+                                            kind: TopLevelIdentKind::Function,
+                                        },
                                     );
                                     let export_sig = tcx.fn_sig(*id);
                                     let sig = match translate_polyfnsig(tcx, &export_sig, &typ_ctx)
@@ -402,7 +432,7 @@ enum SpecialTypeReturn {
     NotSpecial,
 }
 
-fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTypeReturn {
+fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTypeReturn {
     // First we check whether the type is a special Hacspec type (array, abstract int, etc.)
     match def.kind() {
         TyKind::Adt(adt, substs) if adt.is_struct() => {
@@ -426,17 +456,24 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                 TyKind::Array(cell_t, size) => {
                     let (new_cell_t, _) = match translate_base_typ(tcx, cell_t, &HashMap::new()) {
                         Ok(x) => x,
-                        Err(()) => return SpecialTypeReturn::NotSpecial,
+                        Err(()) => {
+                            return SpecialTypeReturn::NotSpecial;
+                        }
                     };
                     let new_size = match &size.val {
+                        // We can only retrieve the actual size of the array
+                        // when the size has been declared as a literal value,
+                        // not a reference to another const value
                         ConstKind::Value(value) => match value {
                             ConstValue::Scalar(scalar) => match scalar {
                                 Scalar::Int(s) => Some(s.to_bits(s.size()).unwrap() as usize),
-                                _ => None,
+                                _ => Some(0),
                             },
-                            _ => None,
+                            // TODO: replace placeholder value by indication
+                            // that we could not retrieve the size
+                            _ => Some(0),
                         },
-                        _ => None,
+                        _ => Some(0),
                     };
                     if maybe_abstract_int {
                         // So here we cannot infer neither the secrecy nor the modulo
@@ -464,15 +501,22 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                     SpecialTypeReturn::NotSpecial
                     | SpecialTypeReturn::NatInt(_)
                     | SpecialTypeReturn::Array(_)
-                    | SpecialTypeReturn::Enum(_) => (),
+                    | SpecialTypeReturn::Enum(_) => return SpecialTypeReturn::NotSpecial,
                     SpecialTypeReturn::RawAbstractInt(nat_int_typ) => {
                         return SpecialTypeReturn::NatInt(nat_int_typ)
                     }
                 },
             }
         }
-        _ => (),
+        _ => return SpecialTypeReturn::NotSpecial,
     };
+}
+
+fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTypeReturn {
+    match check_non_enum_special_type_from_struct_shape(tcx, def) {
+        SpecialTypeReturn::NotSpecial => (),
+        ret => return ret,
+    }
     // If it is not a special type, we check whether it is an enum (or wrapper struct)
     match def.kind() {
         TyKind::Adt(adt, substs) => {
@@ -505,7 +549,13 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                                     _ => None, // If the type of the constructor is not a function, then there is no payload
                                 };
                                 Ok((
-                                    (TopLevelIdent(name), RustspecSpan::from(variant.ident.span)),
+                                    (
+                                        TopLevelIdent {
+                                            string: name,
+                                            kind: TopLevelIdentKind::EnumConstructor,
+                                        },
+                                        RustspecSpan::from(variant.ident.span),
+                                    ),
                                     case_typ,
                                 ))
                             })
@@ -540,12 +590,72 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                         }
                     }
                 }
-                _ => (), //TODO wrapper structs
+                AdtKind::Struct => {
+                    // This case imports non-generic wrapper structs
+                    if substs.len() > 0 {
+                        return SpecialTypeReturn::NotSpecial;
+                    }
+                    if adt.variants.len() != 1 {
+                        return SpecialTypeReturn::NotSpecial;
+                    }
+                    let variant = adt.variants.iter().next().unwrap();
+                    let name = variant.ident.name.to_ident_string();
+                    // Some wrapper structs are defined in std, core or
+                    // hacspec_lib but we don't want to import them
+                    // so we special case them out here
+                    let crate_name = &*tcx.crate_name(tcx.def_path(adt.did).krate).as_str();
+                    match crate_name {
+                        "core" | "std" | "hacspec_lib" | "secret_integers"
+                        | "abstract_integers" => {
+                            return SpecialTypeReturn::NotSpecial;
+                        }
+                        _ => (),
+                    }
+                    let fields_typ = match check_vec(
+                        variant
+                            .fields
+                            .iter()
+                            .map(|field| {
+                                // We only allow fields without names
+                                match field.ident.name.to_ident_string().parse::<i32>() {
+                                    Ok(_) => (),
+                                    Err(_) => return Err(()),
+                                }
+                                let field_typ = tcx.type_of(field.did);
+                                let (ty, _) = translate_base_typ(tcx, &field_typ, &HashMap::new())?;
+                                Ok((ty, RustspecSpan::from(variant.ident.span)))
+                            })
+                            .collect(),
+                    ) {
+                        Ok(x) => x,
+                        Err(_) => return SpecialTypeReturn::NotSpecial,
+                    };
+                    let case_typ = if fields_typ.len() == 1 {
+                        let ty = fields_typ.into_iter().next().unwrap();
+                        Some(ty)
+                    } else {
+                        let ty = BaseTyp::Tuple(fields_typ);
+                        Some((ty, RustspecSpan::from(variant.ident.span)))
+                    };
+                    return SpecialTypeReturn::Enum(BaseTyp::Enum(
+                        vec![(
+                            (
+                                TopLevelIdent {
+                                    string: name,
+                                    kind: TopLevelIdentKind::EnumConstructor,
+                                },
+                                RustspecSpan::from(variant.ident.span),
+                            ),
+                            case_typ,
+                        )],
+                        vec![],
+                    ));
+                }
+                _ => return SpecialTypeReturn::NotSpecial,
             }
         }
         _ => return SpecialTypeReturn::NotSpecial,
-    };
-    SpecialTypeReturn::NotSpecial
+    }
 }
 
 fn add_special_type_from_struct_shape(
@@ -586,7 +696,7 @@ pub fn retrieve_external_data(
     tcx: &TyCtxt,
     imported_crates: &Vec<Spanned<String>>,
 ) -> ExternalData {
-    let mut krates: Vec<_> = tcx.crates().iter().collect();
+    let mut krates: Vec<_> = tcx.crates(()).iter().collect();
     krates.push(&LOCAL_CRATE);
     let mut extern_funcs = HashMap::new();
     let mut extern_consts = HashMap::new();
@@ -594,7 +704,11 @@ pub fn retrieve_external_data(
     let mut extern_nat_ints = HashMap::new();
     let mut extern_enums = HashMap::new();
     let mut ty_aliases = HashMap::new();
-    let crate_store = tcx.cstore_as_any().downcast_ref::<CStore>().unwrap();
+    let crate_store = tcx
+        .cstore_untracked()
+        .as_any()
+        .downcast_ref::<CStore>()
+        .unwrap();
     let mut imported_crates = imported_crates.clone();
     // You normally only import hacspec_lib which then reexports the definitions
     // from abstract_integers and secret_integers. But we do have to fetch those
@@ -688,9 +802,11 @@ pub fn retrieve_external_data(
                                                 def_path.data[def_path.data.len() - 2];
                                             match name_segment.data {
                                                 DefPathData::TypeNs(name) => {
-                                                    let fn_key = FnKey::Independent(TopLevelIdent(
-                                                        name.to_ident_string(),
-                                                    ));
+                                                    let fn_key =
+                                                        FnKey::Independent(TopLevelIdent {
+                                                            string: name.to_ident_string(),
+                                                            kind: TopLevelIdentKind::Function,
+                                                        });
                                                     extern_funcs.insert(fn_key, sig);
                                                 }
                                                 _ => (),
@@ -709,9 +825,8 @@ pub fn retrieve_external_data(
             }
         }
     }
-    let items = &tcx.hir_crate(()).items;
-    for (item_id, item) in items {
-        let item_id = tcx.hir().local_def_id(item_id.hir_id()).to_def_id();
+    for item in tcx.hir().items() {
+        let item_id = tcx.hir().local_def_id(item.hir_id()).to_def_id();
         match &item.kind {
             ItemKind::Fn(_, _, _) => process_fn_id(
                 sess,

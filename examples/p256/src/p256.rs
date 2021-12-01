@@ -4,11 +4,6 @@ pub enum Error {
     InvalidAddition,
 }
 
-pub type Affine = (P256FieldElement, P256FieldElement);
-pub type AffineResult = Result<Affine, Error>;
-type P256Jacobian = (P256FieldElement, P256FieldElement, P256FieldElement);
-type JacobianResult = Result<P256Jacobian, Error>;
-
 const BITS: usize = 256;
 
 public_nat_mod!(
@@ -25,28 +20,12 @@ public_nat_mod!(
     modulo_value: "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551"
 );
 
+pub type Affine = (P256FieldElement, P256FieldElement);
+pub type AffineResult = Result<Affine, Error>;
+type P256Jacobian = (P256FieldElement, P256FieldElement, P256FieldElement);
+type JacobianResult = Result<P256Jacobian, Error>;
+
 bytes!(Element, 32);
-
-pub fn p256_point_mul_base(k: P256Scalar) -> AffineResult {
-    let base_point = (
-        P256FieldElement::from_byte_seq_be(&Element(secret_bytes!([
-            0x6Bu8, 0x17u8, 0xD1u8, 0xF2u8, 0xE1u8, 0x2Cu8, 0x42u8, 0x47u8, 0xF8u8, 0xBCu8, 0xE6u8,
-            0xE5u8, 0x63u8, 0xA4u8, 0x40u8, 0xF2u8, 0x77u8, 0x03u8, 0x7Du8, 0x81u8, 0x2Du8, 0xEBu8,
-            0x33u8, 0xA0u8, 0xF4u8, 0xA1u8, 0x39u8, 0x45u8, 0xD8u8, 0x98u8, 0xC2u8, 0x96u8
-        ]))),
-        P256FieldElement::from_byte_seq_be(&Element(secret_bytes!([
-            0x4Fu8, 0xE3u8, 0x42u8, 0xE2u8, 0xFEu8, 0x1Au8, 0x7Fu8, 0x9Bu8, 0x8Eu8, 0xE7u8, 0xEBu8,
-            0x4Au8, 0x7Cu8, 0x0Fu8, 0x9Eu8, 0x16u8, 0x2Bu8, 0xCEu8, 0x33u8, 0x57u8, 0x6Bu8, 0x31u8,
-            0x5Eu8, 0xCEu8, 0xCBu8, 0xB6u8, 0x40u8, 0x68u8, 0x37u8, 0xBFu8, 0x51u8, 0xF5u8
-        ]))),
-    );
-    p256_point_mul(k, base_point)
-}
-
-pub fn p256_point_mul(k: P256Scalar, p: Affine) -> AffineResult {
-    let jac = ltr_mul(k, affine_to_jacobian(p))?;
-    AffineResult::Ok(jacobian_to_affine(jac))
-}
 
 fn jacobian_to_affine(p: P256Jacobian) -> Affine {
     let (x, y, z) = p;
@@ -89,20 +68,6 @@ fn point_double(p: P256Jacobian) -> P256Jacobian {
 fn is_point_at_infinity(p: P256Jacobian) -> bool {
     let (_x, _y, z) = p;
     z.equal(P256FieldElement::from_literal(0u128))
-}
-
-fn point_add_distinct(p: Affine, q: Affine) -> AffineResult {
-    let r = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q))?;
-    AffineResult::Ok(jacobian_to_affine(r))
-}
-
-#[allow(unused_assignments)]
-pub fn point_add(p: Affine, q: Affine) -> AffineResult {
-    if p != q {
-        point_add_distinct(p, q)
-    } else {
-        AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))))
-    }
 }
 
 fn s1_equal_s2(s1: P256FieldElement, s2: P256FieldElement) -> JacobianResult {
@@ -171,4 +136,39 @@ fn ltr_mul(k: P256Scalar, p: P256Jacobian) -> JacobianResult {
         }
     }
     JacobianResult::Ok(q)
+}
+
+pub fn p256_point_mul(k: P256Scalar, p: Affine) -> AffineResult {
+    let jac = ltr_mul(k, affine_to_jacobian(p))?;
+    AffineResult::Ok(jacobian_to_affine(jac))
+}
+
+pub fn p256_point_mul_base(k: P256Scalar) -> AffineResult {
+    let base_point = (
+        P256FieldElement::from_byte_seq_be(&Element(secret_bytes!([
+            0x6Bu8, 0x17u8, 0xD1u8, 0xF2u8, 0xE1u8, 0x2Cu8, 0x42u8, 0x47u8, 0xF8u8, 0xBCu8, 0xE6u8,
+            0xE5u8, 0x63u8, 0xA4u8, 0x40u8, 0xF2u8, 0x77u8, 0x03u8, 0x7Du8, 0x81u8, 0x2Du8, 0xEBu8,
+            0x33u8, 0xA0u8, 0xF4u8, 0xA1u8, 0x39u8, 0x45u8, 0xD8u8, 0x98u8, 0xC2u8, 0x96u8
+        ]))),
+        P256FieldElement::from_byte_seq_be(&Element(secret_bytes!([
+            0x4Fu8, 0xE3u8, 0x42u8, 0xE2u8, 0xFEu8, 0x1Au8, 0x7Fu8, 0x9Bu8, 0x8Eu8, 0xE7u8, 0xEBu8,
+            0x4Au8, 0x7Cu8, 0x0Fu8, 0x9Eu8, 0x16u8, 0x2Bu8, 0xCEu8, 0x33u8, 0x57u8, 0x6Bu8, 0x31u8,
+            0x5Eu8, 0xCEu8, 0xCBu8, 0xB6u8, 0x40u8, 0x68u8, 0x37u8, 0xBFu8, 0x51u8, 0xF5u8
+        ]))),
+    );
+    p256_point_mul(k, base_point)
+}
+
+fn point_add_distinct(p: Affine, q: Affine) -> AffineResult {
+    let r = point_add_jacob(affine_to_jacobian(p), affine_to_jacobian(q))?;
+    AffineResult::Ok(jacobian_to_affine(r))
+}
+
+#[allow(unused_assignments)]
+pub fn point_add(p: Affine, q: Affine) -> AffineResult {
+    if p != q {
+        point_add_distinct(p, q)
+    } else {
+        AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))))
+    }
 }

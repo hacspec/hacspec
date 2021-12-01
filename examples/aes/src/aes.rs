@@ -233,7 +233,8 @@ pub fn aes128_encrypt_block(k: Key128, input: Block) -> Block {
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 pub fn aes_ctr_key_block(
@@ -336,7 +337,8 @@ pub fn aes128_encrypt(key: Key128, nonce: AesNonce, counter: U32, msg: &ByteSeq)
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 pub fn aes128_decrypt(key: Key128, nonce: AesNonce, counter: U32, ctxt: &ByteSeq) -> ByteSeq {
@@ -350,7 +352,8 @@ pub fn aes128_decrypt(key: Key128, nonce: AesNonce, counter: U32, ctxt: &ByteSeq
         KEY_SCHEDULE_LENGTH,
         KEY_LENGTH,
         ITERATIONS,
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 #[test]

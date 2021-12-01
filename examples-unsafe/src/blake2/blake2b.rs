@@ -53,7 +53,7 @@ fn mix<Word: SecretIntegerCopy>(
     c: usize,
     d: usize,
     x: Word,
-    y: Word
+    y: Word,
 ) -> DoubleState<Word> {
     let mut result = v;
     result[a] = result[a] + result[b] + x;
@@ -96,11 +96,15 @@ pub trait HasIV<Word: UnsignedSecretInteger> {
 }
 
 impl HasIV<U64> for State<U64> {
-    fn iv() -> State<U64> { IVB }
+    fn iv() -> State<U64> {
+        IVB
+    }
 }
 
 impl HasIV<U32> for State<U32> {
-    fn iv() -> State<U32> { IVS }
+    fn iv() -> State<U32> {
+        IVS
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -109,13 +113,16 @@ pub enum BlakeVariant {
     Blake2B,
 }
 
-fn compress<Word: UnsignedSecretIntegerCopy> (
+fn compress<Word: UnsignedSecretIntegerCopy>(
     h: State<Word>,
     m: &ByteSeq,
     t: Counter<Word::PublicVersionCopy>,
     last_block: bool,
     alg: BlakeVariant,
-) -> State<Word> where State<Word>: HasIV<Word> {
+) -> State<Word>
+where
+    State<Word>: HasIV<Word>,
+{
     let mut v = DoubleState::new();
 
     // Read u8 data to u64.
@@ -136,7 +143,7 @@ fn compress<Word: UnsignedSecretIntegerCopy> (
 
     let num_rounds = match alg {
         BlakeVariant::Blake2S => 10,
-        BlakeVariant::Blake2B => 12
+        BlakeVariant::Blake2B => 12,
     };
     // Mixing.
     for i in 0..num_rounds {
@@ -170,25 +177,24 @@ fn get_byte<Word: UnsignedSecretIntegerCopy>(x: Word, i: usize) -> U8 {
     bytes[0]
 }
 
-pub fn blake2<Word: UnsignedSecretIntegerCopy>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq where State<Word> : HasIV<Word> {
+pub fn blake2<Word: UnsignedSecretIntegerCopy>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq
+where
+    State<Word>: HasIV<Word>,
+{
     let mut h = State::iv();
     // This only supports the 512 version without key.
     h[0] = h[0] ^ Word::from_literal(0x0101_0000) ^ Word::from_literal(64);
 
     let dd = data.num_chunks(128);
-    let mut t : Counter<Word::PublicVersionCopy> = Counter::new();
+    let mut t: Counter<Word::PublicVersionCopy> = Counter::new();
     if dd > 1 {
-        for i in 0..dd-1 {
+        for i in 0..dd - 1 {
             let (_, block) = data.get_chunk(128, i);
             t = inc_counter(t, Word::PublicVersionCopy::from_literal(128));
             h = compress(h, &ByteSeq::from_seq(&block), t, false, alg);
         }
     }
-    let last_chunk = if dd == 0 {
-        0
-    } else {
-        data.num_chunks(128) - 1
-    };
+    let last_chunk = if dd == 0 { 0 } else { data.num_chunks(128) - 1 };
     let (block_len, block) = data.get_chunk(128, last_chunk);
     if block_len == 128 {
         t = inc_counter(t, Word::PublicVersionCopy::from_literal(128));

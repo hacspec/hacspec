@@ -1,8 +1,7 @@
+use core::ops::Mul;
 /// This code is inspired from Dalek's field multiplication for 64-bits backends contained in the
 /// file [`src/backend/u64/field.rs`](https://github.com/dalek-cryptography/curve25519-dalek/blob/master/src/backend/u64/field.rs)
-
 use secret_integers::*;
-use core::ops::Mul;
 
 /// A `FieldElement64` represents an element of the field
 /// \\( \mathbb Z / (2\^{255} - 19)\\).
@@ -22,7 +21,7 @@ use core::ops::Mul;
 type Limb = U64;
 
 #[derive(Copy, Clone)]
-pub struct FieldElement64(pub (crate) [Limb; 5]);
+pub struct FieldElement64(pub(crate) [Limb; 5]);
 
 impl<'a, 'b> Mul<&'b FieldElement64> for &'a FieldElement64 {
     type Output = FieldElement64;
@@ -30,7 +29,9 @@ impl<'a, 'b> Mul<&'b FieldElement64> for &'a FieldElement64 {
         /// Helper function to multiply two 64-bit integers with 128
         /// bits of output.
         #[inline(always)]
-        fn m(x: U64, y: U64) -> U128 { U128::from(x) * y.into() }
+        fn m(x: U64, y: U64) -> U128 {
+            U128::from(x) * y.into()
+        }
 
         // Alias self, _rhs for more readable formulas
         let a: &[Limb; 5] = &self.0;
@@ -56,11 +57,16 @@ impl<'a, 'b> Mul<&'b FieldElement64> for &'a FieldElement64 {
         let b4_19 = b[4] * nineteen;
 
         // Multiply to get 128-bit coefficients of output
-        let     c0: U128 = m(a[0],b[0]) + m(a[4],b1_19) + m(a[3],b2_19) + m(a[2],b3_19) + m(a[1],b4_19);
-        let mut c1: U128 = m(a[1],b[0]) + m(a[0],b[1])  + m(a[4],b2_19) + m(a[3],b3_19) + m(a[2],b4_19);
-        let mut c2: U128 = m(a[2],b[0]) + m(a[1],b[1])  + m(a[0],b[2])  + m(a[4],b3_19) + m(a[3],b4_19);
-        let mut c3: U128 = m(a[3],b[0]) + m(a[2],b[1])  + m(a[1],b[2])  + m(a[0],b[3])  + m(a[4],b4_19);
-        let mut c4: U128 = m(a[4],b[0]) + m(a[3],b[1])  + m(a[2],b[2])  + m(a[1],b[3])  + m(a[0],b[4]);
+        let c0: U128 =
+            m(a[0], b[0]) + m(a[4], b1_19) + m(a[3], b2_19) + m(a[2], b3_19) + m(a[1], b4_19);
+        let mut c1: U128 =
+            m(a[1], b[0]) + m(a[0], b[1]) + m(a[4], b2_19) + m(a[3], b3_19) + m(a[2], b4_19);
+        let mut c2: U128 =
+            m(a[2], b[0]) + m(a[1], b[1]) + m(a[0], b[2]) + m(a[4], b3_19) + m(a[3], b4_19);
+        let mut c3: U128 =
+            m(a[3], b[0]) + m(a[2], b[1]) + m(a[1], b[2]) + m(a[0], b[3]) + m(a[4], b4_19);
+        let mut c4: U128 =
+            m(a[4], b[0]) + m(a[3], b[1]) + m(a[2], b[2]) + m(a[1], b[3]) + m(a[0], b[4]);
 
         // How big are the c[i]? We have
         //

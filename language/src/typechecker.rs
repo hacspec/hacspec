@@ -36,7 +36,7 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
                     DictEntry::Array | DictEntry::NaturalInteger => true,
                 }
             }
-            None => match name.0.as_str() {
+            None => match name.string.as_str() {
                 "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64" | "I128" => {
                     true
                 }
@@ -44,6 +44,10 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
             },
         },
         BaseTyp::Array(_, _) => true,
+        BaseTyp::Seq(t1) => is_numeric(
+            &((Borrowing::Consumed, DUMMY_SP.into()), *t1.clone()),
+            top_ctxt,
+        ),
         _ => false,
     }
 }
@@ -93,7 +97,7 @@ fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
                 is_copy(&(new_t1.1).0, top_ctxt)
             }
             None => match arg {
-                None => match name.0.as_str() {
+                None => match name.string.as_str() {
                     "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64"
                     | "I128" => true,
                     _ => false,
@@ -135,14 +139,12 @@ fn is_array(
                         );
                         Err(())
                     }
-                    DictEntry::Array => {
-                        match &(new_t.1).0 {
-                            BaseTyp::Array(size, cell_t) => {
-                                Ok((Some(size.clone()), cell_t.as_ref().clone()))
-                            }
-                            _ => panic!(), // shouldd not happen
+                    DictEntry::Array => match &(new_t.1).0 {
+                        BaseTyp::Array(size, cell_t) => {
+                            Ok((Some(size.clone()), cell_t.as_ref().clone()))
                         }
-                    }
+                        _ => panic!("should not happen"),
+                    },
                     DictEntry::NaturalInteger => {
                         sess.span_rustspec_err(
                             span.clone(),
@@ -201,7 +203,8 @@ fn is_index(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
     }
 }
 
-fn is_castable_integer(t: &BaseTyp) -> bool {
+fn is_castable_integer(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
+    let t = dealias_type(t.clone(), top_ctxt);
     match t {
         BaseTyp::UInt128 => true,
         BaseTyp::Int128 => true,
@@ -352,9 +355,10 @@ fn unify_types(
                 ),
                 (BaseTyp::Named(name1, args1), BaseTyp::Named(name2, args2)) => {
                     let (name1, name2) = match (&name1.0, &name2.0) {
-                        (TopLevelIdent(name1), TopLevelIdent(name2)) => {
-                            (name1.clone(), name2.clone())
-                        }
+                        (
+                            TopLevelIdent { string: name1, .. },
+                            TopLevelIdent { string: name2, .. },
+                        ) => (name1.clone(), name2.clone()),
                     };
                     if name1 == name2 {
                         match (args1, args2) {
@@ -502,7 +506,7 @@ fn sig_args(sig: &FnValue) -> Vec<Typ> {
     match sig {
         FnValue::Local(sig) => sig.args.clone().into_iter().map(|(_, (x, _))| x).collect(),
         FnValue::External(sig) => sig.args.clone(),
-        FnValue::ExternalNotInHacspec(_) => panic!(),
+        FnValue::ExternalNotInHacspec(_) => panic!("should not happen"),
     }
 }
 
@@ -510,7 +514,7 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
     match sig {
         FnValue::Local(sig) => sig.ret.0.clone(),
         FnValue::External(sig) => sig.ret.clone(),
-        FnValue::ExternalNotInHacspec(_) => panic!(),
+        FnValue::ExternalNotInHacspec(_) => panic!("should not happen"),
     }
 }
 
@@ -530,7 +534,7 @@ fn find_func(
         .iter()
         .filter_map(|(key2, sig)| match (key1, key2) {
             (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
-                (TopLevelIdent(n1), TopLevelIdent(n2)) => {
+                (TopLevelIdent { string: n1, .. }, TopLevelIdent { string: n2, .. }) => {
                     if n1 == n2 {
                         Some((HashMap::new(), sig))
                     } else {
@@ -554,7 +558,7 @@ fn find_func(
                 );
                 match unification {
                     Ok(Some(new_typ_ctx)) => match (n1, n2) {
-                        (TopLevelIdent(n1), TopLevelIdent(n2)) => {
+                        (TopLevelIdent { string: n1, .. }, TopLevelIdent { string: n2, .. }) => {
                             if n1 == n2 {
                                 Some((new_typ_ctx, sig))
                             } else {
@@ -579,7 +583,26 @@ fn find_func(
         sess.span_rustspec_err(*span, format!("function {} cannot be found", key1).as_str());
         return Err(());
     }
-    // If there are multiple candidates we just take the first one
+    // TODO: figure out why we need this
+    // https://github.com/hacspec/hacspec/issues/194
+    let candidates = if candidates.iter().all(|(_, candidate)| match candidate {
+        FnValue::ExternalNotInHacspec(_) => true,
+        _ => false,
+    }) {
+        // If all candidates are not in hacspec we return one
+        candidates
+    } else {
+        // If not we discard the not in hacspec candidates and return
+        // one in hacspec
+        candidates
+            .into_iter()
+            .filter(|(_, candidate)| match candidate {
+                FnValue::ExternalNotInHacspec(_) => false,
+                _ => true,
+            })
+            .collect()
+    };
+
     for (typ_ctx, sig) in candidates {
         return Ok((sig.clone(), typ_ctx));
     }
@@ -592,7 +615,7 @@ fn find_typ(
     top_level_context: &TopLevelContext,
 ) -> Option<Typ> {
     match x {
-        Ident::Unresolved(_) => panic!(), // name resolution should have already happened
+        Ident::Unresolved(_) => panic!("name resolution should have already happened"),
         Ident::TopLevel(name) => top_level_context.consts.get(name).map(|(t, span)| {
             (
                 (Borrowing::Consumed, span.clone()),
@@ -843,22 +866,22 @@ fn typecheck_expression(
                         // Then we finally proceed with typechecking the arm
                         // expression, for that we retrieve the type of this arm's
                         // payload
-                        let (case_index, case_typ) = match t_arg_cases
-                            .iter()
-                            .enumerate()
-                            .find(|(_, ((t_arg_case_name, _), _))| &arm_case.0 == t_arg_case_name)
-                        {
-                            Some((case_index, (_, t_arg_case_typ))) => {
-                                (case_index, t_arg_case_typ.clone())
-                            }
-                            None => {
-                                sess.span_rustspec_err(
-                                    arm_case.1.clone(),
-                                    format!("enum case not found for {}", arm_enum_name.0).as_str(),
-                                );
-                                return Err(());
-                            }
-                        };
+                        let (case_index, case_typ) =
+                            match t_arg_cases.iter().enumerate().find(
+                                |(_, ((t_arg_case_name, _), _))| &arm_case.0 == t_arg_case_name,
+                            ) {
+                                Some((case_index, (_, t_arg_case_typ))) => {
+                                    (case_index, t_arg_case_typ.clone())
+                                }
+                                None => {
+                                    sess.span_rustspec_err(
+                                        arm_case.1.clone(),
+                                        format!("enum case not found for {}", arm_enum_name.string)
+                                            .as_str(),
+                                    );
+                                    return Err(());
+                                }
+                            };
                         let case_typ = match case_typ {
                             Some(case_typ) => Some((
                                 bind_variable_type(sess, &case_typ, &typ_var_ctx)?,
@@ -1033,10 +1056,14 @@ fn typecheck_expression(
                 &HashMap::new(),
                 top_level_context,
             )?;
-            let (new_e_t, t_e_t, var_context) =
+            let (new_e_t, t_e_t, var_context_true_branch) =
                 typecheck_expression(sess, e_t, top_level_context, &var_context)?;
-            let (new_e_f, t_e_f, var_context) =
+            let (new_e_f, t_e_f, var_context_false_branch) =
                 typecheck_expression(sess, e_f, top_level_context, &var_context)?;
+            let final_var_context = var_context
+                .clone()
+                .intersection(var_context_true_branch)
+                .intersection(var_context_false_branch);
             unify_types_default_error_message(
                 sess,
                 &t_e_t,
@@ -1051,7 +1078,7 @@ fn typecheck_expression(
                     Box::new((new_e_f, e_f.1.clone())),
                 ),
                 t_e_t,
-                var_context,
+                final_var_context,
             ))
         }
         Expression::Binary((op, op_span), e1, e2, _) => {
@@ -1310,99 +1337,194 @@ fn typecheck_expression(
             )),
         },
         Expression::NewArray(array_type, _, elements) => {
-            let (array_len, (cell_type, cell_type_span)) = is_array(
-                sess,
-                &(
-                    (Borrowing::Consumed, array_type.1.clone()),
-                    (
-                        BaseTyp::Named(array_type.clone(), None),
-                        array_type.1.clone(),
-                    ),
-                ),
-                top_level_context,
-                &array_type.1,
-            )?;
-            let array_len = match array_len {
-                Some(len) => len,
-                None => {
-                    sess.span_rustspec_err(
-                        array_type.1.clone(),
-                        "type should be an array but is Seq",
-                    );
-                    return Err(());
-                }
-            };
-            match &array_len.0 {
-                ArraySize::Integer(array_len) => {
-                    if elements.len() != *array_len {
-                        sess.span_rustspec_err(
-                            span.clone(),
-                            format!(
-                                "array {} initializer expected {} elements but got {}",
-                                array_type.0,
-                                array_len,
-                                elements.len()
-                            )
-                            .as_str(),
-                        )
-                    }
-                }
-                ArraySize::Ident(_) => (), // we trust Rust typechecking for this case,
-                                           // in order to avoid redoing here a const computation engine
-            }
-            let mut var_context = var_context.clone();
-            let new_elements = check_vec(
-                elements
-                    .iter()
-                    .map(|element| {
-                        let (new_element, element_typ, new_var_context) =
-                            typecheck_expression(sess, element, top_level_context, &var_context)?;
-                        var_context = new_var_context;
-                        match unify_types(
-                            sess,
-                            &(
-                                (Borrowing::Consumed, cell_type_span.clone()),
-                                (cell_type.clone(), cell_type_span.clone()),
+            match array_type {
+                Some(array_type) => {
+                    let (array_len, (cell_type, cell_type_span)) = is_array(
+                        sess,
+                        &(
+                            (Borrowing::Consumed, array_type.1.clone()),
+                            (
+                                BaseTyp::Named(array_type.clone(), None),
+                                array_type.1.clone(),
                             ),
-                            &element_typ,
-                            &HashMap::new(),
-                            top_level_context,
-                        )? {
-                            None => {
+                        ),
+                        top_level_context,
+                        &array_type.1,
+                    )?;
+                    let array_len = match array_len {
+                        Some(len) => len,
+                        None => {
+                            sess.span_rustspec_err(
+                                array_type.1.clone(),
+                                "type should be an array but is Seq",
+                            );
+                            return Err(());
+                        }
+                    };
+                    match &array_len.0 {
+                        ArraySize::Integer(array_len) => {
+                            if elements.len() != *array_len {
                                 sess.span_rustspec_err(
-                                    element.1.clone(),
+                                    span.clone(),
                                     format!(
-                                        "expected type {}, got type {}{}",
-                                        &cell_type,
-                                        &(element_typ.0).0,
-                                        &(element_typ.1).0
+                                        "array {} initializer expected {} elements but got {}",
+                                        array_type.0,
+                                        array_len,
+                                        elements.len()
                                     )
                                     .as_str(),
-                                );
-                                Err(())
-                            }
-                            Some(_) => {
-                                // Here we can drop the unified variables because there should not be any
-                                // unified variables (no generic functions involved)
-                                Ok((new_element, element.1.clone()))
+                                )
                             }
                         }
-                    })
-                    .collect(),
-            )?;
-            let new_array_typ = BaseTyp::Named(array_type.clone(), None);
-            Ok((
-                Expression::NewArray(
-                    array_type.clone(),
-                    Some(new_array_typ.clone()),
-                    new_elements,
-                ),
-                (
-                    (Borrowing::Consumed, array_type.1.clone()),
-                    (new_array_typ, array_type.1.clone()),
-                ),
-                var_context,
-            ))
+                        ArraySize::Ident(_) => (), // we trust Rust typechecking for this case,
+                                                   // in order to avoid redoing here a const computation engine
+                    };
+                    let mut var_context = var_context.clone();
+                    let new_elements = check_vec(
+                        elements
+                            .iter()
+                            .map(|element| {
+                                let (new_element, element_typ, new_var_context) =
+                                    typecheck_expression(
+                                        sess,
+                                        element,
+                                        top_level_context,
+                                        &var_context,
+                                    )?;
+                                var_context = new_var_context;
+                                match unify_types(
+                                    sess,
+                                    &(
+                                        (Borrowing::Consumed, cell_type_span.clone()),
+                                        (cell_type.clone(), cell_type_span.clone()),
+                                    ),
+                                    &element_typ,
+                                    &HashMap::new(),
+                                    top_level_context,
+                                )? {
+                                    None => {
+                                        sess.span_rustspec_err(
+                                            element.1.clone(),
+                                            format!(
+                                                "expected type {}, got type {}{}",
+                                                &cell_type,
+                                                &(element_typ.0).0,
+                                                &(element_typ.1).0
+                                            )
+                                            .as_str(),
+                                        );
+                                        Err(())
+                                    }
+                                    Some(_) => {
+                                        // Here we can drop the unified variables because there should not be any
+                                        // unified variables (no generic functions involved)
+                                        Ok((new_element, element.1.clone()))
+                                    }
+                                }
+                            })
+                            .collect(),
+                    )?;
+                    let new_array_typ = (
+                        (Borrowing::Consumed, array_type.1.clone()),
+                        (
+                            BaseTyp::Named(array_type.clone(), None),
+                            array_type.1.clone(),
+                        ),
+                    );
+                    Ok((
+                        Expression::NewArray(
+                            Some(array_type.clone()),
+                            Some(cell_type),
+                            new_elements,
+                        ),
+                        new_array_typ,
+                        var_context,
+                    ))
+                }
+                None => {
+                    let mut cell_type: Option<(BaseTyp, RustspecSpan)> = None;
+                    let mut var_context = var_context.clone();
+                    let new_elements = check_vec(
+                        elements
+                            .iter()
+                            .map(|element| {
+                                let (new_element, element_typ, new_var_context) =
+                                    typecheck_expression(
+                                        sess,
+                                        element,
+                                        top_level_context,
+                                        &var_context,
+                                    )?;
+                                var_context = new_var_context;
+                                match &cell_type {
+                                    Some((cell_type, cell_type_span)) => {
+                                        match unify_types(
+                                            sess,
+                                            &(
+                                                (Borrowing::Consumed, cell_type_span.clone()),
+                                                (cell_type.clone(), cell_type_span.clone()),
+                                            ),
+                                            &element_typ,
+                                            &HashMap::new(),
+                                            top_level_context,
+                                        )? {
+                                            None => {
+                                                sess.span_rustspec_err(
+                                                    element.1.clone(),
+                                                    format!(
+                                                        "expected type {}, got type {}{}",
+                                                        &cell_type,
+                                                        &(element_typ.0).0,
+                                                        &(element_typ.1).0
+                                                    )
+                                                    .as_str(),
+                                                );
+                                                Err(())
+                                            }
+                                            Some(_) => {
+                                                // Here we can drop the unified variables because there should not be any
+                                                // unified variables (no generic functions involved)
+                                                Ok((new_element, element.1.clone()))
+                                            }
+                                        }
+                                    }
+                                    None => match element_typ.0 .0 {
+                                        Borrowing::Consumed => {
+                                            cell_type = Some(element_typ.1);
+                                            Ok(element.clone())
+                                        }
+                                        Borrowing::Borrowed => {
+                                            sess.span_rustspec_err(
+                                                (element_typ.0).1,
+                                                "cannot insert references in a Seq",
+                                            );
+                                            Err(())
+                                        }
+                                    },
+                                }
+                            })
+                            .collect(),
+                    )?;
+                    let cell_type = match cell_type {
+                        Some(x) => x,
+                        None => {
+                            sess.span_rustspec_err(
+                                span.clone(),
+                                "use Seq::new() to create an empty sequence instead",
+                            );
+                            return Err(());
+                        }
+                    };
+                    Ok((
+                        Expression::NewArray(None, Some(cell_type.0.clone()), new_elements),
+                        (
+                            (Borrowing::Consumed, span.clone()),
+                            (BaseTyp::Seq(Box::new(cell_type)), span.clone()),
+                        ),
+                        var_context,
+                    ))
+                }
+            }
         }
         Expression::ArrayIndex((x, x_span), e2, _) => {
             let t1 = match find_typ(&x, var_context, top_level_context) {
@@ -1587,13 +1709,14 @@ fn typecheck_expression(
                 f_span,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
-            if let FnValue::ExternalNotInHacspec(_) = f_sig {
+            if let FnValue::ExternalNotInHacspec(sig_str) = f_sig {
                 sess.span_rustspec_err(
                     *f_span,
                     format!(
-                        "function {}::{} is known but its signature is not in Hacspec",
+                        "function {}::{} is known but its signature is not in Hacspec: {}",
                         (sel_typ.1).0,
-                        f
+                        f,
+                        sig_str
                     )
                     .as_str(),
                 );
@@ -1714,7 +1837,7 @@ fn typecheck_expression(
                 sess.span_rustspec_err(e1.1.clone(), "cannot cast borrowed expression");
                 return Err(());
             }
-            if !is_castable_integer(&(e1_typ.1).0) {
+            if !is_castable_integer(&(e1_typ.1).0, top_level_context) {
                 sess.span_rustspec_err(
                     e1.1.clone(),
                     format!(
@@ -1726,7 +1849,7 @@ fn typecheck_expression(
                 );
                 return Err(());
             }
-            if !is_castable_integer(&t1.0) {
+            if !is_castable_integer(&t1.0, top_level_context) {
                 sess.span_rustspec_err(e1.1.clone(), "impossible to cast to this type");
                 return Err(());
             }
@@ -1787,21 +1910,20 @@ fn typecheck_pattern(
                         *pat_span,
                         format!(
                             "this pattern is matching the enum {} with multiple cases",
-                            pat_enum_name.0
+                            pat_enum_name
                         )
                         .as_str(),
                     );
                     return Err(());
                 }
                 let ((case_name, _), case_typ) = cases.into_iter().next().unwrap();
-                if case_name != pat_enum_name {
+                if case_name.string != pat_enum_name.string {
                     sess.span_rustspec_err(
                         *pat_span,
                         format!(
-                            "this pattern matches the enum {} with a single case {} instead of the wrapper struct {}",
-                            case_name.0,
-                            pat_enum_name.0,
-                            pat_enum_name.0
+                            "this pattern matches the enum {} with a single case instead of the wrapper struct {}",
+                            case_name,
+                            pat_enum_name,
                         )
                         .as_str(),
                     );
@@ -1813,7 +1935,7 @@ fn typecheck_pattern(
                             *pat_span,
                             format!(
                                 "this pattern is matching the enum {} with one case but no payload",
-                                pat_enum_name.0
+                                pat_enum_name
                             )
                             .as_str(),
                         );
@@ -1835,7 +1957,7 @@ fn typecheck_pattern(
                     *pat_span,
                     format!(
                         "let-binding pattern expected a {} struct but the type is {}",
-                        pat_enum_name.0, typ.0
+                        pat_enum_name, typ.0
                     )
                     .as_str(),
                 );
@@ -1952,14 +2074,24 @@ fn typecheck_question_mark(
         match expr_typ {
             (
                 (Borrowing::Consumed, _),
-                (BaseTyp::Named((TopLevelIdent(name), _), Some(args)), _),
+                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
             ) if name == "Result" && args.len() == 2 => {
                 let ok_typ = &args[0];
                 let err_typ = &args[1];
                 match return_typ {
-                    (BaseTyp::Named((TopLevelIdent(return_name), _), Some(return_args)), _)
-                        if return_name == "Result" && return_args.len() == 2 =>
-                    {
+                    (
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: return_name,
+                                    ..
+                                },
+                                _,
+                            ),
+                            Some(return_args),
+                        ),
+                        _,
+                    ) if return_name == "Result" && return_args.len() == 2 => {
                         let err_typ_ret = &args[1];
                         match unify_types(
                             sess,
@@ -2118,7 +2250,7 @@ fn typecheck_statement(
                 add_var(&x, &x_typ, &new_var_context),
                 VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
-                    _ => panic!(), // should not happen
+                    _ => panic!("should not happen"),
                 })),
             ))
         }
@@ -2186,7 +2318,7 @@ fn typecheck_statement(
                 var_context,
                 VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
-                    _ => panic!(), // should not happen
+                    _ => panic!("should not happen"),
                 })),
             ))
         }
@@ -2235,10 +2367,7 @@ fn typecheck_statement(
                 }
             };
             match &new_b1.return_typ {
-                None => {
-                    // Should not happen
-                    panic!()
-                }
+                None => panic!("should not happen"),
                 Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                 Some(((b_t, _), (t, _))) => {
                     sess.span_rustspec_err(
@@ -2253,7 +2382,7 @@ fn typecheck_statement(
                 None => (),
                 Some((new_b2, _)) => {
                     match &new_b2.return_typ {
-                        None => panic!(), // should not happen
+                        None => panic!("should not happen"),
                         Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
                         Some(((b_t, _), (t, _))) => {
                             sess.span_rustspec_err(
@@ -2301,19 +2430,22 @@ fn typecheck_statement(
                 new_mutated,
             ))
         }
-        Statement::ForLoop((x, x_span), e1, e2, (b, b_span)) => {
+        Statement::ForLoop(x, e1, e2, (b, b_span)) => {
             let original_var_context = var_context;
             let (new_e1, t_e1, var_context) =
                 typecheck_expression(sess, e1, top_level_context, var_context)?;
             let (new_e2, t_e2, var_context) =
                 typecheck_expression(sess, e2, top_level_context, &var_context)?;
-            match &t_e1 {
-                ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
+            match (
+                t_e1.0.clone(),
+                dealias_type(t_e1.1 .0.clone(), top_level_context),
+            ) {
+                ((Borrowing::Consumed, _), BaseTyp::Usize) => (),
                 _ => {
                     sess.span_rustspec_err(
                         e1.1,
                         format!(
-                            "loop range bound should be an integer but has type {}{}",
+                            "loop range bound should be an usize but has type {}{}",
                             (t_e1.0).0,
                             (t_e1.1).0
                         )
@@ -2322,13 +2454,16 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            match &t_e2 {
-                ((Borrowing::Consumed, _), (BaseTyp::Usize, _)) => (),
+            match (
+                t_e2.0.clone(),
+                dealias_type(t_e2.1 .0.clone(), top_level_context),
+            ) {
+                ((Borrowing::Consumed, _), BaseTyp::Usize) => (),
                 _ => {
                     sess.span_rustspec_err(
                         e2.1,
                         format!(
-                            "loop range bound should be an integer but has type {}{}",
+                            "loop range bound should be an usize but has type {}{}",
                             (t_e2.0).0,
                             (t_e2.1).0
                         )
@@ -2337,11 +2472,14 @@ fn typecheck_statement(
                     return Err(());
                 }
             };
-            let var_context = add_var(
-                &x,
-                &((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
-                &var_context,
-            );
+            let var_context = match x {
+                None => var_context,
+                Some((x, x_span)) => add_var(
+                    &x,
+                    &((Borrowing::Consumed, *x_span), (BaseTyp::Usize, *x_span)),
+                    &var_context,
+                ),
+            };
             let (new_b, var_context) = typecheck_block(
                 sess,
                 (b.clone(), b_span.clone()),
@@ -2363,7 +2501,7 @@ fn typecheck_statement(
             }
             Ok((
                 Statement::ForLoop(
-                    (x.clone(), *x_span),
+                    x.clone(),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
                     (new_b, *b_span),
@@ -2423,7 +2561,9 @@ fn typecheck_block(
         .retain(|mut_var| original_var_context.contains_key(&mut_var.id));
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
     let contains_question_mark = Some(new_stmts.iter().any(|s| match s {
-        (Statement::LetBinding(_, _, _, true), _) => true,
+        (Statement::Reassignment(_, _, true), _) | (Statement::LetBinding(_, _, _, true), _) => {
+            true
+        }
         (Statement::Conditional(_, then_b, else_b, _), _) => {
             then_b.0.contains_question_mark.unwrap()
                 || (match else_b {

@@ -1,4 +1,3 @@
-
 use hacspec_attributes::hacspec_unsafe;
 
 #[hacspec_unsafe]

@@ -59,11 +59,6 @@ macro_rules! _array_base {
         }
 
         impl $name {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            pub fn capacity() -> usize {
-                $l
-            }
-
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
@@ -336,11 +331,6 @@ macro_rules! generic_array {
         }
 
         impl<T: Numeric + Copy> $name<T> {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            pub fn capacity() -> usize {
-                $l
-            }
-
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_slice<A: SeqTrait<T>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();

@@ -83,7 +83,10 @@ pub(crate) fn find_ident<'b>(
     match &x.0 {
         Ident::Unresolved(name) => match name_context.get(name) {
             None => {
-                let x_tl = TopLevelIdent(name.clone());
+                let x_tl = TopLevelIdent {
+                    string: name.clone(),
+                    kind: TopLevelIdentKind::Constant,
+                };
                 match top_level_context.consts.get(&x_tl) {
                     Some(_) => Ok(Ident::TopLevel(x_tl)),
                     None => {
@@ -319,7 +322,19 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::ForLoop((var, var_span), lower, upper, body) => {
+        Statement::ForLoop(None, lower, upper, body) => {
+            let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
+            let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
+            let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
+            Ok((
+                (
+                    Statement::ForLoop(None, new_lower, new_upper, new_body),
+                    s_span,
+                ),
+                name_context,
+            ))
+        }
+        Statement::ForLoop(Some((var, var_span)), lower, upper, body) => {
             let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
             let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
             let new_var = match &var {
@@ -330,7 +345,7 @@ fn resolve_statement(
             let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
             Ok((
                 (
-                    Statement::ForLoop((new_var, var_span), new_lower, new_upper, new_body),
+                    Statement::ForLoop(Some((new_var, var_span)), new_lower, new_upper, new_body),
                     s_span,
                 ),
                 name_context,
@@ -453,10 +468,15 @@ fn resolve_item(
         }
     };
     match i {
-	Ok ((i,i_span)) => Ok((DecoratedItem { item : i, tags : item.tags },i_span)),
-	Err (a) => Err (a),
+        Ok((i, i_span)) => Ok((
+            DecoratedItem {
+                item: i,
+                tags: item.tags,
+            },
+            i_span,
+        )),
+        Err(a) => Err(a),
     }
-
 }
 
 fn process_decl_item(
@@ -485,9 +505,10 @@ fn process_decl_item(
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let new_size = match &size.0 {
                 Expression::Lit(Literal::Usize(u)) => ArraySize::Integer(u.clone()),
-                Expression::Named(Ident::Unresolved(s)) => {
-                    ArraySize::Ident(TopLevelIdent(s.clone()))
-                }
+                Expression::Named(Ident::Unresolved(s)) => ArraySize::Ident(TopLevelIdent {
+                    string: s.clone(),
+                    kind: TopLevelIdentKind::Constant,
+                }),
                 _ => {
                     sess.span_rustspec_err(
                         size.1.clone(),
@@ -532,27 +553,26 @@ fn process_decl_item(
                     process_decl_item(
                         sess,
                         &(
-			    DecoratedItem {
-				item : Item::ArrayDecl(
+                            DecoratedItem {
+                                item: Item::ArrayDecl(
                                     canvas_typ_ident.clone(),
                                     canvas_size.clone(),
                                     match secrecy {
-					Secrecy::Secret => (
+                                        Secrecy::Secret => (
                                             BaseTyp::Named(
-						(
-                                                    TopLevelIdent("U8".to_string()),
-                                                    canvas_typ_ident.1.clone(),
-						),
-						None,
+                                                (U8_TYP(), canvas_typ_ident.1.clone()),
+                                                None,
                                             ),
                                             canvas_typ_ident.1.clone(),
-					),
-					Secrecy::Public => (BaseTyp::UInt8, canvas_typ_ident.1.clone()),
+                                        ),
+                                        Secrecy::Public => {
+                                            (BaseTyp::UInt8, canvas_typ_ident.1.clone())
+                                        }
                                     },
                                     None,
-				),
-				tags : ItemTagSet(HashSet::unit(ItemTag::Code))
-			    },
+                                ),
+                                tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                            },
                             *i_span,
                         ),
                         top_level_context,
@@ -618,13 +638,19 @@ fn process_decl_item(
 pub fn get_imported_crates(p: &Program) -> Vec<Spanned<String>> {
     p.items
         .iter()
-	.map(|i| ((&i.0.item), &i.1))
+        .map(|i| ((&i.0.item), &i.1))
         .filter(|i| match &i.0 {
             Item::ImportedCrate(_) => true,
             _ => false,
         })
         .map(|i| match &i.0 {
-            Item::ImportedCrate((TopLevelIdent(s), _)) => (s.clone(), i.1.clone()),
+            Item::ImportedCrate((
+                TopLevelIdent {
+                    string: s,
+                    kind: TopLevelIdentKind::Crate,
+                },
+                _,
+            )) => (s.clone(), i.1.clone()),
             _ => panic!("should not happen"),
         })
         .collect()
@@ -646,7 +672,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     } = external_data(&get_imported_crates(p));
     for (alias_name, alias_ty) in extern_aliases {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(alias_name.clone()),
+            TopLevelIdent {
+                string: alias_name.clone(),
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -658,7 +687,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     }
     for (array_name, array_typ) in extern_arrays {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(array_name),
+            TopLevelIdent {
+                string: array_name,
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -670,7 +702,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     }
     for (enum_name, enum_typ) in extern_enums {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(enum_name),
+            TopLevelIdent {
+                string: enum_name,
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -682,7 +717,10 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
     }
     for (nat_int_name, nat_int_typ) in extern_nat_ints {
         top_level_ctx.typ_dict.insert(
-            TopLevelIdent(nat_int_name),
+            TopLevelIdent {
+                string: nat_int_name,
+                kind: TopLevelIdentKind::Type,
+            },
             (
                 (
                     (Borrowing::Consumed, DUMMY_SP.into()),
@@ -702,9 +740,13 @@ fn enrich_with_external_crates_symbols<F: Fn(&Vec<Spanned<String>>) -> ExternalD
         );
     }
     for (k, v) in extern_consts {
-        top_level_ctx
-            .consts
-            .insert(TopLevelIdent(k), (v, DUMMY_SP.into()));
+        top_level_ctx.consts.insert(
+            TopLevelIdent {
+                string: k,
+                kind: TopLevelIdentKind::Constant,
+            },
+            (v, DUMMY_SP.into()),
+        );
     }
     Ok(())
 }
