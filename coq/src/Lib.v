@@ -271,8 +271,12 @@ Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
   const init len.
 
-Definition array_from_list (A: Type) (l: list A) : nseq A (length l)
-  := of_list l.
+Definition array_from_list (A: Type) (l: list A) : nseq A (length l).
+Proof.
+  induction l.
+  - apply (VectorDef.nil A).
+  - apply (VectorDef.cons A a (length l) IHl).
+Defined.
 
 (* automatic conversion from list to array *)
 Global Coercion array_from_list : list >-> nseq.
