@@ -3,7 +3,7 @@ Global Set Warnings "-uniform-inheritance".
 Global Set Warnings "-auto-template".
 Global Set Warnings "-disj-pattern-notation".
 (*** Integers *)
-From Coq Require Import ZArith List Vector.
+From Coq Require Import ZArith List.
 Import ListNotations.
 (* Require Import IntTypes. *)
 
@@ -269,7 +269,7 @@ Definition seq_index {A: Type} `{Default A} (s: seq A) (i : nat) :=
 Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 
 Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
-  const init len.
+  VectorDef.const init len.
 
 Fixpoint array_from_list (A: Type) (l: list A) : nseq A (length l) :=
   match l return (nseq A (length l)) with
@@ -305,7 +305,7 @@ Global Coercion array_from_list : list >-> nseq.
 
 
 Definition array_new_ {A: Type} (init:A) (len: nat)  : nseq A len :=
-  const init len.
+  VectorDef.const init len.
 
 Open Scope nat_scope.
 Definition array_index {A: Type} `{Default A} {len : nat} (s: nseq A len) (i: nat) : A.
@@ -313,7 +313,7 @@ Proof.
   destruct (i <? len) eqn:H1.
   (* If i < len, index normally *)
   - rewrite Nat.ltb_lt in H1.
-    exact (Vector.nth s (Fin.of_nat_lt H1)).
+    exact (VectorDef.nth s (Fin.of_nat_lt H1)).
   (* otherwise return default element *)
   - exact default.
 Defined.
@@ -324,7 +324,7 @@ Proof.
   destruct (i <? len) eqn:H.
   (* If i < len, update normally *)
   - rewrite Nat.ltb_lt in H.
-    exact (Vector.replace s (Fin.of_nat_lt H) new_v).
+    exact (VectorDef.replace s (Fin.of_nat_lt H) new_v).
   (* otherwise return original array *)
   - exact s.
 Defined.
@@ -352,9 +352,9 @@ Definition array_from_seq
   (input: seq a)
   (* {H : List.length input = out_len} *)
     : nseq a out_len :=
-    let out := Vector.const default out_len in
+    let out := VectorDef.const default out_len in
     update_sub out 0 (out_len - 1) input.
-  (* Vector.of_list input. *)
+  (* VectorDef.of_list input. *)
 
 Global Coercion array_from_seq : seq >-> nseq.
 
@@ -362,7 +362,7 @@ Definition slice {A} (l : seq A) (i j : nat) : seq A :=
   if j <=? i then [] else firstn (j-i+1) (skipn i l).
 
 Definition lseq_slice {A n} (l : nseq A n) (i j : nat) : nseq A _ :=
-  of_list (slice (to_list l) i j).
+  VectorDef.of_list (slice (VectorDef.to_list l) i j).
 
 Definition array_from_slice
   {a: Type}
@@ -373,8 +373,8 @@ Definition array_from_slice
   (start: nat)
   (slice_len: nat)
     : nseq a out_len :=
-    let out := const default_value out_len in
-    update_sub out 0 slice_len (lseq_slice (of_list input) start (start + slice_len)).
+    let out := VectorDef.const default_value out_len in
+    update_sub out 0 slice_len (lseq_slice (VectorDef.of_list input) start (start + slice_len)).
 
 
 Definition array_slice
@@ -398,7 +398,7 @@ Definition array_from_slice_range
     : nseq a out_len :=
     let out := array_new_ default_value out_len in
     let (start, fin) := start_fin in
-    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (of_list (slice input (from_uint_size start) (from_uint_size fin))).
+    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin))).
 
 
 Definition array_slice_range
@@ -417,7 +417,7 @@ Definition array_update
   (start : nat)
   (start_s: seq a)
     : nseq a len :=
-    update_sub s start (length start_s) (of_list start_s).
+    update_sub s start (length start_s) (VectorDef.of_list start_s).
 
 Definition array_update_start
   {a: Type}
@@ -426,7 +426,7 @@ Definition array_update_start
   (s: nseq a len)
   (start_s: seq a)
     : nseq a len :=
-    update_sub s 0 (length start_s) (of_list start_s).
+    update_sub s 0 (length start_s) (VectorDef.of_list start_s).
 
 
 Definition array_len  {a: Type} {len: nat} (s: nseq a len) := len.
@@ -460,7 +460,7 @@ Definition seq_update
   (start: nat)
   (input: seq a)
     : seq a :=
-  update_sub (of_list s) start (length input) (of_list input).
+  update_sub (VectorDef.of_list s) start (length input) (VectorDef.of_list input).
 
 (* updating only a single value in a sequence*)
 Definition seq_upd
@@ -470,7 +470,7 @@ Definition seq_upd
   (start: nat)
   (v: a)
     : seq a :=
-  update_sub (of_list s) start 1 (of_list [v]).
+  update_sub (VectorDef.of_list s) start 1 (VectorDef.of_list [v]).
 
 Definition sub {a} (s : list a) start n :=
   slice s start (start + n).
@@ -481,7 +481,7 @@ Definition seq_update_start
   (s: seq a)
   (start_s: seq a)
     : seq a :=
-    update_sub (of_list s) 0 (length start_s) (of_list start_s).
+    update_sub (VectorDef.of_list s) 0 (length start_s) (VectorDef.of_list start_s).
 
 Definition array_update_slice
   {a : Type}
@@ -494,8 +494,8 @@ Definition array_update_slice
   (len: nat)
     : nseq a (length out)
   :=
-  update_sub (of_list out) start_out len
-    (of_list (sub input start_in len)).
+  update_sub (VectorDef.of_list out) start_out len
+    (VectorDef.of_list (sub input start_in len)).
 
 Definition seq_update_slice
   {a : Type}
@@ -507,15 +507,15 @@ Definition seq_update_slice
   (len: nat)
     : nseq a (length out)
   :=
-  update_sub (of_list out) start_out len
-    (of_list (sub input start_in len)).
+  update_sub (VectorDef.of_list out) start_out len
+    (VectorDef.of_list (sub input start_in len)).
 
 Definition seq_concat
   {a : Type}
   (s1 :seq a)
   (s2: seq a)
   : seq a :=
-  of_list (s1 ++ s2).
+  VectorDef.of_list (s1 ++ s2).
 
 Definition seq_from_slice_range
   {a: Type}
@@ -525,7 +525,7 @@ Definition seq_from_slice_range
   : seq a :=
   let out := array_new_ (default) (length input) in
   let (start, fin) := start_fin in
-    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (of_list (slice input (from_uint_size start) (from_uint_size fin))).
+    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin))).
 
 Definition seq_from_seq {A} (l : seq A) := l.
 
@@ -581,7 +581,7 @@ Definition seq_set_chunk
   (chunk: seq a ) : seq a :=
  let idx_start := chunk_len * chunk_num in
  let out_len := seq_chunk_len s chunk_len chunk_num in
-  VectorDef.to_list (update_sub (of_list s) idx_start out_len (of_list chunk)).
+  VectorDef.to_list (update_sub (VectorDef.of_list s) idx_start out_len (VectorDef.of_list chunk)).
 
 
 Definition seq_num_exact_chunks {a} (l : seq a) (chunk_size : uint_size) : uint_size :=
@@ -1194,7 +1194,7 @@ Global Instance List_eqdec {A} `{EqDec A} : EqDec (list A) := {
   eqb_leibniz := list_eqdec_sound;
 }.
 
-Lemma vector_eqb_sound : forall {A : Type} {n : nat} `{EqDec A} (v1 v2 : t A n), Vector.eqb _ eqb v1 v2 = true <-> v1 = v2.
+Lemma vector_eqb_sound : forall {A : Type} {n : nat} `{EqDec A} (v1 v2 : VectorDef.t A n), Vector.eqb _ eqb v1 v2 = true <-> v1 = v2.
 Proof.
   intros.
   apply Vector.eqb_eq.
@@ -1202,7 +1202,7 @@ Proof.
   apply eqb_leibniz.
 Qed.
 
-Global Program Instance Vector_eqdec {A n} `{EqDec A}: EqDec (Vector.t A n) := {
+Global Program Instance Vector_eqdec {A n} `{EqDec A}: EqDec (VectorDef.t A n) := {
   eqb := Vector.eqb _ eqb;
   eqb_leibniz := vector_eqb_sound;
 }.
@@ -1269,7 +1269,7 @@ Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat × int64) : nat × int
   (S n, v .+ (@repr WORDSIZE64 ((int8_to_nat i) * 2 ^ (4 * n)))).
 
 -Definition u64_from_be_bytes' : nseq int8 8 -> int64 :=
-  (fun v => snd (Vector.fold_right u64_from_be_bytes_fold_fun v (0, @repr WORDSIZE64 0))).
+  (fun v => snd (VectorDef.fold_right u64_from_be_bytes_fold_fun v (0, @repr WORDSIZE64 0))).
 
 Definition u64_to_be_bytes : int64 -> nseq int8 8 := u64_to_be_bytes'.
 Definition u64_from_be_bytes : nseq int8 8 -> int64 := u64_from_be_bytes'.
