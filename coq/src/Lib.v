@@ -252,12 +252,12 @@ Global Arguments default {_} {_}.
 
 (*** Seq *)
 
-Definition nseq := Vector.t.
+Definition nseq := VectorDef.t.
 
 Definition seq (A : Type) := list A.
 
 (* Automatic conversion from nseq/vector/array to seq/list *)
-Global Coercion Vector.to_list : Vector.t >-> list.
+Global Coercion VectorDef.to_list : VectorDef.t >-> list.
 
 Definition public_byte_seq := seq int8.
 Definition byte_seq := seq int8.
@@ -271,12 +271,31 @@ Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
   const init len.
 
-Definition array_from_list (A: Type) (l: list A) : nseq A (length l).
-Proof.
-  induction l.
-  - apply (VectorDef.nil A).
-  - apply (VectorDef.cons A a (length l) IHl).
-Defined.
+Fixpoint array_from_list (A: Type) (l: list A) : nseq A (length l) :=
+  match l return (nseq A (length l)) with
+  | [] => VectorDef.nil A
+  | x :: xs => VectorDef.cons A x (length xs) (array_from_list A xs)
+  end.
+
+  (*   match l, length l with *)
+(*   | [], O => VectorDef.nil A *)
+(*   | (x :: xs), S n => VectorDef.cons A x (length xs) (array_from_list A xs) *)
+(*   end. *)
+(*   - apply (VectorDef.cons A a (length l) (array_from_list A l)). *)
+(* Defined. *)
+  
+  (* match l with *)
+  (* | [] => VectorDef.nil *)
+  (* | (x :: xs) => VectorDef.cons A x (length xs) (array_from_list xs) *)
+  (* end. *)
+
+(* Definition array_from_list (A: Type) (l: list A) : nseq A (length l) := *)
+  (* VectorDef.of_list l. *)
+(* Proof. *)
+(*   induction l. *)
+(*   - apply (VectorDef.nil A). *)
+(*   - apply (VectorDef.cons A a (length l) IHl). *)
+(* Defined. *)
 
 (* automatic conversion from list to array *)
 Global Coercion array_from_list : list >-> nseq.
@@ -562,7 +581,7 @@ Definition seq_set_chunk
   (chunk: seq a ) : seq a :=
  let idx_start := chunk_len * chunk_num in
  let out_len := seq_chunk_len s chunk_len chunk_num in
-  Vector.to_list (update_sub (of_list s) idx_start out_len (of_list chunk)).
+  VectorDef.to_list (update_sub (of_list s) idx_start out_len (of_list chunk)).
 
 
 Definition seq_num_exact_chunks {a} (l : seq a) (chunk_size : uint_size) : uint_size :=

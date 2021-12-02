@@ -35,8 +35,8 @@ Definition g_int64 : G (int64) :=
 Definition g_uint_size : G (uint_size) := arbitrary.
 #[global] Instance gen_uint_size : Gen (uint_size) := Build_Gen uint_size g_uint_size.
 
-#[global] Instance show_nseq n : Show (nseq (int8) (usize n)) :=
-  Build_Show (nseq (int8) (usize n)) (fun x =>
+#[global] Instance show_nseq {A} `{Show A} n : Show (nseq A n) :=
+  Build_Show (nseq A n) (fun x =>
      match x with
      | Vector.nil _ => "[]"%string
      | Vector.cons _ x n xs => ("[" ++ fold_left (fun a b => (a ++ " " ++ show b)) xs (show x) ++ "]")%string
@@ -51,9 +51,9 @@ Proof.
   apply unsizedReturn.
 Qed.
 
-Definition g_nseq n : G (nseq (int8) (usize n)) :=
-  (@bindGen' (list int8) (nseq int8 (usize n)) (vectorOf (usize n) g_int8)) (fun l sem =>
-  returnGen (@eq_rect_r (nat) (Datatypes.length l) (nseq int8) (array_from_list int8 l) (usize n) (Logic.eq_sym (proj1 ( proj1 (@semVectorOfUnsized int8 g_int8 (usize n) unsized_g_int8 l) sem ))))).
+Definition g_nseq {A} `{H : Gen A} `{@Unsized A (@arbitrary A H)} n : G (nseq A n) :=
+  (@bindGen' (list A) (nseq A n) (vectorOf n (arbitrary : G A))) (fun l sem =>
+  returnGen (@eq_rect_r (nat) (Datatypes.length l) (nseq A) (array_from_list A l) n (Logic.eq_sym (proj1 ( proj1 (@semVectorOfUnsized A (arbitrary : G A) n _ l) sem ))))).
 
 Definition g_nseq' n : G (nseq (int8) (usize n)). (* (usize *)
   intros.
@@ -64,7 +64,7 @@ Definition g_nseq' n : G (nseq (int8) (usize n)). (* (usize *)
   apply (array_from_list int8 l).
 Defined.
 
-#[global] Instance gen_nseq n : Gen (nseq (int8) (usize n)) := Build_Gen (nseq (int8) (usize n)) (g_nseq n).
+#[global] Instance gen_nseq {A} `{Gen A} `{@Unsized A (@arbitrary A H)} n : Gen (nseq A n) := Build_Gen (nseq A n) (g_nseq n).
 
 #[global] Instance show_public_byte_seq : Show (public_byte_seq) :=
   Build_Show (public_byte_seq) (fun x =>
@@ -81,3 +81,6 @@ Definition g_public_byte_seq : G (public_byte_seq) :=
   (* listOf (g_int8). (*arbitrary*) *)
 #[global] Instance gen_public_byte_seq : Gen (public_byte_seq) :=
   Build_Gen public_byte_seq g_public_byte_seq.
+
+Check (@g_nseq int8 gen_int8 unsized_g_int8 1).
+Sample (@g_nseq int8 gen_int8 unsized_g_int8 1).
