@@ -10,3 +10,4 @@ path = "src/hkdf.rs"
 [dependencies]
 hacspec-lib = { path = "../../lib" }
 hacspec-hmac = { path = "../hmac" }
+hacspec-sha256 = { path = "../sha256" }

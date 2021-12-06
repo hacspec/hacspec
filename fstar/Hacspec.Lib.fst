@@ -87,6 +87,9 @@ let usize_shift_right (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
 let usize_shift_left (u: uint_size) (s: pub_uint32{v s < 32}) : uint_size =
   v (shift_left (size u) s)
 
+let usize_bit_and (u: uint_size) (s: uint_size) : uint_size =
+  v ((size u) &. (size s))
+
 let pub_uint128_wrapping_add (x y: pub_uint128) : pub_uint128 =
   x +. y
 
@@ -179,6 +182,8 @@ let seq_len (#a: Type) (s: seq a) : nat = Seq.length s
 let seq_new_ (#a: Type) (init:a) (len: uint_size) : lseq a len =
   Seq.create len init
 
+let seq_clone (#a: Type) (s: seq a) : seq a = s
+
 let seq_index (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) : a =
   Seq.index s i
 
@@ -186,18 +191,28 @@ let seq_upd (#a: Type) (s: seq a) (i: uint_size{i < seq_len s}) (new_v: a)
     : (s':seq a{seq_len s' = seq_len s})  =
   Seq.upd s i new_v
 
+let seq_update_start
+  (#a: Type)
+  (s: seq a)
+  (start_s: seq a{Seq.length start_s <= Seq.length s})
+    : seq a
+  =
+  LSeq.update_sub #_ #(Seq.length s) s 0 (Seq.length start_s) start_s
+
+let seq_from_seq (#a: Type) (s: seq a) : seq a = s
+
+
+(**** Array manipulation *)
+
+let array_new_ (#a: Type) (init:a) (len: uint_size)  : lseq a len =
+  LSeq.create len init
+
 let array_from_list
   (#a: Type)
   (l: list a{List.Tot.length l <= max_size_t})
     : lseq a (List.Tot.length l)
   =
   LSeq.of_list l
-
-(**** Array manipulation *)
-
-
-let array_new_ (#a: Type) (init:a) (len: uint_size)  : lseq a len =
-  LSeq.create len init
 
 let array_index (#a: Type) (#len:uint_size) (s: lseq a len) (i: uint_size{i < len}) : a =
   LSeq.index s i
@@ -283,6 +298,9 @@ let array_len  (#a: Type) (#len: uint_size) (s: lseq a len) = len
 let array_to_le_uint32s (#len: uint_size) (s: lseq uint8 len{len % 4 = 0}) : lseq uint32 (len / 4) =
   admit()
 
+let array_to_be_uint32s (#len: uint_size) (s: lseq uint8 len{len % 4 = 0}) : lseq uint32 (len / 4) =
+  admit()
+
 let array_to_le_bytes
   (#int_ty: inttype{unsigned int_ty /\ int_ty <> U1})
   (#len: uint_size{
@@ -292,6 +310,19 @@ let array_to_le_bytes
     : lseq uint8 (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16))
   =
   admit()
+
+let array_to_be_bytes
+  (#int_ty: inttype{unsigned int_ty /\ int_ty <> U1})
+  (#len: uint_size{
+    range (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16)) U32
+  })
+  (s: lseq (uint_t int_ty SEC) len)
+    : lseq uint8 (len * (match int_ty with U8 -> 1 | U16 -> 2  | U32 -> 4 | U64 -> 8 | U128 -> 16))
+  =
+  admit()
+
+let array_declassify_eq (#a: eqtype) (#len: uint_size) (x y: lseq a len) : bool =
+  Seq.Properties.for_all (fun (x, y) -> x = y) (Lib.Sequence.map2 (fun x y -> (x,y)) x y)
 
 (**** Seq manipulation *)
 
@@ -400,6 +431,17 @@ let seq_get_exact_chunk
     (ensures (fun chunk -> True))
   =
   snd (seq_get_chunk s chunk_len chunk_num)
+
+let seq_get_remainder_chunk
+  (#a: Type)
+  (s: seq a)
+  (chunk_len: uint_size{chunk_len > 0})
+  : Pure (seq a)
+    (requires (chunk_len <= Seq.length s))
+    (ensures (fun chunk -> True))
+  =
+  snd (seq_get_chunk s chunk_len ((seq_num_chunks s chunk_len) - 1))
+
 
 let seq_set_chunk
   (#a: Type)
@@ -580,9 +622,18 @@ let u128_from_be_bytes (s: lseq pub_uint8 16) : pub_uint128 =
 
 let uint32_from_uint8 (x: uint8) : uint32 = cast U32 SEC x
 
+let uint64_from_uint8 (x: uint8) : uint64 = cast U64 SEC x
+
+let uint8_from_uint64 (x: uint64) : uint8 = cast U8 SEC x
+
+
 (**** Declassification *)
 
 let uint32_declassify (x: uint32) : pub_uint32 = uint (Lib.RawIntTypes.uint_to_nat x)
+
+(**** Classification *)
+
+let uint64_classify (x: pub_uint64) : uint64 = uint (Lib.RawIntTypes.uint_to_nat x)
 
 (*** Nats *)
 
@@ -591,14 +642,51 @@ let nat_mod (n: nat) = x:nat{x < n}
 val (+%) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let (+%) #n a b = (a + b) % n
 
+val (-%) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
+let (-%) #n a b = (a - b) % n
+
+
 val ( *% ) (#n:pos) (a:nat_mod n) (b:nat_mod n) : nat_mod n
 let ( *% ) #n a b = (a * b) % n
+
+let nat_exp (m: pos) (n: nat_mod m) (exponent: pub_uint32) : nat_mod m =
+  admit()
+
+let nat_inv (m: pos) (n: nat_mod m) : nat_mod m =
+  admit()
+
+let nat_one (m: pos) : nat_mod m = 1 % m
+
+let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
+
+let nat_pow (m: pos) (x: nat_mod m) (exponent: pub_uint128) : nat_mod m =
+  admit()
+
+let nat_zero (m: pos) : nat_mod m = 0
+
+
+let nat_equal (m: pos) (n n': nat_mod m) : bool = n = n'
+
+let nat_get_bit (m: pos) (n: nat_mod m) (bit: uint_size) : nat_mod m =
+  admit()
+
+let nat_bit (m: pos) (n: nat_mod m) (bit: uint_size) : bool =
+  admit()
+
 
 let nat_from_secret_literal (m:pos) (x:uint128{v x < m}) : n:nat_mod m{v x == n} =
   v x
 
 let nat_from_literal (m: pos) (x:pub_uint128{v x < m}) : n:nat_mod m{v x == n} =
   v x
+
+let nat_to_byte_seq_le (n: pos) (len: uint_size) (x: nat_mod n) : lseq uint8 len =
+  let n' = n % (pow2 (8 * len)) in
+  Lib.ByteSequence.nat_to_bytes_le len n'
+
+let nat_to_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq uint8 len =
+  let n' = n % (pow2 (8 * len)) in
+  Lib.ByteSequence.nat_to_bytes_be len n'
 
 let nat_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod n) : lseq pub_uint8 len =
   let n' = n % (pow2 (8 * len)) in
@@ -608,6 +696,42 @@ let nat_to_public_byte_seq_be (n: pos)  (len: uint_size) (x: nat_mod n) : lseq p
   let n' = n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n'
 
-let nat_pow2 (m:pos) (x: nat{pow2 x < m}) : nat_mod m = pow2 x
+let nat_from_byte_seq_be (n : pos) (len: uint_size) (x: lseq uint8 len) : nat_mod n =
+  let out = Lib.ByteSequence.nat_from_bytes_be x in
+  admit();
+  out
 
-let nat_zero (m: pos) : nat_mod m = 0
+let nat_from_byte_seq_le (n : pos) (len: uint_size) (x: lseq uint8 len) : nat_mod n =
+  let out = Lib.ByteSequence.nat_from_bytes_be x in
+  admit();
+  out
+
+(**** Math utils *)
+
+let mul_poly_irr
+  (#t: inttype)
+  (#l: secrecy_level)
+  (a b irr: seq (int_t t l))
+  (modulo: int_t t l) : seq (int_t t l) =
+    admit()
+
+let add_poly
+  (#t: inttype)
+  (#l: secrecy_level)
+  (a b: seq (int_t t l))
+  (modulo: int_t t l) : seq (int_t t l) =
+    admit()
+
+let poly_to_ring
+  (#t: inttype)
+  (#l: secrecy_level)
+  (irr poly: seq (int_t t l))
+  (modulo: int_t t l) : seq (int_t t l) & bool =
+    admit()
+
+let make_positive
+  (#t: inttype)
+  (#l: secrecy_level)
+  (poly: seq (int_t t l))
+  (q: int_t t l) : seq (int_t t l) =
+    admit()
