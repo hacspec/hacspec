@@ -1,5 +1,7 @@
 /* Hashing to Elliptic Curves: https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html
-For the BLS12-381 curve.  */
+For the BLS12-381 curve. 
+Includes both the Shallue-van de Woestijne method and the Simplified Shallue-van de Woestijne-Ulas for AB == 0 method
+for mapping to curve. */
 
 use hacspec_bls12_381::*;
 use hacspec_lib::*;
@@ -120,7 +122,7 @@ fn g1_curve_func(x: Fp) -> Fp {
 }
 
 // https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.6.1
-fn g1_map_to_curve(u: Fp) -> G1 {
+fn g1_map_to_curve_svdw(u: Fp) -> G1 {
     let z = Fp::ZERO() - Fp::from_literal(3u128);
     let gz = g1_curve_func(z);
     let tv1 = u * u * gz;
@@ -158,18 +160,18 @@ fn g1_clear_cofactor(x: G1) -> G1 {
 }
 
 //  https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-3
-pub fn g1_hash_to_curve(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
+pub fn g1_hash_to_curve_svdw(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
     let u = fp_hash_to_field(msg, dst, 2);
-    let q0 = g1_map_to_curve(u[0]);
-    let q1 = g1_map_to_curve(u[1]);
+    let q0 = g1_map_to_curve_svdw(u[0]);
+    let q1 = g1_map_to_curve_svdw(u[1]);
     let r = g1add(q0, q1);
     let p = g1_clear_cofactor(r);
     p
 }
 
-pub fn g1_encode_to_curve(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
+pub fn g1_encode_to_curve_svdw(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
     let u = fp_hash_to_field(msg, dst, 1);
-    let q = g1_map_to_curve(u[0]);
+    let q = g1_map_to_curve_svdw(u[0]);
     let p = g1_clear_cofactor(q);
     p
 }
@@ -251,7 +253,7 @@ pub fn g2_curve_func(x: Fp2) -> Fp2 {
 }
 
 // https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.6.1
-fn g2_map_to_curve(u: Fp2) -> G2 {
+fn g2_map_to_curve_svdw(u: Fp2) -> G2 {
     let z = fp2neg(fp2fromfp(Fp::ONE())); //-1
     let gz = g2_curve_func(z); //g(z)
     let tv1 = fp2mul(fp2mul(u, u), gz); // u^2 * g(z)
@@ -325,18 +327,869 @@ fn g2_clear_cofactor(p: G2) -> G2 {
 }
 
 // https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-3
-pub fn g2_hash_to_curve(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
+pub fn g2_hash_to_curve_svdw(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
     let u = fp2_hash_to_field(msg, dst, 2);
-    let q0 = g2_map_to_curve(u[0]);
-    let q1 = g2_map_to_curve(u[1]);
+    let q0 = g2_map_to_curve_svdw(u[0]);
+    let q1 = g2_map_to_curve_svdw(u[1]);
     let r = g2add(q0, q1);
     let p = g2_clear_cofactor(r);
     p
 }
 
-pub fn g2_encode_to_curve(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
+pub fn g2_encode_to_curve_svdw(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
     let u = fp2_hash_to_field(msg, dst, 1);
-    let q = g2_map_to_curve(u[0]);
+    let q = g2_map_to_curve_svdw(u[0]);
+    let p = g2_clear_cofactor(q);
+    p
+}
+
+/* Simplified SWU for AB == 0 method
+*
+*
+*/
+
+// https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.6.2
+fn g1_simple_swu_iso(u: Fp) -> (Fp, Fp) {
+    let z = Fp::from_literal(11u128);
+    let a = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x00144698a3b8e943u64,
+            0x3d693a02c96d4982u64,
+            0xb0ea985383ee66a8u64,
+            0xd8e8981aefd881acu64,
+            0x98936f8da0e0f97fu64,
+            0x5cf428082d584c1du64
+        ]
+    ))));
+    let b = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x12e2908d11688030u64,
+            0x018b12e8753eee3bu64,
+            0x2016c1f0f24f4070u64,
+            0xa0b9c14fcef35ef5u64,
+            0x5a23215a316ceaa5u64,
+            0xd1cc48e98e172be0u64
+        ]
+    ))));
+    let tv1 = (z * z * u.exp(4u32) + z * u * u).inv(); // inv0(z^2 * u^4 + z * u^2)
+    let mut x1 = ((Fp::ZERO() - b) * a.inv()) * (Fp::ONE() + tv1); // (-B / A) * (1 + tv1)
+    if tv1 == Fp::ZERO() {
+        x1 = b * (z * a).inv(); // If tv1 == 0, set x1 = B / (Z * A)
+    };
+    let gx1 = x1.exp(3u32) + a * x1 + b; // x1^3 + A * x1 + B
+    let x2 = z * u * u * x1; // Z * u^2 * x1
+    let gx2 = x2.exp(3u32) + a * x2 + b; // x2^3 + A * x2 + B
+    let (x, mut y) = if fp_is_square(gx1) {
+        (x1, fp_sqrt(gx1)) // If is_square(gx1), set x = x1 and y = sqrt(gx1)
+    } else {
+        (x2, fp_sqrt(gx2)) // Else set x = x2 and y = sqrt(gx2)
+    };
+    if fp_sgn0(u) != fp_sgn0(y) {
+        y = Fp::ZERO() - y; // If sgn0(u) != sgn0(y), set y = -y
+    };
+    (x, y)
+}
+
+#[rustfmt::skip::macros(secret_array)]
+// https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#appendix-E.2
+fn g1_isogeny_map(x: Fp, y: Fp) -> G1 {
+    // xnum_k
+    let mut xnum_k = Seq::<Fp>::new(12);
+
+    xnum_k[0usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x11a05f2b1e833340u64, 0xb809101dd9981585u64, 0x6b303e88a2d7005fu64,
+            0xf2627b56cdb4e2c8u64, 0x5610c2d5f2e62d6eu64, 0xaeac1662734649b7u64
+        ]
+    ))));
+
+    xnum_k[1usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x17294ed3e943ab2fu64, 0x0588bab22147a81cu64, 0x7c17e75b2f6a8417u64,
+            0xf565e33c70d1e86bu64, 0x4838f2a6f318c356u64, 0xe834eef1b3cb83bbu64
+        ]
+    ))));
+
+    xnum_k[2usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0d54005db97678ecu64, 0x1d1048c5d10a9a1bu64, 0xce032473295983e5u64,
+            0x6878e501ec68e25cu64, 0x958c3e3d2a09729fu64, 0xe0179f9dac9edcb0u64
+        ]
+    ))));
+
+    xnum_k[3usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x1778e7166fcc6db7u64, 0x4e0609d307e55412u64, 0xd7f5e4656a8dbf25u64,
+            0xf1b33289f1b33083u64, 0x5336e25ce3107193u64, 0xc5b388641d9b6861u64
+        ]
+    ))));
+
+    xnum_k[4usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0e99726a3199f443u64, 0x6642b4b3e4118e54u64, 0x99db995a1257fb3fu64,
+            0x086eeb65982fac18u64, 0x985a286f301e77c4u64, 0x51154ce9ac8895d9u64
+        ]
+    ))));
+
+    xnum_k[5usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x1630c3250d7313ffu64, 0x01d1201bf7a74ab5u64, 0xdb3cb17dd952799bu64,
+            0x9ed3ab9097e68f90u64, 0xa0870d2dcae73d19u64, 0xcd13c1c66f652983u64
+        ]
+    ))));
+
+    xnum_k[6usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0d6ed6553fe44d29u64, 0x6a3726c38ae652bfu64, 0xb11586264f0f8ce1u64,
+            0x9008e218f9c86b2au64, 0x8da25128c1052ecau64, 0xddd7f225a139ed84u64
+        ]
+    ))));
+
+    xnum_k[7usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x17b81e7701abdbe2u64, 0xe8743884d1117e53u64, 0x356de5ab275b4db1u64,
+            0xa682c62ef0f27533u64, 0x39b7c8f8c8f475afu64, 0x9ccb5618e3f0c88eu64
+        ]
+    ))));
+
+    xnum_k[8usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x080d3cf1f9a78fc4u64, 0x7b90b33563be990du64, 0xc43b756ce79f5574u64,
+            0xa2c596c928c5d1deu64, 0x4fa295f296b74e95u64, 0x6d71986a8497e317u64
+        ]
+    ))));
+
+    xnum_k[9usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x169b1f8e1bcfa7c4u64, 0x2e0c37515d138f22u64, 0xdd2ecb803a0c5c99u64,
+            0x676314baf4bb1b7fu64, 0xa3190b2edc032779u64, 0x7f241067be390c9eu64
+        ]
+    ))));
+
+    xnum_k[10usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x10321da079ce07e2u64, 0x72d8ec09d2565b0du64, 0xfa7dccdde6787f96u64,
+            0xd50af36003b14866u64, 0xf69b771f8c285decu64, 0xca67df3f1605fb7bu64
+        ]
+    ))));
+
+    xnum_k[11usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x06e08c248e260e70u64, 0xbd1e962381edee3du64, 0x31d79d7e22c837bcu64,
+            0x23c0bf1bc24c6b68u64, 0xc24b1b80b64d391fu64, 0xa9c8ba2e8ba2d229u64
+        ]
+    ))));
+
+    // xden_k
+    let mut xden_k = Seq::<Fp>::new(10);
+
+    xden_k[0usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x08ca8d548cff19aeu64, 0x18b2e62f4bd3fa6fu64, 0x01d5ef4ba35b48bau64,
+            0x9c9588617fc8ac62u64, 0xb558d681be343df8u64, 0x993cf9fa40d21b1cu64
+        ]
+    ))));
+
+    xden_k[1usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x12561a5deb559c43u64, 0x48b4711298e53636u64, 0x7041e8ca0cf0800cu64,
+            0x0126c2588c48bf57u64, 0x13daa8846cb026e9u64, 0xe5c8276ec82b3bffu64
+        ]
+    ))));
+
+    xden_k[2usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0b2962fe57a3225eu64, 0x8137e629bff2991fu64, 0x6f89416f5a718cd1u64,
+            0xfca64e00b11aceacu64, 0xd6a3d0967c94fedcu64, 0xfcc239ba5cb83e19u64
+        ]
+    ))));
+
+    xden_k[3usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x03425581a58ae2feu64, 0xc83aafef7c40eb54u64, 0x5b08243f16b16551u64,
+            0x54cca8abc28d6fd0u64, 0x4976d5243eecf5c4u64, 0x130de8938dc62cd8u64
+        ]
+    ))));
+
+    xden_k[4usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x13a8e162022914a8u64, 0x0a6f1d5f43e7a07du64, 0xffdfc759a12062bbu64,
+            0x8d6b44e833b306dau64, 0x9bd29ba81f35781du64, 0x539d395b3532a21eu64
+        ]
+    ))));
+
+    xden_k[5usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0e7355f8e4e667b9u64, 0x55390f7f0506c6e9u64, 0x395735e9ce9cad4du64,
+            0x0a43bcef24b8982fu64, 0x7400d24bc4228f11u64, 0xc02df9a29f6304a5u64
+        ]
+    ))));
+
+    xden_k[6usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0772caacf1693619u64, 0x0f3e0c63e0596721u64, 0x570f5799af53a189u64,
+            0x4e2e073062aede9cu64, 0xea73b3538f0de06cu64, 0xec2574496ee84a3au64
+        ]
+    ))));
+
+    xden_k[7usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x14a7ac2a9d64a8b2u64, 0x30b3f5b074cf0199u64, 0x6e7f63c21bca68a8u64,
+            0x1996e1cdf9822c58u64, 0x0fa5b9489d11e2d3u64, 0x11f7d99bbdcc5a5eu64
+        ]
+    ))));
+
+    xden_k[8usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0a10ecf6ada54f82u64, 0x5e920b3dafc7a3ccu64, 0xe07f8d1d7161366bu64,
+            0x74100da67f398835u64, 0x03826692abba4370u64, 0x4776ec3a79a1d641u64
+        ]
+    ))));
+
+    xden_k[9usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x095fc13ab9e92ad4u64, 0x476d6e3eb3a56680u64, 0xf682b4ee96f7d037u64,
+            0x76df533978f31c15u64, 0x93174e4b4b786500u64, 0x2d6384d168ecdd0au64
+        ]
+    ))));
+
+    // ynum_k
+    let mut ynum_k = Seq::<Fp>::new(16);
+    ynum_k[0usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x090d97c81ba24ee0u64, 0x259d1f094980dcfau64, 0x11ad138e48a86952u64,
+            0x2b52af6c956543d3u64, 0xcd0c7aee9b3ba3c2u64, 0xbe9845719707bb33u64
+        ]
+    ))));
+
+    ynum_k[1usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x134996a104ee5811u64, 0xd51036d776fb4683u64, 0x1223e96c254f383du64,
+            0x0f906343eb67ad34u64, 0xd6c56711962fa8bfu64, 0xe097e75a2e41c696u64
+        ]
+    ))));
+
+    ynum_k[2usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x00cc786baa966e66u64, 0xf4a384c86a3b4994u64, 0x2552e2d658a31ce2u64,
+            0xc344be4b91400da7u64, 0xd26d521628b00523u64, 0xb8dfe240c72de1f6u64
+        ]
+    ))));
+
+    ynum_k[3usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x01f86376e8981c21u64, 0x7898751ad8746757u64, 0xd42aa7b90eeb791cu64,
+            0x09e4a3ec03251cf9u64, 0xde405aba9ec61decu64, 0xa6355c77b0e5f4cbu64
+        ]
+    ))));
+
+    ynum_k[4usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x08cc03fdefe0ff13u64, 0x5caf4fe2a21529c4u64, 0x195536fbe3ce50b8u64,
+            0x79833fd221351adcu64, 0x2ee7f8dc099040a8u64, 0x41b6daecf2e8fedbu64
+        ]
+    ))));
+
+    ynum_k[5usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x16603fca40634b6au64, 0x2211e11db8f0a6a0u64, 0x74a7d0d4afadb7bdu64,
+            0x76505c3d3ad5544eu64, 0x203f6326c95a8072u64, 0x99b23ab13633a5f0u64
+        ]
+    ))));
+
+    ynum_k[6usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x04ab0b9bcfac1bbcu64, 0xb2c977d027796b3cu64, 0xe75bb8ca2be184cbu64,
+            0x5231413c4d634f37u64, 0x47a87ac2460f415eu64, 0xc961f8855fe9d6f2u64
+        ]
+    ))));
+
+    ynum_k[7usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0987c8d5333ab86fu64, 0xde9926bd2ca6c674u64, 0x170a05bfe3bdd81fu64,
+            0xfd038da6c26c8426u64, 0x42f64550fedfe935u64, 0xa15e4ca31870fb29u64
+        ]
+    ))));
+
+    ynum_k[8usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x09fc4018bd96684bu64, 0xe88c9e221e4da1bbu64, 0x8f3abd16679dc26cu64,
+            0x1e8b6e6a1f20cabeu64, 0x69d65201c78607a3u64, 0x60370e577bdba587u64
+        ]
+    ))));
+
+    ynum_k[9usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0e1bba7a1186bdb5u64, 0x223abde7ada14a23u64, 0xc42a0ca7915af6feu64,
+            0x06985e7ed1e4d43bu64, 0x9b3f7055dd4eba6fu64, 0x2bafaaebca731c30u64
+        ]
+    ))));
+
+    ynum_k[10usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x19713e47937cd1beu64, 0x0dfd0b8f1d43fb93u64, 0xcd2fcbcb6caf493fu64,
+            0xd1183e416389e610u64, 0x31bf3a5cce3fbafcu64, 0xe813711ad011c132u64
+        ]
+    ))));
+
+    ynum_k[11usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x18b46a908f36f6deu64, 0xb918c143fed2edccu64, 0x523559b8aaf0c246u64,
+            0x2e6bfe7f911f6432u64, 0x49d9cdf41b44d606u64, 0xce07c8a4d0074d8eu64
+        ]
+    ))));
+
+    ynum_k[12usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0b182cac101b9399u64, 0xd155096004f53f44u64, 0x7aa7b12a3426b08eu64,
+            0xc02710e807b4633fu64, 0x06c851c1919211f2u64, 0x0d4c04f00b971ef8u64
+        ]
+    ))));
+
+    ynum_k[13usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0245a394ad1eca9bu64, 0x72fc00ae7be315dcu64, 0x757b3b080d4c1580u64,
+            0x13e6632d3c40659cu64, 0xc6cf90ad1c232a64u64, 0x42d9d3f5db980133u64
+        ]
+    ))));
+
+    ynum_k[14usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x05c129645e44cf11u64, 0x02a159f748c4a3fcu64, 0x5e673d81d7e86568u64,
+            0xd9ab0f5d396a7ce4u64, 0x6ba1049b6579afb7u64, 0x866b1e715475224bu64
+        ]
+    ))));
+
+    ynum_k[15usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x15e6be4e990f03ceu64, 0x4ea50b3b42df2eb5u64, 0xcb181d8f84965a39u64,
+            0x57add4fa95af01b2u64, 0xb665027efec01c77u64, 0x04b456be69c8b604u64
+        ]
+    ))));
+
+    // yden_k
+    let mut yden_k = Seq::<Fp>::new(15);
+    yden_k[0usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x16112c4c3a9c98b2u64, 0x52181140fad0eae9u64, 0x601a6de578980be6u64,
+            0xeec3232b5be72e7au64, 0x07f3688ef60c206du64, 0x01479253b03663c1u64
+        ]
+    ))));
+
+    yden_k[1usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x1962d75c2381201eu64, 0x1a0cbd6c43c348b8u64, 0x85c84ff731c4d59cu64,
+            0xa4a10356f453e01fu64, 0x78a4260763529e35u64, 0x32f6102c2e49a03du64
+        ]
+    ))));
+
+    yden_k[2usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x058df3306640da27u64, 0x6faaae7d6e8eb157u64, 0x78c4855551ae7f31u64,
+            0x0c35a5dd279cd2ecu64, 0xa6757cd636f96f89u64, 0x1e2538b53dbf67f2u64
+        ]
+    ))));
+
+    yden_k[3usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x16b7d288798e5395u64, 0xf20d23bf89edb4d1u64, 0xd115c5dbddbcd30eu64,
+            0x123da489e726af41u64, 0x727364f2c28297adu64, 0xa8d26d98445f5416u64
+        ]
+    ))));
+
+    yden_k[4usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0be0e079545f43e4u64, 0xb00cc912f8228ddcu64, 0xc6d19c9f0f69bbb0u64,
+            0x542eda0fc9dec916u64, 0xa20b15dc0fd2ededu64, 0xda39142311a5001du64
+        ]
+    ))));
+
+    yden_k[5usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x08d9e5297186db2du64, 0x9fb266eaac783182u64, 0xb70152c65550d881u64,
+            0xc5ecd87b6f0f5a64u64, 0x49f38db9dfa9cce2u64, 0x02c6477faaf9b7acu64
+        ]
+    ))));
+
+    yden_k[6usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x166007c08a99db2fu64, 0xc3ba8734ace9824bu64, 0x5eecfdfa8d0cf8efu64,
+            0x5dd365bc400a0051u64, 0xd5fa9c01a58b1fb9u64, 0x3d1a1399126a775cu64
+        ]
+    ))));
+
+    yden_k[7usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x16a3ef08be3ea7eau64, 0x03bcddfabba6ff6eu64, 0xe5a4375efa1f4fd7u64,
+            0xfeb34fd206357132u64, 0xb920f5b00801dee4u64, 0x60ee415a15812ed9u64
+        ]
+    ))));
+
+    yden_k[8usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x1866c8ed336c6123u64, 0x1a1be54fd1d74cc4u64, 0xf9fb0ce4c6af5920u64,
+            0xabc5750c4bf39b48u64, 0x52cfe2f7bb924883u64, 0x6b233d9d55535d4au64
+        ]
+    ))));
+
+    yden_k[9usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x167a55cda70a6e1cu64, 0xea820597d94a8490u64, 0x3216f763e13d87bbu64,
+            0x5308592e7ea7d4fbu64, 0xc7385ea3d529b35eu64, 0x346ef48bb8913f55u64
+        ]
+    ))));
+
+    yden_k[10usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x04d2f259eea405bdu64, 0x48f010a01ad2911du64, 0x9c6dd039bb61a629u64,
+            0x0e591b36e636a5c8u64, 0x71a5c29f4f830604u64, 0x00f8b49cba8f6aa8u64
+        ]
+    ))));
+
+    yden_k[11usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0accbb67481d033fu64, 0xf5852c1e48c50c47u64, 0x7f94ff8aefce42d2u64,
+            0x8c0f9a88cea79135u64, 0x16f968986f7ebbeau64, 0x9684b529e2561092u64
+        ]
+    ))));
+
+    yden_k[12usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0ad6b9514c767fe3u64, 0xc3613144b45f1496u64, 0x543346d98adf0226u64,
+            0x7d5ceef9a00d9b86u64, 0x93000763e3b90ac1u64, 0x1e99b138573345ccu64
+        ]
+    ))));
+
+    yden_k[13usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x02660400eb2e4f3bu64, 0x628bdd0d53cd76f2u64, 0xbf565b94e72927c1u64,
+            0xcb748df27942480eu64, 0x420517bd8714cc80u64, 0xd1fadc1326ed06f7u64
+        ]
+    ))));
+
+    yden_k[14usize] = Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+        U64,
+        [
+            0x0e0fa1d816ddc03eu64, 0x6b24255e0d7819c1u64, 0x71c40f65e273b853u64,
+            0x324efcd6356caa20u64, 0x5ca2f570f1349780u64, 0x4415473a1d634b8fu64
+        ]
+    ))));
+
+    // Computation
+
+    // x_num = k_(1,11) * x'^11 + k_(1,10) * x'^10 + k_(1,9) * x'^9 + ... + k_(1,0)
+    let mut xnum = Fp::ZERO();
+    let mut xx = Fp::ONE();
+    for i in 0..xnum_k.len() {
+        xnum = xnum + xx * xnum_k[i];
+        xx = xx * x;
+    }
+
+    // x_den = x'^10 + k_(2,9) * x'^9 + k_(2,8) * x'^8 + ... + k_(2,0)
+    let mut xden = Fp::ZERO();
+    let mut xx = Fp::ONE();
+    for i in 0..xden_k.len() {
+        xden = xden + xx * xden_k[i];
+        xx = xx * x;
+    }
+    xden = xden + xx;
+
+    // y_num = k_(3,15) * x'^15 + k_(3,14) * x'^14 + k_(3,13) * x'^13 + ... + k_(3,0)
+    let mut ynum = Fp::ZERO();
+    let mut xx = Fp::ONE();
+    for i in 0..ynum_k.len() {
+        ynum = ynum + xx * ynum_k[i];
+        xx = xx * x;
+    }
+
+    // y_den = x'^15 + k_(4,14) * x'^14 + k_(4,13) * x'^13 + ... + k_(4,0)
+    let mut yden = Fp::ZERO();
+    let mut xx = Fp::ONE();
+    for i in 0..yden_k.len() {
+        yden = yden + xx * yden_k[i];
+        xx = xx * x;
+    }
+    yden = yden + xx;
+
+    // x = x_num / x_den
+    let xr = xnum * xden.inv();
+
+    // y = y' * y_num / y_den
+    let yr = y * ynum * yden.inv();
+
+    // if xden or yden is zero return point at infinity
+    let mut inf = false;
+    if xden == Fp::ZERO() || yden == Fp::ZERO() {
+        inf = true;
+    }
+
+    (xr, yr, inf)
+}
+
+// https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.6.3
+fn g1_map_to_curve_sswu(u: Fp) -> G1 {
+    let (xp, yp) = g1_simple_swu_iso(u);
+    let p = g1_isogeny_map(xp, yp);
+    p
+}
+
+//  https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-3
+pub fn g1_hash_to_curve_sswu(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
+    let u = fp_hash_to_field(msg, dst, 2);
+    let q0 = g1_map_to_curve_sswu(u[0]);
+    let q1 = g1_map_to_curve_sswu(u[1]);
+    let r = g1add(q0, q1);
+    let p = g1_clear_cofactor(r);
+    p
+}
+
+pub fn g1_encode_to_curve_sswu(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
+    let u = fp_hash_to_field(msg, dst, 1);
+    let q = g1_map_to_curve_sswu(u[0]);
+    let p = g1_clear_cofactor(q);
+    p
+}
+
+// https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.6.2
+fn g2_simple_swu_iso(u: Fp2) -> (Fp2, Fp2) {
+    let z = fp2neg((Fp::TWO(), Fp::ONE()));
+    let a = (Fp::ZERO(), Fp::from_literal(240u128));
+    let b = (Fp::from_literal(1012u128), Fp::from_literal(1012u128));
+    let tv1 = fp2inv(fp2add(
+        fp2mul(fp2mul(z, z), fp2mul(fp2mul(u, u), fp2mul(u, u))),
+        fp2mul(z, fp2mul(u, u)),
+    )); // inv0(z^2 * u^4 + z * u^2)
+    let mut x1 = fp2mul(
+        fp2mul(fp2neg(b), fp2inv(a)),
+        fp2add(fp2fromfp(Fp::ONE()), tv1),
+    ); // (-B / A) * (1 + tv1)
+    if tv1 == fp2zero() {
+        x1 = fp2mul(b, fp2inv(fp2mul(z, a))); // If tv1 == 0, set x1 = B / (Z * A)
+    };
+    let gx1 = fp2add(fp2add(fp2mul(fp2mul(x1, x1), x1), fp2mul(a, x1)), b); // x1^3 + A * x1 + B
+    let x2 = fp2mul(fp2mul(z, fp2mul(u, u)), x1); // Z * u^2 * x1
+    let gx2 = fp2add(fp2add(fp2mul(fp2mul(x2, x2), x2), fp2mul(a, x2)), b); // x2^3 + A * x2 + B
+    let (x, mut y) = if fp2_is_square(gx1) {
+        (x1, fp2_sqrt(gx1)) // If is_square(gx1), set x = x1 and y = sqrt(gx1)
+    } else {
+        (x2, fp2_sqrt(gx2)) // Else set x = x2 and y = sqrt(gx2)
+    };
+    if fp2_sgn0(u) != fp2_sgn0(y) {
+        y = fp2neg(y); // If sgn0(u) != sgn0(y), set y = -y
+    };
+    (x, y)
+}
+
+#[rustfmt::skip::macros(secret_array)]
+// https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#appendix-E.3
+fn g2_isogeny_map(x: Fp2, y: Fp2) -> G2 {
+    // Constants
+    // xnum_k
+    let mut xnum_k = Seq::<Fp2>::new(4);
+    xnum_k[0usize] = (
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x05c759507e8e333eu64, 0xbb5b7a9a47d7ed85u64, 0x32c52d39fd3a042au64,
+                0x88b58423c50ae15du64, 0x5c2638e343d9c71cu64, 0x6238aaaaaaaa97d6u64
+            ]
+        )))),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x05c759507e8e333eu64, 0xbb5b7a9a47d7ed85u64, 0x32c52d39fd3a042au64,
+                0x88b58423c50ae15du64, 0x5c2638e343d9c71cu64, 0x6238aaaaaaaa97d6u64
+            ]
+        )))),
+    );
+
+    xnum_k[1usize] = (
+        Fp::ZERO(),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x11560bf17baa99bcu64, 0x32126fced787c88fu64, 0x984f87adf7ae0c7fu64,
+                0x9a208c6b4f20a418u64, 0x1472aaa9cb8d5555u64, 0x26a9ffffffffc71au64
+            ]
+        )))),
+    );
+
+    xnum_k[2usize] = (
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x11560bf17baa99bcu64, 0x32126fced787c88fu64, 0x984f87adf7ae0c7fu64,
+                0x9a208c6b4f20a418u64, 0x1472aaa9cb8d5555u64, 0x26a9ffffffffc71eu64
+            ]
+        )))),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x08ab05f8bdd54cdeu64, 0x190937e76bc3e447u64, 0xcc27c3d6fbd7063fu64,
+                0xcd104635a790520cu64, 0x0a395554e5c6aaaau64, 0x9354ffffffffe38du64
+            ]
+        )))),
+    );
+
+    xnum_k[3usize] = (
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x171d6541fa38ccfau64, 0xed6dea691f5fb614u64, 0xcb14b4e7f4e810aau64,
+                0x22d6108f142b8575u64, 0x7098e38d0f671c71u64, 0x88e2aaaaaaaa5ed1u64
+            ]
+        )))),
+        Fp::ZERO(),
+    );
+
+    // xden_k
+    let mut xden_k = Seq::<Fp2>::new(2);
+    xden_k[0usize] = (
+        Fp::ZERO(),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
+                0x6730d2a0f6b0f624u64, 0x1eabfffeb153ffffu64, 0xb9feffffffffaa63u64
+            ]
+        )))),
+    );
+
+    xden_k[1usize] = (
+        Fp::from_literal(12u128),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
+                0x6730d2a0f6b0f624u64, 0x1eabfffeb153ffffu64, 0xb9feffffffffaa9fu64
+            ]
+        )))),
+    );
+
+    // ynum_k
+    let mut ynum_k = Seq::<Fp2>::new(4);
+    ynum_k[0usize] = (
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1530477c7ab4113bu64, 0x59a4c18b076d1193u64, 0x0f7da5d4a07f649bu64,
+                0xf54439d87d27e500u64, 0xfc8c25ebf8c92f68u64, 0x12cfc71c71c6d706u64
+            ]
+        )))),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1530477c7ab4113bu64, 0x59a4c18b076d1193u64, 0x0f7da5d4a07f649bu64,
+                0xf54439d87d27e500u64, 0xfc8c25ebf8c92f68u64, 0x12cfc71c71c6d706u64
+            ]
+        )))),
+    );
+
+    ynum_k[1usize] = (
+        Fp::ZERO(),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x05c759507e8e333eu64, 0xbb5b7a9a47d7ed85u64, 0x32c52d39fd3a042au64,
+                0x88b58423c50ae15du64, 0x5c2638e343d9c71cu64, 0x6238aaaaaaaa97beu64
+            ]
+        )))),
+    );
+
+    ynum_k[2usize] = (
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x11560bf17baa99bcu64, 0x32126fced787c88fu64, 0x984f87adf7ae0c7fu64,
+                0x9a208c6b4f20a418u64, 0x1472aaa9cb8d5555u64, 0x26a9ffffffffc71cu64
+            ]
+        )))),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x08ab05f8bdd54cdeu64, 0x190937e76bc3e447u64, 0xcc27c3d6fbd7063fu64,
+                0xcd104635a790520cu64, 0x0a395554e5c6aaaau64, 0x9354ffffffffe38fu64
+            ]
+        )))),
+    );
+
+    ynum_k[3usize] = (
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x124c9ad43b6cf79bu64, 0xfbf7043de3811ad0u64, 0x761b0f37a1e26286u64,
+                0xb0e977c69aa27452u64, 0x4e79097a56dc4bd9u64, 0xe1b371c71c718b10u64
+            ]
+        )))),
+        Fp::ZERO(),
+    );
+
+    // yden_k
+    let mut yden_k = Seq::<Fp2>::new(3);
+    yden_k[0usize] = (
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
+                0x6730d2a0f6b0f624u64, 0x1eabfffeb153ffffu64, 0xb9feffffffffa8fbu64
+            ]
+        )))),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
+                0x6730d2a0f6b0f624u64, 0x1eabfffeb153ffffu64, 0xb9feffffffffa8fbu64
+            ]
+        )))),
+    );
+
+    yden_k[1usize] = (
+        Fp::ZERO(),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
+                0x6730d2a0f6b0f624u64, 0x1eabfffeb153ffffu64, 0xb9feffffffffa9d3u64
+            ]
+        )))),
+    );
+
+    yden_k[2usize] = (
+        Fp::from_literal(18u128),
+        Fp::from_byte_seq_be(&ArrFp::to_be_bytes(&ArrFp(secret_array!(
+            U64,
+            [
+                0x1a0111ea397fe69au64, 0x4b1ba7b6434bacd7u64, 0x64774b84f38512bfu64,
+                0x6730d2a0f6b0f624u64, 0x1eabfffeb153ffffu64, 0xb9feffffffffaa99u64
+            ]
+        )))),
+    );
+
+    // Computation
+
+    // x_num = k_(1,3) * x'^3 + k_(1,2) * x'^2 + k_(1,1) * x' + k_(1,0)
+    let mut xnum = fp2zero();
+    let mut xx = fp2fromfp(Fp::ONE());
+    for i in 0..xnum_k.len() {
+        xnum = fp2add(xnum, fp2mul(xx, xnum_k[i]));
+        xx = fp2mul(xx, x);
+    }
+
+    // x_den = x'^2 + k_(2,1) * x' + k_(2,0)
+    let mut xden = fp2zero();
+    let mut xx = fp2fromfp(Fp::ONE());
+    for i in 0..xden_k.len() {
+        xden = fp2add(xden, fp2mul(xx, xden_k[i]));
+        xx = fp2mul(xx, x);
+    }
+    xden = fp2add(xden, xx);
+
+    // y_num = k_(3,3) * x'^3 + k_(3,2) * x'^2 + k_(3,1) * x' + k_(3,0)
+    let mut ynum = fp2zero();
+    let mut xx = fp2fromfp(Fp::ONE());
+    for i in 0..ynum_k.len() {
+        ynum = fp2add(ynum, fp2mul(xx, ynum_k[i]));
+        xx = fp2mul(xx, x);
+    }
+
+    // y_den = x'^3 + k_(4,2) * x'^2 + k_(4,1) * x' + k_(4,0)
+    let mut yden = fp2zero();
+    let mut xx = fp2fromfp(Fp::ONE());
+    for i in 0..yden_k.len() {
+        yden = fp2add(yden, fp2mul(xx, yden_k[i]));
+        xx = fp2mul(xx, x);
+    }
+    yden = fp2add(yden, xx);
+
+    // x = x_num / x_den
+    let xr = fp2mul(xnum, fp2inv(xden));
+
+    // y = y' * y_num / y_den
+    let yr = fp2mul(y, fp2mul(ynum, fp2inv(yden)));
+
+    // if xden or yden is zero return point at infinity
+    let mut inf = false;
+    if xden == fp2zero() || yden == fp2zero() {
+        inf = true;
+    }
+
+    (xr, yr, inf)
+}
+
+// https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.6.3
+fn g2_map_to_curve_sswu(u: Fp2) -> G2 {
+    let (xp, yp) = g2_simple_swu_iso(u);
+    let p = g2_isogeny_map(xp, yp);
+    p
+}
+
+// https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-3
+pub fn g2_hash_to_curve_sswu(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
+    let u = fp2_hash_to_field(msg, dst, 2);
+    let q0 = g2_map_to_curve_sswu(u[0]);
+    let q1 = g2_map_to_curve_sswu(u[1]);
+    let r = g2add(q0, q1);
+    let p = g2_clear_cofactor(r);
+    p
+}
+
+pub fn g2_encode_to_curve_sswu(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
+    let u = fp2_hash_to_field(msg, dst, 1);
+    let q = g2_map_to_curve_sswu(u[0]);
     let p = g2_clear_cofactor(q);
     p
 }
@@ -475,21 +1328,21 @@ mod test {
     }
 
     #[test]
-    fn test_g1_map_to_curve() {
+    fn test_g1_map_to_curve_svdw() {
         let u = Fp::from_literal(3082);
-        let (x, y, _) = g1_map_to_curve(u);
+        let (x, y, _) = g1_map_to_curve_svdw(u);
         assert_eq!(y * y, x * x * x + Fp::from_literal(4));
     }
 
     #[quickcheck]
-    fn test_prop_g1_map_to_curve(a: u128) -> bool {
+    fn test_prop_g1_map_to_curve_svdw(a: u128) -> bool {
         let u = Fp::from_literal(a);
-        let (x, y, _) = g1_map_to_curve(u);
+        let (x, y, _) = g1_map_to_curve_svdw(u);
         y * y == x * x * x + Fp::from_literal(4)
     }
 
     #[test]
-    // Test vectors from https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#appendix-J.9.2
+    // Test vectors from https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#appendix-J.10.1
     fn test_fp2_hash_to_field() {
         let dst = ByteSeq::from_public_slice(b"QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_");
         let msg = ByteSeq::from_public_slice(b"");
@@ -533,10 +1386,10 @@ mod test {
     }
 
     #[test]
-    fn test_g2_map_to_curve() {
+    fn test_g2_map_to_curve_svdw() {
         let u1 = Fp::from_literal(3082);
         let u2 = Fp::from_literal(4021);
-        let (x, y, _) = g2_map_to_curve((u1, u2));
+        let (x, y, _) = g2_map_to_curve_svdw((u1, u2));
         assert_eq!(
             fp2mul(y, y),
             fp2add(
@@ -547,10 +1400,95 @@ mod test {
     }
 
     #[quickcheck]
-    fn test_prop_g2_map_to_curve(a: u128, b: u128) -> bool {
+    fn test_prop_g2_map_to_curve_svdw(a: u128, b: u128) -> bool {
         let u1 = Fp::from_literal(a);
         let u2 = Fp::from_literal(b);
-        let (x, y, _) = g2_map_to_curve((u1, u2));
+        let (x, y, _) = g2_map_to_curve_svdw((u1, u2));
+        fp2mul(y, y)
+            == fp2add(
+                fp2mul(fp2mul(x, x), x),
+                (Fp::from_literal(4), Fp::from_literal(4)),
+            )
+    }
+
+    /* Tests for sswu
+     *
+     */
+
+    #[test]
+    fn test_g1_simple_swu_iso() {
+        let a = Fp::from_hex("144698a3b8e9433d693a02c96d4982b0ea985383ee66a8d8e8981aefd881ac98936f8da0e0f97f5cf428082d584c1d");
+        let b = Fp::from_hex("12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0b9c14fcef35ef55a23215a316ceaa5d1cc48e98e172be0");
+        let u = Fp::from_literal(2464);
+        let (x, y) = g1_simple_swu_iso(u);
+        assert_eq!(y * y, x * x * x + a * x + b);
+    }
+
+    #[quickcheck]
+    fn test_prop_g1_simple_swu_iso(u: u128) -> bool {
+        let a = Fp::from_hex("144698a3b8e9433d693a02c96d4982b0ea985383ee66a8d8e8981aefd881ac98936f8da0e0f97f5cf428082d584c1d");
+        let b = Fp::from_hex("12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0b9c14fcef35ef55a23215a316ceaa5d1cc48e98e172be0");
+        let u = Fp::from_literal(u);
+        let (x, y) = g1_simple_swu_iso(u);
+        y * y == x * x * x + a * x + b
+    }
+
+    #[test]
+    fn test_g1_map_to_curve_sswu() {
+        let u = Fp::from_literal(0);
+        let (x, y, _) = g1_map_to_curve_sswu(u);
+        assert_eq!(y * y, x * x * x + Fp::from_literal(4));
+    }
+
+    #[quickcheck]
+    fn test_prop_g1_map_to_curve_sswu(a: u128) -> bool {
+        let u = Fp::from_literal(a);
+        let (x, y, _) = g1_map_to_curve_sswu(u);
+        y * y == x * x * x + Fp::from_literal(4)
+    }
+
+    #[test]
+    fn test_g2_simple_swu_iso() {
+        let a = (Fp::ZERO(), Fp::from_literal(240u128));
+        let b = (Fp::from_literal(1012u128), Fp::from_literal(1012u128));
+        let u1 = Fp::from_literal(3082);
+        let u2 = Fp::from_literal(4021);
+        let (x, y) = g2_simple_swu_iso((u1, u2));
+        assert_eq!(
+            fp2mul(y, y),
+            fp2add(fp2add(fp2mul(fp2mul(x, x), x), fp2mul(a, x)), b)
+        );
+    }
+
+    #[quickcheck]
+    fn test_prop_g2_simple_swu_iso(u1: u128, u2: u128) -> bool {
+        let a = (Fp::ZERO(), Fp::from_literal(240u128));
+        let b = (Fp::from_literal(1012u128), Fp::from_literal(1012u128));
+        let u1 = Fp::from_literal(u1);
+        let u2 = Fp::from_literal(u2);
+        let (x, y) = g2_simple_swu_iso((u1, u2));
+        fp2mul(y, y) == fp2add(fp2add(fp2mul(fp2mul(x, x), x), fp2mul(a, x)), b)
+    }
+
+    #[test]
+    fn test_g2_map_to_curve_sswu() {
+        let u1 = Fp::from_literal(3082);
+        let u2 = Fp::from_literal(4021);
+        let (x, y, _) = g2_map_to_curve_sswu((u1, u2));
+        assert_eq!(
+            fp2mul(y, y),
+            fp2add(
+                fp2mul(fp2mul(x, x), x),
+                (Fp::from_literal(4), Fp::from_literal(4))
+            )
+        );
+    }
+
+    #[quickcheck]
+    fn test_prop_g2_map_to_curve_sswu(a: u128, b: u128) -> bool {
+        let u1 = Fp::from_literal(a);
+        let u2 = Fp::from_literal(b);
+        let (x, y, _) = g2_map_to_curve_sswu((u1, u2));
         fp2mul(y, y)
             == fp2add(
                 fp2mul(fp2mul(x, x), x),
