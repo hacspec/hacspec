@@ -473,13 +473,8 @@ pub enum Item {
     ),
 }
 
-#[derive(Clone, Hash, Copy, PartialEq, Eq, Serialize)]
-pub enum ItemTag {
-    Code,
-    Test,
-    QuickCheck,
-    Proof,
-}
+pub type ItemTag = String;
+
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct ItemTagSet(pub HashSet<ItemTag>);
 
