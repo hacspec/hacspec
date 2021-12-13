@@ -94,8 +94,7 @@ pub fn fp_hash_to_field(msg: &ByteSeq, dst: &ByteSeq, count: usize) -> Seq<Fp> {
         let elm_offset = L * i; // L * (j + i * m)
         let tv = uniform_bytes.slice(elm_offset, L); //substr(uniform_bytes, elm_offset, L)
         let u_i =
-            Fp::from_byte_seq_be(&tv.slice(16, 48)); // OS2IP(tv) mod p
-            // Fp::from_byte_seq_be(&FpHash::from_byte_seq_be(&tv).to_byte_seq_be().slice(16, 48)); // OS2IP(tv) mod p
+            Fp::from_byte_seq_be(&FpHash::from_byte_seq_be(&tv).to_byte_seq_be().slice(16, 48)); // OS2IP(tv) mod p
         output[i] = u_i;
     }
     output
@@ -187,12 +186,12 @@ pub fn fp2_hash_to_field(msg: &ByteSeq, dst: &ByteSeq, count: usize) -> Seq<Fp2>
         let elm_offset = L * i * 2; // L * (j + i * m)
         let tv = uniform_bytes.slice(elm_offset, L); //substr(uniform_bytes, elm_offset, L)
         let e_1 =
-            Fp::from_byte_seq_be(&tv.slice(16, 48)); // OS2IP(tv) mod p
+            Fp::from_byte_seq_be(&FpHash::from_byte_seq_be(&tv).to_byte_seq_be().slice(16, 48)); // OS2IP(tv) mod p
 
         let elm_offset = L * (1 + i * 2); // L * (j + i * m)
         let tv = uniform_bytes.slice(elm_offset, L); //substr(uniform_bytes, elm_offset, L)
         let e_2 =
-            Fp::from_byte_seq_be(&tv.slice(16, 48)); // OS2IP(tv) mod p
+            Fp::from_byte_seq_be(&FpHash::from_byte_seq_be(&tv).to_byte_seq_be().slice(16, 48)); // OS2IP(tv) mod p
         output[i] = (e_1, e_2);
     }
     output
@@ -769,7 +768,7 @@ const G1_YDEN_K_11: ArrFp = ArrFp(secret_array!(
 const G1_YDEN_K_12: ArrFp = ArrFp(secret_array!(
     U64,
     [
-        0x0ad6b9514c767fe3u64, 0xc3613144b45f1496u64, 0x543346d98adf0226u64, 
+        0x0ad6b9514c767fe3u64, 0xc3613144b45f1496u64, 0x543346d98adf0226u64,
         0x7d5ceef9a00d9b86u64, 0x93000763e3b90ac1u64, 0x1e99b138573345ccu64
     ]
 ));

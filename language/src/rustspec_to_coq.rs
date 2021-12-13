@@ -528,26 +528,35 @@ fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
     name: Ident,
     top_ctx: &'a TopLevelContext,
-) -> (RcDoc<'a, ()>, Vec<RcDoc<'a, ()>>) {
+) -> (RcDoc<'a, ()>, Vec<RcDoc<'a, ()>>, Option<BaseTyp>) {
     match prefix.clone() {
         None => {
             let name = translate_ident(name.clone());
             match format!("{}", name.pretty(0)).as_str() {
-                "uint128" | "uint64" | "uint32" | "uint16" | "uint8" | "int128" | "int64"
-                | "int32" | "int16" | "int8" => {
-                    // In this case, we're trying to apply a secret
-                    // int constructor. The value it is applied to is
-                    // a public integer of the same kind. So in Coq, that
-                    // will amount to a classification operation
-                    // TODO: may need to add type annotation here
-                    (RcDoc::as_string("secret"), vec![])
-                }
-                _ => (name, vec![]),
+                // In this case, we're trying to apply a secret
+                // int constructor. The value it is applied to is
+                // a public integer of the same kind. So in Coq, that
+                // will amount to a classification operation
+                // TODO: may need to add type annotation here
+                "uint128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt128)),
+                "uint64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt64)),
+                "uint32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt32)),
+                "uint16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt16)),
+                "uint8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt8)),
+                "int128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int128)),
+                "int64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int64)),
+                "int32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int32)),
+                "int16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int16)),
+                "int8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int8)),
+                _ => (name, vec![], None), // TODO: is None correct?
             }
         }
         Some((prefix, _)) => {
             let (module_name, prefix_info) =
                 translate_prefix_for_func_name(prefix.clone(), top_ctx);
+
+            let mut result_typ = None;
+
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
 
@@ -559,12 +568,14 @@ fn translate_func_name<'a>(
             ) {
                 (NAT_MODULE, "from_literal") | (NAT_MODULE, "pow2") => {
                     match &prefix_info {
-                        FuncPrefix::NatMod(modulo, _bits) => {
+                        FuncPrefix::NatMod(modulo, _) => {
                             if modulo == "unknown" {
                                 additional_args.push(RcDoc::as_string("_"));
                             } else {
                                 additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
                             }
+
+                            result_typ = Some(prefix.clone());
                         }
                         _ => panic!(), // should not happen
                     }
@@ -585,6 +596,24 @@ fn translate_func_name<'a>(
                 }
                 _ => (),
             };
+
+            // And decoding
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                (NAT_MODULE, "from_byte_seq_le")
+                | (NAT_MODULE, "from_byte_seq_be") => {
+                    match &prefix_info {
+                        FuncPrefix::NatMod(modulo, _) => {
+                            result_typ = Some(prefix.clone());
+                        }
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            };
+
             // Then the default value for seqs
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
@@ -595,7 +624,7 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice")
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
-                        FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
+                        FuncPrefix::Array(_, _) | FuncPrefix::Seq(_) => {
                             additional_args.push(RcDoc::as_string("default"));
                         }
                         _ => panic!(), // should not happen
@@ -634,6 +663,7 @@ fn translate_func_name<'a>(
                     .append(RcDoc::as_string("_"))
                     .append(func_ident.clone()),
                 additional_args,
+                result_typ,
             )
         }
     }
@@ -728,7 +758,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         ),
         Expression::Named(p) => translate_ident(p.clone()),
         Expression::FuncCall(prefix, name, args) => {
-            let (func_name, additional_args) =
+            let (func_name, additional_args, func_ret_ty) =
                 translate_func_name(prefix.clone(), Ident::TopLevel(name.0.clone()), top_ctx);
             let total_args = args.len() + additional_args.len();
             func_name
@@ -747,13 +777,22 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 } else {
                     RcDoc::nil()
                 })
+                .append(match func_ret_ty {
+                    Some(ret_ty) => RcDoc::as_string(" : ").append(translate_base_typ(ret_ty)),
+                    None => RcDoc::nil(),
+                })
         }
         Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
             // Ignore "clone" // TODO: is this correct?
             if f.string == "clone" {
-                RcDoc::nil()
+                // Then the self argument
+                make_paren(translate_expression((sel_arg.0).0, top_ctx))
+                    // And finally the rest of the arguments
+                    .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
+                        RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
+                    })))
             } else {
-                let (func_name, additional_args) = translate_func_name(
+                let (func_name, additional_args, func_ret_ty) = translate_func_name(
                     sel_typ.clone().map(|x| x.1),
                     Ident::TopLevel(f.clone()),
                     top_ctx,
@@ -765,13 +804,17 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                             .map(|arg| RcDoc::space().append(make_paren(arg))),
                     ))
                     .append(RcDoc::space())
+                    // Then the self argument
+                    .append(make_paren(translate_expression((sel_arg.0).0, top_ctx)))
+                    // And finally the rest of the arguments
+                    .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
+                        RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
+                    })))
+                    .append(match func_ret_ty {
+                        Some(ret_ty) => RcDoc::as_string(" : ").append(translate_base_typ(ret_ty)),
+                        None => RcDoc::nil(),
+                    })
             }
-            // Then the self argument
-            .append(make_paren(translate_expression((sel_arg.0).0, top_ctx)))
-            // And finally the rest of the arguments
-            .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
-                RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
-            })))
         }
         Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
@@ -1792,7 +1835,7 @@ fn translate_item<'a>(
                 str::replace(
                     // TODO: Better name resolution for crate imports
                     // Only first should be outer crate name (no crate with _ allowed?)
-                    &str::replacen(&kr.to_title_case(), " ", ".", 1), 
+                    &str::replacen(&kr.to_title_case(), " ", ".", 1),
                     " ", "_")
             ))
         }
