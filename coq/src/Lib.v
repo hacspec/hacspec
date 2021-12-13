@@ -228,26 +228,6 @@ Definition foldi
 Class Default (A : Type) := {
   default : A
 }.
-
-(* Default instances for common types *)
-Global Instance nat_default : Default nat := {
-  default := 0%nat
-}.
-Global Instance N_default : Default N := {
-  default := 0%N
-}.
-Global Instance Z_default : Default Z := {
-  default := 0%Z
-}.
-Global Instance uint_size_default : Default uint_size := {
-  default := zero
-}.
-Global Instance int_size_default : Default int_size := {
-  default := zero
-}.
-Global Instance int_default {WS : WORDSIZE} : Default int := {
-  default := repr 0
-}.
 Global Arguments default {_} {_}.
 
 (*** Seq *)
@@ -271,6 +251,9 @@ Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
   VectorDef.const init len.
 
+Definition seq_new {A: Type} `{Default A} (len: nat) : seq A :=
+  seq_new_ default len.
+
 Fixpoint array_from_list (A: Type) (l: list A) : nseq A (length l) :=
   match l return (nseq A (length l)) with
   | [] => VectorDef.nil A
@@ -283,7 +266,7 @@ Fixpoint array_from_list (A: Type) (l: list A) : nseq A (length l) :=
 (*   end. *)
 (*   - apply (VectorDef.cons A a (length l) (array_from_list A l)). *)
 (* Defined. *)
-  
+
   (* match l with *)
   (* | [] => VectorDef.nil *)
   (* | (x :: xs) => VectorDef.cons A x (length xs) (array_from_list xs) *)
@@ -517,6 +500,13 @@ Definition seq_concat
   : seq a :=
   VectorDef.of_list (s1 ++ s2).
 
+Definition seq_push
+  {a : Type}
+  (s1 :seq a)
+  (s2: a)
+  : seq a :=
+  VectorDef.of_list (s1 ++ [s2]).
+
 Definition seq_from_slice_range
   {a: Type}
  `{Default a}
@@ -604,6 +594,21 @@ Definition seq_get_remainder_chunk : forall {a}, seq a -> uint_size -> seq a :=
     if eq len chunk_size then
       []
     else chunk.
+
+Fixpoint seq_xor_ {WS} (x : seq int) (y : seq int) : seq int :=
+  match x, y with
+  | (x :: xs), (y :: ys) => @MachineIntegers.xor WS x y :: (seq_xor_ xs ys)
+  | [], y => y
+  | x, [] => x
+  end.
+Infix "seq_xor" := seq_xor_ (at level 33) : hacspec_scope.
+
+Fixpoint seq_truncate {a} (x : seq a) (n : nat) : seq a := (* uint_size *)
+  match x, n with
+  | _, 0 => []
+  | [], _ => []
+  | (x :: xs), S n' => x :: (seq_truncate xs n')
+  end.
 
 (**** Numeric operations *)
 
@@ -761,6 +766,8 @@ Infix "-%" := nat_mod_sub (at level 33) : hacspec_scope.
 Definition nat_mod_div {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n := GZnZ.div n a b.
 Infix "/%" := nat_mod_div (at level 33) : hacspec_scope.
 
+(* A % B = (a * B + r) *)
+
 Definition nat_mod_neg {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
 
 Definition nat_mod_inv {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.inv n a.
@@ -775,6 +782,7 @@ Definition nat_mod_exp {p : Z} (a:nat_mod p) (n : uint_size) : nat_mod p :=
   exp_ a n.
 
 Definition nat_mod_pow {p} := @nat_mod_exp p.
+Definition nat_mod_pow_self {p} := @nat_mod_exp p.
 
 Close Scope nat_scope.
 Open Scope Z_scope.
@@ -1012,30 +1020,42 @@ End Coercions.
 
 (*** Casting *)
 
+Definition uint128_from_usize (n : uint_size) : int128 := repr n.
+Definition uint64_from_usize (n : uint_size) : int64 := repr n.
+Definition uint32_from_usize (n : uint_size) : int32 := repr n.
+Definition uint16_from_usize (n : uint_size) : int16 := repr n.
+Definition uint8_from_usize (n : uint_size) : int8 := repr n.
+
 Definition uint128_from_uint8 (n : int8) : int128 := repr n.
 Definition uint64_from_uint8 (n : int8) : int64 := repr n.
 Definition uint32_from_uint8 (n : int8) : int32 := repr n.
 Definition uint16_from_uint8 (n : int8) : int16 := repr n.
+Definition usize_from_uint8 (n : int8) : uint_size := repr n.
 
 Definition uint128_from_uint16 (n : int16) : int128 := repr n.
 Definition uint64_from_uint16 (n : int16) : int64 := repr n.
 Definition uint32_from_uint16 (n : int16) : int32 := repr n.
 Definition uint8_from_uint16 (n : int16) : int8 := repr n.
+Definition usize_from_uint16 (n : int16) : uint_size := repr n.
 
 Definition uint128_from_uint32 (n : int32) : int128 := repr n.
 Definition uint64_from_uint32 (n : int32) : int64 := repr n.
 Definition uint16_from_uint32 (n : int32) : int16 := repr n.
 Definition uint8_from_uint32 (n : int32) : int8 := repr n.
+Definition usize_from_uint32 (n : int32) : uint_size := repr n.
 
 Definition uint128_from_uint64 (n : int64) : int128 := repr n.
 Definition uint32_from_uint64 (n : int64) : int32 := repr n.
 Definition uint16_from_uint64 (n : int64) : int16 := repr n.
 Definition uint8_from_uint64 (n : int64) : int8 := repr n.
+Definition usize_from_uint64 (n : int64) : uint_size := repr n.
 
 Definition uint64_from_uint128 (n : int128) : int64 := repr n.
 Definition uint32_from_uint128 (n : int128) : int32 := repr n.
 Definition uint16_from_uint128 (n : int128) : int16 := repr n.
 Definition uint8_from_uint128 (n : int128) : int8 := repr n.
+Definition usize_from_uint128 (n : int128) : uint_size := repr n.
+
 
 (* Comparisons, boolean equality, and notation *)
 
@@ -1144,6 +1164,22 @@ Global Instance nat_mod_comparable `{p : Z} : Comparable (nat_mod p) := {
   geb a b := if Zeq_bool b a then true else Z.ltb (nat_mod_val p b) (nat_mod_val p a) ;
 }.
 
+Fixpoint nat_mod_rem_aux {n : Z} (a:nat_mod n) (b:nat_mod n) (f : nat) {struct f} : nat_mod n :=
+  match f with
+  | O => a
+  | S f' =>
+      if geb a b
+      then nat_mod_rem_aux (nat_mod_sub a b) b f'
+      else a
+  end.
+
+Definition nat_mod_rem {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
+  if nat_mod_equal b nat_mod_zero
+  then nat_mod_one
+  else nat_mod_rem_aux a b (S (nat_mod_div a b)).
+
+Infix "rem" := nat_mod_rem (at level 33) : hacspec_scope.
+
 Global Instance bool_eqdec : EqDec bool := {
   eqb := Bool.eqb;
   eqb_leibniz := Bool.eqb_true_iff;
@@ -1222,13 +1258,13 @@ Defined.
 
 (*** Result *)
 
-Inductive result (a: Type) (b: Type) := 
+Inductive result (a: Type) (b: Type) :=
   | Ok : a -> result a b
   | Err : b -> result a b.
 
 Arguments Ok {_ _}.
 Arguments Err {_ _}.
-  
+
 (*** Be Bytes *)
 
 
@@ -1274,6 +1310,9 @@ Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat × int64) : nat × int
 Definition u64_to_be_bytes : int64 -> nseq int8 8 := u64_to_be_bytes'.
 Definition u64_from_be_bytes : nseq int8 8 -> int64 := u64_from_be_bytes'.
 
+(* Definition nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8 := *)
+(*   fun k => VectorDef.of_list . *)
+
 (*** Monad / Bind *)
 
 Class Monad (M : Type -> Type) :=
@@ -1290,7 +1329,7 @@ Definition result_bind {A B C} (r : result2 C A) (f : A -> result2 C B) : result
   end.
 
 Definition result_ret {A C} (a : A) : result2 C A := Ok a.
- 
+
 Global Instance result_monad {C} : Monad (result2 C) :=
   Build_Monad (result2 C) (fun A B => @result_bind A B C) (fun A => @result_ret A C).
 
@@ -1344,3 +1383,33 @@ Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else match y 
 Notation "'ifbnd' b 'thenbnd' x 'elsebnd' y '>>' f" := (if b then result_bind x f else result_bind y f) (at level 200).
 
 Notation "'foldibnd' s 'to' e 'for' z '>>' f" := (foldi s e (fun x y => result_bind y (f x)) (Ok z)) (at level 50).
+
+Axiom nat_mod_from_byte_seq_be : forall  {A n}, seq A -> nat_mod n.
+
+(*** Default *)
+
+(* Default instances for common types *)
+Global Instance nat_default : Default nat := {
+  default := 0%nat
+}.
+Global Instance N_default : Default N := {
+  default := 0%N
+}.
+Global Instance Z_default : Default Z := {
+  default := 0%Z
+}.
+Global Instance uint_size_default : Default uint_size := {
+  default := zero
+}.
+Global Instance int_size_default : Default int_size := {
+  default := zero
+}.
+Global Instance int_default {WS : WORDSIZE} : Default int := {
+  default := repr 0
+}.
+Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
+  default := nat_mod_zero
+}.
+Global Instance prod_default {A B} `{Default A} `{Default B} : Default (A × B) := {
+  default := (default, default)
+}.

@@ -1,0 +1,19 @@
+[package]
+name = "hacspec-bls12-381-hash"
+version = "0.1.0"
+authors = ["Kasper S. Nielsen <Kasper@s-nielsen.dk>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/bls12-381-hash.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+hacspec-bls12-381 = { path = "../bls12-381" }
+hacspec-sha256 = { path = "../sha256" }
+
+[dev-dependencies]
+quickcheck = "1"
+quickcheck_macros = "1"

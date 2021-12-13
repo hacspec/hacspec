@@ -318,107 +318,6 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
     }
 }
 
-fn get_type_default(t: &BaseTyp) -> Expression {
-    match t {
-        BaseTyp::UInt8 => Expression::Lit(Literal::UInt8(0)),
-        BaseTyp::Int8 => Expression::Lit(Literal::Int8(0)),
-        BaseTyp::UInt16 => Expression::Lit(Literal::UInt16(0)),
-        BaseTyp::Int16 => Expression::Lit(Literal::Int16(0)),
-        BaseTyp::UInt32 => Expression::Lit(Literal::UInt32(0)),
-        BaseTyp::Int32 => Expression::Lit(Literal::Int32(0)),
-        BaseTyp::UInt64 => Expression::Lit(Literal::UInt64(0)),
-        BaseTyp::Int64 => Expression::Lit(Literal::Int64(0)),
-        BaseTyp::UInt128 => Expression::Lit(Literal::UInt128(0)),
-        BaseTyp::Int128 => Expression::Lit(Literal::Int128(0)),
-        BaseTyp::Usize => Expression::Lit(Literal::Usize(0)),
-        BaseTyp::Isize => Expression::Lit(Literal::Isize(0)),
-        BaseTyp::Named((name, i_s), None) => match name.string.as_str() {
-            "U8" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt8(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I8" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int8(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U16" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt16(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I16" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int16(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U32" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt32(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I32" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int32(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U64" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt64(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I64" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int64(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U128" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt128(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I128" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int128(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            _ => panic!("Trying to get default for {}", t),
-        },
-        _ => panic!("Trying to get default for {}", t),
-    }
-}
-
 fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
         // If the pattern is a tuple, expand it
@@ -454,6 +353,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Sub => return RcDoc::as_string("-%"),
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
+                        BinOpKind::Rem => return RcDoc::as_string("rem"),
                         // Rem,
                         // And,
                         // Or,
@@ -468,7 +368,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Ne => return RcDoc::as_string("!=.?"),
                         // Ge,
                         // Gt,
-                        _ => unimplemented!(),
+                        _ => unimplemented!("{:?}", op),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
                         return translate_binop(op, inner_ty, top_ctx)
@@ -650,6 +550,7 @@ fn translate_func_name<'a>(
                 translate_prefix_for_func_name(prefix.clone(), top_ctx);
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
+
             // We add the modulo value for nat_mod
 
             match (
@@ -659,7 +560,11 @@ fn translate_func_name<'a>(
                 (NAT_MODULE, "from_literal") | (NAT_MODULE, "pow2") => {
                     match &prefix_info {
                         FuncPrefix::NatMod(modulo, _bits) => {
-                            additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+                            if modulo == "unknown" {
+                                additional_args.push(RcDoc::as_string("_"));
+                            } else {
+                                additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+                            }
                         }
                         _ => panic!(), // should not happen
                     }
@@ -691,8 +596,7 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
-                            additional_args
-                                .push(translate_expression(get_type_default(inner_ty), top_ctx))
+                            additional_args.push(RcDoc::as_string("default"));
                         }
                         _ => panic!(), // should not happen
                     }
@@ -1882,10 +1786,16 @@ fn translate_item<'a>(
                     }),
             )
         }
-        Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => RcDoc::as_string(format!(
+        Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => {
+            RcDoc::as_string(format!(
             "Require Import {}.",
-            str::replace(&kr.to_title_case(), " ", ".")
-        )),
+                str::replace(
+                    // TODO: Better name resolution for crate imports
+                    // Only first should be outer crate name (no crate with _ allowed?)
+                    &str::replacen(&kr.to_title_case(), " ", ".", 1), 
+                    " ", "_")
+            ))
+        }
         // Aliases are translated to Coq Notations
         Item::AliasDecl((TopLevelIdent { string: name, .. }, _), (ty, _)) => {
             RcDoc::as_string("Notation")
