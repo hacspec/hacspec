@@ -768,7 +768,7 @@ const G1_YDEN_K_11: ArrFp = ArrFp(secret_array!(
 const G1_YDEN_K_12: ArrFp = ArrFp(secret_array!(
     U64,
     [
-        0x0ad6b9514c767fe3u64, 0xc3613144b45f1496u64, 0x543346d98adf0226u64, 
+        0x0ad6b9514c767fe3u64, 0xc3613144b45f1496u64, 0x543346d98adf0226u64,
         0x7d5ceef9a00d9b86u64, 0x93000763e3b90ac1u64, 0x1e99b138573345ccu64
     ]
 ));
