@@ -20,6 +20,8 @@ quickcheck = "1"
 quickcheck_macros = "1"
 h2c-rust-ref = { git = "https://github.com/armfazh/h2c-rust-ref" }
 redox-ecc = { git = "https://github.com/armfazh/redox-ecc" }
-# amcl = { version = "0.3.0",  git = "https://github.com/apache/incubator-milagro-crypto-rust", features = ["bls381"] }
+amcl = { version = "0.3.0",  git = "https://github.com/apache/incubator-milagro-crypto-rust", features = ["bls381"] }
 pairing-plus = { git = "https://github.com/algorand/pairing-plus" }
-sha2 = "0.8"
+sha2-8 = { package = "sha2", version = "0.8" }
+sha2-9 = { package = "sha2", version = "0.9" }
+bls12_381 = {version = "0.6.0", features = ["experimental"] }
