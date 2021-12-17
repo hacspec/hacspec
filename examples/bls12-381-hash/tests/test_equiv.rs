@@ -24,9 +24,14 @@ use bls12_381::{
 };
 use sha2_09::Sha256 as ZKSha256;
 
-#[cfg(test)]
+use curve_arithmetic::Curve;
+use group::EncodedPoint as CEncodedPoint;
+use pairing::bls12_381::{
+    G1Affine as CG1Affine, G1Uncompressed as CG1Uncompressed, G2Affine as CG2Affine,
+    G2Uncompressed as CG2Uncompressed,
+};
+
 extern crate quickcheck;
-#[cfg(test)]
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
@@ -342,4 +347,48 @@ fn test_equiv_zkcrypto_g2_sswu_nu(msg: String) -> bool {
         ZKExpandMsgXmd<ZKSha256>,
     >>::encode_to_curve(msg, dst));
     ph == q
+}
+
+/* Testing against concordium
+https://github.com/Concordium/concordium-base/tree/main/rust-src/curve_arithmetic */
+#[quickcheck]
+fn test_equiv_concordium_g1_sswu_ro(msg: String) -> bool {
+    let dst = b"CONCORDIUM-hashtoG1-with-BLS12381G1_XMD:SHA-256_SSWU_RO";
+    let msg: &[u8] = msg.as_bytes();
+    let q = CG1Affine::hash_to_group(msg);
+    let p = g1_hash_to_curve_sswu(
+        &ByteSeq::from_public_slice(msg),
+        &ByteSeq::from_public_slice(dst),
+    );
+    let t = [
+        p.0.to_byte_seq_be().to_native(),
+        p.1.to_byte_seq_be().to_native(),
+    ]
+    .concat();
+    let mut tv = CG1Uncompressed::empty();
+    tv.as_mut().copy_from_slice(&t[0..96]);
+    let ph = tv.into_affine().unwrap();
+    q == ph
+}
+
+#[quickcheck]
+fn test_equiv_concordium_g2_sswu_ro(msg: String) -> bool {
+    let dst = b"CONCORDIUM-hashtoG2-with-BLS12381G2_XMD:SHA-256_SSWU_RO";
+    let msg: &[u8] = msg.as_bytes();
+    let q = CG2Affine::hash_to_group(msg);
+    let p = g2_hash_to_curve_sswu(
+        &ByteSeq::from_public_slice(msg),
+        &ByteSeq::from_public_slice(dst),
+    );
+    let t = [
+        p.0 .1.to_byte_seq_be().to_native(),
+        p.0 .0.to_byte_seq_be().to_native(),
+        p.1 .1.to_byte_seq_be().to_native(),
+        p.1 .0.to_byte_seq_be().to_native(),
+    ]
+    .concat();
+    let mut tv = CG2Uncompressed::empty();
+    tv.as_mut().copy_from_slice(&t[0..192]);
+    let ph = tv.into_affine().unwrap();
+    q == ph
 }
