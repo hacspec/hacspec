@@ -2327,8 +2327,8 @@ fn tokentree_text(x: TokenTree) -> String {
             TokenKind::Pound => "€".to_string(),
             TokenKind::Dollar => "$".to_string(),
             TokenKind::Question => "$".to_string(),
-            TokenKind::Literal(x) => format!["{}", x].to_string(),
-            TokenKind::Ident(sym, _) => format!["{}", sym].to_string(),
+            TokenKind::Literal(x) => format![" {} ", x].to_string(),
+            TokenKind::Ident(sym, _) => format![" {} ", sym].to_string(),
             y => {
                 panic!(" (TODO: {:?})", y);
             }
@@ -2513,7 +2513,7 @@ fn translate_pearlite_pat(pat: syn::Pat, span: Span) -> ast::Pat {
             syn::Pat::TupleStruct(p) => ast::PatKind::TupleStruct(None, translate_pearlite_path(p.path, span), p.pat.elems.into_iter().map(|x| { P(translate_pearlite_pat(x, span)) }).collect()),
             // syn::Pat::Type(p) => ...
             // syn::Pat::Verbatim(p) => ...
-            // syn::Pat::Wild(p) => ...
+            syn::Pat::Wild(_p) => ast::PatKind::Wild,
             p => unimplemented!("Pearlite pattern {:?}", p),
         },
         span: span,
