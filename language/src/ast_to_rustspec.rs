@@ -2510,7 +2510,7 @@ fn translate_pearlite_pat(pat: syn::Pat, span: Span) -> ast::Pat {
             // syn::Pat::Slice(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
             // syn::Pat::Struct(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
             // syn::Pat::Tuple(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
-            // syn::Pat::TupleStruct(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            syn::Pat::TupleStruct(p) => ast::PatKind::TupleStruct(None, translate_pearlite_path(p.path, span), p.pat.elems.into_iter().map(|x| { P(translate_pearlite_pat(x, span)) }).collect()),
             // syn::Pat::Type(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
             // syn::Pat::Verbatim(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
             // syn::Pat::Wild(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
@@ -2595,6 +2595,28 @@ fn translate_id(id: rustc_span::symbol::Ident) -> Ident {
     Ident::Unresolved(format!("{}", id))
 }
 
+fn translate_pearlite_path(path: syn::Path, span: Span) -> ast::Path {
+    match path {
+        syn::Path {
+            leading_colon: _,
+            segments: s,
+        } => rustc_ast::ast::Path {
+            span,
+            segments: s
+                .iter()
+                .map(|x| match x {
+                    syn::PathSegment { ident: id, .. } => rustc_ast::ast::PathSegment {
+                        ident: translate_pearlite_ident(id.clone(), span),
+                        id: NodeId::MAX,
+                        args: None,
+                    },
+                })
+                .collect(),
+            tokens: None,
+        },
+    }
+}
+
 fn translate_pearlite_type(typ: syn::Type, span: Span) -> rustc_ast::ast::Ty {
     match typ {
         // syn::Type::Array(arr_ty) => {
@@ -2611,49 +2633,18 @@ fn translate_pearlite_type(typ: syn::Type, span: Span) -> rustc_ast::ast::Ty {
         // syn::Type::Paren(TypeParen) => ,
         syn::Type::Path(syn::TypePath {
             qself: _,
-            path:
-                syn::Path {
-                    leading_colon: _,
-                    segments: s,
-                },
+            path,
         }) => {
             Ty {
                 tokens: None,
                 id: NodeId::MAX,
                 kind: rustc_ast::TyKind::Path(
                     None,
-                    rustc_ast::ast::Path {
-                        span,
-                        segments: s
-                            .iter()
-                            .map(|x| match x {
-                                syn::PathSegment { ident: id, .. } => rustc_ast::ast::PathSegment {
-                                    ident: translate_pearlite_ident(id.clone(), span),
-                                    id: NodeId::MAX,
-                                    args: None,
-                                },
-                            })
-                            .collect(),
-                        tokens: None,
-                    },
+                    translate_pearlite_path(path, span),
                 ),
-                span, // tok.span.clone(),
+                span,
             }
-        }
-        //     BaseTyp::Named(
-        //     (
-        //         TopLevelIdent(
-        //             s.iter()
-        //                 .fold("".to_string(), |s, x| match x {
-        //                     syn::PathSegment { ident: id, .. } =>
-        //                         (if s == "".to_string() { s } else { s + "::" }) + format!("{}", id.clone()).as_str(),
-        //                 }),
-        //         ),
-        //         span,
-        //     ),
-        //     None,
-        // )
-        ,
+        },
         // syn::Type::Ptr(TypePtr) => ,
         // syn::Type::Reference(TypeReference) => ,
         // syn::Type::Slice(TypeSlice) => ,
