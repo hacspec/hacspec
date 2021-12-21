@@ -2703,7 +2703,12 @@ pub fn translate_pearlite(
                     .collect(),
             )
         }
-        //         pearlite_syn::term::Term::Cast(_) => RcDoc::as_string("TODOCast"),
+        pearlite_syn::term::Term::Cast(pearlite_syn::term::TermCast { expr, ty, .. }) => {
+            ExprKind::Cast(
+                P(translate_pearlite_unquantified(sess, *expr, span).unwrap()),
+                P(translate_pearlite_type(*ty, span)),
+            )
+        }
         //         pearlite_syn::term::Term::Field(pearlite_syn::term::TermField { base, member, .. }) => {
         //             RcDoc::as_string("TODOField")
         //         }
