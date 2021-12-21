@@ -2378,7 +2378,7 @@ fn get_delimited_tree(attr: Attribute) -> Option<rustc_ast::tokenstream::TokenSt
             }
         }
         _ => None,
-    }           
+    }
 }
 
 fn attribute_requires(attr: &Attribute) -> Option<String> {
@@ -2471,18 +2471,53 @@ fn translate_pearlite_binop(op: syn::BinOp) -> ast::BinOpKind {
         syn::BinOp::Ne(_) => ast::BinOpKind::Ne,
         syn::BinOp::Ge(_) => ast::BinOpKind::Ge,
         syn::BinOp::Gt(_) => ast::BinOpKind::Gt,
-        binop => panic!("binop error: {:#?}", binop), // Error
-                                                      // syn::BinOp::AddEq(_) => ast::BinOpKind::AddEq,
-                                                      // syn::BinOp::SubEq(_) => ast::BinOpKind::SubEq,
-                                                      // syn::BinOp::MulEq(_) => ast::BinOpKind::MulEq,
-                                                      // syn::BinOp::DivEq(_) => ast::BinOpKind::DivEq,
-                                                      // syn::BinOp::RemEq(_) => ast::BinOpKind::RemEq,
-                                                      // syn::BinOp::BitXorEq(_) => ast::BinOpKind::BitXorEq,
-                                                      // syn::BinOp::BitAndEq(_) => ast::BinOpKind::BitAndEq,
-                                                      // syn::BinOp::BitOrEq(_) => ast::BinOpKind::BitOrEq,
-                                                      // syn::BinOp::ShlEq(_) => ast::BinOpKind::ShlEq,
-                                                      // syn::BinOp::ShrEq(_) => ast::BinOpKind::ShrEq,
-                                                      // _ => RcDoc::as_string(format!("TODO: {:?}", b)),
+        binop => panic!("binop error: {:#?}", binop),
+        // Error
+        // syn::BinOp::AddEq(_) => ast::BinOpKind::AddEq,
+        // syn::BinOp::SubEq(_) => ast::BinOpKind::SubEq,
+        // syn::BinOp::MulEq(_) => ast::BinOpKind::MulEq,
+        // syn::BinOp::DivEq(_) => ast::BinOpKind::DivEq,
+        // syn::BinOp::RemEq(_) => ast::BinOpKind::RemEq,
+        // syn::BinOp::BitXorEq(_) => ast::BinOpKind::BitXorEq,
+        // syn::BinOp::BitAndEq(_) => ast::BinOpKind::BitAndEq,
+        // syn::BinOp::BitOrEq(_) => ast::BinOpKind::BitOrEq,
+        // syn::BinOp::ShlEq(_) => ast::BinOpKind::ShlEq,
+        // syn::BinOp::ShrEq(_) => ast::BinOpKind::ShrEq,
+        // _ => RcDoc::as_string(format!("TODO: {:?}", b)),
+    }
+}
+
+fn translate_pearlite_pat(pat: syn::Pat, span: Span) -> ast::Pat {
+    ast::Pat {
+        id: NodeId::MAX,
+        kind: match pat {
+            syn::Pat::Box(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            syn::Pat::Ident(p) => ast::PatKind::Ident(
+                ast::BindingMode::ByValue(ast::Mutability::Not),
+                translate_pearlite_ident(p.ident, span),
+                match p.subpat {
+                    Some((_, subpat)) => Some(P(translate_pearlite_pat(*subpat, span))),
+                    _ => None,
+                },
+            ),
+            // syn::Pat::Lit(p) => ast::PatKind::Lit(P(...)),
+            // syn::Pat::Macro(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Or(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Path(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Range(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Reference(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Rest(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Slice(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Struct(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Tuple(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::TupleStruct(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Type(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Verbatim(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            // syn::Pat::Wild(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
+            p => unimplemented!("Pearlite pattern {:?}", p),
+        },
+        span: span,
+        tokens: None,
     }
 }
 
@@ -2503,9 +2538,9 @@ pub fn translate_pearlite_unquantified(
 ) -> Option<Expr> {
     match translate_pearlite(sess, t, span) {
         Quantified::Unquantified(e) => Some(e),
-                         _ => None,
-                     }
-                 }
+        _ => None,
+    }
+}
 
 fn translate_pearlite_lit<'a>(l: syn::Lit, span: Span) -> rustc_ast::ast::Lit {
     match l.clone() {
@@ -2559,7 +2594,6 @@ fn translate_pearlite_lit<'a>(l: syn::Lit, span: Span) -> rustc_ast::ast::Lit {
 fn translate_id(id: rustc_span::symbol::Ident) -> Ident {
     Ident::Unresolved(format!("{}", id))
 }
-
 
 fn translate_pearlite_type(typ: syn::Type, span: Span) -> rustc_ast::ast::Ty {
     match typ {
@@ -2699,9 +2733,30 @@ pub fn translate_pearlite(
         pearlite_syn::term::Term::Lit(pearlite_syn::term::TermLit { ref lit }) => {
             ExprKind::Lit(translate_pearlite_lit(lit.clone(), span))
         }
-        //         pearlite_syn::term::Term::Match(pearlite_syn::term::TermMatch { expr, arms, .. }) => {
-        //             RcDoc::as_string("TODOMatch")
-        //         }
+        pearlite_syn::term::Term::Match(pearlite_syn::term::TermMatch { expr, arms, .. }) => {
+            ExprKind::Match(
+                P(translate_pearlite_unquantified(sess, *expr, span).unwrap()),
+                arms.into_iter()
+                    .map(|a| ast::Arm {
+                        attrs: Into::<AttrVec>::into(vec![]),
+                        pat: P(translate_pearlite_pat(a.pat.clone(), span)),
+                        guard: match a.guard {
+                            Some((_, a_guard)) => {
+                                match translate_pearlite_unquantified(sess, *a_guard, span) {
+                                    Some(translated_a_guard) => Some(P(translated_a_guard)),
+                                    _ => None,
+                                }
+                            }
+                            _ => None,
+                        },
+                        body: P(translate_pearlite_unquantified(sess, *a.body, span).unwrap()), // P(translate_pearlite_unquantified(sess, *a.body, span).unwrap()),
+                        span: span,
+                        id: NodeId::MAX,
+                        is_placeholder: false,
+                    })
+                    .collect(),
+            )
+        }
         pearlite_syn::term::Term::MethodCall(pearlite_syn::term::TermMethodCall {
             receiver,
             method,
@@ -2727,23 +2782,23 @@ pub fn translate_pearlite(
             )
         }
         pearlite_syn::term::Term::Paren(pearlite_syn::term::TermParen { expr, .. }) => {
-            // match expr.clone() {                
+            // match expr.clone() {
             // ExprKind::Paren(P(
-            return translate_pearlite(sess, *expr, span)// _unquantified.unwrap()
-            // ))
-            // }
+            return translate_pearlite(sess, *expr, span); // _unquantified.unwrap()
+                                                          // ))
+                                                          // }
         }
         pearlite_syn::term::Term::Path(pearlite_syn::term::TermPath {
             inner:
-            syn::ExprPath {
-                attrs: _,
-                qself: _,
-                path:
-                syn::Path {
-                    leading_colon: _,
-                    segments: s,
+                syn::ExprPath {
+                    attrs: _,
+                    qself: _,
+                    path:
+                        syn::Path {
+                            leading_colon: _,
+                            segments: s,
+                        },
                 },
-            },
         }) => ExprKind::Path(
             None,
             Path {
@@ -2907,9 +2962,6 @@ fn translate_quantified_expr(
         ),
     }
 }
-
-
-
 
 fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
