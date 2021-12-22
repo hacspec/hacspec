@@ -10,7 +10,7 @@ bytes!(Block, BLOCK_SIZE);
 array!(OpTableType, 12, usize);
 bytes!(Sha256Digest, HASH_SIZE);
 array!(RoundConstantsTable, K_SIZE, U32);
-array!(HashType, 8, U32);
+array!(Hash, 8, U32);
 
 fn ch(x: U32, y: U32, z: U32) -> U32 {
     (x & y) ^ ((!x) & z)
@@ -42,7 +42,7 @@ const K_TABLE: RoundConstantsTable = RoundConstantsTable(secret_array!(
     ]
 ));
 
-const HASH_INIT: HashType = HashType(secret_array!(
+const HASH_INIT: Hash = Hash(secret_array!(
     U32,
     [
         0x6a09e667u32,
@@ -83,7 +83,7 @@ fn schedule(block: Block) -> RoundConstantsTable {
     s
 }
 
-fn shuffle(ws: RoundConstantsTable, hashi: HashType) -> HashType {
+fn shuffle(ws: RoundConstantsTable, hashi: Hash) -> Hash {
     let mut h = hashi;
     for i in 0..K_SIZE {
         let a0 = h[0];
@@ -110,7 +110,7 @@ fn shuffle(ws: RoundConstantsTable, hashi: HashType) -> HashType {
     h
 }
 
-fn compress(block: Block, h_in: HashType) -> HashType {
+fn compress(block: Block, h_in: Hash) -> Hash {
     let s = schedule(block);
     let mut h = shuffle(s, h_in);
     for i in 0..8 {
