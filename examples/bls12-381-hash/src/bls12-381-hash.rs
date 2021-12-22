@@ -1,7 +1,7 @@
-/* Hashing to Elliptic Curves: https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html
-For the BLS12-381 curve.
-Includes both the Shallue-van de Woestijne method and the Simplified Shallue-van de Woestijne-Ulas for AB == 0 method
-for mapping to curve. */
+//! Hashing to Elliptic Curves: <https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html>
+//! For the BLS12-381 curve.
+//! Includes both the Shallue-van de Woestijne method and the Simplified Shallue-van de Woestijne-Ulas for `AB == 0` method
+//! for mapping to curve. */
 
 use hacspec_bls12_381::*;
 use hacspec_lib::*;
@@ -343,10 +343,8 @@ pub fn g2_encode_to_curve_svdw(msg: &ByteSeq, dst: &ByteSeq) -> G2 {
     p
 }
 
-/* Simplified SWU for AB == 0 method
-*
-* Hash to G1 - Constants
-*/
+// Simplified SWU for AB == 0 method
+// Hash to G1 - Constants
 
 #[rustfmt::skip]
 const G1_ISO_A: ArrFp = ArrFp(secret_array!(
@@ -955,7 +953,7 @@ pub fn g1_encode_to_curve_sswu(msg: &ByteSeq, dst: &ByteSeq) -> G1 {
     p
 }
 
-/* Hash to G2 - Constants */
+// Hash to G2 - Constants
 
 #[rustfmt::skip]
 const G2_XNUM_K_0: ArrFp = ArrFp(secret_array!(
@@ -1470,9 +1468,7 @@ mod test {
             )
     }
 
-    /* Tests for sswu
-     *
-     */
+    // Tests for sswu
 
     #[test]
     fn test_g1_simple_swu_iso() {

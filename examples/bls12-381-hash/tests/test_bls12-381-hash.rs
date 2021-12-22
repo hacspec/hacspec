@@ -1,7 +1,6 @@
 use hacspec_bls12_381::*;
 use hacspec_bls12_381_hash::*;
 use hacspec_lib::*;
-//use hacspec_sha256::*;
 
 #[test]
 fn test_g1_hash_to_curve_svdw() {

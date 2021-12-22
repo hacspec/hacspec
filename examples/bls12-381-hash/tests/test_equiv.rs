@@ -1,5 +1,4 @@
-/* Testing the hacspec implementation of hashing to the bls12-381 curve against a number of implementations.
-*/
+//! Testing the hacspec implementation of hashing to the bls12-381 curve against a number of implementations.
 
 use hacspec_bls12_381_hash::*;
 use hacspec_lib::*;
@@ -35,8 +34,8 @@ extern crate quickcheck;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
-/* Testing against the reference implementation
-https://github.com/armfazh/h2c-rust-ref */
+// Testing against the reference implementation
+// https://github.com/armfazh/h2c-rust-ref
 #[quickcheck]
 fn test_equiv_armfazh_g1_sswu_ro(msg: String) -> bool {
     let dst = b"QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
@@ -125,8 +124,8 @@ fn test_equiv_armfazh_g1_svdw_nu(msg: String) -> bool {
     q == ph
 }
 
-/* Testing against pairing-plus
-https://github.com/algorand/pairing-plus */
+// Testing against pairing-plus
+// https://github.com/algorand/pairing-plus
 #[quickcheck]
 fn test_equiv_pairing_plus_g1_sswu_ro(msg: String) -> bool {
     let dst = b"pairing-plus-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
@@ -215,8 +214,8 @@ fn test_equiv_pairing_plus_g2_sswu_nu(msg: String) -> bool {
     q == ph
 }
 
-/* Testing against amcl
-https://github.com/apache/incubator-milagro-crypto-rust */
+// Testing against amcl
+// https://github.com/apache/incubator-milagro-crypto-rust
 #[quickcheck]
 fn test_equiv_amcl_g1_sswu_ro(msg: String) -> bool {
     let dst = b"amcl-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
@@ -255,8 +254,8 @@ fn test_equiv_amcl_g2_sswu_ro(msg: String) -> bool {
     ph == q
 }
 
-/* Testing against zkcrypto
-https://github.com/zkcrypto/bls12_381 */
+// Testing against zkcrypto
+// https://github.com/zkcrypto/bls12_381
 #[quickcheck]
 fn test_equiv_zkcrypto_g1_sswu_ro(msg: String) -> bool {
     let dst = b"zkcrypto-with-BLS12381G1_XMD:SHA-256_SSWU_RO_";
@@ -349,8 +348,8 @@ fn test_equiv_zkcrypto_g2_sswu_nu(msg: String) -> bool {
     ph == q
 }
 
-/* Testing against concordium
-https://github.com/Concordium/concordium-base/tree/main/rust-src/curve_arithmetic */
+// Testing against concordium
+// https://github.com/Concordium/concordium-base/tree/main/rust-src/curve_arithmetic
 #[quickcheck]
 fn test_equiv_concordium_g1_sswu_ro(msg: String) -> bool {
     let dst = b"CONCORDIUM-hashtoG1-with-BLS12381G1_XMD:SHA-256_SSWU_RO";
