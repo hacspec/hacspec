@@ -144,7 +144,29 @@ fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
-    translate_ident_str(x.string)
+    match x.kind {
+        TopLevelIdentKind::Type => {
+            match format!("{}", translate_ident_str(x.string).pretty(0)).as_str() {
+                s @ "uint128"
+                | s @ "uint64"
+                | s @ "uint32"
+                | s @ "uint16"
+                | s @ "uint8"
+                | s @ "int128"
+                | s @ "int64"
+                | s @ "int32"
+                | s @ "int16"
+                | s @ "int8"
+                | s @ "byte_seq"
+                | s @ "public_byte_seq"
+                | s @ "option"
+                | s @ "result" => RcDoc::as_string(s),
+                s => RcDoc::as_string(format!("{}_t", s)),
+            }
+        }
+        TopLevelIdentKind::Constant => translate_ident_str(format!("{}_v", x.string)),
+        _ => translate_ident_str(x.string),
+    }
 }
 
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
@@ -602,8 +624,7 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (NAT_MODULE, "from_byte_seq_le")
-                | (NAT_MODULE, "from_byte_seq_be") => {
+                (NAT_MODULE, "from_byte_seq_le") | (NAT_MODULE, "from_byte_seq_be") => {
                     match &prefix_info {
                         FuncPrefix::NatMod(modulo, _) => {
                             result_typ = Some(prefix.clone());
@@ -643,7 +664,7 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
-                            additional_args.push(translate_ident_str(s.string.clone()))
+                            additional_args.push(translate_ident(Ident::TopLevel(s.clone())))
                         }
                         FuncPrefix::Array(ArraySize::Integer(i), _) => {
                             additional_args.push(RcDoc::as_string(format!("{}", i)))
@@ -1840,11 +1861,11 @@ fn translate_item<'a>(
             ))
         }
         // Aliases are translated to Coq Notations
-        Item::AliasDecl((TopLevelIdent { string: name, .. }, _), (ty, _)) => {
+        Item::AliasDecl((ident, _), (ty, _)) => {
             RcDoc::as_string("Notation")
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("\"'"))
-                .append(translate_ident_str(name.clone()))
+                .append(translate_ident(Ident::TopLevel(ident.clone())))
                 .append(RcDoc::as_string("'\""))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string(":= ("))
@@ -1857,18 +1878,18 @@ fn translate_item<'a>(
                         .append(RcDoc::as_string("Instance"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("show_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string(":"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("Show ("))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string(") :="))
                         .append(RcDoc::line())
                         .append(
                             RcDoc::as_string("Build_Show")
                                     .append(RcDoc::space())
-                                    .append(translate_ident_str(name.clone()))
+                                    .append(translate_ident(Ident::TopLevel(ident.clone())))
                                     .append(RcDoc::space())
                                     .append(RcDoc::as_string("(fun x =>"))
                                     .append(RcDoc::line())
@@ -1904,12 +1925,12 @@ fn translate_item<'a>(
                         .append(RcDoc::as_string("Definition"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("g_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string(":"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("G ("))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string(") :="))
                         .append(RcDoc::line())
                         .append(match ty.clone() {
@@ -1953,18 +1974,18 @@ fn translate_item<'a>(
                         .append(RcDoc::as_string("Instance"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("gen_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string(":"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("Gen ("))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string(") := Build_Gen"))
                         .append(RcDoc::space())
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("g_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string("."))
                         .group()
                                 .append(RcDoc::hardline())
