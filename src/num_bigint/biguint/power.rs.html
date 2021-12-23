@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/num-bigint-0.4.3/src/biguint/power.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>power.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../num_bigint/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;num-bigint-0.4.3&#x2F;src&#x2F;biguint&#x2F;power.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>power.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../num_bigint/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -256,24 +256,23 @@
 <span id="256">256</span>
 <span id="257">257</span>
 <span id="258">258</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">monty</span>::<span class="ident">monty_modpow</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">BigUint</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::monty::monty_modpow</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::BigUint</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">big_digit</span>::{<span class="self">self</span>, <span class="ident">BigDigit</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::big_digit</span>::{<span class="self">self</span>, <span class="ident">BigDigit</span>};
 
-<span class="kw">use</span> <span class="ident">num_integer</span>::<span class="ident">Integer</span>;
+<span class="kw">use</span> <span class="ident">num_integer::Integer</span>;
 <span class="kw">use</span> <span class="ident">num_traits</span>::{<span class="ident">One</span>, <span class="ident">Pow</span>, <span class="ident">ToPrimitive</span>, <span class="ident">Zero</span>};
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span> <span class="ident">Pow</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">BigUint</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BigUint</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
+    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) -&gt; <span class="ident">BigUint</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_one</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">exp</span>.<span class="ident">is_zero</span>() {
-            <span class="ident">BigUint</span>::<span class="ident">one</span>()
+            <span class="ident">BigUint::one</span>()
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_zero</span>() {
-            <span class="ident">BigUint</span>::<span class="ident">zero</span>()
+            <span class="ident">BigUint::zero</span>()
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">exp</span>) <span class="op">=</span> <span class="ident">exp</span>.<span class="ident">to_u64</span>() {
             <span class="self">self</span>.<span class="ident">pow</span>(<span class="ident">exp</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">exp</span>) <span class="op">=</span> <span class="ident">exp</span>.<span class="ident">to_u128</span>() {
@@ -281,7 +280,7 @@
         } <span class="kw">else</span> {
             <span class="comment">// At this point, `self &gt;= 2` and `exp &gt;= 2¹²⁸`. The smallest possible result given</span>
             <span class="comment">// `2.pow(2¹²⁸)` would require far more memory than 64-bit targets can address!</span>
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;memory overflow&quot;</span>)
+            <span class="macro">panic!</span>(<span class="string">&quot;memory overflow&quot;</span>)
         }
     }
 }
@@ -290,8 +289,8 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">BigUint</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-        <span class="ident">Pow</span>::<span class="ident">pow</span>(<span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>)
+    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">BigUint</span>) -&gt; <span class="ident">BigUint</span> {
+        <span class="ident">Pow::pow</span>(<span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>)
     }
 }
 
@@ -299,11 +298,11 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
+    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) -&gt; <span class="ident">BigUint</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_one</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">exp</span>.<span class="ident">is_zero</span>() {
-            <span class="ident">BigUint</span>::<span class="ident">one</span>()
+            <span class="ident">BigUint::one</span>()
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_zero</span>() {
-            <span class="ident">BigUint</span>::<span class="ident">zero</span>()
+            <span class="ident">BigUint::zero</span>()
         } <span class="kw">else</span> {
             <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">pow</span>(<span class="ident">exp</span>)
         }
@@ -314,28 +313,28 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">BigUint</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-        <span class="ident">Pow</span>::<span class="ident">pow</span>(<span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>)
+    <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="ident">BigUint</span>) -&gt; <span class="ident">BigUint</span> {
+        <span class="ident">Pow::pow</span>(<span class="self">self</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>)
     }
 }
 
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">pow_impl</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
+<span class="macro">macro_rules!</span> <span class="ident">pow_impl</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>:<span class="ident">ty</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">Pow</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BigUint</span> {
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
-            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">exp</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-                <span class="kw">if</span> <span class="ident">exp</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="kw">return</span> <span class="ident">BigUint</span>::<span class="ident">one</span>();
+            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">exp</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) -&gt; <span class="ident">BigUint</span> {
+                <span class="kw">if</span> <span class="ident">exp</span> <span class="op">==</span> <span class="number">0</span> {
+                    <span class="kw">return</span> <span class="ident">BigUint::one</span>();
                 }
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="self">self</span>;
 
-                <span class="kw">while</span> <span class="ident">exp</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">while</span> <span class="ident">exp</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">==</span> <span class="number">0</span> {
                     <span class="ident">base</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">base</span>;
                     <span class="ident">exp</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span>;
                 }
 
-                <span class="kw">if</span> <span class="ident">exp</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+                <span class="kw">if</span> <span class="ident">exp</span> <span class="op">==</span> <span class="number">1</span> {
                     <span class="kw">return</span> <span class="ident">base</span>;
                 }
 
@@ -343,7 +342,7 @@
                 <span class="kw">while</span> <span class="ident">exp</span> <span class="op">&gt;</span> <span class="number">1</span> {
                     <span class="ident">exp</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span>;
                     <span class="ident">base</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">base</span>;
-                    <span class="kw">if</span> <span class="ident">exp</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+                    <span class="kw">if</span> <span class="ident">exp</span> <span class="op">&amp;</span> <span class="number">1</span> <span class="op">==</span> <span class="number">1</span> {
                         <span class="ident">acc</span> <span class="kw-2">*</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base</span>;
                     }
                 }
@@ -355,8 +354,8 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-                <span class="ident">Pow</span>::<span class="ident">pow</span>(<span class="self">self</span>, <span class="kw-2">*</span><span class="ident">exp</span>)
+            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) -&gt; <span class="ident">BigUint</span> {
+                <span class="ident">Pow::pow</span>(<span class="self">self</span>, <span class="kw-2">*</span><span class="ident">exp</span>)
             }
         }
 
@@ -364,11 +363,11 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-                <span class="kw">if</span> <span class="ident">exp</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="kw">return</span> <span class="ident">BigUint</span>::<span class="ident">one</span>();
+            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) -&gt; <span class="ident">BigUint</span> {
+                <span class="kw">if</span> <span class="ident">exp</span> <span class="op">==</span> <span class="number">0</span> {
+                    <span class="kw">return</span> <span class="ident">BigUint::one</span>();
                 }
-                <span class="ident">Pow</span>::<span class="ident">pow</span>(<span class="self">self</span>.<span class="ident">clone</span>(), <span class="ident">exp</span>)
+                <span class="ident">Pow::pow</span>(<span class="self">self</span>.<span class="ident">clone</span>(), <span class="ident">exp</span>)
             }
         }
 
@@ -376,22 +375,22 @@
             <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">BigUint</span>;
 
             <span class="attribute">#[<span class="ident">inline</span>]</span>
-            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-                <span class="ident">Pow</span>::<span class="ident">pow</span>(<span class="self">self</span>, <span class="kw-2">*</span><span class="ident">exp</span>)
+            <span class="kw">fn</span> <span class="ident">pow</span>(<span class="self">self</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>) -&gt; <span class="ident">BigUint</span> {
+                <span class="ident">Pow::pow</span>(<span class="self">self</span>, <span class="kw-2">*</span><span class="ident">exp</span>)
             }
         }
     };
 }
 
-<span class="macro">pow_impl</span><span class="macro">!</span>(<span class="ident">u8</span>);
-<span class="macro">pow_impl</span><span class="macro">!</span>(<span class="ident">u16</span>);
-<span class="macro">pow_impl</span><span class="macro">!</span>(<span class="ident">u32</span>);
-<span class="macro">pow_impl</span><span class="macro">!</span>(<span class="ident">u64</span>);
-<span class="macro">pow_impl</span><span class="macro">!</span>(<span class="ident">usize</span>);
-<span class="macro">pow_impl</span><span class="macro">!</span>(<span class="ident">u128</span>);
+<span class="macro">pow_impl!</span>(<span class="ident">u8</span>);
+<span class="macro">pow_impl!</span>(<span class="ident">u16</span>);
+<span class="macro">pow_impl!</span>(<span class="ident">u32</span>);
+<span class="macro">pow_impl!</span>(<span class="ident">u64</span>);
+<span class="macro">pow_impl!</span>(<span class="ident">usize</span>);
+<span class="macro">pow_impl!</span>(<span class="ident">u128</span>);
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">modpow</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>, <span class="ident">exponent</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>, <span class="ident">modulus</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-    <span class="macro">assert</span><span class="macro">!</span>(
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">modpow</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>, <span class="ident">exponent</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>, <span class="ident">modulus</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) -&gt; <span class="ident">BigUint</span> {
+    <span class="macro">assert!</span>(
         <span class="op">!</span><span class="ident">modulus</span>.<span class="ident">is_zero</span>(),
         <span class="string">&quot;attempt to calculate with zero modulus!&quot;</span>
     );
@@ -405,20 +404,20 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">plain_modpow</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>, <span class="ident">exp_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">BigDigit</span>], <span class="ident">modulus</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigUint</span> {
-    <span class="macro">assert</span><span class="macro">!</span>(
+<span class="kw">fn</span> <span class="ident">plain_modpow</span>(<span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>, <span class="ident">exp_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">BigDigit</span>], <span class="ident">modulus</span>: <span class="kw-2">&amp;</span><span class="ident">BigUint</span>) -&gt; <span class="ident">BigUint</span> {
+    <span class="macro">assert!</span>(
         <span class="op">!</span><span class="ident">modulus</span>.<span class="ident">is_zero</span>(),
         <span class="string">&quot;attempt to calculate with zero modulus!&quot;</span>
     );
 
     <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">exp_data</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>) {
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">BigUint</span>::<span class="ident">one</span>(),
-        <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>,
+        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">BigUint::one</span>(),
+        <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; <span class="ident">i</span>,
     };
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">base</span> <span class="op">%</span> <span class="ident">modulus</span>;
     <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">i</span> {
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">big_digit</span>::<span class="ident">BITS</span> {
+        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">big_digit::BITS</span> {
             <span class="ident">base</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base</span> <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">base</span> <span class="op">%</span> <span class="ident">modulus</span>;
         }
     }
@@ -432,7 +431,7 @@
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exp_iter</span> <span class="op">=</span> <span class="ident">exp_data</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>..].<span class="ident">iter</span>();
-    <span class="kw">if</span> <span class="ident">exp_iter</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">r</span>.<span class="ident">is_one</span>() {
+    <span class="kw">if</span> <span class="ident">exp_iter</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">r</span>.<span class="ident">is_one</span>() {
         <span class="kw">return</span> <span class="ident">base</span>;
     }
 
@@ -451,7 +450,7 @@
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">last</span>) <span class="op">=</span> <span class="ident">exp_iter</span>.<span class="ident">next_back</span>() {
             <span class="comment">// consume exp_data[i]</span>
-            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="ident">b</span>..<span class="ident">big_digit</span>::<span class="ident">BITS</span> {
+            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="ident">b</span>..<span class="ident">big_digit::BITS</span> {
                 <span class="ident">unit</span>(<span class="ident">r</span>.<span class="ident">is_odd</span>());
                 <span class="ident">r</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span>;
             }
@@ -459,7 +458,7 @@
             <span class="comment">// consume all other digits before the last</span>
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">r</span> <span class="kw">in</span> <span class="ident">exp_iter</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">r</span>;
-                <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">big_digit</span>::<span class="ident">BITS</span> {
+                <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">big_digit::BITS</span> {
                     <span class="ident">unit</span>(<span class="ident">r</span>.<span class="ident">is_odd</span>());
                     <span class="ident">r</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span>;
                 }
@@ -467,7 +466,7 @@
             <span class="ident">r</span> <span class="op">=</span> <span class="ident">last</span>;
         }
 
-        <span class="macro">debug_assert_ne</span><span class="macro">!</span>(<span class="ident">r</span>, <span class="number">0</span>);
+        <span class="macro">debug_assert_ne!</span>(<span class="ident">r</span>, <span class="number">0</span>);
         <span class="kw">while</span> <span class="op">!</span><span class="ident">r</span>.<span class="ident">is_zero</span>() {
             <span class="ident">unit</span>(<span class="ident">r</span>.<span class="ident">is_odd</span>());
             <span class="ident">r</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span>;
@@ -478,31 +477,31 @@
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_plain_modpow</span>() {
-    <span class="kw">let</span> <span class="ident">two</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">BigUint</span>::<span class="ident">from</span>(<span class="number">2u32</span>);
-    <span class="kw">let</span> <span class="ident">modulus</span> <span class="op">=</span> <span class="ident">BigUint</span>::<span class="ident">from</span>(<span class="number">0x1100u32</span>);
+    <span class="kw">let</span> <span class="ident">two</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">BigUint::from</span>(<span class="number">2u32</span>);
+    <span class="kw">let</span> <span class="ident">modulus</span> <span class="op">=</span> <span class="ident">BigUint::from</span>(<span class="number">0x1100u32</span>);
 
-    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>, <span class="number">0b1</span>];
-    <span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">0b1</span>];
+    <span class="macro">assert_eq!</span>(
         <span class="ident">two</span>.<span class="ident">pow</span>(<span class="number">0b1_00000000_u32</span>) <span class="op">%</span> <span class="kw-2">&amp;</span><span class="ident">modulus</span>,
         <span class="ident">plain_modpow</span>(<span class="kw-2">&amp;</span><span class="ident">two</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>, <span class="kw-2">&amp;</span><span class="ident">modulus</span>)
     );
-    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>, <span class="number">0b10</span>];
-    <span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">0b10</span>];
+    <span class="macro">assert_eq!</span>(
         <span class="ident">two</span>.<span class="ident">pow</span>(<span class="number">0b10_00000000_u32</span>) <span class="op">%</span> <span class="kw-2">&amp;</span><span class="ident">modulus</span>,
         <span class="ident">plain_modpow</span>(<span class="kw-2">&amp;</span><span class="ident">two</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>, <span class="kw-2">&amp;</span><span class="ident">modulus</span>)
     );
-    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>, <span class="number">0b110010</span>];
-    <span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">0b110010</span>];
+    <span class="macro">assert_eq!</span>(
         <span class="ident">two</span>.<span class="ident">pow</span>(<span class="number">0b110010_00000000_u32</span>) <span class="op">%</span> <span class="kw-2">&amp;</span><span class="ident">modulus</span>,
         <span class="ident">plain_modpow</span>(<span class="kw-2">&amp;</span><span class="ident">two</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>, <span class="kw-2">&amp;</span><span class="ident">modulus</span>)
     );
-    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0b1</span>, <span class="number">0b1</span>];
-    <span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0b1</span>, <span class="number">0b1</span>];
+    <span class="macro">assert_eq!</span>(
         <span class="ident">two</span>.<span class="ident">pow</span>(<span class="number">0b1_00000001_u32</span>) <span class="op">%</span> <span class="kw-2">&amp;</span><span class="ident">modulus</span>,
         <span class="ident">plain_modpow</span>(<span class="kw-2">&amp;</span><span class="ident">two</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>, <span class="kw-2">&amp;</span><span class="ident">modulus</span>)
     );
-    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0b1100</span>, <span class="number">0</span>, <span class="number">0b1</span>];
-    <span class="macro">assert_eq</span><span class="macro">!</span>(
+    <span class="kw">let</span> <span class="ident">exp</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0b1100</span>, <span class="number">0</span>, <span class="number">0b1</span>];
+    <span class="macro">assert_eq!</span>(
         <span class="ident">two</span>.<span class="ident">pow</span>(<span class="number">0b1_00000000_00001100_u32</span>) <span class="op">%</span> <span class="kw-2">&amp;</span><span class="ident">modulus</span>,
         <span class="ident">plain_modpow</span>(<span class="kw-2">&amp;</span><span class="ident">two</span>, <span class="kw-2">&amp;</span><span class="ident">exp</span>, <span class="kw-2">&amp;</span><span class="ident">modulus</span>)
     );
@@ -510,10 +509,12 @@
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_pow_biguint</span>() {
-    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BigUint</span>::<span class="ident">from</span>(<span class="number">5u8</span>);
-    <span class="kw">let</span> <span class="ident">exponent</span> <span class="op">=</span> <span class="ident">BigUint</span>::<span class="ident">from</span>(<span class="number">3u8</span>);
+    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">BigUint::from</span>(<span class="number">5u8</span>);
+    <span class="kw">let</span> <span class="ident">exponent</span> <span class="op">=</span> <span class="ident">BigUint::from</span>(<span class="number">3u8</span>);
 
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">BigUint</span>::<span class="ident">from</span>(<span class="number">125u8</span>), <span class="ident">base</span>.<span class="ident">pow</span>(<span class="ident">exponent</span>));
+    <span class="macro">assert_eq!</span>(<span class="ident">BigUint::from</span>(<span class="number">125u8</span>), <span class="ident">base</span>.<span class="ident">pow</span>(<span class="ident">exponent</span>));
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "num_bigint";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="num_bigint" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
+</body></html>

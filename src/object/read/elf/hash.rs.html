@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/object-0.27.1/src/read/elf/hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>hash.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../object/index.html'><div class='logo-container'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;object-0.27.1&#x2F;src&#x2F;read&#x2F;elf&#x2F;hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>hash.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../object/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -218,11 +218,10 @@
 <span id="218">218</span>
 <span id="219">219</span>
 <span id="220">220</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>;
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::mem</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">elf</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">read</span>::{<span class="ident">ReadError</span>, <span class="ident">ReadRef</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::elf</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::read</span>::{<span class="ident">ReadError</span>, <span class="ident">ReadRef</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">U32</span>, <span class="ident">U64</span>};
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">FileHeader</span>, <span class="ident">Sym</span>, <span class="ident">SymbolTable</span>, <span class="ident">Version</span>, <span class="ident">VersionTable</span>};
@@ -230,8 +229,8 @@
 <span class="doccomment">/// A SysV symbol hash table in an ELF file.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HashTable</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span>: <span class="ident">FileHeader</span><span class="op">&gt;</span> {
-    <span class="ident">buckets</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span>],
-    <span class="ident">chains</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span>],
+    <span class="ident">buckets</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span>],
+    <span class="ident">chains</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span>],
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span>: <span class="ident">FileHeader</span><span class="op">&gt;</span> <span class="ident">HashTable</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span><span class="op">&gt;</span> {
@@ -241,44 +240,44 @@
     <span class="doccomment">/// segment pointed to via the `DT_HASH` entry.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The header is read at offset 0 in the given `data`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">endian</span>: <span class="ident">Elf</span>::<span class="ident">Endian</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">endian</span>: <span class="ident">Elf::Endian</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">elf</span>::<span class="ident">HashHeader</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">offset</span>)
+            .<span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">elf::HashHeader</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset</span>)
             .<span class="ident">read_error</span>(<span class="string">&quot;Invalid hash header&quot;</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">buckets</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">offset</span>, <span class="ident">header</span>.<span class="ident">bucket_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>)
+            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset</span>, <span class="ident">header</span>.<span class="ident">bucket_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>)
             .<span class="ident">read_error</span>(<span class="string">&quot;Invalid hash buckets&quot;</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">chains</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">offset</span>, <span class="ident">header</span>.<span class="ident">chain_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>)
+            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset</span>, <span class="ident">header</span>.<span class="ident">chain_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>)
             .<span class="ident">read_error</span>(<span class="string">&quot;Invalid hash chains&quot;</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">HashTable</span> { <span class="ident">buckets</span>, <span class="ident">chains</span> })
     }
 
     <span class="doccomment">/// Return the symbol table length.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol_table_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol_table_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">chains</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>
     }
 
     <span class="doccomment">/// Use the hash table to find the symbol table entry with the given name, hash and version.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">ReadRef</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">endian</span>: <span class="ident">Elf</span>::<span class="ident">Endian</span>,
+        <span class="ident">endian</span>: <span class="ident">Elf::Endian</span>,
         <span class="ident">name</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">hash</span>: <span class="ident">u32</span>,
         <span class="ident">version</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Version</span><span class="op">&gt;</span>,
         <span class="ident">symbols</span>: <span class="kw-2">&amp;</span><span class="ident">SymbolTable</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span>, <span class="ident">R</span><span class="op">&gt;</span>,
         <span class="ident">versions</span>: <span class="kw-2">&amp;</span><span class="ident">VersionTable</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> <span class="ident">Elf</span>::<span class="ident">Sym</span>)<span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> <span class="ident">Elf::Sym</span>)<span class="op">&gt;</span> {
         <span class="comment">// Get the chain start from the bucket for this hash.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buckets</span>[(<span class="ident">hash</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">buckets</span>.<span class="ident">len</span>()].<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="comment">// Avoid infinite loop.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">strings</span> <span class="op">=</span> <span class="ident">symbols</span>.<span class="ident">strings</span>();
-        <span class="kw">while</span> <span class="ident">index</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">chains</span>.<span class="ident">len</span>() {
+        <span class="kw">while</span> <span class="ident">index</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">chains</span>.<span class="ident">len</span>() {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">symbol</span>) <span class="op">=</span> <span class="ident">symbols</span>.<span class="ident">symbol</span>(<span class="ident">index</span>) {
-                <span class="kw">if</span> <span class="ident">symbol</span>.<span class="ident">name</span>(<span class="ident">endian</span>, <span class="ident">strings</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Ok</span>(<span class="ident">name</span>)
-                    <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">versions</span>.<span class="ident">matches</span>(<span class="ident">endian</span>, <span class="ident">index</span>, <span class="ident">version</span>)
+                <span class="kw">if</span> <span class="ident">symbol</span>.<span class="ident">name</span>(<span class="ident">endian</span>, <span class="ident">strings</span>) <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">name</span>)
+                    <span class="op">&amp;&amp;</span> <span class="ident">versions</span>.<span class="ident">matches</span>(<span class="ident">endian</span>, <span class="ident">index</span>, <span class="ident">version</span>)
                 {
                     <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">index</span>, <span class="ident">symbol</span>));
                 }
@@ -296,8 +295,8 @@
     <span class="ident">symbol_base</span>: <span class="ident">u32</span>,
     <span class="ident">bloom_shift</span>: <span class="ident">u32</span>,
     <span class="ident">bloom_filters</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">u8</span>],
-    <span class="ident">buckets</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span>],
-    <span class="ident">values</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span>],
+    <span class="ident">buckets</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span>],
+    <span class="ident">values</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span>],
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span>: <span class="ident">FileHeader</span><span class="op">&gt;</span> <span class="ident">GnuHashTable</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span><span class="op">&gt;</span> {
@@ -312,22 +311,22 @@
     <span class="doccomment">/// will be used as the hash table values. It does not matter if this</span>
     <span class="doccomment">/// is longer than needed, and this will often the case when accessing</span>
     <span class="doccomment">/// the hash table via the `DT_GNU_HASH` entry.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">endian</span>: <span class="ident">Elf</span>::<span class="ident">Endian</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">endian</span>: <span class="ident">Elf::Endian</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">elf</span>::<span class="ident">GnuHashHeader</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">offset</span>)
+            .<span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">elf::GnuHashHeader</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset</span>)
             .<span class="ident">read_error</span>(<span class="string">&quot;Invalid GNU hash header&quot;</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">bloom_len</span> <span class="op">=</span>
-            <span class="ident">u64</span>::<span class="ident">from</span>(<span class="ident">header</span>.<span class="ident">bloom_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>)) <span class="op">*</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Word</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>;
+            <span class="ident">u64::from</span>(<span class="ident">header</span>.<span class="ident">bloom_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>)) <span class="op">*</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">Elf::Word</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>;
         <span class="kw">let</span> <span class="ident">bloom_filters</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">read_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">offset</span>, <span class="ident">bloom_len</span>)
+            .<span class="ident">read_bytes</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset</span>, <span class="ident">bloom_len</span>)
             .<span class="ident">read_error</span>(<span class="string">&quot;Invalid GNU hash bloom filters&quot;</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">buckets</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">offset</span>, <span class="ident">header</span>.<span class="ident">bucket_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>)
+            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset</span>, <span class="ident">header</span>.<span class="ident">bucket_count</span>.<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>)
             .<span class="ident">read_error</span>(<span class="string">&quot;Invalid GNU hash buckets&quot;</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">chain_count</span> <span class="op">=</span> (<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">/</span> <span class="number">4</span>;
         <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">offset</span>, <span class="ident">chain_count</span>)
+            .<span class="ident">read_slice</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset</span>, <span class="ident">chain_count</span>)
             .<span class="ident">read_error</span>(<span class="string">&quot;Invalid GNU hash values&quot;</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">GnuHashTable</span> {
             <span class="ident">symbol_base</span>: <span class="ident">header</span>.<span class="ident">symbol_base</span>.<span class="ident">get</span>(<span class="ident">endian</span>),
@@ -339,16 +338,16 @@
     }
 
     <span class="doccomment">/// Return the symbol table index of the first symbol in the hash table.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol_base</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol_base</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="self">self</span>.<span class="ident">symbol_base</span>
     }
 
     <span class="doccomment">/// Determine the symbol table length by finding the last entry in the hash table.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns `None` if the hash table is empty or invalid.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol_table_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">endian</span>: <span class="ident">Elf</span>::<span class="ident">Endian</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol_table_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">endian</span>: <span class="ident">Elf::Endian</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
         <span class="comment">// Ensure we find a non-empty bucket.</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">symbol_base</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">symbol_base</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
 
@@ -378,41 +377,41 @@
     <span class="doccomment">/// Use the hash table to find the symbol table entry with the given name, hash, and version.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">find</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">ReadRef</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">endian</span>: <span class="ident">Elf</span>::<span class="ident">Endian</span>,
+        <span class="ident">endian</span>: <span class="ident">Elf::Endian</span>,
         <span class="ident">name</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">hash</span>: <span class="ident">u32</span>,
         <span class="ident">version</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Version</span><span class="op">&gt;</span>,
         <span class="ident">symbols</span>: <span class="kw-2">&amp;</span><span class="ident">SymbolTable</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span>, <span class="ident">R</span><span class="op">&gt;</span>,
         <span class="ident">versions</span>: <span class="kw-2">&amp;</span><span class="ident">VersionTable</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Elf</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> <span class="ident">Elf</span>::<span class="ident">Sym</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">word_bits</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Word</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">8</span>;
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;data</span> <span class="ident">Elf::Sym</span>)<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">word_bits</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">Elf::Word</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">8</span>;
 
         <span class="comment">// Test against bloom filter.</span>
-        <span class="kw">let</span> <span class="ident">bloom_count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bloom_filters</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Word</span><span class="op">&gt;</span>();
+        <span class="kw">let</span> <span class="ident">bloom_count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bloom_filters</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">Elf::Word</span><span class="op">&gt;</span>();
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span>
-            ((<span class="ident">hash</span> <span class="op">/</span> <span class="ident">word_bits</span>) <span class="op">&amp;</span> (<span class="ident">bloom_count</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">*</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Word</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">word_bits</span> <span class="op">=</span><span class="op">=</span> <span class="number">64</span> {
+            ((<span class="ident">hash</span> <span class="op">/</span> <span class="ident">word_bits</span>) <span class="op">&amp;</span> (<span class="ident">bloom_count</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">*</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">Elf::Word</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">word_bits</span> <span class="op">==</span> <span class="number">64</span> {
             <span class="self">self</span>.<span class="ident">bloom_filters</span>
-                .<span class="ident">read_at</span>::<span class="op">&lt;</span><span class="ident">U64</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">offset</span>.<span class="ident">into</span>())
+                .<span class="ident">read_at</span>::<span class="op">&lt;</span><span class="ident">U64</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">offset</span>.<span class="ident">into</span>())
                 .<span class="ident">ok</span>()<span class="question-mark">?</span>
                 .<span class="ident">get</span>(<span class="ident">endian</span>)
         } <span class="kw">else</span> {
             <span class="self">self</span>.<span class="ident">bloom_filters</span>
-                .<span class="ident">read_at</span>::<span class="op">&lt;</span><span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf</span>::<span class="ident">Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">offset</span>.<span class="ident">into</span>())
+                .<span class="ident">read_at</span>::<span class="op">&lt;</span><span class="ident">U32</span><span class="op">&lt;</span><span class="ident">Elf::Endian</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">offset</span>.<span class="ident">into</span>())
                 .<span class="ident">ok</span>()<span class="question-mark">?</span>
                 .<span class="ident">get</span>(<span class="ident">endian</span>)
                 .<span class="ident">into</span>()
         };
-        <span class="kw">if</span> <span class="ident">filter</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">hash</span> <span class="op">%</span> <span class="ident">word_bits</span>)) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">filter</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">hash</span> <span class="op">%</span> <span class="ident">word_bits</span>)) <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
-        <span class="kw">if</span> <span class="ident">filter</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> ((<span class="ident">hash</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">bloom_shift</span>) <span class="op">%</span> <span class="ident">word_bits</span>)) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">filter</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> ((<span class="ident">hash</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">bloom_shift</span>) <span class="op">%</span> <span class="ident">word_bits</span>)) <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
 
         <span class="comment">// Get the chain start from the bucket for this hash.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buckets</span>[(<span class="ident">hash</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">buckets</span>.<span class="ident">len</span>()].<span class="ident">get</span>(<span class="ident">endian</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="kw">if</span> <span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">index</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
 
@@ -424,9 +423,9 @@
             .<span class="ident">get</span>(<span class="ident">index</span>.<span class="ident">checked_sub</span>(<span class="self">self</span>.<span class="ident">symbol_base</span> <span class="kw">as</span> <span class="ident">usize</span>)<span class="question-mark">?</span>..)<span class="question-mark">?</span>;
         <span class="kw">for</span> (<span class="ident">symbol</span>, <span class="ident">value</span>) <span class="kw">in</span> <span class="ident">symbols</span>.<span class="ident">iter</span>().<span class="ident">zip</span>(<span class="ident">values</span>.<span class="ident">iter</span>()) {
             <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">get</span>(<span class="ident">endian</span>);
-            <span class="kw">if</span> <span class="ident">value</span> <span class="op">|</span> <span class="number">1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">hash</span> <span class="op">|</span> <span class="number">1</span> {
-                <span class="kw">if</span> <span class="ident">symbol</span>.<span class="ident">name</span>(<span class="ident">endian</span>, <span class="ident">strings</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Ok</span>(<span class="ident">name</span>)
-                    <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">versions</span>.<span class="ident">matches</span>(<span class="ident">endian</span>, <span class="ident">index</span>, <span class="ident">version</span>)
+            <span class="kw">if</span> <span class="ident">value</span> <span class="op">|</span> <span class="number">1</span> <span class="op">==</span> <span class="ident">hash</span> <span class="op">|</span> <span class="number">1</span> {
+                <span class="kw">if</span> <span class="ident">symbol</span>.<span class="ident">name</span>(<span class="ident">endian</span>, <span class="ident">strings</span>) <span class="op">==</span> <span class="prelude-val">Ok</span>(<span class="ident">name</span>)
+                    <span class="op">&amp;&amp;</span> <span class="ident">versions</span>.<span class="ident">matches</span>(<span class="ident">endian</span>, <span class="ident">index</span>, <span class="ident">version</span>)
                 {
                     <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">index</span>, <span class="ident">symbol</span>));
                 }
@@ -439,5 +438,7 @@
         <span class="prelude-val">None</span>
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../../";window.currentCrate = "object";</script><script src="../../../../aliases.js"></script><script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script><script defer src="../../../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="object" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
+    <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script>
+</body></html>

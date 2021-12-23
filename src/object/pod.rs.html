@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/object-0.27.1/src/pod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../object/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;object-0.27.1&#x2F;src&#x2F;pod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pod.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../object/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -236,8 +236,7 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Tools for converting file format structures to and from bytes.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Tools for converting file format structures to and from bytes.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module should be replaced once rust provides safe transmutes.</span>
 
@@ -249,7 +248,7 @@
 
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem</span>, <span class="ident">result</span>, <span class="ident">slice</span>};
 
-<span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, ()<span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, ()<span class="op">&gt;</span>;
 
 <span class="doccomment">/// A trait for types that can safely be converted from and to byte slices.</span>
 <span class="doccomment">///</span>
@@ -263,11 +262,11 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Returns the type and the tail of the slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">T</span>, <span class="kw-2">&amp;</span>[<span class="ident">u8</span>])<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">T</span>, <span class="kw-2">&amp;</span>[<span class="ident">u8</span>])<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
     <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">size</span>..).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem</span>::<span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem::align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(());
     }
     <span class="comment">// Safety:</span>
@@ -281,20 +280,20 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Returns the type and the tail of the slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>])<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">T</span>, <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>])<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
     <span class="kw">if</span> <span class="ident">size</span> <span class="op">&gt;</span> <span class="ident">data</span>.<span class="ident">len</span>() {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(());
     }
     <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">tail</span>) <span class="op">=</span> <span class="ident">data</span>.<span class="ident">split_at_mut</span>(<span class="ident">size</span>);
     <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>();
-    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem</span>::<span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem::align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(());
     }
     <span class="comment">// Safety:</span>
     <span class="comment">// The alignment and size are checked by this function.</span>
     <span class="comment">// The Pod trait ensures the type is valid to cast from bytes.</span>
-    <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">ptr</span>.<span class="ident">cast</span>() };
+    <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">ptr</span>.<span class="ident">cast</span>() };
     <span class="prelude-val">Ok</span>((<span class="ident">val</span>, <span class="ident">tail</span>))
 }
 
@@ -302,17 +301,17 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Returns the type slice and the tail of the byte slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slice_from_bytes</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">count</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="kw-2">&amp;</span>[<span class="ident">u8</span>])<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">count</span>.<span class="ident">checked_mul</span>(<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>;
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slice_from_bytes</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">count</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="kw-2">&amp;</span>[<span class="ident">u8</span>])<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">count</span>.<span class="ident">checked_mul</span>(<span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get</span>(<span class="ident">size</span>..).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">as_ptr</span>();
-    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem</span>::<span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem::align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(());
     }
     <span class="comment">// Safety:</span>
     <span class="comment">// The alignment and size are checked by this function.</span>
     <span class="comment">// The Pod trait ensures the type is valid to cast from bytes.</span>
-    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span>.<span class="ident">cast</span>(), <span class="ident">count</span>) };
+    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">ptr</span>.<span class="ident">cast</span>(), <span class="ident">count</span>) };
     <span class="prelude-val">Ok</span>((<span class="ident">slice</span>, <span class="ident">tail</span>))
 }
 
@@ -321,78 +320,78 @@
 <span class="doccomment">/// Returns the type slice and the tail of the byte slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slice_from_bytes_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>],
+    <span class="ident">data</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>],
     <span class="ident">count</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">T</span>], <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>])<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">count</span>.<span class="ident">checked_mul</span>(<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>;
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;mut</span> [<span class="ident">T</span>], <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>])<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">count</span>.<span class="ident">checked_mul</span>(<span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>;
     <span class="kw">if</span> <span class="ident">size</span> <span class="op">&gt;</span> <span class="ident">data</span>.<span class="ident">len</span>() {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(());
     }
     <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">tail</span>) <span class="op">=</span> <span class="ident">data</span>.<span class="ident">split_at_mut</span>(<span class="ident">size</span>);
     <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>();
-    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem</span>::<span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="ident">mem::align_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(());
     }
     <span class="comment">// Safety:</span>
     <span class="comment">// The alignment and size are checked by this function.</span>
     <span class="comment">// The Pod trait ensures the type is valid to cast from bytes.</span>
-    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">ptr</span>.<span class="ident">cast</span>(), <span class="ident">count</span>) };
+    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts_mut</span>(<span class="ident">ptr</span>.<span class="ident">cast</span>(), <span class="ident">count</span>) };
     <span class="prelude-val">Ok</span>((<span class="ident">slice</span>, <span class="ident">tail</span>))
 }
 
 <span class="doccomment">/// Cast a `Pod` type to a byte slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
     <span class="comment">// Safety:</span>
     <span class="comment">// Any alignment is allowed.</span>
     <span class="comment">// The size is determined in this function.</span>
     <span class="comment">// The Pod trait ensures the type is valid to cast to bytes.</span>
-    <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">slice</span>::<span class="ident">from_ref</span>(<span class="ident">val</span>).<span class="ident">as_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
+    <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">slice::from_ref</span>(<span class="ident">val</span>).<span class="ident">as_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
 }
 
 <span class="doccomment">/// Cast a `Pod` type to a mutable byte slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>] {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;mut</span> <span class="ident">T</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>] {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
     <span class="comment">// Safety:</span>
     <span class="comment">// Any alignment is allowed.</span>
     <span class="comment">// The size is determined in this function.</span>
     <span class="comment">// The Pod trait ensures the type is valid to cast to bytes.</span>
-    <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">slice</span>::<span class="ident">from_mut</span>(<span class="ident">val</span>).<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
+    <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts_mut</span>(<span class="ident">slice::from_mut</span>(<span class="ident">val</span>).<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
 }
 
 <span class="doccomment">/// Cast a slice of a `Pod` type to a byte slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of_slice</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">len</span>().<span class="ident">wrapping_mul</span>(<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>());
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of_slice</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">len</span>().<span class="ident">wrapping_mul</span>(<span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>());
     <span class="comment">// Safety:</span>
     <span class="comment">// Any alignment is allowed.</span>
     <span class="comment">// The size is determined in this function.</span>
     <span class="comment">// The Pod trait ensures the type is valid to cast to bytes.</span>
-    <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">val</span>.<span class="ident">as_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
+    <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts</span>(<span class="ident">val</span>.<span class="ident">as_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
 }
 
 <span class="doccomment">/// Cast a slice of a `Pod` type to a mutable byte slice.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of_slice_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>] {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">len</span>().<span class="ident">wrapping_mul</span>(<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>());
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bytes_of_slice_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">val</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">T</span>]) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>] {
+    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">len</span>().<span class="ident">wrapping_mul</span>(<span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>());
     <span class="comment">// Safety:</span>
     <span class="comment">// Any alignment is allowed.</span>
     <span class="comment">// The size is determined in this function.</span>
     <span class="comment">// The Pod trait ensures the type is valid to cast to bytes.</span>
-    <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">val</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
+    <span class="kw">unsafe</span> { <span class="ident">slice::from_raw_parts_mut</span>(<span class="ident">val</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">cast</span>(), <span class="ident">size</span>) }
 }
 
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">unsafe_impl_pod</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_name</span>:<span class="ident">ident</span>),<span class="op">+</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
+<span class="macro">macro_rules!</span> <span class="ident">unsafe_impl_pod</span> {
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_name</span>:<span class="ident">ident</span>),<span class="op">+</span> $(,)<span class="question-mark">?</span>) =&gt; {
         $(
             <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_name</span> { }
         )<span class="op">+</span>
     }
 }
 
-<span class="macro">unsafe_impl_pod</span><span class="macro">!</span>(<span class="ident">u8</span>, <span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>);
+<span class="macro">unsafe_impl_pod!</span>(<span class="ident">u8</span>, <span class="ident">u16</span>, <span class="ident">u32</span>, <span class="ident">u64</span>);
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
@@ -400,80 +399,82 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">single</span>() {
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">to_be</span>(<span class="number">0x0123_4567</span>);
+        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">u32::to_be</span>(<span class="number">0x0123_4567</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">x_mut</span> <span class="op">=</span> <span class="ident">x</span>;
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">bytes_of</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>);
-        <span class="kw">let</span> <span class="ident">bytes_mut</span> <span class="op">=</span> <span class="ident">bytes_of_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">x_mut</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bytes</span>, [<span class="number">0x01</span>, <span class="number">0x23</span>, <span class="number">0x45</span>, <span class="number">0x67</span>]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bytes</span>, <span class="ident">bytes_mut</span>);
+        <span class="kw">let</span> <span class="ident">bytes_mut</span> <span class="op">=</span> <span class="ident">bytes_of_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">x_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, [<span class="number">0x01</span>, <span class="number">0x23</span>, <span class="number">0x45</span>, <span class="number">0x67</span>]);
+        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, <span class="ident">bytes_mut</span>);
 
-        <span class="kw">let</span> <span class="ident">x16</span> <span class="op">=</span> [<span class="ident">u16</span>::<span class="ident">to_be</span>(<span class="number">0x0123</span>), <span class="ident">u16</span>::<span class="ident">to_be</span>(<span class="number">0x4567</span>)];
+        <span class="kw">let</span> <span class="ident">x16</span> <span class="op">=</span> [<span class="ident">u16::to_be</span>(<span class="number">0x0123</span>), <span class="ident">u16::to_be</span>(<span class="number">0x4567</span>)];
 
         <span class="kw">let</span> (<span class="ident">y</span>, <span class="ident">tail</span>) <span class="op">=</span> <span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> (<span class="ident">y_mut</span>, <span class="ident">tail_mut</span>) <span class="op">=</span> <span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>(<span class="ident">bytes_mut</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">y</span>, <span class="ident">x</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span>[]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">y</span>, <span class="ident">x</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span>[]);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
 
         <span class="kw">let</span> (<span class="ident">y</span>, <span class="ident">tail</span>) <span class="op">=</span> <span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> (<span class="ident">y_mut</span>, <span class="ident">tail_mut</span>) <span class="op">=</span> <span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes_mut</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">y</span>, <span class="ident">x16</span>[<span class="number">0</span>]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">2</span>..]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">y</span>, <span class="ident">x16</span>[<span class="number">0</span>]);
+        <span class="macro">assert_eq!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">2</span>..]);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
 
         <span class="kw">let</span> (<span class="ident">y</span>, <span class="ident">tail</span>) <span class="op">=</span> <span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">2</span>..]).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">y_mut</span>, <span class="ident">tail_mut</span>) <span class="op">=</span> <span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes_mut</span>[<span class="number">2</span>..]).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">y</span>, <span class="ident">x16</span>[<span class="number">1</span>]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span>[]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
+        <span class="kw">let</span> (<span class="ident">y_mut</span>, <span class="ident">tail_mut</span>) <span class="op">=</span> <span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_mut</span>[<span class="number">2</span>..]).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">y</span>, <span class="ident">x16</span>[<span class="number">1</span>]);
+        <span class="macro">assert_eq!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span>[]);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">1</span>..]), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">3</span>..]), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">4</span>..]), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes_mut</span>[<span class="number">1</span>..]), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes_mut</span>[<span class="number">3</span>..]), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes_mut</span>[<span class="number">4</span>..]), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">1</span>..]), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">3</span>..]), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">4</span>..]), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_mut</span>[<span class="number">1</span>..]), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_mut</span>[<span class="number">3</span>..]), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_mut</span>[<span class="number">4</span>..]), <span class="prelude-val">Err</span>(()));
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">slice</span>() {
         <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> [
-            <span class="ident">u16</span>::<span class="ident">to_be</span>(<span class="number">0x0123</span>),
-            <span class="ident">u16</span>::<span class="ident">to_be</span>(<span class="number">0x4567</span>),
-            <span class="ident">u16</span>::<span class="ident">to_be</span>(<span class="number">0x89ab</span>),
-            <span class="ident">u16</span>::<span class="ident">to_be</span>(<span class="number">0xcdef</span>),
+            <span class="ident">u16::to_be</span>(<span class="number">0x0123</span>),
+            <span class="ident">u16::to_be</span>(<span class="number">0x4567</span>),
+            <span class="ident">u16::to_be</span>(<span class="number">0x89ab</span>),
+            <span class="ident">u16::to_be</span>(<span class="number">0xcdef</span>),
         ];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">x_mut</span> <span class="op">=</span> <span class="ident">x</span>;
 
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">bytes_of_slice</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>);
-        <span class="kw">let</span> <span class="ident">bytes_mut</span> <span class="op">=</span> <span class="ident">bytes_of_slice_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">x_mut</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bytes</span>, [<span class="number">0x01</span>, <span class="number">0x23</span>, <span class="number">0x45</span>, <span class="number">0x67</span>, <span class="number">0x89</span>, <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">bytes</span>, <span class="ident">bytes_mut</span>);
+        <span class="kw">let</span> <span class="ident">bytes_mut</span> <span class="op">=</span> <span class="ident">bytes_of_slice_mut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">x_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, [<span class="number">0x01</span>, <span class="number">0x23</span>, <span class="number">0x45</span>, <span class="number">0x67</span>, <span class="number">0x89</span>, <span class="number">0xab</span>, <span class="number">0xcd</span>, <span class="number">0xef</span>]);
+        <span class="macro">assert_eq!</span>(<span class="ident">bytes</span>, <span class="ident">bytes_mut</span>);
 
         <span class="kw">let</span> (<span class="ident">y</span>, <span class="ident">tail</span>) <span class="op">=</span> <span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes</span>, <span class="number">4</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> (<span class="ident">y_mut</span>, <span class="ident">tail_mut</span>) <span class="op">=</span> <span class="ident">slice_from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes_mut</span>, <span class="number">4</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">y</span>, <span class="ident">x</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span>[]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">y</span>, <span class="ident">x</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span>[]);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
 
         <span class="kw">let</span> (<span class="ident">y</span>, <span class="ident">tail</span>) <span class="op">=</span> <span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">2</span>..], <span class="number">2</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> (<span class="ident">y_mut</span>, <span class="ident">tail_mut</span>) <span class="op">=</span> <span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes_mut</span>[<span class="number">2</span>..], <span class="number">2</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">y</span>, <span class="kw-2">&amp;</span><span class="ident">x</span>[<span class="number">1</span>..<span class="number">3</span>]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">6</span>..]);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
+        <span class="kw">let</span> (<span class="ident">y_mut</span>, <span class="ident">tail_mut</span>) <span class="op">=</span> <span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_mut</span>[<span class="number">2</span>..], <span class="number">2</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">y</span>, <span class="kw-2">&amp;</span><span class="ident">x</span>[<span class="number">1</span>..<span class="number">3</span>]);
+        <span class="macro">assert_eq!</span>(<span class="ident">y</span>, <span class="ident">y_mut</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">6</span>..]);
+        <span class="macro">assert_eq!</span>(<span class="ident">tail</span>, <span class="ident">tail_mut</span>);
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes</span>, <span class="number">5</span>), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">2</span>..], <span class="number">4</span>), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">1</span>..], <span class="number">2</span>), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">slice_from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes_mut</span>, <span class="number">5</span>), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">slice_from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes_mut</span>[<span class="number">2</span>..], <span class="number">4</span>), <span class="prelude-val">Err</span>(()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">slice_from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes_mut</span>[<span class="number">1</span>..], <span class="number">2</span>), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes</span>, <span class="number">5</span>), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">2</span>..], <span class="number">4</span>), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">slice_from_bytes</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>[<span class="number">1</span>..], <span class="number">2</span>), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">slice_from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="ident">bytes_mut</span>, <span class="number">5</span>), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">slice_from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_mut</span>[<span class="number">2</span>..], <span class="number">4</span>), <span class="prelude-val">Err</span>(()));
+        <span class="macro">assert_eq!</span>(<span class="ident">slice_from_bytes_mut</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes_mut</span>[<span class="number">1</span>..], <span class="number">2</span>), <span class="prelude-val">Err</span>(()));
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "object";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="object" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</body></html>

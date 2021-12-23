@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/object-0.27.1/src/endian.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>endian.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../object/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;object-0.27.1&#x2F;src&#x2F;endian.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>endian.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../object/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -769,12 +769,11 @@
 <span id="769">769</span>
 <span id="770">770</span>
 <span id="771">771</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Types for compile-time and run-time endianness.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Types for compile-time and run-time endianness.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pod</span>::<span class="ident">Pod</span>;
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>};
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">marker</span>::<span class="ident">PhantomData</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pod::Pod</span>;
+<span class="kw">use</span> <span class="ident">core::fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>};
+<span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
 
 <span class="doccomment">/// A trait for using an endianness specification.</span>
 <span class="doccomment">///</span>
@@ -786,261 +785,261 @@
     <span class="doccomment">/// Construct a specification for the endianness of some values.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns `None` if the type does not support specifying the given endianness.</span>
-    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Construct a specification for the endianness of some values.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns `None` if the type does not support specifying the given endianness.</span>
-    <span class="kw">fn</span> <span class="ident">from_little_endian</span>(<span class="ident">little_endian</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="self">Self</span>::<span class="ident">from_big_endian</span>(<span class="op">!</span><span class="ident">little_endian</span>)
+    <span class="kw">fn</span> <span class="ident">from_little_endian</span>(<span class="ident">little_endian</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="ident"><span class="self">Self</span>::from_big_endian</span>(<span class="op">!</span><span class="ident">little_endian</span>)
     }
 
     <span class="doccomment">/// Return true for big endian byte order.</span>
-    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>;
+    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span>;
 
     <span class="doccomment">/// Return true for little endian byte order.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_little_endian</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_little_endian</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="op">!</span><span class="self">self</span>.<span class="ident">is_big_endian</span>()
     }
 
     <span class="doccomment">/// Converts an unsigned 16 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_u16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u16</span> {
+    <span class="kw">fn</span> <span class="ident">read_u16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u16</span>::<span class="ident">from_be</span>(<span class="ident">n</span>)
+            <span class="ident">u16::from_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u16</span>::<span class="ident">from_le</span>(<span class="ident">n</span>)
+            <span class="ident">u16::from_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unsigned 32 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_u32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">fn</span> <span class="ident">read_u32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u32</span>::<span class="ident">from_be</span>(<span class="ident">n</span>)
+            <span class="ident">u32::from_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u32</span>::<span class="ident">from_le</span>(<span class="ident">n</span>)
+            <span class="ident">u32::from_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unsigned 64 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_u64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">read_u64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u64</span>::<span class="ident">from_be</span>(<span class="ident">n</span>)
+            <span class="ident">u64::from_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u64</span>::<span class="ident">from_le</span>(<span class="ident">n</span>)
+            <span class="ident">u64::from_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts a signed 16 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_i16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i16</span> {
+    <span class="kw">fn</span> <span class="ident">read_i16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i16</span>) -&gt; <span class="ident">i16</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i16</span>::<span class="ident">from_be</span>(<span class="ident">n</span>)
+            <span class="ident">i16::from_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i16</span>::<span class="ident">from_le</span>(<span class="ident">n</span>)
+            <span class="ident">i16::from_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts a signed 32 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_i32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+    <span class="kw">fn</span> <span class="ident">read_i32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i32</span>) -&gt; <span class="ident">i32</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i32</span>::<span class="ident">from_be</span>(<span class="ident">n</span>)
+            <span class="ident">i32::from_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i32</span>::<span class="ident">from_le</span>(<span class="ident">n</span>)
+            <span class="ident">i32::from_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts a signed 64 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_i64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
+    <span class="kw">fn</span> <span class="ident">read_i64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) -&gt; <span class="ident">i64</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i64</span>::<span class="ident">from_be</span>(<span class="ident">n</span>)
+            <span class="ident">i64::from_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i64</span>::<span class="ident">from_le</span>(<span class="ident">n</span>)
+            <span class="ident">i64::from_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned unsigned 16 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_u16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">2</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u16</span> {
+    <span class="kw">fn</span> <span class="ident">read_u16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">2</span>]) -&gt; <span class="ident">u16</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u16</span>::<span class="ident">from_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u16::from_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u16</span>::<span class="ident">from_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u16::from_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned unsigned 32 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_u32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">4</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">fn</span> <span class="ident">read_u32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">4</span>]) -&gt; <span class="ident">u32</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u32</span>::<span class="ident">from_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u32::from_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u32</span>::<span class="ident">from_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u32::from_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned unsigned 64 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_u64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">read_u64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">8</span>]) -&gt; <span class="ident">u64</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u64</span>::<span class="ident">from_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u64::from_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u64</span>::<span class="ident">from_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u64::from_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned signed 16 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_i16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">2</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i16</span> {
+    <span class="kw">fn</span> <span class="ident">read_i16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">2</span>]) -&gt; <span class="ident">i16</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i16</span>::<span class="ident">from_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i16::from_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i16</span>::<span class="ident">from_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i16::from_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned signed 32 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_i32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">4</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+    <span class="kw">fn</span> <span class="ident">read_i32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">4</span>]) -&gt; <span class="ident">i32</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i32</span>::<span class="ident">from_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i32::from_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i32</span>::<span class="ident">from_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i32::from_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned signed 64 bit integer to native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">read_i64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
+    <span class="kw">fn</span> <span class="ident">read_i64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: [<span class="ident">u8</span>; <span class="number">8</span>]) -&gt; <span class="ident">i64</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i64</span>::<span class="ident">from_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i64::from_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i64</span>::<span class="ident">from_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i64::from_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unsigned 16 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u16</span> {
+    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u16</span>::<span class="ident">to_be</span>(<span class="ident">n</span>)
+            <span class="ident">u16::to_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u16</span>::<span class="ident">to_le</span>(<span class="ident">n</span>)
+            <span class="ident">u16::to_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unsigned 32 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u32</span>::<span class="ident">to_be</span>(<span class="ident">n</span>)
+            <span class="ident">u32::to_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u32</span>::<span class="ident">to_le</span>(<span class="ident">n</span>)
+            <span class="ident">u32::to_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unsigned 64 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u64</span>::<span class="ident">to_be</span>(<span class="ident">n</span>)
+            <span class="ident">u64::to_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u64</span>::<span class="ident">to_le</span>(<span class="ident">n</span>)
+            <span class="ident">u64::to_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts a signed 16 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_i16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i16</span> {
+    <span class="kw">fn</span> <span class="ident">write_i16</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i16</span>) -&gt; <span class="ident">i16</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i16</span>::<span class="ident">to_be</span>(<span class="ident">n</span>)
+            <span class="ident">i16::to_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i16</span>::<span class="ident">to_le</span>(<span class="ident">n</span>)
+            <span class="ident">i16::to_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts a signed 32 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_i32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+    <span class="kw">fn</span> <span class="ident">write_i32</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i32</span>) -&gt; <span class="ident">i32</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i32</span>::<span class="ident">to_be</span>(<span class="ident">n</span>)
+            <span class="ident">i32::to_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i32</span>::<span class="ident">to_le</span>(<span class="ident">n</span>)
+            <span class="ident">i32::to_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts a signed 64 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_i64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
+    <span class="kw">fn</span> <span class="ident">write_i64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) -&gt; <span class="ident">i64</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i64</span>::<span class="ident">to_be</span>(<span class="ident">n</span>)
+            <span class="ident">i64::to_be</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i64</span>::<span class="ident">to_le</span>(<span class="ident">n</span>)
+            <span class="ident">i64::to_le</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned unsigned 16 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">2</span>] {
+    <span class="kw">fn</span> <span class="ident">write_u16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u16</span>) -&gt; [<span class="ident">u8</span>; <span class="number">2</span>] {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u16</span>::<span class="ident">to_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u16::to_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u16</span>::<span class="ident">to_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u16::to_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned unsigned 32 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">4</span>] {
+    <span class="kw">fn</span> <span class="ident">write_u32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u32</span>) -&gt; [<span class="ident">u8</span>; <span class="number">4</span>] {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u32</span>::<span class="ident">to_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u32::to_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u32</span>::<span class="ident">to_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u32::to_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned unsigned 64 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">8</span>] {
+    <span class="kw">fn</span> <span class="ident">write_u64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) -&gt; [<span class="ident">u8</span>; <span class="number">8</span>] {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">u64</span>::<span class="ident">to_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u64::to_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">u64</span>::<span class="ident">to_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">u64::to_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned signed 16 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_i16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i16</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">2</span>] {
+    <span class="kw">fn</span> <span class="ident">write_i16_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i16</span>) -&gt; [<span class="ident">u8</span>; <span class="number">2</span>] {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i16</span>::<span class="ident">to_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i16::to_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i16</span>::<span class="ident">to_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i16::to_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned signed 32 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_i32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">4</span>] {
+    <span class="kw">fn</span> <span class="ident">write_i32_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i32</span>) -&gt; [<span class="ident">u8</span>; <span class="number">4</span>] {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i32</span>::<span class="ident">to_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i32::to_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i32</span>::<span class="ident">to_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i32::to_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 
     <span class="doccomment">/// Converts an unaligned signed 64 bit integer from native endian.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_i64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">8</span>] {
+    <span class="kw">fn</span> <span class="ident">write_i64_bytes</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) -&gt; [<span class="ident">u8</span>; <span class="number">8</span>] {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_big_endian</span>() {
-            <span class="ident">i64</span>::<span class="ident">to_be_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i64::to_be_bytes</span>(<span class="ident">n</span>)
         } <span class="kw">else</span> {
-            <span class="ident">i64</span>::<span class="ident">to_le_bytes</span>(<span class="ident">n</span>)
+            <span class="ident">i64::to_le_bytes</span>(<span class="ident">n</span>)
         }
     }
 }
@@ -1057,30 +1056,30 @@
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Endianness</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_endian</span> <span class="op">=</span> <span class="string">&quot;little&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Endianness</span> {
-        <span class="ident">Endianness</span>::<span class="ident">Little</span>
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">Endianness</span> {
+        <span class="ident">Endianness::Little</span>
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_endian</span> <span class="op">=</span> <span class="string">&quot;big&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Endianness</span> {
-        <span class="ident">Endianness</span>::<span class="ident">Big</span>
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">Endianness</span> {
+        <span class="ident">Endianness::Big</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Endian</span> <span class="kw">for</span> <span class="ident">Endianness</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Some</span>(<span class="kw">if</span> <span class="ident">big_endian</span> {
-            <span class="ident">Endianness</span>::<span class="ident">Big</span>
+            <span class="ident">Endianness::Big</span>
         } <span class="kw">else</span> {
-            <span class="ident">Endianness</span>::<span class="ident">Little</span>
+            <span class="ident">Endianness::Little</span>
         })
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Endianness</span>::<span class="ident">Little</span>
+    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Endianness::Little</span>
     }
 }
 
@@ -1090,14 +1089,14 @@
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">LittleEndian</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LittleEndian</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">LittleEndian</span> {
         <span class="ident">LittleEndian</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Endian</span> <span class="kw">for</span> <span class="ident">LittleEndian</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">big_endian</span> {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
@@ -1106,7 +1105,7 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="bool-val">false</span>
     }
 }
@@ -1117,14 +1116,14 @@
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">BigEndian</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BigEndian</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">BigEndian</span> {
         <span class="ident">BigEndian</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Endian</span> <span class="kw">for</span> <span class="ident">BigEndian</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_big_endian</span>(<span class="ident">big_endian</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">big_endian</span> {
             <span class="prelude-val">Some</span>(<span class="ident">BigEndian</span>)
         } <span class="kw">else</span> {
@@ -1133,7 +1132,7 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_big_endian</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="bool-val">true</span>
     }
 }
@@ -1156,8 +1155,8 @@
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NativeEndian</span>: <span class="ident">BigEndian</span> <span class="op">=</span> <span class="ident">BigEndian</span>;
 
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">unsafe_impl_endian_pod</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_name</span>:<span class="ident">ident</span>),<span class="op">+</span> $(,)<span class="question-mark">?</span>) <span class="op">=</span><span class="op">&gt;</span> {
+<span class="macro">macro_rules!</span> <span class="ident">unsafe_impl_endian_pod</span> {
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_name</span>:<span class="ident">ident</span>),<span class="op">+</span> $(,)<span class="question-mark">?</span>) =&gt; {
         $(
             <span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">struct_name</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> { }
         )<span class="op">+</span>
@@ -1175,17 +1174,17 @@
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">U16</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
         <span class="doccomment">/// Construct a new value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_u16</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
         }
 
         <span class="doccomment">/// Return the value as a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u16</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">u16</span> {
             <span class="ident">e</span>.<span class="ident">read_u16</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
 
         <span class="doccomment">/// Set the value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) {
             <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_u16</span>(<span class="ident">n</span>);
         }
     }
@@ -1197,15 +1196,15 @@
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">U32</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
         <span class="doccomment">/// Construct a new value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_u32</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
         }
         <span class="doccomment">/// Return the value as a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">u32</span> {
             <span class="ident">e</span>.<span class="ident">read_u32</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
         <span class="doccomment">/// Set the value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) {
             <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_u32</span>(<span class="ident">n</span>);
         }
     }
@@ -1217,15 +1216,15 @@
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">U64</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
         <span class="doccomment">/// Construct a new value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_u64</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
         }
         <span class="doccomment">/// Return the value as a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">u64</span> {
             <span class="ident">e</span>.<span class="ident">read_u64</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
         <span class="doccomment">/// Set the value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) {
             <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_u64</span>(<span class="ident">n</span>);
         }
     }
@@ -1237,15 +1236,15 @@
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">I16</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
         <span class="doccomment">/// Construct a new value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_i16</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
         }
         <span class="doccomment">/// Return the value as a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i16</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">i16</span> {
             <span class="ident">e</span>.<span class="ident">read_i16</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
         <span class="doccomment">/// Set the value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) {
             <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_i16</span>(<span class="ident">n</span>);
         }
     }
@@ -1257,15 +1256,15 @@
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">I32</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
         <span class="doccomment">/// Construct a new value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_i32</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
         }
         <span class="doccomment">/// Return the value as a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">i32</span> {
             <span class="ident">e</span>.<span class="ident">read_i32</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
         <span class="doccomment">/// Set the value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) {
             <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_i32</span>(<span class="ident">n</span>);
         }
     }
@@ -1277,56 +1276,56 @@
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">I64</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
         <span class="doccomment">/// Construct a new value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) -&gt; <span class="self">Self</span> {
             <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_i64</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
         }
         <span class="doccomment">/// Return the value as a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">i64</span> {
             <span class="ident">e</span>.<span class="ident">read_i64</span>(<span class="self">self</span>.<span class="number">0</span>)
         }
         <span class="doccomment">/// Set the value given a native endian value.</span>
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) {
+        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) {
             <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_i64</span>(<span class="ident">n</span>);
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">U16</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;U16({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">U16</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;U16({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">U32</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;U32({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">U32</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;U32({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">U64</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;U64({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">U64</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;U64({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">I16</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;I16({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">I16</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;I16({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">I32</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;I32({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">I32</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;I32({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
         }
     }
 
-    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">I64</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-            <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;I64({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">I64</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+        <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+            <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;I64({:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
         }
     }
 
-    <span class="macro">unsafe_impl_endian_pod</span><span class="macro">!</span>(<span class="ident">U16</span>, <span class="ident">U32</span>, <span class="ident">U64</span>, <span class="ident">I16</span>, <span class="ident">I32</span>, <span class="ident">I64</span>);
+    <span class="macro">unsafe_impl_endian_pod!</span>(<span class="ident">U16</span>, <span class="ident">U32</span>, <span class="ident">U64</span>, <span class="ident">I16</span>, <span class="ident">I32</span>, <span class="ident">I64</span>);
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;unaligned&quot;</span>))]</span>
@@ -1363,17 +1362,17 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">U16Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Construct a new value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_u16_bytes</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
     }
 
     <span class="doccomment">/// Return the value as a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u16</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">u16</span> {
         <span class="ident">e</span>.<span class="ident">read_u16_bytes</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Set the value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u16</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_u16_bytes</span>(<span class="ident">n</span>);
     }
 }
@@ -1385,17 +1384,17 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">U32Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Construct a new value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_u32_bytes</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
     }
 
     <span class="doccomment">/// Return the value as a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">u32</span> {
         <span class="ident">e</span>.<span class="ident">read_u32_bytes</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Set the value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u32</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_u32_bytes</span>(<span class="ident">n</span>);
     }
 }
@@ -1407,17 +1406,17 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">U64Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Construct a new value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_u64_bytes</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
     }
 
     <span class="doccomment">/// Return the value as a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">u64</span> {
         <span class="ident">e</span>.<span class="ident">read_u64_bytes</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Set the value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">u64</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_u64_bytes</span>(<span class="ident">n</span>);
     }
 }
@@ -1429,17 +1428,17 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">I16Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Construct a new value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_i16_bytes</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
     }
 
     <span class="doccomment">/// Return the value as a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i16</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">i16</span> {
         <span class="ident">e</span>.<span class="ident">read_i16_bytes</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Set the value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i16</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_i16_bytes</span>(<span class="ident">n</span>);
     }
 }
@@ -1451,17 +1450,17 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">I32Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Construct a new value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_i32_bytes</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
     }
 
     <span class="doccomment">/// Return the value as a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">i32</span> {
         <span class="ident">e</span>.<span class="ident">read_i32_bytes</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Set the value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i32</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_i32_bytes</span>(<span class="ident">n</span>);
     }
 }
@@ -1473,30 +1472,30 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">I64Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Construct a new value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="ident">e</span>.<span class="ident">write_i64_bytes</span>(<span class="ident">n</span>), <span class="ident">PhantomData</span>)
     }
 
     <span class="doccomment">/// Return the value as a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>) -&gt; <span class="ident">i64</span> {
         <span class="ident">e</span>.<span class="ident">read_i64_bytes</span>(<span class="self">self</span>.<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Set the value given a native endian value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">e</span>: <span class="ident">E</span>, <span class="ident">n</span>: <span class="ident">i64</span>) {
         <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_i64_bytes</span>(<span class="ident">n</span>);
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">U16Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;U16({:x}, {:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>],)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">U16Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;U16({:x}, {:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>],)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">U32Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">U32Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;U32({:x}, {:x}, {:x}, {:x})&quot;</span>,
             <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">2</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">3</span>],
@@ -1504,9 +1503,9 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">U64Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">U64Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;U64({:x}, {:x}, {:x}, {:x}, {:x}, {:x}, {:x}, {:x})&quot;</span>,
             <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">2</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">3</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">4</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">5</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">6</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">7</span>],
@@ -1514,15 +1513,15 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">I16Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;I16({:x}, {:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>],)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">I16Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;I16({:x}, {:x})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>],)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">I32Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">I32Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;I32({:x}, {:x}, {:x}, {:x})&quot;</span>,
             <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">2</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">3</span>],
@@ -1530,9 +1529,9 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">I64Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Endian</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">I64Bytes</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;I64({:x}, {:x}, {:x}, {:x}, {:x}, {:x}, {:x}, {:x})&quot;</span>,
             <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">2</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">3</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">4</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">5</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">6</span>], <span class="self">self</span>.<span class="number">0</span>[<span class="number">7</span>],
@@ -1540,6 +1539,8 @@
     }
 }
 
-<span class="macro">unsafe_impl_endian_pod</span><span class="macro">!</span>(<span class="ident">U16Bytes</span>, <span class="ident">U32Bytes</span>, <span class="ident">U64Bytes</span>, <span class="ident">I16Bytes</span>, <span class="ident">I32Bytes</span>, <span class="ident">I64Bytes</span>);
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "object";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+<span class="macro">unsafe_impl_endian_pod!</span>(<span class="ident">U16Bytes</span>, <span class="ident">U32Bytes</span>, <span class="ident">U64Bytes</span>, <span class="ident">I16Bytes</span>, <span class="ident">I32Bytes</span>, <span class="ident">I64Bytes</span>);
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="object" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</body></html>

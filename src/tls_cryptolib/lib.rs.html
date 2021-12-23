@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `protocols/tls_cryptolib/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../tls_cryptolib/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `protocols&#x2F;tls_cryptolib&#x2F;src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../tls_cryptolib/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -562,8 +562,7 @@
 <span id="562">562</span>
 <span id="563">563</span>
 <span id="564">564</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">/// A module that wraps all the generic crypto needed by TLS 1.3</span>
+</pre><pre class="rust"><code><span class="doccomment">/// A module that wraps all the generic crypto needed by TLS 1.3</span>
 <span class="doccomment">/// Each function below should be supported by a standard crypto library</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This module uses hacspec crypto implementations.</span>
@@ -595,16 +594,16 @@
 }
 
 <span class="comment">// === An alias for bytes and some helper functions. === //</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
-    <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="number">0</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">empty</span>() -&gt; <span class="ident">ByteSeq</span> {
+    <span class="ident">ByteSeq::new</span>(<span class="number">0</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zeros</span>(<span class="ident">u</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ByteSeq</span> {
-    <span class="ident">ByteSeq</span>::<span class="ident">new</span>(<span class="ident">u</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zeros</span>(<span class="ident">u</span>: <span class="ident">usize</span>) -&gt; <span class="ident">ByteSeq</span> {
+    <span class="ident">ByteSeq::new</span>(<span class="ident">u</span>)
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Entropy</span> <span class="op">=</span> <span class="ident">ByteSeq</span>;
-<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">Random</span>, <span class="number">32</span>);
+<span class="macro">bytes!</span>(<span class="ident">Random</span>, <span class="number">32</span>);
 
 <span class="comment">// === A number of type aliases for different byte types. === //</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DhSk</span> <span class="op">=</span> <span class="ident">ByteSeq</span>;
@@ -652,98 +651,98 @@
 
 <span class="comment">// === Helper functions to get the length of different configurations. === //</span>
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_len</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash_len</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">match</span> <span class="ident">ha</span> {
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA384</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">48</span>,
+        <span class="ident">HashAlgorithm::SHA256</span> =&gt; <span class="number">32</span>,
+        <span class="ident">HashAlgorithm::SHA384</span> =&gt; <span class="number">48</span>,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hmac_key_len</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hmac_key_len</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">match</span> <span class="ident">ha</span> {
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA384</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">48</span>,
+        <span class="ident">HashAlgorithm::SHA256</span> =&gt; <span class="number">32</span>,
+        <span class="ident">HashAlgorithm::SHA384</span> =&gt; <span class="number">48</span>,
     }
 }
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ae_key_len</span>(<span class="ident">ae</span>: <span class="kw-2">&amp;</span><span class="ident">AeadAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ae_key_len</span>(<span class="ident">ae</span>: <span class="kw-2">&amp;</span><span class="ident">AeadAlgorithm</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">match</span> <span class="ident">ae</span> {
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Chacha20Poly1305</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes128Gcm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">16</span>,
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes256Gcm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">16</span>,
+        <span class="ident">AeadAlgorithm::Chacha20Poly1305</span> =&gt; <span class="number">32</span>,
+        <span class="ident">AeadAlgorithm::Aes128Gcm</span> =&gt; <span class="number">16</span>,
+        <span class="ident">AeadAlgorithm::Aes256Gcm</span> =&gt; <span class="number">16</span>,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ae_iv_len</span>(<span class="ident">ae</span>: <span class="kw-2">&amp;</span><span class="ident">AeadAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ae_iv_len</span>(<span class="ident">ae</span>: <span class="kw-2">&amp;</span><span class="ident">AeadAlgorithm</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">match</span> <span class="ident">ae</span> {
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Chacha20Poly1305</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">12</span>,
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes128Gcm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">12</span>,
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes256Gcm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">12</span>,
+        <span class="ident">AeadAlgorithm::Chacha20Poly1305</span> =&gt; <span class="number">12</span>,
+        <span class="ident">AeadAlgorithm::Aes128Gcm</span> =&gt; <span class="number">12</span>,
+        <span class="ident">AeadAlgorithm::Aes256Gcm</span> =&gt; <span class="number">12</span>,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dh_priv_len</span>(<span class="ident">gn</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dh_priv_len</span>(<span class="ident">gn</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">match</span> <span class="ident">gn</span> {
-        <span class="ident">NamedGroup</span>::<span class="ident">X25519</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-        <span class="ident">NamedGroup</span>::<span class="ident">Secp256r1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
+        <span class="ident">NamedGroup::X25519</span> =&gt; <span class="number">32</span>,
+        <span class="ident">NamedGroup::Secp256r1</span> =&gt; <span class="number">32</span>,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dh_pub_len</span>(<span class="ident">gn</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dh_pub_len</span>(<span class="ident">gn</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">match</span> <span class="ident">gn</span> {
-        <span class="ident">NamedGroup</span>::<span class="ident">X25519</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">32</span>,
-        <span class="ident">NamedGroup</span>::<span class="ident">Secp256r1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">64</span>,
+        <span class="ident">NamedGroup::X25519</span> =&gt; <span class="number">32</span>,
+        <span class="ident">NamedGroup::Secp256r1</span> =&gt; <span class="number">64</span>,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero_key</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Key</span> {
-    <span class="ident">Key</span>::<span class="ident">new</span>(<span class="ident">hash_len</span>(<span class="ident">ha</span>) <span class="kw">as</span> <span class="ident">usize</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero_key</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>) -&gt; <span class="ident">Key</span> {
+    <span class="ident">Key::new</span>(<span class="ident">hash_len</span>(<span class="ident">ha</span>) <span class="kw">as</span> <span class="ident">usize</span>)
 }
 
 <span class="comment">// === ECDH === //</span>
 
 <span class="comment">// Convert a DH secret key to the corresponding public key in the given group</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">secret_to_public</span>(<span class="ident">group_name</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">DhSk</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">secret_to_public</span>(<span class="ident">group_name</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">DhSk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">group_name</span> {
-        <span class="ident">NamedGroup</span>::<span class="ident">Secp256r1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">p256_point_mul_base</span>(<span class="ident">P256Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">x</span>)) {
-            <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>((<span class="ident">x</span>, <span class="ident">y</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">x</span>.<span class="ident">to_byte_seq_be</span>().<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">to_byte_seq_be</span>()))
+        <span class="ident">NamedGroup::Secp256r1</span> =&gt; <span class="kw">match</span> <span class="ident">p256_point_mul_base</span>(<span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="ident">x</span>)) {
+            <span class="ident">AffineResult::Ok</span>((<span class="ident">x</span>, <span class="ident">y</span>)) =&gt; {
+                <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">x</span>.<span class="ident">to_byte_seq_be</span>().<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">to_byte_seq_be</span>()))
             }
-            <span class="ident">AffineResult</span>::<span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">CryptoError</span>),
+            <span class="ident">AffineResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::CryptoError</span>),
         },
-        <span class="ident">NamedGroup</span>::<span class="ident">X25519</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">DhPk</span>::<span class="ident">from_seq</span>(
-            <span class="kw-2">&amp;</span><span class="ident">x25519_secret_to_public</span>(<span class="ident">X25519SerializedScalar</span>::<span class="ident">from_seq</span>(<span class="ident">x</span>)),
+        <span class="ident">NamedGroup::X25519</span> =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">DhPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">DhPk::from_seq</span>(
+            <span class="kw-2">&amp;</span><span class="ident">x25519_secret_to_public</span>(<span class="ident">X25519SerializedScalar::from_seq</span>(<span class="ident">x</span>)),
         )),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">p256_check_point_len</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">DhPk</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">p256_check_point_len</span>(<span class="ident">p</span>: <span class="kw-2">&amp;</span><span class="ident">DhPk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">p</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">64</span> {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">CryptoError</span>)
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::CryptoError</span>)
     } <span class="kw">else</span> {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(())
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(())
     }
 }
 
-<span class="kw">fn</span> <span class="ident">p256_ecdh</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">DhSk</span>, <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">DhPk</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">p256_ecdh</span>(<span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">DhSk</span>, <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">DhPk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="ident">p256_check_point_len</span>(<span class="ident">y</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> (
-        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="number">32</span>)),
-        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">slice_range</span>(<span class="number">32</span>..<span class="number">64</span>)),
+        <span class="ident">P256FieldElement::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="number">32</span>)),
+        <span class="ident">P256FieldElement::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">slice_range</span>(<span class="number">32</span>..<span class="number">64</span>)),
     );
-    <span class="kw">match</span> <span class="ident">p256_point_mul</span>(<span class="ident">P256Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">x</span>), <span class="ident">pk</span>) {
-        <span class="ident">AffineResult</span>::<span class="prelude-val">Ok</span>((<span class="ident">x</span>, <span class="ident">y</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">x</span>.<span class="ident">to_byte_seq_be</span>().<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">to_byte_seq_be</span>()))
+    <span class="kw">match</span> <span class="ident">p256_point_mul</span>(<span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="ident">x</span>), <span class="ident">pk</span>) {
+        <span class="ident">AffineResult::Ok</span>((<span class="ident">x</span>, <span class="ident">y</span>)) =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">x</span>.<span class="ident">to_byte_seq_be</span>().<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">y</span>.<span class="ident">to_byte_seq_be</span>()))
         }
-        <span class="ident">AffineResult</span>::<span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">CryptoError</span>),
+        <span class="ident">AffineResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::CryptoError</span>),
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ecdh</span>(<span class="ident">group_name</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">DhSk</span>, <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">DhPk</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ecdh</span>(<span class="ident">group_name</span>: <span class="kw-2">&amp;</span><span class="ident">NamedGroup</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="ident">DhSk</span>, <span class="ident">y</span>: <span class="kw-2">&amp;</span><span class="ident">DhPk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">group_name</span> {
-        <span class="ident">NamedGroup</span>::<span class="ident">Secp256r1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p256_ecdh</span>(<span class="ident">x</span>, <span class="ident">y</span>),
-        <span class="ident">NamedGroup</span>::<span class="ident">X25519</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">DhPk</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">x25519_scalarmult</span>(
-            <span class="ident">X25519SerializedScalar</span>::<span class="ident">from_seq</span>(<span class="ident">x</span>),
-            <span class="ident">X25519SerializedPoint</span>::<span class="ident">from_seq</span>(<span class="ident">y</span>),
+        <span class="ident">NamedGroup::Secp256r1</span> =&gt; <span class="ident">p256_ecdh</span>(<span class="ident">x</span>, <span class="ident">y</span>),
+        <span class="ident">NamedGroup::X25519</span> =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">DhPk::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">x25519_scalarmult</span>(
+            <span class="ident">X25519SerializedScalar::from_seq</span>(<span class="ident">x</span>),
+            <span class="ident">X25519SerializedPoint::from_seq</span>(<span class="ident">y</span>),
         ))),
     }
 }
@@ -754,82 +753,82 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">KemSk</span> <span class="op">=</span> <span class="ident">ByteSeq</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">KemPk</span> <span class="op">=</span> <span class="ident">ByteSeq</span>;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_priv_len</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_priv_len</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>) -&gt; <span class="ident">usize</span> {
     <span class="ident">dh_priv_len</span>(<span class="ident">ks</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_pub_len</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_pub_len</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>) -&gt; <span class="ident">usize</span> {
     <span class="ident">dh_pub_len</span>(<span class="ident">ks</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_priv_to_pub</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">sk</span>: <span class="kw-2">&amp;</span><span class="ident">KemSk</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">KemPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_priv_to_pub</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">sk</span>: <span class="kw-2">&amp;</span><span class="ident">KemSk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">KemPk</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="ident">secret_to_public</span>(<span class="ident">ks</span>, <span class="ident">sk</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">kem_keygen_inner</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">KemSk</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">ent</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">dh_priv_len</span>(<span class="ident">ks</span>)));
+<span class="kw">fn</span> <span class="ident">kem_keygen_inner</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">KemSk::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">ent</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">dh_priv_len</span>(<span class="ident">ks</span>)));
     <span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">kem_priv_to_pub</span>(<span class="ident">ks</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>)<span class="question-mark">?</span>;
-    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>((<span class="ident">sk</span>, <span class="ident">pk</span>))
+    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>((<span class="ident">sk</span>, <span class="ident">pk</span>))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_keygen</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_keygen</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">ent</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">dh_priv_len</span>(<span class="ident">ks</span>) {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">InsufficientEntropy</span>)
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(<span class="ident">KemSk</span>, <span class="ident">KemPk</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::InsufficientEntropy</span>)
     } <span class="kw">else</span> {
         <span class="ident">kem_keygen_inner</span>(<span class="ident">ks</span>, <span class="ident">ent</span>)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_encap</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">KemPk</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Key</span>, <span class="ident">ByteSeq</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_encap</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">KemPk</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Key</span>, <span class="ident">ByteSeq</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">gx</span>) <span class="op">=</span> <span class="ident">kem_keygen</span>(<span class="ident">ks</span>, <span class="ident">ent</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">gxy</span> <span class="op">=</span> <span class="ident">ecdh</span>(<span class="ident">ks</span>, <span class="kw-2">&amp;</span><span class="ident">x</span>, <span class="ident">pk</span>)<span class="question-mark">?</span>;
-    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(<span class="ident">Key</span>, <span class="ident">ByteSeq</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>((<span class="ident">gxy</span>, <span class="ident">gx</span>))
+    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(<span class="ident">Key</span>, <span class="ident">ByteSeq</span>), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>((<span class="ident">gxy</span>, <span class="ident">gx</span>))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_decap</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">ct</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">sk</span>: <span class="ident">KemSk</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kem_decap</span>(<span class="ident">ks</span>: <span class="kw-2">&amp;</span><span class="ident">KemScheme</span>, <span class="ident">ct</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">sk</span>: <span class="ident">KemSk</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">gxy</span> <span class="op">=</span> <span class="ident">ecdh</span>(<span class="ident">ks</span>, <span class="kw-2">&amp;</span><span class="ident">sk</span>, <span class="ident">ct</span>)<span class="question-mark">?</span>;
-    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">gxy</span>)
+    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">gxy</span>)
 }
 
 <span class="comment">// === Hashing === //</span>
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Digest</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Digest</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">ha</span> {
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA256</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Digest</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">Digest</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">sha256</span>(<span class="ident">payload</span>)))
+        <span class="ident">HashAlgorithm::SHA256</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Digest</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">Digest::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">sha256</span>(<span class="ident">payload</span>)))
         }
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA384</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Digest</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">HashAlgorithm::SHA384</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Digest</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
     }
 }
 
 <span class="comment">// === HMAC === //</span>
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hmac_tag</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>, <span class="ident">mk</span>: <span class="kw-2">&amp;</span><span class="ident">MacKey</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HMAC</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hmac_tag</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>, <span class="ident">mk</span>: <span class="kw-2">&amp;</span><span class="ident">MacKey</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HMAC</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">ha</span> {
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA256</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">HMAC</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">HMAC</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">hmac</span>(<span class="ident">mk</span>, <span class="ident">payload</span>)))
+        <span class="ident">HashAlgorithm::SHA256</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">HMAC</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">HMAC::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">hmac</span>(<span class="ident">mk</span>, <span class="ident">payload</span>)))
         }
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA384</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">HMAC</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">HashAlgorithm::SHA384</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">HMAC</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">check_tag_len</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">HMAC</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">HMAC</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">a</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">b</span>.<span class="ident">len</span>() {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(())
+<span class="kw">fn</span> <span class="ident">check_tag_len</span>(<span class="ident">a</span>: <span class="kw-2">&amp;</span><span class="ident">HMAC</span>, <span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">HMAC</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="ident">a</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="ident">b</span>.<span class="ident">len</span>() {
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(())
     } <span class="kw">else</span> {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">MacFailed</span>)
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::MacFailed</span>)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">check_bytes</span>(<span class="ident">a</span>: <span class="ident">U8</span>, <span class="ident">b</span>: <span class="ident">U8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">check_bytes</span>(<span class="ident">a</span>: <span class="ident">U8</span>, <span class="ident">b</span>: <span class="ident">U8</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">equal</span>(<span class="ident">b</span>) {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">MacFailed</span>)
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::MacFailed</span>)
     } <span class="kw">else</span> {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(())
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(())
     }
 }
 
@@ -838,37 +837,37 @@
     <span class="ident">mk</span>: <span class="kw-2">&amp;</span><span class="ident">MacKey</span>,
     <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">m</span>: <span class="kw-2">&amp;</span><span class="ident">HMAC</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">my_hmac</span> <span class="op">=</span> <span class="ident">hmac_tag</span>(<span class="ident">ha</span>, <span class="ident">mk</span>, <span class="ident">payload</span>)<span class="question-mark">?</span>;
     <span class="ident">check_tag_len</span>(<span class="ident">m</span>, <span class="kw-2">&amp;</span><span class="ident">my_hmac</span>)<span class="question-mark">?</span>;
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">m</span>.<span class="ident">len</span>() {
         <span class="ident">check_bytes</span>(<span class="ident">my_hmac</span>[<span class="ident">i</span>], <span class="ident">m</span>[<span class="ident">i</span>])<span class="question-mark">?</span>;
     }
-    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(())
+    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(())
 }
 
 <span class="comment">// === Signatures === //</span>
 
-<span class="macro">bytes</span><span class="macro">!</span>(<span class="ident">EcOidTag</span>, <span class="number">9</span>);
+<span class="macro">bytes!</span>(<span class="ident">EcOidTag</span>, <span class="number">9</span>);
 
 <span class="comment">// Some ASN.1 helper functions</span>
-<span class="kw">fn</span> <span class="ident">get_length_length</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-    <span class="kw">if</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="ident">b</span>[<span class="number">0</span>]) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">7</span> <span class="op">=</span><span class="op">=</span> <span class="number">1u8</span> {
+<span class="kw">fn</span> <span class="ident">get_length_length</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="ident">usize</span> {
+    <span class="kw">if</span> <span class="ident">U8::declassify</span>(<span class="ident">b</span>[<span class="number">0</span>]) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">7</span> <span class="op">==</span> <span class="number">1u8</span> {
         <span class="ident">declassify_usize_from_U8</span>(<span class="ident">b</span>[<span class="number">0</span>] <span class="op">&amp;</span> <span class="ident">U8</span>(<span class="number">0x7fu8</span>))
     } <span class="kw">else</span> {
         <span class="number">0</span>
     }
 }
-<span class="kw">fn</span> <span class="ident">get_length</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-    <span class="ident">declassify_u32_from_U32</span>(<span class="ident">U32_from_be_bytes</span>(<span class="ident">U32Word</span>::<span class="ident">from_slice</span>(<span class="ident">b</span>, <span class="number">0</span>, <span class="ident">len</span>))) <span class="kw">as</span> <span class="ident">usize</span>
+<span class="kw">fn</span> <span class="ident">get_length</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">len</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
+    <span class="ident">declassify_u32_from_U32</span>(<span class="ident">U32_from_be_bytes</span>(<span class="ident">U32Word::from_slice</span>(<span class="ident">b</span>, <span class="number">0</span>, <span class="ident">len</span>))) <span class="kw">as</span> <span class="ident">usize</span>
         <span class="op">&gt;</span><span class="op">&gt;</span> ((<span class="number">4</span> <span class="op">-</span> <span class="ident">len</span>) <span class="op">*</span> <span class="number">8</span>)
 }
-<span class="kw">fn</span> <span class="ident">get_short_length</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+<span class="kw">fn</span> <span class="ident">get_short_length</span>(<span class="ident">b</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="ident">usize</span> {
     <span class="ident">declassify_usize_from_U8</span>(<span class="ident">b</span>[<span class="number">0</span>] <span class="op">&amp;</span> <span class="ident">U8</span>(<span class="number">0x7fu8</span>))
 }
 
 <span class="comment">// Very basic ASN.1 parser to read the ECDSA public key from an X.509 certificate.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verification_key_from_cert</span>(<span class="ident">cert</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerificationKey</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verification_key_from_cert</span>(<span class="ident">cert</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VerificationKey</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="comment">// cert is an ASN.1 sequence. Take the first sequence inside the outer.</span>
     <span class="comment">// Skip 1 + length bytes</span>
     <span class="kw">let</span> <span class="ident">skip</span> <span class="op">=</span> <span class="number">2</span> <span class="op">+</span> <span class="ident">get_length_length</span>(<span class="kw-2">&amp;</span><span class="ident">cert</span>.<span class="ident">slice_range</span>(<span class="number">1</span>..<span class="ident">cert</span>.<span class="ident">len</span>())) <span class="op">+</span> <span class="number">1</span>;
@@ -878,12 +877,12 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq1</span> <span class="op">=</span> <span class="ident">cert</span>.<span class="ident">slice_range</span>(<span class="ident">skip</span> <span class="op">+</span> <span class="ident">seq1_len_len</span>..<span class="ident">skip</span> <span class="op">+</span> <span class="ident">seq1_len_len</span> <span class="op">+</span> <span class="ident">seq1_len</span>);
 
     <span class="comment">// Read sequences until we find the ecPublicKey (we don&#39;t support anything else right now)</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">VerificationKey</span>::<span class="ident">new</span>(<span class="number">0</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">VerificationKey::new</span>(<span class="number">0</span>);
     <span class="comment">// XXX: the typechecker should allow _ here. We don&#39;t need the counter.  #135</span>
     <span class="kw">for</span> <span class="ident">_i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">seq1</span>.<span class="ident">len</span>() {
         <span class="comment">// FIXME: we really need a break statement.</span>
         <span class="kw">if</span> <span class="ident">seq1</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="ident">element_type</span> <span class="op">=</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="ident">seq1</span>[<span class="number">0</span>]);
+            <span class="kw">let</span> <span class="ident">element_type</span> <span class="op">=</span> <span class="ident">U8::declassify</span>(<span class="ident">seq1</span>[<span class="number">0</span>]);
             <span class="ident">seq1</span> <span class="op">=</span> <span class="ident">seq1</span>.<span class="ident">slice</span>(<span class="number">1</span>, <span class="ident">seq1</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>);
             <span class="kw">let</span> <span class="ident">len_len</span> <span class="op">=</span> <span class="ident">get_length_length</span>(<span class="kw-2">&amp;</span><span class="ident">seq1</span>);
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span> <span class="op">=</span> <span class="ident">get_short_length</span>(<span class="kw-2">&amp;</span><span class="ident">seq1</span>);
@@ -893,21 +892,21 @@
             }
             <span class="comment">// XXX: Unfortunately we can&#39;t break so we don&#39;t go in here if we have</span>
             <span class="comment">//      the pk already.</span>
-            <span class="kw">if</span> <span class="ident">element_type</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x30u8</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">pk</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">element_type</span> <span class="op">==</span> <span class="number">0x30u8</span> <span class="op">&amp;&amp;</span> <span class="ident">pk</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> {
                 <span class="comment">// peek into this sequence to see if sequence again with an ecPublicKey</span>
                 <span class="comment">// as first element</span>
                 <span class="kw">let</span> <span class="ident">seq2</span> <span class="op">=</span> <span class="ident">seq1</span>.<span class="ident">slice</span>(<span class="ident">len_len</span>, <span class="ident">len</span>);
-                <span class="kw">let</span> <span class="ident">element_type</span> <span class="op">=</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="ident">seq2</span>[<span class="number">0</span>]);
+                <span class="kw">let</span> <span class="ident">element_type</span> <span class="op">=</span> <span class="ident">U8::declassify</span>(<span class="ident">seq2</span>[<span class="number">0</span>]);
                 <span class="kw">let</span> <span class="ident">seq2</span> <span class="op">=</span> <span class="ident">seq2</span>.<span class="ident">slice</span>(<span class="number">1</span>, <span class="ident">seq2</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>);
-                <span class="kw">if</span> <span class="ident">element_type</span> <span class="op">=</span><span class="op">=</span> <span class="number">0x30u8</span> {
+                <span class="kw">if</span> <span class="ident">element_type</span> <span class="op">==</span> <span class="number">0x30u8</span> {
                     <span class="kw">let</span> <span class="ident">len_len</span> <span class="op">=</span> <span class="ident">get_length_length</span>(<span class="kw-2">&amp;</span><span class="ident">seq2</span>);
-                    <span class="kw">if</span> <span class="ident">len_len</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                    <span class="kw">if</span> <span class="ident">len_len</span> <span class="op">==</span> <span class="number">0</span> {
                         <span class="kw">let</span> <span class="ident">oid_len</span> <span class="op">=</span> <span class="ident">get_short_length</span>(<span class="kw-2">&amp;</span><span class="ident">seq2</span>);
                         <span class="kw">if</span> <span class="ident">oid_len</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">9</span> {
                             <span class="comment">// ecPublicKey oid incl tag: 06 07 2A 86 48 CE 3D 02 01</span>
                             <span class="comment">// FIXME: This shouldn&#39;t be necessary. Instead public_byte_seq!</span>
                             <span class="comment">//        should be added to the typechecker. #136</span>
-                            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">EcOidTag</span>(<span class="macro">secret_bytes</span><span class="macro">!</span>([
+                            <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="ident">ByteSeq::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">EcOidTag</span>(<span class="macro">secret_bytes!</span>([
                                 <span class="number">0x06u8</span>, <span class="number">0x07u8</span>, <span class="number">0x2Au8</span>, <span class="number">0x86u8</span>, <span class="number">0x48u8</span>, <span class="number">0xCEu8</span>, <span class="number">0x3Du8</span>, <span class="number">0x02u8</span>,
                                 <span class="number">0x01u8</span>
                             ])));
@@ -915,15 +914,15 @@
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ec_pk_oid</span> <span class="op">=</span> <span class="bool-val">true</span>;
                             <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">9</span> {
                                 <span class="kw">let</span> <span class="ident">oid_byte_equal</span> <span class="op">=</span>
-                                    <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="ident">oid</span>[<span class="ident">i</span>]) <span class="op">=</span><span class="op">=</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="ident">expected</span>[<span class="ident">i</span>]);
-                                <span class="ident">ec_pk_oid</span> <span class="op">=</span> <span class="ident">ec_pk_oid</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">oid_byte_equal</span>;
+                                    <span class="ident">U8::declassify</span>(<span class="ident">oid</span>[<span class="ident">i</span>]) <span class="op">==</span> <span class="ident">U8::declassify</span>(<span class="ident">expected</span>[<span class="ident">i</span>]);
+                                <span class="ident">ec_pk_oid</span> <span class="op">=</span> <span class="ident">ec_pk_oid</span> <span class="op">&amp;&amp;</span> <span class="ident">oid_byte_equal</span>;
                             }
                             <span class="kw">if</span> <span class="ident">ec_pk_oid</span> {
                                 <span class="comment">// We have an ecPublicKey, skip the inner sequences</span>
                                 <span class="comment">// and read the public key from the bit string</span>
                                 <span class="kw">let</span> <span class="ident">bit_string</span> <span class="op">=</span> <span class="ident">seq2</span>.<span class="ident">slice</span>(<span class="ident">oid_len</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">seq2</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">oid_len</span> <span class="op">-</span> <span class="number">1</span>);
                                 <span class="comment">// We only support uncompressed points</span>
-                                <span class="kw">if</span> <span class="ident">U8</span>::<span class="ident">declassify</span>(<span class="ident">bit_string</span>[<span class="number">0</span>]) <span class="op">=</span><span class="op">=</span> <span class="number">0x03u8</span> {
+                                <span class="kw">if</span> <span class="ident">U8::declassify</span>(<span class="ident">bit_string</span>[<span class="number">0</span>]) <span class="op">==</span> <span class="number">0x03u8</span> {
                                     <span class="kw">let</span> <span class="ident">pk_len</span> <span class="op">=</span> <span class="ident">declassify_usize_from_U8</span>(<span class="ident">bit_string</span>[<span class="number">1</span>]); <span class="comment">// 42</span>
                                     <span class="kw">let</span> <span class="ident">_zeroes</span> <span class="op">=</span> <span class="ident">declassify_usize_from_U8</span>(<span class="ident">bit_string</span>[<span class="number">2</span>]); <span class="comment">// 00</span>
                                     <span class="kw">let</span> <span class="ident">_uncompressed</span> <span class="op">=</span> <span class="ident">declassify_usize_from_U8</span>(<span class="ident">bit_string</span>[<span class="number">3</span>]); <span class="comment">// 04</span>
@@ -937,28 +936,28 @@
             <span class="ident">seq1</span> <span class="op">=</span> <span class="ident">seq1</span>.<span class="ident">slice</span>(<span class="ident">len</span>, <span class="ident">seq1</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">len</span>);
         }
     }
-    <span class="kw">if</span> <span class="ident">pk</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">VerificationKey</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">InvalidCert</span>)
+    <span class="kw">if</span> <span class="ident">pk</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> {
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">VerificationKey</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::InvalidCert</span>)
     } <span class="kw">else</span> {
-        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">VerificationKey</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">pk</span>)
+        <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">VerificationKey</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">pk</span>)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">concat_signature</span>(<span class="ident">r</span>: <span class="ident">P256Scalar</span>, <span class="ident">s</span>: <span class="ident">P256Scalar</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">Signature</span>::<span class="ident">new</span>(<span class="number">0</span>)
+<span class="kw">fn</span> <span class="ident">concat_signature</span>(<span class="ident">r</span>: <span class="ident">P256Scalar</span>, <span class="ident">s</span>: <span class="ident">P256Scalar</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">Signature::new</span>(<span class="number">0</span>)
         .<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">to_byte_seq_be</span>())
         .<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">to_byte_seq_be</span>());
-    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">signature</span>)
+    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">signature</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">p256_sign</span>(<span class="ident">ps</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureKey</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">random</span> <span class="op">=</span> <span class="ident">Random</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">ent</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="number">32</span>));
+<span class="kw">fn</span> <span class="ident">p256_sign</span>(<span class="ident">ps</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureKey</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">ent</span>: <span class="ident">Entropy</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">random</span> <span class="op">=</span> <span class="ident">Random::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">ent</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="number">32</span>));
     <span class="comment">// FIXME: #138 return an error when nonce is not a valid scalar value.</span>
-    <span class="kw">let</span> <span class="ident">nonce</span> <span class="op">=</span> <span class="ident">P256Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">random</span>);
-    <span class="kw">match</span> <span class="ident">ecdsa_p256_sha256_sign</span>(<span class="ident">payload</span>, <span class="ident">P256Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="ident">ps</span>), <span class="ident">nonce</span>) {
+    <span class="kw">let</span> <span class="ident">nonce</span> <span class="op">=</span> <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">random</span>);
+    <span class="kw">match</span> <span class="ident">ecdsa_p256_sha256_sign</span>(<span class="ident">payload</span>, <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="ident">ps</span>), <span class="ident">nonce</span>) {
         <span class="comment">// The ASN.1 encoding happens later on the outside.</span>
-        <span class="ident">SignatureResult</span>::<span class="prelude-val">Ok</span>((<span class="ident">r</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">concat_signature</span>(<span class="ident">r</span>, <span class="ident">s</span>),
-        <span class="ident">SignatureResult</span>::<span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">CryptoError</span>),
+        <span class="ident">SignatureResult::Ok</span>((<span class="ident">r</span>, <span class="ident">s</span>)) =&gt; <span class="ident">concat_signature</span>(<span class="ident">r</span>, <span class="ident">s</span>),
+        <span class="ident">SignatureResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::CryptoError</span>),
     }
 }
 
@@ -967,30 +966,30 @@
     <span class="ident">ps</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureKey</span>,
     <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">ent</span>: <span class="ident">Entropy</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">sa</span> {
-        <span class="ident">SignatureScheme</span>::<span class="ident">EcdsaSecp256r1Sha256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p256_sign</span>(<span class="ident">ps</span>, <span class="ident">payload</span>, <span class="ident">ent</span>),
-        <span class="ident">SignatureScheme</span>::<span class="ident">ED25519</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">SignatureScheme::EcdsaSecp256r1Sha256</span> =&gt; <span class="ident">p256_sign</span>(<span class="ident">ps</span>, <span class="ident">payload</span>, <span class="ident">ent</span>),
+        <span class="ident">SignatureScheme::ED25519</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
-        <span class="ident">SignatureScheme</span>::<span class="ident">RsaPssRsaSha256</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">SignatureScheme::RsaPssRsaSha256</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">p256_verify</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">VerificationKey</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">p256_verify</span>(<span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">VerificationKey</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="ident">pk_x</span>, <span class="ident">pk_y</span>) <span class="op">=</span> (
-        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">slice</span>(<span class="number">0</span>, <span class="number">32</span>)),
-        <span class="ident">P256FieldElement</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">slice</span>(<span class="number">32</span>, <span class="number">32</span>)),
+        <span class="ident">P256FieldElement::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">slice</span>(<span class="number">0</span>, <span class="number">32</span>)),
+        <span class="ident">P256FieldElement::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">pk</span>.<span class="ident">slice</span>(<span class="number">32</span>, <span class="number">32</span>)),
     );
     <span class="kw">let</span> (<span class="ident">r</span>, <span class="ident">s</span>) <span class="op">=</span> (
-        <span class="ident">P256Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">slice</span>(<span class="number">0</span>, <span class="number">32</span>)),
-        <span class="ident">P256Scalar</span>::<span class="ident">from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">slice</span>(<span class="number">32</span>, <span class="number">32</span>)),
+        <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">slice</span>(<span class="number">0</span>, <span class="number">32</span>)),
+        <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">slice</span>(<span class="number">32</span>, <span class="number">32</span>)),
     );
     <span class="kw">match</span> <span class="ident">ecdsa_p256_sha256_verify</span>(<span class="ident">payload</span>, (<span class="ident">pk_x</span>, <span class="ident">pk_y</span>), (<span class="ident">r</span>, <span class="ident">s</span>)) {
-        <span class="ident">VerifyResult</span>::<span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(()),
-        <span class="ident">VerifyResult</span>::<span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">VerifyFailed</span>),
+        <span class="ident">VerifyResult::Ok</span>(()) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(()),
+        <span class="ident">VerifyResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::VerifyFailed</span>),
     }
 }
 
@@ -999,24 +998,24 @@
     <span class="ident">pk</span>: <span class="kw-2">&amp;</span><span class="ident">VerificationKey</span>,
     <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">sig</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">sa</span> {
-        <span class="ident">SignatureScheme</span>::<span class="ident">EcdsaSecp256r1Sha256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p256_verify</span>(<span class="ident">pk</span>, <span class="ident">payload</span>, <span class="ident">sig</span>),
-        <span class="ident">SignatureScheme</span>::<span class="ident">ED25519</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">SignatureScheme::EcdsaSecp256r1Sha256</span> =&gt; <span class="ident">p256_verify</span>(<span class="ident">pk</span>, <span class="ident">payload</span>, <span class="ident">sig</span>),
+        <span class="ident">SignatureScheme::ED25519</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
-        <span class="ident">SignatureScheme</span>::<span class="ident">RsaPssRsaSha256</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">SignatureScheme::RsaPssRsaSha256</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
     }
 }
 
 <span class="comment">// === HKDF === //</span>
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hkdf_extract</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>, <span class="ident">k</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">salt</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hkdf_extract</span>(<span class="ident">ha</span>: <span class="kw-2">&amp;</span><span class="ident">HashAlgorithm</span>, <span class="ident">k</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>, <span class="ident">salt</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">ha</span> {
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">Key</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">extract</span>(<span class="ident">salt</span>, <span class="ident">k</span>))),
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA384</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>),
+        <span class="ident">HashAlgorithm::SHA256</span> =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">Key::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">extract</span>(<span class="ident">salt</span>, <span class="ident">k</span>))),
+        <span class="ident">HashAlgorithm::SHA384</span> =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>),
     }
 }
 
@@ -1025,13 +1024,13 @@
     <span class="ident">k</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
     <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">len</span>: <span class="ident">usize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">ha</span> {
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA256</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">expand</span>(<span class="ident">k</span>, <span class="ident">info</span>, <span class="ident">len</span>) {
-            <span class="ident">HkdfByteSeqResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">Key</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>)),
-            <span class="ident">HkdfByteSeqResult</span>::<span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">HkdfError</span>),
+        <span class="ident">HashAlgorithm::SHA256</span> =&gt; <span class="kw">match</span> <span class="ident">expand</span>(<span class="ident">k</span>, <span class="ident">info</span>, <span class="ident">len</span>) {
+            <span class="ident">HkdfByteSeqResult::Ok</span>(<span class="ident">b</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">Key::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>)),
+            <span class="ident">HkdfByteSeqResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::HkdfError</span>),
         },
-        <span class="ident">HashAlgorithm</span>::<span class="ident">SHA384</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>),
+        <span class="ident">HashAlgorithm::SHA384</span> =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Key</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>),
     }
 }
 
@@ -1042,9 +1041,9 @@
     <span class="ident">iv</span>: <span class="kw-2">&amp;</span><span class="ident">AeadIv</span>,
     <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">ad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> (<span class="ident">ctxt</span>, <span class="ident">tag</span>) <span class="op">=</span> <span class="ident">encrypt_aes128</span>(<span class="ident">Key128</span>::<span class="ident">from_seq</span>(<span class="ident">k</span>), <span class="ident">AesNonce</span>::<span class="ident">from_seq</span>(<span class="ident">iv</span>), <span class="ident">ad</span>, <span class="ident">payload</span>);
-    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">ctxt</span>.<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>)))
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> (<span class="ident">ctxt</span>, <span class="ident">tag</span>) <span class="op">=</span> <span class="ident">encrypt_aes128</span>(<span class="ident">Key128::from_seq</span>(<span class="ident">k</span>), <span class="ident">AesNonce::from_seq</span>(<span class="ident">iv</span>), <span class="ident">ad</span>, <span class="ident">payload</span>);
+    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">ctxt</span>.<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">ByteSeq::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>)))
 }
 
 <span class="kw">fn</span> <span class="ident">chacha_encrypt</span>(
@@ -1052,10 +1051,10 @@
     <span class="ident">iv</span>: <span class="kw-2">&amp;</span><span class="ident">AeadIv</span>,
     <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">ad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="ident">ctxt</span>, <span class="ident">tag</span>) <span class="op">=</span>
-        <span class="ident">chacha20_poly1305_encrypt</span>(<span class="ident">ChaChaKey</span>::<span class="ident">from_seq</span>(<span class="ident">k</span>), <span class="ident">ChaChaIV</span>::<span class="ident">from_seq</span>(<span class="ident">iv</span>), <span class="ident">ad</span>, <span class="ident">payload</span>);
-    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">ctxt</span>.<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>))
+        <span class="ident">chacha20_poly1305_encrypt</span>(<span class="ident">ChaChaKey::from_seq</span>(<span class="ident">k</span>), <span class="ident">ChaChaIV::from_seq</span>(<span class="ident">iv</span>), <span class="ident">ad</span>, <span class="ident">payload</span>);
+    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">ctxt</span>.<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>))
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">aead_encrypt</span>(
@@ -1064,13 +1063,13 @@
     <span class="ident">iv</span>: <span class="kw-2">&amp;</span><span class="ident">AeadIv</span>,
     <span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">ad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">a</span> {
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes128Gcm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">aes128_encrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">payload</span>, <span class="ident">ad</span>),
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes256Gcm</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">AeadAlgorithm::Aes128Gcm</span> =&gt; <span class="ident">aes128_encrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">payload</span>, <span class="ident">ad</span>),
+        <span class="ident">AeadAlgorithm::Aes256Gcm</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Chacha20Poly1305</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">chacha_encrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">payload</span>, <span class="ident">ad</span>),
+        <span class="ident">AeadAlgorithm::Chacha20Poly1305</span> =&gt; <span class="ident">chacha_encrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">payload</span>, <span class="ident">ad</span>),
     }
 }
 
@@ -1079,16 +1078,16 @@
     <span class="ident">iv</span>: <span class="kw-2">&amp;</span><span class="ident">AeadIv</span>,
     <span class="ident">ciphertext</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">ad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">decrypt_aes128</span>(
-        <span class="ident">Key128</span>::<span class="ident">from_seq</span>(<span class="ident">k</span>),
-        <span class="ident">AesNonce</span>::<span class="ident">from_seq</span>(<span class="ident">iv</span>),
+        <span class="ident">Key128::from_seq</span>(<span class="ident">k</span>),
+        <span class="ident">AesNonce::from_seq</span>(<span class="ident">iv</span>),
         <span class="ident">ad</span>,
         <span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">ciphertext</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">16</span>),
-        <span class="ident">Gf128Tag</span>::<span class="ident">from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">slice_range</span>(<span class="ident">ciphertext</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">16</span>..<span class="ident">ciphertext</span>.<span class="ident">len</span>())),
+        <span class="ident">Gf128Tag::from_seq</span>(<span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">slice_range</span>(<span class="ident">ciphertext</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">16</span>..<span class="ident">ciphertext</span>.<span class="ident">len</span>())),
     ) {
-        <span class="ident">AesGcmByteSeqResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">m</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">m</span>),
-        <span class="ident">AesGcmByteSeqResult</span>::<span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">MacFailed</span>),
+        <span class="ident">AesGcmByteSeqResult::Ok</span>(<span class="ident">m</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">m</span>),
+        <span class="ident">AesGcmByteSeqResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::MacFailed</span>),
     }
 }
 
@@ -1097,18 +1096,18 @@
     <span class="ident">iv</span>: <span class="kw-2">&amp;</span><span class="ident">AeadIv</span>,
     <span class="ident">ciphertext</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">ad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">chacha20_poly1305_decrypt</span>(
-        <span class="ident">ChaChaKey</span>::<span class="ident">from_seq</span>(<span class="ident">k</span>),
-        <span class="ident">ChaChaIV</span>::<span class="ident">from_seq</span>(<span class="ident">iv</span>),
+        <span class="ident">ChaChaKey::from_seq</span>(<span class="ident">k</span>),
+        <span class="ident">ChaChaIV::from_seq</span>(<span class="ident">iv</span>),
         <span class="ident">ad</span>,
         <span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">slice_range</span>(<span class="number">0</span>..<span class="ident">ciphertext</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">16</span>),
-        <span class="ident">Poly1305Tag</span>::<span class="ident">from_seq</span>(
+        <span class="ident">Poly1305Tag::from_seq</span>(
             <span class="kw-2">&amp;</span><span class="ident">ciphertext</span>.<span class="ident">slice_range</span>(<span class="ident">ciphertext</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">16</span>..<span class="ident">ciphertext</span>.<span class="ident">len</span>()), <span class="comment">// .declassify(),</span>
         ),
     ) {
-        <span class="ident">ByteSeqResult</span>::<span class="prelude-val">Ok</span>(<span class="ident">ptxt</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Ok</span>(<span class="ident">ptxt</span>),
-        <span class="ident">ByteSeqResult</span>::<span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">MacFailed</span>),
+        <span class="ident">ByteSeqResult::Ok</span>(<span class="ident">ptxt</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">ptxt</span>),
+        <span class="ident">ByteSeqResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::MacFailed</span>),
     }
 }
 
@@ -1118,14 +1117,16 @@
     <span class="ident">iv</span>: <span class="kw-2">&amp;</span><span class="ident">AeadIv</span>,
     <span class="ident">ciphertext</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
     <span class="ident">ad</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">a</span> {
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes128Gcm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">aes128_decrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">ciphertext</span>, <span class="ident">ad</span>),
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Aes256Gcm</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span>::<span class="prelude-val">Err</span>(<span class="ident">CryptoError</span>::<span class="ident">UnsupportedAlgorithm</span>)
+        <span class="ident">AeadAlgorithm::Aes128Gcm</span> =&gt; <span class="ident">aes128_decrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">ciphertext</span>, <span class="ident">ad</span>),
+        <span class="ident">AeadAlgorithm::Aes256Gcm</span> =&gt; {
+            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">ByteSeq</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::UnsupportedAlgorithm</span>)
         }
-        <span class="ident">AeadAlgorithm</span>::<span class="ident">Chacha20Poly1305</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">chacha_decrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">ciphertext</span>, <span class="ident">ad</span>),
+        <span class="ident">AeadAlgorithm::Chacha20Poly1305</span> =&gt; <span class="ident">chacha_decrypt</span>(<span class="ident">k</span>, <span class="ident">iv</span>, <span class="ident">ciphertext</span>, <span class="ident">ad</span>),
     }
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "tls_cryptolib";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="tls_cryptolib" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</body></html>
