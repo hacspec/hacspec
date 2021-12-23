@@ -144,7 +144,29 @@ fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
-    translate_ident_str(x.string)
+    match x.kind {
+        TopLevelIdentKind::Type => {
+            match format!("{}", translate_ident_str(x.string).pretty(0)).as_str() {
+                s @ "uint128"
+                | s @ "uint64"
+                | s @ "uint32"
+                | s @ "uint16"
+                | s @ "uint8"
+                | s @ "int128"
+                | s @ "int64"
+                | s @ "int32"
+                | s @ "int16"
+                | s @ "int8"
+                | s @ "byte_seq"
+                | s @ "public_byte_seq"
+                | s @ "option"
+                | s @ "result" => RcDoc::as_string(s),
+                s => RcDoc::as_string(format!("{}_t", s)),
+            }
+        }
+        TopLevelIdentKind::Constant => translate_ident_str(format!("{}_v", x.string)),
+        _ => translate_ident_str(x.string),
+    }
 }
 
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
@@ -318,107 +340,6 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
     }
 }
 
-fn get_type_default(t: &BaseTyp) -> Expression {
-    match t {
-        BaseTyp::UInt8 => Expression::Lit(Literal::UInt8(0)),
-        BaseTyp::Int8 => Expression::Lit(Literal::Int8(0)),
-        BaseTyp::UInt16 => Expression::Lit(Literal::UInt16(0)),
-        BaseTyp::Int16 => Expression::Lit(Literal::Int16(0)),
-        BaseTyp::UInt32 => Expression::Lit(Literal::UInt32(0)),
-        BaseTyp::Int32 => Expression::Lit(Literal::Int32(0)),
-        BaseTyp::UInt64 => Expression::Lit(Literal::UInt64(0)),
-        BaseTyp::Int64 => Expression::Lit(Literal::Int64(0)),
-        BaseTyp::UInt128 => Expression::Lit(Literal::UInt128(0)),
-        BaseTyp::Int128 => Expression::Lit(Literal::Int128(0)),
-        BaseTyp::Usize => Expression::Lit(Literal::Usize(0)),
-        BaseTyp::Isize => Expression::Lit(Literal::Isize(0)),
-        BaseTyp::Named((name, i_s), None) => match name.string.as_str() {
-            "U8" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt8(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I8" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int8(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U16" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt16(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I16" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int16(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U32" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt32(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I32" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int32(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U64" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt64(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I64" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int64(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "U128" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::UInt128(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            "I128" => Expression::FuncCall(
-                None,
-                (name.clone(), i_s.clone()),
-                vec![(
-                    (Expression::Lit(Literal::Int128(0)), i_s.clone()),
-                    (Borrowing::Consumed, i_s.clone()),
-                )],
-            ),
-            _ => panic!("Trying to get default for {}", t),
-        },
-        _ => panic!("Trying to get default for {}", t),
-    }
-}
-
 fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
         // If the pattern is a tuple, expand it
@@ -454,6 +375,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Sub => return RcDoc::as_string("-%"),
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
+                        BinOpKind::Rem => return RcDoc::as_string("rem"),
                         // Rem,
                         // And,
                         // Or,
@@ -468,7 +390,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Ne => return RcDoc::as_string("!=.?"),
                         // Ge,
                         // Gt,
-                        _ => unimplemented!(),
+                        _ => unimplemented!("{:?}", op),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
                         return translate_binop(op, inner_ty, top_ctx)
@@ -628,28 +550,38 @@ fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
     name: Ident,
     top_ctx: &'a TopLevelContext,
-) -> (RcDoc<'a, ()>, Vec<RcDoc<'a, ()>>) {
+) -> (RcDoc<'a, ()>, Vec<RcDoc<'a, ()>>, Option<BaseTyp>) {
     match prefix.clone() {
         None => {
             let name = translate_ident(name.clone());
             match format!("{}", name.pretty(0)).as_str() {
-                "uint128" | "uint64" | "uint32" | "uint16" | "uint8" | "int128" | "int64"
-                | "int32" | "int16" | "int8" => {
-                    // In this case, we're trying to apply a secret
-                    // int constructor. The value it is applied to is
-                    // a public integer of the same kind. So in Coq, that
-                    // will amount to a classification operation
-                    // TODO: may need to add type annotation here
-                    (RcDoc::as_string("secret"), vec![])
-                }
-                _ => (name, vec![]),
+                // In this case, we're trying to apply a secret
+                // int constructor. The value it is applied to is
+                // a public integer of the same kind. So in Coq, that
+                // will amount to a classification operation
+                // TODO: may need to add type annotation here
+                "uint128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt128)),
+                "uint64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt64)),
+                "uint32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt32)),
+                "uint16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt16)),
+                "uint8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt8)),
+                "int128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int128)),
+                "int64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int64)),
+                "int32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int32)),
+                "int16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int16)),
+                "int8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int8)),
+                _ => (name, vec![], None), // TODO: is None correct?
             }
         }
         Some((prefix, _)) => {
             let (module_name, prefix_info) =
                 translate_prefix_for_func_name(prefix.clone(), top_ctx);
+
+            let mut result_typ = None;
+
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
+
             // We add the modulo value for nat_mod
 
             match (
@@ -658,8 +590,14 @@ fn translate_func_name<'a>(
             ) {
                 (NAT_MODULE, "from_literal") | (NAT_MODULE, "pow2") => {
                     match &prefix_info {
-                        FuncPrefix::NatMod(modulo, _bits) => {
-                            additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+                        FuncPrefix::NatMod(modulo, _) => {
+                            if modulo == "unknown" {
+                                additional_args.push(RcDoc::as_string("_"));
+                            } else {
+                                additional_args.push(RcDoc::as_string(format!("0x{}", modulo)));
+                            }
+
+                            result_typ = Some(prefix.clone());
                         }
                         _ => panic!(), // should not happen
                     }
@@ -680,6 +618,23 @@ fn translate_func_name<'a>(
                 }
                 _ => (),
             };
+
+            // And decoding
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                (NAT_MODULE, "from_byte_seq_le") | (NAT_MODULE, "from_byte_seq_be") => {
+                    match &prefix_info {
+                        FuncPrefix::NatMod(modulo, _) => {
+                            result_typ = Some(prefix.clone());
+                        }
+                        _ => panic!(), // should not happen
+                    }
+                }
+                _ => (),
+            };
+
             // Then the default value for seqs
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
@@ -690,9 +645,8 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice")
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
-                        FuncPrefix::Array(_, inner_ty) | FuncPrefix::Seq(inner_ty) => {
-                            additional_args
-                                .push(translate_expression(get_type_default(inner_ty), top_ctx))
+                        FuncPrefix::Array(_, _) | FuncPrefix::Seq(_) => {
+                            additional_args.push(RcDoc::as_string("default"));
                         }
                         _ => panic!(), // should not happen
                     }
@@ -710,7 +664,7 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
-                            additional_args.push(translate_ident_str(s.string.clone()))
+                            additional_args.push(translate_ident(Ident::TopLevel(s.clone())))
                         }
                         FuncPrefix::Array(ArraySize::Integer(i), _) => {
                             additional_args.push(RcDoc::as_string(format!("{}", i)))
@@ -730,6 +684,7 @@ fn translate_func_name<'a>(
                     .append(RcDoc::as_string("_"))
                     .append(func_ident.clone()),
                 additional_args,
+                result_typ,
             )
         }
     }
@@ -824,7 +779,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         ),
         Expression::Named(p) => translate_ident(p.clone()),
         Expression::FuncCall(prefix, name, args) => {
-            let (func_name, additional_args) =
+            let (func_name, additional_args, func_ret_ty) =
                 translate_func_name(prefix.clone(), Ident::TopLevel(name.0.clone()), top_ctx);
             let total_args = args.len() + additional_args.len();
             func_name
@@ -843,13 +798,22 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 } else {
                     RcDoc::nil()
                 })
+                .append(match func_ret_ty {
+                    Some(ret_ty) => RcDoc::as_string(" : ").append(translate_base_typ(ret_ty)),
+                    None => RcDoc::nil(),
+                })
         }
         Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
             // Ignore "clone" // TODO: is this correct?
             if f.string == "clone" {
-                RcDoc::nil()
+                // Then the self argument
+                make_paren(translate_expression((sel_arg.0).0, top_ctx))
+                    // And finally the rest of the arguments
+                    .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
+                        RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
+                    })))
             } else {
-                let (func_name, additional_args) = translate_func_name(
+                let (func_name, additional_args, func_ret_ty) = translate_func_name(
                     sel_typ.clone().map(|x| x.1),
                     Ident::TopLevel(f.clone()),
                     top_ctx,
@@ -861,13 +825,17 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                             .map(|arg| RcDoc::space().append(make_paren(arg))),
                     ))
                     .append(RcDoc::space())
+                    // Then the self argument
+                    .append(make_paren(translate_expression((sel_arg.0).0, top_ctx)))
+                    // And finally the rest of the arguments
+                    .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
+                        RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
+                    })))
+                    .append(match func_ret_ty {
+                        Some(ret_ty) => RcDoc::as_string(" : ").append(translate_base_typ(ret_ty)),
+                        None => RcDoc::nil(),
+                    })
             }
-            // Then the self argument
-            .append(make_paren(translate_expression((sel_arg.0).0, top_ctx)))
-            // And finally the rest of the arguments
-            .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
-                RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
-            })))
         }
         Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
@@ -1882,16 +1850,22 @@ fn translate_item<'a>(
                     }),
             )
         }
-        Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => RcDoc::as_string(format!(
+        Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => {
+            RcDoc::as_string(format!(
             "Require Import {}.",
-            str::replace(&kr.to_title_case(), " ", ".")
-        )),
+                str::replace(
+                    // TODO: Better name resolution for crate imports
+                    // Only first should be outer crate name (no crate with _ allowed?)
+                    &str::replacen(&kr.to_title_case(), " ", ".", 1),
+                    " ", "_")
+            ))
+        }
         // Aliases are translated to Coq Notations
-        Item::AliasDecl((TopLevelIdent { string: name, .. }, _), (ty, _)) => {
+        Item::AliasDecl((ident, _), (ty, _)) => {
             RcDoc::as_string("Notation")
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("\"'"))
-                .append(translate_ident_str(name.clone()))
+                .append(translate_ident(Ident::TopLevel(ident.clone())))
                 .append(RcDoc::as_string("'\""))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string(":= ("))
@@ -1904,18 +1878,18 @@ fn translate_item<'a>(
                         .append(RcDoc::as_string("Instance"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("show_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string(":"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("Show ("))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string(") :="))
                         .append(RcDoc::line())
                         .append(
                             RcDoc::as_string("Build_Show")
                                     .append(RcDoc::space())
-                                    .append(translate_ident_str(name.clone()))
+                                    .append(translate_ident(Ident::TopLevel(ident.clone())))
                                     .append(RcDoc::space())
                                     .append(RcDoc::as_string("(fun x =>"))
                                     .append(RcDoc::line())
@@ -1951,12 +1925,12 @@ fn translate_item<'a>(
                         .append(RcDoc::as_string("Definition"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("g_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string(":"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("G ("))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string(") :="))
                         .append(RcDoc::line())
                         .append(match ty.clone() {
@@ -2000,18 +1974,18 @@ fn translate_item<'a>(
                         .append(RcDoc::as_string("Instance"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("gen_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string(":"))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("Gen ("))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string(") := Build_Gen"))
                         .append(RcDoc::space())
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("g_"))
-                        .append(translate_ident_str(name.clone()))
+                        .append(translate_ident(Ident::TopLevel(ident.clone())))
                         .append(RcDoc::as_string("."))
                         .group()
                                 .append(RcDoc::hardline())

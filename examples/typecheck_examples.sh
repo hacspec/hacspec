@@ -65,3 +65,4 @@ typecheck hacspec-ecdsa-p256-sha256 no-ec   no-fst    json      no-coq
 typecheck hacspec-aes               no-ec      fst    json      no-coq
 typecheck hacspec-gf128             no-ec      fst    json      no-coq
 typecheck hacspec-aes128-gcm        no-ec      fst    json      no-coq
+typecheck hacspec-bls12-381-hash    no-ec   no-fst    json      coq
