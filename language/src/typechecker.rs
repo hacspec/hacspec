@@ -2075,6 +2075,42 @@ fn typecheck_question_mark(
             (
                 (Borrowing::Consumed, _),
                 (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
+            ) if name == "Option" && args.len() == 1 => {
+                let some_typ = &args[0];
+                match return_typ {
+                    (
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: return_name,
+                                    ..
+                                },
+                                _,
+                            ),
+                            Some(return_args),
+                        ),
+                        _,
+                    ) if return_name == "Option" && return_args.len() == 1 => {
+                        expr_typ =
+                            ((Borrowing::Consumed, some_typ.1.clone()), some_typ.clone());
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            return_typ.1,
+                            format!(
+                                "expected a option type for this \
+                    return type because of a question mark in the function, got {}",
+                                return_typ.0,
+                            )
+                            .as_str(),
+                        );
+                        return Err(());
+                    }
+                }
+            }
+            (
+                (Borrowing::Consumed, _),
+                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
             ) if name == "Result" && args.len() == 2 => {
                 let ok_typ = &args[0];
                 let err_typ = &args[1];
@@ -2421,6 +2457,10 @@ fn typecheck_statement(
                     new_b2,
                     Some(Box::new(MutatedInfo {
                         vars: new_mutated.clone(),
+                        is_option: match return_typ.clone().0 {
+                            BaseTyp::Named(a,_) if a.0.string == "Option" => true,
+                            _ => false,
+                        },
                         stmt: mut_tuple,
                     })),
                 ),
@@ -2581,6 +2621,10 @@ fn typecheck_block(
             stmts: new_stmts,
             mutated: Some(Box::new(MutatedInfo {
                 vars: mutated_vars,
+                is_option: match &return_typ {
+                    Some ((_,(BaseTyp::Named(a,_),_))) if a.0.string == "Option" => true,
+                    _ => false,
+                },
                 stmt: mut_tuple,
             })),
             return_typ,

@@ -969,17 +969,21 @@ fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
 }
 
 // taken from rustspec_to_fstar
-fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> {
+fn add_ok_if_result(stmt: Statement, is_option: bool, question_mark: bool) -> Spanned<Statement> {
     (
         if question_mark {
             // If b has an early return, then we must prefix the returned
-            // mutated variables by Ok
+            // mutated variables by Ok or Some
             match stmt {
                 Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
                     BaseTyp::Named(
                         (
                             TopLevelIdent {
-                                string: "Result".to_string(),
+                                string: if is_option {
+                                    "Option".to_string()
+                                } else {
+                                    "Result".to_string()
+                                },
                                 kind: TopLevelIdentKind::Type,
                             },
                             DUMMY_SP.into(),
@@ -988,7 +992,11 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
                     ),
                     (
                         TopLevelIdent {
-                            string: "Ok".to_string(),
+                            string: if is_option {
+                                "Some".to_string()
+                            } else {
+                                "Ok".to_string()
+                            },
                             kind: TopLevelIdentKind::EnumConstructor,
                         },
                         DUMMY_SP.into(),
@@ -1141,6 +1149,7 @@ fn translate_statements<'a>(
             let either_blocks_contains_question_mark = b1_question_mark || b2_question_mark;
             b1.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
+                mutated_info.is_option.clone(),
                 b1_question_mark,
             ));
             let expr = RcDoc::as_string("if")
@@ -1162,6 +1171,7 @@ fn translate_statements<'a>(
                     Some((mut b2, _)) => {
                         b2.stmts.push(add_ok_if_result(
                             mutated_info.stmt.clone(),
+                            mutated_info.is_option.clone(),
                             b2_question_mark,
                         ));
                         RcDoc::space()
@@ -1205,6 +1215,7 @@ fn translate_statements<'a>(
                         Some((mut b2, _)) => {
                             b2.stmts.push(add_ok_if_result(
                                 mutated_info.stmt.clone(),
+                                mutated_info.is_option.clone(),
                                 b2_question_mark,
                             ));
                             let block2 = make_paren(translate_block(b2, true, top_ctx));
@@ -1235,8 +1246,11 @@ fn translate_statements<'a>(
             let mutated_info = b.mutated.clone().unwrap();
             // TODO: handle question_mark
             let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
-            b.stmts
-                .push(add_ok_if_result(mutated_info.stmt.clone(), b_question_mark));
+            b.stmts.push(add_ok_if_result(
+                mutated_info.stmt.clone(),
+                mutated_info.is_option.clone(),
+                b_question_mark,
+            ));
 
             let mut_tuple = |prefix: String| -> RcDoc<'a> {
                 // if there is only one element, just print the identifier instead of making a tuple
