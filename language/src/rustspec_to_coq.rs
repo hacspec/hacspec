@@ -626,7 +626,7 @@ fn translate_func_name<'a>(
             ) {
                 (NAT_MODULE, "from_byte_seq_le") | (NAT_MODULE, "from_byte_seq_be") => {
                     match &prefix_info {
-                        FuncPrefix::NatMod(modulo, _) => {
+                        FuncPrefix::NatMod(_modulo, _) => {
                             result_typ = Some(prefix.clone());
                         }
                         _ => panic!(), // should not happen
