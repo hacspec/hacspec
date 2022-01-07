@@ -384,6 +384,7 @@ pub enum Pattern {
 
 #[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
+    pub is_option: bool,
     pub vars: VarSet,
     pub stmt: Statement,
 }
