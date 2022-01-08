@@ -9,7 +9,7 @@ Require Import Hacspec.Lib.
 
 Definition foo (x_0 : bool) : (result int64 uint8) :=
   (if (x_0):bool then (@Ok int64 uint8 (@repr WORDSIZE64 42)) else (
-      @Err int64 uint8 (secret (@repr WORDSIZE8 0)))).
+      @Err int64 uint8 (secret (@repr WORDSIZE8 0) : int8))).
 
 Definition bar  : (result int64 uint8) :=
   bind (foo (false)) (fun x_1 => @Ok int64 uint8 ((x_1) .+ (

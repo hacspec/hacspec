@@ -378,6 +378,7 @@ pub enum Expression {
 pub enum Pattern {
     IdentPat(Ident),
     WildCard,
+    LiteralPat(Literal),
     Tuple(Vec<Spanned<Pattern>>),
     SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }

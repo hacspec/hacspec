@@ -445,71 +445,37 @@ fn translate_function_argument(
 }
 
 fn translate_literal(
+    lit: &rustc_ast::Lit,
+) -> Result<Literal,()> {
+    match &lit.kind {
+        LitKind::Bool(b) => Ok(Literal::Bool(*b)),
+        //TODO: check that the casting is safe each time!
+        LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok(Literal::Int128(*x as i128)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok(Literal::UInt128(*x as u128)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok(Literal::Int64(*x as i64)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok(Literal::UInt64(*x as u64)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok(Literal::Int32(*x as i32)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok(Literal::UInt32(*x as u32)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok(Literal::Int16(*x as i16)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok(Literal::UInt16(*x as u16)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok(Literal::Int8(*x as i8)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok(Literal::UInt8(*x as u8)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok(Literal::Isize(*x as isize)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok(Literal::Usize(*x as usize)),
+        // Unspecified integers are always interpreted as usize
+        LitKind::Int(x, LitIntType::Unsuffixed) => Ok(Literal::Usize(*x as usize)),
+        LitKind::Str(msg, StrStyle::Cooked) => Ok(Literal::Str(msg.to_ident_string())),
+        _ => Err(())
+    }
+}
+fn translate_literal_expr(
     sess: &Session,
     lit: &rustc_ast::Lit,
     span: Span,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
-    match &lit.kind {
-        LitKind::Bool(b) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),
-            span.into(),
-        )),
-        //TODO: check that the casting is safe each time!
-        LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int128(*x as i128))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt128(*x as u128))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int64(*x as i64))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt64(*x as u64))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt32(*x as u32))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int16(*x as i16))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt16(*x as u16))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int8(*x as i8))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt8(*x as u8))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Isize(*x as isize))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
-            span.into(),
-        )),
-        // Unspecified integers are always interpreted as usize
-        LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
-            span.into(),
-        )),
-        LitKind::Str(msg, StrStyle::Cooked) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Str(msg.to_ident_string()))),
+    match translate_literal(lit) {
+        Ok(l) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(l)),
             span.into(),
         )),
         _ => {
@@ -901,7 +867,7 @@ fn translate_expr(
                 e.span.into(),
             ))
         }
-        ExprKind::Lit(lit) => translate_literal(sess, lit, e.span.clone()),
+        ExprKind::Lit(lit) => translate_literal_expr(sess, lit, e.span.clone()),
         ExprKind::Assign(lhs, rhs_e, _) => {
             let (r_e, r_e_question_mark) =
                 match translate_expr_accepts_question_mark(sess, specials, &rhs_e)? {
@@ -1236,6 +1202,7 @@ fn translate_expr(
                         let arm_body = translate_expr_expects_exp(sess, specials, &*arm.body)?;
                         // We only allow for a very specific type of pattern
                         let (enum_name, case_name, pat) = match &arm.pat.kind {
+                           // PatKind::Wild => {return Ok()
                             PatKind::Path(None, ast::Path { segments, .. }) => {
                                 if segments.len() != 2 {
                                     sess.span_rustspec_err(
@@ -1646,6 +1613,15 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
             Ok((Pattern::Tuple(pats), pat.span.into()))
         }
         PatKind::Wild => Ok((Pattern::WildCard, pat.span.into())),
+        PatKind::Lit(e) => {
+            match e.clone().into_inner().kind {
+                ExprKind::Lit(l) => Ok((Pattern::LiteralPat(translate_literal(&l)?),pat.span.into())),
+                _ => {
+                    sess.span_rustspec_err(pat.span, "pattern not allowed in Hacspec let bindings");
+                    Err(())
+                }
+            }
+        }
         _ => {
             sess.span_rustspec_err(pat.span, "pattern not allowed in Hacspec let bindings");
             Err(())
@@ -1787,7 +1763,7 @@ fn check_for_literal(sess: &Session, arg: &TokenTree) -> TranslationResult<Spann
     match arg {
         TokenTree::Token(tok) => match tok.kind {
             TokenKind::Literal(l) => {
-                match translate_literal(
+                match translate_literal_expr(
                     sess,
                     &match rustc_ast::Lit::from_lit_token(l, tok.span.clone()) {
                         Ok(x) => x,

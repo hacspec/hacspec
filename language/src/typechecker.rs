@@ -642,6 +642,25 @@ fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
     }
 }
 
+fn get_literal_type(l:&Literal) -> BaseTyp {
+    match l {
+        Literal::Unit => BaseTyp::Unit,
+        Literal::Bool(_) => BaseTyp::Bool,
+        Literal::Int128(_) => BaseTyp::Int128,
+        Literal::UInt128(_) => BaseTyp::UInt128,
+        Literal::Int64(_) => BaseTyp::Int64,
+        Literal::UInt64(_) => BaseTyp::UInt64,
+        Literal::Int32(_) => BaseTyp::Int32,
+        Literal::UInt32(_) => BaseTyp::UInt32,
+        Literal::Int16(_) => BaseTyp::Int16,
+        Literal::UInt16(_) => BaseTyp::UInt16,
+        Literal::Int8(_) => BaseTyp::Int8,
+        Literal::UInt8(_) => BaseTyp::UInt8,
+        Literal::Usize(_) => BaseTyp::Usize,
+        Literal::Isize(_) => BaseTyp::Isize,
+        Literal::Str(_) => BaseTyp::Str}
+}
+
 pub type TypecheckingResult<T> = Result<T, ()>;
 
 fn typecheck_expression(
@@ -1214,128 +1233,16 @@ fn typecheck_expression(
                 new_var_context,
             ))
         }
-        Expression::Lit(lit) => match lit {
-            Literal::Unit => Ok((
+        Expression::Lit(lit) => {
+            Ok((
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Unit, span.clone()),
+                    (get_literal_type(lit), span.clone()),
                 ),
                 var_context.clone(),
-            )),
-            Literal::Bool(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Bool, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int128(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int128, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt128(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt128, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int64(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int64, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt64(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt64, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int32(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int32, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt32(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt32, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int16(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int16, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt16(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt16, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int8(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int8, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt8(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt8, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Usize(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Usize, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Isize(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Isize, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Str(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Str, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-        },
+            ))
+        }
         Expression::NewArray(array_type, _, elements) => {
             match array_type {
                 Some(array_type) => {
@@ -2010,6 +1917,11 @@ fn typecheck_pattern(
             Err(())
         }
         (Pattern::WildCard, _) => Ok(HashMap::new()),
+        (Pattern::LiteralPat(l), t) => {
+            if get_literal_type(l) == t.clone() {
+                Ok(HashMap::new())
+            } else {Err(())}
+        },
         (Pattern::IdentPat(x), _) => {
             let (id, name) = match &x {
                 Ident::Local(LocalIdent { id, name }) => (id.clone(), name.clone()),

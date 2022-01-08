@@ -284,6 +284,7 @@ fn resolve_pattern(
             Ok((Pattern::Tuple(tup_args), acc_name))
         }
         Pattern::WildCard => Ok((Pattern::WildCard, HashMap::new())),
+        Pattern::LiteralPat(x) => Ok((Pattern::LiteralPat(x.clone()), HashMap::new())),
         Pattern::IdentPat(x) => {
             let (x_new, s) = match x {
                 Ident::Unresolved(s) => (to_fresh_ident(s), s.clone()),

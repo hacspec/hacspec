@@ -7,9 +7,9 @@ Open Scope bool_scope.
 Open Scope hacspec_scope.
 Require Import Hacspec.Lib.
 
-Notation "'my_integer_type'" := (uint_size) : hacspec_scope.
+Notation "'my_integer_type_t'" := (uint_size) : hacspec_scope.
 
-Definition foo (x_0 : my_integer_type) : uint_size :=
+Definition foo (x_0 : my_integer_type_t) : uint_size :=
   let x_0 :=
     foldi (usize 0) (x_0) (fun i_1 x_0 =>
       let x_0 :=
@@ -18,9 +18,9 @@ Definition foo (x_0 : my_integer_type) : uint_size :=
     x_0 in 
   x_0.
 
-Notation "'my_uint32_integer_type'" := (int32) : hacspec_scope.
+Notation "'my_uint32_integer_type_t'" := (int32) : hacspec_scope.
 
-Definition baz (x_2 : my_uint32_integer_type) : my_uint32_integer_type :=
+Definition baz (x_2 : my_uint32_integer_type_t) : my_uint32_integer_type_t :=
   let x_2 :=
     foldi (usize 0) (@cast _ uint32 _ (x_2)) (fun i_3 x_2 =>
       let x_2 :=
@@ -35,7 +35,7 @@ Definition bar (x_4 : uint32) : uint32 :=
   let y_5 :=
     foldi (usize 0) (usize 5) (fun _ y_5 =>
       let y_5 :=
-        (y_5) .+ (secret (@repr WORDSIZE32 1)) in 
+        (y_5) .+ (secret (@repr WORDSIZE32 1) : int32) in 
       (y_5))
     y_5 in 
   y_5.

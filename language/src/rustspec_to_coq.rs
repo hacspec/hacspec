@@ -355,6 +355,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
         Pattern::IdentPat(x) => translate_ident(x.clone()),
+        Pattern::LiteralPat(x) => translate_literal(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }

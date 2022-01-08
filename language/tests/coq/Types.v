@@ -52,9 +52,9 @@ Definition num_isize  : int_size :=
 Definition tuple  : (bool × int64 × unit) :=
   (false, num_i64 , tt).
 
-Definition my_array := nseq (int64) (usize 5).
+Definition my_array_t := nseq (int64) (usize 5).
 
-Definition array  : my_array :=
+Definition array  : my_array_t :=
   array_from_list int64 (let l :=
       [
         @repr WORDSIZE64 0;
@@ -65,20 +65,20 @@ Definition array  : my_array :=
       ] in  l).
 
 Definition sequence  : seq int64 :=
-  seq_new_ (@repr WORDSIZE64 0) (usize 0).
+  seq_new_ (default) (usize 0).
 
-Inductive my_tuple_struct :=
-| MyTupleStruct : (bool × seq int64) -> my_tuple_struct.
+Inductive my_tuple_struct_t :=
+| MyTupleStruct : (bool × seq int64) -> my_tuple_struct_t.
 
-Definition my_tuple_struct_fn  : my_tuple_struct :=
+Definition my_tuple_struct_fn  : my_tuple_struct_t :=
   MyTupleStruct ((true, sequence )).
 
-Inductive my_enum :=
-| First : my_enum
-| Second : int64 -> my_enum
-| Third : bool -> my_enum.
+Inductive my_enum_t :=
+| First : my_enum_t
+| Second : int64 -> my_enum_t
+| Third : bool -> my_enum_t.
 
-Definition my_enum_fn (inp_0 : my_enum) : my_enum :=
+Definition my_enum_fn (inp_0 : my_enum_t) : my_enum_t :=
   match inp_0 with
   | First => Second (@repr WORDSIZE64 0)
   | Second _ => Third (false)
