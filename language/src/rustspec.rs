@@ -349,9 +349,7 @@ pub enum Expression {
     MatchWith(
         Box<Spanned<Expression>>, // Expression to match
         Vec<(
-            BaseTyp,                  // Type of enum
-            Spanned<TopLevelIdent>,   // Name of case
-            Option<Spanned<Pattern>>, // Payload of case
+            Spanned<Pattern>, // Payload of case
             Spanned<Expression>,      // Match arm expression
         )>,
     ),
@@ -380,7 +378,7 @@ pub enum Pattern {
     WildCard,
     LiteralPat(Literal),
     Tuple(Vec<Spanned<Pattern>>),
-    SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
+    EnumCase(BaseTyp, Spanned<TopLevelIdent>, Option<Box<Spanned<Pattern>>>),
 }
 
 #[derive(Clone, Serialize, Debug)]

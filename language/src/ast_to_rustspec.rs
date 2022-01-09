@@ -1200,95 +1200,8 @@ fn translate_expr(
                             return Err(());
                         }
                         let arm_body = translate_expr_expects_exp(sess, specials, &*arm.body)?;
-                        // We only allow for a very specific type of pattern
-                        let (enum_name, case_name, pat) = match &arm.pat.kind {
-                           // PatKind::Wild => {return Ok()
-                            PatKind::Path(None, ast::Path { segments, .. }) => {
-                                if segments.len() != 2 {
-                                    sess.span_rustspec_err(
-                                        ((arm.pat).span).clone(),
-                                        "expected <name of the enum>::<name of the case>",
-                                    );
-                                    return Err(());
-                                }
-                                let mut it = segments.iter();
-                                let first_seg = it.next().unwrap();
-                                let second_seg = it.next().unwrap();
-                                (
-                                    BaseTyp::Named(
-                                        translate_toplevel_ident(
-                                            &first_seg.ident,
-                                            TopLevelIdentKind::Type,
-                                        ),
-                                        match &first_seg.args {
-                                            None => None,
-                                            Some(args) => Some(translate_type_args(
-                                                sess,
-                                                args,
-                                                &first_seg.ident.span,
-                                            )?),
-                                        },
-                                    ),
-                                    translate_toplevel_ident(
-                                        &second_seg.ident,
-                                        TopLevelIdentKind::EnumConstructor,
-                                    ),
-                                    None,
-                                )
-                            }
-                            PatKind::TupleStruct(None, ast::Path { segments, .. }, args) => {
-                                if segments.len() != 2 {
-                                    sess.span_rustspec_err(
-                                        ((arm.pat).span).clone(),
-                                        "expected <name of the enum>::<name of the case>",
-                                    );
-                                    return Err(());
-                                }
-                                let mut it = segments.iter();
-                                let first_seg = it.next().unwrap();
-                                let second_seg = it.next().unwrap();
-                                let pat_args = check_vec(
-                                    args.iter()
-                                        .map(|arg| translate_pattern(sess, arg))
-                                        .collect(),
-                                )?;
-                                let pat = if pat_args.len() == 1 {
-                                    pat_args.into_iter().next().unwrap()
-                                } else {
-                                    (Pattern::Tuple(pat_args), arm.pat.span.clone().into())
-                                };
-                                (
-                                    BaseTyp::Named(
-                                        translate_toplevel_ident(
-                                            &first_seg.ident,
-                                            TopLevelIdentKind::Type,
-                                        ),
-                                        match &first_seg.args {
-                                            None => None,
-                                            Some(args) => Some(translate_type_args(
-                                                sess,
-                                                args,
-                                                &first_seg.ident.span,
-                                            )?),
-                                        },
-                                    ),
-                                    translate_toplevel_ident(
-                                        &second_seg.ident,
-                                        TopLevelIdentKind::EnumConstructor,
-                                    ),
-                                    Some(pat),
-                                )
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    ((arm.pat).span).clone(),
-                                    "the only types of match pattern allowed in Hacspec start by \
-                                <name of the enum>::<name of the case>",
-                                );
-                                return Err(());
-                            }
-                        };
-                        Ok((enum_name, case_name, pat, arm_body))
+                        let pat = translate_pattern(sess, &arm.pat)?;
+                        Ok((pat, arm_body))
                     })
                     .collect(),
             )?;
@@ -1582,11 +1495,17 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
         }
         PatKind::TupleStruct(None, path, args) => {
             let struct_name = translate_struct_name(sess, path)?;
-            if args.len() == 1 {
+            let new_name = (struct_name, path.span.into());
+            if args.len() == 0 {
+                Ok((
+                    Pattern::EnumCase(BaseTyp::Named(new_name.clone(),None),new_name, None),
+                    pat.span.into(),
+                ))
+            } else if args.len() == 1 {
                 let arg = args.into_iter().next().unwrap();
                 let new_arg = translate_pattern(sess, arg)?;
                 Ok((
-                    Pattern::SingleCaseEnum((struct_name, path.span.into()), Box::new(new_arg)),
+                    Pattern::EnumCase(BaseTyp::Named(new_name.clone(),None),new_name, Some(Box::new(new_arg))),
                     pat.span.into(),
                 ))
             } else {
@@ -1596,9 +1515,8 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
                         .collect(),
                 )?;
                 Ok((
-                    Pattern::SingleCaseEnum(
-                        (struct_name, path.span.into()),
-                        Box::new((Pattern::Tuple(new_args), pat.span.into())),
+                    Pattern::EnumCase(BaseTyp::Named(new_name.clone(),None),new_name, 
+                        Some(Box::new((Pattern::Tuple(new_args), pat.span.into()))),
                     ),
                     pat.span.into(),
                 ))

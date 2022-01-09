@@ -349,8 +349,11 @@ fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
 }
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
-            translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone(), false)
+        Pattern::EnumCase(ty_name, name, None) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
+        }
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
@@ -711,20 +714,10 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             .append(RcDoc::as_string("with"))
             .append(RcDoc::line())
             .append(RcDoc::intersperse(
-                arms.into_iter().map(|(enum_name, case_name, payload, e1)| {
+                arms.into_iter().map(|(pat, e1)| {
                     RcDoc::as_string("|")
                         .append(RcDoc::space())
-                        .append(translate_enum_case_name(
-                            enum_name.clone(),
-                            case_name.0.clone(),
-                            false,
-                        ))
-                        .append(match &payload {
-                            Some(payload) => {
-                                RcDoc::space().append(translate_pattern(payload.0.clone()))
-                            }
-                            None => RcDoc::nil(),
-                        })
+                        .append(translate_pattern(pat.0.clone()))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("=>"))
                         .append(RcDoc::space())
@@ -1023,7 +1016,7 @@ fn translate_statements<'a>(
                         RcDoc::as_string("fun")
                             .append(RcDoc::space())
                             .append(match pat.clone() {
-                                Pattern::SingleCaseEnum(_, _) => RcDoc::as_string("'"),
+                                Pattern::EnumCase(_, _, _) => RcDoc::as_string("'"),
                                 _ => RcDoc::nil(),
                             })
                             .append(translate_pattern_tick(pat.clone()))
@@ -1034,12 +1027,12 @@ fn translate_statements<'a>(
             } else {
                 make_let_binding(
                     match pat.clone() {
-                        Pattern::SingleCaseEnum(_, _) => RcDoc::as_string("'"),
+                        Pattern::EnumCase(_, _, _) => RcDoc::as_string("'"),
                         _ => RcDoc::nil(),
                     }
                     .append(translate_pattern_tick(pat.clone())),
                     match pat.clone() {
-                        Pattern::SingleCaseEnum(_, _) | Pattern::Tuple(_) => None,
+                        Pattern::EnumCase(_, _, _) | Pattern::Tuple(_) => None,
                         _ => typ.map(|(typ, _)| translate_typ(typ)),
                     },
                     translate_expression(expr.clone(), top_ctx),
