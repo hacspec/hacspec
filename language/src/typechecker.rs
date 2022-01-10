@@ -2091,8 +2091,7 @@ fn typecheck_question_mark(
                         ),
                         _,
                     ) if return_name == "Option" && return_args.len() == 1 => {
-                        expr_typ =
-                            ((Borrowing::Consumed, some_typ.1.clone()), some_typ.clone());
+                        expr_typ = ((Borrowing::Consumed, some_typ.1.clone()), some_typ.clone());
                     }
                     _ => {
                         sess.span_rustspec_err(
@@ -2209,10 +2208,16 @@ fn typecheck_statement(
                 top_level_context,
             )?;
             let typ = match typ {
-                None => Some ((expr_typ.clone(), expr.1.clone())),
+                None => Some((expr_typ.clone(), expr.1.clone())),
                 Some((inner_typ, _)) => {
-                    if unify_types(sess, inner_typ, &expr_typ, &HashMap::new(), top_level_context)?
-                        .is_none()
+                    if unify_types(
+                        sess,
+                        inner_typ,
+                        &expr_typ,
+                        &HashMap::new(),
+                        top_level_context,
+                    )?
+                    .is_none()
                     {
                         sess.span_rustspec_err(
                             *pat_span,
@@ -2457,10 +2462,15 @@ fn typecheck_statement(
                     new_b2,
                     Some(Box::new(MutatedInfo {
                         vars: new_mutated.clone(),
-                        is_option: match return_typ.clone().0 {
-                            BaseTyp::Named(a,_) if a.0.string == "Option" => true,
-                            _ => false,
+                        early_return_type: match return_typ.clone().0 {
+                            BaseTyp::Named(a, _) => match a.0.string.as_str() {
+                                "Option" => Some(EarlyReturnType::Option),
+                                "Result" => Some(EarlyReturnType::Result),
+                                _ => None,
+                            },
+                            _ => None,
                         },
+
                         stmt: mut_tuple,
                     })),
                 ),
@@ -2616,14 +2626,19 @@ fn typecheck_block(
         (Statement::ForLoop(_, _, _, loop_b), _) => loop_b.0.contains_question_mark.unwrap(),
         _ => false,
     }));
+
     Ok((
         Block {
             stmts: new_stmts,
             mutated: Some(Box::new(MutatedInfo {
                 vars: mutated_vars,
-                is_option: match &return_typ {
-                    Some ((_,(BaseTyp::Named(a,_),_))) if a.0.string == "Option" => true,
-                    _ => false,
+                early_return_type: match &function_return_typ.0 {
+                    BaseTyp::Named((a, _), _) => match a.string.as_str() {
+                        "Option" => Some(EarlyReturnType::Option),
+                        "Result" => Some(EarlyReturnType::Result),
+                        _ => None,
+                    },
+                    _ => None,
                 },
                 stmt: mut_tuple,
             })),
