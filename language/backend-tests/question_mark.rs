@@ -1,5 +1,18 @@
 use hacspec_lib::*;
 
+pub fn foo_option(x: bool) -> Option<u64> {
+    if x {
+        Option::<u64>::Some(42u64)
+    } else {
+        Option::<u64>::None
+    }
+}
+
+pub fn bar_option() -> Option<u64> {
+    let x = foo_option(false)?;
+    Option::<u64>::Some(x + 1u64)
+}
+
 pub fn foo(x: bool) -> Result<u64, U8> {
     if x {
         Result::<u64, U8>::Ok(42u64)

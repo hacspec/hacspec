@@ -383,8 +383,14 @@ pub enum Pattern {
 }
 
 #[derive(Clone, Serialize, Debug)]
+pub enum EarlyReturnType {
+    Option,
+    Result,
+}
+
+#[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
-    pub is_option: bool,
+    pub early_return_type: Fillable<EarlyReturnType>,
     pub vars: VarSet,
     pub stmt: Statement,
 }
