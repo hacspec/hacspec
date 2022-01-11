@@ -2487,6 +2487,14 @@ fn translate_pearlite_binop(op: syn::BinOp) -> ast::BinOpKind {
     }
 }
 
+fn translate_pearlite_unop(op: syn::UnOp) -> ast::UnOp {
+    match op {
+        syn::UnOp::Deref(_) => ast::UnOp::Deref,
+        syn::UnOp::Not(_) => ast::UnOp::Not,
+        syn::UnOp::Neg(_) => ast::UnOp::Neg,
+    }
+}
+
 fn translate_pearlite_pat(pat: syn::Pat, span: Span) -> ast::Pat {
     ast::Pat {
         id: NodeId::MAX,
@@ -2854,9 +2862,12 @@ pub fn translate_pearlite(
         //             ))
         //         }
         //         pearlite_syn::term::Term::Type(ty) => RcDoc::as_string("TODOType"),
-        //         pearlite_syn::term::Term::Unary(pearlite_syn::term::TermUnary { op, expr }) => {
-        //             RcDoc::as_string("TODOUnary").append(translate_pearlite(*expr, top_ctx, idents.clone()))
-        //         }
+        pearlite_syn::term::Term::Unary(pearlite_syn::term::TermUnary { op, expr }) => {
+            ExprKind::Unary(
+                translate_pearlite_unop(op),
+                P(translate_pearlite_unquantified(sess, *expr, span).unwrap())
+            )            
+        }
         //         pearlite_syn::term::Term::Final(pearlite_syn::term::TermFinal { term, .. }) => {
         //             RcDoc::as_string("TODOFinal").append(translate_pearlite(*term, top_ctx, idents.clone()))
         //         }
@@ -2876,12 +2887,6 @@ pub fn translate_pearlite(
                 Box::new(translate_pearlite(sess, *hyp, span)),
                 Box::new(translate_pearlite(sess, *cons, span)),
             );
-
-            // make_paren(translate_pearlite(*hyp, top_ctx, idents.clone()))
-            //     .append(RcDoc::space())
-            //     .append(RcDoc::as_string("->"))
-            //     .append(RcDoc::space())
-            //     .append(make_paren(translate_pearlite(*cons, top_ctx, idents.clone())))
         }
         pearlite_syn::term::Term::Forall(pearlite_syn::term::TermForall { args, term, .. }) => {
             return Quantified::Forall(
