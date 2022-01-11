@@ -1743,6 +1743,12 @@ fn typecheck_quantified_expression(
                 var_context,
             )),
         ),
+        Quantified::Not(x) => Quantified::Not(Box::new(typecheck_quantified_expression(
+            sess,
+            *x,
+            top_level_context,
+            var_context,
+        ))),
     }
 }
 

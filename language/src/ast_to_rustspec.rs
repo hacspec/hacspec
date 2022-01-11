@@ -2518,7 +2518,15 @@ fn translate_pearlite_pat(pat: syn::Pat, span: Span) -> ast::Pat {
             // syn::Pat::Slice(p) => ...
             // syn::Pat::Struct(p) => ...
             // syn::Pat::Tuple(p) => ...
-            syn::Pat::TupleStruct(p) => ast::PatKind::TupleStruct(None, translate_pearlite_path(p.path, span), p.pat.elems.into_iter().map(|x| { P(translate_pearlite_pat(x, span)) }).collect()),
+            syn::Pat::TupleStruct(p) => ast::PatKind::TupleStruct(
+                None,
+                translate_pearlite_path(p.path, span),
+                p.pat
+                    .elems
+                    .into_iter()
+                    .map(|x| P(translate_pearlite_pat(x, span)))
+                    .collect(),
+            ),
             // syn::Pat::Type(p) => ...
             // syn::Pat::Verbatim(p) => ...
             syn::Pat::Wild(_p) => ast::PatKind::Wild,
@@ -2639,19 +2647,11 @@ fn translate_pearlite_type(typ: syn::Type, span: Span) -> rustc_ast::ast::Ty {
         // syn::Type::Macro(TypeMacro) => ,
         // syn::Type::Never(TypeNever) => ,
         // syn::Type::Paren(TypeParen) => ,
-        syn::Type::Path(syn::TypePath {
-            qself: _,
-            path,
-        }) => {
-            Ty {
-                tokens: None,
-                id: NodeId::MAX,
-                kind: rustc_ast::TyKind::Path(
-                    None,
-                    translate_pearlite_path(path, span),
-                ),
-                span,
-            }
+        syn::Type::Path(syn::TypePath { qself: _, path }) => Ty {
+            tokens: None,
+            id: NodeId::MAX,
+            kind: rustc_ast::TyKind::Path(None, translate_pearlite_path(path, span)),
+            span,
         },
         // syn::Type::Ptr(TypePtr) => ,
         // syn::Type::Reference(TypeReference) => ,
@@ -2863,10 +2863,16 @@ pub fn translate_pearlite(
         //         }
         //         pearlite_syn::term::Term::Type(ty) => RcDoc::as_string("TODOType"),
         pearlite_syn::term::Term::Unary(pearlite_syn::term::TermUnary { op, expr }) => {
-            ExprKind::Unary(
-                translate_pearlite_unop(op),
-                P(translate_pearlite_unquantified(sess, *expr, span).unwrap())
-            )            
+            let t_op = translate_pearlite_unop(op);
+            match t_op {
+                ast::UnOp::Not => {
+                    return Quantified::Not(Box::new(translate_pearlite(sess, *expr, span)))
+                }
+                _ => ExprKind::Unary(
+                    translate_pearlite_unop(op),
+                    P(translate_pearlite_unquantified(sess, *expr, span).unwrap()),
+                ),
+            }
         }
         //         pearlite_syn::term::Term::Final(pearlite_syn::term::TermFinal { term, .. }) => {
         //             RcDoc::as_string("TODOFinal").append(translate_pearlite(*term, top_ctx, idents.clone()))
@@ -2961,6 +2967,9 @@ fn translate_quantified_expr(
             Box::new(translate_quantified_expr(sess, specials, *a)),
             Box::new(translate_quantified_expr(sess, specials, *b)),
         ),
+        Quantified::Not(x) => {
+            Quantified::Not(Box::new(translate_quantified_expr(sess, specials, *x)))
+        }
     }
 }
 

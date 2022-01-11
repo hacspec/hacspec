@@ -503,6 +503,7 @@ pub enum Quantified<I, T> {
     Exists(Vec<I>, Box<Quantified<I, T>>),
     Implication(Box<Quantified<I, T>>, Box<Quantified<I, T>>),
     Eq(Box<Quantified<I, T>>, Box<Quantified<I, T>>),
+    Not(Box<Quantified<I, T>>),
 }
 
 #[derive(Clone, Serialize, Debug)]
