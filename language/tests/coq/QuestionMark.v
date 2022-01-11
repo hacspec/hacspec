@@ -68,3 +68,12 @@ Definition fizzbarbuzz  : (result int32 uint8) :=
           Ok ((out_18)))) >> (fun '(out_18) =>
       Ok ((out_18))))) (fun out_18 => @Ok int32 uint8 (out_18))).
 
+Notation "'alias_t'" := ((result int32 uint8)) : hacspec_scope.
+
+Definition alias_test  : alias_t :=
+  ifbnd true : bool
+  thenbnd (bind (@Err int32 uint8 (secret (@repr WORDSIZE8 0) : int8)) (fun _ =>
+      Ok (tt)))
+  else (tt) >> (fun 'tt =>
+  @Ok int32 uint8 (@repr WORDSIZE32 1)).
+

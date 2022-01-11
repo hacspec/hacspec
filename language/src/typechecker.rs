@@ -2192,17 +2192,7 @@ fn early_return_type_from_return_type(
     top_level_context: &TopLevelContext,
     return_typ: BaseTyp,
 ) -> Fillable<EarlyReturnType> {
-    // We first have to remove all the aliases
-    // We don't support generic aliases for now
-    let no_alias_return_type = match return_typ.clone() {
-        BaseTyp::Named((name1, _), None) => match top_level_context.typ_dict.get(&name1) {
-            Some(((_, new_t1), DictEntry::Alias)) => new_t1.0.clone(),
-            _ => return_typ.clone(),
-        },
-        _ => return_typ.clone(),
-    };
-
-    match no_alias_return_type {
+    match dealias_type(return_typ, top_level_context) {
         BaseTyp::Named((a, _), _) => match a.string.as_str() {
             "Option" => Some(EarlyReturnType::Option),
             "Result" => Some(EarlyReturnType::Result),

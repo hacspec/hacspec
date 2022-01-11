@@ -145,3 +145,18 @@ let fizzbarbuzz () : (result pub_uint32 uint8) =
     | Ok  (out_20) ->
       Ok (out_20)
 
+type alias_t = (result pub_uint32 uint8)
+
+let alias_test () : alias_t =
+  match (
+    if true then begin
+      match (Err (secret (pub_u8 0x0))) with
+      | Err x -> Err x
+      | Ok  _ : pub_uint32 ->
+        Ok (())
+    end else begin Ok (())
+    end) with
+  | Err x -> Err x
+  | Ok  () ->
+    Ok (pub_u32 0x1)
+
