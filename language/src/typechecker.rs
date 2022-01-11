@@ -2188,6 +2188,30 @@ fn typecheck_question_mark(
     Ok(expr_typ)
 }
 
+fn early_return_type_from_return_type(
+    top_level_context: &TopLevelContext,
+    return_typ: BaseTyp,
+) -> Fillable<EarlyReturnType> {
+    // We first have to remove all the aliases
+    // We don't support generic aliases for now
+    let no_alias_return_type = match return_typ.clone() {
+        BaseTyp::Named((name1, _), None) => match top_level_context.typ_dict.get(&name1) {
+            Some(((_, new_t1), DictEntry::Alias)) => new_t1.0.clone(),
+            _ => return_typ.clone(),
+        },
+        _ => return_typ.clone(),
+    };
+
+    match no_alias_return_type {
+        BaseTyp::Named((a, _), _) => match a.string.as_str() {
+            "Option" => Some(EarlyReturnType::Option),
+            "Result" => Some(EarlyReturnType::Result),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -2462,14 +2486,7 @@ fn typecheck_statement(
                     new_b2,
                     Some(Box::new(MutatedInfo {
                         vars: new_mutated.clone(),
-                        early_return_type: match return_typ.clone().0 {
-                            BaseTyp::Named(a, _) => match a.0.string.as_str() {
-                                "Option" => Some(EarlyReturnType::Option),
-                                "Result" => Some(EarlyReturnType::Result),
-                                _ => None,
-                            },
-                            _ => None,
-                        },
+                        early_return_type: early_return_type_from_return_type(top_level_context, return_typ.0.clone()),
 
                         stmt: mut_tuple,
                     })),
@@ -2632,14 +2649,7 @@ fn typecheck_block(
             stmts: new_stmts,
             mutated: Some(Box::new(MutatedInfo {
                 vars: mutated_vars,
-                early_return_type: match &function_return_typ.0 {
-                    BaseTyp::Named((a, _), _) => match a.string.as_str() {
-                        "Option" => Some(EarlyReturnType::Option),
-                        "Result" => Some(EarlyReturnType::Result),
-                        _ => None,
-                    },
-                    _ => None,
-                },
+                early_return_type: early_return_type_from_return_type(top_level_context, function_return_typ.0.clone()),
                 stmt: mut_tuple,
             })),
             return_typ,
