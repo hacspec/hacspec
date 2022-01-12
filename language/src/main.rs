@@ -304,6 +304,7 @@ fn main() -> Result<(), usize> {
     pretty_env_logger::init();
     log::debug!(" --- hacspec");
     let mut args = env::args().collect::<Vec<String>>();
+    log::trace!("     args: {:?}", args);
 
     // Args to pass to the compiler
     let mut compiler_args = Vec::new();
@@ -326,9 +327,9 @@ fn main() -> Result<(), usize> {
     let input_file = match args.iter().position(|a| a == "-f") {
         Some(i) => {
             args.remove(i);
-            true
+            Some(args.remove(i))
         }
-        None => false,
+        None => None,
     };
 
     // Read the --manifest-path argument if present.
@@ -356,18 +357,22 @@ fn main() -> Result<(), usize> {
             + "/../target/debug/deps",
     };
 
-    if !input_file {
-        let package_name = args.pop();
-        log::trace!("package name to analyze: {:?}", package_name);
-        read_crate(manifest, package_name, &mut compiler_args, &mut callbacks);
-    } else {
-        // If only a file is provided we add the default dependencies only.
-        compiler_args.extend_from_slice(&[
-            "--extern=abstract_integers".to_string(),
-            "--extern=hacspec_derive".to_string(),
-            "--extern=hacspec_lib".to_string(),
-            "--extern=secret_integers".to_string(),
-        ]);
+    match input_file {
+        Some(input_file) => {
+            compiler_args.push(input_file);
+            // If only a file is provided we add the default dependencies only.
+            compiler_args.extend_from_slice(&[
+                "--extern=abstract_integers".to_string(),
+                "--extern=hacspec_derive".to_string(),
+                "--extern=hacspec_lib".to_string(),
+                "--extern=secret_integers".to_string(),
+            ]);
+        }
+        None => {
+            let package_name = args.pop();
+            log::trace!("package name to analyze: {:?}", package_name);
+            read_crate(manifest, package_name, &mut compiler_args, &mut callbacks);
+        }
     }
 
     compiler_args.push("--crate-type=lib".to_string());
