@@ -1,3 +1,4 @@
+use hacspec_lib::ByteSeq;
 use hacspec_p256::*;
 
 use hacspec_dev::prelude::*;
@@ -105,11 +106,15 @@ fn test_wycheproof_plain() {
         assert_eq!(testGroup.encoding, "ecpoint");
         for test in testGroup.tests.iter() {
             println!("Test {:?}: {:?}", test.tcId, test.comment);
-            if !test.result.eq("valid") {
+            if !test.result.eq("valid")
+                && !(test.result.eq("invalid") && test.comment.eq("point is not on curve"))
+            {
                 println!("We're only doing valid tests for now.");
                 skipped_tests += 1;
                 continue;
             }
+            let not_on_curve =
+                test.result.eq("invalid") && test.comment.eq("point is not on curve");
             if test.comment == "compressed public key" {
                 // not implemented
                 println!("Compressed public keys are not supported.");
@@ -122,6 +127,12 @@ fn test_wycheproof_plain() {
                 P256FieldElement::from_hex(&test.public[2..66]),
                 P256FieldElement::from_hex(&test.public[66..]),
             );
+            if not_on_curve {
+                assert!(!p256_validate_public_key(p));
+                tests_run += 1;
+                continue;
+            }
+            assert!(p256_validate_public_key(p));
             let expected = P256FieldElement::from_hex(&test.shared);
             let shared = match p256_point_mul(k, p) {
                 Ok(s) => s,
@@ -137,4 +148,61 @@ fn test_wycheproof_plain() {
         tests_run, num_tests, skipped_tests
     );
     assert_eq!(num_tests - skipped_tests, tests_run);
+}
+
+#[test]
+fn invalid_scalars() {
+    let zero = ByteSeq::from_hex("00");
+    assert!(!p256_validate_private_key(&zero));
+
+    let too_large =
+        ByteSeq::from_hex("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551");
+    assert!(!p256_validate_private_key(&too_large));
+
+    let largest_valid =
+        ByteSeq::from_hex("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632550");
+    assert!(p256_validate_private_key(&largest_valid));
+}
+
+#[test]
+fn point_validation() {
+    let not_on_curve = (
+        P256FieldElement::from_hex(
+            "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",
+        ),
+        P256FieldElement::from_hex(
+            "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",
+        ),
+    );
+    assert!(!p256_validate_public_key(not_on_curve));
+
+    let valid_point = (
+        P256FieldElement::from_hex(
+            "31028f3377fc8f2b1967edaab90213acad0da9f50897f08f57537f78f1167447",
+        ),
+        P256FieldElement::from_hex(
+            "43a1930189363bbde2ac4cbd1649cdc6f451add71dd2f16a8a867f2b17caa16b",
+        ),
+    );
+    assert!(p256_validate_public_key(valid_point));
+
+    let not_on_curve = (
+        P256FieldElement::from_hex(
+            "0000000000000000000000000000000000000000000000000000000000000000",
+        ),
+        P256FieldElement::from_hex(
+            "0000000000000000000000000000000000000000000000000000000000000000",
+        ),
+    );
+    assert!(!p256_validate_public_key(not_on_curve));
+
+    let not_on_curve = (
+        P256FieldElement::from_hex(
+            "0000000000000000000000000000000000000000000000000000000000000000",
+        ),
+        P256FieldElement::from_hex(
+            "0000000000000000000000000000000000000000000000000000000000000001",
+        ),
+    );
+    assert!(!p256_validate_public_key(not_on_curve));
 }
