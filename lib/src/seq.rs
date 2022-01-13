@@ -8,6 +8,9 @@
 
 use crate::prelude::*;
 
+mod bytes;
+pub use bytes::*;
+
 macro_rules! declare_seq {
     ($name:ident, $constraint:ident) => {
         /// Variable length byte arrays.
@@ -91,6 +94,14 @@ macro_rules! declare_seq_with_contents_constraints_impl {
             pub fn split_off(mut self, at: usize) -> (Self, Self) {
                 let other = Self::from_vec(self.b.split_off(at));
                 (self, other)
+            }
+
+            #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
+            #[inline(always)]
+            pub fn pop(mut self) -> (T, Self) {
+                let other = Self::from_vec(self.b.split_off(1));
+                let first = self.b.pop().unwrap();
+                (first, other)
             }
 
             #[cfg_attr(feature="use_attributes", unsafe_hacspec)]
@@ -237,6 +248,19 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 let idx_start = chunk_size * chunk_number;
                 debug_assert!(idx_start + chunk_size <= self.len(), "not enough space for a full chunk. space left: {}, needed {}", input.len(), chunk_size);
                 self.update_slice(idx_start, input, 0, chunk_size)
+            }
+
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn update_owned(
+                mut self,
+                start_out: usize,
+                mut v: Self,
+            ) -> Self {
+                debug_assert!(self.len() >= start_out + v.len(), "{} < {} + {}", self.len(), start_out, v.len());
+                for (o, i) in self.b.iter_mut().skip(start_out).zip(v.b.drain(..)) {
+                    *o = i;
+                }
+                self
             }
         }
 
@@ -516,7 +540,7 @@ macro_rules! impl_declassify {
             }
             #[cfg_attr(feature = "use_attributes", not_hacspec)]
             pub fn into_native(self) -> Vec<$t> {
-                self.b.iter().map(|&x| <$st>::declassify(x)).collect()
+                self.b.into_iter().map(|x| x.declassify()).collect()
             }
             #[cfg_attr(feature = "use_attributes", not_hacspec)]
             pub fn to_native(&self) -> Vec<$t> {
