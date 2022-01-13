@@ -172,3 +172,35 @@ pub fn point_add(p: Affine, q: Affine) -> AffineResult {
         AffineResult::Ok(jacobian_to_affine(point_double(affine_to_jacobian(p))))
     }
 }
+
+/// Verify that k != 0 && k < ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
+pub fn p256_validate_private_key(k: &ByteSeq) -> bool {
+    let mut valid = true;
+    // XXX: This should fail.
+    let k_element = P256Scalar::from_byte_seq_be(k);
+    let k_element_bytes = k_element.to_byte_seq_be();
+    let mut all_zero = true;
+    for i in 0..k.len() {
+        if !k[i].equal(U8(0u8)) {
+            all_zero = false;
+        }
+        if !k_element_bytes[i].equal(k[i]) {
+            valid = false;
+        }
+    }
+    valid && !all_zero
+}
+
+/// Verify that the point `p` is a valid public key.
+pub fn p256_validate_public_key(p: Affine) -> bool {
+    let b = P256FieldElement::from_byte_seq_be(&byte_seq!(
+        0x5au8, 0xc6u8, 0x35u8, 0xd8u8, 0xaau8, 0x3au8, 0x93u8, 0xe7u8, 0xb3u8, 0xebu8, 0xbdu8,
+        0x55u8, 0x76u8, 0x98u8, 0x86u8, 0xbcu8, 0x65u8, 0x1du8, 0x06u8, 0xb0u8, 0xccu8, 0x53u8,
+        0xb0u8, 0xf6u8, 0x3bu8, 0xceu8, 0x3cu8, 0x3eu8, 0x27u8, 0xd2u8, 0x60u8, 0x4bu8
+    ));
+    let point_at_infinity = is_point_at_infinity(affine_to_jacobian(p));
+    let (x, y) = p;
+    let on_curve = y * y == x * x * x - P256FieldElement::from_literal(3u128) * x + b;
+
+    !point_at_infinity && on_curve
+}

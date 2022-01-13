@@ -67,6 +67,8 @@ impl HacspecErrorEmitter for Session {
 
 impl Callbacks for HacspecCallbacks {
     fn config(&mut self, config: &mut Config) {
+        log::debug!(" --- hacspec config callback");
+        log::trace!("     target directory {}", self.target_directory);
         config.opts.search_paths.push(SearchPath::from_cli_opt(
             &self.target_directory,
             ERROR_OUTPUT_CONFIG,
@@ -82,6 +84,7 @@ impl Callbacks for HacspecCallbacks {
         compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
+        log::debug!(" --- hacspec after_analysis callback");
         let krate = queries.parse().unwrap().take();
         let external_data = |imported_crates: &Vec<rustspec::Spanned<String>>| {
             queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
@@ -226,39 +229,62 @@ struct Manifest {
 // ===
 
 /// Read the crate metadata and use the information for the build.
-fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut HacspecCallbacks) {
+fn read_crate(
+    manifest: Option<String>,
+    package_name: Option<String>,
+    args: &mut Vec<String>,
+    callbacks: &mut HacspecCallbacks,
+) {
     let manifest: Manifest = {
         let mut output = Command::new("cargo");
-        let output = output
-            .arg("metadata")
-            .args(&["--no-deps", "--format-version", "1"]);
-        let output = output.output().expect("Error reading cargo manifest.");
+        let mut output_args = if let Some(manifest_path) = manifest {
+            vec!["--manifest-path".to_string(), manifest_path]
+        } else {
+            Vec::<String>::new()
+        };
+        output_args.extend_from_slice(&[
+            "--no-deps".to_string(),
+            "--format-version".to_string(),
+            "1".to_string(),
+        ]);
+        let output = output.arg("metadata").args(&output_args);
+        let output = output.output().expect(" ⚠️  Error reading cargo manifest.");
         let stdout = output.stdout;
         if !output.status.success() {
             let error =
-                String::from_utf8(output.stderr).expect("Failed reading cargo stderr output");
+                String::from_utf8(output.stderr).expect(" ⚠️  Failed reading cargo stderr output");
             panic!("Error running cargo metadata: {:?}", error);
         }
-        let json_string = String::from_utf8(stdout).expect("Failed reading cargo output");
-        serde_json::from_str(&json_string).expect("Error reading to manifest")
+        let json_string = String::from_utf8(stdout).expect(" ⚠️  Failed reading cargo output");
+        serde_json::from_str(&json_string).expect(" ⚠️  Error reading to manifest")
     };
 
-    // Pick the package of the given name.
-    let package = manifest
-        .packages
-        .iter()
-        .find(|p| p.name == package_name)
-        .expect(&format!(
-            "Can't find the package {} in the Cargo.toml",
-            package_name
-        ));
+    // Pick the package of the given name or the only package available.
+    let package = if let Some(package_name) = package_name {
+        manifest
+            .packages
+            .iter()
+            .find(|p| p.name == package_name)
+            .expect(&format!(
+                " ⚠️  Can't find the package {} in the Cargo.toml\n\n{}",
+                package_name, APP_USAGE,
+            ))
+    } else {
+        &manifest.packages[0]
+    };
+    log::trace!("Typechecking '{:?}' ...", package);
 
     // Take the first lib target we find. There should be only one really.
+    // log::trace!("crate types: {:?}", package.targets);
+    // log::trace!("package targets {:?}", package.targets);
     let target = package
         .targets
         .iter()
-        .find(|p| p.crate_types.contains(&"lib".to_string()))
-        .expect("No target in the Cargo.toml");
+        .find(|p| {
+            p.crate_types.contains(&"lib".to_string())
+                || p.crate_types.contains(&"rlib".to_string())
+        })
+        .expect(&format!(" ⚠️  No target in the Cargo.toml\n\n{}", APP_USAGE));
 
     // Add the target source file to the arguments
     args.push(target.src_path.clone());
@@ -274,11 +300,25 @@ fn read_crate(package_name: String, args: &mut Vec<String>, callbacks: &mut Hacs
     }
 }
 
-fn main() -> Result<(), ()> {
+fn main() -> Result<(), usize> {
+    pretty_env_logger::init();
+    log::debug!(" --- hacspec");
     let mut args = env::args().collect::<Vec<String>>();
+    log::trace!("     args: {:?}", args);
+
+    // Args to pass to the compiler
+    let mut compiler_args = Vec::new();
+
+    // Drop and pass along binary name.
+    compiler_args.push(args.remove(0));
+
+    // Optionally get output file.
     let output_file_index = args.iter().position(|a| a == "-o");
     let output_file = match output_file_index {
-        Some(i) => args.get(i + 1).cloned(),
+        Some(i) => {
+            args.remove(i);
+            Some(args.remove(i))
+        }
         None => None,
     };
 
@@ -287,10 +327,28 @@ fn main() -> Result<(), ()> {
     let input_file = match args.iter().position(|a| a == "-f") {
         Some(i) => {
             args.remove(i);
-            true
+            Some(args.remove(i))
         }
-        None => false,
+        None => None,
     };
+
+    // Read the --manifest-path argument if present.
+    let manifest = match args.iter().position(|a| a == "--manifest-path") {
+        Some(i) => {
+            args.remove(i);
+            Some(args.remove(i))
+        }
+        None => None,
+    };
+
+    // Read the --sysroot. It must be present
+    log::trace!("args: {:?}", args);
+    match args.iter().position(|a| a.starts_with("--sysroot")) {
+        Some(i) => {
+            compiler_args.push(args.remove(i));
+        }
+        None => panic!(" ⚠️  --sysroot is missing. Please report this issue."),
+    }
 
     let mut callbacks = HacspecCallbacks {
         output_file,
@@ -299,27 +357,31 @@ fn main() -> Result<(), ()> {
             + "/../target/debug/deps",
     };
 
-    if !input_file {
-        let package_name = args
-            .pop()
-            .expect(&format!("No package to analyze.\n\n{}", APP_USAGE));
-
-        read_crate(package_name, &mut args, &mut callbacks);
-    } else {
-        // If only a file is provided we add the default dependencies only.
-        args.extend_from_slice(&[
-            "--extern=abstract_integers".to_string(),
-            "--extern=hacspec_derive".to_string(),
-            "--extern=hacspec_lib".to_string(),
-            "--extern=secret_integers".to_string(),
-        ]);
+    match input_file {
+        Some(input_file) => {
+            compiler_args.push(input_file);
+            // If only a file is provided we add the default dependencies only.
+            compiler_args.extend_from_slice(&[
+                "--extern=abstract_integers".to_string(),
+                "--extern=hacspec_derive".to_string(),
+                "--extern=hacspec_lib".to_string(),
+                "--extern=secret_integers".to_string(),
+            ]);
+        }
+        None => {
+            let package_name = args.pop();
+            log::trace!("package name to analyze: {:?}", package_name);
+            read_crate(manifest, package_name, &mut compiler_args, &mut callbacks);
+        }
     }
 
-    args.push("--crate-type=lib".to_string());
-    args.push("--edition=2018".to_string());
+    compiler_args.push("--crate-type=lib".to_string());
+    compiler_args.push("--edition=2021".to_string());
+    log::trace!("compiler_args: {:?}", compiler_args);
+    let compiler = RunCompiler::new(&compiler_args, &mut callbacks);
 
-    match RunCompiler::new(&args, &mut callbacks).run() {
+    match compiler.run() {
         Ok(_) => Ok(()),
-        Err(_) => Err(()),
+        Err(_) => Err(1),
     }
 }
