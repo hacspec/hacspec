@@ -172,6 +172,38 @@
 <span id="172">172</span>
 <span id="173">173</span>
 <span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
 
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
@@ -345,6 +377,38 @@
     } <span class="kw">else</span> {
         <span class="ident">AffineResult::Ok</span>(<span class="ident">jacobian_to_affine</span>(<span class="ident">point_double</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>))))
     }
+}
+
+<span class="doccomment">/// Verify that k != 0 &amp;&amp; k &lt; ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p256_validate_private_key</span>(<span class="ident">k</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">valid</span> <span class="op">=</span> <span class="bool-val">true</span>;
+    <span class="comment">// XXX: This should fail.</span>
+    <span class="kw">let</span> <span class="ident">k_element</span> <span class="op">=</span> <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="ident">k</span>);
+    <span class="kw">let</span> <span class="ident">k_element_bytes</span> <span class="op">=</span> <span class="ident">k_element</span>.<span class="ident">to_byte_seq_be</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">all_zero</span> <span class="op">=</span> <span class="bool-val">true</span>;
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">k</span>.<span class="ident">len</span>() {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">k</span>[<span class="ident">i</span>].<span class="ident">equal</span>(<span class="ident">U8</span>(<span class="number">0u8</span>)) {
+            <span class="ident">all_zero</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        }
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">k_element_bytes</span>[<span class="ident">i</span>].<span class="ident">equal</span>(<span class="ident">k</span>[<span class="ident">i</span>]) {
+            <span class="ident">valid</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        }
+    }
+    <span class="ident">valid</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">all_zero</span>
+}
+
+<span class="doccomment">/// Verify that the point `p` is a valid public key.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p256_validate_public_key</span>(<span class="ident">p</span>: <span class="ident">Affine</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">P256FieldElement::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="macro">byte_seq!</span>(
+        <span class="number">0x5au8</span>, <span class="number">0xc6u8</span>, <span class="number">0x35u8</span>, <span class="number">0xd8u8</span>, <span class="number">0xaau8</span>, <span class="number">0x3au8</span>, <span class="number">0x93u8</span>, <span class="number">0xe7u8</span>, <span class="number">0xb3u8</span>, <span class="number">0xebu8</span>, <span class="number">0xbdu8</span>,
+        <span class="number">0x55u8</span>, <span class="number">0x76u8</span>, <span class="number">0x98u8</span>, <span class="number">0x86u8</span>, <span class="number">0xbcu8</span>, <span class="number">0x65u8</span>, <span class="number">0x1du8</span>, <span class="number">0x06u8</span>, <span class="number">0xb0u8</span>, <span class="number">0xccu8</span>, <span class="number">0x53u8</span>,
+        <span class="number">0xb0u8</span>, <span class="number">0xf6u8</span>, <span class="number">0x3bu8</span>, <span class="number">0xceu8</span>, <span class="number">0x3cu8</span>, <span class="number">0x3eu8</span>, <span class="number">0x27u8</span>, <span class="number">0xd2u8</span>, <span class="number">0x60u8</span>, <span class="number">0x4bu8</span>
+    ));
+    <span class="kw">let</span> <span class="ident">point_at_infinity</span> <span class="op">=</span> <span class="ident">is_point_at_infinity</span>(<span class="ident">affine_to_jacobian</span>(<span class="ident">p</span>));
+    <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">p</span>;
+    <span class="kw">let</span> <span class="ident">on_curve</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">y</span> <span class="op">==</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">x</span> <span class="op">-</span> <span class="ident">P256FieldElement::from_literal</span>(<span class="number">3u128</span>) <span class="op">*</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">b</span>;
+
+    <span class="op">!</span><span class="ident">point_at_infinity</span> <span class="op">&amp;&amp;</span> <span class="ident">on_curve</span>
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hacspec_p256" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
