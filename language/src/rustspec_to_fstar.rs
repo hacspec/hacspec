@@ -465,6 +465,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Add => return RcDoc::as_string("+%"),
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
+                        BinOpKind::Eq => return RcDoc::as_string("=%"),
                         _ => unimplemented!(),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
