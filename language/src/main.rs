@@ -38,15 +38,13 @@ use rustc_span::MultiSpan;
 use serde::Deserialize;
 use serde_json;
 use std::env;
-use std::ffi::OsStr;
 use std::fs::File;
 use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
 
 use im::{HashMap, HashSet};
-use rustc_ast_pretty::pprust::item_to_string;
-use heck::{SnakeCase, TitleCase};
+use heck::TitleCase;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
@@ -107,6 +105,13 @@ pub fn handle_crate<'tcx>(
                         rustc_ast::ast::Unsafe::No,
                         rustc_ast::ast::ModKind::Unloaded,
                     ) => {
+
+                        let new_top_ctx = &mut name_resolution::TopLevelContext {
+                            consts: HashMap::new(),
+                            functions: HashMap::new(),
+                            typ_dict: HashMap::new(),
+                        };
+                        
                         if handle_crate(
                             output_file,
                             compiler,
@@ -114,24 +119,15 @@ pub fn handle_crate<'tcx>(
                             handled,
                             ast_crates,
                             x.ident.name.to_ident_string(),
-                            top_ctx,
+                            new_top_ctx,
                         ) == Compilation::Stop
                         {
                             return Compilation::Stop;
                         }
 
-                        // TODO: Include items in some way ?
-                        // v.push(rustc_ast::ast::Item {
-                        //     kind: rustc_ast::ast::ItemKind::Mod(
-                        //         rustc_ast::ast::Unsafe::No,
-                        //         rustc_ast::ast::ModKind::Loaded(
-                        //             vec![],
-                        //             rustc_ast::ast::Inline::No,
-                        //             rustc_span::DUMMY_SP,
-                        //         ),
-                        //     ),
-                        //     ..(*x).clone()
-                        // });
+                        top_ctx.consts.extend(new_top_ctx.consts.clone());
+                        top_ctx.functions.extend(new_top_ctx.functions.clone());
+                        top_ctx.typ_dict.extend(new_top_ctx.typ_dict.clone());
                     }
                     _ => v.push((*x).clone()),
                 }
@@ -213,13 +209,13 @@ pub fn handle_crate<'tcx>(
 
             let oe = if krate_path != "".to_string() {
                 (original_file.parent().unwrap())
-                    .join(Path::new(krate_path.clone().as_str()))
+                    .join(Path::new(krate_path.clone().to_title_case().replace(" ", "_").replace("Hacspec_", "").as_str()))
                     .with_extension(extension)
             } else {
                 original_file.to_path_buf()
             };
 
-            let file = &(oe.to_str().unwrap().to_title_case().replace("-", "_"));
+            let file = &(oe.to_str().unwrap());
             match extension.to_str().unwrap() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
