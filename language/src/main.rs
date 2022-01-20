@@ -315,7 +315,7 @@ fn handle_crate<'tcx>(
             Err(_) => {
                 compiler
                     .session()
-                    .err("unable to translate to Hacspec due to out-of-language errors");
+                    .err("found some Hacspec name resolution errors");
                 return Compilation::Stop;
             }
         };
