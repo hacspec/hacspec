@@ -51,6 +51,17 @@ const BASE: CompressedEdPoint = CompressedEdPoint(secret_array!(
 ));
 
 #[rustfmt::skip]
+const CONSTANT_P: SerializedScalar = SerializedScalar(secret_array!(
+    U8, 
+    [
+        0xedu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 
+        0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 
+        0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 
+        0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0x7fu8 
+    ]
+));
+
+#[rustfmt::skip]
 const CONSTANT_L: SerializedScalar = SerializedScalar(secret_array!(
     U8, 
     [
@@ -128,7 +139,34 @@ fn sqrt(a: Ed25519FieldElement) -> Option<Ed25519FieldElement> {
     result
 }
 
-fn decompress(p: CompressedEdPoint) -> Option<EdPoint> {
+fn decompress(q: CompressedEdPoint) -> Option<EdPoint> {
+    let d = Ed25519FieldElement::from_byte_seq_le(CONSTANT_D);
+
+    let x_s = (q[31usize] & U8(128u8)) >> 7;
+    let mut y_s = q;
+    y_s[31usize] = y_s[31usize] & U8(127u8);
+    if Scalar::from_byte_seq_le(y_s) >= Scalar::from_byte_seq_le(CONSTANT_P) {
+        Option::<EdPoint>::None?;
+    }
+    let y = Ed25519FieldElement::from_byte_seq_le(y_s);
+    let z = Ed25519FieldElement::ONE();
+    let yy = y * y;
+    let u = yy - z;
+    let v = d * yy + z;
+    let xx = u * v.inv();
+    let mut x = sqrt(xx)?;
+    let x_r = is_negative(x);
+    if x == Ed25519FieldElement::ZERO() && x_s.declassify() == 1u8 {
+        Option::<EdPoint>::None?;
+    }
+    if x_r.declassify() != x_s.declassify() {
+        x = Ed25519FieldElement::ZERO() - x;
+    }
+    Some((x, y, z, x * y))
+}
+
+// Allows decompression of non-canonical points
+fn decompress_non_canonical(p: CompressedEdPoint) -> Option<EdPoint> {
     let d = Ed25519FieldElement::from_byte_seq_le(CONSTANT_D);
 
     let x_s = (p[31usize] & U8(128u8)) >> 7;
@@ -140,9 +178,8 @@ fn decompress(p: CompressedEdPoint) -> Option<EdPoint> {
     let u = yy - z;
     let v = d * yy + z;
     let xx = u * v.inv();
-    let x_o = sqrt(xx)?;
-    let x_r = is_negative(x_o);
-    let mut x = x_o;
+    let mut x = sqrt(xx)?;
+    let x_r = is_negative(x);
     if x_r.declassify() != x_s.declassify() {
         x = Ed25519FieldElement::ZERO() - x;
     }
@@ -194,16 +231,6 @@ fn point_mul_by_cofactor(p: EdPoint) -> EdPoint {
     p8
 }
 
-fn point_neg(p: EdPoint) -> EdPoint {
-    let (x, y, z, t) = p;
-    (
-        Ed25519FieldElement::ZERO() - x,
-        y,
-        z,
-        Ed25519FieldElement::ZERO() - t,
-    )
-}
-
 fn point_eq(p: EdPoint, q: EdPoint) -> bool {
     let (x1, y1, z1, _) = p;
     let (x2, y2, z2, _) = q;
@@ -236,6 +263,14 @@ fn sc_to_sc_modl(s: Scalar) -> ScalarModL {
     ScalarModL::from_byte_seq_le(s.to_byte_seq_le().concat(&ByteSeq::new(32)))
 }
 
+fn check_canonical_l(s: SerializedScalar) -> bool {
+    if (s[31usize] & U8(224u8)).declassify() != 0u8 {
+        false
+    } else {
+        Scalar::from_byte_seq_le(s) < Scalar::from_byte_seq_le(CONSTANT_L)
+    }
+}
+
 pub fn sign(sk: SerializedScalar, msg: &ByteSeq) -> Signature {
     let (a, prefix) = secret_expand(sk);
     let a = Scalar::from_byte_seq_le(a);
@@ -252,29 +287,117 @@ pub fn sign(sk: SerializedScalar, msg: &ByteSeq) -> Signature {
     Signature::new().update(0, &r_s).update(32, &s_bytes)
 }
 
-pub fn verify(pk: CompressedEdPoint, signature: Signature, msg: &ByteSeq) -> VerifyResult {
+pub fn zcash_verify(pk: CompressedEdPoint, signature: Signature, msg: &ByteSeq) -> VerifyResult {
+    let b = decompress_non_canonical(BASE).unwrap();
+    let a = decompress_non_canonical(pk).ok_or(Error::InvalidPublickey)?;
+    let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
+    let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
+    if !check_canonical_l(s_bytes) {
+        VerifyResult::Err(Error::InvalidSignature)?;
+    }
+    let r = decompress_non_canonical(r_bytes).ok_or(Error::InvalidSignature)?;
+    let s = Scalar::from_byte_seq_le(s_bytes);
+    let k = sha512(&r_bytes.concat(&pk).concat(msg));
+    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+
+    let sb = point_mul_by_cofactor(point_mul(s, b));
+    let rc = point_mul_by_cofactor(r);
+    let ka = point_mul_by_cofactor(point_mul(k, a));
+
+    if point_eq(sb, point_add(rc, ka)) {
+        VerifyResult::Ok(())
+    } else {
+        VerifyResult::Err(Error::InvalidSignature)
+    }
+}
+
+pub fn ietf_cofactored_verify(
+    pk: CompressedEdPoint,
+    signature: Signature,
+    msg: &ByteSeq,
+) -> VerifyResult {
     let b = decompress(BASE).unwrap();
     let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
     let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
-    let r = decompress(r_bytes).ok_or(Error::InvalidSignature)?;
-    let s = Scalar::from_byte_seq_le(signature.slice(32, 32));
-    let l = Scalar::from_byte_seq_le(CONSTANT_L);
-    if s >= l {
+    let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
+    if !check_canonical_l(s_bytes) {
         VerifyResult::Err(Error::InvalidSignature)?;
     }
+    let r = decompress(r_bytes).ok_or(Error::InvalidSignature)?;
+    let s = Scalar::from_byte_seq_le(s_bytes);
     let k = sha512(&r_bytes.concat(&pk).concat(msg));
-    let h = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
 
-    let r_prime = point_add(point_mul(s, b), point_neg(point_mul(h, a))); // R' = [s]B - [c]A
-    let check = point_mul_by_cofactor(point_add(r, point_neg(r_prime)));
+    let sb = point_mul_by_cofactor(point_mul(s, b));
+    let rc = point_mul_by_cofactor(r);
+    let ka = point_mul_by_cofactor(point_mul(k, a));
+
+    if point_eq(sb, point_add(rc, ka)) {
+        VerifyResult::Ok(())
+    } else {
+        VerifyResult::Err(Error::InvalidSignature)
+    }
+}
+
+pub fn ietf_cofactorless_verify(
+    pk: CompressedEdPoint,
+    signature: Signature,
+    msg: &ByteSeq,
+) -> VerifyResult {
+    let b = decompress(BASE).unwrap();
+    let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
+    let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
+    let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
+    if !check_canonical_l(s_bytes) {
+        VerifyResult::Err(Error::InvalidSignature)?;
+    }
+    let r = decompress(r_bytes).ok_or(Error::InvalidSignature)?;
+    let s = Scalar::from_byte_seq_le(s_bytes);
+    let k = sha512(&r_bytes.concat(&pk).concat(msg));
+    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+
+    let sb = point_mul(s, b);
+    let ka = point_mul(k, a);
+
+    if point_eq(sb, point_add(r, ka)) {
+        VerifyResult::Ok(())
+    } else {
+        VerifyResult::Err(Error::InvalidSignature)
+    }
+}
+
+fn is_identity(p: EdPoint) -> bool {
     let identity = (
         Ed25519FieldElement::ZERO(),
         Ed25519FieldElement::ONE(),
         Ed25519FieldElement::ONE(),
         Ed25519FieldElement::ZERO(),
     );
+    point_eq(p, identity)
+}
 
-    if point_eq(check, identity) {
+// Algorithm 2 from https://eprint.iacr.org/2020/1244.pdf
+pub fn alg2_verify(pk: CompressedEdPoint, signature: Signature, msg: &ByteSeq) -> VerifyResult {
+    let b = decompress(BASE).unwrap();
+    let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
+    if is_identity(point_mul_by_cofactor(a)) {
+        VerifyResult::Err(Error::InvalidPublickey)?;
+    }
+    let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
+    let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
+    if !check_canonical_l(s_bytes) {
+        VerifyResult::Err(Error::InvalidSignature)?;
+    }
+    let r = decompress(r_bytes).ok_or(Error::InvalidSignature)?;
+    let s = Scalar::from_byte_seq_le(s_bytes);
+    let k = sha512(&r_bytes.concat(&pk).concat(msg));
+    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+
+    let sb = point_mul_by_cofactor(point_mul(s, b));
+    let rc = point_mul_by_cofactor(r);
+    let ka = point_mul_by_cofactor(point_mul(k, a));
+
+    if point_eq(sb, point_add(rc, ka)) {
         VerifyResult::Ok(())
     } else {
         VerifyResult::Err(Error::InvalidSignature)
@@ -290,6 +413,22 @@ extern crate quickcheck_macros;
 #[cfg(test)]
 mod test {
     use super::*;
+    use curve25519_dalek::edwards::CompressedEdwardsY;
+
+    #[test]
+    fn test_test() {
+        let t = CompressedEdPoint::from_hex(
+            "f0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+        );
+        let r = decompress(t);
+        assert!(r.is_none());
+        let mut t1 = [0u8; 32];
+        t1.copy_from_slice(&t.to_le_bytes().to_native());
+        println!("{:?}", t1);
+        let t1 = CompressedEdwardsY(t1);
+        let r1 = t1.decompress();
+        assert!(!r1.is_none());
+    }
 
     #[test]
     fn test_compress_decompress() {
@@ -375,7 +514,7 @@ mod test {
             "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e06522490155\
             5fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b",
         );
-        let result = verify(a, sig, &msg);
+        let result = zcash_verify(a, sig, &msg);
         assert!(result.is_ok());
 
         let s = SerializedScalar::from_hex(
@@ -389,7 +528,7 @@ mod test {
             18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a",
         );
         assert_bytes_eq!(sig, sig_result);
-        assert!(verify(a, sig, &msg).is_ok());
+        assert!(zcash_verify(a, sig, &msg).is_ok());
     }
 
     #[quickcheck]
@@ -400,6 +539,6 @@ mod test {
         let pk = secret_to_public(sk);
         let msg = &ByteSeq::from_public_slice(msg.as_bytes());
         let signature = sign(sk, &msg);
-        verify(pk, signature, msg).is_ok()
+        zcash_verify(pk, signature, msg).is_ok()
     }
 }
