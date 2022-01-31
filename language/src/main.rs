@@ -549,20 +549,6 @@ impl Callbacks for HacspecCallbacks {
         {
             let krate_and_resolver = queries.expansion().unwrap().peek_mut().clone(); // ?
             expanded_krate = (*krate_and_resolver.0).clone();
-
-            // let mut resolver = (*krate_and_resolver.1).into_inner();
-            // resolver.access(|resolver| {
-
-            //     let krate_name = queries.crate_name().unwrap().peek().clone();
-            //     let mut ext_ctxt = rustc_expand::base::ExtCtxt::new(
-            //         &compiler.session(),
-            //         rustc_expand::expand::ExpansionConfig::default(krate_name),
-            //         resolver,
-            //         None);
-
-            // let mut macro_expander : rustc_expand::expand::MacroExpander = ext_ctxt.expander();
-            //     krate = macro_expander.expand_crate(krate.clone());
-            // });
         }
 
         queries.prepare_outputs().unwrap(); // ?
@@ -599,10 +585,7 @@ impl Callbacks for HacspecCallbacks {
                     }
                     // Invariant, the second parameter is up to date at this moment
                     (
-                        rustc_ast::ast::ItemKind::MacCall(rustc_ast::ast::MacCall {
-                            path,
-                            ..
-                        }),
+                        rustc_ast::ast::ItemKind::MacCall(rustc_ast::ast::MacCall { path, .. }),
                         _,
                     ) => {
                         let push_in_loop = match path
@@ -614,7 +597,12 @@ impl Callbacks for HacspecCallbacks {
                             .to_ident_string()
                             .as_str()
                         {
-                            "secret_array" | "array" | "public_nat_mod" => {
+                            "array"
+                            | "bytes"
+                            | "public_bytes"
+                            | "public_nat_mod"
+                            | "nat_mod"
+                            | "unsigned_public_integer" => {
                                 items.push(krate.items[index].clone());
                                 false
                             }
@@ -662,8 +650,13 @@ impl Callbacks for HacspecCallbacks {
             krate.items = items;
         }
 
-        let crate_origin_file = compiler.build_output_filenames(compiler.session(), &[]).with_extension("").to_str().unwrap().to_string();
-        
+        let crate_origin_file = compiler
+            .build_output_filenames(compiler.session(), &[])
+            .with_extension("")
+            .to_str()
+            .unwrap()
+            .to_string();
+
         let mut analysis_crates = HashMap::new();
         analysis_crates.insert(crate_origin_file.clone(), krate);
 
