@@ -148,8 +148,7 @@ fn construct_handle_crate_queue<'tcx>(
                 }
             }
 
-            // Remove the modules statements from the crate
-            rustc_ast::ast::Crate {
+            let modified_krate = rustc_ast::ast::Crate {
                 attrs,
                 items: items
                     .clone()
@@ -163,7 +162,9 @@ fn construct_handle_crate_queue<'tcx>(
                     })
                     .collect(),
                 span,
-            }
+            };
+
+            modified_krate
         }
     };
 
@@ -528,20 +529,141 @@ impl Callbacks for HacspecCallbacks {
         ));
     }
 
-    fn after_analysis<'tcx>(
+    fn after_parsing<'tcx>(
         &mut self,
         compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
-        log::debug!(" --- hacspec after_analysis callback");
-        let krate: rustc_ast::ast::Crate = queries.parse().unwrap().take();
-        let crate_origin_file = compiler
-            .build_output_filenames(compiler.session(), &[])
-            .with_extension("")
-            .to_str()
-            .unwrap()
-            .to_string();
+        log::debug!(" --- hacspec after_expansion callback");
+        let expanded_krate;
+        {
+            let (_, _) = &*queries.register_plugins().unwrap().peek(); // ?
 
+            // // Lint plugins are registered; now we can process command line flags.
+            // if sess.opts.describe_lints {
+            //     describe_lints(sess, lint_store, true);
+            //     return early_exit();
+            // }
+        }
+
+        {
+            let krate_and_resolver = queries.expansion().unwrap().peek_mut().clone(); // ?
+            expanded_krate = (*krate_and_resolver.0).clone();
+
+            // let mut resolver = (*krate_and_resolver.1).into_inner();
+            // resolver.access(|resolver| {
+
+            //     let krate_name = queries.crate_name().unwrap().peek().clone();
+            //     let mut ext_ctxt = rustc_expand::base::ExtCtxt::new(
+            //         &compiler.session(),
+            //         rustc_expand::expand::ExpansionConfig::default(krate_name),
+            //         resolver,
+            //         None);
+
+            // let mut macro_expander : rustc_expand::expand::MacroExpander = ext_ctxt.expander();
+            //     krate = macro_expander.expand_crate(krate.clone());
+            // });
+        }
+
+        queries.prepare_outputs().unwrap(); // ?
+
+        queries.global_ctxt().unwrap(); // ?
+
+        queries
+            .global_ctxt()
+            .unwrap()
+            .peek_mut()
+            .enter(|tcx| {
+                // ?
+                let result = tcx.analysis(());
+                result
+            })
+            .unwrap(); // ?
+
+        let mut krate = queries.parse().unwrap().take();
+
+        {
+            let mut items = vec![];
+
+            let mut index = 0;
+            let mut index_expand = 1; // Skip use std?
+
+            while index < krate.items.len() && index_expand < expanded_krate.items.len() {
+                // Merge trees removing macro calls when not hacspec calls
+                match (
+                    krate.items[index].kind.clone(),
+                    expanded_krate.items[index_expand].kind.clone(),
+                ) {
+                    (_, rustc_ast::ast::ItemKind::ExternCrate(..)) => {
+                        index_expand += 1;
+                    }
+                    // Invariant, the second parameter is up to date at this moment
+                    (
+                        rustc_ast::ast::ItemKind::MacCall(rustc_ast::ast::MacCall {
+                            path,
+                            ..
+                        }),
+                        _,
+                    ) => {
+                        let push_in_loop = match path
+                            .segments
+                            .last()
+                            .unwrap()
+                            .ident
+                            .name
+                            .to_ident_string()
+                            .as_str()
+                        {
+                            "secret_array" | "array" | "public_nat_mod" => {
+                                items.push(krate.items[index].clone());
+                                false
+                            }
+                            _ => true,
+                        };
+
+                        let source_call_cite = expanded_krate.items[index_expand]
+                            .clone()
+                            .span
+                            .source_callsite();
+
+                        while expanded_krate.items[index_expand]
+                            .clone()
+                            .span
+                            .from_expansion()
+                            && expanded_krate.items[index_expand]
+                                .clone()
+                                .span
+                                .source_callsite()
+                                == source_call_cite
+                        {
+                            if push_in_loop {
+                                items.push(expanded_krate.items[index_expand].clone());
+                            }
+                            index_expand += 1;
+                            if !(index_expand < expanded_krate.items.len()) {
+                                break;
+                            }
+                        }
+
+                        index += 1;
+                    }
+                    (rustc_ast::ast::ItemKind::MacroDef(..), _) => {
+                        index += 1;
+                        index_expand += 1;
+                    }
+                    _ => {
+                        items.push(krate.items[index].clone());
+                        index += 1;
+                        index_expand += 1;
+                    }
+                }
+            }
+
+            krate.items = items;
+        }
+
+        let crate_origin_file = compiler.build_output_filenames(compiler.session(), &[]).with_extension("").to_str().unwrap().to_string();
+        
         let mut analysis_crates = HashMap::new();
         analysis_crates.insert(crate_origin_file.clone(), krate);
 
