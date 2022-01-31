@@ -2,17 +2,15 @@
 extern crate im;
 extern crate pretty;
 extern crate rustc_ast;
-extern crate rustc_ast_pretty;
 extern crate rustc_driver;
 extern crate rustc_errors;
 extern crate rustc_hir;
 extern crate rustc_interface;
 extern crate rustc_metadata;
 extern crate rustc_middle;
+extern crate rustc_parse;
 extern crate rustc_session;
 extern crate rustc_span;
-
-extern crate rustc_parse;
 
 mod ast_to_rustspec;
 mod hir_to_rustspec;
@@ -24,6 +22,8 @@ mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
+use heck::TitleCase;
+use im::{HashMap, HashSet};
 use itertools::Itertools;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
@@ -42,9 +42,6 @@ use std::fs::File;
 use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
-
-use im::{HashMap, HashSet};
-use heck::TitleCase;
 
 struct HacspecCallbacks {
     output_file: Option<String>,
@@ -75,59 +72,83 @@ pub fn handle_crate<'tcx>(
     compiler: &Compiler,
     queries: &'tcx Queries<'tcx>,
     handled: &mut HashSet<String>,
-    ast_crates: &HashMap<String, rustc_ast::ast::Crate>,
+    ast_crates_map: &HashMap<String, rustc_ast::ast::Crate>,
     krate_path: String,
-    top_ctx: &mut name_resolution::TopLevelContext,
+    top_ctx_map: &mut HashMap<String, name_resolution::TopLevelContext>,
 ) -> Compilation {
-    if handled.contains(&krate_path) {
-        return Compilation::Continue;
-    }
-
-    // Look at path/mod_name.rs and path/mod_name/mod.rs for module
-    let krate = ast_crates[&(if ast_crates.contains_key(&krate_path.clone()) {
+    let krate_module_string = if ast_crates_map.contains_key(&krate_path.clone()) {
         krate_path.clone()
-    } else if ast_crates.contains_key(&(krate_path.clone() + "/mod")) {
+    } else if ast_crates_map.contains_key(&(krate_path.clone() + "/mod")) {
         krate_path.clone() + "/mod"
     } else {
         compiler
             .session()
             .err(format!("There is no module with name {}", krate_path.clone()).as_str());
         return Compilation::Stop;
-    })]
-        .clone();
+    };
+
+    if handled.contains(&krate_module_string) {
+        return Compilation::Continue;
+    }
+
+    // Look at path/mod_name.rs and path/mod_name/mod.rs for module
+    let krate = ast_crates_map[&krate_module_string].clone();
+
+    let new_top_ctx = &mut name_resolution::TopLevelContext {
+        consts: HashMap::new(),
+        functions: HashMap::new(),
+        typ_dict: HashMap::new(),
+    };
 
     let krate = match krate {
         rustc_ast::ast::Crate { attrs, items, span } => {
             let mut v = vec![];
-            for x in items.into_iter().clone() {
+
+            for x in items.clone().into_iter() {
                 match x.kind {
                     rustc_ast::ast::ItemKind::Mod(
                         rustc_ast::ast::Unsafe::No,
                         rustc_ast::ast::ModKind::Unloaded,
                     ) => {
-
-                        let new_top_ctx = &mut name_resolution::TopLevelContext {
-                            consts: HashMap::new(),
-                            functions: HashMap::new(),
-                            typ_dict: HashMap::new(),
-                        };
-                        
                         if handle_crate(
                             output_file,
                             compiler,
                             queries,
                             handled,
-                            ast_crates,
+                            ast_crates_map,
                             x.ident.name.to_ident_string(),
-                            new_top_ctx,
+                            top_ctx_map,
                         ) == Compilation::Stop
                         {
                             return Compilation::Stop;
                         }
+                    }
+                    rustc_ast::ast::ItemKind::Use(ref tree) => {
+                        match tree.kind {
+                            rustc_ast::ast::UseTreeKind::Glob => {
+                                let krate_use_string = (&tree.prefix)
+                                    .segments
+                                    .last()
+                                    .unwrap()
+                                    .ident
+                                    .name
+                                    .to_ident_string();
 
-                        top_ctx.consts.extend(new_top_ctx.consts.clone());
-                        top_ctx.functions.extend(new_top_ctx.functions.clone());
-                        top_ctx.typ_dict.extend(new_top_ctx.typ_dict.clone());
+                                if top_ctx_map.contains_key(&krate_use_string) {
+                                    new_top_ctx
+                                        .consts
+                                        .extend(top_ctx_map[&krate_use_string].consts.clone());
+                                    new_top_ctx
+                                        .functions
+                                        .extend(top_ctx_map[&krate_use_string].functions.clone());
+                                    new_top_ctx
+                                        .typ_dict
+                                        .extend(top_ctx_map[&krate_use_string].typ_dict.clone());
+                                }
+                            }
+                            _ => (),
+                        };
+                        v.push((*x).clone())
                     }
                     _ => v.push((*x).clone()),
                 }
@@ -163,7 +184,7 @@ pub fn handle_crate<'tcx>(
         &compiler.session(),
         krate,
         &external_data,
-        top_ctx,
+        new_top_ctx,
     ) {
         Ok(krate) => krate,
         Err(_) => {
@@ -174,7 +195,7 @@ pub fn handle_crate<'tcx>(
         }
     };
 
-    let krate = match typechecker::typecheck_program(&compiler.session(), &krate, top_ctx) {
+    let krate = match typechecker::typecheck_program(&compiler.session(), &krate, new_top_ctx) {
         Ok(krate) => krate,
         Err(_) => {
             compiler
@@ -209,7 +230,14 @@ pub fn handle_crate<'tcx>(
 
             let oe = if krate_path != "".to_string() {
                 (original_file.parent().unwrap())
-                    .join(Path::new(krate_path.clone().to_title_case().replace(" ", "_").replace("Hacspec_", "").as_str()))
+                    .join(Path::new(
+                        krate_path
+                            .clone()
+                            .to_title_case()
+                            .replace(" ", "_")
+                            .replace("Hacspec_", "")
+                            .as_str(),
+                    ))
                     .with_extension(extension)
             } else {
                 original_file.to_path_buf()
@@ -221,13 +249,13 @@ pub fn handle_crate<'tcx>(
                     &compiler.session(),
                     &krate,
                     &file,
-                    &top_ctx,
+                    &new_top_ctx,
                 ),
                 "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
                     &file,
-                    &top_ctx,
+                    &new_top_ctx,
                 ),
                 "json" => {
                     let file = file.trim();
@@ -256,7 +284,7 @@ pub fn handle_crate<'tcx>(
                     &compiler.session(),
                     &krate,
                     &file,
-                    &top_ctx,
+                    &new_top_ctx,
                 ),
                 _ => {
                     compiler
@@ -268,7 +296,8 @@ pub fn handle_crate<'tcx>(
         }
     }
 
-    handled.insert(krate_path);
+    handled.insert(krate_module_string.clone());
+    (*top_ctx_map).insert(krate_module_string, new_top_ctx.clone());
 
     Compilation::Continue
 }
@@ -295,16 +324,15 @@ impl Callbacks for HacspecCallbacks {
         log::debug!(" --- hacspec after_analysis callback");
         let krate: rustc_ast::ast::Crate = queries.parse().unwrap().take();
 
-        let mut analysis_crates = HashMap::new(); // [krate]
+        let mut analysis_crates = HashMap::new();
         analysis_crates.insert("".to_string(), krate);
 
         // Find module location using hir
         queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-            // .take() instead of peek_mut ?
             let hir_krate = tcx.hir();
             for item in hir_krate.items() {
                 if let rustc_hir::ItemKind::Mod(_m) = &item.kind {
-                    let (expra, exprb, _exprc) = &tcx.hir().get_module(item.def_id); // expra == m
+                    let (expra, exprb, _exprc) = &tcx.hir().get_module(item.def_id);
 
                     let sm: &rustc_span::source_map::SourceMap =
                         (compiler.session()).parse_sess.source_map();
@@ -351,11 +379,7 @@ impl Callbacks for HacspecCallbacks {
             &mut HashSet::new(),
             &analysis_crates,
             "".to_string(),
-            &mut name_resolution::TopLevelContext {
-                consts: HashMap::new(),
-                functions: HashMap::new(),
-                typ_dict: HashMap::new(),
-            },
+            &mut HashMap::new(),
         );
 
         Compilation::Stop
