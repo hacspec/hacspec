@@ -7,7 +7,6 @@ USAGE:
 
 FLAGS:
     -v               Verbosity
-    -t <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
     --manifest-path  The cargo manifest path argument. The typechecker will analyze
                      the crate or workspace at the specified Cargo.toml.
                      Note that you have to specify the path including the Cargo.toml
@@ -15,6 +14,7 @@ FLAGS:
 
 OPTIONS:
     -o <FILE_DIR>    The output directory
+    -t <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
 
 ARGS:
     CRATE            The crate to analyse.
