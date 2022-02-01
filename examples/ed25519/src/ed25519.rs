@@ -11,13 +11,19 @@ public_nat_mod!(
     type_name: Scalar,
     type_of_canvas: ScalarCanvas,
     bit_size_of_field: 256,
-    modulo_value: "8000000000000000000000000000000000000000000000000000000000000000"
+    modulo_value: "1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"
 );
 public_nat_mod!(
-    type_name: ScalarModL,
-    type_of_canvas: ScalarModLCanvas,
+    type_name: BigScalar,
+    type_of_canvas: BigScalarCanvas,
     bit_size_of_field: 512,
     modulo_value: "1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"
+);
+public_nat_mod!(
+    type_name: BigInteger,
+    type_of_canvas: BigIntegerCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "8000000000000000000000000000000080000000000000000000000000000000"
 );
 
 type EdPoint = (
@@ -31,10 +37,17 @@ bytes!(CompressedEdPoint, 32);
 bytes!(SerializedScalar, 32);
 bytes!(Signature, 64);
 
+pub type PublicKey = CompressedEdPoint;
+pub type SecretKey = SerializedScalar;
+
 #[derive(Debug)]
 pub enum Error {
     InvalidPublickey,
     InvalidSignature,
+    InvalidS,
+    InvalidR,
+    SmallOrderPoint,
+    NotEnoughRandomness,
 }
 
 pub type VerifyResult = Result<(), Error>;
@@ -139,13 +152,20 @@ fn sqrt(a: Ed25519FieldElement) -> Option<Ed25519FieldElement> {
     result
 }
 
+fn check_canonical_point(x: CompressedEdPoint) -> bool {
+    let mut x = x;
+    x[31usize] = x[31usize] & U8(127u8);
+    let x = BigInteger::from_byte_seq_le(x);
+    x < BigInteger::from_byte_seq_le(CONSTANT_P)
+}
+
 fn decompress(q: CompressedEdPoint) -> Option<EdPoint> {
     let d = Ed25519FieldElement::from_byte_seq_le(CONSTANT_D);
 
     let x_s = (q[31usize] & U8(128u8)) >> 7;
     let mut y_s = q;
     y_s[31usize] = y_s[31usize] & U8(127u8);
-    if Scalar::from_byte_seq_le(y_s) >= Scalar::from_byte_seq_le(CONSTANT_P) {
+    if !check_canonical_point(y_s) {
         Option::<EdPoint>::None?;
     }
     let y = Ed25519FieldElement::from_byte_seq_le(y_s);
@@ -207,14 +227,18 @@ fn point_add(p: EdPoint, q: EdPoint) -> EdPoint {
     (x3, y3, z3, t3)
 }
 
+fn point_identity() -> EdPoint {
+    (
+        Ed25519FieldElement::ZERO(),
+        Ed25519FieldElement::ONE(),
+        Ed25519FieldElement::ONE(),
+        Ed25519FieldElement::ZERO(),
+    )
+}
+
 fn point_mul(s: Scalar, p: EdPoint) -> EdPoint {
     let mut p = p;
-    let mut q = (
-        Ed25519FieldElement::ZERO(),
-        Ed25519FieldElement::ONE(),
-        Ed25519FieldElement::ONE(),
-        Ed25519FieldElement::ZERO(),
-    );
+    let mut q = point_identity();
     for i in 0..256 {
         if s.bit(i) {
             q = point_add(q, p);
@@ -231,13 +255,23 @@ fn point_mul_by_cofactor(p: EdPoint) -> EdPoint {
     p8
 }
 
+fn point_neg(p: EdPoint) -> EdPoint {
+    let (x, y, z, t) = p;
+    (
+        Ed25519FieldElement::ZERO() - x,
+        y,
+        z,
+        Ed25519FieldElement::ZERO() - t,
+    )
+}
+
 fn point_eq(p: EdPoint, q: EdPoint) -> bool {
     let (x1, y1, z1, _) = p;
     let (x2, y2, z2, _) = q;
     x1 * z2 == x2 * z1 && y1 * z2 == y2 * z1
 }
 
-fn secret_expand(sk: SerializedScalar) -> (SerializedScalar, SerializedScalar) {
+fn secret_expand(sk: SecretKey) -> (SerializedScalar, SerializedScalar) {
     let h = sha512(&ByteSeq::from_slice(&sk, 0, 32));
     let h_d = SerializedScalar::from_slice(&h, 32, 32);
     let mut s = SerializedScalar::from_slice(&h, 0, 32);
@@ -247,7 +281,7 @@ fn secret_expand(sk: SerializedScalar) -> (SerializedScalar, SerializedScalar) {
     (s, h_d)
 }
 
-pub fn secret_to_public(sk: SerializedScalar) -> CompressedEdPoint {
+pub fn secret_to_public(sk: SecretKey) -> PublicKey {
     let (s, _) = secret_expand(sk);
     let base = decompress(BASE).unwrap();
     let ss = Scalar::from_byte_seq_le(s);
@@ -255,50 +289,46 @@ pub fn secret_to_public(sk: SerializedScalar) -> CompressedEdPoint {
     compress(a)
 }
 
-fn sc_modl_to_sc(s: ScalarModL) -> Scalar {
-    Scalar::from_byte_seq_le(s.to_byte_seq_le().slice(0, 32))
-}
-
-fn sc_to_sc_modl(s: Scalar) -> ScalarModL {
-    ScalarModL::from_byte_seq_le(s.to_byte_seq_le().concat(&ByteSeq::new(32)))
-}
-
-fn check_canonical_l(s: SerializedScalar) -> bool {
+fn check_canonical_scalar(s: SerializedScalar) -> bool {
     if (s[31usize] & U8(224u8)).declassify() != 0u8 {
         false
     } else {
-        Scalar::from_byte_seq_le(s) < Scalar::from_byte_seq_le(CONSTANT_L)
+        BigInteger::from_byte_seq_le(s) < BigInteger::from_byte_seq_le(CONSTANT_L)
     }
 }
 
-pub fn sign(sk: SerializedScalar, msg: &ByteSeq) -> Signature {
+fn scalar_from_hash(h: Sha512Digest) -> Scalar {
+    let s = BigScalar::from_byte_seq_le(h);
+    Scalar::from_byte_seq_le(s.to_byte_seq_le().slice(0, 32))
+}
+
+pub fn sign(sk: SecretKey, msg: &ByteSeq) -> Signature {
     let (a, prefix) = secret_expand(sk);
     let a = Scalar::from_byte_seq_le(a);
     let b = decompress(BASE).unwrap();
     let a_p = compress(point_mul(a, b));
-    let r_h = sha512(&prefix.concat(msg));
-    let r = ScalarModL::from_byte_seq_le(r_h);
-    let r_p = point_mul(sc_modl_to_sc(r), b);
+    let r = scalar_from_hash(sha512(&prefix.concat(msg)));
+    let r_p = point_mul(r, b);
     let r_s = compress(r_p);
-    let h_h = sha512(&r_s.concat(&a_p).concat(msg));
-    let h = ScalarModL::from_byte_seq_le(h_h);
-    let s = r + h * sc_to_sc_modl(a);
+    let h = scalar_from_hash(sha512(&r_s.concat(&a_p).concat(msg)));
+    let s = r + h * a;
     let s_bytes = s.to_byte_seq_le().slice(0, 32);
     Signature::new().update(0, &r_s).update(32, &s_bytes)
 }
 
-pub fn zcash_verify(pk: CompressedEdPoint, signature: Signature, msg: &ByteSeq) -> VerifyResult {
+// Allows non-canonical encoding of points
+// Uses verification equation: [8][S]B = [8]R + [8][H(R, A, msg)]A
+pub fn zcash_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> VerifyResult {
     let b = decompress_non_canonical(BASE).unwrap();
     let a = decompress_non_canonical(pk).ok_or(Error::InvalidPublickey)?;
     let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
     let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
-    if !check_canonical_l(s_bytes) {
-        VerifyResult::Err(Error::InvalidSignature)?;
+    if !check_canonical_scalar(s_bytes) {
+        VerifyResult::Err(Error::InvalidS)?;
     }
-    let r = decompress_non_canonical(r_bytes).ok_or(Error::InvalidSignature)?;
+    let r = decompress_non_canonical(r_bytes).ok_or(Error::InvalidR)?;
     let s = Scalar::from_byte_seq_le(s_bytes);
-    let k = sha512(&r_bytes.concat(&pk).concat(msg));
-    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+    let k = scalar_from_hash(sha512(&r_bytes.concat(&pk).concat(msg)));
 
     let sb = point_mul_by_cofactor(point_mul(s, b));
     let rc = point_mul_by_cofactor(r);
@@ -311,22 +341,18 @@ pub fn zcash_verify(pk: CompressedEdPoint, signature: Signature, msg: &ByteSeq) 
     }
 }
 
-pub fn ietf_cofactored_verify(
-    pk: CompressedEdPoint,
-    signature: Signature,
-    msg: &ByteSeq,
-) -> VerifyResult {
+// Uses verification equation: [8][S]B = [8]R + [8][H(R, A, msg)]A
+pub fn ietf_cofactored_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> VerifyResult {
     let b = decompress(BASE).unwrap();
     let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
     let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
     let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
-    if !check_canonical_l(s_bytes) {
-        VerifyResult::Err(Error::InvalidSignature)?;
+    if !check_canonical_scalar(s_bytes) {
+        VerifyResult::Err(Error::InvalidS)?;
     }
-    let r = decompress(r_bytes).ok_or(Error::InvalidSignature)?;
+    let r = decompress(r_bytes).ok_or(Error::InvalidR)?;
     let s = Scalar::from_byte_seq_le(s_bytes);
-    let k = sha512(&r_bytes.concat(&pk).concat(msg));
-    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+    let k = scalar_from_hash(sha512(&r_bytes.concat(&pk).concat(msg)));
 
     let sb = point_mul_by_cofactor(point_mul(s, b));
     let rc = point_mul_by_cofactor(r);
@@ -339,8 +365,9 @@ pub fn ietf_cofactored_verify(
     }
 }
 
+// Uses verification equation: [S]B = R + [H(R, A, msg)]A
 pub fn ietf_cofactorless_verify(
-    pk: CompressedEdPoint,
+    pk: PublicKey,
     signature: Signature,
     msg: &ByteSeq,
 ) -> VerifyResult {
@@ -348,13 +375,12 @@ pub fn ietf_cofactorless_verify(
     let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
     let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
     let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
-    if !check_canonical_l(s_bytes) {
-        VerifyResult::Err(Error::InvalidSignature)?;
+    if !check_canonical_scalar(s_bytes) {
+        VerifyResult::Err(Error::InvalidS)?;
     }
-    let r = decompress(r_bytes).ok_or(Error::InvalidSignature)?;
+    let r = decompress(r_bytes).ok_or(Error::InvalidR)?;
     let s = Scalar::from_byte_seq_le(s_bytes);
-    let k = sha512(&r_bytes.concat(&pk).concat(msg));
-    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+    let k = scalar_from_hash(sha512(&r_bytes.concat(&pk).concat(msg)));
 
     let sb = point_mul(s, b);
     let ka = point_mul(k, a);
@@ -367,37 +393,116 @@ pub fn ietf_cofactorless_verify(
 }
 
 fn is_identity(p: EdPoint) -> bool {
-    let identity = (
-        Ed25519FieldElement::ZERO(),
-        Ed25519FieldElement::ONE(),
-        Ed25519FieldElement::ONE(),
-        Ed25519FieldElement::ZERO(),
-    );
-    point_eq(p, identity)
+    point_eq(p, point_identity())
 }
 
 // Algorithm 2 from https://eprint.iacr.org/2020/1244.pdf
-pub fn alg2_verify(pk: CompressedEdPoint, signature: Signature, msg: &ByteSeq) -> VerifyResult {
+// Disallows the public key to a point with small-order (<= 8)
+// Uses verification equation: [8][S]B = [8]R + [8][H(R, A, msg)]A
+pub fn alg2_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> VerifyResult {
     let b = decompress(BASE).unwrap();
     let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
     if is_identity(point_mul_by_cofactor(a)) {
-        VerifyResult::Err(Error::InvalidPublickey)?;
+        VerifyResult::Err(Error::SmallOrderPoint)?;
     }
     let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
     let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
-    if !check_canonical_l(s_bytes) {
-        VerifyResult::Err(Error::InvalidSignature)?;
+    if !check_canonical_scalar(s_bytes) {
+        VerifyResult::Err(Error::InvalidS)?;
     }
-    let r = decompress(r_bytes).ok_or(Error::InvalidSignature)?;
+    let r = decompress(r_bytes).ok_or(Error::InvalidR)?;
     let s = Scalar::from_byte_seq_le(s_bytes);
-    let k = sha512(&r_bytes.concat(&pk).concat(msg));
-    let k = sc_modl_to_sc(ScalarModL::from_byte_seq_le(k));
+    let k = scalar_from_hash(sha512(&r_bytes.concat(&pk).concat(msg)));
 
     let sb = point_mul_by_cofactor(point_mul(s, b));
     let rc = point_mul_by_cofactor(r);
     let ka = point_mul_by_cofactor(point_mul(k, a));
 
     if point_eq(sb, point_add(rc, ka)) {
+        VerifyResult::Ok(())
+    } else {
+        VerifyResult::Err(Error::InvalidSignature)
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct BatchEntry(PublicKey, ByteSeq, Signature);
+
+// Batch verification
+// Uses verification equation: [8](- [sum z_j*S_j mod l]B + sum [z_j]R_j + sum [z_j*c_j mod l]A_j) = 0
+pub fn batch_verify_zcash(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
+    if entropy.len() < 16 * entries.len() {
+        VerifyResult::Err(Error::NotEnoughRandomness)?;
+    }
+    let mut s_sum = Scalar::ZERO();
+    let mut r_sum = point_identity();
+    let mut a_sum = point_identity();
+    for i in 0..entries.len() {
+        let BatchEntry(pk, msg, signature) = entries[i].clone();
+        let a = decompress_non_canonical(pk).ok_or(Error::InvalidPublickey)?;
+        let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
+        let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
+        if !check_canonical_scalar(s_bytes) {
+            VerifyResult::Err(Error::InvalidS)?;
+        }
+        let r = decompress_non_canonical(r_bytes).ok_or(Error::InvalidR)?;
+        let s = Scalar::from_byte_seq_le(s_bytes);
+        let c = scalar_from_hash(sha512(&r_bytes.concat(&pk).concat(&msg)));
+
+        let z = entropy.slice(16 * i, 16);
+        let z = Scalar::from_byte_seq_le(z.concat(&ByteSeq::new(16)));
+
+        s_sum = s_sum + s * z;
+
+        r_sum = point_add(r_sum, point_mul(z, r));
+
+        a_sum = point_add(a_sum, point_mul(z * c, a))
+    }
+
+    let b = decompress(BASE).unwrap();
+    let sb = point_mul(s_sum, b);
+    let check = point_mul_by_cofactor(point_add(point_neg(sb), point_add(r_sum, a_sum)));
+    if is_identity(check) {
+        VerifyResult::Ok(())
+    } else {
+        VerifyResult::Err(Error::InvalidSignature)
+    }
+}
+
+// Uses verification equation: (- [sum z_j*S_j mod l]B + sum [z_j]R_j + sum [z_j*c_j mod l]A_j) = 0
+pub fn batch_verify_cofactorless(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
+    if entropy.len() < 16 * entries.len() {
+        VerifyResult::Err(Error::NotEnoughRandomness)?;
+    }
+    let mut s_sum = Scalar::ZERO();
+    let mut r_sum = point_identity();
+    let mut a_sum = point_identity();
+    for i in 0..entries.len() {
+        let BatchEntry(pk, msg, signature) = entries[i].clone();
+        let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
+        let r_bytes = CompressedEdPoint::from_slice(&signature, 0, 32);
+        let s_bytes = SerializedScalar::from_slice(&signature, 32, 32);
+        if !check_canonical_scalar(s_bytes) {
+            VerifyResult::Err(Error::InvalidS)?;
+        }
+        let r = decompress(r_bytes).ok_or(Error::InvalidR)?;
+        let s = Scalar::from_byte_seq_le(s_bytes);
+        let c = scalar_from_hash(sha512(&r_bytes.concat(&pk).concat(&msg)));
+
+        let z = entropy.slice(16 * i, 16);
+        let z = Scalar::from_byte_seq_le(z.concat(&ByteSeq::new(16)));
+
+        s_sum = s_sum + s * z;
+
+        r_sum = point_add(r_sum, point_mul(z, r));
+
+        a_sum = point_add(a_sum, point_mul(z * c, a))
+    }
+
+    let b = decompress(BASE).unwrap();
+    let sb = point_mul(s_sum, b);
+    let check = point_add(point_neg(sb), point_add(r_sum, a_sum));
+    if is_identity(check) {
         VerifyResult::Ok(())
     } else {
         VerifyResult::Err(Error::InvalidSignature)
@@ -413,38 +518,16 @@ extern crate quickcheck_macros;
 #[cfg(test)]
 mod test {
     use super::*;
-    use curve25519_dalek::edwards::CompressedEdwardsY;
-
-    #[test]
-    fn test_test() {
-        let t = CompressedEdPoint::from_hex(
-            "f0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
-        );
-        let r = decompress(t);
-        assert!(r.is_none());
-        let mut t1 = [0u8; 32];
-        t1.copy_from_slice(&t.to_le_bytes().to_native());
-        println!("{:?}", t1);
-        let t1 = CompressedEdwardsY(t1);
-        let r1 = t1.decompress();
-        assert!(!r1.is_none());
-    }
 
     #[test]
     fn test_compress_decompress() {
-        let sk = SerializedScalar::from_hex(
+        let sk = Scalar::from_byte_seq_le(SerializedScalar::from_hex(
             "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
-        );
-        let msg = &ByteSeq::from_public_slice(b"");
-        let (_, prefix) = secret_expand(sk);
-        //let a = Scalar::from_byte_seq_le(a);
+        ));
         let b = decompress(BASE).unwrap();
-        //let a_p = compress(point_mul(a, b));
-        let r_h = sha512(&prefix.concat(msg));
-        let r = ScalarModL::from_byte_seq_le(r_h);
-        let r_p = point_mul(sc_modl_to_sc(r), b);
-        let r_s = compress(r_p);
-        assert!(point_eq(r_p, decompress(r_s).unwrap()));
+        let a = point_mul(sk, b);
+        let r = compress(a);
+        assert!(point_eq(a, decompress(r).unwrap()));
     }
 
     #[test]
@@ -540,5 +623,194 @@ mod test {
         let msg = &ByteSeq::from_public_slice(msg.as_bytes());
         let signature = sign(sk, &msg);
         zcash_verify(pk, signature, msg).is_ok()
+    }
+
+    #[quickcheck]
+    fn test_sign_verify_cofactorless(sk: (u128, u128), msg: String) -> bool {
+        let (sk1, sk2) = sk;
+        let sk = [sk2.to_le_bytes(), sk1.to_le_bytes()].concat();
+        let sk = SerializedScalar::from_public_slice(&sk);
+        let pk = secret_to_public(sk);
+        let msg = &ByteSeq::from_public_slice(msg.as_bytes());
+        let signature = sign(sk, &msg);
+        ietf_cofactorless_verify(pk, signature, msg).is_ok()
+    }
+
+    //use rand::prelude::*;
+    #[test]
+    fn test_batch_zcash() {
+        let entropy: [[u8; 16]; 32] = rand::random();
+        let entropy = ByteSeq::from_public_slice(&entropy.concat());
+        let mut entries = Seq::<BatchEntry>::new(32);
+        for i in 0usize..32 {
+            let sk: [u8; 32] = rand::random();
+            let sk = SecretKey::from_public_slice(&sk);
+            let pk = secret_to_public(sk);
+            let msg = ByteSeq::from_public_slice(b"BatchVerifyTest");
+            let sig = sign(sk, &msg);
+            entries[i] = BatchEntry(pk, msg, sig);
+        }
+        assert!(batch_verify_zcash(entries, &entropy).is_ok());
+    }
+
+    #[test]
+    fn test_batch_bad_zcash() {
+        let entropy: [[u8; 16]; 32] = rand::random();
+        let entropy = ByteSeq::from_public_slice(&entropy.concat());
+        let mut entries = Seq::<BatchEntry>::new(32);
+        let bad_index = 10;
+        for i in 0usize..32 {
+            let sk: [u8; 32] = rand::random();
+            let sk = SecretKey::from_public_slice(&sk);
+            let pk = secret_to_public(sk);
+            let msg = ByteSeq::from_public_slice(b"BatchVerifyTest");
+            let sig = if i != bad_index {
+                sign(sk, &msg)
+            } else {
+                sign(sk, &ByteSeq::from_public_slice(b"badmsg"))
+            };
+            entries[i] = BatchEntry(pk, msg, sig);
+        }
+        assert!(batch_verify_zcash(entries.clone(), &entropy).is_err());
+        for i in 0usize..32 {
+            let BatchEntry(pk, msg, signature) = entries[i].clone();
+            if i != bad_index {
+                assert!(zcash_verify(pk, signature, &msg).is_ok())
+            } else {
+                assert!(zcash_verify(pk, signature, &msg).is_err())
+            }
+        }
+    }
+
+    #[test]
+    fn test_batch_cofactorless() {
+        let entropy: [[u8; 16]; 32] = rand::random();
+        let entropy = ByteSeq::from_public_slice(&entropy.concat());
+        let mut entries = Seq::<BatchEntry>::new(32);
+        for i in 0usize..32 {
+            let sk: [u8; 32] = rand::random();
+            let sk = SecretKey::from_public_slice(&sk);
+            let pk = secret_to_public(sk);
+            let msg = ByteSeq::from_public_slice(b"BatchVerifyTest");
+            let sig = sign(sk, &msg);
+            entries[i] = BatchEntry(pk, msg, sig);
+        }
+        let result = batch_verify_cofactorless(entries, &entropy);
+        println!("{:?}", result);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_batch_single_cofactorless() {
+        let entropy: [u8; 16] = rand::random();
+        let entropy = ByteSeq::from_public_slice(&entropy);
+        let sk: [u8; 32] = rand::random();
+        let sk = SecretKey::from_public_slice(&sk);
+        let pk = secret_to_public(sk);
+        let msg = ByteSeq::from_public_slice(b"BatchVerifyTest");
+        let sig = sign(sk, &msg);
+
+        let mut entries = Seq::<BatchEntry>::new(1);
+        entries[0] = BatchEntry(pk, msg.clone(), sig);
+        let result = batch_verify_cofactorless(entries, &entropy);
+
+        assert!(ietf_cofactorless_verify(pk, sig, &msg).is_ok());
+
+        println!("{:?}", result);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_cofactorless_flaky() {
+        let b = decompress(BASE).unwrap();
+        let small_order_point = decompress(CompressedEdPoint::from_hex(
+            "C7176A703D4DD84FBA3C0B760D10670F2A2053FA2C39CCC64EC7FD7792AC037A",
+        ))
+        .unwrap();
+        let msg = ByteSeq::from_public_slice(b"hello test");
+
+        let s = Scalar::from_byte_seq_le(SerializedScalar::from_hex(
+            "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+        ));
+
+        let r = Scalar::from_byte_seq_le(SerializedScalar::from_hex(
+            "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+        ));
+
+        let ap = point_add(point_mul(s, b), small_order_point);
+        let rp = point_mul(r, b);
+        let ap_bytes = compress(ap);
+        let rp_bytes = compress(rp);
+        let c = scalar_from_hash(sha512(&rp_bytes.concat(&ap_bytes).concat(&msg)));
+
+        let sp = r + c * s;
+        let sig = Signature::new()
+            .update(0, &rp_bytes)
+            .update(32, &sp.to_byte_seq_le());
+        assert!(ietf_cofactorless_verify(ap_bytes, sig, &msg).is_err());
+
+        let mut entry = Seq::<BatchEntry>::new(1);
+        entry[0] = BatchEntry(ap_bytes, msg, sig);
+        let mut no_f = 0;
+        let mut no_t = 0;
+        for _ in 0..64 {
+            let entropy: [u8; 16] = rand::random();
+            let entropy = ByteSeq::from_public_slice(&entropy);
+            if batch_verify_cofactorless(entry.clone(), &entropy).is_ok() {
+                no_t += 1;
+            } else {
+                no_f += 1;
+            }
+        }
+        println!("no_t: {}\nno_f: {}", no_t, no_f);
+        assert!(0 < no_t);
+        assert!(0 < no_f);
+    }
+
+    #[test]
+    fn test_cofactored_not_flaky() {
+        let b = decompress(BASE).unwrap();
+        let small_order_point = decompress(CompressedEdPoint::from_hex(
+            "C7176A703D4DD84FBA3C0B760D10670F2A2053FA2C39CCC64EC7FD7792AC037A",
+        ))
+        .unwrap();
+        let msg = ByteSeq::from_public_slice(b"hello test");
+
+        let s = Scalar::from_byte_seq_le(SerializedScalar::from_hex(
+            "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+        ));
+
+        let r = Scalar::from_byte_seq_le(SerializedScalar::from_hex(
+            "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+        ));
+
+        let ap = point_add(point_mul(s, b), small_order_point);
+        let rp = point_mul(r, b);
+        let ap_bytes = compress(ap);
+        let rp_bytes = compress(rp);
+        let c = scalar_from_hash(sha512(&rp_bytes.concat(&ap_bytes).concat(&msg)));
+
+        let sp = r + c * s;
+        let sig = Signature::new()
+            .update(0, &rp_bytes)
+            .update(32, &sp.to_byte_seq_le());
+        assert!(zcash_verify(ap_bytes, sig, &msg).is_ok());
+
+        let mut entry = Seq::<BatchEntry>::new(1);
+        entry[0] = BatchEntry(ap_bytes, msg, sig);
+        let mut no_f = 0;
+        let mut no_t = 0;
+        for _ in 0..32 {
+            let entropy: [u8; 16] = rand::random();
+            let entropy = ByteSeq::from_public_slice(&entropy);
+            if batch_verify_zcash(entry.clone(), &entropy).is_ok() {
+                no_t += 1;
+            } else {
+                no_f += 1;
+            }
+        }
+        println!("no_t: {}\nno_f: {}", no_t, no_f);
+        assert!(0 < no_t);
+        assert!(0 == no_f);
     }
 }
