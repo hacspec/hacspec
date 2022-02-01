@@ -44,7 +44,8 @@ use std::process::Command;
 use util::APP_USAGE;
 
 struct HacspecCallbacks {
-    output_file: Option<String>,
+    output_directory: Option<String>,
+    output_type: String,
     target_directory: String,
 }
 
@@ -67,8 +68,8 @@ impl HacspecErrorEmitter for Session {
     }
 }
 
-pub fn handle_crate<'tcx>(
-    output_file: &Option<String>,
+fn handle_crate<'tcx>(
+    callback: &HacspecCallbacks,
     compiler: &Compiler,
     queries: &'tcx Queries<'tcx>,
     handled: &mut HashSet<String>,
@@ -111,7 +112,7 @@ pub fn handle_crate<'tcx>(
                         rustc_ast::ast::ModKind::Unloaded,
                     ) => {
                         if handle_crate(
-                            output_file,
+                            callback,
                             compiler,
                             queries,
                             handled,
@@ -222,14 +223,14 @@ pub fn handle_crate<'tcx>(
         }
     );
 
-    match &output_file {
+    match &callback.output_directory {
         None => return Compilation::Stop,
         Some(file_str) => {
             let original_file = Path::new(file_str);
-            let extension = original_file.extension().unwrap();
+            let extension = &callback.output_type;
 
             let oe = if krate_path != "".to_string() {
-                (original_file.parent().unwrap())
+                (original_file)
                     .join(Path::new(
                         krate_path
                             .clone()
@@ -244,7 +245,7 @@ pub fn handle_crate<'tcx>(
             };
 
             let file = &(oe.to_str().unwrap());
-            match extension.to_str().unwrap() {
+            match extension.as_str() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
@@ -323,14 +324,16 @@ impl Callbacks for HacspecCallbacks {
     ) -> Compilation {
         log::debug!(" --- hacspec after_analysis callback");
         let krate: rustc_ast::ast::Crate = queries.parse().unwrap().take();
+        let crate_origin_file = compiler.build_output_filenames(compiler.session(), &[]).with_extension("rs").to_str().unwrap().to_string();
 
         let mut analysis_crates = HashMap::new();
-        analysis_crates.insert("".to_string(), krate);
+        analysis_crates.insert(crate_origin_file.clone(), krate);
 
         // Find module location using hir
         queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
             let hir_krate = tcx.hir();
             for item in hir_krate.items() {
+
                 if let rustc_hir::ItemKind::Mod(_m) = &item.kind {
                     let (expra, exprb, _exprc) = &tcx.hir().get_module(item.def_id);
 
@@ -373,12 +376,12 @@ impl Callbacks for HacspecCallbacks {
         });
 
         handle_crate(
-            &self.output_file,
+            &self,
             compiler,
             queries,
             &mut HashSet::new(),
             &analysis_crates,
-            "".to_string(),
+            crate_origin_file,
             &mut HashMap::new(),
         );
 
@@ -505,13 +508,23 @@ fn main() -> Result<(), usize> {
     compiler_args.push(args.remove(0));
 
     // Optionally get output file.
-    let output_file_index = args.iter().position(|a| a == "-o");
-    let output_file = match output_file_index {
+    let output_directory_index = args.iter().position(|a| a == "-o");
+    let output_directory = match output_directory_index {
         Some(i) => {
             args.remove(i);
             Some(args.remove(i))
         }
         None => None,
+    };
+
+    // Optionally get output file.
+    let output_type_index = args.iter().position(|a| a == "-t");
+    let output_type = match output_type_index {
+        Some(i) => {
+            args.remove(i);
+            args.remove(i)
+        }
+        None => "".to_string(),
     };
 
     // Optionally an input file can be passed in. This should be mostly used for
@@ -543,7 +556,8 @@ fn main() -> Result<(), usize> {
     }
 
     let mut callbacks = HacspecCallbacks {
-        output_file,
+        output_directory,
+        output_type,
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",

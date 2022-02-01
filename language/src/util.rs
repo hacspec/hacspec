@@ -7,15 +7,14 @@ USAGE:
 
 FLAGS:
     -v               Verbosity
-    --init           Creates a '<output>_template' file along with the output
-    --update         Merges changes into output file based on the template file
+    -t <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
     --manifest-path  The cargo manifest path argument. The typechecker will analyze
                      the crate or workspace at the specified Cargo.toml.
                      Note that you have to specify the path including the Cargo.toml
                      file!
 
 OPTIONS:
-    -o <FILE>        Name of the F* (.fst), Easycrypt (.ec), or Coq (.v) output file
+    -o <FILE_DIR>    The output directory
 
 ARGS:
     CRATE            The crate to analyse.
