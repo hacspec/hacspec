@@ -88,6 +88,7 @@ fn test_vectors_alg2() {
     }
 }
 
+/*
 // There are 14 points of small order, 6 of which are not on canonical form
 // morecases contains contains test vectors where R and A are every combination of these small order points
 // Zcash verifies every test as it allows non-canonical encodings
@@ -112,3 +113,4 @@ fn test_more_vector() {
         );
     }
 }
+*/
