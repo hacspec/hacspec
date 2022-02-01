@@ -324,7 +324,7 @@ impl Callbacks for HacspecCallbacks {
     ) -> Compilation {
         log::debug!(" --- hacspec after_analysis callback");
         let krate: rustc_ast::ast::Crate = queries.parse().unwrap().take();
-        let crate_origin_file = compiler.build_output_filenames(compiler.session(), &[]).with_extension("rs").to_str().unwrap().to_string();
+        let crate_origin_file = compiler.build_output_filenames(compiler.session(), &[]).with_extension("").to_str().unwrap().to_string(); 
 
         let mut analysis_crates = HashMap::new();
         analysis_crates.insert(crate_origin_file.clone(), krate);

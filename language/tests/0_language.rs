@@ -5,6 +5,7 @@ fn run_test(file_name: &str, output: Option<&str>) {
     let mut cmd = Command::cargo_bin("cargo-hacspec").expect("Error getting cargo hacspec command");
     cmd.envs(env::vars());
     if let Some(f) = output {
+        cmd.args(&["-t", "fst"]);
         cmd.args(&["-o", f]);
     }
     cmd.args(&["-f", file_name]);
@@ -17,25 +18,22 @@ fn run_test(file_name: &str, output: Option<&str>) {
 
 #[test]
 fn positive_question_mark() {
-    run_test(
-        "language-tests/question_mark.rs",
-        Some("tests/QuestionMark.fst"),
-    );
+    run_test("language-tests/question_mark.rs", Some("tests/"));
 }
 
 #[test]
 fn positive_result() {
-    run_test("language-tests/result.rs", Some("tests/Result.fst"));
+    run_test("language-tests/result.rs", Some("tests/"));
 }
 
 #[test]
 fn positive_enums() {
-    run_test("language-tests/enums.rs", Some("tests/Enums.fst"));
+    run_test("language-tests/enums.rs", Some("tests/"));
 }
 
 #[test]
 fn positive_option() {
-    run_test("language-tests/option.rs", Some("tests/Option.fst"));
+    run_test("language-tests/option.rs", Some("tests/"));
 }
 
 #[test]
