@@ -13,8 +13,8 @@ FLAGS:
                      file!
 
 OPTIONS:
-    -o <FILE_DIR>    The output directory
-    -t <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
+    -o <FILE_DIR>    The output directory (needed for output)
+    -e <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
 
 ARGS:
     CRATE            The crate to analyse.

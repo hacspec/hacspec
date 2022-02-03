@@ -6,7 +6,7 @@ fn run_test_option(file_name: &str, output: &str, output_type: &str) {
     let mut cmd = Command::cargo_bin("cargo-hacspec").expect("Error getting cargo hacspec command");
     cmd.envs(env::vars());
     cmd.args(&["-o", output]);
-    cmd.args(&["-t", output_type]);
+    cmd.args(&["-e", output_type]);
     cmd.args(&["-f", file_name]);
     println!("Running: {:?}", cmd);
     let status = cmd.status();

@@ -5,7 +5,7 @@ fn run_test(file_name: &str, output: Option<&str>) {
     let mut cmd = Command::cargo_bin("cargo-hacspec").expect("Error getting cargo hacspec command");
     cmd.envs(env::vars());
     if let Some(f) = output {
-        cmd.args(&["-t", "fst"]);
+        cmd.args(&["-e", "fst"]);
         cmd.args(&["-o", f]);
     }
     cmd.args(&["-f", file_name]);

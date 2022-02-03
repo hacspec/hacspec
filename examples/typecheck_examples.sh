@@ -8,7 +8,7 @@ function typecheck {
   then
     echo "    extracting EC ..."
     mkdir -p target/easycrypt
-    cargo hacspec -t ec -o target/easycrypt/ $1
+    cargo hacspec -e ec -o target/easycrypt/ $1
   else
     cargo hacspec $1
   fi
@@ -22,19 +22,19 @@ function typecheck {
   if [ "$3" == "fst" ];
   then
     echo "    extracting F* ..."
-    cargo hacspec -t fst -o $fstar_file $1
+    cargo hacspec -e fst -o $fstar_file $1
   fi
   if [ "$4" == "json" ];
   then
     echo "    extracting JSON ..."
     mkdir -p target/json
-    cargo hacspec -t json -o target/json/ $1
+    cargo hacspec -e json -o target/json/ $1
   fi
   if [ "$5" == "coq" ];
   then
     echo "    extracting coq ..."
     mkdir -p target/coq
-    cargo hacspec -t v -o target/coq/ $1
+    cargo hacspec -e v -o target/coq/ $1
   fi
 }
 
