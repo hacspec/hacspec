@@ -9,9 +9,7 @@ create_test_vectors!(
     signature: String
 );
 
-create_test_vectors!(MoreTestVec, pub_key: String, signature: String);
-
-// Testing test vectors from https://eprint.iacr.org/2020/1244.pdf 
+// Testing test vectors from https://eprint.iacr.org/2020/1244.pdf
 // https://github.com/novifinancial/ed25519-speccheck
 #[test]
 fn test_vectors_zcash() {
@@ -88,30 +86,3 @@ fn test_vectors_alg2() {
         }
     }
 }
-
-/*
-// There are 14 points of small order, 6 of which are not on canonical form
-// morecases contains contains test vectors where R and A are every combination of these small order points
-// Zcash verifies every test as it allows non-canonical encodings
-// Alg2 rejects every test as it doesn't allow small order points
-// ietf_cofactored verifies all canonical encoded tests
-// ietf_cofactorless verifes only when the equation coincidentally holds
-#[test]
-fn test_more_vector() {
-    let msg = ByteSeq::from_public_slice(b"Zcash");
-    let v: Vec<MoreTestVec> = MoreTestVec::from_file("tests/morecases.json");
-    println!("Differences on more test vectors");
-    for i in 0..v.len() {
-        let pub_key = CompressedEdPoint::from_hex(&v[i].pub_key);
-        let signature = Signature::from_hex(&v[i].signature);
-        let result_zcash = zcash_verify(pub_key, signature, &msg);
-        let result_ietf_cofactored = ietf_cofactored_verify(pub_key, signature, &msg);
-        let result_ietf_cofactorless = ietf_cofactorless_verify(pub_key, signature, &msg);
-        let result_alg2 = alg2_verify(pub_key, signature, &msg);
-        println!(
-            "Diffenrence in test {}: zcash: {:?}, ietf_cf: {:?}, ietf_cl: {:?}, alg2: {:?}",
-            i, result_zcash, result_ietf_cofactored, result_ietf_cofactorless, result_alg2
-        );
-    }
-}
-*/
