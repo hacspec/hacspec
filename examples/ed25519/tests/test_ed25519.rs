@@ -11,7 +11,8 @@ create_test_vectors!(
 
 create_test_vectors!(MoreTestVec, pub_key: String, signature: String);
 
-// Testing test vectors from https://github.com/novifinancial/ed25519-speccheck
+// Testing test vectors from https://eprint.iacr.org/2020/1244.pdf 
+// https://github.com/novifinancial/ed25519-speccheck
 #[test]
 fn test_vectors_zcash() {
     let v: Vec<Ed25519TestVector> = Ed25519TestVector::from_file("tests/cases.json");
