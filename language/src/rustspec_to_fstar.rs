@@ -229,8 +229,16 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
     RcDoc::as_string(snake_case_ident)
 }
 
+fn uppercase_first_letter(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
 fn translate_constructor<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
-    RcDoc::as_string(enum_name.string)
+    RcDoc::as_string(uppercase_first_letter(&enum_name.string))
 }
 
 fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
@@ -246,7 +254,7 @@ fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) ->
                 RcDoc::as_string("_").append(translate_toplevel_ident(name.0))
             }
         }
-        _ => panic!("shoud not happen"),
+        _ => panic!("should not happen"),
     })
 }
 
