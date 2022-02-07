@@ -2,12 +2,15 @@
 //! As there is no proper consensus for the verification algorithm, it has been implemented in multiple ways.
 //!
 //! The different implementations and specifications differ mainly in three different ways:
-//! -- Cofactored/cofactorless verification
-//!     -- (Using [8][S]B = [8]R + [8][H(R, A, msg)]A or [S]B = R + [H(R, A, msg)]A)
-//! -- Accepting/rejecting non-canonical encodings of points
-//! -- Accepting/rejecting small-order points
+//! - Cofactored/cofactorless verification -- (Using \[8\]\[S\]B = \[8\]R + \[8\]\[H(R, A, msg)\]A or \[S\]B = R + \[H(R, A, msg)\]A as the verification check).
+//! - Accepting/rejecting non-canonical encodings of points.
+//! - Accepting/rejecting small-order points.
+//! 
+//! Batch verification has also been implemented, but one should be careful when using cofactorless batch verification, as on some inputs
+//! it can both accept and reject non-deterministically.
+//! Cofactored batch verification does not have this problem.
 //!
-//! The paper <https://eprint.iacr.org/2020/1244.pdf> test various implementations on edge cases such as these.
+//! The paper <https://eprint.iacr.org/2020/1244.pdf> dives deeper into the differences and tests various implementations on edge cases such as these.
 //!
 //! # Example
 //! ```
@@ -325,7 +328,7 @@ fn scalar_from_hash(h: Sha512Digest) -> Scalar {
     Scalar::from_byte_seq_le(s.to_byte_seq_le().slice(0, 32))
 }
 
-/// Sign a message under a secret key
+/// Sign a message under a secret key.
 pub fn sign(sk: SecretKey, msg: &ByteSeq) -> Signature {
     let (a, prefix) = secret_expand(sk);
     let a = Scalar::from_byte_seq_le(a);
@@ -340,9 +343,9 @@ pub fn sign(sk: SecretKey, msg: &ByteSeq) -> Signature {
     Signature::new().update(0, &r_s).update(32, &s_bytes)
 }
 
-/// Cofactored verification
-/// Allows non-canonical encoding of points
-/// Allows small-order points
+/// Cofactored verification.
+/// Allows non-canonical encoding of points.
+/// Allows small-order points.
 pub fn zcash_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> VerifyResult {
     let b = decompress_non_canonical(BASE).unwrap();
     let a = decompress_non_canonical(pk).ok_or(Error::InvalidPublickey)?;
@@ -366,9 +369,9 @@ pub fn zcash_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> Verif
     }
 }
 
-/// Cofactored verification
-/// Rejects non-canonical encoding of points
-/// Allows small-order points
+/// Cofactored verification.
+/// Rejects non-canonical encoding of points.
+/// Allows small-order points.
 pub fn ietf_cofactored_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> VerifyResult {
     let b = decompress(BASE).unwrap();
     let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
@@ -392,9 +395,9 @@ pub fn ietf_cofactored_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq
     }
 }
 
-/// Cofactorless verification
-/// Rejects non-canonical encoding of points
-/// Allows small-order points
+/// Cofactorless verification.
+/// Rejects non-canonical encoding of points.
+/// Allows small-order points.
 pub fn ietf_cofactorless_verify(
     pk: PublicKey,
     signature: Signature,
@@ -425,10 +428,10 @@ fn is_identity(p: EdPoint) -> bool {
     point_eq(p, point_identity())
 }
 
-/// Algorithm 2 from https://eprint.iacr.org/2020/1244.pdf
-/// Cofactored verification
-/// Rejects non-canonical encoding of points
-/// Rejects small-order points for the public key
+/// Algorithm 2 from <https://eprint.iacr.org/2020/1244.pdf>.
+/// Cofactored verification.
+/// Rejects non-canonical encoding of points.
+/// Rejects small-order points for the public key.
 pub fn alg2_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> VerifyResult {
     let b = decompress(BASE).unwrap();
     let a = decompress(pk).ok_or(Error::InvalidPublickey)?;
@@ -458,10 +461,10 @@ pub fn alg2_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> Verify
 #[derive(Default, Clone)]
 pub struct BatchEntry(PublicKey, ByteSeq, Signature);
 
-/// Batch verification
-/// Cofactored verification
-/// Allows non-canonical encoding of points
-/// Allows small-order points
+/// Batch verification.
+/// Cofactored verification.
+/// Allows non-canonical encoding of points.
+/// Allows small-order points.
 pub fn zcash_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
@@ -499,10 +502,10 @@ pub fn zcash_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> Verify
     }
 }
 
-/// Batch verification
-/// Cofactored verification
-/// Rejects non-canonical encoding of points
-/// Allows small-order points
+/// Batch verification.
+/// Cofactored verification.
+/// Rejects non-canonical encoding of points.
+/// Allows small-order points.
 pub fn ietf_cofactored_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
@@ -540,10 +543,10 @@ pub fn ietf_cofactored_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq)
     }
 }
 
-/// Batch verification
-/// Cofactorless verification
-/// Rejects non-canonical encoding of points
-/// Allows small-order points
+/// Batch verification.
+/// Cofactorless verification.
+/// Rejects non-canonical encoding of points.
+/// Allows small-order points.
 pub fn ietf_cofactorless_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
@@ -581,11 +584,11 @@ pub fn ietf_cofactorless_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSe
     }
 }
 
-/// Batch verification
-/// Algorithm 3 from https://eprint.iacr.org/2020/1244.pdf
-/// Cofactored verification
-/// Rejects non-canonical encoding of points
-/// Rejects small-order points for the public key
+/// Batch verification.
+/// Algorithm 3 from <https://eprint.iacr.org/2020/1244.pdf>.
+/// Cofactored verification.
+/// Rejects non-canonical encoding of points.
+/// Rejects small-order points for the public key.
 pub fn alg3_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
