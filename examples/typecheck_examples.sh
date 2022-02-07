@@ -47,18 +47,18 @@ typecheck hacspec-chacha20poly1305  no-ec      fst    json      coq  Hacspec.Cha
 typecheck hacspec-poly1305             ec      fst    json      coq  Hacspec.Poly1305.fst
 typecheck hacspec-curve25519           ec      fst    json      coq  Hacspec.Curve25519.fst
 typecheck hacspec-hkdf              no-ec      fst    json      no-coq  Hacspec.Hkdf.fst
-typecheck hacspec-hmac              no-ec      fst    json      no-coq  Hacspec.Hmac.fst
+typecheck hacspec-hmac              no-ec      fst    json      coq  Hacspec.Hmac.fst
 typecheck hacspec-sha256            no-ec      fst    json      coq     Hacspec.Sha256.fst
 typecheck hacspec-ntru-prime           ec      fst    json      no-coq  Hacspec.NtruPrime.fst
-typecheck hacspec-p256              no-ec      fst    json      no-coq  Hacspec.P256.fst
+typecheck hacspec-p256              no-ec      fst    json      coq  Hacspec.P256.fst
 typecheck hacspec-riot-bootloader      ec      fst    json      no-coq  Hacspec.Riot.Bootloader.fst
 typecheck hacspec-riot-runqueue     no-ec      fst    no-json   no-coq  Hacspec.Riot.Runqueue.fst
 typecheck hacspec-sha3              no-ec      fst    json      no-coq  Hacspec.Sha3.fst
 typecheck hacspec-gimli                ec      fst    json      no-coq
 typecheck hacspec-bls12-381         no-ec   no-fst    json      coq
-typecheck hacspec-ecdsa-p256-sha256 no-ec   no-fst    json      no-coq
+typecheck hacspec-ecdsa-p256-sha256 no-ec   no-fst    json      coq
 typecheck hacspec-aes               no-ec      fst    json      no-coq
-typecheck hacspec-gf128             no-ec      fst    json      no-coq
+typecheck hacspec-gf128             no-ec      fst    json      coq
 typecheck hacspec-aes128-gcm        no-ec      fst    json      no-coq
 typecheck hacspec-bls12-381-hash    no-ec   no-fst    json      coq
 typecheck hacspec-sha512            no-ec   no-fst    json      coq
