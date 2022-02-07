@@ -10,7 +10,7 @@ readme = "README.md"
 repository = "https://github.com/hacspec/hacspec"
 
 [lib]
-path = "src/poly1305.rs"
+path = "src/hacspec-poly1305.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib", version = "0.1.0-beta.1" }
