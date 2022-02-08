@@ -13,8 +13,11 @@ FLAGS:
                      file!
 
 OPTIONS:
-    -o <FILE_DIR>    The output directory (needed for output)
+    -o <FILE_DIR>    The output directory
     -e <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
+
+                     If just -e is supplied, then current directory is used as output.
+                     If neither -e nor -o are supplied, then we only run the typechecker.
 
 ARGS:
     CRATE            The crate to analyse.

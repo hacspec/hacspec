@@ -251,27 +251,17 @@ fn handle_crate<'tcx>(
             let file = match extension.clone().as_str() {
                 "fst" | "ec" | "json" => {
                     // Compute file name as output directory with crate local path (krate_path)
-                    (original_file)
-                        .join(Path::new(
-                            (krate_path
-                                .clone()
-                                .to_title_case()
-                                .replace(" ", ".")
-                                + "." + extension)
-                                .as_str(),
-                        ))
+                    (original_file).join(Path::new(
+                        (krate_path.clone().to_title_case().replace(" ", ".") + "." + extension)
+                            .as_str(),
+                    ))
                 }
                 "v" => {
                     // Compute file name as output directory with crate local path (krate_path)
-                    (original_file)
-                        .join(Path::new(
-                            (krate_path
-                             .clone()
-                             .to_title_case()
-                             .replace(" ", "_")
-                             + "." + extension)
-                                .as_str(),
-                        ))
+                    (original_file).join(Path::new(
+                        (krate_path.clone().to_title_case().replace(" ", "_") + "." + extension)
+                            .as_str(),
+                    ))
                 }
                 _ => {
                     compiler
@@ -559,7 +549,7 @@ fn main() -> Result<(), usize> {
 
     // Optionally get output directory.
     let output_directory_index = args.iter().position(|a| a == "-o");
-    let output_directory = match output_directory_index {
+    let mut output_directory = match output_directory_index {
         Some(i) => {
             args.remove(i);
             Some(args.remove(i))
@@ -571,6 +561,9 @@ fn main() -> Result<(), usize> {
     let output_type_index = args.iter().position(|a| a == "-e");
     let output_type = match output_type_index {
         Some(i) => {
+            if let None = output_directory {
+                output_directory = Some(env::current_dir().unwrap().to_str().unwrap().to_owned());
+            }
             args.remove(i);
             args.remove(i)
         }
