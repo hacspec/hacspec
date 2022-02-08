@@ -1,18 +1,34 @@
 //! This crate gives a specification for the EdDSA signature scheme ed25519.
-//! As there is no proper consensus for the verification algorithm, it has been implemented in multiple ways.
+//! As there is no proper consensus for the verification algorithm, it has been implemented
+//! in multiple ways.
+//! - zcash_verify implements the ZIP-0215 standard (<https://zips.z.cash/zip-0215>)
+//! - ietf_cofactored_verify and ietf_cofactorless_verify both implement the ietf standard.
+//! (<https://datatracker.ietf.org/doc/draft-irtf-cfrg-eddsa/08/>). However as the standard writes:
+//!
+//!     > Check the group equation \[8\]\[S\]B = \[8\]R + \[8\]\[k\]A'.  It's sufficient, but not,
+//!     > required to instead check \[S\]B = R + \[k\]A'.
+//!
+//!     they differ in which of verification equations they use.
+//! - alg2_verify implements algorithm 2 from the paper <https://eprint.iacr.org/2020/1244.pdf>.
 //!
 //! The different implementations and specifications differ mainly in three different ways:
-//! - Cofactored/cofactorless verification -- (Using \[8\]\[S\]B = \[8\]R + \[8\]\[H(R, A, msg)\]A or \[S\]B = R + \[H(R, A, msg)\]A as the verification check).
+//! - Cofactored/cofactorless verification -- (Using \[8\]\[S\]B = \[8\]R + \[8\]\[H(R, A, msg)\]A
+//! or \[S\]B = R + \[H(R, A, msg)\]A as the verification check).
 //! - Accepting/rejecting non-canonical encodings of points.
 //! - Accepting/rejecting small-order points.
-//! 
-//! Batch verification has also been implemented, but one should be careful when using cofactorless batch verification, as on some inputs
-//! it can both accept and reject non-deterministically.
-//! Cofactored batch verification does not have this problem.
 //!
-//! The paper <https://eprint.iacr.org/2020/1244.pdf> dives deeper into the differences and tests various implementations on edge cases such as these.
+//! For each of the single signature verification algorithms, their corresponding batch
+//! verification algorithm has also been implemented. However one should not use cofactorless
+//! batch verification as on some inputs it is flaky (ie. it can both accept and reject the signature
+//! non-deterministically). The reason this is included is for completeness sake, to show that it
+//! is indeed flaky, and because multiple libraries implement this batch verification (eg. the dalek
+//! library). Cofactored batch verification does not have this problem.
 //!
-//! # Example
+//! The paper <https://eprint.iacr.org/2020/1244.pdf> shows why cofactorless batch verification
+//! does not work. It also provides test vectors for edge cases and compares various implementations
+//! on these.
+//!
+//! # Examples
 //! ```
 //! use hacspec_lib::*;
 //! use hacspec_ed25519::*;
@@ -158,7 +174,7 @@ fn compress(p: EdPoint) -> CompressedEdPoint {
     let x = x * z_inv;
     let y = y * z_inv;
     let mut s: ByteSeq = y.to_byte_seq_le();
-    s[31usize] = s[31usize] ^ (is_negative(x) << 7); // setting top bit
+    s[31] = s[31] ^ (is_negative(x) << 7); // setting top bit
     CompressedEdPoint::from_slice(&s, 0, 32)
 }
 
@@ -180,7 +196,7 @@ fn sqrt(a: Ed25519FieldElement) -> Option<Ed25519FieldElement> {
 
 fn check_canonical_point(x: CompressedEdPoint) -> bool {
     let mut x = x;
-    x[31usize] = x[31usize] & U8(127u8);
+    x[31] = x[31] & U8(127u8);
     let x = BigInteger::from_byte_seq_le(x);
     x < BigInteger::from_byte_seq_le(CONSTANT_P)
 }
@@ -190,7 +206,7 @@ fn decompress(q: CompressedEdPoint) -> Option<EdPoint> {
 
     let x_s = (q[31usize] & U8(128u8)) >> 7;
     let mut y_s = q;
-    y_s[31usize] = y_s[31usize] & U8(127u8);
+    y_s[31] = y_s[31] & U8(127u8);
     if !check_canonical_point(y_s) {
         Option::<EdPoint>::None?;
     }
@@ -217,7 +233,7 @@ fn decompress_non_canonical(p: CompressedEdPoint) -> Option<EdPoint> {
 
     let x_s = (p[31usize] & U8(128u8)) >> 7;
     let mut y_s = p;
-    y_s[31usize] = y_s[31usize] & U8(127u8);
+    y_s[31] = y_s[31] & U8(127u8);
     let y = Ed25519FieldElement::from_byte_seq_le(y_s);
     let z = Ed25519FieldElement::ONE();
     let yy = y * y;
@@ -301,9 +317,9 @@ fn secret_expand(sk: SecretKey) -> (SerializedScalar, SerializedScalar) {
     let h = sha512(&ByteSeq::from_slice(&sk, 0, 32));
     let h_d = SerializedScalar::from_slice(&h, 32, 32);
     let mut s = SerializedScalar::from_slice(&h, 0, 32);
-    s[0usize] = s[0usize] & U8(248u8);
-    s[31usize] = s[31usize] & U8(127u8);
-    s[31usize] = s[31usize] | U8(64u8);
+    s[0] = s[0] & U8(248u8);
+    s[31] = s[31] & U8(127u8);
+    s[31] = s[31] | U8(64u8);
     (s, h_d)
 }
 
@@ -459,13 +475,13 @@ pub fn alg2_verify(pk: PublicKey, signature: Signature, msg: &ByteSeq) -> Verify
 }
 
 #[derive(Default, Clone)]
-pub struct BatchEntry(PublicKey, ByteSeq, Signature);
+pub struct BatchEntry(pub PublicKey, pub ByteSeq, pub Signature);
 
 /// Batch verification.
 /// Cofactored verification.
 /// Allows non-canonical encoding of points.
 /// Allows small-order points.
-pub fn zcash_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
+pub fn zcash_batch_verify(entries: &Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
     }
@@ -506,7 +522,7 @@ pub fn zcash_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> Verify
 /// Cofactored verification.
 /// Rejects non-canonical encoding of points.
 /// Allows small-order points.
-pub fn ietf_cofactored_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
+pub fn ietf_cofactored_batch_verify(entries: &Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
     }
@@ -547,7 +563,11 @@ pub fn ietf_cofactored_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq)
 /// Cofactorless verification.
 /// Rejects non-canonical encoding of points.
 /// Allows small-order points.
-pub fn ietf_cofactorless_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
+/// One should not use this as it can be flaky.
+pub fn ietf_cofactorless_batch_verify(
+    entries: &Seq<BatchEntry>,
+    entropy: &ByteSeq,
+) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
     }
@@ -589,7 +609,7 @@ pub fn ietf_cofactorless_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSe
 /// Cofactored verification.
 /// Rejects non-canonical encoding of points.
 /// Rejects small-order points for the public key.
-pub fn alg3_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
+pub fn alg3_batch_verify(entries: &Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyResult {
     if entropy.len() < 16 * entries.len() {
         VerifyResult::Err(Error::NotEnoughRandomness)?;
     }
@@ -630,12 +650,9 @@ pub fn alg3_batch_verify(entries: Seq<BatchEntry>, entropy: &ByteSeq) -> VerifyR
 }
 
 #[cfg(test)]
-extern crate quickcheck;
-
-#[cfg(test)]
 mod test {
     use super::*;
-    use quickcheck::QuickCheck;
+    use hacspec_dev::prelude::*;
 
     #[test]
     fn test_compress_decompress() {
@@ -648,171 +665,8 @@ mod test {
         assert!(point_eq(a, decompress(r).unwrap()));
     }
 
-    #[test]
-    fn test_secret_to_public() {
-        let sk =
-            SecretKey::from_hex("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60");
-        let result =
-            PublicKey::from_hex("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a");
-        let pk = secret_to_public(sk);
-        assert_bytes_eq!(pk, result);
-
-        let sk =
-            SecretKey::from_hex("4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb");
-        let result =
-            PublicKey::from_hex("3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c");
-        let pk = secret_to_public(sk);
-        assert_bytes_eq!(pk, result);
-    }
-
-    #[test]
-    fn test_sign() {
-        let sk =
-            SecretKey::from_hex("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60");
-        let msg = ByteSeq::from_public_slice(b"");
-        let sig = sign(sk, &msg);
-        let result = Signature::from_hex(
-            "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e06522490155\
-            5fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b",
-        );
-        assert_bytes_eq!(sig, result);
-
-        let sk =
-            SecretKey::from_hex("4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb");
-        let msg = ByteSeq::from_hex("72");
-        let sig = sign(sk, &msg);
-        let result = Signature::from_hex(
-            "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da\
-            085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00",
-        );
-        assert_bytes_eq!(sig, result);
-
-        let sk =
-            SecretKey::from_hex("c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7");
-        let msg = ByteSeq::from_hex("af82");
-        let sig = sign(sk, &msg);
-        let result = Signature::from_hex(
-            "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac\
-            18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a",
-        );
-        assert_bytes_eq!(sig, result);
-    }
-
-    #[test]
-    fn test_verify() {
-        let pk =
-            PublicKey::from_hex("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a");
-        let msg = ByteSeq::from_hex("");
-        let sig = Signature::from_hex(
-            "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e06522490155\
-            5fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b",
-        );
-        assert!(zcash_verify(pk, sig, &msg).is_ok());
-        assert!(ietf_cofactored_verify(pk, sig, &msg).is_ok());
-        assert!(ietf_cofactorless_verify(pk, sig, &msg).is_ok());
-        assert!(alg2_verify(pk, sig, &msg).is_ok());
-
-        let pk =
-            PublicKey::from_hex("3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c");
-        let msg = ByteSeq::from_hex("72");
-        let sig = Signature::from_hex(
-            "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da\
-            085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00",
-        );
-        assert!(zcash_verify(pk, sig, &msg).is_ok());
-        assert!(ietf_cofactored_verify(pk, sig, &msg).is_ok());
-        assert!(ietf_cofactorless_verify(pk, sig, &msg).is_ok());
-        assert!(alg2_verify(pk, sig, &msg).is_ok());
-
-        let pk =
-            PublicKey::from_hex("fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025");
-        let msg = ByteSeq::from_hex("af82");
-        let sig = Signature::from_hex(
-            "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac\
-            18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a",
-        );
-        assert!(zcash_verify(pk, sig, &msg).is_ok());
-        assert!(ietf_cofactored_verify(pk, sig, &msg).is_ok());
-        assert!(ietf_cofactorless_verify(pk, sig, &msg).is_ok());
-        assert!(alg2_verify(pk, sig, &msg).is_ok());
-    }
-
-    #[test]
-    fn test_sign_verify() {
-        fn test_q(sk: (u128, u128), msg: String) -> bool {
-            let (sk1, sk2) = sk;
-            let sk = [sk2.to_le_bytes(), sk1.to_le_bytes()].concat();
-            let sk = SecretKey::from_public_slice(&sk);
-            let pk = secret_to_public(sk);
-            let msg = &ByteSeq::from_public_slice(msg.as_bytes());
-            let sig = sign(sk, &msg);
-            zcash_verify(pk, sig, &msg).is_ok()
-                && ietf_cofactored_verify(pk, sig, &msg).is_ok()
-                && ietf_cofactorless_verify(pk, sig, &msg).is_ok()
-                && alg2_verify(pk, sig, &msg).is_ok()
-        }
-        QuickCheck::new()
-            .tests(30)
-            .quickcheck(test_q as fn((u128, u128), String) -> bool);
-    }
-
-    #[test]
-    fn test_batch() {
-        let entropy: [[u8; 16]; 32] = rand::random();
-        let entropy = ByteSeq::from_public_slice(&entropy.concat());
-        let mut entries = Seq::<BatchEntry>::new(32);
-        for i in 0usize..32 {
-            let sk: [u8; 32] = rand::random();
-            let sk = SecretKey::from_public_slice(&sk);
-            let pk = secret_to_public(sk);
-            let msg = ByteSeq::from_public_slice(b"BatchVerifyTest");
-            let sig = sign(sk, &msg);
-            entries[i] = BatchEntry(pk, msg, sig);
-        }
-        assert!(zcash_batch_verify(entries.clone(), &entropy).is_ok());
-        assert!(ietf_cofactored_batch_verify(entries.clone(), &entropy).is_ok());
-        assert!(ietf_cofactorless_batch_verify(entries.clone(), &entropy).is_ok());
-        assert!(alg3_batch_verify(entries.clone(), &entropy).is_ok());
-    }
-
-    #[test]
-    fn test_batch_bad() {
-        let entropy: [[u8; 16]; 32] = rand::random();
-        let entropy = ByteSeq::from_public_slice(&entropy.concat());
-        let mut entries = Seq::<BatchEntry>::new(32);
-        let bad_index = 10;
-        for i in 0usize..32 {
-            let sk: [u8; 32] = rand::random();
-            let sk = SecretKey::from_public_slice(&sk);
-            let pk = secret_to_public(sk);
-            let msg = ByteSeq::from_public_slice(b"BatchVerifyTest");
-            let sig = if i != bad_index {
-                sign(sk, &msg)
-            } else {
-                sign(sk, &ByteSeq::from_public_slice(b"badmsg"))
-            };
-            entries[i] = BatchEntry(pk, msg, sig);
-        }
-        assert!(zcash_batch_verify(entries.clone(), &entropy).is_err());
-        assert!(ietf_cofactored_batch_verify(entries.clone(), &entropy).is_err());
-        assert!(ietf_cofactorless_batch_verify(entries.clone(), &entropy).is_err());
-        assert!(alg3_batch_verify(entries.clone(), &entropy).is_err());
-        for i in 0usize..32 {
-            let BatchEntry(pk, msg, signature) = entries[i].clone();
-            if i != bad_index {
-                assert!(zcash_verify(pk, signature, &msg).is_ok());
-                assert!(ietf_cofactored_verify(pk, signature, &msg).is_ok());
-                assert!(ietf_cofactorless_verify(pk, signature, &msg).is_ok());
-                assert!(alg2_verify(pk, signature, &msg).is_ok());
-            } else {
-                assert!(zcash_verify(pk, signature, &msg).is_err());
-                assert!(ietf_cofactored_verify(pk, signature, &msg).is_err());
-                assert!(ietf_cofactorless_verify(pk, signature, &msg).is_err());
-                assert!(alg2_verify(pk, signature, &msg).is_err());
-            }
-        }
-    }
-
+    // Test that shows that cofactorless batch verification can be flaky.
+    // ie. on the same input it can both accept and reject.
     #[test]
     fn test_cofactorless_flaky() {
         let b = decompress(BASE).unwrap();
@@ -847,9 +701,9 @@ mod test {
         let mut no_f = 0;
         let mut no_t = 0;
         for _ in 0..64 {
-            let entropy: [u8; 16] = rand::random();
+            let entropy = rand::random_byte_vec(16);
             let entropy = ByteSeq::from_public_slice(&entropy);
-            if ietf_cofactorless_batch_verify(entry.clone(), &entropy).is_ok() {
+            if ietf_cofactorless_batch_verify(&entry, &entropy).is_ok() {
                 no_t += 1;
             } else {
                 no_f += 1;
@@ -894,9 +748,9 @@ mod test {
         let mut no_f = 0;
         let mut no_t = 0;
         for _ in 0..32 {
-            let entropy: [u8; 16] = rand::random();
+            let entropy = rand::random_byte_vec(16);
             let entropy = ByteSeq::from_public_slice(&entropy);
-            if ietf_cofactored_batch_verify(entry.clone(), &entropy).is_ok() {
+            if ietf_cofactored_batch_verify(&entry, &entropy).is_ok() {
                 no_t += 1;
             } else {
                 no_f += 1;
