@@ -71,3 +71,23 @@ fn positive_seq_ops() {
 fn negative_arrays() {
     run_test("negative-language-tests/arrays.rs", None);
 }
+
+fn run_crate_test(crate_dir: &str, output: Option<&str>) {
+    let mut cmd = Command::cargo_bin("cargo-hacspec").expect("Error getting cargo hacspec command");
+    cmd.envs(env::vars());
+    if let Some(f) = output {
+        cmd.args(&["-e", "fst"]);
+        cmd.args(&["-o", f]);
+    }
+    cmd.current_dir(crate_dir);
+    println!("Running: {:?}", cmd);
+    let status = cmd.status();
+    println!("Result: {:?}", status);
+    let status = status.expect("Error running typechecker");
+    assert!(status.success());
+}
+
+#[test]
+fn positive_crate_structure() {
+    run_crate_test("test-crate", None);
+}
