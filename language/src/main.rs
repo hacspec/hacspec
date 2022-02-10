@@ -68,6 +68,27 @@ impl HacspecErrorEmitter for Session {
     }
 }
 
+fn construct_module_string<T>(
+    krate_path: String,
+    krate_dir: String,
+    ast_crates_map: &HashMap<String, T>,
+) -> Option<String> {
+    if ast_crates_map.contains_key(&krate_path.clone()) {
+        Some(krate_path.clone())
+    } else if ast_crates_map.contains_key(&(krate_path.clone() + "/mod")) {
+        Some(krate_path.clone() + "/mod")
+    } else if ast_crates_map.contains_key(&(krate_dir.clone() + "/" + krate_path.clone().as_str()))
+    {
+        Some(krate_dir.clone() + "/" + krate_path.clone().as_str())
+    } else if ast_crates_map
+        .contains_key(&(krate_dir.clone() + "/" + krate_path.clone().as_str() + "/mod"))
+    {
+        Some(krate_dir.clone() + "/" + krate_path.clone().as_str() + "/mod")
+    } else {
+        None
+    }
+}
+
 fn handle_crate<'tcx>(
     callback: &HacspecCallbacks,
     compiler: &Compiler,
@@ -75,20 +96,22 @@ fn handle_crate<'tcx>(
     handled: &mut HashSet<String>,
     ast_crates_map: &HashMap<String, rustc_ast::ast::Crate>,
     krate_path: String,
+    krate_dir: String,
     top_ctx_map: &mut HashMap<String, name_resolution::TopLevelContext>,
+    special_names_map: &mut HashMap<String, ast_to_rustspec::SpecialNames>,
 ) -> Compilation {
     // Compute the crate module string, based on local path (krate_path)
     // Look at path/mod_name.rs and path/mod_name/mod.rs for module
-    let krate_module_string = if ast_crates_map.contains_key(&krate_path.clone()) {
-        krate_path.clone()
-    } else if ast_crates_map.contains_key(&(krate_path.clone() + "/mod")) {
-        krate_path.clone() + "/mod"
-    } else {
-        compiler
-            .session()
-            .err(format!("There is no module with name {}", krate_path.clone()).as_str());
-        return Compilation::Stop;
-    };
+    let krate_module_string =
+        match construct_module_string(krate_path.clone(), krate_dir.clone(), ast_crates_map) {
+            Some(s) => s,
+            None => {
+                compiler
+                    .session()
+                    .err(format!("There is no module with name {}", krate_path.clone()).as_str());
+                return Compilation::Stop;
+            }
+        };
 
     // Depth first handling, skip module if already visited
     if handled.contains(&krate_module_string) {
@@ -102,6 +125,12 @@ fn handle_crate<'tcx>(
         consts: HashMap::new(),
         functions: HashMap::new(),
         typ_dict: HashMap::new(),
+    };
+
+    let new_specials = &mut ast_to_rustspec::SpecialNames {
+        arrays: HashSet::new(),
+        enums: HashSet::new(),
+        aliases: HashMap::new(),
     };
 
     let krate = match krate {
@@ -122,7 +151,9 @@ fn handle_crate<'tcx>(
                             handled,
                             ast_crates_map,
                             x.ident.name.to_ident_string(),
+                            krate_path.clone(),
                             top_ctx_map,
+                            special_names_map,
                         ) == Compilation::Stop
                         {
                             // If not able to handle module, stop compilation.
@@ -133,7 +164,7 @@ fn handle_crate<'tcx>(
                     rustc_ast::ast::ItemKind::Use(ref tree) => {
                         match tree.kind {
                             rustc_ast::ast::UseTreeKind::Glob => {
-                                let krate_use_string = (&tree.prefix)
+                                let krate_use_path_string = (&tree.prefix)
                                     .segments
                                     .last()
                                     .unwrap()
@@ -141,7 +172,11 @@ fn handle_crate<'tcx>(
                                     .name
                                     .to_ident_string();
 
-                                if top_ctx_map.contains_key(&krate_use_string) {
+                                if let Some(krate_use_string) = construct_module_string(
+                                    krate_use_path_string.clone(),
+                                    krate_dir.clone(),
+                                    top_ctx_map,
+                                ) {
                                     new_top_ctx
                                         .consts
                                         .extend(top_ctx_map[&krate_use_string].consts.clone());
@@ -151,6 +186,22 @@ fn handle_crate<'tcx>(
                                     new_top_ctx
                                         .typ_dict
                                         .extend(top_ctx_map[&krate_use_string].typ_dict.clone());
+                                }
+
+                                if let Some(krate_use_string) = construct_module_string(
+                                    krate_use_path_string.clone(),
+                                    krate_dir.clone(),
+                                    special_names_map,
+                                ) {
+                                    new_specials.arrays.extend(
+                                        special_names_map[&krate_use_string].arrays.clone(),
+                                    );
+                                    new_specials
+                                        .enums
+                                        .extend(special_names_map[&krate_use_string].enums.clone());
+                                    new_specials.aliases.extend(
+                                        special_names_map[&krate_use_string].aliases.clone(),
+                                    );
                                 }
                             }
                             _ => (),
@@ -189,15 +240,17 @@ fn handle_crate<'tcx>(
         })
     };
 
-    let krate = match ast_to_rustspec::translate(&compiler.session(), &krate, &external_data) {
-        Ok(krate) => krate,
-        Err(_) => {
-            compiler
-                .session()
-                .err("unable to translate to Hacspec due to out-of-language errors");
-            return Compilation::Stop;
-        }
-    };
+    let krate =
+        match ast_to_rustspec::translate(&compiler.session(), &krate, &external_data, new_specials)
+        {
+            Ok(krate) => krate,
+            Err(_) => {
+                compiler
+                    .session()
+                    .err("unable to translate to Hacspec due to out-of-language errors");
+                return Compilation::Stop;
+            }
+        };
 
     let krate = match name_resolution::resolve_crate(
         &compiler.session(),
@@ -325,7 +378,8 @@ fn handle_crate<'tcx>(
     }
 
     handled.insert(krate_module_string.clone());
-    (*top_ctx_map).insert(krate_path, new_top_ctx.clone());
+    (*top_ctx_map).insert(krate_path.clone(), new_top_ctx.clone());
+    (*special_names_map).insert(krate_path.clone(), new_specials.clone());
 
     Compilation::Continue
 }
@@ -422,6 +476,8 @@ impl Callbacks for HacspecCallbacks {
             &mut HashSet::new(),
             &analysis_crates,
             crate_origin_file,
+            "".to_string(),
+            &mut HashMap::new(),
             &mut HashMap::new(),
         );
 
