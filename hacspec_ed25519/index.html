@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="This crate gives a specification for the EdDSA signature scheme ed25519. As there is no proper consensus for the verification algorithm, it has been implemented in multiple ways."><meta name="keywords" content="rust, rustlang, rust-lang, hacspec_ed25519"><title>hacspec_ed25519 - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script id="default-settings" ></script><script src="../storage.js"></script><script src="../crates.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../hacspec_ed25519/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><h2 class="location">Crate hacspec_ed25519</h2><div class="block version"><div class="narrow-helper"></div><p>Version 0.1.0</p></div><div class="sidebar-elems"><a id="all-types" href="all.html"><p>See all hacspec_ed25519's items</p></a><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="hacspec_ed25519" data-ty="mod" data-relpath=""></div><script defer src="sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Crate <a class="mod" href="#">hacspec_ed25519</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../src/hacspec_ed25519/ed25519.rs.html#1-762" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>This crate gives a specification for the EdDSA signature scheme ed25519.
+As there is no proper consensus for the verification algorithm, it has been implemented
+in multiple ways.</p>
+<ul>
+<li>
+<p>zcash_verify implements the ZIP-0215 standard (<a href="https://zips.z.cash/zip-0215">https://zips.z.cash/zip-0215</a>)</p>
+</li>
+<li>
+<p>ietf_cofactored_verify and ietf_cofactorless_verify both implement the ietf standard.
+(<a href="https://datatracker.ietf.org/doc/rfc8032">https://datatracker.ietf.org/doc/rfc8032</a>). However as the standard writes:</p>
+<blockquote>
+<p>Check the group equation [8][S]B = [8]R + [8][k]A’.  It’s sufficient, but not,
+required to instead check [S]B = R + [k]A’.</p>
+</blockquote>
+<p>they differ in which of the verification equations they use.</p>
+</li>
+<li>
+<p>alg2_verify implements algorithm 2 from the paper <a href="https://eprint.iacr.org/2020/1244.pdf">https://eprint.iacr.org/2020/1244.pdf</a>.</p>
+</li>
+</ul>
+<p>The different implementations and specifications differ in three ways:</p>
+<ul>
+<li>Cofactored/cofactorless verification – (Using [8][S]B = [8]R + [8][H(R, A, msg)]A
+or [S]B = R + [H(R, A, msg)]A as the verification check).</li>
+<li>Accepting/rejecting non-canonical encodings of points.</li>
+<li>Accepting/rejecting small-order points.</li>
+</ul>
+<p>For each of the single signature verification algorithms, their corresponding batch
+verification algorithm has also been implemented. However one should not use cofactorless
+batch verification as on some inputs it is flaky (ie. it can both accept and reject the signature
+non-deterministically). The reason this is included is for completeness sake, to show that it
+is indeed flaky, and because multiple libraries implement this batch verification (eg. the dalek
+library). Cofactored batch verification does not have this problem.</p>
+<p>The paper <a href="https://eprint.iacr.org/2020/1244.pdf">https://eprint.iacr.org/2020/1244.pdf</a> shows why cofactorless batch verification
+does not work. It also provides test vectors for edge cases and compares various implementations
+on these.</p>
+<h2 id="examples" class="section-header"><a href="#examples">Examples</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">hacspec_ed25519</span>::<span class="kw-2">*</span>;
+
+<span class="kw">let</span> <span class="ident">sk</span> <span class="op">=</span> <span class="ident">SecretKey::from_hex</span>(<span class="string">&quot;9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60&quot;</span>);
+<span class="comment">// or alternatively SecretKey::from_public_slice(...);</span>
+<span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">ByteSeq::from_public_slice</span>(<span class="string">b&quot;hello world&quot;</span>);
+<span class="kw">let</span> <span class="ident">sig</span> <span class="op">=</span> <span class="ident">sign</span>(<span class="ident">sk</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>);
+<span class="kw">let</span> <span class="ident">pk</span> <span class="op">=</span> <span class="ident">secret_to_public</span>(<span class="ident">sk</span>);
+<span class="macro">assert!</span>(<span class="ident">zcash_verify</span>(<span class="ident">pk</span>, <span class="ident">sig</span>, <span class="kw-2">&amp;</span><span class="ident">msg</span>).<span class="ident">is_ok</span>());</code></pre></div>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BatchEntry.html" title="hacspec_ed25519::BatchEntry struct">BatchEntry</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BigInteger.html" title="hacspec_ed25519::BigInteger struct">BigInteger</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BigIntegerCanvas.html" title="hacspec_ed25519::BigIntegerCanvas struct">BigIntegerCanvas</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BigScalar.html" title="hacspec_ed25519::BigScalar struct">BigScalar</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.BigScalarCanvas.html" title="hacspec_ed25519::BigScalarCanvas struct">BigScalarCanvas</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CompressedEdPoint.html" title="hacspec_ed25519::CompressedEdPoint struct">CompressedEdPoint</a></div><div class="item-right docblock-short"><p>Fixed length byte array.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Ed25519FieldElement.html" title="hacspec_ed25519::Ed25519FieldElement struct">Ed25519FieldElement</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.FieldCanvas.html" title="hacspec_ed25519::FieldCanvas struct">FieldCanvas</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Scalar.html" title="hacspec_ed25519::Scalar struct">Scalar</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.ScalarCanvas.html" title="hacspec_ed25519::ScalarCanvas struct">ScalarCanvas</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SerializedScalar.html" title="hacspec_ed25519::SerializedScalar struct">SerializedScalar</a></div><div class="item-right docblock-short"><p>Fixed length byte array.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Signature.html" title="hacspec_ed25519::Signature struct">Signature</a></div><div class="item-right docblock-short"><p>Fixed length byte array.</p>
+</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="hacspec_ed25519::Error enum">Error</a></div><div class="item-right docblock-short"></div></div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.alg2_verify.html" title="hacspec_ed25519::alg2_verify fn">alg2_verify</a></div><div class="item-right docblock-short"><p>Algorithm 2 from <a href="https://eprint.iacr.org/2020/1244.pdf">https://eprint.iacr.org/2020/1244.pdf</a>.
+Cofactored verification.
+Rejects non-canonical encoding of points.
+Rejects small-order points for the public key.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.alg3_batch_verify.html" title="hacspec_ed25519::alg3_batch_verify fn">alg3_batch_verify</a></div><div class="item-right docblock-short"><p>Batch verification.
+Algorithm 3 from <a href="https://eprint.iacr.org/2020/1244.pdf">https://eprint.iacr.org/2020/1244.pdf</a>.
+Cofactored verification.
+Rejects non-canonical encoding of points.
+Rejects small-order points for the public key.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.ietf_cofactored_batch_verify.html" title="hacspec_ed25519::ietf_cofactored_batch_verify fn">ietf_cofactored_batch_verify</a></div><div class="item-right docblock-short"><p>Batch verification.
+Cofactored verification.
+Rejects non-canonical encoding of points.
+Allows small-order points.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.ietf_cofactored_verify.html" title="hacspec_ed25519::ietf_cofactored_verify fn">ietf_cofactored_verify</a></div><div class="item-right docblock-short"><p>Cofactored verification.
+Rejects non-canonical encoding of points.
+Allows small-order points.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.ietf_cofactorless_batch_verify.html" title="hacspec_ed25519::ietf_cofactorless_batch_verify fn">ietf_cofactorless_batch_verify</a></div><div class="item-right docblock-short"><p>Batch verification.
+Cofactorless verification.
+Rejects non-canonical encoding of points.
+Allows small-order points.
+One should not use this as it can be flaky.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.ietf_cofactorless_verify.html" title="hacspec_ed25519::ietf_cofactorless_verify fn">ietf_cofactorless_verify</a></div><div class="item-right docblock-short"><p>Cofactorless verification.
+Rejects non-canonical encoding of points.
+Allows small-order points.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.secret_to_public.html" title="hacspec_ed25519::secret_to_public fn">secret_to_public</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.sign.html" title="hacspec_ed25519::sign fn">sign</a></div><div class="item-right docblock-short"><p>Sign a message under a secret key.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.zcash_batch_verify.html" title="hacspec_ed25519::zcash_batch_verify fn">zcash_batch_verify</a></div><div class="item-right docblock-short"><p>Batch verification.
+Cofactored verification.
+Allows non-canonical encoding of points.
+Allows small-order points.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.zcash_verify.html" title="hacspec_ed25519::zcash_verify fn">zcash_verify</a></div><div class="item-right docblock-short"><p>Cofactored verification.
+Allows non-canonical encoding of points.
+Allows small-order points.</p>
+</div></div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.PublicKey.html" title="hacspec_ed25519::PublicKey type">PublicKey</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.SecretKey.html" title="hacspec_ed25519::SecretKey type">SecretKey</a></div><div class="item-right docblock-short"></div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.VerifyResult.html" title="hacspec_ed25519::VerifyResult type">VerifyResult</a></div><div class="item-right docblock-short"></div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../" data-current-crate="hacspec_ed25519" data-search-index-js="../search-index.js" data-search-js="../search.js"></div>
+    <script src="../main.js"></script>
+</body></html>

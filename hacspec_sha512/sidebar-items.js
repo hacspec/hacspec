@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["HASH_SIZE",""],["K_SIZE",""]],"fn":[["hash",""],["sha512",""]],"struct":[["Block","Fixed length byte array."],["Hash","Fixed length byte array."],["OpTableType","Fixed length byte array."],["RoundConstantsTable","Fixed length byte array."],["Sha512Digest","Fixed length byte array."]]});
