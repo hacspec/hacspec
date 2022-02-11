@@ -3,7 +3,7 @@ use hacspec_ed25519::*;
 use hacspec_lib::*;
 use quickcheck::QuickCheck;
 
-// Test vectors from https://datatracker.ietf.org/doc/draft-irtf-cfrg-eddsa/08/
+// Test vectors from https://datatracker.ietf.org/doc/rfc8032
 create_test_vectors!(
     IetfTestVector,
     secret_key: String,

@@ -3,15 +3,15 @@
 //! in multiple ways.
 //! - zcash_verify implements the ZIP-0215 standard (<https://zips.z.cash/zip-0215>)
 //! - ietf_cofactored_verify and ietf_cofactorless_verify both implement the ietf standard.
-//! (<https://datatracker.ietf.org/doc/draft-irtf-cfrg-eddsa/08/>). However as the standard writes:
+//! (<https://datatracker.ietf.org/doc/rfc8032>). However as the standard writes:
 //!
 //!     > Check the group equation \[8\]\[S\]B = \[8\]R + \[8\]\[k\]A'.  It's sufficient, but not,
 //!     > required to instead check \[S\]B = R + \[k\]A'.
 //!
-//!     they differ in which of verification equations they use.
+//!     they differ in which of the verification equations they use.
 //! - alg2_verify implements algorithm 2 from the paper <https://eprint.iacr.org/2020/1244.pdf>.
 //!
-//! The different implementations and specifications differ mainly in three different ways:
+//! The different implementations and specifications differ in three ways:
 //! - Cofactored/cofactorless verification -- (Using \[8\]\[S\]B = \[8\]R + \[8\]\[H(R, A, msg)\]A
 //! or \[S\]B = R + \[H(R, A, msg)\]A as the verification check).
 //! - Accepting/rejecting non-canonical encodings of points.
@@ -194,8 +194,7 @@ fn sqrt(a: Ed25519FieldElement) -> Option<Ed25519FieldElement> {
     result
 }
 
-fn check_canonical_point(x: CompressedEdPoint) -> bool {
-    let mut x = x;
+fn check_canonical_point(mut x: CompressedEdPoint) -> bool {
     x[31] = x[31] & U8(127u8);
     let x = BigInteger::from_byte_seq_le(x);
     x < BigInteger::from_byte_seq_le(CONSTANT_P)
