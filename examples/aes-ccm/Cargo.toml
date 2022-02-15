@@ -1,0 +1,17 @@
+[package]
+name = "hacspec-aes-ccm"
+version = "0.1.0"
+authors = ["Tanmay Garg <tanmaygarg@gmail.com>"]
+edition = "2018"
+
+[lib]
+path = "src/ccm_mode.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+hacspec-aes = { path = "../aes", version = "0.1.0" }
+
+[dev-dependencies]
+serde_json = "1.0"
+serde = {version = "1.0", features = ["derive"]}
+hacspec-dev = { path = "../../utils/dev" }
