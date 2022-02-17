@@ -44,8 +44,9 @@ use std::process::Command;
 use util::APP_USAGE;
 
 struct HacspecCallbacks {
+    output_filename: Option<String>,
     output_directory: Option<String>,
-    output_type: String,
+    output_type: Option<String>,
     target_directory: String,
 }
 
@@ -99,6 +100,7 @@ fn handle_crate<'tcx>(
     krate_dir: String,
     top_ctx_map: &mut HashMap<String, name_resolution::TopLevelContext>,
     special_names_map: &mut HashMap<String, ast_to_rustspec::SpecialNames>,
+    root_module: bool,
 ) -> Compilation {
     // Compute the crate module string, based on local path (krate_path)
     // Look at path/mod_name.rs and path/mod_name/mod.rs for module
@@ -154,6 +156,7 @@ fn handle_crate<'tcx>(
                             krate_path.clone(),
                             top_ctx_map,
                             special_names_map,
+                            false,
                         ) == Compilation::Stop
                         {
                             // If not able to handle module, stop compilation.
@@ -276,106 +279,110 @@ fn handle_crate<'tcx>(
             return Compilation::Stop;
         }
     };
-    let imported_crates = name_resolution::get_imported_crates(&krate);
-    let imported_crates = imported_crates
-        .into_iter()
-        .filter(|(x, _)| x != "hacspec_lib")
-        .map(|(x, _)| x)
-        .collect::<Vec<_>>();
-    println!(
-        " > Successfully typechecked {}{}",
-        krate_path.clone(),
-        if imported_crates.len() == 0 {
-            ".".to_string()
+
+    if root_module {
+        let imported_crates = name_resolution::get_imported_crates(&krate);
+        let imported_crates = imported_crates
+            .into_iter()
+            .filter(|(x, _)| x != "hacspec_lib")
+            .map(|(x, _)| x)
+            .collect::<Vec<_>>();
+        println!(
+            " > Successfully typechecked {}",
+            if imported_crates.len() == 0 {
+                ".".to_string()
+            } else {
+                format!(
+                    ", assuming that the code in crates {} has also been Hacspec-typechecked",
+                    imported_crates.iter().format(", ")
+                )
+            }
+        );
+    }
+
+    if let (Some(extension), Some(file_str)) = (&callback.output_type, &callback.output_directory) {
+        let original_file = Path::new(file_str);
+
+        let file_name = if let Some(file_name) = &callback.output_filename {
+            Path::new(&file_name.clone()).with_extension("").to_str().unwrap().to_string()
         } else {
-            format!(
-                ", assuming that the code in crates {} has also been Hacspec-typechecked",
-                imported_crates.iter().format(", ")
-            )
-        }
-    );
+            krate_path.clone()
+        };
 
-    match &callback.output_directory {
-        None => (),
-        Some(file_str) => {
-            let original_file = Path::new(file_str);
-            let extension = &callback.output_type;
+        let file = match extension.clone().as_str() {
+            "fst" | "ec" | "json" => {
+                // Compute file name as output directory with crate local path (file_name)
+                (original_file).join(Path::new(
+                    (file_name.clone().to_title_case().replace(" ", ".") + "." + extension)
+                        .as_str(),
+                ))
+            }
+            "v" => {
+                // Compute file name as output directory with crate local path (file_name)
+                (original_file).join(Path::new(
+                    (file_name.clone().to_title_case().replace(" ", "_") + "." + extension)
+                        .as_str(),
+                ))
+            }
+            _ => {
+                compiler
+                    .session()
+                    .err("unknown backend extension for output files");
+                return Compilation::Stop;
+            }
+        };
+        let file = file.to_str().unwrap();
 
-            let file = match extension.clone().as_str() {
-                "fst" | "ec" | "json" => {
-                    // Compute file name as output directory with crate local path (krate_path)
-                    (original_file).join(Path::new(
-                        (krate_path.clone().to_title_case().replace(" ", ".") + "." + extension)
-                            .as_str(),
-                    ))
-                }
-                "v" => {
-                    // Compute file name as output directory with crate local path (krate_path)
-                    (original_file).join(Path::new(
-                        (krate_path.clone().to_title_case().replace(" ", "_") + "." + extension)
-                            .as_str(),
-                    ))
-                }
-                _ => {
-                    compiler
-                        .session()
-                        .err("unknown backend extension for output files");
-                    return Compilation::Stop;
-                }
-            };
-            let file = file.to_str().unwrap();
-
-            match extension.as_str() {
-                "fst" => rustspec_to_fstar::translate_and_write_to_file(
-                    &compiler.session(),
-                    &krate,
-                    &file,
-                    &new_top_ctx,
-                ),
-                "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
-                    &compiler.session(),
-                    &krate,
-                    &file,
-                    &new_top_ctx,
-                ),
-                "json" => {
-                    let file = file.trim();
-                    let path = Path::new(file);
-                    let file = match File::create(&path) {
-                        Err(why) => {
-                            compiler.session().err(
-                                format!("Unable to write to output file {}: \"{}\"", file, why)
-                                    .as_str(),
-                            );
-                            return Compilation::Stop;
-                        }
-                        Ok(file) => file,
-                    };
-                    match serde_json::to_writer_pretty(file, &krate) {
-                        Err(why) => {
-                            compiler
-                                .session()
-                                .err(format!("Unable to serialize program: \"{}\"", why).as_str());
-                            return Compilation::Stop;
-                        }
-                        Ok(_) => (),
-                    };
-                }
-                "v" => rustspec_to_coq::translate_and_write_to_file(
-                    &compiler.session(),
-                    &krate,
-                    &file,
-                    &new_top_ctx,
-                ),
-                _ => {
-                    compiler
-                        .session()
-                        .err("unknown backend extension for output file");
-                    return Compilation::Stop;
-                }
+        match extension.as_str() {
+            "fst" => rustspec_to_fstar::translate_and_write_to_file(
+                &compiler.session(),
+                &krate,
+                &file,
+                &new_top_ctx,
+            ),
+            "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
+                &compiler.session(),
+                &krate,
+                &file,
+                &new_top_ctx,
+            ),
+            "json" => {
+                let file = file.trim();
+                let path = Path::new(file);
+                let file = match File::create(&path) {
+                    Err(why) => {
+                        compiler.session().err(
+                            format!("Unable to write to output file {}: \"{}\"", file, why)
+                                .as_str(),
+                        );
+                        return Compilation::Stop;
+                    }
+                    Ok(file) => file,
+                };
+                match serde_json::to_writer_pretty(file, &krate) {
+                    Err(why) => {
+                        compiler
+                            .session()
+                            .err(format!("Unable to serialize program: \"{}\"", why).as_str());
+                        return Compilation::Stop;
+                    }
+                    Ok(_) => (),
+                };
+            }
+            "v" => rustspec_to_coq::translate_and_write_to_file(
+                &compiler.session(),
+                &krate,
+                &file,
+                &new_top_ctx,
+            ),
+            _ => {
+                compiler
+                    .session()
+                    .err("unknown backend extension for output file");
+                return Compilation::Stop;
             }
         }
-    }
+    };
 
     handled.insert(krate_module_string.clone());
     (*top_ctx_map).insert(krate_path.clone(), new_top_ctx.clone());
@@ -479,6 +486,7 @@ impl Callbacks for HacspecCallbacks {
             "".to_string(),
             &mut HashMap::new(),
             &mut HashMap::new(),
+            true,
         );
 
         Compilation::Stop
@@ -604,8 +612,18 @@ fn main() -> Result<(), usize> {
     compiler_args.push(args.remove(0));
 
     // Optionally get output directory.
-    let output_directory_index = args.iter().position(|a| a == "-o");
-    let mut output_directory = match output_directory_index {
+    let output_filename_index = args.iter().position(|a| a == "-o");
+    let output_filename = match output_filename_index {
+        Some(i) => {
+            args.remove(i);
+            Some(args.remove(i))
+        }
+        None => None,
+    };
+
+    // Optionally get output directory.
+    let output_directory_index = args.iter().position(|a| a == "-dir");
+    let output_directory = match output_directory_index {
         Some(i) => {
             args.remove(i);
             Some(args.remove(i))
@@ -617,13 +635,10 @@ fn main() -> Result<(), usize> {
     let output_type_index = args.iter().position(|a| a == "-e");
     let output_type = match output_type_index {
         Some(i) => {
-            if let None = output_directory {
-                output_directory = Some(env::current_dir().unwrap().to_str().unwrap().to_owned());
-            }
             args.remove(i);
-            args.remove(i)
+            Some(args.remove(i))
         }
-        None => "".to_string(),
+        None => None,
     };
 
     // Optionally an input file can be passed in. This should be mostly used for
@@ -655,7 +670,24 @@ fn main() -> Result<(), usize> {
     }
 
     let mut callbacks = HacspecCallbacks {
-        output_directory,
+        output_filename: (if None == output_filename {
+            if let Some(package_name) = args.pop() {
+                args.push(package_name.clone());
+                Some(package_name.clone())
+            } else {
+                None
+            }
+        } else {
+            output_filename
+        }),
+        output_directory: if match output_type {
+            Some(_) => None == output_directory,
+            _ => false,
+        } {
+            Some(env::current_dir().unwrap().to_str().unwrap().to_owned())
+        } else {
+            output_directory
+        },
         output_type,
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()

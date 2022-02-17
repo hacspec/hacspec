@@ -8,33 +8,40 @@ function typecheck {
   then
     echo "    extracting EC ..."
     mkdir -p target/easycrypt
-    cargo hacspec -e ec -o target/easycrypt/ $1
+    cargo hacspec -e ec -dir target/easycrypt/ $1
   else
     cargo hacspec $1
   fi
   if [ -z "$6" ];
   then
     mkdir -p target/fstar
-    fstar_file=target/fstar/
+    fstar_dir=target/fstar/
+    fstar_file=$1
   else
-    fstar_file=fstar/
+    fstar_dir=fstar/
+    fstar_file=$6
   fi
   if [ "$3" == "fst" ];
   then
     echo "    extracting F* ..."
-    cargo hacspec -e fst -o $fstar_file $1
+    cargo hacspec -e fst -dir $fstar_dir -o $fstar_file $1
   fi
   if [ "$4" == "json" ];
   then
     echo "    extracting JSON ..."
     mkdir -p target/json
-    cargo hacspec -e json -o target/json/ $1
+    cargo hacspec -e json -dir target/json/ $1
   fi
   if [ "$5" == "coq" ];
   then
     echo "    extracting coq ..."
     mkdir -p target/coq
-    cargo hacspec -e v -o target/coq/ $1
+    cratename=$1
+    prefix="hacspec-"
+    outname=${cratename#"$prefix"}
+    # capitalize first letter - macOS safe version (bash <= 3.2)
+    outname=$(tr '[:lower:]' '[:upper:]' <<<"${outname:0:1}")${outname:1}
+    cargo hacspec -e v -dir target/coq/ -o ${outname} $1
   fi
 }
 

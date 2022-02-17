@@ -5,7 +5,7 @@ authors = ["Denis Merigoux <denis.merigoux@gmail.com>"]
 edition = "2018"
 
 [lib]
-path = "src/hacspec-sha3.rs"
+path = "src/sha3.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

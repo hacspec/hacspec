@@ -5,7 +5,7 @@ authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
 edition = "2018"
 
 [lib]
-path = "src/hacspec-aes128-gcm.rs"
+path = "src/aes128-gcm.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
