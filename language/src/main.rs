@@ -90,18 +90,13 @@ fn construct_module_string<T>(
     }
 }
 
-fn handle_crate<'tcx>(
-    callback: &HacspecCallbacks,
+fn construct_handle_crate_queue<'tcx>(
     compiler: &Compiler,
-    queries: &'tcx Queries<'tcx>,
     handled: &mut HashSet<String>,
     ast_crates_map: &HashMap<String, rustc_ast::ast::Crate>,
     krate_path: String,
     krate_dir: String,
-    top_ctx_map: &mut HashMap<String, name_resolution::TopLevelContext>,
-    special_names_map: &mut HashMap<String, ast_to_rustspec::SpecialNames>,
-    root_module: bool,
-) -> Compilation {
+) -> Result<Vec<((String, String, String), rustc_ast::ast::Crate)>, bool> {
     // Compute the crate module string, based on local path (krate_path)
     // Look at path/mod_name.rs and path/mod_name/mod.rs for module
     let krate_module_string =
@@ -111,104 +106,43 @@ fn handle_crate<'tcx>(
                 compiler
                     .session()
                     .err(format!("There is no module with name {}", krate_path.clone()).as_str());
-                return Compilation::Stop;
+                return Err(false);
             }
         };
 
     // Depth first handling, skip module if already visited
     if handled.contains(&krate_module_string) {
-        return Compilation::Continue;
+        return Err(true);
     }
 
     let krate = ast_crates_map[&krate_module_string].clone();
 
-    // Generate an empty context then fill it whenever an Use statement is encountered
-    let new_top_ctx = &mut name_resolution::TopLevelContext {
-        consts: HashMap::new(),
-        functions: HashMap::new(),
-        typ_dict: HashMap::new(),
-    };
-
-    let new_specials = &mut ast_to_rustspec::SpecialNames {
-        arrays: HashSet::new(),
-        enums: HashSet::new(),
-        aliases: HashMap::new(),
-    };
+    let mut krates = Vec::new();
 
     let krate = match krate {
         rustc_ast::ast::Crate { attrs, items, span } => {
             // Parse over the crate, loading modules and filling top_level_ctx
             for x in items.clone().into_iter() {
                 match x.kind {
-                    // Whenever a module statement is encountered, handle the module
-                    // generating files and loading values into the top_ctx_map as needed
+                    // Whenever a module statement is encountered, add it to the queue
                     rustc_ast::ast::ItemKind::Mod(
                         rustc_ast::ast::Unsafe::No,
                         rustc_ast::ast::ModKind::Unloaded,
                     ) => {
-                        if handle_crate(
-                            callback,
+                        match construct_handle_crate_queue(
                             compiler,
-                            queries,
                             handled,
                             ast_crates_map,
                             x.ident.name.to_ident_string(),
                             krate_path.clone(),
-                            top_ctx_map,
-                            special_names_map,
-                            false,
-                        ) == Compilation::Stop
-                        {
-                            // If not able to handle module, stop compilation.
-                            return Compilation::Stop;
-                        }
-                    }
-                    // Load the top_ctx from the module specified in the use statement
-                    rustc_ast::ast::ItemKind::Use(ref tree) => {
-                        match tree.kind {
-                            rustc_ast::ast::UseTreeKind::Glob => {
-                                let krate_use_path_string = (&tree.prefix)
-                                    .segments
-                                    .last()
-                                    .unwrap()
-                                    .ident
-                                    .name
-                                    .to_ident_string();
-
-                                if let Some(krate_use_string) = construct_module_string(
-                                    krate_use_path_string.clone(),
-                                    krate_dir.clone(),
-                                    top_ctx_map,
-                                ) {
-                                    new_top_ctx
-                                        .consts
-                                        .extend(top_ctx_map[&krate_use_string].consts.clone());
-                                    new_top_ctx
-                                        .functions
-                                        .extend(top_ctx_map[&krate_use_string].functions.clone());
-                                    new_top_ctx
-                                        .typ_dict
-                                        .extend(top_ctx_map[&krate_use_string].typ_dict.clone());
-                                }
-
-                                if let Some(krate_use_string) = construct_module_string(
-                                    krate_use_path_string.clone(),
-                                    krate_dir.clone(),
-                                    special_names_map,
-                                ) {
-                                    new_specials.arrays.extend(
-                                        special_names_map[&krate_use_string].arrays.clone(),
-                                    );
-                                    new_specials
-                                        .enums
-                                        .extend(special_names_map[&krate_use_string].enums.clone());
-                                    new_specials.aliases.extend(
-                                        special_names_map[&krate_use_string].aliases.clone(),
-                                    );
-                                }
+                        ) {
+                            Ok(v) => krates.extend(v),
+                            Err(false) => {
+                                // If not able to handle module, stop compilation.
+                                return Err(false);
                             }
-                            _ => (),
-                        };
+                            Err(true) => (),
+                        }
                     }
                     _ => (),
                 }
@@ -233,6 +167,103 @@ fn handle_crate<'tcx>(
         }
     };
 
+    krates.push((
+        (
+            krate_path.clone(),
+            krate_dir.clone(),
+            krate_module_string.clone(),
+        ),
+        krate,
+    ));
+
+    handled.insert(krate_module_string.clone());
+
+    Ok(krates)
+}
+
+fn handle_crate<'tcx>(
+    callback: &HacspecCallbacks,
+    compiler: &Compiler,
+    queries: &'tcx Queries<'tcx>,
+    ast_crates_map: &HashMap<String, rustc_ast::ast::Crate>,
+    krate_path: String,
+) -> Compilation {
+    // Construct a queue of files to handle
+    let krate_queue = match construct_handle_crate_queue(
+        compiler,
+        &mut HashSet::new(),
+        ast_crates_map,
+        krate_path,
+        "".to_string(),
+    ) {
+        Ok(v) => v,
+        Err(false) => {
+            // If not able to handle crate, stop compilation.
+            return Compilation::Stop;
+        }
+        Err(true) => return Compilation::Continue, // Nothing at all, should probably never happen
+    };
+
+    let top_ctx_map: &mut HashMap<String, name_resolution::TopLevelContext> = &mut HashMap::new();
+    let special_names_map: &mut HashMap<String, ast_to_rustspec::SpecialNames> =
+        &mut HashMap::new();
+
+    let krate_use_paths: &mut HashMap<String, Vec<String>> = &mut HashMap::new();
+
+    // Get all 'use' dependencies per module
+    let mut krate_queue_no_module_statements = Vec::new();
+    for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue {
+        krate_use_paths.insert(krate_path.clone(), Vec::new());
+
+        match krate {
+            rustc_ast::ast::Crate { attrs, items, span } => {
+                // Parse over the crate, loading modules and filling top_level_ctx
+                for x in items.clone().into_iter() {
+                    match x.kind {
+                        // Load the top_ctx from the module specified in the use statement
+                        rustc_ast::ast::ItemKind::Use(ref tree) => {
+                            match tree.kind {
+                                rustc_ast::ast::UseTreeKind::Glob => {
+                                    krate_use_paths[&krate_path].push(
+                                        (&tree.prefix)
+                                            .segments
+                                            .last()
+                                            .unwrap()
+                                            .ident
+                                            .name
+                                            .to_ident_string(),
+                                    );
+                                }
+                                _ => (),
+                            };
+                        }
+                        _ => (),
+                    }
+                }
+
+                // Remove the modules statements from the crate
+                krate_queue_no_module_statements.push((
+                    (krate_path, krate_dir, krate_module_string),
+                    rustc_ast::ast::Crate {
+                        attrs,
+                        items: items
+                            .clone()
+                            .into_iter()
+                            .filter(|x| match x.kind {
+                                rustc_ast::ast::ItemKind::Mod(
+                                    rustc_ast::ast::Unsafe::No,
+                                    rustc_ast::ast::ModKind::Unloaded,
+                                ) => false,
+                                _ => true,
+                            })
+                            .collect(),
+                        span,
+                    },
+                ))
+            }
+        }
+    }
+
     /////////////////////////////////
     // Start of actual translation //
     /////////////////////////////////
@@ -243,9 +274,43 @@ fn handle_crate<'tcx>(
         })
     };
 
-    let krate =
-        match ast_to_rustspec::translate(&compiler.session(), &krate, &external_data, new_specials)
-        {
+    ///////////////////////////////////////////////////////////////////////////
+    // Translate all modules from ast to rustspec (modules becomes programs) //
+    ///////////////////////////////////////////////////////////////////////////
+    
+    let mut krate_queue_programs = Vec::new();    
+    for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_no_module_statements {
+        // Generate an empty context then fill it whenever an Use statement is encountered
+        let new_specials = &mut ast_to_rustspec::SpecialNames {
+            arrays: HashSet::new(),
+            enums: HashSet::new(),
+            aliases: HashMap::new(),
+        };
+
+        for krate_use_path_string in &krate_use_paths[&krate_path] {
+            if let Some(krate_use_string) = construct_module_string(
+                krate_use_path_string.clone(),
+                krate_dir.clone(),
+                special_names_map,
+            ) {
+                new_specials
+                    .arrays
+                    .extend(special_names_map[&krate_use_string].arrays.clone());
+                new_specials
+                    .enums
+                    .extend(special_names_map[&krate_use_string].enums.clone());
+                new_specials
+                    .aliases
+                    .extend(special_names_map[&krate_use_string].aliases.clone());
+            }
+        }
+
+        let krate = match ast_to_rustspec::translate(
+            &compiler.session(),
+            &krate,
+            &external_data,
+            new_specials,
+        ) {
             Ok(krate) => krate,
             Err(_) => {
                 compiler
@@ -255,138 +320,198 @@ fn handle_crate<'tcx>(
             }
         };
 
-    let krate = match name_resolution::resolve_crate(
-        &compiler.session(),
-        krate,
-        &external_data,
-        new_top_ctx,
-    ) {
-        Ok(krate) => krate,
-        Err(_) => {
-            compiler
-                .session()
-                .err("found some Hacspec name resolution errors");
-            return Compilation::Stop;
-        }
-    };
+        (*special_names_map).insert(krate_path.clone(), new_specials.clone());
 
-    let krate = match typechecker::typecheck_program(&compiler.session(), &krate, new_top_ctx) {
-        Ok(krate) => krate,
-        Err(_) => {
-            compiler
-                .session()
-                .err("found some Hacspec typechecking errors");
-            return Compilation::Stop;
-        }
-    };
-
-    if root_module {
-        let imported_crates = name_resolution::get_imported_crates(&krate);
-        let imported_crates = imported_crates
-            .into_iter()
-            .filter(|(x, _)| x != "hacspec_lib")
-            .map(|(x, _)| x)
-            .collect::<Vec<_>>();
-        println!(
-            " > Successfully typechecked {}",
-            if imported_crates.len() == 0 {
-                ".".to_string()
-            } else {
-                format!(
-                    ", assuming that the code in crates {} has also been Hacspec-typechecked",
-                    imported_crates.iter().format(", ")
-                )
-            }
-        );
+        krate_queue_programs.push(((krate_path, krate_dir, krate_module_string), krate));
     }
 
+    ///////////////////////////////
+    // Typecheck all the modules //
+    ///////////////////////////////
+    
+    let mut root_module: bool = true;
+    let mut krate_queue_typechecked = Vec::new();
+    for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_programs {
+        let new_top_ctx = &mut name_resolution::TopLevelContext {
+            consts: HashMap::new(),
+            functions: HashMap::new(),
+            typ_dict: HashMap::new(),
+        };
+
+        for krate_use_path_string in &krate_use_paths[&krate_path] {
+            if let Some(krate_use_string) = construct_module_string(
+                krate_use_path_string.clone(),
+                krate_dir.clone(),
+                top_ctx_map,
+            ) {
+                new_top_ctx
+                    .consts
+                    .extend(top_ctx_map[&krate_use_string].consts.clone());
+                new_top_ctx
+                    .functions
+                    .extend(top_ctx_map[&krate_use_string].functions.clone());
+                new_top_ctx
+                    .typ_dict
+                    .extend(top_ctx_map[&krate_use_string].typ_dict.clone());
+            }
+        }
+
+        let krate = match name_resolution::resolve_crate(
+            &compiler.session(),
+            krate,
+            &external_data,
+            new_top_ctx,
+        ) {
+            Ok(krate) => krate,
+            Err(_) => {
+                compiler
+                    .session()
+                    .err("found some Hacspec name resolution errors");
+                return Compilation::Stop;
+            }
+        };
+
+        let krate = match typechecker::typecheck_program(&compiler.session(), &krate, new_top_ctx) {
+            Ok(krate) => krate,
+            Err(_) => {
+                compiler
+                    .session()
+                    .err("found some Hacspec typechecking errors");
+                return Compilation::Stop;
+            }
+        };
+
+        (*top_ctx_map).insert(krate_path.clone(), new_top_ctx.clone());
+        krate_queue_typechecked.push(((krate_path, krate_dir, krate_module_string), krate));
+    }
+
+    let imported_crates = (&krate_queue_typechecked).into_iter().fold(
+        Vec::new(),
+        |mut all_imported_crates, (_, krate)| {
+            all_imported_crates.extend(name_resolution::get_imported_crates(&krate));
+            all_imported_crates
+        },
+    );
+    let imported_crates = imported_crates
+        .into_iter()
+        .filter(|(x, _)| x != "hacspec_lib")
+        .map(|(x, _)| x)
+        .collect::<Vec<_>>();
+
+    println!(
+        " > Successfully typechecked{}{}",
+        match &callback.output_filename {
+            Some(file_name) => " ".to_string() + file_name,
+            None => "".to_string(),
+        },
+        if imported_crates.len() == 0 {
+            ".".to_string()
+        } else {
+            format!(
+                ", assuming that the code in crates {} has also been Hacspec-typechecked",
+                imported_crates.iter().format(", ")
+            )
+        }
+    );
+
+    ///////////////////////////////////
+    // Generate all the output files //
+    ///////////////////////////////////
+    
     if let (Some(extension), Some(file_str)) = (&callback.output_type, &callback.output_directory) {
         let original_file = Path::new(file_str);
 
-        let file_name = if let Some(file_name) = &callback.output_filename {
-            Path::new(&file_name.clone()).with_extension("").to_str().unwrap().to_string()
-        } else {
-            krate_path.clone()
-        };
+        for ((krate_path, _, _), krate) in krate_queue_typechecked {
+            let file_name = if root_module {
+                if let Some(file_name) = &callback.output_filename {
+                    Path::new(&file_name.clone())
+                        .with_extension("")
+                        .to_str()
+                        .unwrap()
+                        .to_string()
+                } else {
+                    krate_path.clone() // TODO: Should this throw an error instead
+                }
+            } else {
+                krate_path.clone()
+            };
+            root_module = false;
 
-        let file = match extension.clone().as_str() {
-            "fst" | "ec" | "json" => {
-                // Compute file name as output directory with crate local path (file_name)
-                (original_file).join(Path::new(
-                    (file_name.clone().to_title_case().replace(" ", ".") + "." + extension)
-                        .as_str(),
-                ))
-            }
-            "v" => {
-                // Compute file name as output directory with crate local path (file_name)
-                (original_file).join(Path::new(
-                    (file_name.clone().to_title_case().replace(" ", "_") + "." + extension)
-                        .as_str(),
-                ))
-            }
-            _ => {
-                compiler
-                    .session()
-                    .err("unknown backend extension for output files");
-                return Compilation::Stop;
-            }
-        };
-        let file = file.to_str().unwrap();
+            let file = match extension.clone().as_str() {
+                "fst" | "ec" | "json" => {
+                    // Compute file name as output directory with crate local path (file_name)
+                    (original_file).join(Path::new(
+                        (file_name.clone().to_title_case().replace(" ", ".") + "." + extension)
+                            .as_str(),
+                    ))
+                }
+                "v" => {
+                    // Compute file name as output directory with crate local path (file_name)
+                    (original_file).join(Path::new(
+                        (file_name.clone().to_title_case().replace(" ", "_") + "." + extension)
+                            .as_str(),
+                    ))
+                }
+                _ => {
+                    compiler
+                        .session()
+                        .err("unknown backend extension for output files");
+                    return Compilation::Stop;
+                }
+            };
+            let file = file.to_str().unwrap();
 
-        match extension.as_str() {
-            "fst" => rustspec_to_fstar::translate_and_write_to_file(
-                &compiler.session(),
-                &krate,
-                &file,
-                &new_top_ctx,
-            ),
-            "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
-                &compiler.session(),
-                &krate,
-                &file,
-                &new_top_ctx,
-            ),
-            "json" => {
-                let file = file.trim();
-                let path = Path::new(file);
-                let file = match File::create(&path) {
-                    Err(why) => {
-                        compiler.session().err(
-                            format!("Unable to write to output file {}: \"{}\"", file, why)
-                                .as_str(),
-                        );
-                        return Compilation::Stop;
-                    }
-                    Ok(file) => file,
-                };
-                match serde_json::to_writer_pretty(file, &krate) {
-                    Err(why) => {
-                        compiler
-                            .session()
-                            .err(format!("Unable to serialize program: \"{}\"", why).as_str());
-                        return Compilation::Stop;
-                    }
-                    Ok(_) => (),
-                };
-            }
-            "v" => rustspec_to_coq::translate_and_write_to_file(
-                &compiler.session(),
-                &krate,
-                &file,
-                &new_top_ctx,
-            ),
-            _ => {
-                compiler
-                    .session()
-                    .err("unknown backend extension for output file");
-                return Compilation::Stop;
+            match extension.as_str() {
+                "fst" => rustspec_to_fstar::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                "json" => {
+                    let file = file.trim();
+                    let path = Path::new(file);
+                    let file = match File::create(&path) {
+                        Err(why) => {
+                            compiler.session().err(
+                                format!("Unable to write to output file {}: \"{}\"", file, why)
+                                    .as_str(),
+                            );
+                            return Compilation::Stop;
+                        }
+                        Ok(file) => file,
+                    };
+                    match serde_json::to_writer_pretty(file, &krate) {
+                        Err(why) => {
+                            compiler
+                                .session()
+                                .err(format!("Unable to serialize program: \"{}\"", why).as_str());
+                            return Compilation::Stop;
+                        }
+                        Ok(_) => (),
+                    };
+                }
+                "v" => rustspec_to_coq::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                _ => {
+                    compiler
+                        .session()
+                        .err("unknown backend extension for output file");
+                    return Compilation::Stop;
+                }
             }
         }
-    };
-
-    handled.insert(krate_module_string.clone());
-    (*top_ctx_map).insert(krate_path.clone(), new_top_ctx.clone());
-    (*special_names_map).insert(krate_path.clone(), new_specials.clone());
+    }
 
     Compilation::Continue
 }
@@ -480,13 +605,8 @@ impl Callbacks for HacspecCallbacks {
             &self,
             compiler,
             queries,
-            &mut HashSet::new(),
             &analysis_crates,
             crate_origin_file,
-            "".to_string(),
-            &mut HashMap::new(),
-            &mut HashMap::new(),
-            true,
         );
 
         Compilation::Stop
