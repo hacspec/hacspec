@@ -1,11 +1,11 @@
 (** This file was automatically generated using Hacspec **)
-Require Import Lib MachineIntegers.
+Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
-Require Import Hacspec.Lib.
+Require Import Hacspec_Lib.
 
 Definition foo_option (x_0 : bool) : (option int64) :=
   (if (x_0):bool then (@Some int64 (@repr WORDSIZE64 42)) else (@None int64)).

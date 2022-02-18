@@ -277,8 +277,8 @@ fn handle_crate<'tcx>(
     ///////////////////////////////////////////////////////////////////////////
     // Translate all modules from ast to rustspec (modules becomes programs) //
     ///////////////////////////////////////////////////////////////////////////
-    
-    let mut krate_queue_programs = Vec::new();    
+
+    let mut krate_queue_programs = Vec::new();
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_no_module_statements {
         // Generate an empty context then fill it whenever an Use statement is encountered
         let new_specials = &mut ast_to_rustspec::SpecialNames {
@@ -328,7 +328,7 @@ fn handle_crate<'tcx>(
     ///////////////////////////////
     // Typecheck all the modules //
     ///////////////////////////////
-    
+
     let mut root_module: bool = true;
     let mut krate_queue_typechecked = Vec::new();
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_programs {
@@ -394,7 +394,7 @@ fn handle_crate<'tcx>(
     );
     let imported_crates = imported_crates
         .into_iter()
-        .filter(|(x, _)| x != "hacspec_lib")
+        .filter(|(x, _)| x != "hacspec_lib" && x != "crate")
         .map(|(x, _)| x)
         .collect::<Vec<_>>();
 
@@ -408,7 +408,7 @@ fn handle_crate<'tcx>(
             ".".to_string()
         } else {
             format!(
-                ", assuming that the code in crates {} has also been Hacspec-typechecked",
+                ", assuming that the code in {} has also been Hacspec-typechecked",
                 imported_crates.iter().format(", ")
             )
         }
@@ -417,7 +417,7 @@ fn handle_crate<'tcx>(
     ///////////////////////////////////
     // Generate all the output files //
     ///////////////////////////////////
-    
+
     if let (Some(extension), Some(file_str)) = (&callback.output_type, &callback.output_directory) {
         let original_file = Path::new(file_str);
 
@@ -717,6 +717,10 @@ fn read_crate(
     for dependency in package.dependencies.iter() {
         args.push(format!("--extern={}", dependency.name.replace("-", "_")));
     }
+
+    if callbacks.output_filename == None {
+        callbacks.output_filename = Some(package.name.clone())
+    }
 }
 
 fn main() -> Result<(), usize> {
@@ -790,16 +794,7 @@ fn main() -> Result<(), usize> {
     }
 
     let mut callbacks = HacspecCallbacks {
-        output_filename: (if None == output_filename {
-            if let Some(package_name) = args.pop() {
-                args.push(package_name.clone());
-                Some(package_name.clone())
-            } else {
-                None
-            }
-        } else {
-            output_filename
-        }),
+        output_filename,
         output_directory: if match output_type {
             Some(_) => None == output_directory,
             _ => false,
