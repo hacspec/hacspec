@@ -1,11 +1,10 @@
-Require Import Lib MachineIntegers.
+Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
 From QuickChick Require Import QuickChick.
-Require Import Hacspec.Lib.
 Require Import Coq.Lists.List.
 
 #[global] Instance show_unit : Show (unit) := Build_Show (unit) (fun _ => "tt"%string).

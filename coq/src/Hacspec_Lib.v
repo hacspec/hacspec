@@ -49,6 +49,7 @@ Definition uint128 := int128.
 Definition uint_size := int32.
 Definition int_size := int32.
 
+Axiom declassify_usize_from_uint8 : uint8 -> uint_size.
 
 (* Represents any type that can be converted to uint_size and back *)
 Class UInt_sizable (A : Type) := {
@@ -187,6 +188,7 @@ Infix "shift_right" := (shift_right_) (at level 77) : hacspec_scope.
 Infix "%%" := Z.rem (at level 40, left associativity) : Z_scope.
 Infix ".+" := (MachineIntegers.add) (at level 77) : hacspec_scope.
 Infix ".-" := (MachineIntegers.sub) (at level 77) : hacspec_scope.
+Notation "-" := (MachineIntegers.neg) (at level 77) : hacspec_scope.
 Infix ".*" := (MachineIntegers.mul) (at level 77) : hacspec_scope.
 Infix "./" := (MachineIntegers.divs) (at level 77) : hacspec_scope.
 Infix ".%" := (MachineIntegers.mods) (at level 77) : hacspec_scope.
@@ -466,13 +468,27 @@ Definition seq_update_start
     : seq a :=
     update_sub (VectorDef.of_list s) 0 (length start_s) (VectorDef.of_list start_s).
 
+(* Definition array_update_slice *)
+(*   {a : Type} *)
+(*  `{Default a} *)
+(*   {l : nat} *)
+(*   (out: nseq a l) *)
+(*   (start_out: nat) *)
+(*   (input: nseq a l) *)
+(*   (start_in: nat) *)
+(*   (len: nat) *)
+(*     : nseq a (length out) *)
+(*   := *)
+(*   update_sub (VectorDef.of_list out) start_out len *)
+(*     (VectorDef.of_list (sub input start_in len)). *)
+
 Definition array_update_slice
   {a : Type}
  `{Default a}
   {l : nat}
   (out: nseq a l)
   (start_out: nat)
-  (input: nseq a l)
+  (input: seq a)
   (start_in: nat)
   (len: nat)
     : nseq a (length out)
@@ -772,8 +788,7 @@ Definition nat_mod_neg {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
 
 Definition nat_mod_inv {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.inv n a.
 
-Definition nat_mod_exp {p : Z} (a:nat_mod p) (n : uint_size) : nat_mod p :=
-  let n : nat := Z.to_nat (from_uint_size n) in
+Definition nat_mod_exp_def {p : Z} (a:nat_mod p) (n : nat) : nat_mod p :=
   let fix exp_ (e : nat_mod p) (n : nat) :=
     match n with
     | 0%nat => nat_mod_one
@@ -781,8 +796,9 @@ Definition nat_mod_exp {p : Z} (a:nat_mod p) (n : uint_size) : nat_mod p :=
     end in
   exp_ a n.
 
-Definition nat_mod_pow {p} := @nat_mod_exp p.
-Definition nat_mod_pow_self {p} := @nat_mod_exp p.
+Definition nat_mod_exp {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
+Definition nat_mod_pow {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
+Definition nat_mod_pow_self {p} a n := @nat_mod_exp_def p a (Z.to_nat (from_uint_size n)).
 
 Close Scope nat_scope.
 Open Scope Z_scope.
@@ -811,6 +827,11 @@ Definition nat_mod_bit {n : Z} (a : nat_mod n) (i : uint_size) :=
 
 (* Alias for nat_mod_bit *)
 Definition nat_get_mod_bit {p} (a : nat_mod p) := nat_mod_bit a.
+Definition nat_mod_get_bit {p} (a : nat_mod p) n :=
+  if (nat_mod_bit a n)
+  then @nat_mod_one p
+  else @nat_mod_zero p.
+  
 (*
 Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_mod n) : lseq pub_uint8 len =
   Definition n' := n % (pow2 (8 * len)) in
@@ -1138,6 +1159,8 @@ Global Instance int_comparable `{WORDSIZE} : Comparable int := {
   geb a b := if eq a b then true else lt b a;
 }.
 
+Definition uint8_equal : int8 -> int8 -> bool := eqb.
+
 Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := GZnZ.val p a.
 
 Theorem nat_mod_eqb_spec : forall {p} (a b : nat_mod p), Z.eqb (nat_mod_val p a) (nat_mod_val p b) = true <-> a = b.
@@ -1401,6 +1424,7 @@ Global Instance int_size_default : Default int_size := {
 Global Instance int_default {WS : WORDSIZE} : Default int := {
   default := repr 0
 }.
+Global Instance uint8_default : Default uint8 := _.
 Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
   default := nat_mod_zero
 }.

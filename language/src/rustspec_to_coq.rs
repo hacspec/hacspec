@@ -667,7 +667,12 @@ fn translate_func_name<'a>(
                             additional_args.push(translate_ident(Ident::TopLevel(s.clone())))
                         }
                         FuncPrefix::Array(ArraySize::Integer(i), _) => {
-                            additional_args.push(RcDoc::as_string(format!("{}", i)))
+                            if *i == 0 {
+                                additional_args.push(RcDoc::as_string("_"))
+                            }
+                            else {
+                                additional_args.push(RcDoc::as_string(format!("{}", i)))
+                            }
                         }
                         FuncPrefix::Seq(_) => {
                             // This is the Seq case, should be alright
@@ -1877,11 +1882,7 @@ fn translate_item<'a>(
         Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => {
             RcDoc::as_string(format!(
             "Require Import {}.",
-                str::replace(
-                    // TODO: Better name resolution for crate imports
-                    // Only first should be outer crate name (no crate with _ allowed?)
-                    &str::replacen(&kr.to_title_case(), " ", ".", 1),
-                    " ", "_")
+                str::replace(&kr.to_title_case(), " ", "_"),
             ))
         }
         // Aliases are translated to Coq Notations
@@ -2060,7 +2061,7 @@ pub fn translate_and_write_to_file(
     write!(
         file,
         "(** This file was automatically generated using Hacspec **)\n\
-        Require Import Lib MachineIntegers.\n\
+        Require Import Hacspec_Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\
         Open Scope Z_scope.\n\

@@ -755,21 +755,17 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     p: Program,
     external_data: &F,
-) -> ResolutionResult<(Program, TopLevelContext)> {
-    let mut top_level_ctx = TopLevelContext {
-        consts: HashMap::new(),
-        functions: HashMap::new(),
-        typ_dict: HashMap::new(),
-    };
+    top_level_ctx : &mut TopLevelContext,
+) -> ResolutionResult<Program> {
     // First we fill the context with external symbols
-    enrich_with_external_crates_symbols(sess, &p, &mut top_level_ctx, external_data)?;
+    enrich_with_external_crates_symbols(sess, &p, top_level_ctx, external_data)?;
     // Then we do a first pass that collects types and signatures of top-level
     // items
     for item in p.items.iter() {
-        process_decl_item(sess, item, &mut top_level_ctx)?;
+        process_decl_item(sess, item, top_level_ctx)?;
     }
     // And finally a second pass that performs the actual name resolution
-    Ok((
+    Ok(
         Program {
             items: check_vec(
                 p.items
@@ -777,7 +773,6 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     .map(|i| resolve_item(sess, i, &top_level_ctx))
                     .collect(),
             )?,
-        },
-        top_level_ctx,
-    ))
+        }
+    )
 }
