@@ -1,7 +1,7 @@
 mod submod1;
 mod submod2;
-use submod1::*;
-use submod2::*;
+pub use submod1::*;
+pub use submod2::*;
 
 pub fn test_simpl_fails() -> Res {
     match ResTyp::Ok((42, 42)) {
@@ -12,6 +12,10 @@ pub fn test_simpl_fails() -> Res {
 pub fn test_tuple_destructuring() {
     let tuple = MyTupleType(1u16, 2u8).clone();
     let MyTupleType(_a, _b) = tuple;
+}
+
+pub fn some_fun() -> Result<(), Error> {
+    Result::<(), Error>::Err(Error::First)
 }
 
 
