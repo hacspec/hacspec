@@ -145,16 +145,19 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [Poly1305](examples/poly1305/src/poly1305.rs)
 - [Chacha20Poly1305](examples/chacha20poly1305/src/chacha20poly1305.rs)
 - [SHA256](examples/sha256/src/sha256.rs)
+- [SHA512](examples/sha512/src/sha512.rs)
 - [Curve25519](examples/curve25519/src/curve25519.rs)
 - [NTRU-prime](examples/hacspec-ntru-prime/src/ntru-prime.rs)
 - [SHA-3](examples/sha3/src/sha3.rs)
 - [HKDF-SHA256](examples/hkdf/src/hkdf.rs)
 - [HMAC-SHA256](examples/hmac/src/hmac.rs)
 - [BLS12-381](examples/bls12-381/src/bls12-381.rs)
+- [BLS12-381 Hash To Curve](examples/bls12-381-hash/src/bls12-381-hash.rs)
 - [RIOT bootloade](examples/riot-bootloader/src/lib.rs)
 - [GIMLI](examples/gimli/src/gimli.rs)
 - [P256](examples/p256/src/p256.rs)
 - [ECDSA-P256-SHA256](examples/ecdsa-p256-sha256/src/ecdsa.rs)
+- [Ed25519](examples/ed25519/src/ed25519.rs)
 
 ## Unsafe examples
 
