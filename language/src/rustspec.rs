@@ -1,6 +1,6 @@
 use core::cmp::PartialEq;
 use core::hash::Hash;
-use im::HashSet;
+use im::{HashMap, HashSet};
 use itertools::Itertools;
 use rustc_errors::MultiSpan;
 use rustc_span::Span;
@@ -37,6 +37,7 @@ impl From<Span> for RustspecSpan {
 pub struct LocalIdent {
     pub id: usize,
     pub name: String,
+    pub mutable: bool,
 }
 
 impl fmt::Display for LocalIdent {
@@ -378,6 +379,7 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
         Fillable<Vec<BaseTyp>>,
+        Vec<ScopeMutableVar>,
     ),
     MethodCall(
         Box<(Spanned<Expression>, Spanned<Borrowing>)>,
@@ -385,6 +387,7 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
         Fillable<Vec<BaseTyp>>,
+        Vec<ScopeMutableVar>,
     ),
     EnumInject(
         BaseTyp,                          // Type of enum
@@ -421,7 +424,7 @@ pub enum Expression {
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Pattern {
-    IdentPat(Ident),
+    IdentPat(Ident, bool),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
     SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
@@ -477,18 +480,25 @@ pub enum Statement {
     ReturnExp(Expression),
 }
 
+pub type ScopeMutableVar = (Spanned<Ident>, Fillable<Spanned<Typ>>);
+pub type FunctionDependency = Spanned<TopLevelIdent>;
+
 #[derive(Clone, Serialize, Debug)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
     pub contains_question_mark: Fillable<bool>,
+    pub mutable_vars: Vec<ScopeMutableVar>,
+    pub function_dependencies: Vec<FunctionDependency>,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
+    pub mutable_vars: Vec<ScopeMutableVar>,
+    pub function_dependencies: Vec<FunctionDependency>,
 }
 
 #[derive(Clone, Debug, Serialize)]

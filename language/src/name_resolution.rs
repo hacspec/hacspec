@@ -16,10 +16,11 @@ fn fresh_hacspec_id() -> usize {
     ID_COUNTER.fetch_add(1, Ordering::SeqCst)
 }
 
-pub(crate) fn to_fresh_ident(x: &String) -> Ident {
+pub(crate) fn to_fresh_ident(x: &String, m: bool) -> Ident {
     Ident::Local(LocalIdent {
         id: fresh_hacspec_id(),
         name: x.clone(),
+        mutable: m,
     })
 }
 
@@ -137,24 +138,58 @@ pub enum FnValue {
     ExternalNotInHacspec(String),
 }
 
+pub struct ScopeMutInfo {
+    pub vars: Vec<ScopeMutableVar>,
+    pub funcs: Vec<FunctionDependency>,
+}
+impl ScopeMutInfo {
+    fn new() -> Self {
+        ScopeMutInfo {
+            vars: Vec::new(),
+            funcs: Vec::new(),
+        }
+    }
+
+    fn extend(&mut self, s: ScopeMutInfo) {
+        self.vars.extend(s.vars);
+        self.funcs.extend(s.funcs);
+    }
+
+    fn extend_with_block(&mut self, b: Block) {
+        self.vars.extend(b.mutable_vars);
+        self.funcs.extend(b.function_dependencies);
+    }
+}
+
 fn resolve_expression(
     sess: &Session,
     (e, e_span): Spanned<Expression>,
     name_context: &NameContext,
     top_level_ctx: &TopLevelContext,
-) -> ResolutionResult<Spanned<Expression>> {
+) -> ResolutionResult<(ScopeMutInfo, Spanned<Expression>)> {
     log::trace!("resolve_expression ({:?}, {:?})", e, e_span);
     match e {
         Expression::Unary(op, e1, ty) => {
-            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
-            Ok((Expression::Unary(op, Box::new(new_e1), ty), e_span))
+            let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            Ok((
+                smi_new_e1,
+                (Expression::Unary(op, Box::new(new_e1), ty), e_span),
+            ))
         }
         Expression::Binary(op, e1, e2, ty) => {
-            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
-            let new_e2 = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
+            let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            let (smi_new_e2, new_e2) = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_e1);
+            smi.extend(smi_new_e2);
+
             Ok((
-                Expression::Binary(op, Box::new(new_e1), Box::new(new_e2), ty),
-                e_span,
+                smi,
+                (
+                    Expression::Binary(op, Box::new(new_e1), Box::new(new_e2), ty),
+                    e_span,
+                ),
             ))
         }
         Expression::MonadicLet(..) =>
@@ -172,8 +207,9 @@ fn resolve_expression(
             e_span,
         )),
         Expression::MatchWith(arg, arms) => {
-            let new_arg = resolve_expression(sess, *arg, name_context, top_level_ctx)?;
-            let new_arms = check_vec(
+            let (smi_new_arg, new_arg) =
+                resolve_expression(sess, *arg, name_context, top_level_ctx)?;
+            let (smi_new_arms, new_arms): (Vec<_>, Vec<_>) = check_vec(
                 arms.into_iter()
                     .map(|(enum_name, case_name, payload, arm)| {
                         let (new_payload, new_name_context) = match payload {
@@ -188,40 +224,73 @@ fn resolve_expression(
                         for (k, v) in new_name_context.into_iter() {
                             updated_name_context = updated_name_context.update(k, v);
                         }
-                        let new_arm =
+                        let (smi_new_arm, new_arm) =
                             resolve_expression(sess, arm, &updated_name_context, top_level_ctx)?;
-                        Ok((enum_name, case_name, new_payload, new_arm))
+                        Ok((smi_new_arm, (enum_name, case_name, new_payload, new_arm)))
                     })
                     .collect(),
-            )?;
-            Ok((Expression::MatchWith(Box::new(new_arg), new_arms), e_span))
-        }
-        Expression::EnumInject(enum_name, case_name, payload) => Ok((
-            Expression::EnumInject(
-                enum_name,
-                case_name,
-                match payload {
-                    None => None,
-                    Some(payload) => {
-                        let (new_payload, new_payload_span) = resolve_expression(
-                            sess,
-                            (*payload.0, payload.1),
-                            &name_context,
-                            top_level_ctx,
-                        )?;
-                        Some((Box::new(new_payload), new_payload_span))
-                    }
-                },
-            ),
-            e_span,
-        )),
-        Expression::InlineConditional(e1, e2, e3) => {
-            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
-            let new_e2 = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
-            let new_e3 = resolve_expression(sess, *e3, name_context, top_level_ctx)?;
+            )?
+            .into_iter()
+            .unzip();
+            let smi_new_arms: ScopeMutInfo =
+                smi_new_arms
+                    .into_iter()
+                    .fold(ScopeMutInfo::new(), |mut smi, x| {
+                        smi.extend(x);
+                        smi
+                    });
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_arg);
+            smi.extend(smi_new_arms);
+
             Ok((
-                Expression::InlineConditional(Box::new(new_e1), Box::new(new_e2), Box::new(new_e3)),
-                e_span,
+                smi,
+                (Expression::MatchWith(Box::new(new_arg), new_arms), e_span),
+            ))
+        }
+        Expression::EnumInject(enum_name, case_name, payload) => {
+            let (smi_payload, payload) = match payload {
+                None => (ScopeMutInfo::new(), None),
+                Some(payload) => {
+                    let (smi_payload, (new_payload, new_payload_span)) = resolve_expression(
+                        sess,
+                        (*payload.0, payload.1),
+                        &name_context,
+                        top_level_ctx,
+                    )?;
+                    (smi_payload, Some((Box::new(new_payload), new_payload_span)))
+                }
+            };
+
+            Ok((
+                smi_payload,
+                (
+                    Expression::EnumInject(enum_name, case_name, payload),
+                    e_span,
+                ),
+            ))
+        }
+        Expression::InlineConditional(e1, e2, e3) => {
+            let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            let (smi_new_e2, new_e2) = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
+            let (smi_new_e3, new_e3) = resolve_expression(sess, *e3, name_context, top_level_ctx)?;
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_e1);
+            smi.extend(smi_new_e2);
+            smi.extend(smi_new_e3);
+
+            Ok((
+                smi,
+                (
+                    Expression::InlineConditional(
+                        Box::new(new_e1),
+                        Box::new(new_e2),
+                        Box::new(new_e3),
+                    ),
+                    e_span,
+                ),
             ))
         }
         Expression::Named(i) => {
@@ -231,73 +300,164 @@ fn resolve_expression(
                 name_context,
                 top_level_ctx,
             )?;
-            Ok((Expression::Named(new_i), e_span))
-        }
-        Expression::FuncCall(ty, f, args, arg_types) => {
-            let new_args = check_vec(
-                args.into_iter()
-                    .map(|arg| {
-                        let new_arg0 =
-                            resolve_expression(sess, arg.0, name_context, top_level_ctx)?;
-                        Ok((new_arg0, arg.1))
-                    })
-                    .collect(),
-            )?;
-            Ok((Expression::FuncCall(ty, f, new_args, arg_types), e_span))
-        }
-        Expression::MethodCall(self_, ty, f, args, args_types) => {
-            let (self_, self_borrow) = *self_;
-            let new_self = resolve_expression(sess, self_, name_context, top_level_ctx)?;
-            let new_args = check_vec(
-                args.into_iter()
-                    .map(|arg| {
-                        let new_arg0 =
-                            resolve_expression(sess, arg.0, name_context, top_level_ctx)?;
-                        Ok((new_arg0, arg.1))
-                    })
-                    .collect(),
-            )?;
             Ok((
-                Expression::MethodCall(
-                    Box::new((new_self, self_borrow)),
-                    ty,
-                    f,
-                    new_args,
-                    args_types,
-                ),
-                e_span,
+                ScopeMutInfo {
+                    vars: Vec::new(),
+                    funcs: Vec::new(),
+                },
+                (Expression::Named(new_i), e_span),
             ))
         }
-        Expression::Lit(_) => Ok((e, e_span)),
+        Expression::FuncCall(ty, f, args, arg_types, mut_vars) => {
+            let (smi_new_args, new_args): (Vec<_>, Vec<_>) = check_vec(
+                args.into_iter()
+                    .map(|arg| {
+                        let (smi_new_arg0, new_arg0) =
+                            resolve_expression(sess, arg.0, name_context, top_level_ctx)?;
+                        Ok((smi_new_arg0, (new_arg0, arg.1)))
+                    })
+                    .collect(),
+            )?
+            .into_iter()
+            .unzip();
+            let smi_new_args: ScopeMutInfo =
+                smi_new_args
+                    .into_iter()
+                    .fold(ScopeMutInfo::new(), |mut smi, x| {
+                        smi.extend(x);
+                        smi
+                    });
+
+            let mut new_mut_vars = Vec::new();
+            for (mut_var, typ) in mut_vars {
+                let new_mut_var = find_ident(sess, &mut_var.clone(), &name_context, top_level_ctx)?;
+                new_mut_vars.push(((new_mut_var, mut_var.1.clone()), typ));
+            }
+
+            let mut smi = ScopeMutInfo {
+                vars: Vec::new(),
+                funcs: Vec::new(),
+            };
+            smi.extend(smi_new_args);
+            smi.funcs.push(f.clone());
+
+            Ok((
+                smi,
+                (
+                    Expression::FuncCall(ty, f, new_args, arg_types, new_mut_vars),
+                    e_span,
+                ),
+            ))
+        }
+        Expression::MethodCall(self_, ty, f, args, args_types, mut_vars) => {
+            let (self_, self_borrow) = *self_;
+            let (smi_new_self, new_self) =
+                resolve_expression(sess, self_, name_context, top_level_ctx)?;
+            let (smi_new_args, new_args): (Vec<_>, Vec<_>) = check_vec(
+                args.into_iter()
+                    .map(|arg| {
+                        let (smi_new_arg0, new_arg0) =
+                            resolve_expression(sess, arg.0, name_context, top_level_ctx)?;
+                        Ok((smi_new_arg0, (new_arg0, arg.1)))
+                    })
+                    .collect(),
+            )?
+            .into_iter()
+            .unzip();
+            let smi_new_args: ScopeMutInfo =
+                smi_new_args
+                    .into_iter()
+                    .fold(ScopeMutInfo::new(), |mut smi, x| {
+                        smi.extend(x);
+                        smi
+                    });
+
+            let mut new_mut_vars = Vec::new();
+            for (mut_var, typ) in mut_vars {
+                let new_mut_var = find_ident(sess, &mut_var.clone(), &name_context, top_level_ctx)?;
+                new_mut_vars.push(((new_mut_var, mut_var.1.clone()), typ));
+            }
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_self);
+            smi.extend(smi_new_args);
+            smi.funcs.push(f.clone());
+
+            Ok((
+                smi,
+                (
+                    Expression::MethodCall(
+                        Box::new((new_self, self_borrow)),
+                        ty,
+                        f,
+                        new_args,
+                        args_types,
+                        new_mut_vars,
+                    ),
+                    e_span,
+                ),
+            ))
+        }
+        Expression::Lit(_) => Ok((ScopeMutInfo::new(), (e, e_span))),
         Expression::ArrayIndex(x, e1, typ) => {
             let new_x = find_ident(sess, &x, name_context, top_level_ctx)?;
-            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             Ok((
-                Expression::ArrayIndex((new_x, x.1), Box::new(new_e1), typ),
-                e_span,
+                smi_new_e1,
+                (
+                    Expression::ArrayIndex((new_x, x.1), Box::new(new_e1), typ),
+                    e_span,
+                ),
             ))
         }
         Expression::NewArray(x, ty, args) => {
-            let new_args = check_vec(
+            let (smi_new_args, new_args): (Vec<_>, Vec<_>) = check_vec(
                 args.into_iter()
                     .map(|arg| resolve_expression(sess, arg, name_context, top_level_ctx))
                     .collect(),
-            )?;
-            Ok((Expression::NewArray(x, ty, new_args), e_span))
+            )?
+            .into_iter()
+            .unzip();
+            let smi_new_args: ScopeMutInfo =
+                smi_new_args
+                    .into_iter()
+                    .fold(ScopeMutInfo::new(), |mut smi, x| {
+                        smi.extend(x);
+                        smi
+                    });
+            Ok((
+                smi_new_args,
+                (Expression::NewArray(x, ty, new_args), e_span),
+            ))
         }
         Expression::Tuple(args) => {
-            let new_args = check_vec(
+            let (smi_new_args, new_args): (Vec<_>, Vec<_>) = check_vec(
                 args.into_iter()
                     .map(|arg| resolve_expression(sess, arg, name_context, top_level_ctx))
                     .collect(),
-            )?;
-            Ok((Expression::Tuple(new_args), e_span))
+            )?
+            .into_iter()
+            .unzip();
+            let smi_new_args: ScopeMutInfo =
+                smi_new_args
+                    .into_iter()
+                    .fold(ScopeMutInfo::new(), |mut smi, x| {
+                        smi.extend(x);
+                        smi
+                    });
+            Ok((smi_new_args, (Expression::Tuple(new_args), e_span)))
         }
         Expression::IntegerCasting(e1, from, to) => {
-            let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
-            let expr = Expression::IntegerCasting(Box::new(new_e1), from, to);
+            let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
+            let expr = (
+                    Expression::IntegerCasting(Box::new(new_e1), from, to),
+                    e_span,
+            );
             log::trace!("   expr: {:?}", expr);
-            Ok((expr, e_span))
+            Ok((
+                smi_new_e1,
+                expr,
+            ))
         }
     }
 }
@@ -335,13 +495,13 @@ fn resolve_pattern(
             Ok((Pattern::Tuple(tup_args), acc_name))
         }
         Pattern::WildCard => Ok((Pattern::WildCard, HashMap::new())),
-        Pattern::IdentPat(x) => {
+        Pattern::IdentPat(x, m) => {
             let (x_new, s) = match x {
-                Ident::Unresolved(s) => (to_fresh_ident(s), s.clone()),
+                Ident::Unresolved(s) => (to_fresh_ident(s, m.clone()), s.clone()),
                 _ => panic!("should not happen"),
             };
             Ok((
-                Pattern::IdentPat(x_new.clone()),
+                Pattern::IdentPat(x_new.clone(), m.clone()),
                 HashMap::unit(s.clone(), x_new.clone()),
             ))
         }
@@ -353,21 +513,31 @@ fn resolve_statement(
     (s, s_span): Spanned<Statement>,
     mut name_context: NameContext,
     top_level_ctx: &TopLevelContext,
-) -> ResolutionResult<(Spanned<Statement>, NameContext)> {
+) -> ResolutionResult<(ScopeMutInfo, Spanned<Statement>, NameContext)> {
     log::trace!("resolve_statements ({:?}, {:?})", s, s_span);
     log::trace!("   name_context: {:#?}", name_context);
     match s {
         Statement::Conditional(cond, then_b, else_b, info) => {
-            let new_cond = resolve_expression(sess, cond, &name_context, top_level_ctx)?;
+            let (smi_new_cond, new_cond) =
+                resolve_expression(sess, cond, &name_context, top_level_ctx)?;
             let new_then_b = resolve_block(sess, then_b, &name_context, top_level_ctx)?;
-            let new_else_b = match else_b {
-                None => None,
+            let (smi_new_else_b, new_else_b) = match else_b {
+                None => (ScopeMutInfo::new(), None),
                 Some(else_b) => {
                     let new_else_b = resolve_block(sess, else_b, &name_context, top_level_ctx)?;
-                    Some(new_else_b)
+                    let mut smi = ScopeMutInfo::new();
+                    smi.extend_with_block(new_else_b.0.clone());
+                    (smi, Some(new_else_b))
                 }
             };
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_cond);
+            smi.extend_with_block(new_then_b.0.clone());
+            smi.extend(smi_new_else_b);
+
             Ok((
+                smi,
                 (
                     Statement::Conditional(new_cond, new_then_b, new_else_b, info),
                     s_span,
@@ -376,10 +546,19 @@ fn resolve_statement(
             ))
         }
         Statement::ForLoop(None, lower, upper, body) => {
-            let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
-            let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
+            let (smi_new_lower, new_lower) =
+                resolve_expression(sess, lower, &name_context, top_level_ctx)?;
+            let (smi_new_upper, new_upper) =
+                resolve_expression(sess, upper, &name_context, top_level_ctx)?;
             let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_lower);
+            smi.extend(smi_new_upper);
+            smi.extend_with_block(new_body.clone().0);
+
             Ok((
+                smi,
                 (
                     Statement::ForLoop(None, new_lower, new_upper, new_body),
                     s_span,
@@ -388,15 +567,24 @@ fn resolve_statement(
             ))
         }
         Statement::ForLoop(Some((var, var_span)), lower, upper, body) => {
-            let new_lower = resolve_expression(sess, lower, &name_context, top_level_ctx)?;
-            let new_upper = resolve_expression(sess, upper, &name_context, top_level_ctx)?;
+            let (smi_new_lower, new_lower) =
+                resolve_expression(sess, lower, &name_context, top_level_ctx)?;
+            let (smi_new_upper, new_upper) =
+                resolve_expression(sess, upper, &name_context, top_level_ctx)?;
             let new_var = match &var {
-                Ident::Unresolved(s) => to_fresh_ident(s),
+                Ident::Unresolved(s) => to_fresh_ident(s, false),
                 _ => panic!("should not happen"),
             };
             let name_context = add_name(&var, &new_var, name_context);
             let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_lower);
+            smi.extend(smi_new_upper);
+            smi.extend_with_block(new_body.clone().0);
+
             Ok((
+                smi,
                 (
                     Statement::ForLoop(Some((new_var, var_span)), new_lower, new_upper, new_body),
                     s_span,
@@ -405,15 +593,26 @@ fn resolve_statement(
             ))
         }
         Statement::ReturnExp(e) => {
-            let new_e =
+            let (smi_new_e, new_e) =
                 resolve_expression(sess, (e, s_span.clone()), &name_context, top_level_ctx)?;
-            Ok(((Statement::ReturnExp(new_e.0), s_span), name_context))
+            Ok((
+                smi_new_e,
+                (Statement::ReturnExp(new_e.0), s_span),
+                name_context,
+            ))
         }
         Statement::ArrayUpdate(var, index, e, question_mark, typ) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
-            let new_index = resolve_expression(sess, index, &name_context, top_level_ctx)?;
-            let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
+            let (smi_new_index, new_index) =
+                resolve_expression(sess, index, &name_context, top_level_ctx)?;
+            let (smi_new_e, new_e) = resolve_expression(sess, e, &name_context, top_level_ctx)?;
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_index);
+            smi.extend(smi_new_e);
+
             Ok((
+                smi,
                 (
                     Statement::ArrayUpdate(
                         (new_var, var.1.clone()),
@@ -429,8 +628,10 @@ fn resolve_statement(
         }
         Statement::Reassignment(var, e, question_mark) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
-            let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
+            let (mut_vars_new_e, new_e) =
+                resolve_expression(sess, e, &name_context, top_level_ctx)?;
             Ok((
+                mut_vars_new_e,
                 (
                     Statement::Reassignment((new_var, var.1.clone()), new_e, question_mark),
                     s_span,
@@ -439,15 +640,26 @@ fn resolve_statement(
             ))
         }
         Statement::LetBinding(pat, typ, e, question_mark) => {
-            let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
+            let (smi_new_e, new_e) = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             let (new_pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_new_e);
+
+            if let Pattern::IdentPat(x, true) = new_pat.clone() {
+                println!("Mutable vars {:?}", (x.clone(), pat.1.clone()));
+
+                smi.vars.push(((x, pat.1.clone()), typ.clone()));
+            };
             log::trace!("   new_name_context {:#?}", new_name_context);
             log::trace!("   existing name_context {:#?}", name_context);
             for (k, v) in new_name_context.into_iter() {
                 name_context = name_context.update(k, v);
             }
             log::trace!("   updated name_context {:#?}", name_context);
+            
             Ok((
+                smi,
                 (
                     Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e, question_mark),
                     s_span,
@@ -468,10 +680,13 @@ fn resolve_block(
     log::trace!("   name_context: {:#?}", name_context);
     let mut new_stmts = Vec::new();
     let mut name_context = name_context.clone();
+    let mut smi = ScopeMutInfo::new();
     for s in b.stmts.into_iter() {
         log::trace!("   mutated name_context: {:#?}", name_context);
-        let (new_stmt, new_name_context) = resolve_statement(sess, s, name_context, top_level_ctx)?;
+        let (smi_stmt, new_stmt, new_name_context) =
+            resolve_statement(sess, s, name_context, top_level_ctx)?;
         new_stmts.push(new_stmt);
+        smi.extend(smi_stmt);
         name_context = new_name_context;
     }
     Ok((
@@ -480,6 +695,8 @@ fn resolve_block(
             mutated: None,
             return_typ: None,
             contains_question_mark: None,
+            mutable_vars: smi.vars,
+            function_dependencies: smi.funcs,
         },
         b_span,
     ))
@@ -494,16 +711,17 @@ fn resolve_item(
     let i = item.clone().item;
     let i = match i {
         Item::ConstDecl(id, typ, e) => {
-            let new_e = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
+            let (smi_new_e, new_e) = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ConstDecl(id, typ, new_e), i_span))
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
-            let new_size = resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
+            let (smi_new_size, new_size) =
+                resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
         Item::EnumDecl(_, _) | Item::AliasDecl(_, _) | Item::ImportedCrate(_) => Ok((i, i_span)),
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
-            let new_canvas_size =
+            let (smi_new_canvas_size, new_canvas_size) =
                 resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
             Ok((
                 Item::NaturalIntegerDecl(typ_ident, secrecy, new_canvas_size, info),
@@ -516,7 +734,7 @@ fn resolve_item(
                 (Vec::new(), name_context),
                 |(mut new_sig_acc, name_context), ((x, x_span), (t, t_span))| {
                     let new_x = match x {
-                        Ident::Unresolved(s) => to_fresh_ident(s),
+                        Ident::Unresolved(s) => to_fresh_ident(s, false),
                         _ => panic!("should not happen"),
                     };
                     let name_context = add_name(x, &new_x, name_context);
@@ -525,7 +743,14 @@ fn resolve_item(
                 },
             );
             sig.args = new_sig_args;
+
             let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
+
+            println!("FUN {:?} sig {:?}", f.clone(), new_b.clone().0.mutable_vars);
+
+            sig.mutable_vars = new_b.clone().0.mutable_vars;
+            sig.function_dependencies = new_b.clone().0.function_dependencies;
+
             Ok((Item::FnDecl((f, f_span), sig, new_b), i_span))
         }
     };
@@ -543,11 +768,11 @@ fn resolve_item(
 
 fn process_decl_item(
     sess: &Session,
-    (i, i_span): &Spanned<DecoratedItem>,
+    (i, i_span): &mut Spanned<DecoratedItem>,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
     log::trace!("process_decl_item ({:?}, {:?})", i, i_span);
-    match &i.item {
+    match &mut i.item {
         Item::ConstDecl(id, typ, _e) => {
             log::trace!("   Item::ConstDecl");
             top_level_context.consts.insert(id.0.clone(), typ.clone());
@@ -626,7 +851,7 @@ fn process_decl_item(
                 Some((canvas_typ_ident, mod_string)) => {
                     process_decl_item(
                         sess,
-                        &(
+                        &mut (
                             DecoratedItem {
                                 item: Item::ArrayDecl(
                                     canvas_typ_ident.clone(),
@@ -704,8 +929,20 @@ fn process_decl_item(
             // Foreign items already imported at this point
             Ok(())
         }
-        Item::FnDecl((f, _f_span), sig, _b) => {
+        Item::FnDecl((f, _f_span), ref mut sig, _b) => {
             log::trace!("   Item::FnDecl");
+            {
+                let mut new_mut_vars = Vec::new();
+                for (mut_var, typ) in sig.mutable_vars.clone() {
+                    let new_mut_var = match &mut_var.0 {
+                        Ident::Unresolved(s) => to_fresh_ident(s, false),
+                        _ => panic!("should not happen"),
+                    };
+                    new_mut_vars.push(((new_mut_var, mut_var.1.clone()), typ));
+                }
+                sig.mutable_vars = new_mut_vars;
+            }
+            
             top_level_context
                 .functions
                 .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
@@ -841,17 +1078,55 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     enrich_with_external_crates_symbols(sess, &p, top_level_ctx, external_data)?;
     // Then we do a first pass that collects types and signatures of top-level
     // items
-    for item in p.items.iter() {
+
+    let mut items = p.items;
+
+    for item in &mut items {
         process_decl_item(sess, item, top_level_ctx)?;
     }
     // log::trace!("   enriched top level context {}", top_level_ctx);
     // And finally a second pass that performs the actual name resolution
-    Ok(Program {
-        items: check_vec(
-            p.items
-                .into_iter()
-                .map(|i| resolve_item(sess, i, &top_level_ctx))
-                .collect(),
-        )?,
-    })
+    items = check_vec(
+        items
+            .into_iter()
+            .map(|i| resolve_item(sess, i, &top_level_ctx))
+            .collect(),
+    )?;
+
+    for x in items.clone().into_iter() {
+        match x.0.item {
+            Item::FnDecl((f, _f_span), sig, _b) => {
+                let mut mut_vars = Vec::new();
+                for (f_dep, _) in sig.clone().function_dependencies {
+                    println!("{:?} dependeds on {:?}", f.clone(), f_dep.clone());
+
+                    match top_level_ctx
+                        .functions
+                        .get(&FnKey::Independent(f_dep.clone()))
+                    {
+                        Some(FnValue::Local(sig_dep)) => {
+                            mut_vars.extend(sig_dep.clone().mutable_vars);
+                        }
+                        _ => (),
+                    }
+                }
+                let mut new_sig = sig.clone();
+                new_sig.mutable_vars.extend(mut_vars);
+
+                println!(
+                    "{:?} new mutable vars {:?}",
+                    f.clone(),
+                    new_sig.clone().mutable_vars
+                );
+
+                top_level_ctx.functions.insert(
+                    FnKey::Independent(f.clone()),
+                    FnValue::Local(new_sig.clone()),
+                );
+            }
+            _ => (),
+        }
+    }
+
+    Ok(Program { items })
 }

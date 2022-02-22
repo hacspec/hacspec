@@ -215,7 +215,7 @@ fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     match x {
         Ident::Unresolved(s) => translate_ident_str(s.clone()),
         Ident::TopLevel(s) => translate_toplevel_ident(s),
-        Ident::Local(LocalIdent { id, name: s }) => {
+        Ident::Local(LocalIdent { id, name: s , .. }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
                 Some(c_id) => *c_id,
@@ -384,6 +384,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "I8" => Expression::FuncCall(
                 None,
@@ -393,6 +394,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "U16" => Expression::FuncCall(
                 None,
@@ -402,6 +404,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "I16" => Expression::FuncCall(
                 None,
@@ -411,6 +414,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "U32" => Expression::FuncCall(
                 None,
@@ -420,6 +424,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "I32" => Expression::FuncCall(
                 None,
@@ -429,6 +434,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "U64" => Expression::FuncCall(
                 None,
@@ -438,6 +444,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "I64" => Expression::FuncCall(
                 None,
@@ -447,6 +454,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "U128" => Expression::FuncCall(
                 None,
@@ -456,6 +464,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             "I128" => Expression::FuncCall(
                 None,
@@ -465,6 +474,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
+                vec![],
             ),
             _ => panic!("Trying to get default for {}", t),
         },
@@ -479,7 +489,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x) => translate_ident(x.clone()),
+        Pattern::IdentPat(x,_) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }
@@ -921,7 +931,7 @@ fn translate_expression<'a>(
                 .map(|(e, _)| translate_expression(sess, e, top_ctx)),
         ),
         Expression::Named(p) => translate_ident(p.clone()),
-        Expression::FuncCall(prefix, name, args, _arg_types) => {
+        Expression::FuncCall(prefix, name, args, _arg_types, mut_var) => {
             let (func_name, additional_args) = translate_func_name(
                 sess,
                 prefix.clone(),
@@ -946,7 +956,7 @@ fn translate_expression<'a>(
                     RcDoc::nil()
                 })
         }
-        Expression::MethodCall(sel_arg, sel_typ, (f, _), args, _arg_types) => {
+        Expression::MethodCall(sel_arg, sel_typ, (f, _), args, _arg_types, mut_var) => {
             let (func_name, additional_args) = translate_func_name(
                 sess,
                 sel_typ.clone().map(|x| x.1),
@@ -1224,6 +1234,7 @@ fn translate_statements<'a>(
                 let tmp_ident = Ident::Local(LocalIdent {
                     name: "tmp".to_string(),
                     id: fresh_codegen_id(),
+                    mutable: false,
                 });
                 let array_upd_payload = array_or_seq
                     .append(RcDoc::as_string("_upd"))

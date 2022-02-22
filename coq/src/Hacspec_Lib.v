@@ -2,6 +2,45 @@ Global Set Warnings "-ambiguous-paths".
 Global Set Warnings "-uniform-inheritance".
 Global Set Warnings "-auto-template".
 Global Set Warnings "-disj-pattern-notation".
+
+From mathcomp Require Import choice (* all_ssreflect *) (* ssreflect *) (* seq tuple *).
+From Crypt Require Import choice_type Package Prelude.
+Import PackageNotation.
+
+Axiom choice_type_from_type : Type -> choice_type.
+Axiom choice_type_from_type_elem : forall {T : Type}, T -> choice_type_from_type T.
+Axiom type_from_choice_type_elem : forall {T : Type}, choice_type_from_type T -> T.
+
+Axiom choice_type_from_type_id :
+  forall T (x : T), type_from_choice_type_elem (choice_type_from_type_elem x) = x.
+Axiom type_from_choice_type_id :
+  forall T (x : choice_type_from_type T), choice_type_from_type_elem (type_from_choice_type_elem x) = x.
+
+Definition code_injection {T : Type} (t : T) : code fset.fset0 [interface] (choice_type_from_type T) :=
+  {code
+     @pkg_core_definition.ret (choice_type_from_type T) (choice_type_from_type_elem t)
+  }.
+
+Fixpoint code_extraction {T : Type} (t : code fset.fset0 [interface] (choice_type_from_type T)) : T.
+Admitted.
+  (* destruct t.   *)
+  (* induction prog.   *)
+  (* - apply (type_from_choice_type_elem x). *)
+  (* - inversion prog_valid. *)
+
+  (* (* Inductive raw_code (A : choiceType) : Type := *) *)
+  (* (* | ret (x : A) *) *)
+  (* (* | opr (o : opsig) (x : src o) (k : tgt o → raw_code A) *) *)
+  (* (* | getr (l : Location) (k : l → raw_code A) *) *)
+  (* (* | putr (l : Location) (v : l) (k : raw_code A) *) *)
+  (* (* | sampler (op : Op) (k : Arit op → raw_code A). *) *)
+
+
+  (* apply T. *)
+
+Theorem code_extraction_injection_id : forall T (t : T), code_extraction (code_injection t) = t.
+Admitted.
+
 (*** Integers *)
 From Coq Require Import ZArith List.
 Import ListNotations.
@@ -14,7 +53,7 @@ Require Import Lia.
 
 Declare Scope hacspec_scope.
 
-Axiom secret : forall {WS : WORDSIZE},  (@int WS) -> (@int WS).
+Axiom secret : forall {WS : WORDSIZE},  (@int WS) -> code fset.fset0 [interface] (choice_type_from_type (@int WS)).
 
 Axiom uint8_declassify : int8 -> int8.
 Axiom int8_declassify : int8 -> int8.
@@ -152,7 +191,7 @@ Definition shift_right_ `{WS : WORDSIZE} (i : @int WS) (j : uint_size) :=
 Infix "shift_left" := (shift_left_) (at level 77) : hacspec_scope.
 Infix "shift_right" := (shift_right_) (at level 77) : hacspec_scope.
 
-Infix "%%" := Z.rem (at level 40, left associativity) : Z_scope.
+(* Infix "%%" := Z.rem (at level 40, left associativity) : Z_scope. *)
 Infix ".+" := (MachineIntegers.add) (at level 77) : hacspec_scope.
 Infix ".-" := (MachineIntegers.sub) (at level 77) : hacspec_scope.
 Notation "-" := (MachineIntegers.neg) (at level 77) : hacspec_scope.
@@ -162,10 +201,11 @@ Infix ".%" := (MachineIntegers.mods) (at level 77) : hacspec_scope.
 Infix ".^" := (MachineIntegers.xor) (at level 77) : hacspec_scope.
 Infix ".&" := (MachineIntegers.and) (at level 77) : hacspec_scope.
 Infix ".|" := (MachineIntegers.or) (at level 77) : hacspec_scope.
-Infix "==" := (MachineIntegers.eq) (at level 32) : hacspec_scope.
+(* Infix "==" := (MachineIntegers.eq) (at level 32) : hacspec_scope. *)
 (* Definition one := (@one WORDSIZE32). *)
 (* Definition zero := (@zero WORDSIZE32). *)
-Notation "A × B" := (prod A B) (at level 79, left associativity) : hacspec_scope.
+
+Notation "A '× B" := (prod A B) (at level 79, left associativity) : hacspec_scope.
 
 (*** Positive util *)
 
@@ -385,7 +425,7 @@ Fixpoint foldi_
   | S n' => foldi_ n' (add i one) f (f i cur)
   end.
 Close Scope nat_scope.
-Definition foldi
+Definition foldi_pre
   {acc: Type}
   (lo: uint_size)
   (hi: uint_size) (* {lo <= hi} *)
@@ -396,6 +436,13 @@ Definition foldi
   | Zneg p => init
   | Zpos p => foldi_ (Pos.to_nat p) lo f init
   end.
+Definition foldi
+  {acc: Type}
+  (lo: uint_size)
+  (hi: uint_size) (* {lo <= hi} *)
+  (f: (uint_size) -> acc -> code fset.fset0 [interface] (choice_type_from_type acc)) (* {i < hi} *)
+  (init: acc) : _ :=
+  code_injection (foldi_pre lo hi (fun x y => code_extraction (f x y)) init).
 
 (* Fold done using natural numbers for bounds *)
 Fixpoint foldi_nat_
@@ -412,11 +459,11 @@ Definition foldi_nat
   {acc: Type}
   (lo: nat)
   (hi: nat) (* {lo <= hi} *)
-  (f: nat -> acc -> acc) (* {i < hi} *)
-  (init: acc) : acc :=
-  match Nat.sub hi lo with
+  (f: nat -> acc -> code fset.fset0 [interface] (choice_type_from_type acc)) (* {i < hi} *)
+  (init: acc) : code fset.fset0 [interface] (choice_type_from_type acc) :=
+  code_injection match Nat.sub hi lo with
   | O => init
-  | S n' => foldi_nat_ (S n') lo f init
+  | S n' => foldi_nat_ (S n') lo (fun x y => code_extraction (f x y)) init
   end.
 
 Lemma foldi__move_S :
@@ -498,7 +545,7 @@ Lemma foldi_to_foldi_nat :
   forall {acc: Type}
     (lo: uint_size) (* {lo <= hi} *)
     (hi: uint_size) (* {lo <= hi} *)
-    (f: (uint_size) -> acc -> acc) (* {i < hi} *)
+    (f: (uint_size) -> acc -> code fset.fset0 [interface] (choice_type_from_type acc)) (* {i < hi} *)
     (init: acc),
     (unsigned lo <= unsigned hi)%Z ->
     foldi lo hi f init = foldi_nat (Z.to_nat (unsigned lo)) (Z.to_nat (unsigned hi)) (fun x => f (repr (Z.of_nat x))) init.
@@ -507,6 +554,8 @@ Proof.
 
   unfold foldi.
   unfold foldi_nat.
+  unfold foldi_pre.
+  f_equal.
 
   destruct (uint_size_as_nat hi) as [ hi_n [ hi_eq hi_H ] ] ; subst.
   rewrite (@unsigned_repr_alt WORDSIZE32 _ hi_H) in *.
@@ -551,7 +600,6 @@ Proof.
         rewrite Nat2Z.inj_add.
         reflexivity.
       * rewrite SuccNat2Pos.id_succ.
-        rewrite foldi__move_S.
         reflexivity.
 Qed.
 
@@ -560,10 +608,10 @@ Lemma foldi_nat_split_S :
   forall {acc: Type}
     (lo: nat)
     (hi: nat) (* {lo <= hi} *)
-    (f: nat -> acc -> acc) (* {i < hi} *)
+    (f: nat -> acc -> code fset.fset0 [interface] (choice_type_from_type acc)) (* {i < hi} *)
     (init: acc),
     (lo < hi)%nat ->
-    foldi_nat lo hi f init = foldi_nat (S lo) hi f (foldi_nat lo (S lo) f init).
+    foldi_nat lo hi f init = foldi_nat (S lo) hi f (code_extraction (foldi_nat lo (S lo) f init)).
 Proof.
   unfold foldi_nat.
   intros.
@@ -576,6 +624,7 @@ Proof.
   - apply Nat.eqb_eq in hi_eq_lo ; rewrite hi_eq_lo in *.
     rewrite (succ_sub_diag lo).
     rewrite Nat.sub_diag.
+    rewrite code_extraction_injection_id.
     reflexivity.
   - apply Nat.eqb_neq in hi_eq_lo.
     apply Nat.lt_gt_cases in hi_eq_lo.
@@ -584,6 +633,7 @@ Proof.
     + rewrite (Nat.sub_succ_l (S lo)) by apply (Nat.lt_le_pred _ _ H0).
       rewrite Nat.sub_succ_l by apply (Nat.lt_le_pred _ _ H).
       replace ((S (hi - S lo))) with (hi - lo)%nat by lia.
+      rewrite code_extraction_injection_id.
       reflexivity.
 Qed.
 
@@ -593,19 +643,20 @@ Lemma foldi_nat_split_add :
   forall {acc: Type}
     (lo: nat)
     (hi: nat) (* {lo <= hi} *)
-    (f: nat -> acc -> acc) (* {i < hi} *)
+    (f: nat -> acc -> code fset.fset0 [interface] (choice_type_from_type acc)) (* {i < hi} *)
     (init: acc),
   forall {guarantee: (lo + k <= hi)%nat},
-  foldi_nat lo hi f init = foldi_nat (k + lo) hi f (foldi_nat lo (k + lo) f init).
+  foldi_nat lo hi f init = foldi_nat (k + lo) hi f (code_extraction (foldi_nat lo (k + lo) f init)).
 Proof.
   induction k ; intros.
   - cbn.
     unfold foldi_nat.
     rewrite Nat.sub_diag.
+    rewrite code_extraction_injection_id.
     reflexivity.
   - rewrite foldi_nat_split_S by lia.
     replace (S k + lo)%nat with (k + S lo)%nat by lia.
-    specialize (IHk acc (S lo) hi f (foldi_nat lo (S lo) f init)).
+    specialize (IHk acc (S lo) hi f (code_extraction (foldi_nat lo (S lo) f init))).
     rewrite IHk by lia.
     f_equal.
     rewrite <- foldi_nat_split_S by lia.
@@ -618,10 +669,10 @@ Lemma foldi_nat_split :
   forall {acc: Type}
     (lo: nat)
     (hi: nat) (* {lo <= hi} *)
-    (f: nat -> acc -> acc) (* {i < hi} *)
+    (f: nat -> acc -> code fset.fset0 [interface] (choice_type_from_type acc)) (* {i < hi} *)
     (init: acc),
   forall {guarantee: (lo <= mid <= hi)%nat},
-  foldi_nat lo hi f init = foldi_nat mid hi f (foldi_nat lo mid f init).
+  foldi_nat lo hi f init = foldi_nat mid hi f (code_extraction (foldi_nat lo mid f init)).
 Proof.
   intros.
   assert (mid_is_low_plus_constant : {k : nat | (mid = lo + k)%nat})  by (exists (mid - lo)%nat ; lia).  
@@ -637,10 +688,10 @@ Lemma foldi_split :
   forall {acc: Type}
     (lo: uint_size)
     (hi: uint_size) (* {lo <= hi} *)
-    (f: uint_size -> acc -> acc) (* {i < hi} *)
+    (f: uint_size -> acc -> code fset.fset0 [interface] (choice_type_from_type acc)) (* {i < hi} *)
     (init: acc),
   forall {guarantee: (unsigned lo <= unsigned mid <= unsigned hi)%Z},
-  foldi lo hi f init = foldi mid hi f (foldi lo mid f init).
+  foldi lo hi f init = foldi mid hi f (code_extraction (foldi lo mid f init)).
 Proof.
   intros.
   do 3 rewrite foldi_to_foldi_nat by lia.
@@ -721,56 +772,73 @@ Definition array_index {A: Type} `{Default A} {len : nat} (s: nseq A len) (i: na
 Proof.
   destruct (i <? len) eqn:H1.
   (* If i < len, index normally *)
-  - rewrite Nat.ltb_lt in H1.
+  - apply Nat.ltb_lt in H1.
     exact (VectorDef.nth s (Fin.of_nat_lt H1)).
   (* otherwise return default element *)
   - exact default.
 Defined.
 
 
-Definition array_upd {A: Type} {len : nat} (s: nseq A len) (i: nat) (new_v: A) : nseq A len.
+Definition array_upd_pre {A: Type} {len : nat} (s: nseq A len) (i: nat) (new_v: A) : nseq A len.
 Proof.
   destruct (i <? len) eqn:H.
   (* If i < len, update normally *)
-  - rewrite Nat.ltb_lt in H.
+  - apply Nat.ltb_lt in H.
     exact (VectorDef.replace s (Fin.of_nat_lt H) new_v).
   (* otherwise return original array *)
   - exact s.
 Defined.
 
+Definition array_upd {A: Type} {len : nat} (s: nseq A len) (i: nat) (new_v: A) : code fset.fset0 [interface] (choice_type_from_type (nseq A len)) :=
+  code_injection (array_upd_pre s i new_v).
+
 (* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
 
 (* substitutes a sequence (list) into an array (nseq), given index interval  *)
 (* Axiom update_sub : forall {A len }, nseq A len -> nat -> nat -> seq A -> t A len. *)
-Definition update_sub {A len slen} `{Default A} (v : nseq A len) (i : nat) (n : nat) (sub : nseq A slen) : nseq A len :=
+Definition update_sub_pre {A len slen} `{Default A} (v : nseq A len) (i : nat) (n : nat) (sub : nseq A slen) : nseq A len :=
   let fix rec x acc :=
     match x with
     | 0 => acc
     (* | 0 => array_upd acc 0 (array_index sub 0) *)
-    | S x => rec x (array_upd acc (i+x) (array_index sub x))
+    | S x => rec x (array_upd_pre acc (i+x) (array_index sub x))
     end in
   rec (n - i + 1) v.
 
 (* Sanity check *)
 (* Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))). *)
 
-Definition array_to_seq
+Definition array_to_seq_pre
   {a: Type}
   {out_len:nat}
   (input: nseq a out_len)
   (* {H : List.length input = out_len} *)
     : seq a := VectorDef.to_list input.
+Definition array_to_seq
+  {a: Type}
+  {out_len:nat}
+  (input: nseq a out_len)
+  (* {H : List.length input = out_len} *)
+    : seq a := array_to_seq_pre input. (* todo fix *)
 
-Definition array_from_seq
+Definition array_from_seq_pre
   {a: Type}
  `{Default a}
   (out_len:nat)
   (input: seq a)
     : nseq a out_len :=
     let out := VectorDef.const default out_len in
-    update_sub out 0 (out_len - 1) (Vector.of_list input).
+    update_sub_pre out 0 (out_len - 1) (VectorDef.of_list input).
 
-(* Global Coercion array_from_seq : seq >-> nseq. *)
+Definition array_from_seq   {a: Type}
+ `{Default a}
+  (out_len:nat)
+  (input: seq a)
+  (* {H : List.length input = out_len} *)
+    : code fset.fset0 [interface] (choice_type_from_type (nseq a out_len)) :=
+  code_injection (array_from_seq_pre out_len input).
+
+(* Global Coercion array_from_seq_pre : seq >-> nseq. *)
 
 Definition slice {A} (l : seq A) (i j : nat) : seq A :=
   if j <=? i then [] else firstn (j-i+1) (skipn i l).
@@ -778,7 +846,7 @@ Definition slice {A} (l : seq A) (i j : nat) : seq A :=
 Definition lseq_slice {A n} (l : nseq A n) (i j : nat) : nseq A _ :=
   VectorDef.of_list (slice (VectorDef.to_list l) i j).
 
-Definition array_from_slice
+Definition array_from_slice_pre
   {a: Type}
  `{Default a}
   (default_value: a)
@@ -788,10 +856,18 @@ Definition array_from_slice
   (slice_len: nat)
     : nseq a out_len :=
     let out := VectorDef.const default_value out_len in
-    update_sub out 0 slice_len (lseq_slice (VectorDef.of_list input) start (start + slice_len)).
+    update_sub_pre out 0 slice_len (lseq_slice (VectorDef.of_list input) start (start + slice_len)).
+Definition array_from_slice
+  {a: Type}
+ `{Default a}
+  (default_value: a)
+  (out_len: nat)
+  (input: seq a)
+  (start: nat)
+  (slice_len: nat)
+  : code fset.fset0 [interface] (choice_type_from_type (nseq a out_len)) := code_injection (array_from_slice_pre default_value out_len input start slice_len).
 
-
-Definition array_slice
+Definition array_slice_pre
   {a: Type}
   `{Default a}
   {len : nat}
@@ -799,10 +875,10 @@ Definition array_slice
   (start: nat)
   (slice_len: nat)
     : seq a :=
-  slice (array_to_seq input) start (start + slice_len).
+  slice (array_to_seq_pre input) start (start + slice_len).
 
 
-Definition array_from_slice_range
+Definition array_from_slice_range_pre
   {a: Type}
  `{Default a}
   (default_value: a)
@@ -812,7 +888,7 @@ Definition array_from_slice_range
     : nseq a out_len :=
     let out := array_new_ default_value out_len in
     let (start, fin) := start_fin in
-    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin))).
+    update_sub_pre out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin))).
 
 
 Definition array_slice_range
@@ -823,7 +899,7 @@ Definition array_slice_range
     : nseq a _ :=
   lseq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
 
-Definition array_update
+Definition array_update_pre
   {a: Type}
  `{Default a}
   {len: nat}
@@ -831,16 +907,17 @@ Definition array_update
   (start : nat)
   (start_s: seq a)
     : nseq a len :=
-    update_sub (s) start (length start_s) (VectorDef.of_list start_s).
+    update_sub_pre s start (length start_s) (VectorDef.of_list start_s).
 
-Definition array_update_start
+Definition array_update_start_pre
   {a: Type}
  `{Default a}
   {len: nat}
   (s: nseq a len)
   (start_s: seq a)
     : nseq a len :=
-    update_sub (s) 0 (length start_s) (VectorDef.of_list start_s).
+    update_sub_pre s 0 (length start_s) (VectorDef.of_list start_s).
+
 
 Definition array_len  {a: Type} {len: nat} (s: nseq a len) := len.
 (* May also come up as 'length' instead of 'len' *)
@@ -848,55 +925,69 @@ Definition array_length  {a: Type} {len: nat} (s: nseq a len) := len.
 
 (**** Seq manipulation *)
 
-Definition seq_slice
+Definition seq_slice_pre
   {a: Type}
  `{Default a}
   (s: seq a)
   (start: nat)
   (len: nat)
-    : seq a :=
-  (slice s start (start + len)).
+    : nseq a _ :=
+  array_from_seq_pre len (slice s start (start + len)).
 
-Definition seq_slice_range
+Definition seq_slice_range_pre
   {a: Type}
  `{Default a}
   (input: seq a)
   (start_fin:(uint_size * uint_size))
-    : seq a :=
-  seq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
+    : nseq a _ :=
+  seq_slice_pre input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
 
 (* updating a subsequence in a sequence *)
-Definition seq_update
+Definition seq_update_pre
   {a: Type}
  `{Default a}
   (s: seq a)
   (start: nat)
   (input: seq a)
     : seq a :=
-  array_to_seq (update_sub (VectorDef.of_list s) start (length input) (VectorDef.of_list input)).
+  array_to_seq_pre (update_sub_pre (VectorDef.of_list s) start (length input) (VectorDef.of_list input)).
 
 (* updating only a single value in a sequence*)
-Definition seq_upd
+Definition seq_upd_pre
   {a: Type}
  `{Default a}
   (s: seq a)
   (start: nat)
   (v: a)
     : seq a :=
-  array_to_seq (update_sub (VectorDef.of_list s) start 1 (VectorDef.of_list [v])).
+  array_to_seq_pre (update_sub_pre (VectorDef.of_list s) start 1 (VectorDef.of_list [v])).
 
 Definition sub {a} (s : list a) start n :=
   slice s start (start + n).
 
-Definition seq_update_start
+Definition seq_update_start_pre
   {a: Type}
  `{Default a}
   (s: seq a)
   (start_s: seq a)
     : seq a :=
-    array_to_seq (update_sub (VectorDef.of_list s) 0 (length start_s) (VectorDef.of_list start_s)).
+    array_to_seq_pre (update_sub_pre (VectorDef.of_list s) 0 (length start_s) (VectorDef.of_list start_s)).
 
-Definition array_update_slice
+(* Definition array_update_slice *)
+(*   {a : Type} *)
+(*  `{Default a} *)
+(*   {l : nat} *)
+(*   (out: nseq a l) *)
+(*   (start_out: nat) *)
+(*   (input: nseq a l) *)
+(*   (start_in: nat) *)
+(*   (len: nat) *)
+(*     : nseq a (length out) *)
+(*   := *)
+(*   update_sub (VectorDef.of_list out) start_out len *)
+(*     (VectorDef.of_list (sub input start_in len)). *)
+
+Definition array_update_slice_pre
   {a : Type}
  `{Default a}
   {l : nat}
@@ -907,10 +998,10 @@ Definition array_update_slice
   (len: nat)
     : nseq a (array_length out)
   :=
-  update_sub (out) start_out len
+  update_sub_pre out start_out len
     (VectorDef.of_list (sub input start_in len)).
 
-Definition seq_update_slice
+Definition seq_update_slice_pre
   {a : Type}
  `{Default a}
   (out: seq a)
@@ -920,7 +1011,7 @@ Definition seq_update_slice
   (len: nat)
     : nseq a (length out)
   :=
-  update_sub (VectorDef.of_list out) start_out len
+  update_sub_pre (VectorDef.of_list out) start_out len
     (VectorDef.of_list (sub input start_in len)).
 
 Definition seq_concat
@@ -937,7 +1028,7 @@ Definition seq_push
   : seq a :=
   (s1 ++ [s2]).
 
-Definition seq_from_slice_range
+Definition seq_from_slice_range_pre
   {a: Type}
  `{Default a}
   (input: seq a)
@@ -945,7 +1036,7 @@ Definition seq_from_slice_range
   : seq a :=
   let out := array_new_ (default) (length input) in
   let (start, fin) := start_fin in
-    array_to_seq (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin)))).
+    array_to_seq_pre (update_sub_pre out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin)))).
 
 Definition seq_from_seq {A} (l : seq A) := l.
 
@@ -992,7 +1083,7 @@ Definition seq_get_chunk
   (usize out_len, slice
     s idx_start (idx_start + seq_chunk_len s chunk_len chunk_num)).
 
-Definition seq_set_chunk
+Definition seq_set_chunk_pre
   {a: Type}
  `{Default a}
   (s: seq a)
@@ -1001,7 +1092,7 @@ Definition seq_set_chunk
   (chunk: seq a ) : seq a :=
  let idx_start := chunk_len * chunk_num in
  let out_len := seq_chunk_len s chunk_len chunk_num in
-  VectorDef.to_list (update_sub (VectorDef.of_list s) idx_start out_len (VectorDef.of_list chunk)).
+  VectorDef.to_list (update_sub_pre (VectorDef.of_list s) idx_start out_len (VectorDef.of_list chunk)).
 
 
 Definition seq_num_exact_chunks {a} (l : seq a) (chunk_size : uint_size) : uint_size :=
@@ -1012,7 +1103,7 @@ Definition seq_get_exact_chunk {a} (l : seq a) (chunk_size chunk_num: uint_size)
   let '(len, chunk) := seq_get_chunk l (from_uint_size chunk_size) (from_uint_size chunk_num) in
   if eq len chunk_size then [] else chunk.
 
-Definition seq_set_exact_chunk {a} `{H : Default a} := @seq_set_chunk a H.
+Definition seq_set_exact_chunk_pre {a} `{H : Default a} := @seq_set_chunk_pre a H.
 
 Definition seq_get_remainder_chunk : forall {a}, seq a -> uint_size -> seq a :=
   fun _ l chunk_size =>
@@ -1077,28 +1168,28 @@ Infix "array_neq" := (fun s1 s2 => negb (array_eq_ eq s1 s2)) (at level 33) : ha
 
 
 (**** Integers to arrays *)
-Axiom uint32_to_le_bytes : int32 -> nseq int8 4.
-Axiom uint32_to_be_bytes : int32 -> nseq int8 4.
-Axiom uint32_from_le_bytes : nseq int8 4 -> int32.
-Axiom uint32_from_be_bytes : nseq int8 4 -> int32.
-Axiom uint64_to_le_bytes : int64 -> nseq int8 8.
-Axiom uint64_to_be_bytes : int64 -> nseq int8 8.
-Axiom uint64_from_le_bytes : nseq int8 8 -> int64.
-Axiom uint64_from_be_bytes : nseq int8 8 -> int64.
-Axiom uint128_to_le_bytes : int128 -> nseq int8 16.
-Axiom uint128_to_be_bytes : int128 -> nseq int8 16.
-Axiom uint128_from_le_bytes : nseq int8 16 -> int128.
-Axiom uint128_from_be_bytes : nseq int8 16 -> int128.
-Axiom u32_to_le_bytes : int32 -> nseq int8 4.
-Axiom u32_to_be_bytes : int32 -> nseq int8 4.
-Axiom u32_from_le_bytes : nseq int8 4 -> int32.
-Axiom u32_from_be_bytes : nseq int8 4 -> int32.
-Axiom u64_to_le_bytes : int64 -> nseq int8 8.
-Axiom u64_from_le_bytes : nseq int8 8 -> int64.
-Axiom u128_to_le_bytes : int128 -> nseq int8 16.
-Axiom u128_to_be_bytes : int128 -> nseq int8 16.
-Axiom u128_from_le_bytes : nseq int8 16 -> int128.
-Axiom u128_from_be_bytes : nseq int8 16 -> int128.
+Axiom uint32_to_le_bytes : int32 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 4)).
+Axiom uint32_to_be_bytes : int32 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 4)).
+Axiom uint32_from_le_bytes : nseq int8 4 -> code fset.fset0 [interface] (choice_type_from_type (int32)).
+Axiom uint32_from_be_bytes : nseq int8 4 -> code fset.fset0 [interface] (choice_type_from_type (int32)).
+Axiom uint64_to_le_bytes : int64 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 8)).
+Axiom uint64_to_be_bytes : int64 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 8)).
+Axiom uint64_from_le_bytes : nseq int8 8 -> code fset.fset0 [interface] (choice_type_from_type (int64)).
+Axiom uint64_from_be_bytes : nseq int8 8 -> code fset.fset0 [interface] (choice_type_from_type (int64)).
+Axiom uint128_to_le_bytes : int128 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 16)).
+Axiom uint128_to_be_bytes : int128 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 16)).
+Axiom uint128_from_le_bytes : nseq int8 16 -> code fset.fset0 [interface] (choice_type_from_type (int128)).
+Axiom uint128_from_be_bytes : nseq int8 16 -> code fset.fset0 [interface] (choice_type_from_type (int128)).
+Axiom u32_to_le_bytes : int32 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 4)).
+Axiom u32_to_be_bytes : int32 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 4)).
+Axiom u32_from_le_bytes : nseq int8 4 -> code fset.fset0 [interface] (choice_type_from_type (int32)).
+Axiom u32_from_be_bytes : nseq int8 4 -> code fset.fset0 [interface] (choice_type_from_type (int32)).
+Axiom u64_to_le_bytes : int64 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 8)).
+Axiom u64_from_le_bytes : nseq int8 8 -> code fset.fset0 [interface] (choice_type_from_type (int64)).
+Axiom u128_to_le_bytes : int128 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 16)).
+Axiom u128_to_be_bytes : int128 -> code fset.fset0 [interface] (choice_type_from_type (nseq int8 16)).
+Axiom u128_from_le_bytes : nseq int8 16 -> code fset.fset0 [interface] (choice_type_from_type (int128)).
+Axiom u128_from_be_bytes : nseq int8 16 -> code fset.fset0 [interface] (choice_type_from_type (int128)).
 
 (*** Nats *)
 
@@ -1109,9 +1200,12 @@ Definition nat_mod (p : Z) : Set := GZnZ.znz p.
 Definition nat_mod_equal {p} (a b : nat_mod p) : bool :=
   Z.eqb (GZnZ.val p a) (GZnZ.val p b).
 
-Definition nat_mod_zero {p} : nat_mod p := GZnZ.zero p.
-Definition nat_mod_one {p} : nat_mod p := GZnZ.one p.
-Definition nat_mod_two {p} : nat_mod p := GZnZ.mkznz p _ (GZnZ.modz p 2).
+Definition nat_mod_zero_pre {p} : nat_mod p := GZnZ.zero p.
+Definition nat_mod_zero {p} : code fset.fset0 [interface] (choice_type_from_type (nat_mod p)) := code_injection (nat_mod_zero_pre).
+Definition nat_mod_one_pre {p} : nat_mod p := GZnZ.one p.
+Definition nat_mod_one {p} : code fset.fset0 [interface] (choice_type_from_type (nat_mod p)) := code_injection (nat_mod_one_pre).
+Definition nat_mod_two_pre {p} : nat_mod p := GZnZ.mkznz p _ (GZnZ.modz p 2).
+Definition nat_mod_two {p} : code fset.fset0 [interface] (choice_type_from_type (nat_mod p)) := code_injection (nat_mod_two_pre).
 
 
 (* convenience coercions from nat_mod to Z and N *)
@@ -1136,23 +1230,23 @@ Definition nat_mod_neg {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.opp n a.
 
 Definition nat_mod_inv {n : Z} (a:nat_mod n) : nat_mod n := GZnZ.inv n a.
 
-Definition nat_mod_exp_def {p : Z} (a:nat_mod p) (n : nat) : nat_mod p :=
+Definition nat_mod_exp_def_pre {p : Z} (a:nat_mod p) (n : nat) : nat_mod p :=
   let fix exp_ (e : nat_mod p) (n : nat) :=
     match n with
-    | 0%nat => nat_mod_one
+    | 0%nat => nat_mod_one_pre
     | S n => nat_mod_mul a (exp_ a n)
     end in
   exp_ a n.
 
-Definition nat_mod_exp {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
-Definition nat_mod_pow {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
-Definition nat_mod_pow_self {p} a n := @nat_mod_exp_def p a (Z.to_nat (from_uint_size n)).
+Definition nat_mod_exp_pre {WS} {p} a n := @nat_mod_exp_def_pre p a (Z.to_nat (@unsigned WS n)).
+Definition nat_mod_pow_pre {WS} {p} a n := @nat_mod_exp_def_pre p a (Z.to_nat (@unsigned WS n)).
+Definition nat_mod_pow_self_pre {p} a n := @nat_mod_exp_def_pre p a (Z.to_nat (from_uint_size n)).
 
 Close Scope nat_scope.
 Open Scope Z_scope.
 
 (* We assume x < m *)
-Definition nat_mod_from_secret_literal {m : Z} (x:int128) : nat_mod m.
+Definition nat_mod_from_secret_literal_pre {m : Z} (x:int128) : nat_mod m.
 Proof.
   unfold nat_mod.
   (* since we assume x < m, it will be true that (unsigned x) = (unsigned x) mod m  *)
@@ -1162,8 +1256,10 @@ Proof.
   rewrite Zmod_mod.
   reflexivity.
 Defined.
+Definition nat_mod_from_secret_literal {m : Z} (x:int128) : code fset.fset0 [interface] (choice_type_from_type (nat_mod m)) :=
+ (@code_injection (nat_mod m) (@nat_mod_from_secret_literal_pre m x)).  
 
-Definition nat_mod_from_literal (m : Z) (x:int128) : nat_mod m := nat_mod_from_secret_literal x.
+Definition nat_mod_from_literal_pre (m : Z) (x:int128) : nat_mod m := nat_mod_from_secret_literal_pre x.
 
 Axiom nat_mod_to_byte_seq_le : forall {n : Z}, nat_mod n -> seq int8.
 Axiom nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8.
@@ -1202,7 +1298,7 @@ Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> uint_size.
 
 
 (* We assume 2^x < m *)
-Definition nat_mod_pow2 (m : Z) (x : N) : nat_mod m.
+Definition nat_mod_pow2_pre (m : Z) (x : N) : nat_mod m.
 Proof.
   remember (Z.pow 2 (Z.of_N x) mod m) as y.
   apply (GZnZ.mkznz m y).
@@ -1210,7 +1306,7 @@ Proof.
   rewrite Zmod_mod.
   reflexivity.
 Defined.
-
+Definition nat_mod_pow2 (m : Z) (x : N) : code fset.fset0 [interface] (choice_type_from_type (nat_mod m)) := code_injection (nat_mod_pow2_pre m x).
 
 Section Casting.
 
@@ -1232,15 +1328,15 @@ Section Casting.
   }.
 
   Global Instance cast_prod {A B C D} `{Cast A B} `{Cast C D} : Cast (A * C) (B * D) := {
-    cast '(a, c) := ('a, 'c)
+    cast '(a, c) := (cast _ a, cast _ c)
   }.
 
   Global Instance cast_option {A B} `{Cast A B} : Cast (option A) (option B) := {
-    cast a := match a with Some a => Some ('a) | None => None end
+    cast a := match a with Some a => Some (cast _ a) | None => None end
   }.
 
   Global Instance cast_option_b {A B} `{Cast A B} : Cast A (option B) := {
-    cast a := Some ('a)
+    cast a := Some (cast _ a)
   }.
 
   (* Global Instances for common types *)
@@ -1282,7 +1378,7 @@ End Casting.
 
 
 Global Arguments pair {_ _} & _ _.
-Global Arguments id {_} & _.
+(* Global Arguments id {_} & _. *)
 Section Coercions.
   (* First, in order to have automatic coercions for tuples, we add bidirectionality hints: *)
 
@@ -1547,10 +1643,13 @@ Fixpoint nat_mod_rem_aux {n : Z} (a:nat_mod n) (b:nat_mod n) (f : nat) {struct f
       else a
   end.
 
-Definition nat_mod_rem {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
-  if nat_mod_equal b nat_mod_zero
-  then nat_mod_one
+Definition nat_mod_rem_pre {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
+  if nat_mod_equal b nat_mod_zero_pre
+  then nat_mod_one_pre
   else nat_mod_rem_aux a b (S (nat_mod_div a b)).
+
+Definition nat_mod_rem {n : Z} (a:nat_mod n) (b:nat_mod n) : code fset.fset0 [interface] (choice_type_from_type (nat_mod n)) :=
+  code_injection (nat_mod_rem_pre a b).
 
 Infix "rem" := nat_mod_rem (at level 33) : hacspec_scope.
 
@@ -1564,10 +1663,10 @@ Global Instance string_eqdec : EqDec String.string := {
   eqb_leibniz := String.eqb_eq ;
 }.
 
-Global Instance unit_eqdec : EqDec unit := {
-  eqb := fun _ _ => true ;
-  eqb_leibniz := fun 'tt 'tt => (conj (fun _ => eq_refl) (fun _ => eq_refl)) ;
-}.
+(* Global Instance unit_eqdec : EqDec unit := { *)
+(*   eqb := fun _ _ => true ; *)
+(*   eqb_leibniz := fun 'tt 'tt => (conj (fun _ => eq_refl) (fun _ => eq_refl)) ; *)
+(* }. *)
 
 Require Import Sumbool.
 Open Scope list_scope.
@@ -1621,12 +1720,12 @@ Global Program Instance Dec_eq_prod (A B : Type) `{EqDec A} `{EqDec B} : EqDec (
   eqb '(a0, b0) '(a1, b1) := andb (eqb a0 a1) (eqb b0 b1)
 }.
 Next Obligation.
-  split ; intros.
+  split ; intros ; destruct x ; destruct y.
   - symmetry in H1.
     apply Bool.andb_true_eq in H1. destruct H1.
-    symmetry in H1. apply (eqb_leibniz a0 a) in H1.
-    symmetry in H2. apply (eqb_leibniz b0 b) in H2.
-    rewrite H1, H2. reflexivity.
+    symmetry in H1. rewrite (eqb_leibniz) in H1.
+    symmetry in H2. rewrite (eqb_leibniz) in H2.
+    rewrite H1. rewrite H2. reflexivity.
   - inversion_clear H1. now do 2 rewrite eqb_refl.
 Defined.
 
@@ -1674,7 +1773,7 @@ Definition u64_to_be_bytes' : int64 -> nseq int8 8 :=
 
 Open Scope hacspec_scope.
 
-Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat × int64) : nat × int64 :=
+Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat '× int64) : nat '× int64 :=
   let (n,v) := s in
   (S n, v .+ (@repr WORDSIZE64 ((int8_to_nat i) * 2 ^ (4 * n)))).
 
@@ -1726,8 +1825,8 @@ Definition option_is_none {A} (x : option A) : bool :=
   | _ => false
   end.
 
-Definition foldi_bind {A : Type} {M : Type -> Type} `{Monad M} (a : uint_size) (b : uint_size) (f : uint_size -> A -> M A) (init : M A) : M A :=
-  @foldi (M A) a b (fun x y => bind y (f x)) init.
+Definition foldi_bind {A : Type} {M : Type -> Type} `{Monad M} (a : uint_size) (b : uint_size) (f : uint_size -> A -> M A) (init : M A) : code fset.fset0 [interface] (choice_type_from_type (M A)) :=
+  @foldi (M A) a b (fun x y => code_injection (bind y (f x))) init.
 
 Definition lift_to_result {A B C} (r : result A C) (f : A -> B) : result B C :=
   result_bind r (fun x => result_ret (f x)).
@@ -1776,8 +1875,8 @@ Global Instance int_default {WS : WORDSIZE} : Default int := {
 }.
 Global Instance uint8_default : Default uint8 := _.
 Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
-  default := nat_mod_zero
+  default := nat_mod_zero_pre
 }.
-Global Instance prod_default {A B} `{Default A} `{Default B} : Default (A × B) := {
+Global Instance prod_default {A B} `{Default A} `{Default B} : Default (A '× B) := {
   default := (default, default)
 }.

@@ -522,6 +522,14 @@ fn sig_ret(sig: &FnValue) -> BaseTyp {
     }
 }
 
+fn sig_mut_vars(sig: &FnValue) -> Vec<ScopeMutableVar> {
+    match sig {
+        FnValue::Local(sig) => sig.mutable_vars.clone(),
+        FnValue::External(sig) => vec![],
+        FnValue::ExternalNotInHacspec(_) => panic!("should not happen"),
+    }
+}
+
 fn find_func(
     sess: &Session,
     key1: &FnKey,
@@ -627,13 +635,21 @@ fn find_typ(
                 (t.clone(), span.clone()),
             )
         }),
-        Ident::Local(LocalIdent { name: _, id }) => var_context.get(id).map(|x| x.0.clone()),
+        Ident::Local(LocalIdent {
+            name: _,
+            id,
+            mutable: _,
+        }) => var_context.get(id).map(|x| x.0.clone()),
     }
 }
 
 fn remove_var(x: &Ident, var_context: &VarContext) -> VarContext {
     match x {
-        Ident::Local(LocalIdent { id, name: _ }) => var_context.without(id),
+        Ident::Local(LocalIdent {
+            id,
+            name: _,
+            mutable: _,
+        }) => var_context.without(id),
         _ => panic!("trying to lookup in the var context a non-local id"),
     }
 }
@@ -641,9 +657,11 @@ fn remove_var(x: &Ident, var_context: &VarContext) -> VarContext {
 fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
     log::trace!("add_var {} of type {:?}", x, typ);
     match x {
-        Ident::Local(LocalIdent { id, name }) => {
-            var_context.update(id.clone(), (typ.clone(), name.clone()))
-        }
+        Ident::Local(LocalIdent {
+            id,
+            name,
+            mutable: _,
+        }) => var_context.update(id.clone(), (typ.clone(), name.clone())),
         _ => panic!("trying to lookup in the var context a non-local id"),
     }
 }
@@ -1639,7 +1657,7 @@ fn typecheck_expression(
                 Err(())
             }
         }
-        Expression::FuncCall(prefix, name, args, _arg_types) => {
+        Expression::FuncCall(prefix, name, args, _arg_types, mut_vars) => {
             let (f_sig, typ_var_ctx) = find_func(
                 sess,
                 &match prefix {
@@ -1759,8 +1777,13 @@ fn typecheck_expression(
                         return Err(());
                     }
                 };
+
+            let mut new_mut_vars = Vec::new();
+            new_mut_vars.extend(sig_mut_vars(&f_sig));
+            new_mut_vars.extend(mut_vars.clone());
+
             Ok((
-                Expression::FuncCall(prefix.clone(), name.clone(), new_args, Some(new_arg_types)),
+                Expression::FuncCall(prefix.clone(), name.clone(), new_args, Some(new_arg_types), new_mut_vars),
                 (
                     (Borrowing::Consumed, name.1.clone()),
                     (ret_ty, name.1.clone()),
@@ -1768,7 +1791,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::MethodCall(sel, _, (f, f_span), orig_args, _args_types) => {
+        Expression::MethodCall(sel, _, (f, f_span), orig_args, _args_types, mut_vars) => {
             let (sel, sel_borrow) = sel.as_ref();
             let mut var_context = var_context.clone();
             // We omit to take the new var context because it will be retypechecked later, this
@@ -1898,6 +1921,11 @@ fn typecheck_expression(
             new_arg_types = new_arg_types[1..].to_vec();
             let ret_ty = sig_ret(&f_sig);
             let ret_ty = bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx)?;
+
+            let mut new_mut_vars = Vec::new();
+            new_mut_vars.extend(sig_mut_vars(&f_sig));
+            new_mut_vars.extend(mut_vars.clone());
+
             Ok((
                 Expression::MethodCall(
                     Box::new(new_sel),
@@ -1905,6 +1933,7 @@ fn typecheck_expression(
                     (f.clone(), f_span.clone()),
                     new_args,
                     Some(new_arg_types),
+                    new_mut_vars,
                 ),
                 (
                     (Borrowing::Consumed, f_span.clone()),
@@ -2099,9 +2128,13 @@ fn typecheck_pattern(
             Err(())
         }
         (Pattern::WildCard, _) => Ok(HashMap::new()),
-        (Pattern::IdentPat(x), _) => {
+        (Pattern::IdentPat(x, _m), _) => {
             let (id, name) = match &x {
-                Ident::Local(LocalIdent { id, name }) => (id.clone(), name.clone()),
+                Ident::Local(LocalIdent {
+                    id,
+                    name,
+                    mutable: _,
+                }) => (id.clone(), name.clone()),
                 _ => panic!("should not happen"),
             };
             Ok(HashMap::unit(
@@ -2842,6 +2875,8 @@ fn typecheck_block(
             })),
             return_typ,
             contains_question_mark,
+            mutable_vars: b.mutable_vars, // TODO: Typecheck mutable_vars?
+            function_dependencies: b.function_dependencies, // TODO: Typecheck mutable_vars?
         },
         var_context.intersection(original_var_context.clone()),
     ))
