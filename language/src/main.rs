@@ -611,7 +611,7 @@ impl Callbacks for HacspecCallbacks {
             let mut items = vec![];
 
             let mut index = 0;
-            let mut index_expand = 1; // Skip use std?
+            let mut index_expand = 0; // Skip use std? = 1
 
             while index < krate.items.len() && index_expand < expanded_krate.items.len() {
                 // Merge trees removing macro calls when not hacspec calls
@@ -619,6 +619,9 @@ impl Callbacks for HacspecCallbacks {
                     krate.items[index].kind.clone(),
                     expanded_krate.items[index_expand].kind.clone(),
                 ) {
+                    (rustc_ast::ast::ItemKind::ExternCrate(..), _) => {
+                        index += 1;
+                    }
                     (_, rustc_ast::ast::ItemKind::ExternCrate(..)) => {
                         index_expand += 1;
                     }
