@@ -186,14 +186,14 @@ fn handle_crate<'tcx>(
     compiler: &Compiler,
     queries: &'tcx Queries<'tcx>,
     ast_crates_map: &HashMap<String, rustc_ast::ast::Crate>,
-    krate_path: String,
+    root_krate_path: String,
 ) -> Compilation {
     // Construct a queue of files to handle
     let krate_queue = match construct_handle_crate_queue(
         compiler,
         &mut HashSet::new(),
         ast_crates_map,
-        krate_path,
+        root_krate_path.clone(),
         "".to_string(),
     ) {
         Ok(v) => v,
@@ -329,7 +329,6 @@ fn handle_crate<'tcx>(
     // Typecheck all the modules //
     ///////////////////////////////
 
-    let mut root_module: bool = true;
     let mut krate_queue_typechecked = Vec::new();
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_programs {
         let new_top_ctx = &mut name_resolution::TopLevelContext {
@@ -422,7 +421,7 @@ fn handle_crate<'tcx>(
         let original_file = Path::new(file_str);
 
         for ((krate_path, _, _), krate) in krate_queue_typechecked {
-            let file_name = if root_module {
+            let file_name = if krate_path == root_krate_path {
                 if let Some(file_name) = &callback.output_filename {
                     Path::new(&file_name.clone())
                         .with_extension("")
@@ -430,12 +429,14 @@ fn handle_crate<'tcx>(
                         .unwrap()
                         .to_string()
                 } else {
-                    krate_path.clone() // TODO: Should this throw an error instead
+                    compiler
+                        .session()
+                        .err("could not find file name for root module");
+                    return Compilation::Stop;
                 }
             } else {
                 krate_path.clone()
             };
-            root_module = false;
 
             let file = match extension.clone().as_str() {
                 "fst" | "ec" | "json" => {
