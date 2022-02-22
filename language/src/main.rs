@@ -429,10 +429,7 @@ fn handle_crate<'tcx>(
                         .unwrap()
                         .to_string()
                 } else {
-                    compiler
-                        .session()
-                        .err("could not find file name for root module");
-                    return Compilation::Stop;
+                    krate_path.clone() // TODO: Should this throw an error instead (needs default for programs run with -f)
                 }
             } else {
                 krate_path.clone()
