@@ -10,7 +10,7 @@ readme = "README.md"
 repository = "https://github.com/hacspec/hacspec"
 
 [lib]
-path = "src/hacspec-chacha20.rs"
+path = "src/chacha20.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib", version = "0.1.0-beta.1" }

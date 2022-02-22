@@ -5,7 +5,7 @@ authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
 edition = "2018"
 
 [lib]
-path = "src/hacspec-gimli.rs"
+path = "src/gimli.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
