@@ -1,3 +1,0 @@
-[submodule "utils/rc-tests/wycheproof"]
-	path = utils/rc-tests/wycheproof
-	url = git@github.com:google/wycheproof.git
