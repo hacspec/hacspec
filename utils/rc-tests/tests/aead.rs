@@ -50,7 +50,7 @@ impl ReadFromFile for AeadTestVector {}
 #[test]
 fn test_wycheproof() {
     let chacha_poly_tests: AeadTestVector =
-        AeadTestVector::from_file("wycheproof/testvectors/chacha20_poly1305_test.json");
+        AeadTestVector::from_file("tests/chacha20_poly1305_test.json");
 
     let num_tests = chacha_poly_tests.numberOfTests;
     let mut skipped_tests = 0;
