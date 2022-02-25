@@ -10,6 +10,8 @@ Import ListNotations.
 Require Import MachineIntegers.
 From Coqprime Require GZnZ.
 
+Require Import Lia.
+        
 Declare Scope hacspec_scope.
 
 Axiom secret : forall {WS : WORDSIZE},  (@int WS) -> (@int WS).
@@ -224,6 +226,248 @@ Definition foldi
   | Zneg p => init
   | Zpos p => foldi_ (Pos.to_nat p) lo f init
   end.
+
+(* Theorem repr_add : forall {WS : WORDSIZE} a b, *)
+(*     repr (unsigned a + unsigned b) = a + b. *)
+(* Admitted. *)
+
+Theorem representation :
+  forall (us: uint_size),
+    { pu : unit + positive |
+      match pu with inl u => us = repr Z0 | inr p => us = repr (Z.pos p) /\ (Z.pred 0 < Z.pos p < @modulus WORDSIZE32)%Z end
+      }.
+Proof.
+  intros us.
+  destruct us.
+  destruct intval.
+  - exists (inl tt). apply mkint_eq. reflexivity.
+  - exists (inr p).
+    split.
+    + apply mkint_eq.
+      rewrite Z_mod_modulus_eq.
+      symmetry.
+      apply Zmod_small.
+      inversion intrange.
+      split.
+      * apply Z.lt_pred_le.
+        apply H.
+      * apply H0. 
+    + apply intrange.
+  - exfalso.
+    inversion intrange.
+    pose (Z.lt_pred_le 0 (Z.neg p)).
+    apply i in H.
+    contradiction.
+Defined.    
+
+Lemma unsigned_inner_sub :
+  forall {WS : WORDSIZE},
+  forall a b,
+    eqm (unsigned (repr a) - unsigned (repr b))%Z (unsigned (repr (a - b)))%Z.
+Proof.
+  intros.
+  apply eqm_unsigned_repr_r.  
+  apply eqm_sub.
+  apply eqm_unsigned_repr_l.
+  apply eqm_refl.
+  apply eqm_unsigned_repr_l.
+  apply eqm_refl.
+Qed.
+
+Lemma unsigned_inner_add :
+  forall {WS : WORDSIZE},
+  forall a b,
+    eqm (unsigned (repr a) + unsigned (repr b))%Z (unsigned (repr (a + b)))%Z.
+Proof.
+  intros.
+  apply eqm_unsigned_repr_r.  
+  apply eqm_add.
+  apply eqm_unsigned_repr_l.
+  apply eqm_refl.
+  apply eqm_unsigned_repr_l.
+  apply eqm_refl.
+Qed.
+
+Lemma modulus_range_helper :
+  forall {WS : WORDSIZE},
+  forall i, (Z.pred 0 < i < modulus)%Z -> (0 <= i <= max_unsigned)%Z.
+Proof.
+  intros.
+  unfold max_unsigned.
+
+  destruct H.
+  apply (Z.lt_pred_le 0%Z) in H.
+  split.
+  - apply H.
+  - apply (Z.lt_le_pred).
+    apply H0.
+Qed.      
+
+Definition destruct_uint_size  (a : uint_size) : forall (P : uint_size -> Prop),
+    (P (repr 0)) ->
+    (forall b, (Z.pred 0 < Z.pos b < @modulus WORDSIZE32)%Z -> P (repr (Z.pos b))) ->
+    P a.
+Proof.
+  intros.
+  destruct (representation a) as [ [ _ | b ] y ].
+  - subst.
+    apply H.
+  - destruct y.
+    subst.
+    apply H0.
+    apply H2.
+Qed.
+
+Theorem zero_always_modulus {WS : WORDSIZE} : (Z.pred 0 < 0 < modulus)%Z.
+Proof. easy. Qed.
+
+Ltac destruct_uint_size a :=
+  generalize dependent a ;
+  intros a ;
+  apply (destruct_uint_size a) ; intros.
+
+Definition helper (b : positive) :
+  forall (P : positive -> Prop),
+    (P 1%positive) ->
+    (forall x : positive, (P x)  -> (P (Pos.succ x))) ->
+    forall x : positive, b = x -> P x.
+Proof.
+  intros.
+  apply (Coqlib.positive_Peano_ind P).
+  apply H.
+  apply H0.
+Defined.
+
+Fixpoint binary_representation_pre (n : nat) {struct n}: positive :=
+  match n with
+  | O => 1%positive
+  | S O => 1%positive
+  | S n => Pos.succ (binary_representation_pre n)
+  end.
+Definition binary_representation (n : nat) `(n <> O) := binary_representation_pre n.
+
+Theorem positive_is_succs : forall n, forall (H : n <> O) (K : S n <> O),
+    @binary_representation (S n) K = Pos.succ (@binary_representation n H).
+Proof.
+  intros.
+  induction n.
+  - contradiction.
+  - reflexivity.
+Qed.
+
+Theorem positive_to_succs : forall n m {H : n <> O} {G : m <> O} {K : (n + m)%nat <> O},
+    @binary_representation (n + m) K = Pos.add (@binary_representation n H ) (@binary_representation m G).
+Proof.
+  induction n ; destruct m ; try contradiction.
+  rewrite (Nat.add_succ_r (S n) m) in *.
+  rewrite plus_Sn_m in *.
+
+  intros.  
+
+  pose (J := Nat.neq_succ_0 (n + m)).
+  rewrite (positive_is_succs) with (H := J).
+  generalize dependent J.
+  
+  rewrite <- (Nat.add_succ_r n m).
+  intros.
+
+  destruct n.
+  - replace (binary_representation 1 H) with 1%positive by easy.
+    rewrite <- Pplus_one_succ_l.
+    f_equal.
+  - rename n into i.
+    remember (S i) as n.
+  
+  assert (n <> O) by lia.
+  
+  rewrite (IHn (S m) H0 G J).
+
+  rewrite (positive_is_succs n H0 H).
+
+  rewrite Pos.add_succ_l.
+  
+  reflexivity.      
+Qed.
+  
+Theorem positive_to_positive_succs : forall p, binary_representation (Pos.to_nat p) (Nat.neq_sym _ _ (Nat.lt_neq _ _ (Pos2Nat.is_pos p))) = p.
+Proof.
+  intros.
+  generalize dependent (Nat.neq_sym 0 (Pos.to_nat p) (Nat.lt_neq 0 (Pos.to_nat p) (Pos2Nat.is_pos p))).
+
+  destruct Pos.to_nat eqn:ptno.
+  - intros.
+    contradiction.
+  - intros.
+    generalize dependent p.
+    induction n ; intros.
+    + cbn.
+      apply (Pos2Nat.inj).
+      symmetry.
+      apply ptno.
+    + rewrite positive_is_succs with (H := Nat.neq_succ_0 n).
+      rewrite IHn with (p := Pos.of_nat (S n)).
+      rewrite <- Nat2Pos.inj_succ.
+      pose (Pos2Nat.id p).
+      rewrite ptno in e.
+      apply e.
+      apply (Nat.neq_succ_0 n).
+      rewrite Nat2Pos.id.
+      reflexivity.
+      apply (Nat.neq_succ_0 n).
+Qed.
+      
+Definition induction_uint_size :
+  forall (P : uint_size -> Prop),
+    (P (repr 0)) ->
+    (P (repr 1)) ->
+    (forall b,
+        (Z.pred 0 < Z.succ (Z.pos b) < @modulus WORDSIZE32)%Z ->
+        P (repr (Z.pos b)) ->
+        P (repr (Z.succ (Z.pos b)))) ->
+    forall (a : uint_size), P a.
+Proof.
+  intros P H H0 H1 a.
+  intros ; subst.
+  destruct (representation a) as [ [ _ | b ] y ].
+  - rewrite y in * ; clear y.
+    apply H.
+  - destruct y.
+    subst.
+
+    pose proof (positive_to_positive_succs b).
+    symmetry in H2.
+    rewrite H2 in *.
+    clear H2.
+    
+    generalize dependent (Nat.neq_sym 0 (Pos.to_nat b) (Nat.lt_neq 0 (Pos.to_nat b) (Pos2Nat.is_pos b))).
+    
+    induction (Pos.to_nat b) ; intros.
+    + contradiction.
+    + destruct n.
+      * apply H0.
+      * rewrite (positive_is_succs _  (Nat.neq_succ_0 n) n0) in *.
+        rewrite Pos2Z.inj_succ in *.
+        apply H1.        
+        -- apply H3.        
+        -- apply IHn.
+           intros.
+           generalize dependent (binary_representation (S n) (Nat.neq_succ_0 n)).
+           intros.
+           destruct H3.
+           split.
+           {
+             easy.
+           }
+           {
+             apply Z.lt_succ_l.
+             apply H3.
+           }
+Qed.        
+
+Ltac induction_uint_size var :=
+  generalize dependent var ;
+  intros var ;
+  apply induction_uint_size with (a := var) ; intros.
 
 (* Typeclass handling of default elements, for use in sequences/arrays.
    We provide instances for the library integer types *)
