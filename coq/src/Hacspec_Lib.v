@@ -696,6 +696,155 @@ Proof.
         reflexivity.
 Qed.
 
+Definition sum_first_n (n : nat) :=
+  let f := (fun x y => x + y + 1)%nat in
+  foldi_nat 0 n f 0%nat.
+Definition sum_first_n_mid (n : nat) (m : nat) :=
+  let f := (fun x y => x + y + 1)%nat in
+  foldi_nat m n f (foldi_nat 0 m f 0%nat).
+
+Compute sum_first_n 4.
+Compute sum_first_n_mid 4 4.
+
+Lemma foldi_nat_split_S :
+  forall {acc: Type}
+    (lo: nat)
+    (hi: nat) (* {lo <= hi} *)
+    (f: nat -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+    (lo < hi)%nat ->
+    foldi_nat lo hi f init = foldi_nat (S lo) hi f (foldi_nat lo (S lo) f init).
+Proof.
+  unfold foldi_nat.
+  intros.
+
+  assert (succ_sub_diag : forall n, (S n - n = 1)%nat).
+  {
+    intros.
+    rewrite Nat.sub_succ_l by easy.
+    rewrite Nat.sub_diag.
+    reflexivity.
+  }
+
+  rewrite (succ_sub_diag lo).
+  
+  induction hi ; [ lia | ].
+  destruct (S hi =? S lo)%nat eqn:hi_eq_lo.
+  - apply Nat.eqb_eq in hi_eq_lo ; rewrite hi_eq_lo in *.
+    rewrite (succ_sub_diag lo).
+    rewrite Nat.sub_diag.
+    reflexivity.
+  - apply Nat.eqb_neq in hi_eq_lo.
+    apply Nat.lt_gt_cases in hi_eq_lo.
+    destruct hi_eq_lo.
+    * lia.
+    * rewrite (Nat.sub_succ_l (S lo)) by apply (Nat.lt_le_pred _ _ H0).
+      rewrite Nat.sub_succ_l by apply (Nat.lt_le_pred _ _ H).
+      replace ((S (hi - S lo))) with (hi - lo)%nat by lia.
+      reflexivity.
+Qed.
+
+Lemma foldi_nat_split_add :
+  forall (k : nat),
+  forall {acc: Type}
+    (lo: nat)
+    (hi: nat) (* {lo <= hi} *)
+    (f: nat -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+  forall {guarantee: (lo + k <= hi)%nat},
+  foldi_nat lo hi f init = foldi_nat (k + lo) hi f (foldi_nat lo (k + lo) f init).
+Proof.
+  induction k ; intros.
+  - cbn.
+    replace (foldi_nat lo lo f init) with init.
+    reflexivity.
+    unfold foldi_nat.
+    rewrite Nat.sub_diag.
+    reflexivity.
+  - rewrite foldi_nat_split_S by lia.
+    replace ((S k + lo))%nat with ((k + S lo))%nat by lia.
+    specialize (IHk acc (S lo) hi f ((foldi_nat lo (S lo) f init))).    
+    rewrite IHk by lia.
+    f_equal.
+    rewrite <- foldi_nat_split_S by lia.
+    reflexivity.    
+Qed.
+    
+Lemma foldi_nat_split_helper :
+  forall (mid : nat), (* {lo <= mid <= hi} *)
+  forall {acc: Type}
+    (lo: nat)
+    (hi: nat) (* {lo <= hi} *)
+    (f: nat -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+  forall {guarantee: (lo <= mid <= hi)%nat},
+  foldi_nat lo hi f init = foldi_nat mid hi f (foldi_nat lo mid f init).
+Proof.
+  intros.
+
+  assert ({k : nat | (mid = lo + k)%nat}).
+  {
+    exists (mid - lo)%nat.
+    rewrite Nat.add_comm.
+    rewrite Nat.sub_add by apply guarantee.
+    reflexivity.
+  }
+
+  destruct H ; subst.
+  rewrite Nat.add_comm.    
+  apply (foldi_nat_split_add).
+  apply guarantee.
+Qed.
+
+Lemma foldi__add :
+  forall {acc: Type}
+  (a b : nat)
+  (i : uint_size)
+  (f : uint_size -> acc -> acc)
+  (cur : acc),
+    (0 <= Z.of_nat b <= @max_unsigned WORDSIZE32)%Z ->
+    foldi_ (a + b) i f cur = foldi_ a (add i (repr (Z.of_nat b))) f (foldi_ b i f cur).
+Proof.
+  induction b ; intros.
+  - rewrite Nat.add_0_r.
+    replace (repr (Z.of_nat 0)) with (@zero WORDSIZE32) by reflexivity.
+    rewrite add_zero.
+    reflexivity.
+  - rewrite Nat.add_succ_r.
+    replace (foldi_ (S (a + b)) i f cur)
+      with (foldi_ (a + b) (add i one) f (f i cur))
+      by reflexivity.
+
+    assert (0 <= Z.of_nat b <= @max_unsigned WORDSIZE32)%Z.
+    {
+      destruct H.
+      split.
+      - apply Nat2Z.is_nonneg.
+      - apply Zle_succ_le.
+        rewrite <- Nat2Z.inj_succ.
+        apply H0.
+    }
+    
+    rewrite (IHb (add i one) f (f i cur) H0) ; clear IHb.
+    f_equal.
+    rewrite add_assoc.
+    f_equal.
+    unfold add.
+    f_equal.
+    replace (unsigned one) with 1%Z by reflexivity.    
+    rewrite (unsigned_repr _ H0).
+    rewrite Z.add_1_l.
+    rewrite Nat2Z.inj_succ.
+    reflexivity.
+Qed.
+
+Theorem Zpos_bound_succ : forall {WS : WORDSIZE} b, (0 <= Z.succ (Z.pos b) <= max_unsigned)%Z -> (0 <= Z.pos b <= max_unsigned)%Z.
+Proof.
+  split.
+  + easy.
+  + apply Zle_succ_le.
+    apply H.
+Qed.        
 
 (* Typeclass handling of default elements, for use in sequences/arrays.
    We provide instances for the library integer types *)
