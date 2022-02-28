@@ -770,7 +770,7 @@ Proof.
     reflexivity.    
 Qed.
     
-Lemma foldi_nat_split_helper :
+Lemma foldi_nat_split :
   forall (mid : nat), (* {lo <= mid <= hi} *)
   forall {acc: Type}
     (lo: nat)
@@ -796,55 +796,24 @@ Proof.
   apply guarantee.
 Qed.
 
-Lemma foldi__add :
-  forall {acc: Type}
-  (a b : nat)
-  (i : uint_size)
-  (f : uint_size -> acc -> acc)
-  (cur : acc),
-    (0 <= Z.of_nat b <= @max_unsigned WORDSIZE32)%Z ->
-    foldi_ (a + b) i f cur = foldi_ a (add i (repr (Z.of_nat b))) f (foldi_ b i f cur).
-Proof.
-  induction b ; intros.
-  - rewrite Nat.add_0_r.
-    replace (repr (Z.of_nat 0)) with (@zero WORDSIZE32) by reflexivity.
-    rewrite add_zero.
-    reflexivity.
-  - rewrite Nat.add_succ_r.
-    replace (foldi_ (S (a + b)) i f cur)
-      with (foldi_ (a + b) (add i one) f (f i cur))
-      by reflexivity.
 
-    assert (0 <= Z.of_nat b <= @max_unsigned WORDSIZE32)%Z.
-    {
-      destruct H.
-      split.
-      - apply Nat2Z.is_nonneg.
-      - apply Zle_succ_le.
-        rewrite <- Nat2Z.inj_succ.
-        apply H0.
-    }
-    
-    rewrite (IHb (add i one) f (f i cur) H0) ; clear IHb.
-    f_equal.
-    rewrite add_assoc.
-    f_equal.
-    unfold add.
-    f_equal.
-    replace (unsigned one) with 1%Z by reflexivity.    
-    rewrite (unsigned_repr _ H0).
-    rewrite Z.add_1_l.
-    rewrite Nat2Z.inj_succ.
-    reflexivity.
+Lemma foldi_split :
+  forall (mid : uint_size), (* {lo <= mid <= hi} *)
+  forall {acc: Type}
+    (lo: uint_size)
+    (hi: uint_size) (* {lo <= hi} *)
+    (f: uint_size -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+  forall {guarantee: (unsigned lo <= unsigned mid <= unsigned hi)%Z},
+  foldi lo hi f init = foldi mid hi f (foldi lo mid f init).
+Proof.
+  intros.
+  rewrite foldi_to_foldi_nat by lia.
+  rewrite foldi_to_foldi_nat by lia.
+  rewrite foldi_to_foldi_nat by lia.
+  apply foldi_nat_split ; lia.
 Qed.
 
-Theorem Zpos_bound_succ : forall {WS : WORDSIZE} b, (0 <= Z.succ (Z.pos b) <= max_unsigned)%Z -> (0 <= Z.pos b <= max_unsigned)%Z.
-Proof.
-  split.
-  + easy.
-  + apply Zle_succ_le.
-    apply H.
-Qed.        
 
 (* Typeclass handling of default elements, for use in sequences/arrays.
    We provide instances for the library integer types *)
