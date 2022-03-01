@@ -70,8 +70,3 @@ in the crate you want to analyze. This might require updating the version in rus
 ```
 cargo hacspec -e v -o <output_file_name> -dir <output_dir> <crate_name>
 ```
-to install you might need to change the path of
-```
-pearlite-syn = { path = "../../../creusot/pearlite-syn" }
-```
-in langauges/Cargo.toml to a local copy of the creusot/pearlite-syn crate.
