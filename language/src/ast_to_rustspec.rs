@@ -2335,16 +2335,16 @@ fn tokentree_text(x: TokenTree) -> String {
         },
         TokenTree::Delimited(_, delim_token, inner) => {
             let (left, right) = match delim_token {
-                DelimToken::Paren => ("(", ")"),
-                DelimToken::Bracket => ("[", "]"),
-                DelimToken::Brace => ("{", "}"),
-                DelimToken::NoDelim => ("", ""),
+                Delimiter::Parenthesis => ("(", ")"),
+                Delimiter::Bracket => ("[", "]"),
+                Delimiter::Brace => ("{", "}"),
+                Delimiter::Invisible => ("", ""),
             };
 
             left.to_string()
                 + &inner
                     .trees()
-                    .fold("".to_string(), |s, x| s + &tokentree_text(x))
+                    .fold("".to_string(), |s, x| s + &tokentree_text(x.clone()))
                 + right
         }
     }
@@ -2388,7 +2388,7 @@ fn attribute_requires(attr: &Attribute) -> Option<String> {
             let inner = get_delimited_tree(attr.clone())?;
             let textify = inner
                 .trees()
-                .fold("".to_string(), |s, x| s + &tokentree_text(x));
+                .fold("".to_string(), |s, x| s + &tokentree_text(x.clone()));
             Some(textify)
         }
         _ => None,
@@ -2402,7 +2402,7 @@ fn attribute_ensures(attr: &Attribute) -> Option<String> {
             let inner = get_delimited_tree(attr.clone())?;
             let textify = inner
                 .trees()
-                .fold("".to_string(), |s, x| s + &tokentree_text(x));
+                .fold("".to_string(), |s, x| s + &tokentree_text(x.clone()));
             Some(textify)
         }
         _ => None,

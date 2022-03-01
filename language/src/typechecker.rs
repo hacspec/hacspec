@@ -1665,12 +1665,13 @@ fn typecheck_expression(
 fn typecheck_quantified_expression(
     sess: &Session,
     qe: Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>,
+    func_return_type: &Option<&Spanned<BaseTyp>>,
     top_level_context: &TopLevelContext,
     var_context: &VarContext,
 ) -> Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>> {
     match qe {
         Quantified::Unquantified(e) => Quantified::Unquantified((
-            typecheck_expression(sess, &e.clone(), top_level_context, var_context)
+            typecheck_expression(sess, &e.clone(), func_return_type, top_level_context, var_context)
                 .unwrap()
                 .0,
             e.1,
@@ -1690,6 +1691,7 @@ fn typecheck_quantified_expression(
                 Box::new(typecheck_quantified_expression(
                     sess,
                     *qe2,
+                    func_return_type, 
                     top_level_context,
                     &var_context,
                 )),
@@ -1710,6 +1712,7 @@ fn typecheck_quantified_expression(
                 Box::new(typecheck_quantified_expression(
                     sess,
                     *qe2,
+                    func_return_type, 
                     top_level_context,
                     &var_context,
                 )),
@@ -1719,12 +1722,14 @@ fn typecheck_quantified_expression(
             Box::new(typecheck_quantified_expression(
                 sess,
                 *a,
+                func_return_type, 
                 top_level_context,
                 var_context,
             )),
             Box::new(typecheck_quantified_expression(
                 sess,
                 *b,
+                func_return_type, 
                 top_level_context,
                 var_context,
             )),
@@ -1733,12 +1738,14 @@ fn typecheck_quantified_expression(
             Box::new(typecheck_quantified_expression(
                 sess,
                 *a,
+                func_return_type, 
                 top_level_context,
                 var_context,
             )),
             Box::new(typecheck_quantified_expression(
                 sess,
                 *b,
+                func_return_type, 
                 top_level_context,
                 var_context,
             )),
@@ -1746,6 +1753,7 @@ fn typecheck_quantified_expression(
         Quantified::Not(x) => Quantified::Not(Box::new(typecheck_quantified_expression(
             sess,
             *x,
+            func_return_type, 
             top_level_context,
             var_context,
         ))),
@@ -2733,6 +2741,7 @@ fn typecheck_item(
                     typecheck_quantified_expression(
                         sess,
                         x.clone(),
+                        &None,
                         top_level_context,
                         &attribute_var_context.clone(),
                     )
@@ -2753,6 +2762,7 @@ fn typecheck_item(
                     typecheck_quantified_expression(
                         sess,
                         x.clone(),
+                        &None,
                         top_level_context,
                         &result_var_context.clone(),
                     )
