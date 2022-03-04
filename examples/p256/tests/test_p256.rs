@@ -205,4 +205,27 @@ fn point_validation() {
         ),
     );
     assert!(!p256_validate_public_key(not_on_curve));
+
+#[test]
+fn test_p256_calculate_w() {
+	// gx and gy from RFC6090 Appendix D
+	let valid_point = (
+        P256FieldElement::from_hex(
+            "6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296",
+        ),
+        P256FieldElement::from_hex(
+            "4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",
+        ),
+    );
+	assert!(valid_point == p256_calculate_w(valid_point.0));
+
+    let valid_point = (
+        P256FieldElement::from_hex(
+            "31028f3377fc8f2b1967edaab90213acad0da9f50897f08f57537f78f1167447",
+        ),
+        P256FieldElement::from_hex(
+            "43a1930189363bbde2ac4cbd1649cdc6f451add71dd2f16a8a867f2b17caa16b",
+        ),
+    );
+	assert!(valid_point == p256_calculate_w(valid_point.0));
 }
