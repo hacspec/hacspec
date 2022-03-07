@@ -205,6 +205,7 @@ fn point_validation() {
         ),
     );
     assert!(!p256_validate_public_key(not_on_curve));
+}
 
 #[test]
 fn test_p256_calculate_w() {
@@ -217,7 +218,7 @@ fn test_p256_calculate_w() {
             "4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",
         ),
     );
-	assert!(valid_point == p256_calculate_w(valid_point.0));
+	assert!(valid_point.1 == p256_calculate_w(valid_point.0));
 
     let valid_point = (
         P256FieldElement::from_hex(
@@ -227,5 +228,6 @@ fn test_p256_calculate_w() {
             "43a1930189363bbde2ac4cbd1649cdc6f451add71dd2f16a8a867f2b17caa16b",
         ),
     );
-	assert!(valid_point == p256_calculate_w(valid_point.0));
+	assert!(valid_point.1 == p256_calculate_w(valid_point.0));
+
 }
