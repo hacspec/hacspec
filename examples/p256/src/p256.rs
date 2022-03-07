@@ -224,7 +224,5 @@ pub fn p256_calculate_w(x: P256FieldElement) -> P256FieldElement {
 	let z = x * x * x - P256FieldElement::from_literal(3u128) * x + b;
     // z to power of exp
 	let w = z.pow_felem(exp);
-	// sanity check whether the input x coordinate is valid
-	assert!(w * w == z);
 	w
 }
