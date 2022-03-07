@@ -384,7 +384,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "I8" => Expression::FuncCall(
                 None,
@@ -394,7 +393,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "U16" => Expression::FuncCall(
                 None,
@@ -404,7 +402,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "I16" => Expression::FuncCall(
                 None,
@@ -414,7 +411,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "U32" => Expression::FuncCall(
                 None,
@@ -424,7 +420,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "I32" => Expression::FuncCall(
                 None,
@@ -434,7 +429,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "U64" => Expression::FuncCall(
                 None,
@@ -444,7 +438,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "I64" => Expression::FuncCall(
                 None,
@@ -454,7 +447,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "U128" => Expression::FuncCall(
                 None,
@@ -464,7 +456,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             "I128" => Expression::FuncCall(
                 None,
@@ -474,7 +465,6 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Borrowing::Consumed, i_s.clone()),
                 )],
                 None,
-                vec![],
             ),
             _ => panic!("Trying to get default for {}", t),
         },
@@ -931,7 +921,7 @@ fn translate_expression<'a>(
                 .map(|(e, _)| translate_expression(sess, e, top_ctx)),
         ),
         Expression::Named(p) => translate_ident(p.clone()),
-        Expression::FuncCall(prefix, name, args, _arg_types, mut_var) => {
+        Expression::FuncCall(prefix, name, args, _arg_types) => {
             let (func_name, additional_args) = translate_func_name(
                 sess,
                 prefix.clone(),
@@ -956,7 +946,7 @@ fn translate_expression<'a>(
                     RcDoc::nil()
                 })
         }
-        Expression::MethodCall(sel_arg, sel_typ, (f, _), args, _arg_types, mut_var) => {
+        Expression::MethodCall(sel_arg, sel_typ, (f, _), args, _arg_types) => {
             let (func_name, additional_args) = translate_func_name(
                 sess,
                 sel_typ.clone().map(|x| x.1),
@@ -1095,7 +1085,7 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
             // If b has an early return, then we must prefix the returned
             // mutated variables by Ok
             match stmt {
-                Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
+                Statement::ReturnExp(e, t) => Statement::ReturnExp(Expression::EnumInject(
                     BaseTyp::Named(
                         (
                             TopLevelIdent {
@@ -1114,7 +1104,7 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
                         DUMMY_SP.into(),
                     ),
                     Some((Box::new(e.clone()), DUMMY_SP.into())),
-                )),
+                ), t), // TODO typing
                 _ => panic!("should not happen"),
             }
         } else {
@@ -1181,7 +1171,7 @@ fn translate_statements<'a>(
             // 	Expression::MonadicLet(..) => true,
             // 	_ => false
             // });
-            if question_mark {
+            if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_pattern(pat.clone()),
                     typ.map(|(typ, _)| translate_typ(typ)),
@@ -1194,7 +1184,7 @@ fn translate_statements<'a>(
                     typ.map(|(typ, _)| translate_typ(typ)),
                     translate_expression(sess, expr.clone(), top_ctx),
                     false,
-                    if question_mark {
+                    if question_mark.is_some() {
                         Some(EarlyReturnType::Result)
                     } else {
                         None
@@ -1205,7 +1195,7 @@ fn translate_statements<'a>(
             }
         }
         Statement::Reassignment((x, _), (e1, _), question_mark) => {
-            if question_mark {
+            if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_ident(x.clone()),
                     None,
@@ -1218,7 +1208,7 @@ fn translate_statements<'a>(
                     None,
                     translate_expression(sess, e1.clone(), top_ctx),
                     false,
-                    if question_mark {
+                    if question_mark.is_some() {
                         Some(EarlyReturnType::Result)
                     } else {
                         None
@@ -1230,7 +1220,7 @@ fn translate_statements<'a>(
         }
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
-            if question_mark {
+            if question_mark.is_some() {
                 let tmp_ident = Ident::Local(LocalIdent {
                     name: "tmp".to_string(),
                     id: fresh_codegen_id(),
@@ -1280,7 +1270,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::ReturnExp(e1) => translate_expression(sess, e1.clone(), top_ctx),
+        Statement::ReturnExp(e1, _) => translate_expression(sess, e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (mut b1, _), b2, mutated) => {
             let mutated_info = mutated.unwrap();
             let pat = make_tuple(
@@ -1408,7 +1398,7 @@ fn translate_block<'a>(
         (None, _) => panic!(), // should not happen,
         (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
             statements.push((
-                Statement::ReturnExp(Expression::Lit(Literal::Unit)),
+                Statement::ReturnExp(Expression::Lit(Literal::Unit), None),
                 DUMMY_SP.into(),
             ));
         }

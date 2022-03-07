@@ -13,7 +13,7 @@ use std::path;
 
 use crate::rustspec_to_coq_base::*;
 
-fn make_let_binding<'a>(
+pub fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
     typ: Option<RcDoc<'a, ()>>,
     expr: RcDoc<'a, ()>,
@@ -22,14 +22,15 @@ fn make_let_binding<'a>(
     RcDoc::as_string(if toplevel { "Definition" } else { "let" })
         .append(RcDoc::space())
         .append(
-            pat.append(match typ {
-                None => RcDoc::nil(),
-                Some(tau) => RcDoc::space()
-                    .append(RcDoc::as_string(":"))
-                    .append(RcDoc::space())
-                    .append(tau),
-            })
-            .group(),
+            pat.clone()
+                .append(match typ.clone() {
+                    None => RcDoc::nil(),
+                    Some(tau) => RcDoc::space()
+                        .append(RcDoc::as_string(":"))
+                        .append(RcDoc::space())
+                        .append(tau),
+                })
+                .group(),
         )
         .append(RcDoc::space())
         .append(RcDoc::as_string(":="))
@@ -106,7 +107,7 @@ fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'
                 .append(RcDoc::intersperse(
                     args.into_iter(),
                     RcDoc::space()
-                        .append(RcDoc::as_string("×"))
+                        .append(RcDoc::as_string("'×"))
                         .append(RcDoc::line()),
                 ))
                 .group()
@@ -170,6 +171,7 @@ fn translate_enum_case_name<'a>(
 
 fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
     match tau {
+        BaseTyp::Unit => RcDoc::as_string("unit"),
         BaseTyp::Bool => RcDoc::as_string("bool"),
         BaseTyp::UInt8 => RcDoc::as_string("int8"),
         BaseTyp::Int8 => RcDoc::as_string("int8"),
@@ -242,16 +244,16 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::Unit => RcDoc::as_string("tt"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("@repr WORDSIZE128 {}", x)),
-        Literal::UInt128(x) => RcDoc::as_string(format!("@repr WORDSIZE128 {}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("@repr WORDSIZE64 {}", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("@repr WORDSIZE64 {}", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("@repr WORDSIZE32 {}", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("@repr WORDSIZE32 {}", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("@repr WORDSIZE16 {}", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("@repr WORDSIZE16 {}", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("@repr WORDSIZE8 {}", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("@repr WORDSIZE8 {}", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("@repr U128 {}", x)),
+        Literal::UInt128(x) => RcDoc::as_string(format!("@repr U128 {}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("@repr U64 {}", x)),
+        Literal::UInt64(x) => RcDoc::as_string(format!("@repr U64 {}", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("@repr U32 {}", x)),
+        Literal::UInt32(x) => RcDoc::as_string(format!("@repr U32 {}", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("@repr U16 {}", x)),
+        Literal::UInt16(x) => RcDoc::as_string(format!("@repr U16 {}", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("@repr U8 {}", x)),
+        Literal::UInt8(x) => RcDoc::as_string(format!("@repr U8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
@@ -272,7 +274,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x, _mut) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _mutable) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }
@@ -292,6 +294,7 @@ fn translate_prefix_for_func_name<'a>(
 ) -> (RcDoc<'a, ()>, FuncPrefix) {
     match prefix {
         BaseTyp::Bool => panic!(), // should not happen
+        BaseTyp::Unit => panic!(), // should not happen
         BaseTyp::UInt8 => (RcDoc::as_string("pub_uint8"), FuncPrefix::Regular),
         BaseTyp::Int8 => (RcDoc::as_string("pub_int8"), FuncPrefix::Regular),
         BaseTyp::UInt16 => (RcDoc::as_string("pub_uint16"), FuncPrefix::Regular),
@@ -588,11 +591,6 @@ fn translate_func_name<'a>(
 
 fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match e {
-        Expression::MonadicLet(..) => panic!("TODO: Coq support for Expression::MonadicLet"),
-        Expression::QuestionMark(..) => {
-            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
-            panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
-        }
         Expression::Binary((op, _), e1, e2, op_typ) => {
             let e1 = e1.0;
             let e2 = e2.0;
@@ -907,34 +905,37 @@ fn add_ok_if_result(
                     // If b has an early return, then we must prefix the returned
                     // mutated variables by Ok or Some
                     match stmt {
-                        Statement::ReturnExp(e, typ) => Statement::ReturnExp(Expression::EnumInject(
-                            BaseTyp::Named(
+                        Statement::ReturnExp(e, typ) => Statement::ReturnExp(
+                            Expression::EnumInject(
+                                BaseTyp::Named(
+                                    (
+                                        TopLevelIdent {
+                                            string: match ert {
+                                                EarlyReturnType::Option => "Option",
+                                                EarlyReturnType::Result => "Result",
+                                            }
+                                            .to_string(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        DUMMY_SP.into(),
+                                    ),
+                                    None,
+                                ),
                                 (
                                     TopLevelIdent {
                                         string: match ert {
-                                            EarlyReturnType::Option => "Option",
-                                            EarlyReturnType::Result => "Result",
+                                            EarlyReturnType::Option => "Some",
+                                            EarlyReturnType::Result => "Ok",
                                         }
                                         .to_string(),
-                                        kind: TopLevelIdentKind::Type,
+                                        kind: TopLevelIdentKind::EnumConstructor,
                                     },
                                     DUMMY_SP.into(),
                                 ),
-                                None,
+                                Some((Box::new(e.clone()), DUMMY_SP.into())),
                             ),
-                            (
-                                TopLevelIdent {
-                                    string: match ert {
-                                        EarlyReturnType::Option => "Some",
-                                        EarlyReturnType::Result => "Ok",
-                                    }
-                                    .to_string(),
-                                    kind: TopLevelIdentKind::EnumConstructor,
-                                },
-                                DUMMY_SP.into(),
-                            ),
-                            Some((Box::new(e.clone()), DUMMY_SP.into())),
-                        ), typ),
+                            typ,
+                        ),
                         _ => panic!("should not happen"),
                     }
                 } else {
@@ -1285,7 +1286,7 @@ fn translate_statements<'a>(
     .group()
 }
 
-fn translate_block<'a>(
+pub fn translate_block<'a>(
     b: Block,
     omit_extra_unit: bool,
     top_ctx: &'a TopLevelContext,
@@ -1293,7 +1294,7 @@ fn translate_block<'a>(
     let mut statements = b.stmts;
     match (&b.return_typ, omit_extra_unit) {
         (None, _) => panic!(), // should not happen,
-        (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
+        (Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))), false) => {
             statements.push((
                 Statement::ReturnExp(Expression::Lit(Literal::Unit), b.return_typ),
                 DUMMY_SP.into(),
@@ -1342,6 +1343,58 @@ fn translate_item<'a>(
                 .group(),
             true,
         )
+        .append(
+            RcDoc::hardline()
+                .append(make_let_binding(
+                    translate_ident(Ident::TopLevel(f.clone()))
+                        .append(RcDoc::as_string("_code"))
+                        .append(RcDoc::line())
+                        .append(if sig.args.len() > 0 {
+                            RcDoc::intersperse(
+                                sig.args.iter().map(|((x, _), (tau, _))| {
+                                    make_paren(
+                                        translate_ident(x.clone())
+                                            .append(RcDoc::space())
+                                            .append(RcDoc::as_string(":"))
+                                            .append(RcDoc::space())
+                                            .append(translate_typ(tau.clone())),
+                                    )
+                                }),
+                                RcDoc::line(),
+                            )
+                        } else {
+                            RcDoc::nil()
+                        })
+                        .append(RcDoc::line())
+                        .append(
+                            RcDoc::as_string(":")
+                                .append(RcDoc::space())
+                                .append(RcDoc::as_string("code fset.fset0 [interface] (@ct "))
+                                .append(translate_base_typ(sig.ret.0.clone()))
+                                .append(RcDoc::as_string(")"))
+                                .group(),
+                        ),
+                    None,
+                    RcDoc::as_string("{code pkg_core_definition.ret (T_ct")
+                        .append(RcDoc::space())
+                        .append(make_paren(
+                            translate_ident(Ident::TopLevel(f.clone()))
+                                .append(RcDoc::space()
+                                        .append(if sig.args.len() > 0 {
+                                            RcDoc::intersperse(
+                                                sig.args.iter().map(|((x, _), (_, _))| {
+                                                    translate_ident(x.clone())
+                                                }),
+                                                RcDoc::line(),
+                                            )
+                                        } else {
+                                            RcDoc::nil()
+                                        })
+                                )
+                        ))
+                        .append(RcDoc::as_string(")}")),
+                    true
+                )))
         .append({
             if item.tags.0.contains(&"quickcheck".to_string()) {
                 RcDoc::hardline()
@@ -1801,10 +1854,14 @@ fn translate_item<'a>(
             )
         }
         Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => {
+            if &kr.to_title_case() == "Hacspec Lib" {
+                RcDoc::nil()
+            } else {
             RcDoc::as_string(format!(
             "Require Import {}.",
                 str::replace(&kr.to_title_case(), " ", "_"),
             ))
+            }
         }
         // Aliases are translated to Coq Notations
         Item::AliasDecl((ident, _), (ty, _)) => {
@@ -1982,16 +2039,27 @@ pub fn translate_and_write_to_file(
     write!(
         file,
         "(** This file was automatically generated using Hacspec **)\n\
-        Require Import Hacspec_Lib MachineIntegers.\n\
-        From Coq Require Import ZArith.\n\
-        Import List.ListNotations.\n\
-        Open Scope Z_scope.\n\
-        Open Scope bool_scope.\n\
-        Open Scope hacspec_scope.\n\
-        {}",
+         From Crypt Require Import choice_type Package Prelude.\n\
+         Import PackageNotation.\n\
+         From extructures Require Import ord fset.\n\
+         From CoqWord Require Import ssrZ word.\n\
+         From Jasmin Require Import word.\n\
+         Require Import ChoiceEquality.\n\
+         \n\
+         From Coq Require Import ZArith.\n\
+         Import List.ListNotations.\n\
+         Open Scope list_scope.\n\
+         Open Scope Z_scope.\n\
+         Open Scope bool_scope.\n\
+         \n\
+         Require Import Hacspec_Lib_Comparable.\n\
+         Require Import Hacspec_Lib_Pre.\n\
+         \n\
+         Open Scope hacspec_scope.\n\
+         {}\n\n",
         if export_quick_check {
             "From QuickChick Require Import QuickChick.\n\
-            Require Import QuickChickLib.\n"
+             Require Import QuickChickLib.\n"
         } else {
             ""
         }

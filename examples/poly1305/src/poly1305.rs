@@ -38,7 +38,7 @@ public_nat_mod!(
 pub type PolyState = (FieldElement, FieldElement, PolyKey); //(accumulator,r,key)
 
 pub fn poly1305_encode_r(b: &PolyBlock) -> FieldElement {
-    let mut n : U128 = U128_from_le_bytes(U128Word::from_seq(b));
+    let mut n = U128_from_le_bytes(U128Word::from_seq(b));
     n = n & U128(0x0fff_fffc_0fff_fffc_0fff_fffc_0fff_ffffu128);
     FieldElement::from_secret_literal(n)
 }
@@ -68,7 +68,7 @@ pub fn poly1305_update_block(b: &PolyBlock, st: PolyState) -> PolyState {
 }
 
 pub fn poly1305_update_blocks(m: &ByteSeq, st: PolyState) -> PolyState {
-    let mut st : PolyState = st;
+    let mut st = st;
     let n_blocks = m.len() / BLOCKSIZE;
     for i in 0..n_blocks {
         let block = PolyBlock::from_seq(&m.get_exact_chunk(BLOCKSIZE, i));
@@ -78,7 +78,7 @@ pub fn poly1305_update_blocks(m: &ByteSeq, st: PolyState) -> PolyState {
 }
 
 pub fn poly1305_update_last(pad_len: usize, b: &SubBlock, st: PolyState) -> PolyState {
-    let mut st : PolyState = st;
+    let mut st = st;
     if b.len() != 0 {
         let (acc, r, k) = st;
         st = ((poly1305_encode_last(pad_len, b) + acc) * r, r, k);
@@ -102,7 +102,7 @@ pub fn poly1305_finish(st: PolyState) -> Poly1305Tag {
 }
 
 pub fn poly1305(m: &ByteSeq, key: PolyKey) -> Poly1305Tag {
-    let mut st : PolyState = poly1305_init(key);
+    let mut st = poly1305_init(key);
     st = poly1305_update(m, st);
     poly1305_finish(st)
 }

@@ -763,7 +763,6 @@ fn translate_expr(
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
                                                             None,
-                                                            vec![],
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -805,7 +804,6 @@ fn translate_expr(
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
                                                             None,
-                                                            vec![],
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -861,7 +859,6 @@ fn translate_expr(
                             func_name,
                             func_args,
                             None,
-                            vec![],
                         )),
                         e.span.into(),
                     ))
@@ -919,7 +916,6 @@ fn translate_expr(
                     method_name,
                     rest_args_final,
                     None,
-                    vec![],
                 )),
                 e.span.into(),
             ))
@@ -1075,8 +1071,8 @@ fn translate_expr(
                         let r_f_e = block_r_f_e.0.stmts.pop().unwrap();
                         match (r_t_e, r_f_e) {
                             (
-                                (Statement::ReturnExp(r_t_e), _),
-                                (Statement::ReturnExp(r_f_e), _),
+                                (Statement::ReturnExp(r_t_e, None), _),
+                                (Statement::ReturnExp(r_f_e, None), _),
                             ) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::InlineConditional(
                                     Box::new(r_cond),
@@ -1376,7 +1372,7 @@ fn translate_expr(
                 translated_statements.len(),
                 translated_statements.iter().next().unwrap(),
             ) {
-                (1, (Statement::ReturnExp(e), span)) => {
+                (1, (Statement::ReturnExp(e, None), span)) => {
                     Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
                 }
                 _ => {
@@ -1512,7 +1508,6 @@ fn translate_expr(
                                                     (Borrowing::Consumed, i.1.clone()),
                                                 )],
                                                 Some(vec![BaseTyp::UInt8]),
-                                                vec![],
                                             ),
                                             i.1.clone(),
                                         )
@@ -1602,7 +1597,7 @@ fn translate_expr(
 }
 
 enum ExprTranslationResultMaybeQuestionMark {
-    TransExpr(Expression, bool), // true if ends with question mark
+    TransExpr(Expression, Option<ScopeMutableVars>), // true if ends with question mark
     TransStmt(Statement),
 }
 
@@ -1616,7 +1611,7 @@ fn translate_expr_accepts_question_mark(
             let (result, span) = translate_expr(sess, specials, &inner_e)?;
             match result {
                 ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, true),
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, Some (ScopeMutableVars::new())),
                     span,
                 )),
                 ExprTranslationResult::TransStmt(_) => {
@@ -1633,7 +1628,7 @@ fn translate_expr_accepts_question_mark(
             let (result, span) = translate_expr(sess, specials, e)?;
             match result {
                 ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, false),
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, None),
                     span,
                 )),
                 ExprTranslationResult::TransStmt(s) => {
@@ -1752,7 +1747,7 @@ fn translate_statement(
         StmtKind::Expr(e) => {
             let t_s = translate_expr(sess, specials, &e)?;
             let t_s = match t_s {
-                (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e),
+                (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e, None),
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span.into())])
@@ -1798,7 +1793,7 @@ fn translate_block(
             contains_question_mark: None,
             // We initialize these fields to None as they are
             // to be filled by the typechecker
-            mutable_vars: vec![],
+            mutable_vars: ScopeMutableVars::new(),
             function_dependencies: vec![],
         },
         b.span.into(),
@@ -2564,7 +2559,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         return_typ: None,
                         mutated: None,
                         contains_question_mark: None,
-                        mutable_vars: Vec::new(),
+                        mutable_vars: ScopeMutableVars::new(),
                         function_dependencies: Vec::new(),
                     },
                     i.span.into(),
@@ -2575,7 +2570,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             let fn_sig = FuncSig {
                 args: fn_inputs,
                 ret: fn_output,
-                mutable_vars: Vec::new(),
+                mutable_vars: ScopeMutableVars::new(),
                 function_dependencies: Vec::new(),
             };
             let fn_item = Item::FnDecl(

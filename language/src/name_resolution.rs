@@ -139,13 +139,13 @@ pub enum FnValue {
 }
 
 pub struct ScopeMutInfo {
-    pub vars: Vec<ScopeMutableVar>,
+    pub vars: ScopeMutableVars,
     pub funcs: Vec<FunctionDependency>,
 }
 impl ScopeMutInfo {
     fn new() -> Self {
         ScopeMutInfo {
-            vars: Vec::new(),
+            vars: ScopeMutableVars::new(),
             funcs: Vec::new(),
         }
     }
@@ -300,15 +300,9 @@ fn resolve_expression(
                 name_context,
                 top_level_ctx,
             )?;
-            Ok((
-                ScopeMutInfo {
-                    vars: Vec::new(),
-                    funcs: Vec::new(),
-                },
-                (Expression::Named(new_i), e_span),
-            ))
+            Ok((ScopeMutInfo::new(), (Expression::Named(new_i), e_span)))
         }
-        Expression::FuncCall(ty, f, args, arg_types, mut_vars) => {
+        Expression::FuncCall(ty, f, args, arg_types) => {
             let (smi_new_args, new_args): (Vec<_>, Vec<_>) = check_vec(
                 args.into_iter()
                     .map(|arg| {
@@ -328,28 +322,16 @@ fn resolve_expression(
                         smi
                     });
 
-            let mut new_mut_vars = Vec::new();
-            for (mut_var, typ) in mut_vars {
-                let new_mut_var = find_ident(sess, &mut_var.clone(), &name_context, top_level_ctx)?;
-                new_mut_vars.push(((new_mut_var, mut_var.1.clone()), typ));
-            }
-
-            let mut smi = ScopeMutInfo {
-                vars: Vec::new(),
-                funcs: Vec::new(),
-            };
+            let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_args);
             smi.funcs.push(f.clone());
 
             Ok((
                 smi,
-                (
-                    Expression::FuncCall(ty, f, new_args, arg_types, new_mut_vars),
-                    e_span,
-                ),
+                (Expression::FuncCall(ty, f, new_args, arg_types), e_span),
             ))
         }
-        Expression::MethodCall(self_, ty, f, args, args_types, mut_vars) => {
+        Expression::MethodCall(self_, ty, f, args, arg_types) => {
             let (self_, self_borrow) = *self_;
             let (smi_new_self, new_self) =
                 resolve_expression(sess, self_, name_context, top_level_ctx)?;
@@ -372,12 +354,6 @@ fn resolve_expression(
                         smi
                     });
 
-            let mut new_mut_vars = Vec::new();
-            for (mut_var, typ) in mut_vars {
-                let new_mut_var = find_ident(sess, &mut_var.clone(), &name_context, top_level_ctx)?;
-                new_mut_vars.push(((new_mut_var, mut_var.1.clone()), typ));
-            }
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_self);
             smi.extend(smi_new_args);
@@ -391,8 +367,7 @@ fn resolve_expression(
                         ty,
                         f,
                         new_args,
-                        args_types,
-                        new_mut_vars,
+                        arg_types,
                     ),
                     e_span,
                 ),
@@ -592,12 +567,12 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::ReturnExp(e) => {
+        Statement::ReturnExp(e, _) => {
             let (smi_new_e, new_e) =
                 resolve_expression(sess, (e, s_span.clone()), &name_context, top_level_ctx)?;
             Ok((
                 smi_new_e,
-                (Statement::ReturnExp(new_e.0), s_span),
+                (Statement::ReturnExp(new_e.0, None), s_span),
                 name_context,
             ))
         }
@@ -628,10 +603,10 @@ fn resolve_statement(
         }
         Statement::Reassignment(var, e, question_mark) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
-            let (mut_vars_new_e, new_e) =
+            let (smi_new_e, new_e) =
                 resolve_expression(sess, e, &name_context, top_level_ctx)?;
             Ok((
-                mut_vars_new_e,
+                smi_new_e,
                 (
                     Statement::Reassignment((new_var, var.1.clone()), new_e, question_mark),
                     s_span,
@@ -647,8 +622,6 @@ fn resolve_statement(
             smi.extend(smi_new_e);
 
             if let Pattern::IdentPat(x, true) = new_pat.clone() {
-                println!("Mutable vars {:?}", (x.clone(), pat.1.clone()));
-
                 smi.vars.push(((x, pat.1.clone()), typ.clone()));
             };
             log::trace!("   new_name_context {:#?}", new_name_context);
@@ -711,17 +684,17 @@ fn resolve_item(
     let i = item.clone().item;
     let i = match i {
         Item::ConstDecl(id, typ, e) => {
-            let (smi_new_e, new_e) = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
+            let (_smi_new_e, new_e) = resolve_expression(sess, e, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ConstDecl(id, typ, new_e), i_span))
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
-            let (smi_new_size, new_size) =
+            let (_smi_new_size, new_size) =
                 resolve_expression(sess, size, &HashMap::new(), top_level_ctx)?;
             Ok((Item::ArrayDecl(id, new_size, cell_t, index_typ), i_span))
         }
         Item::EnumDecl(_, _) | Item::AliasDecl(_, _) | Item::ImportedCrate(_) => Ok((i, i_span)),
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
-            let (smi_new_canvas_size, new_canvas_size) =
+            let (_smi_new_canvas_size, new_canvas_size) =
                 resolve_expression(sess, canvas_size, &HashMap::new(), top_level_ctx)?;
             Ok((
                 Item::NaturalIntegerDecl(typ_ident, secrecy, new_canvas_size, info),
@@ -746,9 +719,7 @@ fn resolve_item(
 
             let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
 
-            println!("FUN {:?} sig {:?}", f.clone(), new_b.clone().0.mutable_vars);
-
-            sig.mutable_vars = new_b.clone().0.mutable_vars;
+            // sig.mutable_vars = new_b.clone().0.mutable_vars;
             sig.function_dependencies = new_b.clone().0.function_dependencies;
 
             Ok((Item::FnDecl((f, f_span), sig, new_b), i_span))
@@ -1096,32 +1067,9 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     for x in items.clone().into_iter() {
         match x.0.item {
             Item::FnDecl((f, _f_span), sig, _b) => {
-                let mut mut_vars = Vec::new();
-                for (f_dep, _) in sig.clone().function_dependencies {
-                    println!("{:?} dependeds on {:?}", f.clone(), f_dep.clone());
-
-                    match top_level_ctx
-                        .functions
-                        .get(&FnKey::Independent(f_dep.clone()))
-                    {
-                        Some(FnValue::Local(sig_dep)) => {
-                            mut_vars.extend(sig_dep.clone().mutable_vars);
-                        }
-                        _ => (),
-                    }
-                }
-                let mut new_sig = sig.clone();
-                new_sig.mutable_vars.extend(mut_vars);
-
-                println!(
-                    "{:?} new mutable vars {:?}",
-                    f.clone(),
-                    new_sig.clone().mutable_vars
-                );
-
                 top_level_ctx.functions.insert(
                     FnKey::Independent(f.clone()),
-                    FnValue::Local(new_sig.clone()),
+                    FnValue::Local(sig.clone()),
                 );
             }
             _ => (),

@@ -1,6 +1,6 @@
 use core::cmp::PartialEq;
 use core::hash::Hash;
-use im::{HashMap, HashSet};
+use im::{HashSet};
 use itertools::Itertools;
 use rustc_errors::MultiSpan;
 use rustc_span::Span;
@@ -379,7 +379,6 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
         Fillable<Vec<BaseTyp>>,
-        Vec<ScopeMutableVar>,
     ),
     MethodCall(
         Box<(Spanned<Expression>, Spanned<Borrowing>)>,
@@ -387,7 +386,6 @@ pub enum Expression {
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
         Fillable<Vec<BaseTyp>>,
-        Vec<ScopeMutableVar>,
     ),
     EnumInject(
         BaseTyp,                          // Type of enum
@@ -448,15 +446,15 @@ pub type Fillable<T> = Option<T>;
 #[derive(Clone, Serialize, Debug)]
 pub enum Statement {
     LetBinding(
-        Spanned<Pattern>,     // Let-binded pattern
-        Option<Spanned<Typ>>, // Typ of the binded expr
-        Spanned<Expression>,  // Binded expr
-        bool,                 // Presence of a question mark at the end
+        Spanned<Pattern>,           // Let-binded pattern
+        Option<Spanned<Typ>>,       // Typ of the binded expr
+        Spanned<Expression>,        // Binded expr
+        Option<ScopeMutableVars>, // Presence of a question mark at the end
     ),
     Reassignment(
-        Spanned<Ident>,      // Variable reassigned
-        Spanned<Expression>, // New value
-        bool,                // Presence of a question mark at the end
+        Spanned<Ident>,             // Variable reassigned
+        Spanned<Expression>,        // New value
+        Option<ScopeMutableVars>, // Presence of a question mark at the end
     ),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -471,16 +469,68 @@ pub enum Statement {
         Spanned<Block>,         // Loop body
     ),
     ArrayUpdate(
-        Spanned<Ident>,      // Array variable
-        Spanned<Expression>, // Index value
-        Spanned<Expression>, // Cell value
-        bool,                // Presence of a question mark at the end of the cell value expression
-        Fillable<Typ>,       // Type of the array
+        Spanned<Ident>,             // Array variable
+        Spanned<Expression>,        // Index value
+        Spanned<Expression>,        // Cell value
+        Option<ScopeMutableVars>, // Presence of a question mark at the end of the cell value expression
+        Fillable<Typ>,              // Type of the array
     ),
-    ReturnExp(Expression),
+    ReturnExp(Expression, Fillable<Typ>),
 }
 
-pub type ScopeMutableVar = (Spanned<Ident>, Fillable<Spanned<Typ>>);
+pub type MutableVar = (Ident, Fillable<Typ>);
+#[derive(Clone, Debug)]
+pub struct ScopeMutableVars {
+    pub external_vars: HashSet<MutableVar>,
+    pub local_vars: HashSet<MutableVar>,
+}
+
+impl Serialize for ScopeMutableVars {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // TODO: Serialize local vars
+        let mut seq = serializer.serialize_seq(Some(self.external_vars.len()))?;
+        for e in &self.external_vars {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+impl ScopeMutableVars {
+    pub fn new() -> Self {
+        ScopeMutableVars { external_vars: HashSet::new(), local_vars: HashSet::new() }
+    }
+
+    pub fn push(&mut self, value: MutableVar) {
+        self.local_vars.insert(value);
+    }
+
+    pub fn push_external(&mut self, value: MutableVar) {
+        self.external_vars.insert(value);
+    }
+
+    pub fn extend(&mut self, other: ScopeMutableVars) {
+        for i in other.external_vars {
+            self.external_vars.insert(i);
+        }
+        for i in other.local_vars {
+            self.local_vars.insert(i);
+        }
+    }
+    
+    pub fn extend_external(&mut self, other: ScopeMutableVars) {
+        for i in other.external_vars {
+            self.external_vars.insert(i);
+        }
+        for i in other.local_vars {
+            self.external_vars.insert(i);
+        }
+    }
+}
+
 pub type FunctionDependency = Spanned<TopLevelIdent>;
 
 #[derive(Clone, Serialize, Debug)]
@@ -489,7 +539,7 @@ pub struct Block {
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
     pub contains_question_mark: Fillable<bool>,
-    pub mutable_vars: Vec<ScopeMutableVar>,
+    pub mutable_vars: ScopeMutableVars,
     pub function_dependencies: Vec<FunctionDependency>,
 }
 
@@ -497,7 +547,7 @@ pub struct Block {
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
-    pub mutable_vars: Vec<ScopeMutableVar>,
+    pub mutable_vars: ScopeMutableVars,
     pub function_dependencies: Vec<FunctionDependency>,
 }
 
