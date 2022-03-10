@@ -209,8 +209,8 @@ fn point_validation() {
 
 #[test]
 fn test_p256_calculate_w() {
-	// gx and gy from RFC6090 Appendix D
-	let valid_point = (
+    // gx and gy from RFC6090 Appendix D
+    let valid_point = (
         P256FieldElement::from_hex(
             "6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296",
         ),
@@ -218,7 +218,7 @@ fn test_p256_calculate_w() {
             "4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",
         ),
     );
-	assert!(valid_point.1 == p256_calculate_w(valid_point.0));
+    assert!(valid_point.1 == p256_calculate_w(valid_point.0));
 
     let valid_point = (
         P256FieldElement::from_hex(
@@ -228,6 +228,27 @@ fn test_p256_calculate_w() {
             "43a1930189363bbde2ac4cbd1649cdc6f451add71dd2f16a8a867f2b17caa16b",
         ),
     );
-	assert!(valid_point.1 == p256_calculate_w(valid_point.0));
+    assert!(valid_point.1 == p256_calculate_w(valid_point.0));
 
+    // from edhoc test-vectors11/p256/vectors-json.txt
+    fn kat(x: &str, gx_x: &str, gx_y: &str) {
+        let x = P256Scalar::from_hex(x);
+        let expected_gx_x = P256FieldElement::from_hex(gx_x);
+        let expected_gx_y = P256FieldElement::from_hex(gx_y);
+        let my_gx = p256_point_mul_base(x).unwrap();
+        assert_eq!(expected_gx_x, my_gx.0);
+        assert_eq!(expected_gx_y, my_gx.1);
+        let w = p256_calculate_w(my_gx.0);
+        assert_eq!(my_gx.1, w);
+    }
+    kat(
+        "368ec1f69aeb659ba37d5a8d45b21bdc0299dceaa8ef235f3ca42ce3530f9525",
+        "8af6f430ebe18d34184017a9a11bf511c8dff8f834730b96c1b7c8dbca2fc3b6",
+        "51e8af6c6edb781601ad1d9c5fa8bf7aa15716c7c06a5d038503c614ff80c9b3",
+    );
+    kat(
+        "e2f4126777205e853b437d6eaca1e1f753cdcc3e2c69fa884b0a1a640977e418",
+        "419701d7f00a26c2dc587a36dd752549f33763c893422c8ea0f955a13a4ff5d5",
+        "5e4f0dd8a3da0baa16b9d3ad56a0c1860a940af85914915e25019b402417e99d",
+    );
 }
