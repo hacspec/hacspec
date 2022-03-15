@@ -1,4 +1,4 @@
-use hacspec_lib::ByteSeq;
+use hacspec_lib::{ByteSeq, ModNumeric};
 use hacspec_p256::*;
 
 use hacspec_dev::prelude::*;
@@ -139,6 +139,14 @@ fn test_wycheproof_plain() {
                 Err(_) => panic!("Unexpected error in point_mul"),
             };
             assert_eq!(shared.0, expected);
+
+            // Check Y
+            test_y(p);
+            fn test_y(point: Affine) {
+                let my_y = p256_calculate_w(point.0);
+                assert_eq!(format!("{:x}", my_y), format!("{:x}", point.1));
+            }
+
             tests_run += 1;
         }
     }
@@ -209,39 +217,63 @@ fn point_validation() {
 
 #[test]
 fn test_p256_calculate_w() {
-	fn test_ecdh(x: &str, gy_x: &str, gxy_x: &str) {
-		let private = P256Scalar::from_hex(x);
-		let public_x = P256FieldElement::from_hex(gy_x);
-		let expected_secret_x = P256FieldElement::from_hex(gxy_x);
+    fn test_ecdh(x: &str, gy_x: &str, gy_y: impl Into<Option<&'static str>>, gxy_x: &str) {
+        let private = P256Scalar::from_hex(x);
+        let public_x = P256FieldElement::from_hex(gy_x);
+        let expected_secret_x = P256FieldElement::from_hex(gxy_x);
 
-		let public = (
-			public_x,
-			p256_calculate_w(public_x)
-		);
+        let public = (public_x, p256_calculate_w(public_x));
 
-		// calculate the ECDH secret
-		let my_secret_x = match p256_point_mul(private, public) {
-			Ok(p) => p.0,
-			Err(_) => panic!("Error test_ecdh"),
-		};
+        if let Some(gy_y) = gy_y.into() {
+            // Check the Y coordinate.
+            println!("{} == {}", gy_y, format!("{:x}", public.1));
+            println!(
+                "sign: {:x}",
+                public.1.modulo(P256FieldElement::from_literal(2))
+            );
+            assert_eq!(gy_y, format!("{:x}", public.1));
+        }
 
-		assert_eq!(expected_secret_x, my_secret_x);
-	}
+        // calculate the ECDH secret
+        let my_secret_x = match p256_point_mul(private, public) {
+            Ok(p) => p.0,
+            Err(_) => panic!("Error test_ecdh"),
+        };
 
-	// taken from ecdh_secp256r1_ecpoint_test.json tcId=2
-	// negative y
-	test_ecdh(
-		"0612465c89a023ab17855b0a6bcebfd3febb53aef84138647b5352e02c10c346",
-		"62d5bd3372af75fe85a040715d0f502428e07046868b0bfdfa61d731afe44f26",
-		"53020d908b0219328b658b525f26780e3ae12bcd952bb25a93bc0895e1714285",
-	);
+        assert_eq!(expected_secret_x, my_secret_x);
+    }
 
-	// test vector from edhoc
-	// positive y
-	test_ecdh(
-		"368ec1f69aeb659ba37d5a8d45b21bdc0299dceaa8ef235f3ca42ce3530f9525",
-		"419701d7f00a26c2dc587a36dd752549f33763c893422c8ea0f955a13a4ff5d5",
-		"2f0cb7e860ba538fbf5c8bded009f6259b4b628fe1eb7dbe9378e5ecf7a824ba",
-	);
+    // taken from ecdh_secp256r1_ecpoint_test.json tcId=2
+    // negative y
+    test_ecdh(
+        "0612465c89a023ab17855b0a6bcebfd3febb53aef84138647b5352e02c10c346",
+        "62d5bd3372af75fe85a040715d0f502428e07046868b0bfdfa61d731afe44f26",
+        "ac333a93a9e70a81cd5a95b5bf8d13990eb741c8c38872b4a07d275a014e30cf",
+        "53020d908b0219328b658b525f26780e3ae12bcd952bb25a93bc0895e1714285",
+    );
 
+    // taken from ecdh_secp256r1_ecpoint_test.json tcId=4
+    test_ecdh(
+        "0a0d622a47e48f6bc1038ace438c6f528aa00ad2bd1da5f13ee46bf5f633d71a",
+        "00c7defeb1a16236738e9a1123ba621bc8e9a3f2485b3f8ffde7f9ce98f5a8a1",
+        "cb338c3912b1792f60c2b06ec5231e2d84b0e596e9b76d419ce105ece3791dbc",
+        "0000000000000000ffffffffffffffff00000000000000010000000000000001",
+    );
+
+    // taken from ecdh_secp256r1_ecpoint_test.json tcId=7
+    test_ecdh(
+        "0a0d622a47e48f6bc1038ace438c6f528aa00ad2bd1da5f13ee46bf5f633d71a",
+        "e9484e58f3331b66ffed6d90cb1c78065fa28cfba5c7dd4352013d3252ee4277",
+        "bd7503b045a38b4b247b32c59593580f39e6abfa376c3dca20cf7f9cfb659e13",
+        "000003ffffff0000003ffffff0000003ffffff0000003ffffff0000003ffffff",
+    );
+
+    // test vector from edhoc
+    // positive y
+    test_ecdh(
+        "368ec1f69aeb659ba37d5a8d45b21bdc0299dceaa8ef235f3ca42ce3530f9525",
+        "419701d7f00a26c2dc587a36dd752549f33763c893422c8ea0f955a13a4ff5d5",
+        "5e4f0dd8a3da0baa16b9d3ad56a0c1860a940af85914915e25019b402417e99d",
+        "2f0cb7e860ba538fbf5c8bded009f6259b4b628fe1eb7dbe9378e5ecf7a824ba",
+    );
 }
