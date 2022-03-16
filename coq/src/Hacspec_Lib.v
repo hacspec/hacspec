@@ -754,6 +754,13 @@ Definition update_sub {A len slen} `{Default A} (v : nseq A len) (i : nat) (n : 
 (* Sanity check *)
 (* Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))). *)
 
+Definition array_as_seq
+  {a: Type}
+  {out_len:nat}
+  (input: nseq a out_len)
+  (* {H : List.length input = out_len} *)
+    : seq a := VectorDef.to_list input.
+
 Definition array_from_seq
   {a: Type}
  `{Default a}
