@@ -469,6 +469,16 @@
 <span id="469">469</span>
 <span id="470">470</span>
 <span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">modular_integer</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">max</span>:<span class="ident">expr</span>) =&gt; {
@@ -608,6 +618,16 @@
             <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">comp_lt</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
                 <span class="kw">let</span> <span class="ident">x</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">into</span>();
                 <span class="ident">x</span>.<span class="ident">comp_lt</span>(<span class="ident">rhs</span>.<span class="ident">into</span>()).<span class="ident">into</span>()
+            }
+
+            <span class="doccomment">/// Negate the value modulo max: `mod_value - self`</span>
+            <span class="attribute">#[<span class="ident">inline</span>]</span>
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">neg</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
+                <span class="kw">let</span> <span class="ident">mod_val</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">max</span>.<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">s</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">into</span>();
+                <span class="kw">let</span> <span class="ident">result</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span> <span class="op">=</span> <span class="ident">mod_val</span>.<span class="ident">sub</span>(<span class="ident">s</span>).<span class="ident">into</span>();
+                <span class="ident">result</span>.<span class="ident">into</span>()
             }
         }
     };
