@@ -550,7 +550,12 @@ fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
     name: Ident,
     top_ctx: &'a TopLevelContext,
-) -> (RcDoc<'a, ()>, Vec<RcDoc<'a, ()>>, Option<BaseTyp>) {
+) -> (
+    RcDoc<'a, ()>,
+    Vec<RcDoc<'a, ()>>,
+    Option<BaseTyp>,
+    Vec<(RcDoc<'a, ()>, RcDoc<'a, ()>)>,
+) {
     match prefix.clone() {
         None => {
             let name = translate_ident(name.clone());
@@ -560,17 +565,26 @@ fn translate_func_name<'a>(
                 // a public integer of the same kind. So in Coq, that
                 // will amount to a classification operation
                 // TODO: may need to add type annotation here
-                "uint128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt128)),
-                "uint64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt64)),
-                "uint32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt32)),
-                "uint16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt16)),
-                "uint8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt8)),
-                "int128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int128)),
-                "int64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int64)),
-                "int32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int32)),
-                "int16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int16)),
-                "int8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int8)),
-                _ => (name, vec![], None), // TODO: is None correct?
+                x @ ("uint128" | "uint64" | "uint32" | "uint16" | "uint8" | "int128" | "int64"
+                | "int32" | "int16" | "int8") => (
+                    RcDoc::as_string("secret"),
+                    vec![],
+                    Some(match x {
+                        "uint128" => BaseTyp::UInt128,
+                        "uint64" => BaseTyp::UInt64,
+                        "uint32" => BaseTyp::UInt32,
+                        "uint16" => BaseTyp::UInt16,
+                        "uint8" => BaseTyp::UInt8,
+                        "int128" => BaseTyp::Int128,
+                        "int64" => BaseTyp::Int64,
+                        "int32" => BaseTyp::Int32,
+                        "int16" => BaseTyp::Int16,
+                        "int8" => BaseTyp::Int8,
+                        _ => panic!("Should not happen"),
+                    }),
+                    vec![],
+                ),
+                _ => (name, vec![], None, vec![]), // TODO: is None correct?
             }
         }
         Some((prefix, _)) => {
@@ -581,6 +595,8 @@ fn translate_func_name<'a>(
 
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
+
+            let mut extra_info = Vec::new();
 
             // We add the modulo value for nat_mod
 
@@ -664,13 +680,16 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
+                            extra_info
+                                .push((RcDoc::as_string("array_as_seq ("), RcDoc::as_string(")")));
                             additional_args.push(translate_ident(Ident::TopLevel(s.clone())))
                         }
                         FuncPrefix::Array(ArraySize::Integer(i), _) => {
+                            extra_info
+                                .push((RcDoc::as_string("array_as_seq ("), RcDoc::as_string(")")));
                             if *i == 0 {
                                 additional_args.push(RcDoc::as_string("_"))
-                            }
-                            else {
+                            } else {
                                 additional_args.push(RcDoc::as_string(format!("{}", i)))
                             }
                         }
@@ -690,6 +709,7 @@ fn translate_func_name<'a>(
                     .append(func_ident.clone()),
                 additional_args,
                 result_typ,
+                extra_info,
             )
         }
     }
@@ -784,7 +804,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         ),
         Expression::Named(p) => translate_ident(p.clone()),
         Expression::FuncCall(prefix, name, args) => {
-            let (func_name, additional_args, func_ret_ty) =
+            let (func_name, additional_args, func_ret_ty, extra_info) =
                 translate_func_name(prefix.clone(), Ident::TopLevel(name.0.clone()), top_ctx);
             let total_args = args.len() + additional_args.len();
             func_name
@@ -795,9 +815,19 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         .map(|arg| RcDoc::space().append(make_paren(arg))),
                 ))
                 // Then the explicit arguments
-                .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
-                    RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
-                })))
+                .append(RcDoc::concat(args.into_iter().enumerate().map(
+                    |(i, ((arg, _), _))| {
+                        RcDoc::space().append(make_paren(if i < extra_info.len() {
+                            let (pre_arg, post_arg) = extra_info[i].clone();
+                            pre_arg
+                                .clone()
+                                .append(translate_expression(arg, top_ctx))
+                                .append(post_arg.clone())
+                        } else {
+                            translate_expression(arg, top_ctx)
+                        }))
+                    },
+                )))
                 .append(if total_args == 0 {
                     RcDoc::space() //.append(RcDoc::as_string("()"))
                 } else {
@@ -818,11 +848,12 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
                     })))
             } else {
-                let (func_name, additional_args, func_ret_ty) = translate_func_name(
-                    sel_typ.clone().map(|x| x.1),
-                    Ident::TopLevel(f.clone()),
-                    top_ctx,
-                );
+                let (func_name, additional_args, func_ret_ty, extra_info) =
+                    translate_func_name(
+                        sel_typ.clone().map(|x| x.1),
+                        Ident::TopLevel(f.clone()),
+                        top_ctx,
+                    );
                 func_name // We append implicit arguments first
                     .append(RcDoc::concat(
                         additional_args
@@ -831,7 +862,17 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     ))
                     .append(RcDoc::space())
                     // Then the self argument
-                    .append(make_paren(translate_expression((sel_arg.0).0, top_ctx)))
+                    .append(make_paren(
+                        if 0 < extra_info.len() {
+                            let (pre_arg, post_arg) = extra_info[0].clone();
+                            pre_arg
+                                .clone()
+                                .append(translate_expression((sel_arg.0).0, top_ctx))
+                                .append(post_arg.clone())
+                        } else {
+                            translate_expression((sel_arg.0).0, top_ctx)
+                        }
+                    ))
                     // And finally the rest of the arguments
                     .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
                         RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
