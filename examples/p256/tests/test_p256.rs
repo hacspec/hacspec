@@ -140,12 +140,23 @@ fn test_wycheproof_plain() {
             };
             assert_eq!(shared.0, expected);
 
-            // Check Y
-            test_y(p);
-            fn test_y(point: Affine) {
-                let my_y = p256_calculate_w(point.0);
-                assert_eq!(format!("{:x}", my_y), format!("{:x}", point.1));
-            }
+            // Check w
+            let my_p = (p.0, p256_calculate_w(p.0));
+            let shared = match p256_point_mul(k, my_p) {
+                Ok(s) => s,
+                Err(_) => panic!("Unexpected error in point_mul"),
+            };
+            assert_eq!(shared.0, expected, "Error in ECDH using calculate w");
+            // The Y coordinate of the computed point (my_p) is either
+            // equal to y, or -y % p.
+            let other_y = my_p.1.neg();
+            assert!(
+                p.1 == my_p.1 || p.1 == other_y,
+                "The computed w is wrong.\nGot {:x}\n or {:x} but expected\n    {}",
+                my_p.1,
+                other_y,
+                &test.public[66..]
+            );
 
             tests_run += 1;
         }
@@ -217,22 +228,16 @@ fn point_validation() {
 
 #[test]
 fn test_p256_calculate_w() {
-    fn test_ecdh(x: &str, gy_x: &str, gy_y: impl Into<Option<&'static str>>, gxy_x: &str) {
+    fn test_ecdh(x: &str, gy_x: &str, gy_y: &str, gxy_x: &str) {
         let private = P256Scalar::from_hex(x);
         let public_x = P256FieldElement::from_hex(gy_x);
         let expected_secret_x = P256FieldElement::from_hex(gxy_x);
 
         let public = (public_x, p256_calculate_w(public_x));
 
-        if let Some(gy_y) = gy_y.into() {
-            // Check the Y coordinate.
-            println!("{} == {}", gy_y, format!("{:x}", public.1));
-            println!(
-                "sign: {:x}",
-                public.1.modulo(P256FieldElement::from_literal(2))
-            );
-            assert_eq!(gy_y, format!("{:x}", public.1));
-        }
+        // Check the Y coordinate.
+        let other_y = public.1.neg();
+        assert!(gy_y == format!("{:x}", public.1) || gy_y == format!("{:x}", other_y));
 
         // calculate the ECDH secret
         let my_secret_x = match p256_point_mul(private, public) {
