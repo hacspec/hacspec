@@ -435,20 +435,14 @@ fn handle_crate<'tcx>(
                 krate_path.clone()
             };
 
-            let file = match extension.clone().as_str() {
+            let join_path = match extension.clone().as_str() {
                 "fst" | "ec" | "json" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    (original_file).join(Path::new(
-                        (file_name.clone().to_title_case().replace(" ", ".") + "." + extension)
-                            .as_str(),
-                    ))
+                    file_name.clone().to_title_case().replace(" ", ".") + "." + extension
                 }
                 "v" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    (original_file).join(Path::new(
-                        (file_name.clone().to_title_case().replace(" ", "_") + "." + extension)
-                            .as_str(),
-                    ))
+                    file_name.clone().to_title_case().replace(" ", "_") + "." + extension
                 }
                 _ => {
                     compiler
@@ -457,23 +451,30 @@ fn handle_crate<'tcx>(
                     return Compilation::Stop;
                 }
             };
-            let file = file.to_str().unwrap();
 
+            let file_temp = original_file.join("_temp").join(join_path.clone());
+            let file_temp = file_temp.to_str().unwrap();
+
+            let file_temp_dir = original_file.join("_temp");
+            let file_temp_dir = file_temp_dir.to_str().unwrap();
+            
+            std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to crate dir");
+            
             match extension.as_str() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
-                    &file,
+                    &file_temp,
                     &top_ctx_map[&krate_path],
                 ),
                 "ec" => rustspec_to_easycrypt::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
-                    &file,
+                    &file_temp,
                     &top_ctx_map[&krate_path],
                 ),
                 "json" => {
-                    let file = file.trim();
+                    let file = file_temp.trim();
                     let path = Path::new(file);
                     let file = match File::create(&path) {
                         Err(why) => {
@@ -498,7 +499,7 @@ fn handle_crate<'tcx>(
                 "v" => rustspec_to_coq::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
-                    &file,
+                    &file_temp,
                     &top_ctx_map[&krate_path],
                 ),
                 _ => {
@@ -507,6 +508,61 @@ fn handle_crate<'tcx>(
                         .err("unknown backend extension for output file");
                     return Compilation::Stop;
                 }
+            }
+
+            let file = original_file.join(join_path.clone());
+            let file = file.to_str().unwrap();
+
+            let file_vc = original_file.join("_vc").join(join_path.clone());
+            let file_vc = file_vc.to_str().unwrap();
+
+            let file_vc_dir = original_file.join("_vc");
+            let file_vc_dir = file_vc_dir.to_str().unwrap();
+            
+            std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to crate dir");
+            
+            println!("{:?} {:?} {}", file_vc, file_temp, file);
+
+            let initialize_vc = false;
+
+            if initialize_vc {
+                std::fs::copy(file_temp.clone(), file.clone()).expect(
+                    format!(
+                        "Failed to copy file '{}' to '{}'",
+                        file_temp.clone(),
+                        file.clone()
+                    )
+                    .as_str(),
+                );
+                std::fs::copy(file.clone(), file_vc.clone()).expect(
+                    format!(
+                        "Failed to copy file '{}' to '{}'",
+                        file.clone(),
+                        file_vc.clone()
+                    )
+                    .as_str(),
+                );
+            } else {
+                std::process::Command::new("git")
+                    .output()
+                    .expect("Could not find 'git'. Please install git and try again.");
+                std::process::Command::new("git")
+                    .arg("merge-file")
+                    .arg(file.clone())
+                    .arg(file_temp.clone())
+                    .arg(file_vc.clone())
+                    .output()
+                    .expect("git-merge failed");
+                std::fs::copy(file_temp.clone(), file_vc.clone()).expect(
+                    format!(
+                        "Failed to copy file '{}' to '{}'",
+                        file_temp.clone(),
+                        file_vc.clone()
+                    )
+                    .as_str(),
+                );
+                std::fs::remove_file(file_temp.clone())
+                    .expect(format!("Failed to remove file '{}'", file.clone()).as_str());
             }
         }
     }
