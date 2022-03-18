@@ -279,14 +279,14 @@ Definition hash (msg_39 : byte_seq) : sha256_digest_t :=
     if (last_block_len_42) <.? ((block_size_v) - (len_size_v)):bool then (
       let last_block_41 :=
         array_update (last_block_41) ((block_size_v) - (len_size_v)) (
-          uint64_to_be_bytes (len_bist_47)) in 
+          array_to_seq (uint64_to_be_bytes (len_bist_47))) in 
       let h_40 :=
         compress (last_block_41) (h_40) in 
       (h_40, last_block_41)) else (let pad_block_48 : block_t :=
         array_new_ (default) (block_size_v) in 
       let pad_block_48 :=
         array_update (pad_block_48) ((block_size_v) - (len_size_v)) (
-          uint64_to_be_bytes (len_bist_47)) in 
+          array_to_seq (uint64_to_be_bytes (len_bist_47))) in 
       let h_40 :=
         compress (last_block_41) (h_40) in 
       let h_40 :=

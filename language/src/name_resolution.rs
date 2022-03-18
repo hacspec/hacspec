@@ -191,7 +191,7 @@ fn resolve_expression(
             )?;
             Ok((Expression::Named(new_i), e_span))
         }
-        Expression::FuncCall(ty, f, args) => {
+        Expression::FuncCall(ty, f, args, arg_types) => {
             let new_args = check_vec(
                 args.into_iter()
                     .map(|arg| {
@@ -201,9 +201,9 @@ fn resolve_expression(
                     })
                     .collect(),
             )?;
-            Ok((Expression::FuncCall(ty, f, new_args), e_span))
+            Ok((Expression::FuncCall(ty, f, new_args, arg_types), e_span))
         }
-        Expression::MethodCall(self_, ty, f, args) => {
+        Expression::MethodCall(self_, ty, f, args, args_types) => {
             let (self_, self_borrow) = *self_;
             let new_self = resolve_expression(sess, self_, name_context, top_level_ctx)?;
             let new_args = check_vec(
@@ -216,7 +216,7 @@ fn resolve_expression(
                     .collect(),
             )?;
             Ok((
-                Expression::MethodCall(Box::new((new_self, self_borrow)), ty, f, new_args),
+                Expression::MethodCall(Box::new((new_self, self_borrow)), ty, f, new_args, args_types),
                 e_span,
             ))
         }
