@@ -241,7 +241,7 @@ Definition p256_point_mul
 Definition p256_point_mul_base (k_70 : p256_scalar_t) : affine_result_t :=
   let base_point_71 : (p256_field_element_t × p256_field_element_t) :=
     (
-      nat_mod_from_byte_seq_be (array_from_list uint8 (let l :=
+      nat_mod_from_byte_seq_be (array_to_seq (array_from_list uint8 (let l :=
             [
               secret (@repr WORDSIZE8 107) : int8;
               secret (@repr WORDSIZE8 23) : int8;
@@ -275,8 +275,8 @@ Definition p256_point_mul_base (k_70 : p256_scalar_t) : affine_result_t :=
               secret (@repr WORDSIZE8 152) : int8;
               secret (@repr WORDSIZE8 194) : int8;
               secret (@repr WORDSIZE8 150) : int8
-            ] in  l)) : p256_field_element_t,
-      nat_mod_from_byte_seq_be (array_from_list uint8 (let l :=
+            ] in  l))) : p256_field_element_t,
+      nat_mod_from_byte_seq_be (array_to_seq (array_from_list uint8 (let l :=
             [
               secret (@repr WORDSIZE8 79) : int8;
               secret (@repr WORDSIZE8 227) : int8;
@@ -310,7 +310,7 @@ Definition p256_point_mul_base (k_70 : p256_scalar_t) : affine_result_t :=
               secret (@repr WORDSIZE8 191) : int8;
               secret (@repr WORDSIZE8 81) : int8;
               secret (@repr WORDSIZE8 245) : int8
-            ] in  l)) : p256_field_element_t
+            ] in  l))) : p256_field_element_t
     ) in 
   p256_point_mul (k_70) (base_point_71).
 

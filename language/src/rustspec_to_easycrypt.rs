@@ -297,6 +297,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt8(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I8" => Expression::FuncCall(
                 None,
@@ -305,6 +306,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int8(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U16" => Expression::FuncCall(
                 None,
@@ -313,6 +315,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt16(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I16" => Expression::FuncCall(
                 None,
@@ -321,6 +324,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int16(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U32" => Expression::FuncCall(
                 None,
@@ -329,6 +333,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt32(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I32" => Expression::FuncCall(
                 None,
@@ -337,6 +342,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int32(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U64" => Expression::FuncCall(
                 None,
@@ -345,6 +351,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt64(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I64" => Expression::FuncCall(
                 None,
@@ -353,6 +360,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int64(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U128" => Expression::FuncCall(
                 None,
@@ -361,6 +369,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt128(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I128" => Expression::FuncCall(
                 None,
@@ -369,6 +378,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int128(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             _ => panic!("Trying to get default for {}", t),
         },
@@ -715,7 +725,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .map(|(e, _)| translate_expression(e, top_ctx)),
         ),
         Expression::Named(p) => translate_ident(p.clone()),
-        Expression::FuncCall(prefix, name, args) => {
+        Expression::FuncCall(prefix, name, args, _arg_types) => {
             let (func_name, additional_args) =
                 translate_func_name(prefix.clone(), Ident::TopLevel(name.0), top_ctx);
             let total_args = args.len() + additional_args.len();
@@ -736,7 +746,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     RcDoc::nil()
                 })
         }
-        Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
+        Expression::MethodCall(sel_arg, sel_typ, (f, _), args, _arg_types) => {
             let (func_name, additional_args) =
                 translate_func_name(sel_typ.clone().map(|x| x.1), Ident::TopLevel(f), top_ctx);
             func_name // We append implicit arguments first

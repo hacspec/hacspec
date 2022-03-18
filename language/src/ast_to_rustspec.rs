@@ -747,6 +747,7 @@ fn translate_expr(
                                                                 i.clone(),
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
+                                                            None,
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -787,6 +788,7 @@ fn translate_expr(
                                                                 i.clone(),
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
+                                                            None,
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -841,6 +843,7 @@ fn translate_expr(
                             func_prefix,
                             func_name,
                             func_args,
+                            None,
                         )),
                         e.span.into(),
                     ))
@@ -897,6 +900,7 @@ fn translate_expr(
                     None,
                     method_name,
                     rest_args_final,
+                    None,
                 )),
                 e.span.into(),
             ))
@@ -1484,6 +1488,7 @@ fn translate_expr(
                                                     i.clone(),
                                                     (Borrowing::Consumed, i.1.clone()),
                                                 )],
+                                                Some(vec![BaseTyp::UInt8]),
                                             ),
                                             i.1.clone(),
                                         )

@@ -132,7 +132,7 @@ Definition chacha20_init
   let st_33 : state_t :=
     array_new_ (default) (16) in 
   let st_33 :=
-    array_update (st_33) (usize 0) (chacha20_constants_init ) in 
+    array_update (st_33) (usize 0) (array_to_seq (chacha20_constants_init )) in 
   let st_33 :=
     array_update (st_33) (usize 4) (array_to_le_uint32s (key_30)) in 
   let st_33 :=
@@ -193,7 +193,8 @@ Definition chacha20_update (st0_49 : state_t) (m_50 : byte_seq) : byte_seq :=
         chacha20_encrypt_block (st0_49) (secret (pub_u32 (i_53)) : int32) (
           array_from_seq (64) (msg_block_54)) in 
       let blocks_out_51 :=
-        seq_set_exact_chunk (blocks_out_51) (usize 64) (i_53) (b_55) in 
+        seq_set_exact_chunk (blocks_out_51) (usize 64) (i_53) (
+          array_to_seq (b_55)) in 
       (blocks_out_51))
     blocks_out_51 in 
   let last_block_56 : seq uint8 :=
