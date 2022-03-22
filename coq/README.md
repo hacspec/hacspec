@@ -1,17 +1,18 @@
 ## Dependencies
 
-The coq libraries uses `compcert` for machine signed and unsigned integer modulo arithmetic, and `coqprime` for finite field arithmetic on prime modulus (to support hacspec's `nat_mod p` type). These can be installed through `opam`:
+The coq libraries uses `compcert` for machine signed and unsigned integer modulo arithmetic, and `coqprime` for finite field arithmetic on prime modulus (to support hacspec's `nat_mod p` type). 
+These requires the following repository:
+
+```
+opam repo add coq-released https://coq.inria.fr/opam/released --all-switches
+```
+
+Then one can install the dependencies through `opam`:
 
 ```
 opam install coq-compcert coq-coqprime
 ```
 (assuming you have coq installed through opam).
-
-Note that this requires the coq repository, which you can add as follows.
-
-```
-opam repo add coq-released https://coq.inria.fr/opam/released --all-switches
-```
 
 ## Compiling the coq files
 
