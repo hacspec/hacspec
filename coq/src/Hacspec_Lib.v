@@ -181,6 +181,7 @@ Theorem positive_is_succs : forall n, forall (H : n <> O) (K : S n <> O),
     @binary_representation (S n) K = Pos.succ (@binary_representation n H).
 Proof. induction n ; [contradiction | reflexivity]. Qed.
 
+(* Conversion of positive to binary representation *)
 Theorem positive_to_positive_succs : forall p, binary_representation (Pos.to_nat p) (Nat.neq_sym _ _ (Nat.lt_neq _ _ (Pos2Nat.is_pos p))) = p.
 Proof.
   intros p.
@@ -203,32 +204,36 @@ Proof.
         apply Nat.neq_succ_0.
 Qed.
 
-
 (*** Uint size util *)
 
+(* If a natural number is in bound then a smaller natural number is still in bound *)
 Lemma range_of_nat_succ :
   forall {WS : WORDSIZE},
   forall i, (Z.pred 0 < Z.of_nat (S i) < modulus)%Z -> (Z.pred 0 < Z.of_nat i < modulus)%Z.
 Proof. lia. Qed.
 
+(* Conversion to equivalent bound *)
 Lemma modulus_range_helper :
   forall {WS : WORDSIZE},
   forall i, (Z.pred 0 < i < modulus)%Z -> (0 <= i <= max_unsigned)%Z.
 Proof. unfold max_unsigned. lia. Qed.
 
-Definition unsigned_repr_alt {WS : WORDSIZE} (a : Z) `((Z.pred 0 < a < modulus)%Z) :=
+Definition unsigned_repr_alt {WS : WORDSIZE} (a : Z) `((Z.pred 0 < a < modulus)%Z) : unsigned (repr a) = a :=
   unsigned_repr a (modulus_range_helper a H).
 
 Theorem zero_always_modulus {WS : WORDSIZE} : (Z.pred 0 < 0 < modulus)%Z.
 Proof. easy. Qed.
 
+(* any uint_size can be represented as a natural number and a bound *)
+(* this is easier for proofs, however less efficient for computation *)
+(* as Z uses a binary representation *)
 Theorem uint_size_as_nat :
   forall (us: uint_size),
     { n : nat |
       us = repr (Z.of_nat n) /\ (Z.pred 0 < Z.of_nat n < @modulus WORDSIZE32)%Z}.
 Proof.
   destruct us.
-  exists (Z.to_nat (intval)).
+  exists (Z.to_nat intval).
   rewrite Z2Nat.id by (apply Z.lt_pred_le ; apply intrange).
 
   split.
@@ -240,6 +245,7 @@ Proof.
   - apply intrange.
 Qed.
 
+(* destruct uint_size as you would a natural number *)
 Definition destruct_uint_size_as_nat  (a : uint_size) : forall (P : uint_size -> Prop),
     forall (zero_case : P (repr 0)),
     forall (succ_case : forall (n : nat), (Z.pred 0 < Z.of_nat n < @modulus WORDSIZE32)%Z -> P (repr (Z.of_nat n))),
@@ -258,6 +264,7 @@ Ltac destruct_uint_size_as_nat a :=
   intros a ;
   apply (destruct_uint_size_as_nat a) ; [ pose proof (@unsigned_repr_alt WORDSIZE32 0 zero_always_modulus) | let n := fresh in let H := fresh in intros n H ; pose proof (@unsigned_repr_alt WORDSIZE32 _ H)] ; intros.
 
+(* induction for uint_size as you would do for a natural number *)
 Definition induction_uint_size_as_nat :
   forall (P : uint_size -> Prop),
     (P (repr 0)) ->
@@ -284,6 +291,7 @@ Ltac induction_uint_size_as_nat var :=
   intros var ;
   apply induction_uint_size_as_nat with (a := var) ; [ pose proof (@unsigned_repr_alt WORDSIZE32 0 zero_always_modulus) | let n := fresh in let IH := fresh in intros n IH ; pose proof (@unsigned_repr_alt WORDSIZE32 _ IH)] ; intros.
 
+(* conversion of usize to positive or zero and the respective bound *)
 Theorem uint_size_as_positive :
   forall (us: uint_size),
     { pu : unit + positive |
@@ -305,6 +313,7 @@ Proof.
     lia.
 Defined.
 
+(* destruction of uint_size as positive *)
 Definition destruct_uint_size_as_positive  (a : uint_size) : forall (P : uint_size -> Prop),
     (P (repr 0)) ->
     (forall b, (Z.pred 0 < Z.pos b < @modulus WORDSIZE32)%Z -> P (repr (Z.pos b))) ->
@@ -322,6 +331,7 @@ Ltac destruct_uint_size_as_positive a :=
   intros a ;
   apply (destruct_uint_size_as_positive a) ; intros.
 
+(* induction of uint_size as positive *)
 Definition induction_uint_size_as_positive :
   forall (P : uint_size -> Prop),
     (P (repr 0)) ->
@@ -1741,7 +1751,7 @@ Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat × int64) : nat × int
   let (n,v) := s in
   (S n, v .+ (@repr WORDSIZE64 ((int8_to_nat i) * 2 ^ (4 * n)))).
 
--Definition u64_from_be_bytes' : nseq int8 8 -> int64 :=
+Definition u64_from_be_bytes' : nseq int8 8 -> int64 :=
   (fun v => snd (VectorDef.fold_right u64_from_be_bytes_fold_fun v (0, @repr WORDSIZE64 0))).
 
 Definition u64_to_be_bytes : int64 -> nseq int8 8 := u64_to_be_bytes'.
