@@ -11,7 +11,7 @@ Require Import MachineIntegers.
 From Coqprime Require GZnZ.
 
 Require Import Lia.
-        
+
 Declare Scope hacspec_scope.
 
 Axiom secret : forall {WS : WORDSIZE},  (@int WS) -> (@int WS).
@@ -104,79 +104,44 @@ Global Instance Z_Int_sizable : Int_sizable Z := {
 
 (**** Public integers *)
 
-(* Definition pub_u8 (n:range_t U8) : u:pub_uint8{v u == n} := uint #U8 #PUB n *)
 Definition pub_u8 (n : Z) : int8 := repr n.
-
-(* Definition pub_i8 (n:N) : u:pub_int8{v u == n} := sint #S8 #PUB n *)
 Definition pub_i8 (n : Z) : int8 := repr n.
-
-(* Definition pub_u16 (n:N) : u:pub_uint16{v u == n} := uint #U16 #PUB n *)
 Definition pub_u16 (n : Z) : int16 := repr n.
-
-(* Definition pub_i16 (n:N) : u:pub_int16{v u == n} := sint #S16 #PUB n *)
 Definition pub_i16 (n : Z) : int16 := repr n.
-
-(* Definition pub_u32 (n:N) : u:pub_uint32{v u == n} := uint #U32 #PUB n *)
 Definition pub_u32 (n : Z) : int32 := repr n.
-
-(* Definition pub_i32 (n:N) : u:pub_int32{v u == n} := sint #S32 #PUB n *)
 Definition pub_i32 (n : Z) : int32 := repr n.
-
-(* Definition pub_u64 (n:N) : u:pub_uint64{v u == n} := uint #U64 #PUB n *)
 Definition pub_u64 (n : Z) : int64 := repr n.
-
-(* Definition pub_i64 (n:N) : u:pub_int64{v u == n} := sint #S64 #PUB n *)
 Definition pub_i64 (n : Z) : int64 := repr n.
-
-(* Definition pub_u128 (n:N) : u:pub_uint128{v u == n} := uint #U128 #PUB n *)
 Definition pub_u128 (n : Z) : int128 := repr n.
-
-(* Definition pub_i128 (n:N) : u:pub_int128{v u == n} := sint #S128 #PUB n *)
 Definition pub_i128 (n : Z) : int128 := repr n.
 
 (**** Operations *)
 
 (* Should maybe use size of s instead? *)
 Definition uint8_rotate_left (u: int8) (s: int8) : int8 := rol u s.
-
 Definition uint8_rotate_right (u: int8) (s: int8) : int8 := ror u s.
 
-Definition uint16_rotate_left (u: int16) (s: int16) : int16 :=
-  rol u s.
+Definition uint16_rotate_left (u: int16) (s: int16) : int16 := rol u s.
+Definition uint16_rotate_right (u: int16) (s: int16) : int16 := ror u s.
 
-Definition uint16_rotate_right (u: int16) (s: int16) : int16 :=
-  ror u s.
+Definition uint32_rotate_left (u: int32) (s: int32) : int32 := rol u s.
+Definition uint32_rotate_right (u: int32) (s: int32) : int32 := ror u s.
 
-Definition uint32_rotate_left (u: int32) (s: int32) : int32 :=
-  rol u s.
+Definition uint64_rotate_left (u: int64) (s: int64) : int64 := rol u s.
+Definition uint64_rotate_right (u: int64) (s: int64) : int64 := ror u s.
 
-Definition uint32_rotate_right (u: int32) (s: int32) : int32 :=
-  ror u s.
-
-Definition uint64_rotate_left (u: int64) (s: int64) : int64 :=
-  rol u s.
-
-Definition uint64_rotate_right (u: int64) (s: int64) : int64 :=
-  ror u s.
-
-Definition uint128_rotate_left (u: int128) (s: int128) : int128 :=
-  rol u s.
-
-Definition uint128_rotate_right (u: int128) (s: int128) : int128 :=
-  ror u s.
+Definition uint128_rotate_left (u: int128) (s: int128) : int128 := rol u s.
+Definition uint128_rotate_right (u: int128) (s: int128) : int128 := ror u s.
 
 (* should use size u instead of u? *)
-Definition usize_shift_right (u: uint_size) (s: int32) : uint_size :=
-  (ror u s).
+Definition usize_shift_right (u: uint_size) (s: int32) : uint_size := ror u s.
 Infix "usize_shift_right" := (usize_shift_right) (at level 77) : hacspec_scope.
 
 (* should use size u instead of u? *)
-Definition usize_shift_left (u: uint_size) (s: int32) : uint_size :=
-  (rol u s).
+Definition usize_shift_left (u: uint_size) (s: int32) : uint_size := rol u s.
 Infix "usize_shift_left" := (usize_shift_left) (at level 77) : hacspec_scope.
 
-Definition pub_uint128_wrapping_add (x y: int128) : int128 :=
-  add x y.
+Definition pub_uint128_wrapping_add (x y: int128) : int128 := add x y.
 
 Definition shift_left_ `{WS : WORDSIZE} (i : @int WS) (j : uint_size) :=
   MachineIntegers.shl i (repr (from_uint_size j)).
@@ -206,46 +171,36 @@ Notation "A × B" := (prod A B) (at level 79, left associativity) : hacspec_scop
 
 Fixpoint binary_representation_pre (n : nat) {struct n}: positive :=
   match n with
-  | O => 1%positive
-  | S O => 1%positive
+  | O => 1
+  | S O => 1
   | S n => Pos.succ (binary_representation_pre n)
-  end.
+  end%positive.
 Definition binary_representation (n : nat) `(n <> O) := binary_representation_pre n.
 
 Theorem positive_is_succs : forall n, forall (H : n <> O) (K : S n <> O),
     @binary_representation (S n) K = Pos.succ (@binary_representation n H).
-Proof.
-  intros.
-  induction n.
-  - contradiction.
-  - reflexivity.
-Qed.
+Proof. induction n ; [contradiction | reflexivity]. Qed.
 
 Theorem positive_to_positive_succs : forall p, binary_representation (Pos.to_nat p) (Nat.neq_sym _ _ (Nat.lt_neq _ _ (Pos2Nat.is_pos p))) = p.
 Proof.
-  intros.
+  intros p.
   generalize dependent (Nat.neq_sym 0 (Pos.to_nat p) (Nat.lt_neq 0 (Pos.to_nat p) (Pos2Nat.is_pos p))).
 
   destruct Pos.to_nat eqn:ptno.
-  - intros.
-    contradiction.
-  - intros.
-    generalize dependent p.
+  - contradiction.
+  - generalize dependent p.
     induction n ; intros.
     + cbn.
-      apply (Pos2Nat.inj).
+      apply Pos2Nat.inj.
       symmetry.
       apply ptno.
     + rewrite positive_is_succs with (H := Nat.neq_succ_0 n).
       rewrite IHn with (p := Pos.of_nat (S n)).
-      rewrite <- Nat2Pos.inj_succ.
-      pose (Pos2Nat.id p).
-      rewrite ptno in e.
-      apply e.
-      apply (Nat.neq_succ_0 n).
-      rewrite Nat2Pos.id.
-      reflexivity.
-      apply (Nat.neq_succ_0 n).
+      * rewrite <- Nat2Pos.inj_succ by apply Nat.neq_succ_0.
+        rewrite <- ptno.
+        apply Pos2Nat.id.
+      * apply Nat2Pos.id.
+        apply Nat.neq_succ_0.
 Qed.
 
 
@@ -254,33 +209,15 @@ Qed.
 Lemma range_of_nat_succ :
   forall {WS : WORDSIZE},
   forall i, (Z.pred 0 < Z.of_nat (S i) < modulus)%Z -> (Z.pred 0 < Z.of_nat i < modulus)%Z.
-Proof.
-  intros.
-  destruct H.
-  split.
-  - apply (Z.lt_pred_le 0%Z).
-    apply Nat2Z.is_nonneg.
-  - apply Z.lt_succ_l.
-    rewrite <- Nat2Z.inj_succ.
-    apply H0.
-Qed.      
-
+Proof. lia. Qed.
 
 Lemma modulus_range_helper :
   forall {WS : WORDSIZE},
   forall i, (Z.pred 0 < i < modulus)%Z -> (0 <= i <= max_unsigned)%Z.
-Proof.
-  intros.
-  unfold max_unsigned.
+Proof. unfold max_unsigned. lia. Qed.
 
-  destruct H.
-  apply (Z.lt_pred_le 0%Z) in H.
-  split.
-  - apply H.
-  - apply (Z.lt_le_pred).
-    apply H0.
-Qed.      
-Definition unsigned_repr_alt {WS : WORDSIZE} (a : Z) `((Z.pred 0 < a < modulus)%Z) := unsigned_repr a (modulus_range_helper a H).
+Definition unsigned_repr_alt {WS : WORDSIZE} (a : Z) `((Z.pred 0 < a < modulus)%Z) :=
+  unsigned_repr a (modulus_range_helper a H).
 
 Theorem zero_always_modulus {WS : WORDSIZE} : (Z.pred 0 < 0 < modulus)%Z.
 Proof. easy. Qed.
@@ -288,22 +225,18 @@ Proof. easy. Qed.
 Theorem uint_size_as_nat :
   forall (us: uint_size),
     { n : nat |
-      us = repr (Z.of_nat n) /\ (Z.pred 0 < (Z.of_nat n) < @modulus WORDSIZE32)%Z}.
+      us = repr (Z.of_nat n) /\ (Z.pred 0 < Z.of_nat n < @modulus WORDSIZE32)%Z}.
 Proof.
-  intros.
   destruct us.
   exists (Z.to_nat (intval)).
   rewrite Z2Nat.id by (apply Z.lt_pred_le ; apply intrange).
-  
+
   split.
   - apply mkint_eq.
     rewrite Z_mod_modulus_eq.
     rewrite Z.mod_small.
     + reflexivity.
-    + split.
-      * apply Z.lt_pred_le.
-        apply intrange.
-      * apply intrange.
+    + lia.
   - apply intrange.
 Qed.
 
@@ -334,31 +267,22 @@ Definition induction_uint_size_as_nat :
         P (repr (Z.succ (Z.of_nat n)))) ->
     forall (a : uint_size), P a.
 Proof.
-  intros P H H1 a.
-  intros ; subst.
-
+  intros P H_zero H_ind a.
   destruct (uint_size_as_nat a) as [ n y ] ; destruct y as [ya yb] ; subst.
   induction n.
-  - apply H.
+  - apply H_zero.
   - rewrite Nat2Z.inj_succ.
-    apply H1.
+    apply H_ind.
     + rewrite <- Nat2Z.inj_succ.
       apply yb.
     + apply IHn.
-      split.
-      * apply Z.lt_pred_le.
-        apply Nat2Z.is_nonneg.
-      * apply Z.lt_succ_l.
-        rewrite <- Nat2Z.inj_succ.
-        apply yb.
-Qed.        
+      lia.
+Qed.
 
 Ltac induction_uint_size_as_nat var :=
   generalize dependent var ;
   intros var ;
   apply induction_uint_size_as_nat with (a := var) ; [ pose proof (@unsigned_repr_alt WORDSIZE32 0 zero_always_modulus) | let n := fresh in let IH := fresh in intros n IH ; pose proof (@unsigned_repr_alt WORDSIZE32 _ IH)] ; intros.
-
-
 
 Theorem uint_size_as_positive :
   forall (us: uint_size),
@@ -366,7 +290,6 @@ Theorem uint_size_as_positive :
       match pu with inl u => us = repr Z0 | inr p => us = repr (Z.pos p) /\ (Z.pred 0 < Z.pos p < @modulus WORDSIZE32)%Z end
       }.
 Proof.
-  intros us.
   destruct us.
   destruct intval.
   - exists (inl tt). apply mkint_eq. reflexivity.
@@ -376,38 +299,28 @@ Proof.
       rewrite Z_mod_modulus_eq.
       symmetry.
       apply Zmod_small.
-      inversion intrange.
-      split.
-      * apply Z.lt_pred_le.
-        apply H.
-      * apply H0. 
+      lia.
     + apply intrange.
   - exfalso.
-    inversion intrange.
-    pose (Z.lt_pred_le 0 (Z.neg p)).
-    apply i in H.
-    contradiction.
-Defined.    
+    lia.
+Defined.
 
 Definition destruct_uint_size_as_positive  (a : uint_size) : forall (P : uint_size -> Prop),
     (P (repr 0)) ->
     (forall b, (Z.pred 0 < Z.pos b < @modulus WORDSIZE32)%Z -> P (repr (Z.pos b))) ->
     P a.
 Proof.
-  intros.
+  intros P H_zero H_succ.
   destruct (uint_size_as_positive a) as [ [ _ | b ] y ] ; [ subst | destruct y as [ya yb] ; subst ].
-  - apply H.
-  - apply H0.
+  - apply H_zero.
+  - apply H_succ.
     apply yb.
 Qed.
-
 
 Ltac destruct_uint_size_as_positive a :=
   generalize dependent a ;
   intros a ;
   apply (destruct_uint_size_as_positive a) ; intros.
-
-
 
 Definition induction_uint_size_as_positive :
   forall (P : uint_size -> Prop),
@@ -419,40 +332,29 @@ Definition induction_uint_size_as_positive :
         P (repr (Z.succ (Z.pos b)))) ->
     forall (a : uint_size), P a.
 Proof.
-  intros P H H0 H1 a.
-  intros ; subst.
-  
+  intros P H_zero H_one H_ind a.
+
   destruct (uint_size_as_positive a) as [ [ _ | b ] y ] ; [ subst | destruct y as [ya yb] ; subst ].
-  - apply H.
-  - pose proof (positive_to_positive_succs b).
-    symmetry in H2.
-    rewrite H2 in *.
-    clear H2.
-    
+  - apply H_zero.
+  - pose proof (pos_succ_b := positive_to_positive_succs b)
+    ; symmetry in pos_succ_b
+    ; rewrite pos_succ_b in *
+    ; clear pos_succ_b.
+
     generalize dependent (Nat.neq_sym 0 (Pos.to_nat b) (Nat.lt_neq 0 (Pos.to_nat b) (Pos2Nat.is_pos b))).
-    
-    induction (Pos.to_nat b) ; intros.
+
+    induction (Pos.to_nat b).
     + contradiction.
-    + destruct n.
-      * apply H0.
-      * rewrite (positive_is_succs _  (Nat.neq_succ_0 n) n0) in *.
+    + intros n_neq yb.
+      destruct n.
+      * apply H_one.
+      * rewrite (positive_is_succs _  (Nat.neq_succ_0 n) n_neq) in *.
         rewrite Pos2Z.inj_succ in *.
-        apply H1.        
+        apply H_ind.
         -- apply yb.
         -- apply IHn.
-           intros.
-           generalize dependent (binary_representation (S n) (Nat.neq_succ_0 n)).
-           intros.
-           destruct yb.
-           split.
-           {
-             easy.
-           }
-           {
-             apply Z.lt_succ_l.
-             apply H3.
-           }
-Qed.        
+           lia.
+Qed.
 
 Ltac induction_uint_size_as_positive var :=
   generalize dependent var ;
@@ -485,6 +387,7 @@ Definition foldi
   | Zpos p => foldi_ (Pos.to_nat p) lo f init
   end.
 
+(* Fold done using natural numbers for bounds *)
 Fixpoint foldi_nat_
   {acc : Type}
   (fuel : nat)
@@ -495,7 +398,6 @@ Fixpoint foldi_nat_
   | O => cur
   | S n' => foldi_nat_ n' (S i) f (f i cur)
   end.
-Close Scope nat_scope.
 Definition foldi_nat
   {acc: Type}
   (lo: nat)
@@ -514,11 +416,8 @@ Lemma foldi__move_S :
   (f : uint_size -> acc -> acc)
   (cur : acc),
     foldi_ fuel (add i one) f (f i cur) = foldi_ (S fuel) i f cur.
-Proof.
-  intros.
-  cbn.
-  reflexivity.
-Qed.
+Proof. reflexivity. Qed.
+
 Lemma foldi__nat_move_S :
   forall {acc: Type}
   (fuel : nat)
@@ -526,13 +425,10 @@ Lemma foldi__nat_move_S :
   (f : nat -> acc -> acc)
   (cur : acc),
     foldi_nat_ fuel (S i) f (f i cur) = foldi_nat_ (S fuel) i f cur.
-Proof.
-  intros.
-  cbn.
-  reflexivity.
-Qed.
+Proof. reflexivity. Qed.
 
-Lemma foldi__move_S2 :
+(* You can do one iteration of the fold by burning a unit of fuel *)
+Lemma foldi__move_S_fuel :
   forall {acc: Type}
   (fuel : nat)
   (i : uint_size)
@@ -542,24 +438,14 @@ Lemma foldi__move_S2 :
     f (add (repr (Z.of_nat fuel)) i) (foldi_ (fuel) i f cur) = foldi_ (S (fuel)) i f cur.
 Proof.
   intros acc fuel.
-  induction (fuel) ; intros.
+  induction fuel ; intros.
   - cbn.
     replace (repr 0) with (@zero WORDSIZE32) by reflexivity.
     rewrite add_zero_l.
     reflexivity.
   - do 2 rewrite <- foldi__move_S.
-
-    assert (guarantee : (0 <= Z.of_nat n <= @max_unsigned WORDSIZE32)%Z).
-    {
-      split.
-      - apply Nat2Z.is_nonneg.
-      - apply Zle_succ_le.
-        rewrite <- Nat2Z.inj_succ.
-        apply H.      
-    }
-    
-    replace (add (repr (Z.of_nat (S n))) i)
-      with (add (repr (Z.of_nat n)) (add i one)).
+    replace (add (repr (Z.of_nat (S fuel))) i)
+      with (add (repr (Z.of_nat fuel)) (add i one)).
     2 : {
       rewrite <- (add_commut one).
       rewrite <- add_assoc.
@@ -570,46 +456,34 @@ Proof.
       rewrite Z.add_1_r.
       rewrite Nat2Z.inj_succ.
       f_equal.
-
       apply unsigned_repr.
-      apply guarantee.
+      lia.
     }
-    
-    rewrite IHn.
+    rewrite IHfuel.
     reflexivity.
-    apply guarantee.
+    lia.
 Qed.
-Lemma foldi__nat_move_S2 :
+
+(* You can do one iteration of the fold by burning a unit of fuel *)
+Lemma foldi__nat_move_S_fuel :
   forall {acc: Type}
   (fuel : nat)
   (i : nat)
   (f : nat -> acc -> acc)
   (cur : acc),
     (0 <= Z.of_nat fuel <= @max_unsigned WORDSIZE32)%Z ->
-    f (fuel + i)%nat (foldi_nat_ fuel i f cur) = foldi_nat_ (S (fuel)) i f cur.
+    f (fuel + i)%nat (foldi_nat_ fuel i f cur) = foldi_nat_ (S fuel) i f cur.
 Proof.
-  intros acc fuel.
-  induction (fuel) ; intros.
-  - cbn.
-    reflexivity.
+  induction fuel ; intros.
+  - reflexivity.
   - do 2 rewrite <- foldi__nat_move_S.
-
-    assert (guarantee : (0 <= Z.of_nat n <= @max_unsigned WORDSIZE32)%Z).
-    {
-      split.
-      - apply Nat2Z.is_nonneg.
-      - apply Zle_succ_le.
-        rewrite <- Nat2Z.inj_succ.
-        apply H.      
-    }
-    
-    replace (S n + i)%nat with (n + (S i))%nat by (symmetry ; apply plus_Snm_nSm).    
-    rewrite IHn.
-    reflexivity.
-    apply guarantee.
+    replace (S fuel + i)%nat with (fuel + (S i))%nat by (symmetry ; apply plus_Snm_nSm).
+    rewrite IHfuel.
+    + reflexivity.
+    + lia.
 Qed.
 
-
+(* folds and natural number folds compute the same thing *)
 Lemma foldi_to_foldi_nat :
   forall {acc: Type}
     (lo: uint_size) (* {lo <= hi} *)
@@ -620,7 +494,7 @@ Lemma foldi_to_foldi_nat :
     foldi lo hi f init = foldi_nat (Z.to_nat (unsigned lo)) (Z.to_nat (unsigned hi)) (fun x => f (repr (Z.of_nat x))) init.
 Proof.
   intros.
-  
+
   unfold foldi.
   unfold foldi_nat.
 
@@ -636,56 +510,31 @@ Proof.
   apply f_equal with (f := Z.of_nat) in Heqn.
   rewrite (Nat2Z.inj_sub) in Heqn by (apply Nat2Z.inj_le ; apply H).
   rewrite <- Heqn.
-  
-  assert (Z.pred 0 < Z.of_nat n < @modulus WORDSIZE32)%Z.
-  {
-    split.
-    + apply Z.le_succ_l.
-      apply Nat2Z.is_nonneg.
-    + rewrite Heqn.
-      apply Z.le_lt_trans with (m := Z.of_nat hi_n).
-      apply Z.le_sub_nonneg.
-      apply Nat2Z.is_nonneg.
-      apply hi_H.
-  }    
-  
+
+  assert (H_bound : (Z.pred 0 < Z.of_nat n < @modulus WORDSIZE32)%Z) by lia.
+
   clear Heqn.
   induction n.
   - reflexivity.
-  -
-    pose proof (modulus_range_helper _ (range_of_nat_succ _ H0)).
-    rewrite <- foldi__nat_move_S2 by apply H1.
-    
+  - pose proof (H_max_bound := modulus_range_helper _ (range_of_nat_succ _ H_bound)).
+    rewrite <- foldi__nat_move_S_fuel by apply H_max_bound.
     cbn.
     rewrite SuccNat2Pos.id_succ.
-    rewrite <- foldi__move_S2 by apply H1.
+    rewrite <- foldi__move_S_fuel by apply H_max_bound.
 
     destruct n.
     + cbn.
       replace (repr 0) with (@zero WORDSIZE32) by reflexivity.
       rewrite add_zero_l.
       reflexivity.
-    + cbn in IHn.
-      cbn.
-
-      assert (Z.pred 0 < Z.pos (Pos.of_succ_nat n) < @modulus WORDSIZE32)%Z.
-      {
-        split.
-        - apply H0.
-        - rewrite Zpos_P_of_succ_nat.
-          apply Z.lt_succ_l.
-          do 2 rewrite <- Nat2Z.inj_succ.
-          apply H0.
-      }
-      
-      rewrite <- (IHn H2) ; clear IHn.
-      
+    + cbn in *.
+      assert (H_bound_pred: (Z.pred 0 < Z.pos (Pos.of_succ_nat n) < @modulus WORDSIZE32)%Z) by lia.
+      rewrite <- (IHn H_bound_pred) ; clear IHn.
       f_equal.
       * unfold add.
         f_equal.
-        
         rewrite (@unsigned_repr_alt WORDSIZE32 _ lo_H) in *.
-        rewrite (unsigned_repr_alt _ H2).
+        rewrite (unsigned_repr_alt _ H_bound_pred).
         do 2 rewrite Zpos_P_of_succ_nat.
         rewrite Z.add_succ_l.
         f_equal.
@@ -696,16 +545,7 @@ Proof.
         reflexivity.
 Qed.
 
-Definition sum_first_n (n : nat) :=
-  let f := (fun x y => x + y + 1)%nat in
-  foldi_nat 0 n f 0%nat.
-Definition sum_first_n_mid (n : nat) (m : nat) :=
-  let f := (fun x y => x + y + 1)%nat in
-  foldi_nat m n f (foldi_nat 0 m f 0%nat).
-
-Compute sum_first_n 4.
-Compute sum_first_n_mid 4 4.
-
+(* folds can be computed by doing one iteration and incrementing the lower bound *)
 Lemma foldi_nat_split_S :
   forall {acc: Type}
     (lo: nat)
@@ -717,17 +557,10 @@ Lemma foldi_nat_split_S :
 Proof.
   unfold foldi_nat.
   intros.
-
-  assert (succ_sub_diag : forall n, (S n - n = 1)%nat).
-  {
-    intros.
-    rewrite Nat.sub_succ_l by easy.
-    rewrite Nat.sub_diag.
-    reflexivity.
-  }
-
-  rewrite (succ_sub_diag lo).
   
+  assert (succ_sub_diag : forall n, (S n - n = 1)%nat) by lia.
+  rewrite (succ_sub_diag lo).
+
   induction hi ; [ lia | ].
   destruct (S hi =? S lo)%nat eqn:hi_eq_lo.
   - apply Nat.eqb_eq in hi_eq_lo ; rewrite hi_eq_lo in *.
@@ -737,13 +570,14 @@ Proof.
   - apply Nat.eqb_neq in hi_eq_lo.
     apply Nat.lt_gt_cases in hi_eq_lo.
     destruct hi_eq_lo.
-    * lia.
-    * rewrite (Nat.sub_succ_l (S lo)) by apply (Nat.lt_le_pred _ _ H0).
+    + lia.
+    + rewrite (Nat.sub_succ_l (S lo)) by apply (Nat.lt_le_pred _ _ H0).
       rewrite Nat.sub_succ_l by apply (Nat.lt_le_pred _ _ H).
       replace ((S (hi - S lo))) with (hi - lo)%nat by lia.
       reflexivity.
 Qed.
 
+(* folds can be split at some valid offset from lower bound *)
 Lemma foldi_nat_split_add :
   forall (k : nat),
   forall {acc: Type}
@@ -756,20 +590,19 @@ Lemma foldi_nat_split_add :
 Proof.
   induction k ; intros.
   - cbn.
-    replace (foldi_nat lo lo f init) with init.
-    reflexivity.
     unfold foldi_nat.
     rewrite Nat.sub_diag.
     reflexivity.
   - rewrite foldi_nat_split_S by lia.
-    replace ((S k + lo))%nat with ((k + S lo))%nat by lia.
-    specialize (IHk acc (S lo) hi f ((foldi_nat lo (S lo) f init))).    
+    replace (S k + lo)%nat with (k + S lo)%nat by lia.
+    specialize (IHk acc (S lo) hi f (foldi_nat lo (S lo) f init)).
     rewrite IHk by lia.
     f_equal.
     rewrite <- foldi_nat_split_S by lia.
-    reflexivity.    
+    reflexivity.
 Qed.
-    
+
+(* folds can be split at some midpoint *)
 Lemma foldi_nat_split :
   forall (mid : nat), (* {lo <= mid <= hi} *)
   forall {acc: Type}
@@ -781,22 +614,14 @@ Lemma foldi_nat_split :
   foldi_nat lo hi f init = foldi_nat mid hi f (foldi_nat lo mid f init).
 Proof.
   intros.
-
-  assert ({k : nat | (mid = lo + k)%nat}).
-  {
-    exists (mid - lo)%nat.
-    rewrite Nat.add_comm.
-    rewrite Nat.sub_add by apply guarantee.
-    reflexivity.
-  }
-
-  destruct H ; subst.
-  rewrite Nat.add_comm.    
-  apply (foldi_nat_split_add).
+  assert (mid_is_low_plus_constant : {k : nat | (mid = lo + k)%nat})  by (exists (mid - lo)%nat ; lia).  
+  destruct mid_is_low_plus_constant ; subst.
+  rewrite Nat.add_comm.
+  apply foldi_nat_split_add.
   apply guarantee.
 Qed.
 
-
+(* folds can be split at some midpoint *)
 Lemma foldi_split :
   forall (mid : uint_size), (* {lo <= mid <= hi} *)
   forall {acc: Type}
@@ -808,12 +633,11 @@ Lemma foldi_split :
   foldi lo hi f init = foldi mid hi f (foldi lo mid f init).
 Proof.
   intros.
-  rewrite foldi_to_foldi_nat by lia.
-  rewrite foldi_to_foldi_nat by lia.
-  rewrite foldi_to_foldi_nat by lia.
+  do 3 rewrite foldi_to_foldi_nat by lia.
   apply foldi_nat_split ; lia.
 Qed.
 
+(*** Default *)
 
 (* Typeclass handling of default elements, for use in sequences/arrays.
    We provide instances for the library integer types *)
@@ -1421,7 +1245,7 @@ Definition nat_mod_get_bit {p} (a : nat_mod p) n :=
   if (nat_mod_bit a n)
   then @nat_mod_one p
   else @nat_mod_zero p.
-  
+
 (*
 Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_mod n) : lseq pub_uint8 len =
   Definition n' := n % (pow2 (8 * len)) in
