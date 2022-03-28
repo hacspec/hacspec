@@ -243,9 +243,6 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
         .replace_all(&ident_str, "int")
         .to_string();
     let mut snake_case_ident = ident_str.to_snake_case();
-    if snake_case_ident == "new" {
-        snake_case_ident = "new_".to_string();
-    }
     RcDoc::as_string(snake_case_ident)
 }
 
@@ -640,10 +637,7 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (ARRAY_MODULE, "new_")
-                | (SEQ_MODULE, "new_")
-                | (ARRAY_MODULE, "from_slice")
-                | (ARRAY_MODULE, "from_slice_range") => {
+                (ARRAY_MODULE, "from_slice") | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(_, _) | FuncPrefix::Seq(_) => {
                             additional_args.push(RcDoc::as_string("default"));
@@ -653,15 +647,17 @@ fn translate_func_name<'a>(
                 }
                 _ => (),
             };
+
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
                 // Then we add the size for arrays
-                (ARRAY_MODULE, "new_")
+                (ARRAY_MODULE, "new")
                 | (ARRAY_MODULE, "from_seq")
                 | (ARRAY_MODULE, "from_slice")
-                | (ARRAY_MODULE, "from_slice_range") => {
+                | (ARRAY_MODULE, "from_slice_range")
+                | (ARRAY_MODULE, "length") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
                             additional_args.push(translate_ident(Ident::TopLevel(s.clone())))
@@ -669,8 +665,7 @@ fn translate_func_name<'a>(
                         FuncPrefix::Array(ArraySize::Integer(i), _) => {
                             if *i == 0 {
                                 additional_args.push(RcDoc::as_string("_"))
-                            }
-                            else {
+                            } else {
                                 additional_args.push(RcDoc::as_string(format!("{}", i)))
                             }
                         }

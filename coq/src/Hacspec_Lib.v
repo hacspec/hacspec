@@ -2,6 +2,7 @@ Global Set Warnings "-ambiguous-paths".
 Global Set Warnings "-uniform-inheritance".
 Global Set Warnings "-auto-template".
 Global Set Warnings "-disj-pattern-notation".
+
 (*** Integers *)
 From Coq Require Import ZArith List.
 Import ListNotations.
@@ -656,70 +657,21 @@ Class Default (A : Type) := {
 }.
 Global Arguments default {_} {_}.
 
-(*** Seq *)
+(*** List types *)
 
 Definition nseq := VectorDef.t.
-
 Definition seq (A : Type) := list A.
 
-(* Automatic conversion from nseq/vector/array to seq/list *)
-Global Coercion VectorDef.to_list : VectorDef.t >-> list.
+(*** Nseq *)
 
-Definition public_byte_seq := seq int8.
-Definition byte_seq := seq int8.
-Definition list_len := length.
+Definition array_new {A: Type} `{Default A} (len: nat)  : nseq A len :=
+  VectorDef.const default len.
 
-Definition seq_index {A: Type} `{Default A} (s: seq A) (i : nat) :=
-  List.nth i s default.
+Definition array_len  {a: Type} {len: nat} (s: nseq a len) := len.
 
-Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
-
-Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
-  VectorDef.const init len.
-
-Definition seq_new {A: Type} `{Default A} (len: nat) : seq A :=
-  seq_new_ default len.
-
-Fixpoint array_from_list (A: Type) (l: list A) : nseq A (length l) :=
-  match l return (nseq A (length l)) with
-  | [] => VectorDef.nil A
-  | x :: xs => VectorDef.cons A x (length xs) (array_from_list A xs)
-  end.
-
-  (*   match l, length l with *)
-(*   | [], O => VectorDef.nil A *)
-(*   | (x :: xs), S n => VectorDef.cons A x (length xs) (array_from_list A xs) *)
-(*   end. *)
-(*   - apply (VectorDef.cons A a (length l) (array_from_list A l)). *)
-(* Defined. *)
-
-  (* match l with *)
-  (* | [] => VectorDef.nil *)
-  (* | (x :: xs) => VectorDef.cons A x (length xs) (array_from_list xs) *)
-  (* end. *)
-
-(* Definition array_from_list (A: Type) (l: list A) : nseq A (length l) := *)
-  (* VectorDef.of_list l. *)
-(* Proof. *)
-(*   induction l. *)
-(*   - apply (VectorDef.nil A). *)
-(*   - apply (VectorDef.cons A a (length l) IHl). *)
-(* Defined. *)
-
-(* automatic conversion from list to array *)
-Global Coercion array_from_list : list >-> nseq.
-
-
-(**** Array manipulation *)
-
-
-Definition array_new_ {A: Type} (init:A) (len: nat)  : nseq A len :=
-  VectorDef.const init len.
-
-Open Scope nat_scope.
 Definition array_index {A: Type} `{Default A} {len : nat} (s: nseq A len) (i: nat) : A.
 Proof.
-  destruct (i <? len) eqn:H1.
+  destruct (i <? len)%nat eqn:H1.
   (* If i < len, index normally *)
   - rewrite Nat.ltb_lt in H1.
     exact (VectorDef.nth s (Fin.of_nat_lt H1)).
@@ -727,10 +679,22 @@ Proof.
   - exact default.
 Defined.
 
+Axiom array_declassify_eq : forall  {A l}, nseq A l -> nseq A l -> bool.
+Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
+Axiom array_to_be_bytes : forall {A l}, nseq A l -> seq uint8.
+Axiom array_to_le_uint32s : forall {l}, nseq uint8 l -> seq uint32.
+Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> seq uint32.
+Axiom array_to_le_uint64s : forall {l}, nseq uint8 l -> seq uint64.
+Axiom array_to_be_uint64s : forall {l}, nseq uint8 l -> seq uint64.
+Axiom array_to_uint128s_le : forall {l}, nseq uint8 l -> seq uint128.
+Axiom array_to_uint128s_be : forall {l}, nseq uint8 l -> seq uint128.
+
+Definition array_new_ {A: Type} (init:A) (len: nat)  : nseq A len :=
+  VectorDef.const init len.
 
 Definition array_upd {A: Type} {len : nat} (s: nseq A len) (i: nat) (new_v: A) : nseq A len.
 Proof.
-  destruct (i <? len) eqn:H.
+  destruct (i <? len)%nat eqn:H.
   (* If i < len, update normally *)
   - rewrite Nat.ltb_lt in H.
     exact (VectorDef.replace s (Fin.of_nat_lt H) new_v).
@@ -738,44 +702,32 @@ Proof.
   - exact s.
 Defined.
 
-(* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
+
+
+(* May also come up as 'length' instead of 'len' *)
+Definition array_length (len : nat) := len.
+
+
+Definition slice {A} (l : seq A) (i j : nat) : seq A :=
+  (if j <=? i then [] else firstn (j-i+1) (skipn i l))%nat.
+
+Definition lseq_slice {A n} (l : nseq A n) (i j : nat) : nseq A _ :=
+  VectorDef.of_list (slice (VectorDef.to_list l) i j).
 
 (* substitutes a sequence (list) into an array (nseq), given index interval  *)
 (* Axiom update_sub : forall {A len }, nseq A len -> nat -> nat -> seq A -> t A len. *)
 Definition update_sub {A len slen} `{Default A} (v : nseq A len) (i : nat) (n : nat) (sub : nseq A slen) : nseq A len :=
   let fix rec x acc :=
     match x with
-    | 0 => acc
+    | O => acc
     (* | 0 => array_upd acc 0 (array_index sub 0) *)
     | S x => rec x (array_upd acc (i+x) (array_index sub x))
     end in
-  rec (n - i + 1) v.
-
-(* Sanity check *)
-(* Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))). *)
-
-Definition array_from_seq
-  {a: Type}
- `{Default a}
-  (out_len:nat)
-  (input: seq a)
-  (* {H : List.length input = out_len} *)
-    : nseq a out_len :=
-    let out := VectorDef.const default out_len in
-    update_sub out 0 (out_len - 1) input.
-  (* VectorDef.of_list input. *)
-
-Global Coercion array_from_seq : seq >-> nseq.
-
-Definition slice {A} (l : seq A) (i j : nat) : seq A :=
-  if j <=? i then [] else firstn (j-i+1) (skipn i l).
-
-Definition lseq_slice {A n} (l : nseq A n) (i j : nat) : nseq A _ :=
-  VectorDef.of_list (slice (VectorDef.to_list l) i j).
+  rec (n - i + 1)%nat v.
 
 Definition array_from_slice
   {a: Type}
- `{Default a}
+  `{Default a}
   (default_value: a)
   (out_len: nat)
   (input: seq a)
@@ -785,17 +737,13 @@ Definition array_from_slice
     let out := VectorDef.const default_value out_len in
     update_sub out 0 slice_len (lseq_slice (VectorDef.of_list input) start (start + slice_len)).
 
-
-Definition array_slice
-  {a: Type}
- `{Default a}
-  (input: seq a)
-  (start: nat)
-  (slice_len: nat)
-    : nseq a _ :=
-  let out := slice input start (start + slice_len) in
-  array_from_seq slice_len out.
-
+Definition array_concat
+  {a : Type}
+  {l : nat}
+  (s1 :nseq a l)
+  (s2: seq a)
+  : seq a :=
+  VectorDef.to_list s1 ++ s2.
 
 Definition array_from_slice_range
   {a: Type}
@@ -804,11 +752,19 @@ Definition array_from_slice_range
   (out_len: nat)
   (input: seq a)
   (start_fin: (uint_size * uint_size))
-    : nseq a out_len :=
-    let out := array_new_ default_value out_len in
-    let (start, fin) := start_fin in
-    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin))).
+  : nseq a out_len :=
+  let (start, fin) := start_fin in
+  array_from_slice default_value out_len input (from_uint_size start) ((from_uint_size fin) - (from_uint_size start))%nat.
 
+Definition array_slice
+  {a: Type}
+  `{Default a}
+  {l : nat}
+  (input: nseq a l)
+  (start: nat)
+  (slice_len: nat)
+    : nseq a _ :=
+  lseq_slice input start (start + slice_len).
 
 Definition array_slice_range
   {a: Type}
@@ -817,6 +773,70 @@ Definition array_slice_range
   (start_fin:(uint_size * uint_size))
     : nseq a _ :=
   lseq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
+
+Definition array_num_chunks {a: Type} {l : nat} (s: nseq a l) (chunk_len: nat) : nat :=
+  ((array_len s) + chunk_len - 1) / chunk_len.
+
+Definition array_get_chunk_len
+  {a: Type}
+  {l : nat}
+  (s: nseq a l)
+  (chunk_len: nat)
+  (chunk_num: nat)
+    : nat :=
+  let idx_start := (chunk_len * chunk_num)%nat in
+  if (array_len s <? idx_start + chunk_len)%nat then
+    (array_len s) - idx_start
+  else
+    chunk_len.
+
+Definition array_get_chunk
+  {a: Type}
+  {l : nat}
+  (s: nseq a l)
+  (chunk_len: nat)
+  (chunk_num: nat)
+  : (uint_size * seq a)
+ :=
+  let idx_start := (chunk_len * chunk_num)%nat in
+  let out_len := array_get_chunk_len s chunk_len chunk_num in
+  (usize out_len,
+    VectorDef.to_list (lseq_slice
+    s idx_start (idx_start + array_get_chunk_len s chunk_len chunk_num))). 
+
+Definition array_set_chunk
+  {a: Type}
+  {l : nat}
+  `{Default a}
+  (s: nseq a l)
+  (chunk_len: nat)
+  (chunk_num: nat)
+  (chunk: seq a ) : nseq a l :=
+ let idx_start := (chunk_len * chunk_num)%nat in
+ let out_len := array_get_chunk_len s chunk_len chunk_num in
+ update_sub s idx_start out_len (VectorDef.of_list chunk).
+
+Instance nseq_default {A : Type} {l : nat} `{Default A} : Default (nseq A l) := {
+    default := array_new l
+  }.
+Definition array_default {A : Type} {l : nat} `{Default A} : nseq A l := default.
+
+Definition array_to_seq  {A : Type} {l : nat} (s : nseq A l) : seq A := VectorDef.to_list s.
+
+Definition array_create {A : Type} `{Default A} (n : nat)  : nseq A n := array_new n.
+
+Definition array_update_slice
+  {a : Type}
+ `{Default a}
+  {l : nat}
+  (out: nseq a l)
+  (start_out: nat)
+  (input: seq a)
+  (start_in: nat)
+  (len: nat)
+    : nseq a (array_len out)
+  :=
+  update_sub out start_out len (VectorDef.of_list input).
 
 Definition array_update
   {a: Type}
@@ -837,10 +857,78 @@ Definition array_update_start
     : nseq a len :=
     update_sub s 0 (length start_s) (VectorDef.of_list start_s).
 
+(*** Seq *)
 
-Definition array_len  {a: Type} {len: nat} (s: nseq a len) := len.
-(* May also come up as 'length' instead of 'len' *)
-Definition array_length  {a: Type} {len: nat} (s: nseq a len) := len.
+Definition public_byte_seq := seq int8.
+
+Definition byte_seq := seq int8.
+
+(**** Unsafe functions *)
+Definition seq_new {A: Type} `{Default A} (len: nat) : seq A :=
+  VectorDef.to_list (VectorDef.const default len).
+Definition seq_with_capacity  {A: Type} (len: nat) : seq A :=
+    [].
+
+Definition reserve  {A: Type} (s : seq A) (additional : nat) : seq A :=
+    s.
+
+Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
+
+
+Definition seq_index {A: Type} `{Default A} (s: seq A) (i : nat) :=
+  List.nth i s default.
+
+Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
+  VectorDef.to_list (VectorDef.const init len).
+
+(* Automatic conversion from nseq/vector/array to seq/list *)
+Global Coercion VectorDef.to_list : VectorDef.t >-> list.
+
+Definition list_len := length.
+
+Fixpoint array_from_list (A: Type) (l: list A) : nseq A (length l) :=
+  match l return (nseq A (length l)) with
+  | [] => VectorDef.nil A
+  | x :: xs => VectorDef.cons A x (length xs) (array_from_list A xs)
+  end.
+
+(* automatic conversion from list to array *)
+Global Coercion array_from_list : list >-> nseq.
+
+
+(**** Array manipulation *)
+
+
+Open Scope nat_scope.
+
+
+(* Definition array_upd {A: Type} {len : uint_size} (s: lseq A len) (i: uint_size) (new_v: A) : lseq A len := List.upd s i new_v. *)
+
+
+(* Sanity check *)
+(* Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))). *)
+
+Definition array_from_seq
+  {a: Type}
+ `{Default a}
+  (out_len:nat)
+  (input: seq a)
+  (* {H : List.length input = out_len} *)
+    : nseq a out_len :=
+    let out := VectorDef.const default out_len in
+    update_sub out 0 (out_len - 1) input.
+  (* VectorDef.of_list input. *)
+
+Global Coercion array_from_seq : seq >-> nseq.
+
+
+
+
+
+
+
+
+
 
 (**** Seq manipulation *)
 
@@ -906,19 +994,6 @@ Definition seq_update_start
 (*   update_sub (VectorDef.of_list out) start_out len *)
 (*     (VectorDef.of_list (sub input start_in len)). *)
 
-Definition array_update_slice
-  {a : Type}
- `{Default a}
-  {l : nat}
-  (out: nseq a l)
-  (start_out: nat)
-  (input: seq a)
-  (start_in: nat)
-  (len: nat)
-    : nseq a (length out)
-  :=
-  update_sub (VectorDef.of_list out) start_out len
-    (VectorDef.of_list (sub input start_in len)).
 
 Definition seq_update_slice
   {a : Type}
@@ -1265,11 +1340,7 @@ Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n' *)
 
-Axiom array_declassify_eq : forall  {A l}, nseq A l -> nseq A l -> bool.
-Axiom array_to_le_uint32s : forall {A l}, nseq A l -> nseq uint32 l.
-Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> nseq uint32 (l/4).
-Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
-Axiom array_to_be_bytes : forall {A l}, nseq A l -> seq uint8.
+
 Axiom nat_mod_from_byte_seq_le : forall  {A n}, seq A -> nat_mod n.
 Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> uint_size.
 
