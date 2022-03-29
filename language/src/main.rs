@@ -465,7 +465,7 @@ fn handle_crate<'tcx>(
                     let file_temp_dir = original_file.join("_temp");
                     let file_temp_dir = file_temp_dir.to_str().unwrap();
 
-                    std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to crate dir");
+                    std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to create dir");
 
                     original_file.join("_temp").join(join_path.clone())
                 }
@@ -811,7 +811,7 @@ fn main() -> Result<(), usize> {
     };
 
     // Optionally get output directory.
-    let output_directory_index = args.iter().position(|a| a == "-dir");
+    let output_directory_index = args.iter().position(|a| a == "--dir");
     let output_directory = match output_directory_index {
         Some(i) => {
             args.remove(i);
