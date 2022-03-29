@@ -43,12 +43,19 @@ use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
 
+#[derive(Clone, PartialEq)]
+enum VersionControlArg {
+    Initialize,
+    Update,
+    None,
+}
+
 struct HacspecCallbacks {
     output_filename: Option<String>,
     output_directory: Option<String>,
     output_type: Option<String>,
     target_directory: String,
-    version_control: Option<bool>
+    version_control: VersionControlArg,
 }
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
@@ -454,20 +461,18 @@ fn handle_crate<'tcx>(
             };
 
             let file = match &callback.version_control {
-                Some(false) => {
+                VersionControlArg::Initialize => {
                     let file_temp_dir = original_file.join("_temp");
                     let file_temp_dir = file_temp_dir.to_str().unwrap();
-            
+
                     std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to crate dir");
 
                     original_file.join("_temp").join(join_path.clone())
                 }
-                _ => {
-                    original_file.join(join_path.clone())
-                }
+                _ => original_file.join(join_path.clone()),
             };
             let file = file.to_str().unwrap();
-                
+
             match extension.as_str() {
                 "fst" => rustspec_to_fstar::translate_and_write_to_file(
                     &compiler.session(),
@@ -518,28 +523,29 @@ fn handle_crate<'tcx>(
                 }
             }
 
-            match callback.version_control {
-                Some(initialize_vc) => {
-                    let file_destination = original_file.join(join_path.clone());
-                    let file_destination = file_destination.to_str().unwrap();
+            if callback.version_control != VersionControlArg::None {
+                let file_destination = original_file.join(join_path.clone());
+                let file_destination = file_destination.to_str().unwrap();
 
-                    let file_vc = original_file.join("_vc").join(join_path.clone());
-                    let file_vc = file_vc.to_str().unwrap();
+                let file_vc = original_file.join("_vc").join(join_path.clone());
+                let file_vc = file_vc.to_str().unwrap();
 
-                    let file_vc_dir = original_file.join("_vc");
-                    let file_vc_dir = file_vc_dir.to_str().unwrap();                    
-                    std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to crate dir");
+                let file_vc_dir = original_file.join("_vc");
+                let file_vc_dir = file_vc_dir.to_str().unwrap();
+                std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to crate dir");
 
-                    if initialize_vc {
+                match callback.version_control {
+                    VersionControlArg::Initialize => {
                         std::fs::copy(file_destination.clone(), file_vc.clone()).expect(
                             format!(
                                 "Failed to copy file '{}' to '{}'",
                                 file_destination.clone(),
                                 file_vc.clone()
                             )
-                                .as_str(),
+                            .as_str(),
                         );
-                    } else {
+                    }
+                    VersionControlArg::Update => {
                         let file_temp = original_file.join("_temp").join(join_path.clone());
                         let file_temp = file_temp.to_str().unwrap();
 
@@ -559,13 +565,15 @@ fn handle_crate<'tcx>(
                                 file_temp.clone(),
                                 file_vc.clone()
                             )
+                            .as_str(),
+                        );
+                        std::fs::remove_file(file_temp.clone()).expect(
+                            format!("Failed to remove file '{}'", file_destination.clone())
                                 .as_str(),
                         );
-                        std::fs::remove_file(file_temp.clone())
-                            .expect(format!("Failed to remove file '{}'", file_destination.clone()).as_str());
                     }
+                    VersionControlArg::None => panic!(),
                 }
-                None => ()
             }
         }
     }
@@ -832,21 +840,21 @@ fn main() -> Result<(), usize> {
         None => None,
     };
 
-    let init_file = match args.iter().position(|a| a == "--init") {
+    let vc = match args.iter().position(|a| a == "--vc-init") {
         Some(i) => {
             args.remove(i);
-            Some(true)
+            VersionControlArg::Initialize
         }
-        None => None,
+        None => VersionControlArg::None,
     };
-    let update_file = match args.iter().position(|a| a == "--update") {
+    let vc = match args.iter().position(|a| a == "--vc-update") {
         Some(i) => {
             args.remove(i);
-            Some(false)
+            VersionControlArg::Update
         }
-        None => None,
+        None => vc,
     };
-    
+
     // Read the --manifest-path argument if present.
     let manifest = match args.iter().position(|a| a == "--manifest-path") {
         Some(i) => {
@@ -879,10 +887,7 @@ fn main() -> Result<(), usize> {
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",
-        version_control: match (init_file, update_file) {
-            (Some(b), _) | (_,Some(b)) => Some(b),
-            _ => None,
-        }
+        version_control: vc,
     };
 
     match input_file {
