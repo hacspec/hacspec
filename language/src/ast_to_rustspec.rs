@@ -2,10 +2,10 @@ use im::{HashMap, HashSet};
 use rustc_ast::{
     ast::{
         self, AngleBracketedArg, Async, Attribute, BindingMode, BlockCheckMode, BorrowKind, Const,
-        Crate, Defaultness, Expr, ExprKind, Extern, FnKind, FnRetTy, GenericArg, GenericArgs,
-        IntTy, ItemKind, LitIntType, LitKind, MacArgs, MacCall, Mutability, Pat, PatKind,
-        RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAliasKind, TyKind, UintTy, UnOp, Unsafe,
-        UseTreeKind, VariantData,
+        Crate, Defaultness, Expr, ExprKind, Extern, Fn as FnKind, FnRetTy, GenericArg, GenericArgs,
+        IntTy, ItemKind, LitIntType, LitKind, LocalKind, MacArgs, MacCall, Mutability, Pat,
+        PatKind, RangeLimits, Stmt, StmtKind, StrStyle, Ty, TyAlias as TyAliasKind, TyKind, UintTy,
+        UnOp, Unsafe, UseTreeKind, VariantData,
     },
     node_id::NodeId,
     token::{DelimToken, LitKind as TokenLitKind, TokenKind},
@@ -19,10 +19,10 @@ use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
 #[derive(Clone)]
-struct SpecialNames {
-    arrays: HashSet<String>,
-    enums: HashSet<String>,
-    aliases: HashMap<String, BaseTyp>,
+pub struct SpecialNames {
+    pub arrays: HashSet<String>,
+    pub enums: HashSet<String>,
+    pub aliases: HashMap<String, BaseTyp>,
 }
 
 fn dealias_probable_enum_name(
@@ -33,7 +33,16 @@ fn dealias_probable_enum_name(
     match specials.aliases.get(&s) {
         None => (),
         Some(t) => match t {
-            BaseTyp::Named((TopLevelIdent(name), _), args) => {
+            BaseTyp::Named(
+                (
+                    TopLevelIdent {
+                        string: name,
+                        kind: TopLevelIdentKind::Type,
+                    },
+                    _,
+                ),
+                args,
+            ) => {
                 if *name != s {
                     return dealias_probable_enum_name(name.clone(), specials, args.clone());
                 }
@@ -58,8 +67,14 @@ fn check_vec<T>(v: Vec<TranslationResult<T>>) -> TranslationResult<Vec<T>> {
     }
 }
 
-fn translate_toplevel_ident(i: &symbol::Ident) -> Spanned<TopLevelIdent> {
-    (TopLevelIdent(i.name.to_ident_string()), i.span.into())
+fn translate_toplevel_ident(i: &symbol::Ident, kind: TopLevelIdentKind) -> Spanned<TopLevelIdent> {
+    (
+        TopLevelIdent {
+            string: i.name.to_ident_string(),
+            kind,
+        },
+        i.span.into(),
+    )
 }
 
 fn translate_ident(i: &symbol::Ident) -> Spanned<Ident> {
@@ -147,9 +162,12 @@ pub fn translate_typ_name(
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok((translate_toplevel_ident(&segment.ident), None)),
+            None => Ok((
+                translate_toplevel_ident(&segment.ident, TopLevelIdentKind::Type),
+                None,
+            )),
             Some(generic_args) => Ok((
-                translate_toplevel_ident(&segment.ident),
+                translate_toplevel_ident(&segment.ident, TopLevelIdentKind::Type),
                 Some(translate_type_args(sess, generic_args, &path.span)?),
             )),
         },
@@ -200,7 +218,10 @@ pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationRes
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok(TopLevelIdent(segment.ident.name.to_ident_string())),
+            None => Ok(TopLevelIdent {
+                string: segment.ident.name.to_ident_string(),
+                kind: TopLevelIdentKind::Type,
+            }),
             Some(_) => {
                 sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
                 Err(())
@@ -222,7 +243,6 @@ fn translate_func_name(
     if path.segments.len() > 2 {
         return Err(());
     }
-    let base_name = translate_toplevel_ident(&path.segments.last().unwrap().ident);
     if path.segments.len() == 2 {
         match path.segments.first() {
             None => panic!(), // should not happen
@@ -233,7 +253,13 @@ fn translate_func_name(
                 {
                     Ok(FuncNameResult::EnumConstructor(
                         BaseTyp::Named(
-                            (TopLevelIdent(enum_name), segment.ident.span.clone().into()),
+                            (
+                                TopLevelIdent {
+                                    string: enum_name,
+                                    kind: TopLevelIdentKind::Type,
+                                },
+                                segment.ident.span.clone().into(),
+                            ),
                             match segment.args {
                                 None => enum_args,
                                 Some(ref args) => {
@@ -241,7 +267,10 @@ fn translate_func_name(
                                 }
                             },
                         ),
-                        base_name,
+                        translate_toplevel_ident(
+                            &path.segments.last().unwrap().ident,
+                            TopLevelIdentKind::EnumConstructor,
+                        ),
                     ))
                 } else {
                     Ok(FuncNameResult::TypePrefixed(
@@ -261,13 +290,22 @@ fn translate_func_name(
                                 ),
                             },
                         )?),
-                        base_name,
+                        translate_toplevel_ident(
+                            &path.segments.last().unwrap().ident,
+                            TopLevelIdentKind::Function,
+                        ),
                     ))
                 }
             }
         }
     } else {
-        Ok(FuncNameResult::TypePrefixed(None, base_name))
+        Ok(FuncNameResult::TypePrefixed(
+            None,
+            translate_toplevel_ident(
+                &path.segments.last().unwrap().ident,
+                TopLevelIdentKind::Function,
+            ),
+        ))
     }
 }
 
@@ -558,7 +596,7 @@ fn translate_expr(
             Ok((
                 ExprTranslationResult::TransExpr(Expression::EnumInject(
                     BaseTyp::Named(
-                        translate_toplevel_ident(&first_seg.ident),
+                        translate_toplevel_ident(&first_seg.ident, TopLevelIdentKind::Type),
                         match &first_seg.args {
                             None => None,
                             Some(args) => {
@@ -566,7 +604,7 @@ fn translate_expr(
                             }
                         },
                     ),
-                    translate_toplevel_ident(&second_seg.ident),
+                    translate_toplevel_ident(&second_seg.ident, TopLevelIdentKind::EnumConstructor),
                     None,
                 )),
                 e.span.into(),
@@ -586,7 +624,21 @@ fn translate_expr(
             }?;
             match func_name_kind {
                 FuncNameResult::TypePrefixed(func_prefix, func_name) => {
-                    let func_name_string = (func_name.clone().0).0;
+                    let func_name_string = (func_name.clone().0).string;
+                    let func_name_but_as_type = (
+                        TopLevelIdent {
+                            string: func_name.0.string.clone(),
+                            kind: TopLevelIdentKind::Type,
+                        },
+                        func_name.1,
+                    );
+                    let func_name_but_as_enum_constructor = (
+                        TopLevelIdent {
+                            string: func_name.0.string.clone(),
+                            kind: TopLevelIdentKind::EnumConstructor,
+                        },
+                        func_name.1,
+                    );
                     if specials.enums.contains(&func_name_string) {
                         // Special case for struct constructors
                         let func_args: Vec<
@@ -613,8 +665,8 @@ fn translate_expr(
                         )?;
                         return Ok((
                             ExprTranslationResult::TransExpr(Expression::EnumInject(
-                                BaseTyp::Named(func_name.clone(), None),
-                                func_name,
+                                BaseTyp::Named(func_name_but_as_type, None),
+                                func_name_but_as_enum_constructor,
                                 Some(if func_args.len() > 1 {
                                     (Box::new(Expression::Tuple(func_args)), e.span.into())
                                 } else {
@@ -644,7 +696,7 @@ fn translate_expr(
                                 let new_cells = check_vec(new_cells)?;
                                 return Ok((
                                     (ExprTranslationResult::TransExpr(Expression::NewArray(
-                                        Some(func_name),
+                                        Some(func_name_but_as_type),
                                         None,
                                         new_cells,
                                     ))),
@@ -677,8 +729,11 @@ fn translate_expr(
                                                     it.next().map_or(Err(()), |x| Ok(x));
                                                 Ok((first_arg?, second_arg?, third_arg?))
                                             }?;
-                                            let typ_ident =
-                                                check_for_toplevel_ident(sess, &first_arg)?;
+                                            let typ_ident = check_for_toplevel_ident(
+                                                sess,
+                                                &first_arg,
+                                                TopLevelIdentKind::Type,
+                                            )?;
                                             check_for_comma(sess, &second_arg)?;
                                             let array = check_for_literal_array(sess, &third_arg)?;
                                             let array = array
@@ -700,7 +755,7 @@ fn translate_expr(
                                             return Ok((
                                                 (ExprTranslationResult::TransExpr(
                                                     Expression::NewArray(
-                                                        Some(func_name),
+                                                        Some(func_name_but_as_type),
                                                         None,
                                                         array,
                                                     ),
@@ -727,10 +782,7 @@ fn translate_expr(
                                                     (
                                                         Expression::FuncCall(
                                                             None,
-                                                            (
-                                                                TopLevelIdent("U8".to_string()),
-                                                                call.span().into(),
-                                                            ),
+                                                            (U8_TYP(), call.span().into()),
                                                             vec![(
                                                                 i.clone(),
                                                                 (Borrowing::Consumed, i.1.clone()),
@@ -743,7 +795,7 @@ fn translate_expr(
                                             return Ok((
                                                 (ExprTranslationResult::TransExpr(
                                                     Expression::NewArray(
-                                                        Some(func_name),
+                                                        Some(func_name_but_as_type),
                                                         None,
                                                         array,
                                                     ),
@@ -828,7 +880,10 @@ fn translate_expr(
                 .first()
                 .map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
             let method_name = match method_name.args {
-                None => Ok(translate_toplevel_ident(&method_name.ident)),
+                None => Ok(translate_toplevel_ident(
+                    &method_name.ident,
+                    TopLevelIdentKind::Function,
+                )),
                 Some(_) => {
                     sess.span_rustspec_err(*span, "method type arguments not allowed in Hacspec");
                     Err(())
@@ -1151,7 +1206,7 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::Let(_, _) => {
+        ExprKind::Let(_, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "inline lets are not allowed in Hacspec");
             Err(())
         }
@@ -1194,7 +1249,10 @@ fn translate_expr(
                                 let second_seg = it.next().unwrap();
                                 (
                                     BaseTyp::Named(
-                                        translate_toplevel_ident(&first_seg.ident),
+                                        translate_toplevel_ident(
+                                            &first_seg.ident,
+                                            TopLevelIdentKind::Type,
+                                        ),
                                         match &first_seg.args {
                                             None => None,
                                             Some(args) => Some(translate_type_args(
@@ -1204,7 +1262,10 @@ fn translate_expr(
                                             )?),
                                         },
                                     ),
-                                    translate_toplevel_ident(&second_seg.ident),
+                                    translate_toplevel_ident(
+                                        &second_seg.ident,
+                                        TopLevelIdentKind::EnumConstructor,
+                                    ),
                                     None,
                                 )
                             }
@@ -1231,7 +1292,10 @@ fn translate_expr(
                                 };
                                 (
                                     BaseTyp::Named(
-                                        translate_toplevel_ident(&first_seg.ident),
+                                        translate_toplevel_ident(
+                                            &first_seg.ident,
+                                            TopLevelIdentKind::Type,
+                                        ),
                                         match &first_seg.args {
                                             None => None,
                                             Some(args) => Some(translate_type_args(
@@ -1241,7 +1305,10 @@ fn translate_expr(
                                             )?),
                                         },
                                     ),
-                                    translate_toplevel_ident(&second_seg.ident),
+                                    translate_toplevel_ident(
+                                        &second_seg.ident,
+                                        TopLevelIdentKind::EnumConstructor,
+                                    ),
                                     Some(pat),
                                 )
                             }
@@ -1412,7 +1479,7 @@ fn translate_expr(
                                         (
                                             Expression::FuncCall(
                                                 None,
-                                                (TopLevelIdent("U8".to_string()), e.span.into()),
+                                                (U8_TYP(), e.span.into()),
                                                 vec![(
                                                     i.clone(),
                                                     (Borrowing::Consumed, i.1.clone()),
@@ -1613,26 +1680,29 @@ fn translate_statement(
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
             };
-            let (init, question_mark) = match &local.init {
-                None => {
+            let (init, question_mark) = match &local.kind {
+                LocalKind::Decl | LocalKind::InitElse(_, _) => {
                     sess.span_rustspec_err(
                         local.span,
                         "let-bindings without initialization are not allowed in Hacspec",
                     );
                     Err(())
                 }
-                Some(e) => match translate_expr_accepts_question_mark(sess, specials, &e)? {
-                    (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
-                        sess.span_rustspec_err(
-                            e.span,
-                            "let binding expression should not contain statements in Hacspec",
-                        );
-                        Err(())
+                LocalKind::Init(e) => {
+                    match translate_expr_accepts_question_mark(sess, specials, &e)? {
+                        (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
+                            sess.span_rustspec_err(
+                                e.span,
+                                "let binding expression should not contain statements in Hacspec",
+                            );
+                            Err(())
+                        }
+                        (
+                            ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark),
+                            span,
+                        ) => Ok(((e, span), question_mark)),
                     }
-                    (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
-                        Ok(((e, span), question_mark))
-                    }
-                },
+                }
             }?;
             Ok(vec![(
                 Statement::LetBinding(pat, ty, init, question_mark),
@@ -1858,11 +1928,18 @@ fn check_for_usize(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned
 fn check_for_toplevel_ident(
     sess: &Session,
     arg: &TokenTree,
+    kind: TopLevelIdentKind,
 ) -> TranslationResult<(Spanned<TopLevelIdent>, String)> {
     match arg {
         TokenTree::Token(tok) => match tok.kind {
             TokenKind::Ident(id, _) => Ok((
-                (TopLevelIdent(id.to_ident_string()), tok.span.clone().into()),
+                (
+                    TopLevelIdent {
+                        string: id.to_ident_string(),
+                        kind,
+                    },
+                    tok.span.clone().into(),
+                ),
                 id.to_ident_string(),
             )),
             _ => {
@@ -1893,13 +1970,14 @@ fn translate_simplified_natural_integer_decl(
                 let third_arg = it.next().map_or(Err(()), |x| Ok(x));
                 Ok((first_arg?, second_arg?, third_arg?))
             }?;
-            let (typ_ident, typ_ident_string) = check_for_toplevel_ident(sess, &first_arg)?;
+            let (typ_ident, typ_ident_string) =
+                check_for_toplevel_ident(sess, &first_arg, TopLevelIdentKind::Type)?;
             check_for_comma(sess, &second_arg)?;
             let canvas_size = check_for_usize(sess, &third_arg)?;
             Ok((
                 (ItemTranslationResult::Item(DecoratedItem {
                     item: Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, None),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(HashSet::unit("code".to_string())),
                 })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -1974,19 +2052,21 @@ fn translate_natural_integer_decl(
                     fiftheen_arg?,
                 ))
             }?;
-            check_for_toplevel_ident(sess, &first_arg)?;
+            check_for_toplevel_ident(sess, &first_arg, TopLevelIdentKind::Function)?;
             check_for_colon(sess, &second_arg)?;
-            let (typ_ident, typ_ident_string) = check_for_toplevel_ident(sess, &third_arg)?;
+            let (typ_ident, typ_ident_string) =
+                check_for_toplevel_ident(sess, &third_arg, TopLevelIdentKind::Type)?;
             check_for_comma(sess, &fourth_arg)?;
-            check_for_toplevel_ident(sess, &fifth_arg)?;
+            check_for_toplevel_ident(sess, &fifth_arg, TopLevelIdentKind::Function)?;
             check_for_colon(sess, &sixth_arg)?;
-            let (canvas_typ_ident, _) = check_for_toplevel_ident(sess, &seventh_arg)?;
+            let (canvas_typ_ident, _) =
+                check_for_toplevel_ident(sess, &seventh_arg, TopLevelIdentKind::Type)?;
             check_for_comma(sess, &eight_arg)?;
-            check_for_toplevel_ident(sess, &ninth_arg)?;
+            check_for_toplevel_ident(sess, &ninth_arg, TopLevelIdentKind::Function)?;
             check_for_colon(sess, &tenth_arg)?;
             let canvas_size = check_for_usize(sess, &eleventh_arg)?;
             check_for_comma(sess, &twelveth_arg)?;
-            check_for_toplevel_ident(sess, &thirteenth_arg)?;
+            check_for_toplevel_ident(sess, &thirteenth_arg, TopLevelIdentKind::Function)?;
             check_for_colon(sess, &fourteenth_arg)?;
             let modulo_string = match &fiftheen_arg {
                 TokenTree::Token(tok) => match tok.kind {
@@ -2021,7 +2101,7 @@ fn translate_natural_integer_decl(
                         canvas_size,
                         Some((canvas_typ_ident, modulo_string)),
                     ),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(HashSet::unit("code".to_string())),
                 })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2052,7 +2132,8 @@ fn translate_array_decl(
                 let third_arg = it.next().map_or(Err(()), |x| Ok(x));
                 Ok((first_arg?, second_arg?, third_arg?))
             }?;
-            let (typ_ident, typ_ident_string) = check_for_toplevel_ident(sess, &first_arg)?;
+            let (typ_ident, typ_ident_string) =
+                check_for_toplevel_ident(sess, &first_arg, TopLevelIdentKind::Type)?;
             check_for_comma(sess, &second_arg)?;
             let size = check_for_usize(sess, &third_arg)?;
             let cell_t = match cell_t {
@@ -2108,12 +2189,15 @@ fn translate_array_decl(
                 match (fourth_arg, fifth_arg, sixth_arg, seventh_arg) {
                     (Some(fourth_arg), Some(fifth_arg), Some(sixth_arg), Some(seventh_arg)) => {
                         check_for_comma(sess, &fourth_arg)?;
-                        check_for_toplevel_ident(sess, &fifth_arg)?;
+                        check_for_toplevel_ident(sess, &fifth_arg, TopLevelIdentKind::Type)?;
                         check_for_colon(sess, &sixth_arg)?;
                         match seventh_arg {
                             TokenTree::Token(tok) => match tok.kind {
                                 TokenKind::Ident(id, _) => Some((
-                                    TopLevelIdent(id.to_ident_string()),
+                                    TopLevelIdent {
+                                        string: id.to_ident_string(),
+                                        kind: TopLevelIdentKind::Type,
+                                    },
                                     tok.span.clone().into(),
                                 )),
                                 _ => {
@@ -2139,7 +2223,7 @@ fn translate_array_decl(
             Ok((
                 (ItemTranslationResult::Item(DecoratedItem {
                     item: Item::ArrayDecl(typ_ident, size, cell_t, index_typ),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(HashSet::unit("code".to_string())),
                 })),
                 SpecialNames {
                     arrays: specials.arrays.update(typ_ident_string),
@@ -2207,11 +2291,51 @@ fn attribute_is_test(attr: &Attribute) -> bool {
     }
 }
 
-fn attribute_tag(attr: &Attribute) -> Option<ItemTag> {
+fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
     let attr_name = attr.name_or_empty().to_ident_string();
     match attr_name.as_str() {
-        "quickcheck" => Some(ItemTag::QuickCheck),
-        "test" => Some(ItemTag::Test),
+        "quickcheck" | "test" => Some(vec![attr_name]),
+        "derive" => {
+            let inner_tokens = attr.tokens().to_tokenstream();
+            if inner_tokens.len() != 2 {
+                return None;
+            }
+            let mut it = inner_tokens.trees();
+            let first_token = it.next().unwrap();
+            let second_token = it.next().unwrap();
+            match (first_token, second_token) {
+                (TokenTree::Token(first_tok), TokenTree::Delimited(_, _, inner)) => {
+                    match first_tok.kind {
+                        TokenKind::Pound => {
+                            if inner.len() != 2 {
+                                return None;
+                            }
+                            let mut it = inner.trees();
+                            let _first_token = it.next().unwrap();
+                            // First is derive
+                            let second_token = it.next().unwrap();
+                            match second_token {
+                                TokenTree::Delimited(_, _, inner) => {
+                                    Some(inner.trees().fold(Vec::new(), |mut a, x| match x {
+                                        TokenTree::Token(tok) => match tok.kind {
+                                            TokenKind::Ident(ident, _) => {
+                                                a.push(ident.to_ident_string());
+                                                a
+                                            }
+                                            _ => a,
+                                        },
+                                        _ => a,
+                                    }))
+                                }
+                                _ => None,
+                            }
+                        }
+                        _ => None,
+                    }
+                }
+                _ => None,
+            }
+        }
         "cfg" => {
             let inner_tokens = attr.tokens().to_tokenstream();
             if inner_tokens.len() != 2 {
@@ -2243,8 +2367,7 @@ fn attribute_tag(attr: &Attribute) -> Option<ItemTag> {
                                             TokenKind::Ident(ident, _) => {
                                                 let ident_string = ident.to_ident_string();
                                                 match ident_string.as_str() {
-                                                    "proof" => Some(ItemTag::Proof),
-                                                    "test" => Some(ItemTag::Test),
+                                                    "proof" | "test" => Some(vec![ident_string]),
                                                     _ => None,
                                                 }
                                             }
@@ -2274,14 +2397,14 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
     let mut tags = HashSet::new();
-    tags.insert(ItemTag::Code);
+    tags.insert("code".to_string());
     let export = i
         .attrs
         .iter()
         .fold(false, |b, attr| match attribute_tag(attr) {
             Some(a) => {
-                tags.insert(a);
-                b || a == ItemTag::Proof
+                tags.extend(a.iter());
+                b || a.contains(&"proof".to_string())
             }
             None => b,
         });
@@ -2293,7 +2416,12 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         ItemKind::Fn(fn_kind) => {
             // Foremost we check whether this function is a test, in which case
             // we ignore it
-            let FnKind(defaultness, ref sig, ref generics, ref body) = fn_kind.as_ref();
+            let FnKind {
+                defaultness,
+                ref sig,
+                ref generics,
+                ref body,
+            } = fn_kind.as_ref();
             // First, checking that no fancy function qualifier is here
             match defaultness {
                 Defaultness::Default(span) => {
@@ -2397,7 +2525,11 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 args: fn_inputs,
                 ret: fn_output,
             };
-            let fn_item = Item::FnDecl(translate_toplevel_ident(&i.ident), fn_sig, fn_body);
+            let fn_item = Item::FnDecl(
+                translate_toplevel_ident(&i.ident, TopLevelIdentKind::Function),
+                fn_sig,
+                fn_body,
+            );
 
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
@@ -2421,10 +2553,13 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 Ok((
                     ItemTranslationResult::Item(DecoratedItem {
                         item: Item::ImportedCrate((
-                            TopLevelIdent(krate_name),
+                            TopLevelIdent {
+                                string: krate_name,
+                                kind: TopLevelIdentKind::Crate,
+                            },
                             tree.span.clone().into(),
                         )),
-                        tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                        tags: ItemTagSet(tags),
                     }),
                     specials,
                 ))
@@ -2453,10 +2588,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     i,
                     specials,
                     call,
-                    Some(BaseTyp::Named(
-                        (TopLevelIdent("U8".into()), i.span.clone().into()),
-                        None,
-                    )),
+                    Some(BaseTyp::Named((U8_TYP(), i.span.clone().into()), None)),
                 ),
                 ("public_bytes", None) => {
                     translate_array_decl(sess, i, specials, call, Some(BaseTyp::UInt8))
@@ -2490,11 +2622,11 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         ItemKind::Const(_, ty, Some(e)) => {
             let new_ty = translate_base_typ(sess, ty)?;
             let new_e = translate_expr_expects_exp(sess, specials, e)?;
-            let id = translate_toplevel_ident(&i.ident);
+            let id = translate_toplevel_ident(&i.ident, TopLevelIdentKind::Constant);
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
                     item: Item::ConstDecl(id, new_ty, new_e),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(tags),
                 }),
                 specials.clone(),
             ))
@@ -2507,7 +2639,12 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Err(())
         }
         ItemKind::TyAlias(ty_alias_kind) => {
-            let TyAliasKind(defaultness, generics, _, ty) = ty_alias_kind.as_ref();
+            let TyAliasKind {
+                defaultness,
+                generics,
+                ty,
+                ..
+            } = ty_alias_kind.as_ref();
             match defaultness {
                 Defaultness::Final => (),
                 Defaultness::Default(span) => {
@@ -2540,11 +2677,17 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     specials
                         .aliases
                         .insert(ty_alias_name_string.clone(), ty.0.clone());
-                    let ty_alias_name = (TopLevelIdent(ty_alias_name_string), i.span.into());
+                    let ty_alias_name = (
+                        TopLevelIdent {
+                            string: ty_alias_name_string,
+                            kind: TopLevelIdentKind::Type,
+                        },
+                        i.span.into(),
+                    );
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
                             item: Item::AliasDecl(ty_alias_name, ty),
-                            tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                            tags: ItemTagSet(tags),
                         }),
                         specials,
                     ))
@@ -2583,12 +2726,13 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 return Err(());
             }
             let id_string = i.ident.name.to_ident_string();
-            let id = translate_toplevel_ident(&i.ident);
+            let id = translate_toplevel_ident(&i.ident, TopLevelIdentKind::Type);
             let variants = check_vec(
                 def.variants
                     .iter()
                     .map(|v| {
-                        let case_id = translate_toplevel_ident(&v.ident);
+                        let case_id =
+                            translate_toplevel_ident(&v.ident, TopLevelIdentKind::EnumConstructor);
                         let case_typ = match &v.data {
                             VariantData::Unit(_) => Ok(None),
                             VariantData::Struct(_, _) => {
@@ -2620,7 +2764,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
                     item: Item::EnumDecl(id, variants),
-                    tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                    tags: ItemTagSet(tags),
                 }),
                 SpecialNames {
                     enums: specials.enums.update(id_string),
@@ -2637,7 +2781,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 return Err(());
             }
             let id_string = i.ident.name.to_ident_string();
-            let id = translate_toplevel_ident(&i.ident);
+            let id = translate_toplevel_ident(&i.ident, TopLevelIdentKind::Type);
             match data {
                 VariantData::Struct(_, _) => {
                     sess.span_rustspec_err(
@@ -2648,8 +2792,20 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 }
                 VariantData::Unit(_) => Ok((
                     ItemTranslationResult::Item(DecoratedItem {
-                        item: Item::EnumDecl(id.clone(), vec![(id, None)]),
-                        tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                        item: Item::EnumDecl(
+                            id.clone(),
+                            vec![(
+                                (
+                                    TopLevelIdent {
+                                        string: id.0.string,
+                                        kind: TopLevelIdentKind::EnumConstructor,
+                                    },
+                                    id.1,
+                                ),
+                                None,
+                            )],
+                        ),
+                        tags: ItemTagSet(tags),
                     }),
                     SpecialNames {
                         enums: specials.enums.update(id_string),
@@ -2679,8 +2835,20 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     };
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
-                            item: Item::EnumDecl(id.clone(), vec![(id, Some(payload))]),
-                            tags: ItemTagSet(HashSet::unit(ItemTag::Code)),
+                            item: Item::EnumDecl(
+                                id.clone(),
+                                vec![(
+                                    (
+                                        TopLevelIdent {
+                                            string: id.0.string,
+                                            kind: TopLevelIdentKind::EnumConstructor,
+                                        },
+                                        id.1,
+                                    ),
+                                    Some(payload),
+                                )],
+                            ),
+                            tags: ItemTagSet(tags),
                         }),
                         SpecialNames {
                             enums: specials.enums.update(id_string),
@@ -2717,19 +2885,15 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     krate: &Crate,
     external_data: &F,
+    specials: &mut SpecialNames,
 ) -> TranslationResult<Program> {
     let items = &krate.items;
-    let mut specials = SpecialNames {
-        arrays: HashSet::new(),
-        enums: HashSet::new(),
-        aliases: HashMap::new(),
-    };
     let translated_items = check_vec(
         items
             .into_iter()
             .map(|i| {
                 let (new_i, new_specials) = translate_items(sess, &i, &specials, external_data)?;
-                specials = new_specials;
+                *specials = new_specials;
                 Ok((new_i, i.span))
             })
             .collect(),

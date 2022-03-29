@@ -28,7 +28,7 @@ In order to ensure that the code is a hacspec one can use the typecheker.
 
 Make sure you have at least `rustup 1.23.0`.
 The [`rust-toolchain`](./language/rust-toolchain) automatically picks the correct Rust nightly version and components.
-The compiler version is currently pinned to `nightly-2021-06-15`.
+The compiler version is currently pinned to `nightly-2021-11-14`.
 
 **Installing the typechecker from the repository**
 ```
@@ -46,30 +46,30 @@ First ensure that Rust nightly is installed and the typechecker is installed.
 
 ```bash
 cd language
-rustup toolchain install nightly-2021-06-15
-rustup component add --toolchain nightly-2021-06-15 rustc-dev
-cargo +nightly-2021-06-15 install hacspec
+rustup toolchain install nightly-2021-11-14
+rustup component add --toolchain nightly-2021-11-14 rustc-dev
+cargo +nightly-2021-11-14 install hacspec
 ```
 
 Depending on your system you might also need `llvm-tools-preview`
 
 ```bash
-rustup component add --toolchain nightly-2021-06-15 llvm-tools-preview
+rustup component add --toolchain nightly-2021-11-14 llvm-tools-preview
 ```
 
 **Usage**
 
 In a hacspec crate or workspace directory typechecking can be done as follows now:
-(Specifying `+nightly-2021-06-15` is only necessary if it's not specified in the toolchain as it is in this main repository.)
+(Specifying `+nightly-2021-11-14` is only necessary if it's not specified in the toolchain as it is in this main repository.)
 
 ```bash
-cargo +nightly-2021-06-15 hacspec <crate-name>
+cargo +nightly-2021-11-14 hacspec <crate-name>
 ```
 
 Note that the crate dependencies need to be compiled before it can be typechecked.
 
 ```bash
-cargo +nightly-2021-06-15 build
+cargo +nightly-2021-11-14 build
 ```
 
 If typechecking succeeds, it should show
@@ -83,9 +83,9 @@ If typechecking succeeds, it should show
 To generate F\*, EasyCrypt, or Coq code from hacspec the typechecker (see above) is required.
 
 ```bash
-cargo +nightly-2021-06-15 hacspec -o <fst-name>.fst <crate-name>
-cargo +nightly-2021-06-15 hacspec -o <ec-name>.ec <crate-name>
-cargo +nightly-2021-06-15 hacspec -o <coq-name>.v <crate-name>
+cargo +nightly-2021-11-14 hacspec -o <fst-name>.fst <crate-name>
+cargo +nightly-2021-11-14 hacspec -o <ec-name>.ec <crate-name>
+cargo +nightly-2021-11-14 hacspec -o <coq-name>.v <crate-name>
 ```
 
 ## Publications & Other material
@@ -145,16 +145,19 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [Poly1305](examples/poly1305/src/poly1305.rs)
 - [Chacha20Poly1305](examples/chacha20poly1305/src/chacha20poly1305.rs)
 - [SHA256](examples/sha256/src/sha256.rs)
+- [SHA512](examples/sha512/src/sha512.rs)
 - [Curve25519](examples/curve25519/src/curve25519.rs)
 - [NTRU-prime](examples/hacspec-ntru-prime/src/ntru-prime.rs)
 - [SHA-3](examples/sha3/src/sha3.rs)
 - [HKDF-SHA256](examples/hkdf/src/hkdf.rs)
 - [HMAC-SHA256](examples/hmac/src/hmac.rs)
 - [BLS12-381](examples/bls12-381/src/bls12-381.rs)
+- [BLS12-381 Hash To Curve](examples/bls12-381-hash/src/bls12-381-hash.rs)
 - [RIOT bootloade](examples/riot-bootloader/src/lib.rs)
 - [GIMLI](examples/gimli/src/gimli.rs)
 - [P256](examples/p256/src/p256.rs)
 - [ECDSA-P256-SHA256](examples/ecdsa-p256-sha256/src/ecdsa.rs)
+- [Ed25519](examples/ed25519/src/ed25519.rs)
 
 ## Unsafe examples
 

@@ -19,15 +19,6 @@ public_nat_mod!( //Custom Macro - defining a new type with some functions - well
     modulo_value: "8000000000000000000000000000000000000000000000000000000000000000" //0x8000000000000000000000000000000000000000000000000000000000000000
 );
 
-//Returns index of left-most bit, set to 1
-fn most_significant_bit(m: Scalar, n: usize) -> usize //usize does not have a secret integer implementation
-{
-    if n > 0 && !m.bit(n) {
-        most_significant_bit(m, n - 1)
-    } else {
-        n
-    }
-}
 //bool is "isPointAtInfinity"
 pub type G1 = (Fp, Fp, bool);
 pub type Fp2 = (Fp, Fp); //(10, 8) = (10+8u) : u² = -1
@@ -36,31 +27,31 @@ pub type Fp6 = (Fp2, Fp2, Fp2); //v³ = u + 1
 pub type Fp12 = (Fp6, Fp6); //w² = v
 
 /* Arithmetic for FP2 elements */
-fn fp2fromfp(n: Fp) -> Fp2 {
+pub fn fp2fromfp(n: Fp) -> Fp2 {
     (n, Fp::ZERO())
 }
 
-fn fp2zero() -> Fp2 {
+pub fn fp2zero() -> Fp2 {
     fp2fromfp(Fp::ZERO())
 }
 
-fn fp2neg(n: Fp2) -> Fp2 {
+pub fn fp2neg(n: Fp2) -> Fp2 {
     let (n1, n2) = n;
     (Fp::ZERO() - n1, Fp::ZERO() - n2)
 }
 
-fn fp2add(n: Fp2, m: Fp2) -> Fp2 {
+pub fn fp2add(n: Fp2, m: Fp2) -> Fp2 {
     //Coordinate wise
     let (n1, n2) = n;
     let (m1, m2) = m;
     (n1 + m1, n2 + m2)
 }
 
-fn fp2sub(n: Fp2, m: Fp2) -> Fp2 {
+pub fn fp2sub(n: Fp2, m: Fp2) -> Fp2 {
     fp2add(n, fp2neg(m))
 }
 
-fn fp2mul(n: Fp2, m: Fp2) -> Fp2 {
+pub fn fp2mul(n: Fp2, m: Fp2) -> Fp2 {
     //(a+bu)*(c+du) = ac + adu + bcu + bdu^2 = ac - bd + (ad + bc)u
     let (n1, n2) = n;
     let (m1, m2) = m;
@@ -69,7 +60,7 @@ fn fp2mul(n: Fp2, m: Fp2) -> Fp2 {
     (x1, x2)
 }
 
-fn fp2inv(n: Fp2) -> Fp2 {
+pub fn fp2inv(n: Fp2) -> Fp2 {
     let (n1, n2) = n;
     let t0 = n1 * n1 + (n2 * n2);
     let t1 = t0.inv();
@@ -78,7 +69,7 @@ fn fp2inv(n: Fp2) -> Fp2 {
     (x1, x2)
 }
 
-fn fp2conjugate(n: Fp2) -> Fp2 {
+pub fn fp2conjugate(n: Fp2) -> Fp2 {
     let (n1, n2) = n;
     (n1, Fp::ZERO() - n2)
 }
@@ -203,12 +194,11 @@ pub fn fp12inv(n: Fp12) -> Fp12 {
 }
 
 pub fn fp12exp(n: Fp12, k: Scalar) -> Fp12 {
-    let l = 255 - most_significant_bit(k, 255); //has a timing side channel issue
-    let mut c = n;
-    for i in l..255 {
+    let mut c = fp12fromfp6(fp6fromfp2(fp2fromfp(Fp::ONE())));
+    for i in 0..256 {
         //starting from second most significant bit
         c = fp12mul(c, c);
-        if k.bit(255 - i - 1) {
+        if k.bit(255 - i) {
             c = fp12mul(c, n);
         }
     }
@@ -283,13 +273,11 @@ pub fn g1add(p: G1, q: G1) -> G1 {
 }
 
 pub fn g1mul(m: Scalar, p: G1) -> G1 {
-    let n = 255;
-    let k = n - most_significant_bit(m, n); //has a timing side channel issue
-    let mut t = p;
-    for i in k..n {
+    let mut t = (Fp::ZERO(), Fp::ZERO(), true);
+    for i in 0..256 {
         //starting from second most significant bit
         t = g1double(t);
-        if m.bit(n - i - 1) {
+        if m.bit(255 - i) {
             t = g1add(t, p);
         }
     }
@@ -369,13 +357,11 @@ pub fn g2add(p: G2, q: G2) -> G2 {
 }
 
 pub fn g2mul(m: Scalar, p: G2) -> G2 {
-    let n = 255;
-    let k = n - most_significant_bit(m, n); //has a timing side channel issue
-    let mut t = p;
-    for i in k..n {
+    let mut t = (fp2zero(), fp2zero(), true);
+    for i in 0..256 {
         //starting from second most significant bit
         t = g2double(t);
-        if m.bit(n - i - 1) {
+        if m.bit(255 - i) {
             t = g2add(t, p);
         }
     }
@@ -647,12 +633,28 @@ fn test_fp12_prop_mul_inv(a: Fp12) -> bool {
 }
 
 #[cfg(test)]
-#[quickcheck]
-fn test_fp12_prop_exp(a: Fp12) -> bool {
-    let m = Scalar::from_literal(3u128);
-    let n = Scalar::from_literal(4u128);
-    let k = Scalar::from_literal(12u128);
-    fp12exp(fp12exp(a, m), n) == fp12exp(a, k)
+#[test]
+fn test_fp12_exp_zero() {
+    fn test_fp12_exp(a: Fp12) -> bool {
+        fp12fromfp6(fp6fromfp2(fp2fromfp(Fp::ONE()))) == fp12exp(a, Scalar::ZERO())
+    }
+    QuickCheck::new()
+        .tests(5)
+        .quickcheck(test_fp12_exp as fn(Fp12) -> bool);
+}
+
+#[cfg(test)]
+#[test]
+fn test_fp12_prop_exp() {
+    fn test_fp12_exp(a: Fp12) -> bool {
+        let m = Scalar::from_literal(3u128);
+        let n = Scalar::from_literal(4u128);
+        let k = Scalar::from_literal(12u128);
+        fp12exp(fp12exp(a, m), n) == fp12exp(a, k)
+    }
+    QuickCheck::new()
+        .tests(5)
+        .quickcheck(test_fp12_exp as fn(Fp12) -> bool);
 }
 
 /* G1 tests */
@@ -667,6 +669,31 @@ fn test_g1_arithmetic() {
     let g4b = g1add(g3, g);
     assert_eq!(g4a, g4b);
 }
+
+#[cfg(test)]
+#[test]
+fn test_g1_mul_standard()
+{
+    let g = g1();
+    let m = Scalar::ONE();
+    assert_eq!(g, g1mul(m, g));
+    let m = Scalar::from_literal(2u128);
+    let g2 = g1double(g);
+    assert_eq!(g2, g1mul(m, g));
+    let m = Scalar::from_literal(3u128);
+    let g3 = g1add(g, g2);
+    assert_eq!(g3, g1mul(m, g));
+}
+
+#[cfg(test)]
+#[test]
+fn test_g1_mul_zero()
+{
+    let g = g1();
+    let m = Scalar::ZERO();
+    let h = g1mul(m, g);
+    assert!(h.2);
+} 
 
 #[cfg(test)]
 #[test]
@@ -719,6 +746,31 @@ fn test_g2_arithmetic() {
 
 #[cfg(test)]
 #[test]
+fn test_g2_mul_standard()
+{
+    let g = g2();
+    let m = Scalar::ONE();
+    assert_eq!(g, g2mul(m, g));
+    let m = Scalar::from_literal(2u128);
+    let g2 = g2double(g);
+    assert_eq!(g2, g2mul(m, g));
+    let m = Scalar::from_literal(3u128);
+    let g3 = g2add(g, g2);
+    assert_eq!(g3, g2mul(m, g));
+}
+
+#[cfg(test)]
+#[test]
+fn test_g2_mul_zero()
+{
+    let g = g2();
+    let m = Scalar::ZERO();
+    let h = g2mul(m, g);
+    assert!(h.2);
+} 
+
+#[cfg(test)]
+#[test]
 fn test_g2_mul_prop() {
     fn test_g2_mul(a: Scalar) -> bool {
         let g = g2mul(a, g2());
@@ -736,14 +788,14 @@ fn test_g2_mul_prop() {
 #[cfg(test)]
 #[test]
 fn test_g2_add_double_equiv() {
-    fn test_g1_mul(a: Scalar) -> bool {
+    fn test_g2_mul(a: Scalar) -> bool {
         let g = g2mul(a, g2());
         g2add(g, g) == g2double(g)
     }
     //Only needing 5 successes, slow because affine
     QuickCheck::new()
         .tests(5)
-        .quickcheck(test_g1_mul as fn(Scalar) -> bool);
+        .quickcheck(test_g2_mul as fn(Scalar) -> bool);
 }
 
 #[cfg(test)]

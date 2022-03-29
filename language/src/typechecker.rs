@@ -36,7 +36,7 @@ fn is_numeric(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
                     DictEntry::Array | DictEntry::NaturalInteger => true,
                 }
             }
-            None => match name.0.as_str() {
+            None => match name.string.as_str() {
                 "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64" | "I128" => {
                     true
                 }
@@ -97,7 +97,7 @@ fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
                 is_copy(&(new_t1.1).0, top_ctxt)
             }
             None => match arg {
-                None => match name.0.as_str() {
+                None => match name.string.as_str() {
                     "U8" | "U16" | "U32" | "U64" | "U128" | "I8" | "I16" | "I32" | "I64"
                     | "I128" => true,
                     _ => false,
@@ -355,9 +355,10 @@ fn unify_types(
                 ),
                 (BaseTyp::Named(name1, args1), BaseTyp::Named(name2, args2)) => {
                     let (name1, name2) = match (&name1.0, &name2.0) {
-                        (TopLevelIdent(name1), TopLevelIdent(name2)) => {
-                            (name1.clone(), name2.clone())
-                        }
+                        (
+                            TopLevelIdent { string: name1, .. },
+                            TopLevelIdent { string: name2, .. },
+                        ) => (name1.clone(), name2.clone()),
                     };
                     if name1 == name2 {
                         match (args1, args2) {
@@ -533,7 +534,7 @@ fn find_func(
         .iter()
         .filter_map(|(key2, sig)| match (key1, key2) {
             (FnKey::Independent(n1), FnKey::Independent(n2)) => match (n1, n2) {
-                (TopLevelIdent(n1), TopLevelIdent(n2)) => {
+                (TopLevelIdent { string: n1, .. }, TopLevelIdent { string: n2, .. }) => {
                     if n1 == n2 {
                         Some((HashMap::new(), sig))
                     } else {
@@ -557,7 +558,7 @@ fn find_func(
                 );
                 match unification {
                     Ok(Some(new_typ_ctx)) => match (n1, n2) {
-                        (TopLevelIdent(n1), TopLevelIdent(n2)) => {
+                        (TopLevelIdent { string: n1, .. }, TopLevelIdent { string: n2, .. }) => {
                             if n1 == n2 {
                                 Some((new_typ_ctx, sig))
                             } else {
@@ -582,7 +583,26 @@ fn find_func(
         sess.span_rustspec_err(*span, format!("function {} cannot be found", key1).as_str());
         return Err(());
     }
-    // If there are multiple candidates we just take the first one
+    // TODO: figure out why we need this
+    // https://github.com/hacspec/hacspec/issues/194
+    let candidates = if candidates.iter().all(|(_, candidate)| match candidate {
+        FnValue::ExternalNotInHacspec(_) => true,
+        _ => false,
+    }) {
+        // If all candidates are not in hacspec we return one
+        candidates
+    } else {
+        // If not we discard the not in hacspec candidates and return
+        // one in hacspec
+        candidates
+            .into_iter()
+            .filter(|(_, candidate)| match candidate {
+                FnValue::ExternalNotInHacspec(_) => false,
+                _ => true,
+            })
+            .collect()
+    };
+
     for (typ_ctx, sig) in candidates {
         return Ok((sig.clone(), typ_ctx));
     }
@@ -846,22 +866,22 @@ fn typecheck_expression(
                         // Then we finally proceed with typechecking the arm
                         // expression, for that we retrieve the type of this arm's
                         // payload
-                        let (case_index, case_typ) = match t_arg_cases
-                            .iter()
-                            .enumerate()
-                            .find(|(_, ((t_arg_case_name, _), _))| &arm_case.0 == t_arg_case_name)
-                        {
-                            Some((case_index, (_, t_arg_case_typ))) => {
-                                (case_index, t_arg_case_typ.clone())
-                            }
-                            None => {
-                                sess.span_rustspec_err(
-                                    arm_case.1.clone(),
-                                    format!("enum case not found for {}", arm_enum_name.0).as_str(),
-                                );
-                                return Err(());
-                            }
-                        };
+                        let (case_index, case_typ) =
+                            match t_arg_cases.iter().enumerate().find(
+                                |(_, ((t_arg_case_name, _), _))| &arm_case.0 == t_arg_case_name,
+                            ) {
+                                Some((case_index, (_, t_arg_case_typ))) => {
+                                    (case_index, t_arg_case_typ.clone())
+                                }
+                                None => {
+                                    sess.span_rustspec_err(
+                                        arm_case.1.clone(),
+                                        format!("enum case not found for {}", arm_enum_name.string)
+                                            .as_str(),
+                                    );
+                                    return Err(());
+                                }
+                            };
                         let case_typ = match case_typ {
                             Some(case_typ) => Some((
                                 bind_variable_type(sess, &case_typ, &typ_var_ctx)?,
@@ -1689,13 +1709,14 @@ fn typecheck_expression(
                 f_span,
             )?;
             let mut typ_var_ctx = typ_var_ctx;
-            if let FnValue::ExternalNotInHacspec(_) = f_sig {
+            if let FnValue::ExternalNotInHacspec(sig_str) = f_sig {
                 sess.span_rustspec_err(
                     *f_span,
                     format!(
-                        "function {}::{} is known but its signature is not in Hacspec",
+                        "function {}::{} is known but its signature is not in Hacspec: {}",
                         (sel_typ.1).0,
-                        f
+                        f,
+                        sig_str
                     )
                     .as_str(),
                 );
@@ -1889,21 +1910,20 @@ fn typecheck_pattern(
                         *pat_span,
                         format!(
                             "this pattern is matching the enum {} with multiple cases",
-                            pat_enum_name.0
+                            pat_enum_name
                         )
                         .as_str(),
                     );
                     return Err(());
                 }
                 let ((case_name, _), case_typ) = cases.into_iter().next().unwrap();
-                if case_name != pat_enum_name {
+                if case_name.string != pat_enum_name.string {
                     sess.span_rustspec_err(
                         *pat_span,
                         format!(
-                            "this pattern matches the enum {} with a single case {} instead of the wrapper struct {}",
-                            case_name.0,
-                            pat_enum_name.0,
-                            pat_enum_name.0
+                            "this pattern matches the enum {} with a single case instead of the wrapper struct {}",
+                            case_name,
+                            pat_enum_name,
                         )
                         .as_str(),
                     );
@@ -1915,7 +1935,7 @@ fn typecheck_pattern(
                             *pat_span,
                             format!(
                                 "this pattern is matching the enum {} with one case but no payload",
-                                pat_enum_name.0
+                                pat_enum_name
                             )
                             .as_str(),
                         );
@@ -1937,7 +1957,7 @@ fn typecheck_pattern(
                     *pat_span,
                     format!(
                         "let-binding pattern expected a {} struct but the type is {}",
-                        pat_enum_name.0, typ.0
+                        pat_enum_name, typ.0
                     )
                     .as_str(),
                 );
@@ -2054,14 +2074,59 @@ fn typecheck_question_mark(
         match expr_typ {
             (
                 (Borrowing::Consumed, _),
-                (BaseTyp::Named((TopLevelIdent(name), _), Some(args)), _),
+                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
+            ) if name == "Option" && args.len() == 1 => {
+                let some_typ = &args[0];
+                match return_typ {
+                    (
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: return_name,
+                                    ..
+                                },
+                                _,
+                            ),
+                            Some(return_args),
+                        ),
+                        _,
+                    ) if return_name == "Option" && return_args.len() == 1 => {
+                        expr_typ = ((Borrowing::Consumed, some_typ.1.clone()), some_typ.clone());
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            return_typ.1,
+                            format!(
+                                "expected a option type for this \
+                    return type because of a question mark in the function, got {}",
+                                return_typ.0,
+                            )
+                            .as_str(),
+                        );
+                        return Err(());
+                    }
+                }
+            }
+            (
+                (Borrowing::Consumed, _),
+                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
             ) if name == "Result" && args.len() == 2 => {
                 let ok_typ = &args[0];
                 let err_typ = &args[1];
                 match return_typ {
-                    (BaseTyp::Named((TopLevelIdent(return_name), _), Some(return_args)), _)
-                        if return_name == "Result" && return_args.len() == 2 =>
-                    {
+                    (
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: return_name,
+                                    ..
+                                },
+                                _,
+                            ),
+                            Some(return_args),
+                        ),
+                        _,
+                    ) if return_name == "Result" && return_args.len() == 2 => {
                         let err_typ_ret = &args[1];
                         match unify_types(
                             sess,
@@ -2123,6 +2188,20 @@ fn typecheck_question_mark(
     Ok(expr_typ)
 }
 
+fn early_return_type_from_return_type(
+    top_level_context: &TopLevelContext,
+    return_typ: BaseTyp,
+) -> Fillable<EarlyReturnType> {
+    match dealias_type(return_typ, top_level_context) {
+        BaseTyp::Named((a, _), _) => match a.string.as_str() {
+            "Option" => Some(EarlyReturnType::Option),
+            "Result" => Some(EarlyReturnType::Result),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -2142,18 +2221,24 @@ fn typecheck_statement(
                 expr.1.clone(),
                 top_level_context,
             )?;
-            match typ {
-                None => (),
-                Some((typ, _)) => {
-                    if unify_types(sess, typ, &expr_typ, &HashMap::new(), top_level_context)?
-                        .is_none()
+            let typ = match typ {
+                None => Some((expr_typ.clone(), expr.1.clone())),
+                Some((inner_typ, _)) => {
+                    if unify_types(
+                        sess,
+                        inner_typ,
+                        &expr_typ,
+                        &HashMap::new(),
+                        top_level_context,
+                    )?
+                    .is_none()
                     {
                         sess.span_rustspec_err(
                             *pat_span,
                             format!(
                                 "wrong type declared for variable: expected {}{}, found {}{}",
-                                (typ.0).0,
-                                (typ.1).0,
+                                (inner_typ.0).0,
+                                (inner_typ.1).0,
                                 (expr_typ.0).0,
                                 (expr_typ.1).0
                             )
@@ -2161,6 +2246,8 @@ fn typecheck_statement(
                         );
                         return Err(());
                     }
+
+                    typ.clone()
                 }
             };
             let pat_var_context = typecheck_pattern(
@@ -2389,6 +2476,8 @@ fn typecheck_statement(
                     new_b2,
                     Some(Box::new(MutatedInfo {
                         vars: new_mutated.clone(),
+                        early_return_type: early_return_type_from_return_type(top_level_context, return_typ.0.clone()),
+
                         stmt: mut_tuple,
                     })),
                 ),
@@ -2531,7 +2620,9 @@ fn typecheck_block(
         .retain(|mut_var| original_var_context.contains_key(&mut_var.id));
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
     let contains_question_mark = Some(new_stmts.iter().any(|s| match s {
-        (Statement::LetBinding(_, _, _, true), _) => true,
+        (Statement::Reassignment(_, _, true), _) | (Statement::LetBinding(_, _, _, true), _) => {
+            true
+        }
         (Statement::Conditional(_, then_b, else_b, _), _) => {
             then_b.0.contains_question_mark.unwrap()
                 || (match else_b {
@@ -2542,11 +2633,13 @@ fn typecheck_block(
         (Statement::ForLoop(_, _, _, loop_b), _) => loop_b.0.contains_question_mark.unwrap(),
         _ => false,
     }));
+
     Ok((
         Block {
             stmts: new_stmts,
             mutated: Some(Box::new(MutatedInfo {
                 vars: mutated_vars,
+                early_return_type: early_return_type_from_return_type(top_level_context, function_return_typ.0.clone()),
                 stmt: mut_tuple,
             })),
             return_typ,

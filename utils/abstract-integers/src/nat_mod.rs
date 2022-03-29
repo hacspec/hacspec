@@ -138,6 +138,16 @@ macro_rules! modular_integer {
                 let x: $base = self.into();
                 x.comp_lt(rhs.into()).into()
             }
+
+            /// Negate the value modulo max: `mod_value - self`
+            #[inline]
+            pub fn neg(self) -> Self {
+                let mod_val: BigInt = $max.into();
+                let s: $base = self.into();
+                let s: BigInt = s.into();
+                let result: $base = mod_val.sub(s).into();
+                result.into()
+            }
         }
     };
 }

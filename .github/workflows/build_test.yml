@@ -18,11 +18,11 @@ jobs:
           submodules: true
       - name: Build
         run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+      - name: Run library tests
+        run: cargo test --verbose -p hacspec-lib
       - name: Test Provider
         run: cargo test --verbose -p rc-tests
       - name: Get hacspec function stats
-        run: RUST_NIGHTLY=nightly-2021-06-15 ./lib/get_func_stats.sh
+        run: RUST_NIGHTLY=nightly-2021-11-14 ./lib/get_func_stats.sh
       - name: Build and test Hacspec compiler
-        run: cargo clean && cargo build -p hacspec-lib &&  cd language && cargo test --verbose
+        run: cargo clean && cargo build -p hacspec-lib && cd language && cargo test --verbose
