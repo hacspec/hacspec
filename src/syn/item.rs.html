@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;syn-1.0.89&#x2F;src&#x2F;item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../syn/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;syn-1.0.90&#x2F;src&#x2F;item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../syn/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -3319,26 +3319,6 @@
 <span id="3319">3319</span>
 <span id="3320">3320</span>
 <span id="3321">3321</span>
-<span id="3322">3322</span>
-<span id="3323">3323</span>
-<span id="3324">3324</span>
-<span id="3325">3325</span>
-<span id="3326">3326</span>
-<span id="3327">3327</span>
-<span id="3328">3328</span>
-<span id="3329">3329</span>
-<span id="3330">3330</span>
-<span id="3331">3331</span>
-<span id="3332">3332</span>
-<span id="3333">3333</span>
-<span id="3334">3334</span>
-<span id="3335">3335</span>
-<span id="3336">3336</span>
-<span id="3337">3337</span>
-<span id="3338">3338</span>
-<span id="3339">3339</span>
-<span id="3340">3340</span>
-<span id="3341">3341</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::derive</span>::{<span class="ident">Data</span>, <span class="ident">DataEnum</span>, <span class="ident">DataStruct</span>, <span class="ident">DataUnion</span>, <span class="ident">DeriveInput</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::punctuated::Punctuated</span>;
@@ -3358,6 +3338,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: Expr#syntax-tree-enums</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">syn_no_non_exhaustive</span>), <span class="ident">non_exhaustive</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Item</span> {
         <span class="doccomment">/// A constant item: `const MAX: u16 = 65535`.</span>
         <span class="ident">Const</span>(<span class="ident">ItemConst</span>),
@@ -3412,18 +3393,17 @@
         <span class="doccomment">/// Tokens forming an item not interpreted by Syn.</span>
         <span class="ident">Verbatim</span>(<span class="ident">TokenStream</span>),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of</span>
-        <span class="comment">// this enum.</span>
+        <span class="comment">// Not public API.</span>
         <span class="comment">//</span>
-        <span class="comment">//     match expr {</span>
-        <span class="comment">//         Item::Const(e) =&gt; {...}</span>
-        <span class="comment">//         Item::Enum(e) =&gt; {...}</span>
+        <span class="comment">// For testing exhaustiveness in downstream code, use the following idiom:</span>
+        <span class="comment">//</span>
+        <span class="comment">//     match item {</span>
+        <span class="comment">//         Item::Const(item) =&gt; {...}</span>
+        <span class="comment">//         Item::Enum(item) =&gt; {...}</span>
         <span class="comment">//         ...</span>
-        <span class="comment">//         Item::Verbatim(e) =&gt; {...}</span>
+        <span class="comment">//         Item::Verbatim(item) =&gt; {...}</span>
         <span class="comment">//</span>
-        <span class="comment">//         #[cfg(test)]</span>
-        <span class="comment">//         Item::__TestExhaustive(_) =&gt; unimplemented!(),</span>
-        <span class="comment">//         #[cfg(not(test))]</span>
+        <span class="comment">//         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]</span>
         <span class="comment">//         _ =&gt; { /* some sane fallback */ }</span>
         <span class="comment">//     }</span>
         <span class="comment">//</span>
@@ -3431,12 +3411,9 @@
         <span class="comment">// a variant. You will be notified by a test failure when a variant is</span>
         <span class="comment">// added, so that you can add code to handle it, but your library will</span>
         <span class="comment">// continue to compile and work for downstream users in the interim.</span>
-        <span class="comment">//</span>
-        <span class="comment">// Once `deny(reachable)` is available in rustc, Item will be</span>
-        <span class="comment">// reimplemented as a non_exhaustive enum.</span>
-        <span class="comment">// https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-        <span class="ident">__TestExhaustive</span>(<span class="ident"><span class="kw">crate</span>::private</span>),
+        <span class="ident">__NonExhaustive</span>,
     }
 }
 
@@ -3722,9 +3699,7 @@
             <span class="op">|</span> <span class="ident">Item::Macro2</span>(<span class="ident">ItemMacro2</span> { <span class="ident">attrs</span>, .. }) =&gt; <span class="ident">mem::replace</span>(<span class="ident">attrs</span>, <span class="ident">new</span>),
             <span class="ident">Item::Verbatim</span>(<span class="kw">_</span>) =&gt; <span class="ident">Vec::new</span>(),
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-            <span class="ident">Item::__TestExhaustive</span>(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
             <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
         }
     }
@@ -3905,6 +3880,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: Expr#syntax-tree-enums</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">syn_no_non_exhaustive</span>), <span class="ident">non_exhaustive</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ForeignItem</span> {
         <span class="doccomment">/// A foreign function in an `extern` block.</span>
         <span class="ident">Fn</span>(<span class="ident">ForeignItemFn</span>),
@@ -3921,18 +3897,17 @@
         <span class="doccomment">/// Tokens in an `extern` block not interpreted by Syn.</span>
         <span class="ident">Verbatim</span>(<span class="ident">TokenStream</span>),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of</span>
-        <span class="comment">// this enum.</span>
+        <span class="comment">// Not public API.</span>
         <span class="comment">//</span>
-        <span class="comment">//     match expr {</span>
-        <span class="comment">//         ForeignItem::Fn(e) =&gt; {...}</span>
-        <span class="comment">//         ForeignItem::Static(e) =&gt; {...}</span>
+        <span class="comment">// For testing exhaustiveness in downstream code, use the following idiom:</span>
+        <span class="comment">//</span>
+        <span class="comment">//     match item {</span>
+        <span class="comment">//         ForeignItem::Fn(item) =&gt; {...}</span>
+        <span class="comment">//         ForeignItem::Static(item) =&gt; {...}</span>
         <span class="comment">//         ...</span>
-        <span class="comment">//         ForeignItem::Verbatim(e) =&gt; {...}</span>
+        <span class="comment">//         ForeignItem::Verbatim(item) =&gt; {...}</span>
         <span class="comment">//</span>
-        <span class="comment">//         #[cfg(test)]</span>
-        <span class="comment">//         ForeignItem::__TestExhaustive(_) =&gt; unimplemented!(),</span>
-        <span class="comment">//         #[cfg(not(test))]</span>
+        <span class="comment">//         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]</span>
         <span class="comment">//         _ =&gt; { /* some sane fallback */ }</span>
         <span class="comment">//     }</span>
         <span class="comment">//</span>
@@ -3940,12 +3915,9 @@
         <span class="comment">// a variant. You will be notified by a test failure when a variant is</span>
         <span class="comment">// added, so that you can add code to handle it, but your library will</span>
         <span class="comment">// continue to compile and work for downstream users in the interim.</span>
-        <span class="comment">//</span>
-        <span class="comment">// Once `deny(reachable)` is available in rustc, ForeignItem will be</span>
-        <span class="comment">// reimplemented as a non_exhaustive enum.</span>
-        <span class="comment">// https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-        <span class="ident">__TestExhaustive</span>(<span class="ident"><span class="kw">crate</span>::private</span>),
+        <span class="ident">__NonExhaustive</span>,
     }
 }
 
@@ -4016,6 +3988,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: Expr#syntax-tree-enums</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">syn_no_non_exhaustive</span>), <span class="ident">non_exhaustive</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TraitItem</span> {
         <span class="doccomment">/// An associated constant within the definition of a trait.</span>
         <span class="ident">Const</span>(<span class="ident">TraitItemConst</span>),
@@ -4032,18 +4005,17 @@
         <span class="doccomment">/// Tokens within the definition of a trait not interpreted by Syn.</span>
         <span class="ident">Verbatim</span>(<span class="ident">TokenStream</span>),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of</span>
-        <span class="comment">// this enum.</span>
+        <span class="comment">// Not public API.</span>
         <span class="comment">//</span>
-        <span class="comment">//     match expr {</span>
-        <span class="comment">//         TraitItem::Const(e) =&gt; {...}</span>
-        <span class="comment">//         TraitItem::Method(e) =&gt; {...}</span>
+        <span class="comment">// For testing exhaustiveness in downstream code, use the following idiom:</span>
+        <span class="comment">//</span>
+        <span class="comment">//     match item {</span>
+        <span class="comment">//         TraitItem::Const(item) =&gt; {...}</span>
+        <span class="comment">//         TraitItem::Method(item) =&gt; {...}</span>
         <span class="comment">//         ...</span>
-        <span class="comment">//         TraitItem::Verbatim(e) =&gt; {...}</span>
+        <span class="comment">//         TraitItem::Verbatim(item) =&gt; {...}</span>
         <span class="comment">//</span>
-        <span class="comment">//         #[cfg(test)]</span>
-        <span class="comment">//         TraitItem::__TestExhaustive(_) =&gt; unimplemented!(),</span>
-        <span class="comment">//         #[cfg(not(test))]</span>
+        <span class="comment">//         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]</span>
         <span class="comment">//         _ =&gt; { /* some sane fallback */ }</span>
         <span class="comment">//     }</span>
         <span class="comment">//</span>
@@ -4051,12 +4023,9 @@
         <span class="comment">// a variant. You will be notified by a test failure when a variant is</span>
         <span class="comment">// added, so that you can add code to handle it, but your library will</span>
         <span class="comment">// continue to compile and work for downstream users in the interim.</span>
-        <span class="comment">//</span>
-        <span class="comment">// Once `deny(reachable)` is available in rustc, TraitItem will be</span>
-        <span class="comment">// reimplemented as a non_exhaustive enum.</span>
-        <span class="comment">// https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-        <span class="ident">__TestExhaustive</span>(<span class="ident"><span class="kw">crate</span>::private</span>),
+        <span class="ident">__NonExhaustive</span>,
     }
 }
 
@@ -4129,6 +4098,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: Expr#syntax-tree-enums</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">doc_cfg</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;full&quot;</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">syn_no_non_exhaustive</span>), <span class="ident">non_exhaustive</span>)]</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ImplItem</span> {
         <span class="doccomment">/// An associated constant within an impl block.</span>
         <span class="ident">Const</span>(<span class="ident">ImplItemConst</span>),
@@ -4145,18 +4115,17 @@
         <span class="doccomment">/// Tokens within an impl block not interpreted by Syn.</span>
         <span class="ident">Verbatim</span>(<span class="ident">TokenStream</span>),
 
-        <span class="comment">// The following is the only supported idiom for exhaustive matching of</span>
-        <span class="comment">// this enum.</span>
+        <span class="comment">// Not public API.</span>
         <span class="comment">//</span>
-        <span class="comment">//     match expr {</span>
-        <span class="comment">//         ImplItem::Const(e) =&gt; {...}</span>
-        <span class="comment">//         ImplItem::Method(e) =&gt; {...}</span>
+        <span class="comment">// For testing exhaustiveness in downstream code, use the following idiom:</span>
+        <span class="comment">//</span>
+        <span class="comment">//     match item {</span>
+        <span class="comment">//         ImplItem::Const(item) =&gt; {...}</span>
+        <span class="comment">//         ImplItem::Method(item) =&gt; {...}</span>
         <span class="comment">//         ...</span>
-        <span class="comment">//         ImplItem::Verbatim(e) =&gt; {...}</span>
+        <span class="comment">//         ImplItem::Verbatim(item) =&gt; {...}</span>
         <span class="comment">//</span>
-        <span class="comment">//         #[cfg(test)]</span>
-        <span class="comment">//         ImplItem::__TestExhaustive(_) =&gt; unimplemented!(),</span>
-        <span class="comment">//         #[cfg(not(test))]</span>
+        <span class="comment">//         #[cfg_attr(test, deny(non_exhaustive_omitted_patterns))]</span>
         <span class="comment">//         _ =&gt; { /* some sane fallback */ }</span>
         <span class="comment">//     }</span>
         <span class="comment">//</span>
@@ -4164,12 +4133,9 @@
         <span class="comment">// a variant. You will be notified by a test failure when a variant is</span>
         <span class="comment">// added, so that you can add code to handle it, but your library will</span>
         <span class="comment">// continue to compile and work for downstream users in the interim.</span>
-        <span class="comment">//</span>
-        <span class="comment">// Once `deny(reachable)` is available in rustc, ImplItem will be</span>
-        <span class="comment">// reimplemented as a non_exhaustive enum.</span>
-        <span class="comment">// https://github.com/rust-lang/rust/issues/44109#issuecomment-521781237</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
         <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-        <span class="ident">__TestExhaustive</span>(<span class="ident"><span class="kw">crate</span>::private</span>),
+        <span class="ident">__NonExhaustive</span>,
     }
 }
 
@@ -5169,9 +5135,7 @@
                 <span class="ident">ForeignItem::Macro</span>(<span class="ident">item</span>) =&gt; <span class="kw-2">&amp;mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                 <span class="ident">ForeignItem::Verbatim</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">item</span>),
 
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-                <span class="ident">ForeignItem::__TestExhaustive</span>(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
                 <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
             };
             <span class="ident">attrs</span>.<span class="ident">append</span>(<span class="ident">item_attrs</span>);
@@ -5605,9 +5569,7 @@
                 <span class="ident">TraitItem::Macro</span>(<span class="ident">item</span>) =&gt; <span class="kw-2">&amp;mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                 <span class="ident">TraitItem::Verbatim</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
 
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-                <span class="ident">TraitItem::__TestExhaustive</span>(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
                 <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
             };
             <span class="ident">attrs</span>.<span class="ident">append</span>(<span class="ident">item_attrs</span>);
@@ -5948,9 +5910,7 @@
                     <span class="ident">ImplItem::Macro</span>(<span class="ident">item</span>) =&gt; <span class="kw-2">&amp;mut</span> <span class="ident">item</span>.<span class="ident">attrs</span>,
                     <span class="ident">ImplItem::Verbatim</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">item</span>),
 
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-                    <span class="ident">ImplItem::__TestExhaustive</span>(<span class="kw">_</span>) =&gt; <span class="macro">unimplemented!</span>(),
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">syn_no_non_exhaustive</span>)]</span>
                     <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                 };
                 <span class="ident">attrs</span>.<span class="ident">append</span>(<span class="ident">item_attrs</span>);
