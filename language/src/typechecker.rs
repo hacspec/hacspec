@@ -294,7 +294,7 @@ fn unify_types(
                     typ_ctx,
                     top_ctx,
                 );
-            }
+            },
             _ => (),
         },
         _ => (),
@@ -329,6 +329,7 @@ fn unify_types(
         },
         _ => (),
     }
+    
     match (&(t1.0).0, &(t2.0).0) {
         (Borrowing::Consumed, Borrowing::Consumed) | (Borrowing::Borrowed, Borrowing::Borrowed) => {
             match (&(t1.1).0, &(t2.1).0) {
@@ -1571,7 +1572,7 @@ fn typecheck_expression(
                 Err(())
             }
         }
-        Expression::FuncCall(prefix, name, args) => {
+        Expression::FuncCall(prefix, name, args, _arg_types) => {
             let (f_sig, typ_var_ctx) = find_func(
                 sess,
                 &match prefix {
@@ -1613,15 +1614,17 @@ fn typecheck_expression(
             }
             let mut var_context = var_context.clone();
             let mut new_args = Vec::new();
+            let mut new_arg_types = Vec::new();
             for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
                 sig_args.iter().zip(args)
-            {
+            {   
                 let (new_arg, arg_t, new_var_context) = typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
                     top_level_context,
                     &var_context,
                 )?;
+                
                 let new_arg_t = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
@@ -1651,10 +1654,12 @@ fn typecheck_expression(
                         arg_t.clone()
                     }
                 };
+                
                 new_args.push((
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
+                new_arg_types.push(new_arg_t.1.0.clone());
                 match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, top_level_context)? {
                     None => {
                         sess.span_rustspec_err(
@@ -1687,7 +1692,7 @@ fn typecheck_expression(
                     }
                 };
             Ok((
-                Expression::FuncCall(prefix.clone(), name.clone(), new_args),
+                Expression::FuncCall(prefix.clone(), name.clone(), new_args, Some(new_arg_types)),
                 (
                     (Borrowing::Consumed, name.1.clone()),
                     (ret_ty, name.1.clone()),
@@ -1695,7 +1700,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::MethodCall(sel, _, (f, f_span), orig_args) => {
+        Expression::MethodCall(sel, _, (f, f_span), orig_args, _args_types) => {
             let (sel, sel_borrow) = sel.as_ref();
             let mut var_context = var_context.clone();
             // We omit to take the new var context because it will be retypechecked later, this
@@ -1739,6 +1744,7 @@ fn typecheck_expression(
             args.push((sel.clone(), new_sel_borrow.clone()));
             args.extend(orig_args.clone());
             let mut new_args = Vec::new();
+            let mut new_arg_types = Vec::new();
             if sig_args.len() != args.len() {
                 sess.span_rustspec_err(
                     *span,
@@ -1794,6 +1800,7 @@ fn typecheck_expression(
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
+                new_arg_types.push(new_arg_t.1.0.clone());
                 match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, top_level_context)? {
                     None => {
                         sess.span_rustspec_err(
@@ -1814,6 +1821,7 @@ fn typecheck_expression(
             }
             let new_sel = new_args.first().unwrap().clone();
             new_args = new_args[1..].to_vec();
+            new_arg_types = new_arg_types[1..].to_vec();
             let ret_ty = sig_ret(&f_sig);
             let ret_ty = bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx)?;
             Ok((
@@ -1822,6 +1830,7 @@ fn typecheck_expression(
                     Some(sel_typ),
                     (f.clone(), f_span.clone()),
                     new_args,
+                    Some(new_arg_types),
                 ),
                 (
                     (Borrowing::Consumed, f_span.clone()),
