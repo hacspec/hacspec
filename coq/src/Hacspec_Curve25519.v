@@ -41,7 +41,7 @@ Definition mask_scalar
 Definition decode_scalar (s_2 : x25519_serialized_scalar_t) : scalar_t :=
   let k_3 : x25519_serialized_scalar_t :=
     mask_scalar (s_2) in 
-  nat_mod_from_byte_seq_le (k_3) : scalar_t.
+  nat_mod_from_byte_seq_le (array_to_seq (k_3)) : scalar_t.
 
 Definition decode_point (u_4 : x25519_serialized_point_t) : point_t :=
   let u_5 : x25519_serialized_point_t :=
@@ -50,7 +50,7 @@ Definition decode_point (u_4 : x25519_serialized_point_t) : point_t :=
     array_upd u_5 (usize 31) ((array_index (u_5) (usize 31)) .& (secret (
           @repr WORDSIZE8 127) : int8)) in 
   (
-    nat_mod_from_byte_seq_le (u_5) : x25519_field_element_t,
+    nat_mod_from_byte_seq_le (array_to_seq (u_5)) : x25519_field_element_t,
     nat_mod_from_literal (
       0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed) (
       @repr WORDSIZE128 1) : x25519_field_element_t

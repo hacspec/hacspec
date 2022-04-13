@@ -28,7 +28,7 @@ Notation "'poly_state_t'" := ((field_element_t × field_element_t × poly_key_t
 
 Definition poly1305_encode_r (b_0 : poly_block_t) : field_element_t :=
   let n_1 : uint128 :=
-    uint128_from_le_bytes (array_from_seq (16) (b_0)) in 
+    uint128_from_le_bytes (array_from_seq (16) (array_to_seq (b_0))) in 
   let n_1 :=
     (n_1) .& (secret (
         @repr WORDSIZE128 21267647620597763993911028882763415551) : int128) in 
@@ -36,7 +36,7 @@ Definition poly1305_encode_r (b_0 : poly_block_t) : field_element_t :=
 
 Definition poly1305_encode_block (b_2 : poly_block_t) : field_element_t :=
   let n_3 : uint128 :=
-    uint128_from_le_bytes (array_from_seq (16) (b_2)) in 
+    uint128_from_le_bytes (array_from_seq (16) (array_to_seq (b_2))) in 
   let f_4 : field_element_t :=
     nat_mod_from_secret_literal (n_3) in 
   (f_4) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (
@@ -56,8 +56,8 @@ Definition poly1305_encode_last
 
 Definition poly1305_init (k_9 : poly_key_t) : poly_state_t :=
   let r_10 : field_element_t :=
-    poly1305_encode_r (array_from_slice (default) (16) (k_9) (usize 0) (
-        usize 16)) in 
+    poly1305_encode_r (array_from_slice (default) (16) (array_to_seq (k_9)) (
+        usize 0) (usize 16)) in 
   (nat_mod_zero , r_10, k_9).
 
 Definition poly1305_update_block
@@ -120,14 +120,14 @@ Definition poly1305_finish (st_33 : poly_state_t) : poly1305_tag_t :=
   let '(acc_34, _, k_35) :=
     st_33 in 
   let n_36 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (k_35) (usize 16) (
-        usize 16)) in 
+    uint128_from_le_bytes (array_from_slice (default) (16) (
+        array_to_seq (k_35)) (usize 16) (usize 16)) in 
   let aby_37 : seq uint8 :=
     nat_mod_to_byte_seq_le (acc_34) in 
   let a_38 : uint128 :=
     uint128_from_le_bytes (array_from_slice (default) (16) (aby_37) (usize 0) (
         usize 16)) in 
-  array_from_seq (16) (uint128_to_le_bytes ((a_38) .+ (n_36))).
+  array_from_seq (16) (array_to_seq (uint128_to_le_bytes ((a_38) .+ (n_36)))).
 
 Definition poly1305 (m_39 : byte_seq) (key_40 : poly_key_t) : poly1305_tag_t :=
   let st_41 : (field_element_t × field_element_t × poly_key_t) :=

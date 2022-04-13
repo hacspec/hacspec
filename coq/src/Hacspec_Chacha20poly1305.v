@@ -27,7 +27,8 @@ Definition init
   let key_block0_2 : block_t :=
     chacha20_key_block0 (key_0) (iv_1) in 
   let poly_key_3 : poly_key_t :=
-    array_from_slice (default) (32) (key_block0_2) (usize 0) (usize 32) in 
+    array_from_slice (default) (32) (array_to_seq (key_block0_2)) (usize 0) (
+      usize 32) in 
   poly1305_init (poly_key_3).
 
 Definition poly1305_update_padded
@@ -48,11 +49,11 @@ Definition finish
   let last_block_11 : poly_block_t :=
     array_new_ (default) (16) in 
   let last_block_11 :=
-    array_update (last_block_11) (usize 0) (uint64_to_le_bytes (secret (
-          pub_u64 (aad_len_8)) : int64)) in 
+    array_update (last_block_11) (usize 0) (array_to_seq (uint64_to_le_bytes (
+        secret (pub_u64 (aad_len_8)) : int64))) in 
   let last_block_11 :=
-    array_update (last_block_11) (usize 8) (uint64_to_le_bytes (secret (
-          pub_u64 (cipher_len_9)) : int64)) in 
+    array_update (last_block_11) (usize 8) (array_to_seq (uint64_to_le_bytes (
+        secret (pub_u64 (cipher_len_9)) : int64))) in 
   let st_12 : (field_element_t × field_element_t × poly_key_t) :=
     poly1305_update_block (last_block_11) (st_10) in 
   poly1305_finish (st_12).
