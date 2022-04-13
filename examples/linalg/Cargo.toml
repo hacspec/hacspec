@@ -1,0 +1,16 @@
+[package]
+name = "hacspec-linalg"
+version = "0.1.0"
+authors = ["Rasmus Kirk <mail@rasmuskirk.com>"]
+edition = "2018"
+
+[lib]
+path = "src/linalg.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+
+[dev-dependencies]
+hacspec-dev = { path = "../../utils/dev" }
+quickcheck = "1"
+nalgebra = "0.30"
