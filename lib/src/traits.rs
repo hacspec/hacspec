@@ -166,7 +166,7 @@ pub trait Numeric:
     + Not<Output = Self>
     + Default
     + Clone
-    + Debug
+    // + Debug
 {
     /// Return largest value that can be represented.
     fn max_val() -> Self;

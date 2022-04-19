@@ -68,8 +68,8 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            pub fn concat<A: SeqTrait<$t>>(&self, next: &A) -> Seq<$t> {
-                let mut out = Seq::new(self.len() + next.len());
+            pub fn concat<A: SeqTrait<$t>>(&self, next: &A) -> crate::seq::Seq<$t> {
+                let mut out = crate::seq::Seq::new(self.len() + next.len());
                 out = out.update_start(self);
                 out = out.update_slice(self.len(), next, 0, next.len());
                 out
@@ -81,12 +81,12 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            pub fn slice(&self, start_out: usize, len: usize) -> Seq<$t> {
-                Seq::from_slice(self, start_out, len)
+            pub fn slice(&self, start_out: usize, len: usize) -> crate::seq::Seq<$t> {
+                crate::seq::Seq::from_slice(self, start_out, len)
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            pub fn slice_range(&self, r: Range<usize>) -> Seq<$t> {
+            pub fn slice_range(&self, r: Range<usize>) -> crate::seq::Seq<$t> {
                 self.slice(r.start, r.end - r.start)
             }
 
@@ -106,7 +106,7 @@ macro_rules! _array_base {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            pub fn get_chunk(&self, chunk_size: usize, chunk_number: usize) -> (usize, Seq<$t>) {
+            pub fn get_chunk(&self, chunk_size: usize, chunk_number: usize) -> (usize, crate::seq::Seq<$t>) {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 let out = self.slice(idx_start, len);
@@ -149,6 +149,12 @@ macro_rules! _array_base {
             fn len(&self) -> usize {
                 $l
             }
+            #[cfg(feature = "std")]
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn iter(&self) -> core::slice::Iter<$t> {
+                self.0.iter()
+            }
+            #[cfg(not(feature = "std"))]
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             fn iter(&self) -> core::slice::Iter<$t> {
                 self.0.iter()
@@ -197,45 +203,45 @@ macro_rules! _array_base {
             }
         }
 
-        impl Index<u8> for $name {
-            type Output = $t;
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            fn index(&self, i: u8) -> &$t {
-                &self.0[i as usize]
-            }
-        }
-        impl IndexMut<u8> for $name {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn index_mut(&mut self, i: u8) -> &mut $t {
-                &mut self.0[i as usize]
-            }
-        }
-        impl Index<u32> for $name {
-            type Output = $t;
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            fn index(&self, i: u32) -> &$t {
-                &self.0[i as usize]
-            }
-        }
-        impl IndexMut<u32> for $name {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn index_mut(&mut self, i: u32) -> &mut $t {
-                &mut self.0[i as usize]
-            }
-        }
-        impl Index<i32> for $name {
-            type Output = $t;
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            fn index(&self, i: i32) -> &$t {
-                &self.0[i as usize]
-            }
-        }
-        impl IndexMut<i32> for $name {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn index_mut(&mut self, i: i32) -> &mut $t {
-                &mut self.0[i as usize]
-            }
-        }
+        // impl Index<u8> for $name {
+        //     type Output = $t;
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     fn index(&self, i: u8) -> &$t {
+        //         &self.0[i as usize]
+        //     }
+        // }
+        // impl IndexMut<u8> for $name {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     fn index_mut(&mut self, i: u8) -> &mut $t {
+        //         &mut self.0[i as usize]
+        //     }
+        // }
+        // impl Index<u32> for $name {
+        //     type Output = $t;
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     fn index(&self, i: u32) -> &$t {
+        //         &self.0[i as usize]
+        //     }
+        // }
+        // impl IndexMut<u32> for $name {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     fn index_mut(&mut self, i: u32) -> &mut $t {
+        //         &mut self.0[i as usize]
+        //     }
+        // }
+        // impl Index<i32> for $name {
+        //     type Output = $t;
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     fn index(&self, i: i32) -> &$t {
+        //         &self.0[i as usize]
+        //     }
+        // }
+        // impl IndexMut<i32> for $name {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     fn index_mut(&mut self, i: i32) -> &mut $t {
+        //         &mut self.0[i as usize]
+        //     }
+        // }
         impl Index<RangeFull> for $name {
             type Output = [$t];
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
@@ -268,6 +274,16 @@ macro_rules! _array_base {
         }
 
         impl $name {
+            #[cfg(feature = "std")]
+            fn hex_string_to_vec(s: &str) -> Vec<$t> {
+                debug_assert!(s.len() % core::mem::size_of::<$t>() == 0);
+                let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
+                    .step_by(2)
+                    .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map(<$t>::from))
+                    .collect();
+                b.expect("Error parsing hex string")
+            }
+            #[cfg(not(feature = "std"))]
             fn hex_string_to_vec(s: &str) -> Vec<$t> {
                 debug_assert!(s.len() % core::mem::size_of::<$t>() == 0);
                 let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
@@ -277,6 +293,7 @@ macro_rules! _array_base {
                 b.expect("Error parsing hex string")
             }
 
+            
             /// Read hex string to Bytes.
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn from_hex(s: &str) -> $name {
@@ -340,8 +357,8 @@ macro_rules! generic_array {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> Seq<T> {
-                let mut out = Seq::new(self.len() + next.len());
+            pub fn concat<A: SeqTrait<T>>(&self, next: &A) -> crate::seq::Seq<T> {
+                let mut out = crate::seq::Seq::new(self.len() + next.len());
                 out = out.update_start(self);
                 out = out.update_slice(self.len(), next, 0, next.len());
                 out
@@ -353,12 +370,12 @@ macro_rules! generic_array {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            pub fn slice(&self, start_out: usize, len: usize) -> Seq<T> {
-                Seq::from_slice(self, start_out, len)
+            pub fn slice(&self, start_out: usize, len: usize) -> crate::seq::Seq<T> {
+                crate::seq::Seq::from_slice(self, start_out, len)
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            pub fn slice_range(&self, r: Range<usize>) -> Seq<T> {
+            pub fn slice_range(&self, r: Range<usize>) -> crate::seq::Seq<T> {
                 self.slice(r.start, r.end - r.start)
             }
 
@@ -378,7 +395,7 @@ macro_rules! generic_array {
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            pub fn get_chunk(&self, chunk_size: usize, chunk_number: usize) -> (usize, Seq<T>) {
+            pub fn get_chunk(&self, chunk_size: usize, chunk_number: usize) -> (usize, crate::seq::Seq<T>) {
                 let idx_start = chunk_size * chunk_number;
                 let len = self.get_chunk_len(chunk_size, chunk_number);
                 let out = self.slice(idx_start, len);
@@ -421,6 +438,12 @@ macro_rules! generic_array {
             fn len(&self) -> usize {
                 $l
             }
+            #[cfg(feature = "std")]
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn iter(&self) -> core::slice::Iter<T> {
+                self.0.iter()
+            }
+            #[cfg(not(feature = "std"))]
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             fn iter(&self) -> core::slice::Iter<T> {
                 self.0.iter()
@@ -469,45 +492,45 @@ macro_rules! generic_array {
             }
         }
 
-        impl<T: Numeric + Copy> Index<u8> for $name<T> {
-            type Output = T;
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            fn index(&self, i: u8) -> &T {
-                &self.0[i as usize]
-            }
-        }
-        impl<T: Numeric + Copy> IndexMut<u8> for $name<T> {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn index_mut(&mut self, i: u8) -> &mut T {
-                &mut self.0[i as usize]
-            }
-        }
-        impl<T: Numeric + Copy> Index<u32> for $name<T> {
-            type Output = T;
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            fn index(&self, i: u32) -> &T {
-                &self.0[i as usize]
-            }
-        }
-        impl<T: Numeric + Copy> IndexMut<u32> for $name<T> {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn index_mut(&mut self, i: u32) -> &mut T {
-                &mut self.0[i as usize]
-            }
-        }
-        impl<T: Numeric + Copy> Index<i32> for $name<T> {
-            type Output = T;
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            fn index(&self, i: i32) -> &T {
-                &self.0[i as usize]
-            }
-        }
-        impl<T: Numeric + Copy> IndexMut<i32> for $name<T> {
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn index_mut(&mut self, i: i32) -> &mut T {
-                &mut self.0[i as usize]
-            }
-        }
+        // impl<T: Numeric + Copy> Index<u8> for $name<T> {
+        //     type Output = T;
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     fn index(&self, i: u8) -> &T {
+        //         &self.0[i as usize]
+        //     }
+        // }
+        // impl<T: Numeric + Copy> IndexMut<u8> for $name<T> {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     fn index_mut(&mut self, i: u8) -> &mut T {
+        //         &mut self.0[i as usize]
+        //     }
+        // }
+        // impl<T: Numeric + Copy> Index<u32> for $name<T> {
+        //     type Output = T;
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     fn index(&self, i: u32) -> &T {
+        //         &self.0[i as usize]
+        //     }
+        // }
+        // impl<T: Numeric + Copy> IndexMut<u32> for $name<T> {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     fn index_mut(&mut self, i: u32) -> &mut T {
+        //         &mut self.0[i as usize]
+        //     }
+        // }
+        // impl<T: Numeric + Copy> Index<i32> for $name<T> {
+        //     type Output = T;
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     fn index(&self, i: i32) -> &T {
+        //         &self.0[i as usize]
+        //     }
+        // }
+        // impl<T: Numeric + Copy> IndexMut<i32> for $name<T> {
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     fn index_mut(&mut self, i: i32) -> &mut T {
+        //         &mut self.0[i as usize]
+        //     }
+        // }
         impl<T: Numeric + Copy> Index<RangeFull> for $name<T> {
             type Output = [T];
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
@@ -539,6 +562,7 @@ macro_rules! generic_array {
             }
         }
 
+        #[cfg(feature = "hacspec")]
         /// **Warning:** declassifies secret integer types.
         impl<T: Numeric + Copy> fmt::Debug for $name<T> {
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
@@ -557,6 +581,7 @@ macro_rules! _secret_array {
     ($name:ident,$l:expr,$t:ty, $tbase:ty) => {
         _array_base!($name, $l, $t);
 
+        #[cfg(feature = "hacspec")]
         /// **Warning:** declassifies secret integer types.
         impl fmt::Debug for $name {
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
@@ -584,9 +609,9 @@ macro_rules! _secret_array {
         }
         impl $name {
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_be_bytes(&self) -> Seq<U8> {
+            pub fn to_be_bytes(&self) -> crate::seq::Seq<U8> {
                 const FACTOR: usize = core::mem::size_of::<$t>();
-                let mut out: Seq<U8> = Seq::new($l * FACTOR);
+                let mut out: crate::seq::Seq<U8> = crate::seq::Seq::new($l * FACTOR);
                 for i in 0..$l {
                     let tmp: $t = self[i];
                     let tmp = <$t>::to_be_bytes(&[tmp]);
@@ -598,9 +623,9 @@ macro_rules! _secret_array {
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_le_bytes(&self) -> Seq<U8> {
+            pub fn to_le_bytes(&self) -> crate::seq::Seq<U8> {
                 const FACTOR: usize = core::mem::size_of::<$t>();
-                let mut out: Seq<U8> = Seq::new($l * FACTOR);
+                let mut out: crate::seq::Seq<U8> = crate::seq::Seq::new($l * FACTOR);
                 for i in 0..$l {
                     let tmp: $t = self[i];
                     let tmp = <$t>::to_le_bytes(&[tmp]);
@@ -637,7 +662,7 @@ macro_rules! _secret_array {
             /// # Examples
             ///
             /// ```
-            /// use hacspec_lib::prelude::*;
+            /// use crate::prelude::*;
             ///
             /// bytes!(Block, 5);
             /// let b = Block::from_public_array([1, 2, 3, 4, 5]);
@@ -677,6 +702,7 @@ macro_rules! _public_array {
             }
         }
 
+        #[cfg(feature = "hacspec")]
         impl fmt::Debug for $name {
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -702,8 +728,8 @@ macro_rules! _implement_secret_u8_array {
         impl $name {
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_be_U32s(&self) -> Seq<U32> {
-                let mut out = Seq::new($l / 4);
+            pub fn to_be_U32s(&self) -> crate::seq::Seq<U32> {
+                let mut out = crate::seq::Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
                     out[i] = U32_from_be_bytes(U32Word::from_native_slice(block));
@@ -712,8 +738,8 @@ macro_rules! _implement_secret_u8_array {
             }
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_le_U32s(&self) -> Seq<U32> {
-                let mut out = Seq::new($l / 4);
+            pub fn to_le_U32s(&self) -> crate::seq::Seq<U32> {
+                let mut out = crate::seq::Seq::new($l / 4);
                 for (i, block) in self.0.chunks(4).enumerate() {
                     debug_assert!(block.len() == 4);
                     out[i] = U32_from_le_bytes(U32Word::from_native_slice(block));
@@ -722,8 +748,8 @@ macro_rules! _implement_secret_u8_array {
             }
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_be_U64s(&self) -> Seq<U64> {
-                let mut out = Seq::new($l / 8);
+            pub fn to_be_U64s(&self) -> crate::seq::Seq<U64> {
+                let mut out = crate::seq::Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
                     out[i] = U64_from_be_bytes(U64Word::from_native_slice(block));
@@ -732,8 +758,8 @@ macro_rules! _implement_secret_u8_array {
             }
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_le_U64s(&self) -> Seq<U64> {
-                let mut out = Seq::new($l / 8);
+            pub fn to_le_U64s(&self) -> crate::seq::Seq<U64> {
+                let mut out = crate::seq::Seq::new($l / 8);
                 for (i, block) in self.0.chunks(8).enumerate() {
                     debug_assert!(block.len() == 8);
                     out[i] = U64_from_le_bytes(U64Word::from_native_slice(block));
@@ -742,8 +768,8 @@ macro_rules! _implement_secret_u8_array {
             }
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_U128s_be(&self) -> Seq<U128> {
-                let mut out = Seq::new($l / 16);
+            pub fn to_U128s_be(&self) -> crate::seq::Seq<U128> {
+                let mut out = crate::seq::Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
                     out[i] = U128_from_be_bytes(U128Word::from_native_slice(block));
@@ -752,17 +778,18 @@ macro_rules! _implement_secret_u8_array {
             }
             #[allow(non_snake_case)]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_U128s_le(&self) -> Seq<U128> {
-                let mut out = Seq::new($l / 16);
+            pub fn to_U128s_le(&self) -> crate::seq::Seq<U128> {
+                let mut out = crate::seq::Seq::new($l / 16);
                 for (i, block) in self.0.chunks(16).enumerate() {
                     debug_assert!(block.len() == 16);
                     out[i] = U128_from_le_bytes(U128Word::from_native_slice(block));
                 }
                 out
             }
+            #[cfg(feature = "std")]
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             pub fn to_hex(&self) -> String {
-                let strs: Vec<String> = self.0.iter().map(|b| format!("{:02x}", b)).collect();
+                let strs: Vec<String> = self.0.iter().map(|b| std::format!("{:02x}", b)).collect();
                 strs.join("")
             }
         }
@@ -776,67 +803,68 @@ macro_rules! _implement_public_u8_array {
         _public_array!($name, $l, u8);
         _implement_numeric_unsigned_public!($name);
 
-        impl $name {
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_be_u32s(&self) -> Seq<u32> {
-                let mut out = Seq::new($l / 4);
-                for (i, block) in self.0.chunks(4).enumerate() {
-                    debug_assert!(block.len() == 4);
-                    out[i] = u32::from_be_bytes(to_array(block));
-                }
-                out
-            }
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_le_u32s(&self) -> Seq<u32> {
-                let mut out = Seq::new($l / 4);
-                for (i, block) in self.0.chunks(4).enumerate() {
-                    debug_assert!(block.len() == 4);
-                    out[i] = u32::from_le_bytes(to_array(block));
-                }
-                out
-            }
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_be_u64s(&self) -> Seq<u64> {
-                let mut out = Seq::new($l / 8);
-                for (i, block) in self.0.chunks(8).enumerate() {
-                    debug_assert!(block.len() == 8);
-                    out[i] = u64::from_be_bytes(to_array(block));
-                }
-                out
-            }
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_le_u64s(&self) -> Seq<u64> {
-                let mut out = Seq::new($l / 8);
-                for (i, block) in self.0.chunks(8).enumerate() {
-                    debug_assert!(block.len() == 8);
-                    out[i] = u64::from_le_bytes(to_array(block));
-                }
-                out
-            }
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_u128s_be(&self) -> Seq<u128> {
-                let mut out = Seq::new($l / 16);
-                for (i, block) in self.0.chunks(16).enumerate() {
-                    debug_assert!(block.len() == 16);
-                    out[i] = u128::from_be_bytes(to_array(block));
-                }
-                out
-            }
-            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-            pub fn to_u128s_le(&self) -> Seq<u128> {
-                let mut out = Seq::new($l / 16);
-                for (i, block) in self.0.chunks(16).enumerate() {
-                    debug_assert!(block.len() == 16);
-                    out[i] = u128::from_le_bytes(to_array(block));
-                }
-                out
-            }
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            pub fn to_hex(&self) -> String {
-                let strs: Vec<String> = self.0.iter().map(|b| format!("{:02x}", b)).collect();
-                strs.join("")
-            }
-        }
+        // impl $name {
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     pub fn to_be_u32s(&self) -> crate::seq::Seq<u32> {
+        //         let mut out = crate::seq::Seq::new($l / 4);
+        //         for (i, block) in self.0.chunks(4).enumerate() {
+        //             debug_assert!(block.len() == 4);
+        //             out[i] = u32::from_be_bytes(to_array(block));
+        //         }
+        //         out
+        //     }
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     pub fn to_le_u32s(&self) -> crate::seq::Seq<u32> {
+        //         let mut out = crate::seq::Seq::new($l / 4);
+        //         for (i, block) in self.0.chunks(4).enumerate() {
+        //             debug_assert!(block.len() == 4);
+        //             out[i] = u32::from_le_bytes(to_array(block));
+        //         }
+        //         out
+        //     }
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     pub fn to_be_u64s(&self) -> crate::seq::Seq<u64> {
+        //         let mut out = crate::seq::Seq::new($l / 8);
+        //         for (i, block) in self.0.chunks(8).enumerate() {
+        //             debug_assert!(block.len() == 8);
+        //             out[i] = u64::from_be_bytes(to_array(block));
+        //         }
+        //         out
+        //     }
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     pub fn to_le_u64s(&self) -> crate::seq::Seq<u64> {
+        //         let mut out = crate::seq::Seq::new($l / 8);
+        //         for (i, block) in self.0.chunks(8).enumerate() {
+        //             debug_assert!(block.len() == 8);
+        //             out[i] = u64::from_le_bytes(to_array(block));
+        //         }
+        //         out
+        //     }
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     pub fn to_u128s_be(&self) -> crate::seq::Seq<u128> {
+        //         let mut out = crate::seq::Seq::new($l / 16);
+        //         for (i, block) in self.0.chunks(16).enumerate() {
+        //             debug_assert!(block.len() == 16);
+        //             out[i] = u128::from_be_bytes(to_array(block));
+        //         }
+        //         out
+        //     }
+        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+        //     pub fn to_u128s_le(&self) -> crate::seq::Seq<u128> {
+        //         let mut out = crate::seq::Seq::new($l / 16);
+        //         for (i, block) in self.0.chunks(16).enumerate() {
+        //             debug_assert!(block.len() == 16);
+        //             out[i] = u128::from_le_bytes(to_array(block));
+        //         }
+        //         out
+        //     }
+        //     #[cfg(feature = "std")]
+        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+        //     pub fn to_hex(&self) -> String {
+        //         let strs: Vec<String> = self.0.iter().map(|b| std::format!("{:02x}", b)).collect();
+        //         strs.join("")
+        //     }
+        // }
     };
 }
 

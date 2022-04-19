@@ -1,11 +1,17 @@
 // BLS: y^2 = x^3 + 4
 
-use hacspec_lib::*;
+#[cfg(not(feature = "hacspec"))]
+extern crate hacspec_lib;
+
+#[cfg(feature = "hacspec")]
+use hacspec_attributes::*;
 
 #[cfg(not(feature = "hacspec"))]
 extern crate creusot_contracts;
 #[cfg(not(feature = "hacspec"))]
-use creusot_contracts::*;
+pub use creusot_contracts::*;
+
+pub use hacspec_lib::*;
 
 public_nat_mod!( //Custom Macro - defining a newtype with some functions - well defined macro's have library functions built in
     type_name: Fp,
@@ -36,7 +42,7 @@ pub fn fp2fromfp(n: Fp) -> Fp2 {
     (n, Fp::ZERO())
 }
 
-#[ensures(result === 0)]
+#[ensures(result === (Fp::ZERO(), Fp::ZERO()))]
 pub fn fp2zero() -> Fp2 {
     fp2fromfp(Fp::ZERO())
 }

@@ -70,8 +70,8 @@ in the crate you want to analyze. This might require updating the version in rus
 ```
 cargo clean
 cargo install --path language
-cargo build --features=contracts
-cargo hacspec -e v -o <output_file_name> -dir <output_dir> <crate_name> --features=contracts
+cargo build
+cargo hacspec -e v -o <output_file_name> -dir <output_dir> <crate_name>
 ```
 
 To get it working add the following to the Cargo.toml file of the project:
@@ -80,20 +80,20 @@ To get it working add the following to the Cargo.toml file of the project:
 git = "https://github.com/xldenis/creusot/"
 branch = "master"
 package = "creusot-contracts"
-optional = true
-
-[dependencies]
-pearlite-syn = { git = "https://github.com/xldenis/creusot", branch = "master" }
-
-[features]
-std = 
-contracts = ["creusot-contracts"]
 ```
 And the lines 
 ```
 #[cfg(not(feature = "hacspec"))]
+extern crate hacspec_lib;
+
+#[cfg(feature = "hacspec")]
+use hacspec_attributes::*;
+
+#[cfg(not(feature = "hacspec"))]
 extern crate creusot_contracts;
 #[cfg(not(feature = "hacspec"))]
-use creusot_contracts::*;
+pub use creusot_contracts::*;
+
+pub use hacspec_lib::*;
 ```
 to the hacspec file using creusot/pearlite

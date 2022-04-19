@@ -30,11 +30,32 @@ pub use alloc::string::{String, ToString};
 pub use alloc::vec;
 pub use alloc::vec::Vec;
 
+#[cfg(not(feature = "std"))]
 pub use core::num::ParseIntError;
+#[cfg(not(feature = "std"))]
 pub use core::ops::*;
+#[cfg(not(feature = "std"))]
 pub use core::str::FromStr;
-pub use core::{cmp::min, cmp::PartialEq, fmt, fmt::Debug};
-pub use num::{self, traits::sign::Signed, CheckedSub, Num, Zero};
+#[cfg(not(feature = "std"))]
+pub use core::{cmp::min, cmp::PartialEq};
+#[cfg(not(feature = "std"))]
+#[cfg(feature = "hacspec")]
+pub use core::{fmt, fmt::Debug};
+
+#[cfg(feature = "std")]
+pub use std::num::ParseIntError;
+#[cfg(feature = "std")]
+pub use std::ops::*;
+#[cfg(feature = "std")]
+pub use std::str::FromStr;
+#[cfg(feature = "std")]
+pub use std::{cmp::min, cmp::PartialEq};
+
+#[cfg(feature = "std")]
+#[cfg(feature = "hacspec")]
+pub use std::{fmt, fmt::Debug};
+
+pub use num::{self, traits::sign::Signed, CheckedSub, Num, Zero, BigUint};
 
 bytes!(U16Word, 2);
 bytes!(U32Word, 4);

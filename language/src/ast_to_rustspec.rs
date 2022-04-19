@@ -2229,59 +2229,6 @@ fn translate_array_decl(
     }
 }
 
-fn attribute_is_test(attr: &Attribute) -> bool {
-    let attr_name = attr.name_or_empty().to_ident_string();
-    match attr_name.as_str() {
-        "test" => true,
-        "cfg" => {
-            let inner_tokens = attr.tokens().to_tokenstream();
-            if inner_tokens.len() != 2 {
-                return false;
-            }
-            let mut it = inner_tokens.trees();
-            let first_token = it.next().unwrap();
-            let second_token = it.next().unwrap();
-            match (first_token, second_token) {
-                (TokenTree::Token(first_tok), TokenTree::Delimited(_, _, inner)) => {
-                    match first_tok.kind {
-                        TokenKind::Pound => {
-                            if inner.len() != 2 {
-                                return false;
-                            }
-                            let mut it = inner.trees();
-                            let _first_token = it.next().unwrap();
-                            // First is cfg
-                            let second_token = it.next().unwrap();
-                            match second_token {
-                                TokenTree::Delimited(_, _, inner) => {
-                                    if inner.len() != 1 {
-                                        return false;
-                                    }
-                                    let mut it = inner.trees();
-                                    let first_token = it.next().unwrap();
-                                    match first_token {
-                                        TokenTree::Token(tok) => match tok.kind {
-                                            TokenKind::Ident(ident, _) => {
-                                                ident.to_ident_string() == "test"
-                                            }
-                                            _ => false,
-                                        },
-                                        _ => false,
-                                    }
-                                }
-                                _ => false,
-                            }
-                        }
-                        _ => false,
-                    }
-                }
-                _ => false,
-            }
-        }
-        _ => false,
-    }
-}
-
 fn binop_text(op: rustc_ast::token::BinOpToken) -> String {
     match op {
         rustc_ast::token::BinOpToken::Plus => "+".to_string(),
@@ -2349,34 +2296,38 @@ fn tokentree_text(x: TokenTree) -> String {
         }
     }
 }
-
+                                                                             
 fn get_delimited_tree(attr: Attribute) -> Option<rustc_ast::tokenstream::TokenStream> {
-    let inner_tokens = attr.tokens().to_tokenstream();
+    let inner_tokens = attr.clone().tokens().to_tokenstream();
     if inner_tokens.len() != 2 {
         return None;
     }
     let mut it = inner_tokens.trees();
     let first_token = it.next().unwrap();
     let second_token = it.next().unwrap();
-    match (first_token, second_token) {
-        (TokenTree::Token(first_tok), TokenTree::Delimited(_, _, inner)) => {
-            match first_tok.kind {
-                TokenKind::Pound => {
-                    if inner.len() != 2 {
-                        return None;
-                    }
-                    let mut it = inner.trees();
-                    let _first_token = it.next().unwrap();
-                    // First is derive
-                    let second_token = it.next().unwrap();
-                    match second_token.clone() {
-                        TokenTree::Delimited(_, _, inner) => Some(inner),
-                        _ => None,
-                    }
+    match first_token {
+        TokenTree::Token(first_tok) => match first_tok.kind {
+            TokenKind::Pound => {
+                let inner = get_delimited_inner_tree(second_token.clone())?;
+                if inner.len() != 2 {
+                    return None;
                 }
-                _ => None,
+                let mut it = inner.trees();
+                let _first_token = it.next().unwrap();
+                // First is derive
+                let second_token = it.next().unwrap();
+                get_delimited_inner_tree(second_token.clone())
             }
-        }
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+
+fn get_delimited_inner_tree(delim: TokenTree) -> Option<rustc_ast::tokenstream::TokenStream> {
+    match delim {
+        TokenTree::Delimited(_, _, inner) => Some(inner),
         _ => None,
     }
 }
@@ -2409,10 +2360,42 @@ fn attribute_ensures(attr: &Attribute) -> Option<String> {
     }
 }
 
+fn attribute_cfg_token_ident(
+    ident: rustc_span::symbol::Symbol,
+    mut it: rustc_ast::tokenstream::CursorRef, // rustc_ast::tokenstream::Cursor
+) -> Option<Vec<String>> {
+    let ident_string = ident.to_ident_string();
+    match ident_string.as_str() {
+        "proof" | "test" => Some(vec![ident_string]),
+        "feature" => {
+            it.next(); // skip '=' TODO: Check is EQ token..
+            let second_token = it.next().unwrap();
+            match second_token {
+                TokenTree::Token(tok) => match tok.kind {
+                    TokenKind::Literal(rustc_ast::token::Lit {
+                        kind: rustc_ast::token::LitKind::Str,
+                        symbol,
+                        ..
+                    }) => {
+                        let ident_string = symbol.to_ident_string();
+                        match ident_string.as_str() {
+                            "creusot" | "hacspec" => Some(vec![ident_string]),
+                            _ => None,
+                        }
+                    }
+                    _ => None,
+                },
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
     let attr_name = attr.name_or_empty().to_ident_string();
     match attr_name.as_str() {
-        "quickcheck" | "test" | "requires" | "ensures" => Some(vec![attr_name]),
+        "quickcheck" | "proof" | "test" | "requires" | "ensures" | "creusot" => Some(vec![attr_name]),
         "derive" => {
             let inner = get_delimited_tree(attr.clone())?;
             Some(inner.trees().fold(Vec::new(), |mut a, x| match x {
@@ -2428,18 +2411,33 @@ fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
         }
         "cfg" => {
             let inner = get_delimited_tree(attr.clone())?;
-            if inner.len() != 1 {
-                return None;
-            }
+            // if inner.len() != 1 {
+            //     return None;
+            // }
             let mut it = inner.trees();
             let first_token = it.next().unwrap();
             match first_token {
                 TokenTree::Token(tok) => match tok.kind {
                     TokenKind::Ident(ident, _) => {
-                        let ident_string = ident.to_ident_string();
-                        match ident_string.as_str() {
-                            "proof" | "test" => Some(vec![ident_string]),
-                            _ => None,
+                        if ident.to_ident_string() == "not" {
+                            let second_token = it.next().unwrap();
+                            let inner = get_delimited_inner_tree(second_token.clone())?;
+                            let mut it = inner.trees();
+                            let first_token = it.next().unwrap();
+                            match first_token {
+                                TokenTree::Token(tok) => match tok.kind {
+                                    TokenKind::Ident(ident, _) => Some(
+                                        attribute_cfg_token_ident(ident, it)?
+                                            .iter()
+                                            .map(|s| "not(".to_string() + s + ")")
+                                            .collect(),
+                                    ),
+                                    _ => None,
+                                },
+                                _ => None,
+                            }
+                        } else {
+                            attribute_cfg_token_ident(ident, it)
                         }
                     }
                     _ => None,
@@ -2853,14 +2851,12 @@ pub fn translate_pearlite(
         //         pearlite_syn::term::Term::Range(_) => RcDoc::as_string("TODORange"),
         //         pearlite_syn::term::Term::Repeat(_) => RcDoc::as_string("TODORepeat"),
         //         pearlite_syn::term::Term::Struct(_) => RcDoc::as_string("TODOStruct"),
-        //         pearlite_syn::term::Term::Tuple(pearlite_syn::term::TermTuple { elems, .. }) => {
-        //             make_paren(RcDoc::intersperse(
-        //                 elems
-        //                     .into_iter()
-        //                     .map(|x| make_paren(translate_pearlite(x, top_ctx, idents.clone()))),
-        //                 RcDoc::as_string(",").append(RcDoc::space()),
-        //             ))
-        //         }
+        pearlite_syn::term::Term::Tuple(pearlite_syn::term::TermTuple { elems, .. }) => {
+            ExprKind::Tup(elems
+                        .into_iter()
+                          .map(|x| P(translate_pearlite_unquantified(sess, x, span).unwrap()))
+                          .collect())
+        }
         //         pearlite_syn::term::Term::Type(ty) => RcDoc::as_string("TODOType"),
         pearlite_syn::term::Term::Unary(pearlite_syn::term::TermUnary { op, expr }) => {
             let t_op = translate_pearlite_unop(op);
@@ -2982,18 +2978,19 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     log::trace!("translate_items ({:?})", i);
     let mut tags = HashSet::new();
     tags.insert("code".to_string());
-    let export = i
+    i
         .attrs
         .iter()
-        .fold(false, |b, attr| match attribute_tag(attr) {
+        .fold((), |(), attr| match attribute_tag(attr) {
             Some(a) => {
                 tags.extend(a.iter());
-                b || a.contains(&"proof".to_string())
             }
-            None => b,
+            None => (),
         });
 
-    if i.attrs.iter().any(attribute_is_test) && !export {
+    if tags.contains(&"test".to_string()) && !tags.contains(&"proof".to_string())
+        || (!tags.contains(&"hacspec".to_string()) && tags.contains(&"not(hacspec)".to_string()))
+    {
         return Ok((ItemTranslationResult::Ignored, specials.clone()));
     }
     match &i.kind {
@@ -3168,6 +3165,10 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
         ItemKind::Use(ref tree) => match tree.kind {
             UseTreeKind::Glob => {
                 let krate_name = translate_use_path(sess, &tree.prefix)?;
+                if krate_name == "hacspec_attributes" {
+                    return Ok((ItemTranslationResult::Ignored, specials.clone()));
+                }
+
                 let data = external_data(&vec![(krate_name.clone(), i.span.into())]);
                 let mut specials = specials.clone();
                 for (enum_name, _) in data.enums.into_iter() {

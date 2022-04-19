@@ -1,4 +1,4 @@
 [toolchain]
-# channel = "nightly-2022-02-24"
+# channel = "nightly-2022-04-14"
 channel = "nightly-2022-07-04"
 components = [ "rustc-dev", "llvm-tools-preview" , "rust-analysis" , "rust-src" , "rustfmt" ]

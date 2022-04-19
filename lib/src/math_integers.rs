@@ -47,8 +47,8 @@ macro_rules! unsigned_public_integer {
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_byte_seq_be(self) -> Seq<U8> {
-                Seq::from_vec(
+            pub fn to_byte_seq_be(self) -> hacspec_lib::Seq<U8> {
+                hacspec_lib::Seq::from_vec(
                     self.to_be_bytes()
                         .iter()
                         .map(|x| U8::classify(*x))
@@ -834,8 +834,8 @@ macro_rules! nat_mod {
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_byte_seq_le(self) -> Seq<U8> {
-                Seq::from_vec(
+            pub fn to_byte_seq_le(self) -> hacspec_lib::Seq<U8> {
+                hacspec_lib::Seq::from_vec(
                     self.to_le_bytes()
                         .iter()
                         .map(|x| U8::classify(*x))
@@ -928,19 +928,19 @@ macro_rules! nat_mod {
         }
         impl UnsignedSecretInteger for $name {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn to_le_bytes(self) -> Seq<U8> {
+            fn to_le_bytes(self) -> hacspec_lib::Seq<U8> {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn to_be_bytes(self) -> Seq<U8> {
+            fn to_be_bytes(self) -> hacspec_lib::Seq<U8> {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_le_bytes(x: &Seq<U8>) -> Self {
+            fn from_le_bytes(x: &hacspec_lib::Seq<U8>) -> Self {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_be_bytes(x: &Seq<U8>) -> Self {
+            fn from_be_bytes(x: &hacspec_lib::Seq<U8>) -> Self {
                 unimplemented!();
             }
         }
@@ -1111,8 +1111,8 @@ macro_rules! public_nat_mod {
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_byte_seq_be(self) -> Seq<U8> {
-                Seq::from_vec(
+            pub fn to_byte_seq_be(self) -> hacspec_lib::Seq<U8> {
+                hacspec_lib::Seq::from_vec(
                     self.to_be_bytes()
                         .iter()
                         .map(|x| U8::classify(*x))
@@ -1121,8 +1121,8 @@ macro_rules! public_nat_mod {
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_public_byte_seq_be(self) -> Seq<u8> {
-                Seq::from_vec(self.to_be_bytes())
+            pub fn to_public_byte_seq_be(self) -> hacspec_lib::Seq<u8> {
+                hacspec_lib::Seq::from_vec(self.to_be_bytes())
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
@@ -1142,8 +1142,8 @@ macro_rules! public_nat_mod {
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_byte_seq_le(self) -> Seq<U8> {
-                Seq::from_vec(
+            pub fn to_byte_seq_le(self) -> hacspec_lib::Seq<U8> {
+                hacspec_lib::Seq::from_vec(
                     self.to_le_bytes()
                         .iter()
                         .map(|x| U8::classify(*x))
@@ -1152,8 +1152,8 @@ macro_rules! public_nat_mod {
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-            pub fn to_public_byte_seq_le(self) -> Seq<u8> {
-                Seq::from_vec(self.to_le_bytes())
+            pub fn to_public_byte_seq_le(self) -> hacspec_lib::Seq<u8> {
+                hacspec_lib::Seq::from_vec(self.to_le_bytes())
             }
 
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]

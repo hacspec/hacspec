@@ -245,9 +245,9 @@ fn translate_base_typ(
         TyKind::Tuple(args) => {
             let mut new_args = Vec::new();
             let typ_ctx = args.iter().fold(Ok(typ_ctx.clone()), |typ_ctx, ty| {
-                let (new_ty, typ_ctx) = translate_base_typ(tcx, &ty, &typ_ctx?)?;
+                let (new_ty, typ_ctx_temp) = translate_base_typ(tcx, &ty, &typ_ctx?)?;
                 new_args.push((new_ty, DUMMY_SP.into()));
-                Ok(typ_ctx)
+                Ok(typ_ctx_temp)
             })?;
             Ok((BaseTyp::Tuple(new_args), typ_ctx))
         }
