@@ -2,6 +2,11 @@
 
 use hacspec_lib::*;
 
+#[cfg(not(feature = "hacspec"))]
+extern crate creusot_contracts;
+#[cfg(not(feature = "hacspec"))]
+use creusot_contracts::*;
+
 public_nat_mod!( //Custom Macro - defining a newtype with some functions - well defined macro's have library functions built in
     type_name: Fp,
     type_of_canvas: FpCanvas,
@@ -31,6 +36,7 @@ pub fn fp2fromfp(n: Fp) -> Fp2 {
     (n, Fp::ZERO())
 }
 
+#[ensures(result === 0)]
 pub fn fp2zero() -> Fp2 {
     fp2fromfp(Fp::ZERO())
 }

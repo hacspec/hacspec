@@ -9,8 +9,19 @@ edition = "2018"
 [lib]
 path = "src/hacspec-bls12-381.rs"
 
+[dependencies.creusot-contracts]
+git = "https://github.com/xldenis/creusot/"
+branch = "master"
+package = "creusot-contracts"
+optional = true
+
 [dependencies]
 hacspec-lib = { path = "../../lib" }
+pearlite-syn = { git = "https://github.com/xldenis/creusot", branch = "master" }
+
+[features]
+# default = ["std"]
+contracts = ["creusot-contracts"]
 
 [dev-dependencies]
 quickcheck = "1"

@@ -68,5 +68,32 @@ cargo creusot
 ```
 in the crate you want to analyze. This might require updating the version in rust-toolchain to match the version used by creusot (this is how creusot finds relevant packages to analyze). To compile hacspec code to pearlite statements in coq run
 ```
-cargo hacspec -e v -o <output_file_name> -dir <output_dir> <crate_name>
+cargo clean
+cargo install --path language
+cargo build --features=contracts
+cargo hacspec -e v -o <output_file_name> -dir <output_dir> <crate_name> --features=contracts
 ```
+
+To get it working add the following to the Cargo.toml file of the project:
+```
+[dependencies.creusot-contracts]
+git = "https://github.com/xldenis/creusot/"
+branch = "master"
+package = "creusot-contracts"
+optional = true
+
+[dependencies]
+pearlite-syn = { git = "https://github.com/xldenis/creusot", branch = "master" }
+
+[features]
+std = 
+contracts = ["creusot-contracts"]
+```
+And the lines 
+```
+#[cfg(not(feature = "hacspec"))]
+extern crate creusot_contracts;
+#[cfg(not(feature = "hacspec"))]
+use creusot_contracts::*;
+```
+to the hacspec file using creusot/pearlite
