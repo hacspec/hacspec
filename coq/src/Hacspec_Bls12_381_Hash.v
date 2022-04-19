@@ -81,10 +81,10 @@ Definition expand_message_xmd
     seq_concat (seq_concat (seq_concat (seq_concat (z_pad_5) (msg_0)) (
           l_i_b_str_6)) (seq_new_ (default) (usize 1))) (dst_prime_4) in 
   let b_0_8 : seq uint8 :=
-    seq_from_seq (hash (msg_prime_7)) in 
+    seq_from_seq (array_to_seq (hash (msg_prime_7))) in 
   let b_i_9 : seq uint8 :=
-    seq_from_seq (hash (seq_concat (seq_push (b_0_8) (secret (
-              @repr WORDSIZE8 1) : int8)) (dst_prime_4))) in 
+    seq_from_seq (array_to_seq (hash (seq_concat (seq_push (b_0_8) (secret (
+              @repr WORDSIZE8 1) : int8)) (dst_prime_4)))) in 
   let uniform_bytes_10 : seq uint8 :=
     seq_from_seq (b_i_9) in 
   let '(b_i_9, uniform_bytes_10) :=
@@ -93,8 +93,8 @@ Definition expand_message_xmd
       let t_12 : seq uint8 :=
         seq_from_seq (b_0_8) in 
       let b_i_9 :=
-        seq_from_seq (hash (seq_concat (seq_push ((t_12) seq_xor (b_i_9)) (
-                uint8_from_usize (i_11))) (dst_prime_4))) in 
+        seq_from_seq (array_to_seq (hash (seq_concat (seq_push ((t_12) seq_xor (
+                  b_i_9)) (uint8_from_usize (i_11))) (dst_prime_4)))) in 
       let uniform_bytes_10 :=
         seq_concat (uniform_bytes_10) (b_i_9) in 
       (b_i_9, uniform_bytes_10))

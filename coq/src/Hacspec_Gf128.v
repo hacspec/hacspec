@@ -51,10 +51,10 @@ Definition fmul (x_2 : element_t) (y_3 : element_t) : element_t :=
   res_4.
 
 Definition encode (block_7 : gf128_block_t) : element_t :=
-  uint128_from_be_bytes (array_from_seq (16) (block_7)).
+  uint128_from_be_bytes (array_from_seq (16) (array_to_seq (block_7))).
 
 Definition decode (e_8 : element_t) : gf128_block_t :=
-  array_from_seq (blocksize_v) (uint128_to_be_bytes (e_8)).
+  array_from_seq (blocksize_v) (array_to_seq (uint128_to_be_bytes (e_8))).
 
 Definition update
   (r_9 : element_t)
@@ -104,8 +104,9 @@ Definition gmac (text_23 : byte_seq) (k_24 : gf128_key_t) : gf128_tag_t :=
   let s_25 : gf128_block_t :=
     array_new_ (default) (blocksize_v) in 
   let r_26 : uint128 :=
-    encode (array_from_seq (blocksize_v) (k_24)) in 
+    encode (array_from_seq (blocksize_v) (array_to_seq (k_24))) in 
   let a_27 : uint128 :=
     poly (text_23) (r_26) in 
-  array_from_seq (blocksize_v) (decode (fadd (a_27) (encode (s_25)))).
+  array_from_seq (blocksize_v) (array_to_seq (decode (fadd (a_27) (encode (
+          s_25))))).
 

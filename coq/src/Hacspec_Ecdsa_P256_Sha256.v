@@ -71,7 +71,8 @@ Definition sign
         let payload_hash_15 : sha256_digest_t :=
           hash (payload_9) in 
         let payload_hash_16 : p256_scalar_t :=
-          nat_mod_from_byte_seq_be (payload_hash_15) : p256_scalar_t in 
+          nat_mod_from_byte_seq_be (
+            array_to_seq (payload_hash_15)) : p256_scalar_t in 
         let rsk_17 : p256_scalar_t :=
           (r_14) *% (sk_10) in 
         let hash_rsk_18 : p256_scalar_t :=
@@ -99,7 +100,8 @@ Definition verify
   let payload_hash_29 : sha256_digest_t :=
     hash (payload_24) in 
   let payload_hash_30 : p256_scalar_t :=
-    nat_mod_from_byte_seq_be (payload_hash_29) : p256_scalar_t in 
+    nat_mod_from_byte_seq_be (
+      array_to_seq (payload_hash_29)) : p256_scalar_t in 
   let s_inv_31 : p256_scalar_t :=
     nat_mod_inv (s_28) in 
   let u1_32 : p256_scalar_t :=
