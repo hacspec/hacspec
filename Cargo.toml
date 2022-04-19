@@ -33,6 +33,7 @@ members = [
     "examples/aes128-gcm",
     "examples/bls12-381-hash",
     "examples/ed25519",
+    "examples/coverage_test",
 ]
 default-members = [
     "lib",
@@ -66,5 +67,6 @@ default-members = [
     "examples/bls12-381-hash",
     "examples/ed25519",
     "examples/sha512",
+    "examples/coverage_test",
 ]
 exclude = [ "language" ]

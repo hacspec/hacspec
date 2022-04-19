@@ -12,60 +12,6 @@ bytes!(Sha512Digest, HASH_SIZE);
 array!(RoundConstantsTable, K_SIZE, U64);
 array!(Hash, 8, U64);
 
-
-// both_bytes!(BothType, BothTypeSecret, 8); // unknown hacspec macro ?
-// both_arrays!(BothType, BothTypeSecret, 8, U8, u8); // unknown hacspec macro ?
-pub fn test () {
-    // Hash::from_hex("22");
-    let hs = Hash::new();
-    hs.len();
-    hs[2_usize];
-    hs.declassify_eq(&hs);
-    hs.to_be_bytes();
-    hs.to_le_bytes();
-    let hs = Block::new();
-    hs.to_be_U32s();
-    hs.to_le_U32s();
-    hs.to_be_U64s();
-    hs.to_le_U64s();    
-    hs.to_U128s_be();
-    hs.to_U128s_le();
-    // BothTypeSecret::from_public(BothType::new());
-    // BothType::from_secret_declassify(BothTypeSecret::new());
-
-    Block::length();
-    Block::from_slice(&hs,0,2);
-    Block::from_slice(&ByteSeq::new(3),0,2);
-
-    hs.concat(&hs);
-    hs.concat(&ByteSeq::new(3));
-
-    Block::from_slice_range(&hs,0..2);
-    Block::from_slice_range(&ByteSeq::new(3),0..2);
-
-    hs.num_chunks(2);
-    hs.get_chunk_len(2, 2);
-    hs.get_chunk(2, 2);
-
-    hs.set_chunk(2, 2, &hs);
-    hs.set_chunk(2, 2, &ByteSeq::new(3));
-
-    Block::default();
-    
-    Block::create(128);
-    hs.update_slice(0, &hs, 1, 2);
-    hs.update_slice(0, &ByteSeq::new(3), 1, 2);
-
-    hs.update(0, &hs);
-    hs.update(0, &ByteSeq::new(3));
-
-    hs.update_start(&hs);
-    hs.update_start(&ByteSeq::new(3));
-
-    Block::from_seq(&hs);
-    Block::from_seq(&ByteSeq::new(3));
-}
-
 fn ch(x: U64, y: U64, z: U64) -> U64 {
     (x & y) ^ ((!x) & z)
 }
@@ -214,4 +160,3 @@ pub fn hash(msg: &ByteSeq) -> Sha512Digest {
 pub fn sha512(msg: &ByteSeq) -> Sha512Digest {
     hash(msg)
 }
-
