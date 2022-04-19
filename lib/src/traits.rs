@@ -188,7 +188,7 @@ pub trait Numeric:
     // Comparison functions returning bool.
     fn equal(self, other: Self) -> bool;
     fn greater_than(self, other: Self) -> bool;
-    fn greater_than_or_qual(self, other: Self) -> bool;
+    fn greater_than_or_equal(self, other: Self) -> bool;
     fn less_than(self, other: Self) -> bool;
     fn less_than_or_equal(self, other: Self) -> bool;
 

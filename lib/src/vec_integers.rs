@@ -283,7 +283,7 @@ macro_rules! _implement_numeric_unsigned_public {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, _other: Self) -> bool {
+            fn greater_than_or_equal(self, _other: Self) -> bool {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -533,7 +533,7 @@ macro_rules! _implement_numeric_signed_public {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -785,7 +785,7 @@ macro_rules! _implement_numeric_unsigned_secret {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, _other: Self) -> bool {
+            fn greater_than_or_equal(self, _other: Self) -> bool {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -1031,7 +1031,7 @@ macro_rules! _implement_numeric_signed_secret {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]

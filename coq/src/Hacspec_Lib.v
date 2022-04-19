@@ -4,6 +4,7 @@ Global Set Warnings "-auto-template".
 Global Set Warnings "-disj-pattern-notation".
 
 (*** Integers *)
+Require Import String.
 From Coq Require Import ZArith List.
 Import ListNotations.
 (* Require Import IntTypes. *)
@@ -15,29 +16,33 @@ Require Import Lia.
 
 Declare Scope hacspec_scope.
 
+Definition string_t := string.
+
 Axiom secret : forall {WS : WORDSIZE},  (@int WS) -> (@int WS).
 
-Axiom uint8_declassify : int8 -> int8.
-Axiom int8_declassify : int8 -> int8.
-Axiom uint16_declassify : int16 -> int16.
-Axiom int16_declassify : int16 -> int16.
-Axiom uint32_declassify : int32 -> int32.
-Axiom int32_declassify : int32 -> int32.
-Axiom uint64_declassify : int64 -> int64.
-Axiom int64_declassify : int64 -> int64.
-Axiom uint128_declassify : int128 -> int128.
-Axiom int128_declassify : int128 -> int128.
+Axiom declassify : forall {WS : WORDSIZE}, int -> int.
+Definition uint8_declassify := @declassify WORDSIZE8.
+Definition int8_declassify := @declassify WORDSIZE8.
+Definition uint16_declassify := @declassify WORDSIZE16.
+Definition int16_declassify := @declassify WORDSIZE16.
+Definition uint32_declassify := @declassify WORDSIZE32.
+Definition int32_declassify := @declassify WORDSIZE32.
+Definition uint64_declassify := @declassify WORDSIZE64.
+Definition int64_declassify := @declassify WORDSIZE64.
+Definition uint128_declassify := @declassify WORDSIZE128.
+Definition int128_declassify := @declassify WORDSIZE128.
 
-Axiom uint8_classify : int8 -> int8.
-Axiom int8_classify : int8 -> int8.
-Axiom uint16_classify : int16 -> int16.
-Axiom int16_classify : int16 -> int16.
-Axiom uint32_classify : int32 -> int32.
-Axiom int32_classify : int32 -> int32.
-Axiom uint64_classify : int64 -> int64.
-Axiom int64_classify : int64 -> int64.
-Axiom uint128_classify : int128 -> int128.
-Axiom int128_classify : int128 -> int128.
+Axiom classify : forall {WS : WORDSIZE}, int -> int.
+Definition uint8_classify := @classify WORDSIZE8.
+Definition int8_classify := @classify WORDSIZE8.
+Definition uint16_classify := @classify WORDSIZE16.
+Definition int16_classify := @classify WORDSIZE16.
+Definition uint32_classify := @classify WORDSIZE32.
+Definition int32_classify := @classify WORDSIZE32.
+Definition uint64_classify := @classify WORDSIZE64.
+Definition int64_classify := @classify WORDSIZE64.
+Definition uint128_classify := @classify WORDSIZE128.
+Definition int128_classify := @classify WORDSIZE128.
 
 
 (* CompCert integers' signedness is only interpreted through 'signed' and 'unsigned',
@@ -869,14 +874,19 @@ Definition seq_new {A: Type} `{Default A} (len: nat) : seq A :=
 Definition seq_with_capacity  {A: Type} (len: nat) : seq A :=
     [].
 
-Definition reserve  {A: Type} (s : seq A) (additional : nat) : seq A :=
+Definition seq_create {A: Type} `{Default A} (len: nat) : seq A := seq_new len.
+
+Definition seq_reserve  {A: Type} (s : seq A) (additional : nat) : seq A :=
     s.
 
 Definition seq_len {A: Type} (s: seq A) : N := N.of_nat (length s).
 
 
-Definition seq_index {A: Type} `{Default A} (s: seq A) (i : nat) :=
-  List.nth i s default.
+Definition seq_index {A: Type} `{Default A} (s: seq A) {WS : WORDSIZE} (i : int) :=
+  List.nth (Z.to_nat (unsigned i)) s default.
+
+(* Definition seq_index {A: Type} `{Default A} (s: seq A) (i : nat) := *)
+(*   List.nth i s default. *)
 
 Definition seq_new_ {A: Type} (init : A) (len: nat) : seq A :=
   VectorDef.to_list (VectorDef.const init len).
@@ -938,7 +948,16 @@ Definition seq_slice
   (s: seq a)
   (start: nat)
   (len: nat)
-    : nseq a _ :=
+    : seq a :=
+  array_from_seq len (slice s start (start + len)).
+
+Definition seq_into_slice
+  {a: Type}
+ `{Default a}
+  (s: seq a)
+  (start: nat)
+  (len: nat)
+    : seq a :=
   array_from_seq len (slice s start (start + len)).
 
 Definition seq_slice_range
@@ -946,8 +965,25 @@ Definition seq_slice_range
  `{Default a}
   (input: seq a)
   (start_fin:(uint_size * uint_size))
-    : nseq a _ :=
+    : seq a :=
   seq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
+
+Definition seq_into_slice_range
+  {a: Type}
+ `{Default a}
+  (input: seq a)
+  (start_fin:(uint_size * uint_size))
+    : seq a :=
+  seq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
+
+Definition seq_split_off
+           {a: Type}
+           `{Default a}
+           (input: seq a)
+           (pos : uint_size)
+  : seq a * seq a :=
+  (seq_slice input 0 (from_uint_size pos),
+   seq_slice input (from_uint_size pos) (length input)).
 
 (* updating a subsequence in a sequence *)
 Definition seq_update
@@ -1015,12 +1051,36 @@ Definition seq_concat
   : seq a :=
   VectorDef.of_list (s1 ++ s2).
 
+Definition seq_concat_owned
+  {a : Type}
+  (s1 :seq a)
+  (s2: seq a)
+  : seq a :=
+  seq_concat s1 s2.
+
 Definition seq_push
   {a : Type}
   (s1 :seq a)
   (s2: a)
   : seq a :=
   VectorDef.of_list (s1 ++ [s2]).
+
+Definition seq_push_owned
+  {a : Type}
+  (s1 :seq a)
+  (s2: a)
+  : seq a :=
+  seq_push s1 s2.
+
+Definition seq_from_slice
+  {a: Type}
+ `{Default a}
+  (input: seq a)
+  (start: uint_size)
+  (fin : uint_size)
+  : seq a :=
+  let out := array_new_ (default) (length input) in
+    update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin))).
 
 Definition seq_from_slice_range
   {a: Type}
@@ -1033,7 +1093,87 @@ Definition seq_from_slice_range
     update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) (VectorDef.of_list (slice input (from_uint_size start) (from_uint_size fin))).
 
 Definition seq_from_seq {A} (l : seq A) := l.
+Definition seq_from_public_seq {A} (l : seq A) := l.
 
+Module IntToHex.
+  Require Import Coq.Numbers.HexadecimalString.
+
+  (* Compute Number.IntHexadecimal 2. *)
+
+
+  Definition positive_to_hex (p : positive) : Hexadecimal.uint.
+  Proof.
+    induction p.
+    - exact (Hexadecimal.Little.succ_double IHp).
+    - exact (Hexadecimal.Little.double IHp).
+    - exact (Hexadecimal.D1 Hexadecimal.Nil).
+  Defined.
+  
+  Definition int_to_hex (n : int8) : Hexadecimal.int.
+    destruct n as [n _].
+    destruct n.
+    + exact (Hexadecimal.Pos Hexadecimal.zero).
+    + exact (Hexadecimal.Pos (positive_to_hex p)).
+    + exact (Hexadecimal.Neg (positive_to_hex p)).
+  Defined.
+  
+  Require Import Hexadecimal Ascii String.
+
+  Definition string_of_uint_digit (d:uint) :=
+    match d with
+    | Nil => EmptyString
+    | D0 d => String "0" EmptyString
+    | D1 d => String "1" EmptyString
+    | D2 d => String "2" EmptyString
+    | D3 d => String "3" EmptyString
+    | D4 d => String "4" EmptyString
+    | D5 d => String "5" EmptyString
+    | D6 d => String "6" EmptyString
+    | D7 d => String "7" EmptyString
+    | D8 d => String "8" EmptyString
+    | D9 d => String "9" EmptyString
+    | Da d => String "a" EmptyString
+    | Db d => String "b" EmptyString
+    | Dc d => String "c" EmptyString
+    | Dd d => String "d" EmptyString
+    | De d => String "e" EmptyString
+    | Df d => String "f" EmptyString
+    end.
+
+  Definition string_of_uint (d:uint) :=
+    match d with
+    | Nil => EmptyString
+    | D0 Nil | D1 Nil | D2 Nil | D3 Nil | D4 Nil | D5 Nil | D6 Nil | D7 Nil | D8 Nil | D9 Nil | Da Nil | Db Nil | Dc Nil | Dd Nil | De Nil | Df Nil => String "0" (string_of_uint_digit d)
+    | D0 d => String "0" (string_of_uint_digit d)
+    | D1 d => String "1" (string_of_uint_digit d)
+    | D2 d => String "2" (string_of_uint_digit d)
+    | D3 d => String "3" (string_of_uint_digit d)
+    | D4 d => String "4" (string_of_uint_digit d)
+    | D5 d => String "5" (string_of_uint_digit d)
+    | D6 d => String "6" (string_of_uint_digit d)
+    | D7 d => String "7" (string_of_uint_digit d)
+    | D8 d => String "8" (string_of_uint_digit d)
+    | D9 d => String "9" (string_of_uint_digit d)
+    | Da d => String "a" (string_of_uint_digit d)
+    | Db d => String "b" (string_of_uint_digit d)
+    | Dc d => String "c" (string_of_uint_digit d)
+    | Dd d => String "d" (string_of_uint_digit d)
+    | De d => String "e" (string_of_uint_digit d)
+    | Df d => String "f" (string_of_uint_digit d)
+    end.
+
+  Definition string_of_int (d: MachineIntegers.int) :=
+    match int_to_hex d with
+    | Pos d => string_of_uint d
+    | Neg d => String "-" (string_of_uint d)
+    end.
+End IntToHex.
+
+Fixpoint seq_to_hex (l : seq int8) :=
+  match l with
+  | [] => String.EmptyString
+  | (x :: xs) => String.append (IntToHex.string_of_int x) (seq_to_hex xs)
+  end.
 
 (**** Chunking *)
 
@@ -1123,6 +1263,12 @@ Fixpoint seq_truncate {a} (x : seq a) (n : nat) : seq a := (* uint_size *)
   | _, 0 => []
   | [], _ => []
   | (x :: xs), S n' => x :: (seq_truncate xs n')
+  end.
+
+Fixpoint seq_declassify {WS: WORDSIZE} (x : seq int) : seq int := (* uint_size *)
+  match x with
+  | [] => []
+  | (x :: xs) => declassify x :: seq_declassify xs
   end.
 
 (**** Numeric operations *)

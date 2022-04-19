@@ -130,7 +130,7 @@ impl Numeric for BigInt {
         unimplemented!();
     }
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
-    fn greater_than_or_qual(self, other: Self) -> bool {
+    fn greater_than_or_equal(self, other: Self) -> bool {
         unimplemented!();
     }
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
