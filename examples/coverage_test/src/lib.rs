@@ -2,8 +2,100 @@
 use hacspec_lib::*;
 
 pub fn big_integer_test () {
+    /////////////////////////
+    // lib/big_integers.rs //
+    /////////////////////////
 
+    BigInt::ZERO();
+    BigInt::ONE();
+    BigInt::TWO();
+    let mut bi = BigInt::from_literal(1238_u128);
+    // BigInt::from_hex_string(&String::from(""));
+    bi = bi.get_bit(3);
+    bi = bi.set_bit(BigInt::ONE(), 3);
+    bi = bi.set(4, BigInt::TWO(), 2);
+    bi = bi.rotate_left(4);
+    bi = bi.rotate_right(4);
+
+    BigInt::max_val();
+    bi = bi.wrap_add(BigInt::TWO());
+    bi = bi.wrap_sub(BigInt::TWO());
+    bi = bi.wrap_mul(BigInt::TWO());
+    bi = bi.wrap_div(BigInt::TWO());
+
+    bi = bi.exp(2_u32);
+    bi = bi.pow_self(BigInt::TWO());
+    bi = bi.divide(BigInt::TWO());
+    bi = bi.inv(BigInt::TWO());
+    let _ : bool = BigInt::ONE().equal(BigInt::TWO());
+    
+    let _ : bool = BigInt::ONE().greater_than(BigInt::TWO());
+    let _ : bool = BigInt::ONE().greater_than_or_equal(BigInt::TWO());
+    let _ : bool = BigInt::ONE().less_than(BigInt::TWO());
+    let _ : bool = BigInt::ONE().less_than_or_equal(BigInt::TWO());
+
+    bi = bi.not_equal_bm(BigInt::TWO());
+    bi = bi.equal_bm(BigInt::TWO());
+    bi = bi.greater_than_bm(BigInt::TWO());
+    bi = bi.greater_than_or_equal_bm(BigInt::TWO());
+    bi = bi.less_than_bm(BigInt::TWO());
+    bi = bi.less_than_or_equal_bm(BigInt::TWO());
+
+    bi = bi.sub_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
+    bi = bi.add_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
+    bi = bi.mul_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
+    bi = bi.pow_mod(BigInt::TWO(), BigInt::from_literal(4_u128));
+    bi = bi.absolute();
+
+    // let sbi = BigInt::classify(bi);
 }
+
+pub fn machine_integer_test () {
+    /////////////////////////////
+    // lib/machine_integers.rs //
+    /////////////////////////////
+    u16::ZERO();
+    u16::ONE();
+    u16::TWO();
+    let mut bi = u16::from_literal(1238_u128);
+    // u16::from_hex_string(&String::from(""));
+    bi = bi.get_bit(3);
+    bi = bi.set_bit(u16::ONE(), 3);
+    bi = bi.set(4, u16::TWO(), 2);
+    bi = bi.rotate_left(4);
+    bi = bi.rotate_right(4);
+
+    u16::max_val();
+    bi = bi.wrap_add(u16::TWO());
+    bi = bi.wrap_sub(u16::TWO());
+    bi = bi.wrap_mul(u16::TWO());
+    bi = bi.wrap_div(u16::TWO());
+
+    bi = bi.exp(2_u32);
+    bi = bi.pow_self(u16::TWO());
+    bi = bi.divide(u16::TWO());
+    bi = bi.inv(u16::TWO());
+    let _ : bool = u16::ONE().equal(u16::TWO());
+    
+    let _ : bool = u16::ONE().greater_than(u16::TWO());
+    let _ : bool = u16::ONE().greater_than_or_equal(u16::TWO());
+    let _ : bool = u16::ONE().less_than(u16::TWO());
+    let _ : bool = u16::ONE().less_than_or_equal(u16::TWO());
+
+    bi = bi.not_equal_bm(u16::TWO());
+    bi = bi.equal_bm(u16::TWO());
+    bi = bi.greater_than_bm(u16::TWO());
+    bi = bi.greater_than_or_equal_bm(u16::TWO());
+    bi = bi.less_than_bm(u16::TWO());
+    bi = bi.less_than_or_equal_bm(u16::TWO());
+
+    bi = bi.sub_mod(u16::TWO(), u16::from_literal(4_u128));
+    bi = bi.add_mod(u16::TWO(), u16::from_literal(4_u128));
+    bi = bi.mul_mod(u16::TWO(), u16::from_literal(4_u128));
+    bi = bi.pow_mod(u16::TWO(), u16::from_literal(4_u128));
+    bi = bi.absolute();
+}
+
 
 pub fn seq_test () {
     ////////////////
@@ -88,16 +180,16 @@ pub fn seq_test () {
     ps = ps.less_than_bm(a.clone());
     ps = ps.less_than_or_equal_bm(a.clone());
 
-    // ps = ps.mul(a.clone());
-    // ps = ps.sub(a.clone());
-    // ps = ps.add(a.clone());
-    // ps = ps.not();
-    // ps = ps.bitor(a.clone());
-    // ps = ps.bitxor(a.clone());
-    // ps = ps.bitand(a.clone());
-    // ps = ps.shr(3);
-    // ps = ps.shl(3);
-
+    ps = ps * a.clone();
+    ps = ps - a.clone();
+    ps = ps + a.clone();
+    ps = !ps;
+    ps = ps | a.clone();
+    ps = ps ^ a.clone();
+    ps = ps & a.clone();
+    ps = ps >> 3;
+    ps = ps << 3;
+    
     ////////////////////////////////
     // lib/vec_integers_secret.rs //
     ////////////////////////////////
@@ -136,15 +228,19 @@ pub fn seq_test () {
     ss = ss.less_than_bm(a.clone());
     ss = ss.less_than_or_equal_bm(a.clone());
 
-    // ss = ss.mul(a.clone());
-    // ss = ss.sub(a.clone());
-    // ss = ss.add(a.clone());
-    // ss = ss.not();
-    // ss = ss.bitor(a.clone());
-    // ss = ss.bitxor(a.clone());
-    // ss = ss.bitand(a.clone());
-    // ss = ss.shr(3);
-    // ss = ss.shl(3);
+    ss = ss.clone() + a.clone();
+    ss = ss.clone() * a.clone();
+ 
+    ss = ss * a.clone();
+    ss = ss - a.clone();
+    ss = ss + a.clone();
+    ss = !ss;
+    ss = ss | a.clone();
+    ss = ss ^ a.clone();
+    ss = ss & a.clone();
+    ss = ss >> 3;
+    ss = ss << 3;
+
 
     /////////////////////////
     // lib/vec_integers.rs //

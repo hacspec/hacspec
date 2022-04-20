@@ -242,7 +242,7 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
     ident_str = secret_signed_int_fix
         .replace_all(&ident_str, "int")
         .to_string();
-    let mut snake_case_ident = ident_str.to_snake_case();
+    let snake_case_ident = ident_str.to_snake_case();
     RcDoc::as_string(snake_case_ident)
 }
 
@@ -373,14 +373,13 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
                         BinOpKind::Rem => return RcDoc::as_string("rem"),
-                        // Rem,
                         // And,
                         // Or,
                         BinOpKind::BitXor => return RcDoc::as_string("xor"),
                         BinOpKind::BitOr => return RcDoc::as_string("or"),
                         BinOpKind::BitAnd => return RcDoc::as_string("and"),
-                        // Shl,
-                        // Shr,
+                        BinOpKind::Shl => return RcDoc::as_string("<<"),
+                        BinOpKind::Shr => return RcDoc::as_string(">>"),
                         BinOpKind::Eq => return RcDoc::as_string("=.?"),
                         BinOpKind::Lt => return RcDoc::as_string("<.?"),
                         BinOpKind::Le => return RcDoc::as_string("<=.?"),
@@ -418,7 +417,16 @@ fn translate_binop<'a, 'b>(
                 BinOpKind::BitAnd => "and",
                 BinOpKind::Eq => "eq",
                 BinOpKind::Ne => "neq",
-                _ => panic!("operator: {:?}", op), // should not happen
+                BinOpKind::Rem => "rem",
+                BinOpKind::And => "and",
+                BinOpKind::Or => "or",
+                BinOpKind::Shr => "shift_right",
+                BinOpKind::Shl => "shift_left",
+                BinOpKind::Lt => "lt",
+                BinOpKind::Le => "le",
+                BinOpKind::Gt => "gt",
+                BinOpKind::Ge => "ge",
+                // _ => panic!("operator: {:?}", op), // should not happen
             };
             RcDoc::as_string(format!(
                 "{}_{}",
