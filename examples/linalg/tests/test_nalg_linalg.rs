@@ -1,3 +1,8 @@
+/*
+* QuickCheck testing for the linear algebra library against
+* the Nalgebra rust library.
+*/
+
 extern crate nalgebra;
 extern crate quickcheck;
 
@@ -44,6 +49,24 @@ fn quickcheck(helper: impl Testable) {
 // === Test Functions ===
 
 #[test]
+fn test_nalg_repeat() {
+    fn helper(n: u8, m: u8, s: i128) -> TestResult {
+        let n = n as usize;
+        let m = m as usize;
+
+        if n * m == 0 {
+            return TestResult::discard();
+        }
+
+        let hac = repeat(n, m, s).unwrap();
+        let ext = DMatrix::repeat(n, m, s);
+
+        TestResult::from_bool(assert_matrices(hac, ext))
+    }
+    quickcheck(helper as fn(u8, u8, i128) -> TestResult);
+}
+
+#[test]
 fn test_nalg_zeros() {
     fn helper(n: u8, m: u8) -> TestResult {
         let n = n as usize;
@@ -82,17 +105,18 @@ fn test_nalg_ones() {
 
 #[test]
 fn test_nalg_identity() {
-    fn helper(n: u8) -> TestResult {
+    fn helper(n: u8, m: u8) -> TestResult {
         let n = n as usize;
+        let m = m as usize;
 
-        if n == 0 {
+        if n == 0 || m == 0 {
             return TestResult::discard();
         }
 
-        let hac = identity(n).unwrap();
-        let ext = DMatrix::identity(n, n);
+        let hac = identity(n, m).unwrap();
+        let ext = DMatrix::identity(n, m);
 
         TestResult::from_bool(assert_matrices(hac, ext))
     }
-    quickcheck(helper as fn(u8) -> TestResult);
+    quickcheck(helper as fn(u8, u8) -> TestResult);
 }
