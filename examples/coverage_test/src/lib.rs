@@ -54,27 +54,27 @@ pub fn machine_integer_test () {
     /////////////////////////////
     // lib/machine_integers.rs //
     /////////////////////////////
-    u16::ZERO();
-    u16::ONE();
-    u16::TWO();
-    let mut bi = u16::from_literal(1238_u128);
+    u32::ZERO();
+    u8::ONE();
+    u128::TWO();
+    let mut mi = u16::from_literal(1238_u128);
     // u16::from_hex_string(&String::from(""));
-    bi = bi.get_bit(3);
-    bi = bi.set_bit(u16::ONE(), 3);
-    bi = bi.set(4, u16::TWO(), 2);
-    bi = bi.rotate_left(4);
-    bi = bi.rotate_right(4);
+    mi = mi.get_bit(3);
+    mi = mi.set_bit(u16::ONE(), 3);
+    mi = mi.set(4, u16::TWO(), 2);
+    mi = mi.rotate_left(4);
+    mi = mi.rotate_right(4);
 
     u16::max_val();
-    bi = bi.wrap_add(u16::TWO());
-    bi = bi.wrap_sub(u16::TWO());
-    bi = bi.wrap_mul(u16::TWO());
-    bi = bi.wrap_div(u16::TWO());
+    mi = mi.wrap_add(u16::TWO());
+    mi = mi.wrap_sub(u16::TWO());
+    mi = mi.wrap_mul(u16::TWO());
+    mi = mi.wrap_div(u16::TWO());
 
-    bi = bi.exp(2_u32);
-    bi = bi.pow_self(u16::TWO());
-    bi = bi.divide(u16::TWO());
-    bi = bi.inv(u16::TWO());
+    mi = mi.exp(2_u32);
+    mi = mi.pow_self(u16::TWO());
+    mi = mi.divide(u16::TWO());
+    mi = mi.inv(u16::TWO());
     let _ : bool = u16::ONE().equal(u16::TWO());
     
     let _ : bool = u16::ONE().greater_than(u16::TWO());
@@ -82,18 +82,20 @@ pub fn machine_integer_test () {
     let _ : bool = u16::ONE().less_than(u16::TWO());
     let _ : bool = u16::ONE().less_than_or_equal(u16::TWO());
 
-    bi = bi.not_equal_bm(u16::TWO());
-    bi = bi.equal_bm(u16::TWO());
-    bi = bi.greater_than_bm(u16::TWO());
-    bi = bi.greater_than_or_equal_bm(u16::TWO());
-    bi = bi.less_than_bm(u16::TWO());
-    bi = bi.less_than_or_equal_bm(u16::TWO());
+    mi = mi.not_equal_bm(u16::TWO());
+    mi = mi.equal_bm(u16::TWO());
+    mi = mi.greater_than_bm(u16::TWO());
+    mi = mi.greater_than_or_equal_bm(u16::TWO());
+    mi = mi.less_than_bm(u16::TWO());
+    mi = mi.less_than_or_equal_bm(u16::TWO());
 
-    bi = bi.sub_mod(u16::TWO(), u16::from_literal(4_u128));
-    bi = bi.add_mod(u16::TWO(), u16::from_literal(4_u128));
-    bi = bi.mul_mod(u16::TWO(), u16::from_literal(4_u128));
-    bi = bi.pow_mod(u16::TWO(), u16::from_literal(4_u128));
-    bi = bi.absolute();
+    mi = mi.sub_mod(u16::TWO(), u16::from_literal(4_u128));
+    mi = mi.add_mod(u16::TWO(), u16::from_literal(4_u128));
+    mi = mi.mul_mod(u16::TWO(), u16::from_literal(4_u128));
+    mi = mi.pow_mod(u16::TWO(), u16::from_literal(4_u128));
+    mi = mi.absolute();
+
+    U64(12_u64);
 }
 
 

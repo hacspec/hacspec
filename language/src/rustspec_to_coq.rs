@@ -321,16 +321,16 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::Unit => RcDoc::as_string("tt"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("@repr WORDSIZE128 {}", x)),
-        Literal::UInt128(x) => RcDoc::as_string(format!("@repr WORDSIZE128 {}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("@repr WORDSIZE64 {}", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("@repr WORDSIZE64 {}", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("@repr WORDSIZE32 {}", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("@repr WORDSIZE32 {}", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("@repr WORDSIZE16 {}", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("@repr WORDSIZE16 {}", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("@repr WORDSIZE8 {}", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("@repr WORDSIZE8 {}", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("repr (i := U128) {}", x)),
+        Literal::UInt128(x) => RcDoc::as_string(format!("repr (i := U128) {}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("repr (i := U64) {}", x)),
+        Literal::UInt64(x) => RcDoc::as_string(format!("repr (i := U64) {}", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("repr (i := U32) {}", x)),
+        Literal::UInt32(x) => RcDoc::as_string(format!("repr (i := U32) {}", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("repr (i := U16) {}", x)),
+        Literal::UInt16(x) => RcDoc::as_string(format!("repr (i := U16) {}", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("repr (i := U8) {}", x)),
+        Literal::UInt8(x) => RcDoc::as_string(format!("repr (i := U8) {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
@@ -2064,7 +2064,7 @@ pub fn translate_and_write_to_file(
     write!(
         file,
         "(** This file was automatically generated using Hacspec **)\n\
-        Require Import Hacspec_Lib MachineIntegers.\n\
+        Require Import Hacspec_Lib.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\
         Open Scope Z_scope.\n\

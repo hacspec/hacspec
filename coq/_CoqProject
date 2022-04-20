@@ -2,6 +2,8 @@
 -arg -w
 -arg all
 
+src/HacspecIntegerDefinitions.v
+
 src/MachineIntegers.v
 src/Hacspec_Lib.v
 src/QuickChickLib.v
