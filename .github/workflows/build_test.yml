@@ -23,6 +23,6 @@ jobs:
       - name: Test Provider
         run: cargo test --verbose -p rc-tests
       - name: Get hacspec function stats
-        run: RUST_NIGHTLY=nightly-2021-11-14 ./lib/get_func_stats.sh
+        run: RUST_NIGHTLY=nightly-2022-04-20 ./lib/get_func_stats.sh
       - name: Build and test Hacspec compiler
         run: cargo clean && cargo build -p hacspec-lib && cd language && cargo test --verbose
