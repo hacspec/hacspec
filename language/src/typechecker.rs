@@ -294,7 +294,7 @@ fn unify_types(
                     typ_ctx,
                     top_ctx,
                 );
-            }
+            },
             _ => (),
         },
         _ => (),
@@ -329,6 +329,7 @@ fn unify_types(
         },
         _ => (),
     }
+    
     match (&(t1.0).0, &(t2.0).0) {
         (Borrowing::Consumed, Borrowing::Consumed) | (Borrowing::Borrowed, Borrowing::Borrowed) => {
             match (&(t1.1).0, &(t2.1).0) {
@@ -1275,7 +1276,7 @@ fn typecheck_expression(
                 Err(())
             }
         }
-        Expression::FuncCall(prefix, name, args) => {
+        Expression::FuncCall(prefix, name, args, _arg_types) => {
             let (f_sig, typ_var_ctx) = find_func(
                 sess,
                 &match prefix {
@@ -1317,15 +1318,17 @@ fn typecheck_expression(
             }
             let mut var_context = var_context.clone();
             let mut new_args = Vec::new();
+            let mut new_arg_types = Vec::new();
             for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
                 sig_args.iter().zip(args)
-            {
+            {   
                 let (new_arg, arg_t, new_var_context) = typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
                     top_level_context,
                     &var_context,
                 )?;
+                
                 let new_arg_t = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
@@ -1355,10 +1358,12 @@ fn typecheck_expression(
                         arg_t.clone()
                     }
                 };
+                
                 new_args.push((
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
+                new_arg_types.push(new_arg_t.1.0.clone());
                 match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, top_level_context)? {
                     None => {
                         sess.span_rustspec_err(
@@ -1391,7 +1396,7 @@ fn typecheck_expression(
                     }
                 };
             Ok((
-                Expression::FuncCall(prefix.clone(), name.clone(), new_args),
+                Expression::FuncCall(prefix.clone(), name.clone(), new_args, Some(new_arg_types)),
                 (
                     (Borrowing::Consumed, name.1.clone()),
                     (ret_ty, name.1.clone()),
@@ -1399,7 +1404,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::MethodCall(sel, _, (f, f_span), orig_args) => {
+        Expression::MethodCall(sel, _, (f, f_span), orig_args, _args_types) => {
             let (sel, sel_borrow) = sel.as_ref();
             let mut var_context = var_context.clone();
             // We omit to take the new var context because it will be retypechecked later, this
@@ -1443,6 +1448,7 @@ fn typecheck_expression(
             args.push((sel.clone(), new_sel_borrow.clone()));
             args.extend(orig_args.clone());
             let mut new_args = Vec::new();
+            let mut new_arg_types = Vec::new();
             if sig_args.len() != args.len() {
                 sess.span_rustspec_err(
                     *span,
@@ -1498,6 +1504,7 @@ fn typecheck_expression(
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
+                new_arg_types.push(new_arg_t.1.0.clone());
                 match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, top_level_context)? {
                     None => {
                         sess.span_rustspec_err(
@@ -1518,6 +1525,7 @@ fn typecheck_expression(
             }
             let new_sel = new_args.first().unwrap().clone();
             new_args = new_args[1..].to_vec();
+            new_arg_types = new_arg_types[1..].to_vec();
             let ret_ty = sig_ret(&f_sig);
             let ret_ty = bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx)?;
             Ok((
@@ -1526,6 +1534,7 @@ fn typecheck_expression(
                     Some(sel_typ),
                     (f.clone(), f_span.clone()),
                     new_args,
+                    Some(new_arg_types),
                 ),
                 (
                     (Borrowing::Consumed, f_span.clone()),
@@ -2033,6 +2042,41 @@ fn typecheck_question_mark(
             (
                 (Borrowing::Consumed, _),
                 (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
+            ) if name == "Option" && args.len() == 1 => {
+                let some_typ = &args[0];
+                match return_typ {
+                    (
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: return_name,
+                                    ..
+                                },
+                                _,
+                            ),
+                            Some(return_args),
+                        ),
+                        _,
+                    ) if return_name == "Option" && return_args.len() == 1 => {
+                        expr_typ = ((Borrowing::Consumed, some_typ.1.clone()), some_typ.clone());
+                    }
+                    _ => {
+                        sess.span_rustspec_err(
+                            return_typ.1,
+                            format!(
+                                "expected a option type for this \
+                    return type because of a question mark in the function, got {}",
+                                return_typ.0,
+                            )
+                            .as_str(),
+                        );
+                        return Err(());
+                    }
+                }
+            }
+            (
+                (Borrowing::Consumed, _),
+                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
             ) if name == "Result" && args.len() == 2 => {
                 let ok_typ = &args[0];
                 let err_typ = &args[1];
@@ -2111,6 +2155,20 @@ fn typecheck_question_mark(
     Ok(expr_typ)
 }
 
+fn early_return_type_from_return_type(
+    top_level_context: &TopLevelContext,
+    return_typ: BaseTyp,
+) -> Fillable<EarlyReturnType> {
+    match dealias_type(return_typ, top_level_context) {
+        BaseTyp::Named((a, _), _) => match a.string.as_str() {
+            "Option" => Some(EarlyReturnType::Option),
+            "Result" => Some(EarlyReturnType::Result),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -2131,10 +2189,16 @@ fn typecheck_statement(
                 top_level_context,
             )?;
             let typ = match typ {
-                None => Some ((expr_typ.clone(), expr.1.clone())),
+                None => Some((expr_typ.clone(), expr.1.clone())),
                 Some((inner_typ, _)) => {
-                    if unify_types(sess, inner_typ, &expr_typ, &HashMap::new(), top_level_context)?
-                        .is_none()
+                    if unify_types(
+                        sess,
+                        inner_typ,
+                        &expr_typ,
+                        &HashMap::new(),
+                        top_level_context,
+                    )?
+                    .is_none()
                     {
                         sess.span_rustspec_err(
                             *pat_span,
@@ -2379,6 +2443,8 @@ fn typecheck_statement(
                     new_b2,
                     Some(Box::new(MutatedInfo {
                         vars: new_mutated.clone(),
+                        early_return_type: early_return_type_from_return_type(top_level_context, return_typ.0.clone()),
+
                         stmt: mut_tuple,
                     })),
                 ),
@@ -2534,11 +2600,13 @@ fn typecheck_block(
         (Statement::ForLoop(_, _, _, loop_b), _) => loop_b.0.contains_question_mark.unwrap(),
         _ => false,
     }));
+
     Ok((
         Block {
             stmts: new_stmts,
             mutated: Some(Box::new(MutatedInfo {
                 vars: mutated_vars,
+                early_return_type: early_return_type_from_return_type(top_level_context, function_return_typ.0.clone()),
                 stmt: mut_tuple,
             })),
             return_typ,

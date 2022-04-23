@@ -229,8 +229,16 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
     RcDoc::as_string(snake_case_ident)
 }
 
+fn uppercase_first_letter(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
 fn translate_constructor<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
-    RcDoc::as_string(enum_name.string)
+    RcDoc::as_string(uppercase_first_letter(&enum_name.string))
 }
 
 fn translate_enum_name<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
@@ -246,7 +254,7 @@ fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) ->
                 RcDoc::as_string("_").append(translate_toplevel_ident(name.0))
             }
         }
-        _ => panic!("shoud not happen"),
+        _ => panic!("should not happen"),
     })
 }
 
@@ -357,6 +365,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt8(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I8" => Expression::FuncCall(
                 None,
@@ -365,6 +374,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int8(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U16" => Expression::FuncCall(
                 None,
@@ -373,6 +383,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt16(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I16" => Expression::FuncCall(
                 None,
@@ -381,6 +392,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int16(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U32" => Expression::FuncCall(
                 None,
@@ -389,6 +401,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt32(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I32" => Expression::FuncCall(
                 None,
@@ -397,6 +410,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int32(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U64" => Expression::FuncCall(
                 None,
@@ -405,6 +419,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt64(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I64" => Expression::FuncCall(
                 None,
@@ -413,6 +428,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int64(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "U128" => Expression::FuncCall(
                 None,
@@ -421,6 +437,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::UInt128(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             "I128" => Expression::FuncCall(
                 None,
@@ -429,6 +446,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
                     (Expression::Lit(Literal::Int128(0)), i_s.clone()),
                     (Borrowing::Consumed, i_s.clone()),
                 )],
+                None,
             ),
             _ => panic!("Trying to get default for {}", t),
         },
@@ -469,6 +487,7 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Add => return RcDoc::as_string("+%"),
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
+                        BinOpKind::Eq => return RcDoc::as_string("=%"),
                         _ => unimplemented!(),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
@@ -846,7 +865,7 @@ fn translate_expression<'a>(
                 .map(|(e, _)| translate_expression(sess, e, top_ctx)),
         ),
         Expression::Named(p) => translate_ident(p.clone()),
-        Expression::FuncCall(prefix, name, args) => {
+        Expression::FuncCall(prefix, name, args, _arg_types) => {
             let (func_name, additional_args) = translate_func_name(
                 sess,
                 prefix.clone(),
@@ -871,7 +890,7 @@ fn translate_expression<'a>(
                     RcDoc::nil()
                 })
         }
-        Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
+        Expression::MethodCall(sel_arg, sel_typ, (f, _), args, _arg_types) => {
             let (func_name, additional_args) = translate_func_name(
                 sess,
                 sel_typ.clone().map(|x| x.1),

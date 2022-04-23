@@ -8,7 +8,7 @@ edition = "2018"
 random = []
 
 [dependencies]
-evercrypt = "0.0.10"
+evercrypt = "0.0.11"
 hacspec-provider = { path = "../../provider" }
 aead = { version = "0.4", features = ["alloc"] }
 

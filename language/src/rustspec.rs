@@ -334,12 +334,14 @@ pub enum Expression {
         Option<Spanned<BaseTyp>>,
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
+        Fillable<Vec<BaseTyp>>,
     ),
     MethodCall(
         Box<(Spanned<Expression>, Spanned<Borrowing>)>,
         Option<Typ>, // Type of self, to be filled by the typechecker
         Spanned<TopLevelIdent>,
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
+        Fillable<Vec<BaseTyp>>,
     ),
     EnumInject(
         BaseTyp,                          // Type of enum
@@ -382,7 +384,14 @@ pub enum Pattern {
 }
 
 #[derive(Clone, Serialize, Debug)]
+pub enum EarlyReturnType {
+    Option,
+    Result,
+}
+
+#[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
+    pub early_return_type: Fillable<EarlyReturnType>,
     pub vars: VarSet,
     pub stmt: Statement,
 }

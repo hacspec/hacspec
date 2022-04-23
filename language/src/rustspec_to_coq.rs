@@ -389,11 +389,11 @@ fn translate_binop<'a, 'b>(
                         // Shl,
                         // Shr,
                         BinOpKind::Eq => return RcDoc::as_string("=.?"),
-                        // Lt,
-                        // Le,
+                        BinOpKind::Lt => return RcDoc::as_string("<.?"),
+                        BinOpKind::Le => return RcDoc::as_string("<=.?"),
                         BinOpKind::Ne => return RcDoc::as_string("!=.?"),
-                        // Ge,
-                        // Gt,
+                        BinOpKind::Ge => return RcDoc::as_string(">=.?"),
+                        BinOpKind::Gt => return RcDoc::as_string(">.?"),
                         _ => unimplemented!("{:?}", op),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
@@ -554,7 +554,13 @@ fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
     name: Ident,
     top_ctx: &'a TopLevelContext,
-) -> (RcDoc<'a, ()>, Vec<RcDoc<'a, ()>>, Option<BaseTyp>) {
+    args_ty: Vec<BaseTyp>,
+) -> (
+    RcDoc<'a, ()>,
+    Vec<RcDoc<'a, ()>>,
+    Option<BaseTyp>,
+    Vec<(RcDoc<'a, ()>, RcDoc<'a, ()>)>,
+) {
     match prefix.clone() {
         None => {
             let name = translate_ident(name.clone());
@@ -564,17 +570,26 @@ fn translate_func_name<'a>(
                 // a public integer of the same kind. So in Coq, that
                 // will amount to a classification operation
                 // TODO: may need to add type annotation here
-                "uint128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt128)),
-                "uint64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt64)),
-                "uint32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt32)),
-                "uint16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt16)),
-                "uint8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::UInt8)),
-                "int128" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int128)),
-                "int64" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int64)),
-                "int32" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int32)),
-                "int16" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int16)),
-                "int8" => (RcDoc::as_string("secret"), vec![], Some(BaseTyp::Int8)),
-                _ => (name, vec![], None), // TODO: is None correct?
+                x @ ("uint128" | "uint64" | "uint32" | "uint16" | "uint8" | "int128" | "int64"
+                | "int32" | "int16" | "int8") => (
+                    RcDoc::as_string("secret"),
+                    vec![],
+                    Some(match x {
+                        "uint128" => BaseTyp::UInt128,
+                        "uint64" => BaseTyp::UInt64,
+                        "uint32" => BaseTyp::UInt32,
+                        "uint16" => BaseTyp::UInt16,
+                        "uint8" => BaseTyp::UInt8,
+                        "int128" => BaseTyp::Int128,
+                        "int64" => BaseTyp::Int64,
+                        "int32" => BaseTyp::Int32,
+                        "int16" => BaseTyp::Int16,
+                        "int8" => BaseTyp::Int8,
+                        _ => panic!("Should not happen"),
+                    }),
+                    vec![],
+                ),
+                _ => (name, vec![], None, vec![]), // TODO: is None correct?
             }
         }
         Some((prefix, _)) => {
@@ -585,6 +600,8 @@ fn translate_func_name<'a>(
 
             let func_ident = translate_ident(name.clone());
             let mut additional_args = Vec::new();
+
+            let mut extra_info = Vec::new();
 
             // We add the modulo value for nat_mod
 
@@ -630,7 +647,7 @@ fn translate_func_name<'a>(
             ) {
                 (NAT_MODULE, "from_byte_seq_le") | (NAT_MODULE, "from_byte_seq_be") => {
                     match &prefix_info {
-                        FuncPrefix::NatMod(modulo, _) => {
+                        FuncPrefix::NatMod(_modulo, _) => {
                             result_typ = Some(prefix.clone());
                         }
                         _ => panic!(), // should not happen
@@ -657,6 +674,82 @@ fn translate_func_name<'a>(
                 }
                 _ => (),
             };
+
+            // Handle everything with the SeqTrait.
+            match (
+                format!("{}", module_name.pretty(0)).as_str(),
+                format!("{}", func_ident.pretty(0)).as_str(),
+            ) {
+                m @ ((ARRAY_MODULE, "from_slice")
+                | (ARRAY_MODULE, "concat")
+                | (ARRAY_MODULE, "from_slice_range")
+                | (ARRAY_MODULE, "set_chunk")
+                | (ARRAY_MODULE, "update_slice")
+                | (ARRAY_MODULE, "update")
+                | (ARRAY_MODULE, "update_start")
+                | (ARRAY_MODULE, "from_seq")
+                | (SEQ_MODULE, "from_slice")
+                | (SEQ_MODULE, "concat")
+                | (SEQ_MODULE, "from_slice_range")
+                | (SEQ_MODULE, "set_chunk")
+                | (SEQ_MODULE, "set_exact_chunk")
+                | (SEQ_MODULE, "update_slice")
+                | (SEQ_MODULE, "update")
+                | (SEQ_MODULE, "update_start")
+                | (SEQ_MODULE, "from_seq")
+                | (SEQ_MODULE, "from_public_seq")
+                | (NAT_MODULE, "from_byte_seq_le")
+                | (NAT_MODULE, "from_byte_seq_be")
+                | (NAT_MODULE, "to_public_byte_seq_le")
+                | (NAT_MODULE, "to_public_byte_seq_be")) => {
+                    // position in arg list (does not count self)
+                    let position = match m {
+                        (ARRAY_MODULE, "from_slice")
+                        | (ARRAY_MODULE, "concat")
+                        | (ARRAY_MODULE, "from_slice_range")
+                        | (ARRAY_MODULE, "update_start")
+                        | (ARRAY_MODULE, "from_seq")
+                        | (SEQ_MODULE, "from_slice")
+                        | (SEQ_MODULE, "concat")
+                        | (SEQ_MODULE, "from_slice_range")
+                        | (SEQ_MODULE, "update_start")
+                        | (SEQ_MODULE, "from_seq")
+                        | (SEQ_MODULE, "from_public_seq")
+                        | (NAT_MODULE, "from_byte_seq_le")
+                        | (NAT_MODULE, "from_byte_seq_be")
+                        | (NAT_MODULE, "to_public_byte_seq_le")
+                        | (NAT_MODULE, "to_public_byte_seq_be") => 0,
+                        (ARRAY_MODULE, "update")
+                        | (SEQ_MODULE, "update")
+                        | (ARRAY_MODULE, "update_slice")
+                        | (SEQ_MODULE, "update_slice") => 1,
+                        (ARRAY_MODULE, "set_chunk")
+                        | (SEQ_MODULE, "set_chunk")
+                        | (SEQ_MODULE, "set_exact_chunk") => 2,
+                        _ => panic!(),
+                    };
+
+                    let ty = match args_ty[position].clone() {
+                        BaseTyp::Named(p, _) => match top_ctx.typ_dict.get(&p.0) {
+                            Some(x) => x.0 .1 .0.clone(),
+                            None => args_ty[position].clone(),
+                        },
+                        _ => args_ty[position].clone(),
+                    };
+
+                    if let BaseTyp::Array(..) = ty {
+                        while extra_info.len() <= position {
+                            extra_info.push((RcDoc::nil(), RcDoc::nil()))
+                        }
+                        extra_info.insert(
+                            position,
+                            (RcDoc::as_string("array_to_seq ("), RcDoc::as_string(")")),
+                        );
+                    }
+                }
+                _ => (),
+            };
+
             match (
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
@@ -671,7 +764,11 @@ fn translate_func_name<'a>(
                             additional_args.push(translate_ident(Ident::TopLevel(s.clone())))
                         }
                         FuncPrefix::Array(ArraySize::Integer(i), _) => {
-                            additional_args.push(RcDoc::as_string(format!("{}", i)))
+                            if *i == 0 {
+                                additional_args.push(RcDoc::as_string("_"))
+                            } else {
+                                additional_args.push(RcDoc::as_string(format!("{}", i)))
+                            }
                         }
                         FuncPrefix::Seq(_) => {
                             // This is the Seq case, should be alright
@@ -689,6 +786,7 @@ fn translate_func_name<'a>(
                     .append(func_ident.clone()),
                 additional_args,
                 result_typ,
+                extra_info,
             )
         }
     }
@@ -772,9 +870,13 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .map(|(e, _)| translate_expression(e, top_ctx)),
         ),
         Expression::Named(p) => translate_ident(p.clone()),
-        Expression::FuncCall(prefix, name, args) => {
-            let (func_name, additional_args, func_ret_ty) =
-                translate_func_name(prefix.clone(), Ident::TopLevel(name.0.clone()), top_ctx);
+        Expression::FuncCall(prefix, name, args, arg_types) => {
+            let (func_name, additional_args, func_ret_ty, extra_info) = translate_func_name(
+                prefix.clone(),
+                Ident::TopLevel(name.0.clone()),
+                top_ctx,
+                arg_types.unwrap(),
+            );
             let total_args = args.len() + additional_args.len();
             func_name
                 // We append implicit arguments first
@@ -784,9 +886,19 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         .map(|arg| RcDoc::space().append(make_paren(arg))),
                 ))
                 // Then the explicit arguments
-                .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
-                    RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
-                })))
+                .append(RcDoc::concat(args.into_iter().enumerate().map(
+                    |(i, ((arg, _), _))| {
+                        RcDoc::space().append(make_paren(if i < extra_info.len() {
+                            let (pre_arg, post_arg) = extra_info[i].clone();
+                            pre_arg
+                                .clone()
+                                .append(translate_expression(arg, top_ctx))
+                                .append(post_arg.clone())
+                        } else {
+                            translate_expression(arg, top_ctx)
+                        }))
+                    },
+                )))
                 .append(if total_args == 0 {
                     RcDoc::space() //.append(RcDoc::as_string("()"))
                 } else {
@@ -797,7 +909,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     None => RcDoc::nil(),
                 })
         }
-        Expression::MethodCall(sel_arg, sel_typ, (f, _), args) => {
+        Expression::MethodCall(sel_arg, sel_typ, (f, _), args, arg_types) => {
             // Ignore "clone" // TODO: is this correct?
             if f.string == "clone" {
                 // Then the self argument
@@ -807,10 +919,11 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
                     })))
             } else {
-                let (func_name, additional_args, func_ret_ty) = translate_func_name(
+                let (func_name, additional_args, func_ret_ty, extra_info) = translate_func_name(
                     sel_typ.clone().map(|x| x.1),
                     Ident::TopLevel(f.clone()),
                     top_ctx,
+                    arg_types.unwrap(),
                 );
                 func_name // We append implicit arguments first
                     .append(RcDoc::concat(
@@ -822,9 +935,19 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     // Then the self argument
                     .append(make_paren(translate_expression((sel_arg.0).0, top_ctx)))
                     // And finally the rest of the arguments
-                    .append(RcDoc::concat(args.into_iter().map(|((arg, _), _)| {
-                        RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
-                    })))
+                    .append(RcDoc::concat(args.into_iter().enumerate().map(
+                        |(i, ((arg, _), _))| {
+                            RcDoc::space().append(make_paren(if i < extra_info.len() {
+                                let (pre_arg, post_arg) = extra_info[i].clone();
+                                pre_arg
+                                    .clone()
+                                    .append(translate_expression(arg, top_ctx))
+                                    .append(post_arg.clone())
+                            } else {
+                                translate_expression(arg, top_ctx)
+                            }))
+                        },
+                    )))
                     .append(match func_ret_ty {
                         Some(ret_ty) => RcDoc::as_string(" : ").append(translate_base_typ(ret_ty)),
                         None => RcDoc::nil(),
@@ -963,36 +1086,53 @@ fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
 }
 
 // taken from rustspec_to_fstar
-fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> {
+fn add_ok_if_result(
+    stmt: Statement,
+    early_return_type: Fillable<EarlyReturnType>,
+    question_mark: bool,
+) -> Spanned<Statement> {
     (
-        if question_mark {
-            // If b has an early return, then we must prefix the returned
-            // mutated variables by Ok
-            match stmt {
-                Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
-                    BaseTyp::Named(
-                        (
-                            TopLevelIdent {
-                                string: "Result".to_string(),
-                                kind: TopLevelIdentKind::Type,
-                            },
-                            DUMMY_SP.into(),
-                        ),
-                        None,
-                    ),
-                    (
-                        TopLevelIdent {
-                            string: "Ok".to_string(),
-                            kind: TopLevelIdentKind::EnumConstructor,
-                        },
-                        DUMMY_SP.into(),
-                    ),
-                    Some((Box::new(e.clone()), DUMMY_SP.into())),
-                )),
-                _ => panic!("should not happen"),
+        match early_return_type {
+            Some(ert) => {
+                if question_mark {
+                    // If b has an early return, then we must prefix the returned
+                    // mutated variables by Ok or Some
+                    match stmt {
+                        Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
+                            BaseTyp::Named(
+                                (
+                                    TopLevelIdent {
+                                        string: match ert {
+                                            EarlyReturnType::Option => "Option",
+                                            EarlyReturnType::Result => "Result",
+                                        }
+                                        .to_string(),
+                                        kind: TopLevelIdentKind::Type,
+                                    },
+                                    DUMMY_SP.into(),
+                                ),
+                                None,
+                            ),
+                            (
+                                TopLevelIdent {
+                                    string: match ert {
+                                        EarlyReturnType::Option => "Some",
+                                        EarlyReturnType::Result => "Ok",
+                                    }
+                                    .to_string(),
+                                    kind: TopLevelIdentKind::EnumConstructor,
+                                },
+                                DUMMY_SP.into(),
+                            ),
+                            Some((Box::new(e.clone()), DUMMY_SP.into())),
+                        )),
+                        _ => panic!("should not happen"),
+                    }
+                } else {
+                    stmt.clone()
+                }
             }
-        } else {
-            stmt.clone()
+            _ => stmt.clone(),
         },
         DUMMY_SP.into(),
     )
@@ -1135,6 +1275,7 @@ fn translate_statements<'a>(
             let either_blocks_contains_question_mark = b1_question_mark || b2_question_mark;
             b1.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
+                mutated_info.early_return_type.clone(),
                 b1_question_mark,
             ));
             let expr = RcDoc::as_string("if")
@@ -1156,6 +1297,7 @@ fn translate_statements<'a>(
                     Some((mut b2, _)) => {
                         b2.stmts.push(add_ok_if_result(
                             mutated_info.stmt.clone(),
+                            mutated_info.early_return_type.clone(),
                             b2_question_mark,
                         ));
                         RcDoc::space()
@@ -1199,6 +1341,7 @@ fn translate_statements<'a>(
                         Some((mut b2, _)) => {
                             b2.stmts.push(add_ok_if_result(
                                 mutated_info.stmt.clone(),
+                                mutated_info.early_return_type.clone(),
                                 b2_question_mark,
                             ));
                             let block2 = make_paren(translate_block(b2, true, top_ctx));
@@ -1229,8 +1372,11 @@ fn translate_statements<'a>(
             let mutated_info = b.mutated.clone().unwrap();
             // TODO: handle question_mark
             let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
-            b.stmts
-                .push(add_ok_if_result(mutated_info.stmt.clone(), b_question_mark));
+            b.stmts.push(add_ok_if_result(
+                mutated_info.stmt.clone(),
+                mutated_info.early_return_type.clone(),
+                b_question_mark,
+            ));
 
             let mut_tuple = |prefix: String| -> RcDoc<'a> {
                 // if there is only one element, just print the identifier instead of making a tuple
@@ -1264,6 +1410,7 @@ fn translate_statements<'a>(
                     .append(RcDoc::as_string("for"))
                     .append(RcDoc::space())
                     .append(mut_tuple("".to_string()).clone())
+                    .append(RcDoc::space())
                     .append(">> (fun")
                     .append(RcDoc::space())
                     .append(match x {
@@ -1847,11 +1994,7 @@ fn translate_item<'a>(
         Item::ImportedCrate((TopLevelIdent { string: kr, .. }, _)) => {
             RcDoc::as_string(format!(
             "Require Import {}.",
-                str::replace(
-                    // TODO: Better name resolution for crate imports
-                    // Only first should be outer crate name (no crate with _ allowed?)
-                    &str::replacen(&kr.to_title_case(), " ", ".", 1),
-                    " ", "_")
+                str::replace(&kr.to_title_case(), " ", "_"),
             ))
         }
         // Aliases are translated to Coq Notations
@@ -2030,7 +2173,7 @@ pub fn translate_and_write_to_file(
     write!(
         file,
         "(** This file was automatically generated using Hacspec **)\n\
-        Require Import Lib MachineIntegers.\n\
+        Require Import Hacspec_Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\
         Open Scope Z_scope.\n\

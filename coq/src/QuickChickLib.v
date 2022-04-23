@@ -1,11 +1,10 @@
-Require Import Lib MachineIntegers.
+Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
 From QuickChick Require Import QuickChick.
-Require Import Hacspec.Lib.
 Require Import Coq.Lists.List.
 
 #[global] Instance show_unit : Show (unit) := Build_Show (unit) (fun _ => "tt"%string).
@@ -63,7 +62,7 @@ Definition g_listOf {A} (gen : G (A)) : G (list A) :=
   Build_Show (nseq A n) (fun x =>
      match x with
      | Vector.nil _ => "[]"%string
-     | Vector.cons _ x n xs => ("[" ++ fold_left (fun a b => (a ++ " " ++ show b)) xs (show x) ++ "]")%string
+     | Vector.cons _ x n xs => ("[" ++ fold_left (fun a b => (a ++ " " ++ show b)) (VectorDef.to_list xs) (show x) ++ "]")%string
      end).
  
 Definition array_from_list_ (A : Type) (n : nat) (l : list A) `{n = (Datatypes.length l)} : nseq A n.

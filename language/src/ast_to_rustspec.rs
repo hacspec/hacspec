@@ -19,10 +19,10 @@ use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
 #[derive(Clone)]
-struct SpecialNames {
-    arrays: HashSet<String>,
-    enums: HashSet<String>,
-    aliases: HashMap<String, BaseTyp>,
+pub struct SpecialNames {
+    pub arrays: HashSet<String>,
+    pub enums: HashSet<String>,
+    pub aliases: HashMap<String, BaseTyp>,
 }
 
 fn dealias_probable_enum_name(
@@ -716,6 +716,7 @@ fn translate_expr(
                                                                 i.clone(),
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
+                                                            None,
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -756,6 +757,7 @@ fn translate_expr(
                                                                 i.clone(),
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
+                                                            None,
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -810,6 +812,7 @@ fn translate_expr(
                             func_prefix,
                             func_name,
                             func_args,
+                            None,
                         )),
                         e.span.into(),
                     ))
@@ -866,6 +869,7 @@ fn translate_expr(
                     None,
                     method_name,
                     rest_args_final,
+                    None,
                 )),
                 e.span.into(),
             ))
@@ -1367,6 +1371,7 @@ fn translate_expr(
                                                     i.clone(),
                                                     (Borrowing::Consumed, i.1.clone()),
                                                 )],
+                                                Some(vec![BaseTyp::UInt8]),
                                             ),
                                             i.1.clone(),
                                         )
@@ -2782,19 +2787,15 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     krate: &Crate,
     external_data: &F,
+    specials: &mut SpecialNames,
 ) -> TranslationResult<Program> {
     let items = &krate.items;
-    let mut specials = SpecialNames {
-        arrays: HashSet::new(),
-        enums: HashSet::new(),
-        aliases: HashMap::new(),
-    };
     let translated_items = check_vec(
         items
             .into_iter()
             .map(|i| {
                 let (new_i, new_specials) = translate_items(sess, &i, &specials, external_data)?;
-                specials = new_specials;
+                *specials = new_specials;
                 Ok((new_i, i.span))
             })
             .collect(),

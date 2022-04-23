@@ -185,7 +185,7 @@ fn resolve_expression(
             )?;
             Ok((Expression::Named(new_i), e_span))
         }
-        Expression::FuncCall(ty, f, args) => {
+        Expression::FuncCall(ty, f, args, arg_types) => {
             let new_args = check_vec(
                 args.into_iter()
                     .map(|arg| {
@@ -195,9 +195,9 @@ fn resolve_expression(
                     })
                     .collect(),
             )?;
-            Ok((Expression::FuncCall(ty, f, new_args), e_span))
+            Ok((Expression::FuncCall(ty, f, new_args, arg_types), e_span))
         }
-        Expression::MethodCall(self_, ty, f, args) => {
+        Expression::MethodCall(self_, ty, f, args, args_types) => {
             let (self_, self_borrow) = *self_;
             let new_self = resolve_expression(sess, self_, name_context, top_level_ctx)?;
             let new_args = check_vec(
@@ -210,7 +210,7 @@ fn resolve_expression(
                     .collect(),
             )?;
             Ok((
-                Expression::MethodCall(Box::new((new_self, self_borrow)), ty, f, new_args),
+                Expression::MethodCall(Box::new((new_self, self_borrow)), ty, f, new_args, args_types),
                 e_span,
             ))
         }
@@ -761,21 +761,17 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     p: Program,
     external_data: &F,
-) -> ResolutionResult<(Program, TopLevelContext)> {
-    let mut top_level_ctx = TopLevelContext {
-        consts: HashMap::new(),
-        functions: HashMap::new(),
-        typ_dict: HashMap::new(),
-    };
+    top_level_ctx : &mut TopLevelContext,
+) -> ResolutionResult<Program> {
     // First we fill the context with external symbols
-    enrich_with_external_crates_symbols(sess, &p, &mut top_level_ctx, external_data)?;
+    enrich_with_external_crates_symbols(sess, &p, top_level_ctx, external_data)?;
     // Then we do a first pass that collects types and signatures of top-level
     // items
     for item in p.items.iter() {
-        process_decl_item(sess, item, &mut top_level_ctx)?;
+        process_decl_item(sess, item, top_level_ctx)?;
     }
     // And finally a second pass that performs the actual name resolution
-    Ok((
+    Ok(
         Program {
             items: check_vec(
                 p.items
@@ -783,7 +779,6 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                     .map(|i| resolve_item(sess, i, &top_level_ctx))
                     .collect(),
             )?,
-        },
-        top_level_ctx,
-    ))
+        }
+    )
 }

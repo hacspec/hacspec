@@ -2,3 +2,6 @@
 *.aux
 *.glob
 *.cache
+.Makefile.d
+Makefile
+Makefile.conf

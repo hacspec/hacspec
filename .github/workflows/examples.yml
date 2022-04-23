@@ -1,0 +1,22 @@
+name: Test Examples
+
+on: [push, pull_request, release]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build release
+        run: cargo build --verbose --release
+      - name: Run release tests
+        run: cargo test --verbose --release

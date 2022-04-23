@@ -1,11 +1,11 @@
 (** This file was automatically generated using Hacspec **)
-Require Import Lib MachineIntegers.
+Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
-Require Import Hacspec.Lib.
+Require Import Hacspec_Lib.
 
 Notation "'my_integer_type_t'" := (uint_size) : hacspec_scope.
 
@@ -43,7 +43,7 @@ Definition bar (x_4 : uint32) : uint32 :=
 Definition foobar (x_6 : int32) : (result int32 int32) :=
   let y_7 : int32 :=
     x_6 in 
-  bind (foldibnd (usize 0) to (usize 5) for y_7>> (fun _ y_7 =>
+  bind (foldibnd (usize 0) to (usize 5) for y_7 >> (fun _ y_7 =>
     ifbnd (y_7) >.? (@repr WORDSIZE32 100) : bool
     thenbnd (bind (@Err int32 int32 (y_7)) (fun _ => Ok (tt)))
     else (tt) >> (fun 'tt =>

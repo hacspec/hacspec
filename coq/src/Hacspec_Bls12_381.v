@@ -1,5 +1,5 @@
 (** This file was automatically generated using Hacspec **)
-Require Import Lib MachineIntegers.
+Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
 Open Scope Z_scope.
@@ -7,7 +7,7 @@ Open Scope bool_scope.
 Open Scope hacspec_scope.
 From QuickChick Require Import QuickChick.
 Require Import QuickChickLib.
-Require Import Hacspec.Lib.
+Require Import Hacspec_Lib.
 
 Definition fp_canvas_t := nseq (int8) (48).
 Definition fp_t :=
