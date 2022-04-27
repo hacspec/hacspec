@@ -25,6 +25,7 @@ pub type Scalar = i128;
 pub type Dims = (DimType, DimType);
 pub type Matrix = (Dims, Seq<Scalar>);
 pub type MatRes = Result<Matrix, ()>;
+pub type ScalRes = Result<Scalar, ()>;
 
 // Generate new matrix using rows, cols and a seq.
 pub fn new(rows: DimType, cols: DimType, seq: Seq<Scalar>) -> MatRes {
@@ -68,4 +69,73 @@ pub fn identity(n: DimType, m: DimType) -> MatRes {
     }
 
     new(n, m, ret)
+}
+
+// Gets the index of a matrix
+pub fn index(m: Matrix, i: DimType, j: DimType) -> ScalRes {
+    let (dim, seq) = m;
+    let (rows, cols) = dim;
+    let index = i * cols + j;
+
+    if index >= rows * cols {
+        ScalRes::Err(())
+    } else {
+        ScalRes::Ok(seq[index])
+    }
+}
+
+// Transposes a matrix
+pub fn transpose(matrix: Matrix) -> Matrix {
+    let (dim, seq) = matrix;
+    let (rows, cols) = dim;
+    let mut ret = Seq::<Scalar>::new(seq.len());
+
+    for i in 0..rows {
+        for j in 0..cols {
+            let seq_index = i * cols + j;
+            let ret_index = j * rows + i;
+            ret[ret_index] = seq[seq_index]
+        }
+    }
+
+    ((cols, rows), ret)
+}
+
+// Returns a matrix slice, given a Matrix and two Dims (pairs of usize),
+// first Dims pair representing the starting point and second Dims
+// pair the dimensions
+pub fn slice(matrix: Matrix, start: Dims, len: Dims) -> MatRes {
+    let (dim, seq) = matrix;
+    let (rows, cols) = dim;
+    let (start_row, start_col) = start;
+    let (len_rows, len_cols) = len;
+    let start_index = start_row * cols + start_col;
+    let mut ret = Seq::<Scalar>::new(len_rows * len_cols);
+    let mut res = MatRes::Err(());
+
+    if start_index + len_rows * len_cols <= rows * cols {
+        for i in 0..len_rows {
+            for j in 0..len_cols {
+                let ret_index = i * len_cols + j;
+                let seq_index = (start_row + i) * cols + (start_col + j);
+                ret[ret_index] = seq[seq_index].clone()
+            }
+        }
+
+        res = new(len_rows, len_cols, ret);
+    }
+
+    res
+}
+
+// Scale a matrix with a given scalar
+pub fn scale(matrix: Matrix, scalar: Scalar) -> Matrix {
+    let (dim, seq) = matrix;
+    let mut ret = Seq::<Scalar>::new(seq.len());
+
+    for i in 0..seq.len() {
+        ret[i] = scalar * seq[i].clone()
+    }
+
+    (dim, ret)
 }

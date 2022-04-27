@@ -12,6 +12,8 @@ use hacspec_linalg::*;
 use nalgebra::DMatrix;
 use quickcheck::*;
 
+type IntSize = i32;
+
 // === Helper functions ===
 
 fn assert_matrices(x: Matrix, y: DMatrix<Scalar>) -> bool {
@@ -44,6 +46,14 @@ fn quickcheck(helper: impl Testable) {
         .min_tests_passed(100)
         .max_tests(1000000)
         .quickcheck(helper);
+}
+
+fn cast_vec(xs: Vec<IntSize>) -> Vec<Scalar> {
+    xs.into_iter().map(|x| x.into()).collect()
+}
+
+fn dmatrix(n: usize, m: usize, xs: Vec<Scalar>) -> DMatrix<Scalar> {
+    DMatrix::from_vec(m, n, xs).transpose()
 }
 
 // === Test Functions ===
@@ -119,4 +129,124 @@ fn test_nalg_identity() {
         TestResult::from_bool(assert_matrices(hac, ext))
     }
     quickcheck(helper as fn(u8, u8) -> TestResult);
+}
+
+#[test]
+fn test_nalg_index() {
+    fn helper(xs: Vec<IntSize>, n: u8, m: u8) -> TestResult {
+        let mut xs = cast_vec(xs);
+        let n = n as usize;
+        let m = m as usize;
+
+        if n * m == 0 || n * m > xs.len() {
+            return TestResult::discard();
+        }
+
+        xs.truncate(n * m);
+
+        let hac = new(n, m, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+        let ext = dmatrix(n, m, xs.clone());
+
+        let mut eq = true;
+        for i in 0..n {
+            for j in 0..m {
+                let hac_op = index(hac.clone(), i, j).unwrap();
+                let ext_op = ext.index((i, j));
+
+                if hac_op != *ext_op {
+                    eq = false
+                }
+            }
+        }
+
+        TestResult::from_bool(eq)
+    }
+    quickcheck(helper as fn(Vec<IntSize>, u8, u8) -> TestResult);
+}
+
+#[test]
+fn test_nalg_transpose() {
+    fn helper(xs: Vec<IntSize>, n: u8, m: u8) -> TestResult {
+        let mut xs = cast_vec(xs);
+        let n = n as usize;
+        let m = m as usize;
+
+        if n * m == 0 || n * m > xs.len() {
+            return TestResult::discard();
+        }
+
+        xs.truncate(n * m);
+
+        let hac = new(n, m, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+        let ext = dmatrix(n, m, xs.clone());
+
+        let hac_op = transpose(hac);
+        let ext_op = ext.transpose();
+
+        TestResult::from_bool(assert_matrices(hac_op, ext_op))
+    }
+    quickcheck(helper as fn(Vec<IntSize>, u8, u8) -> TestResult);
+}
+
+#[test]
+fn test_nalg_slice() {
+    fn helper(xs: Vec<IntSize>, n: u8, m: u8) -> TestResult {
+        let mut xs = cast_vec(xs);
+        let n = n as usize;
+        let m = m as usize;
+
+        if n * m == 0 || n * m > xs.len() {
+            return TestResult::discard();
+        }
+
+        xs.truncate(n * m);
+
+        let hac = new(n, m, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+        let ext = dmatrix(n, m, xs.clone());
+
+        // Try all combinations of slices
+        let mut eq = true;
+        for i in 0..n - 1 {
+            for j in 0..m - 1 {
+                for k in 1..n - i - 1 {
+                    for l in 1..m - j - 1 {
+                        let hac_op = slice(hac.clone(), (i, j), (k, l)).unwrap();
+                        let ext_op: DMatrix<Scalar> = ext.slice((i, j), (k, l)).into();
+
+                        if !assert_matrices(hac_op.clone(), ext_op.clone()) {
+                            eq = false
+                        }
+                    }
+                }
+            }
+        }
+
+        TestResult::from_bool(eq)
+    }
+    quickcheck(helper as fn(Vec<IntSize>, u8, u8) -> TestResult);
+}
+
+#[test]
+fn test_nalg_scale() {
+    fn helper(xs: Vec<IntSize>, n: u8, m: u8, scalar: IntSize) -> TestResult {
+        let mut xs = cast_vec(xs);
+        let n = n as usize;
+        let m = m as usize;
+        let scalar = scalar as Scalar;
+
+        if n * m == 0 || n * m > xs.len() {
+            return TestResult::discard();
+        }
+
+        xs.truncate(n * m);
+
+        let hac = new(n, m, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+        let ext = dmatrix(n, m, xs.clone());
+
+        let hac_op = scale(hac, scalar);
+        let ext_op = ext * scalar;
+
+        TestResult::from_bool(assert_matrices(hac_op, ext_op))
+    }
+    quickcheck(helper as fn(Vec<IntSize>, u8, u8, IntSize) -> TestResult);
 }
