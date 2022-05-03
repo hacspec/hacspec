@@ -18,18 +18,16 @@ Require Import Hacspec_Lib.
 
 Open Scope hacspec_scope.
 
-From Equations Require Import Equations.
-
 Obligation Tactic :=
 (intros ; do 2 ssprove_valid'_2) ||
 (try (Tactics.program_simpl; fail); simpl). (* Old Obligation Tactic *)
 
-Require Import Hacspec_Lib.
+
 
 Definition poly_key_t := nseq (uint8) (usize 32).
 
-Definition blocksize_v : (uint_size) :=
-  ((usize 16)).
+Definition blocksize_v : uint_size :=
+  usize 16.
 
 Definition poly_block_t := nseq (uint8) (usize 16).
 
@@ -48,759 +46,1289 @@ Notation "'poly_state_t'" := ((
   poly_key_t
 )) : hacspec_scope.
 
-Definition n_4_loc : Location :=
-  (uint128 : choice_type ; 7%nat).
-Program Definition poly1305_encode_r
-  (b_0 : poly_block_t)
-  : code (fset (path.sort leb [ n_4_loc])) [interface] (@ct (
+Import Hacspec_Lib_Pre.
+Definition poly1305_encode_r_pure (b_2 : poly_block_t) : field_element_t :=
+  let n_0 : uint128 :=
+    uint128_from_le_bytes (array_from_seq (16) (array_to_seq (b_2))) in 
+  let n_0 :=
+    (n_0) .& (secret (
+        @repr U128 21267647620597763993911028882763415551) : int128) in 
+  nat_mod_from_secret_literal (n_0).
+Definition poly1305_encode_r_pure_code
+  (b_2 : poly_block_t)
+  : code fset.fset0 [interface] (@ct field_element_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_encode_r_pure b_2))}.
+
+Import Hacspec_Lib.
+Definition n_0_loc : Location :=
+  (uint128 : choice_type ; 8%nat).
+Program Definition poly1305_encode_r_state
+  (b_2 : poly_block_t)
+  : code (fset (path.sort leb [ n_0_loc])) [interface] (@ct (
       field_element_t)) :=
-  (({code  temp_1 ←
-        (array_to_seq (b_0)) ;;
-      let temp_1 : seq uint8 :=
-        (temp_1) in
-       temp_2 ←
-        (array_from_seq (16) (temp_1)) ;;
-       temp_3 ←
-        (uint128_from_le_bytes (temp_2)) ;;
-      #put n_4_loc := 
-        (temp_3) ;;
-      n_4 ← get n_4_loc ;;
-      let n_4 : uint128 :=
-        (n_4) in
+  (({code  temp_3 ←
+        (array_to_seq (b_2)) ;;
+      let temp_3 : seq uint8 :=
+        (temp_3) in
+       temp_4 ←
+        (array_from_seq (16) (temp_3)) ;;
        temp_5 ←
-        (secret (@repr U128 21267647620597763993911028882763415551)) ;;
-      let temp_5 : int128 :=
-        (temp_5) in
-      n_4 ← get n_4_loc ;;
-      
-      #put n_4_loc := 
-        ((n_4) .& (temp_5)) ;;
-      n_4 ← get n_4_loc ;;
-      
+        (uint128_from_le_bytes (temp_4)) ;;
+      #put n_0_loc := 
+        (temp_5) ;;
+      n_0 ← get n_0_loc ;;
+      let n_0 : uint128 :=
+        (n_0) in
        temp_6 ←
-        (nat_mod_from_secret_literal (n_4)) ;;
-      @pkg_core_definition.ret (field_element_t) ( (temp_6)) } : code (fset (
-                                                                           path.sort leb [ n_4_loc])) [interface] _)).
+        (secret (@repr U128 21267647620597763993911028882763415551)) ;;
+      let temp_6 : int128 :=
+        (temp_6) in
+      n_0 ← get n_0_loc ;;
+      
+      #put n_0_loc := 
+        ((n_0) .& (temp_6)) ;;
+      n_0 ← get n_0_loc ;;
+      
+       temp_7 ←
+        (nat_mod_from_secret_literal (n_0)) ;;
+      @pkg_core_definition.ret (field_element_t) ( (temp_7)) } : code (fset (
+          path.sort leb [ n_0_loc])) [interface] _)).
 Fail Next Obligation.
 
-Import Hacspec_Lib_Pre.
-Definition poly1305_encode_r_pure (b_0 : poly_block_t) : field_element_t :=
-  let n_1 : uint128 :=
-    uint128_from_le_bytes (array_from_seq (16) (array_to_seq (b_0))) in 
-  let n_1 :=
-    (n_1) .& (secret (
-        @repr U128 21267647620597763993911028882763415551) : int128) in 
-  nat_mod_from_secret_literal (n_1).
-Definition poly1305_encode_r_code
-           (b_0 : poly_block_t)
-  : code fset.fset0 [interface] (@ct field_element_t) :=
-  lift_to_code (poly1305_encode_r_pure b_0).
-
-Ltac unfold_T_ct :=
-  unfold T_ct , eq_rect_r , eq_rect , ChoiceEq ;
-  repeat
-    (unfold int128
-     || unfold uint8, int8
-     || unfold nat_mod
-     || unfold nseq, Hacspec_Lib_Pre.nseq_obligation_1 , eq_ind , ChoiceEq
-     || unfold seq, Hacspec_Lib_Pre.seq_obligation_1, eq_ind, ChoiceEq
-     || unfold int, Hacspec_Lib_Pre.int_obligation_1) ;
-  unfold eq_sym.
-
-Hint Unfold poly1305_encode_r : Hacspec_hint.
-Hint Transparent poly1305_encode_r.
-Transparent poly1305_encode_r.
-Import Hacspec_Lib.
-Theorem encode_equality :
-  forall b , ⊢ ⦃ (fun '(h₀, h₁) => h₀ = h₁) ⦄  poly1305_encode_r b ≈ poly1305_encode_r_code b ⦃ fun '(a, _) '(b, _) => a = b ⦄.
-  Set Printing Coercions.
-  intros.
-
-  unfold poly1305_encode_r.
-  unfold poly1305_encode_r_code.
+Program Definition poly1305_encode_r
+  (b_2 : poly_block_t)
+  : both (fset (path.sort leb [ n_0_loc])) field_element_t :=
+  {|
+  is_pure := poly1305_encode_r_pure(b_2 : poly_block_t);
+  is_state := poly1305_encode_r_state(b_2 : poly_block_t);
+  |}.
+Next Obligation.
   unfold poly1305_encode_r_pure.
-  unfold lift_to_code.
+  unfold poly1305_encode_r_state.
+  unfold is_pure.
+  unfold is_state.
+
   unfold prog.
 
   unfold array_to_seq.
-  unfold lift_to_code.
-
   unfold array_from_seq.
-  unfold lift_to_code.
-
   unfold uint128_from_le_bytes.
-  unfold lift_to_code.
-  
   unfold secret.
-  unfold lift_to_code.
-  
   unfold nat_mod_from_secret_literal.
+
   unfold lift_to_code.
 
   step_code.
+  intros.
+
+  split ; [reflexivity | ].
+  destruct H.
+  decompose [and or] H ; clear H ; subst.
   
-  reflexivity.
+  heap_ignore_remove_ignore.
 Qed.
 
-Ltac ch_nat_compute :=
-  let k := fresh in
-  let e := fresh in
-  match goal with
-  | [ |- context[match nat_ch (ch_nat ?l ?v) _ with | Some _ => _ | None => None end] ] =>
-      pose (ch_nat_ch l v) as k ;
-      generalize dependent k ;
-      destruct (ch_nat l v) eqn:e ; [clear e ; intros k | exfalso .. ]
-  end.
+Import Hacspec_Lib_Pre.
+Definition poly1305_encode_block_pure (b_9 : poly_block_t) : field_element_t :=
+  let n_10 : uint128 :=
+    uint128_from_le_bytes (array_from_seq (16) (array_to_seq (b_9))) in 
+  let f_11 : field_element_t :=
+    nat_mod_from_secret_literal (n_10) in 
+  (f_11) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (
+      usize 128) : field_element_t).
+Definition poly1305_encode_block_pure_code
+  (b_9 : poly_block_t)
+  : code fset.fset0 [interface] (@ct field_element_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_encode_block_pure b_9))}.
 
-Theorem encode_equality :
-  forall b n, 
-    Run sampler (poly1305_encode_r_code b true) n =
-    Run sampler (poly1305_encode_r b) n.
-Proof.
-  Set Printing Coercions.
-  intros.
-  
-  assert (forall (A B : ChoiceEquality) x f, @bind A B (ret x) f = f x) by reflexivity.
+Import Hacspec_Lib.
 
-  
-  unfold poly1305_encode_r_code.
-  unfold poly1305_encode_r.
-  unfold poly1305_encode_r_pure.
-
-  unfold Run.
-  unfold lift_to_code.
-  unfold prog.
-
-  unfold Run_aux at 1.
-  
-  assert (forall (A B : ChoiceEquality) x f, @bind A B (ret x) f = f x) by reflexivity.
-  unfold array_to_seq.
-  unfold lift_to_code.
-  rewrite H.
-
-  unfold array_from_seq.
-  unfold lift_to_code.
-  rewrite H.    
-
-  unfold uint128_from_le_bytes.
-  unfold lift_to_code.
-  rewrite H.
-  
-  unfold Run_aux ; fold (@Run_aux sampler).
-
-  unfold new_state.
-  rewrite eqtype.eq_refl.
-
-  unfold_T_ct.
-  unfold field_element_t.
-  unfold_T_ct.
-    
-  ch_nat_compute.
-  2: {
-    destruct (Hacspec_Lib_Pre.uint128_from_le_bytes _) in H1.
-    cbn in H1.
-    simp ch_nat in H1.
-    discriminate.
-  }.  
-  rewrite H0.
-  
-  unfold secret.
-  unfold lift_to_code.
-  rewrite H.
-
-  unfold Run_aux ; fold (@Run_aux sampler).
-
-  rewrite eqtype.eq_refl.
-  rewrite H0.
-
-  unfold new_state.
-  rewrite eqtype.eq_refl.
-
-  unfold_T_ct.
-
-  ch_nat_compute.
-  2: {
-    destruct (_ .& _) in H2.
-    cbn in H2.
-    simp ch_nat in H2.
-    discriminate.    
-  }
-  rewrite H1.
-  
-  unfold nat_mod_from_secret_literal.
-  unfold lift_to_code.
-  
-  rewrite bind_ret with (v := ret _). 
-  unfold Run_aux ; fold (@Run_aux sampler).
-
-  unfold_T_ct.
-
-  reflexivity.
-Qed.  
-  
-  
-    
-  
-
-Theorem encode_equality :
-  forall b , prog (poly1305_encode_r_code b) = prog (poly1305_encode_r b).
-Proof.  
-  Set Printing Coercions.
-  intros.
-  unfold poly1305_encode_r_code.
-
-  assert (forall A x, @prog _ _ _ (@lift_to_code A
-                        fset.fset0
-                        [interface] x) = ret (T_ct x)) by reflexivity.
-  
-  unfold poly1305_encode_r_code.
-  unfold poly1305_encode_r.
-  unfold poly1305_encode_r_pure.
-
-  
-  unfold lift_to_code.
-  unfold prog.
-    
-  assert (forall (A B : ChoiceEquality) x f, @bind A B (ret x) f = f x) by reflexivity.
-
-  rewrite <- (@bind_ret _ (ret (T_ct _))).
-
-  Check bind_morphism _ _ _.
-  rewrite bind_morphism.
-  
-  assert (bind_def : forall (A B : ChoiceEquality) (f : A -> B) (x : A) t,
-             (@bind B B (ret (T_ct (f x))) (@ret B))
-             =
-               (@bind A B (ret x) (fun v => @bind B B (ret (T_ct (f v))) (@ret B)))).
-  
-  
-  
-  rewrite bind_assoc.
-  
-  assert (bind_def : forall (A B : ChoiceEquality) (f : A -> B) (x : A) t,
-             (@bind _ _ (ret (T_ct (f x))) t)
-             =
-               (@bind A B (ret (T_ct x)) (fun v => @bind _ _ (ret (T_ct (f (ct_T v)))) t))).
-  {
-    clear ; intros.
-    cbn.
-    rewrite ct_T_id.
-    reflexivity.
-    Show Proof.
-  }
-  rewrite bind_def.
-
-
-
-  fold (@nat_mod_from_secret_literal 1361129467683753853853498429727072845819).
-  fold (nat_mod_from_secret_literal).
-
-  
-  assert (bind_def2 : forall (A C B : ChoiceEquality) (f : A -> C -> B) (x : A) (y : C) t,
-             (@bind _ _ (ret (T_ct (f x y))) t)
-             =
-               (@bind A B (ret (T_ct x)) (fun v =>
-               (@bind C B (ret (T_ct y)) (fun u =>
-                  @bind _ _ (ret (T_ct (f (ct_T v) (ct_T u)))) t))))).
-  {
-    clear ; intros.
-    cbn.
-    rewrite ct_T_id.
-    rewrite ct_T_id.
-    reflexivity.
-  }
-
-  rewrite bind_def2.
-  
-  
-  specialize (bind_def).
-  
-  
-    with (f := (fun x => T_ct (Hacspec_Lib_Pre.nat_mod_from_secret_literal x))).
-  
-  specialize bind_def with (f := @Hacspec_Lib_Pre.nat_mod_from_secret_literal 0x03fffffffffffffffffffffffffffffffb) (g := Hacspec_Lib_Pre.uint128_from_le_bytes) (x := (Hacspec_Lib_Pre.array_from_seq 16 (Hacspec_Lib_Pre.array_to_seq b))
-          .& Hacspec_Lib_Pre.secret (repr 21267647620597763993911028882763415551)).
-  
-  rewrite bind_def.
-  
-  
-  rewrite -> bind_assoc.
-  
-  rewrite <- H0.
-  
-  assert (forall (A B : ChoiceEquality) x f,
-             ret (T_ct (f x)) =
-             @bind A B (ret (T_ct (f x))) (fun y => ret (T_ct _))) by reflexivity.
-  rewrite <- H0.
-
-  
-  rewrite <- H.
-
-  replace (ret
-         (T_ct
-            (Hacspec_Lib_Pre.nat_mod_from_secret_literal
-               (Hacspec_Lib_Pre.uint128_from_le_bytes
-                  (Hacspec_Lib_Pre.array_from_seq 16 (Hacspec_Lib_Pre.array_to_seq b))
-                  .& Hacspec_Lib_Pre.secret (repr 21267647620597763993911028882763415551))))).
-  replace (ret
-         (T_ct
-            (Hacspec_Lib_Pre.nat_mod_from_secret_literal
-               (Hacspec_Lib_Pre.uint128_from_le_bytes
-                  (Hacspec_Lib_Pre.array_from_seq 16 (Hacspec_Lib_Pre.array_to_seq b))
-                .& Hacspec_Lib_Pre.secret (repr 21267647620597763993911028882763415551)))))
-  
-  rewrite bind_assoc.
-  
-  unfold array_to_seq.
-  unfold lift_to_code.
-  rewrite H.
-
-  unfold array_from_seq.
-  unfold lift_to_code.
-  rewrite H.    
-
-  unfold uint128_from_le_bytes.
-  unfold lift_to_code.
-  rewrite H.
-  
-  rewrite put_get_id_none.
-
-  unfold secret ; unfold lift_to_code ; rewrite H.
-  
-  replace (
-      n_4 ← get n_4_loc ;;
-      #put n_4_loc := n_4 .& T_ct (secret_pure (repr 21267647620597763993911028882763415551)) ;;
-                      n_0 ← get n_4_loc ;;
-                      temp_6 ← prog (@nat_mod_from_secret_literal 0x03fffffffffffffffffffffffffffffffb n_0) ;;
-                      ret temp_6)
-    with
-    (n_4 ← get n_4_loc ;;
-   temp_6 ← prog (@nat_mod_from_secret_literal 0x03fffffffffffffffffffffffffffffffb (n_4 .& T_ct (secret_pure (repr 21267647620597763993911028882763415551)))) ;;
-   ret temp_6).
-  2: {
-    f_equal.
-    apply functional_extensionality.
-  
-  
-  
-  
-
-  unfold uint128_from_le_bytes.
-  unfold lift_to_code.
-  rewrite H.
-  
-  assert (forall B l x f, (#put l := x ;; n ← get l ;; f n) = (@bind (loc_type l) B (ret x) f)).
-  clear ; intros.
-  cbn.
-  
-  
-  
-  pose (fun v => r_put_get uint8 n_4_loc v).
-  assert putr
-  
-  Check putr.
-  Locate " #put _ := _ ;; _".
-  
-  unfold uint128_from_le_bytes.
-  unfold lift_to_code.
-  rewrite H.
-  
-  rewrite <- bind_assoc.  
-
-  
-  rewrite H.
-  
-  unfold bind in r.
-  
-  
-  assert (forall x f, bind x f = f (T_ct x)).
-  
-
-  unfold prog.
-  unfold array_to_seq.
-  unfold lift_to_code.
-
-  unfold array_from_seq.
-  unfold lift_to_code.
-
-  
-
-  rewrite <- bind_assoc.  
-  rewrite <- bind_assoc.
-
-  
-  
-  erewrite (@bind_cong _ _ (ret (T_ct (Hacspec_Lib_Pre.array_to_seq b : seq uint8))) _
-                       (fun x => ret (T_ct (Hacspec_Lib_Pre.array_from_seq 16 (x : seq_type uint8) : nseq uint8 16)))).
-  2: {
-    Set Printing All.
-  }.
-  
-  assert (forall (A B C : ChoiceEquality) (f : @T A -> @T C) (g : @T C -> @T B) y,
-
-             
-
-             
-             (@bind (@ct C) (@ct B) (ret (T_ct (f y))) (fun x => ret (T_ct (g (ct_T x))))) =
-               (@bind (@ct A) (@ct B) (ret y) (fun x => g (f x)))) by reflexivity.
-  
-  rewrite <- bind_assoc.
-  rewrite (H _ _ _ T_ct).
-  
-  
-  pose (@bind_cong _ _ (ret (T_ct (Hacspec_Lib_Pre.array_to_seq b : seq uint8))) (ret (T_ct (Hacspec_Lib_Pre.array_to_seq b : seq uint8)))
-                   (fun x => ret (T_ct (Hacspec_Lib_Pre.array_from_seq 16 (x : seq_type uint8) : nseq uint8 16)))).
-  erewrite e.
-
-  
-  intros.
-  
-  rewrite @bind_cong with (v := x) (g := @ret (@ct acc)).
-  rewrite bind_ret.
-  reflexivity.
-  reflexivity.
-  
-  apply functional_extensionality.
-  intros.
-  
-  rewrite T_ct_id.
-  reflexivity.  
-
-  
-  Locate raw_code_type_from_choice_type_id.
-  rewrite raw_code_type_from_choice_type_id.
-  rewrite bind_ret.
-  
-  
-  unfold array_from_seq.
-  unfold lift_to_code.
-
-  
-  rewrite <- bind_assoc.
-
-  
-  assert (x ← prog y ;; prog (g x) = prog (g y)).
-  
-  rewrite <- bind_assoc.
-  rewrite bind_assoc.
-
-  unfold array_to_seq.
-  unfold lift_to_code.
-
-  (* unfold bind. *)
-
-  unfold bind.
-  
-  replace (x ← ret (T_ct (Hacspec_Lib_Pre.array_to_seq b)) ;;
-             prog (array_from_seq 16 x)) with (prog (array_from_seq 16 (T_ct (Hacspec_Lib_Pre.array_to_seq b)))).
-  
-  (* assert ((x ← ret (T_ct (Hacspec_Lib_Pre.array_to_seq b : seq uint8)) ;; *)
-  (*          prog (array_from_seq 16 x)) = *)
-  (*   (prog (array_from_seq 16 (Hacspec_Lib_Pre.array_to_seq b)))). *)
-  
-  rewrite bind_ret.  
-  
-  replace ((x ← prog (array_to_seq b) ;;
-            prog (array_from_seq 16 x))) with
-    
-  
-  rewrite <- bind_assoc.
-
-  replace ((x ← prog (array_to_seq b) ;;
-             prog (array_from_seq 16 x))) with (array_to_seq b).
-  
-  unfold bind at 0.
-  
-  replace (prog (array_to_seq b)) with
-
-  unfold prog.
-  
-  
-  (* replace (ret *)
-  (*   (T_ct *)
-  (*      (Hacspec_Lib_Pre.nat_mod_from_secret_literal *)
-  (*         (Hacspec_Lib_Pre.uint128_from_le_bytes *)
-  (*            (Hacspec_Lib_Pre.array_from_seq 16 (Hacspec_Lib_Pre.array_to_seq b)) *)
-  (*          .& Hacspec_Lib_Pre.secret (repr 21267647620597763993911028882763415551))))) with *)
-  (* ((fun a => ret *)
-  (*   (T_ct *)
-  (*      (Hacspec_Lib_Pre.nat_mod_from_secret_literal *)
-  (*         (Hacspec_Lib_Pre.uint128_from_le_bytes *)
-  (*            (Hacspec_Lib_Pre.array_from_seq 16 a) *)
-  (*          .& Hacspec_Lib_Pre.secret (repr 21267647620597763993911028882763415551))))) (Hacspec_Lib_Pre.array_to_seq b)). *)
-
-  assert (forall f, @bind _ (nseq _ 16) (array_to_seq b) f = f (Hacspec_Lib_Pre.array_to_seq b)).
-  intros.
-  cbn.
-  reflexivity.
-  
-  cbn.
-  unfold poly1305_encode_r_pure.
-  rewrite bind_ret.
+Program Definition poly1305_encode_block_state
+  (b_9 : poly_block_t)
+  : code (fset.fset0) [interface] (@ct (field_element_t)) :=
+  (({code  temp_12 ←
+        (array_to_seq (b_9)) ;;
+      let temp_12 : seq uint8 :=
+        (temp_12) in
+       temp_13 ←
+        (array_from_seq (16) (temp_12)) ;;
+       temp_14 ←
+        (uint128_from_le_bytes (temp_13)) ;;
+      let n_10 : uint128 :=
+        (temp_14) in
+       temp_15 ←
+        (nat_mod_from_secret_literal (n_10)) ;;
+      let f_11 : field_element_t :=
+        (temp_15) in
+       temp_16 ←
+        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (usize 128)) ;;
+      let temp_16 : field_element_t :=
+        (temp_16) in
+      @pkg_core_definition.ret (field_element_t) ( ((f_11) +% (
+          temp_16))) } : code (fset.fset0) [interface] _)).
+Fail Next Obligation.
 
 Program Definition poly1305_encode_block
-  (b_8 : poly_block_t)
-  : code (fset.fset0) [interface] (@ct (field_element_t)) :=
-  (({code  temp_9 ←
-        (array_to_seq (b_8)) ;;
-      let temp_9 : seq uint8 :=
-        (temp_9) in
-       temp_10 ←
-        (array_from_seq (16) (temp_9)) ;;
-       temp_11 ←
-        (uint128_from_le_bytes (temp_10)) ;;
-      let n_12 : uint128 :=
-        (temp_11) in
-       temp_13 ←
-        (nat_mod_from_secret_literal (n_12)) ;;
-      let f_14 : field_element_t :=
-        (temp_13) in
-       temp_15 ←
-        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (usize 128)) ;;
-      let temp_15 : field_element_t :=
-        (temp_15) in
-      @pkg_core_definition.ret (field_element_t) ( ((f_14) +% (
-          temp_15))) } : code (fset.fset0) [interface] _)).
-Fail Next Obligation.
+  (b_9 : poly_block_t)
+  : both (fset.fset0) field_element_t :=
+  {|
+  is_pure := poly1305_encode_block_pure(b_9 : poly_block_t);
+  is_state := poly1305_encode_block_state(b_9 : poly_block_t);
+  |}.
+Next Obligation.
+  unfold poly1305_encode_block_pure.
+  unfold poly1305_encode_block_state.
 
+  unfold prog.
+
+  unfold array_to_seq.
+  unfold array_from_seq.
+  unfold uint128_from_le_bytes.
+  unfold nat_mod_from_secret_literal.
+  unfold nat_mod_pow2.
+
+  unfold lift_to_code.
+
+  step_code.
+  split ; easy.
+Qed.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_encode_last_pure
+  (pad_len_17 : block_index_t)
+  (b_18 : sub_block_t)
+  : field_element_t :=
+  let n_19 : uint128 :=
+    uint128_from_le_bytes (array_from_slice (default) (16) (b_18) (usize 0) (
+        seq_len (b_18))) in 
+  let f_20 : field_element_t :=
+    nat_mod_from_secret_literal (n_19) in 
+  (f_20) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) .* (
+        pad_len_17)) : field_element_t).
+Definition poly1305_encode_last_pure_code
+  (pad_len_17 : block_index_t)
+  (b_18 : sub_block_t)
+  : code fset.fset0 [interface] (@ct field_element_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_encode_last_pure pad_len_17
+    b_18))}.
+
+Import Hacspec_Lib.
+
+Program Definition poly1305_encode_last_state
+  (pad_len_17 : block_index_t)
+  (b_18 : sub_block_t)
+  : code (fset.fset0) [interface] (@ct (field_element_t)) :=
+  (({code  temp_21 ←
+        (seq_len (b_18)) ;;
+       temp_22 ←
+        (array_from_slice (default) (16) (b_18) (usize 0) (temp_21)) ;;
+       temp_23 ←
+        (uint128_from_le_bytes (temp_22)) ;;
+      let n_19 : uint128 :=
+        (temp_23) in
+       temp_24 ←
+        (nat_mod_from_secret_literal (n_19)) ;;
+      let f_20 : field_element_t :=
+        (temp_24) in
+       temp_25 ←
+        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) .* (
+              pad_len_17))) ;;
+      let temp_25 : field_element_t :=
+        (temp_25) in
+      @pkg_core_definition.ret (field_element_t) ( ((f_20) +% (
+          temp_25))) } : code (fset.fset0) [interface] _)).
+Fail Next Obligation.
 
 Program Definition poly1305_encode_last
-  (pad_len_23 : block_index_t)
-  (b_16 : sub_block_t)
-  : code (fset.fset0) [interface] (@ct (field_element_t)) :=
-  (({code  temp_17 ←
-        (seq_len (b_16)) ;;
-       temp_18 ←
-        (array_from_slice (default) (16) (b_16) (usize 0) (temp_17)) ;;
-       temp_19 ←
-        (uint128_from_le_bytes (temp_18)) ;;
-      let n_20 : uint128 :=
-        (temp_19) in
-       temp_21 ←
-        (nat_mod_from_secret_literal (n_20)) ;;
-      let f_22 : field_element_t :=
-        (temp_21) in
-       temp_24 ←
-        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) .* (
-              pad_len_23))) ;;
-      let temp_24 : field_element_t :=
-        (temp_24) in
-      @pkg_core_definition.ret (field_element_t) ( ((f_22) +% (
-          temp_24))) } : code (fset.fset0) [interface] _)).
-Fail Next Obligation.
+  (pad_len_17 : block_index_t)
+  (b_18 : sub_block_t)
+  : both (fset.fset0) field_element_t :=
+  {|
+  is_pure := poly1305_encode_last_pure(pad_len_17 : block_index_t)
+  (b_18 : sub_block_t);
+  is_state := poly1305_encode_last_state(pad_len_17 : block_index_t)
+  (b_18 : sub_block_t);
+  |}.
+Next Obligation.
+  unfold poly1305_encode_last_pure.
+  unfold poly1305_encode_last_state.
 
+  unfold prog.
 
-Program Definition poly1305_init
-  (k_25 : poly_key_t)
-  : code (fset (path.sort leb [ n_4_loc])) [interface] (@ct (poly_state_t)) :=
-  (({code  temp_26 ←
-        (array_to_seq (k_25)) ;;
-      let temp_26 : seq uint8 :=
-        (temp_26) in
-       temp_27 ←
-        (array_from_slice (default) (16) (temp_26) (usize 0) (usize 16)) ;;
-       temp_28 ←
-        (poly1305_encode_r (temp_27)) ;;
-      let r_30 : field_element_t :=
+  unfold seq_len.
+  unfold array_from_slice.
+  unfold uint128_from_le_bytes.
+  unfold nat_mod_from_secret_literal.
+  unfold nat_mod_pow2.
+
+  unfold lift_to_code.
+
+  step_code.
+  split ; easy.
+Qed.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_init_pure (k_26 : poly_key_t) : poly_state_t :=
+  let r_27 : field_element_t :=
+    poly1305_encode_r (array_from_slice (default) (16) (array_to_seq (k_26)) (
+        usize 0) (usize 16)) in 
+  (nat_mod_zero , r_27, k_26).
+Definition poly1305_init_pure_code
+  (k_26 : poly_key_t)
+  : code fset.fset0 [interface] (@ct poly_state_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_init_pure k_26))}.
+
+Import Hacspec_Lib.
+
+Program Definition poly1305_init_state
+  (k_26 : poly_key_t)
+  : code (fset (path.sort leb [ n_0_loc])) [interface] (@ct (poly_state_t)) :=
+  (({code  temp_28 ←
+        (array_to_seq (k_26)) ;;
+      let temp_28 : seq uint8 :=
         (temp_28) in
        temp_29 ←
+        (array_from_slice (default) (16) (temp_28) (usize 0) (usize 16)) ;;
+       temp_30 ←
+        (poly1305_encode_r (temp_29)) ;;
+      let r_27 : field_element_t :=
+        (temp_30) in
+       temp_31 ←
         (nat_mod_zero ) ;;
       @pkg_core_definition.ret ((
           field_element_t '×
           field_element_t '×
           poly_key_t
-        )) ( ((temp_29, r_30, k_25))) } : code (fset (
-          path.sort leb [ n_4_loc])) [interface] _)).
+        )) ( ((temp_31, r_27, k_26))) } : code (fset (
+          path.sort leb [ n_0_loc])) [interface] _)).
 Fail Next Obligation.
 
+Program Definition poly1305_init
+  (k_26 : poly_key_t)
+  : both (fset (path.sort leb [ n_0_loc])) poly_state_t :=
+  {|
+  is_pure := poly1305_init_pure(k_26 : poly_key_t);
+  is_state := poly1305_init_state(k_26 : poly_key_t);
+  |}.
+Next Obligation.
+  unfold poly1305_init_pure.
+  unfold poly1305_init_state.
 
-Program Definition poly1305_update_block
+  unfold prog.
+
+  unfold array_to_seq.
+  unfold array_from_slice.
+  unfold nat_mod_zero.
+
+  unfold lift_to_code.
+
+  step_code.
+  both_bind.
+    
+  apply r_ret.
+  intros ; subst.
+  reflexivity.
+
+  intros.
+  step_code.
+  intros ? ? [] ; subst.
+  split ; easy.
+Qed.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_update_block_pure
   (b_32 : poly_block_t)
-  (st_31 : poly_state_t)
+  (st_33 : poly_state_t)
+  : poly_state_t :=
+  let '(acc_34, r_35, k_36) :=
+    st_33 in 
+  (((poly1305_encode_block (b_32)) +% (acc_34)) *% (r_35), r_35, k_36).
+Definition poly1305_update_block_pure_code
+  (b_32 : poly_block_t)
+  (st_33 : poly_state_t)
+  : code fset.fset0 [interface] (@ct poly_state_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_update_block_pure b_32 st_33))}.
+
+Import Hacspec_Lib.
+
+Program Definition poly1305_update_block_state
+  (b_32 : poly_block_t)
+  (st_33 : poly_state_t)
   : code (fset.fset0) [interface] (@ct (poly_state_t)) :=
   (({code let '(acc_34, r_35, k_36) :=
-        (st_31) : (field_element_t '× field_element_t '× poly_key_t) in
-       temp_33 ←
+        (st_33) : (field_element_t '× field_element_t '× poly_key_t) in
+       temp_37 ←
         (poly1305_encode_block (b_32)) ;;
       @pkg_core_definition.ret ((
           field_element_t '×
           field_element_t '×
           poly_key_t
-        )) ( ((((temp_33) +% (acc_34)) *% (r_35), r_35, k_36))) } : code (
+        )) ( ((((temp_37) +% (acc_34)) *% (r_35), r_35, k_36))) } : code (
         fset.fset0) [interface] _)).
 Fail Next Obligation.
 
-Definition st_45_loc : Location :=
-  ((field_element_t '× field_element_t '× poly_key_t) : choice_type ; 47%nat).
+Program Definition poly1305_update_block
+  (b_32 : poly_block_t)
+  (st_33 : poly_state_t)
+  : both (fset.fset0) poly_state_t :=
+  {|
+  is_pure := poly1305_update_block_pure(b_32 : poly_block_t)
+  (st_33 : poly_state_t);
+  is_state := poly1305_update_block_state(b_32 : poly_block_t)
+  (st_33 : poly_state_t);
+  |}.
+Next Obligation.
+unfold poly1305_update_block_pure.
+unfold poly1305_update_block_state.
+unfold is_pure.
+unfold is_state.
+
+unfold prog.
+
+both_bind.
+
+step_code.
+intros ; subst.
+reflexivity.
+
+intros.
+step_code.
+intros ? ? [] ; subst.
+split ; easy.
+Qed.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_update_blocks_pure
+  (m_40 : byte_seq)
+  (st_41 : poly_state_t)
+  : poly_state_t :=
+  let st_38 : (field_element_t '× field_element_t '× poly_key_t) :=
+    st_41 in 
+  let n_blocks_42 : uint_size :=
+    (seq_len (m_40)) ./ (blocksize_v) in 
+  let st_38 :=
+    foldi (usize 0) (n_blocks_42) (fun i_43 st_38 =>
+      let block_44 : poly_block_t :=
+        array_from_seq (16) (seq_get_exact_chunk (m_40) (blocksize_v) (
+            i_43)) in 
+      let st_38 :=
+        poly1305_update_block (block_44) (st_38) in 
+      (st_38))
+    st_38 in 
+  st_38.
+Definition poly1305_update_blocks_pure_code
+  (m_40 : byte_seq)
+  (st_41 : poly_state_t)
+  : code fset.fset0 [interface] (@ct poly_state_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_update_blocks_pure m_40
+    st_41))}.
+
+Import Hacspec_Lib.
+Definition st_38_loc : Location :=
+  ((field_element_t '× field_element_t '× poly_key_t) : choice_type ; 49%nat).
+Program Definition poly1305_update_blocks_state
+  (m_40 : byte_seq)
+  (st_41 : poly_state_t)
+  : code (fset (path.sort leb [ st_38_loc])) [interface] (@ct (poly_state_t)) :=
+  (({code #put st_38_loc := 
+        (st_41) ;;
+      st_38 ← get st_38_loc ;;
+      let st_38 : (field_element_t '× field_element_t '× poly_key_t) :=
+        (st_38) in
+       temp_45 ←
+        (seq_len (m_40)) ;;
+      let n_blocks_42 : uint_size :=
+        ((temp_45) ./ (blocksize_v)) in
+      for_loop_usize (usize 0) (n_blocks_42) (fun i_43 =>
+        ({code  temp_46 ←
+            (seq_get_exact_chunk (m_40) (blocksize_v) (i_43)) ;;
+           temp_47 ←
+            (array_from_seq (16) (temp_46 : seq int8)) ;;
+          let block_44 : poly_block_t :=
+            (temp_47) in
+           temp_48 ←
+            (poly1305_update_block (block_44) (st_38)) ;;
+          st_38 ← get st_38_loc ;;
+          
+          #put st_38_loc := 
+            (temp_48) ;;
+          st_38 ← get st_38_loc ;;
+          
+          @pkg_core_definition.ret (unit_ChoiceEquality) ( (tt)) } : code (
+            fset (path.sort leb [ st_38_loc])) [interface] _)) ;;
+      @pkg_core_definition.ret ((
+          field_element_t '×
+          field_element_t '×
+          poly_key_t
+        )) ( (st_38)) } : code (fset (
+                                    path.sort leb [ st_38_loc])) [interface] _)).
+Fail Next Obligation.
+
 Program Definition poly1305_update_blocks
-  (m_38 : byte_seq)
-  (st_37 : poly_state_t)
-  : code (fset (path.sort leb [ st_45_loc])) [interface] (@ct (poly_state_t)) :=
-  (({code #put st_45_loc := 
-        (st_37) ;;
-      st_45 ← get st_45_loc ;;
-      let st_45 : (field_element_t '× field_element_t '× poly_key_t) :=
-        (st_45) in
-       temp_39 ←
-        (seq_len (m_38)) ;;
-      let n_blocks_40 : uint_size :=
-        ((temp_39) ./ (blocksize_v)) in
-       st_45 ←
-        (foldi (usize 0) (n_blocks_40) (fun i_41 (st_45 : _) =>
-            ({code  temp_42 ←
-                (seq_get_exact_chunk (m_38) (blocksize_v) (i_41)) ;;
-               temp_43 ←
-                (array_from_seq (16) (temp_42)) ;;
-              let block_44 : poly_block_t :=
-                (temp_43) in
-               temp_46 ←
-                (poly1305_update_block (block_44) (st_45)) ;;
-              st_45 ← get st_45_loc ;;
-              
-              #put st_45_loc := 
-                (temp_46) ;;
-              st_45 ← get st_45_loc ;;
-              
-              @pkg_core_definition.ret (_) ( ((st_45))) } : code (fset (
-                  path.sort leb [ st_45_loc])) [interface] _))
-          st_45) ;;
-      
-      @pkg_core_definition.ret ((
-          field_element_t '×
-          field_element_t '×
-          poly_key_t
-        )) ( (st_45)) } : code (fset (
-          path.sort leb [ st_45_loc])) [interface] _)).
-Fail Next Obligation.
+  (m_40 : byte_seq)
+  (st_41 : poly_state_t)
+  : both (fset (path.sort leb [ st_38_loc])) poly_state_t :=
+  {|
+  is_pure := poly1305_update_blocks_pure(m_40 : byte_seq)
+  (st_41 : poly_state_t);
+  is_state := poly1305_update_blocks_state(m_40 : byte_seq)
+  (st_41 : poly_state_t);
+  |}.
+Next Obligation.
+unfold poly1305_update_blocks_pure.
+unfold poly1305_update_blocks_state.
+unfold is_pure.
+unfold is_state.
 
-Definition st_49_loc : Location :=
-  ((field_element_t '× field_element_t '× poly_key_t) : choice_type ; 57%nat).
-Program Definition poly1305_update_last
+unfold prog.
+
+unfold seq_len.
+unfold lift_to_code.
+
+step_code.
+
+
+enough (unsigned (usize 0%nat) <=
+          unsigned (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v))%Z.
+
+unfold for_loop_usize.
+replace (from_uint_size (usize 0)) with 0 by reflexivity.
+
+set (f := fun n : nat => _).
+set (k := (_ , _)).
+pose (foldi_nat_is_loop 0 (from_uint_size (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v)) (fun (_ : poly_state_t) => f) k).
+hnf in e.
+
+Set Printing Coercions.
+
+set (tct := T_ct _) in *.
+replace tct with k in e by reflexivity. 
+remove_T_ct.
+rewrite e.
+  
+pose @Build_both.
+epose (fun x y => @Build_both _ _ (d x y) (c x)) .
+
+
+both_bind.
+
+unfold c at 1.
+
+unfold poly1305_update_block.
+unfold poly1305_update_block_state.
+unfold poly1305_update_block_pure.
+destruct st_41 as [[]].
+
+unfold poly1305_encode_block.
+unfold is_pure.
+unfold is_state.
+unfold poly1305_encode_block_state.
+unfold poly1305_encode_block_pure.
+
+unfold prog.
+unfold seq_get_exact_chunk.
+unfold array_from_seq.
+unfold array_to_seq.
+unfold uint128_from_le_bytes.
+unfold nat_mod_from_secret_literal.
+unfold nat_mod_pow2.
+
+unfold lift_to_code.
+
+step_code.
+
+
+
+apply r_restore_lhs.
+intros.
+subst.
+
+apply r_get_remember_lhs. intros.
+apply r_put_lhs.
+apply r_get_remember_lhs. intros.
+fold (@bind 'unit).
+step_code.
+
+
+set (lo := S (from_uint_size _)).
+set (hi := (from_uint_size (_ ./ _))).
+set (f := fun _ _ => _ ).
+set (v := (@pair (@T (prod_ChoiceEquality field_element_t field_element_t))
+                (@T poly_key_t) (@pair (@T field_element_t) (@T field_element_t) t t0) t1) : poly_state_t).
+
+replace (foldi_nat lo hi f tt ;; ret _) with (foldi_nat lo hi (fun (x : nat) (a : poly_state_t) => f x tt ;; ret a) v) by apply (@foldi_nat_consume_ret (prod_ChoiceEquality _ _) lo hi f v).
+
+(* replace (S (from_uint_size (usize 0))) with (from_uint_size (usize (S 0))) in lo. *)
+pose (foldi_to_foldi_nat (usize (S 0)) (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v)).
+
+rewrite foldi_nat_to_foldi.
+
+epose (@foldi
+       (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                            poly_key_t) (@usize nat nat_uint_sizable lo) (@usize nat nat_uint_sizable hi)
+       _ _
+       (fun (x1 : @T uint_size)
+          (a : @T
+                 (prod_ChoiceEquality
+                    (prod_ChoiceEquality field_element_t field_element_t) poly_key_t)) =>
+        {code (@bind (chElement (@ct unit_ChoiceEquality))
+          (chElement
+             (@ct
+                (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                   poly_key_t))) (f (@from_uint_size nat nat_uint_sizable x1) tt)
+          (fun _ : choice.Choice.sort (chElement (@ct unit_ChoiceEquality)) =>
+           @ret
+             (chElement
+                (@ct
+                   (prod_ChoiceEquality
+                      (prod_ChoiceEquality field_element_t field_element_t) poly_key_t)))
+             (@T_ct
+                (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                                     poly_key_t) a)))}) v).
+
+replace (@foldi_pre
+       (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+          poly_key_t) (@usize nat nat_uint_sizable lo) (@usize nat nat_uint_sizable hi)
+       (fun (x1 : @T uint_size)
+          (a : @T
+                 (prod_ChoiceEquality
+                    (prod_ChoiceEquality field_element_t field_element_t) poly_key_t)) =>
+        @bind (chElement (@ct unit_ChoiceEquality))
+          (chElement
+             (@ct
+                (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                   poly_key_t))) (f (@from_uint_size nat nat_uint_sizable x1) tt)
+          (fun _ : choice.Choice.sort (chElement (@ct unit_ChoiceEquality)) =>
+           @ret
+             (chElement
+                (@ct
+                   (prod_ChoiceEquality
+                      (prod_ChoiceEquality field_element_t field_element_t) poly_key_t)))
+             (@T_ct
+                (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                   poly_key_t) a))) v) with (prog c0).
+unfold c0.
+
+unfold prog.
+(* eapply rpre_weaken_rule. *)
+
+set (f_state := (fun (x1 : block_index_t) (a : poly_state_t) =>
+        {code f (from_uint_size x1) tt ;;
+        ret a })).
+
+set (f_pure := (fun (i_43 : block_index_t) => _)).
+
+unfold hi in *. clear hi. set (hi := (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v)).
+unfold lo in *. clear lo.
+unfold nat_uint_sizable.
+unfold usize at 3.
+unfold from_uint_size at 3.
+
+set (lo := usize 0%Z).
+set (P := _ ⋊ _).
+assert (forall x , P (x , x)).
+clear.
+intros.
+unfold P.
+unfold set_lhs.
+hnf.
+esplit.
+exists (set_heap x1 st_38_loc v).
+split.
+hnf.
+split.
+exists x1.
+split.
+reflexivity.
+reflexivity.
+
+hnf.
+rewrite get_set_heap_eq.
+
+exists x1.
+cbn.
+
+pose (@foldi_both _ _ lo (hi) f_state f_pure v H P).
+
+Set Printing Coercions.
+
+pose @r_transR.
+specialize r0 with (P := P).
+              (set_lhs st_38_loc v (fun '(h₀, h₁) => h₀ = h₁) ⋊ rem_lhs st_38_loc x)). 
+                                                                                  (c₁' := ret (Hacspec_Lib_Pre.foldi lo hi f_pure v)).
+
+(((T_ct
+              (Hacspec_Lib_Pre.nat_mod_from_secret_literal
+                 (T_ct
+                    (Hacspec_Lib_Pre.uint128_from_le_bytes
+                       (T_ct
+                          (Hacspec_Lib_Pre.array_from_seq 16
+                             (T_ct
+                                (Hacspec_Lib_Pre.array_to_seq
+                                   (T_ct
+                                      (Hacspec_Lib_Pre.array_from_seq 16
+                                         (T_ct
+                                            (Hacspec_Lib_Pre.seq_get_exact_chunk m_40
+                                               blocksize_v
+                                               (usize (from_uint_size (repr (Z.of_nat 0))))))))))))))) +%
+            T_ct
+              (Hacspec_Lib_Pre.nat_mod_pow2 1361129467683753853853498429727072845819
+                 (N.of_nat (uint_size_to_nat (Z_to_uint_size (toword (usize 128))))))) +%
+           t) *% t0, t0, t1)
+
+  eapply r_transR.
+apply r.
+assumption.
+intros.
+unfold f_state.
+unfold f_pure.
+unfold prog.
+unfold f.
+unfold c.
+
+
+unfold poly1305_update_block.
+unfold poly1305_update_block_state.
+unfold poly1305_update_block_pure.
+(* destruct st_41 as [[]]. *)
+
+unfold poly1305_encode_block.
+unfold is_pure.
+unfold is_state.
+unfold poly1305_encode_block_state.
+unfold poly1305_encode_block_pure.
+
+unfold prog.
+unfold seq_get_exact_chunk.
+unfold array_from_seq.
+unfold array_to_seq.
+unfold uint128_from_le_bytes.
+unfold nat_mod_from_secret_literal.
+unfold nat_mod_pow2.
+
+unfold lift_to_code.
+
+step_code.
+
+
+
+
+unfold lo.
+unfold hi.
+unfold nat_uint_sizable.
+unfold from_uint_size.
+unfold usize.
+
+
+
+
+
+rewrite  Z2Nat.id.
+rewrite Nat2Z.id.
+
+eapply r.
+
+Print foldi.
+rewrite <- foldi_to_foldi_nat.
+
+apply foldi_both.
+
+
+  
+
+Set Printing All.
+
+rewrite <- e.
+rewrite <- foldi_nat_consume_ret.
+
+
+
+
+(@bind (chElement chUnit)
+       (chElement
+          (@ct
+             (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                poly_key_t))) (@foldi_nat unit_ChoiceEquality lo hi f tt)
+       (fun _ : choice.Choice.sort (chElement chUnit) =>
+        @ret
+          (chElement
+             (@ct
+                (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                   poly_key_t)))
+          (@pair (@T (prod_ChoiceEquality field_element_t field_element_t))
+                 (@T poly_key_t) t2 t3)))
+
+(@bind (chElement chUnit)
+          (chElement
+             (@ct
+                (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                   poly_key_t))) (@foldi_nat unit_ChoiceEquality lo hi f tt)
+          (fun _ : choice.Choice.sort (chElement (@ct unit_ChoiceEquality)) =>
+           @ret
+             (chElement
+                (@ct
+                   (prod_ChoiceEquality
+                      (prod_ChoiceEquality field_element_t field_element_t) poly_key_t)))
+             (@T_ct
+                (prod_ChoiceEquality (prod_ChoiceEquality field_element_t field_element_t)
+                   poly_key_t)
+                (@pair (@T (prod_ChoiceEquality field_element_t field_element_t))
+                   (@T poly_key_t) t2 t3))))
+
+set (v := (t, t0, t1) ).
+
+
+rewrite <- foldi_nat_consume_ret.
+
+
+apply rreflexivity_rule.
+
+reflexivity.
+
+
+fold bind.
+
+Check r_get_remind_lhs.
+apply r_get_remind_lhs.
+
+apply r_restore_lhs.
+intros. subst.  admit. 
+
+
+rewrite <- bind_assoc.
+unfold bind at 1.
+
+
+
+replace (S
+          (from_uint_size (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v) -
+             from_uint_size (usize 0) - 1)) with
+  (S (from_uint_size ((Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v) .- repr 1) -
+      from_uint_size (usize 0))).
+
+pose (foldi_nat (usize 0) ((Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v) - 1)).
+remember r.
+
+inversion Heqr0.
+unfold r in Heqr0.
+unfold foldi_nat in r.
+destruct ((Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v) - 1 - usize 0) eqn:ro in r.
+
+
+replace 
+
+
+
+fold foldi_nat.
+
+rewrite <- foldi__nat_move_S_append.
+unfold c.
+unfold prog.
+unfold seq_get_exact_chunk.
+unfold array_from_seq.
+
+rewrite forc;
+
+
+
+
+eapply (r_transL
+          (foldi_nat_
+       (S
+          (from_uint_size (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v) -
+           from_uint_size (usize 0) - 1)) 0
+       (fun (x : nat) (_ : unit_ChoiceEquality) =>
+        c (usize (x + from_uint_size (usize 0)))) tt ;; ret st_41)) .
+eapply r_bind.
+apply rsymmetry.
+apply rsym_pre. intros ; subst ; reflexivity.
+eapply rpost_weaken_rule.
+rewrite for_loop_equality.
+reflexivity.
+
+
+apply for_loop_equality. apply H.
+intros. subst. destruct a₁. reflexivity.
+intros. apply r_ret. intros. inversion H0. subst. reflexivity.
+Set Printing Coercions.
+
+eapply (r_transL
+          (lift_to_code (Hacspec_Lib_Pre.foldi (usize 0) (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v) (fun i_43 st_38 : T =>
+              let (is_pure, _) :=
+                poly1305_update_block
+                  (Hacspec_Lib_Pre.array_from_seq 16
+                     (Hacspec_Lib_Pre.seq_get_exact_chunk m_40 blocksize_v i_43)) st_38 in
+              is_pure) _) ;; ret st_41)).
+eapply r_bind.
+apply rsymmetry.
+apply rsym_pre. intros ; subst ; reflexivity.
+eapply rpost_weaken_rule.
+pose @foldi_both.
+apply foldi_both.
+intros [h₀  h₁]. apply (h₀ = h₁).
+apply H.
+intros.
+
+
+
+
+
+(* unfold prog. *)
+(* unfold foldi. *)
+
+(* assert (forall lo hi {L I} f v (H : (unsigned lo <= unsigned hi)%Z), *)
+(*            (foldi lo hi (fun x _ => f x) tt ;; ret v) = *)
+(*            (foldi lo hi (L := L) (I := I) (fun x v => {code f x ;; ret v}) (ct_T v)) *)
+(*        ). *)
+(* clear. *)
+(* intros. *)
+(* unfold prog. *)
+(* unfold foldi. *)
+(* rewrite foldi_to_foldi_nat by apply H. *)
+(* rewrite foldi_to_foldi_nat by apply H. *)
+(* unfold prog. *)
+(* unfold foldi_nat. *)
+(* destruct (Z.to_nat (unsigned hi) - Z.to_nat (unsigned lo)) ; [ reflexivity | .. ]. *)
+(* rewrite <- foldi__nat_move_S. *)
+(* rewrite <- foldi__nat_move_S. *)
+(* f_equal. *)
+(* induction n. *)
+(* - cbn. *)
+(*   rewrite bind_ret. *)
+
+apply 
+
+unfold prog.
+unfold foldi.
+rewrite foldi_to_foldi_nat.
+
+  
+
+pose (foldi_both (usize 0) (Hacspec_Lib_Pre.seq_len m_40 ./ blocksize_v) (fun (x : block_index_t) (_ : unit_ChoiceEquality) => c x)).
+
+apply H.
+
+unfold nat_uint_sizable in r.
+unfold usize in r.
+rewrite unsigned_repr_alt in r.
+
+
+
+
+specialize r with ()
+apply r.
+
+unfold for_loop_usize.
+unfold for_loop_range.
+
+unfold prog.
+
+unfold poly1305_update_block.
+unfold poly1305_update_block_pure.
+unfold poly1305_update_block_state.
+unfold is_pure.
+unfold is_state.
+destruct st_41 as [[]].
+
+unfold poly1305_encode_block.
+unfold poly1305_encode_block_pure.
+unfold poly1305_encode_block_state.
+unfold is_pure.
+unfold is_state.
+unfold prog.
+
+unfold seq_get_exact_chunk.
+unfold array_from_seq.
+
+unfold array_to_seq.
+unfold array_from_seq.
+unfold uint128_from_le_bytes.
+unfold nat_mod_from_secret_literal.
+unfold nat_mod_pow2.
+
+unfold lift_to_code.
+
+
+unfold from_uint_size.
+unfold nat_uint_sizable.
+unfold usize.
+Set Printing Coercions.
+
+rewrite unsigned_repr_alt.
+rewrite Nat2Z.id.
+rewrite Nat.sub_0_r.
+
+unfold for_loop.
+destruct (Z.to_nat (unsigned (T_ct (Hacspec_Lib_Pre.seq_len m_40) ./ blocksize_v))).
+
+
+
+
+
+repeat rewrite unsigned_repr_alt.
+
+
+rewrite unsigned_repr.
+
+apply (for_loop_rule (fun i => fun '(s₀, s₁) => set_lhs st_38_loc st_41 (fun '(h₀, h₁) => h₀ = h₁) (s₀, s₁))).
+
+unfold poly1305_update_block.
+unfold poly1305_update_block_pure.
+unfold poly1305_update_block_state.
+unfold is_pure.
+unfold is_state.
+
+unfold prog.
+
+destruct st_38 as [[]].
+
+unfold poly1305_encode_block.
+unfold poly1305_encode_block_pure.
+unfold poly1305_encode_block_state.
+unfold is_pure.
+unfold is_state.
+unfold prog.
+
+unfold seq_get_exact_chunk.
+unfold array_from_seq.
+
+
+
+unfold array_to_seq.
+  unfold array_from_seq.
+  unfold uint128_from_le_bytes.
+  unfold nat_mod_from_secret_literal.
+  unfold nat_mod_pow2.
+
+  unfold lift_to_code.
+
+Admitted.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_update_last_pure
   (pad_len_52 : uint_size)
-  (b_50 : sub_block_t)
-  (st_48 : poly_state_t)
-  : code (fset (path.sort leb [ st_49_loc])) [interface] (@ct (poly_state_t)) :=
-  (({code #put st_49_loc := 
-        (st_48) ;;
-      st_49 ← get st_49_loc ;;
-      let st_49 : (field_element_t '× field_element_t '× poly_key_t) :=
-        (st_49) in
-       temp_51 ←
-        (seq_len (b_50)) ;;
-       '(st_49) ←
-        (if (temp_51) !=.? (usize 0):bool_ChoiceEquality then (({code let '(
-                  acc_54,
-                  r_55,
-                  k_56
+  (b_53 : sub_block_t)
+  (st_54 : poly_state_t)
+  : poly_state_t :=
+  let st_50 : (field_element_t '× field_element_t '× poly_key_t) :=
+    st_54 in 
+  let '(st_50) :=
+    if (seq_len (b_53)) !=.? (usize 0):bool then (let '(acc_55, r_56, k_57) :=
+        st_50 in 
+      let st_50 :=
+        (
+          ((poly1305_encode_last (pad_len_52) (b_53)) +% (acc_55)) *% (r_56),
+          r_56,
+          k_57
+        ) in 
+      (st_50)) else ((st_50)) in 
+  st_50.
+Definition poly1305_update_last_pure_code
+  (pad_len_52 : uint_size)
+  (b_53 : sub_block_t)
+  (st_54 : poly_state_t)
+  : code fset.fset0 [interface] (@ct poly_state_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_update_last_pure pad_len_52
+    b_53
+    st_54))}.
+
+Import Hacspec_Lib.
+Definition st_50_loc : Location :=
+  ((field_element_t '× field_element_t '× poly_key_t) : choice_type ; 60%nat).
+Program Definition poly1305_update_last_state
+  (pad_len_52 : uint_size)
+  (b_53 : sub_block_t)
+  (st_54 : poly_state_t)
+  : code (fset (path.sort leb [ st_50_loc])) [interface] (@ct (poly_state_t)) :=
+  (({code #put st_50_loc := 
+        (st_54) ;;
+      st_50 ← get st_50_loc ;;
+      let st_50 : (field_element_t '× field_element_t '× poly_key_t) :=
+        (st_50) in
+       temp_58 ←
+        (seq_len (b_53)) ;;
+       '(st_50) ←
+        (if (temp_58) !=.? (usize 0):bool_ChoiceEquality then (({code let '(
+                  acc_55,
+                  r_56,
+                  k_57
                 ) :=
-                (st_49) : (field_element_t '× field_element_t '× poly_key_t
+                (st_50) : (field_element_t '× field_element_t '× poly_key_t
               ) in
-               temp_53 ←
-                (poly1305_encode_last (pad_len_52) (b_50)) ;;
-              st_49 ← get st_49_loc ;;
+               temp_59 ←
+                (poly1305_encode_last (pad_len_52) (b_53)) ;;
+              st_50 ← get st_50_loc ;;
               
-              #put st_49_loc := 
-                ((((temp_53) +% (acc_54)) *% (r_55), r_55, k_56)) ;;
-              st_49 ← get st_49_loc ;;
+              #put st_50_loc := 
+                ((((temp_59) +% (acc_55)) *% (r_56), r_56, k_57)) ;;
+              st_50 ← get st_50_loc ;;
               
-              @pkg_core_definition.ret (_) ( ((st_49))) } : code (fset (
-                  path.sort leb [ st_49_loc])) [interface] _)) else (
-            @pkg_core_definition.ret (_) ( ((st_49))))) ;;
+              @pkg_core_definition.ret (_) ( ((st_50))) } : code (fset (
+                  path.sort leb [ st_50_loc])) [interface] _)) else (
+            @pkg_core_definition.ret (_) ( ((st_50))))) ;;
       
       @pkg_core_definition.ret ((
           field_element_t '×
           field_element_t '×
           poly_key_t
-        )) ( (st_49)) } : code (fset (
-          path.sort leb [ st_49_loc])) [interface] _)).
+        )) ( (st_50)) } : code (fset (
+          path.sort leb [ st_50_loc])) [interface] _)).
 Fail Next Obligation.
 
+Definition poly1305_update_last
+  (pad_len_52 : uint_size)
+  (b_53 : sub_block_t)
+  (st_54 : poly_state_t)
+  : both (fset (path.sort leb [ st_50_loc])) poly_state_t :=
+  {|
+  is_pure := poly1305_update_last_pure(pad_len_52 : uint_size)
+  (b_53 : sub_block_t)
+  (st_54 : poly_state_t);
+  is_state := poly1305_update_last_state(pad_len_52 : uint_size)
+  (b_53 : sub_block_t)
+  (st_54 : poly_state_t);
+  |}.
 
-Program Definition poly1305_update
-  (m_58 : byte_seq)
-  (st_59 : poly_state_t)
-  : code (fset (path.sort leb [ st_45_loc ; st_49_loc])) [interface] (@ct (
+Instance poly1305_update_last_eq :
+forall (pad_len_52 : uint_size)
+(b_53 : sub_block_t)
+(st_54 : poly_state_t),
+CodeEqProofStatement (poly1305_update_last(pad_len_52 : uint_size)
+  (b_53 : sub_block_t)
+  (st_54 : poly_state_t)).
+Proof.
+intros.
+unfold CodeEqProofStatement.
+
+unfold poly1305_update_last.
+unfold poly1305_update_last_pure.
+unfold poly1305_update_last_state.
+unfold is_pure.
+unfold is_state.
+
+unfold prog.
+Admitted.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_update_pure
+  (m_61 : byte_seq)
+  (st_62 : poly_state_t)
+  : poly_state_t :=
+  let st_63 : (field_element_t '× field_element_t '× poly_key_t) :=
+    poly1305_update_blocks (m_61) (st_62) in 
+  let last_64 : seq uint8 :=
+    seq_get_remainder_chunk (m_61) (blocksize_v) in 
+  poly1305_update_last (seq_len (last_64)) (last_64) (st_63).
+Definition poly1305_update_pure_code
+  (m_61 : byte_seq)
+  (st_62 : poly_state_t)
+  : code fset.fset0 [interface] (@ct poly_state_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_update_pure m_61 st_62))}.
+
+Import Hacspec_Lib.
+
+Program Definition poly1305_update_state
+  (m_61 : byte_seq)
+  (st_62 : poly_state_t)
+  : code (fset (path.sort leb [ st_38_loc ; st_50_loc])) [interface] (@ct (
       poly_state_t)) :=
-  (({code  temp_60 ←
-        (poly1305_update_blocks (m_58) (st_59)) ;;
-      let st_64 : (field_element_t '× field_element_t '× poly_key_t) :=
-        (temp_60) in
-       temp_61 ←
-        (seq_get_remainder_chunk (m_58) (blocksize_v)) ;;
-      let last_62 : seq uint8 :=
-        (temp_61) in
-       temp_63 ←
-        (seq_len (last_62)) ;;
-       temp_65 ←
-        (poly1305_update_last (temp_63) (last_62) (st_64)) ;;
-      @pkg_core_definition.ret (poly_state_t) ( (temp_65)) } : code (fset (
-          path.sort leb [ st_45_loc ; st_49_loc])) [interface] _)).
+  (({code  temp_65 ←
+        (poly1305_update_blocks (m_61) (st_62)) ;;
+      let st_63 : (field_element_t '× field_element_t '× poly_key_t) :=
+        (temp_65) in
+       temp_66 ←
+        (seq_get_remainder_chunk (m_61) (blocksize_v)) ;;
+      let last_64 : seq uint8 :=
+        (temp_66) in
+       temp_67 ←
+        (seq_len (last_64)) ;;
+       temp_68 ←
+        (poly1305_update_last (temp_67) (last_64) (st_63)) ;;
+      @pkg_core_definition.ret (poly_state_t) ( (temp_68)) } : code (fset (
+          path.sort leb [ st_38_loc ; st_50_loc])) [interface] _)).
 Fail Next Obligation.
 
+Definition poly1305_update
+  (m_61 : byte_seq)
+  (st_62 : poly_state_t)
+  : both (fset (path.sort leb [ st_38_loc ; st_50_loc])) poly_state_t :=
+  {|
+  is_pure := poly1305_update_pure(m_61 : byte_seq)
+  (st_62 : poly_state_t);
+  is_state := poly1305_update_state(m_61 : byte_seq)
+  (st_62 : poly_state_t);
+  |}.
 
-Program Definition poly1305_finish
-  (st_66 : poly_state_t)
+Instance poly1305_update_eq :
+forall (m_61 : byte_seq)
+(st_62 : poly_state_t),
+CodeEqProofStatement (poly1305_update(m_61 : byte_seq) (st_62 : poly_state_t)).
+Proof.
+intros.
+unfold CodeEqProofStatement.
+
+unfold poly1305_update.
+unfold poly1305_update_pure.
+unfold poly1305_update_state.
+unfold is_pure.
+unfold is_state.
+
+unfold prog.
+Admitted.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_finish_pure (st_69 : poly_state_t) : poly1305_tag_t :=
+  let '(acc_70, _, k_71) :=
+    st_69 in 
+  let n_72 : uint128 :=
+    uint128_from_le_bytes (array_from_slice (default) (16) (
+        array_to_seq (k_71)) (usize 16) (usize 16)) in 
+  let aby_73 : seq uint8 :=
+    nat_mod_to_byte_seq_le (acc_70) in 
+  let a_74 : uint128 :=
+    uint128_from_le_bytes (array_from_slice (default) (16) (aby_73) (usize 0) (
+        usize 16)) in 
+  array_from_seq (16) (array_to_seq (uint128_to_le_bytes ((a_74) .+ (n_72)))).
+Definition poly1305_finish_pure_code
+  (st_69 : poly_state_t)
+  : code fset.fset0 [interface] (@ct poly1305_tag_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_finish_pure st_69))}.
+
+Import Hacspec_Lib.
+
+Program Definition poly1305_finish_state
+  (st_69 : poly_state_t)
   : code (fset.fset0) [interface] (@ct (poly1305_tag_t)) :=
-  (({code let '(acc_71, _, k_67) :=
-        (st_66) : (field_element_t '× field_element_t '× poly_key_t) in
-       temp_68 ←
-        (array_to_seq (k_67)) ;;
-      let temp_68 : seq uint8 :=
-        (temp_68) in
-       temp_69 ←
-        (array_from_slice (default) (16) (temp_68) (usize 16) (usize 16)) ;;
-       temp_70 ←
-        (uint128_from_le_bytes (temp_69)) ;;
-      let n_77 : uint128 :=
-        (temp_70) in
-       temp_72 ←
-        (nat_mod_to_byte_seq_le (acc_71)) ;;
-      let aby_73 : seq uint8 :=
-        (temp_72) in
-       temp_74 ←
-        (array_from_slice (default) (16) (aby_73) (usize 0) (usize 16)) ;;
+  (({code let '(acc_70, _, k_71) :=
+        (st_69) : (field_element_t '× field_element_t '× poly_key_t) in
        temp_75 ←
-        (uint128_from_le_bytes (temp_74)) ;;
-      let a_76 : uint128 :=
+        (array_to_seq (k_71)) ;;
+      let temp_75 : seq uint8 :=
         (temp_75) in
+       temp_76 ←
+        (array_from_slice (default) (16) (temp_75) (usize 16) (usize 16)) ;;
+       temp_77 ←
+        (uint128_from_le_bytes (temp_76)) ;;
+      let n_72 : uint128 :=
+        (temp_77) in
        temp_78 ←
-        (uint128_to_le_bytes ((a_76) .+ (n_77))) ;;
+        (nat_mod_to_byte_seq_le (acc_70)) ;;
+      let aby_73 : seq uint8 :=
+        (temp_78) in
        temp_79 ←
-        (array_to_seq (temp_78)) ;;
-      let temp_79 : seq uint8 :=
-        (temp_79) in
+        (array_from_slice (default) (16) (aby_73) (usize 0) (usize 16)) ;;
        temp_80 ←
-        (array_from_seq (16) (temp_79)) ;;
-      @pkg_core_definition.ret (poly1305_tag_t) ( (temp_80)) } : code (
+        (uint128_from_le_bytes (temp_79)) ;;
+      let a_74 : uint128 :=
+        (temp_80) in
+       temp_81 ←
+        (uint128_to_le_bytes ((a_74) .+ (n_72))) ;;
+       temp_82 ←
+        (array_to_seq (temp_81)) ;;
+      let temp_82 : seq uint8 :=
+        (temp_82) in
+       temp_83 ←
+        (array_from_seq (16) (temp_82)) ;;
+      @pkg_core_definition.ret (poly1305_tag_t) ( (temp_83)) } : code (
         fset.fset0) [interface] _)).
 Fail Next Obligation.
 
+Definition poly1305_finish
+  (st_69 : poly_state_t)
+  : both (fset.fset0) poly1305_tag_t :=
+  {|
+  is_pure := poly1305_finish_pure(st_69 : poly_state_t);
+  is_state := poly1305_finish_state(st_69 : poly_state_t);
+  |}.
+
+Instance poly1305_finish_eq :
+forall (st_69 : poly_state_t),
+CodeEqProofStatement (poly1305_finish(st_69 : poly_state_t)).
+Proof.
+intros.
+unfold CodeEqProofStatement.
+
+unfold poly1305_finish.
+unfold poly1305_finish_pure.
+unfold poly1305_finish_state.
+unfold is_pure.
+unfold is_state.
+
+unfold prog.
+Admitted.
+
+Import Hacspec_Lib_Pre.
+Definition poly1305_pure
+  (m_86 : byte_seq)
+  (key_87 : poly_key_t)
+  : poly1305_tag_t :=
+  let st_84 : (field_element_t '× field_element_t '× poly_key_t) :=
+    poly1305_init (key_87) in 
+  let st_84 :=
+    poly1305_update (m_86) (st_84) in 
+  poly1305_finish (st_84).
+Definition poly1305_pure_code
+  (m_86 : byte_seq)
+  (key_87 : poly_key_t)
+  : code fset.fset0 [interface] (@ct poly1305_tag_t) :=
+  {code pkg_core_definition.ret (T_ct (poly1305_pure m_86 key_87))}.
+
+Import Hacspec_Lib.
 Definition st_84_loc : Location :=
-  ((field_element_t '× field_element_t '× poly_key_t) : choice_type ; 87%nat).
-Program Definition poly1305
-  (m_83 : byte_seq)
-  (key_81 : poly_key_t)
+  ((field_element_t '× field_element_t '× poly_key_t) : choice_type ; 91%nat).
+Program Definition poly1305_state
+  (m_86 : byte_seq)
+  (key_87 : poly_key_t)
   : code (fset (
-      path.sort leb [ st_45_loc ; st_49_loc ; n_4_loc ; st_84_loc])) [interface] (
+      path.sort leb [ st_50_loc ; n_0_loc ; st_84_loc ; st_38_loc])) [interface] (
     @ct (poly1305_tag_t)) :=
-  (({code  temp_82 ←
-        (poly1305_init (key_81)) ;;
+  (({code  temp_88 ←
+        (poly1305_init (key_87)) ;;
       #put st_84_loc := 
-        (temp_82) ;;
+        (temp_88) ;;
       st_84 ← get st_84_loc ;;
       let st_84 : (field_element_t '× field_element_t '× poly_key_t) :=
         (st_84) in
-       temp_85 ←
-        (poly1305_update (m_83) (st_84)) ;;
+       temp_89 ←
+        (poly1305_update (m_86) (st_84)) ;;
       st_84 ← get st_84_loc ;;
       
       #put st_84_loc := 
-        (temp_85) ;;
+        (temp_89) ;;
       st_84 ← get st_84_loc ;;
       
-       temp_86 ←
+       temp_90 ←
         (poly1305_finish (st_84)) ;;
-      @pkg_core_definition.ret (poly1305_tag_t) ( (temp_86)) } : code (fset (
-          path.sort leb [ st_45_loc ; st_49_loc ; n_4_loc ; st_84_loc])) [interface] _)).
+      @pkg_core_definition.ret (poly1305_tag_t) ( (temp_90)) } : code (fset (
+          path.sort leb [ st_50_loc ; n_0_loc ; st_84_loc ; st_38_loc])) [interface] _)).
 Fail Next Obligation.
+
+Definition poly1305
+  (m_86 : byte_seq)
+  (key_87 : poly_key_t)
+  : both (fset (
+      path.sort leb [ st_50_loc ; n_0_loc ; st_84_loc ; st_38_loc])) poly1305_tag_t :=
+  {|
+  is_pure := poly1305_pure(m_86 : byte_seq)
+  (key_87 : poly_key_t);
+  is_state := poly1305_state(m_86 : byte_seq)
+  (key_87 : poly_key_t);
+  |}.
+
+Instance poly1305_eq :
+forall (m_86 : byte_seq)
+(key_87 : poly_key_t),
+CodeEqProofStatement (poly1305(m_86 : byte_seq) (key_87 : poly_key_t)).
+Proof.
+intros.
+unfold CodeEqProofStatement.
+
+unfold poly1305.
+unfold poly1305_pure.
+unfold poly1305_state.
+unfold is_pure.
+unfold is_state.
+
+unfold prog.
+Admitted.
 

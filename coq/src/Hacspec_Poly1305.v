@@ -51,7 +51,7 @@ Definition poly1305_encode_last
         seq_len (b_6))) in 
   let f_8 : field_element_t :=
     nat_mod_from_secret_literal (n_7) in 
-  (f_8) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (
+  (f_8) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) .* (
         pad_len_5)) : field_element_t).
 
 Definition poly1305_init (k_9 : poly_key_t) : poly_state_t :=
@@ -75,7 +75,7 @@ Definition poly1305_update_blocks
   let st_18 : (field_element_t × field_element_t × poly_key_t) :=
     st_17 in 
   let n_blocks_19 : uint_size :=
-    (seq_len (m_16)) / (blocksize_v) in 
+    (seq_len (m_16)) ./ (blocksize_v) in 
   let st_18 :=
     foldi (usize 0) (n_blocks_19) (fun i_20 st_18 =>
       let block_21 : poly_block_t :=

@@ -28,20 +28,22 @@ Open Scope nat_scope.
 
 Require Import Hacspec_Lib_Comparable.
 
+Require Import Coq.Logic.FunctionalExtensionality.
+
 Section IntType.
 
 Definition int_choice {WS : wsize} := chWord WS.
 Definition int_type {WS : wsize} : Type := WS.-word.
 Program Instance int {WS : wsize} : ChoiceEquality :=
   {| ct := @int_choice WS ; T := @int_type WS |}.
-  
+
 Definition unsigned {WS : wsize} (i : @int WS) : Z := wunsigned i.
 Definition signed {WS : wsize} (i: @int WS) : Z := wsigned i.
-Definition repr {WS : wsize} (z : Z) : @int_type WS := wrepr WS z. 
+Definition repr {WS : wsize} (z : Z) : @int_type WS := wrepr WS z.
 
 Definition rol {WS} (u s : @int WS) := wrol u (unsigned s).
 Definition ror {WS} (u s : @int WS) := wror u (unsigned s).
-  
+
 Instance int8 : ChoiceEquality := @int U8.
 Instance int16 : ChoiceEquality := @int U16.
 Instance int32 : ChoiceEquality := @int U32.
@@ -59,6 +61,70 @@ Definition int_xor {WS : wsize} : @int WS -> @int WS -> @int WS := wxor.
 Definition int_and {WS : wsize} : @int WS -> @int WS -> @int WS := wand.
 Definition int_or {WS : wsize} : @int WS -> @int WS -> @int WS := wor.
 
+Definition zero {WS : wsize} : @T (@int WS) := @word0 WS.
+Definition one {WS : wsize} : @T (@int WS) := @word1 (pred WS).
+
+Lemma add_zero_l : forall {WS : wsize} n, @int_add WS zero n = n.
+Proof.
+  intros.
+  apply add0w.
+Defined.
+
+(* Lemma add_one_l : forall {WS : wsize} n m H1 H2, *)
+(*     n = m -> *)
+(*     mkword n H1 = mkword m H2. *)
+
+Lemma add_one_l : forall {WS : wsize} n, @int_add WS one (repr n) = repr (Z.succ n).
+Proof.
+  intros.
+
+  unfold int_add.
+  unfold add_word.
+
+  replace (urepr one) with 1%Z by reflexivity.
+
+  unfold nat_of_wsize.
+  fold (wrepr WS (Z.add 1 (@urepr (S (wsize_size_minus_1 WS)) (@repr WS n)))).
+  unfold repr.
+
+  rewrite wrepr_add.
+  rewrite urepr_word.
+
+  (* Set Printing All. *)
+  replace toword with urepr by reflexivity.
+  unfold wrepr at 2.
+  rewrite ureprK.
+
+  rewrite <- wrepr_add.
+  rewrite Z.add_1_l.
+  reflexivity.
+Defined.
+
+Lemma repr0_is_zero : forall {WS : wsize}, @repr WS 0 = zero.
+Proof.
+  intros.
+  now rewrite wrepr0.
+Qed.
+
+Lemma add_repr : forall {WS : wsize} (n m : Z), @int_add WS (repr n) (repr m) = (repr (n + m)).
+Proof.
+  intros.
+  unfold int_add.
+  unfold add_word.
+  unfold nat_of_wsize.
+  fold (wrepr WS (Z.add (@urepr (S (wsize_size_minus_1 WS)) (@repr WS n))
+                        (@urepr (S (wsize_size_minus_1 WS)) (@repr WS m)))).
+
+  rewrite wrepr_add.
+  replace toword with urepr by reflexivity.
+  unfold wrepr at 1 2.
+  rewrite ureprK.
+  rewrite ureprK.
+  rewrite <- wrepr_add.
+  reflexivity.
+Qed.
+
+
 End IntType.
 
 Axiom secret : forall {WS : wsize},  (@T (@int WS)) -> (@T (@int WS)).
@@ -75,8 +141,6 @@ Infix ".&" := int_and (at level 77) : hacspec_scope.
 Infix ".|" := int_or (at level 77) : hacspec_scope.
 (* Infix "==" := (MachineIntegers.eq) (at level 32) : hacspec_scope. *)
 (* w1 == w2 -- already defined *)
-Definition zero {WS : wsize} : @T (@int WS) := @word0 WS.
-Definition one {WS : wsize} : @T (@int WS) := @word1 (pred WS).
 
 
 
@@ -304,18 +368,20 @@ Next Obligation.
   do 2 rewrite ChoiceEq.
   reflexivity.
 Defined.
-  
+
 Notation "A '× B" := (prod_ChoiceEquality A B) (at level 79, left associativity) : hacspec_scope.
 
 (* Notation "A '× B" := (prod A B) (at level 79, left associativity) : hacspec_scope. *)
 
 Instance nat_ChoiceEquality : ChoiceEquality := {| T := nat ; ct := 'nat ; ChoiceEq := ltac:(reflexivity) |}.
 Instance bool_ChoiceEquality : ChoiceEquality := {| T := bool ; ct := 'bool ; ChoiceEq := ltac:(reflexivity) |}.
+Instance unit_ChoiceEquality : ChoiceEquality := {| T := unit ; ct := 'unit ; ChoiceEq := ltac:(reflexivity) |}.
+
 
 (*** Positive util *)
 
 Section Util.
-  
+
 Fixpoint binary_representation_pre (n : nat) {struct n}: positive :=
   match n with
   | O => 1
@@ -362,7 +428,7 @@ Proof. lia. Qed.
 (* Conversion to equivalent bound *)
 Lemma modulus_range_helper :
   forall {WS : wsize},
-  forall i, (Z.pred 0 < i < modulus WS)%Z -> (0 <= i < wbase WS)%Z.
+  forall i, (Z.pred 0 < i < modulus WS)%Z -> (0 <= i <= wmax_unsigned WS)%Z.
 Proof.
   intros.
   unfold wmax_unsigned.
@@ -372,7 +438,14 @@ Proof.
 Qed.
 
 Definition unsigned_repr_alt {WS : wsize} (a : Z) `((Z.pred 0 < a < modulus WS)%Z) :
-  unsigned (@repr WS a) = a := wunsigned_repr_small (modulus_range_helper a H).
+  unsigned (@repr WS a) = a.
+Proof.
+  apply wunsigned_repr_small.
+  intros.
+  unfold wbase.
+  unfold nat_of_wsize in H.
+  lia.
+Qed.
 
 Theorem zero_always_modulus {WS : wsize} : (Z.pred 0 < 0 < modulus WS)%Z.
 Proof. easy. Qed.
@@ -385,10 +458,10 @@ Theorem uint_size_as_nat :
   forall (us: uint_size),
     { n : nat |
       us = repr (Z.of_nat n) /\ (Z.pred 0 < Z.of_nat n < @modulus U32)%Z}.
-Proof.  
+Proof.
   intros.
   exists (Z.to_nat (unsigned us)).
-  rewrite Z2Nat.id by apply (ssrbool.elimT lezP (urepr_ge0 us)).  
+  rewrite Z2Nat.id by apply (ssrbool.elimT lezP (urepr_ge0 us)).
   split.
   - unfold repr.
     unfold unsigned.
@@ -458,13 +531,13 @@ Theorem uint_size_as_positive :
       }.
 Proof.
   intros.
-  
+
   destruct us as [val H_].
-  pose proof (H := H_).  
+  pose proof (H := H_).
   apply Bool.andb_true_iff in H as [lt gt].
   apply (ssrbool.elimT lezP) in lt.
   apply (ssrbool.elimT ltzP) in gt.
-  
+
   destruct val.
   - exists (inl tt). apply word_ext. reflexivity.
   - exists (inr p).
@@ -488,11 +561,6 @@ Proof.
   - apply H_succ.
     apply yb.
 Qed.
-
-Ltac destruct_uint_size_as_positive a :=
-  generalize dependent a ;
-  intros a ;
-  apply (destruct_uint_size_as_positive a) ; intros.
 
 (* induction of uint_size as positive *)
 Definition induction_uint_size_as_positive :
@@ -529,15 +597,21 @@ Proof.
            lia.
 Qed.
 
-Ltac induction_uint_size_as_positive var :=
+End Util.
+
+Global Ltac destruct_uint_size_as_nat a :=
+  generalize dependent a ;
+  intros a ;
+  apply (destruct_uint_size_as_nat a) ; [ pose proof (@unsigned_repr_alt U32 0 zero_always_modulus) | let n := fresh in let H := fresh in intros n H ; pose proof (@unsigned_repr_alt U32 _ H)] ; intros.
+
+Global Ltac induction_uint_size_as_positive var :=
   generalize dependent var ;
   intros var ;
   apply induction_uint_size_as_positive with (a := var) ; intros ; [ | | ].
 
-End Util.
-
 (*** Loops *)
 
+Open Scope nat_scope.
 Fixpoint foldi_
   {acc : Type}
   (fuel : nat)
@@ -545,7 +619,7 @@ Fixpoint foldi_
   (f : uint_size -> acc -> acc)
   (cur : acc) : acc :=
   match fuel with
-  | 0%nat => cur
+  | 0 => cur
   | S n' => foldi_ n' (i .+ one) f (f i cur)
   end.
 Close Scope nat_scope.
@@ -561,6 +635,406 @@ Definition foldi
   | Zpos p => foldi_ (Pos.to_nat p) lo f init
   end.
 
+(* Fold done using natural numbers for bounds *)
+Fixpoint foldi_nat_
+  {acc : Type}
+  (fuel : nat)
+  (i : nat)
+  (f : nat -> acc -> acc)
+  (cur : acc) : acc :=
+  match fuel with
+  | O => cur
+  | S n' => foldi_nat_ n' (S i) f (f i cur)
+  end.
+
+
+Fixpoint for_loop_
+  {acc : Type}
+  (fuel : nat)
+  (f : nat -> acc -> acc)
+  (cur : acc) : acc :=
+  match fuel with
+  | O => cur
+  | S n' => f n' (for_loop_ n' f cur)
+  end.
+
+Definition foldi_nat
+  {acc: Type}
+  (lo: nat)
+  (hi: nat) (* {lo <= hi} *)
+  (f: nat -> acc -> acc) (* {i < hi} *)
+  (init: acc) : acc :=
+  match Nat.sub hi lo with
+  | O => init
+  | S n' => foldi_nat_ (S n') lo f init
+  end.
+
+Definition for_loop_range
+  {acc: Type}
+  (lo: nat)
+  (hi: nat) (* {lo <= hi} *)
+  (f: nat -> acc -> acc) (* {i < hi} *)
+  (init: acc) : acc :=
+  match Nat.sub hi lo with
+  | O => init
+  | S n' => for_loop_ (S n') (fun x => f (x + lo)%nat)  init
+  end.
+
+Definition for_loop_usize {acc : Type} (lo hi : uint_size) (f : uint_size -> acc -> acc) init : acc :=
+  for_loop_range (from_uint_size lo) (from_uint_size hi) (fun x => f (usize x)) init.
+
+
+Lemma foldi__move_S :
+  forall {acc: Type}
+  (fuel : nat)
+  (i : uint_size)
+  (f : uint_size -> acc -> acc)
+  (cur : acc),
+    foldi_ fuel (i .+ one) f (f i cur) = foldi_ (S fuel) i f cur.
+Proof. reflexivity. Qed.
+
+Lemma foldi__nat_move_S :
+  forall {acc: Type}
+  (fuel : nat)
+  (i : nat)
+  (f : nat -> acc -> acc)
+  (cur : acc),
+    foldi_nat_ fuel (S i) f (f i cur) = foldi_nat_ (S fuel) i f cur.
+Proof. reflexivity. Qed.
+
+Lemma foldi__nat_move_S_append :
+  forall {acc: Type}
+    (fuel : nat)
+    (i : nat)
+    (f : nat -> acc -> acc)
+    (cur : acc),
+    f (i + fuel)%nat (foldi_nat_ fuel i f cur) = foldi_nat_ (S fuel) i f cur.
+Proof.
+  induction fuel ; intros.
+  - rewrite <- foldi__nat_move_S.
+    unfold foldi_nat_.
+    rewrite Nat.add_0_r.
+    reflexivity.
+  - rewrite <- foldi__nat_move_S.
+    rewrite <- foldi__nat_move_S.
+    replace (i + S fuel)%nat with (S i + fuel)%nat by lia.
+    rewrite IHfuel.
+    reflexivity.
+Qed.
+
+Theorem foldi_for_loop_eq :
+  forall {acc} fuel f (cur : acc),
+    foldi_nat_ fuel 0 f cur
+    =
+    for_loop_ fuel f cur.
+Proof.
+  induction fuel ; intros.
+  - reflexivity.
+  - unfold for_loop_ ; fold (@for_loop_ acc).
+    rewrite <- foldi__nat_move_S_append.
+    rewrite <- IHfuel.
+    reflexivity.
+Qed.
+
+Lemma foldi__nat_move_to_function :
+    forall {acc: ChoiceEquality}
+      (fuel : nat)
+      (i : nat)
+      (f : nat -> acc -> acc)
+      (cur : @T acc),
+      foldi_nat_ fuel i (fun x => f (S x)) (cur) = foldi_nat_ fuel (S i) f cur.
+Proof.
+  induction fuel ; intros.
+  - reflexivity.
+  - cbn.
+    rewrite IHfuel.
+    reflexivity.
+Qed.
+
+Lemma foldi__nat_move_to_function_add :
+  forall {acc: ChoiceEquality}
+    (fuel : nat)
+    (i j : nat)
+    (f : nat -> @T acc ->  acc)
+    (cur : @T acc),
+    foldi_nat_ fuel i (fun x => f (x + j)%nat) (cur) = foldi_nat_ fuel (i + j) f cur.
+Proof.
+  intros acc fuel i j. generalize dependent i.
+  induction j ; intros.
+  - rewrite Nat.add_0_r.
+    replace (fun x : nat => f (x + 0)%nat) with f.
+    reflexivity.
+    apply functional_extensionality.
+    intros.
+    now rewrite Nat.add_0_r.
+  - replace (i + S j)%nat with (S i + j)%nat by lia.
+    rewrite <- IHj.
+    rewrite <- foldi__nat_move_to_function.
+    f_equal.
+    apply functional_extensionality.
+    intros.
+    f_equal.
+    lia.
+Qed.
+
+Theorem foldi_for_loop_range_eq :
+  forall {acc : ChoiceEquality} lo hi f (cur : acc),
+    foldi_nat lo hi f cur
+    =
+    for_loop_range lo hi f cur.
+Proof.
+  unfold foldi_nat.
+  unfold for_loop_range.
+  intros.
+
+  destruct (hi - lo)%nat.
+  - reflexivity.
+  - rewrite <- foldi_for_loop_eq.
+    (* pose (@foldi__nat_move_to_function acc (S n) 0 f). *)
+    (* rewrite <- foldi__nat_move_to_function. *)
+
+    induction lo.
+    + f_equal.
+      apply functional_extensionality.
+      intros.
+      now rewrite Nat.add_0_r.
+    + replace (fun x : nat => f (x + S lo)%nat) with (fun x : nat => f (S (x + lo))%nat).
+      2:{
+        apply functional_extensionality.
+        intros.
+        f_equal.
+        lia.
+      }
+
+      rewrite (foldi__nat_move_to_function (S n) 0 (fun x => f (x + lo)%nat)).
+      rewrite foldi__nat_move_to_function_add.
+      reflexivity.
+Qed.
+
+(* You can do one iteration of the fold by burning a unit of fuel *)
+Lemma foldi__move_S_fuel :
+  forall {acc: Type}
+  (fuel : nat)
+  (i : uint_size)
+  (f : uint_size -> acc -> acc)
+  (cur : acc),
+    (0 <= Z.of_nat fuel <= wmax_unsigned U32)%Z ->
+    f ((repr (Z.of_nat fuel)) .+ i) (foldi_ (fuel) i f cur) = foldi_ (S (fuel)) i f cur.
+Proof.
+  intros acc fuel.
+  induction fuel ; intros.
+  - cbn.
+    replace (repr 0) with (@zero U32) by (rewrite wrepr0 ; reflexivity).
+    rewrite add_zero_l.
+    reflexivity.
+  - do 2 rewrite <- foldi__move_S.
+    replace (int_add (repr (Z.of_nat (S fuel))) i)
+      with (int_add (repr (Z.of_nat fuel)) (int_add i one)).
+    2 : {
+      unfold ".+".
+      rewrite addwA.
+      rewrite addwC.
+      rewrite addwA.
+      f_equal.
+
+      rewrite Nat2Z.inj_succ.
+      unfold repr.
+      unfold add_word.
+      unfold wrepr.
+      f_equal.
+      rewrite urepr_word.
+      Set Printing Coercions.
+      replace (toword one)%Z with 1%Z by reflexivity.
+      unfold urepr.
+      unfold eqtype.val.
+      unfold word_subType.
+      unfold toword.
+      unfold mkword.
+      rewrite Zmod_small.
+
+      rewrite Z.add_1_l.
+      reflexivity.
+
+      clear -H.
+      unfold modulus.
+      unfold two_power_nat.
+      cbn in *.
+      lia.
+    }
+    rewrite IHfuel.
+    reflexivity.
+    lia.
+Qed.
+
+(* You can do one iteration of the fold by burning a unit of fuel *)
+Lemma foldi__nat_move_S_fuel :
+  forall {acc: Type}
+  (fuel : nat)
+  (i : nat)
+  (f : nat -> acc -> acc)
+  (cur : acc),
+    (0 <= Z.of_nat fuel <= @wmax_unsigned U32)%Z ->
+    f (fuel + i)%nat (foldi_nat_ fuel i f cur) = foldi_nat_ (S fuel) i f cur.
+Proof.
+  induction fuel ; intros.
+  - reflexivity.
+  - do 2 rewrite <- foldi__nat_move_S.
+    replace (S fuel + i)%nat with (fuel + (S i))%nat by (symmetry ; apply plus_Snm_nSm).
+    rewrite IHfuel.
+    + reflexivity.
+    + lia.
+Qed.
+
+(* folds and natural number folds compute the same thing *)
+Lemma foldi_to_foldi_nat :
+  forall {acc: Type}
+    (lo: uint_size) (* {lo <= hi} *)
+    (hi: uint_size) (* {lo <= hi} *)
+    (f: (uint_size) -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+    (unsigned lo <= unsigned hi)%Z ->
+    foldi lo hi f init = foldi_nat (Z.to_nat (unsigned lo)) (Z.to_nat (unsigned hi)) (fun x => f (repr (Z.of_nat x))) init.
+Proof.
+  intros.
+
+  unfold foldi.
+  unfold foldi_nat.
+
+  destruct (uint_size_as_nat hi) as [ hi_n [ hi_eq hi_H ] ] ; subst.
+  rewrite (@unsigned_repr_alt U32 _ hi_H) in *.
+  rewrite Nat2Z.id.
+
+  destruct (uint_size_as_nat lo) as [ lo_n [ lo_eq lo_H ] ] ; subst.
+  rewrite (@unsigned_repr_alt U32 _ lo_H) in *.
+  rewrite Nat2Z.id.
+
+  remember (hi_n - lo_n)%nat as n.
+  apply f_equal with (f := Z.of_nat) in Heqn.
+  rewrite (Nat2Z.inj_sub) in Heqn by (apply Nat2Z.inj_le ; apply H).
+  rewrite <- Heqn.
+
+  assert (H_bound : (Z.pred 0 < Z.of_nat n < @modulus U32)%Z) by lia.
+
+  clear Heqn.
+  induction n.
+  - reflexivity.
+  - pose proof (H_max_bound := modulus_range_helper _ (range_of_nat_succ _ H_bound)).
+    rewrite <- foldi__nat_move_S_fuel by apply H_max_bound.
+    cbn.
+    rewrite SuccNat2Pos.id_succ.
+    rewrite <- foldi__move_S_fuel by apply H_max_bound.
+
+    destruct n.
+    + cbn.
+      replace (repr 0) with (@zero U32) by (rewrite wrepr0 ; reflexivity).
+      rewrite add_zero_l.
+      reflexivity.
+    + cbn in *.
+      assert (H_bound_pred: (Z.pred 0 < Z.pos (Pos.of_succ_nat n) < @modulus U32)%Z) by lia.
+      rewrite <- (IHn H_bound_pred) ; clear IHn.
+      f_equal.
+      * rewrite add_repr.
+        do 2 rewrite Zpos_P_of_succ_nat.
+        rewrite Z.add_succ_l.
+        rewrite Nat2Z.inj_add.
+        reflexivity.
+      * rewrite SuccNat2Pos.id_succ.
+        rewrite foldi__move_S.
+        reflexivity.
+Qed.
+
+(* folds can be computed by doing one iteration and incrementing the lower bound *)
+Lemma foldi_nat_split_S :
+  forall {acc: Type}
+    (lo: nat)
+    (hi: nat) (* {lo <= hi} *)
+    (f: nat -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+    (lo < hi)%nat ->
+    foldi_nat lo hi f init = foldi_nat (S lo) hi f (foldi_nat lo (S lo) f init).
+Proof.
+  unfold foldi_nat.
+  intros.
+
+  assert (succ_sub_diag : forall n, (S n - n = 1)%nat) by lia.
+  rewrite (succ_sub_diag lo).
+
+  induction hi ; [ lia | ].
+  destruct (S hi =? S lo)%nat eqn:hi_eq_lo.
+  - apply Nat.eqb_eq in hi_eq_lo ; rewrite hi_eq_lo in *.
+    rewrite (succ_sub_diag lo).
+    rewrite Nat.sub_diag.
+    reflexivity.
+  - apply Nat.eqb_neq in hi_eq_lo.
+    apply Nat.lt_gt_cases in hi_eq_lo.
+    destruct hi_eq_lo.
+    + lia.
+    + rewrite (Nat.sub_succ_l (S lo)) by apply (Nat.lt_le_pred _ _ H0).
+      rewrite Nat.sub_succ_l by apply (Nat.lt_le_pred _ _ H).
+      replace ((S (hi - S lo))) with (hi - lo)%nat by lia.
+      reflexivity.
+Qed.
+
+(* folds can be split at some valid offset from lower bound *)
+Lemma foldi_nat_split_add :
+  forall (k : nat),
+  forall {acc: Type}
+    (lo: nat)
+    (hi: nat) (* {lo <= hi} *)
+    (f: nat -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+  forall {guarantee: (lo + k <= hi)%nat},
+  foldi_nat lo hi f init = foldi_nat (k + lo) hi f (foldi_nat lo (k + lo) f init).
+Proof.
+  induction k ; intros.
+  - cbn.
+    unfold foldi_nat.
+    rewrite Nat.sub_diag.
+    reflexivity.
+  - rewrite foldi_nat_split_S by lia.
+    replace (S k + lo)%nat with (k + S lo)%nat by lia.
+    specialize (IHk acc (S lo) hi f (foldi_nat lo (S lo) f init)).
+    rewrite IHk by lia.
+    f_equal.
+    rewrite <- foldi_nat_split_S by lia.
+    reflexivity.
+Qed.
+
+(* folds can be split at some midpoint *)
+Lemma foldi_nat_split :
+  forall (mid : nat), (* {lo <= mid <= hi} *)
+  forall {acc: Type}
+    (lo: nat)
+    (hi: nat) (* {lo <= hi} *)
+    (f: nat -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+  forall {guarantee: (lo <= mid <= hi)%nat},
+  foldi_nat lo hi f init = foldi_nat mid hi f (foldi_nat lo mid f init).
+Proof.
+  intros.
+  assert (mid_is_low_plus_constant : {k : nat | (mid = lo + k)%nat})  by (exists (mid - lo)%nat ; lia).
+  destruct mid_is_low_plus_constant ; subst.
+  rewrite Nat.add_comm.
+  apply foldi_nat_split_add.
+  apply guarantee.
+Qed.
+
+(* folds can be split at some midpoint *)
+Lemma foldi_split :
+  forall (mid : uint_size), (* {lo <= mid <= hi} *)
+  forall {acc: Type}
+    (lo: uint_size)
+    (hi: uint_size) (* {lo <= hi} *)
+    (f: uint_size -> acc -> acc) (* {i < hi} *)
+    (init: acc),
+  forall {guarantee: (unsigned lo <= unsigned mid <= unsigned hi)%Z},
+  foldi lo hi f init = foldi mid hi f (foldi lo mid f init).
+Proof.
+  intros.
+  do 3 rewrite foldi_to_foldi_nat by lia.
+  apply foldi_nat_split ; lia.
+Qed.
+
 (* Typeclass handling of default elements, for use in sequences/arrays.
    We provide instances for the library integer types *)
 Class Default (A : Type) := {
@@ -570,7 +1044,7 @@ Global Arguments default {_} {_}.
 
 (*** Seq *)
 
-Definition nseq_choice (A: ChoiceEquality) (len : nat) : choice_type :=  
+Definition nseq_choice (A: ChoiceEquality) (len : nat) : choice_type :=
   match len with
   | O => chUnit (* A *)
   | S n => chMap ('fin (S n)) (@ct A)
@@ -614,7 +1088,7 @@ Definition seq_index {A: ChoiceEquality} `{Default (@T A)} (s: @T (seq A)) (i : 
   | None => default
   end.
 
-Definition seq_len {A: ChoiceEquality} (s: @T (seq A)) : @T (nat_ChoiceEquality) := (length s).
+Definition seq_len {A: ChoiceEquality} (s: @T (seq A)) : @T (uint_size) := usize (length s).
 
 Definition seq_to_list (A: ChoiceEquality) (s : @T (seq A)) : list (@T A).
 Proof.
@@ -686,7 +1160,7 @@ Proof.
   - apply Nat.ltb_lt in H1.
     destruct len. { lia. }
     rewrite <- ChoiceEq in s.
-    cbn in s. 
+    cbn in s.
     rewrite -> ChoiceEq in s.
     destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := i) (ssrbool.introT ssrnat.ltP H1))) as [f | _].
     + exact f.
@@ -704,10 +1178,10 @@ Proof.
   - apply Nat.ltb_lt in v.
     destruct len. { lia. }
     rewrite <- ChoiceEq in s.
-    cbn in s. 
+    cbn in s.
     rewrite -> ChoiceEq in s.
     rewrite <- ChoiceEq.
-    cbn. 
+    cbn.
     rewrite -> ChoiceEq.
     apply (setm s (fintype.Ordinal (m := i) (ssrbool.introT ssrnat.ltP v)) new_v).
 
@@ -755,7 +1229,7 @@ Fixpoint array_to_list_helper {A : ChoiceEquality} {n} (f : @T (nseq A (S n))) (
     + apply (ssrbool.introT ssrnat.ltP).
       lia.
     + lia.
-Defined.  
+Defined.
 
 Definition array_to_list {A : ChoiceEquality} {n} (f : @T (nseq A n)) : list (@T A).
   destruct n.
@@ -791,14 +1265,14 @@ Proof.
   destruct (j <=? i)%nat.
   - reflexivity.
   - reflexivity.
-Qed.      
+Qed.
 
 Definition lseq_slice {A : ChoiceEquality} {n} (l : @T (nseq A n)) (i j : nat) :
   @T (@nseq A (length (slice (array_to_list l) (i) (j)))) :=
   array_from_list _ (slice (array_to_list l) (i) (j)).
 
 Definition seq_sub {a : ChoiceEquality} `{Default (@T (a))} (s : (@T (seq a))) (start n : nat) :=
-  lseq_slice (array_from_seq (seq_len s) s) start (start + n)%nat.
+  lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) start (start + n)%nat.
 
 Definition array_update_slice
   {a : ChoiceEquality}
@@ -809,9 +1283,9 @@ Definition array_update_slice
   (input: (@T (seq a)))
   (start_in: nat)
   (len: nat)
-  : (@T (nseq a (seq_len out))) :=
-  update_sub (array_from_seq (seq_len out) out) start_out (len) (seq_sub input start_in len).
-  
+  : (@T (nseq a (from_uint_size (seq_len out)))) :=
+  update_sub (array_from_seq (from_uint_size (seq_len out)) out) start_out (len) (seq_sub input start_in len).
+
 Definition array_from_slice
   {a: ChoiceEquality}
  `{Default (@T a)}
@@ -832,7 +1306,7 @@ Definition array_slice
   (slice_len: nat)
   : @T (nseq a slice_len) :=
   array_from_slice default (slice_len) input (slice_len) (slice_len).
-  
+
 Definition array_from_slice_range
   {a: ChoiceEquality}
  `{Default (@T a)}
@@ -845,9 +1319,9 @@ Proof.
   pose (out := array_new_ default_value (out_len)).
   destruct start_fin as [start fin].
   refine (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) _).
-  
+
   apply (@lseq_slice a ((from_uint_size fin) - (from_uint_size start)) (array_from_seq ((from_uint_size fin) - (from_uint_size start)) input) (from_uint_size start) (from_uint_size fin)).
-Defined.  
+Defined.
 
 Definition array_slice_range
   {a: ChoiceEquality}
@@ -866,7 +1340,7 @@ Definition array_update
   (start : nat)
   (start_s: @T (seq a))
   : @T (nseq a len) :=
-  update_sub s start (seq_len start_s) (array_from_seq (seq_len start_s) (start_s)).
+  update_sub s start (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) (start_s)).
 
 Definition array_update_start
   {a: ChoiceEquality}
@@ -875,7 +1349,7 @@ Definition array_update_start
   (s: @T (nseq a len))
   (start_s: @T (seq a))
     : @T (nseq a len) :=
-    update_sub s 0 (seq_len start_s) (array_from_seq (seq_len start_s) start_s).
+    update_sub s 0 (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) start_s).
 
 
 Definition array_len  {a: ChoiceEquality} {len: nat} (s: @T (nseq a len)) := len.
@@ -891,7 +1365,7 @@ Definition seq_slice
   (start: nat)
   (len: nat)
     : (@T (nseq a _)) :=
-  lseq_slice (array_from_seq (seq_len s) s) start (start + len).
+  lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) start (start + len).
 
 Definition seq_slice_range
   {a: ChoiceEquality}
@@ -909,7 +1383,7 @@ Definition seq_update
   (start: nat)
   (input: (@T (seq a)))
   : (@T (seq a)) :=
-  array_to_seq (update_sub (array_from_seq (seq_len s) s) start (seq_len input) (array_from_seq (seq_len input) input)).
+  array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) start (from_uint_size (seq_len input)) (array_from_seq (from_uint_size (seq_len input)) input)).
 
 (* updating only a single value in a sequence*)
 Definition seq_upd
@@ -927,7 +1401,7 @@ Definition seq_update_start
   (s: (@T (seq a)))
   (start_s: (@T (seq a)))
     : (@T (seq a)) :=
-    array_to_seq (update_sub (array_from_seq (seq_len s) s) 0 (seq_len start_s) (array_from_seq (seq_len start_s) start_s)).
+    array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) 0 (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) start_s)).
 
 Definition seq_update_slice
   {a : ChoiceEquality}
@@ -937,9 +1411,9 @@ Definition seq_update_slice
   (input: (@T (seq a)))
   (start_in: nat)
   (len: nat)
-    : (@T (nseq a (seq_len out)))
+    : (@T (nseq a (from_uint_size (seq_len out))))
   :=
-  update_sub (array_from_seq (seq_len out) out) start_out len (seq_sub input start_in len).
+  update_sub (array_from_seq (from_uint_size (seq_len out)) out) start_out len (seq_sub input start_in len).
 
 Definition seq_concat
   {a : ChoiceEquality}
@@ -961,9 +1435,9 @@ Definition seq_from_slice_range
   (input: (@T (seq a)))
   (start_fin: ((@T (uint_size)) * (@T (uint_size))))
   : (@T (seq a)) :=
-  let out := array_new_ (default) (seq_len input) in
+  let out := array_new_ (default) (from_uint_size (seq_len input)) in
   let (start, fin) := start_fin in
-    array_to_seq (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) ((lseq_slice (array_from_seq (seq_len input) input) (from_uint_size start) (from_uint_size fin)))).
+    array_to_seq (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) ((lseq_slice (array_from_seq (from_uint_size (seq_len input)) input) (from_uint_size start) (from_uint_size fin)))).
 
 Definition seq_from_seq {A} (l : seq A) := l.
 
@@ -971,7 +1445,7 @@ Definition seq_from_seq {A} (l : seq A) := l.
 (**** Chunking *)
 
 Definition seq_num_chunks {a: ChoiceEquality} (s: (@T (seq a))) (chunk_len: nat) : nat_ChoiceEquality :=
-  (((seq_len s) + chunk_len - 1) / chunk_len)%nat.
+  (((from_uint_size (seq_len s)) + chunk_len - 1) / chunk_len)%nat.
 
 Definition seq_chunk_len
   {a: ChoiceEquality}
@@ -980,8 +1454,8 @@ Definition seq_chunk_len
   (chunk_num: nat)
     : nat_ChoiceEquality :=
   let idx_start := (chunk_len * chunk_num)%nat in
-  if (seq_len s <.? (idx_start + chunk_len))%nat then
-    (seq_len s - idx_start)%nat
+  if ((from_uint_size (seq_len s)) <.? (idx_start + chunk_len))%nat then
+    ((from_uint_size (seq_len s)) - idx_start)%nat
   else
     chunk_len.
 
@@ -1004,7 +1478,7 @@ Definition seq_get_chunk
  :=
   let idx_start := (chunk_len * chunk_num)%nat in
   let out_len := seq_chunk_len s chunk_len chunk_num in
-  (usize out_len, array_to_seq (lseq_slice (array_from_seq (seq_len s) s) idx_start (idx_start + seq_chunk_len s chunk_len chunk_num))).
+  (usize out_len, array_to_seq (lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) idx_start (idx_start + seq_chunk_len s chunk_len chunk_num))).
 
 Definition seq_set_chunk
   {a: ChoiceEquality}
@@ -1015,7 +1489,7 @@ Definition seq_set_chunk
   (chunk: (@T (seq a)) ) : (@T (seq a)) :=
  let idx_start := (chunk_len * chunk_num)%nat in
  let out_len := seq_chunk_len s chunk_len chunk_num in
-  array_to_seq (update_sub (array_from_seq (seq_len s) s) idx_start out_len (array_from_seq (seq_len chunk) chunk)).
+  array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) idx_start out_len (array_from_seq (from_uint_size (seq_len chunk)) chunk)).
 
 
 Definition seq_num_exact_chunks {a} (l : (@T (seq a))) (chunk_size : (@T (uint_size))) : (@T (uint_size)) :=
@@ -1195,7 +1669,7 @@ Axiom u128_from_be_bytes : nseq int8 16 -> int128.
 Definition nat_mod_choice {p : Z} : choice_type := 'fin (S (Init.Nat.pred (Z.to_nat p))).
 Definition nat_mod_type {p : Z} : Type := 'I_(S (Init.Nat.pred (Z.to_nat p))).
 Instance nat_mod (p : Z) : ChoiceEquality :=
-  {| ct :=  nat_mod_choice ; T :=  @nat_mod_type p ; ChoiceEq := eq_refl |}.    
+  {| ct :=  nat_mod_choice ; T :=  @nat_mod_type p ; ChoiceEq := eq_refl |}.
 Definition mk_natmod {p} (z : Z) : nat_mod p := @zmodp.inZp (Init.Nat.pred (Z.to_nat p)) (Z.to_nat z).
 
 
@@ -1643,7 +2117,7 @@ Axiom result_compute : forall a b, choice.Choice.sort (result_choice_type a b) =
   {| ct := result_choice_type a b ; T := result_type a b |}.
 Proof.
   intros.
-  rewrite result_compute.  
+  rewrite result_compute.
   do 2 rewrite ChoiceEq.
   reflexivity.
 Defined.
@@ -1654,7 +2128,7 @@ Definition Ok {a b : ChoiceEquality} : a -> result a b := Ok_type (@T a) (@T b).
 Definition Err {a b : ChoiceEquality} : b -> result a b := Err_type (@T a) (@T b).
 
 Arguments Ok {_ _}.
-Arguments Err {_ _}.        
+Arguments Err {_ _}.
 
 Definition result_unwrap_safe {a b} (x : result a b) `{match x with @Ok_type _ _ _ => True | @Err_type _ _ _ => False end} : a.
   destruct x.
@@ -1674,14 +2148,14 @@ Next Obligation.
 Qed.
 
 Module ChoiceEqualityMonad.
-  
+
   Class CEMonad (M : ChoiceEquality -> ChoiceEquality) : Type :=
     {
       bind {A B : ChoiceEquality} (x : M A) (f : A -> M B) : M B ;
       ret {A : ChoiceEquality} (x : A) : M A ;
-    }.  
-  
-  Section ResultMonad.  
+    }.
+
+  Section ResultMonad.
     Definition result_bind {C A B} (r : result A C) (f : A -> result B C) : result B C :=
       match r with
       | Ok_type a => f a
@@ -1692,12 +2166,12 @@ Module ChoiceEqualityMonad.
 
     Global Instance result_monad {C : ChoiceEquality} : CEMonad (result2 C) :=
       Build_CEMonad (result2 C) (@result_bind C) (@result_ret C).
-    
+
     Arguments result_monad {_} &.
-    
+
     (* Existing Instance result_monad. *)
   End ResultMonad.
-    
+
   Definition option_bind {A B} (r : option A) (f : A -> option B) : option B :=
     match r with
       Some (a) => f a
@@ -1705,7 +2179,7 @@ Module ChoiceEqualityMonad.
     end.
 
   Definition option_ret {A} (a : A) : option A := Some a.
-  
+
   Global Instance option_monad : CEMonad option_ChoiceEquality :=
     Build_CEMonad option_ChoiceEquality (@option_bind) (@option_ret).
 
@@ -1714,8 +2188,8 @@ Module ChoiceEqualityMonad.
     | None => true
     | _ => false
     end.
-  
-End ChoiceEqualityMonad.  
+
+End ChoiceEqualityMonad.
 
 Definition foldi_bind {A : ChoiceEquality} `{ChoiceEqualityMonad.CEMonad} (a : uint_size) (b : uint_size) (f : uint_size -> A -> M A) (init : M A) : M A :=
   @foldi (M A) a b (fun x y => ChoiceEqualityMonad.bind y (f x)) init.

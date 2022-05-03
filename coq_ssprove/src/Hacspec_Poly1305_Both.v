@@ -92,6 +92,20 @@ Program Definition poly1305_encode_r_state
           path.sort leb [ n_4_loc])) [interface] _)).
 Fail Next Obligation.
 
+Ltac poly1305_encode_r_unfold :=
+  unfold poly1305_encode_r_state ;
+  unfold poly1305_encode_r_pure ;
+  unfold lift_to_code ;
+  unfold prog ;
+
+  unfold array_to_seq ;
+  unfold array_from_seq ;
+  unfold uint128_from_le_bytes ;
+  unfold secret ;
+  unfold nat_mod_from_secret_literal ;
+
+  unfold lift_to_code.
+
 Program Instance poly1305_encode_r
   (b_0 : poly_block_t)
   : both (fset (path.sort leb [ n_4_loc])) field_element_t :=
@@ -101,19 +115,7 @@ Program Instance poly1305_encode_r
   |}.
 Next Obligation.
   intros.
-  unfold poly1305_encode_r_state.
-  unfold poly1305_encode_r_pure.
-  unfold lift_to_code.
-  unfold prog.
-
-  unfold array_to_seq.
-  unfold array_from_seq.
-  unfold uint128_from_le_bytes.
-  unfold secret.
-  unfold nat_mod_from_secret_literal.
-
-  unfold lift_to_code.
-  
+  poly1305_encode_r_unfold.
   step_code.
   reflexivity.
 Qed.
@@ -154,6 +156,21 @@ Program Definition poly1305_encode_block_state
           temp_15))) } : code (fset.fset0) [interface] _)).
 Fail Next Obligation.
 
+Ltac poly1305_encode_block_unfold :=
+  unfold poly1305_encode_block_state ;
+  unfold poly1305_encode_block_pure ;
+  unfold lift_to_code ;
+  unfold prog ;
+
+  unfold array_to_seq ;
+  unfold array_from_seq ;
+  unfold uint128_from_le_bytes ;
+  unfold nat_mod_from_secret_literal ;
+  unfold nat_mod_pow2 ;
+
+  unfold lift_to_code.
+
+
 Program Instance  poly1305_encode_block
   (b_8 : poly_block_t)
   : both (fset.fset0) field_element_t :=
@@ -162,19 +179,7 @@ Program Instance  poly1305_encode_block
   is_state := poly1305_encode_block_state(b_8 : poly_block_t);
   |}.
 Next Obligation.
-  unfold poly1305_encode_block_state.
-  unfold poly1305_encode_block_pure.
-  unfold lift_to_code.
-  unfold prog.
-
-  unfold array_to_seq.
-  unfold array_from_seq.
-  unfold uint128_from_le_bytes.
-  unfold nat_mod_from_secret_literal.
-  unfold nat_mod_pow2.
-
-  unfold lift_to_code.
-  
+  poly1305_encode_block_unfold.
   step_code.
   reflexivity.
 Qed.
@@ -302,242 +307,10 @@ Next Obligation.
 
   unfold poly1305_encode_r.
   unfold is_pure.
-  unfold is_state.
-
-  assert (forall (A : ChoiceEquality) k (v : raw_code A) `(@both fset.fset0 A),
-               ⊢ ⦃ fun '(h₀, h₁) => h₀ = h₁ ⦄
-                 temp ← lift_to_code (L := fset.fset0) (I := [interface]) is_pure ;;
-                 k temp
-                   ≈
-                 v 
-                 ⦃ fun '(a, _) '(b, _) => a = b ⦄
-               ->
-         ⊢ ⦃ fun '(h₀, h₁) => h₀ = h₁ ⦄
-                 temp ← is_state ;;
-                 k temp
-                   ≈
-                 v 
-             ⦃ fun '(a, _) '(b, _) => a = b ⦄).
-  {
-    intros.
-    destruct H. cbn in *.
-
-    pose (@rrewrite_eqDistrL A A (fun '(h₀, h₁) => h₀ = h₁) (fun '(a, _) '(b, _) => a = b) (k is_pure)).
-    apply r.
-    apply H0.
-
-    assert (forall {A} (K₀ K₁ : raw_code A),
-               ⊢ ⦃ fun '(h₀, h₁) => h₀ = h₁ ⦄ K₀ ≈ K₁ ⦃ fun '(a, _) '(b, _) => a = b ⦄ ->
-               forall s₀ s₁,
-                 (fun '(h₀, h₁) => h₀ = h₁) (s₀, s₁) ->
-                 RulesStateProb.θ_dens (RulesStateProb.θ0  (pkg_semantics.repr K₀) s₀) =
-                   RulesStateProb.θ_dens (RulesStateProb.θ0 (pkg_semantics.repr K₁) s₁)).
-    {
-      clear ; intros.    
-      eapply to_sem_jdg in H.
-
-      apply SubDistr.distr_ext.
-      
-      unfold ssrfun.eqfun.
-      intros [x y].
-      rewrite distr.pr_pred1.
-      rewrite distr.pr_pred1.
-      simpl in *.
-
-      unfold ssrbool.PredOfSimpl.coerce.
-      unfold ssrfun.fun_of_simpl.
-      unfold eqtype.pred1.
-      simpl.
-
-      (* unfold eqtype.eq_op. *)
-      (* simpl. *)
-      
-      pose (@RulesStateProb.Pr_eq A A heap_choiceType heap_choiceType).    
-      specialize e with (Ψ := fun '(h₀, h₁) => h₀ = h₁).
-      specialize e with (ϕ := fun '(a, _) '(b, _) => a = b).
-      apply e ; clear e.
-
-      apply H.
-      apply H0.
-
-      
-      
-      intros [] []. intros ; subst.
-      split ; intros.
-      apply Couplings.reflection_nonsense in H0.      
-      inversion H0 ; subst.
-      reflexivity.
-    }
-    
-    intros.
-    simpl.
-    apply (H A _ _ (fun '(h₀, h₁) => h₀ = h₁) ).
-    reflexivity.
-
-    
-    specialize (e (fun x0 : choice.Choice.sort A * heap =>
-     @eqtype.eq_op
-       (choice.Choice.eqType
-          (ChoiceAsOrd.F_choice_prod_obj
-             {| Base.nfst := A; Base.nsnd := heap_choiceType |})) x0 
-       (x, y)) (fun x0 : choice.Choice.sort A * heap =>
-     @eqtype.eq_op
-       (choice.Choice.eqType
-          (ChoiceAsOrd.F_choice_prod_obj
-             {| Base.nfst := A; Base.nsnd := heap_choiceType |})) x0 
-       (x, y))).
-    specialize (e (pkg_semantics.repr K₀) (pkg_semantics.repr K₁) H).
-    specialize (e s₀ s₁ H0).
-
-    
-    enough (forall x y : choice.Choice.sort A * choice.Choice.sort heap_choiceType,
-       x = y ->
-       is_true
-         ((fun _ : choice.Choice.sort A * choice.Choice.sort heap_choiceType => false) x) <->
-       is_true
-         ((fun _ : choice.Choice.sort A * choice.Choice.sort heap_choiceType => true) y)).
-    specialize (e H1). clear H1.
-    simpl in e.
-    simpl.
-
-    
-    
-    apply e.
-    
-    specialize (e s₀ s₁ H0).
-    cbn in e.
-    
-    specialize e with (Ψ := ψ).
-    
-  eapply coupling_eq. all: eauto.
-
-    pose (@rcoupling_eq A (k is_pure) ((temp ← is_state ;;
-                                            k temp)) ).
-    
-    
-    
-    apply (r_transL (k is_pure)).
-
-    
-    apply (r_transL (k is_pure)).
-    2: apply H0.
-   clear H0.
-
-    apply (@r_bind A A A A (ret is_pure) (is_state) k k (fun '(s₀, s₁) => s₀ = s₁) (fun '(a, _) '(b, _) => b = a) eq).
-    apply rsymmetry.
-    apply rsym_pre. intros ; subst ; reflexivity.
-    apply code_eq_proof_statement.
-
-    intros.
-    apply (rpre_hypothesis_rule).
-    intros.
-    subst.    
-    pose (@rpre_weaken_rule A A (k a₀) (k a₀) (fun '(h₀, h₁) => h₀ = h₁) (fun s : heap * heap => fst s = s₀ /\ snd s = s₁)).
-    apply r.
-    apply (@rreflexivity_rule A (k a₀)).
-
-    intros.
-    destruct H0.
-    subst.
-    reflexivity.
-    
-    apply (rpre
-    
-    pose (@rpost_conclusion_rule).
-
-    
-    
-    
-    (* rewrite bind_rewrite. *)
-
-    (* rewrite !repr_bind. *)
-    apply from_sem_jdg. eapply to_sem_jdg in code_eq_proof_statement.
-    pose @rbind_rule.
-    eapply RulesStateProb.bind_rule_pp.
-    
-    destruct is_state as [ [] ].
-    - pose (@rpost_conclusion_rule A A A (fun '(s₀, s₁) => s₀ = s₁) (ret is_pure) (ret x)).
-      apply (rpost_conclusion_rule) in code_eq_proof_statement.
-      
-      rewrite bind_rewrite.
-      
-  }
-  unfold poly1305_encode_r_state.
-  unfold poly1305_encode_r_pure.
-  unfold lift_to_code.
-  unfold prog.
-
-  unfold array_to_seq.
-  unfold array_from_seq.
-  unfold uint128_from_le_bytes.
-  unfold secret.
-  unfold nat_mod_from_secret_literal.
-
-  unfold lift_to_code.
-  
+  unfold is_state.  
+  poly1305_encode_r_unfold.
   unfold bind.
-
   step_code.
-  reflexivity.
-  
-  rewrite bind_assoc.
-  
-  step_code.
-
-  
-  replace (fun temp_28 => (temp_29 ← ret nat_mod_zero_pre ;;
-            ret (temp_29, temp_28, k_25)))
-    with (fun temp_28 => ret (ct_T (nat_mod_zero_pre, temp_28, k_25)) ).
-  pose (@bind_rewrite _ _ (@nat_mod_zero_pre 1361129467683753853853498429727072845819)).
-  rewrite ( (zmodp.Zp0).
-  
-  apply rpost_conclusion_rule.
-  
-  unfold lift_to_code.
-  step_code.
-    match goal with
-    | [ |- context [ ⊢ ⦃ ?P ⦄ (@bind _ _ (_ (_ ?code_fun) ) ?bound_code) ≈ _ ⦃ ?post ⦄ ]] =>
-        let H := fresh in
-        pose (H := @bind_both) ;
-        specialize (H) with (k := bound_code) (Q := post) (code_bind := code_fun)
-    end.
-    unfold lift_to_code in H.
-    unfold prog in H.
-    rewrite bind_rewrite in H.
-    
-
-    
-    unfold nat_mod_zero.
-    unfold lift_to_code.
-
-    rel_jdg_replace_sem.
-    
-    rewrite bind_ret.
-    
-    rewrite <- bind_assocax.
-    rewrite <- bind_assoc.
-    rewrite <- bind_assoc.
-    
-    apply H.
-  step_code.
-  match goal with
-  | [ |- context [ ⊢ ⦃ ?P ⦄ (@bind _ _ (_ (?proj_fun ?code_fun) ) ?k) ≈ _ ⦃ ?Q ⦄ ]] =>
-      apply (@bind_both _ _ _ Q (poly1305_encode_r _) k)
-  end.
-
-  (* eapply (bind_both). *)
-  
-  intros.
-  step_code.
-a
-  (* pose (t := poly1305_encode_r_eq). *)
-  (* unfold code_eq_proof_statement in t. *)
-
-  remember (Hacspec_Lib_Pre.array_from_slice _ _ _ _ _).
-  (* bind_both_function. *)
-  step_code.
-  step_code.
-  intros ; subst.
   reflexivity.
 Qed.
   
@@ -564,11 +337,11 @@ Program Definition poly1305_update_block_state
           field_element_t '×
           field_element_t '×
           poly_key_t
-        )) ( ((((temp_33) +% (acc_34)) *% (r_35), r_35, k_36))) } : code (
+                               )) ( ((((temp_33) +% (acc_34)) *% (r_35), r_35, k_36))) } : code (
         fset.fset0) [interface] _)).
 Fail Next Obligation.
 
-Definition poly1305_update_block
+Program Definition poly1305_update_block
   (b_32 : poly_block_t)
   (st_31 : poly_state_t)
   : both (fset.fset0) poly_state_t :=
@@ -578,13 +351,19 @@ Definition poly1305_update_block
   is_state := poly1305_update_block_state(b_32 : poly_block_t)
   (st_31 : poly_state_t);
   |}.
+Next Obligation.
+  unfold poly1305_update_block_state.
+  unfold poly1305_update_block_pure.
+  unfold lift_to_code.
+  unfold prog.
 
-Theorem poly1305_update_block_eq :
-forall (b_32 : poly_block_t)
-(st_31 : poly_state_t),
-code_eq_proof_statement (poly1305_update_block(b_32 : poly_block_t)
-  (st_31 : poly_state_t)).
-Proof. Admitted.
+  unfold poly1305_encode_block.
+  unfold is_pure.
+  unfold is_state.
+  poly1305_encode_block_unfold.
+  step_code.
+  reflexivity.
+Qed.
 
 Import Hacspec_Lib_Pre.
 Definition poly1305_update_blocks_pure
@@ -594,7 +373,7 @@ Definition poly1305_update_blocks_pure
   let st_45 : (field_element_t '× field_element_t '× poly_key_t) :=
     st_37 in 
   let n_blocks_40 : uint_size :=
-    (seq_len (m_38)) ./ (blocksize_v) in 
+    (seq_len (m_38) : uint_size_type) ./ (blocksize_v) in 
   let st_45 :=
     foldi (usize 0) (n_blocks_40) (fun i_41 st_45 =>
       let block_44 : poly_block_t :=
@@ -621,13 +400,13 @@ Program Definition poly1305_update_blocks_state
        temp_39 ←
         (seq_len (m_38)) ;;
       let n_blocks_40 : uint_size :=
-        ((temp_39) ./ (blocksize_v)) in
+        ((temp_39 : uint_size_type) ./ (blocksize_v)) in
        st_45 ←
         (foldi (usize 0) (n_blocks_40) (fun i_41 (st_45 : _) =>
             ({code  temp_42 ←
                 (seq_get_exact_chunk (m_38) (blocksize_v) (i_41)) ;;
                temp_43 ←
-                (array_from_seq (16) (temp_42)) ;;
+                (array_from_seq (16) (temp_42 : seq int8)) ;;
               let block_44 : poly_block_t :=
                 (temp_43) in
                temp_46 ←
@@ -650,7 +429,7 @@ Program Definition poly1305_update_blocks_state
           path.sort leb [ st_45_loc])) [interface] _)).
 Fail Next Obligation.
 
-Definition poly1305_update_blocks
+Program Definition poly1305_update_blocks
   (m_38 : byte_seq)
   (st_37 : poly_state_t)
   : both (fset (path.sort leb [ st_45_loc])) poly_state_t :=
@@ -660,13 +439,132 @@ Definition poly1305_update_blocks
   is_state := poly1305_update_blocks_state(m_38 : byte_seq)
   (st_37 : poly_state_t);
   |}.
+Next Obligation.
+  unfold poly1305_update_blocks_state.
+  unfold poly1305_update_blocks_pure.
+  unfold lift_to_code.
+  unfold prog.
 
-Theorem poly1305_update_blocks_eq :
-forall (m_38 : byte_seq)
-(st_37 : poly_state_t),
-code_eq_proof_statement (poly1305_update_blocks(m_38 : byte_seq)
-  (st_37 : poly_state_t)).
-Proof. Admitted.
+  unfold seq_len.
+  unfold lift_to_code.
+  step_code.
+
+  unfold foldi.  
+  rewrite foldi_to_foldi_nat by apply wunsigned_range.
+  rewrite Hacspec_Lib_Pre.foldi_to_foldi_nat by apply wunsigned_range.
+  
+  unfold Hacspec_Lib_Pre.foldi.  
+  replace (Z.to_nat (unsigned (usize 0))) with 0 by reflexivity.
+  replace (Z.to_nat (unsigned (usize 0%Z))) with 0 by reflexivity.
+  
+  set (index := 0) at 1 5.
+  
+  unfold foldi_nat.
+  rewrite Nat.sub_0_r. 
+
+  
+  unfold Hacspec_Lib_Pre.foldi_nat.
+  rewrite Nat.sub_0_r.
+
+  rewrite bind_ret.
+  remember (Z.to_nat (unsigned _)) ; clear Heqn.
+
+  destruct n ; [ progress_step_code ; reflexivity | .. ].
+  
+  set (f_state := (fun (x0 : nat) => _)).
+  set (f_pure := fun (x0 : nat) => _).
+  
+  rewrite <- foldi__nat_move_S.
+  rewrite <- Hacspec_Lib_Pre.foldi__nat_move_S.
+
+  unfold poly1305_update_block in f_state , f_pure.
+  unfold is_state in f_state.
+  unfold is_pure in f_pure.
+  unfold poly1305_update_block_state in f_state.
+  unfold poly1305_update_block_pure in f_pure.
+
+  unfold poly1305_encode_block in f_state, f_pure.
+  unfold is_state in f_state.
+  unfold is_pure in f_pure.
+  unfold poly1305_encode_block_state in f_state.
+  unfold poly1305_encode_block_pure in f_pure.
+
+  unfold seq_get_exact_chunk in f_state.
+  unfold array_from_seq in f_state.
+  unfold array_to_seq in f_state.
+
+  unfold uint128_from_le_bytes in f_state.
+  unfold nat_mod_from_secret_literal in f_state.
+  unfold nat_mod_pow2 in f_state.
+
+  unfold prog in f_state.
+  unfold lift_to_code in f_state.
+
+  unfold f_state at 1.
+  
+  repeat (repeat rewrite bind_assoc ; rewrite bind_rewrite).
+  unfold bind at 1.
+  
+  apply r_get_remember_lhs ; intros.
+  step_code.
+  apply r_put_lhs.
+
+  
+  set (f_pure_2 := pair _ _) ; replace f_pure_2 with (f_pure index (t, t1, t0)) ; [ | unfold f_pure_2] ; clear f_pure_2.
+  2: {
+    clear.
+    unfold f_pure.
+    unfold "*%".
+    unfold "+%".
+    unfold nat_mod_add.
+    unfold nat_mod_mul.
+    replace (usize 128) with (usize 128%Z) by reflexivity.
+    Set Printing Coercions.
+    unfold T_ct.
+    unfold eq_rect_r.
+    unfold eq_rect.
+    unfold eq_sym.
+    unfold ChoiceEq.
+    unfold nat_mod.
+    unfold nseq.
+    unfold Hacspec_Lib_Pre.nseq_obligation_1.
+    unfold seq.
+    unfold Hacspec_Lib_Pre.seq_obligation_1.
+    unfold eq_ind.
+    unfold ChoiceEq.
+    unfold int128.
+    unfold uint8.
+    unfold int8.
+    unfold int.
+    unfold Hacspec_Lib_Pre.int_obligation_1.
+    reflexivity.    
+  }    
+
+  set (precon := _ ⋊ _).
+  generalize dependent precon.
+  set (p := f_pure _  _). generalize dependent p.
+  generalize dependent index.
+  
+  induction n ; intros.
+  - step_code.
+    unfold f_pure.
+    reflexivity.
+  - destruct p as [[]].
+    rewrite <- foldi__nat_move_S.
+    rewrite <- Hacspec_Lib_Pre.foldi__nat_move_S.
+    unfold f_state at 1.
+    
+    repeat (repeat rewrite bind_assoc ; rewrite bind_rewrite).
+    unfold bind at 1.
+    
+    apply r_get_remember_lhs ; intros.
+
+    step_code.
+    apply r_put_lhs.
+
+    step_code.
+    apply IHn.
+Qed.
 
 Import Hacspec_Lib_Pre.
 Definition poly1305_update_last_pure
@@ -677,7 +575,7 @@ Definition poly1305_update_last_pure
   let st_49 : (field_element_t '× field_element_t '× poly_key_t) :=
     st_48 in 
   let '(st_49) :=
-    if (seq_len (b_50)) !=.? (usize 0):bool then (let '(acc_54, r_55, k_56) :=
+    if (seq_len (b_50)) !=.? (usize 0 : uint_size_type):bool then (let '(acc_54, r_55, k_56) :=
         st_49 in 
       let st_49 :=
         (
@@ -704,7 +602,7 @@ Program Definition poly1305_update_last_state
        temp_51 ←
         (seq_len (b_50)) ;;
        '(st_49) ←
-        (if (temp_51) !=.? (usize 0):bool_ChoiceEquality then (({code let '(
+        (if (temp_51) !=.? (usize 0 : uint_size_type):bool_ChoiceEquality then (({code let '(
                   acc_54,
                   r_55,
                   k_56

@@ -174,6 +174,83 @@ Section Loops.
       (cur' ← f i cur ;; foldi_nat_ fuel (S i) f (ct_T cur')) = foldi_nat_ (S fuel) i f cur.
   Proof. reflexivity. Qed.
 
+  Lemma foldi__nat_move_S_append :
+    forall {acc: ChoiceEquality}
+      (fuel : nat)
+      (i : nat)
+      (f : nat -> @T acc -> raw_code (@ct acc))
+      (cur : @T acc),
+      (cur' ← foldi_nat_ fuel i f (cur) ;; f (i + fuel) (ct_T cur')) = foldi_nat_ (S fuel) i f cur.
+  Proof.
+    Set Printing Coercions.
+    induction fuel ; intros.
+    - rewrite <- foldi__nat_move_S.
+      unfold foldi_nat_.
+      replace (fun cur' => ret (T_ct (ct_T cur'))) with (fun cur' => @ret acc cur').
+      2: {
+        apply functional_extensionality.
+        intros. now rewrite T_ct_id.
+      }
+      rewrite bind_ret.
+      unfold bind at 1.
+      rewrite ct_T_id.
+      rewrite Nat.add_0_r.
+      reflexivity.
+    - rewrite <- foldi__nat_move_S.      
+      rewrite <- foldi__nat_move_S.      
+      rewrite bind_assoc.
+      f_equal.
+      apply functional_extensionality.
+      intros.
+      replace (i + S fuel) with (S i + fuel) by lia.
+      rewrite IHfuel.
+      reflexivity.
+  Qed.
+
+  Lemma foldi__nat_move_to_function :
+    forall {acc: ChoiceEquality}
+      (fuel : nat)
+      (i : nat)
+      (f : nat -> @T acc -> raw_code (@ct acc))
+      (cur : @T acc),
+      foldi_nat_ fuel i (fun x => f (S x)) (cur) = foldi_nat_ fuel (S i) f cur.
+  Proof.
+    induction fuel ; intros.
+    - reflexivity.
+    - cbn.
+      f_equal.
+      apply functional_extensionality.
+      intros.
+      rewrite IHfuel.
+      reflexivity.
+  Qed.
+  
+  Lemma foldi__nat_move_to_function_add :
+    forall {acc: ChoiceEquality}
+      (fuel : nat)
+      (i j : nat)
+      (f : nat -> @T acc -> raw_code (@ct acc))
+      (cur : @T acc),
+      foldi_nat_ fuel i (fun x => f (x + j)) (cur) = foldi_nat_ fuel (i + j) f cur.
+  Proof.
+    intros acc fuel i j. generalize dependent i.
+    induction j ; intros.
+    - rewrite Nat.add_0_r.
+      replace (fun x : nat => f (x + 0)) with f.
+      reflexivity.
+      apply functional_extensionality.
+      intros.
+      now rewrite Nat.add_0_r.
+    - replace (i + S j) with (S i + j) by lia.
+      rewrite <- IHj.
+      rewrite <- foldi__nat_move_to_function.
+      f_equal.
+      apply functional_extensionality.
+      intros.
+      f_equal.
+      lia.            
+  Qed.      
+  
   Lemma raw_code_type_from_choice_type_id :
     forall (acc : ChoiceEquality) (x : raw_code (@ct acc)),
       (cur' ← x ;;
@@ -201,7 +278,7 @@ Section Loops.
       (i : @T uint_size) 
       (f : @T uint_size -> @T acc -> raw_code (@ct acc))
       (cur : @T acc),
-      (0 <= Z.of_nat fuel < @wbase U32)%Z ->
+      (0 <= Z.of_nat fuel <= @wmax_unsigned U32)%Z ->
       (cur' ← foldi_ fuel i f cur ;;
        f ((repr (Z.of_nat fuel)) .+ i) (ct_T cur')
       ) = foldi_ (S (fuel)) i f cur.
@@ -257,7 +334,7 @@ Section Loops.
       (i : nat)
       (f : nat -> @T acc -> raw_code (@ct acc))
       (cur : @T acc),
-      (0 <= Z.of_nat fuel < @wbase U32)%Z ->
+      (0 <= Z.of_nat fuel <= @wmax_unsigned U32)%Z ->
       (cur' ← foldi_nat_ fuel i f cur ;; f (fuel + i)%nat (ct_T cur')) = foldi_nat_ (S fuel) i f cur.
   Proof.
     induction fuel ; intros.
@@ -342,6 +419,43 @@ Section Loops.
           reflexivity.        
   Qed.
 
+  Lemma foldi_nat_to_foldi :
+    forall {acc: ChoiceEquality}
+      (lo: nat) (* {lo <= hi} *)
+      (hi: nat) (* {lo <= hi} *)
+      (f: nat -> @T acc -> raw_code (@ct acc)) (* {i < hi} *)
+      (init: @T acc),
+      (lo <= hi) ->
+      (Z.of_nat hi < @modulus U32)%Z ->
+      f = (fun x => f (from_uint_size (repr (Z.of_nat x)))) ->
+      foldi_nat lo hi f init =
+        foldi_pre (usize lo) (usize hi) (fun x => f (from_uint_size x)) init.
+  Proof.
+    intros.
+    rewrite foldi_to_foldi_nat.
+    2: {
+      unfold nat_uint_sizable.
+      unfold usize.
+
+      do 2 rewrite wunsigned_repr.
+      rewrite Zmod_small by (split ; [ lia | apply Z.le_lt_trans with (m := Z.of_nat hi) ; try apply inj_le ; assumption ]).
+      rewrite Zmod_small by (split ; try easy ; lia).
+      lia.
+    }
+
+    unfold nat_uint_sizable.
+    unfold usize.
+
+    do 2 rewrite wunsigned_repr.
+    rewrite Zmod_small by (split ; [ lia | apply Z.le_lt_trans with (m := Z.of_nat hi) ; try apply inj_le ; assumption ]).
+    rewrite Zmod_small by (split ; try easy ; lia).
+    do 2 rewrite Nat2Z.id.
+
+    f_equal.
+    apply H1.      
+    
+  Qed.
+        
   (* folds can be computed by doing one iteration and incrementing the lower bound *)
   Lemma foldi_nat_split_S :
     forall {acc: ChoiceEquality}
@@ -600,6 +714,288 @@ Section Loops.
   (*   - apply valid_foldi, H0. *)
   (* Qed.   *)
 
+Theorem for_loop_unfold :
+  forall c n,
+  for_loop (fun m : nat => c m) (S n) =
+    (c 0 ;; for_loop (fun m : nat => c (S m)) (n) ).
+  cbn.
+  induction n ; intros.
+  - reflexivity.
+  - unfold for_loop ; fold for_loop.
+    cbn.
+    rewrite IHn.
+    rewrite bind_assoc.
+    reflexivity.
+Qed.
+
+Lemma for_loop_equality : forall fuel f,
+    for_loop f fuel  =
+    foldi_nat_ (S fuel) 0 (fun x _ => f x) tt.
+Proof.
+  intros.
+
+  replace f with (fun x => f (x + 0)) at 1.
+  2: {
+    apply functional_extensionality.
+    intros.
+    now rewrite Nat.add_0_r.
+  }
+
+  generalize dependent 0.
+  induction fuel ; intros n.
+  - unfold for_loop.
+    unfold foldi_nat_.
+    now rewrite bind_ret.
+  - rewrite for_loop_unfold.
+    rewrite <- foldi__nat_move_S.
+    f_equal.
+    apply functional_extensionality.
+    intros cur'.
+    destruct cur'.    
+    rewrite <- IHfuel.
+    f_equal.
+    apply functional_extensionality.
+    intros.
+    f_equal.
+    lia.
+Qed.    
+    
+Definition for_loop_range
+  (lo: nat)
+  (hi: nat)
+  (f : nat -> raw_code 'unit) : raw_code 'unit :=
+  for_loop (fun n => f (n + lo)) ((hi - lo) - 1).
+
+Definition for_loop_usize (lo hi : uint_size) {L I} (c : uint_size -> code L I 'unit) : raw_code 'unit :=
+  for_loop_range (from_uint_size lo) (from_uint_size hi) (fun n => prog (c (usize n))).
+
+Lemma for_loop_range_eq :
+  forall lo hi f,
+    for_loop_range lo hi f
+    =
+      (t ← f lo ;;
+       foldi_nat (S lo) hi (fun x _ => f x) t).
+Proof.
+  intros.
+  unfold for_loop_range.
+  rewrite for_loop_equality.
+  unfold foldi_nat.
+
+  replace (hi - S lo) with (hi - lo - 1) by lia.
+  
+  destruct (hi - lo - 1).
+  { cbn.
+    rewrite bind_ret.
+    reflexivity. }
+
+  set (f' := (fun (x : nat) (_ : T) => f x)).
+  replace (f lo) with (f' lo tt) by reflexivity.
+  pose foldi__nat_move_S. rewrite e. clear e.
+
+  replace lo with (0 + lo) at 1 by lia.
+  rewrite <- foldi__nat_move_to_function_add.
+  reflexivity.
+Qed.    
+
+
+Lemma foldi_nat_consume_ret_tt :
+  forall {acc : ChoiceEquality} lo hi f (v : acc),
+  (@foldi_nat acc lo hi (fun x a => f x tt ;; ret a) v)
+  =
+  (@foldi_nat unit_ChoiceEquality lo hi f tt ;; ret v).
+Proof.
+  intros.
+  unfold foldi_nat.
+  destruct (hi - lo).
+  - reflexivity.
+  - generalize dependent lo.
+    induction n ; intros.
+    + cbn.
+      rewrite bind_assoc.
+      rewrite bind_assoc.
+      unfold bind at 2.
+      rewrite T_ct_id.
+      reflexivity.
+    + rewrite <- foldi__nat_move_S.
+      rewrite bind_assoc.
+      rewrite <- foldi__nat_move_S.
+      rewrite bind_assoc.
+      f_equal.
+      apply functional_extensionality.
+      intros [].
+      unfold bind at 1.
+      rewrite ct_T_id.     
+      now rewrite IHn.
+Qed.            
+
+(* Lemma foldi_nat_tt_is_ignore : *)
+(*   forall {acc : ChoiceEquality} lo hi f (v : acc), *)
+(*     (@foldi_nat unit_ChoiceEquality lo hi f tt) *)
+(*   = *)
+(*   (@foldi_nat acc lo hi (fun x _ => f x tt) v). *)
+
+Lemma foldi_nat_consume_ret :
+  forall {acc A : ChoiceEquality} lo hi f (a : acc) (v : A),
+    (@foldi_nat (acc '× A) lo hi (fun x a => t ← f x (fst a) ;; @ret (acc '× A) (t, snd a)) (a , v))
+  =
+  (x ← @foldi_nat acc lo hi f a ;; @ret (acc '× A) (x, v)).
+Proof.
+Admitted.
+
+Lemma foldi_nat_is_loop :
+  forall {acc A : ChoiceEquality} lo hi f (k : A),
+  (for_loop_range lo hi (f k) ;; ret k)
+    =
+  (t ← f k lo ;; foldi_nat (S lo) hi (fun (x0 : nat) (a : T) => f k x0 ;; ret (T_ct a)) k).
+Proof.
+  intros.
+
+  rewrite for_loop_range_eq.
+  rewrite bind_assoc.
+  
+  f_equal.
+  apply functional_extensionality.
+  intros [].
+
+  rewrite <- (foldi_nat_consume_ret_tt (S lo) hi _ k).
+  reflexivity.  
+Qed.
+          
+(* Theorem for_loop_nat_equality (lo hi : nat) c : *)
+(*   ⊢ ⦃ fun '(s₀, s₁) => s₀ = s₁ ⦄ *)
+(*      for_loop_range lo hi c tt *)
+(*      ≈ *)
+(*      foldi_nat (lo) (hi) c (tt)    *)
+(*   ⦃ eq ⦄. *)
+(* Proof. *)
+(*   Set Printing Coercions. *)
+
+(*   unfold for_loop_range. *)
+      
+(*   unfold prog.   *)
+(*   unfold foldi_nat. *)
+  
+(*   destruct (hi - lo) eqn:hi_lo. *)
+(*   - (* apply Nat.sub_0_le in hi_lo. *) *)
+(*     (* apply Nat.leb_le in hi_lo. *) *)
+
+(*     (* unfold nat_comparable. *) *)
+(*     (* unfold leb. *) *)
+(*     (* rewrite hi_lo. *) *)
+
+(*     cbn. *)
+(*     rewrite bind_assoc. *)
+(*     unfold bind at 2. *)
+    
+    
+(*     unfold for_loop. *)
+(*     unfold foldi_nat. *)
+
+(*     apply rreflexivity_rule. *)
+(*   - replace (hi <=.? lo) with false by (rewrite leb_correct_conv by (replace hi with (S n + lo) ; lia) ; reflexivity). *)
+(*     clear hi_lo. *)
+
+(*     replace (S n - 1) with n by lia.  *)
+(*     rewrite <- foldi__nat_move_S. *)
+
+(*     generalize dependent lo. *)
+(*     (* generalize dependent P. *) *)
+(*     induction n ; intros. *)
+(*     + unfold for_loop. *)
+(*       rewrite Nat.add_0_l. *)
+(*       unfold foldi_nat_. *)
+(*       rewrite bind_ret. *)
+(*       unfold bind at 1. *)
+(*       rewrite bind_assoc. *)
+(*       unfold bind at 2. *)
+(*       rewrite ct_T_id. *)
+      
+(*       apply rreflexivity_rule. *)
+(*     + rewrite for_loop_unfold. *)
+(*       eapply r_bind. *)
+(*       apply rreflexivity_rule. *)
+(*       intros. *)
+(*       eapply rpre_weaken_rule.       *)
+(*       apply IHn. *)
+(*       intros. *)
+(*       inversion H ; subst. *)
+(*       reflexivity. *)
+(* Qed.     *)
+
+(* Theorem for_loop_nat_equality_better {acc : ChoiceEquality} (lo hi : nat) (c : nat -> acc -> raw_code acc) (v : acc) : *)
+(*   ⊢ ⦃ fun '(s₀, s₁) => s₀ = s₁ ⦄ *)
+(*       i ← ret v ;; *)
+(*   for_loop_range (fun x => (i ← c x (ct_T i) ;; @ret 'unit tt)) lo hi ;; *)
+(*   ret i *)
+(*      ≈ *)
+(*      foldi_nat (lo) (hi) c v    *)
+(*      ⦃ eq ⦄. *)
+(* Proof. *)
+(*   unfold bind at 1. *)
+(*   rewrite ct_T_id. *)
+
+(*   unfold for_loop_range. *)
+      
+(*   unfold prog.   *)
+(*   unfold foldi_nat. *)
+  
+(*   destruct (hi - lo) eqn:hi_lo. *)
+(*   - apply Nat.sub_0_le in hi_lo. *)
+(*     apply Nat.leb_le in hi_lo. *)
+(*     unfold nat_comparable. *)
+(*     unfold leb. *)
+(*     rewrite hi_lo. *)
+
+(*     apply r_ret. intros ; subst ; reflexivity. *)
+(*   - replace (hi <=.? lo) with false by (rewrite leb_correct_conv by (replace hi with (S n + lo) ; lia) ; reflexivity). *)
+(*     clear hi_lo. *)
+
+(*     replace (S n - 1) with n by lia.  *)
+(*     rewrite <- foldi__nat_move_S. *)
+
+(*     generalize dependent lo. *)
+(*     (* generalize dependent P. *) *)
+(*     induction n ; intros. *)
+(*     + unfold for_loop. *)
+(*       rewrite Nat.add_0_l. *)
+(*       unfold foldi_nat_. *)
+(*       rewrite bind_assoc. *)
+(*       unfold bind at 2. *)
+(*       (* unfold bind at 2. *) *)
+(*       replace (fun cur' : choice.Choice.sort (chElement ct) => ret (T_ct (ct_T cur'))) *)
+(*         with *)
+(*         (fun cur' : choice.Choice.sort (chElement ct) => ret cur'). *)
+(*       rewrite bind_ret. *)
+(*       apply rreflexivity_rule. *)
+(*     + rewrite for_loop_unfold. *)
+(*       eapply r_bind. *)
+(*       apply rreflexivity_rule. *)
+(*       intros. *)
+(*       eapply rpre_weaken_rule.       *)
+(*       apply IHn. *)
+(*       intros. *)
+(*       inversion H ; subst. *)
+(*       reflexivity. *)
+
+    
+(*   pose for_loop_nat_equality. *)
+  
+
+(* Theorem for_loop_equality (lo hi : uint_size) {H : (unsigned lo <= unsigned hi)%Z} {L I} (c : uint_size -> code L I 'unit) : *)
+(*   ⊢ ⦃ fun '(s₀, s₁) => s₀ = s₁ ⦄ *)
+(*      for_loop_usize lo hi c *)
+(*      ≈ *)
+(*      foldi (lo) (hi) (fun x a => c x) (tt)    *)
+(*   ⦃ eq ⦄. *)
+(* Proof. *)
+(*   unfold for_loop_usize. *)
+(*   unfold prog. *)
+(*   unfold foldi. *)
+(*   rewrite foldi_to_foldi_nat. *)
+(*   apply for_loop_nat_equality. *)
+(*   apply H. *)
+(* Qed. *)
+
 End Loops.
 
 (*** Seq *)
@@ -614,7 +1010,7 @@ Section Seqs.
   Definition seq_new {A: ChoiceEquality} `{Default A} (len: nat) : code fset.fset0 [interface] (seq A) :=
     lift_to_code (seq_new len).
 
-  Definition seq_len {A: ChoiceEquality} (s: @T (seq A)) : code fset.fset0 [interface] (@ct nat_ChoiceEquality) := lift_to_code (seq_len s).
+  Definition seq_len {A: ChoiceEquality} (s: @T (seq A)) : code fset.fset0 [interface] (@ct uint_size) := lift_to_code (seq_len s).
 
 (**** Array manipulation *)
 Definition array_new_ {A: ChoiceEquality} (init:@T A) (len: nat) :
@@ -1088,9 +1484,8 @@ Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> code fset.fse
 
 (* We assume 2^x < m *)
 
-Definition nat_mod_pow2_pre (m : Z) (x : N) : nat_mod m := mk_natmod (Z.pow 2 (Z.of_N x)).
 Definition nat_mod_pow2 (m : Z) (x : N) : code fset.fset0 [interface] (@ct (nat_mod m)) :=
-  lift_to_code (nat_mod_pow2_pre m x).
+  lift_to_code (nat_mod_pow2 m x).
 
 End Todosection.
 
@@ -1595,6 +1990,7 @@ Theorem loc_compute_b :
     rewrite location_eqbP.
     reflexivity.
 Qed.
+
 Theorem loc_compute : (forall l : (@sigT choice_type (fun _ : choice_type => nat)), forall n : list (@sigT choice_type (fun _ : choice_type => nat)), List.In l n <-> is_true (ssrbool.in_mem l (@ssrbool.mem _
           (seq.seq_predType
              (Ord.eqType
@@ -2238,7 +2634,13 @@ Ltac ssprove_valid' :=
           || (apply ChoiceEqualityMonad.bind_code) 
           || (apply valid_putr ; [ cbn ; ssprove_valid_location | ])
           || (apply valid_getr ; [ cbn ; ssprove_valid_location | intros])
-          || (apply valid_foldi ; intros)
+          (* || (apply valid_foldi ; intros) *)
+          || (unfold for_loop_usize, for_loop_range ;
+             (* match goal with *)
+            (* | [ |- context[match ?x with | true => _ | false => _ end] ] => *)
+                (* destruct x ; [ |  *)apply valid_for_loop ; intros (* ] *)
+            (* end *)
+             )
           || match goal with
             | [ |- context[match ?x with | true => _ | false => _ end] ] =>
                 destruct x
@@ -2259,20 +2661,30 @@ Ltac ssprove_valid'_2 :=
   ssprove_valid_program ;
   ssprove_valid_location.
 
+Definition heap_ignore_post fset {A} : postcond A A :=
+  fun '(a, h₀) '(b, h₁) => a = b /\ heap_ignore fset (h₀ , h₁).
+
 Class both fset (A : ChoiceEquality) :=
   {
     is_pure : A ;
     is_state : code fset [interface] (@ct A) ;
-    code_eq_proof_statement : ⊢ ⦃ (fun '(h₀, h₁) => h₀ = h₁) ⦄  is_state ≈ lift_to_code (L := fset.fset0) (I := [interface]) (is_pure) ⦃ fun '(a, _) '(b, _) => a = b ⦄
+    code_eq_proof_statement : ⊢ ⦃ (fun '(h0, h1) => heap_ignore fset (h0, h1)) ⦄  is_state ≈ lift_to_code (L := fset.fset0) (I := [interface]) (is_pure) ⦃ heap_ignore_post fset ⦄
   }.
 Coercion is_pure : both >-> T.
 Coercion is_state : both >-> code.
 
-Theorem bind_both {A B : ChoiceEquality} {fset Q} `{code_bind : @both fset A}
+(* Class CodeEqProofStatement  {fset} {A : ChoiceEquality} `(b : @both fset A) := *)
+(*   code_eq_proof_statement : ⊢ ⦃ (fun '(h0, h1) => heap_ignore fset (h0, h1)) ⦄  is_state ≈ lift_to_code (L := fset.fset0) (I := [interface]) (is_pure) ⦃ heap_ignore_post fset ⦄. *)
+
+Theorem bind_both {A B : ChoiceEquality} {fset}  `{b : @both fset A} (* `{code_bind : @CodeEqProofStatement fset A b } *)
     (k : choice.Choice.sort A -> raw_code B) :
-    (forall a₀ a₁ : choice.Choice.sort A, ⊢ ⦃ fun '(_, _) => a₀ = a₁ ⦄ k a₀ ≈ k a₁ ⦃ Q ⦄) ->
-    @rel_jdg _ B (fun '(h₀, h₁) => h₀ = h₁) Q (@bind A B is_state k) (@bind A B (lift_to_code (L := fset.fset0) (I := [interface]) is_pure) k).
-Proof. exact (r_bind (is_state) ((lift_to_code (L := fset.fset0) (I := [interface]) is_pure)) k k (fun '(h₀, h₁) => h₀ = h₁) (fun '(a, _) '(b, _) => a = b) Q code_eq_proof_statement). Qed.
+    (forall a₀ a₁ : choice.Choice.sort A, ⊢ ⦃ fun '(s₀, s₁) => heap_ignore_post fset (a₀, s₀) (a₁, s₁) ⦄ k a₀ ≈ k a₁ ⦃ heap_ignore_post fset ⦄) ->
+    ⊢ ⦃ (fun '(h₀, h₁) => heap_ignore fset (h₀ , h₁)) ⦄
+        (@bind A B is_state k)
+        ≈
+        (@bind A B (lift_to_code (L := fset.fset0) (I := [interface]) is_pure) k)
+    ⦃ heap_ignore_post fset ⦄.
+Proof. exact (r_bind (is_state) ((lift_to_code (L := fset.fset0) (I := [interface]) is_pure)) k k (heap_ignore fset) (heap_ignore_post fset) (heap_ignore_post fset) code_eq_proof_statement). Qed.
 
 Ltac bind_both_function :=
   match goal with
@@ -2287,179 +2699,164 @@ Ltac bind_both_function :=
 Theorem bind_rewrite : forall (A B : ChoiceEquality) x f, @bind A B (ret x) f = f x.
 Proof ltac:(reflexivity).
 
+Ltac clear_bind :=
+  rewrite bind_rewrite
+  ||
+  bind_both_function.
+
+Ltac progress_step_code :=
+  match goal with
+  | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; (getr ?l ?a)) ≈ _ ⦃ _ ⦄ ]] =>
+      apply (r_transL (#put l := x ;; a x )) ;
+      [ apply (r_put_get _ l x a) | ]
+  end
+  ||
+  match goal with
+  | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; (putr ?l ?y ?a)) ≈ _ ⦃ _ ⦄ ]] =>
+      apply (r_transL (#put l := y ;; a )) ;
+      [ apply contract_put | ]
+  end
+  ||
+  match goal with
+  | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; ?a) ≈ ?b ⦃ _ ⦄ ]] =>
+      apply (r_put_lhs l x a b (* (fun '(h0, h1) => heap_ignore fset (h0, h1)) *))
+  end
+  ||
+  apply r_ret.
+
 Ltac step_code :=
-  repeat (
-      rewrite bind_rewrite
-      ||
-      bind_both_function
-      ||
-        match goal with
-        | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; (getr ?l ?a)) ≈ _ ⦃ _ ⦄ ]] =>
-            apply (r_transL (#put l := x ;; a x )) ;
-            [ apply (r_put_get _ l x a) | ]
-        end
-      ||
-      match goal with
-      | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; (putr ?l ?y ?a)) ≈ _ ⦃ _ ⦄ ]] =>
-          apply (r_transL (#put l := y ;; a )) ;
-          [ apply contract_put | ]
-      end
-      ||
-      match goal with
-      | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; ?a) ≈ ?b ⦃ _ ⦄ ]] =>
-          apply (r_put_lhs l x a b (fun '(h₀, h₁) => h₀ = h₁))
-      end
-      ||
-      apply r_ret
-    ).
+  repeat (clear_bind || progress_step_code).
 
-
-Theorem simplify :
-  forall (A₀ A₁ B : OrderEnrichedCategory.Obj ChoiceAsOrd.ord_choiceType)
-       (pre : precond) (c₀ : raw_code A₀) (c₁ : raw_code A₁)
-       (f₀ : choice.Choice.sort A₀ -> choice.Choice.sort B)
-       (f₁ : choice.Choice.sort A₁ -> choice.Choice.sort B),
-     ⊢ ⦃ pre ⦄ c₀ ≈ c₁ ⦃ fun '(a₀, s₀) '(a₁, s₁) => s₀ = s₁ /\ f₀ a₀ = f₁ a₁ ⦄ ->
-     ⊢ ⦃ pre ⦄ x₀ ← c₀ ;;
-               ret (f₀ x₀) ≈ x₁ ← c₁ ;;
-                             ret (f₁ x₁) ⦃ eq ⦄.
+Lemma foldi_both :
+  forall {A : ChoiceEquality} {L} lo hi
+    (f_state : uint_size -> A -> code L [interface] A)
+    (f_pure : uint_size -> A -> A) v,
+    (unsigned lo <= unsigned hi)%Z ->
+    forall (P : precond), (forall x, P (x , x)) ->
+    (forall (i : uint_size) (v : A),
+        ⊢ ⦃ fun '(s₀, s₁) => P (s₀, s₁) /\ s₀ = s₁ ⦄
+            f_state i v
+          ≈
+            ret (f_pure i v)
+          ⦃ eq ⦄) ->
+  ⊢ ⦃ fun '(s₀, s₁) => s₀ = s₁ ⦄
+     @foldi _ lo hi L [interface] f_state v 
+  ≈
+     lift_to_code (L := L) (I := [interface]) (Hacspec_Lib_Pre.foldi lo hi f_pure v) 
+  ⦃ eq ⦄. (* fun '(a, _) '(b, _) => a = b *)
 Proof.
   intros.
-  apply rpost_conclusion_rule.
-  rewrite bind_ret.
-  rewrite bind_ret.
-  apply H.
+  unfold foldi.
+  unfold prog.
+  rewrite foldi_to_foldi_nat by apply H.
 
-Theorem heap_ignore_trans :
-  forall {A : OrderEnrichedCategory.Obj ChoiceAsOrd.ord_choiceType} 
-    {P : precond} 
-    (c₀ c₀' c₁ : raw_code A),
-  ⊢ ⦃ fun '(s₀, s₁) => s₀ = s₁ ⦄ c₀ ≈ c₀' ⦃ fun '(a, _) '(b, _) => a = b ⦄ ->
-  ⊢ ⦃ fun '(s₀, s₁) => s₀ = s₁ ⦄ c₀ ≈ c₁ ⦃ fun '(a, _) '(b, _) => a = b ⦄ ->
-  ⊢ ⦃ fun '(s₀, s₁) => s₀ = s₁ ⦄ c₀' ≈ c₁ ⦃ fun '(a, _) '(b, _) => a = b ⦄.
-Proof.
-  intros.
+  unfold lift_to_code.
+  rewrite Hacspec_Lib_Pre.foldi_to_foldi_nat by apply H.
 
-  apply rpre_hypothesis_rule.
-  intros.
-  pose @rpost_conclusion_rule.
+  unfold foldi_nat.  
+  unfold Hacspec_Lib_Pre.foldi_nat.
 
-  rewrite bind_ret in r.
+  set (r := Z.to_nat (unsigned lo)).
+  destruct (_ - r) ; [ apply r_ret ; intros ; subst ; reflexivity | ].
+
+  generalize dependent r.
+  clear -H0 H1.
+  generalize dependent v.
   
-  apply rpost_hy
-  subst.
-
-  destruct s₁.
-  
-  
-  (* pose @r_reflexivity_alt. *)
-  (* r_reflexivity_alt. *)
-
-  eapply rrewrite_eqDistrL. 1: exact H0.
-  intros.
-
-  simpl.
-  unfold RulesStateProb.θ_dens, RulesStateProb.θ0. simpl.
-  unfold Theta_dens.unary_theta_dens_obligation_1.
-  unfold OrderEnrichedRelativeAdjunctionsExamples.ToTheS_obligation_1.
-  simpl.
-  unfold UniversalFreeMap.outOfFree_obligation_1.
-  unfold ChoiceAsOrd.F_choice_prod_obj.
-  unfold choice.prod_choiceType.
-  unfold eqtype.prod_eqType.
-  unfold choice.Choice.eqType.
-  simpl.
-  unfold fmap_of_choiceType.
-  unfold choice.Choice.eqType.
-  unfold eqtype.prod_eqMixin.
-  unfold eqtype.pair_eq.
-  cbn.
-  unfold eqtype.eq_op.
-  cbn.
-  unfold proj1_sig.
-  unfold choice.prod_choiceMixin.
-  unfold choice.CanChoiceMixin.
-  cbn.
-  unfold Theta_dens.unary_ThetaDens0. cbn.
-  unfold UniversalFreeMap.outOfFree0.
-  unfold pkg_semantics.repr.
-  destruct s. cbn.
-  destruct eqtype.pair_eqP.
-  
-  unfold eqtype.Equality.Mixin.  
-  unfold Theta_dens.unary_ThetaDens0. simpl.
-  unfold choice.Choice.Pack.
-
-  
-  Set Printing Coercions.
-  Set Printing Implicit.
-  
-  rewrite get_set_heap_eq. reflexivity.
-
-    destruct s.
-  destruct x.
-  induction fmval.  
-  - cbn in i.
+  induction n ; intros.
+  - cbn.
+    unfold repr.
     
-    cbn in i0.
+    replace (fun cur' : choice.Choice.sort (chElement (@ct A)) =>
+               @ret (chElement (@ct A)) (@T_ct A (@ct_T A cur'))) with (@ret (chElement (@ct A))) by (apply functional_extensionality ; intros ; now rewrite T_ct_id).
+    rewrite bind_ret.
+    eapply rpre_weaken_rule.
+    apply H1. intros ; subst ; split ; easy.
+  - rewrite <- foldi__nat_move_S.
+    rewrite <- Hacspec_Lib_Pre.foldi__nat_move_S.
 
-  rewrite boolp.eq_exist.
-  unfold exista.
-  
-  pose coupling_eq.
-  eapply to_sem_jdg in H.
-  eapply coupling_eq. all: eauto.
-  eapply rcoupling_eq.
-  
-  destruct H.
-  unfold ssreflect.locked in H.
-  destruct ssreflect.master_key.
-  intros s.
-  unfold RulesStateProb.semantic_judgement in H.
-  unfold OrderEnrichedRelativeMonadExamples.extract_ord in H.
-  unfold proj1_sig in H.
-  unfold RulesStateProb.fromPrePost in H.
-  cbn in H.
-  specialize (H (pkg_semantics.repr c₀)).
-  
-  intros.
+    replace (ret
+       (T_ct
+          (Hacspec_Lib_Pre.foldi_nat_ (S n) (S r)
+                                      (fun x : nat => f_pure (repr (Z.of_nat x))) (f_pure (repr (Z.of_nat r)) v)))) with
+      (pu ← lift_to_code (L := L) (I := [interface]) (f_pure (repr (Z.of_nat r)) v) ;;
+        ret
+       (T_ct
+          (Hacspec_Lib_Pre.foldi_nat_ (S n) (S r)
+                                      (fun x : nat => f_pure (repr (Z.of_nat x))) (ct_T pu)))).
 
-  rewrite rrewrite_eqDistrL in H.
-  
-  destruct c₀.
-  destruct c₀'.
-  cbn.
-  
-  
-  unfold pkg_semantics.repr.
-  
+    pose (@r_bind).
+    eapply (@r_bind) with (mid := eq).    
+    eapply rpre_weaken_rule.
+    apply H1. intros ; subst ; split ; easy.
+    intros.
+    specialize IHn with (v := (ct_T a₁)) (r := S r).
+    apply (r_transR _ (foldi_nat_ (S n) (S r)
+       (fun (x : nat) (x0 : T) => prog (f_state (repr (Z.of_nat x)) x0)) 
+       (ct_T a₁))).
+    apply IHn.
+    apply rpre_hypothesis_rule.
+    intros ; inversion H ; subst.
+    eapply rpre_weaken_rule.    
+    apply @rreflexivity_rule.
+    intros sa sb [].
+    cbn in *.
+    subst.
+    reflexivity.
 
-  unfold RulesStateProb.θ0.
-  unfold StateTransformingLaxMorph.unaryIntState.
-  unfold UniversalFreeMap.outOfFree.
-  unfold OrderEnrichedCategory.rmm_map.
-  unfold UniversalFreeMap.outOfFree_obligation_1.
-  unfold StateTransformingLaxMorph.sigMap.
-  unfold OrderEnrichedCategory.ord_relmonObj.
-  unfold StateTransformingLaxMorph.stT_Frp.
-  unfold OrderEnrichedRelativeAdjunctions.AdjTransform.
-  unfold StateTransformingLaxMorph.ar_StP.
-  unfold StateTransformingLaxMorph.SP_AR.
-  unfold UniversalFreeMap.outOfFree0.
-  
-  hnf.  
-  
-  intro s. eapply rcoupling_eq. 1: exact H.
-  cbn. reflexivity.
-  
-  pose (@rpost_weaken_rule A A c₀ c₀' (fun '(s₀, s₁) => s₀ = s₁) (fun '(a, _) '(b, _) => a = b) eq H).
-  clear H.
-  
-  intros.
-  destruct a₁.
-  destruct a₀.
-  subst.
-  f_equal.
+    unfold prog.
+    unfold lift_to_code.
+    rewrite bind_rewrite.
+    rewrite ct_T_id.
+    reflexivity.
+Qed.
 
-  Set Printing All.
-  
+Ltac heap_ignore_remove_ignore :=
+  match goal with
+  | H : heap_ignore ?L ( ?a , ?b ) |- _ =>
+      match goal with
+      | [ |- context[ heap_ignore L ( ?c , b ) ] ] =>
+          intros ℓ H_mem
+          ; specialize (H ℓ H_mem)
+          ; match goal with
+            | [ |- context[ get_heap (set_heap ?x ?ℓ' ?v) ℓ = get_heap _ ℓ ] ] =>
+                destruct (@eqtype.eq_op (@eqtype.tag_eqType choice_type_eqType
+             (fun _ : choice_type => ssrnat.nat_eqType)) ℓ ℓ') eqn:ℓ_eq_ℓ'
+                ; [ exfalso
+                    ; apply (ssrbool.elimT eqtype.eqP) in ℓ_eq_ℓ' ; subst
+                    ; apply (ssrbool.elimT ssrbool.negP) in H_mem
+                    ; apply H_mem
+                    ; clear H_mem
+                    ; apply loc_compute
+                    ; unfold eqtype.val
+                    ; rewrite simplify_sorted_fset
+                    ; repeat (reflexivity || (left ; reflexivity) || right)
+                  | rewrite <- (get_heap_set_heap a ℓ ℓ' v) ;
+                    [ assumption
+                    | rewrite ℓ_eq_ℓ' ; reflexivity 
+                    ]
+                ]     
+            end
+      end
+  end .
+
+Ltac both_bind :=
+  match goal with
+  | [ |- context[ (?x : both ?L ?T) ] ] =>  
+      match goal with
+      | [ |- context[ (bind ?f ?v) ] ] =>
+          eapply (r_transR (bind (@is_state _ _ x) v) (bind (lift_to_code (@is_pure _ _ x)) v)) ;
+          [ 
+          | eapply r_bind ; [ apply x | ]
+          ]
+      end
+  end.
+
+
+Ltac remove_T_ct :=
+  match goal with
+  | [ |- context[ T_ct ?x ] ] =>  
+      replace (T_ct x) with x by reflexivity
+  | H : _ |- context[ T_ct ?x ] =>  
+      replace (T_ct x) with x in H by reflexivity
+  end.
