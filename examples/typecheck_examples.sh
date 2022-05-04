@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -70,3 +70,4 @@ typecheck hacspec-aes128-gcm        no-ec      fst    json      no-coq
 typecheck hacspec-bls12-381-hash    no-ec   no-fst    json      coq
 typecheck hacspec-sha512            no-ec   no-fst    json      coq
 typecheck hacspec-ed25519           no-ec   no-fst    json      coq
+typecheck hacspec-linalg            no-ec   no-fst    json      coq
