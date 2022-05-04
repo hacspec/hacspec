@@ -342,19 +342,10 @@ macro_rules! abstract_public_modular_integer {
             }
         }
 
-        /// **Warning**: panics on division by 0.
         impl Div for $name {
             type Output = $name;
             fn div(self, rhs: $name) -> $name {
-                let a: $base = self.into();
-                let b: $base = rhs.into();
-                let a: BigUint = a.into();
-                let b: BigUint = b.into();
-                let c: BigUint = a / b;
-                let max: BigUint = $max.into();
-                let d: BigUint = c % max;
-                let d: $base = d.into();
-                d.into()
+                self * rhs.inv()
             }
         }
 
