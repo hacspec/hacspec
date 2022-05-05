@@ -20,7 +20,7 @@ path = "src/main.rs"
 [dependencies]
 hacspec-util = { path = "../utils/util", version = "0.1.0-beta.1" }
 pretty = "0.10.0"
-im = "15.0.0"
+im = "~15.0.0"
 itertools = "0.10.0"
 lazy_static = "1.4.0"
 walkdir = "2.3.1"
