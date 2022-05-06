@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;object-0.27.1&#x2F;src&#x2F;read&#x2F;pe&#x2F;file.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>file.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../object/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `&#x2F;home&#x2F;runner&#x2F;.cargo&#x2F;registry&#x2F;src&#x2F;github.com-1ecc6299db9ec823&#x2F;object-0.28.3&#x2F;src&#x2F;read&#x2F;pe&#x2F;file.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>file.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../object/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1011,6 +1011,11 @@
 <span id="1011">1011</span>
 <span id="1012">1012</span>
 <span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
 <span class="kw">use</span> <span class="ident">core::fmt::Debug</span>;
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem</span>, <span class="ident">str</span>};
@@ -1059,7 +1064,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">dos_header</span>.<span class="ident">nt_headers_offset</span>().<span class="ident">into</span>();
         <span class="kw">let</span> (<span class="ident">nt_headers</span>, <span class="ident">data_directories</span>) <span class="op">=</span> <span class="ident">Pe::parse</span>(<span class="ident">data</span>, <span class="kw-2">&amp;mut</span> <span class="ident">offset</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">sections</span> <span class="op">=</span> <span class="ident">nt_headers</span>.<span class="ident">sections</span>(<span class="ident">data</span>, <span class="ident">offset</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">symbols</span> <span class="op">=</span> <span class="ident">nt_headers</span>.<span class="ident">symbols</span>(<span class="ident">data</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">coff_symbols</span> <span class="op">=</span> <span class="ident">nt_headers</span>.<span class="ident">symbols</span>(<span class="ident">data</span>);
         <span class="kw">let</span> <span class="ident">image_base</span> <span class="op">=</span> <span class="ident">nt_headers</span>.<span class="ident">optional_header</span>().<span class="ident">image_base</span>();
 
         <span class="prelude-val">Ok</span>(<span class="ident">PeFile</span> {
@@ -1068,7 +1073,9 @@
             <span class="ident">data_directories</span>,
             <span class="ident">common</span>: <span class="ident">CoffCommon</span> {
                 <span class="ident">sections</span>,
-                <span class="ident">symbols</span>,
+                <span class="comment">// The PE file format deprecates the COFF symbol table (https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#coff-file-header-object-and-image)</span>
+                <span class="comment">// We do not want to prevent parsing the rest of the PE file for a corrupt COFF header, but rather return an empty symbol table</span>
+                <span class="ident">symbols</span>: <span class="ident">coff_symbols</span>.<span class="ident">unwrap_or_default</span>(),
                 <span class="ident">image_base</span>,
             },
             <span class="ident">data</span>,
@@ -1394,6 +1401,7 @@
     <span class="ident">Pe</span>: <span class="ident">ImageNtHeaders</span>,
     <span class="ident">R</span>: <span class="ident">ReadRef</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span><span class="op">&gt;</span>,
 {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
     <span class="ident">file</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;file</span> <span class="ident">PeFile</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Pe</span>, <span class="ident">R</span><span class="op">&gt;</span>,
 }
 
@@ -1424,6 +1432,7 @@
     <span class="ident">Pe</span>: <span class="ident">ImageNtHeaders</span>,
     <span class="ident">R</span>: <span class="ident">ReadRef</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span><span class="op">&gt;</span>,
 {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
     <span class="ident">file</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;file</span> <span class="ident">PeFile</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Pe</span>, <span class="ident">R</span><span class="op">&gt;</span>,
 }
 
@@ -1481,6 +1490,7 @@
     <span class="ident">Pe</span>: <span class="ident">ImageNtHeaders</span>,
     <span class="ident">R</span>: <span class="ident">ReadRef</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span><span class="op">&gt;</span>,
 {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
     <span class="ident">file</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;file</span> <span class="ident">PeFile</span><span class="op">&lt;</span><span class="lifetime">&#39;data</span>, <span class="ident">Pe</span>, <span class="ident">R</span><span class="op">&gt;</span>,
 }
 
@@ -1614,7 +1624,7 @@
         <span class="ident">SectionTable::parse</span>(<span class="self">self</span>.<span class="ident">file_header</span>(), <span class="ident">data</span>, <span class="ident">offset</span>)
     }
 
-    <span class="doccomment">/// Read the symbol table and string table.</span>
+    <span class="doccomment">/// Read the COFF symbol table and string table.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// `data` must be the entire file data.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
