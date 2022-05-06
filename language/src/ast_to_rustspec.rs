@@ -189,7 +189,7 @@ fn translate_expr_name(
     }
     match path.segments.iter().last() {
         None => {
-            sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
+            sess.span_rustspec_err(path.span, "expr: empty identifiers are not allowed in Hacspec");
             Err(())
         }
         Some(segment) => match &segment.args {
@@ -200,24 +200,66 @@ fn translate_expr_name(
                 span.clone().into(),
             )),
             Some(_) => {
-                sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
+                sess.span_rustspec_err(path.span, "expr: expression identifiers cannot have arguments");
                 Err(())
             }
         },
     }
 }
 
-pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationResult<(TopLevelIdent,TopLevelIdent)> {
+pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationResult<(BaseTyp,Spanned<TopLevelIdent>)> {
     if path.segments.len() > 2 {
+        sess.span_rustspec_err(path.span, "expected a one or two segment struct name");
+        return Err(());
+    }
+    if path.segments.len() == 1 {
+	let segment = &path.segments[0];
+        match &segment.args {
+	   None => {
+                let ty_name = TopLevelIdent {string: segment.ident.name.to_ident_string(), kind: TopLevelIdentKind::Type};
+	        let ty = (ty_name,path.span.into());
+                let cons_name = TopLevelIdent {string: segment.ident.name.to_ident_string(), kind: TopLevelIdentKind::EnumConstructor};
+	        let cons = (cons_name,path.span.into());
+                return Ok((BaseTyp::Named(ty,None),cons))},
+           Some(_) => {
+                    sess.span_rustspec_err(path.span, "struct1: expression identifiers cannot have arguments");
+                    return Err(())
+	    }
+	}
+    }
+    if path.segments.len() == 2 { 
+	let segment0 = &path.segments[0];
+	let segment1 = &path.segments[1];
+        let ty_name = TopLevelIdent {string: segment0.ident.name.to_ident_string(), kind: TopLevelIdentKind::Type};
+	let ty = (ty_name,segment0.ident.span.into());
+        let cons_name = TopLevelIdent {string: segment1.ident.name.to_ident_string(), kind: TopLevelIdentKind::EnumConstructor};
+	let cons = (cons_name,segment1.ident.span.into());
+	match (&segment0.args,&segment1.args) {
+	    (None,None) => {
+                return Ok((BaseTyp::Named(ty,None),cons))},
+	    (Some(ref args),None) => {
+		return Ok((BaseTyp::Named(ty,Some(translate_type_args(sess, args, &segment1.ident.span)?)),cons))},
+	    (_,Some(x)) => {
+                sess.span_rustspec_err(path.span, "struct3: expression identifiers cannot have arguments");
+                return Err(())
+	    }
+        }
+    }
+    return Err(())
+}
+
+/*
+pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationResult<(TopLevelIdent,TopLevelIdent)> {
+    if path.segments.len() != 1 {
         sess.span_rustspec_err(path.span, "a path that has more than 2 segments is forbidden in Hacspec");
         return Err(());
     }
-    match (path.segments.0, path.segments.1) {
-        None,None => {
+    match path.segments[1] {
+        None => {
             sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
             Err(())
         }
-        Some(segment0),Some(segment1) => match (&segment0.args,&segment1.args) {
+        Some(segment) => match (&segment.args) {
             None => Ok(TopLevelIdent {
                 string: segment.ident.name.to_ident_string(),
                 kind: TopLevelIdentKind::Type,
@@ -232,7 +274,7 @@ pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationRes
         },
     }
 }
-
+*/
 enum FuncNameResult {
     TypePrefixed(Option<Spanned<BaseTyp>>, Spanned<TopLevelIdent>),
     EnumConstructor(BaseTyp, Spanned<TopLevelIdent>),
@@ -1500,20 +1542,25 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
     match &pat.kind {
         PatKind::Ident(BindingMode::ByValue(_), id, None) => {
             Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
-        }
+        },
+        PatKind::Path(None, path) => {
+            let (ty,cons) = translate_struct_name(sess, path)?;
+                Ok((
+                    Pattern::EnumCase(ty,cons,None),
+                    pat.span.into(),
+                ))},
         PatKind::TupleStruct(None, path, args) => {
-            let (struct_name,cons_name) = translate_struct_name(sess, path)?;
-            let new_name = (struct_name, path.span.into());
+            let (ty,cons) = translate_struct_name(sess, path)?;
             if args.len() == 0 {
                 Ok((
-                    Pattern::EnumCase(BaseTyp::Named(new_name.clone(),None),new_name, None),
+                    Pattern::EnumCase(ty,cons,None),
                     pat.span.into(),
                 ))
             } else if args.len() == 1 {
                 let arg = args.into_iter().next().unwrap();
                 let new_arg = translate_pattern(sess, arg)?;
                 Ok((
-                    Pattern::EnumCase(BaseTyp::Named(new_name.clone(),None),new_name, Some(Box::new(new_arg))),
+                    Pattern::EnumCase(ty,cons, Some(Box::new(new_arg))),
                     pat.span.into(),
                 ))
             } else {
@@ -1523,7 +1570,7 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
                         .collect(),
                 )?;
                 Ok((
-                    Pattern::EnumCase(BaseTyp::Named(new_name.clone(),None),new_name, 
+                    Pattern::EnumCase(ty,cons,
                         Some(Box::new((Pattern::Tuple(new_args), pat.span.into()))),
                     ),
                     pat.span.into(),
@@ -1543,7 +1590,7 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
             match e.clone().into_inner().kind {
                 ExprKind::Lit(l) => Ok((Pattern::LiteralPat(translate_literal(&l)?),pat.span.into())),
                 _ => {
-                    sess.span_rustspec_err(pat.span, "1. pattern not allowed in Hacspec let bindings");
+                    sess.span_rustspec_err(pat.span, "1. literal pattern not allowed in Hacspec let bindings");
                     Err(())
                 }
             }

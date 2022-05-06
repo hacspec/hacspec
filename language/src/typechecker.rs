@@ -1849,36 +1849,20 @@ fn typecheck_pattern(
     match (pat, &typ.0) {
         (
             Pattern::EnumCase(ty_name, (pat_enum_name, _), inner_pat),
-            BaseTyp::Named((typ_name, _), None),
-        ) if pat_enum_name == typ_name => match top_ctx.typ_dict.get(typ_name) {
+            BaseTyp::Named((typ_name, _), _),
+        ) /* if pat_enum_name == typ_name */ => match top_ctx.typ_dict.get(typ_name) {
             Some((
                 ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, _type_args), cases_span)),
                 DictEntry::Enum,
             )) => {
-                if cases.len() != 1 {
-                    sess.span_rustspec_err(
-                        *pat_span,
-                        format!(
-                            "this pattern is matching the enum {} with multiple cases",
-                            pat_enum_name
-                        )
-                        .as_str(),
-                    );
-                    return Err(());
-                }
-                let ((case_name, _), case_typ) = cases.into_iter().next().unwrap();
-                if case_name.string != pat_enum_name.string {
-                    sess.span_rustspec_err(
-                        *pat_span,
-                        format!(
-                            "this pattern matches the enum {} with a single case instead of the wrapper struct {}",
-                            case_name,
-                            pat_enum_name,
-                        )
-                        .as_str(),
-                    );
-                    return Err(());
-                }
+                let ((cn, _), ct) = cases.into_iter().next().unwrap();
+		let mut case_name = cn.clone();
+		let mut case_typ = ct.clone();
+                while (case_name.string != pat_enum_name.string) {
+                    let ((cn, _), ct) = cases.into_iter().next().unwrap();
+		    case_name = cn.clone();
+		    case_typ = ct.clone();
+		}
                 match (inner_pat,case_typ) {
                     (None,None) => {Ok(HashMap::new())}
                     (Some(_),None) => {
@@ -1918,7 +1902,7 @@ fn typecheck_pattern(
                 sess.span_rustspec_err(
                     *pat_span,
                     format!(
-                        "let-binding pattern expected a {} struct but the type is {}",
+                        "1. let-binding pattern expected a {} struct but the type is {}",
                         pat_enum_name, typ.0
                     )
                     .as_str(),
@@ -1930,7 +1914,7 @@ fn typecheck_pattern(
             sess.span_rustspec_err(
                 *pat_span,
                 format!(
-                    "let-binding pattern expected a {} struct but the type is {}",
+                    "2b. let-binding pattern expected a {} struct but the type is {}",
                     name.0, typ.0
                 )
                 .as_str(),
@@ -1964,7 +1948,7 @@ fn typecheck_pattern(
             sess.span_rustspec_err(
                 *pat_span,
                 format!(
-                    "let-binding pattern expected a tuple but the type is {}",
+                    "3. let-binding pattern expected a tuple but the type is {}",
                     typ.0
                 )
                 .as_str(),
