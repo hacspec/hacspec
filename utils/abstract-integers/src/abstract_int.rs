@@ -3,7 +3,7 @@ macro_rules! abstract_int {
     ($name:ident, $bits:literal, $signed:literal) => {
         #[derive(Clone, Copy)]
         pub struct $name {
-            b: [u8 ; ($bits + 7) / 8],
+            b: [u8; ($bits + 7) / 8],
             sign: Sign,
             signed: bool,
         }
@@ -18,36 +18,39 @@ macro_rules! abstract_int {
             }
 
             fn hex_string_to_bytes(s: &str) -> Vec<u8> {
-                let s = if s.len() % 2 != 0 {
-                    let mut x = "0".to_string();
-                    x.push_str(s);
-                    x
-                } else {
-                    s.to_string()
-                };
-                assert!(s.len() % 2 == 0, "length of hex string {}: {}",s, s.len());
-                let b: Result<Vec<u8>, ParseIntError> = (0..s.len())
-                    .step_by(2)
-                    .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
-                    .collect();
-                b.expect("Error parsing hex string")
+                let s = s.to_string();
+                let mut b: Vec<u8> = Vec::new();
+                {
+                    let mut i = 0;
+                    if s.len() % 2 != 0 {
+                        i += 1;
+                        b.push(u8::from_str_radix(&s[0..1], 16).unwrap());
+                    }
+                    while i < s.len() {
+                        b.push(u8::from_str_radix(&s[i..i + 2], 16).unwrap()); // .expect("Error parsing hex string")
+                        i += 2;
+                    }
+                }
+                b
             }
 
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[allow(dead_code)]
-            pub fn from_literal(x: u128) -> Self {
+            pub fn from_literal(x: u64) -> Self {
                 let big_x = BigInt::from(x);
-                if big_x > $name::max().into() {
-                    panic!("literal {} too big for type {}", x, stringify!($name));
-                }
+                // if big_x > $name::max().into() {
+                //     panic!("literal {} too big for type {}", x, stringify!($name));
+                // }
                 big_x.into()
             }
 
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[allow(dead_code)]
-            pub fn from_signed_literal(x: i128) -> Self {
-                let big_x = BigInt::from(x as u128);
-                if big_x > $name::max().into() {
-                    panic!("literal {} too big for type {}", x, stringify!($name));
-                }
+            pub fn from_signed_literal(x: i64) -> Self {
+                let big_x = BigInt::from(x as u64);
+                // if big_x > $name::max().into() {
+                //     panic!("literal {} too big for type {}", x, stringify!($name));
+                // }
                 big_x.into()
             }
 
@@ -57,19 +60,20 @@ macro_rules! abstract_int {
                 BigInt::from(1u32).shl(x).into()
             }
 
-            /// Gets the `i`-th least significant bit of this integer.
-            #[allow(dead_code)]
-            pub fn bit(self, i: usize) -> bool {
-                assert!(
-                    i < self.b.len() * 8,
-                    "the bit queried should be lower than the size of the integer representation: {} < {}",
-                    i,
-                    self.b.len() * 8
-                );
-                let bigint : BigInt = self.into();
-                let tmp: BigInt = bigint >> i;
-                (tmp & BigInt::one()).to_bytes_le().1[0] == 1
-            }
+            // TODO -- fix creusot: 'unsupported constant expression, try binding this to a variable. See issue #163'
+            // /// Gets the `i`-th least significant bit of this integer.
+            // #[allow(dead_code)]
+            // pub fn bit(self, i: usize) -> bool {
+            //     assert!(
+            //         i < self.b.as_ref().len() * 8,
+            //         "the bit queried should be lower than the size of the integer representation: {} < {}",
+            //         i,
+            //         self.b.as_ref().len() * 8
+            //     );
+            //     let bigint : BigInt = self.into();
+            //     let tmp: BigInt = bigint >> i;
+            //     (tmp & BigInt::one()).to_bytes_le().1[0] == 1
+            // }
         }
 
         impl From<BigUint> for $name {
@@ -79,18 +83,51 @@ macro_rules! abstract_int {
         }
 
         impl From<BigInt> for $name {
+            #[cfg(feature = "std")]
             fn from(x: BigInt) -> $name {
-                let max_value = Self::max();
-                assert!(x <= max_value, "{} is too large for type {}!", x, stringify!($name));
+                // let max_value = Self::max();
+                // assert!(x <= max_value, "{} is too large for type {}!", x, stringify!($name));
                 let (sign, repr) = x.to_bytes_be();
-                if sign == Sign::Minus && (!$signed) {
-                    panic!("Trying to convert a negative number into an unsigned integer!")
+                // if sign == Sign::Minus && (!$signed) {
+                //     panic!("Trying to convert a negative number into an unsigned integer!")
+                // }
+                // if repr.len() > ($bits + 7) / 8 {
+                //     panic!("{} is too large for type {}", x, stringify!($name))
+                // }
+                let mut out = std::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![
+                    0u8;
+                    ($bits + 7)
+                        / 8
+                ])
+                .unwrap();
+                let upper = out.as_ref().len();
+                let lower = upper - repr.len();
+                out[lower..upper].copy_from_slice(&repr);
+                $name {
+                    b: out,
+                    sign: sign,
+                    signed: $signed,
                 }
-                if repr.len() > ($bits + 7) / 8 {
-                    panic!("{} is too large for type {}", x, stringify!($name))
-                }
-                let mut out = [0u8; ($bits + 7) / 8];
-                let upper = out.len();
+            }
+
+            #[cfg(not(feature = "std"))]
+            fn from(x: BigInt) -> $name {
+                // let max_value = Self::max();
+                // assert!(x <= max_value, "{} is too large for type {}!", x, stringify!($name));
+                let (sign, repr) = x.to_bytes_be();
+                // if sign == Sign::Minus && (!$signed) {
+                //     panic!("Trying to convert a negative number into an unsigned integer!")
+                // }
+                // if repr.len() > ($bits + 7) / 8 {
+                //     panic!("{} is too large for type {}", x, stringify!($name))
+                // }
+                let mut out: [u8; ($bits + 7) / 8] =
+                    core::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![
+                        0u8;
+                        ($bits + 7) / 8
+                    ])
+                    .unwrap();
+                let upper = out.as_ref().len();
                 let lower = upper - repr.len();
                 out[lower..upper].copy_from_slice(&repr);
                 $name {
@@ -102,9 +139,28 @@ macro_rules! abstract_int {
         }
 
         impl Default for $name {
+            #[cfg(feature = "std")]
             fn default() -> $name {
                 $name {
-                    b: [0u8; ($bits + 7) / 8],
+                    b: std::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![
+                        0u8;
+                        ($bits + 7)
+                            / 8
+                    ])
+                    .unwrap(),
+                    sign: Sign::Plus,
+                    signed: $signed,
+                }
+            }
+            #[cfg(not(feature = "std"))]
+            fn default() -> $name {
+                $name {
+                    b: core::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![
+                        0u8;
+                        ($bits + 7)
+                            / 8
+                    ])
+                    .unwrap(),
                     sign: Sign::Plus,
                     signed: $signed,
                 }
@@ -113,60 +169,60 @@ macro_rules! abstract_int {
 
         impl Into<BigInt> for $name {
             fn into(self) -> BigInt {
-                BigInt::from_bytes_be(self.sign, &self.b)
+                BigInt::from_bytes_be(self.sign, self.b.as_ref())
             }
         }
 
         impl Into<BigUint> for $name {
             fn into(self) -> BigUint {
-                BigUint::from_bytes_be(&self.b)
+                BigUint::from_bytes_be(self.b.as_ref())
             }
         }
 
-        #[cfg(feature = "std")]
-        impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                let uint: BigInt = (*self).into();
-                write!(f, "{}", uint)
-            }
-        }
-        #[cfg(not(feature = "std"))]
-        impl core::fmt::Display for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                let uint: BigInt = (*self).into();
-                write!(f, "{}", uint)
-            }
-        }
+        // #[cfg(feature = "std")]
+        // impl std::fmt::Display for $name {
+        //     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        //         let uint: BigInt = (*self).into();
+        //         write!(f, "{}", uint)
+        //     }
+        // }
+        // #[cfg(not(feature = "std"))]
+        // impl core::fmt::Display for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        //         let uint: BigInt = (*self).into();
+        //         write!(f, "{}", uint)
+        //     }
+        // }
 
-        #[cfg(feature = "std")]
-        impl std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                let uint: BigInt = (*self).into();
-                write!(f, "{}", uint)
-            }
-        }
-        #[cfg(not(feature = "std"))]
-        impl core::fmt::Debug for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                let uint: BigInt = (*self).into();
-                write!(f, "{}", uint)
-            }
-        }
+        // #[cfg(feature = "std")]
+        // impl std::fmt::Debug for $name {
+        //     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        //         let uint: BigInt = (*self).into();
+        //         write!(f, "{}", uint)
+        //     }
+        // }
+        // #[cfg(not(feature = "std"))]
+        // impl core::fmt::Debug for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        //         let uint: BigInt = (*self).into();
+        //         write!(f, "{}", uint)
+        //     }
+        // }
 
-        #[cfg(feature = "std")]
-        impl std::fmt::LowerHex for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let val: BigInt = (*self).into();
-                core::fmt::LowerHex::fmt(&val, f)
-            }
-        }
-        #[cfg(not(feature = "std"))]
-        impl core::fmt::LowerHex for $name {
-            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-                let val: BigInt = (*self).into();
-                core::fmt::LowerHex::fmt(&val, f)
-            }
-        }
+        // #[cfg(feature = "std")]
+        // impl std::fmt::LowerHex for $name {
+        //     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        //         let val: BigInt = (*self).into();
+        //         std::fmt::LowerHex::fmt(&val, f)
+        //     }
+        // }
+        // #[cfg(not(feature = "std"))]
+        // impl core::fmt::LowerHex for $name {
+        //     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        //         let val: BigInt = (*self).into();
+        //         core::fmt::LowerHex::fmt(&val, f)
+        //     }
+        // }
     };
 }
 
@@ -190,10 +246,12 @@ macro_rules! abstract_public {
                 let c: BigInt = a.modpow(&b, &m);
                 c.into()
             }
+
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             /// Returns self to the power of the argument.
             /// The exponent is a u128.
             #[allow(dead_code)]
-            pub fn pow(self, exp: u128, modval: Self) -> Self {
+            pub fn pow(self, exp: u64, modval: Self) -> Self {
                 self.pow_felem(BigInt::from(exp).into(), modval)
             }
 
@@ -209,9 +267,9 @@ macro_rules! abstract_public {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
                 let c = a + b;
-                if c > $name::max() {
-                    panic!("bounded addition overflow for type {}", stringify!($name));
-                }
+                // if c > $name::max() {
+                //     panic!("bounded addition overflow for type {}", stringify!($name));
+                // }
                 c.into()
             }
         }
@@ -225,12 +283,12 @@ macro_rules! abstract_public {
                 let c = if self.signed {
                     a - b
                 } else {
-                    a.checked_sub(&b).unwrap_or_else(|| {
-                        panic!(
-                            "bounded substraction underflow for type {}",
-                            stringify!($name)
-                        )
-                    })
+                    a.checked_sub(&b).unwrap() // _or_else(|| {
+                    //     panic!(
+                    //         "bounded substraction underflow for type {}",
+                    //         stringify!($name)
+                    //     )
+                    // })
                 };
                 c.into()
             }
@@ -243,12 +301,12 @@ macro_rules! abstract_public {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
                 let c = a * b;
-                if c > $name::max() {
-                    panic!(
-                        "bounded multiplication overflow for type {}",
-                        stringify!($name)
-                    );
-                }
+                // if c > $name::max() {
+                //     panic!(
+                //         "bounded multiplication overflow for type {}",
+                //         stringify!($name)
+                //     );
+                // }
                 c.into()
             }
         }
@@ -259,9 +317,9 @@ macro_rules! abstract_public {
             fn div(self, rhs: $name) -> $name {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
-                if b == BigInt::zero() {
-                    panic!("dividing by zero in type {}", stringify!($name));
-                }
+                // if b == BigInt::zero() {
+                //     panic!("dividing by zero in type {}", stringify!($name));
+                // }
                 let c = a / b;
                 c.into()
             }
@@ -273,9 +331,9 @@ macro_rules! abstract_public {
             fn rem(self, rhs: $name) -> $name {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
-                if b == BigInt::zero() {
-                    panic!("dividing by zero in type {}", stringify!($name));
-                }
+                // if b == BigInt::zero() {
+                //     panic!("dividing by zero in type {}", stringify!($name));
+                // }
                 let c = a % b;
                 c.into()
             }
@@ -333,41 +391,42 @@ macro_rules! abstract_public {
             }
         }
 
-        impl PartialEq for $name {
-            fn eq(&self, rhs: &$name) -> bool {
-                let a: BigInt = (*self).into();
-                let b: BigInt = (*rhs).into();
-                a == b
-            }
-        }
+        // TODO : requires equality of bigint in creusot -- 'the trait `creusot_contracts::Model` is not implemented for `hacspec_lib::BigInt`'
+        // impl PartialEq for $name {
+        //     fn eq(&self, rhs: &$name) -> bool {
+        //         let a: BigInt = (*self).into();
+        //         let b: BigInt = (*rhs).into();
+        //         // a == b
+        //     }
+        // }
 
-        impl Eq for $name {}
+        // impl Eq for $name {}
 
-        impl PartialOrd for $name {
-            #[cfg(feature = "std")]
-            fn partial_cmp(&self, other: &$name) -> Option<std::cmp::Ordering> {
-                let a: BigInt = (*self).into();
-                let b: BigInt = (*other).into();
-                a.partial_cmp(&b)
-            }
-            #[cfg(not(feature = "std"))]
-            fn partial_cmp(&self, other: &$name) -> Option<core::cmp::Ordering> {
-                let a: BigInt = (*self).into();
-                let b: BigInt = (*other).into();
-                a.partial_cmp(&b)
-            }
-        }
+        // impl PartialOrd for $name {
+        //     #[cfg(feature = "std")]
+        //     fn partial_cmp(&self, other: &$name) -> Option<std::cmp::Ordering> {
+        //         let a: BigInt = (*self).into();
+        //         let b: BigInt = (*other).into();
+        //         a.partial_cmp(&b)
+        //     }
+        //     #[cfg(not(feature = "std"))]
+        //     fn partial_cmp(&self, other: &$name) -> Option<core::cmp::Ordering> {
+        //         let a: BigInt = (*self).into();
+        //         let b: BigInt = (*other).into();
+        //         a.partial_cmp(&b)
+        //     }
+        // }
 
-        impl Ord for $name {
-            #[cfg(feature = "std")]
-            fn cmp(&self, other: &$name) -> std::cmp::Ordering {
-                self.partial_cmp(other).unwrap()
-            }
-            #[cfg(not(feature = "std"))]
-            fn cmp(&self, other: &$name) -> core::cmp::Ordering {
-                self.partial_cmp(other).unwrap()
-            }
-        }
+        // impl Ord for $name {
+        //     #[cfg(feature = "std")]
+        //     fn cmp(&self, other: &$name) -> std::cmp::Ordering {
+        //         self.partial_cmp(other).unwrap()
+        //     }
+        //     #[cfg(not(feature = "std"))]
+        //     fn cmp(&self, other: &$name) -> core::cmp::Ordering {
+        //         self.partial_cmp(other).unwrap()
+        //     }
+        // }
     };
 }
 
@@ -382,14 +441,15 @@ macro_rules! abstract_unsigned {
                 BigInt::from_bytes_be(Sign::Plus, &Self::hex_string_to_bytes(s)).into()
             }
 
+            #[cfg(feature = "std")]
             #[allow(dead_code)]
             pub fn from_be_bytes(v: &[u8]) -> Self {
                 debug_assert!(
                     v.len() <= ($bits + 7) / 8,
                     "from_be_bytes: lenght of bytes should be lesser than the lenght of the canvas"
                 );
-                let mut repr = [0u8; ($bits + 7) / 8];
-                let upper = repr.len();
+                let mut repr = std::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![0u8; ($bits + 7) / 8]).unwrap();
+                let upper = repr.as_ref().len();
                 let lower = upper - v.len();
                 repr[lower..upper].copy_from_slice(&v);
                 $name {
@@ -399,17 +459,49 @@ macro_rules! abstract_unsigned {
                 }
             }
 
+            #[cfg(not(feature = "std"))]
+            #[allow(dead_code)]
+            pub fn from_be_bytes(v: &[u8]) -> Self {
+                debug_assert!(
+                    v.len() <= ($bits + 7) / 8,
+                    "from_be_bytes: lenght of bytes should be lesser than the lenght of the canvas"
+                );
+                let mut repr = core::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![0u8; ($bits + 7) / 8]).unwrap();
+                let upper = repr.as_ref().len();
+                let lower = upper - v.len();
+                repr[lower..upper].copy_from_slice(&v);
+                $name {
+                    b: repr,
+                    sign: Sign::Plus,
+                    signed: false,
+                }
+            }
+
+            #[cfg(feature = "std")]
             #[allow(dead_code)]
             pub fn from_le_bytes(v: &[u8]) -> Self {
                 debug_assert!(
                     v.len() <= ($bits + 7) / 8,
                     "from_be_bytes: lenght of bytes should be lesser than the lenght of the canvas"
                 );
-                let mut repr = [0u8; ($bits + 7) / 8];
-                let upper = repr.len();
+                let mut repr = std::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![0u8; ($bits + 7) / 8]).unwrap();
+                let upper = repr.as_ref().len();
                 let lower = upper - v.len();
                 repr[lower..upper].copy_from_slice(&v);
-                BigInt::from_bytes_le(Sign::Plus, &repr).into()
+                BigInt::from_bytes_le(Sign::Plus, repr.as_ref()).into()
+            }
+            #[cfg(not(feature = "std"))]
+            #[allow(dead_code)]
+            pub fn from_le_bytes(v: &[u8]) -> Self {
+                debug_assert!(
+                    v.len() <= ($bits + 7) / 8,
+                    "from_be_bytes: lenght of bytes should be lesser than the lenght of the canvas"
+                );
+                let mut repr = core::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![0u8; ($bits + 7) / 8]).unwrap();
+                let upper = repr.as_ref().len();
+                let lower = upper - v.len();
+                repr[lower..upper].copy_from_slice(&v);
+                BigInt::from_bytes_le(Sign::Plus, repr.as_ref()).into()
             }
 
             #[allow(dead_code)]
@@ -417,106 +509,122 @@ macro_rules! abstract_unsigned {
                 self.b
             }
 
+            #[cfg(feature = "std")]
             #[allow(dead_code)]
             pub fn to_le_bytes(self) -> [u8; ($bits + 7) / 8] {
-                let x = BigInt::from_bytes_be(Sign::Plus, &self.b);
+                let x = BigInt::from_bytes_be(Sign::Plus, self.b.as_ref());
                 let (_, x_s) = x.to_bytes_le();
-                let mut repr = [0u8; ($bits + 7) / 8];
+                let mut repr = std::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![0u8; ($bits + 7) / 8]).unwrap();
+                repr[0..x_s.len()].copy_from_slice(&x_s);
+                repr
+            }
+            #[cfg(not(feature = "std"))]
+            #[allow(dead_code)]
+            pub fn to_le_bytes(self) -> [u8; ($bits + 7) / 8] {
+                let x = BigInt::from_bytes_be(Sign::Plus, self.b.as_ref());
+                let (_, x_s) = x.to_bytes_le();
+                let mut repr = core::convert::TryInto::<[u8; ($bits + 7) / 8]>::try_into(vec![0u8; ($bits + 7) / 8]).unwrap();
                 repr[0..x_s.len()].copy_from_slice(&x_s);
                 repr
             }
 
-            /// Produces a new integer which is all ones if the two arguments are equal and
-            /// all zeroes otherwise.
-            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            #[inline]
-            pub fn comp_eq(self, rhs: Self) -> Self {
-                let a: BigInt = self.into();
-                let b: BigInt = rhs.into();
-                if a == b {
-                    let one = Self::from_literal(1);
-                    (one << ($bits - 1)) - one
-                } else {
-                    Self::default()
-                }
-            }
+            // TODO : dependency on 'from_literal'
+            // /// Produces a new integer which is all ones if the two arguments are equal and
+            // /// all zeroes otherwise.
+            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            // #[inline]
+            // pub fn comp_eq(self, rhs: Self) -> Self {
+            //     let a: BigInt = self.into();
+            //     let b: BigInt = rhs.into();
+            //     if a == b {
+            //         let one = Self::from_literal(1);
+            //         (one << ($bits - 1)) - one
+            //     } else {
+            //         Self::default()
+            //     }
+            // }
 
-            /// Produces a new integer which is all ones if the first argument is different from
-            /// the second argument, and all zeroes otherwise.
-            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            #[inline]
-            pub fn comp_ne(self, rhs: Self) -> Self {
-                let a: BigInt = self.into();
-                let b: BigInt = rhs.into();
-                if a != b {
-                    let one = Self::from_literal(1);
-                    (one << ($bits - 1)) - one
-                } else {
-                    Self::default()
-                }
-            }
+            // TODO : dependency on 'from_literal'
+            // /// Produces a new integer which is all ones if the first argument is different from
+            // /// the second argument, and all zeroes otherwise.
+            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            // #[inline]
+            // pub fn comp_ne(self, rhs: Self) -> Self {
+            //     let a: BigInt = self.into();
+            //     let b: BigInt = rhs.into();
+            //     if a != b {
+            //         let one = Self::from_literal(1);
+            //         (one << ($bits - 1)) - one
+            //     } else {
+            //         Self::default()
+            //     }
+            // }
 
-            /// Produces a new integer which is all ones if the first argument is greater than or
-            /// equal to the second argument, and all zeroes otherwise.
-            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            #[inline]
-            pub fn comp_gte(self, rhs: Self) -> Self {
-                let a: BigInt = self.into();
-                let b: BigInt = rhs.into();
-                if a >= b {
-                    let one = Self::from_literal(1);
-                    (one << ($bits - 1)) - one
-                } else {
-                    Self::default()
-                }
-            }
+            // TODO : dependency on 'from_literal'
+            // /// Produces a new integer which is all ones if the first argument is greater than or
+            // /// equal to the second argument, and all zeroes otherwise.
+            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            // #[inline]
+            // pub fn comp_gte(self, rhs: Self) -> Self {
+            //     let a: BigInt = self.into();
+            //     let b: BigInt = rhs.into();
+            //     if a >= b {
+            //         let one = Self::from_literal(1);
+            //         (one << ($bits - 1)) - one
+            //     } else {
+            //         Self::default()
+            //     }
+            // }
 
-            /// Produces a new integer which is all ones if the first argument is strictly greater
-            /// than the second argument, and all zeroes otherwise.
-            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            #[inline]
-            pub fn comp_gt(self, rhs: Self) -> Self {
-                let a: BigInt = self.into();
-                let b: BigInt = rhs.into();
-                if a > b {
-                    let one = Self::from_literal(1);
-                    (one << ($bits - 1)) - one
-                } else {
-                    Self::default()
-                }
-            }
+            // TODO : dependency on 'from_literal'
+            // /// Produces a new integer which is all ones if the first argument is strictly greater
+            // /// than the second argument, and all zeroes otherwise.
+            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            // #[inline]
+            // pub fn comp_gt(self, rhs: Self) -> Self {
+            //     let a: BigInt = self.into();
+            //     let b: BigInt = rhs.into();
+            //     if a > b {
+            //         let one = Self::from_literal(1);
+            //         (one << ($bits - 1)) - one
+            //     } else {
+            //         Self::default()
+            //     }
+            // }
 
-            /// Produces a new integer which is all ones if the first argument is less than or
-            /// equal to the second argument, and all zeroes otherwise.
-            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            #[inline]
-            pub fn comp_lte(self, rhs: Self) -> Self {
-                let a: BigInt = self.into();
-                let b: BigInt = rhs.into();
-                if a <= b {
-                    let one = Self::from_literal(1);
-                    (one << ($bits - 1)) - one
-                } else {
-                    Self::default()
-                }
-            }
+            // TODO : dependency on 'from_literal'
+            // /// Produces a new integer which is all ones if the first argument is less than or
+            // /// equal to the second argument, and all zeroes otherwise.
+            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            // #[inline]
+            // pub fn comp_lte(self, rhs: Self) -> Self {
+            //     let a: BigInt = self.into();
+            //     let b: BigInt = rhs.into();
+            //     if a <= b {
+            //         let one = Self::from_literal(1);
+            //         (one << ($bits - 1)) - one
+            //     } else {
+            //         Self::default()
+            //     }
+            // }
 
-            /// Produces a new integer which is all ones if the first argument is strictly less than
-            /// the second argument, and all zeroes otherwise.
-            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            #[inline]
-            pub fn comp_lt(self, rhs: Self) -> Self {
-                let a: BigInt = self.into();
-                let b: BigInt = rhs.into();
-                if a < b {
-                    let one = Self::from_literal(1);
-                    (one << ($bits - 1)) - one
-                } else {
-                    Self::default()
-                }
-            }
+            // // TODO : dependency on 'from_literal'
+            // /// Produces a new integer which is all ones if the first argument is strictly less than
+            // /// the second argument, and all zeroes otherwise.
+            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            // #[inline]
+            // pub fn comp_lt(self, rhs: Self) -> Self {
+            //     let a: BigInt = self.into();
+            //     let b: BigInt = rhs.into();
+            //     if a < b {
+            //         let one = Self::from_literal(1);
+            //         (one << ($bits - 1)) - one
+            //     } else {
+            //         Self::default()
+            //     }
+            // }
         }
-    };
+   };
 }
 
 #[macro_export]
