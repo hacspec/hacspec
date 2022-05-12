@@ -12,7 +12,6 @@ pub use hacspec_lib::*;
 #[cfg(not(feature = "hacspec"))]
 extern crate creusot_contracts;
 
-
 #[cfg(not(feature = "hacspec"))]
 pub use creusot_contracts::*;
 
@@ -25,6 +24,16 @@ public_nat_mod!(
     bit_size_of_field: 256,
     modulo_value: "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
 );
+    
+// #[cfg(not(feature = "hacspec"))]
+// #[cfg(not(feature = "contracts"))]
+// impl creusot_contracts::Model for FieldCanvas {
+//     type ModelTy = FieldCanvas;
+//     fn model (self) -> FieldCanvas {
+//         self
+//     }
+// }
+
 
 // #[cfg(not(feature = "hacspec"))]
 // #[derive(Clone, Copy)]

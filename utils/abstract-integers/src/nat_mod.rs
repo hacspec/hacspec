@@ -49,129 +49,135 @@ macro_rules! modular_integer {
         //     }
         // }
 
-        // impl From<$base> for $name {
-        //     fn from(x: $base) -> $name {
-        //         $name(x.rem($max))
-        //     }
-        // }
+        // TODO -- creusot error 'unsupported constant expression, try binding this to a variable. See issue #163'
+        impl From<$base> for $name {
+            fn from(x: $base) -> $name {
+                $name(x.rem($max))
+            }
+        }
 
-        // impl Into<$base> for $name {
-        //     fn into(self) -> $base {
-        //         self.0
-        //     }
-        // }
+        impl Into<$base> for $name {
+            fn into(self) -> $base {
+                self.0
+            }
+        }
 
-        // impl $name {
-        //     pub fn from_canvas(x: $base) -> $name {
-        //         $name(x.rem($max))
-        //     }
-        //     pub fn into_canvas(self) -> $base {
-        //         self.0
-        //     }
+        impl $name {
+            pub fn from_canvas(x: $base) -> $name {
+                $name(x.rem($max))
+            }
+            pub fn into_canvas(self) -> $base {
+                self.0
+            }
 
-        //     pub fn max() -> $base {
-        //         $max
-        //     }
+            pub fn max() -> $base {
+                $max
+            }
 
-        //     pub fn declassify(self) -> BigInt {
-        //         let a: $base = self.into();
-        //         a.into()
-        //     }
+            pub fn declassify(self) -> BigInt {
+                let a: $base = self.into();
+                a.into()
+            }
 
-        //     #[allow(dead_code)]
-        //     pub fn from_hex(s: &str) -> Self {
-        //         $base::from_hex(s).into()
-        //     }
+            #[trusted]
+            #[allow(dead_code)]
+            pub fn from_hex(s: &str) -> Self {
+                $base::from_hex(s).into()
+            }
 
-        //     #[allow(dead_code)]
-        //     pub fn from_be_bytes(v: &[u8]) -> Self {
-        //         $base::from_be_bytes(v).into()
-        //     }
+            #[allow(dead_code)]
+            pub fn from_be_bytes(v: &[u8]) -> Self {
+                $base::from_be_bytes(v).into()
+            }
 
-        //     #[allow(dead_code)]
-        //     pub fn to_be_bytes(self) -> Vec<u8> {
-        //         $base::to_be_bytes(self.into()).to_vec()
-        //     }
+            #[allow(dead_code)]
+            pub fn to_be_bytes(self) -> Vec<u8> {
+                $base::to_be_bytes(self.into()).as_ref().to_vec()
+            }
 
-        //     #[allow(dead_code)]
-        //     pub fn from_le_bytes(v: &[u8]) -> Self {
-        //         $base::from_le_bytes(v).into()
-        //     }
+            #[allow(dead_code)]
+            pub fn from_le_bytes(v: &[u8]) -> Self {
+                $base::from_le_bytes(v).into()
+            }
 
-        //     #[allow(dead_code)]
-        //     pub fn to_le_bytes(self) -> Vec<u8> {
-        //         $base::to_le_bytes(self.into()).to_vec()
-        //     }
+            #[allow(dead_code)]
+            pub fn to_le_bytes(self) -> Vec<u8> {
+                $base::to_le_bytes(self.into()).as_ref().to_vec()
+            }
 
-        //     /// Gets the `i`-th least significant bit of this integer.
-        //     #[allow(dead_code)]
-        //     pub fn bit(self, i: usize) -> bool {
-        //         $base::bit(self.into(), i)
-        //     }
+            // TODO: missing
+            // /// Gets the `i`-th least significant bit of this integer.
+            // #[allow(dead_code)]
+            // pub fn bit(self, i: usize) -> bool {
+            //     $base::bit(self.into(), i)
+            // }
 
-        //     #[allow(dead_code)]
-        //     pub fn from_literal(x: u128) -> Self {
-        //         let big_x = BigUint::from(x);
-        //         if big_x > $name::max().into() {
-        //             panic!("literal {} too big for type {}", x, stringify!($name));
-        //         }
-        //         $name(big_x.into())
-        //     }
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
+            #[allow(dead_code)]
+            pub fn from_literal(x: u64) -> Self {
+                let big_x = BigUint::from(x);
+                // if big_x > $name::max().into() {
+                //     panic!("literal {} too big for type {}", x, stringify!($name));
+                // }
+                $name(big_x.into())
+            }
 
-        //     #[allow(dead_code)]
-        //     pub fn from_signed_literal(x: i128) -> Self {
-        //         let big_x = BigUint::from(x as u128);
-        //         if big_x > $name::max().into() {
-        //             panic!("literal {} too big for type {}", x, stringify!($name));
-        //         }
-        //         $name(big_x.into())
-        //     }
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
+            #[allow(dead_code)]
+            pub fn from_signed_literal(x: i64) -> Self {
+                let big_x = BigUint::from(x as u64);
+                // if big_x > $name::max().into() {
+                //     panic!("literal {} too big for type {}", x, stringify!($name));
+                // }
+                $name(big_x.into())
+            }
 
-        //     #[inline]
-        //     pub fn comp_eq(self, rhs: Self) -> Self {
-        //         let x: $base = self.into();
-        //         x.comp_eq(rhs.into()).into()
-        //     }
+            #[inline]
+            pub fn comp_eq(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_eq(rhs.into()).into()
+            }
 
-        //     #[inline]
-        //     pub fn comp_ne(self, rhs: Self) -> Self {
-        //         let x: $base = self.into();
-        //         x.comp_ne(rhs.into()).into()
-        //     }
+            #[inline]
+            pub fn comp_ne(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_ne(rhs.into()).into()
+            }
 
-        //     #[inline]
-        //     pub fn comp_gte(self, rhs: Self) -> Self {
-        //         let x: $base = self.into();
-        //         x.comp_gte(rhs.into()).into()
-        //     }
+            #[inline]
+            pub fn comp_gte(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_gte(rhs.into()).into()
+            }
 
-        //     #[inline]
-        //     pub fn comp_gt(self, rhs: Self) -> Self {
-        //         let x: $base = self.into();
-        //         x.comp_gt(rhs.into()).into()
-        //     }
+            #[inline]
+            pub fn comp_gt(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_gt(rhs.into()).into()
+            }
 
-        //     #[inline]
-        //     pub fn comp_lte(self, rhs: Self) -> Self {
-        //         let x: $base = self.into();
-        //         x.comp_lte(rhs.into()).into()
-        //     }
+            #[inline]
+            pub fn comp_lte(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_lte(rhs.into()).into()
+            }
 
-        //     #[inline]
-        //     pub fn comp_lt(self, rhs: Self) -> Self {
-        //         let x: $base = self.into();
-        //         x.comp_lt(rhs.into()).into()
-        //     }
-      
-        // /// Negate the value modulo max: `mod_value - self`
-        // #[inline]
-        // pub fn neg(self) -> Self {
-        //     let mod_val: BigInt = $max.into();
-        //     let s: $base = self.into();
-        //     let s: BigInt = s.into();
-        //     let result: $base = mod_val.sub(s).into();
-        //     result.into()
-        // }
+            #[inline]
+            pub fn comp_lt(self, rhs: Self) -> Self {
+                let x: $base = self.into();
+                x.comp_lt(rhs.into()).into()
+            }
+        
+            /// Negate the value modulo max: `mod_value - self`
+            #[inline]
+            pub fn neg(self) -> Self {
+                let mod_val: BigInt = $max.into();
+                let s: $base = self.into();
+                let s: BigInt = s.into();
+                let result: $base = mod_val.sub(s).into();
+                result.into()
+            }
+        }
     };
 }
 
@@ -299,188 +305,183 @@ macro_rules! abstract_public_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         modular_integer!($name, $base, $max);
 
-        // // TODO: implement PartialEq, Eq, PartialOrd, Ord,
-        // impl PartialOrd for $name {
-        //     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        //         Some(self.cmp(other))
-        //     }
-        // }
-        // impl Ord for $name {
-        //     fn cmp(&self, other: &Self) -> Ordering {
-        //         self.0.cmp(&other.0)
-        //     }
-        // }
-        // impl PartialEq for $name {
-        //     fn eq(&self, other: &Self) -> bool {
-        //         self.0 == other.0
-        //     }
-        // }
-        // impl Eq for $name {}
+        // TODO: implement PartialEq, Eq, PartialOrd, Ord,
+        impl PartialOrd for $name {
+            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+        impl Ord for $name {
+            fn cmp(&self, other: &Self) -> Ordering {
+                self.0.cmp(&other.0)
+            }
+        }
+        impl PartialEq for $name {
+            fn eq(&self, other: &Self) -> bool {
+                self.0.is_eq(&other.0)
+            }
+        }
+        impl Eq for $name {}
 
-        // /// **Warning**: wraps on overflow.
-        // impl Add for $name {
-        //     type Output = $name;
-        //     fn add(self, rhs: $name) -> $name {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         let a: BigUint = a.into();
-        //         let b: BigUint = b.into();
-        //         let c: BigUint = a + b;
-        //         let max: BigUint = $max.into();
-        //         let d: BigUint = c % max;
-        //         let d: $base = d.into();
-        //         d.into()
-        //     }
-        // }
+        /// **Warning**: wraps on overflow.
+        impl Add for $name {
+            type Output = $name;
+            fn add(self, rhs: $name) -> $name {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let c: BigUint = a + b;
+                let max: BigUint = $max.into();
+                let d: BigUint = c % max;
+                let d: $base = d.into();
+                d.into()
+            }
+        }
 
-        // /// **Warning**: wraps on underflow.
-        // impl Sub for $name {
-        //     type Output = $name;
-        //     fn sub(self, rhs: $name) -> $name {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         let a: BigUint = a.into();
-        //         let b: BigUint = b.into();
-        //         let max: BigUint = $max.into();
-        //         let c: BigUint = if b > a { max.clone() - b + a } else { a - b };
-        //         let d: BigUint = c % max;
-        //         let d: $base = d.into();
-        //         d.into()
-        //     }
-        // }
+        /// **Warning**: wraps on underflow.
+        impl Sub for $name {
+            type Output = $name;
+            fn sub(self, rhs: $name) -> $name {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let max: BigUint = $max.into();
+                let c: BigUint = if b > a { max.clone() - b + a } else { a - b };
+                let d: BigUint = c % max;
+                let d: $base = d.into();
+                d.into()
+            }
+        }
 
-        // /// **Warning**: wraps on overflow.
-        // impl Mul for $name {
-        //     type Output = $name;
-        //     fn mul(self, rhs: $name) -> $name {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         let a: BigUint = a.into();
-        //         let b: BigUint = b.into();
-        //         let c: BigUint = a * b;
-        //         let max: BigUint = $max.into();
-        //         let d: BigUint = c % max;
-        //         let d: $base = d.into();
-        //         d.into()
-        //     }
-        // }
+        /// **Warning**: wraps on overflow.
+        impl Mul for $name {
+            type Output = $name;
+            fn mul(self, rhs: $name) -> $name {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let c: BigUint = a * b;
+                let max: BigUint = $max.into();
+                let d: BigUint = c % max;
+                let d: $base = d.into();
+                d.into()
+            }
+        }
 
-        // impl Div for $name {
-        //     type Output = $name;
-        //     fn div(self, rhs: $name) -> $name {
-        //         self * rhs.inv()
-        //     }
-        // }
+        impl Div for $name {
+            type Output = $name;
+            fn div(self, rhs: $name) -> $name {
+                self * rhs.inv()
+                // let a: $base = self.into();
+                // let b: $base = rhs.into();
+                // let a: BigUint = a.into();
+                // let b: BigUint = b.into();
+                // let c: BigUint = a / b;
+                // let max: BigUint = $max.into();
+                // let d: BigUint = c % max;
+                // let d: $base = d.into();
+                // d.into()
+            }
+        }
 
-        // /// **Warning**: panics on division by 0.
-        // impl Div for $name {
-        //     type Output = $name;
-        //     fn div(self, rhs: $name) -> $name {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         let a: BigUint = a.into();
-        //         let b: BigUint = b.into();
-        //         let c: BigUint = a / b;
-        //         let max: BigUint = $max.into();
-        //         let d: BigUint = c % max;
-        //         let d: $base = d.into();
-        //         d.into()
-        //     }
-        // }
+        /// **Warning**: panics on division by 0.
+        impl Rem for $name {
+            type Output = $name;
+            fn rem(self, rhs: $name) -> $name {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                let a: BigUint = a.into();
+                let b: BigUint = b.into();
+                let c: BigUint = a % b;
+                let max: BigUint = $max.into();
+                let d: BigUint = c % max;
+                let d: $base = d.into();
+                d.into()
+            }
+        }
 
-        // /// **Warning**: panics on division by 0.
-        // impl Rem for $name {
-        //     type Output = $name;
-        //     fn rem(self, rhs: $name) -> $name {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         let a: BigUint = a.into();
-        //         let b: BigUint = b.into();
-        //         let c: BigUint = a % b;
-        //         let max: BigUint = $max.into();
-        //         let d: BigUint = c % max;
-        //         let d: $base = d.into();
-        //         d.into()
-        //     }
-        // }
+        impl Not for $name {
+            type Output = $name;
+            fn not(self) -> Self::Output {
+                let a: $base = self.into();
+                (!a).into()
+            }
+        }
 
-        // impl Not for $name {
-        //     type Output = $name;
-        //     fn not(self) -> Self::Output {
-        //         let a: $base = self.into();
-        //         (!a).into()
-        //     }
-        // }
+        impl BitOr for $name {
+            type Output = $name;
+            fn bitor(self, rhs: Self) -> Self::Output {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a | b).into()
+            }
+        }
 
-        // impl BitOr for $name {
-        //     type Output = $name;
-        //     fn bitor(self, rhs: Self) -> Self::Output {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         (a | b).into()
-        //     }
-        // }
+        impl BitXor for $name {
+            type Output = $name;
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a ^ b).into()
+            }
+        }
 
-        // impl BitXor for $name {
-        //     type Output = $name;
-        //     fn bitxor(self, rhs: Self) -> Self::Output {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         (a ^ b).into()
-        //     }
-        // }
+        impl BitAnd for $name {
+            type Output = $name;
+            fn bitand(self, rhs: Self) -> Self::Output {
+                let a: $base = self.into();
+                let b: $base = rhs.into();
+                (a & b).into()
+            }
+        }
 
-        // impl BitAnd for $name {
-        //     type Output = $name;
-        //     fn bitand(self, rhs: Self) -> Self::Output {
-        //         let a: $base = self.into();
-        //         let b: $base = rhs.into();
-        //         (a & b).into()
-        //     }
-        // }
+        impl Shr<usize> for $name {
+            type Output = $name;
+            fn shr(self, rhs: usize) -> Self::Output {
+                let a: $base = self.into();
+                (a >> rhs).into()
+            }
+        }
 
-        // impl Shr<usize> for $name {
-        //     type Output = $name;
-        //     fn shr(self, rhs: usize) -> Self::Output {
-        //         let a: $base = self.into();
-        //         (a >> rhs).into()
-        //     }
-        // }
+        impl Shl<usize> for $name {
+            type Output = $name;
+            fn shl(self, rhs: usize) -> Self::Output {
+                let a: $base = self.into();
+                (a << rhs).into()
+            }
+        }
 
-        // impl Shl<usize> for $name {
-        //     type Output = $name;
-        //     fn shl(self, rhs: usize) -> Self::Output {
-        //         let a: $base = self.into();
-        //         (a << rhs).into()
-        //     }
-        // }
+        impl $name {
+            #[allow(dead_code)]
+            pub fn inv(self) -> Self {
+                let base: $base = self.into();
+                base.inv(Self::max()).into()
+            }
 
-        // impl $name {
-        //     #[allow(dead_code)]
-        //     pub fn inv(self) -> Self {
-        //         let base: $base = self.into();
-        //         base.inv(Self::max()).into()
-        //     }
+            #[allow(dead_code)]
+            pub fn pow_felem(self, exp: Self) -> Self {
+                let base: $base = self.into();
+                base.pow_felem(exp.into(), Self::max()).into()
+            }
+            
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
+            /// Returns self to the power of the argument.
+            /// The exponent is a u128.
+            #[allow(dead_code)]
+            pub fn pow(self, exp: u64) -> Self {
+                let base: $base = self.into();
+                base.pow(exp, Self::max()).into()
+            }
 
-        //     #[allow(dead_code)]
-        //     pub fn pow_felem(self, exp: Self) -> Self {
-        //         let base: $base = self.into();
-        //         base.pow_felem(exp.into(), Self::max()).into()
-        //     }
-        //     /// Returns self to the power of the argument.
-        //     /// The exponent is a u128.
-        //     #[allow(dead_code)]
-        //     pub fn pow(self, exp: u128) -> Self {
-        //         let base: $base = self.into();
-        //         base.pow(exp, Self::max()).into()
-        //     }
-
-        //     /// Returns 2 to the power of the argument
-        //     #[allow(dead_code)]
-        //     pub fn pow2(x: usize) -> $name {
-        //         $base::pow2(x).into()
-        //     }
-        // }
+            /// Returns 2 to the power of the argument
+            #[allow(dead_code)]
+            pub fn pow2(x: usize) -> $name {
+                $base::pow2(x).into()
+            }
+        }
     };
 }
 

@@ -284,11 +284,11 @@ macro_rules! abstract_public {
                     a - b
                 } else {
                     a.checked_sub(&b).unwrap() // _or_else(|| {
-                    //     panic!(
-                    //         "bounded substraction underflow for type {}",
-                    //         stringify!($name)
-                    //     )
-                    // })
+                                               //     panic!(
+                                               //         "bounded substraction underflow for type {}",
+                                               //         stringify!($name)
+                                               //     )
+                                               // })
                 };
                 c.into()
             }
@@ -392,41 +392,106 @@ macro_rules! abstract_public {
         }
 
         // TODO : requires equality of bigint in creusot -- 'the trait `creusot_contracts::Model` is not implemented for `hacspec_lib::BigInt`'
-        // impl PartialEq for $name {
-        //     fn eq(&self, rhs: &$name) -> bool {
-        //         let a: BigInt = (*self).into();
-        //         let b: BigInt = (*rhs).into();
-        //         // a == b
-        //     }
-        // }
+        impl PartialEq for $name {
+            #[cfg(feature = "std")]
+            fn eq(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { std::cmp::Ordering::Equal => true , _ => false }
+            }
+            #[cfg(not(feature = "std"))]
+            fn eq(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { core::cmp::Ordering::Equal => true , _ => false }
+            }
+        }
 
-        // impl Eq for $name {}
+        impl $name {
+            #[cfg(feature = "std")]
+            fn is_eq(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { std::cmp::Ordering::Equal => true , _ => false }
+            }
+            #[cfg(not(feature = "std"))]
+            fn is_eq(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { core::cmp::Ordering::Equal => true , _ => false }
+            }
 
-        // impl PartialOrd for $name {
-        //     #[cfg(feature = "std")]
-        //     fn partial_cmp(&self, other: &$name) -> Option<std::cmp::Ordering> {
-        //         let a: BigInt = (*self).into();
-        //         let b: BigInt = (*other).into();
-        //         a.partial_cmp(&b)
-        //     }
-        //     #[cfg(not(feature = "std"))]
-        //     fn partial_cmp(&self, other: &$name) -> Option<core::cmp::Ordering> {
-        //         let a: BigInt = (*self).into();
-        //         let b: BigInt = (*other).into();
-        //         a.partial_cmp(&b)
-        //     }
-        // }
+            fn is_ne(&self, rhs: &$name) -> bool {
+               (*self).is_eq(rhs)
+            }
 
-        // impl Ord for $name {
-        //     #[cfg(feature = "std")]
-        //     fn cmp(&self, other: &$name) -> std::cmp::Ordering {
-        //         self.partial_cmp(other).unwrap()
-        //     }
-        //     #[cfg(not(feature = "std"))]
-        //     fn cmp(&self, other: &$name) -> core::cmp::Ordering {
-        //         self.partial_cmp(other).unwrap()
-        //     }
-        // }
+            #[cfg(feature = "std")]
+            fn is_lt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { std::cmp::Ordering::Less => true , _ => false }
+            }
+            #[cfg(not(feature = "std"))]
+            fn is_lt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { core::cmp::Ordering::Less => true , _ => false }
+            }
+
+            #[cfg(feature = "std")]
+            fn is_gt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { std::cmp::Ordering::Greater => true , _ => false }
+            }
+            #[cfg(not(feature = "std"))]
+            fn is_gt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) { core::cmp::Ordering::Greater => true , _ => false }
+            }
+            
+            fn is_lte(&self, rhs: &$name) -> bool {
+               (*self).is_eq(rhs) || (*self).is_lt(rhs)
+            }
+
+            fn is_gte(&self, rhs: &$name) -> bool {
+               (*self).is_eq(rhs) || (*self).is_gt(rhs)
+            }
+
+        }
+        
+        impl Eq for $name {}
+
+        impl PartialOrd for $name {
+            #[cfg(feature = "std")]
+            fn partial_cmp(&self, other: &$name) -> Option<std::cmp::Ordering> {
+                Some((*self).cmp(other))
+            }
+            #[cfg(not(feature = "std"))]
+            fn partial_cmp(&self, other: &$name) -> Option<core::cmp::Ordering> {
+                Some((*self).cmp(other))
+            }
+        }
+
+        impl Ord for $name {
+            #[cfg(feature = "std")]
+            fn cmp(&self, other: &$name) -> std::cmp::Ordering {
+                let signed_cmp = (*self).signed.cmp(&(*other).signed);
+                match signed_cmp { std::cmp::Ordering::Equal => (), _ => {
+                    return signed_cmp;
+                }};
+
+                match ((*self).sign, (*rhs).sign) {
+                    (Sign::Minus, Sign::Minus) => (*rhs).b.cmp(&(*self).b),
+                    (Sign::Minus, _) => std::cmp::Ordering::Less,
+                    (Sign::NoSign, Sign::NoSign) => std::cmp::Ordering::Equal,
+                    (Sign::Plus, Sign::Plus) => (*self).b.cmp(&(*rhs).b),
+                    (Sign::Plus, _) => std::cmp::Ordering::Greater,
+                }
+            }
+            #[cfg(not(feature = "std"))]
+            fn cmp(&self, other: &$name) -> core::cmp::Ordering {
+                let signed_cmp = (*self).signed.cmp(&(*other).signed);
+                match signed_cmp { core::cmp::Ordering::Equal => (), _ => {
+                    return signed_cmp;
+                }};
+                
+                match ((*self).sign, (*other).sign) {
+                    (Sign::Minus, Sign::Minus) => (*other).b.cmp(&(*self).b),
+                    (Sign::Minus, _) => core::cmp::Ordering::Less,
+                    (Sign::NoSign, Sign::NoSign) => core::cmp::Ordering::Equal,
+                    (Sign::Plus, Sign::Plus) => (*self).b.cmp(&(*other).b),
+                    (Sign::Plus, _) => core::cmp::Ordering::Greater,
+                    (Sign::NoSign, Sign::Minus) => core::cmp::Ordering::Greater,
+                    (Sign::NoSign, Sign::Plus) => core::cmp::Ordering::Less,
+                }
+            }
+        }
     };
 }
 
@@ -436,6 +501,7 @@ macro_rules! abstract_unsigned {
         abstract_int!($name, $bits, false);
 
         impl $name {
+            #[trusted]
             #[allow(dead_code)]
             pub fn from_hex(s: &str) -> Self {
                 BigInt::from_bytes_be(Sign::Plus, &Self::hex_string_to_bytes(s)).into()
@@ -529,100 +595,88 @@ macro_rules! abstract_unsigned {
             }
 
             // TODO : dependency on 'from_literal'
-            // /// Produces a new integer which is all ones if the two arguments are equal and
-            // /// all zeroes otherwise.
-            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            // #[inline]
-            // pub fn comp_eq(self, rhs: Self) -> Self {
-            //     let a: BigInt = self.into();
-            //     let b: BigInt = rhs.into();
-            //     if a == b {
-            //         let one = Self::from_literal(1);
-            //         (one << ($bits - 1)) - one
-            //     } else {
-            //         Self::default()
-            //     }
-            // }
+            /// Produces a new integer which is all ones if the two arguments are equal and
+            /// all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_eq(self, rhs: Self) -> Self {
+                if self.is_eq(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
             // TODO : dependency on 'from_literal'
-            // /// Produces a new integer which is all ones if the first argument is different from
-            // /// the second argument, and all zeroes otherwise.
-            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            // #[inline]
-            // pub fn comp_ne(self, rhs: Self) -> Self {
-            //     let a: BigInt = self.into();
-            //     let b: BigInt = rhs.into();
-            //     if a != b {
-            //         let one = Self::from_literal(1);
-            //         (one << ($bits - 1)) - one
-            //     } else {
-            //         Self::default()
-            //     }
-            // }
+            /// Produces a new integer which is all ones if the first argument is different from
+            /// the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_ne(self, rhs: Self) -> Self {
+                if self.is_ne(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
             // TODO : dependency on 'from_literal'
-            // /// Produces a new integer which is all ones if the first argument is greater than or
-            // /// equal to the second argument, and all zeroes otherwise.
-            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            // #[inline]
-            // pub fn comp_gte(self, rhs: Self) -> Self {
-            //     let a: BigInt = self.into();
-            //     let b: BigInt = rhs.into();
-            //     if a >= b {
-            //         let one = Self::from_literal(1);
-            //         (one << ($bits - 1)) - one
-            //     } else {
-            //         Self::default()
-            //     }
-            // }
+            /// Produces a new integer which is all ones if the first argument is greater than or
+            /// equal to the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_gte(self, rhs: Self) -> Self {
+                if self.is_gte(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
             // TODO : dependency on 'from_literal'
-            // /// Produces a new integer which is all ones if the first argument is strictly greater
-            // /// than the second argument, and all zeroes otherwise.
-            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            // #[inline]
-            // pub fn comp_gt(self, rhs: Self) -> Self {
-            //     let a: BigInt = self.into();
-            //     let b: BigInt = rhs.into();
-            //     if a > b {
-            //         let one = Self::from_literal(1);
-            //         (one << ($bits - 1)) - one
-            //     } else {
-            //         Self::default()
-            //     }
-            // }
+            /// Produces a new integer which is all ones if the first argument is strictly greater
+            /// than the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_gt(self, rhs: Self) -> Self {
+                if self.is_gt(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
             // TODO : dependency on 'from_literal'
-            // /// Produces a new integer which is all ones if the first argument is less than or
-            // /// equal to the second argument, and all zeroes otherwise.
-            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            // #[inline]
-            // pub fn comp_lte(self, rhs: Self) -> Self {
-            //     let a: BigInt = self.into();
-            //     let b: BigInt = rhs.into();
-            //     if a <= b {
-            //         let one = Self::from_literal(1);
-            //         (one << ($bits - 1)) - one
-            //     } else {
-            //         Self::default()
-            //     }
-            // }
+            /// Produces a new integer which is all ones if the first argument is less than or
+            /// equal to the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_lte(self, rhs: Self) -> Self {
+                if self.is_lte(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
-            // // TODO : dependency on 'from_literal'
-            // /// Produces a new integer which is all ones if the first argument is strictly less than
-            // /// the second argument, and all zeroes otherwise.
-            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            // #[inline]
-            // pub fn comp_lt(self, rhs: Self) -> Self {
-            //     let a: BigInt = self.into();
-            //     let b: BigInt = rhs.into();
-            //     if a < b {
-            //         let one = Self::from_literal(1);
-            //         (one << ($bits - 1)) - one
-            //     } else {
-            //         Self::default()
-            //     }
-            // }
+            // TODO : dependency on 'from_literal'
+            /// Produces a new integer which is all ones if the first argument is strictly less than
+            /// the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_lt(self, rhs: Self) -> Self {
+                if self.is_lt(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
         }
    };
 }

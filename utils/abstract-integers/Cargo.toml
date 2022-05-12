@@ -13,6 +13,12 @@ readme = "README.md"
 num = { version = "0.4", default-features = false }
 num-bigint = { version = "0.4", default-features = false }
 
+[dependencies.creusot-contracts]
+git = "https://github.com/xldenis/creusot/"
+branch = "master"
+package = "creusot-contracts"
+
 [features]
 default = ["std"]
 std = ["num/std", "num-bigint/std"]
+contracts = []

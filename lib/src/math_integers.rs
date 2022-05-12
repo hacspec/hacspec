@@ -1091,7 +1091,13 @@ macro_rules! nat_mod {
 macro_rules! public_nat_mod {
     (type_name: $name:ident, type_of_canvas: $base:ident,  bit_size_of_field: $bits:literal, modulo_value: $n:literal) => {
         unsigned_public_integer!($base, $bits);
-        abstract_public_modular_integer!($name, $base, $base::from_hex($n));
+
+        #[trusted]
+        pub fn modulo_value () -> $base {
+            $base::from_hex($n)
+        }
+        
+        abstract_public_modular_integer!($name, $base, modulo_value());
 
         // impl $name {
         //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
