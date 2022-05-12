@@ -79,7 +79,15 @@ macro_rules! modular_integer {
                 a.into()
             }
 
-            #[trusted]
+            #[cfg(not(feature = "hacspec"))]
+            #[creusot_contracts::trusted]
+            #[allow(dead_code)]
+            pub fn from_hex(s: &str) -> Self {
+                $base::from_hex(s).into()
+            }
+
+            #[cfg(feature = "hacspec")]
+            #[hacspec_attributes::trusted]
             #[allow(dead_code)]
             pub fn from_hex(s: &str) -> Self {
                 $base::from_hex(s).into()
@@ -105,12 +113,12 @@ macro_rules! modular_integer {
                 $base::to_le_bytes(self.into()).as_ref().to_vec()
             }
 
-            // TODO: missing
-            // /// Gets the `i`-th least significant bit of this integer.
-            // #[allow(dead_code)]
-            // pub fn bit(self, i: usize) -> bool {
-            //     $base::bit(self.into(), i)
-            // }
+            #[creusot_contracts::trusted]
+            /// Gets the `i`-th least significant bit of this integer.
+            #[allow(dead_code)]
+            pub fn bit(self, i: usize) -> bool {
+                $base::bit(self.into(), i)
+            }
 
             // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[allow(dead_code)]

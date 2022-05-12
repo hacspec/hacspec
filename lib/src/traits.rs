@@ -61,7 +61,7 @@ pub trait SeqTrait<T: Clone>:
 /// types. It offers bit manipulation, instantiation from literal, and convenient
 /// constants.
 pub trait Integer: Numeric {
-    const NUM_BITS: usize;
+    fn NUM_BITS() -> usize;
 
     // Some useful values.
     // Not constants because math integers can't do that.
@@ -73,7 +73,8 @@ pub trait Integer: Numeric {
     fn TWO() -> Self;
 
     /// Get an integer with value `val`.
-    fn from_literal(val: u128) -> Self;
+    // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
+    fn from_literal(val: u64) -> Self;
 
     /// Read a hex string (starting with 0x) into an `Integer`.
     fn from_hex_string(s: &String) -> Self;

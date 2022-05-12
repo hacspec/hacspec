@@ -15,12 +15,18 @@ secret_integers = { path = "../utils/secret-integers", optional = true, version 
 abstract_integers = { path = "../utils/abstract-integers", version = "0.1.5", default-features = false } #FIXME: publish new version
 hacspec-attributes = { path = "../utils/attributes",  optional = true, version = "0.1.0-beta.1" }
 
+[dependencies.creusot-contracts]
+git = "https://github.com/xldenis/creusot/"
+branch = "master"
+package = "creusot-contracts"
+
 [features]
 default = ["std"]
 alloc = ["secret_integers"]
 std = ["alloc", "secret_integers", "num/std", "abstract_integers/std"]
 
 use_attributes = ["hacspec-attributes", "hacspec-attributes/print_attributes"]
+contracts = []
 
 [dev-dependencies]
 rand = "0.8"

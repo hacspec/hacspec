@@ -61,19 +61,20 @@ macro_rules! abstract_int {
             }
 
             // TODO -- fix creusot: 'unsupported constant expression, try binding this to a variable. See issue #163'
-            // /// Gets the `i`-th least significant bit of this integer.
-            // #[allow(dead_code)]
-            // pub fn bit(self, i: usize) -> bool {
-            //     assert!(
-            //         i < self.b.as_ref().len() * 8,
-            //         "the bit queried should be lower than the size of the integer representation: {} < {}",
-            //         i,
-            //         self.b.as_ref().len() * 8
-            //     );
-            //     let bigint : BigInt = self.into();
-            //     let tmp: BigInt = bigint >> i;
-            //     (tmp & BigInt::one()).to_bytes_le().1[0] == 1
-            // }
+            #[creusot_contracts::trusted]
+            /// Gets the `i`-th least significant bit of this integer.
+            #[allow(dead_code)]
+            pub fn bit(self, i: usize) -> bool {
+                assert!(
+                    i < self.b.as_ref().len() * 8,
+                    "the bit queried should be lower than the size of the integer representation: {} < {}",
+                    i,
+                    self.b.as_ref().len() * 8
+                );
+                let bigint : BigInt = self.into();
+                let tmp: BigInt = bigint >> i;
+                (tmp & BigInt::one()).to_bytes_le().1[0] == 1
+            }
         }
 
         impl From<BigUint> for $name {
@@ -501,11 +502,20 @@ macro_rules! abstract_unsigned {
         abstract_int!($name, $bits, false);
 
         impl $name {
-            #[trusted]
+            #[cfg(not(feature = "hacspec"))]
+            #[creusot_contracts::trusted]
             #[allow(dead_code)]
             pub fn from_hex(s: &str) -> Self {
                 BigInt::from_bytes_be(Sign::Plus, &Self::hex_string_to_bytes(s)).into()
             }
+
+            #[cfg(feature = "hacspec")]
+            #[hacspec_attributes::trusted]
+            #[allow(dead_code)]
+            pub fn from_hex(s: &str) -> Self {
+                BigInt::from_bytes_be(Sign::Plus, &Self::hex_string_to_bytes(s)).into()
+            }
+
 
             #[cfg(feature = "std")]
             #[allow(dead_code)]

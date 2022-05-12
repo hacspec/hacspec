@@ -21,3 +21,11 @@ rand = "0.8"
 [[bench]]
 name = "benchmarks"
 harness = false
+
+[dependencies.creusot-contracts]
+git = "https://github.com/xldenis/creusot/"
+branch = "master"
+package = "creusot-contracts"
+
+[features]
+contracts = []

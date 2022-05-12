@@ -114,7 +114,11 @@ macro_rules! implement_public_mi {
     ($t:ty,$bits:literal,$true_val:expr) => {
         impl NumericCopy for $t {}
         impl Integer for $t {
-            const NUM_BITS: usize = $bits;
+            // const NUM_BITS: usize = $bits;
+            fn NUM_BITS () -> usize {
+                $bits
+            }
+
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ZERO() -> Self {
@@ -131,9 +135,10 @@ macro_rules! implement_public_mi {
                 2
             }
 
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_literal(val: u128) -> Self {
+            fn from_literal(val: u64) -> Self {
                 val as $t
             }
 
@@ -172,15 +177,15 @@ macro_rules! implement_public_mi {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
         }
         impl Numeric for $t {
@@ -417,7 +422,10 @@ macro_rules! implement_secret_mi {
     ($t:ident,$base:ty,$bits:literal) => {
         impl NumericCopy for $t {}
         impl Integer for $t {
-            const NUM_BITS: usize = $bits;
+            // const NUM_BITS: usize = $bits;
+            fn NUM_BITS () -> usize {
+                $bits
+            }
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -435,9 +443,10 @@ macro_rules! implement_secret_mi {
                 $t(2)
             }
 
+            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_literal(val: u128) -> Self {
+            fn from_literal(val: u64) -> Self {
                 Self::classify(val as $base)
             }
 
@@ -476,15 +485,15 @@ macro_rules! implement_secret_mi {
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_left(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
 
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn rotate_right(self, n: usize) -> Self {
                 // Taken from https://blog.regehr.org/archives/1063
-                assert!(n < Self::NUM_BITS);
-                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+                assert!(n < Self::NUM_BITS());
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
             }
         }
         impl Numeric for $t {

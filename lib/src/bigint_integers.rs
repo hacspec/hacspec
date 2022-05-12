@@ -3,7 +3,10 @@ use crate::prelude::*;
 
 impl Integer for BigInt {
     /// `NUM_BITS` is arbitrary for `BigInt`, so this i `0`.
-    const NUM_BITS: usize = 0;
+    // const NUM_BITS: usize = 0;
+    fn NUM_BITS () -> usize {
+        0
+    }
 
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
@@ -21,9 +24,10 @@ impl Integer for BigInt {
         BigInt::from(2)
     }
 
+    // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
-    fn from_literal(val: u128) -> Self {
+    fn from_literal(val: u64) -> Self {
         BigInt::from(val)
     }
 
@@ -63,16 +67,16 @@ impl Integer for BigInt {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn rotate_left(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
-        assert!(n < Self::NUM_BITS);
-        (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+        assert!(n < Self::NUM_BITS());
+        (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
     }
 
     #[allow(arithmetic_overflow)]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn rotate_right(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
-        assert!(n < Self::NUM_BITS);
-        (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
+        assert!(n < Self::NUM_BITS());
+        (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
     }
 }
 impl Numeric for BigInt {

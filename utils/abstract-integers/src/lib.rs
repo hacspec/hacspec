@@ -64,11 +64,28 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 // Re-exports
-pub use core::cmp::Ordering;
-pub use core::num::ParseIntError;
-pub use core::ops::*;
 pub use num::{traits, traits::identities::*, CheckedSub, Zero};
 pub use num_bigint::{BigInt, BigUint, Sign};
+
+#[cfg(feature = "std")]
+pub use std::cmp::Ordering;
+#[cfg(feature = "std")]
+pub use std::num::ParseIntError;
+#[cfg(feature = "std")]
+pub use std::ops::*;
+
+#[cfg(not(feature = "std"))]
+pub use core::cmp::Ordering;
+#[cfg(not(feature = "std"))]
+pub use core::num::ParseIntError;
+#[cfg(not(feature = "std"))]
+pub use core::ops::*;
+
+#[cfg(not(feature = "std"))]
+extern crate creusot_contracts;
+
+#[cfg(not(feature = "std"))]
+pub use creusot_contracts::*;
 
 pub mod abstract_int;
 pub mod nat_mod;

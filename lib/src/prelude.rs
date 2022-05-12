@@ -42,14 +42,14 @@ pub use core::{cmp::min, cmp::PartialEq};
 #[cfg(feature = "hacspec")]
 pub use core::{fmt, fmt::Debug};
 
-#[cfg(feature = "std")]
-pub use std::num::ParseIntError;
-#[cfg(feature = "std")]
-pub use std::ops::*;
-#[cfg(feature = "std")]
-pub use std::str::FromStr;
-#[cfg(feature = "std")]
-pub use std::{cmp::min, cmp::PartialEq};
+// #[cfg(feature = "std")]
+// pub use std::num::ParseIntError;
+// #[cfg(feature = "std")]
+// pub use std::ops::*;
+// #[cfg(feature = "std")]
+// pub use std::str::FromStr;
+// #[cfg(feature = "std")]
+// pub use std::{cmp::min, cmp::PartialEq};
 
 #[cfg(feature = "std")]
 #[cfg(feature = "hacspec")]
@@ -68,4 +68,4 @@ public_bytes!(u64Word, 8);
 public_bytes!(u128Word, 16);
 
 // Re-export some std lib functions
-pub use core::convert::TryFrom; // Allow down-casting of integers.
+// pub use std::convert::TryFrom; // Allow down-casting of integers.
