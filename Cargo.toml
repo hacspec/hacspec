@@ -68,4 +68,3 @@ default-members = [
     "examples/sha512",
 ]
 exclude = [ "language" ]
-resolver = "2"
