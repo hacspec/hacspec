@@ -36,4 +36,4 @@ jobs:
       - name: Install no_std target
         run: rustup target add thumbv7em-none-eabi
       - name: Build no_std hacspec-lib
-        run: cargo build --target thumbv7em-none-eabi -p hacspec-lib --no-default-features --features alloc
+        run: cargo build --target thumbv7em-none-eabi -p hacspec-lib --no-default-features --features alloc -Zfeatures=all
