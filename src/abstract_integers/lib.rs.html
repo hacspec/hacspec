@@ -69,6 +69,9 @@
 <span id="69">69</span>
 <span id="70">70</span>
 <span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This crate defines specification-friendly natural integers with an upper bound. Operations on</span>
 <span class="doccomment">//! these integers can be defined as modular (modulo the upper bound) or regular (with a panic</span>
 <span class="doccomment">//! on underflow or overflow).</span>
@@ -132,11 +135,14 @@
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 
+<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>), <span class="ident">no_std</span>)]</span>
+
 <span class="comment">// Re-exports</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">num</span>::{<span class="ident">bigint::Sign</span>, <span class="ident">traits</span>, <span class="ident">traits::identities</span>::<span class="kw-2">*</span>, <span class="ident">BigInt</span>, <span class="ident">BigUint</span>, <span class="ident">CheckedSub</span>, <span class="ident">Zero</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::num::ParseIntError</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::ops</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::cmp::Ordering</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::num::ParseIntError</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::ops</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">num</span>::{<span class="ident">traits</span>, <span class="ident">traits::identities</span>::<span class="kw-2">*</span>, <span class="ident">CheckedSub</span>, <span class="ident">Zero</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">num_bigint</span>::{<span class="ident">BigInt</span>, <span class="ident">BigUint</span>, <span class="ident">Sign</span>};
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">abstract_int</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">nat_mod</span>;

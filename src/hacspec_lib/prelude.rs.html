@@ -42,6 +42,12 @@
 <span id="42">42</span>
 <span id="43">43</span>
 <span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module conveniently exports common subroutines necessary for hacspecs</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
@@ -68,11 +74,17 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">hacspec_attributes</span>::<span class="kw-2">*</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">secret_integers</span>::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">num</span>::{<span class="self">self</span>, <span class="ident">traits::sign::Signed</span>, <span class="ident">BigUint</span>, <span class="ident">CheckedSub</span>, <span class="ident">Num</span>, <span class="ident">Zero</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::num::ParseIntError</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::ops</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cmp::min</span>, <span class="ident">cmp::PartialEq</span>, <span class="ident">fmt</span>, <span class="ident">fmt::Debug</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">alloc::fmt::Display</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">alloc::format</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">alloc::string</span>::{<span class="ident">String</span>, <span class="ident">ToString</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">alloc::vec</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
+
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::num::ParseIntError</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::ops</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::str::FromStr</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">cmp::min</span>, <span class="ident">cmp::PartialEq</span>, <span class="ident">fmt</span>, <span class="ident">fmt::Debug</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">num</span>::{<span class="self">self</span>, <span class="ident">traits::sign::Signed</span>, <span class="ident">CheckedSub</span>, <span class="ident">Num</span>, <span class="ident">Zero</span>};
 
 <span class="macro">bytes!</span>(<span class="ident">U16Word</span>, <span class="number">2</span>);
 <span class="macro">bytes!</span>(<span class="ident">U32Word</span>, <span class="number">4</span>);
@@ -85,7 +97,7 @@
 <span class="macro">public_bytes!</span>(<span class="ident">u128Word</span>, <span class="number">16</span>);
 
 <span class="comment">// Re-export some std lib functions</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>; <span class="comment">// Allow down-casting of integers.</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::convert::TryFrom</span>; <span class="comment">// Allow down-casting of integers.</span>
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hacspec_lib" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
