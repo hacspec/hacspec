@@ -502,15 +502,6 @@ macro_rules! abstract_unsigned {
         abstract_int!($name, $bits, false);
 
         impl $name {
-            #[cfg(not(feature = "hacspec"))]
-            #[creusot_contracts::trusted]
-            #[allow(dead_code)]
-            pub fn from_hex(s: &str) -> Self {
-                BigInt::from_bytes_be(Sign::Plus, &Self::hex_string_to_bytes(s)).into()
-            }
-
-            #[cfg(feature = "hacspec")]
-            #[hacspec_attributes::trusted]
             #[allow(dead_code)]
             pub fn from_hex(s: &str) -> Self {
                 BigInt::from_bytes_be(Sign::Plus, &Self::hex_string_to_bytes(s)).into()

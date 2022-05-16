@@ -79,15 +79,6 @@ macro_rules! modular_integer {
                 a.into()
             }
 
-            #[cfg(not(feature = "hacspec"))]
-            #[creusot_contracts::trusted]
-            #[allow(dead_code)]
-            pub fn from_hex(s: &str) -> Self {
-                $base::from_hex(s).into()
-            }
-
-            #[cfg(feature = "hacspec")]
-            #[hacspec_attributes::trusted]
             #[allow(dead_code)]
             pub fn from_hex(s: &str) -> Self {
                 $base::from_hex(s).into()

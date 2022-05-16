@@ -1186,22 +1186,7 @@ macro_rules! nat_mod {
 macro_rules! public_nat_mod {
     (type_name: $name:ident, type_of_canvas: $base:ident,  bit_size_of_field: $bits:literal, modulo_value: $n:literal) => {
         unsigned_public_integer!($base, $bits);
-
-        impl $base {
-            #[cfg(not(feature = "hacspec"))]
-            #[creusot_contracts::trusted]
-            pub fn modulo_value () -> $base {
-                $base::from_hex($n)
-            }
-
-            #[cfg(feature = "hacspec")]
-            #[hacspec_attributes::trusted]
-            pub fn modulo_value () -> $base {
-                $base::from_hex($n)
-            }
-        }
-            
-        abstract_public_modular_integer!($name, $base, $base::modulo_value());
+        abstract_public_modular_integer!($name, $base, $base::from_hex($n));
 
         impl $name {
             #[creusot_contracts::trusted]
@@ -1281,8 +1266,8 @@ macro_rules! public_nat_mod {
         }
 
         impl NumericCopy for $name {}
-        // impl UnsignedInteger for $name {}
-        // impl UnsignedIntegerCopy for $name {}
+        impl UnsignedInteger for $name {}
+        impl UnsignedIntegerCopy for $name {}
         impl Integer for $name {
             // const NUM_BITS: usize = $bits;
             fn NUM_BITS () -> usize {

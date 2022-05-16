@@ -81,17 +81,17 @@ fn is_point_at_infinity(p: P256Jacobian) -> bool {
     z.equal(P256FieldElement::from_literal(0u64))
 }
 
-fn s1_equal_s2(s1: P256FieldElement, s2: P256FieldElement) -> JacobianResult {
-    if s1.equal(s2) {
-        JacobianResult::Err(Error::InvalidAddition)
-    } else {
-        JacobianResult::Ok((
-            P256FieldElement::from_literal(0u64),
-            P256FieldElement::from_literal(1u64),
-            P256FieldElement::from_literal(0u64),
-        ))
-    }
-}
+// fn s1_equal_s2(s1: P256FieldElement, s2: P256FieldElement) -> JacobianResult {
+//     if s1.equal(s2) {
+//         JacobianResult::Err(Error::InvalidAddition)
+//     } else {
+//         JacobianResult::Ok((
+//             P256FieldElement::from_literal(0u64),
+//             P256FieldElement::from_literal(1u64),
+//             P256FieldElement::from_literal(0u64),
+//         ))
+//     }
+// }
 
 // fn point_add_jacob(p: P256Jacobian, q: P256Jacobian) -> JacobianResult {
 //     let mut result = JacobianResult::Ok(q);
