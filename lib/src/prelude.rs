@@ -20,8 +20,8 @@ pub(crate) use crate::vec_util::*;
 pub use crate::*;
 
 pub use abstract_integers::*;
-#[cfg(feature = "use_attributes")]
-pub use hacspec_attributes::*;
+// #[cfg(feature = "use_attributes")]
+// pub use hacspec_attributes::*;
 pub use secret_integers::*;
 
 pub use alloc::fmt::Display;

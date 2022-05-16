@@ -49,7 +49,6 @@ macro_rules! modular_integer {
         //     }
         // }
 
-        // TODO -- creusot error 'unsupported constant expression, try binding this to a variable. See issue #163'
         impl From<$base> for $name {
             fn from(x: $base) -> $name {
                 $name(x.rem($max))
@@ -104,7 +103,6 @@ macro_rules! modular_integer {
                 $base::to_le_bytes(self.into()).as_ref().to_vec()
             }
 
-            #[creusot_contracts::trusted]
             /// Gets the `i`-th least significant bit of this integer.
             #[allow(dead_code)]
             pub fn bit(self, i: usize) -> bool {
@@ -304,7 +302,6 @@ macro_rules! abstract_public_modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         modular_integer!($name, $base, $max);
 
-        // TODO: implement PartialEq, Eq, PartialOrd, Ord,
         impl PartialOrd for $name {
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
                 Some(self.cmp(other))

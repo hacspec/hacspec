@@ -841,12 +841,12 @@ pub fn retrieve_external_data(
             ),
             ItemKind::Impl(i) => {
                 for item in i.items.iter() {
-                    let item_id = tcx.hir().local_def_id(item.id.hir_id()).to_def_id();
+                    let item_def_id = tcx.hir().local_def_id(item.id.hir_id()).to_def_id();
                     if let AssocItemKind::Fn { .. } = item.kind {
                         process_fn_id(
                             sess,
                             tcx,
-                            &item_id,
+                            &item_def_id,
                             &LOCAL_CRATE,
                             &mut extern_funcs,
                             &mut extern_consts,

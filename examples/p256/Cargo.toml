@@ -27,5 +27,13 @@ git = "https://github.com/xldenis/creusot/"
 branch = "master"
 package = "creusot-contracts"
 
-[features]
-contracts = []
+[dependencies.creusot]
+git = "https://github.com/xldenis/creusot/"
+branch = "master"
+package = "creusot"
+
+
+# features = ["contracts"]
+
+# [features]
+# contracts = ["creusot-contracts"]

@@ -10,9 +10,6 @@ Require Import Hacspec_Lib.
 Inductive error_t :=
 | InvalidAddition : error_t.
 
-Definition bits_v : uint_size :=
-  usize 256.
-
 Definition field_canvas_t := nseq (int8) (32).
 Definition p256_field_element_t :=
   nat_mod 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff.
@@ -62,7 +59,7 @@ Definition affine_to_jacobian (p_579 : affine_t) : p256_jacobian_t :=
     y_581,
     nat_mod_from_literal (
       0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff) (
-      @repr WORDSIZE128 1) : p256_field_element_t
+      @repr WORDSIZE64 1) : p256_field_element_t
   ).
 
 Definition point_double (p_582 : p256_jacobian_t) : p256_jacobian_t :=
@@ -110,7 +107,7 @@ Definition is_point_at_infinity (p_598 : p256_jacobian_t) : bool :=
     p_598 in 
   nat_mod_equal (z_601) (nat_mod_from_literal (
       0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff) (
-      @repr WORDSIZE128 0) : p256_field_element_t).
+      @repr WORDSIZE64 0) : p256_field_element_t).
 
 Definition s1_equal_s2
   (s1_602 : p256_field_element_t)
@@ -121,13 +118,13 @@ Definition s1_equal_s2
       @Ok p256_jacobian_t error_t ((
           nat_mod_from_literal (
             0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff) (
-            @repr WORDSIZE128 0) : p256_field_element_t,
+            @repr WORDSIZE64 0) : p256_field_element_t,
           nat_mod_from_literal (
             0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff) (
-            @repr WORDSIZE128 1) : p256_field_element_t,
+            @repr WORDSIZE64 1) : p256_field_element_t,
           nat_mod_from_literal (
             0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff) (
-            @repr WORDSIZE128 0) : p256_field_element_t
+            @repr WORDSIZE64 0) : p256_field_element_t
         )))).
 
 Definition point_add_jacob

@@ -83,7 +83,6 @@ pub use core::ops::*;
 
 #[cfg(not(feature = "std"))]
 extern crate creusot_contracts;
-
 #[cfg(not(feature = "std"))]
 pub use creusot_contracts::*;
 

@@ -10,16 +10,19 @@ impl Integer for BigInt {
 
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[creusot_contracts::trusted]
     fn ZERO() -> Self {
         BigInt::from(0)
     }
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[creusot_contracts::trusted]
     fn ONE() -> Self {
         BigInt::from(1)
     }
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[creusot_contracts::trusted]
     fn TWO() -> Self {
         BigInt::from(2)
     }
@@ -27,12 +30,14 @@ impl Integer for BigInt {
     // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[creusot_contracts::trusted]
     fn from_literal(val: u64) -> Self {
         BigInt::from(val)
     }
 
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    #[creusot_contracts::trusted]
     fn from_hex_string(s: &String) -> Self {
         BigInt::from_str(s).unwrap()
     }
@@ -40,6 +45,7 @@ impl Integer for BigInt {
     /// Get bit `i` of this integer.
     #[inline]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    #[creusot_contracts::trusted]
     fn get_bit(self, i: usize) -> Self {
         (self >> i) & Self::ONE()
     }
@@ -48,11 +54,13 @@ impl Integer for BigInt {
     /// Bit `b` has to be `0` or `1`.
     #[inline]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    #[creusot_contracts::trusted]
     fn set_bit(self, b: Self, i: usize) -> Self {
-        debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
-        let tmp1 = Self::from_literal(!(1 << i));
-        let tmp2 = b << i;
-        (self & tmp1) | tmp2
+        // debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+        // let tmp1 = Self::from_literal(!(1 << i));
+        // let tmp2 = b << i;
+        // (self & tmp1) | tmp2
+        todo!()
     }
 
     /// Set bit `pos` of this integer to bit `yi` of integer `y`.
@@ -65,6 +73,7 @@ impl Integer for BigInt {
 
     #[allow(arithmetic_overflow)]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    #[creusot_contracts::trusted]
     fn rotate_left(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS());
@@ -73,6 +82,7 @@ impl Integer for BigInt {
 
     #[allow(arithmetic_overflow)]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
+    #[creusot_contracts::trusted]
     fn rotate_right(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
         assert!(n < Self::NUM_BITS());

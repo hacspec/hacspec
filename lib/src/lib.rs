@@ -101,10 +101,4 @@ mod vec_integers_public;
 mod vec_integers_secret;
 mod vec_util;
 
-// #[cfg(not(feature = "std"))]
-extern crate creusot_contracts;
-
-// #[cfg(not(feature = "std"))]
-pub use creusot_contracts::*;
-
 pub use crate::prelude::*;

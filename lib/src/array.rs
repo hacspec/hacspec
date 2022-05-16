@@ -35,7 +35,8 @@ macro_rules! _array_base {
             #[creusot_contracts::trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn new() -> Self {
-                Self([<$t>::default(); $l])
+                // Self([<$t>::default(); $l])
+                todo!()
             }
 
             // #[creusot_contracts::trusted]
