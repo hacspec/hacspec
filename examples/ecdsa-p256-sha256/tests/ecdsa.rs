@@ -54,7 +54,7 @@ fn make_fixed_length(b: &[u8]) -> [u8; 32] {
 }
 
 // A very simple ASN1 parser for ecdsa signatures.
-fn decode_signature(sig: &[u8]) -> Signature {
+fn decode_signature(sig: &[u8]) -> P256Signature {
     let mut index = 0;
     let (seq, seq_len) = (sig[index], sig[index + 1] as usize);
     assert_eq!(0x30, seq);
