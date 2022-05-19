@@ -33,6 +33,7 @@ members = [
     "examples/aes128-gcm",
     "examples/bls12-381-hash",
     "examples/ed25519",
+    "examples/no_std",
 ]
 default-members = [
     "lib",
