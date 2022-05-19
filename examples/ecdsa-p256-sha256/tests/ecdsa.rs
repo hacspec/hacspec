@@ -121,7 +121,7 @@ fn test_wycheproof() {
             // The signature is ASN.1 encoded.
             let signature = decode_signature(&sig);
 
-            let result = verify(&msg, pk, signature);
+            let result = ecdsa_p256_sha256_verify(&msg, pk, signature);
             assert!(result.is_ok());
 
             tests_run += 1;
