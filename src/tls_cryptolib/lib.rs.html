@@ -956,8 +956,8 @@
     <span class="kw">let</span> <span class="ident">nonce</span> <span class="op">=</span> <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">random</span>);
     <span class="kw">match</span> <span class="ident">ecdsa_p256_sha256_sign</span>(<span class="ident">payload</span>, <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="ident">ps</span>), <span class="ident">nonce</span>) {
         <span class="comment">// The ASN.1 encoding happens later on the outside.</span>
-        <span class="ident">SignatureResult::Ok</span>((<span class="ident">r</span>, <span class="ident">s</span>)) =&gt; <span class="ident">concat_signature</span>(<span class="ident">r</span>, <span class="ident">s</span>),
-        <span class="ident">SignatureResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::CryptoError</span>),
+        <span class="ident">P256SignatureResult::Ok</span>((<span class="ident">r</span>, <span class="ident">s</span>)) =&gt; <span class="ident">concat_signature</span>(<span class="ident">r</span>, <span class="ident">s</span>),
+        <span class="ident">P256SignatureResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">Signature</span>, <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::CryptoError</span>),
     }
 }
 
@@ -988,8 +988,8 @@
         <span class="ident">P256Scalar::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">sig</span>.<span class="ident">slice</span>(<span class="number">32</span>, <span class="number">32</span>)),
     );
     <span class="kw">match</span> <span class="ident">ecdsa_p256_sha256_verify</span>(<span class="ident">payload</span>, (<span class="ident">pk_x</span>, <span class="ident">pk_y</span>), (<span class="ident">r</span>, <span class="ident">s</span>)) {
-        <span class="ident">VerifyResult::Ok</span>(()) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(()),
-        <span class="ident">VerifyResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::VerifyFailed</span>),
+        <span class="ident">P256VerifyResult::Ok</span>(()) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Ok</span>(()),
+        <span class="ident">P256VerifyResult::Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-ty">Result</span>::<span class="op">&lt;</span>(), <span class="ident">CryptoError</span><span class="op">&gt;</span><span class="ident">::Err</span>(<span class="ident">CryptoError::VerifyFailed</span>),
     }
 }
 
