@@ -392,8 +392,8 @@ fn p256_sign(ps: &SignatureKey, payload: &ByteSeq, ent: Entropy) -> Result<Signa
     let nonce = P256Scalar::from_byte_seq_be(&random);
     match ecdsa_p256_sha256_sign(payload, P256Scalar::from_byte_seq_be(ps), nonce) {
         // The ASN.1 encoding happens later on the outside.
-        SignatureResult::Ok((r, s)) => concat_signature(r, s),
-        SignatureResult::Err(_) => Result::<Signature, CryptoError>::Err(CryptoError::CryptoError),
+        P256SignatureResult::Ok((r, s)) => concat_signature(r, s),
+        P256SignatureResult::Err(_) => Result::<Signature, CryptoError>::Err(CryptoError::CryptoError),
     }
 }
 
@@ -424,8 +424,8 @@ fn p256_verify(pk: &VerificationKey, payload: &ByteSeq, sig: &ByteSeq) -> Result
         P256Scalar::from_byte_seq_be(&sig.slice(32, 32)),
     );
     match ecdsa_p256_sha256_verify(payload, (pk_x, pk_y), (r, s)) {
-        VerifyResult::Ok(()) => Result::<(), CryptoError>::Ok(()),
-        VerifyResult::Err(_) => Result::<(), CryptoError>::Err(CryptoError::VerifyFailed),
+        P256VerifyResult::Ok(()) => Result::<(), CryptoError>::Ok(()),
+        P256VerifyResult::Err(_) => Result::<(), CryptoError>::Err(CryptoError::VerifyFailed),
     }
 }
 
