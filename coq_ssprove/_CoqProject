@@ -2,6 +2,7 @@
 -arg -w
 -arg all
 
+src/LocationUtility.v
 src/ChoiceEquality.v
 src/Hacspec_Lib_Comparable.v
 src/Hacspec_Lib_Pre.v

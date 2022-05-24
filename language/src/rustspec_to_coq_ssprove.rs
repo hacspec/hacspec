@@ -91,9 +91,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
             let (block_vars, _block_var_loc_defs) =
                 rustspec_to_coq_ssprove_state::fset_and_locations(sig.mutable_vars.clone());
 
-            RcDoc::as_string("Import Hacspec_Lib_Pre.")
-                .append(RcDoc::line())
-                .append(rustspec_to_coq_ssprove_pure::translate_item(
+            rustspec_to_coq_ssprove_pure::translate_item(
                     DecoratedItem {
                         item: Item::FnDecl(
                             (
@@ -109,10 +107,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                         ..item.clone()
                     },
                     top_ctx,
-                ))
+                )
                 .append(RcDoc::line())
-                .append(RcDoc::line())
-                .append(RcDoc::as_string("Import Hacspec_Lib."))
                 .append(RcDoc::line())
                 .append(rustspec_to_coq_ssprove_state::translate_item(
                     DecoratedItem {
@@ -177,6 +173,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                 // ).append(RcDoc::hardline().append(RcDoc::as_string("Fail Next Obligation.")))
                 .append(RcDoc::line())
                 .append(RcDoc::line())
+                .append(RcDoc::as_string("Program"))
+                .append(RcDoc::space())
                 .append(rustspec_to_coq_ssprove_pure::make_let_binding(
                     translate_ident(Ident::TopLevel(f.clone()))
                         .append(RcDoc::line())
@@ -204,6 +202,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                                 .append(RcDoc::space())
                                 .append(make_paren(block_vars.clone()))
                                 .append(RcDoc::space())
+                                .append(RcDoc::as_string("[interface]"))
+                                .append(RcDoc::space())
                                 .append(translate_base_typ(sig.ret.0.clone()))
                                 .group(),
                         ),
@@ -215,6 +215,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                             translate_ident(Ident::TopLevel(f.clone()))
                                 .append(RcDoc::as_string("_pure")),
                         )
+                        .append(RcDoc::space())
                         .append(if sig.args.len() > 0 {
                             RcDoc::intersperse(
                                 sig.args.iter().map(|((x, _), (tau, _))| {
@@ -238,6 +239,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                             translate_ident(Ident::TopLevel(f.clone()))
                                 .append(RcDoc::as_string("_state")),
                         )
+                        .append(RcDoc::space())
                         .append(if sig.args.len() > 0 {
                             RcDoc::intersperse(
                                 sig.args.iter().map(|((x, _), (tau, _))| {
@@ -260,65 +262,11 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     true,
                 ))
                 .append(RcDoc::line())
-                .append(RcDoc::line())
-                .append(RcDoc::as_string("Instance"))
-                .append(RcDoc::space())
-                .append(
-                    translate_ident(Ident::TopLevel(f.clone())).append(RcDoc::as_string("_eq :")),
-                )
-                .append(RcDoc::line())
-                .append(RcDoc::as_string("forall"))
-                .append(RcDoc::space())
-                .append(if sig.args.len() > 0 {
-                    RcDoc::intersperse(
-                        sig.args.iter().map(|((x, _), (tau, _))| {
-                            make_paren(
-                                translate_ident(x.clone())
-                                    .append(RcDoc::space())
-                                    .append(RcDoc::as_string(":"))
-                                    .append(RcDoc::space())
-                                    .append(translate_typ(tau.clone())),
-                            )
-                        }),
-                        RcDoc::line(),
-                    )
-                } else {
-                    RcDoc::nil()
-                })
-                .append(RcDoc::as_string(","))
-                .append(RcDoc::line())
-                .append(RcDoc::as_string("CodeEqProofStatement"))
-                .append(RcDoc::space())
-                .append(make_paren(
-                    translate_ident(Ident::TopLevel(f.clone())).append(if sig.args.len() > 0 {
-                        RcDoc::intersperse(
-                            sig.args.iter().map(|((x, _), (tau, _))| {
-                                make_paren(
-                                    translate_ident(x.clone())
-                                        .append(RcDoc::space())
-                                        .append(RcDoc::as_string(":"))
-                                        .append(RcDoc::space())
-                                        .append(translate_typ(tau.clone())),
-                                )
-                            }),
-                            RcDoc::line(),
-                        )
-                    } else {
-                        RcDoc::nil()
-                    }),
-                ))
-                .append(RcDoc::as_string("."))
-                .append(RcDoc::line())
                 .append(RcDoc::as_string(format!(
-                    "Proof.\n\
+                    "Next Obligation.\n\
                        intros.\n\
-                       unfold CodeEqProofStatement.\n\
-                       \n\
-                       unfold {name}.\n\
                        unfold {name}_pure.\n\
                        unfold {name}_state.\n\
-                       unfold is_pure.\n\
-                       unfold is_state.\n\
                        \n\
                        unfold prog.\n\
                        Admitted.", name=f.string)))
@@ -361,14 +309,15 @@ pub fn translate_and_write_to_file(
          From extructures Require Import ord fset.\n\
          From CoqWord Require Import ssrZ word.\n\
          From Jasmin Require Import word.\n\
-         Require Import ChoiceEquality.\n\
          \n\
          From Coq Require Import ZArith.\n\
          Import List.ListNotations.\n\
          Open Scope list_scope.\n\
          Open Scope Z_scope.\n\
-         Open Scope bool_scope.\n\
+         Open Scope bool_scope.\n\n\
          \n\
+         Require Import ChoiceEquality.\n\
+         Require Import LocationUtility.\n\
          Require Import Hacspec_Lib_Comparable.\n\
          Require Import Hacspec_Lib_Pre.\n\
          Require Import Hacspec_Lib.\n\

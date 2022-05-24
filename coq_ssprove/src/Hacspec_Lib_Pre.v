@@ -361,23 +361,6 @@ Definition shift_right_ `{WS : wsize} (i : @int WS) (j : uint_size) :=
 Infix "shift_left" := (shift_left_) (at level 77) : hacspec_scope.
 Infix "shift_right" := (shift_right_) (at level 77) : hacspec_scope.
 
-Program Instance prod_ChoiceEquality (a b : ChoiceEquality) : ChoiceEquality :=
-  {| T := (@T a) * (@T b) ; ct := (@ct a) × (@ct b); |}.
-Next Obligation.
-  intros.
-  do 2 rewrite ChoiceEq.
-  reflexivity.
-Defined.
-
-Notation "A '× B" := (prod_ChoiceEquality A B) (at level 79, left associativity) : hacspec_scope.
-
-(* Notation "A '× B" := (prod A B) (at level 79, left associativity) : hacspec_scope. *)
-
-Instance nat_ChoiceEquality : ChoiceEquality := {| T := nat ; ct := 'nat ; ChoiceEq := ltac:(reflexivity) |}.
-Instance bool_ChoiceEquality : ChoiceEquality := {| T := bool ; ct := 'bool ; ChoiceEq := ltac:(reflexivity) |}.
-Instance unit_ChoiceEquality : ChoiceEquality := {| T := unit ; ct := 'unit ; ChoiceEq := ltac:(reflexivity) |}.
-
-
 (*** Positive util *)
 
 Section Util.
@@ -1210,11 +1193,11 @@ Definition array_from_seq
   `{Default (@T a)}
   (out_len:nat)
   (input: seq_type a)
-  : nseq_type a out_len :=
+  : @T (nseq a out_len) :=
   let out := array_new_ default out_len in
   update_sub out 0 (out_len - 1) (@array_from_list a (@seq_to_list a input)).
 
-Global Coercion array_from_seq : seq_type >-> nseq_type.
+(* Global Coercion array_from_seq : seq_type >-> nseq_type. *)
 
 Definition slice {A} (l : list A) (i j : nat) : list A :=
   if (j <=? i)%nat then [] else firstn (j-i+1) (skipn i l).
@@ -2046,7 +2029,8 @@ Global Program Instance Dec_eq_prod (A B : Type) `{EqDec A} `{EqDec B} : EqDec (
 }.
 Next Obligation.
   split ; intros ; destruct x ; destruct y.
-  - symmetry in H1.
+  - unfold is_true in H1. 
+    symmetry in H1.
     apply Bool.andb_true_eq in H1. destruct H1.
     symmetry in H1. rewrite (eqb_leibniz) in H1.
     symmetry in H2. rewrite (eqb_leibniz) in H2.

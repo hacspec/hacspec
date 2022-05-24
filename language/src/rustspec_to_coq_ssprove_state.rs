@@ -162,10 +162,10 @@ fn code_block_wrap<'a>(
     result_typ: Option<RcDoc<'a, ()>>,
 ) -> RcDoc<'a, ()> {
     make_paren(
-        RcDoc::as_string("{code ")
+        RcDoc::as_string("{| prog := ")
             .append(expr)
-            .append(" } ")
-            .append(RcDoc::as_string(":"))
+            // .append(" } ")
+            .append(RcDoc::as_string(" ; prog_valid := ltac:(ssprove_valid'_2) |}:"))
             .append(RcDoc::space())
             .append(RcDoc::as_string("code "))
             .append(match location_vars {
@@ -1241,14 +1241,15 @@ fn translate_statements<'a>(
                     smv_bind,
                     smv.clone(),
                 ),
-                None => make_get_binding(translate_ident(x.clone()), None, false)
-                    .append(RcDoc::line())
-                    .append(make_put_binding(
+                None => // make_get_binding(translate_ident(x.clone()), None, false)
+                    // .append(RcDoc::line())
+                    // .append(
+                        make_put_binding(
                         translate_ident(x.clone()),
                         None,
                         false,
                         trans_e1,
-                    ))
+                    )// )
                     .append(RcDoc::hardline())
                     .append(trans_stmt),
             };
@@ -1469,15 +1470,24 @@ fn translate_statements<'a>(
             let mutated_info = b.mutated.clone().unwrap();
             // TODO: handle question_mark
             let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
-            b.stmts.push((
-                Statement::ReturnExp(
-                    Expression::Lit(Literal::Unit),
-                    Some((
-                        (Borrowing::Consumed, DUMMY_SP.into()),
-                        (BaseTyp::Unit, DUMMY_SP.into()),
-                    )),
-                ),
-                DUMMY_SP.into(),
+            // b.stmts.push((
+            //     Statement::ReturnExp(
+            //         Expression::Lit(Literal::Unit),
+            //         Some((
+            //             (Borrowing::Consumed, DUMMY_SP.into()),
+            //             (BaseTyp::Unit, DUMMY_SP.into()),
+            //         )),
+            //     ),
+            //     DUMMY_SP.into(),
+            // ));
+            b.stmts.push(add_ok_if_result(
+                mutated_info.stmt.clone(),
+                mutated_info.early_return_type.clone(),
+                if b_question_mark {
+                    Some(b.mutable_vars.clone())
+                } else {
+                    None
+                },
             ));
 
             let mut_tuple = |prefix: String| -> RcDoc<'a> {
@@ -1563,7 +1573,7 @@ fn translate_statements<'a>(
                     smv.clone(),
                 )
             } else {
-                let loop_expr = RcDoc::as_string("for_loop_usize")
+                let loop_expr = RcDoc::as_string("foldi")
                     .append(RcDoc::space())
                     .append(make_paren(trans_e1))
                     .append(RcDoc::space())
@@ -1575,31 +1585,32 @@ fn translate_statements<'a>(
                         Some((x, _)) => translate_ident(x.clone()),
                         None => RcDoc::as_string("_"),
                     })
-                    // .append(RcDoc::space())
-                    // .append(make_paren(
-                    //     mut_tuple("'".to_string())
-                    //         .clone()
-                    //         .append(RcDoc::as_string(" : "))
-                    //         .append(RcDoc::as_string("_")),
-                    // ))
+                    .append(RcDoc::space())
+                    .append(make_paren(
+                        mut_tuple("'".to_string())
+                            .clone()
+                            .append(RcDoc::as_string(" : "))
+                            .append(RcDoc::as_string("_")),
+                    ))
                     .append(RcDoc::space())
                     .append(RcDoc::as_string("=>"))
                     .append(RcDoc::line())
                     .append(block_expr)
-                    .append(RcDoc::as_string(") ;;"))
+                    .append(RcDoc::as_string(")"))
+                    .append(RcDoc::space())
+                    .append(mut_tuple("'".to_string()).clone())
+                    // .append(RcDoc::as_string(";;"))
                     .group()
                     .nest(2);
 
-                // make_let_binding(
-                //     mut_tuple("'".to_string()),
-                //     None,
-                //     false,
-                //     mut_tuple("".to_string()),
-                //     false,
-                //     !inline,
-                // )
-                // .append(
-                loop_expr // )
+                make_let_binding(
+                    mut_tuple("'".to_string()),
+                    None,
+                    false,
+                    loop_expr,
+                    false,
+                    !inline,                    
+                )
                     .append(RcDoc::hardline())
                     .append(trans_stmt)
             };
@@ -1619,7 +1630,7 @@ fn list_of_loc_vars<'a>(smvars: ScopeMutableVars) -> RcDoc<'a, ()> {
     let mut all = smvars.external_vars.clone();
     all.extend(locals.clone());
 
-    RcDoc::as_string("path.sort leb [")
+    RcDoc::as_string("[")
         .append(RcDoc::space())
         .append(RcDoc::intersperse(
             all.iter()
@@ -2091,7 +2102,6 @@ pub fn translate_and_write_to_file(
          From extructures Require Import ord fset.\n\
          From CoqWord Require Import ssrZ word.\n\
          From Jasmin Require Import word.\n\
-         Require Import ChoiceEquality.\n\
          \n\
          From Coq Require Import ZArith.\n\
          Import List.ListNotations.\n\
@@ -2099,6 +2109,8 @@ pub fn translate_and_write_to_file(
          Open Scope Z_scope.\n\
          Open Scope bool_scope.\n\
          \n\
+         Require Import ChoiceEquality.\n\
+         Require Import LocationUtility.\n\
          Require Import Hacspec_Lib_Comparable.\n\
          Require Import Hacspec_Lib_Pre.\n\
          Require Import Hacspec_Lib.\n\

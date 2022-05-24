@@ -1253,7 +1253,7 @@ fn translate_statements<'a>(
                             .append(translate_statements(statements, top_ctx)),
                     ))
             } else {
-                let loop_expr = RcDoc::as_string("foldi")
+                let loop_expr = RcDoc::as_string("Hacspec_Lib_Pre.foldi")
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e1.clone(), top_ctx)))
                     .append(RcDoc::space())
