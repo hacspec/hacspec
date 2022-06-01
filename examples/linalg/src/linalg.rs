@@ -29,9 +29,9 @@ pub type ScalRes = Result<Scalar, u8>;
 
 // === Errors === //
 
-const ROW_COL_MISMATCH: u8 = 10;
-const INDEX_OUT_OUT_OF_BOUNDS: u8 = 11;
-const SLICE_OUT_OUT_OF_BOUNDS: u8 = 11;
+const ROW_COL_MISMATCH: u8 = 10u8;
+const INDEX_OUT_OF_BOUNDS: u8 = 11u8;
+const SLICE_OUT_OF_BOUNDS: u8 = 12u8;
 
 // === External Functions === //
 
@@ -86,7 +86,7 @@ pub fn index(m: Matrix, i: DimType, j: DimType) -> ScalRes {
     let index = i * cols + j;
 
     if index >= rows * cols {
-        ScalRes::Err(INDEX_OUT_OUT_OF_BOUNDS)
+        ScalRes::Err(INDEX_OUT_OF_BOUNDS)
     } else {
         ScalRes::Ok(seq[index])
     }
