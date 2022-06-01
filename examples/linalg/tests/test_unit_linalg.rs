@@ -125,6 +125,63 @@ fn test_unit_scale() {
     assert_hacs(hac_op, hac_rs);
 }
 
+#[test]
+fn test_unit_add() {
+    let xs = vec![0, 1, 2, 3, 4, 5];
+    let ys = vec![7, 3, 6, 2, 4, 3];
+    let rs = vec![7, 4, 8, 5, 8, 8];
+
+    let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+    let hac_ys = new(2, 3, Seq::<Scalar>::from_vec(ys.clone())).unwrap();
+    let hac_rs = new(2, 3, Seq::<Scalar>::from_vec(rs.clone())).unwrap();
+
+    let hac_op = add(hac_xs.clone(), hac_ys.clone()).unwrap();
+    assert_hacs(hac_op, hac_rs);
+}
+
+#[test]
+fn test_unit_sub() {
+    let xs = vec![0, 1, 2, 3, 4, 5];
+    let ys = vec![7, 3, 6, 2, 4, 3];
+    let rs = vec![-7, -2, -4, 1, 0, 2];
+
+    let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+    let hac_ys = new(2, 3, Seq::<Scalar>::from_vec(ys.clone())).unwrap();
+    let hac_rs = new(2, 3, Seq::<Scalar>::from_vec(rs.clone())).unwrap();
+
+    let hac_op = sub(hac_xs.clone(), hac_ys.clone()).unwrap();
+    assert_hacs(hac_op, hac_rs);
+}
+
+#[test]
+fn test_unit_component_mul() {
+    let xs = vec![0, 1, 2, 2, 4, 5];
+    let ys = vec![7, 3, 6, 3, 4, 3];
+    let rs = vec![0, 3, 12, 6, 16, 15];
+
+    let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+    let hac_ys = new(2, 3, Seq::<Scalar>::from_vec(ys.clone())).unwrap();
+    let hac_rs = new(2, 3, Seq::<Scalar>::from_vec(rs.clone())).unwrap();
+
+    let hac_op = component_mul(hac_xs.clone(), hac_ys.clone()).unwrap();
+    assert_hacs(hac_op, hac_rs);
+}
+
+#[test]
+fn test_unit_mul() {
+    let xs = vec![1, 2, 1, 0, 1, 1];
+    let ys = vec![2, 5, 1, 1, 6, 7, 1, 1, 1, 1, 1, 1];
+    let rs = vec![15, 20, 4, 4, 7, 8, 2, 2];
+
+    let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+    let hac_ys = new(3, 4, Seq::<Scalar>::from_vec(ys.clone())).unwrap();
+    let hac_rs = new(2, 4, Seq::<Scalar>::from_vec(rs.clone())).unwrap();
+
+    let hac_mul = mul(hac_xs, hac_ys).unwrap();
+
+    assert!(assert_hacs(hac_mul, hac_rs));
+}
+
 // === Negative Tests ===
 
 #[test]

@@ -29,9 +29,10 @@ pub type ScalRes = Result<Scalar, u8>;
 
 // === Errors === //
 
-const ROW_COL_MISMATCH: u8 = 10u8;
+const DIMENSION_SEQUENCE_LENGTH_MISMATCH: u8 = 10u8;
 const INDEX_OUT_OF_BOUNDS: u8 = 11u8;
 const SLICE_OUT_OF_BOUNDS: u8 = 12u8;
+const DIMENSION_MISMATCH: u8 = 13u8;
 
 // === External Functions === //
 
@@ -40,7 +41,7 @@ pub fn new(rows: DimType, cols: DimType, seq: Seq<Scalar>) -> MatRes {
     if seq.len() > 0 && rows * cols == seq.len() {
         MatRes::Ok(((rows, cols), seq))
     } else {
-        MatRes::Err(ROW_COL_MISMATCH)
+        MatRes::Err(DIMENSION_SEQUENCE_LENGTH_MISMATCH)
     }
 }
 
@@ -146,4 +147,84 @@ pub fn scale(matrix: Matrix, scalar: Scalar) -> Matrix {
     }
 
     (dim, ret)
+}
+
+/// Matrix addition
+pub fn add(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (m1_dim, m1_s) = matrix_1;
+    let (m2_dim, m2_s) = matrix_2;
+    let mut ret = Seq::<Scalar>::new(m1_s.len());
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m1_dim == m2_dim {
+        for i in 0..m1_s.len() {
+            ret[i] = m1_s[i] + m2_s[i]
+        }
+        res = MatRes::Ok((m1_dim, ret))
+    }
+    res
+}
+
+/// Matrix subtraction
+pub fn sub(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (m1_dim, m1_s) = matrix_1;
+    let (m2_dim, m2_s) = matrix_2;
+    let mut ret = Seq::<Scalar>::new(m1_s.len());
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m1_dim == m2_dim {
+        for i in 0..m1_s.len() {
+            ret[i] = m1_s[i].clone() - m2_s[i].clone()
+        }
+        res = MatRes::Ok((m1_dim, ret))
+    }
+    res
+}
+
+/// Component-wise multiplication (Hadamard product)
+pub fn component_mul(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (m1_dim, m1_s) = matrix_1;
+    let (m2_dim, m2_s) = matrix_2;
+    let mut ret = Seq::<Scalar>::new(m1_s.len());
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m1_dim == m2_dim {
+        for i in 0..m1_s.len() {
+            ret[i] = m1_s[i].clone() * m2_s[i].clone()
+        }
+        res = MatRes::Ok((m1_dim, ret))
+    }
+    res
+}
+
+/// Matrix multiplication
+pub fn mul(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (dim_1, seq_1) = matrix_1;
+    let (dim_2, seq_2) = matrix_2;
+    let (l, m) = dim_1;
+    let (m_, n) = dim_2;
+    let mut ret = Seq::<Scalar>::new(l * n);
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m == m_ {
+        for i in 0..l {
+            for j in 0..n {
+                let mut acc = Scalar::ZERO();
+                let index = i * n + j;
+
+                for k in 0..m {
+                    let index_1 = i * m + k;
+                    let index_2 = k * n + j;
+
+                    acc = acc + seq_1[index_1] * seq_2[index_2];
+                }
+
+                ret[index] = acc
+            }
+        }
+
+        res = new(l, n, ret)
+    }
+
+    res
 }
