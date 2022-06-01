@@ -26,3 +26,14 @@ jobs:
         run: RUST_NIGHTLY=nightly-2021-11-14 ./lib/get_func_stats.sh
       - name: Build and test Hacspec compiler
         run: cargo clean && cargo build -p hacspec-lib && cd language && cargo test --verbose
+
+  build_no_std:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install no_std target
+        run: rustup target add thumbv7em-none-eabi
+      - name: Build no_std hacspec-lib
+        run: cargo build --target thumbv7em-none-eabi -p hacspec-lib --no-default-features --features alloc -Zfeatures=all
