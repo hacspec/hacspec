@@ -127,7 +127,7 @@ pub fn slice(matrix: Matrix, start: Dims, len: Dims) -> MatRes {
             for j in 0..len_cols {
                 let ret_index = i * len_cols + j;
                 let seq_index = (start_row + i) * cols + (start_col + j);
-                ret[ret_index] = seq[seq_index].clone()
+                ret[ret_index] = seq[seq_index]
             }
         }
 
@@ -143,7 +143,7 @@ pub fn scale(matrix: Matrix, scalar: Scalar) -> Matrix {
     let mut ret = Seq::<Scalar>::new(seq.len());
 
     for i in 0..seq.len() {
-        ret[i] = scalar * seq[i].clone()
+        ret[i] = scalar * seq[i]
     }
 
     (dim, ret)
@@ -174,7 +174,7 @@ pub fn sub(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
 
     if m1_dim == m2_dim {
         for i in 0..m1_s.len() {
-            ret[i] = m1_s[i].clone() - m2_s[i].clone()
+            ret[i] = m1_s[i] - m2_s[i]
         }
         res = MatRes::Ok((m1_dim, ret))
     }
@@ -190,7 +190,7 @@ pub fn component_mul(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
 
     if m1_dim == m2_dim {
         for i in 0..m1_s.len() {
-            ret[i] = m1_s[i].clone() * m2_s[i].clone()
+            ret[i] = m1_s[i] * m2_s[i]
         }
         res = MatRes::Ok((m1_dim, ret))
     }
