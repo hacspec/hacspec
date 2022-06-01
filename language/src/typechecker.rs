@@ -1704,7 +1704,15 @@ fn typecheck_expression(
                 .union(external_mut_vars.external_vars)
             {
                 match (x, y) {
-                    (Ident::Local(LocalIdent { id, name, mutable: _ }), Some(var)) => { // TODO: mutable should always be true
+                    (
+                        Ident::Local(LocalIdent {
+                            id,
+                            name,
+                            mutable: _,
+                        }),
+                        Some(var),
+                    ) => {
+                        // TODO: mutable should always be true
                         var_context.1 = var_context.1.update(id, (var, name, true))
                     }
                     _ => (),
@@ -1860,7 +1868,15 @@ fn typecheck_expression(
                 .union(external_mut_vars.external_vars)
             {
                 match (x, y) {
-                    (Ident::Local(LocalIdent { id, name, mutable: _ }), Some(var)) => { // TODO: mutable should always be true here
+                    (
+                        Ident::Local(LocalIdent {
+                            id,
+                            name,
+                            mutable: _,
+                        }),
+                        Some(var),
+                    ) => {
+                        // TODO: mutable should always be true here
                         var_context.1 = var_context.1.update(id, (var, name, true))
                     }
                     _ => (),
@@ -2291,11 +2307,17 @@ fn early_return_type_from_return_type(
     return_typ: BaseTyp,
 ) -> Fillable<EarlyReturnType> {
     match dealias_type(return_typ, top_level_context) {
-        BaseTyp::Named((a, _), _) => match a.string.as_str() {
-            "Option" => Some(EarlyReturnType::Option),
-            "Result" => Some(EarlyReturnType::Result),
-            _ => None,
-        },
+        BaseTyp::Named((a, _), Some(args)) => {
+            let mut args_iter = args.into_iter();
+            match a.string.as_str() {
+                "Option" => Some(EarlyReturnType::Option(args_iter.next().unwrap())),
+                "Result" => Some(EarlyReturnType::Result(
+                    args_iter.next().unwrap(),
+                    args_iter.next().unwrap(),
+                )),
+                _ => None,
+            }
+        }
         _ => None,
     }
 }
@@ -2412,7 +2434,7 @@ fn typecheck_statement(
                 &expr_typ,
                 top_level_context,
             )?;
-            
+
             let mut ret_var_context = (
                 new_var_context.clone().0.union(pat_var_context.0),
                 new_var_context
@@ -2424,7 +2446,15 @@ fn typecheck_statement(
 
             if let Pattern::IdentPat(x, true) = pat.clone() {
                 match (x, typ.clone().map(|t| t.0)) {
-                    (Ident::Local(LocalIdent { id, name, mutable: _ }), Some(var)) => { // mutable should always be true
+                    (
+                        Ident::Local(LocalIdent {
+                            id,
+                            name,
+                            mutable: _,
+                        }),
+                        Some(var),
+                    ) => {
+                        // mutable should always be true
                         ret_var_context.1 = ret_var_context.1.update(id, (var, name, false))
                     }
                     _ => (),
@@ -2442,9 +2472,15 @@ fn typecheck_statement(
                     (pat.clone(), pat_span.clone()),
                     typ.clone(),
                     (new_expr, expr.1.clone()),
-                    question_mark
-                        .clone()
-                        .map(|_| translate_var_context_to_mut_vars(ret_var_context.clone())),
+                    question_mark.clone().map(|_| {
+                        (
+                            translate_var_context_to_mut_vars(ret_var_context.clone()),
+                            early_return_type_from_return_type(
+                                top_level_context,
+                                return_typ.clone().0,
+                            ),
+                        )
+                    }),
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 ret_var_context,
@@ -2495,7 +2531,13 @@ fn typecheck_statement(
                     (x.clone(), x_span.clone()),
                     (new_e, e.1.clone()),
                     question_mark.clone().map(|_| {
-                        translate_var_context_to_mut_vars(ret_var_context.clone()).clone()
+                        (
+                            translate_var_context_to_mut_vars(ret_var_context.clone()).clone(),
+                            early_return_type_from_return_type(
+                                top_level_context,
+                                return_typ.clone().0,
+                            ),
+                        )
                     }),
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
@@ -2576,9 +2618,15 @@ fn typecheck_statement(
                     (x.clone(), x_span.clone()),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
-                    question_mark
-                        .clone()
-                        .map(|_| translate_var_context_to_mut_vars(var_context.clone())),
+                    question_mark.clone().map(|_| {
+                        (
+                            translate_var_context_to_mut_vars(var_context.clone()),
+                            early_return_type_from_return_type(
+                                top_level_context,
+                                return_typ.clone().0,
+                            ),
+                        )
+                    }),
                     Some(x_typ),
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),

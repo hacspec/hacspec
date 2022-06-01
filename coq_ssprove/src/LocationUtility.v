@@ -595,3 +595,13 @@ Proof.
   replace (choice_type_test _ _) with (eqtype.eq_op x x) by reflexivity.
   apply eqtype.eq_refl.
 Qed.
+
+Theorem fset_eqEincl: forall a b : list Location, fset a = fset b <-> List.incl a b /\ List.incl b a.
+Proof.
+  intros.
+  rewrite (ssrbool.rwP (@eqtype.eqP _ (fset a) (fset b))).
+  rewrite (@eqEfsubset _ (fset a) (fset b)).
+  rewrite is_true_split_and.
+
+  apply ZifyClasses.and_morph ; rewrite list_incl_fsubset ; rewrite <- list_incl_remove_fset ; reflexivity.
+Qed.

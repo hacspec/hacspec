@@ -1,6 +1,6 @@
 use core::cmp::PartialEq;
 use core::hash::Hash;
-use im::{HashSet};
+use im::HashSet;
 use itertools::Itertools;
 use rustc_errors::MultiSpan;
 use rustc_span::Span;
@@ -430,8 +430,8 @@ pub enum Pattern {
 
 #[derive(Clone, Serialize, Debug, PartialEq, Eq)]
 pub enum EarlyReturnType {
-    Option,
-    Result,
+    Option(Spanned<BaseTyp>),
+    Result(Spanned<BaseTyp>, Spanned<BaseTyp>),
 }
 
 #[derive(Clone, Serialize, Debug)]
@@ -443,18 +443,20 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
+pub type QuestionMarkInfo = Option<(ScopeMutableVars, Fillable<EarlyReturnType>)>;
+
 #[derive(Clone, Serialize, Debug)]
 pub enum Statement {
     LetBinding(
-        Spanned<Pattern>,           // Let-binded pattern
-        Option<Spanned<Typ>>,       // Typ of the binded expr
-        Spanned<Expression>,        // Binded expr
-        Option<ScopeMutableVars>, // Presence of a question mark at the end
+        Spanned<Pattern>,     // Let-binded pattern
+        Option<Spanned<Typ>>, // Typ of the binded expr
+        Spanned<Expression>,  // Binded expr
+        QuestionMarkInfo,     // Presence of a question mark at the end
     ),
     Reassignment(
-        Spanned<Ident>,             // Variable reassigned
-        Spanned<Expression>,        // New value
-        Option<ScopeMutableVars>, // Presence of a question mark at the end
+        Spanned<Ident>,      // Variable reassigned
+        Spanned<Expression>, // New value
+        QuestionMarkInfo,    // Presence of a question mark at the end
     ),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -469,11 +471,11 @@ pub enum Statement {
         Spanned<Block>,         // Loop body
     ),
     ArrayUpdate(
-        Spanned<Ident>,             // Array variable
-        Spanned<Expression>,        // Index value
-        Spanned<Expression>,        // Cell value
-        Option<ScopeMutableVars>, // Presence of a question mark at the end of the cell value expression
-        Fillable<Typ>,              // Type of the array
+        Spanned<Ident>,      // Array variable
+        Spanned<Expression>, // Index value
+        Spanned<Expression>, // Cell value
+        QuestionMarkInfo,    // Presence of a question mark at the end of the cell value expression
+        Fillable<Typ>,       // Type of the array
     ),
     ReturnExp(Expression, Fillable<Typ>),
 }
@@ -501,7 +503,10 @@ impl Serialize for ScopeMutableVars {
 
 impl ScopeMutableVars {
     pub fn new() -> Self {
-        ScopeMutableVars { external_vars: HashSet::new(), local_vars: HashSet::new() }
+        ScopeMutableVars {
+            external_vars: HashSet::new(),
+            local_vars: HashSet::new(),
+        }
     }
 
     pub fn push(&mut self, value: MutableVar) {
@@ -520,13 +525,20 @@ impl ScopeMutableVars {
             self.local_vars.insert(i);
         }
     }
-    
+
     pub fn extend_external(&mut self, other: ScopeMutableVars) {
         for i in other.external_vars {
             self.external_vars.insert(i);
         }
         for i in other.local_vars {
             self.external_vars.insert(i);
+        }
+    }
+
+    pub fn subtract(self, other: ScopeMutableVars) -> ScopeMutableVars {
+        ScopeMutableVars {
+            external_vars: self.external_vars.clone().difference(other.external_vars),
+            local_vars: self.local_vars.clone().difference(other.local_vars),
         }
     }
 }

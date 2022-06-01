@@ -1,6 +1,13 @@
 From Coq Require Import ZArith List.
 From Crypt Require Import Package.
 
+(* Typeclass handling of default elements, for use in sequences/arrays.
+   We provide instances for the library integer types *)
+Class Default (A : Type) := {
+  default : A
+}.
+Global Arguments default {_} {_}.
+
 Class EqDec (A : Type) :=
   { eqb : A -> A -> bool ;
     eqb_leibniz : forall x y, eqb x y = true <-> x = y }.

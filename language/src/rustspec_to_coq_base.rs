@@ -107,6 +107,10 @@ pub(crate) fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> 
     let iter = args.into_iter();
     match &iter.size_hint().1 {
         Some(0) => RcDoc::as_string("tt"),
+        Some(1) => RcDoc::intersperse(
+                        iter,
+                        RcDoc::as_string(",").append(RcDoc::line()),
+                    ), // TODO: handle better than intersperse iterator of size 1
         _ => RcDoc::as_string("(")
             .append(
                 RcDoc::line_()
@@ -284,6 +288,33 @@ pub(crate) fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
 }
 
 // taken from rustspec_to_fstar
+pub(crate) fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
+    match &(t.1).0 {
+        BaseTyp::Seq(_) => RcDoc::as_string("seq"),
+        BaseTyp::Named(id, None) => {
+            let name = &id.0;
+            match top_ctxt.typ_dict.get(name) {
+                Some((new_t, dict_entry)) => match dict_entry {
+                    DictEntry::Alias => array_or_seq(new_t.clone(), top_ctxt),
+                    DictEntry::Enum => panic!("should not happen"),
+                    DictEntry::Array => {
+                        match &(new_t.1).0 {
+                            BaseTyp::Array(_, _) => RcDoc::as_string("array"),
+                            _ => panic!(), // shouldd not happen
+                        }
+                    }
+                    DictEntry::NaturalInteger => panic!("should not happen"),
+                },
+                None => panic!("should not happen"),
+            }
+        }
+        BaseTyp::Named(_, Some(_)) => panic!("should not happen"),
+        BaseTyp::Array(_, _) => RcDoc::as_string("array"),
+        _ => panic!("should not happen"),
+    }
+}
+
+// taken from rustspec_to_fstar
 pub(crate) fn add_ok_if_result(
     stmt: Statement,
     early_return_type: Fillable<EarlyReturnType>,
@@ -304,8 +335,8 @@ pub(crate) fn add_ok_if_result(
                                         (
                                             TopLevelIdent {
                                                 string: match ert {
-                                                    EarlyReturnType::Option => "Option",
-                                                    EarlyReturnType::Result => "Result",
+                                                    EarlyReturnType::Option(_) => "Option",
+                                                    EarlyReturnType::Result(_ , _) => "Result",
                                                 }
                                                 .to_string(),
                                                 kind: TopLevelIdentKind::Type,
@@ -317,8 +348,8 @@ pub(crate) fn add_ok_if_result(
                                     (
                                         TopLevelIdent {
                                             string: match ert {
-                                                EarlyReturnType::Option => "Some",
-                                                EarlyReturnType::Result => "Ok",
+                                                EarlyReturnType::Option(_) => "Some",
+                                                EarlyReturnType::Result(_ , _) => "Ok",
                                             }
                                             .to_string(),
                                             kind: TopLevelIdentKind::EnumConstructor,
@@ -339,4 +370,69 @@ pub(crate) fn add_ok_if_result(
         },
         DUMMY_SP.into(),
     )
+}
+
+#[derive(Debug)]
+pub(crate) enum FuncPrefix {
+    Regular,
+    Array(ArraySize, BaseTyp),
+    Seq(BaseTyp),
+    NatMod(String, usize), // Modulo value, number of bits for the encoding,
+}
+
+pub(crate) fn translate_prefix_for_func_name<'a>(
+    prefix: BaseTyp,
+    top_ctx: &'a TopLevelContext,
+) -> (RcDoc<'a, ()>, FuncPrefix) {
+    match prefix {
+        BaseTyp::Bool => panic!(), // should not happen
+        BaseTyp::Unit => panic!(), // should not happen
+        BaseTyp::UInt8 => (RcDoc::as_string("pub_uint8"), FuncPrefix::Regular),
+        BaseTyp::Int8 => (RcDoc::as_string("pub_int8"), FuncPrefix::Regular),
+        BaseTyp::UInt16 => (RcDoc::as_string("pub_uint16"), FuncPrefix::Regular),
+        BaseTyp::Int16 => (RcDoc::as_string("pub_int16"), FuncPrefix::Regular),
+        BaseTyp::UInt32 => (RcDoc::as_string("pub_uint32"), FuncPrefix::Regular),
+        BaseTyp::Int32 => (RcDoc::as_string("pub_int32"), FuncPrefix::Regular),
+        BaseTyp::UInt64 => (RcDoc::as_string("pub_uint64"), FuncPrefix::Regular),
+        BaseTyp::Int64 => (RcDoc::as_string("pub_int64"), FuncPrefix::Regular),
+        BaseTyp::UInt128 => (RcDoc::as_string("pub_uint128"), FuncPrefix::Regular),
+        BaseTyp::Int128 => (RcDoc::as_string("pub_int128"), FuncPrefix::Regular),
+        BaseTyp::Usize => (RcDoc::as_string("uint_size"), FuncPrefix::Regular),
+        BaseTyp::Isize => (RcDoc::as_string("int_size"), FuncPrefix::Regular),
+        BaseTyp::Str => (RcDoc::as_string("string"), FuncPrefix::Regular),
+        BaseTyp::Enum(_cases, _type_args) => {
+            panic!("Should not happen")
+        }
+        BaseTyp::Seq(inner_ty) => (
+            RcDoc::as_string(SEQ_MODULE),
+            FuncPrefix::Seq(inner_ty.as_ref().0.clone()),
+        ),
+        BaseTyp::Array(size, inner_ty) => (
+            RcDoc::as_string(ARRAY_MODULE),
+            FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
+        ),
+        BaseTyp::Named(ident, _) => {
+            // if the type is an array, we should print the Seq module instead
+            let name = &ident.0;
+            match top_ctx.typ_dict.get(name) {
+                Some((alias_typ, DictEntry::Array))
+                | Some((alias_typ, DictEntry::Alias))
+                | Some((alias_typ, DictEntry::NaturalInteger)) => {
+                    translate_prefix_for_func_name((alias_typ.1).0.clone(), top_ctx)
+                }
+                // TODO: doesn't work if the alias uses a definition from another library
+                // Needs fixing in the frontend
+                _ => (
+                    translate_ident_str(name.string.clone()),
+                    FuncPrefix::Regular,
+                ),
+            }
+        }
+        BaseTyp::Variable(_) => panic!(), // shoult not happen
+        BaseTyp::Tuple(_) => panic!(),    // should not happen
+        BaseTyp::NaturalInteger(_, modulo, bits) => (
+            RcDoc::as_string(NAT_MODULE),
+            FuncPrefix::NatMod(modulo.0.clone(), bits.0.clone()),
+        ),
+    }
 }

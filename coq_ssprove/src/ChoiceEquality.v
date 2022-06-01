@@ -8,6 +8,10 @@ Require Import Hacspec_Lib_Comparable.
 Require Import LocationUtility.
 Require Import Coq.Logic.FunctionalExtensionality.
 
+Import RulesStateProb.
+Import RulesStateProb.RSemanticNotation.
+Open Scope rsemantic_scope.
+
 (* Set Printing Universes. *)
 
 Monomorphic Class ChoiceEquality := {
@@ -22,26 +26,29 @@ Monomorphic Class ChoiceEquality := {
 (*   }. *)
 Print ChoiceEquality.
 
+Arguments T ChoiceEquality : clear implicits.
+Arguments ct ChoiceEquality : clear implicits.
+Arguments ChoiceEq ChoiceEquality : clear implicits.
 
 Global Coercion T : ChoiceEquality >-> Sortclass.
 Global Coercion ct : ChoiceEquality >-> choice_type.
 
-Definition ct_T {ce : ChoiceEquality} (x : choice.Choice.sort (@ct ce)) : @T ce :=
-  eq_rect (choice.Choice.sort (chElement (@ct ce))) id x (@T ce) ChoiceEq.
+Definition ct_T {ce : ChoiceEquality} (x : choice.Choice.sort (ct ce)) : T ce :=
+  eq_rect (choice.Choice.sort (chElement (ct ce))) id x (T ce) (ChoiceEq _).
 
-Definition T_ct {ce : ChoiceEquality} (x : @T ce) : choice.Choice.sort (@ct ce) :=
-  eq_rect_r id x ChoiceEq.
+Definition T_ct {ce : ChoiceEquality} (x : T ce) : choice.Choice.sort (ct ce) :=
+  eq_rect_r id x (ChoiceEq _).
 
 Theorem ct_T_id : forall {ce : ChoiceEquality} t, ct_T (T_ct t) = t.
-Proof (fun ce => rew_opp_r id (@ChoiceEq ce)). 
+Proof (fun ce => rew_opp_r id (ChoiceEq ce)). 
 
 Theorem T_ct_id : forall {ce : ChoiceEquality} t, T_ct (ct_T t) = t.
-Proof (fun ce => rew_opp_l id (@ChoiceEq ce)).
+Proof (fun ce => rew_opp_l id (ChoiceEq ce)).
 
 Global Coercion ct_T : choice.Choice.sort >-> T.
 Global Coercion T_ct : T >-> choice.Choice.sort.
 
-Lemma ChoiceEquality_ct_EqP : forall ce1 ce2, ce1 = ce2 <-> @ct ce1 = @ct ce2.
+Lemma ChoiceEquality_ct_EqP : forall ce1 ce2, ce1 = ce2 <-> ct ce1 = ct ce2.
 Proof.
   split ; intros.
   - rewrite H.
@@ -93,10 +100,25 @@ Defined.
 
 Notation "A '× B" := (prod_ChoiceEquality A B) (at level 79, left associativity) : hacspec_scope.
 
+Notation "prod_ce( a , b )" := ((a , b) : prod_ChoiceEquality _ _) : hacspec_scope.
+Notation "prod_ce( a , b , .. , c )" := ((.. ((a , b) : prod_ChoiceEquality _ _) .. , c) : prod_ChoiceEquality _ _) : hacspec_scope.
+
 Open Scope hacspec_scope.
 
 Definition fst_CE {A B} (p : A '× B) : A := let '(f,s) := p in f.
 Definition snd_CE {A B} (p : A '× B) : B := let '(f,s) := p in s.  
+
+
+Theorem T_ct_id_prod : forall {ceA ceB : ChoiceEquality} a b, @T_ct (prod_ChoiceEquality ceA ceB) (@ct_T ceA a , @ct_T ceB b) = (a , b).
+Proof. now intros [? ? []] [? ? []]. Qed.
+
+Theorem T_ct_prod_propegate : forall {ceA ceB : ChoiceEquality} a b, @T_ct (prod_ChoiceEquality ceA ceB) (a , b) = (T_ct a , T_ct b).
+Proof. now intros [? ? []] [? ? []]. Qed.
+
+Theorem ct_T_prod_propegate : forall {ceA ceB : ChoiceEquality} a b,
+    @ct_T (prod_ChoiceEquality ceA ceB) (a , b) = (ct_T a , ct_T b).
+Proof. now intros [? ? []] [? ? []]. Qed.
+
 
 (* Notation "A '× B" := (prod A B) (at level 79, left associativity) : hacspec_scope. *)
 
@@ -117,6 +139,8 @@ Defined.
 
 Definition pre_to_post (P : precond) {A} : postcond A A :=
   fun '(a, h₀) '(b, h₁) => a = b /\ P (h₀ , h₁).  
+Definition pre_to_post_ret (P : precond) {A} v : postcond A A :=
+  fun '(a, h₀) '(b, h₁) => (a = b /\ b = v) /\ P (h₀ , h₁).  
 
 Definition true_precond : precond := fun _ => True.
 
@@ -127,28 +151,141 @@ Class both L I (A : ChoiceEquality) :=
     code_eq_proof_statement :
     ⊢ ⦃ true_precond ⦄
           is_state ≈ lift_to_code (L := L) (I := I) (is_pure)
-      ⦃ pre_to_post true_precond ⦄
+      ⦃ pre_to_post_ret true_precond (T_ct is_pure) ⦄
   }.
+
+Arguments is_pure {_} {_} {_} both.
+Arguments is_state {_} {_} {_} both.
+Arguments code_eq_proof_statement {_} {_} {_} both.
+
 Coercion is_pure : both >-> T.
 Coercion is_state : both >-> code.
 
 Program Definition lift_to_both {ce : ChoiceEquality} {L I} (x : @T ce) : both L I ce :=
   {| is_pure := x ; is_state := @lift_to_code ce L I x |}.
-Next Obligation. intros. apply r_ret. intros. split ; reflexivity. Qed.
+Next Obligation. intros. apply r_ret. intros. easy. Qed.
 
+Definition both0 (A : ChoiceEquality) := both fset.fset0 [interface] A.
+Definition lift_to_both0 {ce : ChoiceEquality} (x : T ce) : both fset.fset0 [interface] ce := lift_to_both x.
 
+Definition lift_code_scope {L1 L2 : {fset Location}} {I} {A} (c : code L1 I A) `{H_incl : List.incl L1 L2} : code L2 I A :=
+  {code (prog c) #with
+    (@valid_injectLocations I A L1 L2 _ (proj2 (list_incl_fsubset _ _) H_incl) (prog_valid c)) }.
+
+Definition lift_scope {L1 L2 : {fset Location}} {I} {A} (b : both L1 I A) `{H_incl : List.incl L1 L2} : both L2 I A :=
+  {|
+    is_pure := is_pure b ;
+    is_state := {code (prog (is_state b)) #with
+                 (@valid_injectLocations I A L1 L2 _ (proj2 (list_incl_fsubset _ _) H_incl) (prog_valid b)) } ;
+    code_eq_proof_statement := code_eq_proof_statement b
+  |}.
+
+Definition lift_scope0 {L I} {A} (b : both fset.fset0 I A) : both L I A :=
+  lift_scope (H_incl := incl_nil_l _) b.
+  
+Instance both_comparable {A : ChoiceEquality} `{Comparable A} {L I} : Comparable (both L I A) :=
+  {|
+    ltb x y := ltb (is_pure x) (is_pure y) ;
+    leb x y := leb (is_pure x) (is_pure y) ;
+    gtb x y := gtb (is_pure x) (is_pure y) ;
+    geb x y := geb (is_pure x) (is_pure y)
+  |}.
+
+Theorem forget_precond {B} (x y : raw_code B) P Q :
+  ⊢ ⦃ true_precond ⦄ x ≈ y ⦃ Q ⦄ -> 
+  ⊢ ⦃ P ⦄ x ≈ y ⦃ Q ⦄. 
+Proof.
+  intros.
+  eapply rpre_weaken_rule.
+  apply H.
+  intros.
+  reflexivity.
+Qed.
+
+Program Instance prod_both {ceA ceB : ChoiceEquality} {L I} (a : both L I ceA) (b : both L I ceB) : both L I (ceA '× ceB) :=
+  {|
+    is_pure := (is_pure a , is_pure b) ;
+    is_state :=
+    {code
+       x ← a ;;
+       y ← b ;;
+       @ret (prod_ChoiceEquality _ _) (x , y)
+    }
+  |}.
+Next Obligation.
+  intros.
+  rewrite (T_ct_prod_propegate).
+  
+  set (r := ret _).
+  pattern (T_ct (is_pure a)) in r.
+  set (g := fun _ => _) in r.
+  subst r.
+  replace (g a) with (bind (ret a) g) by reflexivity.
+  subst g. hnf.
+
+  eapply r_bind. (* with (mid := pre_to_post_ret true_precond (a , b)). *)
+  apply (code_eq_proof_statement a).
+  intros.
+  apply rpre_hypothesis_rule.
+  intros ? ? [[] []]. subst.
+  apply forget_precond.
+
+  
+  set (r := ret _).
+  pattern (T_ct (is_pure b)) in r.
+  set (g := fun _ => _) in r.
+  subst r.
+  replace (g b) with (bind (ret b) g) by reflexivity.
+  subst g. hnf.
+
+  
+  
+  eapply r_bind. (* with (mid := pre_to_post true_precond). *)
+  apply (code_eq_proof_statement b).
+  intros.
+  apply rpre_hypothesis_rule.
+  intros ? ? [[] []]. subst.
+  apply forget_precond.
+
+  apply r_ret.
+  intros ? ? []. easy. 
+Defined.
+Notation "prod_b( a , b )" := (prod_both a b) : hacspec_scope.
+Notation "prod_b( a , b , .. , c )" := (prod_both .. (prod_both a b) .. c) : hacspec_scope.
+
+(* Program Definition both_prod {L I} {A B} (x : both L I A * both L I B) : both L I (A '× B) := *)
+(*   {| is_pure := (fst x , snd x) ; *)
+(*     is_state := {code x' ← fst x ;; y' ← snd x ;; @ret (A '× B) (x' , y') } |}. *)
+(* Next Obligation. *)
+(*   unfold lift_to_code, prog. *)
+(*   rewrite T_ct_prod_propegate. *)
+(*   step_code. *)
+(* Qed. *)
+
+(* Program Instance list_both {ce : ChoiceEquality} {L I} (l : list (both L I ce)) : both L I ((ce) := *)
+(*   {| *)
+(*     is_pure := (is_pure a , is_pure b) ; *)
+(*     is_state := *)
+(*     {code *)
+(*        x ← a ;; *)
+(*        y ← b ;; *)
+(*        @ret (prod_ChoiceEquality _ _) (x , y) *)
+(*     } *)
+(*   |}. *)
 
 (* Ltac ssprove_valid_location := *)
 (*   try repeat (try (apply eqtype.predU1l ; reflexivity) ; try apply eqtype.predU1r). *)
 
-Ltac ssprove_valid_location :=
-  repeat
-    (try reflexivity ;
-     try (rewrite fset_cons ;
-          apply (ssrbool.introT (fsetU1P _ _ _)) ;
-          try (left ; reflexivity) ;
-          right)).
+(* Ltac ssprove_valid_location := *)
+(*   repeat *)
+(*     (try reflexivity ; *)
+(*      try (rewrite fset_cons ; *)
+(*           apply (ssrbool.introT (fsetU1P _ _ _)) ; *)
+(*           try (left ; reflexivity) ; *)
+(*           right)). *)
 
+Ltac ssprove_valid_location :=
+  apply loc_compute ; try apply -> in_remove_fset ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
 
 Ltac ssprove_valid_program :=
   try (apply prog_valid) ;
@@ -180,7 +317,7 @@ Ltac ssprove_valid_2 :=
   (* destruct_choice_type_prod ; *)
   ssprove_valid ;
   ssprove_valid_program ;
-  ssprove_valid_location.
+  try ssprove_valid_location.
 
 Check ct.
 
@@ -252,9 +389,6 @@ Qed.
 (*     assumption. *)
 (* Qed. *)
 
-
-Ltac ssprove_valid_location' :=
-  apply loc_compute ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
 
 (* Fixpoint uniqb {A} `{EqDec A} (s : list A) := *)
 (*   match s with *)
@@ -396,7 +530,7 @@ Qed.
 
 (* rewrite list_incl_sort with (leb := location_ltb_simple) ;  *)
 Ltac incl_compute :=
-  now (apply list_incl_expand ; (now repeat (split ; [ repeat ((left ; reflexivity) || (right)) | ]))).
+  now (try apply -> list_incl_remove_fset ; apply list_incl_expand ; (now repeat (split ; [ repeat ((left ; reflexivity) || (right)) | ]))).
   (* now (apply list_incl_compute ; cbn ; repeat rewrite ssrnat.eqnE ; repeat rewrite eqtype.eq_refl ; repeat rewrite choice_type_test_refl ; cbn ; reflexivity). *)
 
 (* Ltac valid_sorted_incl := *)
@@ -406,10 +540,37 @@ Ltac incl_compute :=
 (*   ; cbn *)
 (*   ; incl_compute. *)
 
+Lemma valid_subset_fset :
+  forall xs ys I {ct} c,
+    List.incl (xs) (ys) ->
+    ValidCode (fset xs) I c ->
+    @ValidCode (fset ys) I ct c.
+Proof.
+  intros.
+  apply (valid_injectLocations) with (L1 := fset xs).
+  - apply list_incl_fsubset.
+    apply -> list_incl_remove_fset.
+    apply H.
+  - apply H0.
+Qed.
+
+Lemma valid_subset :
+  forall (xs ys : {fset Location}) I {ct} c,
+    List.incl (xs) (ys) ->
+    ValidCode (xs) I c ->
+    @ValidCode (ys) I ct c.
+Proof.
+  intros.
+  apply (valid_injectLocations) with (L1 := xs).
+  - apply list_incl_fsubset.
+    apply H.
+  - apply H0.
+Qed.
+
 Ltac valid_program :=
   apply prog_valid
   || (apply valid_scheme ; apply prog_valid)
-  || (eapply (valid_injectLocations_b) ; [ | apply prog_valid ] ; apply -> list_incl_remove_fset ; incl_compute).
+  || (eapply (valid_subset_fset) ; [ | apply prog_valid ] ; incl_compute).
 
 
 Definition heap_ignore_post fset {A} : postcond A A :=
@@ -552,45 +713,98 @@ Proof.
   unfold bind.
   reflexivity.
 Qed.
-(* Proof ltac:(unfold bind ; reflexivity). *)
-
-Ltac clear_bind :=
-  rewrite bind_rewrite
-  (* || *)
-  (* bind_both_function *).
 
 Theorem r_bind_eq : forall {B C : ChoiceEquality} (y : B) (g : choice.Choice.sort B  -> raw_code C), (temp ← ret y ;; g temp) = g y.
 Proof. reflexivity. Qed.
 
 Theorem r_bind_trans :
   forall {B C : ChoiceEquality}
-    (f g : choice.Choice.sort B -> raw_code C) (x : raw_code B) (y : B),
+     (f : choice.Choice.sort B -> raw_code C)
+    (g : B -> raw_code C) (x : raw_code B) (y : B),
   forall (P P_mid : precond) (Q : postcond (choice.Choice.sort C) (choice.Choice.sort C)),
-  forall (H_x_is_y : ⊢ ⦃ P ⦄ x ≈ ret (T_ct y) ⦃ pre_to_post P_mid ⦄),
-    (forall a, ⊢ ⦃ P_mid ⦄ f a  ≈ g a ⦃ Q ⦄) ->
-    ⊢ ⦃ P ⦄ temp ← x ;; f temp ≈ g (T_ct y) ⦃ Q ⦄.
+  forall (H_x_is_y : ⊢ ⦃ P ⦄ x  ≈ ret y ⦃ pre_to_post_ret P_mid (T_ct y) ⦄),
+    (⊢ ⦃ P_mid ⦄ f (T_ct y)  ≈ g y ⦃ Q ⦄) ->
+    ⊢ ⦃ P ⦄ temp ← x ;; f temp ≈ g y ⦃ Q ⦄.
 Proof.
   intros.
-  (* apply list_incl_fsubset in H_incl. *)
+  (* pose (bind (ret (T_ct y)) (fun x => g (ct_T x))). *)
 
-  replace (g y) with (temp ← ret y ;; g temp) by reflexivity.
-
-  (* destruct H_P_Q as [fset_head [fset_tail [H_P [H_P_mid H_Q]]]]. *)
-  (* cbn in fset_head , fset_tail.  *)
-
-  (* set (P_mid := fun _ _ => _) in H_x_is_y. *)
+  rewrite <- (ct_T_id y).
   
-  eapply r_bind with (mid := pre_to_post P_mid).
-  apply H_x_is_y.
+  replace (g (ct_T (T_ct y))) with (temp ← ret (T_ct y) ;; g (ct_T temp)) by reflexivity.
+  
+  pose @r_bind.
+  specialize r with (f₀ := f) (f₁ := fun x => g (ct_T x)).
+  specialize r with (m₀ := x) (m₁ := (ret (T_ct y))).
+  specialize r with (pre := P) (mid := pre_to_post_ret P_mid (T_ct y) ) (post := Q).
+  (* specialize r with (pre := true_precond) (mid := fun s0 s1 => pre_to_post true_precond s0 s1 /\ fst s1 = T_ct y) (post := pre_to_post true_precond). *)
+  apply r ; clear r.
 
+  - apply H_x_is_y.
+  - intros.
+    eapply rpre_hypothesis_rule.
+    intros ? ? [[] ?]. subst.
+    eapply rpre_weaken_rule.
+    cbn in H2.
+    subst.
+    rewrite ct_T_id.
+    apply H.
+    intros ? ? []. subst. apply H2.
+Qed.
+
+Theorem r_bind_trans' :
+  forall {B C : ChoiceEquality}
+     (f : choice.Choice.sort B -> raw_code C)
+    (g : B -> raw_code C) (x : raw_code B) (y : B),
+  forall (P : precond) (Q : postcond (choice.Choice.sort C) (choice.Choice.sort C)),
+  forall (H_x_is_y : ⊨ repr x ≈ repr (ret (T_ct y)) [{retW (T_ct y, T_ct y)}]),
+    (⊢ ⦃ P ⦄ f (T_ct y)  ≈ g y ⦃ Q ⦄) ->
+    ⊢ ⦃ P ⦄ temp ← x ;; f temp ≈ g y ⦃ Q ⦄.
+Proof.
   intros.
-  eapply rpre_hypothesis_rule.
-  intros ? ? []. subst.
-  eapply rpre_weaken_rule.
-  2: { intros ? ? []. subst. apply H1. }
-  clear H1.
+  (* pose (bind (ret (T_ct y)) (fun x => g (ct_T x))). *)
 
-  apply H.
+  rewrite <- (ct_T_id y).
+  
+  replace (g (ct_T (T_ct y))) with (temp ← ret (T_ct y) ;; g (ct_T temp)) by reflexivity.
+  
+  pose @r_bind.
+  specialize r with (f₀ := f) (f₁ := fun x => g (ct_T x)).
+  specialize r with (m₀ := x) (m₁ := (ret (T_ct y))).
+  specialize r with (pre := P) (mid := fun s0 s1 => pre_to_post P s0 s1 /\ fst s1 = T_ct y) (post := Q).
+  (* specialize r with (pre := true_precond) (mid := fun s0 s1 => pre_to_post true_precond s0 s1 /\ fst s1 = T_ct y) (post := pre_to_post true_precond). *)
+  apply r ; clear r.
+
+  - eapply from_sem_jdg.  
+    eapply (RulesStateProb.weaken_rule (retW (T_ct y , T_ct y))).
+    + apply H_x_is_y.
+    + unfold retW.
+      intros [] X [? πa1a2] ; cbn in X.
+      specialize (fun x => πa1a2 (x, s) (T_ct y, s0)).
+
+      unfold proj1_sig.
+      
+      unfold RulesStateProb.WrelSt.
+      unfold θ.
+      unfold StateTransformingLaxMorph.rlmm_codomain ; simpl.
+
+      apply πa1a2.
+      split.
+      cbn.
+      split.
+      reflexivity.
+      2: { reflexivity. }
+      apply H0.  
+  - intros.
+    eapply rpre_hypothesis_rule.
+    intros ? ? [[] ?]. subst.
+    eapply rpre_weaken_rule.
+    2: { intros ? ? []. subst. apply H1. }
+    clear H1.
+    cbn in H2.
+    subst.
+    rewrite ct_T_id.
+    apply H.
 Qed.
 
 Lemma heap_ignore_remove_set_heap :
@@ -633,21 +847,21 @@ Qed.
 Ltac solve_heap_ignore_remove_set_heap :=
   apply (heap_ignore_remove_set_heap) ; [ apply isolate_mem_section ; apply loc_compute ; apply -> in_remove_fset ; cbn ; repeat (left ; reflexivity || right || reflexivity) | assumption ].
 
-Theorem r_bind_trans_both : forall {B C : ChoiceEquality} {L I} {f g : choice.Choice.sort B -> raw_code C} (b : both L I B),
+Theorem r_bind_trans_both : forall {B C : ChoiceEquality} {L I} {f : choice.Choice.sort B -> raw_code C} {g : B -> raw_code C} (b : both L I B),
   forall (P : precond) (Q : postcond _ _),
-    (forall a, ⊢ ⦃ true_precond ⦄ f a  ≈ g a ⦃ Q ⦄) -> 
-    ⊢ ⦃ P ⦄ temp ← @is_state L I B b ;; f temp ≈ g (is_pure) ⦃ Q ⦄.
+    (⊢ ⦃ true_precond ⦄ f (T_ct (is_pure b))  ≈ g (is_pure b) ⦃ Q ⦄) -> 
+    ⊢ ⦃ P ⦄ temp ← is_state b ;; f temp ≈ g (is_pure b) ⦃ Q ⦄.
 Proof.
   intros.
-  eapply r_bind_trans with (P_mid := true_precond).
-
+  apply r_bind_trans with (P_mid := true_precond).
+  
   eapply rpre_weaken_rule.    
   apply code_eq_proof_statement.
   reflexivity.
 
-  intros.
   apply H.
 Qed.
+
 
 Ltac solve_post_from_pre :=
   let H := fresh in
@@ -674,6 +888,21 @@ Proof.
   apply functional_extensionality.
   intros [].
   reflexivity.
+Qed.
+
+Corollary better_r_put_get : forall (A : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code A) rhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort A)),
+    ⊢ ⦃ pre ⦄
+     #put ℓ := v ;;
+     r v ≈ rhs ⦃ post ⦄ ->
+    ⊢ ⦃ pre ⦄
+        #put ℓ := v ;;
+        x ← get ℓ ;;
+        r x ≈ rhs ⦃ post ⦄.
+Proof.
+  intros.
+  apply (r_transL (#put ℓ := v ;; r v )).
+  apply r_put_get.
+  apply H.
 Qed.
 
 Corollary better_r_get_remind_lhs : forall {A B : choice.Choice.type} (ℓ : Location)
@@ -720,47 +949,12 @@ Proof.
   apply H.
 Qed.
 
-Ltac progress_step_code :=    
-  match goal with
-  | [ |- context [ prog (@is_state ?L ?I _ ?x) : both _ _ _ ] ] =>
-      match goal with
-      | [ |- context [ ⊢ ⦃ _ ⦄ _ ≈ ?os ⦃ _ ⦄ ] ] =>
-          let Hx := fresh in
-          set (Hx := x)
-          ; try replace (@is_pure _ _ _ _) with (@is_pure _ _ _ Hx) by reflexivity
-          ; subst Hx
-          ; let H := fresh in
-            set (H := os)
-            ; pattern (@is_pure L I _ x) in H
-            ; set (Hx := x) in *
-            ; subst H
-            ; apply (@r_bind_trans_both) with (b := Hx)
-            ; intros
-      end
-  end
-  || match goal with
-    | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; (getr ?l ?a)) ≈ _ ⦃ _ ⦄ ]] =>
-        apply (r_transL (#put l := x ;; a x )) ;
-        [ apply (r_put_get _ l x a) | ]
-    end
-  ||
-  match goal with
-  | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; (putr ?l ?y ?a)) ≈ _ ⦃ _ ⦄ ]] =>
-      apply (r_transL (#put l := y ;; a )) ;
-      [ apply contract_put | ]
-  end
-  ||
-  match goal with
-  | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; ?a) ≈ ?b ⦃ _ ⦄ ]] =>
-      apply (better_r_put_lhs l x a b (* (fun '(h0, h1) => heap_ignore fset (h0, h1)) *))
-  end
-  ||
-  rewrite bind_ret
-  ||
-  apply r_ret.
+Ltac remove_T_ct :=
+  progress match goal with
+  | [ |- context[ T_ct ?x ] ] =>  
+      replace (T_ct x) with x by reflexivity
+  end.
 
-Ltac step_code :=
-  repeat (clear_bind || progress_step_code) ; try (intros ; split ; reflexivity).
 
 (* Ltac heap_ignore_remove_ignore := *)
 (*   match goal with *)
@@ -804,13 +998,37 @@ Ltac step_code :=
 (*   end. *)
 
 
-Ltac remove_T_ct :=
-  match goal with
-  | [ |- context[ T_ct ?x ] ] =>  
-      replace (T_ct x) with x by reflexivity
-  | H : _ |- context[ T_ct ?x ] =>  
-      replace (T_ct x) with x in H by reflexivity
-  end.
 
+Ltac pattern_both Hx Hf Hg :=
+  (match goal with
+   | [ |- context [ prog (@is_state ?L ?I _ ?x) : both _ _ _ ] ] =>
+       set (Hx := x)
+       ; try replace (@is_pure _ _ _ _) with (@is_pure _ _ _ Hx) by reflexivity
+       ; match goal with
+         | [ |- context [ ⊢ ⦃ _ ⦄ bind _ ?fb ≈ ?os ⦃ _ ⦄ ] ] =>
+             let H := fresh in
+             set (H := os)
+             ; pattern (@is_pure L I _ Hx) in H
+             ; subst H
+             ; set (Hf := fb)
+             ; match goal with
+               | [ |- context [ ⊢ ⦃ _ ⦄ _ ≈ ?gb _ ⦃ _ ⦄ ] ] =>
+                   set (Hg := gb)
+               end
+         end
+   end).
 
+Ltac pattern_both_fresh :=
+  let x := fresh in
+  let y := fresh in
+  let z := fresh in
+  pattern_both x y z.
 
+Ltac match_bind_trans_both :=
+  let Hx := fresh in
+  let Hf := fresh in
+  let Hg := fresh in
+  repeat remove_T_ct
+  ; pattern_both Hx Hf Hg 
+  ; apply (@r_bind_trans_both) with (b := Hx) (f := Hf) (g := Hg)
+  ; intros ; try remove_T_ct ; subst Hf ; subst Hg ; subst Hx ; hnf.
