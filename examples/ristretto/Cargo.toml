@@ -1,0 +1,15 @@
+[package]
+name = "hacspec-ristretto"
+version = "0.1.0"
+authors = ["Anders Wibrand Larsen <anderswila@hotmail.dk>", "Rasmus Kirk Jakobsen <mail@rasmuskirk.com>"]
+edition = "2018"
+
+[lib]
+path = "src/ristretto.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+
+[dev-dependencies]
+curve25519-dalek-ng = "4"
+quickcheck = "1"
