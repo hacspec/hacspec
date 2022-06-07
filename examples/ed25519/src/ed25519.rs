@@ -32,6 +32,7 @@
 //! ```
 //! use hacspec_lib::*;
 //! use hacspec_ed25519::*;
+//! use hacspec_edwards25519::*;
 //!
 //! let sk = SecretKey::from_hex("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60");
 //! // or alternatively SecretKey::from_public_slice(...);
@@ -43,6 +44,7 @@
 use hacspec_lib::*;
 use hacspec_sha512::*;
 use hacspec_edwards25519::*;
+use hacspec_edwards25519::SecretKey;
 
 fn scalar_from_hash(h: Sha512Digest) -> Scalar {
     let s = BigScalar::from_byte_seq_le(h);
