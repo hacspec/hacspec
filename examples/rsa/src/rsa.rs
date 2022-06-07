@@ -1,4 +1,6 @@
-// based on https://datatracker.ietf.org/doc/html/rfc8017
+// This crate implements RSA primitives from PKCS #1 v2.2, as specified in RFC8017: https://datatracker.ietf.org/doc/html/rfc8017
+// Secret keys are represented in the representation described in section 3.2 of https://datatracker.ietf.org/doc/html/rfc8017#section-3.2
+// Note that the RSA primitives return a MessageTooLarge error if the message is larger than the RSA modulus n
 use hacspec_lib::*;
 use hacspec_sha256::*;
 
@@ -12,8 +14,6 @@ unsigned_public_integer!(RSAInt, 1024);
 pub enum Error {
     InvalidLength,
     MessageTooLarge,
-    MessageTooLargeVerify,
-    InvalidProof,
 }
 
 pub type PK = (RSAInt, RSAInt);
@@ -22,6 +22,7 @@ pub type KeyPair = (PK, SK);
 pub type ByteSeqResult = Result<ByteSeq, Error>;
 pub type RSAIntResult = Result<RSAInt, Error>;
 
+// Encryption primitive, see section 5.1.1 of https://datatracker.ietf.org/doc/html/rfc8017#section-5.1.1
 pub fn rsaep(pk: PK, m: RSAInt) -> RSAIntResult {
     let (n, e) = pk;
     if m > n - RSAInt::ONE() {
@@ -31,6 +32,7 @@ pub fn rsaep(pk: PK, m: RSAInt) -> RSAIntResult {
     }
 }
 
+// Decryption primitive, see section 5.1.2 of https://datatracker.ietf.org/doc/html/rfc8017#section-5.1.2
 pub fn rsadp(sk: SK, c: RSAInt) -> RSAIntResult {
     let (n, d) = sk;
     if c > n - RSAInt::ONE() {
@@ -40,6 +42,7 @@ pub fn rsadp(sk: SK, c: RSAInt) -> RSAIntResult {
     }
 }
 
+// Signature primitive, see section 5.2.1 of https://datatracker.ietf.org/doc/html/rfc8017#section-5.2.1
 pub fn rsasp1(sk: SK, m: RSAInt) -> RSAIntResult {
     let (n, d) = sk;
     if m > n - RSAInt::ONE() {
@@ -49,15 +52,17 @@ pub fn rsasp1(sk: SK, m: RSAInt) -> RSAIntResult {
     }
 }
 
+// Verification primitive, see section 5.2.2 of https://datatracker.ietf.org/doc/html/rfc8017#section-5.2.2
 pub fn rsavp1(pk: PK, s: RSAInt) -> RSAIntResult {
     let (n, e) = pk;
     if s > n - RSAInt::ONE() {
-        RSAIntResult::Err(Error::MessageTooLargeVerify)
+        RSAIntResult::Err(Error::MessageTooLarge)
     } else {
         RSAIntResult::Ok(s.pow_mod(e, n))
     }
 }
 
+// RSA integer to octet string primitive, as described in section 4.1 of https://datatracker.ietf.org/doc/html/rfc8017#section-4.1
 pub fn i2osp(x: RSAInt, x_len: u32) -> ByteSeqResult {
     if x >= (RSAInt::exp(RSAInt::from_literal(256u128), x_len)) 
             && x_len != BYTE_SIZE {
@@ -68,11 +73,12 @@ pub fn i2osp(x: RSAInt, x_len: u32) -> ByteSeqResult {
     }
 }
 
+// Octet string to RSA integer primitive, as described in section 4.2 of https://datatracker.ietf.org/doc/html/rfc8017#section-4.2
 pub fn os2ip(x: &ByteSeq) -> RSAInt {
     RSAInt::from_byte_seq_be(x)
 }
 
-// https://datatracker.ietf.org/doc/html/rfc8017#appendix-B.2.1
+// Mask generation function from appendix B.2.1, see https://datatracker.ietf.org/doc/html/rfc8017#appendix-B.2.1
 pub fn mgf1(mgf_seed: &ByteSeq, mask_len: usize) -> ByteSeqResult {
     let mut result = ByteSeqResult::Err(Error::InvalidLength);
     if mask_len < 2usize^32usize * HLEN {
