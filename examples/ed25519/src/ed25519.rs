@@ -44,7 +44,6 @@
 use hacspec_lib::*;
 use hacspec_sha512::*;
 use hacspec_edwards25519::*;
-use hacspec_edwards25519::SecretKey;
 
 fn scalar_from_hash(h: Sha512Digest) -> Scalar {
     let s = BigScalar::from_byte_seq_le(h);
