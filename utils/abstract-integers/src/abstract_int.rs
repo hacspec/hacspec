@@ -123,24 +123,24 @@ macro_rules! abstract_int {
             }
         }
 
-        impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Display for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let uint: BigInt = (*self).into();
                 write!(f, "{}", uint)
             }
         }
 
-        impl std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Debug for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let uint: BigInt = (*self).into();
                 write!(f, "{}", uint)
             }
         }
 
-        impl std::fmt::LowerHex for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        impl core::fmt::LowerHex for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 let val: BigInt = (*self).into();
-                std::fmt::LowerHex::fmt(&val, f)
+                core::fmt::LowerHex::fmt(&val, f)
             }
         }
     };
@@ -320,7 +320,7 @@ macro_rules! abstract_public {
         impl Eq for $name {}
 
         impl PartialOrd for $name {
-            fn partial_cmp(&self, other: &$name) -> Option<std::cmp::Ordering> {
+            fn partial_cmp(&self, other: &$name) -> Option<core::cmp::Ordering> {
                 let a: BigInt = (*self).into();
                 let b: BigInt = (*other).into();
                 a.partial_cmp(&b)
@@ -328,7 +328,7 @@ macro_rules! abstract_public {
         }
 
         impl Ord for $name {
-            fn cmp(&self, other: &$name) -> std::cmp::Ordering {
+            fn cmp(&self, other: &$name) -> core::cmp::Ordering {
                 self.partial_cmp(other).unwrap()
             }
         }

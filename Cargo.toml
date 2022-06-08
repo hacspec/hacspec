@@ -14,6 +14,7 @@ members = [
     "utils/util",
     "examples/curve25519",
     "examples/chacha20",
+    "examples/linalg",
     "examples/poly1305",
     "examples/chacha20poly1305",
     "examples/gimli",
@@ -33,6 +34,7 @@ members = [
     "examples/aes128-gcm",
     "examples/bls12-381-hash",
     "examples/ed25519",
+    "examples/no_std",
 ]
 default-members = [
     "lib",
