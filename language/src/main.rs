@@ -465,7 +465,9 @@ fn handle_crate<'tcx>(
                     let file_temp_dir = original_file.join("_temp");
                     let file_temp_dir = file_temp_dir.to_str().unwrap();
 
+                    println!("Creating dir: {}", file_temp_dir);
                     std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to create dir");
+                    println!("Path exists: {}", Path::new(file_temp_dir.clone()).exists());
 
                     original_file.join("_temp").join(join_path.clone())
                 }
@@ -532,7 +534,9 @@ fn handle_crate<'tcx>(
 
                 let file_vc_dir = original_file.join("_vc");
                 let file_vc_dir = file_vc_dir.to_str().unwrap();
+                println!("Creating dir: {}", file_vc_dir);
                 std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to crate dir");
+                println!("Path exists: {}", Path::new(file_vc_dir.clone()).exists());
 
                 match callback.version_control {
                     VersionControlArg::Initialize => {
