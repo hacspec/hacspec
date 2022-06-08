@@ -469,7 +469,10 @@ fn handle_crate<'tcx>(
                     
                     original_file.join("_temp").join(join_path.clone())
                 }
-                _ => original_file.join(join_path.clone()),
+                _ => {
+                    std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
+                    original_file.join(join_path.clone())
+                },
             };
             let file = file.to_str().unwrap();
 
