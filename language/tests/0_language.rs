@@ -6,7 +6,7 @@ fn run_test(file_name: &str, output: Option<&str>) {
     cmd.envs(env::vars());
     if let Some(f) = output {
         cmd.args(&["-e", "fst"]);
-        cmd.args(&["-dir", f]);
+        cmd.args(&["--dir", f]);
     }
     cmd.args(&["-f", file_name]);
     println!("Running: {:?}", cmd);
