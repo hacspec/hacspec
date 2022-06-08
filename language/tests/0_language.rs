@@ -77,7 +77,7 @@ fn run_crate_test(crate_dir: &str, output: Option<&str>) {
     cmd.envs(env::vars());
     if let Some(f) = output {
         cmd.args(&["-e", "fst"]);
-        cmd.args(&["-dir", f]);
+        cmd.args(&["--dir", f]);
     }
     cmd.current_dir(crate_dir);
     println!("Running: {:?}", cmd);
