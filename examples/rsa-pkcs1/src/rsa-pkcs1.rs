@@ -153,7 +153,9 @@ mod tests {
         }
     }
 
+
     // quickcheck tests
+    const NUM_TESTS: u64 = 10;
     #[quickcheck]
     fn i2os2i(x: RSAInt) -> bool {
         let s = i2osp(x, BYTE_SIZE).unwrap();
@@ -168,7 +170,7 @@ mod tests {
             let x_prime =  rsadp((kp.n, kp.d), c).unwrap();
             x_prime == x
         }
-        QuickCheck::new().tests(5)
+        QuickCheck::new().tests(NUM_TESTS)
             .quickcheck(rsaepdp as fn(RSAInt, Keyp) -> bool);
     }
 
@@ -179,7 +181,7 @@ mod tests {
             let x_prime = rsavp1((kp.n, kp.e), s).unwrap();
             x_prime == x
         }
-        QuickCheck::new().tests(5)
+        QuickCheck::new().tests(NUM_TESTS)
             .quickcheck(rsasp1vp1 as fn(RSAInt, Keyp) -> bool);
     }
 
@@ -189,7 +191,7 @@ mod tests {
             let x_prime = rsadp((kp.n, kp.d), y).unwrap();
             x_prime != x
         }
-        QuickCheck::new().tests(5)
+        QuickCheck::new().tests(NUM_TESTS)
             .quickcheck(neg_rsaepdp as fn(RSAInt, RSAInt, Keyp) -> bool);
     }
 
@@ -199,7 +201,7 @@ mod tests {
             let x_prime = rsavp1((kp.n, kp.e), y).unwrap();
             x_prime != x
         }
-        QuickCheck::new().tests(5)
+        QuickCheck::new().tests(NUM_TESTS)
             .quickcheck(neg_rsasp1vp1 as fn(RSAInt, RSAInt, Keyp) -> bool);
     }
 
@@ -210,7 +212,7 @@ mod tests {
             let x_prime = rsadp((fake.n, fake.d), c).unwrap_or_default();
             x != x_prime
         }
-        QuickCheck::new().tests(5)
+        QuickCheck::new().tests(NUM_TESTS)
             .quickcheck(negkey_rsaepdp as fn(RSAInt, Keyp, Keyp) -> bool);
     }
 
@@ -221,13 +223,13 @@ mod tests {
             let x_prime = rsavp1((fake.n, fake.e), s).unwrap_or_default();
             x != x_prime
         }
-        QuickCheck::new().tests(5)
+        QuickCheck::new().tests(NUM_TESTS)
             .quickcheck(negkey_rsasp1vp1 as fn(RSAInt, Keyp, Keyp) -> bool)
     }
 
     // tests using test vectors from wycheproof: https://github.com/google/wycheproof/blob/master/testvectors/rsa_pkcs1_2048_test.json
     // tests use RSAES-PKCS1-v1_5 padding
-    fn get_test_key() -> Keyp {
+    fn get_test_ed_key() -> Keyp {
         let n = RSAInt::from_hex("00b3510a2bcd4ce644c5b594ae5059e12b2f054b658d5da5959a2fdf1871b808bc3df3e628d2792e51aad5c124b43bda453dca5cde4bcf28e7bd4effba0cb4b742bbb6d5a013cb63d1aa3a89e02627ef5398b52c0cfd97d208abeb8d7c9bce0bbeb019a86ddb589beb29a5b74bf861075c677c81d430f030c265247af9d3c9140ccb65309d07e0adc1efd15cf17e7b055d7da3868e4648cc3a180f0ee7f8e1e7b18098a3391b4ce7161e98d57af8a947e201a463e2d6bbca8059e5706e9dfed8f4856465ffa712ed1aa18e888d12dc6aa09ce95ecfca83cc5b0b15db09c8647f5d524c0f2e7620a3416b9623cadc0f097af573261c98c8400aa12af38e43cad84d");
         let d = RSAInt::from_hex("1a502d0eea6c7b69e21d5839101f705456ed0ef852fb47fe21071f54c5f33c8ceb066c62d727e32d26c58137329f89d3195325b795264c195d85472f7507dbd0961d2951f935a26b34f0ac24d15490e1128a9b7138915bc7dbfa8fe396357131c543ae9c98507368d9ceb08c1c6198a3eda7aea185a0e976cd42c22d00f003d9f19d96ea4c9afcbfe1441ccc802cfb0689f59d804c6a4e4f404c15174745ed6cb8bc88ef0b33ba0d2a80e35e43bc90f350052e72016e75b00d357a381c9c0d467069ca660887c987766349fcc43460b4aa516bce079edd87ba164307b752c277ed9528ad3ba0bf1877349ed3b7966a6c240110409bf4d0fade0c68fdadd847fd");
         let e = RSAInt::from_hex("010001");
@@ -236,8 +238,8 @@ mod tests {
 
     #[test]
     // tcId1
-    fn test_empty() {
-        let k = get_test_key();
+    fn test_ed_empty() {
+        let k = get_test_ed_key();
         // 0x00 || 0x02 || PS || 0x00
         let ps = ByteSeq::from_hex("00020cd093f602b702dab3162f1853fb22978f2af910e27edb53ad3e88db7ed999619dab0ef87eea68cd45ca64c9b2897af1b85d7be82a6f25bc3f27b3edce366892936616d0174c116656908ac607f2c2571c08b751d883b34bc27e2f2e1bb78325a2169a258f515cc23ede74e5b56650871b28a770293ff1caa6be279c83c20ebf77b6d2e548c205765c87c61a993a33b48c397efc0b0d0cd8323b6c74420da031d794626370abc0fa2b79a6c33c040aec566848524a59b182da2cd23afb61d3bb60550b381b21d1a55e328b6fba58da8fdb3ee5e1a49ea117e41158fee136fd01d3c5cd089f649a6a96132076a37c78da07bb7e032d708f123ab8e2b49e00");
         let ms = ByteSeq::from_hex("");
@@ -255,8 +257,8 @@ mod tests {
 
     #[test]
     // tcId3
-    fn test_54657374() {
-        let k = get_test_key();
+    fn test_ed_54657374() {
+        let k = get_test_ed_key();
         // 0x00 || 0x02 || PS || 0x00
         let ps = ByteSeq::from_hex("0002709714b048c369732269a3d8f92302508770a44368014b3a5cb185c0c91d972c27458dc89b8dfbf02b243fc223be8caa0fafc049b9aeb7d6496945fe9609ebf57e099f67ffe2106e0ea73c261f8d716b763e94f58070980120f4c5519dadbdd28c9102caea032c500e545f9a6099a7ef907b3d9eb30dd3d096c3bd013982df7f864adcb13583eabc9344cb7bf84e46fef0bdde7e88507e1c17c37facdaff20379e83c2071768cfbbeb530150d16b4bb5433d41839a6113ca8a5fcbad5e2ffff71a0155e45c8c21696977fe310c05cb0ac76a9410f0d024ea4d9093ea30dd43259872faa7823c241b3d09dcf4b1b5f35f117cd17e6b7575b92100");
         let ms = ByteSeq::from_hex("54657374");
@@ -274,8 +276,8 @@ mod tests {
 
     #[test]
     // tcId 5
-    fn test_4d657373616765() {
-        let k = get_test_key();
+    fn test_ed_4d657373616765() {
+        let k = get_test_ed_key();
         // 0x00 || 0x02 || PS || 0x00
         let ps = ByteSeq::from_hex("000272de8d1ab401e00fd5db485f9a27c50490b0b4aa46a79dc1b28bbfbde9a52ac1219072d6e5c8f90952c03bdbea2bb993c420faf885931a95e0bea2cdeee3505262c1fa85d61c57c9c4f8aa498f9d1a0372e9fe8f2e469fb5aee3b897d06c12e4702c5490b56c5d0a8bb3bc4624c4455582a79c069e45275231e12697d28b39e3db9723c489b4867cfa6da1c76d1bfc8c0811c1991acd1570dbeafd9a9d9748beafa35d0b429fa933280fd5ebcf5fe838405ae9159fb03bdf2eeee3a692e6dabf4bced04c169f070cf2bcb572034037bad3949a685a798ef8ffee456c4de5639bc2521db8f2738c100d2b4b42e6d6d9953940cc6cd78a00");
         let ms = ByteSeq::from_hex("4d657373616765");
@@ -293,8 +295,8 @@ mod tests {
     
     #[test]
     // tcId 8
-    fn test_longest() {
-        let k = get_test_key();
+    fn test_ed_longest() {
+        let k = get_test_ed_key();
         // 0x00 || 0x02 || PS || 0x00
         let ps = ByteSeq::from_hex("00021fe7713cc938261d00");
         let ms = ByteSeq::from_hex("7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878");
@@ -307,6 +309,78 @@ mod tests {
         assert_eq!(RSAIntResult::Ok(c), c_prime);
 
         let m_prime = rsadp((k.n, k.d), c);
+        assert_eq!(RSAIntResult::Ok(m), m_prime)
+    }
+
+    // tests using test vectors from wycheproof: https://github.com/google/wycheproof/blob/master/testvectors/rsa_sig_gen_misc_test.json
+    // tests use RSASSA-PKCS1-v1_5
+    fn get_test_sv_key() -> Keyp {
+        let n = RSAInt::from_hex("00a2b451a07d0aa5f96e455671513550514a8a5b462ebef717094fa1fee82224e637f9746d3f7cafd31878d80325b6ef5a1700f65903b469429e89d6eac8845097b5ab393189db92512ed8a7711a1253facd20f79c15e8247f3d3e42e46e48c98e254a2fe9765313a03eff8f17e1a029397a1fa26a8dce26f490ed81299615d9814c22da610428e09c7d9658594266f5c021d0fceca08d945a12be82de4d1ece6b4c03145b5d3495d4ed5411eb878daf05fd7afc3e09ada0f1126422f590975a1969816f48698bcbba1b4d9cae79d460d8f9f85e7975005d9bc22c4e5ac0f7c1a45d12569a62807d3b9a02e5a530e773066f453d1f5b4c2e9cf7820283f742b9d5");
+        let d = RSAInt::from_hex("7627eef3567b2a27268e52053ecd31c3a7172ccb9ddcee819b306a5b3c66b7573ca4fa88efc6f3c4a00bfa0ae7139f64543a4dac3d05823f6ff477cfcec84fe2ac7a68b17204b390232e110310c4e899c4e7c10967db4acde042dbbf19dbe00b4b4741de1020aaaaffb5054c797c9f136f7d93ac3fc8caff6654242d7821ebee517bf537f44366a0fdd45ae05b9909c2e6cc1ed9281eff4399f76c96b96233ec29ae0bbf0d752b234fc197389f51050aa1acd01c074c3ac8fbdb9ea8b651a95995e8db4ad5c43b6c8673e5a126e7ee94b8dff4c5afc01259bc8da76950bae6f8bae715f50985b0d6f66d04c6fef3b700720eecdcdf171bb7b1ecbe7289c467c1");
+        let e = RSAInt::from_hex("010001");
+        Keyp {n, d, e}
+    }
+
+    #[test]
+    // tcId81
+    fn test_sv_empty() {
+        let k = get_test_sv_key();
+        // 0x00 || 0x01 || PS || 0x00
+        let ps = ByteSeq::from_hex("0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00");
+        let der = ByteSeq::from_hex("3031300d060960864801650304020105000420"); // SHA-256
+        let ms = ByteSeq::from_hex("");
+        let ss = ByteSeq::from_hex("840f5dac53106dd1f9c57219224cf51289290c42f20466875ba8e830ac5690e541536fcc8ab03b731f82bf66d83f194e7e180b3963ec7a2f3f7904a7ce49aed47da4d4b79421eaf937d301b3e696169297b797c32c076a12be4de0b58e003c5123051a84a10c62f8dac2f42a8640008eb3c7cccd6760ff5b51b689763922582845f048fb8150e5a7a6ca2eccc7bdc85349ad5b26c52137a79fa3fe5c29ab5cd7615013219c1941b6708e9c3c23feff5febaf0c8ebca5750b54e3e6e99a3e876b396f27860b7f3ec4e9191703c6332d944f6f69751167680c79c4f6b57f1cc8755d24b6ec158ccdbacdb23107a33cb6b332516c13274d1f9dccc21dced869e486");
+        let digest = sha256(&ms);
+
+        let m = os2ip(&ps.concat(&der).concat(&digest));
+        let s = os2ip(&ss);
+        
+        let s_prime = rsasp1((k.n, k.d), m);
+        assert_eq!(RSAIntResult::Ok(s), s_prime);
+
+        let m_prime = rsavp1((k.n, k.e), s);
+        assert_eq!(RSAIntResult::Ok(m), m_prime)
+    }
+
+    #[test]
+    // tcId83
+    fn test_sv_54657374() {
+        let k = get_test_sv_key();
+        // 0x00 || 0x01 || PS || 0x00
+        let ps = ByteSeq::from_hex("0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00");
+        let der = ByteSeq::from_hex("3031300d060960864801650304020105000420"); // SHA-256
+        let ms = ByteSeq::from_hex("54657374");
+        let ss = ByteSeq::from_hex("264491e844c119f14e425c03282139a558dcdaeb82a4628173cd407fd319f9076eaebc0dd87a1c22e4d17839096886d58a9d5b7f7aeb63efec56c45ac7bead4203b6886e1faa90e028ec0ae094d46bf3f97efdd19045cfbc25a1abda2432639f9876405c0d68f8edbf047c12a454f7681d5d5a2b54bd3723d193dbad4338baad753264006e2d08931c4b8bb79aa1c9cad10eb6605f87c5831f6e2b08e002f9c6f21141f5841d92727dd3e1d99c36bc560da3c9067df99fcaf818941f72588be33032bad22caf6704223bb114d575b6d02d9d222b580005d930e8f40cce9f672eebb634a20177d84351627964b83f2053d736a84ab1a005f63bd5ba943de6205c");
+        let digest = sha256(&ms);
+
+        let m = os2ip(&ps.concat(&der).concat(&digest));
+        let s = os2ip(&ss);
+        
+        let s_prime = rsasp1((k.n, k.d), m);
+        assert_eq!(RSAIntResult::Ok(s), s_prime);
+
+        let m_prime = rsavp1((k.n, k.e), s);
+        assert_eq!(RSAIntResult::Ok(m), m_prime)
+    }
+
+    #[test]
+    // tcId88
+    fn test_sv_long() {
+        let k = get_test_sv_key();
+        // 0x00 || 0x01 || PS || 0x00
+        let ps = ByteSeq::from_hex("0001ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00");
+        let der = ByteSeq::from_hex("3031300d060960864801650304020105000420"); // SHA-256
+        let ms = ByteSeq::from_hex("0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f1011121314151617");
+        let ss = ByteSeq::from_hex("7aad44a36610ac147835efc623e3aeec0d5d8acbd7f469f92142592c7b843c9326e2015c4bf3843678d2e183ec9ed568e5dd8d535ea77a6d7fe804222e6208d0160bd6cf2744cdb56bce0ed7269cc5f2bcc25d3474c0fb5bc7d20ebf3664bad858dc6e86dabfa5f39a70e23344ab4f8d5edc6397d9d1b54fda4216e0b93d37b906384f82d36666d526939e0f917344208aadf05416c656a11a307ce2101912763728cfc0bd237017d36b8566c6c366b13f142c93edde181146ec63e49a57335b5d9295b85aa4c00d49cae7930653a5651c21371a4b3ec8a6e0f371d005e8b4f1631f7466b767b4789e75e1d2bc63ce4c46e5e7baf0b801ef785fd07ae79bbeef");
+        let digest = sha256(&ms);
+
+        let m = os2ip(&ps.concat(&der).concat(&digest));
+        let s = os2ip(&ss);
+        
+        let s_prime = rsasp1((k.n, k.d), m);
+        assert_eq!(RSAIntResult::Ok(s), s_prime);
+
+        let m_prime = rsavp1((k.n, k.e), s);
         assert_eq!(RSAIntResult::Ok(m), m_prime)
     }
 }
