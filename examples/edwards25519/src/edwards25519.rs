@@ -285,9 +285,10 @@ pub fn point_eq(p: EdPoint, q: EdPoint) -> bool {
     x1 * z2 == x2 * z1 && y1 * z2 == y2 * z1
 }
 
-pub fn point_normalize(p: EdPoint) -> EdPoint {
-    let px = p.0 * p.2.inv();
-    let py = p.1 * p.2.inv();
+pub fn point_normalize(q: EdPoint) -> EdPoint {
+    let (qx, qy, qz, _) = q;
+    let px = qx * qz.inv();
+    let py = qy * qz.inv();
     let pz = Ed25519FieldElement::ONE();
     let pt = px * py;
     (px, py, pz, pt)
