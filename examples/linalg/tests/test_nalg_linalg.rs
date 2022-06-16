@@ -33,8 +33,8 @@ fn assert_matrices(x: Matrix, y: DMatrix<Scalar>) -> bool {
         "({:?}) == ({:?}), ({},{}) == ({},{})",
         x.1.native_slice(),
         y.as_slice(),
-        x.0.0,
-        x.0.1,
+        x.0 .0,
+        x.0 .1,
         y.nrows(),
         y.ncols()
     );
@@ -68,7 +68,7 @@ fn test_nalg_repeat() {
             return TestResult::discard();
         }
 
-        let hac = repeat(n, m, s).unwrap();
+        let hac = repeat(n, m, s);
         let ext = DMatrix::repeat(n, m, s);
 
         TestResult::from_bool(assert_matrices(hac, ext))
@@ -86,7 +86,7 @@ fn test_nalg_zeros() {
             return TestResult::discard();
         }
 
-        let hac = zeros(n, m).unwrap();
+        let hac = zeros(n, m);
         let ext = DMatrix::zeros(n, m);
 
         TestResult::from_bool(assert_matrices(hac, ext))
@@ -104,7 +104,7 @@ fn test_nalg_ones() {
             return TestResult::discard();
         }
 
-        let hac = ones(n, m).unwrap();
+        let hac = ones(n, m);
         let mut ext = DMatrix::zeros(n, m);
         ext.fill(Scalar::ONE());
 
@@ -123,7 +123,7 @@ fn test_nalg_identity() {
             return TestResult::discard();
         }
 
-        let hac = identity(n, m).unwrap();
+        let hac = identity(n, m);
         let ext = DMatrix::identity(n, m);
 
         TestResult::from_bool(assert_matrices(hac, ext))

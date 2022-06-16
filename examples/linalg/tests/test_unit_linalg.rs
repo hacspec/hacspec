@@ -20,10 +20,10 @@ fn assert_hacs(x: Matrix, y: Matrix) -> bool {
                     "{:?} == {:?}, ({},{}) == ({},{})",
                     x.1.native_slice(),
                     y.1.native_slice(),
-                    x.0.0,
-                    x.0.1,
-                    y.0.0,
-                    y.0.1
+                    x.0 .0,
+                    x.0 .1,
+                    y.0 .0,
+                    y.0 .1
                 )
             }
         }
@@ -38,7 +38,7 @@ fn assert_hacs(x: Matrix, y: Matrix) -> bool {
 fn test_unit_repeat() {
     let rs = vec![7, 7, 7, 7, 7, 7, 7, 7, 7, 7];
 
-    let hac_op = repeat(5, 2, 7).unwrap();
+    let hac_op = repeat(5, 2, 7);
     let hac_rs = new(5, 2, Seq::<Scalar>::from_vec(rs)).unwrap();
 
     assert!(assert_hacs(hac_op, hac_rs));
@@ -48,7 +48,7 @@ fn test_unit_repeat() {
 fn test_unit_zeros() {
     let rs = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-    let hac_op = zeros(2, 5).unwrap();
+    let hac_op = zeros(2, 5);
     let hac_rs = new(2, 5, Seq::<Scalar>::from_vec(rs)).unwrap();
 
     assert!(assert_hacs(hac_op, hac_rs));
@@ -58,7 +58,7 @@ fn test_unit_zeros() {
 fn test_unit_ones() {
     let rs = vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
-    let hac_op = ones(2, 5).unwrap();
+    let hac_op = ones(2, 5);
     let hac_rs = new(2, 5, Seq::<Scalar>::from_vec(rs)).unwrap();
 
     assert!(assert_hacs(hac_op, hac_rs));
@@ -68,7 +68,7 @@ fn test_unit_ones() {
 fn test_unit_identity() {
     let rs = vec![1, 0, 0, 0, 1, 0, 0, 0, 1];
 
-    let hac_op = identity(3, 3).unwrap();
+    let hac_op = identity(3, 3);
     let hac_rs = new(3, 3, Seq::<Scalar>::from_vec(rs)).unwrap();
 
     assert!(assert_hacs(hac_op, hac_rs));
