@@ -6,7 +6,7 @@ use hacspec_lib::prelude::*;
 use rand::{Fill, Rng};
 
 pub(crate) fn get_expected(op: &'static str, a: &String, b: &String) -> String {
-    let expected = std::process::Command::new("python")
+    let expected = std::process::Command::new("python3")
         .args(&["tests/math_helper.py", a, op, b])
         .output()
         .expect("failed to execute python test helper");

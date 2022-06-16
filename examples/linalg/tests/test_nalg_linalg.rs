@@ -399,5 +399,3 @@ fn test_prop_multiplicative_identity() {
     }
     quickcheck(helper as fn(Vec<IntSize>, Vec<IntSize>, u8, u8, u8) -> TestResult);
 }
-
-

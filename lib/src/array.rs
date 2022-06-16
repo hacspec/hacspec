@@ -653,6 +653,21 @@ macro_rules! _public_array {
     ($name:ident,$l:expr,$t:ty) => {
         _array_base!($name, $l, $t);
 
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            pub fn into_le_bytes(self) -> Seq<u8> {
+                const FACTOR: usize = core::mem::size_of::<$t>();
+                let mut out: Seq<u8> = Seq::new($l * FACTOR);
+                for i in 0..$l {
+                    let tmp = <$t>::to_le_bytes(self[i]);
+                    for j in 0..FACTOR {
+                        out[i * FACTOR + j] = tmp[j];
+                    }
+                }
+                out
+            }
+        }
+
         impl fmt::Debug for $name {
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
