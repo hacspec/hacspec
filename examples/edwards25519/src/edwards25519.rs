@@ -285,6 +285,14 @@ pub fn point_eq(p: EdPoint, q: EdPoint) -> bool {
     x1 * z2 == x2 * z1 && y1 * z2 == y2 * z1
 }
 
+pub fn point_normalize(p: EdPoint) -> EdPoint {
+    let px = p.0 * p.2.inv();
+    let py = p.1 * p.2.inv();
+    let pz = Ed25519FieldElement::ONE();
+    let pt = px * py;
+    (px, py, pz, pt)
+}
+
 pub fn secret_expand(sk: SecretKey) -> (SerializedScalar, SerializedScalar) {
     let h = sha512(&ByteSeq::from_slice(&sk, 0, 32));
     let h_d = SerializedScalar::from_slice(&h, 32, 32);
