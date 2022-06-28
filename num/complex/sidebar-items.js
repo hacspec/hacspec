@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Complex","A complex number in Cartesian form."],["ParseComplexError",""]],"type":[["Complex32",""],["Complex64",""]]});
+initSidebarItems({"struct":[["Complex","A complex number in Cartesian form."],["ParseComplexError",""]],"trait":[["ComplexFloat","Generic trait for floating point complex numbers."]],"type":[["Complex32",""],["Complex64",""]]});
