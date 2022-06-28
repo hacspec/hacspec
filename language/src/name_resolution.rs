@@ -164,9 +164,13 @@ fn resolve_expression(
                     .map(|(pat, arm)| {
                         let (new_pat, new_name_context) =
                             resolve_pattern(sess, &pat, top_level_ctx)?;
-                        let name_context = new_name_context.union(name_context.clone());
-                        let new_arm = resolve_expression(sess, arm, &name_context, top_level_ctx)?;
-                        Ok(((new_pat,pat.1), new_arm))
+                        let mut updated_name_context = name_context.clone();
+                        for (k, v) in new_name_context.into_iter() {
+                            updated_name_context = updated_name_context.update(k, v);
+                        }
+                        let new_arm =
+                            resolve_expression(sess, arm, &updated_name_context, top_level_ctx)?;
+                        Ok(((new_pat, pat.1), new_arm))
                     })
                     .collect(),
             )?;
@@ -284,16 +288,10 @@ fn resolve_pattern(
     top_ctx: &TopLevelContext,
 ) -> ResolutionResult<(Pattern, NameContext)> {
     match pat {
-        Pattern::EnumCase(ty_name, name, None) => {
-            Ok((
-                Pattern::EnumCase(
-                    ty_name.clone(),
-                    name.clone(),
-                    None,
-                ),
-                HashMap::new(),
-            ))
-        }
+        Pattern::EnumCase(ty_name, name, None) => Ok((
+            Pattern::EnumCase(ty_name.clone(), name.clone(), None),
+            HashMap::new(),
+        )),
         Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
             let (new_inner_pat, sub_context) = resolve_pattern(sess, &*inner_pat, top_ctx)?;
             Ok((
@@ -311,7 +309,8 @@ fn resolve_pattern(
                     .iter()
                     .fold(Ok((Vec::new(), HashMap::new())), |acc, pat_arg| {
                         let (mut acc_pat, acc_name) = acc?;
-                        let (new_pat, mut sub_name_context) = resolve_pattern(sess, pat_arg, top_ctx)?;
+                        let (new_pat, mut sub_name_context) =
+                            resolve_pattern(sess, pat_arg, top_ctx)?;
                         acc_pat.push((new_pat, pat_arg.1.clone()));
                         for (k, v) in acc_name.into_iter() {
                             sub_name_context = sub_name_context.update(k, v);
