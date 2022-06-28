@@ -294,6 +294,7 @@ pub fn point_normalize(q: EdPoint) -> EdPoint {
     (px, py, pz, pt)
 }
 
+
 pub fn secret_expand(sk: SecretKey) -> (SerializedScalar, SerializedScalar) {
     let h = sha512(&ByteSeq::from_slice(&sk, 0, 32));
     let h_d = SerializedScalar::from_slice(&h, 32, 32);

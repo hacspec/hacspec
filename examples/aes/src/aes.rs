@@ -199,6 +199,7 @@ fn key_expansion_aes(
     let word_size = key_length;
     for j in 0..iterations {
         let i = j + word_size;
+        key_ex = key_ex;
         let word = key_expansion_word(
             Word::from_slice(&key_ex, 4 * (i - word_size), 4),
             Word::from_slice(&key_ex, 4 * i - 4, 4),

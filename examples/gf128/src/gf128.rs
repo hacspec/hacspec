@@ -9,7 +9,7 @@ bytes!(Gf128Tag, BLOCKSIZE);
 
 type Element = U128;
 const IRRED: Element = U128(0xE100_0000_0000_0000_0000_0000_0000_0000u128);
-
+    
 fn fadd(x: Element, y: Element) -> Element {
     x ^ y
 }

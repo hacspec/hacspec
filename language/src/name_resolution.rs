@@ -138,26 +138,27 @@ pub enum FnValue {
     ExternalNotInHacspec(String),
 }
 
+#[derive(Clone, Debug)]
 pub struct ScopeMutInfo {
     pub vars: ScopeMutableVars,
-    pub funcs: Vec<FunctionDependency>,
+    pub funcs: FunctionDependencies,
 }
 impl ScopeMutInfo {
     fn new() -> Self {
         ScopeMutInfo {
             vars: ScopeMutableVars::new(),
-            funcs: Vec::new(),
+            funcs: FunctionDependencies (HashSet::new()),
         }
     }
 
     fn extend(&mut self, s: ScopeMutInfo) {
         self.vars.extend(s.vars);
-        self.funcs.extend(s.funcs);
+        self.funcs.0.extend(s.funcs.0);
     }
 
     fn extend_with_block(&mut self, b: Block) {
         self.vars.extend(b.mutable_vars);
-        self.funcs.extend(b.function_dependencies);
+        self.funcs.0.extend(b.function_dependencies.0);
     }
 }
 
@@ -324,7 +325,7 @@ fn resolve_expression(
 
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_args);
-            smi.funcs.push(f.clone());
+            smi.funcs.0.insert(f.clone().0);
 
             Ok((
                 smi,
@@ -357,7 +358,7 @@ fn resolve_expression(
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_self);
             smi.extend(smi_new_args);
-            smi.funcs.push(f.clone());
+            smi.funcs.0.insert(f.clone().0);
 
             Ok((
                 smi,
@@ -587,13 +588,13 @@ fn resolve_statement(
             smi.extend(smi_new_e);
 
             Ok((
-                smi,
+                smi.clone(),
                 (
                     Statement::ArrayUpdate(
                         (new_var, var.1.clone()),
                         new_index,
                         new_e,
-                        question_mark,
+                        question_mark.clone().map(|(x,_,z)| (x, smi.funcs,z)),
                         typ,
                     ),
                     s_span,
@@ -601,14 +602,14 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::Reassignment(var, e, question_mark) => {
+        Statement::Reassignment(var, var_typ, e, question_mark) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
             let (smi_new_e, new_e) =
                 resolve_expression(sess, e, &name_context, top_level_ctx)?;
             Ok((
-                smi_new_e,
+                smi_new_e.clone(),
                 (
-                    Statement::Reassignment((new_var, var.1.clone()), new_e, question_mark),
+                    Statement::Reassignment((new_var, var.1.clone()), var_typ, new_e, question_mark.clone().map(|(x,_,z)| (x, smi_new_e.funcs,z))),
                     s_span,
                 ),
                 name_context,
@@ -621,20 +622,20 @@ fn resolve_statement(
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_e);
 
-            if let Pattern::IdentPat(x, true) = new_pat.clone() {
-                smi.vars.push(((x, pat.1.clone()), typ.clone()));
-            };
+            // if let Pattern::IdentPat(x, true) = new_pat.clone() {
+            //     smi.vars.push(((x, pat.1.clone()), typ.clone()));
+            // };
             log::trace!("   new_name_context {:#?}", new_name_context);
             log::trace!("   existing name_context {:#?}", name_context);
             for (k, v) in new_name_context.into_iter() {
                 name_context = name_context.update(k, v);
             }
             log::trace!("   updated name_context {:#?}", name_context);
-            
+
             Ok((
-                smi,
+                smi.clone(),
                 (
-                    Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e, question_mark),
+                    Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e, question_mark.clone().map(|(x,_,z)| (x, smi.funcs,z))),
                     s_span,
                 ),
                 name_context,
@@ -902,18 +903,6 @@ fn process_decl_item(
         }
         Item::FnDecl((f, _f_span), ref mut sig, _b) => {
             log::trace!("   Item::FnDecl");
-            {
-                let mut new_mut_vars = Vec::new();
-                for (mut_var, typ) in sig.mutable_vars.clone() {
-                    let new_mut_var = match &mut_var.0 {
-                        Ident::Unresolved(s) => to_fresh_ident(s, false),
-                        _ => panic!("should not happen"),
-                    };
-                    new_mut_vars.push(((new_mut_var, mut_var.1.clone()), typ));
-                }
-                sig.mutable_vars = new_mut_vars;
-            }
-            
             top_level_context
                 .functions
                 .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));

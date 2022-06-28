@@ -373,7 +373,7 @@ pub enum Expression {
         bool, // should we insert a `pure` node? (`pure` being e.g. `Ok`)
     ),
     Named(Ident),
-    // FuncCall(prefix, name, args)
+    // FuncCall(prefix, name, args, arg_types)
     FuncCall(
         Option<Spanned<BaseTyp>>,
         Spanned<TopLevelIdent>,
@@ -443,7 +443,7 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
-pub type QuestionMarkInfo = Option<(ScopeMutableVars, Fillable<EarlyReturnType>)>;
+pub type QuestionMarkInfo = Option<(ScopeMutableVars, FunctionDependencies, Fillable<EarlyReturnType>)>;
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Statement {
@@ -454,9 +454,10 @@ pub enum Statement {
         QuestionMarkInfo,     // Presence of a question mark at the end
     ),
     Reassignment(
-        Spanned<Ident>,      // Variable reassigned
-        Spanned<Expression>, // New value
-        QuestionMarkInfo,    // Presence of a question mark at the end
+        Spanned<Ident>,         // Variable reassigned
+        Fillable<Spanned<Typ>>, // Type of variable reassigned
+        Spanned<Expression>,    // New value
+        QuestionMarkInfo,       // Presence of a question mark at the end
     ),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -543,16 +544,32 @@ impl ScopeMutableVars {
     }
 }
 
-pub type FunctionDependency = Spanned<TopLevelIdent>;
+pub type FunctionDependency = TopLevelIdent;
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Debug)]
+pub struct FunctionDependencies (pub HashSet<FunctionDependency>);
+
+impl Serialize for FunctionDependencies {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for e in &self.0 {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
     pub contains_question_mark: Fillable<bool>,
     pub mutable_vars: ScopeMutableVars,
-    pub function_dependencies: Vec<FunctionDependency>,
+    pub function_dependencies: FunctionDependencies,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -560,7 +577,7 @@ pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
     pub mutable_vars: ScopeMutableVars,
-    pub function_dependencies: Vec<FunctionDependency>,
+    pub function_dependencies: FunctionDependencies,
 }
 
 #[derive(Clone, Debug, Serialize)]

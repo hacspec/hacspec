@@ -24,7 +24,6 @@ Monomorphic Class ChoiceEquality := {
 (*     ct : choice_type ; *)
 (*     ChoiceEq : @eq Type@{a} (choice.Choice.sort (chElement ct)) T ; *)
 (*   }. *)
-Print ChoiceEquality.
 
 Arguments T ChoiceEquality : clear implicits.
 Arguments ct ChoiceEquality : clear implicits.
@@ -103,6 +102,16 @@ Notation "A '× B" := (prod_ChoiceEquality A B) (at level 79, left associativity
 Notation "prod_ce( a , b )" := ((a , b) : prod_ChoiceEquality _ _) : hacspec_scope.
 Notation "prod_ce( a , b , .. , c )" := ((.. ((a , b) : prod_ChoiceEquality _ _) .. , c) : prod_ChoiceEquality _ _) : hacspec_scope.
 
+Program Instance sum_ChoiceEquality (a b : ChoiceEquality) : ChoiceEquality :=
+  {| T := (@T a) + (@T b) ; ct := (@ct a) ∐ (@ct b); |}.
+Next Obligation.
+  intros.
+  do 2 rewrite ChoiceEq.
+  reflexivity.
+Defined.
+
+Notation "A '+ B" := (sum_ChoiceEquality A B) (at level 79, left associativity) : hacspec_scope.
+
 Open Scope hacspec_scope.
 
 Definition fst_CE {A B} (p : A '× B) : A := let '(f,s) := p in f.
@@ -165,24 +174,23 @@ Program Definition lift_to_both {ce : ChoiceEquality} {L I} (x : @T ce) : both L
   {| is_pure := x ; is_state := @lift_to_code ce L I x |}.
 Next Obligation. intros. apply r_ret. intros. easy. Qed.
 
-Definition both0 (A : ChoiceEquality) := both fset.fset0 [interface] A.
-Definition lift_to_both0 {ce : ChoiceEquality} (x : T ce) : both fset.fset0 [interface] ce := lift_to_both x.
+Definition both0 (A : ChoiceEquality) := both fset.fset0 fset.fset0 A. (* [interface] *)
+Definition lift_to_both0 {ce : ChoiceEquality} (x : T ce) : both fset.fset0 fset.fset0 ce := lift_to_both x.
 
-Definition lift_code_scope {L1 L2 : {fset Location}} {I} {A} (c : code L1 I A) `{H_incl : List.incl L1 L2} : code L2 I A :=
+Definition lift_code_scope {L1 L2 : {fset Location}} {I1 I2 : {fset opsig}} {A} (c : code L1 I1 A) `{H_loc_incl : List.incl L1 L2} `{H_opsig_incl : List.incl I1 I2} : code L2 I2 A :=
   {code (prog c) #with
-    (@valid_injectLocations I A L1 L2 _ (proj2 (list_incl_fsubset _ _) H_incl) (prog_valid c)) }.
+    (@valid_injectMap L2 A I1 I2 _ (proj2 (opsig_list_incl_fsubset _ _) H_opsig_incl) (@valid_injectLocations I1 A L1 L2 _ (proj2 (loc_list_incl_fsubset _ _) H_loc_incl) (prog_valid c))) }.
 
-Definition lift_scope {L1 L2 : {fset Location}} {I} {A} (b : both L1 I A) `{H_incl : List.incl L1 L2} : both L2 I A :=
+Definition lift_scope {L1 L2 : {fset Location}} {I1 I2 : {fset opsig}} {A} (b : both L1 I1 A) `{H_loc_incl : List.incl L1 L2} `{H_opsig_incl : List.incl I1 I2} : both L2 I2 A :=
   {|
     is_pure := is_pure b ;
-    is_state := {code (prog (is_state b)) #with
-                 (@valid_injectLocations I A L1 L2 _ (proj2 (list_incl_fsubset _ _) H_incl) (prog_valid b)) } ;
+    is_state := lift_code_scope (H_loc_incl := H_loc_incl) (H_opsig_incl := H_opsig_incl) (is_state b) ;
     code_eq_proof_statement := code_eq_proof_statement b
   |}.
 
-Definition lift_scope0 {L I} {A} (b : both fset.fset0 I A) : both L I A :=
-  lift_scope (H_incl := incl_nil_l _) b.
-  
+Definition lift_scope0 {L I} {A} (b : both fset.fset0 fset.fset0 A) : both L I A :=
+  lift_scope (H_loc_incl := incl_nil_l _) (H_opsig_incl := incl_nil_l _) b.
+
 Instance both_comparable {A : ChoiceEquality} `{Comparable A} {L I} : Comparable (both L I A) :=
   {|
     ltb x y := ltb (is_pure x) (is_pure y) ;
@@ -285,11 +293,14 @@ Notation "prod_b( a , b , .. , c )" := (prod_both .. (prod_both a b) .. c) : hac
 (*           right)). *)
 
 Ltac ssprove_valid_location :=
-  apply loc_compute ; try apply -> in_remove_fset ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
+  apply loc_compute ; try apply -> loc_in_remove_fset ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
+
+Ltac ssprove_valid_opsig :=
+  apply opsig_compute ; try apply -> opsig_in_remove_fset ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
 
 Ltac ssprove_valid_program :=
   try (apply prog_valid) ;
-  try (apply valid_scheme ; apply prog_valid).
+  try (apply valid_scheme ; try rewrite <- fset.fset0E ; apply prog_valid).
 
 Ltac destruct_choice_type_prod :=
   try match goal with
@@ -311,15 +322,8 @@ Ltac destruct_choice_type_prod :=
   end ;
   repeat match goal with
          | H : prod _ _ |- _ => destruct H
-         end.
-
-Ltac ssprove_valid_2 :=
-  (* destruct_choice_type_prod ; *)
-  ssprove_valid ;
-  ssprove_valid_program ;
-  try ssprove_valid_location.
-
-Check ct.
+         end ;
+  cbv zeta.
 
 Theorem single_mem : forall m, 
 Datatypes.is_true
@@ -339,109 +343,6 @@ Proof.
   rewrite <- (@fset1E (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType))).
   rewrite (ssrbool.introT (fset1P _ _)) ; reflexivity.
 Qed.
-  
-(* Notation "ct( x , y , .. , z )" := (pair_ChoiceEquality .. (pair_ChoiceEquality x y) .. z) : hacspec_scope. *)
-
-
-
-(* Locate "=.?". *)
-
-(* Definition le_is_ord_leq2 : forall (s s0 : Location), *)
-(*     eqb (ssrfun.tagged s) (ssrfun.tagged s0) = false ->  *)
-(*     eqtype.eq_op (ssrfun.tag s) (ssrfun.tag s0) = false -> *)
-(*     s <.? s0 = (s <= s0)%ord. *)
-(* Proof. *)
-(*   intros s s0. *)
-(*   unfold "<.?" , location_comparable , eq_dec_lt_Comparable , location_ltb , "<?". *)
-(*   unfold eqtype.tagged_as, ssrfun.tagged , ssrfun.tag , ".π1" , ".π2". *)
-(*   intros e H. *)
-(*   destruct s , s0. *)
-
-(*   replace (((x; n) <= (x0; n0))%ord) with (x < x0)%ord. *)
-(*   2 : {     *)
-(*     cbn. *)
-(*     unfold tag_leq. *)
-(*     cbn. *)
-(*     cbn in H. *)
-(*     replace (choice_type_test x x0) with false by apply H. *)
-(*     cbn. *)
-(*     rewrite Bool.orb_false_r. *)
-(*     reflexivity. *)
-(*   }   *)
-
-  
-  
-(*   replace (eqtype.eq_op (ssrfun.tag (x; n)) (ssrfun.tag (x0; n0))) with false. *)
-  
-(*   rewrite le_is_ord_leq by apply e. *)
-
-  
-  
-(*   generalize dependent n. *)
-(*   induction n0 ; intros. *)
-(*   * destruct s ; easy. *)
-(*   * destruct s. reflexivity. *)
-(*     (* unfold Nat.leb ; fold Nat.leb. *) *)
-(*     cbn. *)
-(*     cbn in IHs0. *)
-(*     rewrite IHs0. *)
-(*     reflexivity. *)
-(*     assumption. *)
-(* Qed. *)
-
-
-(* Fixpoint uniqb {A} `{EqDec A} (s : list A) := *)
-(*   match s with *)
-(*   | cons x s' => andb (negb (Inb x s')) (uniqb s') *)
-(*   | _ => true *)
-(*   end. *)
-
-(* Theorem uniq_is_bool : forall (l : list (tag_ordType (I:=choice_type_ordType) (fun _ : choice_type => nat_ordType))), seq.uniq l = uniqb l. *)
-(* Proof. *)
-(*   cbn ; intros. *)
-(*   induction l. *)
-(*   - reflexivity. *)
-(*   - cbn. *)
-(*     f_equal. *)
-(*     + f_equal. *)
-(*       rewrite loc_compute_b. *)
-(*       reflexivity. *)
-(*     + exact IHl. *)
-(* Qed.         *)
-    
-(* Theorem simplify_fset : forall l, *)
-(*     is_true *)
-(*     (path.sorted leb l) -> *)
-(*     is_true (uniqb l) -> *)
-(*     (@FSet.fsval (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType)) *)
-(*        (@fset _ *)
-(*               l)) = (l). *)
-(*   intros l is_sorted  is_unique. *)
-(*   unfold fset ; rewrite ssreflect.locked_withE. *)
-(*   cbn. *)
-(*   rewrite <- uniq_is_bool in is_unique. *)
-(*   rewrite seq.undup_id by assumption. *)
-(*   rewrite path.sorted_sort. *)
-(*   - reflexivity. *)
-(*   - destruct (tag_leqP (I:=choice_type_ordType) (fun _ : choice_type => nat_ordType)) as [ _ trans _ _ ]. *)
-(*     apply trans. *)
-(*   - rewrite location_lebP. *)
-(*     assumption.   *)
-(* Qed. *)
-
-(* Theorem simplify_sorted_fset : forall l, *)
-(*     is_true (uniqb l) -> *)
-(*     (FSet.fsval (fset (path.sort (leb : Location -> Location -> bool) l))) *)
-(*     = (path.sort (leb : Location -> Location -> bool) l). *)
-(* Proof. *)
-(*   intros. *)
-(*   apply simplify_fset. *)
-(*   apply path.sort_sorted ; pose location_lebP ; cbn ; cbn in e ; rewrite <- e ; apply Ord.leq_total. *)
-(*   rewrite <- uniq_is_bool. *)
-(*   rewrite path.sort_uniq. *)
-(*   rewrite uniq_is_bool. *)
-(*   apply H. *)
-(* Qed. *)
   
 Theorem tag_leq_simplify :
   forall (a b : Location),
@@ -528,17 +429,11 @@ Proof.
       reflexivity.
 Qed.
 
-(* rewrite list_incl_sort with (leb := location_ltb_simple) ;  *)
-Ltac incl_compute :=
-  now (try apply -> list_incl_remove_fset ; apply list_incl_expand ; (now repeat (split ; [ repeat ((left ; reflexivity) || (right)) | ]))).
-  (* now (apply list_incl_compute ; cbn ; repeat rewrite ssrnat.eqnE ; repeat rewrite eqtype.eq_refl ; repeat rewrite choice_type_test_refl ; cbn ; reflexivity). *)
+Ltac loc_incl_compute :=
+  now (try apply -> loc_list_incl_remove_fset ; apply loc_list_incl_expand ; (now repeat (split ; [ repeat ((left ; reflexivity) || (right)) | ]))).
 
-(* Ltac valid_sorted_incl := *)
-(*   rewrite simplify_sorted_fset by reflexivity  *)
-(*   ; rewrite simplify_sorted_fset by reflexivity *)
-(*   ; apply list_incl_sort_order_ignorant_compute with (leb1 := location_ltb_simple) *)
-(*   ; cbn *)
-(*   ; incl_compute. *)
+Ltac opsig_incl_compute :=
+  now (try apply -> opsig_list_incl_remove_fset ; apply opsig_list_incl_expand ; (now repeat (split ; [ repeat ((left ; reflexivity) || (right)) | ]))).
 
 Lemma valid_subset_fset :
   forall xs ys I {ct} c,
@@ -548,8 +443,8 @@ Lemma valid_subset_fset :
 Proof.
   intros.
   apply (valid_injectLocations) with (L1 := fset xs).
-  - apply list_incl_fsubset.
-    apply -> list_incl_remove_fset.
+  - apply loc_list_incl_fsubset.
+    apply -> loc_list_incl_remove_fset.
     apply H.
   - apply H0.
 Qed.
@@ -562,15 +457,15 @@ Lemma valid_subset :
 Proof.
   intros.
   apply (valid_injectLocations) with (L1 := xs).
-  - apply list_incl_fsubset.
+  - apply loc_list_incl_fsubset.
     apply H.
   - apply H0.
 Qed.
 
 Ltac valid_program :=
   apply prog_valid
-  || (apply valid_scheme ; apply prog_valid)
-  || (eapply (valid_subset_fset) ; [ | apply prog_valid ] ; incl_compute).
+  || (apply valid_scheme ; try rewrite <- fset.fset0E ; apply prog_valid)
+  || (eapply (valid_subset_fset) ; [ | apply prog_valid ] ; loc_incl_compute).
 
 
 Definition heap_ignore_post fset {A} : postcond A A :=
@@ -647,65 +542,6 @@ Proof.
   intros. cbn.
   apply (heap_ignore_weaken fset fset') ; assumption.
 Qed.
-
-(* Theorem bind_both {A B : ChoiceEquality} {fset' fset : {fset Location}}  `{b : @both fset A} *)
-(*         (k : choice.Choice.sort A -> raw_code B) : *)
-(*   List.incl fset fset' -> *)
-(*   forall fset_head fset_tail, *)
-(*     ⊢ ⦃ (fun '(h₀, h₁) => heap_ignore (fset_head :|: fset' :|: fset_tail) (h₀ , h₁)) ⦄ *)
-(*         (@bind A B is_state k) *)
-(*         ≈ *)
-(*         (@bind A B (lift_to_code (L := fset) (I := [interface]) is_pure) k) *)
-(*     ⦃ heap_ignore_post (fset_head :|: fset' :|: fset_tail) ⦄. *)
-(* Proof. *)
-(*   intros f_subset fset_head fset_tail. *)
-(*   apply list_incl_fsubset in f_subset. *)
-
-
-(*   assert (subset_eq : fset' = fset :|: (fset' :\: fset)). *)
-(*   { *)
-(*     apply (ssrbool.elimT fsetUidPr) in f_subset. *)
-(*     rewrite fsetUDr. *)
-(*     rewrite f_subset. *)
-(*     rewrite fsetDv. *)
-(*     rewrite fsetD0. *)
-(*     reflexivity. *)
-(*   } *)
-
-(*   rewrite subset_eq. *)
-(*   rewrite (fsetUC fset (fset' :\: fset)).     *)
-(*   rewrite fsetUA.   *)
-    
-(*   eapply (r_bind (is_state) ((lift_to_code (L := fset) (I := [interface]) is_pure)) k k). *)
-
-(*   apply code_eq_proof_statement. *)
-
-(*   (* intros. *) *)
-
-(*   exists fset_head, fset_tail. *)
-(*   split. *)
-(*   - intros. *)
-  
-  
-(*   apply rpre_hypothesis_rule. *)
-(*   intros ? ? []. *)
-(*   subst. *)
-
-(*   eapply rpost_weaken_rule. *)
-(*   - eapply rpre_weaken_rule. *)
-(*     + apply rreflexivity_rule. *)
-(*     + intros ? ? []. subst. *)
-(*       admit. *)
-(*   - intros [] [] ?. *)
-(*     inversion_clear H. *)
-(*     apply heap_ignore_post_refl. *)
-(* Admitted. *)
-
-(* Ltac bind_both_function := *)
-(*   match goal with *)
-(*   | [ |- context [ ⊢ ⦃ ?P ⦄ (@bind _ _ (_ (_ ?code_fun) ) ?k) ≈ _ ⦃ ?Q ⦄ ]] => *)
-(*       apply (@bind_both _ _ _ Q (code_eq_proof_statement code_fun) k) *)
-(*   end. *)
 
 Theorem bind_rewrite : forall A B x f, @bind A B (ret x) f = f x.
 Proof.
@@ -845,7 +681,7 @@ Proof.
 Qed.  
   
 Ltac solve_heap_ignore_remove_set_heap :=
-  apply (heap_ignore_remove_set_heap) ; [ apply isolate_mem_section ; apply loc_compute ; apply -> in_remove_fset ; cbn ; repeat (left ; reflexivity || right || reflexivity) | assumption ].
+  apply (heap_ignore_remove_set_heap) ; [ apply isolate_mem_section ; apply loc_compute ; apply -> loc_in_remove_fset ; cbn ; repeat (left ; reflexivity || right || reflexivity) | assumption ].
 
 Theorem r_bind_trans_both : forall {B C : ChoiceEquality} {L I} {f : choice.Choice.sort B -> raw_code C} {g : B -> raw_code C} (b : both L I B),
   forall (P : precond) (Q : postcond _ _),
@@ -954,50 +790,6 @@ Ltac remove_T_ct :=
   | [ |- context[ T_ct ?x ] ] =>  
       replace (T_ct x) with x by reflexivity
   end.
-
-
-(* Ltac heap_ignore_remove_ignore := *)
-(*   match goal with *)
-(*   | H : heap_ignore ?L ( ?a , ?b ) |- _ => *)
-(*       match goal with *)
-(*       | [ |- context[ heap_ignore L ( ?c , b ) ] ] => *)
-(*           intros ℓ H_mem *)
-(*           ; specialize (H ℓ H_mem) *)
-(*           ; match goal with *)
-(*             | [ |- context[ get_heap (set_heap ?x ?ℓ' ?v) ℓ = get_heap _ ℓ ] ] => *)
-(*                 destruct (@eqtype.eq_op (@eqtype.tag_eqType choice_type_eqType *)
-(*              (fun _ : choice_type => ssrnat.nat_eqType)) ℓ ℓ') eqn:ℓ_eq_ℓ' *)
-(*                 ; [ exfalso *)
-(*                     ; apply (ssrbool.elimT eqtype.eqP) in ℓ_eq_ℓ' ; subst *)
-(*                     ; apply (ssrbool.elimT ssrbool.negP) in H_mem *)
-(*                     ; apply H_mem *)
-(*                     ; clear H_mem *)
-(*                     ; apply loc_compute *)
-(*                     ; unfold eqtype.val *)
-(*                     ; rewrite simplify_sorted_fset *)
-(*                     ; repeat (reflexivity || (left ; reflexivity) || right) *)
-(*                   | rewrite <- (get_heap_set_heap a ℓ ℓ' v) ; *)
-(*                     [ assumption *)
-(*                     | rewrite ℓ_eq_ℓ' ; reflexivity  *)
-(*                     ] *)
-(*                 ]      *)
-(*             end *)
-(*       end *)
-(*   end . *)
-
-(* Ltac both_bind := *)
-(*   match goal with *)
-(*   | [ |- context[ (?x : both ?L ?T) ] ] =>   *)
-(*       match goal with *)
-(*       | [ |- context[ (bind ?f ?v) ] ] => *)
-(*           eapply (r_transR (bind (@is_state _ _ x) v) (bind (lift_to_code (@is_pure _ _ x)) v)) ; *)
-(*           [  *)
-(*           | eapply r_bind ; [ apply x | ] *)
-(*           ] *)
-(*       end *)
-(*   end. *)
-
-
 
 Ltac pattern_both Hx Hf Hg :=
   (match goal with

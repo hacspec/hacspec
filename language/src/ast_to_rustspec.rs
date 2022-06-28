@@ -943,6 +943,7 @@ fn translate_expr(
                             Ok((
                                 ExprTranslationResult::TransStmt(Statement::Reassignment(
                                     id,
+                                    None,
                                     r_e,
                                     r_e_question_mark,
                                 )),
@@ -1611,7 +1612,7 @@ fn translate_expr_accepts_question_mark(
             let (result, span) = translate_expr(sess, specials, &inner_e)?;
             match result {
                 ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, Some ((ScopeMutableVars::new(), None))),
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, Some ((ScopeMutableVars::new(), FunctionDependencies(HashSet::new()), None))),
                     span,
                 )),
                 ExprTranslationResult::TransStmt(_) => {
@@ -1794,7 +1795,7 @@ fn translate_block(
             // We initialize these fields to None as they are
             // to be filled by the typechecker
             mutable_vars: ScopeMutableVars::new(),
-            function_dependencies: vec![],
+            function_dependencies: FunctionDependencies(HashSet::new()),
         },
         b.span.into(),
     ))
@@ -2560,21 +2561,23 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         mutated: None,
                         contains_question_mark: None,
                         mutable_vars: ScopeMutableVars::new(),
-                        function_dependencies: Vec::new(),
+                        function_dependencies: FunctionDependencies (HashSet::new()),
                     },
                     i.span.into(),
                 ),
                 Some(b) => translate_block(sess, specials, &b)?,
             };
             log::trace!("   fn_body: {:#?}", fn_body);
+
+            let fn_name = translate_toplevel_ident(&i.ident, TopLevelIdentKind::Function);
             let fn_sig = FuncSig {
                 args: fn_inputs,
                 ret: fn_output,
                 mutable_vars: ScopeMutableVars::new(),
-                function_dependencies: Vec::new(),
+                function_dependencies: FunctionDependencies (HashSet::new()),
             };
             let fn_item = Item::FnDecl(
-                translate_toplevel_ident(&i.ident, TopLevelIdentKind::Function),
+                fn_name,
                 fn_sig,
                 fn_body,
             );

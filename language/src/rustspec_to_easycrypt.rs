@@ -868,7 +868,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
             translate_expression(expr.clone(), top_ctx),
         ),
-        Statement::Reassignment((x, _), (e1, _), _question_mark) => make_let_binding(
+        Statement::Reassignment((x, _), _x_typ, (e1, _), _question_mark) => make_let_binding(
             translate_ident(x.clone()),
             None,
             translate_expression(e1.clone(), top_ctx),

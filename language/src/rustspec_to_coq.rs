@@ -906,7 +906,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _), question_mark) =>
+        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) =>
         //TODO: not yet handled
         {
             if question_mark.is_some() {
@@ -1897,6 +1897,7 @@ pub fn translate_and_write_to_file(
     write!(
         file,
         "(** This file was automatically generated using Hacspec **)\n\
+         Set Warnings \"-notation-overridden,-ambiguous-paths\".\n\
         Require Import Hacspec_Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\

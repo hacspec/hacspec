@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
@@ -11,7 +12,6 @@ Open Scope list_scope.
 Open Scope Z_scope.
 Open Scope bool_scope.
 
-
 Require Import ChoiceEquality.
 Require Import LocationUtility.
 Require Import Hacspec_Lib_Comparable.
@@ -21,23 +21,28 @@ Require Import Hacspec_Lib.
 Open Scope hacspec_scope.
 
 Obligation Tactic := try timeout 8 solve_ssprove_obligations.
+Require Import Hacspec_Lib.
 
+Definition poly_key_t  :=
+  ( nseq (uint8) (usize 32)).
 
-Definition poly_key_t := nseq (uint8) (usize 32).
+Definition blocksize_v : (uint_size) :=
+  ((usize 16)).
 
-Definition blocksize_v : uint_size :=
-  usize 16.
+Definition poly_block_t  :=
+  ( nseq (uint8) (usize 16)).
 
-Definition poly_block_t := nseq (uint8) (usize 16).
-
-Definition poly1305_tag_t := nseq (uint8) (usize 16).
+Definition poly1305_tag_t  :=
+  ( nseq (uint8) (usize 16)).
 
 Notation "'sub_block_t'" := (byte_seq) : hacspec_scope.
 
 Notation "'block_index_t'" := (uint_size) : hacspec_scope.
 
-Definition field_canvas_t := nseq (int8) (usize 17).
-Definition field_element_t := nat_mod 0x03fffffffffffffffffffffffffffffffb.
+Definition field_canvas_t  :=
+  (nseq (int8) (17)).
+Definition field_element_t  :=
+  (nat_mod 0x03fffffffffffffffffffffffffffffffb).
 
 Notation "'poly_state_t'" := ((
   field_element_t '×
@@ -45,639 +50,476 @@ Notation "'poly_state_t'" := ((
   poly_key_t
 )) : hacspec_scope.
 
-Definition poly1305_encode_r_pure (b_2 : poly_block_t) : field_element_t :=
-  let n_0 : uint128 :=
-    uint128_from_le_bytes (array_from_seq (16) (array_to_seq (b_2))) in 
-  let n_0 :=
-    ((n_0) .& (secret (@repr U128 21267647620597763993911028882763415551))) in 
-  nat_mod_from_secret_literal (n_0).
-Definition poly1305_encode_r_pure_code
-  (b_2 : poly_block_t)
-  : code fset.fset0 [interface] (@ct field_element_t) :=
-  lift_to_code (poly1305_encode_r_pure b_2).
-
-Definition n_0_loc : ChoiceEqualityLocation :=
-  ((uint128 ; 15%nat)).
-Program Definition poly1305_encode_r_state
-  (b_2 : poly_block_t) : code (CEfset ([n_0_loc])) [interface] (@ct (
-      field_element_t)) :=
-  (({ code  '(n_0: uint128 ) ←
-          ( '(temp_4: seq uint8 ) ←
-              (array_to_seq (b_2)) ;;
-             temp_6 ←
-              (array_from_seq (16) (temp_4)) ;;
-             temp_8 ←
-              (uint128_from_le_bytes (temp_6)) ;;
-            ret (temp_8)) ;;
-        #put n_0_loc := n_0 ;;
-       n_0 ←
-          (( '(temp_10: int128 ) ←
-                (secret (@repr U128 21267647620597763993911028882763415551)) ;;
-               temp_12 ←
-                ((n_0) .& (temp_10)) ;;
-              ret (temp_12))) ;;
-        #put n_0_loc := n_0 ;;
-      
-       temp_14 ←
-        (nat_mod_from_secret_literal (n_0)) ;;
-      @ret (field_element_t)(temp_14) } : code (CEfset (
-          [n_0_loc])) [interface] _)).
-Fail Next Obligation.
-
+Definition n_7_loc : ChoiceEqualityLocation :=
+  ((uint128 ; 14%nat)).
+Notation "'poly1305_encode_r_inp'" := (
+  poly_block_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_encode_r_out'" := (
+  field_element_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_ENCODE_R : nat :=
+  (15).
 Program Definition poly1305_encode_r
-  (b_2 : poly_block_t)
-  : both (CEfset ([n_0_loc])) [interface] (field_element_t) :=
-  letbm n_0 : uint128 loc( n_0_loc ) :=
-    uint128_from_le_bytes (array_from_seq (16) (
-        array_to_seq (lift_to_both0 b_2))) in
-  letbm n_0 loc( n_0_loc ) :=
-    (lift_to_both0 n_0) .& (secret (lift_to_both0 (
-          @repr U128 21267647620597763993911028882763415551))) in
-  lift_scope (L2 := (CEfset ([n_0_loc]))) (H_incl := _) (
-    nat_mod_from_secret_literal (lift_to_both0 n_0))
-  .
+   : package (CEfset ([n_7_loc])) [interface  ] [interface
+  #val #[ POLY1305_ENCODE_R ] : poly1305_encode_r_inp → poly1305_encode_r_out
+  ] :=
+  (
+    [package #def #[ POLY1305_ENCODE_R ] (temp_inp : poly1305_encode_r_inp) : poly1305_encode_r_out { 
+    let '(b_0) := temp_inp : poly_block_t in
+    ({ code  '(n_7 : uint128) ←
+          ( '(temp_2 : seq uint8) ←
+              (array_to_seq (b_0)) ;;
+             '(temp_4 : uint128_word_t) ←
+              (array_from_seq (16) (temp_2)) ;;
+             '(temp_6 : int128) ←
+              (uint128_from_le_bytes (temp_4)) ;;
+            ret (temp_6)) ;;
+        #put n_7_loc := n_7 ;;
+       '(n_7 : uint128) ←
+          (( '(temp_9 : int128) ←
+                (secret (@repr U128 21267647620597763993911028882763415551)) ;;
+               temp_11 ←
+                ((n_7) .& (temp_9)) ;;
+              ret (temp_11))) ;;
+        #put n_7_loc := n_7 ;;
+      
+       '(temp_13 : field_element_t) ←
+        (nat_mod_from_secret_literal (n_7)) ;;
+      @ret (field_element_t) (temp_13) } : code (CEfset ([n_7_loc])) [interface 
+      ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_encode_r : package _ _ _ :=
+  (poly1305_encode_r).
 Fail Next Obligation.
 
-Definition poly1305_encode_block_pure (b_16 : poly_block_t) : field_element_t :=
-  let n_17 : uint128 :=
-    uint128_from_le_bytes (array_from_seq (16) (array_to_seq (b_16))) in 
-  let f_18 : field_element_t :=
-    nat_mod_from_secret_literal (n_17) in 
-  ((f_18) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (usize 128))).
-Definition poly1305_encode_block_pure_code
-  (b_16 : poly_block_t)
-  : code fset.fset0 [interface] (@ct field_element_t) :=
-  lift_to_code (poly1305_encode_block_pure b_16).
 
-
-Program Definition poly1305_encode_block_state
-  (b_16 : poly_block_t) : code (fset.fset0) [interface] (@ct (
-      field_element_t)) :=
-  (({ code  '(n_17: uint128 ) ←
-        ( '(temp_20: seq uint8 ) ←
-            (array_to_seq (b_16)) ;;
-           temp_22 ←
-            (array_from_seq (16) (temp_20)) ;;
-           temp_24 ←
-            (uint128_from_le_bytes (temp_22)) ;;
-          ret (temp_24)) ;;
-       '(f_18: field_element_t ) ←
-        ( temp_26 ←
-            (nat_mod_from_secret_literal (n_17)) ;;
-          ret (temp_26)) ;;
-       '(temp_28: field_element_t ) ←
-        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (usize 128)) ;;
-       temp_30 ←
-        ((f_18) +% (temp_28)) ;;
-      @ret (field_element_t)(temp_30) } : code (fset.fset0) [interface] _)).
-Fail Next Obligation.
-
+Notation "'poly1305_encode_block_inp'" := (
+  poly_block_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_encode_block_out'" := (
+  field_element_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_ENCODE_BLOCK : nat :=
+  (31).
 Program Definition poly1305_encode_block
-  (b_16 : poly_block_t)
-  : both (fset.fset0) [interface] (field_element_t) :=
-  letb n_17 : uint128 :=
-    uint128_from_le_bytes (array_from_seq (16) (
-        array_to_seq (lift_to_both0 b_16))) in
-  letb f_18 : field_element_t :=
-    nat_mod_from_secret_literal (lift_to_both0 n_17) in
-  lift_scope (L2 := (fset.fset0)) (H_incl := _) ((lift_to_both0 f_18) +% (
-      nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (lift_to_both0 (
-          usize 128))))
-  .
+   : package (fset.fset0) [interface  ] [interface
+  #val #[ POLY1305_ENCODE_BLOCK ] : poly1305_encode_block_inp → poly1305_encode_block_out
+  ] :=
+  (
+    [package #def #[ POLY1305_ENCODE_BLOCK ] (temp_inp : poly1305_encode_block_inp) : poly1305_encode_block_out { 
+    let '(b_16) := temp_inp : poly_block_t in
+    ({ code  '(n_23 : uint128) ←
+        ( '(temp_18 : seq uint8) ←
+            (array_to_seq (b_16)) ;;
+           '(temp_20 : uint128_word_t) ←
+            (array_from_seq (16) (temp_18)) ;;
+           '(temp_22 : int128) ←
+            (uint128_from_le_bytes (temp_20)) ;;
+          ret (temp_22)) ;;
+       '(f_26 : field_element_t) ←
+        ( '(temp_25 : field_element_t) ←
+            (nat_mod_from_secret_literal (n_23)) ;;
+          ret (temp_25)) ;;
+       '(temp_28 : field_element_t) ←
+        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (usize 128)) ;;
+       '(temp_30 : field_element_t) ←
+        ((f_26) +% (temp_28)) ;;
+      @ret (field_element_t) (temp_30) } : code (fset.fset0) [interface  ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_encode_block : package _ _ _ :=
+  (poly1305_encode_block).
 Fail Next Obligation.
 
-Definition poly1305_encode_last_pure
-  (pad_len_31 : block_index_t)
-  (b_32 : sub_block_t)
-  : field_element_t :=
-  let n_33 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (b_32) (usize 0) (
-        seq_len (b_32))) in 
-  let f_34 : field_element_t :=
-    nat_mod_from_secret_literal (n_33) in 
-  ((f_34) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (((
-            usize 8) .* (pad_len_31))))).
-Definition poly1305_encode_last_pure_code
-  (pad_len_31 : block_index_t)
-  (b_32 : sub_block_t)
-  : code fset.fset0 [interface] (@ct field_element_t) :=
-  lift_to_code (poly1305_encode_last_pure pad_len_31 b_32).
 
-
-Program Definition poly1305_encode_last_state
-  (pad_len_31 : block_index_t)
-  (b_32 : sub_block_t) : code (fset.fset0) [interface] (@ct (
-      field_element_t)) :=
-  (({ code  '(n_33: uint128 ) ←
-        ( temp_36 ←
-            (seq_len (b_32)) ;;
-           temp_38 ←
-            (array_from_slice (default) (16) (b_32) (usize 0) (temp_36)) ;;
-           temp_40 ←
-            (uint128_from_le_bytes (temp_38)) ;;
-          ret (temp_40)) ;;
-       '(f_34: field_element_t ) ←
-        ( temp_42 ←
-            (nat_mod_from_secret_literal (n_33)) ;;
-          ret (temp_42)) ;;
-       temp_44 ←
-        ((usize 8) .* (pad_len_31)) ;;
-       '(temp_46: field_element_t ) ←
-        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (temp_44)) ;;
-       temp_48 ←
-        ((f_34) +% (temp_46)) ;;
-      @ret (field_element_t)(temp_48) } : code (fset.fset0) [interface] _)).
-Fail Next Obligation.
-
+Notation "'poly1305_encode_last_inp'" := (
+  block_index_t '× sub_block_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_encode_last_out'" := (
+  field_element_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_ENCODE_LAST : nat :=
+  (50).
 Program Definition poly1305_encode_last
-  (pad_len_31 : block_index_t)
-  (b_32 : sub_block_t)
-  : both (fset.fset0) [interface] (field_element_t) :=
-  letb n_33 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (
-        lift_to_both0 b_32) (lift_to_both0 (usize 0)) (seq_len (
-          lift_to_both0 b_32))) in
-  letb f_34 : field_element_t :=
-    nat_mod_from_secret_literal (lift_to_both0 n_33) in
-  lift_scope (L2 := (fset.fset0)) (H_incl := _) ((lift_to_both0 f_34) +% (
-      nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) ((lift_to_both0 (
-            usize 8)) .* (lift_to_both0 pad_len_31))))
-  .
+   : package (fset.fset0) [interface  ] [interface
+  #val #[ POLY1305_ENCODE_LAST ] : poly1305_encode_last_inp → poly1305_encode_last_out
+  ] :=
+  (
+    [package #def #[ POLY1305_ENCODE_LAST ] (temp_inp : poly1305_encode_last_inp) : poly1305_encode_last_out { 
+    let '(pad_len_43 , b_32) := temp_inp : block_index_t '× sub_block_t in
+    ({ code  '(n_39 : uint128) ←
+        ( '(temp_34 : uint_size) ←
+            (seq_len (b_32)) ;;
+           '(temp_36 : uint128_word_t) ←
+            (array_from_slice (default : uint8) (16) (b_32) (usize 0) (
+                temp_34)) ;;
+           '(temp_38 : int128) ←
+            (uint128_from_le_bytes (temp_36)) ;;
+          ret (temp_38)) ;;
+       '(f_42 : field_element_t) ←
+        ( '(temp_41 : field_element_t) ←
+            (nat_mod_from_secret_literal (n_39)) ;;
+          ret (temp_41)) ;;
+       '(temp_45 : uint_size) ←
+        ((usize 8) .* (pad_len_43)) ;;
+       '(temp_47 : field_element_t) ←
+        (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) (temp_45)) ;;
+       '(temp_49 : field_element_t) ←
+        ((f_42) +% (temp_47)) ;;
+      @ret (field_element_t) (temp_49) } : code (fset.fset0) [interface  ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_encode_last : package _ _ _ :=
+  (poly1305_encode_last).
 Fail Next Obligation.
 
-Definition poly1305_init_pure (k_49 : poly_key_t) : poly_state_t :=
-  let r_50 : field_element_t :=
-    poly1305_encode_r (array_from_slice (default) (16) (array_to_seq (k_49)) (
-        usize 0) (usize 16)) in 
-  prod_ce(nat_mod_zero , r_50, k_49).
-Definition poly1305_init_pure_code
-  (k_49 : poly_key_t)
-  : code fset.fset0 [interface] (@ct poly_state_t) :=
-  lift_to_code (poly1305_init_pure k_49).
 
-
-Program Definition poly1305_init_state
-  (k_49 : poly_key_t) : code (CEfset ([n_0_loc])) [interface] (@ct (
-      poly_state_t)) :=
-  (({ code  '(r_50: field_element_t ) ←
-        ( '(temp_52: seq uint8 ) ←
-            (array_to_seq (k_49)) ;;
-           temp_54 ←
-            (array_from_slice (default) (16) (temp_52) (usize 0) (usize 16)) ;;
-           temp_56 ←
-            (poly1305_encode_r (temp_54)) ;;
-          ret (temp_56)) ;;
-       temp_58 ←
-        (nat_mod_zero ) ;;
-      @ret ((field_element_t '× field_element_t '× poly_key_t))((
-          temp_58,
-          r_50,
-          k_49
-        )) } : code (CEfset ([n_0_loc])) [interface] _)).
-Fail Next Obligation.
-
+Notation "'poly1305_init_inp'" := (
+  poly_key_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_init_out'" := (
+  poly_state_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_INIT : nat :=
+  (61).
 Program Definition poly1305_init
-  (k_49 : poly_key_t)
-  : both (CEfset ([n_0_loc])) [interface] (poly_state_t) :=
-  letb r_50 : field_element_t :=
-    poly1305_encode_r (array_from_slice (default) (16) (
-        array_to_seq (lift_to_both0 k_49)) (lift_to_both0 (usize 0)) (
-        lift_to_both0 (usize 16))) in
-  lift_scope (L2 := (CEfset ([n_0_loc]))) (H_incl := _) (prod_b(
-      nat_mod_zero ,
-      lift_to_both0 r_50,
-      lift_to_both0 k_49
-    ))
-  .
-Fail Next Obligation.
-
-Definition poly1305_update_block_pure
-  (b_59 : poly_block_t)
-  (st_60 : poly_state_t)
-  : poly_state_t :=
-  let '(acc_61, r_62, k_63) :=
-    st_60 : (field_element_t '× field_element_t '× poly_key_t) in 
-  prod_ce(((((poly1305_encode_block (b_59)) +% (acc_61))) *% (r_62)), r_62, k_63
-  ).
-Definition poly1305_update_block_pure_code
-  (b_59 : poly_block_t)
-  (st_60 : poly_state_t)
-  : code fset.fset0 [interface] (@ct poly_state_t) :=
-  lift_to_code (poly1305_update_block_pure b_59 st_60).
-
-
-Program Definition poly1305_update_block_state
-  (b_59 : poly_block_t)
-  (st_60 : poly_state_t) : code (fset.fset0) [interface] (@ct (poly_state_t)) :=
-  (({ code  '((acc_61, r_62, k_63): (
-            field_element_t '×
-            field_element_t '×
-            poly_key_t
-          ) ) ←
-        (ret (st_60)) ;;
-       temp_65 ←
-        (poly1305_encode_block (b_59)) ;;
-       temp_67 ←
-        ((temp_65) +% (acc_61)) ;;
-       temp_69 ←
-        ((temp_67) *% (r_62)) ;;
-      @ret ((field_element_t '× field_element_t '× poly_key_t))((
-          temp_69,
-          r_62,
-          k_63
-        )) } : code (fset.fset0) [interface] _)).
-Fail Next Obligation.
-
-Program Definition poly1305_update_block
-  (b_59 : poly_block_t)
-  (st_60 : poly_state_t)
-  : both (fset.fset0) [interface] (poly_state_t) :=
-  letb '(acc_61, r_62, k_63) : (
-      field_element_t '×
-      field_element_t '×
-      poly_key_t
-    ) :=
-    lift_to_both0 st_60 in
-  lift_scope (L2 := (fset.fset0)) (H_incl := _) (prod_b(
-      ((poly1305_encode_block (lift_to_both0 b_59)) +% (
-          lift_to_both0 acc_61)) *% (lift_to_both0 r_62),
-      lift_to_both0 r_62,
-      lift_to_both0 k_63
-    ))
-  .
-Fail Next Obligation.
-
-Definition poly1305_update_blocks_pure
-  (m_72 : byte_seq)
-  (st_73 : poly_state_t)
-  : poly_state_t :=
-  let st_70 : (field_element_t '× field_element_t '× poly_key_t) :=
-    st_73 in 
-  let n_blocks_74 : uint_size :=
-    ((seq_len (m_72)) ./ (blocksize_v)) in 
-  let st_70 :=
-    Hacspec_Lib_Pre.foldi (usize 0) (n_blocks_74) st_70
-      (fun i_75 st_70 =>
-      let block_76 : poly_block_t :=
-        array_from_seq (16) (seq_get_exact_chunk (m_72) (blocksize_v) (
-            i_75)) in 
-      let st_70 :=
-        poly1305_update_block (block_76) (st_70) in 
-      (st_70)) in 
-  st_70.
-Definition poly1305_update_blocks_pure_code
-  (m_72 : byte_seq)
-  (st_73 : poly_state_t)
-  : code fset.fset0 [interface] (@ct poly_state_t) :=
-  lift_to_code (poly1305_update_blocks_pure m_72 st_73).
-
-Definition st_70_loc : ChoiceEqualityLocation :=
-  (((field_element_t '× field_element_t '× poly_key_t) ; 87%nat)).
-Program Definition poly1305_update_blocks_state
-  (m_72 : byte_seq)
-  (st_73 : poly_state_t) : code (CEfset ([st_70_loc])) [interface] (@ct (
-      poly_state_t)) :=
-  (({ code  '(st_70: (field_element_t '× field_element_t '× poly_key_t) ) ←
-          (ret (st_73)) ;;
-        #put st_70_loc := st_70 ;;
-       '(n_blocks_74: uint_size ) ←
-        ( temp_78 ←
-            (seq_len (m_72)) ;;
-           temp_80 ←
-            ((temp_78) ./ (blocksize_v)) ;;
-          ret (temp_80)) ;;
-       st_70 ←
-        (foldi (usize 0) (n_blocks_74) st_70 (fun i_75 (st_70 : _) =>
-            ({ code  '(block_76: poly_block_t ) ←
-                ( temp_82 ←
-                    (seq_get_exact_chunk (m_72) (blocksize_v) (i_75)) ;;
-                   temp_84 ←
-                    (array_from_seq (16) (temp_82)) ;;
-                  ret (temp_84)) ;;
-               st_70 ←
-                  (( temp_86 ←
-                        (poly1305_update_block (block_76) (st_70)) ;;
-                      ret (temp_86))) ;;
-                #put st_70_loc := st_70 ;;
-              
-              @ret (_)((st_70)) } : code (CEfset (
-                  [st_70_loc])) [interface] _))) ;;
-      
-      @ret ((field_element_t '× field_element_t '× poly_key_t))(
-        st_70) } : code (CEfset ([st_70_loc])) [interface] _)).
-Fail Next Obligation.
-
-Program Definition poly1305_update_blocks
-  (m_72 : byte_seq)
-  (st_73 : poly_state_t)
-  : both (CEfset ([st_70_loc])) [interface] (poly_state_t) :=
-  letbm st_70 : (field_element_t '× field_element_t '× poly_key_t
-    ) loc( st_70_loc ) :=
-    lift_to_both0 st_73 in
-  letb n_blocks_74 : uint_size :=
-    (seq_len (lift_to_both0 m_72)) ./ (lift_to_both0 blocksize_v) in
-  letb st_70 :=
-    foldi_both (lift_to_both0 (usize 0)) (
-        lift_to_both0 n_blocks_74) st_70 (L := (CEfset (
-          [st_70_loc]))) (fun i_75 (st_70 : _) =>
-      letb block_76 : poly_block_t :=
-        array_from_seq (16) (seq_get_exact_chunk (lift_to_both0 m_72) (
-            lift_to_both0 blocksize_v) (lift_to_both0 i_75)) in
-      letbm st_70 loc( st_70_loc ) :=
-        poly1305_update_block (lift_to_both0 block_76) (lift_to_both0 st_70) in
-      lift_scope (L2 := (CEfset ([st_70_loc]))) (H_incl := _) (
-        lift_to_both0 st_70)
-      ) in
-  lift_scope (L2 := (CEfset ([st_70_loc]))) (H_incl := _) (lift_to_both0 st_70)
-  .
-Fail Next Obligation.
-
-Definition poly1305_update_last_pure
-  (pad_len_90 : uint_size)
-  (b_91 : sub_block_t)
-  (st_92 : poly_state_t)
-  : poly_state_t :=
-  let st_88 : (field_element_t '× field_element_t '× poly_key_t) :=
-    st_92 in 
-  let '(st_88) :=
-    if (((seq_len (b_91)) !=.? (usize 0))):bool_ChoiceEquality
-    then (let '(acc_93, r_94, k_95) :=
-        st_88 : (field_element_t '× field_element_t '× poly_key_t) in 
-      let st_88 :=
-        prod_ce(
-          ((((poly1305_encode_last (pad_len_90) (b_91)) +% (acc_93))) *% (
-              r_94)),
-          r_94,
-          k_95
-        ) in 
-      (st_88))
-    else ((st_88)) in 
-  st_88.
-Definition poly1305_update_last_pure_code
-  (pad_len_90 : uint_size)
-  (b_91 : sub_block_t)
-  (st_92 : poly_state_t)
-  : code fset.fset0 [interface] (@ct poly_state_t) :=
-  lift_to_code (poly1305_update_last_pure pad_len_90 b_91 st_92).
-
-Definition st_88_loc : ChoiceEqualityLocation :=
-  (((field_element_t '× field_element_t '× poly_key_t) ; 106%nat)).
-Program Definition poly1305_update_last_state
-  (pad_len_90 : uint_size)
-  (b_91 : sub_block_t)
-  (st_92 : poly_state_t) : code (CEfset ([st_88_loc])) [interface] (@ct (
-      poly_state_t)) :=
-  (({ code  '(st_88: (field_element_t '× field_element_t '× poly_key_t) ) ←
-          (ret (st_92)) ;;
-        #put st_88_loc := st_88 ;;
-       temp_97 ←
-        (seq_len (b_91)) ;;
-       temp_99 ←
-        ((temp_97) !=.? (usize 0)) ;;
-       '(st_88) ←
-        (if temp_99:bool_ChoiceEquality then (({ code  '((acc_93, r_94, k_95): (
-                    field_element_t '×
-                    field_element_t '×
-                    poly_key_t
-                  ) ) ←
-                (ret (st_88)) ;;
-               st_88 ←
-                  (( temp_101 ←
-                        (poly1305_encode_last (pad_len_90) (b_91)) ;;
-                       temp_103 ←
-                        ((temp_101) +% (acc_93)) ;;
-                       temp_105 ←
-                        ((temp_103) *% (r_94)) ;;
-                      ret ((temp_105, r_94, k_95)))) ;;
-                #put st_88_loc := st_88 ;;
-              
-              @ret (_)((st_88)) } : code (CEfset (
-                  [st_88_loc])) [interface] _)) else (@ret (_)((st_88)))) ;;
-      
-      @ret ((field_element_t '× field_element_t '× poly_key_t))(
-        st_88) } : code (CEfset ([st_88_loc])) [interface] _)).
-Fail Next Obligation.
-
-Program Definition poly1305_update_last
-  (pad_len_90 : uint_size)
-  (b_91 : sub_block_t)
-  (st_92 : poly_state_t)
-  : both (CEfset ([st_88_loc])) [interface] (poly_state_t) :=
-  letbm st_88 : (field_element_t '× field_element_t '× poly_key_t
-    ) loc( st_88_loc ) :=
-    lift_to_both0 st_92 in
-  letb '(st_88) :=
-    if (seq_len (lift_to_both0 b_91)) !=.? (lift_to_both0 (
-        usize 0)):bool_ChoiceEquality
-    then lift_scope (L1 := CEfset ([st_88_loc])) (L2 := CEfset (
-      [st_88_loc])) (H_incl := _) (letb '(acc_93, r_94, k_95) : (
-          field_element_t '×
-          field_element_t '×
-          poly_key_t
-        ) :=
-        lift_to_both0 st_88 in
-      letbm st_88 loc( st_88_loc ) :=
-        prod_b(
-          ((poly1305_encode_last (lift_to_both0 pad_len_90) (
-                lift_to_both0 b_91)) +% (lift_to_both0 acc_93)) *% (
-            lift_to_both0 r_94),
-          lift_to_both0 r_94,
-          lift_to_both0 k_95
-        ) in
-      lift_scope (L2 := (CEfset ([st_88_loc]))) (H_incl := _) (
-        lift_to_both0 st_88)
-      )
-    else (lift_scope (L2 := (CEfset ([st_88_loc]))) (H_incl := _) (
-        lift_to_both0 st_88)
-      ) in
-  lift_scope (L2 := (CEfset ([st_88_loc]))) (H_incl := _) (lift_to_both0 st_88)
-  .
-Fail Next Obligation.
-
-Definition poly1305_update_pure
-  (m_107 : byte_seq)
-  (st_108 : poly_state_t)
-  : poly_state_t :=
-  let st_109 : (field_element_t '× field_element_t '× poly_key_t) :=
-    poly1305_update_blocks (m_107) (st_108) in 
-  let last_110 : seq uint8 :=
-    seq_get_remainder_chunk (m_107) (blocksize_v) in 
-  poly1305_update_last (seq_len (last_110)) (last_110) (st_109).
-Definition poly1305_update_pure_code
-  (m_107 : byte_seq)
-  (st_108 : poly_state_t)
-  : code fset.fset0 [interface] (@ct poly_state_t) :=
-  lift_to_code (poly1305_update_pure m_107 st_108).
-
-
-Program Definition poly1305_update_state
-  (m_107 : byte_seq)
-  (st_108 : poly_state_t) : code (CEfset (
-      [st_70_loc ; st_88_loc])) [interface] (@ct (poly_state_t)) :=
-  (({ code  '(st_109: (field_element_t '× field_element_t '× poly_key_t) ) ←
-        ( temp_112 ←
-            (poly1305_update_blocks (m_107) (st_108)) ;;
-          ret (temp_112)) ;;
-       '(last_110: seq uint8 ) ←
-        ( temp_114 ←
-            (seq_get_remainder_chunk (m_107) (blocksize_v)) ;;
-          ret (temp_114)) ;;
-       temp_116 ←
-        (seq_len (last_110)) ;;
-       temp_118 ←
-        (poly1305_update_last (temp_116) (last_110) (st_109)) ;;
-      @ret (poly_state_t)(temp_118) } : code (CEfset (
-          [st_70_loc ; st_88_loc])) [interface] _)).
-Fail Next Obligation.
-
-Program Definition poly1305_update
-  (m_107 : byte_seq)
-  (st_108 : poly_state_t)
-  : both (CEfset ([st_70_loc ; st_88_loc])) [interface] (poly_state_t) :=
-  letb st_109 : (field_element_t '× field_element_t '× poly_key_t) :=
-    poly1305_update_blocks (lift_to_both0 m_107) (lift_to_both0 st_108) in
-  letb last_110 : seq uint8 :=
-    seq_get_remainder_chunk (lift_to_both0 m_107) (lift_to_both0 blocksize_v) in
-  lift_scope (L2 := (CEfset ([st_70_loc ; st_88_loc]))) (H_incl := _) (
-    poly1305_update_last (seq_len (lift_to_both0 last_110)) (
-      lift_to_both0 last_110) (lift_to_both0 st_109))
-  .
-Fail Next Obligation.
-
-Definition poly1305_finish_pure (st_119 : poly_state_t) : poly1305_tag_t :=
-  let '(acc_120, _, k_121) :=
-    st_119 : (field_element_t '× field_element_t '× poly_key_t) in 
-  let n_122 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (
-        array_to_seq (k_121)) (usize 16) (usize 16)) in 
-  let aby_123 : seq uint8 :=
-    nat_mod_to_byte_seq_le (acc_120) in 
-  let a_124 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (aby_123) (usize 0) (
-        usize 16)) in 
-  array_from_seq (16) (array_to_seq (uint128_to_le_bytes (((a_124) .+ (
-          n_122))))).
-Definition poly1305_finish_pure_code
-  (st_119 : poly_state_t)
-  : code fset.fset0 [interface] (@ct poly1305_tag_t) :=
-  lift_to_code (poly1305_finish_pure st_119).
-
-
-Program Definition poly1305_finish_state
-  (st_119 : poly_state_t) : code (fset.fset0) [interface] (@ct (
-      poly1305_tag_t)) :=
-  (({ code  '((acc_120, _, k_121): (
-            field_element_t '×
-            field_element_t '×
-            poly_key_t
-          ) ) ←
-        (ret (st_119)) ;;
-       '(n_122: uint128 ) ←
-        ( '(temp_126: seq uint8 ) ←
-            (array_to_seq (k_121)) ;;
-           temp_128 ←
-            (array_from_slice (default) (16) (temp_126) (usize 16) (
+   : package (CEfset ([])) [interface
+  #val #[ POLY1305_ENCODE_R ] : poly1305_encode_r_inp → poly1305_encode_r_out
+  ] [interface #val #[ POLY1305_INIT ] : poly1305_init_inp → poly1305_init_out
+  ] :=
+  (
+    [package #def #[ POLY1305_INIT ] (temp_inp : poly1305_init_inp) : poly1305_init_out { 
+    let '(k_51) := temp_inp : poly_key_t in
+    #import {sig #[ POLY1305_ENCODE_R ] : poly1305_encode_r_inp → poly1305_encode_r_out } as poly1305_encode_r ;;
+    let poly1305_encode_r := fun x_0 => poly1305_encode_r (x_0) in
+    ({ code  '(r_60 : field_element_t) ←
+        ( '(temp_53 : seq uint8) ←
+            (array_to_seq (k_51)) ;;
+           '(temp_55 : poly_block_t) ←
+            (array_from_slice (default : uint8) (16) (temp_53) (usize 0) (
                 usize 16)) ;;
-           temp_130 ←
-            (uint128_from_le_bytes (temp_128)) ;;
-          ret (temp_130)) ;;
-       '(aby_123: seq uint8 ) ←
-        ( temp_132 ←
-            (nat_mod_to_byte_seq_le (acc_120)) ;;
-          ret (temp_132)) ;;
-       '(a_124: uint128 ) ←
-        ( temp_134 ←
-            (array_from_slice (default) (16) (aby_123) (usize 0) (usize 16)) ;;
-           temp_136 ←
-            (uint128_from_le_bytes (temp_134)) ;;
-          ret (temp_136)) ;;
-       temp_138 ←
-        ((a_124) .+ (n_122)) ;;
-       temp_140 ←
-        (uint128_to_le_bytes (temp_138)) ;;
-       '(temp_142: seq uint8 ) ←
-        (array_to_seq (temp_140)) ;;
-       temp_144 ←
-        (array_from_seq (16) (temp_142)) ;;
-      @ret (poly1305_tag_t)(temp_144) } : code (fset.fset0) [interface] _)).
+           '(temp_57 : field_element_t) ←
+            (poly1305_encode_r (temp_55)) ;;
+          ret (temp_57)) ;;
+       '(temp_59 : field_element_t) ←
+        (nat_mod_zero ) ;;
+      @ret ((field_element_t '× field_element_t '× poly_key_t)) (prod_ce(
+          temp_59,
+          r_60,
+          k_51
+        )) } : code (CEfset ([])) [interface
+      #val #[ POLY1305_ENCODE_R ] : poly1305_encode_r_inp → poly1305_encode_r_out
+      ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_init : package _ _ _ :=
+  (seq_link poly1305_init link_rest(package_poly1305_encode_r)).
 Fail Next Obligation.
 
-Program Definition poly1305_finish
-  (st_119 : poly_state_t)
-  : both (fset.fset0) [interface] (poly1305_tag_t) :=
-  letb '(acc_120, _, k_121) : (
-      field_element_t '×
-      field_element_t '×
-      poly_key_t
-    ) :=
-    lift_to_both0 st_119 in
-  letb n_122 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (
-        array_to_seq (lift_to_both0 k_121)) (lift_to_both0 (usize 16)) (
-        lift_to_both0 (usize 16))) in
-  letb aby_123 : seq uint8 := nat_mod_to_byte_seq_le (lift_to_both0 acc_120) in
-  letb a_124 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (
-        lift_to_both0 aby_123) (lift_to_both0 (usize 0)) (lift_to_both0 (
-          usize 16))) in
-  lift_scope (L2 := (fset.fset0)) (H_incl := _) (array_from_seq (16) (
-      array_to_seq (uint128_to_le_bytes ((lift_to_both0 a_124) .+ (
-          lift_to_both0 n_122)))))
-  .
+
+Notation "'poly1305_update_block_inp'" := (
+  poly_block_t '× poly_state_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_update_block_out'" := (
+  poly_state_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_UPDATE_BLOCK : nat :=
+  (75).
+Program Definition poly1305_update_block
+   : package (fset.fset0) [interface
+  #val #[ POLY1305_ENCODE_BLOCK ] : poly1305_encode_block_inp → poly1305_encode_block_out
+  ] [interface
+  #val #[ POLY1305_UPDATE_BLOCK ] : poly1305_update_block_inp → poly1305_update_block_out
+  ] :=
+  (
+    [package #def #[ POLY1305_UPDATE_BLOCK ] (temp_inp : poly1305_update_block_inp) : poly1305_update_block_out { 
+    let '(b_63 , st_62) := temp_inp : poly_block_t '× poly_state_t in
+    #import {sig #[ POLY1305_ENCODE_BLOCK ] : poly1305_encode_block_inp → poly1305_encode_block_out } as poly1305_encode_block ;;
+    let poly1305_encode_block := fun x_0 => poly1305_encode_block (x_0) in
+    ({ code  temp_74 ←
+        (ret (st_62)) ;;
+      let '(acc_66, r_69, k_72) :=
+        (temp_74) : (field_element_t '× field_element_t '× poly_key_t) in
+       '(temp_65 : field_element_t) ←
+        (poly1305_encode_block (b_63)) ;;
+       '(temp_68 : field_element_t) ←
+        ((temp_65) +% (acc_66)) ;;
+       '(temp_71 : field_element_t) ←
+        ((temp_68) *% (r_69)) ;;
+      @ret ((field_element_t '× field_element_t '× poly_key_t)) (prod_ce(
+          temp_71,
+          r_69,
+          k_72
+        )) } : code (fset.fset0) [interface
+      #val #[ POLY1305_ENCODE_BLOCK ] : poly1305_encode_block_inp → poly1305_encode_block_out
+      ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_update_block : package _ _ _ :=
+  (seq_link poly1305_update_block link_rest(package_poly1305_encode_block)).
 Fail Next Obligation.
 
-Definition poly1305_pure
-  (m_147 : byte_seq)
-  (key_148 : poly_key_t)
-  : poly1305_tag_t :=
-  let st_145 : (field_element_t '× field_element_t '× poly_key_t) :=
-    poly1305_init (key_148) in 
-  let st_145 :=
-    poly1305_update (m_147) (st_145) in 
-  poly1305_finish (st_145).
-Definition poly1305_pure_code
-  (m_147 : byte_seq)
-  (key_148 : poly_key_t)
-  : code fset.fset0 [interface] (@ct poly1305_tag_t) :=
-  lift_to_code (poly1305_pure m_147 key_148).
-
-Definition st_145_loc : ChoiceEqualityLocation :=
-  (((field_element_t '× field_element_t '× poly_key_t) ; 155%nat)).
-Program Definition poly1305_state
-  (m_147 : byte_seq)
-  (key_148 : poly_key_t) : code (CEfset (
-      [n_0_loc ; st_70_loc ; st_88_loc ; st_145_loc])) [interface] (@ct (
-      poly1305_tag_t)) :=
-  (({ code  '(st_145: (field_element_t '× field_element_t '× poly_key_t) ) ←
-          ( temp_150 ←
-              (poly1305_init (key_148)) ;;
-            ret (temp_150)) ;;
-        #put st_145_loc := st_145 ;;
-       st_145 ←
-          (( temp_152 ←
-                (poly1305_update (m_147) (st_145)) ;;
-              ret (temp_152))) ;;
-        #put st_145_loc := st_145 ;;
+Definition st_89_loc : ChoiceEqualityLocation :=
+  (((field_element_t '× field_element_t '× poly_key_t) ; 92%nat)).
+Notation "'poly1305_update_blocks_inp'" := (
+  byte_seq '× poly_state_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_update_blocks_out'" := (
+  poly_state_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_UPDATE_BLOCKS : nat :=
+  (93).
+Program Definition poly1305_update_blocks
+   : package (CEfset ([st_89_loc])) [interface
+  #val #[ POLY1305_UPDATE_BLOCK ] : poly1305_update_block_inp → poly1305_update_block_out
+  ] [interface
+  #val #[ POLY1305_UPDATE_BLOCKS ] : poly1305_update_blocks_inp → poly1305_update_blocks_out
+  ] :=
+  (
+    [package #def #[ POLY1305_UPDATE_BLOCKS ] (temp_inp : poly1305_update_blocks_inp) : poly1305_update_blocks_out { 
+    let '(m_77 , st_76) := temp_inp : byte_seq '× poly_state_t in
+    #import {sig #[ POLY1305_UPDATE_BLOCK ] : poly1305_update_block_inp → poly1305_update_block_out } as poly1305_update_block ;;
+    let poly1305_update_block := fun x_0 x_1 => poly1305_update_block (
+      x_0,x_1) in
+    ({ code  '(st_89 : (field_element_t '× field_element_t '× poly_key_t)) ←
+          (ret (st_76)) ;;
+        #put st_89_loc := st_89 ;;
+       '(n_blocks_82 : uint_size) ←
+        ( '(temp_79 : uint_size) ←
+            (seq_len (m_77)) ;;
+           '(temp_81 : uint_size) ←
+            ((temp_79) ./ (blocksize_v)) ;;
+          ret (temp_81)) ;;
+       '(st_89 : ((field_element_t '× field_element_t '× poly_key_t))) ←
+        (foldi' (usize 0) (n_blocks_82) st_89 (L2 := CEfset ([st_89_loc])) (
+              I2 := [interface
+              #val #[ POLY1305_UPDATE_BLOCK ] : poly1305_update_block_inp → poly1305_update_block_out
+              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_83 st_89 =>
+            ({ code  '(block_88 : poly_block_t) ←
+                ( '(temp_85 : byte_seq) ←
+                    (seq_get_exact_chunk (m_77) (blocksize_v) (i_83)) ;;
+                   '(temp_87 : poly_block_t) ←
+                    (array_from_seq (16) (temp_85)) ;;
+                  ret (temp_87)) ;;
+               '(st_89 : (field_element_t '× field_element_t '× poly_key_t
+                    )) ←
+                  (( '(temp_91 : poly_state_t) ←
+                        (poly1305_update_block (block_88) (st_89)) ;;
+                      ret (temp_91))) ;;
+                #put st_89_loc := st_89 ;;
+              
+              @ret (((field_element_t '× field_element_t '× poly_key_t))) (
+                st_89) } : code (CEfset ([st_89_loc])) [interface
+              #val #[ POLY1305_UPDATE_BLOCK ] : poly1305_update_block_inp → poly1305_update_block_out
+              ] _))) ;;
       
-       temp_154 ←
-        (poly1305_finish (st_145)) ;;
-      @ret (poly1305_tag_t)(temp_154) } : code (CEfset (
-          [n_0_loc ; st_70_loc ; st_88_loc ; st_145_loc])) [interface] _)).
+      @ret ((field_element_t '× field_element_t '× poly_key_t)) (
+        st_89) } : code (CEfset ([st_89_loc])) [interface
+      #val #[ POLY1305_UPDATE_BLOCK ] : poly1305_update_block_inp → poly1305_update_block_out
+      ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_update_blocks : package _ _ _ :=
+  (seq_link poly1305_update_blocks link_rest(package_poly1305_update_block)).
 Fail Next Obligation.
 
+Definition st_100_loc : ChoiceEqualityLocation :=
+  (((field_element_t '× field_element_t '× poly_key_t) ; 113%nat)).
+Notation "'poly1305_update_last_inp'" := (
+  uint_size '× sub_block_t '× poly_state_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_update_last_out'" := (
+  poly_state_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_UPDATE_LAST : nat :=
+  (114).
+Program Definition poly1305_update_last
+   : package (CEfset ([st_100_loc])) [interface
+  #val #[ POLY1305_ENCODE_LAST ] : poly1305_encode_last_inp → poly1305_encode_last_out
+  ] [interface
+  #val #[ POLY1305_UPDATE_LAST ] : poly1305_update_last_inp → poly1305_update_last_out
+  ] :=
+  (
+    [package #def #[ POLY1305_UPDATE_LAST ] (temp_inp : poly1305_update_last_inp) : poly1305_update_last_out { 
+    let '(
+      pad_len_101 , b_95 , st_94) := temp_inp : uint_size '× sub_block_t '× poly_state_t in
+    #import {sig #[ POLY1305_ENCODE_LAST ] : poly1305_encode_last_inp → poly1305_encode_last_out } as poly1305_encode_last ;;
+    let poly1305_encode_last := fun x_0 x_1 => poly1305_encode_last (x_0,x_1) in
+    ({ code  '(st_100 : (field_element_t '× field_element_t '× poly_key_t
+            )) ←
+          (ret (st_94)) ;;
+        #put st_100_loc := st_100 ;;
+       '(temp_97 : uint_size) ←
+        (seq_len (b_95)) ;;
+       '(temp_99 : bool_ChoiceEquality) ←
+        ((temp_97) !=.? (usize 0)) ;;
+       '(st_100 : ((field_element_t '× field_element_t '× poly_key_t))) ←
+        (if temp_99:bool_ChoiceEquality
+          then (({ code  temp_112 ←
+                (ret (st_100)) ;;
+              let '(acc_104, r_107, k_110) :=
+                (temp_112) : (field_element_t '× field_element_t '× poly_key_t
+              ) in
+               '(st_100 : (field_element_t '× field_element_t '× poly_key_t
+                    )) ←
+                  (( '(temp_103 : field_element_t) ←
+                        (poly1305_encode_last (pad_len_101) (b_95)) ;;
+                       '(temp_106 : field_element_t) ←
+                        ((temp_103) +% (acc_104)) ;;
+                       '(temp_109 : field_element_t) ←
+                        ((temp_106) *% (r_107)) ;;
+                      ret (prod_ce(temp_109, r_107, k_110)))) ;;
+                #put st_100_loc := st_100 ;;
+              
+              @ret (((field_element_t '× field_element_t '× poly_key_t))) (
+                st_100) } : code (CEfset ([st_100_loc])) [interface
+              #val #[ POLY1305_ENCODE_LAST ] : poly1305_encode_last_inp → poly1305_encode_last_out
+              ] _))
+          else @ret (((field_element_t '× field_element_t '× poly_key_t))) (
+            st_100)) ;;
+      
+      @ret ((field_element_t '× field_element_t '× poly_key_t)) (
+        st_100) } : code (CEfset ([st_100_loc])) [interface
+      #val #[ POLY1305_ENCODE_LAST ] : poly1305_encode_last_inp → poly1305_encode_last_out
+      ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_update_last : package _ _ _ :=
+  (seq_link poly1305_update_last link_rest(package_poly1305_encode_last)).
+Fail Next Obligation.
+
+
+Notation "'poly1305_update_inp'" := (
+  byte_seq '× poly_state_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_update_out'" := (
+  poly_state_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_UPDATE : nat :=
+  (127).
+Program Definition poly1305_update
+   : package (CEfset ([])) [interface
+  #val #[ POLY1305_UPDATE_BLOCKS ] : poly1305_update_blocks_inp → poly1305_update_blocks_out ;
+  #val #[ POLY1305_UPDATE_LAST ] : poly1305_update_last_inp → poly1305_update_last_out
+  ] [interface
+  #val #[ POLY1305_UPDATE ] : poly1305_update_inp → poly1305_update_out ] :=
+  (
+    [package #def #[ POLY1305_UPDATE ] (temp_inp : poly1305_update_inp) : poly1305_update_out { 
+    let '(m_115 , st_116) := temp_inp : byte_seq '× poly_state_t in
+    #import {sig #[ POLY1305_UPDATE_BLOCKS ] : poly1305_update_blocks_inp → poly1305_update_blocks_out } as poly1305_update_blocks ;;
+    let poly1305_update_blocks := fun x_0 x_1 => poly1305_update_blocks (
+      x_0,x_1) in
+    #import {sig #[ POLY1305_UPDATE_LAST ] : poly1305_update_last_inp → poly1305_update_last_out } as poly1305_update_last ;;
+    let poly1305_update_last := fun x_0 x_1 x_2 => poly1305_update_last (
+      x_0,x_1,x_2) in
+    ({ code  '(st_124 : (field_element_t '× field_element_t '× poly_key_t
+          )) ←
+        ( '(temp_118 : poly_state_t) ←
+            (poly1305_update_blocks (m_115) (st_116)) ;;
+          ret (temp_118)) ;;
+       '(last_121 : seq uint8) ←
+        ( '(temp_120 : byte_seq) ←
+            (seq_get_remainder_chunk (m_115) (blocksize_v)) ;;
+          ret (temp_120)) ;;
+       '(temp_123 : uint_size) ←
+        (seq_len (last_121)) ;;
+       '(temp_126 : poly_state_t) ←
+        (poly1305_update_last (temp_123) (last_121) (st_124)) ;;
+      @ret (poly_state_t) (temp_126) } : code (CEfset ([])) [interface
+      #val #[ POLY1305_UPDATE_BLOCKS ] : poly1305_update_blocks_inp → poly1305_update_blocks_out ;
+      #val #[ POLY1305_UPDATE_LAST ] : poly1305_update_last_inp → poly1305_update_last_out
+      ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_update : package _ _ _ :=
+  (seq_link poly1305_update link_rest(
+      package_poly1305_update_blocks,package_poly1305_update_last)).
+Fail Next Obligation.
+
+
+Notation "'poly1305_finish_inp'" := (
+  poly_state_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_finish_out'" := (
+  poly1305_tag_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305_FINISH : nat :=
+  (156).
+Program Definition poly1305_finish
+   : package (fset.fset0) [interface  ] [interface
+  #val #[ POLY1305_FINISH ] : poly1305_finish_inp → poly1305_finish_out ] :=
+  (
+    [package #def #[ POLY1305_FINISH ] (temp_inp : poly1305_finish_inp) : poly1305_finish_out { 
+    let '(st_128) := temp_inp : poly_state_t in
+    ({ code  temp_155 ←
+        (ret (st_128)) ;;
+      let '(acc_136, _, k_129) :=
+        (temp_155) : (field_element_t '× field_element_t '× poly_key_t) in
+       '(n_145 : uint128) ←
+        ( '(temp_131 : seq uint8) ←
+            (array_to_seq (k_129)) ;;
+           '(temp_133 : uint128_word_t) ←
+            (array_from_slice (default : uint8) (16) (temp_131) (usize 16) (
+                usize 16)) ;;
+           '(temp_135 : int128) ←
+            (uint128_from_le_bytes (temp_133)) ;;
+          ret (temp_135)) ;;
+       '(aby_139 : seq uint8) ←
+        ( temp_138 ←
+            (nat_mod_to_byte_seq_le (acc_136)) ;;
+          ret (temp_138)) ;;
+       '(a_144 : uint128) ←
+        ( '(temp_141 : uint128_word_t) ←
+            (array_from_slice (default : uint8) (16) (aby_139) (usize 0) (
+                usize 16)) ;;
+           '(temp_143 : int128) ←
+            (uint128_from_le_bytes (temp_141)) ;;
+          ret (temp_143)) ;;
+       '(temp_147 : uint128) ←
+        ((a_144) .+ (n_145)) ;;
+       '(temp_149 : uint128_word_t) ←
+        (uint128_to_le_bytes (temp_147)) ;;
+       '(temp_151 : seq uint8) ←
+        (array_to_seq (temp_149)) ;;
+       '(temp_153 : poly1305_tag_t) ←
+        (array_from_seq (16) (temp_151)) ;;
+      @ret (poly1305_tag_t) (temp_153) } : code (fset.fset0) [interface  ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305_finish : package _ _ _ :=
+  (poly1305_finish).
+Fail Next Obligation.
+
+Definition st_161_loc : ChoiceEqualityLocation :=
+  (((field_element_t '× field_element_t '× poly_key_t) ; 166%nat)).
+Notation "'poly1305_inp'" := (
+  byte_seq '× poly_key_t : choice_type) (in custom pack_type at level 2).
+Notation "'poly1305_out'" := (
+  poly1305_tag_t : choice_type) (in custom pack_type at level 2).
+Definition POLY1305 : nat :=
+  (167).
 Program Definition poly1305
-  (m_147 : byte_seq)
-  (key_148 : poly_key_t)
-  : both (CEfset ([n_0_loc ; st_70_loc ; st_88_loc ; st_145_loc])) [interface] (
-    poly1305_tag_t) :=
-  letbm st_145 : (field_element_t '× field_element_t '× poly_key_t
-    ) loc( st_145_loc ) :=
-    poly1305_init (lift_to_both0 key_148) in
-  letbm st_145 loc( st_145_loc ) :=
-    poly1305_update (lift_to_both0 m_147) (lift_to_both0 st_145) in
-  lift_scope (L2 := (CEfset (
-      [n_0_loc ; st_70_loc ; st_88_loc ; st_145_loc]))) (H_incl := _) (
-    poly1305_finish (lift_to_both0 st_145))
-  .
+   : package (CEfset ([st_161_loc])) [interface
+  #val #[ POLY1305_FINISH ] : poly1305_finish_inp → poly1305_finish_out ;
+  #val #[ POLY1305_INIT ] : poly1305_init_inp → poly1305_init_out ;
+  #val #[ POLY1305_UPDATE ] : poly1305_update_inp → poly1305_update_out
+  ] [interface #val #[ POLY1305 ] : poly1305_inp → poly1305_out ] :=
+  ([package #def #[ POLY1305 ] (temp_inp : poly1305_inp) : poly1305_out { 
+    let '(m_160 , key_157) := temp_inp : byte_seq '× poly_key_t in
+    #import {sig #[ POLY1305_FINISH ] : poly1305_finish_inp → poly1305_finish_out } as poly1305_finish ;;
+    let poly1305_finish := fun x_0 => poly1305_finish (x_0) in
+    #import {sig #[ POLY1305_INIT ] : poly1305_init_inp → poly1305_init_out } as poly1305_init ;;
+    let poly1305_init := fun x_0 => poly1305_init (x_0) in
+    #import {sig #[ POLY1305_UPDATE ] : poly1305_update_inp → poly1305_update_out } as poly1305_update ;;
+    let poly1305_update := fun x_0 x_1 => poly1305_update (x_0,x_1) in
+    ({ code  '(st_161 : (field_element_t '× field_element_t '× poly_key_t
+            )) ←
+          ( '(temp_159 : poly_state_t) ←
+              (poly1305_init (key_157)) ;;
+            ret (temp_159)) ;;
+        #put st_161_loc := st_161 ;;
+       '(st_161 : (field_element_t '× field_element_t '× poly_key_t)) ←
+          (( '(temp_163 : poly_state_t) ←
+                (poly1305_update (m_160) (st_161)) ;;
+              ret (temp_163))) ;;
+        #put st_161_loc := st_161 ;;
+      
+       '(temp_165 : poly1305_tag_t) ←
+        (poly1305_finish (st_161)) ;;
+      @ret (poly1305_tag_t) (temp_165) } : code (CEfset (
+          [st_161_loc])) [interface
+      #val #[ POLY1305_FINISH ] : poly1305_finish_inp → poly1305_finish_out ;
+      #val #[ POLY1305_INIT ] : poly1305_init_inp → poly1305_init_out ;
+      #val #[ POLY1305_UPDATE ] : poly1305_update_inp → poly1305_update_out
+      ] _)
+    }]).
+Fail Next Obligation.
+Program Definition package_poly1305 : package _ _ _ :=
+  (seq_link poly1305 link_rest(
+      package_poly1305_finish,package_poly1305_init,package_poly1305_update)).
 Fail Next Obligation.
 

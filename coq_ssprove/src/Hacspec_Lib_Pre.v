@@ -2,6 +2,11 @@ Global Set Warnings "-ambiguous-paths".
 Global Set Warnings "-uniform-inheritance".
 Global Set Warnings "-auto-template".
 Global Set Warnings "-disj-pattern-notation".
+Global Set Warnings "-notation-overridden,-ambiguous-paths".
+
+Require Import Lia.
+Require Import Coq.Logic.FunctionalExtensionality.
+Require Import Sumbool.
 
 From mathcomp Require Import (* choice  *)fintype.
 
@@ -14,13 +19,12 @@ Require Import ChoiceEquality.
 From CoqWord Require Import ssrZ word.
 From Jasmin Require Import word.
 
-(*** Integers *)
 From Coq Require Import ZArith List.
 Import ListNotations.
-Require Import Lia.
+
+(*** Integers *)
 Declare Scope hacspec_scope.
 
-Require Import Sumbool.
 Open Scope list_scope.
 Open Scope hacspec_scope.
 Open Scope nat_scope.
@@ -28,101 +32,101 @@ Open Scope nat_scope.
 
 Require Import Hacspec_Lib_Comparable.
 
-Require Import Coq.Logic.FunctionalExtensionality.
-
 Section IntType.
 
-Definition int_choice {WS : wsize} := chWord WS.
-Definition int_type {WS : wsize} : Type := WS.-word.
-Program Instance int {WS : wsize} : ChoiceEquality :=
-  {| ct := @int_choice WS ; T := @int_type WS |}.
+  Definition int_choice {WS : wsize} := chWord WS.
+  Definition int_type {WS : wsize} : Type := WS.-word.
+  #[global] Program Instance int {WS : wsize} : ChoiceEquality :=
+    {| ct := @int_choice WS ; T := @int_type WS |}.
 
-Definition unsigned {WS : wsize} (i : @int WS) : Z := wunsigned i.
-Definition signed {WS : wsize} (i: @int WS) : Z := wsigned i.
-Definition repr {WS : wsize} (z : Z) : @int WS := wrepr WS z.
+  Definition unsigned {WS : wsize} (i : @int WS) : Z := wunsigned i.
+  Definition signed {WS : wsize} (i: @int WS) : Z := wsigned i.
+  Definition repr {WS : wsize} (z : Z) : @int WS := wrepr WS z.
 
-Definition rol {WS} (u s : @int WS) := wrol u (unsigned s).
-Definition ror {WS} (u s : @int WS) := wror u (unsigned s).
+  Definition rol {WS} (u s : @int WS) := wrol u (unsigned s).
+  Definition ror {WS} (u s : @int WS) := wror u (unsigned s).
 
-Instance int8 : ChoiceEquality := @int U8.
-Instance int16 : ChoiceEquality := @int U16.
-Instance int32 : ChoiceEquality := @int U32.
-Instance int64 : ChoiceEquality := @int U64.
-Instance int128 : ChoiceEquality := @int U128.
+  #[global] Instance int8 : ChoiceEquality := @int U8.
+  #[global] Instance int16 : ChoiceEquality := @int U16.
+  #[global] Instance int32 : ChoiceEquality := @int U32.
+  #[global] Instance int64 : ChoiceEquality := @int U64.
+  #[global] Instance int128 : ChoiceEquality := @int U128.
 
-Definition int_modi {WS : wsize} : @int WS -> @int WS -> @int WS := wmodi.
-Definition int_add {WS : wsize} : @int WS -> @int WS -> @int WS := @add_word WS.
-Definition int_sub {WS : wsize} : @int WS -> @int WS -> @int WS := @sub_word WS.
-Definition int_opp {WS : wsize} : @int WS -> @int WS := @opp_word WS.
-Definition int_mul {WS : wsize} : @int WS -> @int WS -> @int WS := @mul_word WS.
-Definition int_div {WS : wsize} : @int WS -> @int WS -> @int WS := wdiv.
-Definition int_mod {WS : wsize} : @int WS -> @int WS -> @int WS := wmod.
-Definition int_xor {WS : wsize} : @int WS -> @int WS -> @int WS := wxor.
-Definition int_and {WS : wsize} : @int WS -> @int WS -> @int WS := wand.
-Definition int_or {WS : wsize} : @int WS -> @int WS -> @int WS := wor.
+  Definition int_modi {WS : wsize} : @int WS -> @int WS -> @int WS := wmodi.
+  Definition int_add {WS : wsize} : @int WS -> @int WS -> @int WS := @add_word WS.
+  Definition int_sub {WS : wsize} : @int WS -> @int WS -> @int WS := @sub_word WS.
+  Definition int_opp {WS : wsize} : @int WS -> @int WS := @opp_word WS.
+  Definition int_mul {WS : wsize} : @int WS -> @int WS -> @int WS := @mul_word WS.
+  Definition int_div {WS : wsize} : @int WS -> @int WS -> @int WS := wdiv.
+  Definition int_mod {WS : wsize} : @int WS -> @int WS -> @int WS := wmod.
+  Definition int_xor {WS : wsize} : @int WS -> @int WS -> @int WS := wxor.
+  Definition int_and {WS : wsize} : @int WS -> @int WS -> @int WS := wand.
+  Definition int_or {WS : wsize} : @int WS -> @int WS -> @int WS := wor.
 
-Definition zero {WS : wsize} : T (@int WS) := @word0 WS.
-Definition one {WS : wsize} : T (@int WS) := @word1 (pred WS).
+  Definition int_not {WS : wsize} : @int WS -> @int WS := wnot.
+  
+  Definition zero {WS : wsize} : T (@int WS) := @word0 WS.
+  Definition one {WS : wsize} : T (@int WS) := @word1 (pred WS).
 
-Lemma add_zero_l : forall {WS : wsize} n, @int_add WS zero n = n.
-Proof.
-  intros.
-  apply add0w.
-Defined.
+  Lemma add_zero_l : forall {WS : wsize} n, @int_add WS zero n = n.
+  Proof.
+    intros.
+    apply add0w.
+  Defined.
 
-(* Lemma add_one_l : forall {WS : wsize} n m H1 H2, *)
-(*     n = m -> *)
-(*     mkword n H1 = mkword m H2. *)
+  (* Lemma add_one_l : forall {WS : wsize} n m H1 H2, *)
+  (*     n = m -> *)
+  (*     mkword n H1 = mkword m H2. *)
 
-Lemma add_one_l : forall {WS : wsize} n, @int_add WS one (repr n) = repr (Z.succ n).
-Proof.
-  intros.
+  Lemma add_one_l : forall {WS : wsize} n, @int_add WS one (repr n) = repr (Z.succ n).
+  Proof.
+    intros.
 
-  unfold int_add.
-  unfold add_word.
+    unfold int_add.
+    unfold add_word.
 
-  replace (urepr one) with 1%Z by reflexivity.
+    replace (urepr one) with 1%Z by reflexivity.
 
-  unfold nat_of_wsize.
-  fold (wrepr WS (Z.add 1 (@urepr (S (wsize_size_minus_1 WS)) (@repr WS n)))).
-  unfold repr.
+    unfold nat_of_wsize.
+    fold (wrepr WS (Z.add 1 (@urepr (S (wsize_size_minus_1 WS)) (@repr WS n)))).
+    unfold repr.
 
-  rewrite wrepr_add.
-  rewrite urepr_word.
+    rewrite wrepr_add.
+    rewrite urepr_word.
 
-  (* Set Printing All. *)
-  replace toword with urepr by reflexivity.
-  unfold wrepr at 2.
-  rewrite ureprK.
+    (* Set Printing All. *)
+    replace toword with urepr by reflexivity.
+    unfold wrepr at 2.
+    rewrite ureprK.
 
-  rewrite <- wrepr_add.
-  rewrite Z.add_1_l.
-  reflexivity.
-Defined.
+    rewrite <- wrepr_add.
+    rewrite Z.add_1_l.
+    reflexivity.
+  Defined.
 
-Lemma repr0_is_zero : forall {WS : wsize}, @repr WS 0 = zero.
-Proof.
-  intros.
-  now rewrite wrepr0.
-Qed.
+  Lemma repr0_is_zero : forall {WS : wsize}, @repr WS 0 = zero.
+  Proof.
+    intros.
+    now rewrite wrepr0.
+  Qed.
 
-Lemma add_repr : forall {WS : wsize} (n m : Z), @int_add WS (repr n) (repr m) = (repr (n + m)).
-Proof.
-  intros.
-  unfold int_add.
-  unfold add_word.
-  unfold nat_of_wsize.
-  fold (wrepr WS (Z.add (@urepr (S (wsize_size_minus_1 WS)) (@repr WS n))
-                        (@urepr (S (wsize_size_minus_1 WS)) (@repr WS m)))).
+  Lemma add_repr : forall {WS : wsize} (n m : Z), @int_add WS (repr n) (repr m) = (repr (n + m)).
+  Proof.
+    intros.
+    unfold int_add.
+    unfold add_word.
+    unfold nat_of_wsize.
+    fold (wrepr WS (Z.add (@urepr (S (wsize_size_minus_1 WS)) (@repr WS n))
+                          (@urepr (S (wsize_size_minus_1 WS)) (@repr WS m)))).
 
-  rewrite wrepr_add.
-  replace toword with urepr by reflexivity.
-  unfold wrepr at 1 2.
-  rewrite ureprK.
-  rewrite ureprK.
-  rewrite <- wrepr_add.
-  reflexivity.
-Qed.
+    rewrite wrepr_add.
+    replace toword with urepr by reflexivity.
+    unfold wrepr at 1 2.
+    rewrite ureprK.
+    rewrite ureprK.
+    rewrite <- wrepr_add.
+    reflexivity.
+  Qed.
 
 
 End IntType.
@@ -139,6 +143,9 @@ Infix ".%" := int_mod (at level 77) : hacspec_scope.
 Infix ".^" := int_xor (at level 77) : hacspec_scope.
 Infix ".&" := int_and (at level 77) : hacspec_scope.
 Infix ".|" := int_or (at level 77) : hacspec_scope.
+
+Notation "'not'" := int_not (at level 77) : hacspec_scope.
+
 (* Infix "==" := (MachineIntegers.eq) (at level 32) : hacspec_scope. *)
 (* w1 == w2 -- already defined *)
 
@@ -147,40 +154,40 @@ Infix ".|" := int_or (at level 77) : hacspec_scope.
 (* Comparisons, boolean equality, and notation *)
 
 Global Program Instance nat_eqdec : EqDec nat := {
-  eqb := Nat.eqb;
-  eqb_leibniz := Nat.eqb_eq ;
-}.
+    eqb := Nat.eqb;
+    eqb_leibniz := Nat.eqb_eq ;
+  }.
 
 Global Instance nat_comparable : Comparable nat := {
-  ltb := Nat.ltb;
-  leb := Nat.leb;
-  gtb a b := Nat.ltb b a;
-  geb a b := Nat.leb b a;
-}.
+    ltb := Nat.ltb;
+    leb := Nat.leb;
+    gtb a b := Nat.ltb b a;
+    geb a b := Nat.leb b a;
+  }.
 
 Global Instance N_eqdec : EqDec N := {
-  eqb := N.eqb;
+    eqb := N.eqb;
     eqb_leibniz := N.eqb_eq ;
-}.
+  }.
 
 Global Instance N_comparable : Comparable N := {
-  ltb := N.ltb;
-  leb := N.leb;
-  gtb a b := N.ltb b a;
-  geb a b := N.leb b a;
-}.
+    ltb := N.ltb;
+    leb := N.leb;
+    gtb a b := N.ltb b a;
+    geb a b := N.leb b a;
+  }.
 
 Global Instance Z_eqdec : EqDec Z := {
-  eqb := Z.eqb;
-  eqb_leibniz := Z.eqb_eq ;
-}.
+    eqb := Z.eqb;
+    eqb_leibniz := Z.eqb_eq ;
+  }.
 
 Global Instance Z_comparable : Comparable Z := {
-  ltb := Z.ltb;
-  leb := Z.leb;
-  gtb a b := Z.ltb b a;
-  geb a b := Z.leb b a;
-}.
+    ltb := Z.ltb;
+    leb := Z.leb;
+    gtb a b := Z.ltb b a;
+    geb a b := Z.leb b a;
+  }.
 
 Lemma int_eqb_eq : forall {WS : wsize} (a b : @int WS), eqtype.eq_op a b = true <-> a = b.
 Proof.
@@ -188,12 +195,12 @@ Proof.
 Qed.
 
 Global Instance int_eqdec `{WS : wsize}: EqDec (@int WS) := {
-  eqb := eqtype.eq_op;
-  eqb_leibniz := int_eqb_eq ;
-}.
+    eqb := eqtype.eq_op;
+    eqb_leibniz := int_eqb_eq ;
+  }.
 
 Global Instance int_comparable `{WS : wsize} : Comparable (@int WS) :=
-    eq_dec_lt_Comparable (wlt Unsigned).
+  eq_dec_lt_Comparable (wlt Unsigned).
 
 Axiom uint8_declassify : int8 -> int8.
 Axiom int8_declassify : int8 -> int8.
@@ -220,7 +227,7 @@ Axiom int128_classify : int128 -> int128.
 
 (* CompCert integers' signedness is only interpreted through 'signed' and 'unsigned',
    and not in the representation. Therefore, uints are just names for their respective ints.
-*)
+ *)
 
 Definition int8_type := @int_type U8.
 Definition int16_type := @int_type U16.
@@ -230,85 +237,85 @@ Definition int128_type := @int_type U128.
 
 Notation uint8 := int8.
 Definition uint8_type := @int_type U8.
-Instance uint16 : ChoiceEquality := int16.
+#[global] Instance uint16 : ChoiceEquality := int16.
 Definition uint16_type := @int_type U16.
-Instance uint32 : ChoiceEquality := int32.
+#[global] Instance uint32 : ChoiceEquality := int32.
 Definition uint32_type := @int_type U32.
-Instance uint64 : ChoiceEquality := int64.
+#[global] Instance uint64 : ChoiceEquality := int64.
 Definition uint64_type := @int_type U64.
-Instance uint128 : ChoiceEquality := int128.
+#[global] Instance uint128 : ChoiceEquality := int128.
 Definition uint128_type := @int_type U128.
 
-Instance uint_size : ChoiceEquality := int32.
+#[global] Instance uint_size : ChoiceEquality := int32.
 Definition uint_size_type := @int_type U32.
 
-Instance int_size : ChoiceEquality := int32.
+#[global] Instance int_size : ChoiceEquality := int32.
 Definition int_size_type := @int_type U32.
 
 Axiom declassify_usize_from_uint8 : uint8 -> uint_size.
 
 (* Represents any type that can be converted to uint_size and back *)
 Class UInt_sizeable (A : Type) := {
-  usize : A -> uint_size;
-  from_uint_size : uint_size -> A;
-}.
+    usize : A -> uint_size;
+    from_uint_size : uint_size -> A;
+  }.
 Arguments usize {_} {_}.
 Arguments from_uint_size {_} {_}.
 
 Identity Coercion uint_size_to_int:uint_size_type >-> int_type.
 
 Global Instance nat_uint_sizeable : UInt_sizeable nat := {
-  usize n := repr (Z.of_nat n);
-  from_uint_size n := Z.to_nat (unsigned n);
-}.
+    usize n := repr (Z.of_nat n);
+    from_uint_size n := Z.to_nat (unsigned n);
+  }.
 
 Global Instance N_uint_sizeable : UInt_sizeable N := {
-  usize n := repr (Z.of_N n);
-  from_uint_size n := Z.to_N (unsigned n);
-}.
+    usize n := repr (Z.of_N n);
+    from_uint_size n := Z.to_N (unsigned n);
+  }.
 
 Global Instance Z_uint_sizeable : UInt_sizeable Z := {
-  usize n := repr n;
-  from_uint_size n := unsigned n;
-}.
+    usize n := repr n;
+    from_uint_size n := unsigned n;
+  }.
 
 
 (* Same, but for int_size *)
 Class Int_sizeable (A : Type) := {
-  isize : A -> int_size;
-  from_int_size : int_size -> A;
-}.
+    isize : A -> int_size;
+    from_int_size : int_size -> A;
+  }.
 
 Arguments isize {_} {_}.
 Arguments from_int_size {_} {_}.
 
 Global Instance nat_Int_sizeable : Int_sizeable nat := {
-  isize n := repr (Z.of_nat n);
-  from_int_size n := Z.to_nat (signed n);
-}.
+    isize n := repr (Z.of_nat n);
+    from_int_size n := Z.to_nat (signed n);
+  }.
 
 Global Instance N_Int_sizeable : Int_sizeable N := {
-  isize n := repr (Z.of_N n);
-  from_int_size n := Z.to_N (signed n);
-}.
+    isize n := repr (Z.of_N n);
+    from_int_size n := Z.to_N (signed n);
+  }.
 
 Global Instance Z_Int_sizeable : Int_sizeable Z := {
-  isize n := repr n;
-  from_int_size n := signed n;
-}.
+    isize n := repr n;
+    from_int_size n := signed n;
+  }.
 
 (**** Public integers *)
 
-Definition pub_u8 (n : Z) : int8 := repr n.
-Definition pub_i8 (n : Z) : int8 := repr n.
-Definition pub_u16 (n : Z) : int16 := repr n.
-Definition pub_i16 (n : Z) : int16 := repr n.
-Definition pub_u32 (n : Z) : int32 := repr n.
-Definition pub_i32 (n : Z) : int32 := repr n.
-Definition pub_u64 (n : Z) : int64 := repr n.
-Definition pub_i64 (n : Z) : int64 := repr n.
-Definition pub_u128 (n : Z) : int128 := repr n.
-Definition pub_i128 (n : Z) : int128 := repr n.
+Definition pub_u8 (n : uint_size) : int8 := repr (unsigned n).
+Definition pub_i8 (n : uint_size) : int8 := repr (unsigned n).
+Definition pub_u16 (n : uint_size) : int16 := repr (unsigned n).
+Definition pub_i16 (n : uint_size) : int16 := repr (unsigned n).
+Definition pub_u32 (n : uint_size) : int32 := repr (unsigned n).
+Definition pub_i32 (n : uint_size) : int32 := repr (unsigned n).
+Definition pub_u64 (n : uint_size) : int64 := repr (unsigned n).
+Definition pub_i64 (n : uint_size) : int64 := repr (unsigned n).
+Definition pub_u128 (n : uint_size) : int128 := repr (unsigned n).
+Definition pub_i128 (n : uint_size) : int128 := repr (unsigned n).
 
 (**** Operations *)
 
@@ -367,211 +374,211 @@ Infix "shift_right" := (shift_right_) (at level 77) : hacspec_scope.
 
 Section Util.
 
-Fixpoint binary_representation_pre (n : nat) {struct n}: positive :=
-  match n with
-  | O => 1
-  | S O => 1
-  | S n => Pos.succ (binary_representation_pre n)
-  end%positive.
-Definition binary_representation (n : nat) `(n <> O) := binary_representation_pre n.
+  Fixpoint binary_representation_pre (n : nat) {struct n}: positive :=
+    match n with
+    | O => 1
+    | S O => 1
+    | S n => Pos.succ (binary_representation_pre n)
+    end%positive.
+  Definition binary_representation (n : nat) `(n <> O) := binary_representation_pre n.
 
-Theorem positive_is_succs : forall n, forall (H : n <> O) (K : S n <> O),
-    @binary_representation (S n) K = Pos.succ (@binary_representation n H).
-Proof. induction n ; [contradiction | reflexivity]. Qed.
+  Theorem positive_is_succs : forall n, forall (H : n <> O) (K : S n <> O),
+      @binary_representation (S n) K = Pos.succ (@binary_representation n H).
+  Proof. induction n ; [contradiction | reflexivity]. Qed.
 
-(* Conversion of positive to binary representation *)
-Theorem positive_to_positive_succs : forall p, binary_representation (Pos.to_nat p) (Nat.neq_sym _ _ (Nat.lt_neq _ _ (Pos2Nat.is_pos p))) = p.
-Proof.
-  intros p.
-  generalize dependent (Nat.neq_sym 0 (Pos.to_nat p) (Nat.lt_neq 0 (Pos.to_nat p) (Pos2Nat.is_pos p))).
+  (* Conversion of positive to binary representation *)
+  Theorem positive_to_positive_succs : forall p, binary_representation (Pos.to_nat p) (Nat.neq_sym _ _ (Nat.lt_neq _ _ (Pos2Nat.is_pos p))) = p.
+  Proof.
+    intros p.
+    generalize dependent (Nat.neq_sym 0 (Pos.to_nat p) (Nat.lt_neq 0 (Pos.to_nat p) (Pos2Nat.is_pos p))).
 
-  destruct Pos.to_nat eqn:ptno.
-  - contradiction.
-  - generalize dependent p.
-    induction n ; intros.
-    + cbn.
-      apply Pos2Nat.inj.
-      symmetry.
-      apply ptno.
-    + rewrite positive_is_succs with (H := Nat.neq_succ_0 n).
-      rewrite IHn with (p := Pos.of_nat (S n)).
-      * rewrite <- Nat2Pos.inj_succ by apply Nat.neq_succ_0.
-        rewrite <- ptno.
-        apply Pos2Nat.id.
-      * apply Nat2Pos.id.
-        apply Nat.neq_succ_0.
-Qed.
+    destruct Pos.to_nat eqn:ptno.
+    - contradiction.
+    - generalize dependent p.
+      induction n ; intros.
+      + cbn.
+        apply Pos2Nat.inj.
+        symmetry.
+        apply ptno.
+      + rewrite positive_is_succs with (H := Nat.neq_succ_0 n).
+        rewrite IHn with (p := Pos.of_nat (S n)).
+        * rewrite <- Nat2Pos.inj_succ by apply Nat.neq_succ_0.
+          rewrite <- ptno.
+          apply Pos2Nat.id.
+        * apply Nat2Pos.id.
+          apply Nat.neq_succ_0.
+  Qed.
 
-(*** Uint size util *)
+  (*** Uint size util *)
 
-(* If a natural number is in bound then a smaller natural number is still in bound *)
-Lemma range_of_nat_succ :
-  forall {WS : wsize},
-  forall i, (Z.pred 0 < Z.of_nat (S i) < modulus WS)%Z -> (Z.pred 0 < Z.of_nat i < modulus WS)%Z.
-Proof. lia. Qed.
+  (* If a natural number is in bound then a smaller natural number is still in bound *)
+  Lemma range_of_nat_succ :
+    forall {WS : wsize},
+    forall i, (Z.pred 0 < Z.of_nat (S i) < modulus WS)%Z -> (Z.pred 0 < Z.of_nat i < modulus WS)%Z.
+  Proof. lia. Qed.
 
-(* Conversion to equivalent bound *)
-Lemma modulus_range_helper :
-  forall {WS : wsize},
-  forall i, (Z.pred 0 < i < modulus WS)%Z -> (0 <= i <= wmax_unsigned WS)%Z.
-Proof.
-  intros.
-  unfold wmax_unsigned.
-  unfold wbase.
-  unfold nat_of_wsize in H.
-  lia.
-Qed.
-
-Definition unsigned_repr_alt {WS : wsize} (a : Z) `((Z.pred 0 < a < modulus WS)%Z) :
-  unsigned (@repr WS a) = a.
-Proof.
-  apply wunsigned_repr_small.
-  intros.
-  unfold wbase.
-  unfold nat_of_wsize in H.
-  lia.
-Qed.
-
-Theorem zero_always_modulus {WS : wsize} : (Z.pred 0 < 0 < modulus WS)%Z.
-Proof. easy. Qed.
-
-(* any uint_size can be represented as a natural number and a bound *)
-(* this is easier for proofs, however less efficient for computation *)
-(* as Z uses a binary representation *)
-
-Theorem uint_size_as_nat :
-  forall (us: uint_size),
-    { n : nat |
-      us = repr (Z.of_nat n) /\ (Z.pred 0 < Z.of_nat n < @modulus U32)%Z}.
-Proof.
-  intros.
-  exists (Z.to_nat (unsigned us)).
-  rewrite Z2Nat.id by apply (ssrbool.elimT lezP (urepr_ge0 us)).
-  split.
-  - unfold repr.
-    unfold unsigned.
-    rewrite wrepr_unsigned.
-    reflexivity.
-  - pose (wunsigned_range us).
-    unfold wbase in a.
-    unfold nat_of_wsize.
-    cbn in *.
+  (* Conversion to equivalent bound *)
+  Lemma modulus_range_helper :
+    forall {WS : wsize},
+    forall i, (Z.pred 0 < i < modulus WS)%Z -> (0 <= i <= wmax_unsigned WS)%Z.
+  Proof.
+    intros.
+    unfold wmax_unsigned.
+    unfold wbase.
+    unfold nat_of_wsize in H.
     lia.
-Qed.
+  Qed.
 
-(* destruct uint_size as you would a natural number *)
-Definition destruct_uint_size_as_nat  (a : uint_size) : forall (P : uint_size -> Prop),
+  Definition unsigned_repr_alt {WS : wsize} (a : Z) `((Z.pred 0 < a < modulus WS)%Z) :
+    unsigned (@repr WS a) = a.
+  Proof.
+    apply wunsigned_repr_small.
+    intros.
+    unfold wbase.
+    unfold nat_of_wsize in H.
+    lia.
+  Qed.
+
+  Theorem zero_always_modulus {WS : wsize} : (Z.pred 0 < 0 < modulus WS)%Z.
+  Proof. easy. Qed.
+
+  (* any uint_size can be represented as a natural number and a bound *)
+  (* this is easier for proofs, however less efficient for computation *)
+  (* as Z uses a binary representation *)
+
+  Theorem uint_size_as_nat :
+    forall (us: uint_size),
+      { n : nat |
+        us = repr (Z.of_nat n) /\ (Z.pred 0 < Z.of_nat n < @modulus U32)%Z}.
+  Proof.
+    intros.
+    exists (Z.to_nat (unsigned us)).
+    rewrite Z2Nat.id by apply (ssrbool.elimT lezP (urepr_ge0 us)).
+    split.
+    - unfold repr.
+      unfold unsigned.
+      rewrite wrepr_unsigned.
+      reflexivity.
+    - pose (wunsigned_range us).
+      unfold wbase in a.
+      unfold nat_of_wsize.
+      cbn in *.
+      lia.
+  Qed.
+
+  (* destruct uint_size as you would a natural number *)
+  Definition destruct_uint_size_as_nat  (a : uint_size) : forall (P : uint_size -> Prop),
     forall (zero_case : P (repr 0)),
     forall (succ_case : forall (n : nat), (Z.pred 0 < Z.of_nat n < @modulus U32)%Z -> P (repr (Z.of_nat n))),
-    P a.
-Proof.
-  intros.
-  destruct (uint_size_as_nat a) as [ n y ] ; destruct y as [ya yb] ; subst.
-  destruct n.
-  - apply zero_case.
-  - apply succ_case.
-    apply yb.
-Qed.
-
-
-(* induction for uint_size as you would do for a natural number *)
-Definition induction_uint_size_as_nat :
-  forall (P : uint_size -> Prop),
-    (P (repr 0)) ->
-    (forall n,
-        (Z.pred 0 < Z.succ (Z.of_nat n) < @modulus U32)%Z ->
-        P (repr (Z.of_nat n)) ->
-        P (repr (Z.succ (Z.of_nat n)))) ->
-    forall (a : uint_size), P a.
-Proof.
-  intros P H_zero H_ind a.
-  destruct (uint_size_as_nat a) as [ n y ] ; destruct y as [ya yb] ; subst.
-  induction n.
-  - apply H_zero.
-  - rewrite Nat2Z.inj_succ.
-    apply H_ind.
-    + rewrite <- Nat2Z.inj_succ.
+      P a.
+  Proof.
+    intros.
+    destruct (uint_size_as_nat a) as [ n y ] ; destruct y as [ya yb] ; subst.
+    destruct n.
+    - apply zero_case.
+    - apply succ_case.
       apply yb.
-    + apply IHn.
-      lia.
-Qed.
+  Qed.
 
-(* conversion of usize to positive or zero and the respective bound *)
-Theorem uint_size_as_positive :
-  forall (us: uint_size),
-    { pu : unit + positive |
-      match pu with
-      | inl u => us = repr Z0
-      | inr p => us = repr (Z.pos p) /\ (Z.pred 0 < Z.pos p < @modulus U32)%Z
-      end
+
+  (* induction for uint_size as you would do for a natural number *)
+  Definition induction_uint_size_as_nat :
+    forall (P : uint_size -> Prop),
+      (P (repr 0)) ->
+      (forall n,
+          (Z.pred 0 < Z.succ (Z.of_nat n) < @modulus U32)%Z ->
+          P (repr (Z.of_nat n)) ->
+          P (repr (Z.succ (Z.of_nat n)))) ->
+      forall (a : uint_size), P a.
+  Proof.
+    intros P H_zero H_ind a.
+    destruct (uint_size_as_nat a) as [ n y ] ; destruct y as [ya yb] ; subst.
+    induction n.
+    - apply H_zero.
+    - rewrite Nat2Z.inj_succ.
+      apply H_ind.
+      + rewrite <- Nat2Z.inj_succ.
+        apply yb.
+      + apply IHn.
+        lia.
+  Qed.
+
+  (* conversion of usize to positive or zero and the respective bound *)
+  Theorem uint_size_as_positive :
+    forall (us: uint_size),
+      { pu : unit + positive |
+        match pu with
+        | inl u => us = repr Z0
+        | inr p => us = repr (Z.pos p) /\ (Z.pred 0 < Z.pos p < @modulus U32)%Z
+        end
       }.
-Proof.
-  intros.
+  Proof.
+    intros.
 
-  destruct us as [val H_].
-  pose proof (H := H_).
-  apply Bool.andb_true_iff in H as [lt gt].
-  apply (ssrbool.elimT lezP) in lt.
-  apply (ssrbool.elimT ltzP) in gt.
+    destruct us as [val H_].
+    pose proof (H := H_).
+    apply Bool.andb_true_iff in H as [lt gt].
+    apply (ssrbool.elimT lezP) in lt.
+    apply (ssrbool.elimT ltzP) in gt.
 
-  destruct val.
-  - exists (inl tt). apply word_ext. reflexivity.
-  - exists (inr p).
-    split.
-    + apply word_ext.
-      rewrite Zmod_small by (unfold nat_of_wsize in gt ; lia).
-      reflexivity.
-    + lia.
-  - contradiction.
-Defined.
+    destruct val.
+    - exists (inl tt). apply word_ext. reflexivity.
+    - exists (inr p).
+      split.
+      + apply word_ext.
+        rewrite Zmod_small by (unfold nat_of_wsize in gt ; lia).
+        reflexivity.
+      + lia.
+    - contradiction.
+  Defined.
 
-(* destruction of uint_size as positive *)
-Definition destruct_uint_size_as_positive  (a : uint_size) : forall (P : uint_size -> Prop),
-    (P (repr 0)) ->
-    (forall b, (Z.pred 0 < Z.pos b < @modulus U32)%Z -> P (repr (Z.pos b))) ->
-    P a.
-Proof.
-  intros P H_zero H_succ.
-  destruct (uint_size_as_positive a) as [ [ _ | b ] y ] ; [ subst | destruct y as [ya yb] ; subst ].
-  - apply H_zero.
-  - apply H_succ.
-    apply yb.
-Qed.
+  (* destruction of uint_size as positive *)
+  Definition destruct_uint_size_as_positive  (a : uint_size) : forall (P : uint_size -> Prop),
+      (P (repr 0)) ->
+      (forall b, (Z.pred 0 < Z.pos b < @modulus U32)%Z -> P (repr (Z.pos b))) ->
+      P a.
+  Proof.
+    intros P H_zero H_succ.
+    destruct (uint_size_as_positive a) as [ [ _ | b ] y ] ; [ subst | destruct y as [ya yb] ; subst ].
+    - apply H_zero.
+    - apply H_succ.
+      apply yb.
+  Qed.
 
-(* induction of uint_size as positive *)
-Definition induction_uint_size_as_positive :
-  forall (P : uint_size -> Prop),
-    (P (repr 0)) ->
-    (P (repr 1)) ->
-    (forall b,
-        (Z.pred 0 < Z.succ (Z.pos b) < @modulus U32)%Z ->
-        P (repr (Z.pos b)) ->
-        P (repr (Z.succ (Z.pos b)))) ->
-    forall (a : uint_size), P a.
-Proof.
-  intros P H_zero H_one H_ind a.
+  (* induction of uint_size as positive *)
+  Definition induction_uint_size_as_positive :
+    forall (P : uint_size -> Prop),
+      (P (repr 0)) ->
+      (P (repr 1)) ->
+      (forall b,
+          (Z.pred 0 < Z.succ (Z.pos b) < @modulus U32)%Z ->
+          P (repr (Z.pos b)) ->
+          P (repr (Z.succ (Z.pos b)))) ->
+      forall (a : uint_size), P a.
+  Proof.
+    intros P H_zero H_one H_ind a.
 
-  destruct (uint_size_as_positive a) as [ [ _ | b ] y ] ; [ subst | destruct y as [ya yb] ; subst ].
-  - apply H_zero.
-  - pose proof (pos_succ_b := positive_to_positive_succs b)
-    ; symmetry in pos_succ_b
-    ; rewrite pos_succ_b in *
-    ; clear pos_succ_b.
+    destruct (uint_size_as_positive a) as [ [ _ | b ] y ] ; [ subst | destruct y as [ya yb] ; subst ].
+    - apply H_zero.
+    - pose proof (pos_succ_b := positive_to_positive_succs b)
+      ; symmetry in pos_succ_b
+      ; rewrite pos_succ_b in *
+      ; clear pos_succ_b.
 
-    generalize dependent (Nat.neq_sym 0 (Pos.to_nat b) (Nat.lt_neq 0 (Pos.to_nat b) (Pos2Nat.is_pos b))).
+      generalize dependent (Nat.neq_sym 0 (Pos.to_nat b) (Nat.lt_neq 0 (Pos.to_nat b) (Pos2Nat.is_pos b))).
 
-    induction (Pos.to_nat b).
-    + contradiction.
-    + intros n_neq yb.
-      destruct n.
-      * apply H_one.
-      * rewrite (positive_is_succs _  (Nat.neq_succ_0 n) n_neq) in *.
-        rewrite Pos2Z.inj_succ in *.
-        apply H_ind.
-        -- apply yb.
-        -- apply IHn.
-           lia.
-Qed.
+      induction (Pos.to_nat b).
+      + contradiction.
+      + intros n_neq yb.
+        destruct n.
+        * apply H_one.
+        * rewrite (positive_is_succs _  (Nat.neq_succ_0 n) n_neq) in *.
+          rewrite Pos2Z.inj_succ in *.
+          apply H_ind.
+          -- apply yb.
+          -- apply IHn.
+             lia.
+  Qed.
 
 End Util.
 
@@ -596,23 +603,23 @@ Global Ltac induction_uint_size_as_nat var :=
 
 Open Scope nat_scope.
 Fixpoint foldi_
-  {acc : Type}
-  (fuel : nat)
-  (i : uint_size)
-  (f : uint_size -> acc -> acc)
-  (cur : acc) : acc :=
+         {acc : Type}
+         (fuel : nat)
+         (i : uint_size)
+         (f : uint_size -> acc -> acc)
+         (cur : acc) : acc :=
   match fuel with
   | 0 => cur
   | S n' => foldi_ n' (i .+ one) f (f i cur)
   end.
 Close Scope nat_scope.
 Definition foldi
-  {acc: Type}
-  (lo: uint_size)
-  (hi: uint_size) (* {lo <= hi} *)
-  (init: acc)
-  (f: (uint_size) -> acc -> acc) (* {i < hi} *)
-   : acc :=
+           {acc: Type}
+           (lo: uint_size)
+           (hi: uint_size) (* {lo <= hi} *)
+           (init: acc)
+           (f: (uint_size) -> acc -> acc) (* {i < hi} *)
+  : acc :=
   match Z.sub (unsigned hi) (unsigned lo) with
   | Z0 => init
   | Zneg p => init
@@ -621,11 +628,11 @@ Definition foldi
 
 (* Fold done using natural numbers for bounds *)
 Fixpoint foldi_nat_
-  {acc : Type}
-  (fuel : nat)
-  (i : nat)
-  (f : nat -> acc -> acc)
-  (cur : acc) : acc :=
+         {acc : Type}
+         (fuel : nat)
+         (i : nat)
+         (f : nat -> acc -> acc)
+         (cur : acc) : acc :=
   match fuel with
   | O => cur
   | S n' => foldi_nat_ n' (S i) f (f i cur)
@@ -633,32 +640,32 @@ Fixpoint foldi_nat_
 
 
 Fixpoint for_loop_
-  {acc : Type}
-  (fuel : nat)
-  (f : nat -> acc -> acc)
-  (cur : acc) : acc :=
+         {acc : Type}
+         (fuel : nat)
+         (f : nat -> acc -> acc)
+         (cur : acc) : acc :=
   match fuel with
   | O => cur
   | S n' => f n' (for_loop_ n' f cur)
   end.
 
 Definition foldi_nat
-  {acc: Type}
-  (lo: nat)
-  (hi: nat) (* {lo <= hi} *)
-  (f: nat -> acc -> acc) (* {i < hi} *)
-  (init: acc) : acc :=
+           {acc: Type}
+           (lo: nat)
+           (hi: nat) (* {lo <= hi} *)
+           (f: nat -> acc -> acc) (* {i < hi} *)
+           (init: acc) : acc :=
   match Nat.sub hi lo with
   | O => init
   | S n' => foldi_nat_ (S n') lo f init
   end.
 
 Definition for_loop_range
-  {acc: Type}
-  (lo: nat)
-  (hi: nat) (* {lo <= hi} *)
-  (f: nat -> acc -> acc) (* {i < hi} *)
-  (init: acc) : acc :=
+           {acc: Type}
+           (lo: nat)
+           (hi: nat) (* {lo <= hi} *)
+           (f: nat -> acc -> acc) (* {i < hi} *)
+           (init: acc) : acc :=
   match Nat.sub hi lo with
   | O => init
   | S n' => for_loop_ (S n') (fun x => f (x + lo)%nat)  init
@@ -670,28 +677,28 @@ Definition for_loop_usize {acc : Type} (lo hi : uint_size) (f : uint_size -> acc
 
 Lemma foldi__move_S :
   forall {acc: Type}
-  (fuel : nat)
-  (i : uint_size)
-  (f : uint_size -> acc -> acc)
-  (cur : acc),
+         (fuel : nat)
+         (i : uint_size)
+         (f : uint_size -> acc -> acc)
+         (cur : acc),
     foldi_ fuel (i .+ one) f (f i cur) = foldi_ (S fuel) i f cur.
 Proof. reflexivity. Qed.
 
 Lemma foldi__nat_move_S :
   forall {acc: Type}
-  (fuel : nat)
-  (i : nat)
-  (f : nat -> acc -> acc)
-  (cur : acc),
+         (fuel : nat)
+         (i : nat)
+         (f : nat -> acc -> acc)
+         (cur : acc),
     foldi_nat_ fuel (S i) f (f i cur) = foldi_nat_ (S fuel) i f cur.
 Proof. reflexivity. Qed.
 
 Lemma foldi__nat_move_S_append :
   forall {acc: Type}
-    (fuel : nat)
-    (i : nat)
-    (f : nat -> acc -> acc)
-    (cur : acc),
+         (fuel : nat)
+         (i : nat)
+         (f : nat -> acc -> acc)
+         (cur : acc),
     f (i + fuel)%nat (foldi_nat_ fuel i f cur) = foldi_nat_ (S fuel) i f cur.
 Proof.
   induction fuel ; intros.
@@ -710,7 +717,7 @@ Theorem foldi_for_loop_eq :
   forall {acc} fuel f (cur : acc),
     foldi_nat_ fuel 0 f cur
     =
-    for_loop_ fuel f cur.
+      for_loop_ fuel f cur.
 Proof.
   induction fuel ; intros.
   - reflexivity.
@@ -721,12 +728,12 @@ Proof.
 Qed.
 
 Lemma foldi__nat_move_to_function :
-    forall {acc: ChoiceEquality}
-      (fuel : nat)
-      (i : nat)
-      (f : nat -> acc -> acc)
-      (cur : T acc),
-      foldi_nat_ fuel i (fun x => f (S x)) (cur) = foldi_nat_ fuel (S i) f cur.
+  forall {acc: ChoiceEquality}
+         (fuel : nat)
+         (i : nat)
+         (f : nat -> acc -> acc)
+         (cur : T acc),
+    foldi_nat_ fuel i (fun x => f (S x)) (cur) = foldi_nat_ fuel (S i) f cur.
 Proof.
   induction fuel ; intros.
   - reflexivity.
@@ -737,10 +744,10 @@ Qed.
 
 Lemma foldi__nat_move_to_function_add :
   forall {acc: ChoiceEquality}
-    (fuel : nat)
-    (i j : nat)
-    (f : nat -> T acc ->  acc)
-    (cur : T acc),
+         (fuel : nat)
+         (i j : nat)
+         (f : nat -> T acc ->  acc)
+         (cur : T acc),
     foldi_nat_ fuel i (fun x => f (x + j)%nat) (cur) = foldi_nat_ fuel (i + j) f cur.
 Proof.
   intros acc fuel i j. generalize dependent i.
@@ -765,7 +772,7 @@ Theorem foldi_for_loop_range_eq :
   forall {acc : ChoiceEquality} lo hi f (cur : acc),
     foldi_nat lo hi f cur
     =
-    for_loop_range lo hi f cur.
+      for_loop_range lo hi f cur.
 Proof.
   unfold foldi_nat.
   unfold for_loop_range.
@@ -798,10 +805,10 @@ Qed.
 (* You can do one iteration of the fold by burning a unit of fuel *)
 Lemma foldi__move_S_fuel :
   forall {acc: Type}
-  (fuel : nat)
-  (i : uint_size)
-  (f : uint_size -> acc -> acc)
-  (cur : acc),
+         (fuel : nat)
+         (i : uint_size)
+         (f : uint_size -> acc -> acc)
+         (cur : acc),
     (0 <= Z.of_nat fuel <= wmax_unsigned U32)%Z ->
     f ((repr (Z.of_nat fuel)) .+ i) (foldi_ (fuel) i f cur) = foldi_ (S (fuel)) i f cur.
 Proof.
@@ -853,10 +860,10 @@ Qed.
 (* You can do one iteration of the fold by burning a unit of fuel *)
 Lemma foldi__nat_move_S_fuel :
   forall {acc: Type}
-  (fuel : nat)
-  (i : nat)
-  (f : nat -> acc -> acc)
-  (cur : acc),
+         (fuel : nat)
+         (i : nat)
+         (f : nat -> acc -> acc)
+         (cur : acc),
     (0 <= Z.of_nat fuel <= @wmax_unsigned U32)%Z ->
     f (fuel + i)%nat (foldi_nat_ fuel i f cur) = foldi_nat_ (S fuel) i f cur.
 Proof.
@@ -872,10 +879,10 @@ Qed.
 (* folds and natural number folds compute the same thing *)
 Lemma foldi_to_foldi_nat :
   forall {acc: Type}
-    (lo: uint_size) (* {lo <= hi} *)
-    (hi: uint_size) (* {lo <= hi} *)
-    (f: (uint_size) -> acc -> acc) (* {i < hi} *)
-    (init: acc),
+         (lo: uint_size) (* {lo <= hi} *)
+         (hi: uint_size) (* {lo <= hi} *)
+         (f: (uint_size) -> acc -> acc) (* {i < hi} *)
+         (init: acc),
     (unsigned lo <= unsigned hi)%Z ->
     foldi lo hi init f = foldi_nat (Z.to_nat (unsigned lo)) (Z.to_nat (unsigned hi)) (fun x => f (repr (Z.of_nat x))) init.
 Proof.
@@ -930,10 +937,10 @@ Qed.
 (* folds can be computed by doing one iteration and incrementing the lower bound *)
 Lemma foldi_nat_split_S :
   forall {acc: Type}
-    (lo: nat)
-    (hi: nat) (* {lo <= hi} *)
-    (f: nat -> acc -> acc) (* {i < hi} *)
-    (init: acc),
+         (lo: nat)
+         (hi: nat) (* {lo <= hi} *)
+         (f: nat -> acc -> acc) (* {i < hi} *)
+         (init: acc),
     (lo < hi)%nat ->
     foldi_nat lo hi f init = foldi_nat (S lo) hi f (foldi_nat lo (S lo) f init).
 Proof.
@@ -963,12 +970,12 @@ Qed.
 Lemma foldi_nat_split_add :
   forall (k : nat),
   forall {acc: Type}
-    (lo: nat)
-    (hi: nat) (* {lo <= hi} *)
-    (f: nat -> acc -> acc) (* {i < hi} *)
-    (init: acc),
+         (lo: nat)
+         (hi: nat) (* {lo <= hi} *)
+         (f: nat -> acc -> acc) (* {i < hi} *)
+         (init: acc),
   forall {guarantee: (lo + k <= hi)%nat},
-  foldi_nat lo hi f init = foldi_nat (k + lo) hi f (foldi_nat lo (k + lo) f init).
+    foldi_nat lo hi f init = foldi_nat (k + lo) hi f (foldi_nat lo (k + lo) f init).
 Proof.
   induction k ; intros.
   - cbn.
@@ -988,12 +995,12 @@ Qed.
 Lemma foldi_nat_split :
   forall (mid : nat), (* {lo <= mid <= hi} *)
   forall {acc: Type}
-    (lo: nat)
-    (hi: nat) (* {lo <= hi} *)
-    (f: nat -> acc -> acc) (* {i < hi} *)
-    (init: acc),
+         (lo: nat)
+         (hi: nat) (* {lo <= hi} *)
+         (f: nat -> acc -> acc) (* {i < hi} *)
+         (init: acc),
   forall {guarantee: (lo <= mid <= hi)%nat},
-  foldi_nat lo hi f init = foldi_nat mid hi f (foldi_nat lo mid f init).
+    foldi_nat lo hi f init = foldi_nat mid hi f (foldi_nat lo mid f init).
 Proof.
   intros.
   assert (mid_is_low_plus_constant : {k : nat | (mid = lo + k)%nat})  by (exists (mid - lo)%nat ; lia).
@@ -1007,12 +1014,12 @@ Qed.
 Lemma foldi_split :
   forall (mid : uint_size), (* {lo <= mid <= hi} *)
   forall {acc: Type}
-    (lo: uint_size)
-    (hi: uint_size) (* {lo <= hi} *)
-    (f: uint_size -> acc -> acc) (* {i < hi} *)
-    (init: acc),
+         (lo: uint_size)
+         (hi: uint_size) (* {lo <= hi} *)
+         (f: uint_size -> acc -> acc) (* {i < hi} *)
+         (init: acc),
   forall {guarantee: (unsigned lo <= unsigned mid <= unsigned hi)%Z},
-  foldi lo hi init f = foldi mid hi (foldi lo mid init f) f.
+    foldi lo hi init f = foldi mid hi (foldi lo mid init f) f.
 Proof.
   intros.
   do 3 rewrite foldi_to_foldi_nat by lia.
@@ -1031,10 +1038,10 @@ Definition nseq_type (A: ChoiceEquality) (len : nat) : Type :=
   match len with
   | 0%nat => unit
   | S n => fmap.FMap.fmap_type (ordinal_ordType len) (T _) (* (Ord.clone (fun x : ssreflect.phantom (Ord.class_of (Ord.sort (ordinal_ordType len))) *)
-           (* (Ord.class (ordinal_ordType len)) => x)) *) (* [ordType of 'I_len] *)
+                              (* (Ord.class (ordinal_ordType len)) => x)) *) (* [ordType of 'I_len] *)
   end.
 
-Program Instance nseq (A: ChoiceEquality) (len : nat) : ChoiceEquality :=
+#[global] Program Instance nseq (A: ChoiceEquality) (len : nat) : ChoiceEquality :=
   {| ct := nseq_choice A len ; T := nseq_type A len |}.
 Next Obligation.
   intros.
@@ -1059,8 +1066,8 @@ Definition public_byte_seq := seq int8.
 Definition byte_seq := seq int8.
 Definition list_len := length.
 
-Definition seq_index {A: ChoiceEquality} `{Default (T A)} (s: T (seq A)) (i : nat) : T A :=
-  match getm s i with
+Definition seq_index {A: ChoiceEquality} `{Default (T A)} (s: T (seq A)) (i : uint_size) : T A :=
+  match getm s (from_uint_size i) with
   | Some a => a
   | None => default
   end.
@@ -1087,6 +1094,9 @@ Definition seq_new_ {A: ChoiceEquality} (init : A) (len: nat) : seq A :=
 Definition seq_new {A: ChoiceEquality} `{Default A} (len: nat) : seq A :=
   seq_new_ default len.
 
+Definition seq_create {A: ChoiceEquality} `{Default A} (len: nat) : seq A :=
+  seq_new len.
+
 Fixpoint list_iter (n : nat) (k : nat) `{(n <= k)%nat} : list { x : nat | (x < k)%nat }.
   destruct n.
   - apply [].
@@ -1109,19 +1119,19 @@ Qed.
 Definition array_from_list
            (A: ChoiceEquality)
            (l: list (T A))
-            : T (nseq A (length l)).
+  : T (nseq A (length l)).
 Proof.
   destruct l as [ | x xs ].
   - apply tt.
   - pose (l := x :: xs).
     pose proof (seq.foldr (fun (x : (T A) * { x : nat | (x < length l)%nat }) y =>
-                   setm
-                     (S := (T A))
-                     y
-                     (fintype.Ordinal (n := length l) (m := proj1_sig (snd x)) (ssrbool.introT ssrnat.ltP (proj2_sig (snd x))))
-                     (fst x))
-                emptym
-                (seq.zip l (@list_iter (length l) (length l) (le_n (length l))))).
+                             setm
+                               (S := (T A))
+                               y
+                               (fintype.Ordinal (n := length l) (m := proj1_sig (snd x)) (ssrbool.introT ssrnat.ltP (proj2_sig (snd x))))
+                               (fst x))
+                          emptym
+                          (seq.zip l (@list_iter (length l) (length l) (le_n (length l))))).
     rewrite <- ChoiceEq.
     hnf.
     rewrite ChoiceEq.
@@ -1140,7 +1150,7 @@ Definition array_new_ {A: ChoiceEquality} (init:T A) (len: nat) : T (nseq A len)
 Defined.
 
 
-Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {wsize} (i: @int wsize) : T A.
+Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : T A.
 Proof.
   destruct (Z.to_nat (unsigned i) <? len)%nat eqn:H1.
   (* If i < len, index normally *)
@@ -1149,7 +1159,7 @@ Proof.
     rewrite <- ChoiceEq in s.
     cbn in s.
     rewrite -> ChoiceEq in s.
-    destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := Z.to_nat (unsigned i)) (ssrbool.introT ssrnat.ltP H1))) as [f | _].
+    destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := Z.to_nat (unsigned i)) (ssrbool.introT ssrnat.ltP H1))) as [f | ].
     + exact f.
     + exact default.
 
@@ -1172,7 +1182,7 @@ Proof.
     rewrite -> ChoiceEq.
     apply (setm s (fintype.Ordinal (m := Z.to_nat (unsigned i)) (ssrbool.introT ssrnat.ltP v)) new_v).
 
-    (* exact (VectorDef.replace s (Fin.of_nat_lt H) new_v). *)
+  (* exact (VectorDef.replace s (Fin.of_nat_lt H) new_v). *)
   (* otherwise return original array *)
   - exact s.
 Defined.
@@ -1193,10 +1203,10 @@ Definition update_sub {A : ChoiceEquality} {len slen} `{Default (T A)} (v : T (n
 (* Compute (to_list (update_sub [1;2;3;4;5] 0 4 (of_list [9;8;7;6;12]))). *)
 
 Definition array_from_seq
-  {a: ChoiceEquality}
-  `{Default (T a)}
-  (out_len:nat)
-  (input: seq_type a)
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           (out_len:nat)
+           (input: seq_type a)
   : T (nseq a out_len) :=
   let out := array_new_ default out_len in
   update_sub out 0 (out_len - 1) (@array_from_list a (@seq_to_list a input)).
@@ -1228,7 +1238,6 @@ Defined.
 Definition array_to_seq {A : ChoiceEquality} {n} (f : nseq_type A n) : seq_type _ :=
   seq_from_list _ (array_to_list f).
 
-
 Definition positive_slice {A : ChoiceEquality} `{Hd: Default (T A)} {n} `{H: Positive n} (l : T (nseq A n)) (i j : nat) `{H1: (i < j)%nat} `{(j - i < length (array_to_list l) - i)%nat} : Positive (length (slice (array_to_list l) i j)).
 Proof.
   unfold slice.
@@ -1244,8 +1253,8 @@ Defined.
 
 Theorem slice_length :
   forall A (l : list A) (i j : nat),
-  length (slice l i j) =
-    if (j <=? i)%nat then @length A ([]) else length (firstn (j - i + 1) (skipn i l)).
+    length (slice l i j) =
+      if (j <=? i)%nat then @length A ([]) else length (firstn (j - i + 1) (skipn i l)).
 Proof.
   intros.
   unfold slice.
@@ -1262,45 +1271,45 @@ Definition seq_sub {a : ChoiceEquality} `{Default (T (a))} (s : (T (seq a))) (st
   lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) start (start + n)%nat.
 
 Definition array_update_slice
-  {a : ChoiceEquality}
- `{Default (T (a))}
-  {l : nat}
-  (out: (T (seq a)))
-  (start_out: nat)
-  (input: (T (seq a)))
-  (start_in: nat)
-  (len: nat)
-  : (T (nseq a (from_uint_size (seq_len out)))) :=
-  update_sub (array_from_seq (from_uint_size (seq_len out)) out) start_out (len) (seq_sub input start_in len).
+           {a : ChoiceEquality}
+           `{Default (T (a))}
+           {l : nat}
+           (out: (T (nseq a l)))
+           (start_out: nat)
+           (input: (T (seq a)))
+           (start_in: nat)
+           (len: nat)
+  : (T (nseq a l)) :=
+  update_sub out start_out (len) (seq_sub input start_in len).
 
 Definition array_from_slice
-  {a: ChoiceEquality}
- `{Default (T a)}
-  (default_value: (T a))
-  (out_len: nat)
-  (input: T (seq a))
-  (start: nat)
-  (slice_len: nat)
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           (default_value: (T a))
+           (out_len: nat)
+           (input: T (seq a))
+           (start: nat)
+           (slice_len: nat)
   : T (nseq a out_len) :=
   let out := array_new_ default out_len in
   array_from_seq out_len input.
 
 Definition array_slice
-  {a: ChoiceEquality}
- `{Default (T a)}
-  (input: T (seq a))
-  (start: nat)
-  (slice_len: nat)
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           (input: T (seq a))
+           (start: nat)
+           (slice_len: nat)
   : T (nseq a slice_len) :=
   array_from_slice default (slice_len) input (slice_len) (slice_len).
 
 Definition array_from_slice_range
-  {a: ChoiceEquality}
- `{Default (T a)}
-  (default_value: T a)
-  (out_len: nat)
-  (input: T (seq a))
-  (start_fin: (T uint_size * T uint_size))
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           (default_value: T a)
+           (out_len: nat)
+           (input: T (seq a))
+           (start_fin: (T uint_size * T uint_size))
   : T (nseq a out_len).
 Proof.
   pose (out := array_new_ default_value (out_len)).
@@ -1311,123 +1320,144 @@ Proof.
 Defined.
 
 Definition array_slice_range
-  {a: ChoiceEquality}
- `{Default (T a)}
-  {len : nat}
-  (input: T (nseq a len))
-  (start_fin:(T uint_size * T uint_size))
-    : T (seq a) :=
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           {len : nat}
+           (input: T (nseq a len))
+           (start_fin:(T uint_size * T uint_size))
+  : T (seq a) :=
   array_to_seq (lseq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin))).
 
 Definition array_update
-  {a: ChoiceEquality}
- `{Default (T a)}
-  {len: nat}
-  (s: T (nseq a len))
-  (start : nat)
-  (start_s: T (seq a))
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           {len: nat}
+           (s: T (nseq a len))
+           (start : nat)
+           (start_s: T (seq a))
   : T (nseq a len) :=
   update_sub s start (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) (start_s)).
 
 Definition array_update_start
-  {a: ChoiceEquality}
- `{Default (T a)}
-  {len: nat}
-  (s: T (nseq a len))
-  (start_s: T (seq a))
-    : T (nseq a len) :=
-    update_sub s 0 (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) start_s).
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           {len: nat}
+           (s: T (nseq a len))
+           (start_s: T (seq a))
+  : T (nseq a len) :=
+  update_sub s 0 (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) start_s).
 
 
-Definition array_len  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) := len.
+Definition array_len  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) : uint_size := usize len.
 (* May also come up as 'length' instead of 'len' *)
-Definition array_length  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) := len.
+Definition array_length  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) : uint_size := usize len.
 
 (**** Seq manipulation *)
 
 Definition seq_slice
-  {a: ChoiceEquality}
- `{Default (T a)}
-  (s: (T (seq a)))
-  (start: nat)
-  (len: nat)
-    : (T (nseq a _)) :=
-  lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) start (start + len).
+           {a: ChoiceEquality}
+           `{Default (T a)}
+           (s: (T (seq a)))
+           (start: nat)
+           (len: nat)
+  : (seq a) :=
+  array_to_seq (lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) start (start + len)).
 
 Definition seq_slice_range
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  (input: (T (seq a)))
-  (start_fin:((T (uint_size)) * (T (uint_size))))
-    : (T (nseq a _)) :=
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (input: (T (seq a)))
+           (start_fin:((T (uint_size)) * (T (uint_size))))
+  : (T (seq a)) :=
   seq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
 
 (* updating a subsequence in a sequence *)
 Definition seq_update
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  (s: (T (seq a)))
-  (start: nat)
-  (input: (T (seq a)))
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (s: (T (seq a)))
+           (start: uint_size)
+           (input: (T (seq a)))
   : (T (seq a)) :=
-  array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) start (from_uint_size (seq_len input)) (array_from_seq (from_uint_size (seq_len input)) input)).
+  array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) (from_uint_size start) (from_uint_size (seq_len input)) (array_from_seq (from_uint_size (seq_len input)) input)).
 
 (* updating only a single value in a sequence*)
 Definition seq_upd
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  (s: (T (seq a)))
-  (start: nat)
-  (v: (T (a)))
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (s: (T (seq a)))
+           (start: uint_size)
+           (v: (T (a)))
   : (T (seq a)) :=
   seq_update s start (setm emptym 0%nat v).
 
 Definition seq_update_start
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  (s: (T (seq a)))
-  (start_s: (T (seq a)))
-    : (T (seq a)) :=
-    array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) 0 (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) start_s)).
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (s: (T (seq a)))
+           (start_s: (T (seq a)))
+  : (T (seq a)) :=
+  array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) 0 (from_uint_size (seq_len start_s)) (array_from_seq (from_uint_size (seq_len start_s)) start_s)).
 
 Definition seq_update_slice
-  {a : ChoiceEquality}
- `{Default (T (a))}
-  (out: (T (seq a)))
-  (start_out: nat)
-  (input: (T (seq a)))
-  (start_in: nat)
-  (len: nat)
-    : (T (nseq a (from_uint_size (seq_len out))))
+           {a : ChoiceEquality}
+           `{Default (T (a))}
+           (out: (T (seq a)))
+           (start_out: nat)
+           (input: (T (seq a)))
+           (start_in: nat)
+           (len: nat)
+  : (T (seq a))  (* (from_uint_size (seq_len out)) *)
   :=
-  update_sub (array_from_seq (from_uint_size (seq_len out)) out) start_out len (seq_sub input start_in len).
+  array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len out)) out) start_out len (seq_sub input start_in len)).
 
 Definition seq_concat
-  {a : ChoiceEquality}
-  (s1 :(T (seq a)))
-  (s2: (T (seq a)))
+           {a : ChoiceEquality}
+           (s1 :(T (seq a)))
+           (s2: (T (seq a)))
   : (T (seq a)) :=
-   seq_from_list _ (seq_to_list _ s1 ++ seq_to_list _ s2).
+  seq_from_list _ (seq_to_list _ s1 ++ seq_to_list _ s2).
+
+Definition seq_concat_owned
+           {a : ChoiceEquality}
+           (s1 :(T (seq a)))
+           (s2: (T (seq a)))
+  : (T (seq a)) := seq_concat s1 s2.
 
 Definition seq_push
-  {a : ChoiceEquality}
-  (s1 :(T (seq a)))
-  (s2: (T (a)))
+           {a : ChoiceEquality}
+           (s1 :(T (seq a)))
+           (s2: (T (a)))
   : (T (seq a)) :=
   seq_from_list _ ((seq_to_list _ s1) ++ [s2]).
 
-Definition seq_from_slice_range
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  (input: (T (seq a)))
-  (start_fin: ((T (uint_size)) * (T (uint_size))))
+Definition seq_push_owned
+           {a : ChoiceEquality}
+           (s1 :(T (seq a)))
+           (s2: (T (a)))
+  : (T (seq a)) := seq_push s1 s2.
+
+Definition seq_from_slice
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (input: (T (seq a)))
+           (start_fin: ((T (uint_size)) * (T (uint_size))))
   : (T (seq a)) :=
   let out := array_new_ (default) (from_uint_size (seq_len input)) in
   let (start, fin) := start_fin in
-    array_to_seq (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) ((lseq_slice (array_from_seq (from_uint_size (seq_len input)) input) (from_uint_size start) (from_uint_size fin)))).
+  array_to_seq (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) ((lseq_slice (array_from_seq (from_uint_size (seq_len input)) input) (from_uint_size start) (from_uint_size fin)))).
 
-Definition seq_from_seq {A} (l : seq A) := l.
+Definition seq_from_slice_range
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (input: (T (seq a)))
+           (start_fin: ((T (uint_size)) * (T (uint_size))))
+  : (T (seq a)) :=
+  let out := array_new_ (default) (from_uint_size (seq_len input)) in
+  let (start, fin) := start_fin in
+  array_to_seq (update_sub out 0 ((from_uint_size fin) - (from_uint_size start)) ((lseq_slice (array_from_seq (from_uint_size (seq_len input)) input) (from_uint_size start) (from_uint_size fin)))).
 
+Definition seq_from_seq {A} (l : seq A) : seq A := l.
 
 (**** Chunking *)
 
@@ -1435,11 +1465,11 @@ Definition seq_num_chunks {a: ChoiceEquality} (s: (T (seq a))) (chunk_len: uint_
   ((seq_len s .+ chunk_len .- one) ./ chunk_len)%nat.
 
 Definition seq_chunk_len
-  {a: ChoiceEquality}
-  (s: (T (seq a)))
-  (chunk_len: nat)
-  (chunk_num: nat)
-    : nat_ChoiceEquality :=
+           {a: ChoiceEquality}
+           (s: (T (seq a)))
+           (chunk_len: nat)
+           (chunk_num: nat)
+  : nat_ChoiceEquality :=
   let idx_start := (chunk_len * chunk_num)%nat in
   if ((from_uint_size (seq_len s)) <.? (idx_start + chunk_len))%nat then
     ((from_uint_size (seq_len s)) - idx_start)%nat
@@ -1456,26 +1486,26 @@ Definition seq_chunk_len
     (ensures (seq_chunk_len s1 chunk_len chunk_lseq. Admitted. *)
 
 Definition seq_get_chunk
-  {a: ChoiceEquality}
-  `{Default (T (a))}
-  (s: (T (seq a)))
-  (chunk_len: uint_size)
-  (chunk_num: uint_size)
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (s: (T (seq a)))
+           (chunk_len: uint_size)
+           (chunk_num: uint_size)
   : ((T (uint_size '× seq a)))
- :=
+  :=
   let idx_start := (from_uint_size chunk_len * from_uint_size chunk_num)%nat in
   let out_len := seq_chunk_len s (from_uint_size chunk_len) (from_uint_size chunk_num) in
   (usize out_len, array_to_seq (lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) idx_start (idx_start + seq_chunk_len s (from_uint_size chunk_len) (from_uint_size chunk_num)))).
 
 Definition seq_set_chunk
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  (s: (T (seq a)))
-  (chunk_len: uint_size)
-  (chunk_num: uint_size)
-  (chunk: (T (seq a)) ) : (T (seq a)) :=
- let idx_start := (from_uint_size chunk_len * from_uint_size chunk_num)%nat in
- let out_len := seq_chunk_len s (from_uint_size chunk_len) (from_uint_size chunk_num) in
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           (s: (T (seq a)))
+           (chunk_len: uint_size)
+           (chunk_num: uint_size)
+           (chunk: (T (seq a)) ) : (T (seq a)) :=
+  let idx_start := (from_uint_size chunk_len * from_uint_size chunk_num)%nat in
+  let out_len := seq_chunk_len s (from_uint_size chunk_len) (from_uint_size chunk_num) in
   array_to_seq (update_sub (array_from_seq (from_uint_size (seq_len s)) s) idx_start out_len (array_from_seq (from_uint_size (seq_len chunk)) chunk)).
 
 
@@ -1487,7 +1517,8 @@ Definition seq_get_exact_chunk {a : ChoiceEquality} `{Default (T (a))} (l : (T (
   let '(len, chunk) := seq_get_chunk l chunk_size chunk_num in
   if eqtype.eq_op len chunk_size then emptym else chunk.
 
-Definition seq_set_exact_chunk {a : ChoiceEquality} `{H : Default (T (a))} := @seq_set_chunk a H.
+Definition seq_set_exact_chunk {a : ChoiceEquality} `{H : Default (T (a))} :=
+  @seq_set_chunk a H.
 
 Definition seq_get_remainder_chunk {a : ChoiceEquality} `{Default a} (l : seq a) (chunk_size : uint_size) : seq a :=  
   let chunks := seq_num_chunks l chunk_size in
@@ -1499,58 +1530,65 @@ Definition seq_get_remainder_chunk {a : ChoiceEquality} `{Default a} (l : seq a)
   then emptym
   else chunk.
 
-(* Fixpoint seq_xor_ {WS} (x : seq int) (y : seq int) : seq (@int WS) := *)
-(*   match x, y with *)
-(*   | (x :: xs), (y :: ys) => (int_xor x y) :: (seq_xor_ xs ys) *)
-(*   | [], y => y *)
-(*   | x, [] => x *)
-(*   end. *)
-(* Infix "seq_xor" := seq_xor_ (at level 33) : hacspec_scope. *)
+Check @fmap.FMap.FMap _ _ [].
 
-(* Fixpoint seq_truncate {a} (x : seq a) (n : nat) : seq a := (* uint_size *) *)
-(*   match x, n with *)
-(*   | _, 0 => [] *)
-(*   | [], _ => [] *)
-(*   | (x :: xs), S n' => x :: (seq_truncate xs n') *)
-(*   end. *)
+Fixpoint list_xor_ {WS} (x y : list (@int WS)) : list (@int WS) :=
+  match x, y with
+  | (x :: xs), (y :: ys) => (int_xor x y) :: (list_xor_ xs ys) 
+  | [] , _ => y
+  | _, [] => x
+  end.
 
+Definition seq_xor_ {WS} (x y : seq (@int WS)) : seq (@int WS) :=
+  seq_from_list _ (list_xor_ (seq_to_list _ x) (seq_to_list _ y)).
+Infix "seq_xor" := seq_xor_ (at level 33) : hacspec_scope.
+
+Fixpoint list_truncate {a} (x : list a) (n : nat) : list a := (* uint_size *)
+  match x, n with
+  | _, O => []
+  | [], _ => []
+  | (x :: xs), S n' => x :: (list_truncate xs n')
+  end.
+Definition seq_truncate {a} (x : seq a) (n : nat) : seq a := (* uint_size *)
+  seq_from_list _ (list_truncate (seq_to_list _ x) n).
+  
 (**** Numeric operations *)
 
 (* takes two nseq's and joins them using a function op : a -> a -> a *)
 Definition array_join_map
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  {len: nat}
-  (op: (T (a)) -> (T (a)) -> (T (a)))
-  (s1: (T (nseq a len)))
-  (s2 : (T (nseq a len))) :=
+           {a: ChoiceEquality}
+           `{Default (T (a))}
+           {len: nat}
+           (op: (T (a)) -> (T (a)) -> (T (a)))
+           (s1: (T (nseq a len)))
+           (s2 : (T (nseq a len))) :=
   let out := s1 in
   foldi (usize 0%nat) (usize len) out (fun i out =>
-    (* let i := from_uint_size i in *)
-    array_upd out i (op (array_index s1 i) (array_index s2 i))
-                              ).
+                                         (* let i := from_uint_size i in *)
+                                         array_upd out i (op (array_index s1 i) (array_index s2 i))
+                                      ).
 
 Infix "array_xor" := (array_join_map int_xor) (at level 33) : hacspec_scope.
 Infix "array_add" := (array_join_map int_add) (at level 33) : hacspec_scope.
 Infix "array_minus" := (array_join_map int_sub) (at level 33) : hacspec_scope.
 Infix "array_mul" := (array_join_map int_mul) (at level 33) : hacspec_scope.
-(* Infix "array_div" := (array_join_map int_divs) (at level 33) : hacspec_scope. *)
+Infix "array_div" := (array_join_map int_div) (at level 33) : hacspec_scope.
 Infix "array_or" := (array_join_map int_or) (at level 33) : hacspec_scope.
 Infix "array_and" := (array_join_map int_and) (at level 33) : hacspec_scope.
 
 Fixpoint array_eq_
-  {a: ChoiceEquality}
-  {len: nat}
-  (eq: (T (a)) -> (T (a)) -> bool)
-  (s1: (T (nseq a len)))
-  (s2 : (T (nseq a len)))
-  {struct len}
+         {a: ChoiceEquality}
+         {len: nat}
+         (eq: (T (a)) -> (T (a)) -> bool)
+         (s1: (T (nseq a len)))
+         (s2 : (T (nseq a len)))
+         {struct len}
   : bool.
 Proof.
   destruct len ; cbn in *.
   - exact  true.
-  - destruct (getm s1 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s | _].
-    + destruct (getm s2 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s0 | _].
+  - destruct (getm s1 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s | ].
+    + destruct (getm s2 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s0 | ].
       * exact (eq s s0).
       * exact false.
     + exact false.
@@ -1655,7 +1693,7 @@ Axiom u128_from_be_bytes : nseq int8 16 -> int128.
 
 Definition nat_mod_choice {p : Z} : choice_type := 'fin (S (Init.Nat.pred (Z.to_nat p))).
 Definition nat_mod_type {p : Z} : Type := 'I_(S (Init.Nat.pred (Z.to_nat p))).
-Instance nat_mod (p : Z) : ChoiceEquality :=
+#[global] Instance nat_mod (p : Z) : ChoiceEquality :=
   {| ct :=  nat_mod_choice ; T :=  @nat_mod_type p ; ChoiceEq := eq_refl |}.
 Definition mk_natmod {p} (z : Z) : nat_mod p := @zmodp.inZp (Init.Nat.pred (Z.to_nat p)) (Z.to_nat z).
 
@@ -1703,7 +1741,8 @@ Definition nat_mod_exp_def {p : Z} (a:nat_mod p) (n : nat) : nat_mod p :=
 
 Definition nat_mod_exp {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
 Definition nat_mod_pow {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
-Definition nat_mod_pow_self {p} a n := @nat_mod_exp_def p a (Z.to_nat (from_uint_size n)).
+Definition nat_mod_pow_felem {p} a n := @nat_mod_exp_def p a (Z.to_nat (from_uint_size n)).
+Definition nat_mod_pow_self {p} a n := @nat_mod_pow_felem p a n.
 
 Close Scope nat_scope.
 
@@ -1717,8 +1756,10 @@ Axiom nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8.
 Axiom nat_mod_to_public_byte_seq_le : forall (n : Z), nat_mod n -> seq int8.
 Axiom nat_mod_to_public_byte_seq_be : forall (n : Z), nat_mod n -> seq int8.
 
+Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := Z.of_nat (nat_of_ord a).
+
 Definition nat_mod_bit {n : Z} (a : nat_mod n) (i : uint_size) : bool_ChoiceEquality :=
-  Z.testbit (Z.of_nat (nat_of_ord a)) (from_uint_size i).
+  Z.testbit (nat_mod_val _ a) (from_uint_size i).
 
 (* Alias for nat_mod_bit *)
 Definition nat_get_mod_bit {p} (a : nat_mod p) := nat_mod_bit a.
@@ -1736,9 +1777,13 @@ Definition nat_mod_to_public_byte_seq_le (n: pos)  (len: uint_size) (x: nat_mod_
   Definition n' := n % (pow2 (8 * len)) in
   Lib.ByteSequence.nat_to_bytes_be len n' *)
 
-Axiom array_declassify_eq : forall  {A l}, nseq A l -> nseq A l -> bool.
-Axiom array_to_le_uint32s : forall {A l}, nseq A l -> nseq uint32 l.
-Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> nseq uint32 (l/4).
+Axiom array_declassify_eq : forall  {A l}, nseq A l -> nseq A l -> bool_ChoiceEquality.
+Axiom array_to_le_uint32s : forall {A l}, nseq A l -> seq uint32.  (* (l/4) *)
+Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> seq uint32.  (* (l/4) *)
+Axiom array_to_le_uint64s : forall {A l}, nseq A l -> seq uint64.  (* (l/8) *)
+Axiom array_to_be_uint64s : forall {l}, nseq uint8 l -> seq uint64.  (* (l/8) *)
+Axiom array_to_le_uint128s : forall {A l}, nseq A l -> seq uint128.  (* (l/16) *)
+Axiom array_to_be_uint128s : forall {l}, nseq uint8 l -> seq uint128.  (* (l/16) *)
 Axiom array_to_le_bytes : forall {A l}, nseq A l -> seq uint8.
 Axiom array_to_be_bytes : forall {A l}, nseq A l -> seq uint8.
 Axiom nat_mod_from_byte_seq_le : forall  {A n}, seq A -> nat_mod n.
@@ -1760,58 +1805,58 @@ Section Casting.
 
   (* Casting to self is always possible *)
   Global Instance cast_self {A} : Cast A A := {
-    cast a := a
-  }.
+      cast a := a
+    }.
 
   Global Instance cast_transitive {A B C} `{Hab: Cast A B} `{Hbc: Cast B C} : Cast A C := {
-    cast a := Hbc (Hab a)
-  }.
+      cast a := Hbc (Hab a)
+    }.
 
   Global Instance cast_prod {A B C D} `{Cast A B} `{Cast C D} : Cast (A * C) (B * D) := {
-    cast '(a, c) := (cast _ a, cast _ c)
-  }.
+      cast '(a, c) := (cast _ a, cast _ c)
+    }.
 
   Global Instance cast_option {A B} `{Cast A B} : Cast (option A) (option B) := {
-    cast a := match a with Some a => Some (cast _ a) | None => None end
-  }.
+      cast a := match a with Some a => Some (cast _ a) | None => None end
+    }.
 
   Global Instance cast_option_b {A B} `{Cast A B} : Cast A (option B) := {
-    cast a := Some (cast _ a)
-  }.
+      cast a := Some (cast _ a)
+    }.
 
   (* Global Instances for common types *)
 
   Global Instance cast_nat_to_N : Cast nat N := {
-    cast := N.of_nat
-  }.
+      cast := N.of_nat
+    }.
 
   Global Instance cast_N_to_Z : Cast N Z := {
-    cast := Z.of_N
-  }.
+      cast := Z.of_N
+    }.
 
   Global Instance cast_Z_to_int {WORDSIZE} : Cast Z (@int WORDSIZE) := {
-    cast n := repr n
-  }.
+      cast n := repr n
+    }.
 
   Global Instance cast_natmod_to_Z {p} : Cast (nat_mod p) Z := {
-    cast n := Z.of_nat (nat_of_ord n)
-  }.
+      cast n := nat_mod_val _ n
+    }.
 
   (* Note: should be aware of typeclass resolution with int/uint since they are just aliases of each other currently *)
   Global Instance cast_int8_to_uint32 : Cast int8 uint32 := {
-    cast n := repr (unsigned n)
-  }.
+      cast n := repr (unsigned n)
+    }.
   Global Instance cast_int8_to_int32 : Cast int8 int32 := {
-    cast n := repr (signed n)
-  }.
+      cast n := repr (signed n)
+    }.
 
   Global Instance cast_uint8_to_uint32 : Cast uint8 uint32 := {
-    cast n := repr (unsigned n)
-  }.
+      cast n := repr (unsigned n)
+    }.
 
   Global Instance cast_int_to_nat `{WS : wsize} : Cast int nat := {
-    cast n := Z.to_nat (@signed WS n)
-  }.
+      cast n := Z.to_nat (@signed WS n)
+    }.
 
   Close Scope hacspec_scope.
 End Casting.
@@ -1899,6 +1944,12 @@ Section Coercions.
   Definition int_in_nat_mod {m : Z} `{WS : wsize} (x:@int_type WS) : @nat_mod_type m := mk_natmod (unsigned x).
   Global Coercion int_in_nat_mod : int_type >-> nat_mod_type.
 
+  Definition nat_mod_in_int {m : Z} `{WS : wsize} (x:@nat_mod_type m) : @int_type WS := (repr (nat_mod_val _ x)).
+  Global Coercion nat_mod_in_int : nat_mod_type >-> int_type.
+
+  Definition nat_mod_in_Z {m : Z} `{WS : wsize} (x:@nat_mod_type m) : Z := (nat_mod_val _ x).
+  Global Coercion nat_mod_in_Z : nat_mod_type >-> Z.
+
   Definition uint_size_in_nat_mod (n : uint_size_type) : @nat_mod_type 16 := int_in_nat_mod n.
   Global Coercion uint_size_in_nat_mod : uint_size_type >-> nat_mod_type.
 
@@ -1946,24 +1997,22 @@ Definition usize_from_uint128 (n : int128) : uint_size := repr n.
 
 Definition uint8_equal : int8 -> int8 -> bool := eqb.
 
-Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := nat_of_ord a.
-
 Theorem nat_mod_eqb_spec : forall {p} (a b : nat_mod p), nat_mod_equal a b = true <-> a = b.
 Proof.
   symmetry ; exact (ssrbool.rwP nat_mod_equal_reflect).
 Qed.
 
 Global Instance nat_mod_eqdec {p} : EqDec (nat_mod p) := {
-  eqb := nat_mod_equal ;
-  eqb_leibniz := nat_mod_eqb_spec;
-}.
+    eqb := nat_mod_equal ;
+    eqb_leibniz := nat_mod_eqb_spec;
+  }.
 
 Global Instance nat_mod_comparable `{p : Z} : Comparable (nat_mod p) := {
-  ltb a b := Z.ltb (nat_mod_val p a) (nat_mod_val p b);
-  leb a b := if Zeq_bool a b then true else Z.ltb (nat_mod_val p a) (nat_mod_val p b) ;
-  gtb a b := Z.ltb (nat_mod_val p b) (nat_mod_val p a);
-  geb a b := if Zeq_bool b a then true else Z.ltb (nat_mod_val p b) (nat_mod_val p a) ;
-}.
+    ltb a b := Z.ltb (nat_mod_val p a) (nat_mod_val p b);
+    leb a b := if Zeq_bool a b then true else Z.ltb (nat_mod_val p a) (nat_mod_val p b) ;
+    gtb a b := Z.ltb (nat_mod_val p b) (nat_mod_val p a);
+    geb a b := if Zeq_bool b a then true else Z.ltb (nat_mod_val p b) (nat_mod_val p a) ;
+  }.
 
 Fixpoint nat_mod_rem_aux {n : Z} (a:nat_mod n) (b:nat_mod n) (f : nat) {struct f} : nat_mod n :=
   match f with
@@ -1982,14 +2031,14 @@ Definition nat_mod_rem {n : Z} (a:nat_mod n) (b:nat_mod n) : nat_mod n :=
 Infix "rem" := nat_mod_rem (at level 33) : hacspec_scope.
 
 Global Instance bool_eqdec : EqDec bool := {
-  eqb := Bool.eqb;
-  eqb_leibniz := Bool.eqb_true_iff;
-}.
+    eqb := Bool.eqb;
+    eqb_leibniz := Bool.eqb_true_iff;
+  }.
 
 Global Instance string_eqdec : EqDec String.string := {
-  eqb := String.eqb;
-  eqb_leibniz := String.eqb_eq ;
-}.
+    eqb := String.eqb;
+    eqb_leibniz := String.eqb_eq ;
+  }.
 
 (* Global Instance unit_eqdec : EqDec unit := { *)
 (*   eqb := fun _ _ => true ; *)
@@ -2024,13 +2073,13 @@ Proof.
 Qed.
 
 Global Instance List_eqdec {A} `{EqDec A} : EqDec (list A) := {
-  eqb := list_eqdec;
-  eqb_leibniz := list_eqdec_sound;
-}.
+    eqb := list_eqdec;
+    eqb_leibniz := list_eqdec_sound;
+  }.
 
 Global Program Instance Dec_eq_prod (A B : Type) `{EqDec A} `{EqDec B} : EqDec (A * B) := {
-  eqb '(a0, b0) '(a1, b1) := andb (eqb a0 a1) (eqb b0 b1)
-}.
+    eqb '(a0, b0) '(a1, b1) := andb (eqb a0 a1) (eqb b0 b1)
+  }.
 Next Obligation.
   split ; intros ; destruct x ; destruct y.
   - unfold is_true in H1. 
@@ -2067,13 +2116,13 @@ Compute nat_be_range 4 0 300.
 
 Definition u64_to_be_bytes' : int64 -> nseq int8 8 :=
   fun k => array_from_list (int8) [@nat_to_int U8 (nat_be_range 4 k 7) ;
-                               @nat_to_int U8(nat_be_range 4 k 6) ;
-                               @nat_to_int U8 (nat_be_range 4 k 5) ;
-                               @nat_to_int U8 (nat_be_range 4 k 4) ;
-                               @nat_to_int U8 (nat_be_range 4 k 3) ;
-                               @nat_to_int U8 (nat_be_range 4 k 2) ;
-                               @nat_to_int U8 (nat_be_range 4 k 1) ;
-                               @nat_to_int U8 (nat_be_range 4 k 0)].
+                                   @nat_to_int U8(nat_be_range 4 k 6) ;
+                                   @nat_to_int U8 (nat_be_range 4 k 5) ;
+                                   @nat_to_int U8 (nat_be_range 4 k 4) ;
+                                   @nat_to_int U8 (nat_be_range 4 k 3) ;
+                                   @nat_to_int U8 (nat_be_range 4 k 2) ;
+                                   @nat_to_int U8 (nat_be_range 4 k 1) ;
+                                   @nat_to_int U8 (nat_be_range 4 k 0)].
 
 
 
@@ -2081,8 +2130,8 @@ Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat_ChoiceEquality '× int
   let (n,v) := s in
   (S n, v .+ (@repr U64 ((int8_to_nat i) * 2 ^ (4 * n)))).
 
--Definition u64_from_be_bytes' : nseq int8 8 -> int64 :=
-  (fun v => snd (List.fold_right u64_from_be_bytes_fold_fun (0%nat, @repr U64 0) (array_to_list v))).
+Definition u64_from_be_bytes' : nseq int8 8 -> int64 :=
+   (fun v => snd (List.fold_right u64_from_be_bytes_fold_fun (0%nat, @repr U64 0) (array_to_list v))).
 
 Definition u64_to_be_bytes : int64 -> nseq int8 8 := u64_to_be_bytes'.
 Definition u64_from_be_bytes : nseq int8 8 -> int64 := u64_from_be_bytes'.
@@ -2090,10 +2139,9 @@ Definition u64_from_be_bytes : nseq int8 8 -> int64 := u64_from_be_bytes'.
 (* Definition nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8 := *)
 (*   fun k => VectorDef.of_list . *)
 
-
 (*** Result *)
 
-#[refine] Instance result (b a : ChoiceEquality) : ChoiceEquality :=
+#[global] #[refine] Instance result (b a : ChoiceEquality) : ChoiceEquality :=
   {| ct := chSum a b ; T := (a + b)%type |}.
 Proof.
   intros.
@@ -2148,14 +2196,14 @@ Module ChoiceEqualityMonad.
       join {A : ChoiceEquality} (x : M (M A)) : M A ;
     }.
 
-  Instance CEMonadToCEMonad2 `{CEMonad} : CEMonad2 M :=
+  #[global] Instance CEMonadToCEMonad2 `{CEMonad} : CEMonad2 M :=
     {|
       unit A := @ret M _ A ;
       fmap A B f x := bind x (fun y => ret (f y)) ;
       join A x := bind x id
     |}.
 
-  Instance CEMonad2ToCEMonad `{CEMonad2} : CEMonad M :=
+  #[global] Instance CEMonad2ToCEMonad `{CEMonad2} : CEMonad M :=
     {|
       ret A := @unit M _ A ;
       bind A B x f := join (fmap f x)
@@ -2164,14 +2212,14 @@ Module ChoiceEqualityMonad.
   Class CEMonad_prod (M M0 : ChoiceEquality -> ChoiceEquality) :=
     { prod : forall A, M0 (M (M0 A)) -> M (M0 A) }.
   
-  Program Instance ComposeProd2 `{CEMonad2} `{CEMonad2} `{@CEMonad_prod M M0} : CEMonad2 (fun x => M (M0 x)) :=
+  #[global] Program Instance ComposeProd2 `{CEMonad2} `{CEMonad2} `{@CEMonad_prod M M0} : CEMonad2 (fun x => M (M0 x)) :=
     {|
       unit A x := unit (A := M0 A) (unit x) ;
       fmap A B f x := fmap (A := M0 A) (B := M0 B) (fmap f) x ;
       join A x := join (A := M0 A) (fmap (@prod M M0 _ A) x)
     |}.
 
-  Instance ComposeProd `{CEMonad} `{CEMonad} `(@CEMonad_prod M M0) : CEMonad (fun x => M (M0 x)) := (@CEMonad2ToCEMonad _ ComposeProd2).
+  #[global] Instance ComposeProd `{CEMonad} `{CEMonad} `(@CEMonad_prod M M0) : CEMonad (fun x => M (M0 x)) := (@CEMonad2ToCEMonad _ ComposeProd2).
   
   Definition bind_prod `{CEMonad} `{CEMonad} `{@CEMonad_prod M M0}
              {A B} (x : M (M0 A)) (f : A -> M (M0 B))
@@ -2183,20 +2231,20 @@ Module ChoiceEqualityMonad.
   Class CEMonad_swap (M M0 : ChoiceEquality -> ChoiceEquality) :=
     { swap : forall A, M0 (M A) -> M (M0 A) }.
   
-  Program Instance ComposeSwap2 `{CEMonad2 } `{CEMonad2} `{@CEMonad_swap M M0} : CEMonad2 (fun x => M (M0 x)) :=
+  #[global] Program Instance ComposeSwap2 `{CEMonad2 } `{CEMonad2} `{@CEMonad_swap M M0} : CEMonad2 (fun x => M (M0 x)) :=
     {|
       unit A x := unit (A := M0 A) (unit x) ;
       fmap A B f x := fmap (A := M0 A) (B := M0 B) (fmap f) x ;
       join A x := fmap (join (M := M0)) (join (fmap (@swap M M0 _ (M0 A)) x))
     |}.
 
-  Instance ComposeSwap `{CEMonad} `{CEMonad} `(@CEMonad_swap M M0) : CEMonad (fun x => M (M0 x)) := (@CEMonad2ToCEMonad _ ComposeSwap2).
+  #[global] Instance ComposeSwap `{CEMonad} `{CEMonad} `(@CEMonad_swap M M0) : CEMonad (fun x => M (M0 x)) := (@CEMonad2ToCEMonad _ ComposeSwap2).
 
   Definition bind_swap `{CEMonad} `{CEMonad} `{@CEMonad_swap M M0}
              A B (x : M (M0 A)) (f : A -> M (M0 B)) : M (M0 B) :=
-     (@bind _ (@ComposeSwap M _ M0 _ _) A B x f).
-    
-      
+    (@bind _ (@ComposeSwap M _ M0 _ _) A B x f).
+  
+  
   Section ResultMonad.
     Definition result_bind {C A B} (r : result C A) (f : A -> result C B) : result C B :=
       match r with
@@ -2211,11 +2259,11 @@ Module ChoiceEqualityMonad.
         bind := (@result_bind C) ;
         ret := (@result_ret C) ;
       |}.
-        
+    
     Arguments result_monad {_} &.
 
-        
-        
+    
+    
     (* Existing Instance result_monad. *)
 
     
@@ -2259,13 +2307,13 @@ Definition foldi_bind {A : ChoiceEquality} `{ChoiceEqualityMonad.CEMonad} (a : u
 
 (*** Notation *)
 
-Notation "'ifbnd' b 'then' x 'else' y '>>' f" := (if b then f x else f y) (at level 200).
-Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then (ChoiceEqualityMonad.bind x) f else f y) (at level 200).
-Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else (ChoiceEqualityMonad.bind y) f) (at level 200).
+Notation "'ifbnd' b 'then' x 'else' y '>>' f" := (if b then f x else f y) (at level 200) : hacspec_scope.
+Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then (ChoiceEqualityMonad.bind x) f else f y) (at level 200) : hacspec_scope.
+Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else (ChoiceEqualityMonad.bind y) f) (at level 200) : hacspec_scope.
 Notation "'ifbnd' b 'thenbnd' x 'elsebnd' y '>>' f" := (if b then ChoiceEqualityMonad.bind x f else ChoiceEqualityMonad.bind y f) (at level 200).
 
 Notation "'foldibnd' s 'to' e 'M(' v ')' 'for' z '>>' f" :=
-  (Hacspec_Lib_Pre.foldi s e (ChoiceEqualityMonad.ret z) (fun x y => ChoiceEqualityMonad.bind (M := v) y (f x))) (at level 50).
+  (Hacspec_Lib_Pre.foldi s e (ChoiceEqualityMonad.ret z) (fun x y => ChoiceEqualityMonad.bind (M := v) y (f x))) (at level 50) : hacspec_scope.
 
 Axiom nat_mod_from_byte_seq_be : forall  {A n}, seq A -> nat_mod n.
 
@@ -2273,28 +2321,28 @@ Axiom nat_mod_from_byte_seq_be : forall  {A n}, seq A -> nat_mod n.
 
 (* Default instances for common types *)
 Global Instance nat_default : Default nat := {
-  default := 0%nat
-}.
+    default := 0%nat
+  }.
 Global Instance N_default : Default N := {
-  default := 0%N
-}.
+    default := 0%N
+  }.
 Global Instance Z_default : Default Z := {
-  default := 0%Z
-}.
+    default := 0%Z
+  }.
 Global Instance uint_size_default : Default uint_size := {
-  default := zero
-}.
+    default := zero
+  }.
 Global Instance int_size_default : Default int_size := {
-  default := zero
-}.
+    default := zero
+  }.
 Global Instance int_default {WS : wsize} : Default (@int WS) := {
-  default := repr 0
-}.
+    default := repr 0
+  }.
 Global Instance uint8_default : Default uint8 := _.
 Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
-  default := nat_mod_zero
-}.
+    default := nat_mod_zero
+  }.
 Global Instance prod_default {A B : ChoiceEquality} `{Default A} `{Default B} : Default (A '× B) := {
-  default := (default, default)
-}.
+    default := (default, default)
+  }.
 

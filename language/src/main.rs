@@ -452,7 +452,7 @@ fn handle_crate<'tcx>(
                 }
                 "v" | "v_ssprove_state" | "v_ssprove_pure" | "v_ssprove" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    file_name.clone().to_title_case().replace(" ", "_") + "." + extension
+                    file_name.clone().to_title_case().replace(" ", "_") + ".v"
                 }
                 _ => {
                     compiler

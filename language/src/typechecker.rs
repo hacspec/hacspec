@@ -1728,7 +1728,7 @@ fn typecheck_expression(
                 var_context,
             ))
         }
-        Expression::MethodCall(sel, _, (f, f_span), orig_args, _args_types) => {
+        Expression::MethodCall(sel, _, (f, f_span), orig_args, _arg_types) => {
             let (sel, sel_borrow) = sel.as_ref();
             let mut var_context = var_context.clone();
             // We omit to take the new var context because it will be retypechecked later, this
@@ -1835,7 +1835,7 @@ fn typecheck_expression(
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
-                new_arg_types.push(new_arg_t.1 .0.clone());
+                new_arg_types.push((new_arg_t.1).0.clone());
                 match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, top_level_context)? {
                     None => {
                         sess.span_rustspec_err(
@@ -1857,6 +1857,7 @@ fn typecheck_expression(
             let new_sel = new_args.first().unwrap().clone();
             new_args = new_args[1..].to_vec();
             new_arg_types = new_arg_types[1..].to_vec();
+
             let ret_ty = sig_ret(&f_sig);
             let ret_ty = bind_variable_type(sess, &(ret_ty.clone(), span.clone()), &typ_var_ctx)?;
 
@@ -2139,21 +2140,38 @@ fn typecheck_pattern(
     }
 }
 
-fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan) -> Statement {
-    Statement::ReturnExp(
-        if vars.0.len() > 0 {
+fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan, var_context: &VarContext) -> Statement {
+    if vars.0.len() > 0 {
+        Statement::ReturnExp(
             Expression::Tuple(
                 vars.0
                     .iter()
                     .sorted()
                     .map(|i| (Expression::Named(Ident::Local(i.clone())), span.clone()))
                     .collect(),
-            )
-        } else {
-            Expression::Lit(Literal::Unit)
-        },
-        None,
-    ) // Todo: get typing information
+            ),
+            (vars
+                .0
+                .iter()
+                .sorted()
+                .map(|i| var_context.0.get(&i.clone().id).map(|(x,_,_)| x))
+                .collect::<Option<Vec<_>>>())
+            .map(|tup| {
+                (
+                    (Borrowing::Consumed, span.clone()),
+                    (BaseTyp::Tuple(tup.into_iter().map(|(_, x)| x.clone()).collect()), span.clone()),
+                )
+            }),
+        )
+    } else {
+        Statement::ReturnExp(
+            Expression::Lit(Literal::Unit),
+            Some((
+                (Borrowing::Consumed, span.clone()),
+                (BaseTyp::Unit, span.clone()),
+            )),
+        )
+    }
 }
 
 fn dealias_type(ty: BaseTyp, top_level_context: &TopLevelContext) -> BaseTyp {
@@ -2461,20 +2479,15 @@ fn typecheck_statement(
                 }
             };
 
-            log::trace!("   pat_var_context: {:?}", pat_var_context);
-            log::trace!(
-                "   new_var_context: {:?}",
-                new_var_context.clone().union(pat_var_context.clone())
-            );
-
             Ok((
                 Statement::LetBinding(
                     (pat.clone(), pat_span.clone()),
                     typ.clone(),
                     (new_expr, expr.1.clone()),
-                    question_mark.clone().map(|_| {
+                    question_mark.clone().map(|(_,fun_dep,_)| {
                         (
                             translate_var_context_to_mut_vars(ret_var_context.clone()),
+                            fun_dep,
                             early_return_type_from_return_type(
                                 top_level_context,
                                 return_typ.clone().0,
@@ -2487,7 +2500,7 @@ fn typecheck_statement(
                 VarSet(HashSet::new()),
             ))
         }
-        Statement::Reassignment((x, x_span), e, question_mark) => {
+        Statement::Reassignment((x, x_span), _x_typ, e, question_mark) => {
             log::trace!("   Statement::Reassignment");
             let (new_e, e_typ, carrier, new_var_context) = typecheck_expression_qm(
                 sess,
@@ -2529,10 +2542,12 @@ fn typecheck_statement(
             Ok((
                 Statement::Reassignment(
                     (x.clone(), x_span.clone()),
+                    Some((x_typ.clone(), x_span.clone())),
                     (new_e, e.1.clone()),
-                    question_mark.clone().map(|_| {
+                    question_mark.clone().map(|(_,fun_dep,_)| {
                         (
                             translate_var_context_to_mut_vars(ret_var_context.clone()).clone(),
+                            fun_dep,
                             early_return_type_from_return_type(
                                 top_level_context,
                                 return_typ.clone().0,
@@ -2618,9 +2633,10 @@ fn typecheck_statement(
                     (x.clone(), x_span.clone()),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
-                    question_mark.clone().map(|_| {
+                    question_mark.clone().map(|(_,fun_dep,_)| {
                         (
                             translate_var_context_to_mut_vars(var_context.clone()),
+                            fun_dep,
                             early_return_type_from_return_type(
                                 top_level_context,
                                 return_typ.clone().0,
@@ -2739,7 +2755,7 @@ fn typecheck_statement(
                     },
                 }),
             );
-            let mut_tuple = var_set_to_tuple(&new_mutated, &s_span);
+            let mut_tuple = var_set_to_tuple(&new_mutated, &s_span, &var_context);
 
             let ret_var_context = (
                 original_var_context
@@ -2764,7 +2780,6 @@ fn typecheck_statement(
                             top_level_context,
                             return_typ.0.clone(),
                         ),
-
                         stmt: mut_tuple,
                     })),
                 ),
@@ -2925,9 +2940,9 @@ fn typecheck_block(
     mutated_vars
         .0
         .retain(|mut_var| original_var_context.0.contains_key(&mut_var.id));
-    let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span);
+    let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span,&var_context);
     let contains_question_mark = Some(new_stmts.iter().any(|s| match s {
-        (Statement::Reassignment(_, _, Some(_)), _)
+        (Statement::Reassignment(_, _, _, Some(_)), _)
         | (Statement::LetBinding(_, _, _, Some(_)), _) => true,
         (Statement::Conditional(_, then_b, else_b, _), _) => {
             then_b.0.contains_question_mark.unwrap()

@@ -104,13 +104,10 @@ pub(crate) fn make_uint_size_coercion<'a>(pat: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 pub(crate) fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
-    let iter = args.into_iter();
+    let mut iter = args.into_iter();
     match &iter.size_hint().1 {
         Some(0) => RcDoc::as_string("tt"),
-        Some(1) => RcDoc::intersperse(
-                        iter,
-                        RcDoc::as_string(",").append(RcDoc::line()),
-                    ), // TODO: handle better than intersperse iterator of size 1
+        Some(1) => iter.next().unwrap(),
         _ => RcDoc::as_string("(")
             .append(
                 RcDoc::line_()
@@ -329,37 +326,51 @@ pub(crate) fn add_ok_if_result(
                     // mutated variables by Ok or Some
                     {
                         match stmt {
-                            Statement::ReturnExp(e, t) => Statement::ReturnExp(
-                                Expression::EnumInject(
-                                    BaseTyp::Named(
+                            Statement::ReturnExp(e, Some((x, t_base))) => {
+                                let (early_typ, fun_name) = match ert.clone() {
+                                    EarlyReturnType::Option(a) => (
+                                        BaseTyp::Named(
+                                            (
+                                                TopLevelIdent {
+                                                    string: "Option".to_string(),
+                                                    kind: TopLevelIdentKind::Type,
+                                                },
+                                                DUMMY_SP.into(),
+                                            ),
+                                            Some(vec![t_base.clone()]),
+                                        ),
+                                        "Some",
+                                    ),
+                                    EarlyReturnType::Result(a, b) => (
+                                        BaseTyp::Named(
+                                            (
+                                                TopLevelIdent {
+                                                    string: "Result".to_string(),
+                                                    kind: TopLevelIdentKind::Type,
+                                                },
+                                                DUMMY_SP.into(),
+                                            ),
+                                            Some(vec![t_base.clone(), b]),
+                                        ),
+                                        "Ok",
+                                    ),
+                                };
+
+                                Statement::ReturnExp(
+                                    Expression::EnumInject(
+                                        early_typ.clone(),
                                         (
                                             TopLevelIdent {
-                                                string: match ert {
-                                                    EarlyReturnType::Option(_) => "Option",
-                                                    EarlyReturnType::Result(_ , _) => "Result",
-                                                }
-                                                .to_string(),
-                                                kind: TopLevelIdentKind::Type,
+                                                string: fun_name.to_string(),
+                                                kind: TopLevelIdentKind::EnumConstructor,
                                             },
                                             DUMMY_SP.into(),
                                         ),
-                                        None,
+                                        Some((Box::new(e.clone()), DUMMY_SP.into())),
                                     ),
-                                    (
-                                        TopLevelIdent {
-                                            string: match ert {
-                                                EarlyReturnType::Option(_) => "Some",
-                                                EarlyReturnType::Result(_ , _) => "Ok",
-                                            }
-                                            .to_string(),
-                                            kind: TopLevelIdentKind::EnumConstructor,
-                                        },
-                                        DUMMY_SP.into(),
-                                    ),
-                                    Some((Box::new(e.clone()), DUMMY_SP.into())),
-                                ),
-                                t,
-                            ), // todo typing info
+                                    Some((x, (early_typ.clone(), t_base.1))),
+                                )
+                            },
                             _ => panic!("should not happen"),
                         }
                     }

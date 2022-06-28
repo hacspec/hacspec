@@ -2,6 +2,11 @@ Global Set Warnings "-ambiguous-paths".
 Global Set Warnings "-uniform-inheritance".
 Global Set Warnings "-auto-template".
 Global Set Warnings "-disj-pattern-notation".
+Global Set Warnings "-notation-overridden,-ambiguous-paths".
+
+Require Import Lia.
+Require Import Coq.Logic.FunctionalExtensionality.
+Require Import Sumbool.
 
 From mathcomp Require Import (* choice  *)fintype.
 
@@ -9,20 +14,15 @@ From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset fmap.
 
-(*** Integers *)
-From Coq Require Import ZArith List.
-Import List.ListNotations.
-(* Require Import IntTypes. *)
-
-Require Import Lia.
-Require Import Coq.Logic.FunctionalExtensionality.
-
-Require Import Sumbool.
-
-Declare Scope hacspec_scope.
-
 From CoqWord Require Import ssrZ word.
 From Jasmin Require Import word.
+
+From Coq Require Import ZArith List.
+Import List.ListNotations.
+
+(*** Integers *)
+
+Declare Scope hacspec_scope.
 
 Require Import ChoiceEquality.
 Require Import LocationUtility.
@@ -45,9 +45,11 @@ Definition int_mod {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x
 Definition int_xor {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_xor x y).
 Definition int_and {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_and x y).
 Definition int_or {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_or x y).
+Definition int_not {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_not x).
 End IntType.
 
-Definition secret : forall {WS : wsize},  (T (@int WS)) -> both0 (@int WS) := fun {WS} x => lift_to_both (secret x).
+Definition secret : forall {WS : wsize},  (T (@int WS)) -> both0 (@int WS) :=
+  fun {WS} x => lift_to_both (secret x).
 
 Infix "%%" := int_modi (at level 40, left associativity) : Z_scope.
 Infix ".+" := int_add (at level 77) : hacspec_scope.
@@ -59,6 +61,7 @@ Infix ".%" := int_mod (at level 77) : hacspec_scope.
 Infix ".^" := int_xor (at level 77) : hacspec_scope.
 Infix ".&" := int_and (at level 77) : hacspec_scope.
 Infix ".|" := int_or (at level 77) : hacspec_scope.
+Notation "'not'" := int_not (at level 77) : hacspec_scope.
 
 Section IntTypeBoth.
 Definition int_modi_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_modi x y).
@@ -72,17 +75,6 @@ Definition int_xor_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@in
 Definition int_and_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_and x y).
 Definition int_or_both {WS : wsize}  {L I}: both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_or x y).
 End IntTypeBoth.
-
-Infix "both_%%" := int_modi_both (at level 40, left associativity) : Z_scope.
-Infix "both_.+" := int_add_both (at level 77) : hacspec_scope.
-Infix "both_.-" := int_sub_both (at level 77) : hacspec_scope.
-Notation "both_-" := int_opp_both (at level 77) : hacspec_scope.
-Infix "both_.*" := int_mul_both (at level 77) : hacspec_scope.
-Infix "both_./" := int_div_both (at level 77) : hacspec_scope.
-Infix "both_.%" := int_mod_both (at level 77) : hacspec_scope.
-Infix "both_.^" := int_xor_both (at level 77) : hacspec_scope.
-Infix "both_.&" := int_and_both (at level 77) : hacspec_scope.
-Infix "both_.|" := int_or_both (at level 77) : hacspec_scope.
 
 (* Definition secret {WS : wsize} (x : @int WS) : *)
 (*   both (fset.fset0) (@int WS) := lift_to_both (secret x). *)
@@ -137,7 +129,7 @@ Section Uint.
 
   Definition declassify_usize_from_uint8 (n : uint8) : both0 uint_size :=
     lift_to_both (declassify_usize_from_uint8 n).
-  
+
   (* Class UInt_sizeable (A : Type) := { *)
   (*     usize : A -> both0 uint_size; *)
   (*     from_uint_size : uint_size -> A; *)
@@ -178,6 +170,35 @@ Section Uint.
   (* Definition pub_i64 (n : Z) : both0 int64 := lift_to_both0 (pub_i64 n). *)
   (* Definition pub_u128 (n : Z) : both0 int128 := lift_to_both0 (pub_u128 n). *)
   (* Definition pub_i128 (n : Z) : both0 int128 := lift_to_both0 (pub_i128 n). *)
+
+  (* Should maybe use size of s instead? *)
+  Definition uint8_rotate_left (u: int8) (s: int8) : both0 int8 := lift_to_both (uint8_rotate_left u s).
+
+  Definition uint8_rotate_right (u: int8) (s: int8) : both0 (int8) := lift_to_both0 (uint8_rotate_right u s).
+
+  Definition uint16_rotate_left (u: int16) (s: int16) : both0 (int16) :=
+lift_to_both0 (uint16_rotate_left u s).
+
+  Definition uint16_rotate_right (u: int16) (s: int16) : both0 (int16) :=
+lift_to_both0 (uint16_rotate_right u s).
+
+  Definition uint32_rotate_left (u: int32) (s: int32) : both0 (int32) :=
+lift_to_both0 (uint32_rotate_left u s).
+
+  Definition uint32_rotate_right (u: int32) (s: int32) : both0 (int32) :=
+lift_to_both0 (uint32_rotate_right u s).
+
+  Definition uint64_rotate_left (u: int64) (s: int64) : both0 (int64) :=
+lift_to_both0 (uint64_rotate_left u s).
+
+  Definition uint64_rotate_right (u: int64) (s: int64) : both0 (int64) :=
+lift_to_both0 (uint64_rotate_right u s).
+
+  Definition uint128_rotate_left (u: int128) (s: int128) : both0 (int128) :=
+lift_to_both0 (uint128_rotate_left u s).
+
+  Definition uint128_rotate_right (u: int128) (s: int128) : both0 (int128) :=
+lift_to_both0 (uint128_rotate_right u s).
 
   (**** Operations *)
 
@@ -283,7 +304,7 @@ Section Loops.
       (cur : T acc),
       (cur' ← foldi_nat_ fuel i f (cur) ;; f (i + fuel) (ct_T cur')) = foldi_nat_ (S fuel) i f cur.
   Proof.
-    
+
     induction fuel ; intros.
     - rewrite <- foldi__nat_move_S.
       unfold foldi_nat_.
@@ -386,7 +407,7 @@ Section Loops.
        f fuel_add_i (ct_T cur')
       ) = foldi_ (S (fuel)) i f cur.
   Proof.
-    intros acc fuel.    
+    intros acc fuel.
     induction fuel ; intros.
     - cbn.
       replace (repr 0) with (@zero U32) by (apply word_ext ; reflexivity).
@@ -398,8 +419,8 @@ Section Loops.
       reflexivity.
     - unfold foldi_.
       fold (@foldi_ acc fuel).
-      
-      rewrite bind_assoc.      
+
+      rewrite bind_assoc.
       f_equal.
       apply functional_extensionality.
       intros.
@@ -408,10 +429,10 @@ Section Loops.
       unfold lift_to_both, is_state at 1 3.
       unfold prog, lift_to_code.
       do 2 rewrite bind_rewrite.
-      
+
       specialize (IHfuel (Hacspec_Lib_Pre.int_add i one) L I f (ct_T x)).
-      
-      
+
+
 
       replace ((repr (Z.of_nat (S fuel)) .+ i))
         with (repr (Z.of_nat fuel) .+ Hacspec_Lib_Pre.int_add i one).
@@ -524,7 +545,7 @@ Section Loops.
           intros.
 
           unfold int_add.
-          
+
           replace (@Hacspec_Lib_Pre.int_add U32 (@repr U32 (Z.of_nat (S n))) (@repr U32 (Z.of_nat lo_n))) with (@repr U32 (Z.of_nat (Init.Nat.add (S n) lo_n))). reflexivity.
 
           apply word_ext.
@@ -729,8 +750,25 @@ Section Loops.
     :
     code L I (ct acc) :=
     {| prog := foldi_pre lo hi f init;
-                     prog_valid := @valid_foldi_pre acc lo hi L I f init |}.
+      prog_valid := @valid_foldi_pre acc lo hi L I f init |}.
 
+  Definition foldi'
+             {acc: ChoiceEquality}
+             (lo: T uint_size)
+             (hi: T uint_size) (* {lo <= hi} *)
+             (init: T acc)
+             {L1 L2 : {fset Location}} {H_loc_incl : List.incl L1 L2}
+             {I1 I2 : Interface} {H_opsig_incl : List.incl I1 I2}
+             (f: (T uint_size) -> T acc -> code L1 I1 (ct acc))
+    :
+    code L2 I2 (ct acc)
+  .
+    eapply lift_code_scope.
+    apply (foldi lo hi init f).
+    apply H_loc_incl.
+    apply H_opsig_incl.
+  Defined.
+    
   (* Global Arguments foldi {_} _ _ {_} {_} {_} _ _ {_} {_}. *)
 
   Lemma valid_remove_back :
@@ -845,102 +883,13 @@ Section Seqs.
   Definition seq_new {A: ChoiceEquality} `{Default A} (len: nat) : both0 (seq A) :=
     lift_to_both (seq_new len).
 
-  Definition seq_len {A: ChoiceEquality} (s: T (seq A)) : both0 (uint_size) := lift_to_both (seq_len s).
+  Definition seq_len {A: ChoiceEquality} (s: T (seq A)) : both0 (uint_size) :=
+    lift_to_both (seq_len s).
 
-(**** Array manipulation *)
-Definition array_new_ {A: ChoiceEquality} (init:T A) (len: nat) :
-  both0 ((nseq A len)) :=
-  lift_to_both (array_new_ init len).
-
-Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {wsize} (i: @int wsize) : both0 (A) :=
-  lift_to_both (array_index s i).
-
-Definition array_upd {A: ChoiceEquality} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) (new_v: T A) : both0 ((nseq A len)) :=
-  lift_to_both (array_upd s i new_v).
-
-(* substitutes a sequence (seq) into an array (nseq), given index interval  *)
-(* Axiom update_sub : forall {A len }, nseq A len -> nat -> nat -> seq A -> t A len. *)
-Definition update_sub {A : ChoiceEquality} {len slen} `{Default (T A)} (v : T (nseq A len)) (i : nat) (n : nat) (sub : T (nseq A slen)) : both0 ((nseq A len)) :=
-  lift_to_both (update_sub v i n sub).
-
-Definition array_from_list
-           (A: ChoiceEquality)
-           (l: list (T A))
-            : both0 (nseq A (length l)) := lift_to_both (array_from_list A l).
-
-Definition array_from_seq   {a: ChoiceEquality}
- `{Default (T a)}
-  (out_len:nat)
-  (input: T (seq a))
-  : both0 (nseq a out_len) :=
-  lift_to_both (array_from_seq out_len input). (*  : T (nseq a out_len) *)
-
-Definition array_to_seq {A : ChoiceEquality} {n} (f : nseq A n) : both0 (seq _) :=
-  @lift_to_both (seq A) _ _ (array_to_seq f).
-
-Definition array_from_slice
-  {a: ChoiceEquality}
- `{Default (T a)}
-  (default_value: (T a))
-  (out_len: nat)
-  (input: T (seq a))
-  (start: uint_size)
-  (slice_len: uint_size)  : both0 ((nseq a out_len)) :=
-  lift_to_both (array_from_slice default_value out_len input (from_uint_size start) (from_uint_size slice_len)).
-
-Definition array_slice
-  {a: ChoiceEquality}
- `{Default (T a)}
-  (input: T (seq a))
-  (start: nat)
-  (slice_len: nat)
-  : both0 ((nseq a slice_len)) :=
-  lift_to_both (array_slice input start slice_len).
-
-Definition array_from_slice_range
-  {a: ChoiceEquality}
- `{Default (T a)}
-  (default_value: T a)
-  (out_len: nat)
-  (input: T (seq a))
-  (start_fin: (uint_size '× uint_size))
-  : both0 ((nseq a out_len)) :=
-  lift_to_both (array_from_slice_range default_value out_len input start_fin).
-
-Definition array_slice_range
-  {a: ChoiceEquality}
- `{Default (T a)}
-  {len : nat}
-  (input: T (nseq a len))
-  (start_fin:(uint_size '× uint_size))
-    : both0 ((seq a)) :=
-  lift_to_both (array_slice_range input start_fin).
-
-Definition array_update
-  {a: ChoiceEquality}
- `{Default (T a)}
-  {len: nat}
-  (s: T (nseq a len))
-  (start : nat)
-  (start_s: T (seq a))
-  : both0 ((nseq a len)) :=
-    lift_to_both (array_update s start start_s).
-
-Definition array_update_start
-  {a: ChoiceEquality}
- `{Default (T a)}
-  {len: nat}
-  (s: T (nseq a len))
-  (start_s: T (seq a))
-    : both0 ((nseq a len)) :=
-    lift_to_both (array_update_start s start_s).
-
-Definition array_len_pre  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) := len.
-(* May also come up as 'length' instead of 'len' *)
-Definition array_length_pre  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) := len.
+  Definition seq_index {A: ChoiceEquality} `{Default (T A)} (s: T (seq A)) (i : uint_size) : both0 A :=
+    lift_to_both (seq_index s i).
 
 (**** Seq manipulation *)
-
 
 Definition seq_slice
   {a: ChoiceEquality}
@@ -948,7 +897,7 @@ Definition seq_slice
   (s: (T (seq a)))
   (start: nat)
   (len: nat)
-    : both0 ((nseq a _)) :=
+    : both0 (seq a) :=
   lift_to_both (seq_slice s start len).
 
 Definition seq_slice_range
@@ -956,7 +905,7 @@ Definition seq_slice_range
  `{Default (T (a))}
   (input: (T (seq a)))
   (start_fin:(uint_size '× uint_size))
-    : both0 ((nseq a _)) :=
+    : both0 (seq a) :=
   lift_to_both (seq_slice_range input start_fin).
 
 (* updating a subsequence in a sequence *)
@@ -967,14 +916,14 @@ Definition seq_update
   (start: uint_size)
   (input: (T (seq a)))
   : both0 ((seq a)) :=
-  lift_to_both (seq_update s (from_uint_size start) input).
+  lift_to_both (seq_update s start input).
 
 (* updating only a single value in a sequence*)
 Definition seq_upd
   {a: ChoiceEquality}
  `{Default (T (a))}
   (s: (T (seq a)))
-  (start: nat)
+  (start: uint_size)
   (v: (T (a)))
   : both0 ((seq a)) :=
   lift_to_both (seq_upd s start v).
@@ -987,18 +936,6 @@ Definition seq_update_start
     : both0 ((seq a)) :=
     lift_to_both (seq_update_start s start_s).
 
-Definition array_update_slice
-  {a : ChoiceEquality}
- `{Default (T (a))}
-  {l : nat}
-  (out: (T (seq a)))
-  (start_out: nat)
-  (input: (T (seq a)))
-  (start_in: nat)
-  (len: nat)
-  : both0 ((nseq a _)) :=
-  lift_to_both (array_update_slice (l := l) out start_out input start_in len).
-
 Definition seq_update_slice
   {a : ChoiceEquality}
  `{Default (T (a))}
@@ -1007,7 +944,7 @@ Definition seq_update_slice
   (input: (T (seq a)))
   (start_in: nat)
   (len: nat)
-    : both0 ((nseq a _)) :=
+    : both0 ((seq a)) :=
   lift_to_both (seq_update_slice out start_out input start_in len).
 
 Definition seq_concat
@@ -1017,12 +954,20 @@ Definition seq_concat
   : both0 ((seq a)) :=
    lift_to_both (seq_concat s1 s2).
 
-Definition seq_push_pre
+Definition seq_push
   {a : ChoiceEquality}
   (s1 :(T (seq a)))
   (s2: (T (a)))
   : both0 ((seq a)) :=
   lift_to_both (seq_push s1 s2).
+
+Definition seq_from_slice
+  {a: ChoiceEquality}
+ `{Default (T (a))}
+  (input: (T (seq a)))
+  (start_fin: uint_size '× uint_size)
+  : both0 ((seq a)) :=
+  lift_to_both (seq_from_slice input start_fin).
 
 Definition seq_from_slice_range
   {a: ChoiceEquality}
@@ -1091,47 +1036,166 @@ Definition seq_set_exact_chunk {a : ChoiceEquality} `{H : Default (T (a))} :=
 Definition seq_get_remainder_chunk {a : ChoiceEquality} `{Default (T (a))} (l : T (seq a)) (chunk_size : T (uint_size)) : both0 ((seq a)) :=
   lift_to_both (seq_get_remainder_chunk l chunk_size).
 
-(**** Numeric operations *)
+Definition seq_xor_ {WS} (x y : seq (@int WS)) : both0 (seq (@int WS)) :=
+  lift_to_both (seq_xor_ x y).
 
-(* takes two nseq's and joins them using a function op : a -> a -> a *)
-Definition array_join_map
-  {a: ChoiceEquality}
- `{Default (T (a))}
-  {len: nat}
-  (op: (T (a)) -> (T (a)) -> (T (a)))
-  (s1: (T (nseq a len)))
-  (s2 : (T (nseq a len))) : both0 ((nseq a len)) :=
-  lift_to_both (array_join_map op s1 s2).
-
-(* Infix "array_xor" := (array_join_map xor) (at level 33) : hacspec_scope. *)
-(* Infix "array_add" := (array_join_map add) (at level 33) : hacspec_scope. *)
-(* Infix "array_minus" := (array_join_map sub) (at level 33) : hacspec_scope. *)
-(* Infix "array_mul" := (array_join_map mul) (at level 33) : hacspec_scope. *)
-(* Infix "array_div" := (array_join_map divs) (at level 33) : hacspec_scope. *)
-(* Infix "array_or" := (array_join_map or) (at level 33) : hacspec_scope. *)
-(* Infix "array_and" := (array_join_map and) (at level 33) : hacspec_scope. *)
-
-
-Fixpoint array_eq_
-  {a: ChoiceEquality}
-  {len: nat}
-  (eq: (T (a)) -> (T (a)) -> bool)
-  (s1: (T (nseq a len)))
-  (s2 : (T (nseq a len)))
-  {struct len}
-  : bool.
-Proof.
-  destruct len ; cbn in *.
-  - exact  true.
-  - destruct (getm s1 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s | _].
-    + destruct (getm s2 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s0 | _].
-      * exact (eq s s0).
-      * exact false.
-    + exact false.
-Defined.
+Definition seq_truncate {a} (x : seq a) (n : nat) : both0 (seq a) :=
+  lift_to_both (seq_truncate x n).
 
 End Seqs.
+Infix "seq_xor" := seq_xor_ (at level 33) : hacspec_scope.
 
+Section Arrays.
+  (**** types *)
+
+  (***** prelude.rs *)
+  Definition uint128_word_t : ChoiceEquality := nseq uint8 16.
+  Definition uint64_word_t : ChoiceEquality := nseq uint8 8.
+  Definition uint32_word_t : ChoiceEquality := nseq uint8 4.
+  Definition uint16_word_t : ChoiceEquality := nseq uint8 2.
+
+  (**** Array manipulation *)
+  Definition array_new_ {A: ChoiceEquality} (init:T A) `(len: nat) :
+    both0 ((nseq A len)) :=
+    lift_to_both (array_new_ init len).
+
+  Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : both0 (A) :=
+    lift_to_both (array_index s i).
+
+  Definition array_upd {A: ChoiceEquality} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) (new_v: T A) : both0 ((nseq A len)) :=
+    lift_to_both (array_upd s i new_v).
+
+  (* substitutes a sequence (seq) into an array (nseq), given index interval  *)
+  Definition update_sub {A : ChoiceEquality} {len slen} `{Default (T A)} (v : T (nseq A len)) (i : nat) (n : nat) (sub : T (nseq A slen)) : both0 ((nseq A len)) :=
+    lift_to_both (update_sub v i n sub).
+
+  Definition array_from_list
+             (A: ChoiceEquality)
+             (l: list (T A))
+    : both0 (nseq A (length l)) := lift_to_both (array_from_list A l).
+
+  Definition array_from_seq   {a: ChoiceEquality}
+             `{Default (T a)}
+             (out_len:nat)
+             (input: T (seq a))
+    : both0 (nseq a out_len) :=
+    lift_to_both (array_from_seq out_len input). (*  : T (nseq a out_len) *)
+
+  Definition array_to_seq {A : ChoiceEquality} {n} (f : nseq A n) : both0 (seq _) :=
+    @lift_to_both (seq A) _ _ (array_to_seq f).
+
+  Definition array_from_slice
+             {a: ChoiceEquality}
+             `{Default (T a)}
+             (default_value: (T a))
+             (out_len: nat)
+             (input: T (seq a))
+             (start: uint_size)
+             (slice_len: uint_size)  : both0 ((nseq a out_len)) :=
+    lift_to_both (array_from_slice default_value out_len input (from_uint_size start) (from_uint_size slice_len)).
+
+  Definition array_slice
+             {a: ChoiceEquality}
+             `{Default (T a)}
+             (input: T (seq a))
+             (start: nat)
+             (slice_len: nat)
+    : both0 ((nseq a slice_len)) :=
+    lift_to_both (array_slice input start slice_len).
+
+  Definition array_from_slice_range
+             {a: ChoiceEquality}
+             `{Default (T a)}
+             (default_value: T a)
+             (out_len: nat)
+             (input: T (seq a))
+             (start_fin: (uint_size '× uint_size))
+    : both0 ((nseq a out_len)) :=
+    lift_to_both (array_from_slice_range default_value out_len input start_fin).
+
+  Definition array_slice_range
+             {a: ChoiceEquality}
+             `{Default (T a)}
+             {len : nat}
+             (input: T (nseq a len))
+             (start_fin:(uint_size '× uint_size))
+    : both0 ((seq a)) :=
+    lift_to_both (array_slice_range input start_fin).
+
+  Definition array_update
+             {a: ChoiceEquality}
+             `{Default (T a)}
+             {len: nat}
+             (s: T (nseq a len))
+             (start : uint_size)
+             (start_s: T (seq a))
+    : both0 ((nseq a len)) :=
+    lift_to_both (array_update s start start_s).
+
+  Definition array_update_start
+             {a: ChoiceEquality}
+             `{Default (T a)}
+             {len: nat}
+             (s: T (nseq a len))
+             (start_s: T (seq a))
+    : both0 ((nseq a len)) :=
+    lift_to_both (array_update_start s start_s).
+
+  Definition array_len  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) : both0 (uint_size) := lift_to_both (array_len s).
+  (* May also come up as 'length' instead of 'len' *)
+  Definition array_length  {a: ChoiceEquality} {len: nat} (s: T (nseq a len)) : both0 (uint_size) := lift_to_both (array_length s).
+
+  Definition array_update_slice
+             {a : ChoiceEquality}
+             `{Default (T (a))}
+             {l : nat}
+             (out: (T (nseq a l)))
+             (start_out: uint_size)
+             (input: (T (seq a)))
+             (start_in: uint_size)
+             (len: uint_size)
+    : both0 ((nseq a _)) :=
+    lift_to_both (array_update_slice (l := l) out start_out input start_in len).
+
+  (**** Numeric operations *)
+
+  (* takes two nseq's and joins them using a function op : a -> a -> a *)
+  Definition array_join_map
+             {a: ChoiceEquality}
+             `{Default (T (a))}
+             {len: nat}
+             (op: (T (a)) -> (T (a)) -> (T (a)))
+             (s1: (T (nseq a len)))
+             (s2 : (T (nseq a len))) : both0 ((nseq a len)) :=
+    lift_to_both (array_join_map op s1 s2).
+    
+  Fixpoint array_eq_
+           {a: ChoiceEquality}
+           {len: nat}
+           (eq: (T (a)) -> (T (a)) -> bool)
+           (s1: (T (nseq a len)))
+           (s2 : (T (nseq a len)))
+           {struct len}
+    : bool.
+  Proof.
+    destruct len ; cbn in *.
+    - exact  true.
+    - destruct (getm s1 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s | ].
+      + destruct (getm s2 (fintype.Ordinal (m := len) (ssrnat.ltnSn _))) as [s0 | ].
+        * exact (eq s s0).
+        * exact false.
+      + exact false.
+  Defined.
+
+End Arrays.
+
+Infix "array_xor" := (array_join_map int_xor) (at level 33) : hacspec_scope.
+Infix "array_add" := (array_join_map int_add) (at level 33) : hacspec_scope.
+Infix "array_minus" := (array_join_map int_sub) (at level 33) : hacspec_scope.
+Infix "array_mul" := (array_join_map int_mul) (at level 33) : hacspec_scope.
+Infix "array_div" := (array_join_map int_div) (at level 33) : hacspec_scope.
+Infix "array_or" := (array_join_map int_or) (at level 33) : hacspec_scope.
+Infix "array_and" := (array_join_map int_and) (at level 33) : hacspec_scope.
 
 Infix "array_eq" := (array_eq_ eq) (at level 33) : hacspec_scope.
 Infix "array_neq" := (fun s1 s2 => negb (array_eq_ eq s1 s2)) (at level 33) : hacspec_scope.
@@ -1166,10 +1230,10 @@ Definition u128_from_be_bytes (n : T (nseq int8 16)) : both0 ((int128)) := lift_
 
 Section Todosection.
 
-Definition nat_mod_equal {p} (a b : nat_mod p) : bool :=
-  @eqtype.eq_op (ordinal_eqType (S (Init.Nat.pred (Z.to_nat p)))) a b.
+Definition nat_mod_equal {p} (a b : nat_mod p) : both0 bool_ChoiceEquality :=
+  lift_to_both (@eqtype.eq_op (ordinal_eqType (S (Init.Nat.pred (Z.to_nat p)))) a b : bool_ChoiceEquality).
 
-Definition nat_mod_equal_reflect {p} {a b} : Bool.reflect (a = b) (@nat_mod_equal p a b) :=
+Definition nat_mod_equal_reflect {p} {a b} : Bool.reflect (a = b) (is_pure (@nat_mod_equal p a b)) :=
   @eqtype.eqP (ordinal_eqType (S (Init.Nat.pred (Z.to_nat p)))) a b.
 
 Definition nat_mod_zero {p} : both0 ((nat_mod p)) := lift_to_both (nat_mod_zero).
@@ -1192,7 +1256,8 @@ Definition nat_mod_exp_def {p : Z} (a:nat_mod p) (n : nat) : both0 (nat_mod p) :
 
 Definition nat_mod_exp {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
 Definition nat_mod_pow {WS} {p} a n := @nat_mod_exp_def p a (Z.to_nat (@unsigned WS n)).
-Definition nat_mod_pow_self {p} a n := @nat_mod_exp_def p a (Z.to_nat (from_uint_size n)).
+Definition nat_mod_pow_felem {p} (a n : nat_mod p) := @nat_mod_exp_def p a (Z.to_nat (nat_of_ord n)).
+Definition nat_mod_pow_self {p} (a n : nat_mod p) := nat_mod_pow_felem a n.
 
 Close Scope nat_scope.
 
@@ -1214,13 +1279,17 @@ Definition nat_get_mod_bit {p} (a : nat_mod p) (i : uint_size) : both0 bool_Choi
 Definition nat_mod_get_bit {p} (a : nat_mod p) n : both0 (nat_mod p) :=
   lift_to_both (nat_mod_get_bit a n).
 
-Axiom array_declassify_eq : forall  {A l}, nseq A l -> nseq A l -> both0 bool_ChoiceEquality.
-Axiom array_to_le_uint32s : forall {A l}, nseq A l -> both0 (nseq uint32 l).
-Axiom array_to_be_uint32s : forall {l}, nseq uint8 l -> both0 (nseq uint32 (l/4)).
-Axiom array_to_le_bytes : forall {A l}, nseq A l -> both0 (seq uint8).
-Axiom array_to_be_bytes : forall {A l}, nseq A l -> both0 (seq uint8).
-Axiom nat_mod_from_byte_seq_le : forall  {A n}, seq A -> both0 (nat_mod n).
-Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> both0 (uint_size).
+Definition array_declassify_eq {A l} (x : nseq A l) (y : nseq A l) : both0 bool_ChoiceEquality := lift_to_both0 (array_declassify_eq x y).
+Definition array_to_le_uint32s {A l} (x : nseq A l) : both0 (seq uint32) (* (l/4) *) := lift_to_both0 (array_to_le_uint32s x).
+Definition array_to_be_uint32s {l} (x : nseq uint8 l) : both0 (seq uint32) := lift_to_both0 (array_to_be_uint32s x).  (* (l/4) *)
+Definition array_to_le_uint64s {A l} (x : nseq A l) : both0 (seq uint64) := lift_to_both0 (array_to_le_uint64s x).  (* (l/8) *)
+Definition array_to_be_uint64s {l} (x : nseq uint8 l) : both0 (seq uint64) := lift_to_both0 (array_to_be_uint64s x).  (* (l/8) *)
+Definition array_to_le_uint128s {A l} (x : nseq A l) : both0 (seq uint128) := lift_to_both0 (array_to_le_uint128s x).  (* (l/16) *)
+Definition array_to_be_uint128s {l} (x : nseq uint8 l) : both0 (seq uint128) := lift_to_both0 (array_to_be_uint128s x).  (* (l/16) *)
+Definition array_to_le_bytes {A l} (x : nseq A l) : both0 (seq uint8) := lift_to_both0 (array_to_le_bytes x).
+Definition array_to_be_bytes {A l} (x : nseq A l) : both0 (seq uint8) := lift_to_both0 (array_to_be_bytes x).
+Definition nat_mod_from_byte_seq_le {A n} (x : seq A) : both0 (nat_mod n) := lift_to_both0 (nat_mod_from_byte_seq_le x).
+Definition most_significant_bit {m} (x : nat_mod m) (n : uint_size) : both0 (uint_size) := lift_to_both0 (most_significant_bit x n).
 
 
 (* We assume 2^x < m *)
@@ -1235,75 +1304,7 @@ Infix "*%" := nat_mod_mul (at level 33) : hacspec_scope.
 Infix "-%" := nat_mod_sub (at level 33) : hacspec_scope.
 Infix "/%" := nat_mod_div (at level 33) : hacspec_scope.
 
-Section Casting.
-
-  (* Type casts, as defined in Section 4.5 in https://arxiv.org/pdf/1106.3448.pdf *)
-  Class Cast A B := cast : A -> B.
-
-  Arguments cast {_} _ {_}.
-
-  Notation "' x" := (cast _ x) (at level 20) : hacspec_scope.
-
-  (* Casting to self is always possible *)
-  Global Instance cast_self {A} : Cast A A := {
-    cast a := a
-  }.
-
-  Global Instance cast_transitive {A B C} `{Hab: Cast A B} `{Hbc: Cast B C} : Cast A C := {
-    cast a := Hbc (Hab a)
-  }.
-
-  Global Instance cast_prod {A B C D} `{Cast A B} `{Cast C D} : Cast (A * C) (B * D) := {
-    cast '(a, c) := (cast _ a, cast _ c)
-  }.
-
-  Global Instance cast_option {A B} `{Cast A B} : Cast (option A) (option B) := {
-    cast a := match a with Some a => Some (cast _ a) | None => None end
-  }.
-
-  Global Instance cast_option_b {A B} `{Cast A B} : Cast A (option B) := {
-    cast a := Some (cast _ a)
-  }.
-
-  (* Global Instances for common types *)
-
-  Global Instance cast_nat_to_N : Cast nat N := {
-    cast := N.of_nat
-  }.
-
-  Global Instance cast_N_to_Z : Cast N Z := {
-    cast := Z.of_N
-  }.
-
-  Global Instance cast_Z_to_int {wsize} : Cast Z (@int wsize) := {
-    cast n := repr n
-  }.
-
-  Global Instance cast_natmod_to_Z {p} : Cast (nat_mod p) Z := {
-    cast n := Z.of_nat (nat_of_ord n)
-  }.
-
-  (* Note: should be aware of typeclass resolution with int/uint since they are just aliases of each other currently *)
-  Global Instance cast_int8_to_uint32 : Cast int8 uint32 := {
-    cast n := repr (unsigned n)
-  }.
-  Global Instance cast_int8_to_int32 : Cast int8 int32 := {
-    cast n := repr (signed n)
-  }.
-
-  Global Instance cast_uint8_to_uint32 : Cast uint8 uint32 := {
-    cast n := repr (unsigned n)
-  }.
-
-  Global Instance cast_int_to_nat `{WS : wsize} : Cast int nat := {
-    cast n := Z.to_nat (@signed WS n)
-  }.
-
-  Close Scope hacspec_scope.
-End Casting.
-
-
-Global Arguments pair {_ _} & _ _.
+(* Global Arguments pair {_ _} & _ _. *)
 (* Global Arguments id {_} & _. *)
 
 
@@ -1311,41 +1312,41 @@ Global Arguments pair {_ _} & _ _.
 
 Section TodoSection2.
 
-Definition uint128_from_usize (n : uint_size) : int128 := repr (unsigned n).
-Definition uint64_from_usize (n : uint_size) : int64 := repr (unsigned n).
-Definition uint32_from_usize (n : uint_size) : int32 := repr (unsigned n).
-Definition uint16_from_usize (n : uint_size) : int16 := repr (unsigned n).
-Definition uint8_from_usize (n : uint_size) : int8 := repr (unsigned n).
+Definition uint128_from_usize (n : uint_size) : both0 int128 := lift_to_both (repr (unsigned n)).
+Definition uint64_from_usize (n : uint_size) : both0 int64 := lift_to_both (repr (unsigned n)).
+Definition uint32_from_usize (n : uint_size) : both0 int32 := lift_to_both (repr (unsigned n)).
+Definition uint16_from_usize (n : uint_size) : both0 int16 := lift_to_both (repr (unsigned n)).
+Definition uint8_from_usize (n : uint_size) : both0 int8 := lift_to_both (repr (unsigned n)).
 
-Definition uint128_from_uint8 (n : int8) : int128 := repr (unsigned n).
-Definition uint64_from_uint8 (n : int8) : int64 := repr (unsigned n).
-Definition uint32_from_uint8 (n : int8) : int32 := repr (unsigned n).
-Definition uint16_from_uint8 (n : int8) : int16 := repr (unsigned n).
-Definition usize_from_uint8 (n : int8) : uint_size := repr (unsigned n).
+Definition uint128_from_uint8 (n : int8) : both0 int128 := lift_to_both (repr (unsigned n)).
+Definition uint64_from_uint8 (n : int8) : both0 int64 := lift_to_both (repr (unsigned n)).
+Definition uint32_from_uint8 (n : int8) : both0 int32 := lift_to_both (repr (unsigned n)).
+Definition uint16_from_uint8 (n : int8) : both0 int16 := lift_to_both (repr (unsigned n)).
+Definition usize_from_uint8 (n : int8) : both0 uint_size := lift_to_both (repr (unsigned n)).
 
-Definition uint128_from_uint16 (n : int16) : int128 := repr (unsigned n).
-Definition uint64_from_uint16 (n : int16) : int64 := repr (unsigned n).
-Definition uint32_from_uint16 (n : int16) : int32 := repr (unsigned n).
-Definition uint8_from_uint16 (n : int16) : int8 := repr (unsigned n).
-Definition usize_from_uint16 (n : int16) : uint_size := repr (unsigned n).
+Definition uint128_from_uint16 (n : int16) : both0 int128 := lift_to_both (repr (unsigned n)).
+Definition uint64_from_uint16 (n : int16) : both0 int64 := lift_to_both (repr (unsigned n)).
+Definition uint32_from_uint16 (n : int16) : both0 int32 := lift_to_both (repr (unsigned n)).
+Definition uint8_from_uint16 (n : int16) : both0 int8 := lift_to_both (repr (unsigned n)).
+Definition usize_from_uint16 (n : int16) : both0 uint_size := lift_to_both (repr (unsigned n)).
 
-Definition uint128_from_uint32 (n : int32) : int128 := repr (unsigned n).
-Definition uint64_from_uint32 (n : int32) : int64 := repr (unsigned n).
-Definition uint16_from_uint32 (n : int32) : int16 := repr (unsigned n).
-Definition uint8_from_uint32 (n : int32) : int8 := repr (unsigned n).
-Definition usize_from_uint32 (n : int32) : uint_size := repr (unsigned n).
+Definition uint128_from_uint32 (n : int32) : both0 int128 := lift_to_both (repr (unsigned n)).
+Definition uint64_from_uint32 (n : int32) : both0 int64 := lift_to_both (repr (unsigned n)).
+Definition uint16_from_uint32 (n : int32) : both0 int16 := lift_to_both (repr (unsigned n)).
+Definition uint8_from_uint32 (n : int32) : both0 int8 := lift_to_both (repr (unsigned n)).
+Definition usize_from_uint32 (n : int32) : both0 uint_size := lift_to_both (repr (unsigned n)).
 
-Definition uint128_from_uint64 (n : int64) : int128 := repr (unsigned n).
-Definition uint32_from_uint64 (n : int64) : int32 := repr (unsigned n).
-Definition uint16_from_uint64 (n : int64) : int16 := repr (unsigned n).
-Definition uint8_from_uint64 (n : int64) : int8 := repr (unsigned n).
-Definition usize_from_uint64 (n : int64) : uint_size := repr (unsigned n).
+Definition uint128_from_uint64 (n : int64) : both0 int128 := lift_to_both (repr (unsigned n)).
+Definition uint32_from_uint64 (n : int64) : both0 int32 := lift_to_both (repr (unsigned n)).
+Definition uint16_from_uint64 (n : int64) : both0 int16 := lift_to_both (repr (unsigned n)).
+Definition uint8_from_uint64 (n : int64) : both0 int8 := lift_to_both (repr (unsigned n)).
+Definition usize_from_uint64 (n : int64) : both0 uint_size := lift_to_both (repr (unsigned n)).
 
-Definition uint64_from_uint128 (n : int128) : int64 := repr (unsigned n).
-Definition uint32_from_uint128 (n : int128) : int32 := repr (unsigned n).
-Definition uint16_from_uint128 (n : int128) : int16 := repr (unsigned n).
-Definition uint8_from_uint128 (n : int128) : int8 := repr (unsigned n).
-Definition usize_from_uint128 (n : int128) : uint_size := repr (unsigned n).
+Definition uint64_from_uint128 (n : int128) : both0 int64 := lift_to_both (repr (unsigned n)).
+Definition uint32_from_uint128 (n : int128) : both0 int32 := lift_to_both (repr (unsigned n)).
+Definition uint16_from_uint128 (n : int128) : both0 int16 := lift_to_both (repr (unsigned n)).
+Definition uint8_from_uint128 (n : int128) : both0 int8 := lift_to_both (repr (unsigned n)).
+Definition usize_from_uint128 (n : int128) : both0 uint_size := lift_to_both (repr (unsigned n)).
 
 
 (* Comparisons, boolean equality, and notation *)
@@ -1358,35 +1359,29 @@ Global Instance int_eqdec `{WS : wsize}: EqDec (@int WS) := {
 Global Instance int_comparable `{WS : wsize} : Comparable (@int WS) :=
     eq_dec_lt_Comparable (wlt Unsigned).
 
-Definition uint8_equal : int8 -> int8 -> bool := eqb.
+Definition uint8_equal (x y : int8) : both0 bool_ChoiceEquality := lift_to_both (eqb x y : bool_ChoiceEquality).
 
 (* Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := nat_of_ord a. *)
 
 Theorem nat_mod_eqb_spec : forall {p} (a b : nat_mod p),
-    nat_mod_equal a b = true <-> a = b.
+    is_pure (nat_mod_equal a b) = true <-> a = b.
 Proof.
   symmetry ; apply (ssrbool.rwP nat_mod_equal_reflect).
 Qed.
 
 Global Instance nat_mod_eqdec {p} : EqDec (nat_mod p) := {
-  eqb a b := nat_mod_equal a b;
+  eqb a b := is_pure (nat_mod_equal a b);
   eqb_leibniz := nat_mod_eqb_spec;
 }.
 
 Global Instance nat_mod_comparable `{p : Z} : Comparable (nat_mod p) :=
   eq_dec_lt_Comparable (@order.Order.lt order.Order.OrdinalOrder.ord_display (order.Order.OrdinalOrder.porderType _)).
 
-Fixpoint nat_mod_rem_aux {n : Z} (a:nat_mod n) (b:nat_mod n) (f : nat) {struct f} : nat_mod n :=
-  match f with
-  | O => a
-  | S f' =>
-      if geb a b
-      then nat_mod_rem_aux (nat_mod_sub a b) b f'
-      else a
-  end.
+Definition nat_mod_rem {n : Z} (a:nat_mod n) (b:nat_mod n) : both0 (nat_mod n) :=
+  lift_to_both (nat_mod_rem a b).
 
 
-(* Infix "rem" := nat_mod_rem (at level 33) : hacspec_scope. *)
+Infix "rem" := nat_mod_rem (at level 33) : hacspec_scope.
 
 Global Instance bool_eqdec : EqDec bool := {
   eqb := Bool.eqb;
@@ -1516,26 +1511,39 @@ Definition result_unwrap_safe {a b} (x : result b a) `{match x with inl _ => Tru
   lift_to_both (result_unwrap_safe x (H := H)).
 
 Module ChoiceEqualityMonad.
-    
-  Class BindCode M  :=
+
+  Class BindCode (M : ChoiceEquality -> ChoiceEquality) `{mnd : @ChoiceEqualityMonad.CEMonad M}  :=
     { bind_code [L : {fset Location}] {I} {A B : ChoiceEquality} (x : code L I (M A)) (f : A -> code L I (M B)) : code L I (M B) }.
 
-  Class BindBoth M `{@ChoiceEqualityMonad.CEMonad M} `{H_bind_code : @BindCode M} :=
+  Class BindBoth (M : ChoiceEquality -> ChoiceEquality) `{mnd : @ChoiceEqualityMonad.CEMonad M} `{H_bind_code : @BindCode M mnd} :=
      {
        code_eq : forall [L : {fset Location}] {I} {A B : ChoiceEquality} (x : both L I (M A)) (f : A -> both L I (M B)), ⊢ ⦃ true_precond ⦄
-                     bind_code x (fun x0 : A => f x0) 
+                     bind_code x (fun x0 : A => f x0)
                      ≈
-                     ret (y m(M) ⇠ x ;; f y) 
+                     ret (y m(M) ⇠ x ;; f y)
                      ⦃ pre_to_post_ret true_precond (T_ct (y m(M) ⇠ x ;; f y)) ⦄ ;
-       bind_both [L1 L2 : {fset Location}] {I} {A B : ChoiceEquality} (x : both L1 I (M A)) (f : A -> both L2 I (M B)) `{H_incl : List.incl L1 L2} :=
+       bind_both [L : {fset Location}] {I} {A B : ChoiceEquality} (x : both L I (M A)) (f : A -> both L I (M B))  :=
        {|
-         is_state := @bind_code M _ L2 I A B (lift_scope (H_incl := H_incl) x) f ;
+         is_state := bind_code x f ;
          is_pure := y m(M) ⇠ x ;; f y ;
-         code_eq_proof_statement := code_eq (lift_scope (H_incl := H_incl) x) f
+         code_eq_proof_statement := code_eq x f
        |}
     }.
-    
-  Program Instance result_bind_code C : BindCode (result C) :=
+
+  Theorem bind_both_proj_code : forall  `{H_bind_code : BindCode} `{@BindBoth M mnd H_bind_code} {L : {fset Location}}  {I}  {A B : ChoiceEquality} (x : both L I (M A)) (y : code L I (M A)) (f : A -> both L I (M B)) (g : A -> code L I (M B)),
+      (prog (is_state x) = prog y) ->
+      (forall v, prog (is_state (f v)) = prog (g v)) ->
+      is_state (ChoiceEqualityMonad.bind_both x f) = ChoiceEqualityMonad.bind_code  (BindCode := H_bind_code) y g.
+    intros.
+    unfold bind_both.
+    unfold is_state at 1, lift_scope, is_state at 1.
+    f_equal.
+    apply code_ext. apply H0.
+    apply Coq.Logic.FunctionalExtensionality.functional_extensionality. intros.
+    apply code_ext. apply H1.
+  Qed.
+
+  #[global] Program Instance result_bind_code C : BindCode (result C) :=
     {| bind_code L I A B x f :=
       {code t_x ← x ;;
        match ct_T t_x with
@@ -1552,7 +1560,7 @@ Module ChoiceEqualityMonad.
     - apply valid_ret.
   Qed.
 
-  Program Instance result_bind_both {C} : BindBoth (result C).
+  #[global] Program Instance result_bind_both C : BindBoth (result C).
   Next Obligation.
     intros.
 
@@ -1564,9 +1572,9 @@ Module ChoiceEqualityMonad.
     destruct ct_T eqn:xo ; rewrite ct_T_id in xo ; rewrite xo ; clear xo.
     - exact (code_eq_proof_statement (f t)).
     - now apply r_ret.
-  Qed.    
-     
-  Program Instance option_bind_code : BindCode (option_ChoiceEquality) :=
+  Qed.
+
+  #[global] Program Instance option_bind_code : BindCode (option_ChoiceEquality) :=
     {| bind_code L I A B x f :=
       {code t_x ← x ;;
        match ct_T t_x with
@@ -1583,7 +1591,7 @@ Module ChoiceEqualityMonad.
     - apply valid_ret.
   Qed.
 
-  Program Instance option_bind_both : BindBoth (option_ChoiceEquality).
+  #[global] Program Instance option_bind_both : BindBoth (option_ChoiceEquality).
   Next Obligation.
     intros.
 
@@ -1595,16 +1603,9 @@ Module ChoiceEqualityMonad.
     destruct ct_T eqn:xo ; rewrite ct_T_id in xo ; rewrite xo ; clear xo.
     - exact (code_eq_proof_statement (f t)).
     - now apply r_ret.
-  Qed.    
-  
+  Qed.
+
 End ChoiceEqualityMonad.
-
-Notation "'letbnd(' M ')' x ':=' y 'in' f" := (ChoiceEqualityMonad.bind_both (H_bind_code := M) (H_incl := _) y (fun x => f)) (at level 100, x pattern).
-Notation "'letbnd(' M ')' ' x ':=' y 'in' f" := (ChoiceEqualityMonad.bind_both (H_bind_code := M) (H_incl := _) y (fun x => f)) (at level 100, x pattern).
-
-Notation "'bnd(' M ',' A ',' B ',' L ')' x '⇠' y 'in' f" := (ChoiceEqualityMonad.bind_code (BindCode := M) (A := A) (B := B) (L := L) y (fun x => f)) (at level 100, x pattern).
-
-Notation "'bnd(' M ',' A ',' B ',' L ')' ' x '⇠' y 'in' f" := (ChoiceEqualityMonad.bind_code (BindCode := M) (A := A) (B := B) (L := L) y (fun x => f)) (at level 100, x pattern).
 
 (*** Result *)
 
@@ -1620,10 +1621,157 @@ Arguments Err {_ _}.
 
 (*** Notation *)
 
-Program Definition if_bind_code {A B : ChoiceEquality} `{ChoiceEqualityMonad.CEMonad} `{H_bind_code : ChoiceEqualityMonad.BindCode M} (b : bool_ChoiceEquality) {Lx Ly L2 : {fset Location}}  `{it1 : List.incl Lx L2} `{it2 : List.incl Ly L2} {I} (x : code Lx I (M A)) (y : code Ly I (M A)) : (A -> code L2 I (M B)) -> code L2 I (M B) :=
-  ChoiceEqualityMonad.bind_code (if b
-                                 then lift_code_scope (H_incl := it1) x
-                                 else lift_code_scope (H_incl := it2) y).
+Program Definition let_both {L  : {fset Location}} {I} {A B : ChoiceEquality}
+        (x : both L I A)
+        (f : A -> both L I B)
+  : both L I B :=
+  {|
+    is_state := {code temp ← is_state x ;; is_state (f (ct_T temp))} ;
+      is_pure := is_pure (f (is_pure x)) ;
+  |}.
+Next Obligation.
+  intros.
+  cbn.
+  replace (ret _) with (temp ← ret (is_pure x) ;; ret (T_ct (is_pure (f (ct_T temp))))) by (cbn ; now rewrite ct_T_id).
+
+  eapply r_bind.
+  apply x.
+
+  intros.
+  apply rpre_hypothesis_rule.
+  intros ? ? [[] []]. subst.
+  eapply rpre_weaken_rule.
+  rewrite ct_T_id.
+  apply f.
+  reflexivity.
+Qed.
+
+Notation "'letb' x ':=' y 'in' f" :=
+  (let_both (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+Notation "'letb' ''' x ':=' y 'in' f" :=
+  (let_both (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+
+Definition ChoiceEqualityLocation := ∑ (t : ChoiceEquality), nat.
+Definition CE_loc_to_loc := 
+  ((fun '(k ; n) => (ct k; n)) : ChoiceEqualityLocation -> Location).
+Notation "'CE_loc_to_CE'" := (@projT1 ChoiceEquality (fun _ => nat)).
+Coercion CE_loc_to_loc : ChoiceEqualityLocation >-> Location.
+(* Coercion CE_loc_to_CE : ChoiceEqualityLocation >-> ChoiceEquality. *)
+
+Definition let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality}
+           (x_loc : ChoiceEqualityLocation)
+           `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))}
+           (x : code L I (CE_loc_to_CE x_loc)) (f : (CE_loc_to_CE x_loc) -> code L I B) : code L I B :=
+  (let (A, n) as s
+   return (is_true (ssrbool.in_mem (let '(k; n) := s in (ct k; n)) (ssrbool.mem L)) ->
+           code L I (CE_loc_to_CE s) -> (CE_loc_to_CE s -> code L I B) -> code L I B) :=
+     x_loc in
+   fun (_ : is_true (ssrbool.in_mem (ct A; n) (ssrbool.mem L)))
+     (x : code L I (CE_loc_to_CE (A; n))) (f : CE_loc_to_CE (A; n) -> code L I B) =>
+   {code y ← x ;; #put (ct A; n) := y ;; f (ct_T y) }) H_in x f.
+
+Notation "'letmc' x 'loc(' ℓ ')' ':=' y 'in' f" :=
+  (let_mut_code ℓ (H_in := _) y (fun x => f x))
+    (at level 100, x pattern, right associativity).
+Notation "'letmc' ''' x 'loc(' ℓ ')' ':=' y 'in' f" :=
+  (let_mut_code ℓ (H_in := _) y (fun x => f x)) (at level 100, x pattern, right associativity).
+
+Program Definition let_mut_both {L : {fset Location}} {I} {B : ChoiceEquality}
+        (x_loc : ChoiceEqualityLocation) `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))} (x : both L I (CE_loc_to_CE x_loc)) (f : (CE_loc_to_CE x_loc) -> both L I B) : both L I B :=
+  {|
+    is_state := letmc temp loc( x_loc ) := x in f ;
+     is_pure := is_pure (f (is_pure x)) ;
+  |}.  
+Next Obligation.
+  intros.
+  cbn.
+  replace (ret _) with (temp ← ret (is_pure x) ;; ret (T_ct (is_pure (f (ct_T temp))))) by (cbn ; now rewrite ct_T_id).
+
+  destruct x_loc as [A n].
+  
+  eapply r_bind.
+  apply x.
+  intros.
+
+  apply rpre_hypothesis_rule.
+  intros ? ? [[] []]. subst.
+  eapply rpre_weaken_rule with (pre := true_precond).
+
+  apply better_r_put_lhs.
+
+  rewrite ct_T_id.
+  eapply rpre_weaken_rule with (pre := true_precond).
+  apply f.
+  reflexivity.
+  reflexivity.
+Qed.
+
+Notation "'letbm' x 'loc(' ℓ ')' ':=' y 'in' f" :=
+  (let_mut_both ℓ (H_in := _) (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 200, x pattern, right associativity, format "'letbm'  x  'loc(' ℓ ')'  ':='  y  'in' '//' f").
+Notation "'letbm' ''' x 'loc(' ℓ ')' ':=' y 'in' f" :=
+  (let_mut_both ℓ (H_in := _) (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 200, x pattern, right associativity, format "'letbm'  ''' x  'loc(' ℓ ')'  ':='  y  'in' '//' f").
+
+Notation "'bnd(' M ',' A ',' B ',' L ')' x '⇠' y 'in' f" := (ChoiceEqualityMonad.bind_code (BindCode := M) (A := A) (B := B) (L := L) (lift_code_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+Notation "'bnd(' M ',' A ',' B ',' L ')' ' x '⇠' y 'in' f" := (ChoiceEqualityMonad.bind_code (BindCode := M) (A := A) (B := B) (L := L) (lift_code_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+
+Notation "'letbnd(' M ')' x ':=' y 'in' f" := (ChoiceEqualityMonad.bind_both (BindBoth := M) (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+Notation "'letbnd(' M ')' ' x ':=' y 'in' f" := (ChoiceEqualityMonad.bind_both (BindBoth := M) (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+
+Program Definition bind_code_mut  {L : {fset Location}} {I} `{H_bind_code : ChoiceEqualityMonad.BindCode} {B : ChoiceEquality} (x_loc : ChoiceEqualityLocation) {A : ChoiceEquality} `{H_loc : M A = (CE_loc_to_CE x_loc)} `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))} (x : code L I (CE_loc_to_CE x_loc)) (f : A -> code L I (M B)) : code L I (M B) .
+Proof.
+  destruct x_loc as [? n]. 
+  cbn in *. subst.
+  refine ({code ChoiceEqualityMonad.bind_code x (fun temp => {code
+         #put (ct (M A) ; n) := T_ct (ChoiceEqualityMonad.ret temp) ;;
+                                f temp}) }).
+Defined.
+
+Notation "'bndm(' M ',' A ',' B ',' L ')' x 'loc(' ℓ ')'  '⇠' y 'in' f" := (bind_code_mut (H_bind_code := M) (A := A) (B := B) (L := L) (H_loc := eq_refl) ℓ y (fun x => f)) (at level 100, x pattern, right associativity).
+Notation "'bndm(' M ',' A ',' B ',' L ')' ' x 'loc(' ℓ ')'  '⇠' y 'in' f" := (bind_code_mut (H_bind_code := M) (A := A) (B := B) (L := L) (H_loc := eq_refl) ℓ y (fun x => f)) (at level 100, x pattern, right associativity).
+
+
+Definition bind_both_mut  {L : {fset Location}} {I} {A B : ChoiceEquality} (x_loc : ChoiceEqualityLocation) `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))} `{H_bind_both : ChoiceEqualityMonad.BindBoth} {H_loc : M A = (CE_loc_to_CE x_loc)} (x : both L I (CE_loc_to_CE x_loc)) (f : A -> both L I (M B)) : both L I (M B).
+Proof.
+  (* rewrite <- H_loc in *. clear H_loc. *)
+  destruct x_loc as [C n] eqn:x_loc_eq.
+  cbn in *.
+  rewrite <- H_loc in x , H_in.
+  refine {|
+    is_pure :=  'y m(M) ⇠ is_pure x ;; is_pure (f y);
+      is_state := bind_code_mut ((M A ; n) : ChoiceEqualityLocation ) (is_state x) (fun x => is_state (f x)) (H_in := H_in) (* (H_loc := ltac:(eq_refl)) *)
+    |}.
+
+  Unshelve.
+  2: apply eq_refl.
+
+  intros.
+  subst.
+
+  unfold bind_code_mut.
+  unfold eq_rect.
+  unfold prog.
+
+  refine (code_eq_proof_statement (@ChoiceEqualityMonad.bind_both _ _ _ H_bind_both L I A B x (fun temp => {| is_state := {code #put ((ct (M A); n) : Location) := ChoiceEqualityMonad.ret temp ;; f temp } |}))).
+  unfold prog.
+  apply better_r_put_lhs.
+  eapply rpre_weaken_rule with (pre := true_precond).  
+  apply (code_eq_proof_statement (f temp)).
+  easy. 
+Defined.
+
+Notation "'bndm(' M ',' A ',' B ',' L ')' x '⇠' y 'in' f" := (ChoiceEqualityMonad.bind_code (BindCode := M) (A := A) (B := B) (L := L) y (fun x => f)) (at level 100, x pattern, right associativity).
+Notation "'bndm(' M ',' A ',' B ',' L ')' ' x '⇠' y 'in' f" := (ChoiceEqualityMonad.bind_code (BindCode := M) (A := A) (B := B) (L := L) y (fun x => f)) (at level 100, x pattern, right associativity).
+
+Notation "'letbndm(' M ')' x ':=' y 'in' f" := (ChoiceEqualityMonad.bind_both (BindBoth := M) (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+Notation "'letbndm(' M ')' ' x ':=' y 'in' f" := (ChoiceEqualityMonad.bind_both (BindBoth := M) (lift_scope (H_loc_incl := _) (H_opsig_incl := _) y) (fun x => f)) (at level 100, x pattern, right associativity).
+
+
+
+(* Program Definition if_bind_code {A B : ChoiceEquality} `{H_bind_code : ChoiceEqualityMonad.BindCode} (b : bool_ChoiceEquality) {Lx Ly L2 : {fset Location}}  `{it1 : List.incl Lx L2} `{it2 : List.incl Ly L2} {I} (x : code Lx I (M A)) (y : code Ly I (M A)) : (A -> code L2 I (M B)) -> code L2 I (M B) := *)
+(*   ChoiceEqualityMonad.bind_code (if b *)
+(*                                  then lift_code_scope (H_incl := it1) x *)
+(*                                  else lift_code_scope (H_incl := it2) y). *)
+
 (* fun f => *)
 (*   bnd( M , A , B , L2 ) temp ⇠ *)
 (*      (if b *)
@@ -1631,29 +1779,143 @@ Program Definition if_bind_code {A B : ChoiceEquality} `{ChoiceEqualityMonad.CEM
 (*       else lift_code_scope (H_incl := it2) y) in *)
 (*   f temp *)
 
-Program Definition foldi_bind_code {A : ChoiceEquality} {L : {fset Location}} {I} `{ChoiceEqualityMonad.CEMonad} `{H_bind_code : ChoiceEqualityMonad.BindCode M} (a : uint_size) (b : uint_size)  (init : code (L) I (M A)) (f : uint_size -> A -> code (L) I (ct (M A)))  : code (L) I (M A) :=
+Program Definition foldi_bind_code' {A : ChoiceEquality} {L : {fset Location}} {I} `{H_bind_code : ChoiceEqualityMonad.BindCode} (a : uint_size) (b : uint_size)  (init : A) (f : uint_size -> A -> code (L) I (ct (M A)))  : code (L) I (M A) :=
   {code
-     t ← init ;;
    foldi
-     a b (ct_T t)
+     a b (ChoiceEqualityMonad.ret init)
      (fun x y =>
-        ChoiceEqualityMonad.bind_code          
+        ChoiceEqualityMonad.bind_code
           (lift_to_code y)
           (f x))
   }.
+
+Program Definition foldi_bind_code {A : ChoiceEquality} {L : {fset Location}} {I} `{H_bind_code : ChoiceEqualityMonad.BindCode} (lo : uint_size) (hi : uint_size)  (init : code (L) I (M A)) (f : uint_size -> A -> code (L) I (ct (M A)))  : code (L) I (M A) :=
+  {code
+     t ← init ;;
+   foldi lo hi (ct_T t)
+     (fun x y =>
+        ChoiceEqualityMonad.bind_code
+          (lift_to_code y)
+          (f x))
+  }.
+
+Program Definition foldi_both
+             {acc: ChoiceEquality}
+             (lo: T uint_size)
+             (hi: T uint_size) (* {lo <= hi} *)
+             (init: T acc)
+             {L}
+             {I}
+             (f: (T uint_size) -> T acc -> both L I acc)
+             (* `{(unsigned lo <= unsigned hi)%Z} *) : both L I acc :=
+  {|
+    is_pure := Hacspec_Lib_Pre.foldi lo hi init f ;
+    is_state := foldi lo hi init f
+  |}.
+Next Obligation.
+  intros.
+  unfold foldi_pre.
+  unfold Hacspec_Lib_Pre.foldi.
+
+  destruct ((_ - unsigned lo)%Z) ; [ apply r_ret ; easy | | apply r_ret ; easy ].
+
+  generalize dependent lo.
+  clear.
+  generalize dependent init.
+
+  induction (Pos.to_nat p) ; intros.
+  - cbn.
+    apply r_ret ; easy.
+  - rewrite <- foldi__move_S.
+    rewrite <- Hacspec_Lib_Pre.foldi__move_S.
+
+    set (b' := f lo init).
+
+    pose @r_bind_trans_both.
+    specialize r with (b := b').
+
+    pattern_both_fresh.
+    apply r.
+    subst H H0 H1. hnf.
+    rewrite ct_T_id.
+
+    apply IHn.
+Qed.
+
+Definition foldi_both'
+             {acc: ChoiceEquality}
+             {L1} {L2} {L}
+             {I1} {I2} {I}
+             (lo: both L1 I1 uint_size)
+             (hi: both L2 I2 uint_size) (* {lo <= hi} *)
+             (init: acc)
+             (f: (T uint_size) -> T acc -> both L I acc)
+  (* `{(unsigned lo <= unsigned hi)%Z} *) : both L I acc :=
+  foldi_both lo hi init f.
+
+Program Definition foldi_bind_both' {A : ChoiceEquality} {L1 L2 L : {fset Location}} {I1 I2 I}  `{ChoiceEqualityMonad.BindBoth} (lo : both L1 I1 uint_size) (hi : both L2 I2 uint_size) (init : A) (f : uint_size -> A -> both L I (M A))  : both L I (M A) :=
+  foldi_both lo hi (ChoiceEqualityMonad.ret init) (fun x y => ChoiceEqualityMonad.bind_both (lift_to_both y) (f x)).
+
+Program Definition foldi_bind_both {A : ChoiceEquality} {L : {fset Location}} {I}  `{H_bind_both : ChoiceEqualityMonad.BindBoth} (lo : uint_size) (hi : uint_size) (init : both L I (M A)) (f : uint_size -> A -> both L I (M A))  : both L I (M A) :=
+  let_both init (fun init' =>
+  foldi_both lo hi init' (fun x y => ChoiceEqualityMonad.bind_both (lift_to_both y) (f x))).
+
+Theorem foldi_bind_both_proj_code' : forall {A : ChoiceEquality} {L1 L2 L : {fset Location}} {I1 I2 I}  `{H_bind_both : ChoiceEqualityMonad.BindBoth} (lo : both L1 I1 uint_size) (hi : both L2 I2 uint_size) (init : A) (f_both : uint_size -> A -> both L I (M A)) (a : uint_size) (b : uint_size) (f_code : uint_size -> A -> code (L) I (ct (M A))),
+    (forall i x, is_state (f_both i x) = f_code i x) ->
+    is_pure lo = a -> is_pure hi = b ->
+    is_state (foldi_bind_both' lo hi init f_both) = foldi_bind_code' a b init f_code.
+Proof.
+  intros.
+  unfold foldi_bind_both'.
+  unfold foldi_bind_code'.
+
+  apply code_ext.
+
+  subst.
   
-(* Global Notation "'foldibnd' s 'to' e 'for' z '>>' f" := (foldi_bind_code s e (Ok z) f) (at level 50). *)
+  set ((fun (x0 : uint_size) (y : M A) => _)).
+  set ((fun (x0 : uint_size) (y : M A) => _)).
+  enough (y0 = y).
+  + now rewrite H0. subst y y0 ; hnf.
+    apply functional_extensionality. intros.
+    apply functional_extensionality. intros.
+    cbn.
+    f_equal.
+    apply functional_extensionality. intros.
+    now rewrite H.
+Qed.
 
-(* Global Notation "'ifbnd' b 'then' x 'else' y '>>' f" := (if b then f x else f y) (at level 200). *)
-(* Global Notation "'ifbnd' b 'thenbnd' x 'else' y '>>' f" := (if b then (ChoiceEqualityMonad.bind_code x) f else f y) (at level 200). *)
-(* Global Notation "'ifbnd' b 'then' x 'elsebnd' y '>>' f" := (if b then f x else (ChoiceEqualityMonad.bind_code y) f) (at level 200). *)
-(* Global Notation "'ifbnd' b 'thenbnd' x 'elsebnd' y '>>' f" := (if b then ChoiceEqualityMonad.bind x f else ChoiceEqualityMonad.bind y f) (at level 200). *)
-
-
-
+Theorem foldi_bind_both_proj_code : forall {A : ChoiceEquality} {L : {fset Location}} {I}  `{H_bind_both : ChoiceEqualityMonad.BindBoth} (lo : uint_size) (hi : uint_size) (init_both : both L I (M A)) (f_both : uint_size -> A -> both L I (M A)) (init_code : code (L) I (M A)) (f_code : uint_size -> A -> code (L) I (ct (M A))),
+    is_state (init_both) = init_code ->
+    (forall i x, is_state (f_both i x) = f_code i x) ->
+    is_state (foldi_bind_both lo hi init_both f_both) = foldi_bind_code lo hi init_code f_code.
+Proof.
+  intros.
+  unfold foldi_bind_both.
+  (* unfold foldi_both. *)
+  unfold let_both.
+  unfold is_state at 1.
+  unfold foldi_bind_code.
+  apply code_ext.
+  unfold prog.
+  f_equal.
+  - now rewrite H.
+  - apply functional_extensionality. intros.
+    set ((fun (x0 : uint_size) (y : M A) => _)).
+    set ((fun (x0 : uint_size) (y : M A) => _)).
+    enough (y0 = y).
+    + now rewrite H1. subst y y0 ; hnf.
+      apply functional_extensionality. intros.
+      apply functional_extensionality. intros.
+      cbn.
+      f_equal.
+      apply functional_extensionality. intros.
+      symmetry.
+      apply H0.
+Qed.      
 
 Section TodoSection3.
-Axiom nat_mod_from_byte_seq_be : forall  {A n}, seq A -> nat_mod n.
+Definition nat_mod_from_byte_seq_be {A n} (x : seq A) : both0 (nat_mod n) := lift_to_both (nat_mod_from_byte_seq_be x).
 
 (*** Default *)
 
@@ -1711,7 +1973,7 @@ Lemma foldi_nat_both :
   ⊢ ⦃ true_precond ⦄
       @foldi_nat _ lo hi b v
   ≈
-  lift_to_both (L := L) (I := [interface]) (Hacspec_Lib_Pre.foldi_nat lo hi b v)
+  lift_to_both (L := L) (I := I) (Hacspec_Lib_Pre.foldi_nat lo hi b v)
   ⦃ pre_to_post_ret true_precond (T_ct (Hacspec_Lib_Pre.foldi_nat lo hi b v)) ⦄.
 Proof.
   intros.
@@ -1760,82 +2022,6 @@ Proof.
     apply IHn.
 Qed.
 
-Program Definition foldi_both 
-             {acc: ChoiceEquality}
-             (lo: T uint_size)
-             (hi: T uint_size) (* {lo <= hi} *)
-             (init: T acc)
-             {L}
-             {I}
-             (f: (T uint_size) -> T acc -> both L I acc)
-             (* `{(unsigned lo <= unsigned hi)%Z} *) : both L I acc :=
-  {|
-    is_pure := Hacspec_Lib_Pre.foldi lo hi init f ;
-    is_state := foldi lo hi init f
-  |}.
-Next Obligation.
-  intros.
-  unfold foldi_pre.
-  unfold Hacspec_Lib_Pre.foldi.
-
-  destruct ((_ - unsigned lo)%Z) ; [ apply r_ret ; easy | | apply r_ret ; easy ].
-
-  generalize dependent lo.
-  clear.
-  generalize dependent init.
-
-  induction (Pos.to_nat p) ; intros. 
-  - cbn.
-    apply r_ret ; easy.
-  - rewrite <- foldi__move_S.
-    rewrite <- Hacspec_Lib_Pre.foldi__move_S.
-
-    set (b' := f lo init).
-
-    pose @r_bind_trans_both.
-    specialize r with (b := b').
-
-    (repeat remove_T_ct
-   ; match goal with
-     | [ |- context [ prog (@is_state ?L ?I _ ?x) : both _ _ _ ] ] =>
-         let Hx := fresh in
-         set (Hx := x)
-         ; try replace (@is_pure _ _ _ _) with (@is_pure _ _ _ Hx) by reflexivity
-         ; match goal with
-           | [ |- context [ ⊢ ⦃ _ ⦄ bind _ ?fb ≈ ?os ⦃ _ ⦄ ] ] =>
-               let H := fresh in
-               set (H := os)
-               ; pattern (@is_pure L I _ Hx) in H
-               ; subst H
-               ; let Hf := fresh in
-                 set (Hf := fb)
-                 ; match goal with
-                   | [ |- context [ ⊢ ⦃ _ ⦄ _ ≈ ?gb _ ⦃ _ ⦄ ] ] =>
-                       let Hg := fresh in
-                       set (Hg := gb)
-                       ; apply (@r_bind_trans_both) with (b := Hx) (f := Hf) (g := Hg)
-                       ; subst Hf ; subst Hg ; intros ; hnf
-                   end
-           end
-     end).
-    intros.
-
-    rewrite ct_T_id.
-
-    apply IHn.
-Qed.  
-
-Definition foldi_both' 
-             {acc: ChoiceEquality}
-             {L1} {L2} {L}
-             {I}
-             (lo: both L1 I uint_size)
-             (hi: both L2 I uint_size) (* {lo <= hi} *)
-             (init: acc)
-             (f: (T uint_size) -> T acc -> both L I acc)
-  (* `{(unsigned lo <= unsigned hi)%Z} *) : both L I acc :=
-  foldi_both lo hi init f.
-
 Lemma foldi_as_both :
   forall {A : ChoiceEquality} {L I} lo hi
     (state : uint_size -> A -> code L I (ct A))
@@ -1869,19 +2055,11 @@ Definition for_loop_range
   | S i => for_loop (fun n => f (n + lo)) i
   end.
 
-Definition ChoiceEqualityLocation := ∑ (t : ChoiceEquality), nat.
-Definition CE_loc_to_loc :  ChoiceEqualityLocation -> Location :=
-  fun '(k ; n) => (ct k; n).
-Definition CE_loc_to_CE : ChoiceEqualityLocation -> ChoiceEquality :=
-  fun '(k ; n) => k.
-Coercion CE_loc_to_loc : ChoiceEqualityLocation >-> Location.
-Coercion CE_loc_to_CE : ChoiceEqualityLocation >-> ChoiceEquality.
-
 Fixpoint CE_loc_list_to_loc_list (l : list ChoiceEqualityLocation) : list Location :=
   match l with
   | (t :: ts) => (CE_loc_to_loc t :: CE_loc_list_to_loc_list ts)
   | [] => []
-  end.  
+  end.
 Definition CEfset := fun x => fset (CE_loc_list_to_loc_list x).
 
 Fixpoint list_types_ (l : list ChoiceEquality) (init : ChoiceEquality) : ChoiceEquality  :=
@@ -1890,7 +2068,7 @@ Fixpoint list_types_ (l : list ChoiceEquality) (init : ChoiceEquality) : ChoiceE
   | [] => init
   end.
 
-Fixpoint list_types (l : list ChoiceEquality) : ChoiceEquality :=
+Definition list_types (l : list ChoiceEquality) : ChoiceEquality :=
   match l with
   | [] => unit_ChoiceEquality
   | (t :: ts) => list_types_ ts t
@@ -1907,7 +2085,7 @@ Program Fixpoint vars_to_tuple (vars : list (∑ (t : ChoiceEquality), t)) {meas
   end.
 
 Fixpoint for_loop_return_ (ℓ : list ChoiceEqualityLocation) (vars : list (∑ (t : ChoiceEquality), t)) : raw_code (list_types (seq.cat (seq.map (fun '(x ; y) => x) vars) (seq.map (fun '(x ; y) => x) ℓ) )).
-  
+
   destruct ℓ as [ | l ls ].
   - rewrite seq.cats0.
     pose (ret (vars_to_tuple vars)).
@@ -1919,7 +2097,7 @@ Fixpoint for_loop_return_ (ℓ : list ChoiceEqualityLocation) (vars : list (∑ 
          end)
       in r by (apply functional_extensionality ; now intros []).
     apply r.
-  - apply (getr l).
+  - apply (getr (CE_loc_to_loc l)).
     intros x.
     destruct l.
     cbn in x.
@@ -1995,11 +2173,11 @@ Ltac pattern_foldi_both Hx Hf Hg :=
               set (Hg := gb)
           end
     end.
-    
+
 Ltac pattern_foldi_both_fresh :=
   let Hx := fresh in
   let Hf := fresh in
-  let Hg := fresh in       
+  let Hg := fresh in
   pattern_foldi_both Hx Hf Hg.
 
 Ltac progress_step_code :=
@@ -2020,7 +2198,7 @@ Ltac progress_step_code :=
   ||
   match goal with
   | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; ?a) ≈ ?b ⦃ _ ⦄ ]] =>
-      apply (better_r_put_lhs l x a b) 
+      apply (better_r_put_lhs l x a b)
   end
   ||
   (unfold lift_to_code ; apply r_ret)
@@ -2030,7 +2208,7 @@ Ltac progress_step_code :=
     match_foldi_both :=
     let Hx := fresh in
     let Hf := fresh in
-    let Hg := fresh in       
+    let Hg := fresh in
     pattern_foldi_both Hx Hf Hg
     ; try (apply (@r_bind_trans_as_both) with (f := Hf) (g := Hg))
     ; intros ; subst Hf ; subst Hg ; subst Hx ; hnf
@@ -2039,19 +2217,19 @@ Ltac progress_step_code :=
     step_code :=
       repeat (clear_bind || progress_step_code) ; try easy
         with
-        clear_bind := 
+        clear_bind :=
         (unfold lift_to_code ;
          match goal with
          | [ |- context [ bind ?y (fun x => ret (T_ct _)) ] ] =>
              let H := fresh in
              set (H := y)
-             
+
              ; rewrite bind_ret
              ; subst H
          | [ |- context [ bind ?y (fun x => ret _) ] ] =>
              let H := fresh in
              set (H := y)
-             
+
              ; rewrite bind_ret
              ; subst H
          end)
@@ -2061,7 +2239,7 @@ Ltac progress_step_code :=
           | [ |- context [ bind (ret (T_ct ?y)) (fun x => _) ] ] =>
               let H := fresh in
               set (H := y)
-              
+
               ; rewrite bind_rewrite
               ; subst H
           | [ |- context [ bind (ret ?y) (fun x => _) ] ] =>
@@ -2085,34 +2263,49 @@ Proof.
 Qed.
 
 
-Ltac ssprove_valid' :=
-  repeat (
-      (* let statement / array update *)
-      (apply valid_bind ; [apply valid_scheme ; apply prog_valid | intros])
-      || (apply valid_bind ; [valid_program | intros ; cbv zeta])
-      || (apply valid_bind ; [ssprove_valid' | intros ; destruct_choice_type_prod])
-      (* || (apply ChoiceEqualityMonad.bind_code)  *)
-      (* let mut statement / reassign *)
-      || (apply valid_putr ; [ ssprove_valid_location | ])
-      || (apply valid_getr ; [ ssprove_valid_location | intros])
-      (* if statement *)
-      || match goal with
-        | [ |- context[match ?x with | true => _ | false => _ end] ] =>
-            destruct x
-        end
-      (* match expression ? *)
-      || match goal with
-        | [ |- context[match ?x with | inl _ => _ | inr _ => _ end] ] =>
-            destruct x
-        end
-      (* ret statement *)
-      || apply valid_ret
-      (* for looop statement *)
-      || (match goal with
-         | [ |- context [ValidCode (fset ?ys) _ (@prog _ _ _ (@foldi _ ?lo ?hi (fset ?xs) _ ?f ?v))] ] =>
-             eapply (valid_subset_fset xs ys) ; [ | apply valid_foldi_pre ] ; incl_compute
-         end)
-    ).
+Ltac ssprove_valid_step :=
+  (progress
+     (
+       cbv zeta
+       || unfold prog
+       || (repeat match goal with | [ |- context[ @T_ct (prod_ChoiceEquality ?ceA ?ceB) (?a , ?b) ] ] => rewrite @T_ct_prod_propegate end) (* expensive *)
+       || (match goal with | [ |- context[ @bind ?A ?B (ret ?x) ?f ]] => rewrite bind_rewrite end) (* expensive *)
+       (* if statement *)
+       || match goal with
+         | [ |- context[match ?x with | true => _ | false => _ end] ] =>
+             destruct x
+         end
+       (* match expression ? *)
+       || match goal with
+         | [ |- context[match ?x with | inl _ => _ | inr _ => _ end] ] =>
+             destruct x
+         end
+       || (match goal with | [ |- context[bind (bind ?v ?k1) ?k2] ] => rewrite bind_assoc end) (* expensive *)
+       (* let statement / array update *)
+       || (apply valid_bind ; [apply valid_scheme ; try rewrite <- fset.fset0E ; apply prog_valid | intros])
+       || (apply valid_bind ; [valid_program | intros])
+       || (apply valid_bind ; [repeat ssprove_valid_step | intros])
+       (* || (apply ChoiceEqualityMonad.bind_code)  *)
+       (* let mut statement / reassign *)
+       || (apply valid_opr ; [ ssprove_valid_opsig | intros ] )
+       ||(* (apply valid_putr ; [ ssprove_valid_location | ]) *)
+         match goal with
+         | [ |- context [ putr _ _ _ ] ] => (apply valid_putr ; [ ssprove_valid_location | ])
+
+         end
+
+       || match goal with
+         | [ |- context [ getr _ _ ] ] => (apply valid_getr ; [ ssprove_valid_location | intros])
+         end
+       (* ret statement *)
+       || apply valid_ret
+       (* for looop statement *)
+       || (match goal with
+          | [ |- context [ValidCode (fset ?ys) _ (@prog _ _ _ (@foldi _ ?lo ?hi (fset ?xs) _ ?f ?v))] ] =>
+              eapply (valid_subset_fset xs ys) ; [ | apply valid_foldi_pre ] ; loc_incl_compute
+          end)
+       || (hnf in * ; destruct_choice_type_prod) (* expensive *)
+  )).
 
 Theorem length_merge_sort_pop : forall {A} leb (l1 : list (list A)) (l2 : list A),
     length (path.merge_sort_pop leb l2 l1) = length (seq.cat (seq.flatten l1) l2).
@@ -2226,21 +2419,23 @@ Qed.
 (* Admitted.   *)
 
 Ltac ssprove_valid'_2 :=
-  destruct_choice_type_prod
-  ; ssprove_valid'
+  repeat ssprove_valid_step
   ; ssprove_valid_program
-  ; ssprove_valid_location.
+  ; try ssprove_valid_location.
+
+Ltac ssprove_valid_package :=
+  (repeat apply valid_package_cons ; [ apply valid_empty_package | .. | try (rewrite <- fset0E ; setoid_rewrite @imfset0 ; rewrite in_fset0 ; reflexivity) ] ; intros ; progress unfold prog).
 
 Ltac solve_zero :=
   match goal with
   | [ |- context [ (_ <= _)%Z ] ] =>
-      cbn ; 
+      cbn ;
       match goal with
       | [ |- context [ (0 <= toword ?x)%Z ] ] =>
           let H := fresh in
           let H_zero := fresh in
           let H_succ := fresh in
-          set (H := x) 
+          set (H := x)
           ; destruct_uint_size_as_nat_named H H_zero H_succ
           ; [ reflexivity | cbn in H_succ ; cbn ; try rewrite H_succ ; Lia.lia ]
       end
@@ -2248,9 +2443,18 @@ Ltac solve_zero :=
 
 Ltac solve_ssprove_obligations :=
   intros ;
-  (ssprove_valid_location || incl_compute)
+  (ssprove_valid_location || loc_incl_compute || opsig_incl_compute)
+  || (match goal with
+     | [ |- context [ pkg_composition.Parable _ _ ]] =>
+         unfold pkg_composition.Parable, fdisjoint, fsetI, fset_filter,
+                fmap.domm, fmap.FMap.fmval, fmap.mkfmap, fmap.setm, fmap.fmap, fset
+         ; now rewrite ssreflect.locked_withE
+               (* cbv ; now destruct fset_key *)
+     end)
+  || now repeat rewrite <- fset_cat
   (* || (apply fset_eqEincl ; split ; incl_compute) *)
-  || (ssprove_valid'_2)
+  || (ssprove_valid_package ; ssprove_valid'_2)
+  || ssprove_valid'_2
   || (try (Tactics.program_simpl; fail)(* ; simpl *))
   (* || solve_zero *)
   (* ; try (incl_compute) *)
@@ -2261,6 +2465,12 @@ Definition andb (x y : bool_ChoiceEquality) : both0 bool_ChoiceEquality := lift_
 
 Infix "&&" := andb : bool_scope.
 
+Definition orb (x y : bool_ChoiceEquality) : both0 bool_ChoiceEquality := lift_to_both (orb x y : bool_ChoiceEquality).
+
+Infix "||" := orb : bool_scope.
+
+Definition negb (x : bool_ChoiceEquality) : both0 bool_ChoiceEquality := lift_to_both (negb x : bool_ChoiceEquality).
+
 (* Program Definition bind_through_code_result (L1 L2 L3 : {fset Location}) I (H_incl_var : List.incl L1 L3) (H_incl_fun : List.incl L2 L3) {C : ChoiceEquality} : @ChoiceEqualityMonad.bind_through_code L1 L2 L3 I _ _ (ChoiceEqualityMonad.result_code_monad (L3) I C) H_incl_var H_incl_fun. *)
 (* Proof. *)
 (*   constructor. *)
@@ -2270,7 +2480,7 @@ Infix "&&" := andb : bool_scope.
 (*   unfold ChoiceEqualityMonad.result_code_bind. *)
 (*   unfold ChoiceEqualityMonad.bind_prod'. *)
 (*   unfold prog. *)
-  
+
 (*   (* pose (fun b f g => @r_bind_trans_both _ _ (fset L1) I f g b). *) *)
 (*   match_bind_trans_both.   *)
 (*   intros. *)
@@ -2280,48 +2490,12 @@ Infix "&&" := andb : bool_scope.
 (*   - step_code. *)
 (* Qed. *)
 
-Program Definition fun_ChoiceEquality (A B : ChoiceEquality) : ChoiceEquality :=
-  {| T := A -> B ; ct := chFun A B |}.
-Next Obligation.
-  intros ; do 2 rewrite ChoiceEq ; reflexivity.
-Defined.
-
-Program Definition unwrap_CE_function {L I} {A B : ChoiceEquality} (f : code L I (chFun A B)) (x : code L I A) : code L I B := {code t_x ← x ;; t_f ← f ;; ret (t_f t_x) }.
-
-  
-
-(* Program Definition wrap_CE_function {L I} {A B C : ChoiceEquality} (f : A -> code L I (result C B)) : code L I (chFun (result C A) (result C B)). *)
-(* Proof. *)
-(*   cbn. *)
-(*   refine {code _}. Unshelve. *)
-(*   2:{ *)
-    
-(*     apply ret ; cbn. *)
-    
-(*     pose @FreeProbProg.bindrFree. *)
-    
-
-(* {code (bind _ (fun x => f (ct_T x)))}. *)
-
-(* Program Definition wrap_CE_function {L I} {A B : ChoiceEquality} (f : code L I A -> code L I B ) : code L I (chFun A B). *)
-(* (* := {code t_x ← x ;; t_f ← f ;; ret (t_f t_x) }. *) *)
-(* Proof. *)
-(*   pose (@mkprog_rewrite L I B). *)
-
-
 Program Definition ret_both  {L : {fset Location}} {I} `{ChoiceEqualityMonad.CEMonad} {A : ChoiceEquality} (x : A) : both L I (M A) := lift_to_both (ChoiceEqualityMonad.ret x).
 
-Program Definition foldi_bind_both {A : ChoiceEquality} {L : {fset Location}} {I}  `{ChoiceEqualityMonad.BindBoth} (lo : uint_size) (hi : uint_size) (init : both L I (M A)) (f : uint_size -> A -> both L I (M A))  : both L I (M A) :=
-  foldi_both lo hi init (fun x y => ChoiceEqualityMonad.bind_both (H_incl := List.incl_refl _) (lift_to_both y) (f x)).
-
-Program Definition foldi_bind_both' {A : ChoiceEquality} {L1 L2 L : {fset Location}} {I}  `{ChoiceEqualityMonad.BindBoth} (lo : both L1 I uint_size) (hi : both L2 I uint_size) (init : A) (f : uint_size -> A -> both L I (M A))  : both L I (M A) :=
-  foldi_bind_both lo hi (lift_to_both (ChoiceEqualityMonad.ret init)) f.
-Print foldi_bind_both'.
-
-Notation "'nseq'" := (fun A n => nseq A (from_uint_size n)).
+(* Notation "'nseq'" := (fun A n => nseq A (from_uint_size n)). *)
 
 Ltac init_both_proof b_state b_pure :=
-  intros ;  
+  intros ;
   unfold lift_to_code ;
   cbv delta [b_state] ;
   cbn beta ;
@@ -2335,115 +2509,76 @@ Ltac init_both_proof b_state b_pure :=
   subst H ;
   cbn beta.
 
-Program Definition let_both {L  : {fset Location}} {I} {A B : ChoiceEquality}
-        (x : both L I A)
-        (f : A -> both L I B)
-  : both L I B :=
-  {|
-    is_state := {code temp ← is_state x ;; is_state (f (ct_T temp))} ;
-      is_pure := is_pure (f (is_pure x)) ;
-  |}.
-Next Obligation.
-  intros.
-  cbn.
-  replace (ret _) with (temp ← ret (is_pure x) ;; ret (T_ct (is_pure (f (ct_T temp))))) by (cbn ; now rewrite ct_T_id).
-
-  eapply r_bind.
-  apply x.
-
-  intros.
-  apply rpre_hypothesis_rule.
-  intros ? ? [[] []]. subst.
-  eapply rpre_weaken_rule.
-  rewrite ct_T_id.
-  apply f.
-  reflexivity.
-Qed.
-
-Notation "'letb' x ':=' y 'in' f" :=
-  (let_both (lift_scope (H_incl := _) y) (fun x => f)) (at level 100, x pattern).
-Notation "'letb' ''' x ':=' y 'in' f" :=
-  (let_both (lift_scope (H_incl := _) y) (fun x => f)) (at level 100, x pattern).
-
-Program Definition let_mut_both {L1 L2 : {fset Location}} {I} {A B : ChoiceEquality}
-        (x_loc : ChoiceEqualityLocation) `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L2))} `{H_incl : List.incl L1 L2} :
-        forall (x : both L1 I (CE_loc_to_CE x_loc))
-          (f : (CE_loc_to_CE x_loc) -> both L2 I B), both L2 I B :=
-  let '(A ; n) := x_loc in
-  fun x f =>
-  {|
-    is_state := {code temp ← is_state x ;; #put (ct A ; n) := temp ;; is_state (f (ct_T temp))} ;
-      is_pure := is_pure (f (is_pure x)) ;
-  |}.
-Next Obligation.
-  intros. subst. 
-  apply valid_bind. apply valid_subset with (xs := L1). assumption. apply prog_valid. intros.
-  apply valid_putr. apply H_in. apply prog_valid.
-Qed.
-Next Obligation.    
-  intros.
-  cbn.
-  replace (ret _) with (temp ← ret (is_pure x) ;; ret (T_ct (is_pure (f (ct_T temp))))) by (cbn ; now rewrite ct_T_id).
-
-  eapply r_bind.
-  apply x.
-  intros.
-
-  apply rpre_hypothesis_rule.
-  intros ? ? [[] []]. subst.
-  eapply rpre_weaken_rule with (pre := true_precond).
-
-  apply better_r_put_lhs.
-      
-  rewrite ct_T_id.  
-  eapply rpre_weaken_rule with (pre := true_precond).
-  apply f.
-  reflexivity.
-  reflexivity.
-Qed.
-
-Notation "'letbm' x 'loc(' ℓ ')' ':=' y 'in' f" :=
-  (let_mut_both ℓ (H_in := _) (H_incl := _) (y) (fun x => f)) (at level 100, x pattern).
-Notation "'letbm' ''' x 'loc(' ℓ ')' ':=' y 'in' f" :=
-  (let_mut_both ℓ (H_in := _) (H_incl := _) (y) (fun x => f)) (at level 100, x pattern).
-
-Notation "'letbms' x 'loc(' ℓ ')' ':=' y 'in' f" :=
-  (let_mut_both ℓ (H_in := ltac:(ssprove_valid_location)) (H_incl := ltac:(incl_compute)) y (fun x => f)) (at level 100, x pattern).
-Notation "'letbms' ''' x 'loc(' ℓ ')' ':=' y 'in' f" :=
-  (let_mut_both ℓ (H_in := ltac:(ssprove_valid_location)) (H_incl := ltac:(incl_compute)) y (fun x => f)) (at level 100, x pattern).
-
-(* Definition if_both (b : bool_ChoiceEquality) {L I A} (x y : both L I A) := *)
-(*   (if b then x else y). *)
-(* Notation "'if_both' b 'then' x 'else' y" := (if_both b x y) (at level 100). *)
 
 
-Program Definition bind_both_mut  {L1 L2 L3 : {fset Location}} {I} `{ChoiceEqualityMonad.CEMonad} {A B : ChoiceEquality} (x_loc : ChoiceEqualityLocation) `{H_incl_var : List.incl L1 L3} `{H_incl_fun : List.incl L2 L3} `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L2))} : CE_loc_to_CE x_loc = M A -> forall (x : both L1 I (CE_loc_to_CE x_loc)) (f : A -> both L2 I (M B)), both L3 I (M B) :=
-  let '(MA ; n) := x_loc in
-  fun H_M_eq x f =>
-    eq_rect_r (fun MA : ChoiceEquality => both L1 I MA -> both L3 I (M B))
-              (fun x => 
-  ({| is_pure := y m(M) ⇠ is_pure x ;; is_pure (f y) ;
-     is_state := {code temp ← is_state x ;;
-                  #put (ct (M A) ; n) := temp ;;
-                  ret (y m(M) ⇠ ct_T temp ;; is_pure (f y))} |})) H_M_eq x.
-Next Obligation.
-  intros.
-  apply valid_bind.
-  apply (valid_injectLocations) with (L4 := L1).
-  apply list_incl_fsubset. apply H_incl_var.
-  apply prog_valid.
-  intros.
+(* Theorem foldi_bind_code_equality : forall {M} {BindCode} {L I}  {A B : ChoiceEquality} (x y : code L I (M A)) (f g : A -> code L I (M B)), *)
+(*     (prog x = prog y) -> *)
+(*     (forall v, prog (f v) = prog (g v)) -> *)
+(*     ChoiceEqualityMonad.bind_both (M := M) (BindCode := BindCode) (L := L) (I := I) (A := A) (B := B) x f) = prog (ChoiceEqualityMonad.bind_code y g). *)
+(*   intros. *)
+(*   rewrite (code_ext _ _ _ _ _ H). *)
+(*   enough (f = g). rewrite H1. reflexivity. *)
+(*   apply Coq.Logic.FunctionalExtensionality.functional_extensionality. intros. *)
+(*   rewrite (code_ext _ _ _ _ _ (H0 x0)). *)
+(*   reflexivity. *)
+(* Qed. *)
 
-  apply (valid_injectLocations) with (L4 := L2).
-  apply list_incl_fsubset. apply H_incl_fun.
- 
-  apply valid_putr.
-  cbn ; subst.
-  apply H_in.
+
+Ltac foldi_state_eq_code :=
+  erewrite <- @foldi_bind_both_proj_code' ; [ reflexivity | intros ; hnf | reflexivity | reflexivity  ].
+Ltac bind_both_eq_code :=
+  erewrite <- @ChoiceEqualityMonad.bind_both_proj_code ; [ reflexivity | hnf | reflexivity ].  
   
-  apply valid_ret.
-Qed.
-Next Obligation.
-  intros.
-  step_code.
-Qed.
+
+Theorem letbm_proj_code : 
+  forall (L1 L2 : {fset Location}) `{H_loc_incl : List.incl L1 L2} {I1 I2 : {fset opsig}} `{H_opsig_incl : List.incl I1 I2} B (i : ChoiceEqualityLocation),
+  forall `{H_in : is_true (ssrbool.in_mem (CE_loc_to_loc i) (ssrbool.mem L2))} (x : both L1 I1 (CE_loc_to_CE i)) (f : (CE_loc_to_CE i) -> both L2 I2 B) (y : code L1 I1 (CE_loc_to_CE i)) (g : (CE_loc_to_CE i) -> code L2 I2 B),
+    is_state x = y ->
+    (forall x, is_state (f x) = (g x)) ->
+    is_state ((let_mut_both i (H_in := H_in) (lift_scope (H_loc_incl := H_loc_incl) (H_opsig_incl := H_opsig_incl) x) f)) =
+    let_mut_code i (H_in := H_in) (lift_code_scope (H_loc_incl := H_loc_incl) (H_opsig_incl := H_opsig_incl) y) g
+    .
+Proof.
+  intros L1 L2 H_loc_incl I1 I2 H_opsig_incl B [A n].
+  intros H_in x f y g H_var_eq H_fun_eq.
+  apply code_ext. unfold prog.
+  unfold let_mut_both, is_state at 1.
+  unfold lift_scope. unfold is_state at 1.
+  unfold let_mut_code.
+  unfold prog.
+  unfold lift_code_scope.
+  rewrite H_var_eq.
+  apply f_equal.
+  apply functional_extensionality. intros.
+  apply f_equal.
+  rewrite H_fun_eq.
+  reflexivity.
+Qed.  
+
+Ltac letbm_eq_code :=    
+  match goal with
+  | [ |- context [let_mut_both _ (lift_scope ?k) ?f] ] => 
+      erewrite letbm_proj_code with (g := f) (y := k) ; [ hnf | reflexivity | reflexivity ]
+  end.
+Ltac f_equal_fun_ext :=
+  repeat (apply f_equal ; try (apply Coq.Logic.FunctionalExtensionality.functional_extensionality ; intros)).
+
+Definition seq_link { L1 L2 : {fset Location} } {I M E} (p1 : package L1 M E) (p2 : package L2 I M) : package (L1 :|: L2) I E :=
+  {| pack := pkg_composition.link p1 p2 ;
+    pack_valid := pkg_composition.valid_link _ _ _ _ _ _ _
+                                             (pack_valid p1)
+                                             (pack_valid p2) |}.
+
+Definition par_link { L1 L2 : {fset Location} }  { I1 I2 E1 E2} (p1 : package L1 I1 E1) (p2 : package L2 I2 E2) (_ : pkg_composition.Parable p1 p2) : package (L1 :|: L2) (I1 :|: I2) (E1 :|: E2) :=
+  {|
+    pack := pkg_composition.par p1 p2 ;
+    pack_valid := pkg_composition.valid_par _ _ _ _ _ _ _ _ _ (pack_valid p1) (pack_valid p2) |}.
+
+Notation "'link_rest(' a ')'" :=
+  a : hacspec_scope.
+Notation "'link_rest(' a , b ')'" :=
+  (par_link a b _) : hacspec_scope.
+Notation "'link_rest(' a , b , .. , c ')'" :=
+  (par_link .. ( par_link a b _ ) .. c _) : hacspec_scope.
+
+(* Ltac par_link p1 p2 := par_link p1 p2 ltac:(cbv ; now destruct fset_key). *)

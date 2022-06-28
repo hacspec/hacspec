@@ -1194,7 +1194,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _), question_mark) => {
+        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) => {
             if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_ident(x.clone()),
