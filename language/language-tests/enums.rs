@@ -19,3 +19,9 @@ pub fn baz(x: Foo) -> Bar {
         Foo::CaseY(a, _b) => Bar(U32_from_U8(a).declassify()),
     }
 }
+
+pub fn baz_im(x: Foo) {
+    let z: Bar = Bar(0u32);
+    let Bar(z) = z;
+    let _a = z as u8;
+}
