@@ -72,8 +72,13 @@
 //! ```
 //!
 
-use std::num::Wrapping;
-use std::ops::*;
+#![no_std]
+
+extern crate alloc;
+use alloc::vec::Vec;
+
+use core::num::Wrapping;
+use core::ops::*;
 
 macro_rules! define_wrapping_op {
     ($name:ident, $op:tt, $op_name:ident, $func_op:ident, $assign_name:ident, $assign_func:ident, $checked_func_op:ident) => {
@@ -205,7 +210,7 @@ macro_rules! define_secret_integer {
                         chunk_raw[i] = U8::declassify(chunk[i]);
                     }
                     $name::classify(unsafe {
-                        std::mem::transmute::<[u8;$bits/8], $repr>(
+                        core::mem::transmute::<[u8;$bits/8], $repr>(
                             chunk_raw
                         ).to_le()
                     })
@@ -216,7 +221,7 @@ macro_rules! define_secret_integer {
                 ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {
-                         std::mem::transmute::<$repr, [u8;$bits/8]>(int.to_le())
+                         core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_le())
                     };
                     let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
                     secret_bytes
@@ -231,7 +236,7 @@ macro_rules! define_secret_integer {
                         chunk_raw[i] = U8::declassify(chunk[i]);
                     }
                     $name::classify(unsafe {
-                        std::mem::transmute::<[u8;$bits/8], $repr>(
+                        core::mem::transmute::<[u8;$bits/8], $repr>(
                             chunk_raw
                         ).to_be()
                     })
@@ -242,7 +247,7 @@ macro_rules! define_secret_integer {
                 ints.iter().map(|int| {
                     let int = $name::declassify(*int);
                     let bytes : [u8;$bits/8] = unsafe {
-                         std::mem::transmute::<$repr, [u8;$bits/8]>(int.to_be())
+                         core::mem::transmute::<$repr, [u8;$bits/8]>(int.to_be())
                     };
                     let secret_bytes : Vec<U8> = bytes.iter().map(|x| U8::classify(*x)).collect();
                     secret_bytes
@@ -290,22 +295,22 @@ macro_rules! define_secret_integer {
         define_unary_op!($name, !, Not, not);
 
         // Printing integers.
-        impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Display for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let uint: $repr = self.declassify();
                 write!(f, "{}", uint)
             }
         }
-        impl std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Debug for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let uint: $repr = self.declassify();
                 write!(f, "{}", uint)
             }
         }
-        impl std::fmt::LowerHex for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::LowerHex for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let val: $repr = self.declassify();
-                std::fmt::LowerHex::fmt(&val, f)
+                core::fmt::LowerHex::fmt(&val, f)
             }
         }
         // impl Distribution<$name> for Standard {
