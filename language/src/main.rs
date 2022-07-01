@@ -559,8 +559,8 @@ fn handle_crate<'tcx>(
                         std::process::Command::new("git")
                             .arg("merge-file")
                             .arg(file_destination.clone())
-                            .arg(file_temp.clone())
                             .arg(file_vc.clone())
+                            .arg(file_temp.clone())
                             .output()
                             .expect("git-merge failed");
                         std::fs::copy(file_temp.clone(), file_vc.clone()).expect(
