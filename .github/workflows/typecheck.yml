@@ -16,7 +16,5 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Typecheck Primitives
+      - name: Typecheck Primitives and Protocols
         run: examples/typecheck_examples.sh
-      - name: Typecheck Protocols
-        run: protocols/typecheck_protocols.sh
