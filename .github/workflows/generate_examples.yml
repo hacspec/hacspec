@@ -1,0 +1,20 @@
+name: Typecheck
+
+on: [push, pull_request, release]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Update proof files for examples 
+        run: cargo clean && cargo build --verbose --release && cd examples && cargo clean && cargo build --verbose --release && cargo hacspec -e v --dir ../coq/src/ "*" --vc-update && cargo hacspec -e ec --dir ../easycrypt/ "*" --vc-update && cargo hacspec -e fst --dir ../fstar/ "*" --vc-update
