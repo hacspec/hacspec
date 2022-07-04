@@ -15,10 +15,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends qemu-system-arm
       - name: Install rust thumbv7m target support
         run: rustup target add thumbv7m-none-eabi
-        working-directory: ./examples/no_std
+        working-directory: ./no_std
       - name: Build no_std release
-        run: cargo build --verbose --release && cd examples && cargo build --verbose --release
-        working-directory: ./examples/no_std
+        run: cargo build --verbose --release
+        working-directory: ./no_std
       - name: Run no_std release tests
-        run: cargo run --verbose --release && cd examples && cargo run --verbose --release
-        working-directory: ./examples/no_std
+        run: cargo run --verbose --release
+        working-directory: ./no_std
