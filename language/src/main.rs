@@ -747,19 +747,9 @@ fn read_crate_pre(
         serde_json::from_str(&json_string).expect(" ⚠️  Error reading to manifest")
     };
 
-    println!("Package name: {:?}", package_name);
-
     // Pick the package of the given name or the only package available.
     let package: Vec<Package> = if let Some(package_name) = package_name {
-        // if package_name == "*" {
-        //     manifest
-        //         .packages
-        //         .iter()
-        //         .collect();
-        // } else {
-
-        let re = Regex::new(&package_name).unwrap();
-
+        let re = Regex::new(&format!(r"^{}$", package_name)).unwrap();
         let p: Vec<Package> = manifest
             .clone()
             .packages
