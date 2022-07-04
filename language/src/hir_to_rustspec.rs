@@ -1,11 +1,10 @@
 use im::HashMap;
 use rustc_hir::{def::DefKind, definitions::DefPathData, AssocItemKind, ItemKind};
 use rustc_metadata::creader::CStore;
-use rustc_middle::mir::interpret::{ConstValue, Scalar};
-use rustc_middle::mir::terminator::Mutability;
+use rustc_middle::mir::Mutability;
 use rustc_middle::ty::subst::GenericArgKind;
 use rustc_middle::ty::{
-    self, AdtKind, ConstKind, IntTy, PolyFnSig, RegionKind, TyCtxt, TyKind, UintTy,
+    self, AdtKind, ConstKind, IntTy, PolyFnSig, RegionKind, TyCtxt, TyKind, UintTy, ValTree,
 };
 use rustc_session::Session;
 use rustc_span::{
@@ -54,7 +53,7 @@ fn translate_base_typ(
         TyKind::Uint(UintTy::U32) => Ok((BaseTyp::UInt32, typ_ctx.clone())),
         TyKind::Uint(UintTy::U64) => Ok((BaseTyp::UInt64, typ_ctx.clone())),
         TyKind::Uint(UintTy::U128) => Ok((BaseTyp::UInt128, typ_ctx.clone())),
-        TyKind::Ref(region, inner_ty, mutability) => match region {
+        TyKind::Ref(region, inner_ty, mutability) => match region.kind() {
             RegionKind::ReStatic => match mutability {
                 Mutability::Not => match inner_ty.kind() {
                     TyKind::Str => Ok((BaseTyp::Str, typ_ctx.clone())),
@@ -65,7 +64,7 @@ fn translate_base_typ(
             _ => Err(()),
         },
         TyKind::Adt(adt, substs) => {
-            let adt_id = adt.did;
+            let adt_id = adt.did();
             let adt_def_path = tcx.def_path(adt_id);
             // We're looking at types from imported crates that can only be imported
             // with * blobs so the types have to be re-exported from inner modules,
@@ -245,7 +244,7 @@ fn translate_base_typ(
         },
         TyKind::Tuple(args) => {
             let mut new_args = Vec::new();
-            let typ_ctx = args.types().fold(Ok(typ_ctx.clone()), |typ_ctx, ty| {
+            let typ_ctx = args.iter().fold(Ok(typ_ctx.clone()), |typ_ctx, ty| {
                 let (new_ty, typ_ctx) = translate_base_typ(tcx, &ty, &typ_ctx?)?;
                 new_args.push((new_ty, DUMMY_SP.into()));
                 Ok(typ_ctx)
@@ -439,10 +438,10 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
             if substs.len() > 0 {
                 return SpecialTypeReturn::NotSpecial;
             }
-            if adt.variants.len() != 1 {
+            if adt.variants().len() != 1 {
                 return SpecialTypeReturn::NotSpecial;
             }
-            let variant = adt.variants.iter().next().unwrap();
+            let variant = adt.variants().iter().next().unwrap();
             let maybe_abstract_int = match variant.fields.len() {
                 1 => false,
                 3 => true,
@@ -460,15 +459,12 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
                             return SpecialTypeReturn::NotSpecial;
                         }
                     };
-                    let new_size = match &size.val {
+                    let new_size = match &(size.kind()) {
                         // We can only retrieve the actual size of the array
                         // when the size has been declared as a literal value,
                         // not a reference to another const value
                         ConstKind::Value(value) => match value {
-                            ConstValue::Scalar(scalar) => match scalar {
-                                Scalar::Int(s) => Some(s.to_bits(s.size()).unwrap() as usize),
-                                _ => Some(0),
-                            },
+                            ValTree::Leaf(s) => Some(s.to_bits(s.size()).unwrap() as usize),
                             // TODO: replace placeholder value by indication
                             // that we could not retrieve the size
                             _ => Some(0),
@@ -525,10 +521,10 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                 AdtKind::Enum => {
                     // TODO: check whether substs contains only unconstrained type parameters
                     let cases = check_vec(
-                        adt.variants
+                        adt.variants()
                             .iter()
                             .map(|variant| {
-                                let name = variant.ident.name.to_ident_string();
+                                let name = variant.ident(*tcx).name.to_ident_string();
                                 let case_id = variant.def_id;
                                 let case_typ = tcx.type_of(case_id);
                                 let case_typ = match case_typ.kind() {
@@ -543,7 +539,7 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                                             Some(ty)
                                         } else {
                                             let ty = BaseTyp::Tuple(args.collect());
-                                            Some((ty, RustspecSpan::from(variant.ident.span)))
+                                            Some((ty, RustspecSpan::from(variant.ident(*tcx).span)))
                                         }
                                     }
                                     _ => None, // If the type of the constructor is not a function, then there is no payload
@@ -554,7 +550,7 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                                             string: name,
                                             kind: TopLevelIdentKind::EnumConstructor,
                                         },
-                                        RustspecSpan::from(variant.ident.span),
+                                        RustspecSpan::from(variant.ident(*tcx).span),
                                     ),
                                     case_typ,
                                 ))
@@ -595,15 +591,16 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                     if substs.len() > 0 {
                         return SpecialTypeReturn::NotSpecial;
                     }
-                    if adt.variants.len() != 1 {
+                    if adt.variants().len() != 1 {
                         return SpecialTypeReturn::NotSpecial;
                     }
-                    let variant = adt.variants.iter().next().unwrap();
-                    let name = variant.ident.name.to_ident_string();
+                    let variant = adt.variants().iter().next().unwrap();
+                    let name = variant.ident(*tcx).name.to_ident_string();
                     // Some wrapper structs are defined in std, core or
                     // hacspec_lib but we don't want to import them
                     // so we special case them out here
-                    let crate_name = &*tcx.crate_name(tcx.def_path(adt.did).krate).as_str();
+                    let temp = tcx.crate_name(tcx.def_path(adt.did()).krate);
+                    let crate_name = temp.as_str();
                     match crate_name {
                         "core" | "std" | "hacspec_lib" | "secret_integers"
                         | "abstract_integers" => {
@@ -617,13 +614,13 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                             .iter()
                             .map(|field| {
                                 // We only allow fields without names
-                                match field.ident.name.to_ident_string().parse::<i32>() {
+                                match field.ident(*tcx).name.to_ident_string().parse::<i32>() {
                                     Ok(_) => (),
                                     Err(_) => return Err(()),
                                 }
                                 let field_typ = tcx.type_of(field.did);
                                 let (ty, _) = translate_base_typ(tcx, &field_typ, &HashMap::new())?;
-                                Ok((ty, RustspecSpan::from(variant.ident.span)))
+                                Ok((ty, RustspecSpan::from(variant.ident(*tcx).span)))
                             })
                             .collect(),
                     ) {
@@ -635,7 +632,7 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                         Some(ty)
                     } else {
                         let ty = BaseTyp::Tuple(fields_typ);
-                        Some((ty, RustspecSpan::from(variant.ident.span)))
+                        Some((ty, RustspecSpan::from(variant.ident(*tcx).span)))
                     };
                     return SpecialTypeReturn::Enum(BaseTyp::Enum(
                         vec![(
@@ -644,7 +641,7 @@ fn check_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> SpecialTy
                                     string: name,
                                     kind: TopLevelIdentKind::EnumConstructor,
                                 },
-                                RustspecSpan::from(variant.ident.span),
+                                RustspecSpan::from(variant.ident(*tcx).span),
                             ),
                             case_typ,
                         )],
@@ -825,13 +822,16 @@ pub fn retrieve_external_data(
             }
         }
     }
-    for item in tcx.hir().items() {
-        let item_id = tcx.hir().local_def_id(item.hir_id()).to_def_id();
+    for item_id in tcx.hir().items() {
+        let item = tcx.hir().item(item_id);
+        // let item_def_id = tcx.hir().local_def_id(item_id.hir_id()).to_def_id();
+        let item_def_id = item.def_id.to_def_id();
+
         match &item.kind {
             ItemKind::Fn(_, _, _) => process_fn_id(
                 sess,
                 tcx,
-                &item_id,
+                &item_def_id,
                 &LOCAL_CRATE,
                 &mut extern_funcs,
                 &mut extern_consts,

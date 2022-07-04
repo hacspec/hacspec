@@ -29,13 +29,13 @@ use regex::Regex;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
+use rustc_errors::MultiSpan;
 use rustc_interface::{
     interface::{Compiler, Config},
     Queries,
 };
 use rustc_session::Session;
 use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
-use rustc_span::MultiSpan;
 use serde::Deserialize;
 use serde_json;
 use std::env;
@@ -129,53 +129,49 @@ fn construct_handle_crate_queue<'tcx>(
 
     let mut krates = Vec::new();
 
-    let krate = match krate {
-        rustc_ast::ast::Crate { attrs, items, span } => {
-            // Parse over the crate, loading modules and filling top_level_ctx
-            for x in items.clone().into_iter() {
-                match x.kind {
-                    // Whenever a module statement is encountered, add it to the queue
+    // Parse over the crate, loading modules and filling top_level_ctx
+    for x in krate.items.clone().into_iter() {
+        match x.kind {
+            // Whenever a module statement is encountered, add it to the queue
+            rustc_ast::ast::ItemKind::Mod(
+                rustc_ast::ast::Unsafe::No,
+                rustc_ast::ast::ModKind::Unloaded,
+            ) => {
+                match construct_handle_crate_queue(
+                    compiler,
+                    handled,
+                    ast_crates_map,
+                    x.ident.name.to_ident_string(),
+                    krate_path.clone(),
+                ) {
+                    Ok(v) => krates.extend(v),
+                    Err(false) => {
+                        // If not able to handle module, stop compilation.
+                        return Err(false);
+                    }
+                    Err(true) => (),
+                }
+            }
+            _ => (),
+        }
+    }
+
+    let krate =
+        // Remove the modules statements from the crate
+        rustc_ast::ast::Crate {
+            items: krate.items
+                .clone()
+                .into_iter()
+                .filter(|x| match x.kind {
                     rustc_ast::ast::ItemKind::Mod(
                         rustc_ast::ast::Unsafe::No,
                         rustc_ast::ast::ModKind::Unloaded,
-                    ) => {
-                        match construct_handle_crate_queue(
-                            compiler,
-                            handled,
-                            ast_crates_map,
-                            x.ident.name.to_ident_string(),
-                            krate_path.clone(),
-                        ) {
-                            Ok(v) => krates.extend(v),
-                            Err(false) => {
-                                // If not able to handle module, stop compilation.
-                                return Err(false);
-                            }
-                            Err(true) => (),
-                        }
-                    }
-                    _ => (),
-                }
-            }
-
-            // Remove the modules statements from the crate
-            rustc_ast::ast::Crate {
-                attrs,
-                items: items
-                    .clone()
-                    .into_iter()
-                    .filter(|x| match x.kind {
-                        rustc_ast::ast::ItemKind::Mod(
-                            rustc_ast::ast::Unsafe::No,
-                            rustc_ast::ast::ModKind::Unloaded,
-                        ) => false,
-                        _ => true,
-                    })
-                    .collect(),
-                span,
-            }
-        }
-    };
+                    ) => false,
+                    _ => true,
+                })
+                .collect(),
+            ..krate
+        };
 
     krates.push((
         (
@@ -225,53 +221,49 @@ fn handle_crate<'tcx>(
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue {
         krate_use_paths.insert(krate_path.clone(), Vec::new());
 
-        match krate {
-            rustc_ast::ast::Crate { attrs, items, span } => {
-                // Parse over the crate, loading modules and filling top_level_ctx
-                for x in items.clone().into_iter() {
-                    match x.kind {
-                        // Load the top_ctx from the module specified in the use statement
-                        rustc_ast::ast::ItemKind::Use(ref tree) => {
-                            match tree.kind {
-                                rustc_ast::ast::UseTreeKind::Glob => {
-                                    krate_use_paths[&krate_path].push(
-                                        (&tree.prefix)
-                                            .segments
-                                            .last()
-                                            .unwrap()
-                                            .ident
-                                            .name
-                                            .to_ident_string(),
-                                    );
-                                }
-                                _ => (),
-                            };
+        // Parse over the crate, loading modules and filling top_level_ctx
+        for x in krate.items.clone().into_iter() {
+            match x.kind {
+                // Load the top_ctx from the module specified in the use statement
+                rustc_ast::ast::ItemKind::Use(ref tree) => {
+                    match tree.kind {
+                        rustc_ast::ast::UseTreeKind::Glob => {
+                            krate_use_paths[&krate_path].push(
+                                (&tree.prefix)
+                                    .segments
+                                    .last()
+                                    .unwrap()
+                                    .ident
+                                    .name
+                                    .to_ident_string(),
+                            );
                         }
                         _ => (),
-                    }
+                    };
                 }
-
-                // Remove the modules statements from the crate
-                krate_queue_no_module_statements.push((
-                    (krate_path, krate_dir, krate_module_string),
-                    rustc_ast::ast::Crate {
-                        attrs,
-                        items: items
-                            .clone()
-                            .into_iter()
-                            .filter(|x| match x.kind {
-                                rustc_ast::ast::ItemKind::Mod(
-                                    rustc_ast::ast::Unsafe::No,
-                                    rustc_ast::ast::ModKind::Unloaded,
-                                ) => false,
-                                _ => true,
-                            })
-                            .collect(),
-                        span,
-                    },
-                ))
+                _ => (),
             }
         }
+
+        // Remove the modules statements from the crate
+        krate_queue_no_module_statements.push((
+            (krate_path, krate_dir, krate_module_string),
+            rustc_ast::ast::Crate {
+                items: krate
+                    .items
+                    .clone()
+                    .into_iter()
+                    .filter(|x| match x.kind {
+                        rustc_ast::ast::ItemKind::Mod(
+                            rustc_ast::ast::Unsafe::No,
+                            rustc_ast::ast::ModKind::Unloaded,
+                        ) => false,
+                        _ => true,
+                    })
+                    .collect(),
+                ..krate
+            },
+        ));
     }
 
     /////////////////////////////////
@@ -620,10 +612,11 @@ impl Callbacks for HacspecCallbacks {
 
         // Find module location using hir
         queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-            let hir_krate = tcx.hir();
-            for item in hir_krate.items() {
+            for item_id in tcx.hir().items() {
+                let item = tcx.hir().item(item_id);
+
                 if let rustc_hir::ItemKind::Mod(_m) = &item.kind {
-                    let (expra, exprb, _exprc) = &tcx.hir().get_module(item.def_id);
+                    let (module, mod_span, _hir_id) = &tcx.hir().get_module(item.def_id);
 
                     // locate the file from a module using the span
                     let sm: &rustc_span::source_map::SourceMap =
@@ -634,8 +627,8 @@ impl Callbacks for HacspecCallbacks {
                         )),
                         rustc_span::FileName::Real(rustc_span::RealFileName::LocalPath(root)),
                     ) = (
-                        sm.span_to_filename(expra.inner),
-                        sm.span_to_filename(*exprb),
+                        sm.span_to_filename(module.spans.inner_span),
+                        sm.span_to_filename(*mod_span), // = module.spans.inject_use_span ?
                     ) {
                         // parse the file for the module
                         let mut parser = rustc_parse::new_parser_from_file(
@@ -644,16 +637,9 @@ impl Callbacks for HacspecCallbacks {
                             None,
                         );
 
-                        // get the items of the module
-                        let parse_mod_krate_items: Vec<rustc_ast::ptr::P<rustc_ast::Item>> =
-                            parser.parse_crate_mod().unwrap().items;
-
-                        // Make new crate with the parsed items
-                        let new_crate: rustc_ast::ast::Crate = rustc_ast::ast::Crate {
-                            attrs: vec![],
-                            items: parse_mod_krate_items,
-                            span: rustc_span::DUMMY_SP,
-                        };
+                        // Get the items of the module and
+                        // make new crate with the parsed items
+                        let new_crate: rustc_ast::ast::Crate = parser.parse_crate_mod().unwrap();
 
                         // Calculate the local path from the crate root file
                         let crate_local_path = module_path
