@@ -29,11 +29,11 @@ Definition round_constants_table_t := nseq (uint32) (k_size_v).
 
 Definition hash_t := nseq (uint32) (usize 8).
 
-Definition ch (x_0 : uint32) (y_1 : uint32) (z_2 : uint32) : uint32 :=
-  ((x_0) .& (y_1)) .^ ((not (x_0)) .& (z_2)).
+Definition ch (x_663 : uint32) (y_664 : uint32) (z_665 : uint32) : uint32 :=
+  ((x_663) .& (y_664)) .^ ((not (x_663)) .& (z_665)).
 
-Definition maj (x_3 : uint32) (y_4 : uint32) (z_5 : uint32) : uint32 :=
-  ((x_3) .& (y_4)) .^ (((x_3) .& (z_5)) .^ ((y_4) .& (z_5))).
+Definition maj (x_666 : uint32) (y_667 : uint32) (z_668 : uint32) : uint32 :=
+  ((x_666) .& (y_667)) .^ (((x_666) .& (z_668)) .^ ((y_667) .& (z_668))).
 
 Definition op_table_v : op_table_type_t :=
   array_from_list uint_size (let l :=
@@ -134,166 +134,171 @@ Definition hash_init_v : hash_t :=
         secret (@repr WORDSIZE32 1541459225) : int32
       ] in  l).
 
-Definition sigma (x_6 : uint32) (i_7 : uint_size) (op_8 : uint_size) : uint32 :=
-  let tmp_9 : uint32 :=
-    uint32_rotate_right (x_6) (array_index (op_table_v) (((usize 3) * (i_7)) + (
-          usize 2))) in 
-  let '(tmp_9) :=
-    if (op_8) =.? (usize 0):bool then (let tmp_9 :=
-        (x_6) shift_right (array_index (op_table_v) (((usize 3) * (i_7)) + (
+Definition sigma
+  (x_669 : uint32)
+  (i_670 : uint_size)
+  (op_671 : uint_size)
+  : uint32 :=
+  let tmp_672 : uint32 :=
+    uint32_rotate_right (x_669) (array_index (op_table_v) (((usize 3) * (
+            i_670)) + (usize 2))) in 
+  let '(tmp_672) :=
+    if (op_671) =.? (usize 0):bool then (let tmp_672 :=
+        (x_669) shift_right (array_index (op_table_v) (((usize 3) * (i_670)) + (
               usize 2))) in 
-      (tmp_9)) else ((tmp_9)) in 
-  ((uint32_rotate_right (x_6) (array_index (op_table_v) ((usize 3) * (
-            i_7)))) .^ (uint32_rotate_right (x_6) (array_index (op_table_v) (((
-              usize 3) * (i_7)) + (usize 1))))) .^ (tmp_9).
+      (tmp_672)) else ((tmp_672)) in 
+  ((uint32_rotate_right (x_669) (array_index (op_table_v) ((usize 3) * (
+            i_670)))) .^ (uint32_rotate_right (x_669) (array_index (
+          op_table_v) (((usize 3) * (i_670)) + (usize 1))))) .^ (tmp_672).
 
-Definition schedule (block_10 : block_t) : round_constants_table_t :=
-  let b_11 : seq uint32 :=
-    array_to_be_uint32s (block_10) in 
-  let s_12 : round_constants_table_t :=
+Definition schedule (block_673 : block_t) : round_constants_table_t :=
+  let b_674 : seq uint32 :=
+    array_to_be_uint32s (block_673) in 
+  let s_675 : round_constants_table_t :=
     array_new_ (default) (k_size_v) in 
-  let s_12 :=
-    foldi (usize 0) (k_size_v) (fun i_13 s_12 =>
-      let '(s_12) :=
-        if (i_13) <.? (usize 16):bool then (let s_12 :=
-            array_upd s_12 (i_13) (seq_index (b_11) (i_13)) in 
-          (s_12)) else (let t16_14 : uint32 :=
-            array_index (s_12) ((i_13) - (usize 16)) in 
-          let t15_15 : uint32 :=
-            array_index (s_12) ((i_13) - (usize 15)) in 
-          let t7_16 : uint32 :=
-            array_index (s_12) ((i_13) - (usize 7)) in 
-          let t2_17 : uint32 :=
-            array_index (s_12) ((i_13) - (usize 2)) in 
-          let s1_18 : uint32 :=
-            sigma (t2_17) (usize 3) (usize 0) in 
-          let s0_19 : uint32 :=
-            sigma (t15_15) (usize 2) (usize 0) in 
-          let s_12 :=
-            array_upd s_12 (i_13) ((((s1_18) .+ (t7_16)) .+ (s0_19)) .+ (
-                t16_14)) in 
-          (s_12)) in 
-      (s_12))
-    s_12 in 
-  s_12.
+  let s_675 :=
+    foldi (usize 0) (k_size_v) (fun i_676 s_675 =>
+      let '(s_675) :=
+        if (i_676) <.? (usize 16):bool then (let s_675 :=
+            array_upd s_675 (i_676) (seq_index (b_674) (i_676)) in 
+          (s_675)) else (let t16_677 : uint32 :=
+            array_index (s_675) ((i_676) - (usize 16)) in 
+          let t15_678 : uint32 :=
+            array_index (s_675) ((i_676) - (usize 15)) in 
+          let t7_679 : uint32 :=
+            array_index (s_675) ((i_676) - (usize 7)) in 
+          let t2_680 : uint32 :=
+            array_index (s_675) ((i_676) - (usize 2)) in 
+          let s1_681 : uint32 :=
+            sigma (t2_680) (usize 3) (usize 0) in 
+          let s0_682 : uint32 :=
+            sigma (t15_678) (usize 2) (usize 0) in 
+          let s_675 :=
+            array_upd s_675 (i_676) ((((s1_681) .+ (t7_679)) .+ (s0_682)) .+ (
+                t16_677)) in 
+          (s_675)) in 
+      (s_675))
+    s_675 in 
+  s_675.
 
 Definition shuffle
-  (ws_20 : round_constants_table_t)
-  (hashi_21 : hash_t)
+  (ws_683 : round_constants_table_t)
+  (hashi_684 : hash_t)
   : hash_t :=
-  let h_22 : hash_t :=
-    hashi_21 in 
-  let h_22 :=
-    foldi (usize 0) (k_size_v) (fun i_23 h_22 =>
-      let a0_24 : uint32 :=
-        array_index (h_22) (usize 0) in 
-      let b0_25 : uint32 :=
-        array_index (h_22) (usize 1) in 
-      let c0_26 : uint32 :=
-        array_index (h_22) (usize 2) in 
-      let d0_27 : uint32 :=
-        array_index (h_22) (usize 3) in 
-      let e0_28 : uint32 :=
-        array_index (h_22) (usize 4) in 
-      let f0_29 : uint32 :=
-        array_index (h_22) (usize 5) in 
-      let g0_30 : uint32 :=
-        array_index (h_22) (usize 6) in 
-      let h0_31 : uint32 :=
-        array_index (h_22) (usize 7) in 
-      let t1_32 : uint32 :=
-        ((((h0_31) .+ (sigma (e0_28) (usize 1) (usize 1))) .+ (ch (e0_28) (
-                f0_29) (g0_30))) .+ (array_index (k_table_v) (i_23))) .+ (
-          array_index (ws_20) (i_23)) in 
-      let t2_33 : uint32 :=
-        (sigma (a0_24) (usize 0) (usize 1)) .+ (maj (a0_24) (b0_25) (c0_26)) in 
-      let h_22 :=
-        array_upd h_22 (usize 0) ((t1_32) .+ (t2_33)) in 
-      let h_22 :=
-        array_upd h_22 (usize 1) (a0_24) in 
-      let h_22 :=
-        array_upd h_22 (usize 2) (b0_25) in 
-      let h_22 :=
-        array_upd h_22 (usize 3) (c0_26) in 
-      let h_22 :=
-        array_upd h_22 (usize 4) ((d0_27) .+ (t1_32)) in 
-      let h_22 :=
-        array_upd h_22 (usize 5) (e0_28) in 
-      let h_22 :=
-        array_upd h_22 (usize 6) (f0_29) in 
-      let h_22 :=
-        array_upd h_22 (usize 7) (g0_30) in 
-      (h_22))
-    h_22 in 
-  h_22.
+  let h_685 : hash_t :=
+    hashi_684 in 
+  let h_685 :=
+    foldi (usize 0) (k_size_v) (fun i_686 h_685 =>
+      let a0_687 : uint32 :=
+        array_index (h_685) (usize 0) in 
+      let b0_688 : uint32 :=
+        array_index (h_685) (usize 1) in 
+      let c0_689 : uint32 :=
+        array_index (h_685) (usize 2) in 
+      let d0_690 : uint32 :=
+        array_index (h_685) (usize 3) in 
+      let e0_691 : uint32 :=
+        array_index (h_685) (usize 4) in 
+      let f0_692 : uint32 :=
+        array_index (h_685) (usize 5) in 
+      let g0_693 : uint32 :=
+        array_index (h_685) (usize 6) in 
+      let h0_694 : uint32 :=
+        array_index (h_685) (usize 7) in 
+      let t1_695 : uint32 :=
+        ((((h0_694) .+ (sigma (e0_691) (usize 1) (usize 1))) .+ (ch (e0_691) (
+                f0_692) (g0_693))) .+ (array_index (k_table_v) (i_686))) .+ (
+          array_index (ws_683) (i_686)) in 
+      let t2_696 : uint32 :=
+        (sigma (a0_687) (usize 0) (usize 1)) .+ (maj (a0_687) (b0_688) (
+            c0_689)) in 
+      let h_685 :=
+        array_upd h_685 (usize 0) ((t1_695) .+ (t2_696)) in 
+      let h_685 :=
+        array_upd h_685 (usize 1) (a0_687) in 
+      let h_685 :=
+        array_upd h_685 (usize 2) (b0_688) in 
+      let h_685 :=
+        array_upd h_685 (usize 3) (c0_689) in 
+      let h_685 :=
+        array_upd h_685 (usize 4) ((d0_690) .+ (t1_695)) in 
+      let h_685 :=
+        array_upd h_685 (usize 5) (e0_691) in 
+      let h_685 :=
+        array_upd h_685 (usize 6) (f0_692) in 
+      let h_685 :=
+        array_upd h_685 (usize 7) (g0_693) in 
+      (h_685))
+    h_685 in 
+  h_685.
 
-Definition compress (block_34 : block_t) (h_in_35 : hash_t) : hash_t :=
-  let s_36 : round_constants_table_t :=
-    schedule (block_34) in 
-  let h_37 : hash_t :=
-    shuffle (s_36) (h_in_35) in 
-  let h_37 :=
-    foldi (usize 0) (usize 8) (fun i_38 h_37 =>
-      let h_37 :=
-        array_upd h_37 (i_38) ((array_index (h_37) (i_38)) .+ (array_index (
-              h_in_35) (i_38))) in 
-      (h_37))
-    h_37 in 
-  h_37.
+Definition compress (block_697 : block_t) (h_in_698 : hash_t) : hash_t :=
+  let s_699 : round_constants_table_t :=
+    schedule (block_697) in 
+  let h_700 : hash_t :=
+    shuffle (s_699) (h_in_698) in 
+  let h_700 :=
+    foldi (usize 0) (usize 8) (fun i_701 h_700 =>
+      let h_700 :=
+        array_upd h_700 (i_701) ((array_index (h_700) (i_701)) .+ (array_index (
+              h_in_698) (i_701))) in 
+      (h_700))
+    h_700 in 
+  h_700.
 
-Definition hash (msg_39 : byte_seq) : sha256_digest_t :=
-  let h_40 : hash_t :=
+Definition hash (msg_702 : byte_seq) : sha256_digest_t :=
+  let h_703 : hash_t :=
     hash_init_v in 
-  let last_block_41 : block_t :=
+  let last_block_704 : block_t :=
     array_new_ (default) (block_size_v) in 
-  let last_block_len_42 : uint_size :=
+  let last_block_len_705 : uint_size :=
     usize 0 in 
-  let '(h_40, last_block_41, last_block_len_42) :=
-    foldi (usize 0) (seq_num_chunks (msg_39) (block_size_v)) (fun i_43 '(
-        h_40,
-        last_block_41,
-        last_block_len_42
+  let '(h_703, last_block_704, last_block_len_705) :=
+    foldi (usize 0) (seq_num_chunks (msg_702) (block_size_v)) (fun i_706 '(
+        h_703,
+        last_block_704,
+        last_block_len_705
       ) =>
-      let '(block_len_44, block_45) :=
-        seq_get_chunk (msg_39) (block_size_v) (i_43) in 
-      let '(h_40, last_block_41, last_block_len_42) :=
-        if (block_len_44) <.? (block_size_v):bool then (let last_block_41 :=
+      let '(block_len_707, block_708) :=
+        seq_get_chunk (msg_702) (block_size_v) (i_706) in 
+      let '(h_703, last_block_704, last_block_len_705) :=
+        if (block_len_707) <.? (block_size_v):bool then (let last_block_704 :=
             array_update_start (array_new_ (default) (block_size_v)) (
-              block_45) in 
-          let last_block_len_42 :=
-            block_len_44 in 
-          (h_40, last_block_41, last_block_len_42)) else (
-          let compress_input_46 : block_t :=
-            array_from_seq (block_size_v) (block_45) in 
-          let h_40 :=
-            compress (compress_input_46) (h_40) in 
-          (h_40, last_block_41, last_block_len_42)) in 
-      (h_40, last_block_41, last_block_len_42))
-    (h_40, last_block_41, last_block_len_42) in 
-  let last_block_41 :=
-    array_upd last_block_41 (last_block_len_42) (secret (
+              block_708) in 
+          let last_block_len_705 :=
+            block_len_707 in 
+          (h_703, last_block_704, last_block_len_705)) else (
+          let compress_input_709 : block_t :=
+            array_from_seq (block_size_v) (block_708) in 
+          let h_703 :=
+            compress (compress_input_709) (h_703) in 
+          (h_703, last_block_704, last_block_len_705)) in 
+      (h_703, last_block_704, last_block_len_705))
+    (h_703, last_block_704, last_block_len_705) in 
+  let last_block_704 :=
+    array_upd last_block_704 (last_block_len_705) (secret (
         @repr WORDSIZE8 128) : int8) in 
-  let len_bist_47 : uint64 :=
-    secret (pub_u64 ((seq_len (msg_39)) * (usize 8))) : int64 in 
-  let '(h_40, last_block_41) :=
-    if (last_block_len_42) <.? ((block_size_v) - (len_size_v)):bool then (
-      let last_block_41 :=
-        array_update (last_block_41) ((block_size_v) - (len_size_v)) (
-          array_to_seq (uint64_to_be_bytes (len_bist_47))) in 
-      let h_40 :=
-        compress (last_block_41) (h_40) in 
-      (h_40, last_block_41)) else (let pad_block_48 : block_t :=
+  let len_bist_710 : uint64 :=
+    secret (pub_u64 ((seq_len (msg_702)) * (usize 8))) : int64 in 
+  let '(h_703, last_block_704) :=
+    if (last_block_len_705) <.? ((block_size_v) - (len_size_v)):bool then (
+      let last_block_704 :=
+        array_update (last_block_704) ((block_size_v) - (len_size_v)) (
+          array_to_seq (uint64_to_be_bytes (len_bist_710))) in 
+      let h_703 :=
+        compress (last_block_704) (h_703) in 
+      (h_703, last_block_704)) else (let pad_block_711 : block_t :=
         array_new_ (default) (block_size_v) in 
-      let pad_block_48 :=
-        array_update (pad_block_48) ((block_size_v) - (len_size_v)) (
-          array_to_seq (uint64_to_be_bytes (len_bist_47))) in 
-      let h_40 :=
-        compress (last_block_41) (h_40) in 
-      let h_40 :=
-        compress (pad_block_48) (h_40) in 
-      (h_40, last_block_41)) in 
-  array_from_seq (hash_size_v) (array_to_be_bytes (h_40)).
+      let pad_block_711 :=
+        array_update (pad_block_711) ((block_size_v) - (len_size_v)) (
+          array_to_seq (uint64_to_be_bytes (len_bist_710))) in 
+      let h_703 :=
+        compress (last_block_704) (h_703) in 
+      let h_703 :=
+        compress (pad_block_711) (h_703) in 
+      (h_703, last_block_704)) in 
+  array_from_seq (hash_size_v) (array_to_be_bytes (h_703)).
 
-Definition sha256 (msg_49 : byte_seq) : sha256_digest_t :=
-  hash (msg_49).
+Definition sha256 (msg_712 : byte_seq) : sha256_digest_t :=
+  hash (msg_712).
 
