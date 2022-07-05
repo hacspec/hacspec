@@ -25,5 +25,5 @@ sha2-08 = { package = "sha2", version = "0.8" }
 sha2-09 = { package = "sha2", version = "0.9" }
 bls12_381 = {version = "0.6.0", features = ["experimental"] }
 curve_arithmetic = { git = "https://github.com/Concordium/concordium-base" }
-pairing = "0.15"
+pairing = "0.22"
 group = "0.2"
