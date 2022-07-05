@@ -36,6 +36,7 @@ members = [
     "examples/bls12-381-hash",
     "examples/ed25519",
     "examples/no_std",
+    "examples/rsa-pkcs1",
 ]
 default-members = [
     "lib",
@@ -70,5 +71,6 @@ default-members = [
     "examples/bls12-381-hash",
     "examples/ed25519",
     "examples/sha512",
+    "examples/rsa-pkcs1",
 ]
 exclude = [ "language" ]
