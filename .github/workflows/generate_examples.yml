@@ -1,4 +1,4 @@
-name: Typecheck
+name: Generate Examples
 
 on: [push, pull_request, release]
 
@@ -16,9 +16,17 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Update proof files for examples 
-        run: cargo clean && cargo build --verbose --release && cargo install --path language && \
-	cd examples && cargo clean && cargo build --verbose --release && \
-	cargo hacspec -e v --dir ../coq/src/ "*" --vc-update && \
-	cargo hacspec -e ec --dir ../easycrypt/ "*" --vc-update && \
-	cargo hacspec -e fst --dir ../fstar/ "*" --vc-update
+      - name: Build Cargo
+        run: cargo clean && cargo build --verbose && cargo install --path language
+      - name: Build Cargo - Examples
+        run: cargo clean && cargo build --verbose
+        working-directory: ./examples
+      - name: Generate Coq files
+        run: cargo hacspec -e v --dir ../coq/src/ "*" --vc-update
+	working-directory: ./examples
+      - name: Generate Easycrypt files
+        run: cargo hacspec -e ec --dir ../easycrypt/ "*" --vc-update
+	working-directory: ./examples
+      - name: Generate Fstar files
+        run: cargo hacspec -e fst --dir ../fstar/ "*" --vc-update
+	working-directory: ./examples
