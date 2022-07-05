@@ -47,66 +47,66 @@ Notation "'byte_seq_result_t'" := ((result byte_seq error_t)) : hacspec_scope.
 
 Notation "'rsa_int_result_t'" := ((result rsa_int_t error_t)) : hacspec_scope.
 
-Definition rsaep (pk_1929 : pk_t) (m_1930 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1931, e_1932) :=
-    pk_1929 in 
-  (if ((m_1930) >.? ((n_1931) -% (nat_mod_one ))):bool then (
+Definition rsaep (pk_1947 : pk_t) (m_1948 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_1949, e_1950) :=
+    pk_1947 in 
+  (if ((m_1948) >.? ((n_1949) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (m_1930) (e_1932) (n_1931)))).
+        nat_mod_pow_mod (m_1948) (e_1950) (n_1949)))).
 
-Definition rsadp (sk_1933 : sk_t) (c_1934 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1935, d_1936) :=
-    sk_1933 in 
-  (if ((c_1934) >.? ((n_1935) -% (nat_mod_one ))):bool then (
+Definition rsadp (sk_1951 : sk_t) (c_1952 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_1953, d_1954) :=
+    sk_1951 in 
+  (if ((c_1952) >.? ((n_1953) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (c_1934) (d_1936) (n_1935)))).
+        nat_mod_pow_mod (c_1952) (d_1954) (n_1953)))).
 
-Definition rsasp1 (sk_1937 : sk_t) (m_1938 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1939, d_1940) :=
-    sk_1937 in 
-  (if ((m_1938) >.? ((n_1939) -% (nat_mod_one ))):bool then (
+Definition rsasp1 (sk_1955 : sk_t) (m_1956 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_1957, d_1958) :=
+    sk_1955 in 
+  (if ((m_1956) >.? ((n_1957) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (m_1938) (d_1940) (n_1939)))).
+        nat_mod_pow_mod (m_1956) (d_1958) (n_1957)))).
 
-Definition rsavp1 (pk_1941 : pk_t) (s_1942 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1943, e_1944) :=
-    pk_1941 in 
-  (if ((s_1942) >.? ((n_1943) -% (nat_mod_one ))):bool then (
+Definition rsavp1 (pk_1959 : pk_t) (s_1960 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_1961, e_1962) :=
+    pk_1959 in 
+  (if ((s_1960) >.? ((n_1961) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (s_1942) (e_1944) (n_1943)))).
+        nat_mod_pow_mod (s_1960) (e_1962) (n_1961)))).
 
 Definition i2osp
-  (x_1945 : rsa_int_t)
-  (x_len_1946 : int32)
+  (x_1963 : rsa_int_t)
+  (x_len_1964 : int32)
   : byte_seq_result_t :=
-  (if (((x_1945) >=.? (nat_mod_exp (nat_mod_from_literal (0x) (
-              @repr WORDSIZE128 256) : rsa_int_t) (x_len_1946))) && ((
-          x_len_1946) !=.? (byte_size_v))):bool then (@Err byte_seq error_t (
+  (if (((x_1963) >=.? (nat_mod_exp (nat_mod_from_literal (0x) (
+              @repr WORDSIZE128 256) : rsa_int_t) (x_len_1964))) && ((
+          x_len_1964) !=.? (byte_size_v))):bool then (@Err byte_seq error_t (
         InvalidLength)) else (@Ok byte_seq error_t (seq_slice (
-          nat_mod_to_byte_seq_be (x_1945)) (@cast _ uint32 _ ((byte_size_v) .- (
-              x_len_1946))) (@cast _ uint32 _ (x_len_1946))))).
+          nat_mod_to_byte_seq_be (x_1963)) (@cast _ uint32 _ ((byte_size_v) .- (
+              x_len_1964))) (@cast _ uint32 _ (x_len_1964))))).
 
-Definition os2ip (x_1947 : byte_seq) : rsa_int_t :=
-  nat_mod_from_byte_seq_be (x_1947) : rsa_int_t.
+Definition os2ip (x_1965 : byte_seq) : rsa_int_t :=
+  nat_mod_from_byte_seq_be (x_1965) : rsa_int_t.
 
 Definition mgf1
-  (mgf_seed_1948 : byte_seq)
-  (mask_len_1949 : uint_size)
+  (mgf_seed_1966 : byte_seq)
+  (mask_len_1967 : uint_size)
   : byte_seq_result_t :=
-  let result_1950 : (result byte_seq error_t) :=
+  let result_1968 : (result byte_seq error_t) :=
     @Err byte_seq error_t (InvalidLength) in 
-  ifbnd (mask_len_1949) <.? ((usize 2) .^ ((usize 32) * (hlen_v))) : bool
-  thenbnd (let t_1951 : seq uint8 :=
+  ifbnd (mask_len_1967) <.? ((usize 2) .^ ((usize 32) * (hlen_v))) : bool
+  thenbnd (let t_1969 : seq uint8 :=
       seq_new_ (default) (usize 0) in 
-    bind (foldibnd (usize 0) to (((mask_len_1949) + (usize 32)) / (
-          usize 32)) for t_1951 >> (fun i_1952 t_1951 =>
-      bind (i2osp (nat_mod_from_literal (0x) (pub_u128 (i_1952)) : rsa_int_t) (
-          @repr WORDSIZE32 4)) (fun x_1953 => let t_1951 :=
-          seq_concat (t_1951) (array_to_seq (sha256 (seq_concat (
-                mgf_seed_1948) (x_1953)))) in 
-        Ok ((t_1951))))) (fun t_1951 => let result_1950 :=
-        @Ok byte_seq error_t (seq_slice (t_1951) (usize 0) (mask_len_1949)) in 
-      Ok ((result_1950))))
-  else ((result_1950)) >> (fun '(result_1950) =>
-  result_1950).
+    bind (foldibnd (usize 0) to (((mask_len_1967) + (usize 32)) / (
+          usize 32)) for t_1969 >> (fun i_1970 t_1969 =>
+      bind (i2osp (nat_mod_from_literal (0x) (pub_u128 (i_1970)) : rsa_int_t) (
+          @repr WORDSIZE32 4)) (fun x_1971 => let t_1969 :=
+          seq_concat (t_1969) (array_to_seq (sha256 (seq_concat (
+                mgf_seed_1966) (x_1971)))) in 
+        Ok ((t_1969))))) (fun t_1969 => let result_1968 :=
+        @Ok byte_seq error_t (seq_slice (t_1969) (usize 0) (mask_len_1967)) in 
+      Ok ((result_1968))))
+  else ((result_1968)) >> (fun '(result_1968) =>
+  result_1968).
 
