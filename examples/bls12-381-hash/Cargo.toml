@@ -23,7 +23,7 @@ amcl = { version = "0.3.0",  git = "https://github.com/apache/incubator-milagro-
 pairing-plus = { git = "https://github.com/algorand/pairing-plus" } # published crate have a different implentation of sgn0
 sha2-08 = { package = "sha2", version = "0.8" }
 sha2-09 = { package = "sha2", version = "0.9" }
-bls12_381 = {version = "0.6.0", features = ["experimental"] }
+bls12_381 = {version = "0.7.0", features = ["experimental"] }
 curve_arithmetic = { git = "https://github.com/Concordium/concordium-base" }
 pairing = "0.15"
 group = "0.2"
