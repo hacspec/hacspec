@@ -23,10 +23,10 @@ jobs:
         working-directory: ./examples
       - name: Generate Coq files
         run: cargo hacspec -e v --dir ../coq/src/ "*" --vc-update
-	working-directory: ./examples
+        working-directory: ./examples
       - name: Generate Easycrypt files
         run: cargo hacspec -e ec --dir ../easycrypt/ "*" --vc-update
-	working-directory: ./examples
+        working-directory: ./examples
       - name: Generate Fstar files
         run: cargo hacspec -e fst --dir ../fstar/ "*" --vc-update
-	working-directory: ./examples
+        working-directory: ./examples
