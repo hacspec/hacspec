@@ -13,10 +13,11 @@ use nalgebra::DMatrix;
 use quickcheck::*;
 
 type IntSize = i32;
+type Scalar = i128;
 
 // === Helper functions ===
 
-fn assert_matrices(x: Matrix, y: DMatrix<Scalar>) -> bool {
+fn assert_matrices(x: Matrix<Scalar>, y: DMatrix<Scalar>) -> bool {
     if x.0 == (y.nrows(), y.ncols()) {
         let y = y.transpose();
         let zipped = x.1.iter().zip(y.iter());
@@ -36,7 +37,7 @@ fn assert_matrices(x: Matrix, y: DMatrix<Scalar>) -> bool {
         x.0 .0,
         x.0 .1,
         y.nrows(),
-        y.ncols()
+        y.ncols(),
     );
 }
 

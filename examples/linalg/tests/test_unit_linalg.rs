@@ -5,10 +5,19 @@
 use hacspec_lib::prelude::*;
 use hacspec_linalg::*;
 
+type Scalar = i128;
+
+public_nat_mod!(
+    type_name: Scalar_,
+    type_of_canvas: ScalarCanvas,
+    bit_size_of_field: 256,
+    modulo_value: "1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed"
+);
+
 // === Helper functions ===
 
 // Assert that two hacspec matrices are equal
-fn assert_hacs(x: Matrix, y: Matrix) -> bool {
+fn assert_hacs(x: Matrix<Scalar>, y: Matrix<Scalar>) -> bool {
     if x.0 != y.0 {
         false
     } else {
@@ -33,6 +42,14 @@ fn assert_hacs(x: Matrix, y: Matrix) -> bool {
 }
 
 // === Tests ===
+
+#[test]
+fn test_unit_repeat_nat_mod() {
+    let rs = vec![Scalar_::from_literal(1)];
+
+    repeat(1, 1, Scalar_::from_literal(1));
+    new(1, 1, Seq::<Scalar_>::from_vec(rs)).unwrap();
+}
 
 #[test]
 fn test_unit_repeat() {
