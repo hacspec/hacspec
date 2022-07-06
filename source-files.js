@@ -21,6 +21,7 @@ sourcesIndex["hacspec_derive"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["hacspec_dev"] = {"name":"","files":["lib.rs","prelude.rs","rand.rs","test_vectors.rs"]};
 sourcesIndex["hacspec_ecdsa_p256_sha256"] = {"name":"","files":["ecdsa.rs"]};
 sourcesIndex["hacspec_ed25519"] = {"name":"","files":["ed25519.rs"]};
+sourcesIndex["hacspec_edwards25519"] = {"name":"","files":["edwards25519.rs"]};
 sourcesIndex["hacspec_gf128"] = {"name":"","files":["gf128.rs"]};
 sourcesIndex["hacspec_gimli"] = {"name":"","files":["gimli.rs"]};
 sourcesIndex["hacspec_hkdf"] = {"name":"","files":["hkdf.rs"]};
