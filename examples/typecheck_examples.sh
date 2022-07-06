@@ -24,13 +24,13 @@ function typecheck {
   if [ "$3" == "fst" ];
   then
     echo "    extracting F* ..."
-    cargo hacspec -e fst -dir $fstar_dir -o $fstar_file $1
+    cargo hacspec -e fst --dir $fstar_dir -o $fstar_file $1
   fi
   if [ "$4" == "json" ];
   then
     echo "    extracting JSON ..."
     mkdir -p target/json
-    cargo hacspec -e json -dir target/json/ $1
+    cargo hacspec -e json --dir target/json/ $1
   fi
   if [ "$5" == "coq" ];
   then
@@ -41,7 +41,7 @@ function typecheck {
     outname=${cratename#"$prefix"}
     # capitalize first letter - macOS safe version (bash <= 3.2)
     outname=$(tr '[:lower:]' '[:upper:]' <<<"${outname:0:1}")${outname:1}
-    cargo hacspec -e v -dir target/coq/ -o ${outname} $1
+    cargo hacspec -e v --dir target/coq/ -o ${outname} $1
   fi
 }
 

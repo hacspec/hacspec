@@ -85,9 +85,9 @@ pub fn fizzbarbuzz() -> Result<u32, U8> {
     Result::<u32, U8>::Ok(out)
 }
 
-pub type alias = Result<u32, U8>;
+pub type Alias = Result<u32, U8>;
 
-pub fn alias_test() -> alias {
+pub fn alias_test() -> Alias {
     if true {
         Result::<u32, U8>::Err(U8(0u8))?;
     }
