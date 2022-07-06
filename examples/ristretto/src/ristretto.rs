@@ -126,12 +126,14 @@ fn is_negative(e: FieldElement) -> bool {
 }
 
 // Checks if two given field elements are equal.
-fn ct_eq(u: FieldElement, v: FieldElement) -> bool {
+// Should run constant time, which will be possible if FieldElement is changed to Secret Ints
+fn eq(u: FieldElement, v: FieldElement) -> bool {
     u == v
 }
 
 // Given a condition it selects u if the condition is true and v if it is false.
-fn ct_select(u: FieldElement, cond: bool, v: FieldElement) -> FieldElement {
+// Should run constant time, which will be possible if FieldElement is changed to Secret Ints
+fn select(u: FieldElement, cond: bool, v: FieldElement) -> FieldElement {
     if cond {
         u
     } else {
@@ -145,8 +147,9 @@ fn neg_fe(u: FieldElement) -> FieldElement {
 }
 
 // Returns the absolute value of the given field element.
-fn ct_abs(u: FieldElement) -> FieldElement {
-    ct_select(neg_fe(u), is_negative(u), u)
+// Should run constant time, which will be possible if FieldElement is changed to Secret Ints
+fn abs(u: FieldElement) -> FieldElement {
+    select(neg_fe(u), is_negative(u), u)
 }
 
 // Computes if the division of the two given field elements is square and returns said square.
@@ -161,15 +164,15 @@ fn sqrt_ratio_m1(u: FieldElement, v: FieldElement) -> (bool, FieldElement) {
     let mut r = (u * v3) * (u * v7).pow_felem((P() - fe(5)) / fe(8));
     let check = v * r.pow(2u128);
 
-    let correct_sign_sqrt = ct_eq(check, u);
-    let flipped_sign_sqrt = ct_eq(check, neg_fe(u));
-    let flipped_sign_sqrt_i = ct_eq(check, neg_fe(u) * SQRT_M1());
+    let correct_sign_sqrt = eq(check, u);
+    let flipped_sign_sqrt = eq(check, neg_fe(u));
+    let flipped_sign_sqrt_i = eq(check, neg_fe(u) * SQRT_M1());
 
     let r_prime = SQRT_M1() * r;
-    r = ct_select(r_prime, flipped_sign_sqrt || flipped_sign_sqrt_i, r);
+    r = select(r_prime, flipped_sign_sqrt || flipped_sign_sqrt_i, r);
 
     // Choose the nonnegative square root.
-    r = ct_abs(r);
+    r = abs(r);
 
     let was_square = correct_sign_sqrt || flipped_sign_sqrt;
 
