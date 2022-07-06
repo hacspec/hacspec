@@ -339,6 +339,7 @@ fn handle_crate<'tcx>(
 
     let mut krate_queue_typechecked = Vec::new();
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_programs {
+        log::trace!("   typechecking {:#?}", krate);
         let new_top_ctx = &mut name_resolution::TopLevelContext {
             consts: HashMap::new(),
             functions: HashMap::new(),
