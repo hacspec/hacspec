@@ -1,0 +1,584 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples&#x2F;rsa-fdh-vrf&#x2F;src&#x2F;rsa-fdh-vrf.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rsa-fdh-vrf.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../hacspec_rsa_fdh_vrf/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+</pre><pre class="rust"><code><span class="comment">// This crate implements RSA-FDH-VRF based on section 4 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/</span>
+<span class="comment">// The ciphersuite is RSA-FDH-VRF-SHA256, suite string can be changed if other hash function is desired</span>
+<span class="comment">// The step comments refer to the corresponding steps in the IETF pseudocode for comparison with hacspec</span>
+
+<span class="kw">use</span> <span class="ident">hacspec_lib</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">hacspec_sha256</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">hacspec_rsa_pkcs1</span>::<span class="kw-2">*</span>;
+
+<span class="macro">bytes!</span>(<span class="ident">IntByte</span>, <span class="number">1</span>);
+
+<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+<span class="kw">const</span> <span class="ident">ONE</span>: <span class="ident">IntByte</span> <span class="op">=</span> <span class="ident">IntByte</span>(<span class="macro">secret_array!</span>(<span class="ident">U8</span>,  [<span class="number">0x01u8</span>]));
+<span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span>
+<span class="kw">const</span> <span class="ident">TWO</span>: <span class="ident">IntByte</span> <span class="op">=</span> <span class="ident">IntByte</span>(<span class="macro">secret_array!</span>(<span class="ident">U8</span>,  [<span class="number">0x02u8</span>]));
+
+<span class="kw">const</span> <span class="ident">SUITE_STRING</span>: <span class="ident">IntByte</span> <span class="op">=</span> <span class="ident">ONE</span>;
+
+<span class="comment">// Helper function used by prove and verify to compute mgf1 of alpha</span>
+<span class="comment">// mgf_salt currently part of cipher suite, could be optional input</span>
+<span class="kw">fn</span> <span class="ident">vrf_mgf1</span>(<span class="ident">n</span>: <span class="ident">RSAInt</span>, <span class="ident">alpha</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="ident">ByteSeqResult</span> {
+    <span class="kw">let</span> <span class="ident">mgf_salt1</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">RSAInt::from_literal</span>(<span class="ident">BYTE_SIZE</span> <span class="kw">as</span> <span class="ident">u128</span>), <span class="number">4u32</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">mgf_salt2</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">n</span>, <span class="ident">BYTE_SIZE</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">mgf_salt</span> <span class="op">=</span> <span class="ident">mgf_salt1</span>.<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">mgf_salt2</span>);
+
+    <span class="kw">let</span> <span class="ident">mgf_string</span> <span class="op">=</span> <span class="ident">SUITE_STRING</span>
+        .<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">ONE</span>)
+        .<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">mgf_salt</span>)
+        .<span class="ident">concat</span>(<span class="ident">alpha</span>);
+    <span class="kw">let</span> <span class="ident">mgf</span> <span class="op">=</span> <span class="ident">mgf1</span>(<span class="kw-2">&amp;</span><span class="ident">mgf_string</span>, <span class="ident">BYTE_SIZE</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="number">1usize</span>)<span class="question-mark">?</span>;
+    <span class="ident">ByteSeqResult::Ok</span>(<span class="ident">mgf</span>)
+}
+
+<span class="comment">// Based on section 4.1 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prove</span>(<span class="ident">sk</span>: <span class="ident">SK</span>, <span class="ident">alpha</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="ident">ByteSeqResult</span> {
+    <span class="kw">let</span> (<span class="ident">n</span>, <span class="ident">_d</span>) <span class="op">=</span> <span class="ident">sk</span>.<span class="ident">clone</span>();
+
+    <span class="comment">// STEP 1 and 2</span>
+    <span class="kw">let</span> <span class="ident">em</span> <span class="op">=</span> <span class="ident">vrf_mgf1</span>(<span class="ident">n</span>, <span class="ident">alpha</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// STEP 3</span>
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">os2ip</span>(<span class="kw-2">&amp;</span><span class="ident">em</span>);
+
+    <span class="comment">// STEP 4</span>
+    <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">rsasp1</span>(<span class="ident">sk</span>, <span class="ident">m</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// STEP 5 and 6</span>
+    <span class="ident">i2osp</span>(<span class="ident">s</span>, <span class="ident">BYTE_SIZE</span>)
+}
+
+<span class="comment">// Based on section 4.2 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proof_to_hash</span>(<span class="ident">pi_string</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="ident">ByteSeqResult</span> {
+    <span class="comment">// STEP 1 and 2</span>
+    <span class="kw">let</span> <span class="ident">hash_string</span> <span class="op">=</span> <span class="ident">SUITE_STRING</span>.<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">TWO</span>.<span class="ident">concat</span>(<span class="ident">pi_string</span>));
+
+    <span class="comment">// STEP 3</span>
+    <span class="ident">ByteSeqResult</span>:: <span class="prelude-val">Ok</span>(<span class="ident">sha256</span>(<span class="kw-2">&amp;</span><span class="ident">hash_string</span>).<span class="ident">slice</span>(<span class="number">0</span>,<span class="number">32</span>))
+}
+
+<span class="comment">// Based on section 4.3 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify</span>(<span class="ident">pk</span>: <span class="ident">PK</span>, <span class="ident">alpha</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>, <span class="ident">pi_string</span>: <span class="kw-2">&amp;</span><span class="ident">ByteSeq</span>) -&gt; <span class="ident">ByteSeqResult</span> {
+    <span class="kw">let</span> (<span class="ident">n</span>, <span class="ident">_e</span>) <span class="op">=</span> <span class="ident">pk</span>.<span class="ident">clone</span>();
+
+    <span class="comment">// STEP 1</span>
+    <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">os2ip</span>(<span class="ident">pi_string</span>);
+
+    <span class="comment">// STEP 2</span>
+    <span class="kw">let</span> <span class="ident">m</span> <span class="op">=</span> <span class="ident">rsavp1</span>(<span class="ident">pk</span>, <span class="ident">s</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// STEP 3 and 4</span>
+    <span class="kw">let</span> <span class="ident">em_prime</span> <span class="op">=</span> <span class="ident">vrf_mgf1</span>(<span class="ident">n</span>, <span class="ident">alpha</span>)<span class="question-mark">?</span>;
+
+    <span class="comment">// STEP 5</span>
+    <span class="kw">let</span> <span class="ident">m_prime</span> <span class="op">=</span> <span class="ident">os2ip</span>(<span class="kw-2">&amp;</span><span class="ident">em_prime</span>);
+
+    <span class="comment">// STEP 6</span>
+    <span class="kw">if</span> <span class="ident">m</span> <span class="op">==</span> <span class="ident">m_prime</span> {
+        <span class="ident">proof_to_hash</span>(<span class="ident">pi_string</span>)
+    } <span class="kw">else</span> {
+        <span class="ident">ByteSeqResult::Err</span>(<span class="ident">Error::VerificationFailed</span>)
+    }
+}
+
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">num_bigint</span>::{<span class="ident">BigInt</span>,<span class="ident">Sign</span>};
+    <span class="kw">use</span> <span class="ident">glass_pumpkin::prime</span>;
+    <span class="kw">use</span> <span class="ident">quickcheck</span>::<span class="kw-2">*</span>;
+
+    <span class="comment">// RSA key generation</span>
+    <span class="comment">// Taken from https://asecuritysite.com/rust/rsa01/ </span>
+    <span class="kw">fn</span> <span class="ident">modinv</span>(<span class="ident">a0</span>: <span class="ident">BigInt</span>, <span class="ident">m0</span>: <span class="ident">BigInt</span>) -&gt; <span class="ident">BigInt</span> {
+        <span class="kw">if</span> <span class="ident">m0</span> <span class="op">==</span> <span class="ident">one</span>() { <span class="kw">return</span> <span class="ident">one</span>() }
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">a</span>, <span class="kw-2">mut</span> <span class="ident">m</span>, <span class="kw-2">mut</span> <span class="ident">x0</span>, <span class="kw-2">mut</span> <span class="ident">inv</span>) <span class="op">=</span> 
+            (<span class="ident">a0</span>, <span class="ident">m0</span>.<span class="ident">clone</span>(), <span class="ident">zero</span>(), <span class="ident">one</span>());
+        <span class="kw">while</span> <span class="ident">a</span> <span class="op">&gt;</span> <span class="ident">one</span>() {
+            <span class="ident">inv</span> <span class="op">-</span><span class="op">=</span> (<span class="kw-2">&amp;</span><span class="ident">a</span> <span class="op">/</span> <span class="kw-2">&amp;</span><span class="ident">m</span>) <span class="op">*</span> <span class="kw-2">&amp;</span><span class="ident">x0</span>;
+            <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">a</span> <span class="op">%</span> <span class="kw-2">&amp;</span><span class="ident">m</span>;
+            <span class="ident">std::mem::swap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">a</span>, <span class="kw-2">&amp;mut</span> <span class="ident">m</span>);
+            <span class="ident">std::mem::swap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">x0</span>, <span class="kw-2">&amp;mut</span> <span class="ident">inv</span>)
+        }
+        <span class="kw">if</span> <span class="ident">inv</span> <span class="op">&lt;</span> <span class="ident">zero</span>() { <span class="ident">inv</span> <span class="op">+</span><span class="op">=</span> <span class="ident">m0</span> }
+        <span class="ident">inv</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">rsa_key_gen</span>() -&gt; <span class="ident">Keyp</span> {
+        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">BigInt::from_biguint</span>(<span class="ident">Sign::Plus</span>,
+            <span class="ident">prime::new</span>((<span class="ident">BIT_SIZE</span> <span class="op">/</span> <span class="number">2</span>) <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">unwrap</span>());
+        <span class="kw">let</span> <span class="ident">q</span> <span class="op">=</span> <span class="ident">BigInt::from_biguint</span>(<span class="ident">Sign::Plus</span>,
+            <span class="ident">prime::new</span>((<span class="ident">BIT_SIZE</span> <span class="op">/</span> <span class="number">2</span>) <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">unwrap</span>());
+
+        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">RSAInt::from</span>(<span class="ident">p</span>.<span class="ident">clone</span>()<span class="op">*</span> <span class="ident">q</span>.<span class="ident">clone</span>());
+
+        <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">BigInt::parse_bytes</span>(<span class="string">b&quot;65537&quot;</span>, <span class="number">10</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">totient</span> <span class="op">=</span> (<span class="ident">p</span> <span class="op">-</span> <span class="ident">BigInt::one</span>()) <span class="op">*</span> (<span class="ident">q</span> <span class="op">-</span> <span class="ident">BigInt::one</span>());
+        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">modinv</span>(<span class="ident">e</span>.<span class="ident">clone</span>(), <span class="ident">totient</span>.<span class="ident">clone</span>());
+        
+        <span class="ident">Keyp</span> { <span class="ident">n</span>, <span class="ident">d</span>: <span class="ident">RSAInt::from</span>(<span class="ident">d</span>), <span class="ident">e</span>: <span class="ident">RSAInt::from</span>(<span class="ident">e</span>) }
+    }
+
+    <span class="comment">// quickcheck generation</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">struct</span> <span class="ident">Keyp</span> {<span class="ident">n</span>: <span class="ident">RSAInt</span>, <span class="ident">d</span>: <span class="ident">RSAInt</span>, <span class="ident">e</span>: <span class="ident">RSAInt</span>}
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
+    <span class="kw">struct</span> <span class="ident">Wrapper</span>(<span class="ident">RSAInt</span>);
+
+    <span class="kw">impl</span> <span class="ident">Arbitrary</span> <span class="kw">for</span> <span class="ident">Wrapper</span> {
+        <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">g</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Gen</span>) -&gt; <span class="ident">Wrapper</span> {
+            <span class="kw">const</span> <span class="ident">NUM_BYTES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">127</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span>: [<span class="ident">u8</span>; <span class="ident">NUM_BYTES</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="ident">NUM_BYTES</span> <span class="kw">as</span> <span class="ident">usize</span>];
+            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">NUM_BYTES</span> <span class="kw">as</span> <span class="ident">usize</span> {
+                <span class="ident">a</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">u8::arbitrary</span>(<span class="ident">g</span>);
+            }
+            <span class="ident">Wrapper</span>(<span class="ident">RSAInt::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span><span class="ident">::from_public_slice</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>)))
+        }
+    }
+
+    <span class="kw">impl</span> <span class="ident">Arbitrary</span> <span class="kw">for</span> <span class="ident">Keyp</span> {
+        <span class="kw">fn</span> <span class="ident">arbitrary</span>(<span class="ident">_g</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Gen</span>) -&gt; <span class="ident">Keyp</span> {
+            <span class="ident">rsa_key_gen</span>()
+        }
+    }
+
+    <span class="comment">// quickcheck tests</span>
+    <span class="kw">const</span> <span class="ident">NUM_TESTS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">5</span>;
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_rsafdhvrf</span>() {
+        <span class="kw">fn</span> <span class="ident">rsafdhvrf</span>(<span class="ident">kp</span>: <span class="ident">Keyp</span>, <span class="ident">alpha</span>: <span class="ident">Wrapper</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">alpha</span>.<span class="number">0</span>, <span class="ident">BYTE_SIZE</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">prove</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">proof_to_hash</span>(<span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">verify</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">e</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>, <span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+            <span class="ident">beta_prime</span> <span class="op">==</span> <span class="ident">beta</span>
+        }
+        <span class="ident">QuickCheck::new</span>().<span class="ident">tests</span>(<span class="ident">NUM_TESTS</span>)
+            .<span class="ident">quickcheck</span>(<span class="ident">rsafdhvrf</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Keyp</span>, <span class="ident">Wrapper</span>) -&gt; <span class="ident">bool</span>);
+    }
+    
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_neg_rsafdhvrf</span>() {
+        <span class="kw">fn</span> <span class="ident">neg_rsafdhvrf</span>(<span class="ident">kp</span>: <span class="ident">Keyp</span>, <span class="ident">fake</span>: <span class="ident">Keyp</span>, <span class="ident">alpha</span>: <span class="ident">Wrapper</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">alpha</span>.<span class="number">0</span>, <span class="ident">BYTE_SIZE</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">prove</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>).<span class="ident">unwrap</span>();
+            <span class="kw">match</span> <span class="ident">verify</span>((<span class="ident">fake</span>.<span class="ident">n</span>, <span class="ident">fake</span>.<span class="ident">e</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>, <span class="kw-2">&amp;</span><span class="ident">pi</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">_beta_prime</span>) =&gt; <span class="bool-val">false</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="macro">matches!</span>(<span class="ident">e</span>, <span class="ident">Error::VerificationFailed</span>
+                                    <span class="op">|</span> <span class="ident">Error::MessageTooLarge</span>),
+            }
+        }
+        <span class="ident">QuickCheck::new</span>().<span class="ident">tests</span>(<span class="ident">NUM_TESTS</span>)
+            .<span class="ident">quickcheck</span>(<span class="ident">neg_rsafdhvrf</span> <span class="kw">as</span> <span class="kw">fn</span>(<span class="ident">Keyp</span>, <span class="ident">Keyp</span>, <span class="ident">Wrapper</span>) -&gt; <span class="ident">bool</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_neg_alpha_rsafdhvrf</span>() {
+        <span class="kw">fn</span> <span class="ident">neg_alpha_rsafdhvrf</span>(
+            <span class="ident">kp</span>: <span class="ident">Keyp</span>, <span class="ident">alpha</span>: <span class="ident">Wrapper</span>, <span class="ident">fake_alpha</span>: <span class="ident">Wrapper</span>
+        ) -&gt; <span class="ident">bool</span> {
+            <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">alpha</span>.<span class="number">0</span>, <span class="ident">BYTE_SIZE</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">fake_alpha</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">fake_alpha</span>.<span class="number">0</span>, <span class="ident">BYTE_SIZE</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">prove</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">fake_alpha</span>).<span class="ident">unwrap</span>();
+            <span class="kw">match</span> <span class="ident">verify</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">e</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>, <span class="kw-2">&amp;</span><span class="ident">pi</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">_beta_prime</span>) =&gt; <span class="bool-val">false</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="macro">matches!</span>(<span class="ident">e</span>, <span class="ident">Error::VerificationFailed</span>
+                                    <span class="op">|</span> <span class="ident">Error::MessageTooLarge</span>),
+            }
+        }
+        <span class="ident">QuickCheck::new</span>().<span class="ident">tests</span>(<span class="ident">NUM_TESTS</span>)
+            .<span class="ident">quickcheck</span>(<span class="ident">neg_alpha_rsafdhvrf</span> <span class="kw">as</span>
+                <span class="kw">fn</span>(<span class="ident">Keyp</span>, <span class="ident">Wrapper</span>, <span class="ident">Wrapper</span>) -&gt; <span class="ident">bool</span>);
+    }
+
+    <span class="comment">// Test vector generation</span>
+    <span class="comment">// Strings should be given in hexadecimal</span>
+    <span class="kw">fn</span> <span class="ident">generate_test_vector</span>(
+        <span class="ident">alpha</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">kp</span>: <span class="ident">Keyp</span>
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">String</span>), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="kw-2">&amp;</span><span class="ident">alpha</span>);
+        <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">prove</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">proof_to_hash</span>(<span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">verify</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">e</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>, <span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+
+        <span class="macro">assert_eq!</span>(<span class="ident">beta_prime</span>, <span class="ident">beta</span>);
+
+        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">BYTE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">kp</span>.<span class="ident">d</span>, <span class="ident">BYTE_SIZE</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">i2osp</span>(<span class="ident">kp</span>.<span class="ident">e</span>, <span class="ident">BYTE_SIZE</span>)<span class="question-mark">?</span>;
+
+        <span class="macro">println!</span>(<span class="string">&quot;n:\n{}&quot;</span>, <span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">n</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;d:\n{}&quot;</span>, <span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">d</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;e:\n{}&quot;</span>, <span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>));
+
+        <span class="macro">println!</span>(<span class="string">&quot;alpha:\n{}&quot;</span>, <span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">alpha</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;pi:\n{}&quot;</span>, <span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">pi</span>));
+        <span class="macro">println!</span>(<span class="string">&quot;beta:\n{}&quot;</span>, <span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">beta</span>));
+
+        <span class="ident">Result::Ok</span>((<span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">pi</span>), <span class="ident">ByteSeq::to_hex</span>(<span class="kw-2">&amp;</span><span class="ident">beta</span>)))
+    }
+
+    <span class="comment">// Run with cargo test test_vector -- --ignored --nocapture in this crate</span>
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">ignore</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_vector</span>() {
+        <span class="comment">// Pass alpha in hexadecimal</span>
+        <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">rsa_key_gen</span>();
+        <span class="comment">// let kp = get_test_key();</span>
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">generate_test_vector</span>(<span class="string">&quot;af82&quot;</span>, <span class="ident">kp</span>).<span class="ident">is_err</span>());
+    }
+
+    <span class="kw">fn</span> <span class="ident">get_test_key</span>() -&gt; <span class="ident">Keyp</span> {
+        <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">RSAInt::from_hex</span>(<span class="string">&quot;64f70acdc41c0ee7cb4961760368e34889c058ad3c7e578e8e72ed0d2fd1c7cfbb8beffd107204d544919db9d2470669c969e178d4deb8393daec4584ca9f162805c9ba46e617d89d4ab6480b0873b1cb92cf7232c88f013931ffe30f8ddf2cddbff4402bcb721985d2bb2eee5382dd09210b5d1da6b6b8207fe3e526de54efb55b56cd52d97cd77df6315569d5b59823c85ad99c57ad2959ec7d12cdf0c3e66cc57eaa1e644da9b0ca69b0df43945b0bd88ac66903ec98fe0e770b683ca7a332e69cba9229115a5295273aeeb4af2662063a312cbb4b871323f71888fd39557a5f4610ea7a590b021d43e5a89b69de68c728ce147f2743e0b97a5b3eb0d6ab1&quot;</span>);
+        <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">RSAInt::from_hex</span>(<span class="string">&quot;39134e9033a488e8900ad3859b37d804519ae2864c04400ade8c2965a2fabc31ba9bc8f70e2ce67e895ca8053bd1dad6427e106ff626518e4a4859c670d0411ca5e3b438a80d84a23e0f05a99a2158514c7d16d8537cb5fadad8e3215c0e5c0bf3a9c210aa0dfc77dd73ae9b4e090c1d33f52e538b5dde508ba43626f2e906546773ba7401aa6b68ab1151da528336ddafc9a6f2995d89ec282bc555fe41e776216576c0aafb66ef00b718e6c62afd51faf82e7b5a1d430591465b2188fa286ce778eb6a1b346b58331c7820b4142fb808e59ec910aa9b6d340dea673ae7be2d9e1fa91494e40372bcfb92da5fe236dc93b30b0a59b20af8edf3a10e3ea6dfe1&quot;</span>);
+        <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">RSAInt::from_hex</span>(<span class="string">&quot;010001&quot;</span>);
+        <span class="ident">Keyp</span> {<span class="ident">n</span>, <span class="ident">d</span>, <span class="ident">e</span>}
+    }
+
+    <span class="comment">// Note that the test vectors have been generated using this code</span>
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_empty</span>() {
+        <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">get_test_key</span>();
+        <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;&quot;</span>);
+        <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;406581e350c601d6d7518ac928f6753929c56a7480a4a3d011ed65e5f61ca033accd45c03cac2dddcd61b909cedd0df517a1bba4705c9d04a2a8c7d735d24bc3e59b263cc8c18d5f6e2712747d809df7868ac720f90ffd3d7c7b78f3d75f14a9755ea8138804806f4739429d1a313b3abaaf89ce97fbdf10bc01d66723b0b38ad5dc51c87e5f852e2c8fc923cf0f9c86bb7bf8ae808532fcb8a981338d5b13278e66e19915e41c6fbd09f1fce3300da422fbf46f706d1c79f298c740926e14069f83dae52a25bad684e420ad5fc8af3b02e0cf3f79782fb6e7e65abe5e1f6b4fe41f20339b2986fe39f7ce4ceb9c2490d5229e9bfda93150d6800880c411daae&quot;</span>);
+        <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;d065ca3be8716236e99f64139adf481090f0a0c839f86ffda3c4fad948166af0&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">pi_prime</span> <span class="op">=</span> <span class="ident">prove</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">pi_prime</span>, <span class="ident">pi</span>);
+
+        <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">proof_to_hash</span>(<span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">beta_prime</span>, <span class="ident">beta</span>);
+
+        <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">verify</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">e</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>, <span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">beta_prime</span>, <span class="ident">beta</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_72</span>() {
+        <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">get_test_key</span>();
+        <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;72&quot;</span>);
+        <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;3d396dc417bee1975ff63c4e8b43b9417be03a91d5eb47309790d74100271342d6dc11511333ec4bc42aea3e02640dc870665044e85085c3dea43eedeb266d9b2de3824aca18b8de3e4d198bde808d80a2a10f0f4bd73fbc7cc36da44cb68af3161b2264e737dcd2d669252abb29f275c971ff6b8234876b7d1ff3d4d05197fe563d6ae92685dccbbbb689b4837da42fe47433019d9bfc50001b11708bf9f656532febf674119c0d67e27714195722fd977e0fc35d7325b5fb3ecb54df53986e01a809d0e5ec442fdacc3d271e7ab5480b8eb18f25cd3baf6a47abc6bf027e8dedef911f2bec367fa5d65e106f314b64cc1d9534d4f26fa034035a43852be66a&quot;</span>);
+        <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;a229210b84f0bb43b296075f226dee433cf2727cd6c2e4871afdeb77414f6a47&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">pi_prime</span> <span class="op">=</span> <span class="ident">prove</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">pi_prime</span>, <span class="ident">pi</span>);
+
+        <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">proof_to_hash</span>(<span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">beta_prime</span>, <span class="ident">beta</span>);
+
+        <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">verify</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">e</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>, <span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">beta_prime</span>, <span class="ident">beta</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_af82</span>() {
+        <span class="kw">let</span> <span class="ident">kp</span> <span class="op">=</span> <span class="ident">get_test_key</span>();
+        <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;af82&quot;</span>);
+        <span class="kw">let</span> <span class="ident">pi</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;57b07056abc6851330b21ae890fd43ea53b4435319748cf8dba82148ee381c11d21a8660a8714aa59abaac2b7d0141ac4e85b1113b144328eb11461a7f26086896036fc49579a58a2516cecd274946f8dd82fef31652dfe2e2b495966cd6193a1bd197ef6e3472f30bfe14827dd968ea3bf8310dc002a765a0d54b12c3c9627309800b74701a3f7d07a02db0a6ca3a639e60726059727313818a6b671bebe18f078713ced33e50acbfd1e661ec89c5e82b8e1e07f6293f45474aa57d084da46a2437932491d92a87b3393bb0ec62254a3eca19e1004756867839671f84f7a2378097f334832f4aa0442fc5f8637fb2220bb3f2dca247927f0d49ae1c1b2e7455&quot;</span>);
+        <span class="kw">let</span> <span class="ident">beta</span> <span class="op">=</span> <span class="ident">ByteSeq::from_hex</span>(<span class="string">&quot;ebc5582b6aaf23c424ec1c74e1b8250327c957967fa37566284dac8400e62032&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">pi_prime</span> <span class="op">=</span> <span class="ident">prove</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">d</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">pi_prime</span>, <span class="ident">pi</span>);
+
+        <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">proof_to_hash</span>(<span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">beta_prime</span>, <span class="ident">beta</span>);
+
+        <span class="kw">let</span> <span class="ident">beta_prime</span> <span class="op">=</span> <span class="ident">verify</span>((<span class="ident">kp</span>.<span class="ident">n</span>, <span class="ident">kp</span>.<span class="ident">e</span>), <span class="kw-2">&amp;</span><span class="ident">alpha</span>, <span class="kw-2">&amp;</span><span class="ident">pi</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">beta_prime</span>, <span class="ident">beta</span>);
+    }
+    
+}
+</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hacspec_rsa_fdh_vrf" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</body></html>

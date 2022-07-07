@@ -384,6 +384,8 @@
 <span id="384">384</span>
 <span id="385">385</span>
 <span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
 </pre><pre class="rust"><code><span class="comment">// This crate implements RSA primitives from PKCS #1 v2.2, as specified in RFC8017: https://datatracker.ietf.org/doc/html/rfc8017</span>
 <span class="comment">// Secret keys are represented in the representation described in section 3.2 of https://datatracker.ietf.org/doc/html/rfc8017#section-3.2</span>
 <span class="comment">// Note that the RSA primitives return a MessageTooLarge error if the message is larger than the RSA modulus n</span>
@@ -400,6 +402,8 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="ident">InvalidLength</span>,
     <span class="ident">MessageTooLarge</span>,
+    <span class="ident">DecryptionFailed</span>,
+    <span class="ident">VerificationFailed</span>,
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">PK</span> <span class="op">=</span> (<span class="ident">RSAInt</span>, <span class="ident">RSAInt</span>);
