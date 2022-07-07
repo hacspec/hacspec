@@ -1,13 +1,15 @@
 // This crate implements hash to curve for the edwards25519 elliptic curve.
 // This specification follows edwards25519_XMD:SHA-512_ELL2_NU_ as specified in
-// section 8.5 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#name-suites-for-curve25519-and-e
-// Some parts of the code have been adapted/taken from hacspecs bls12-381-hash specification.
+// section 8.5 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
+// Some parts of the code have been adapted/taken from hacspecs bls12-381-hash 
+// specification.
 //
 // The crate has 3 different specifications of the map_to_curve primitive. The
 // first two are map_to_curve_elligator2 and map_to_curve_elligator2_straight.
 // Both of these specifications utilize the monty_to_edw primitive. The third
-// specification map_to_curve_elligator2_edwards25519. An equality test of these
-// 3 implementations and an external one can be seen in ../tests/test_equiv.rs. 
+// specification is map_to_curve_elligator2_edwards25519. An equality test of
+// these 3 implementations and an external one can be seen in 
+// ../tests/test_equiv.rs. 
 
 use hacspec_lib::*;
 use hacspec_edwards25519::*;
@@ -62,7 +64,7 @@ const P_5_8: ArrEd25519FieldElement = ArrEd25519FieldElement(secret_array!(
 ));
 
 // Taken from bls12-381-hash.rs
-// Specification can be seen in section 5.4.1 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-5.4.1
+// Specification can be seen in section 5.3.1 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 pub fn expand_message_xmd(
     msg: &ByteSeq, dst: &ByteSeq, len_in_bytes: usize
 ) -> ByteSeq {
@@ -95,7 +97,7 @@ pub fn expand_message_xmd(
 }
 
 // Adapted from bls12-381-hash.rs
-// Specification can be seen in section 5.3 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-5.3
+// Specification can be seen in section 5.2 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 pub fn ed_hash_to_field(
     msg: &ByteSeq, dst: &ByteSeq, count: usize
 ) -> Seq<Ed25519FieldElement> {
@@ -121,7 +123,7 @@ fn ed_is_square(x: Ed25519FieldElement) -> bool {
     tv == Ed25519FieldElement::ZERO() || tv == Ed25519FieldElement::ONE()
 }
 
-// Specification can be seen in https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-4.1-5
+// Specification can be seen in section 4.1 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 fn sgn0_m_eq_1(x: Ed25519FieldElement) -> bool {
     x % Ed25519FieldElement::TWO() == Ed25519FieldElement::ONE()
 }
@@ -157,7 +159,7 @@ fn xor(a: bool, b: bool) -> bool {
     }
 }
 
-// Specification of monty_to_edw from appendix D.1 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#appendix-D.1-13
+// Specification of monty_to_edw based on appendix D.1 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 // IMPORTANT: Adapted to multiply with sqrt(-486664) and is thus not the generic
 // map that is specified in appendix D.1. Should only be used for edwards25519
 // and is thus not the generic monty_to_edw map, hence the different name.
@@ -185,7 +187,7 @@ pub fn curve25519_to_edwards25519(p: EdPoint) -> EdPoint {
     (v, w, one, v * w)
 }
 
-// Specification can be seen in section 6.7.1 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.7.1
+// Specification can be seen in section 6.7.1 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 // NOTE: returns a curve25519 point, even though represented as EdPoint
 pub fn map_to_curve_elligator2(u: Ed25519FieldElement) -> EdPoint {
     let j = Ed25519FieldElement::from_literal(J);
@@ -221,7 +223,7 @@ pub fn map_to_curve_elligator2(u: Ed25519FieldElement) -> EdPoint {
     (s, t, one, s * t)
 }
 
-// Specification can be seen section F.3 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#name-elligator-2-method-3
+// Specification can be seen section F.3 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 // NOTE: returns a curve25519 point, even though represented as EdPoint
 pub fn map_to_curve_elligator2_straight(u: Ed25519FieldElement) -> EdPoint {
     let j = Ed25519FieldElement::from_literal(J);
@@ -254,7 +256,7 @@ pub fn map_to_curve_elligator2_straight(u: Ed25519FieldElement) -> EdPoint {
     (s, t, one, s * t)
 }
 
-// Specification can be seen in section G.2.1 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#name-curve25519-q-5-mod-8-k-1
+// Specification can be seen in section G.2.1 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 // NOTE: returns a curve25519 point, even though represented as EdPoint
 pub fn map_to_curve_elligator2_curve25519(u: Ed25519FieldElement) -> EdPoint {
     let j = Ed25519FieldElement::from_literal(J);
@@ -309,8 +311,8 @@ pub fn map_to_curve_elligator2_curve25519(u: Ed25519FieldElement) -> EdPoint {
     (xn, xd, y, one)
 }
 
-// Specification can be seen in section G.2.2 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#name-edwards25519
-// Optimized G.2
+// Specification can be seen in section G.2.2 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
+// Optimized version of G.2.1
 pub fn map_to_curve_elligator2_edwards25519(u: Ed25519FieldElement) -> EdPoint {
     let j = Ed25519FieldElement::from_literal(J);
     let zero = Ed25519FieldElement::ZERO();
@@ -336,14 +338,14 @@ pub fn map_to_curve_elligator2_edwards25519(u: Ed25519FieldElement) -> EdPoint {
     (x, y, one, x * y)
 }
 
-// Specification can be seen in section 6.8.2 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-6.8.2
+// Specification can be seen in section 6.8.2 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 pub fn map_to_curve_elligator2_edwards(u: Ed25519FieldElement) -> EdPoint {
     // map_to_curve_elligator2_straight(u) can be used instead
     let st = map_to_curve_elligator2(u);
     curve25519_to_edwards25519(st)
 }
 
-// Specification can be seen in section 3 of https://www.ietf.org/archive/id/draft-irtf-cfrg-hash-to-curve-13.html#section-3
+// Specification can be seen in section 3 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 pub fn ed_encode_to_curve(msg: &ByteSeq, dst: &ByteSeq) -> EdPoint {
     let u = ed_hash_to_field(msg, dst, 1);
     // map_to_curve_elligator2_edwards25519(u[0]) can be used instead
