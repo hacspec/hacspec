@@ -18,7 +18,7 @@ use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SpecialNames {
     pub arrays: HashSet<String>,
     pub enums: HashSet<String>,
@@ -1192,6 +1192,7 @@ fn translate_expr(
             Err(())
         }
         ExprKind::Cast(e1, t1) => {
+            log::trace!("   ExprKind::Cast {:?} -> {:?}", e1, t1);
             let new_e1 = translate_expr_expects_exp(sess, specials, e1)?;
             let new_t1 = translate_base_typ(sess, t1)?;
             Ok((
@@ -1764,6 +1765,7 @@ fn translate_block(
     ))
 }
 
+#[derive(Debug)]
 enum ItemTranslationResult {
     Item(DecoratedItem),
     Ignored,
@@ -2401,6 +2403,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     specials: &SpecialNames,
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
+    log::trace!("translate_items ({:?})", i);
     let mut tags = HashSet::new();
     tags.insert("code".to_string());
     let export = i
@@ -2526,6 +2529,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 ),
                 Some(b) => translate_block(sess, specials, &b)?,
             };
+            log::trace!("   fn_body: {:#?}", fn_body);
             let fn_sig = FuncSig {
                 args: fn_inputs,
                 ret: fn_output,
@@ -2892,6 +2896,7 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     external_data: &F,
     specials: &mut SpecialNames,
 ) -> TranslationResult<Program> {
+    log::trace!("translate ({:?})", krate);
     let items = &krate.items;
     let translated_items = check_vec(
         items
