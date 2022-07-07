@@ -38,6 +38,7 @@ members = [
     "examples/ed25519",
     "examples/no_std",
     "examples/rsa-pkcs1",
+    "examples/rsa-fdh-vrf",
 ]
 default-members = [
     "lib",
@@ -74,5 +75,6 @@ default-members = [
     "examples/ed25519",
     "examples/sha512",
     "examples/rsa-pkcs1",
+    "examples/rsa-fdh-vrf",
 ]
 exclude = [ "language" ]
