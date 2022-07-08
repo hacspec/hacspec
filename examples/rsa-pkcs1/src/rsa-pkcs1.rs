@@ -14,6 +14,8 @@ unsigned_public_integer!(RSAInt, 2048);
 pub enum Error {
     InvalidLength,
     MessageTooLarge,
+    DecryptionFailed,
+    VerificationFailed,
 }
 
 pub type PK = (RSAInt, RSAInt);
