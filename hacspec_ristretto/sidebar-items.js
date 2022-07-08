@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["ByteString","Fixed length byte array."],["FieldCanvas",""],["FieldElement",""],["RistrettoPointEncoded","Fixed length byte array."],["Scalar",""],["ScalarCanvas",""]],"type":[["RistrettoPoint",""]]});

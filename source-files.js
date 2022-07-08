@@ -33,6 +33,7 @@ sourcesIndex["hacspec_poly1305"] = {"name":"","files":["poly1305.rs"]};
 sourcesIndex["hacspec_provider"] = {"name":"","files":["lib.rs","provider.rs"]};
 sourcesIndex["hacspec_riot_bootloader"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["hacspec_riot_runqueue"] = {"name":"","files":["lib.rs"]};
+sourcesIndex["hacspec_ristretto"] = {"name":"","files":["ristretto.rs"]};
 sourcesIndex["hacspec_rsa_fdh_vrf"] = {"name":"","files":["rsa-fdh-vrf.rs"]};
 sourcesIndex["hacspec_rsa_pkcs1"] = {"name":"","files":["rsa-pkcs1.rs"]};
 sourcesIndex["hacspec_sha256"] = {"name":"","files":["sha256.rs"]};
