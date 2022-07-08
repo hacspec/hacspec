@@ -27,7 +27,7 @@ fn test_equiv_armfazh(msg: String) -> bool {
         &ByteSeq::from_public_slice(msg),
         &ByteSeq::from_public_slice(dst),
         1
-    );
+    ).unwrap();
 
     // compute normal
     let st = map_to_curve_elligator2(u[0]);

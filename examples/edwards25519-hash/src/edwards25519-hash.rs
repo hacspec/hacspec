@@ -30,6 +30,15 @@ public_nat_mod!(
     modulo_value: "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed"
 );
 
+#[derive(Debug, PartialEq)]
+pub enum Error {
+    ExpandMessageAbort,
+}
+
+type ByteSeqResult = Result<ByteSeq, Error>;
+type SeqEdResult = Result<Seq<Ed25519FieldElement>, Error>;
+type EdPointResult = Result<EdPoint, Error>;
+
 // (p - 1) / 2
 const P_1_2: ArrEd25519FieldElement = ArrEd25519FieldElement(secret_array!(
     U64,
@@ -67,53 +76,56 @@ const P_5_8: ArrEd25519FieldElement = ArrEd25519FieldElement(secret_array!(
 // Specification can be seen in section 5.3.1 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 pub fn expand_message_xmd(
     msg: &ByteSeq, dst: &ByteSeq, len_in_bytes: usize
-) -> ByteSeq {
+) -> ByteSeqResult {
     let ell = (len_in_bytes + B_IN_BYTES - 1) / B_IN_BYTES; // ceil(len_in_bytes / b_in_bytes)
                                                             // must be that ell <= 255
-    let dst_prime = dst.push(&U8_from_usize(dst.len())); // DST || I2OSP(len(DST), 1)
-    let z_pad = ByteSeq::new(S_IN_BYTES); // I2OSP(0, s_in_bytes)
-    let mut l_i_b_str = ByteSeq::new(2);
-    l_i_b_str[0] = U8_from_usize(len_in_bytes / 256);
-    l_i_b_str[1] = U8_from_usize(len_in_bytes); // I2OSP(len_in_bytes, 2)
+    let mut result = ByteSeqResult::Err(Error::ExpandMessageAbort);
+    if !(ell > 255 || len_in_bytes > 65535 || dst.len() > 255) {
+        let dst_prime = dst.push(&U8_from_usize(dst.len())); // DST || I2OSP(len(DST), 1)
+        let z_pad = ByteSeq::new(S_IN_BYTES); // I2OSP(0, s_in_bytes)
+        let mut l_i_b_str = ByteSeq::new(2);
+        l_i_b_str[0] = U8_from_usize(len_in_bytes / 256);
+        l_i_b_str[1] = U8_from_usize(len_in_bytes); // I2OSP(len_in_bytes, 2)
 
-    let msg_prime = z_pad
-        .concat(msg)
-        .concat(&l_i_b_str)
-        .concat(&ByteSeq::new(1))
-        .concat(&dst_prime); // Z_pad || msg || l_i_b_str || 0 || dst_prime
-    
-    let b_0 = ByteSeq::from_seq(&hash(&msg_prime)); // H(msg_prime)
-    let mut b_i = ByteSeq::from_seq(&hash(&b_0.push(&U8(1u8))
-        .concat(&dst_prime))); // H(b_0 || 1 || dst_prime)
-    let mut uniform_bytes = ByteSeq::from_seq(&b_i);
+        let msg_prime = z_pad
+            .concat(msg)
+            .concat(&l_i_b_str)
+            .concat(&ByteSeq::new(1))
+            .concat(&dst_prime); // Z_pad || msg || l_i_b_str || 0 || dst_prime
+        
+        let b_0 = ByteSeq::from_seq(&hash(&msg_prime)); // H(msg_prime)
+        let mut b_i = ByteSeq::from_seq(&hash(&b_0.push(&U8(1u8))
+            .concat(&dst_prime))); // H(b_0 || 1 || dst_prime)
+        let mut uniform_bytes = ByteSeq::from_seq(&b_i);
 
-    for i in 2..(ell + 1) {
-        let t = ByteSeq::from_seq(&b_0);
-        b_i = ByteSeq::from_seq(&hash(&(t ^ b_i).push(&U8_from_usize(i))
-            .concat(&dst_prime))); //H((b_0 ^ b_(i-1)) || 1 || dst_prime)
-        uniform_bytes = uniform_bytes.concat(&b_i);
+        for i in 2..(ell + 1) {
+            let t = ByteSeq::from_seq(&b_0);
+            b_i = ByteSeq::from_seq(&hash(&(t ^ b_i).push(&U8_from_usize(i))
+                .concat(&dst_prime))); //H((b_0 ^ b_(i-1)) || 1 || dst_prime)
+            uniform_bytes = uniform_bytes.concat(&b_i);
+        }
+        result = ByteSeqResult::Ok(uniform_bytes.truncate(len_in_bytes));
     }
-    uniform_bytes.truncate(len_in_bytes)
+    result
 }
 
 // Adapted from bls12-381-hash.rs
 // Specification can be seen in section 5.2 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 pub fn ed_hash_to_field(
     msg: &ByteSeq, dst: &ByteSeq, count: usize
-) -> Seq<Ed25519FieldElement> {
+) -> SeqEdResult {
     let len_in_bytes = count * L; // count * m * L
-    let uniform_bytes = expand_message_xmd(msg, dst, len_in_bytes);
+    let uniform_bytes = expand_message_xmd(msg, dst, len_in_bytes)?;
     let mut output = Seq::<Ed25519FieldElement>::new(count);
 
     for i in 0..count {
-        // m = 1, so no loop
         let elm_offset = L * i; // L * (j + i * m)
         let tv = uniform_bytes.slice(elm_offset, L); //substr(uniform_bytes, elm_offset, L)
         let u_i = Ed25519FieldElement::from_byte_seq_be(
             &EdFieldHash::from_byte_seq_be(&tv).to_byte_seq_be().slice(32,32)); // OS2IP(tv) mod p
         output[i] = u_i;
     }
-    output
+    SeqEdResult::Ok(output)
 }
 
 // Adapted from bls12-381-hash.rs
@@ -346,11 +358,13 @@ pub fn map_to_curve_elligator2_edwards(u: Ed25519FieldElement) -> EdPoint {
 }
 
 // Specification can be seen in section 3 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
-pub fn ed_encode_to_curve(msg: &ByteSeq, dst: &ByteSeq) -> EdPoint {
-    let u = ed_hash_to_field(msg, dst, 1);
+pub fn ed_encode_to_curve(
+    msg: &ByteSeq, dst: &ByteSeq
+) -> EdPointResult {
+    let u = ed_hash_to_field(msg, dst, 1)?;
     // map_to_curve_elligator2_edwards25519(u[0]) can be used instead
     let q = map_to_curve_elligator2_edwards(u[0]);
-    ed_clear_cofactor(q)
+    EdPointResult::Ok(ed_clear_cofactor(q))
 }
 
 #[cfg(test)]
@@ -381,7 +395,7 @@ mod tests {
         let dst = ByteSeq::from_public_slice(
             b"ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_");
         let dst = dst.concat(&ByteSeq::from_hex("04"));
-        let (x, y, z, _) = ed_encode_to_curve(&msg.0, &dst);
+        let (x, y, z, _) = ed_encode_to_curve(&msg.0, &dst).unwrap();
         let z_inv = z.inv();
         let x = x * z_inv;
         let y = y * z_inv;
@@ -409,7 +423,7 @@ mod tests {
         let dst = ByteSeq::from_public_slice(
             b"ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_");
         let dst = dst.concat(&ByteSeq::from_hex("04")); 
-        let u = ed_hash_to_field(&msg.0, &dst, 1);
+        let u = ed_hash_to_field(&msg.0, &dst, 1).unwrap();
         let (x, y, _, _) = map_to_curve_elligator2(u[0]);
         let lh = y * y;
         let rh = (x * x * x) + (Ed25519FieldElement::from_literal(486662) * x * x) + x;
@@ -422,7 +436,7 @@ mod tests {
         let dst = ByteSeq::from_public_slice(
             b"ECVRF_edwards25519_XMD:SHA-512_ELL2_NU_");
         let dst = dst.concat(&ByteSeq::from_hex("04"));
-        let u = ed_hash_to_field(&msg.0, &dst, 1);
+        let u = ed_hash_to_field(&msg.0, &dst, 1).unwrap();
         let st = map_to_curve_elligator2_straight(u[0]);
 
         let (x, y, z, _) = curve25519_to_edwards25519(st);
@@ -442,7 +456,7 @@ mod tests {
     ) {
         let one = Ed25519FieldElement::ONE();
         let dst = ByteSeq::from_public_slice(b"QUUX-V01-CS02-with-edwards25519_XMD:SHA-512_ELL2_NU_");
-        let u_prime = ed_hash_to_field(&msg, &dst, 1);
+        let u_prime = ed_hash_to_field(&msg, &dst, 1).unwrap();
         assert_eq!(u_prime[0usize].to_byte_seq_be().to_hex(), u);
 
         // test normal
