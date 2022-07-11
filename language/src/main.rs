@@ -43,11 +43,19 @@ use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
 
+#[derive(Clone, PartialEq)]
+enum VersionControlArg {
+    Initialize,
+    Update,
+    None,
+}
+
 struct HacspecCallbacks {
     output_filename: Option<String>,
     output_directory: Option<String>,
     output_type: Option<String>,
     target_directory: String,
+    version_control: VersionControlArg,
 }
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
@@ -331,6 +339,7 @@ fn handle_crate<'tcx>(
 
     let mut krate_queue_typechecked = Vec::new();
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_programs {
+        log::trace!("   typechecking {:#?}", krate);
         let new_top_ctx = &mut name_resolution::TopLevelContext {
             consts: HashMap::new(),
             functions: HashMap::new(),
@@ -435,20 +444,14 @@ fn handle_crate<'tcx>(
                 krate_path.clone()
             };
 
-            let file = match extension.clone().as_str() {
+            let join_path = match extension.clone().as_str() {
                 "fst" | "ec" | "json" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    (original_file).join(Path::new(
-                        (file_name.clone().to_title_case().replace(" ", ".") + "." + extension)
-                            .as_str(),
-                    ))
+                    file_name.clone().to_title_case().replace(" ", ".") + "." + extension
                 }
                 "v" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    (original_file).join(Path::new(
-                        (file_name.clone().to_title_case().replace(" ", "_") + "." + extension)
-                            .as_str(),
-                    ))
+                    file_name.clone().to_title_case().replace(" ", "_") + "." + extension
                 }
                 _ => {
                     compiler
@@ -456,6 +459,21 @@ fn handle_crate<'tcx>(
                         .err("unknown backend extension for output files");
                     return Compilation::Stop;
                 }
+            };
+
+            let file = match &callback.version_control {
+                VersionControlArg::Update => {
+                    let file_temp_dir = original_file.join("_temp");
+                    let file_temp_dir = file_temp_dir.to_str().unwrap();
+
+                    std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to create dir");
+                    
+                    original_file.join("_temp").join(join_path.clone())
+                }
+                _ => {
+                    std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
+                    original_file.join(join_path.clone())
+                },
             };
             let file = file.to_str().unwrap();
 
@@ -506,6 +524,59 @@ fn handle_crate<'tcx>(
                         .session()
                         .err("unknown backend extension for output file");
                     return Compilation::Stop;
+                }
+            }
+
+            if callback.version_control != VersionControlArg::None {
+                let file_destination = original_file.join(join_path.clone());
+                let file_destination = file_destination.to_str().unwrap();
+
+                let file_vc = original_file.join("_vc").join(join_path.clone());
+                let file_vc = file_vc.to_str().unwrap();
+
+                let file_vc_dir = original_file.join("_vc");
+                let file_vc_dir = file_vc_dir.to_str().unwrap();
+                std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to crate dir");
+ 
+                match callback.version_control {
+                    VersionControlArg::Initialize => {
+                        std::fs::copy(file_destination.clone(), file_vc.clone()).expect(
+                            format!(
+                                "Failed to copy file '{}' to '{}'",
+                                file_destination.clone(),
+                                file_vc.clone()
+                            )
+                            .as_str(),
+                        );
+                    }
+                    VersionControlArg::Update => {
+                        let file_temp = original_file.join("_temp").join(join_path.clone());
+                        let file_temp = file_temp.to_str().unwrap();
+
+                        std::process::Command::new("git")
+                            .output()
+                            .expect("Could not find 'git'. Please install git and try again.");
+                        std::process::Command::new("git")
+                            .arg("merge-file")
+                            .arg(file_destination.clone())
+                            .arg(file_temp.clone())
+                            .arg(file_vc.clone())
+                            .output()
+                            .expect("git-merge failed");
+                        std::fs::copy(file_temp.clone(), file_vc.clone()).expect(
+                            format!(
+                                "Failed to copy file '{}' to '{}'",
+                                file_temp.clone(),
+                                file_vc.clone()
+                            )
+                            .as_str(),
+                        );
+                        std::fs::remove_file(file_temp.clone()).expect(
+                            format!("Failed to remove file '{}'", file_destination.clone())
+                                .as_str(),
+                        );
+                    }
+                    VersionControlArg::None => panic!(),
                 }
             }
         }
@@ -744,7 +815,7 @@ fn main() -> Result<(), usize> {
     };
 
     // Optionally get output directory.
-    let output_directory_index = args.iter().position(|a| a == "-dir");
+    let output_directory_index = args.iter().position(|a| a == "--dir");
     let output_directory = match output_directory_index {
         Some(i) => {
             args.remove(i);
@@ -771,6 +842,21 @@ fn main() -> Result<(), usize> {
             Some(args.remove(i))
         }
         None => None,
+    };
+
+    let vc = match args.iter().position(|a| a == "--vc-init") {
+        Some(i) => {
+            args.remove(i);
+            VersionControlArg::Initialize
+        }
+        None => VersionControlArg::None,
+    };
+    let vc = match args.iter().position(|a| a == "--vc-update") {
+        Some(i) => {
+            args.remove(i);
+            VersionControlArg::Update
+        }
+        None => vc,
     };
 
     // Read the --manifest-path argument if present.
@@ -805,6 +891,7 @@ fn main() -> Result<(), usize> {
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",
+        version_control: vc,
     };
 
     match input_file {

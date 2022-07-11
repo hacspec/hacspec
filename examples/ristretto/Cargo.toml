@@ -12,4 +12,5 @@ hacspec-lib = { path = "../../lib" }
 
 [dev-dependencies]
 curve25519-dalek-ng = "4"
+curve25519-dalek = "2"
 quickcheck = "1"
