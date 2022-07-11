@@ -8,11 +8,11 @@ pub enum Error {
     InvalidSignature,
 }
 
-pub type PublicKey = Affine;
-pub type SecretKey = P256Scalar;
-pub type Signature = (P256Scalar, P256Scalar); // (r, s)
-pub type SignatureResult = Result<Signature, Error>;
-pub type VerifyResult = Result<(), Error>;
+pub type P256PublicKey = Affine;
+pub type P256SecretKey = P256Scalar;
+pub type P256Signature = (P256Scalar, P256Scalar); // (r, s)
+pub type P256SignatureResult = Result<P256Signature, Error>;
+pub type P256VerifyResult = Result<(), Error>;
 type CheckResult = Result<(), Error>;
 type ArithmeticResult = Result<Affine, Error>;
 
@@ -45,7 +45,7 @@ fn ecdsa_point_add(p: Affine, q: Affine) -> ArithmeticResult {
     }
 }
 
-pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: P256Scalar) -> SignatureResult {
+fn sign(payload: &ByteSeq, sk: P256SecretKey, nonce: P256Scalar) -> P256SignatureResult {
     check_scalar_zero(nonce)?;
     let (k_x, _k_y) = ecdsa_point_mul_base(nonce)?;
     let r = P256Scalar::from_byte_seq_be(&k_x.to_byte_seq_be());
@@ -57,18 +57,18 @@ pub fn sign(payload: &ByteSeq, sk: SecretKey, nonce: P256Scalar) -> SignatureRes
     let nonce_inv = nonce.inv();
     let s = nonce_inv * hash_rsk;
 
-    SignatureResult::Ok((r, s))
+    P256SignatureResult::Ok((r, s))
 }
 
 pub fn ecdsa_p256_sha256_sign(
     payload: &ByteSeq,
-    sk: SecretKey,
+    sk: P256SecretKey,
     nonce: P256Scalar,
-) -> SignatureResult {
+) -> P256SignatureResult {
     sign(payload, sk, nonce)
 }
 
-pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyResult {
+fn verify(payload: &ByteSeq, pk: P256PublicKey, signature: P256Signature) -> P256VerifyResult {
     // signature = (r, s) must be in [1, n-1] because they are Scalars
     let (r, s) = signature;
     let payload_hash = hash(payload);
@@ -85,17 +85,17 @@ pub fn verify(payload: &ByteSeq, pk: PublicKey, signature: Signature) -> VerifyR
     let x = P256Scalar::from_byte_seq_be(&x.to_byte_seq_be());
 
     if x == r {
-        VerifyResult::Ok(())
+        P256VerifyResult::Ok(())
     } else {
-        VerifyResult::Err(Error::InvalidSignature)
+        P256VerifyResult::Err(Error::InvalidSignature)
     }
 }
 
 pub fn ecdsa_p256_sha256_verify(
     payload: &ByteSeq,
-    pk: PublicKey,
-    signature: Signature,
-) -> VerifyResult {
+    pk: P256PublicKey,
+    signature: P256Signature,
+) -> P256VerifyResult {
     verify(payload, pk, signature)
 }
 

@@ -417,6 +417,13 @@ impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for PublicSeq<T> {
     }
 }
 
+impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for Seq<T> {
+    #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    fn eq(&self, other: &Self) -> bool {
+        self.b == other.b
+    }
+}
+
 impl<T: Copy + Default + PartialEq + PublicInteger> Eq for PublicSeq<T> {}
 
 impl PartialEq for Seq<U8> {
