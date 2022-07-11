@@ -14,6 +14,7 @@ members = [
     "utils/util",
     "examples/curve25519",
     "examples/chacha20",
+    "examples/ristretto",
     "examples/linalg",
     "examples/poly1305",
     "examples/chacha20poly1305",
@@ -33,9 +34,11 @@ members = [
     "examples/gf128",
     "examples/aes128-gcm",
     "examples/bls12-381-hash",
+    "examples/edwards25519",
     "examples/ed25519",
     "examples/no_std",
     "examples/rsa-pkcs1",
+    "examples/rsa-fdh-vrf",
 ]
 default-members = [
     "lib",
@@ -50,6 +53,7 @@ default-members = [
     "examples/curve25519",
     "examples/chacha20",
     "examples/linalg",
+    "examples/ristretto",
     "examples/poly1305",
     "examples/chacha20poly1305",
     "examples/gimli",
@@ -68,8 +72,10 @@ default-members = [
     "examples/gf128",
     "examples/aes128-gcm",
     "examples/bls12-381-hash",
+    "examples/edwards25519",
     "examples/ed25519",
     "examples/sha512",
     "examples/rsa-pkcs1",
+    "examples/rsa-fdh-vrf",
 ]
 exclude = [ "language" ]
