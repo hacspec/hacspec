@@ -75,3 +75,4 @@ typecheck hacspec-edwards25519      no-ec   no-fst    json      coq
 typecheck hacspec-linalg            no-ec   no-fst    json      coq
 typecheck hacspec-rsa-pkcs1         no-ec   no-fst    json      coq
 typecheck hacspec-rsa-fdh-vrf       no-ec   no-fst    json      coq
+typecheck hacspec-bip-340           no-ec     no-fst    json      coq
