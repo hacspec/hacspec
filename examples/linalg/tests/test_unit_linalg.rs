@@ -74,6 +74,57 @@ fn test_unit_identity() {
     assert!(assert_hacs(hac_op, hac_rs));
 }
 
+#[test]
+fn test_unit_index() {
+    let xs = vec![0, 1, 2, 3, 4, 5];
+    let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+
+    assert!(index(hac_xs.clone(), 0, 0).unwrap() == 0.into());
+    assert!(index(hac_xs.clone(), 0, 1).unwrap() == 1.into());
+    assert!(index(hac_xs.clone(), 0, 2).unwrap() == 2.into());
+    assert!(index(hac_xs.clone(), 1, 0).unwrap() == 3.into());
+    assert!(index(hac_xs.clone(), 1, 1).unwrap() == 4.into());
+    assert!(index(hac_xs.clone(), 1, 2).unwrap() == 5.into());
+}
+
+#[test]
+fn test_unit_transpose() {
+    let xs = vec![0, 1, 2, 3, 4, 5];
+    let rs = vec![0, 3, 1, 4, 2, 5];
+
+    let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+    let hac_rs = new(3, 2, Seq::<Scalar>::from_vec(rs.clone())).unwrap();
+
+    let hac_op = transpose(hac_xs.clone());
+    assert_hacs(hac_op, hac_rs);
+}
+
+#[test]
+fn test_unit_slice() {
+    let xs = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    let rs = vec![5, 6, 7, 9, 10, 11];
+
+    let hac_xs = new(3, 4, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+    let hac_rs = new(2, 3, Seq::<Scalar>::from_vec(rs.clone())).unwrap();
+
+    let hac_op = slice(hac_xs.clone(), (1, 1), (2, 3)).unwrap();
+
+    assert!(assert_hacs(hac_op, hac_rs));
+}
+
+#[test]
+fn test_unit_scale() {
+    let x = 2;
+    let xs = vec![0, 1, 2, 3, 4, 5];
+    let rs = vec![0, 2, 4, 6, 8, 10];
+
+    let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs.clone())).unwrap();
+    let hac_rs = new(2, 3, Seq::<Scalar>::from_vec(rs.clone())).unwrap();
+
+    let hac_op = scale(hac_xs.clone(), x);
+    assert_hacs(hac_op, hac_rs);
+}
+
 // === Negative Tests ===
 
 #[test]
