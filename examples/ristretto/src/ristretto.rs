@@ -299,3 +299,4 @@ pub fn neg(u: RistrettoPoint) -> RistrettoPoint {
 pub fn sub(u: RistrettoPoint, v: RistrettoPoint) -> RistrettoPoint {
     add(u, neg(v))
 }
+
