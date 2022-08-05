@@ -12,7 +12,7 @@ jobs:
         with:
           submodules: true
       - name: Install qemu
-        run: sudo apt-get install -y --no-install-recommends qemu-system-arm
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends qemu-system-arm
       - name: Install rust thumbv7m target support
         run: rustup target add thumbv7m-none-eabi
         working-directory: ./examples/no_std
