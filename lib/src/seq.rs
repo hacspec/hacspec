@@ -535,16 +535,18 @@ impl_declassify!(u128, U128);
 impl Seq<U8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     pub fn to_hex(&self) -> String {
-        let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
-        strs.join("")
+        // let strs: Vec<String> = self.b.iter().map(|b| format!("{:02x}", b)).collect();
+        // strs.join("")
+        String::from("TODO") // TODO
     }
 }
 
 impl PublicSeq<u8> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     pub fn to_hex(&self) -> String {
-        let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
-        strs.join("")
+        // let strs: Vec<String> = self.iter().map(|b| format!("{:02x}", b)).collect();
+        // strs.join("")
+        String::from("TODO") // TODO
     }
 }
 

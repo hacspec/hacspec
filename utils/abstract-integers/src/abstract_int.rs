@@ -10,8 +10,44 @@ macro_rules! abstract_int {
             signed: bool,
         }
 
+        #[cfg(feature = "contracts")]
+        #[cfg(not(feature = "hacspec"))]
+        impl Model for $name {
+            type ModelTy = $name;
+
+            #[logic]
+            fn model(self) -> Self::ModelTy {
+                self
+            }
+        }
+
+        #[cfg(feature = "contracts")]
+        #[cfg(not(feature = "hacspec"))]
+        impl OrdLogic for $name {
+            #[logic]
+            fn cmp_log(self : Self, b : Self) -> Ordering { Ordering::Equal }
+            #[logic]
+            fn cmp_le_log(a : Self, b : Self) { }
+            #[logic]
+            fn cmp_lt_log(a : Self, b : Self) { }
+            #[logic]
+            fn cmp_ge_log(a : Self, b : Self) { }
+            #[logic]
+            fn cmp_gt_log(a : Self, b : Self) { }
+            #[logic]
+            fn refl(a : Self) { }
+            #[logic]
+            fn trans(a : Self, b : Self, c : Self, d : Ordering) { }
+            #[logic]
+            fn antisym1(a : Self, b : Self) { }
+            #[logic]
+            fn antisym2(a : Self, b : Self) { }
+            #[logic]
+            fn eq_cmp(a : Self, b : Self) { }
+        }
+
         impl $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn max() -> BigInt {
                 BigInt::from(1u32).shl($bits) - BigInt::one()
             }
@@ -20,7 +56,7 @@ macro_rules! abstract_int {
                 Self::from(Self::max())
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn hex_string_to_bytes(s: &str) -> Vec<u8> {
                 let s = s.to_string();
                 let mut b: Vec<u8> = Vec::new();
@@ -40,7 +76,7 @@ macro_rules! abstract_int {
 
             // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn from_literal(x: u64) -> Self {
                 let big_x = BigInt::from(x);
                 // if big_x > $name::max().into() {
@@ -51,7 +87,7 @@ macro_rules! abstract_int {
 
             // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn from_signed_literal(x: i64) -> Self {
                 let big_x = BigInt::from(x as u64);
                 // if big_x > $name::max().into() {
@@ -62,14 +98,14 @@ macro_rules! abstract_int {
 
             /// Returns 2 to the power of the argument
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn pow2(x: usize) -> $name {
                 BigInt::from(1u32).shl(x).into()
             }
 
             /// Gets the `i`-th least significant bit of this integer.
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn bit(self, i: usize) -> bool {
                 // assert!(
                 //     i < self.b.as_ref().len() * 8,
@@ -84,7 +120,7 @@ macro_rules! abstract_int {
         }
 
         impl From<BigUint> for $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn from(x: BigUint) -> $name {
                 Self::from(BigInt::from(x))
             }
@@ -119,7 +155,7 @@ macro_rules! abstract_int {
             }
 
             #[cfg(not(feature = "std"))]
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn from(x: BigInt) -> $name {
                 // let max_value = Self::max();
                 // assert!(x <= max_value, "{} is too large for type {}!", x, stringify!($name));
@@ -177,14 +213,14 @@ macro_rules! abstract_int {
         }
 
         impl Into<BigInt> for $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn into(self) -> BigInt {
                 BigInt::from_bytes_be(self.sign, self.b.as_ref())
             }
         }
 
         impl Into<BigUint> for $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn into(self) -> BigUint {
                 BigUint::from_bytes_be(self.b.as_ref())
             }
@@ -242,7 +278,7 @@ macro_rules! abstract_public {
     ($name:ident) => {
         impl $name {
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn inv(self, modval: Self) -> Self {
                 let biguintmodval: BigInt = modval.into();
                 let m = &biguintmodval - BigInt::from(2u32);
@@ -251,7 +287,7 @@ macro_rules! abstract_public {
             }
 
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn pow_felem(self, exp: Self, modval: Self) -> Self {
                 let a: BigInt = self.into();
                 let b: BigInt = exp.into();
@@ -264,7 +300,7 @@ macro_rules! abstract_public {
             /// Returns self to the power of the argument.
             /// The exponent is a u128.
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn pow(self, exp: u64, modval: Self) -> Self {
                 self.pow_felem(BigInt::from(exp).into(), modval)
             }
@@ -277,7 +313,7 @@ macro_rules! abstract_public {
         /// **Warning**: panics on overflow.
         impl Add for $name {
             type Output = $name;
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn add(self, rhs: $name) -> $name {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
@@ -292,7 +328,7 @@ macro_rules! abstract_public {
         /// **Warning**: panics on underflow.
         impl Sub for $name {
             type Output = $name;
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn sub(self, rhs: $name) -> $name {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
@@ -314,7 +350,7 @@ macro_rules! abstract_public {
         // impl Mul for $name {
         //     type Output = $name;
 
-        //     #[creusot_contracts::trusted]
+        //     #[trusted]
         //     fn mul(self, rhs: $name) -> $name {
         //         let a: BigInt = self.into();
         //         let b: BigInt = rhs.into();
@@ -332,7 +368,7 @@ macro_rules! abstract_public {
         /// **Warning**: panics on division by 0.
         impl Div for $name {
             type Output = $name;
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn div(self, rhs: $name) -> $name {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
@@ -347,7 +383,7 @@ macro_rules! abstract_public {
         /// **Warning**: panics on division by 0.
         impl Rem for $name {
             type Output = $name;
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn rem(self, rhs: $name) -> $name {
                 let a: BigInt = self.into();
                 let b: BigInt = rhs.into();
@@ -366,49 +402,49 @@ macro_rules! abstract_public {
             }
         }
 
-        // impl BitOr for $name {
-        //     type Output = $name;
-        //     #[creusot_contracts::trusted]
-        //     fn bitor(self, rhs: Self) -> Self::Output {
-        //         let a: BigInt = self.into();
-        //         let b: BigInt = rhs.into();
-        //         (a | b).into()
-        //     }
-        // }
+        impl BitOr for $name {
+            type Output = $name;
+            #[trusted]
+            fn bitor(self, rhs: Self) -> Self::Output {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a | b).into()
+            }
+        }
 
-        // impl BitXor for $name {
-        //     type Output = $name;
-        //     #[creusot_contracts::trusted]
-        //     fn bitxor(self, rhs: Self) -> Self::Output {
-        //         let a: BigInt = self.into();
-        //         let b: BigInt = rhs.into();
-        //         (a ^ b).into()
-        //     }
-        // }
+        impl BitXor for $name {
+            type Output = $name;
+            #[trusted]
+            fn bitxor(self, rhs: Self) -> Self::Output {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a ^ b).into()
+            }
+        }
 
-        // impl BitAnd for $name {
-        //     type Output = $name;
-        //     #[creusot_contracts::trusted]
-        //     fn bitand(self, rhs: Self) -> Self::Output {
-        //         let a: BigInt = self.into();
-        //         let b: BigInt = rhs.into();
-        //         (a & b).into()
-        //     }
-        // }
+        impl BitAnd for $name {
+            type Output = $name;
+            #[trusted]
+            fn bitand(self, rhs: Self) -> Self::Output {
+                let a: BigInt = self.into();
+                let b: BigInt = rhs.into();
+                (a & b).into()
+            }
+        }
 
-        // impl Shr<usize> for $name {
-        //     type Output = $name;
-        //     #[creusot_contracts::trusted]
-        //     fn shr(self, rhs: usize) -> Self::Output {
-        //         let a: BigInt = self.into();
-        //         let b = rhs as usize;
-        //         (a >> b).into()
-        //     }
-        // }
+        impl Shr<usize> for $name {
+            type Output = $name;
+            #[trusted]
+            fn shr(self, rhs: usize) -> Self::Output {
+                let a: BigInt = self.into();
+                let b = rhs as usize;
+                (a >> b).into()
+            }
+        }
 
         impl Shl<usize> for $name {
             type Output = $name;
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn shl(self, rhs: usize) -> Self::Output {
                 let a: BigInt = self.into();
                 let b = rhs as usize;
@@ -507,64 +543,64 @@ macro_rules! abstract_public {
             }
         }
 
-        // impl $name {
-        //     #[cfg(feature = "std")]
-        //     fn is_eq(&self, rhs: &$name) -> bool {
-        //         match (*self).cmp(rhs) {
-        //             std::cmp::Ordering::Equal => true,
-        //             _ => false,
-        //         }
-        //     }
-        //     #[cfg(not(feature = "std"))]
-        //     fn is_eq(&self, rhs: &$name) -> bool {
-        //         match (*self).cmp(rhs) {
-        //             core::cmp::Ordering::Equal => true,
-        //             _ => false,
-        //         }
-        //     }
+        impl $name {
+            #[cfg(feature = "std")]
+            fn is_eq(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) {
+                    std::cmp::Ordering::Equal => true,
+                    _ => false,
+                }
+            }
+            #[cfg(not(feature = "std"))]
+            fn is_eq(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) {
+                    core::cmp::Ordering::Equal => true,
+                    _ => false,
+                }
+            }
 
-        //     fn is_ne(&self, rhs: &$name) -> bool {
-        //         (*self).is_eq(rhs)
-        //     }
+            fn is_ne(&self, rhs: &$name) -> bool {
+                (*self).is_eq(rhs)
+            }
 
-        //     #[cfg(feature = "std")]
-        //     fn is_lt(&self, rhs: &$name) -> bool {
-        //         match (*self).cmp(rhs) {
-        //             std::cmp::Ordering::Less => true,
-        //             _ => false,
-        //         }
-        //     }
-        //     #[cfg(not(feature = "std"))]
-        //     fn is_lt(&self, rhs: &$name) -> bool {
-        //         match (*self).cmp(rhs) {
-        //             core::cmp::Ordering::Less => true,
-        //             _ => false,
-        //         }
-        //     }
+            #[cfg(feature = "std")]
+            fn is_lt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) {
+                    std::cmp::Ordering::Less => true,
+                    _ => false,
+                }
+            }
+            #[cfg(not(feature = "std"))]
+            fn is_lt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) {
+                    core::cmp::Ordering::Less => true,
+                    _ => false,
+                }
+            }
 
-        //     #[cfg(feature = "std")]
-        //     fn is_gt(&self, rhs: &$name) -> bool {
-        //         match (*self).cmp(rhs) {
-        //             std::cmp::Ordering::Greater => true,
-        //             _ => false,
-        //         }
-        //     }
-        //     #[cfg(not(feature = "std"))]
-        //     fn is_gt(&self, rhs: &$name) -> bool {
-        //         match (*self).cmp(rhs) {
-        //             core::cmp::Ordering::Greater => true,
-        //             _ => false,
-        //         }
-        //     }
+            #[cfg(feature = "std")]
+            fn is_gt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) {
+                    std::cmp::Ordering::Greater => true,
+                    _ => false,
+                }
+            }
+            #[cfg(not(feature = "std"))]
+            fn is_gt(&self, rhs: &$name) -> bool {
+                match (*self).cmp(rhs) {
+                    core::cmp::Ordering::Greater => true,
+                    _ => false,
+                }
+            }
 
-        //     fn is_lte(&self, rhs: &$name) -> bool {
-        //         (*self).is_eq(rhs) || (*self).is_lt(rhs)
-        //     }
+            fn is_lte(&self, rhs: &$name) -> bool {
+                (*self).is_eq(rhs) || (*self).is_lt(rhs)
+            }
 
-        //     fn is_gte(&self, rhs: &$name) -> bool {
-        //         (*self).is_eq(rhs) || (*self).is_gt(rhs)
-        //     }
-        // }
+            fn is_gte(&self, rhs: &$name) -> bool {
+                (*self).is_eq(rhs) || (*self).is_gt(rhs)
+            }
+        }
 
         impl Eq for $name {}
 
@@ -599,7 +635,7 @@ macro_rules! abstract_unsigned {
 
         impl $name {
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn from_hex(s: &str) -> Self {
                 BigInt::from_bytes_be(Sign::Plus, &Self::hex_string_to_bytes(s)).into()
             }
@@ -656,7 +692,7 @@ macro_rules! abstract_unsigned {
             }
             #[cfg(not(feature = "std"))]
             #[allow(dead_code)]
-            #[creusot_contracts::trusted]
+            #[trusted]
             pub fn from_le_bytes(v: &[u8]) -> Self {
                 debug_assert!(
                     v.len() <= ($bits + 7) / 8,
@@ -706,70 +742,70 @@ macro_rules! abstract_unsigned {
                 }
             }
 
-            // /// Produces a new integer which is all ones if the first argument is different from
-            // /// the second argument, and all zeroes otherwise.
-            // /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-            // #[inline]
-            // pub fn comp_ne(self, rhs: Self) -> Self {
-            //     if self.is_ne(&rhs) {
-            //         let one = Self::from_literal(1);
-            //         (one << ($bits - 1)) - one
-            //     } else {
-            //         Self::default()
-            //     }
-            // }
+            /// Produces a new integer which is all ones if the first argument is different from
+            /// the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_ne(self, rhs: Self) -> Self {
+                if self.is_ne(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
-        //     /// Produces a new integer which is all ones if the first argument is greater than or
-        //     /// equal to the second argument, and all zeroes otherwise.
-        //     /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-        //     #[inline]
-        //     pub fn comp_gte(self, rhs: Self) -> Self {
-        //         if self.is_gte(&rhs) {
-        //             let one = Self::from_literal(1);
-        //             (one << ($bits - 1)) - one
-        //         } else {
-        //             Self::default()
-        //         }
-        //     }
+            /// Produces a new integer which is all ones if the first argument is greater than or
+            /// equal to the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_gte(self, rhs: Self) -> Self {
+                if self.is_gte(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
-        //     /// Produces a new integer which is all ones if the first argument is strictly greater
-        //     /// than the second argument, and all zeroes otherwise.
-        //     /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-        //     #[inline]
-        //     pub fn comp_gt(self, rhs: Self) -> Self {
-        //         if self.is_gt(&rhs) {
-        //             let one = Self::from_literal(1);
-        //             (one << ($bits - 1)) - one
-        //         } else {
-        //             Self::default()
-        //         }
-        //     }
+            /// Produces a new integer which is all ones if the first argument is strictly greater
+            /// than the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_gt(self, rhs: Self) -> Self {
+                if self.is_gt(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
-        //     /// Produces a new integer which is all ones if the first argument is less than or
-        //     /// equal to the second argument, and all zeroes otherwise.
-        //     /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-        //     #[inline]
-        //     pub fn comp_lte(self, rhs: Self) -> Self {
-        //         if self.is_lte(&rhs) {
-        //             let one = Self::from_literal(1);
-        //             (one << ($bits - 1)) - one
-        //         } else {
-        //             Self::default()
-        //         }
-        //     }
+            /// Produces a new integer which is all ones if the first argument is less than or
+            /// equal to the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_lte(self, rhs: Self) -> Self {
+                if self.is_lte(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
 
-        //     /// Produces a new integer which is all ones if the first argument is strictly less than
-        //     /// the second argument, and all zeroes otherwise.
-        //     /// **NOTE:** This is not constant time but `BigInt` generally isn't.
-        //     #[inline]
-        //     pub fn comp_lt(self, rhs: Self) -> Self {
-        //         if self.is_lt(&rhs) {
-        //             let one = Self::from_literal(1);
-        //             (one << ($bits - 1)) - one
-        //         } else {
-        //             Self::default()
-        //         }
-        //     }
+            /// Produces a new integer which is all ones if the first argument is strictly less than
+            /// the second argument, and all zeroes otherwise.
+            /// **NOTE:** This is not constant time but `BigInt` generally isn't.
+            #[inline]
+            pub fn comp_lt(self, rhs: Self) -> Self {
+                if self.is_lt(&rhs) {
+                    let one = Self::from_literal(1);
+                    (one << ($bits - 1)) - one
+                } else {
+                    Self::default()
+                }
+            }
         }
    };
 }

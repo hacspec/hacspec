@@ -2362,7 +2362,7 @@ fn attribute_ensures(attr: &Attribute) -> Option<String> {
 
 fn attribute_cfg_token_ident(
     ident: rustc_span::symbol::Symbol,
-    mut it: rustc_ast::tokenstream::CursorRef, // rustc_ast::tokenstream::Cursor
+    mut it: rustc_ast::tokenstream::CursorRef,
 ) -> Option<Vec<String>> {
     let ident_string = ident.to_ident_string();
     match ident_string.as_str() {

@@ -1,5 +1,3 @@
-use core::fmt;
-
 use crate::name_resolution::{DictEntry, FnKey, FnValue, TopLevelContext};
 use crate::rustspec::*;
 use crate::util::check_vec;

@@ -463,7 +463,8 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
                             return SpecialTypeReturn::NotSpecial;
                         }
                     };
-                    let new_size = match &(size.kind()) {
+                    let new_size = match &size.kind()
+                    {
                         // We can only retrieve the actual size of the array
                         // when the size has been declared as a literal value,
                         // not a reference to another const value
@@ -471,7 +472,6 @@ fn check_non_enum_special_type_from_struct_shape(tcx: &TyCtxt, def: &ty::Ty) -> 
                             ValTree::Leaf(s) => Some(s.to_bits(s.size()).unwrap() as usize),
                             // TODO: replace placeholder value by indication
                             // that we could not retrieve the size
-                            _ => Some(0),
                         },
                         _ => Some(0),
                     };

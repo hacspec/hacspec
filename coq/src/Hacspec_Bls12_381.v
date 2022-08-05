@@ -5,8 +5,6 @@ Import List.ListNotations.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
-From QuickChick Require Import QuickChick.
-Require Import QuickChickLib.
 Require Import Hacspec_Lib.
 
 Definition fp_canvas_t := nseq (int8) (48).

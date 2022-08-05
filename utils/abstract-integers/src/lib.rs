@@ -81,10 +81,10 @@ pub use core::num::ParseIntError;
 #[cfg(not(feature = "std"))]
 pub use core::ops::*;
 
-#[cfg(not(feature = "std"))]
-extern crate creusot_contracts;
-#[cfg(not(feature = "std"))]
-pub use creusot_contracts::*;
+// #[cfg(not(feature = "std"))]
+// extern crate creusot_contracts;
+// #[cfg(not(feature = "std"))]
+// pub use creusot_contracts::*;
 
 pub mod abstract_int;
 pub mod nat_mod;

@@ -39,11 +39,11 @@ macro_rules! _array_base {
                 todo!()
             }
 
-            // #[creusot_contracts::trusted]
-            // #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-            // pub fn length() -> usize {
-            //     $l
-            // }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn length() -> usize {
+                $l
+            }
 
             #[creusot_contracts::trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
@@ -51,108 +51,108 @@ macro_rules! _array_base {
                 Self(v.clone())
             }
 
-            // #[creusot_contracts::trusted]
-            // #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            // pub fn from_native_slice(v: &[$t]) -> Self {
-            //     debug_assert!(v.len() <= $l);
-            //     let mut tmp = [<$t>::default(); $l];
-            //     for i in 0..v.len() {
-            //         tmp[i] = v[i];
-            //     }
-            //     Self(tmp.clone())
-            // }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            pub fn from_native_slice(v: &[$t]) -> Self {
+                debug_assert!(v.len() <= $l);
+                let mut tmp = [<$t>::default(); $l];
+                for i in 0..v.len() {
+                    tmp[i] = v[i];
+                }
+                Self(tmp.clone())
+            }
         }
 
-        // impl $name {
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
-        //         let mut a = Self::new();
-        //         debug_assert!(len <= a.len(), "{} > {}", len, a.len());
-        //         a = a.update_slice(0, input, start, len);
-        //         a
-        //     }
+        impl $name {
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
+                let mut a = Self::new();
+                debug_assert!(len <= a.len(), "{} > {}", len, a.len());
+                a = a.update_slice(0, input, start, len);
+                a
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     pub fn concat<A: SeqTrait<$t>>(&self, next: &A) -> crate::seq::Seq<$t> {
-        //         let mut out = crate::seq::Seq::new(self.len() + next.len());
-        //         out = out.update_start(self);
-        //         out = out.update_slice(self.len(), next, 0, next.len());
-        //         out
-        //     }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            pub fn concat<A: SeqTrait<$t>>(&self, next: &A) -> crate::seq::Seq<$t> {
+                let mut out = crate::seq::Seq::new(self.len() + next.len());
+                out = out.update_start(self);
+                out = out.update_slice(self.len(), next, 0, next.len());
+                out
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn from_slice_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
-        //         Self::from_slice(input, r.start, r.end - r.start)
-        //     }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn from_slice_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
+                Self::from_slice(input, r.start, r.end - r.start)
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn slice(&self, start_out: usize, len: usize) -> crate::seq::Seq<$t> {
-        //         crate::seq::Seq::from_slice(self, start_out, len)
-        //     }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn slice(&self, start_out: usize, len: usize) -> crate::seq::Seq<$t> {
+                crate::seq::Seq::from_slice(self, start_out, len)
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn slice_range(&self, r: Range<usize>) -> crate::seq::Seq<$t> {
-        //         self.slice(r.start, r.end - r.start)
-        //     }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn slice_range(&self, r: Range<usize>) -> crate::seq::Seq<$t> {
+                self.slice(r.start, r.end - r.start)
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn num_chunks(&self, chunk_size: usize) -> usize {
-        //         (self.len() + chunk_size - 1) / chunk_size
-        //     }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn num_chunks(&self, chunk_size: usize) -> usize {
+                (self.len() + chunk_size - 1) / chunk_size
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn get_chunk_len(&self, chunk_size: usize, chunk_number: usize) -> usize {
-        //         let idx_start = chunk_size * chunk_number;
-        //         if idx_start + chunk_size > self.len() {
-        //             self.len() - idx_start
-        //         } else {
-        //             chunk_size
-        //         }
-        //     }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn get_chunk_len(&self, chunk_size: usize, chunk_number: usize) -> usize {
+                let idx_start = chunk_size * chunk_number;
+                if idx_start + chunk_size > self.len() {
+                    self.len() - idx_start
+                } else {
+                    chunk_size
+                }
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn get_chunk(&self, chunk_size: usize, chunk_number: usize) -> (usize, crate::seq::Seq<$t>) {
-        //         let idx_start = chunk_size * chunk_number;
-        //         let len = self.get_chunk_len(chunk_size, chunk_number);
-        //         let out = self.slice(idx_start, len);
-        //         (len, out)
-        //     }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn get_chunk(&self, chunk_size: usize, chunk_number: usize) -> (usize, crate::seq::Seq<$t>) {
+                let idx_start = chunk_size * chunk_number;
+                let len = self.get_chunk_len(chunk_size, chunk_number);
+                let out = self.slice(idx_start, len);
+                (len, out)
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     pub fn set_chunk<A: SeqTrait<$t>>(
-        //         self,
-        //         chunk_size: usize,
-        //         chunk_number: usize,
-        //         input: &A,
-        //     ) -> Self {
-        //         let idx_start = chunk_size * chunk_number;
-        //         let len = self.get_chunk_len(chunk_size, chunk_number);
-        //         debug_assert!(
-        //             input.len() == len,
-        //             "the chunk length should match the input. got {}, expected {}",
-        //             input.len(),
-        //             len
-        //         );
-        //         self.update_slice(idx_start, input, 0, len)
-        //     }
-        // }
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            pub fn set_chunk<A: SeqTrait<$t>>(
+                self,
+                chunk_size: usize,
+                chunk_number: usize,
+                input: &A,
+            ) -> Self {
+                let idx_start = chunk_size * chunk_number;
+                let len = self.get_chunk_len(chunk_size, chunk_number);
+                debug_assert!(
+                    input.len() == len,
+                    "the chunk length should match the input. got {}, expected {}",
+                    input.len(),
+                    len
+                );
+                self.update_slice(idx_start, input, 0, len)
+            }
+        }
 
-        // impl Default for $name {
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
-        //     fn default() -> Self {
-        //         $name::new()
-        //     }
-        // }
+        impl Default for $name {
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
+            fn default() -> Self {
+                $name::new()
+            }
+        }
         impl SeqTrait<$t> for $name {
             #[creusot_contracts::trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
@@ -166,12 +166,6 @@ macro_rules! _array_base {
             fn len(&self) -> usize {
                 $l
             }
-            #[cfg(feature = "std")]
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn iter(&self) -> std::slice::Iter<$t> {
-                self.0.as_ref().iter()
-            }
-            #[cfg(not(feature = "std"))]
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             fn iter(&self) -> core::slice::Iter<$t> {
                 self.0.as_ref().iter()
@@ -226,53 +220,53 @@ macro_rules! _array_base {
             }
         }
  
-        // impl Index<u8> for $name {
-        //     type Output = $t;
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     fn index(&self, i: u8) -> &$t {
-        //         &self.0[i as usize]
-        //     }
-        // }
-        // impl IndexMut<u8> for $name {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     fn index_mut(&mut self, i: u8) -> &mut $t {
-        //         &mut self.0[i as usize]
-        //     }
-        // }
-        // impl Index<u32> for $name {
-        //     type Output = $t;
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     fn index(&self, i: u32) -> &$t {
-        //         &self.0[i as usize]
-        //     }
-        // }
-        // impl IndexMut<u32> for $name {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     fn index_mut(&mut self, i: u32) -> &mut $t {
-        //         &mut self.0[i as usize]
-        //     }
-        // }
-        // impl Index<i32> for $name {
-        //     type Output = $t;
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     fn index(&self, i: i32) -> &$t {
-        //         &self.0[i as usize]
-        //     }
-        // }
-        // impl IndexMut<i32> for $name {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     fn index_mut(&mut self, i: i32) -> &mut $t {
-        //         &mut self.0[i as usize]
-        //     }
-        // }
-        // impl Index<RangeFull> for $name {
-        //     type Output = [$t];
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     fn index(&self, r: RangeFull) -> &[$t] {
-        //         &self.0.as_ref()[r]
-        //     }
-        // }
+        impl Index<u8> for $name {
+            type Output = $t;
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            fn index(&self, i: u8) -> &$t {
+                &self.0[i as usize]
+            }
+        }
+        impl IndexMut<u8> for $name {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn index_mut(&mut self, i: u8) -> &mut $t {
+                &mut self.0[i as usize]
+            }
+        }
+        impl Index<u32> for $name {
+            type Output = $t;
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            fn index(&self, i: u32) -> &$t {
+                &self.0[i as usize]
+            }
+        }
+        impl IndexMut<u32> for $name {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn index_mut(&mut self, i: u32) -> &mut $t {
+                &mut self.0[i as usize]
+            }
+        }
+        impl Index<i32> for $name {
+            type Output = $t;
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            fn index(&self, i: i32) -> &$t {
+                &self.0[i as usize]
+            }
+        }
+        impl IndexMut<i32> for $name {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn index_mut(&mut self, i: i32) -> &mut $t {
+                &mut self.0[i as usize]
+            }
+        }
+        impl Index<RangeFull> for $name {
+            type Output = [$t];
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            fn index(&self, r: RangeFull) -> &[$t] {
+                &self.0.as_ref()[r]
+            }
+        }
         
         impl $name {
             #[creusot_contracts::trusted]
@@ -300,42 +294,31 @@ macro_rules! _array_base {
             }
         }
 
-        // impl $name {
-        //     #[creusot_contracts::trusted]
-        //     #[cfg(feature = "std")]
-        //     fn hex_string_to_vec(s: &str) -> Vec<$t> {
-        //         debug_assert!(s.len() % std::mem::size_of::<$t>() == 0);
-        //         let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
-        //             .step_by(2)
-        //             .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map(<$t>::from))
-        //             .collect();
-        //         b.expect("Error parsing hex string")
-        //     }
-        //     #[creusot_contracts::trusted]
-        //     #[cfg(not(feature = "std"))]
-        //     fn hex_string_to_vec(s: &str) -> Vec<$t> {
-        //         debug_assert!(s.len() % core::mem::size_of::<$t>() == 0);
-        //         let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
-        //             .step_by(2)
-        //             .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map(<$t>::from))
-        //             .collect();
-        //         b.expect("Error parsing hex string")
-        //     }
+        impl $name {
+            #[creusot_contracts::trusted]
+            fn hex_string_to_vec(s: &str) -> Vec<$t> {
+                debug_assert!(s.len() % core::mem::size_of::<$t>() == 0);
+                let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
+                    .step_by(2)
+                    .map(|i| u8::from_str_radix(&s[i..i + 2], 16).map(<$t>::from))
+                    .collect();
+                b.expect("Error parsing hex string")
+            }
 
             
-        //     /// Read hex string to Bytes.
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     pub fn from_hex(s: &str) -> $name {
-        //         let v = $name::hex_string_to_vec(s);
-        //         let mut o = $name::new();
-        //         debug_assert!(v.len() == $l);
-        //         for i in 0..$l {
-        //             o[i] = v[i]
-        //         }
-        //         o
-        //     }
-        // }
+            /// Read hex string to Bytes.
+            #[creusot_contracts::trusted]
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            pub fn from_hex(s: &str) -> $name {
+                let v = $name::hex_string_to_vec(s);
+                let mut o = $name::new();
+                debug_assert!(v.len() == $l);
+                for i in 0..$l {
+                    o[i] = v[i]
+                }
+                o
+            }
+        }
     };
 }
 
@@ -468,12 +451,6 @@ macro_rules! generic_array {
             fn len(&self) -> usize {
                 $l
             }
-            #[cfg(feature = "std")]
-            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-            fn iter(&self) -> std::slice::Iter<T> {
-                self.0.as_ref().iter()
-            }
-            #[cfg(not(feature = "std"))]
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             fn iter(&self) -> core::slice::Iter<T> {
                 self.0.as_ref().iter()
@@ -522,45 +499,45 @@ macro_rules! generic_array {
             }
         }
 
-        // impl<T: Numeric + Copy> Index<u8> for $name<T> {
-        //     type Output = T;
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     fn index(&self, i: u8) -> &T {
-        //         &self.0[i as usize]
-        //     }
-        // }
-        // impl<T: Numeric + Copy> IndexMut<u8> for $name<T> {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     fn index_mut(&mut self, i: u8) -> &mut T {
-        //         &mut self.0[i as usize]
-        //     }
-        // }
-        // impl<T: Numeric + Copy> Index<u32> for $name<T> {
-        //     type Output = T;
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     fn index(&self, i: u32) -> &T {
-        //         &self.0[i as usize]
-        //     }
-        // }
-        // impl<T: Numeric + Copy> IndexMut<u32> for $name<T> {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     fn index_mut(&mut self, i: u32) -> &mut T {
-        //         &mut self.0[i as usize]
-        //     }
-        // }
-        // impl<T: Numeric + Copy> Index<i32> for $name<T> {
-        //     type Output = T;
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     fn index(&self, i: i32) -> &T {
-        //         &self.0[i as usize]
-        //     }
-        // }
-        // impl<T: Numeric + Copy> IndexMut<i32> for $name<T> {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     fn index_mut(&mut self, i: i32) -> &mut T {
-        //         &mut self.0[i as usize]
-        //     }
-        // }
+        impl<T: Numeric + Copy> Index<u8> for $name<T> {
+            type Output = T;
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            fn index(&self, i: u8) -> &T {
+                &self.0[i as usize]
+            }
+        }
+        impl<T: Numeric + Copy> IndexMut<u8> for $name<T> {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn index_mut(&mut self, i: u8) -> &mut T {
+                &mut self.0[i as usize]
+            }
+        }
+        impl<T: Numeric + Copy> Index<u32> for $name<T> {
+            type Output = T;
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            fn index(&self, i: u32) -> &T {
+                &self.0[i as usize]
+            }
+        }
+        impl<T: Numeric + Copy> IndexMut<u32> for $name<T> {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn index_mut(&mut self, i: u32) -> &mut T {
+                &mut self.0[i as usize]
+            }
+        }
+        impl<T: Numeric + Copy> Index<i32> for $name<T> {
+            type Output = T;
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            fn index(&self, i: i32) -> &T {
+                &self.0[i as usize]
+            }
+        }
+        impl<T: Numeric + Copy> IndexMut<i32> for $name<T> {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn index_mut(&mut self, i: i32) -> &mut T {
+                &mut self.0[i as usize]
+            }
+        }
         impl<T: Numeric + Copy> Index<RangeFull> for $name<T> {
             type Output = [T];
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
@@ -611,103 +588,103 @@ macro_rules! _secret_array {
     ($name:ident,$l:expr,$t:ty, $tbase:ty) => {
         _array_base!($name, $l, $t);
 
-        // #[cfg(feature = "hacspec")]
-        // /// **Warning:** declassifies secret integer types.
-        // impl fmt::Debug for $name {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        //         self.0[..]
-        //             .iter()
-        //             .map(|x| <$t>::declassify(*x))
-        //             .collect::<Vec<_>>()
-        //             .fmt(f)
-        //     }
-        // }
-        // /// **Warning:** declassifies secret integer types.
-        // impl $name {
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     pub fn declassify_eq(&self, other: &Self) -> bool {
-        //         self.0[..]
-        //             .iter()
-        //             .map(|x| <$t>::declassify(*x))
-        //             .collect::<Vec<_>>()
-        //             == other.0[..]
-        //                 .iter()
-        //                 .map(|x| <$t>::declassify(*x))
-        //                 .collect::<Vec<_>>()
-        //     }
-        // }
-        // impl $name {
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn to_be_bytes(&self) -> crate::seq::Seq<U8> {
-        //         const FACTOR: usize = core::mem::size_of::<$t>();
-        //         let mut out: crate::seq::Seq<U8> = crate::seq::Seq::new($l * FACTOR);
-        //         for i in 0..$l {
-        //             let tmp: $t = self[i];
-        //             let tmp = <$t>::to_be_bytes(&[tmp]);
-        //             for j in 0..FACTOR {
-        //                 out[i * FACTOR + j] = tmp[j];
-        //             }
-        //         }
-        //         out
-        //     }
+        #[cfg(feature = "hacspec")]
+        /// **Warning:** declassifies secret integer types.
+        impl fmt::Debug for $name {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.0[..]
+                    .iter()
+                    .map(|x| <$t>::declassify(*x))
+                    .collect::<Vec<_>>()
+                    .fmt(f)
+            }
+        }
+        /// **Warning:** declassifies secret integer types.
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            pub fn declassify_eq(&self, other: &Self) -> bool {
+                self.0[..]
+                    .iter()
+                    .map(|x| <$t>::declassify(*x))
+                    .collect::<Vec<_>>()
+                    == other.0[..]
+                        .iter()
+                        .map(|x| <$t>::declassify(*x))
+                        .collect::<Vec<_>>()
+            }
+        }
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_be_bytes(&self) -> crate::seq::Seq<U8> {
+                const FACTOR: usize = core::mem::size_of::<$t>();
+                let mut out: crate::seq::Seq<U8> = crate::seq::Seq::new($l * FACTOR);
+                for i in 0..$l {
+                    let tmp: $t = self[i];
+                    let tmp = <$t>::to_be_bytes(&[tmp]);
+                    for j in 0..FACTOR {
+                        out[i * FACTOR + j] = tmp[j];
+                    }
+                }
+                out
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
-        //     pub fn to_le_bytes(&self) -> crate::seq::Seq<U8> {
-        //         const FACTOR: usize = core::mem::size_of::<$t>();
-        //         let mut out: crate::seq::Seq<U8> = crate::seq::Seq::new($l * FACTOR);
-        //         for i in 0..$l {
-        //             let tmp: $t = self[i];
-        //             let tmp = <$t>::to_le_bytes(&[tmp]);
-        //             for j in 0..FACTOR {
-        //                 out[i * FACTOR + j] = tmp[j];
-        //             }
-        //         }
-        //         out
-        //     }
-        // }
-        // impl $name {
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     pub fn from_public_slice(v: &[$tbase]) -> $name {
-        //         debug_assert!(v.len() == $l);
-        //         Self::from_vec(
-        //             v[..]
-        //                 .iter()
-        //                 .map(|x| <$t>::classify(*x))
-        //                 .collect::<Vec<$t>>(),
-        //         )
-        //     }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
+            pub fn to_le_bytes(&self) -> crate::seq::Seq<U8> {
+                const FACTOR: usize = core::mem::size_of::<$t>();
+                let mut out: crate::seq::Seq<U8> = crate::seq::Seq::new($l * FACTOR);
+                for i in 0..$l {
+                    let tmp: $t = self[i];
+                    let tmp = <$t>::to_le_bytes(&[tmp]);
+                    for j in 0..FACTOR {
+                        out[i * FACTOR + j] = tmp[j];
+                    }
+                }
+                out
+            }
+        }
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            pub fn from_public_slice(v: &[$tbase]) -> $name {
+                debug_assert!(v.len() == $l);
+                Self::from_vec(
+                    v[..]
+                        .iter()
+                        .map(|x| <$t>::classify(*x))
+                        .collect::<Vec<$t>>(),
+                )
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     pub fn to_public_array(&self) -> [$tbase; $l] {
-        //         let mut out = [0; $l];
-        //         for (x, o) in self.0.iter().zip(out.iter_mut()) {
-        //             *o = <$t>::declassify(*x);
-        //         }
-        //         out
-        //     }
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            pub fn to_public_array(&self) -> [$tbase; $l] {
+                let mut out = [0; $l];
+                for (x, o) in self.0.iter().zip(out.iter_mut()) {
+                    *o = <$t>::declassify(*x);
+                }
+                out
+            }
 
-        //     /// Create an array from a regular Rust array.
-        //     ///
-        //     /// # Examples
-        //     ///
-        //     /// ```
-        //     /// use crate::prelude::*;
-        //     ///
-        //     /// bytes!(Block, 5);
-        //     /// let b = Block::from_public_array([1, 2, 3, 4, 5]);
-        //     /// ```
-        //     #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
-        //     pub fn from_public_array(v: [$tbase; $l]) -> $name {
-        //         debug_assert!(v.len() == $l);
-        //         Self::from_vec(
-        //             v[..]
-        //                 .iter()
-        //                 .map(|x| <$t>::classify(*x))
-        //                 .collect::<Vec<$t>>(),
-        //         )
-        //     }
-        // }
+            /// Create an array from a regular Rust array.
+            ///
+            /// # Examples
+            ///
+            /// ```
+            /// use crate::prelude::*;
+            ///
+            /// bytes!(Block, 5);
+            /// let b = Block::from_public_array([1, 2, 3, 4, 5]);
+            /// ```
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            pub fn from_public_array(v: [$tbase; $l]) -> $name {
+                debug_assert!(v.len() == $l);
+                Self::from_vec(
+                    v[..]
+                        .iter()
+                        .map(|x| <$t>::classify(*x))
+                        .collect::<Vec<$t>>(),
+                )
+            }
+        }
     };
 }
 

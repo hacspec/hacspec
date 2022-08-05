@@ -43,7 +43,7 @@ macro_rules! declare_attribute {
             let func = parse_macro_input!(item as ItemFn);
             let mut attr_args_iter = attr.into_iter();
             let _impl_type_name: Option<String> =
-                attr_args_iter.next().map(|arg| format!("{}", arg));
+                attr_args_iter.next().map(|arg| String::from("TODO")); // format!("{}", arg)
             let _is_generic: bool = attr_args_iter.next().map_or(false, |_| {
                 let _ = attr_args_iter.next().expect("Error 7");
                 true
@@ -68,24 +68,27 @@ macro_rules! declare_attribute {
                 }
                 Diagnostic::new(
                     Level::Note,
-                    format!(
-                        "{}: {} {}",
-                        $msg,
-                        Green.paint(format!("{}", func.sig.ident)),
-                        {
-                            let file = func.sig.span().unwrap().source_file().path();
-                            let start = func.sig.span().start();
-                            format!(
-                                "in file {}, line {}",
-                                Yellow.paint(file.to_str().expect("Error 9")),
-                                Yellow.paint(format!("{}", start.line))
-                            )
-                        }
-                    ),
+                    String::from("")
+                    // format!(
+                    //     "{}: {} {}",
+                    //     $msg,
+                    //     Green.paint(format!("{}", func.sig.ident)),
+                    //     {
+                    //         let file = func.sig.span().unwrap().source_file().path();
+                    //         let start = func.sig.span().start();
+                    //         format!(
+                    //             "in file {}, line {}",
+                    //             Yellow.paint(file.to_str().expect("Error 9")),
+                    //             Yellow.paint(format!("{}", start.line))
+                    //         )
+                    //     }
+                    // )
+                        ,
                 )
                 .emit()
             }
-            let doc_msg = format!("_{}_\n", $doc);
+            let doc_msg = String::from("")// format!("_{}_\n", $doc)
+            ;
             let output = quote! {
                #[doc=#doc_msg]
                #item_copy
@@ -133,22 +136,24 @@ pub fn hacspec_unsafe(attr: TokenStream, item: TokenStream) -> TokenStream {
         }
         Some(_) | None => false,
     };
-    let msg = if outside {
-        format!("function outside of hacspec")
-    } else {
-        format!("unsafe hacspec function")
-    };
+    let msg = String::from(""); // if outside {
+    //     format!("function outside of hacspec")
+    // } else {
+    //     format!("unsafe hacspec function")
+    // };
     Diagnostic::new(
         Level::Note,
-        format!("{}: {} {}", msg, format!("{}", func.sig.ident), {
-            let file = func.sig.span().unwrap().source_file().path();
-            let start = func.sig.span().start();
-            format!(
-                "in {}:{}",
-                file.to_str().unwrap(),
-                format!("{}", start.line)
-            )
-        }),
+        String::from("")
+        // format!("{}: {} {}", msg, format!("{}", func.sig.ident), {
+        //     let file = func.sig.span().unwrap().source_file().path();
+        //     let start = func.sig.span().start();
+        //     format!(
+        //         "in {}:{}",
+        //         file.to_str().unwrap(),
+        //         format!("{}", start.line)
+        //     )
+        // })
+            ,
     )
     .emit();
     item

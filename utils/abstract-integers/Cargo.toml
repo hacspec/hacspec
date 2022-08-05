@@ -15,7 +15,8 @@ num-bigint = { version = "0.4", default-features = false }
 
 [dependencies.creusot-contracts]
 git = "https://github.com/xldenis/creusot/"
-branch = "master"
+# branch = "master"
+rev = "576426205aa78adf8b930018ce94780448fbf023"
 package = "creusot-contracts"
 
 [features]

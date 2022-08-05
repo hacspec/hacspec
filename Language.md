@@ -89,11 +89,27 @@ extern crate hacspec_lib;
 #[cfg(feature = "hacspec")]
 use hacspec_attributes::*;
 
+#[cfg(feature = "contracts")]
 #[cfg(not(feature = "hacspec"))]
 extern crate creusot_contracts;
+#[cfg(feature = "contracts")]
 #[cfg(not(feature = "hacspec"))]
 pub use creusot_contracts::*;
+
+#[cfg(not(feature = "contracts"))]
+#[cfg(not(feature = "hacspec"))]
+extern crate creusot_contracts_dummy;
+#[cfg(not(feature = "contracts"))]
+#[cfg(not(feature = "hacspec"))]
+pub use creusot_contracts_dummy::*;
 
 pub use hacspec_lib::*;
 ```
 to the hacspec file using creusot/pearlite
+
+To analyse the code run the mlcfg script, with the following lines added:
+```
+  --cfg 'feature="contracts"' \
+  --extern hacspec_lib=../LocalHacspec/hacspec/target/debug/libhacspec_lib.rlib \
+  -Ldependency=../LocalHacspec/hacspec/target/debug/deps \
+```

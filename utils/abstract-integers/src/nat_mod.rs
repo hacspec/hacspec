@@ -1,8 +1,47 @@
+extern crate creusot_contracts;
+use creusot_contracts::{std::vec, *};
+
 #[macro_export]
 macro_rules! modular_integer {
     ($name:ident, $base:ident, $max:expr) => {
         #[derive(Clone, Copy, Default)]
         pub struct $name($base);
+
+        #[cfg(feature = "contracts")]
+        #[cfg(not(feature = "hacspec"))]
+        impl Model for $name {
+            type ModelTy = $name;
+
+            #[logic]
+            fn model(self) -> Self::ModelTy {
+                self
+            }
+        }
+
+        #[cfg(feature = "contracts")]
+        #[cfg(not(feature = "hacspec"))]
+        impl OrdLogic for $name {
+            #[logic]
+            fn cmp_log(self : Self, b : Self) -> Ordering { Ordering::Equal }
+            #[logic]
+            fn cmp_le_log(a : Self, b : Self) { }
+            #[logic]
+            fn cmp_lt_log(a : Self, b : Self) { }
+            #[logic]
+            fn cmp_ge_log(a : Self, b : Self) { }
+            #[logic]
+            fn cmp_gt_log(a : Self, b : Self) { }
+            #[logic]
+            fn refl(a : Self) { }
+            #[logic]
+            fn trans(a : Self, b : Self, c : Self, d : Ordering) { }
+            #[logic]
+            fn antisym1(a : Self, b : Self) { }
+            #[logic]
+            fn antisym2(a : Self, b : Self) { }
+            #[logic]
+            fn eq_cmp(a : Self, b : Self) { }
+        }
 
         // #[cfg(feature = "std")]
         // impl std::fmt::Display for $name {

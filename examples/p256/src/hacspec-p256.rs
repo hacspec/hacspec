@@ -9,9 +9,9 @@
 
 // pub use hacspec_lib::*;
 
-// #[cfg(not(feature = "hacspec"))]
+#[cfg(not(feature = "hacspec"))]
 extern crate creusot_contracts;
-// #[cfg(not(feature = "hacspec"))]
+#[cfg(not(feature = "hacspec"))]
 pub use creusot_contracts::*;
 
 extern crate creusot;
@@ -24,23 +24,23 @@ pub use creusot::*;
 //     InvalidAddition,
 // }
 
-struct Seven();
-#[cfg(not(feature = "hacspec"))]
-impl creusot::Model for Seven {
-    type ModelTy = Int;
-    #[logic]
-    #[trusted]
-    fn model(self) -> Self::ModelTy {
-        absurd
-    }
-}
+// struct Seven();
+// #[cfg(not(feature = "hacspec"))]
+// impl creusot::Model for Seven {
+//     type ModelTy = Int;
+//     #[logic]
+//     #[trusted]
+//     fn model(self) -> Self::ModelTy {
+//         absurd
+//     }
+// }
 
-#[trusted]
-#[ensures(@result == 7)]
-#[cfg(not(feature = "hacspec"))]
-fn seven() -> Seven {
-    Seven()
-}
+// #[trusted]
+// #[ensures(@result == 7)]
+// #[cfg(not(feature = "hacspec"))]
+// fn seven() -> Seven {
+//     Seven()
+// }
 
 // struct Pair<T, U>(T, U);
 
