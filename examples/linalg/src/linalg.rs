@@ -39,6 +39,10 @@ const DIMENSION_MISMATCH: u8 = 13u8;
 /// Generate new matrix using rows, cols and a seq. Returns an error
 /// if the product of the given dimensions is larger than the length
 /// of the given Seq.
+
+// === External Functions === //
+
+/// Generate new matrix using rows, cols and a seq.
 pub fn new(rows: DimType, cols: DimType, seq: Seq<Scalar>) -> MatRes {
     if seq.len() > 0 && rows * cols == seq.len() {
         MatRes::Ok(((rows, cols), seq))

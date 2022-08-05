@@ -77,6 +77,7 @@ fn test_unit_identity() {
 #[test]
 fn test_unit_index() {
     let xs = vec![0, 1, 2, 3, 4, 5];
+    
     let hac_xs = new(2, 3, Seq::<Scalar>::from_vec(xs)).unwrap();
 
     assert!(index(hac_xs.clone(), 0, 0).unwrap() == 0.into());
@@ -96,6 +97,7 @@ fn test_unit_transpose() {
     let hac_rs = new(3, 2, Seq::<Scalar>::from_vec(rs)).unwrap();
 
     let hac_op = transpose(hac_xs);
+
     assert_hacs(hac_op, hac_rs);
 }
 
