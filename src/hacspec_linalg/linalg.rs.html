@@ -147,6 +147,93 @@
 <span id="147">147</span>
 <span id="148">148</span>
 <span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
 </pre><pre class="rust"><code><span class="comment">/*
 * A hacspec library implementation modelled on the nalgebra rust library.
 * Functions are modelled and tested against their nalgebra counterparts
@@ -178,9 +265,16 @@
 
 <span class="comment">// === Errors === //</span>
 
-<span class="kw">const</span> <span class="ident">ROW_COL_MISMATCH</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">10u8</span>;
+<span class="kw">const</span> <span class="ident">DIMENSION_SEQUENCE_LENGTH_MISMATCH</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">10u8</span>;
 <span class="kw">const</span> <span class="ident">INDEX_OUT_OF_BOUNDS</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">11u8</span>;
 <span class="kw">const</span> <span class="ident">SLICE_OUT_OF_BOUNDS</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">12u8</span>;
+<span class="kw">const</span> <span class="ident">DIMENSION_MISMATCH</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">13u8</span>;
+
+<span class="comment">// === External Functions === //</span>
+
+<span class="doccomment">/// Generate new matrix using rows, cols and a seq. Returns an error</span>
+<span class="doccomment">/// if the product of the given dimensions is larger than the length</span>
+<span class="doccomment">/// of the given Seq.</span>
 
 <span class="comment">// === External Functions === //</span>
 
@@ -189,35 +283,35 @@
     <span class="kw">if</span> <span class="ident">seq</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">rows</span> <span class="op">*</span> <span class="ident">cols</span> <span class="op">==</span> <span class="ident">seq</span>.<span class="ident">len</span>() {
         <span class="ident">MatRes::Ok</span>(((<span class="ident">rows</span>, <span class="ident">cols</span>), <span class="ident">seq</span>))
     } <span class="kw">else</span> {
-        <span class="ident">MatRes::Err</span>(<span class="ident">ROW_COL_MISMATCH</span>)
+        <span class="ident">MatRes::Err</span>(<span class="ident">DIMENSION_SEQUENCE_LENGTH_MISMATCH</span>)
     }
 }
 
-<span class="doccomment">/// Generate a n*m matrix filled with a given scalar</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">repeat</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>, <span class="ident">scalar</span>: <span class="ident">Scalar</span>) -&gt; <span class="ident">MatRes</span> {
+<span class="doccomment">/// Generate a n*m matrix filled with a given scalar.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">repeat</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>, <span class="ident">scalar</span>: <span class="ident">Scalar</span>) -&gt; <span class="ident">Matrix</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">Scalar</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">n</span> <span class="op">*</span> <span class="ident">m</span>);
 
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> <span class="op">*</span> <span class="ident">m</span> {
         <span class="ident">ret</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">scalar</span>;
     }
 
-    <span class="ident">new</span>(<span class="ident">n</span>, <span class="ident">m</span>, <span class="ident">ret</span>)
+    ((<span class="ident">n</span>, <span class="ident">m</span>), <span class="ident">ret</span>)
 }
 
 <span class="doccomment">/// Generate a n*m matrix filled with zeros.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zeros</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>) -&gt; <span class="ident">MatRes</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zeros</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>) -&gt; <span class="ident">Matrix</span> {
     <span class="ident">repeat</span>(<span class="ident">n</span>, <span class="ident">m</span>, <span class="ident">Scalar::ZERO</span>())
 }
 
 <span class="doccomment">/// Generate a n*m matrix filled with ones.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ones</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>) -&gt; <span class="ident">MatRes</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ones</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>) -&gt; <span class="ident">Matrix</span> {
     <span class="ident">repeat</span>(<span class="ident">n</span>, <span class="ident">m</span>, <span class="ident">Scalar::ONE</span>())
 }
 
 <span class="doccomment">/// Generates an identity matrix. If the matrix is not square,</span>
 <span class="doccomment">/// the largest square submatrix (starting at the first row and column)</span>
 <span class="doccomment">/// is set to the identity while all other entries are set to zero.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">identity</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>) -&gt; <span class="ident">MatRes</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">identity</span>(<span class="ident">n</span>: <span class="ident">DimType</span>, <span class="ident">m</span>: <span class="ident">DimType</span>) -&gt; <span class="ident">Matrix</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">Scalar</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">n</span> <span class="op">*</span> <span class="ident">m</span>);
 
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">min</span>(<span class="ident">n</span>, <span class="ident">m</span>) {
@@ -225,10 +319,10 @@
         <span class="ident">ret</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Scalar::ONE</span>();
     }
 
-    <span class="ident">new</span>(<span class="ident">n</span>, <span class="ident">m</span>, <span class="ident">ret</span>)
+    ((<span class="ident">n</span>, <span class="ident">m</span>), <span class="ident">ret</span>)
 }
 
-<span class="doccomment">/// Gets the index of a matrix</span>
+<span class="doccomment">/// Gets the index of a matrix. Returns an Error if the given index is out of bounds.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">index</span>(<span class="ident">m</span>: <span class="ident">Matrix</span>, <span class="ident">i</span>: <span class="ident">DimType</span>, <span class="ident">j</span>: <span class="ident">DimType</span>) -&gt; <span class="ident">ScalRes</span> {
     <span class="kw">let</span> (<span class="ident">dim</span>, <span class="ident">seq</span>) <span class="op">=</span> <span class="ident">m</span>;
     <span class="kw">let</span> (<span class="ident">rows</span>, <span class="ident">cols</span>) <span class="op">=</span> <span class="ident">dim</span>;
@@ -241,7 +335,7 @@
     }
 }
 
-<span class="doccomment">/// Transposes a matrix</span>
+<span class="doccomment">/// Transposes a matrix.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transpose</span>(<span class="ident">matrix</span>: <span class="ident">Matrix</span>) -&gt; <span class="ident">Matrix</span> {
     <span class="kw">let</span> (<span class="ident">dim</span>, <span class="ident">seq</span>) <span class="op">=</span> <span class="ident">matrix</span>;
     <span class="kw">let</span> (<span class="ident">rows</span>, <span class="ident">cols</span>) <span class="op">=</span> <span class="ident">dim</span>;
@@ -260,7 +354,7 @@
 
 <span class="doccomment">/// Returns a matrix slice, given a Matrix and two Dims (pairs of usize),</span>
 <span class="doccomment">/// first Dims pair representing the starting point and second Dims</span>
-<span class="doccomment">/// pair the dimensions</span>
+<span class="doccomment">/// pair the dimensions. Returns an Error if the given slice is out of bounds.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slice</span>(<span class="ident">matrix</span>: <span class="ident">Matrix</span>, <span class="ident">start</span>: <span class="ident">Dims</span>, <span class="ident">len</span>: <span class="ident">Dims</span>) -&gt; <span class="ident">MatRes</span> {
     <span class="kw">let</span> (<span class="ident">dim</span>, <span class="ident">seq</span>) <span class="op">=</span> <span class="ident">matrix</span>;
     <span class="kw">let</span> (<span class="ident">rows</span>, <span class="ident">cols</span>) <span class="op">=</span> <span class="ident">dim</span>;
@@ -275,7 +369,7 @@
             <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">len_cols</span> {
                 <span class="kw">let</span> <span class="ident">ret_index</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">*</span> <span class="ident">len_cols</span> <span class="op">+</span> <span class="ident">j</span>;
                 <span class="kw">let</span> <span class="ident">seq_index</span> <span class="op">=</span> (<span class="ident">start_row</span> <span class="op">+</span> <span class="ident">i</span>) <span class="op">*</span> <span class="ident">cols</span> <span class="op">+</span> (<span class="ident">start_col</span> <span class="op">+</span> <span class="ident">j</span>);
-                <span class="ident">ret</span>[<span class="ident">ret_index</span>] <span class="op">=</span> <span class="ident">seq</span>[<span class="ident">seq_index</span>].<span class="ident">clone</span>()
+                <span class="ident">ret</span>[<span class="ident">ret_index</span>] <span class="op">=</span> <span class="ident">seq</span>[<span class="ident">seq_index</span>]
             }
         }
 
@@ -285,16 +379,96 @@
     <span class="ident">res</span>
 }
 
-<span class="doccomment">/// Scale a matrix with a given scalar</span>
+<span class="doccomment">/// Scale a matrix with a given scalar.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scale</span>(<span class="ident">matrix</span>: <span class="ident">Matrix</span>, <span class="ident">scalar</span>: <span class="ident">Scalar</span>) -&gt; <span class="ident">Matrix</span> {
     <span class="kw">let</span> (<span class="ident">dim</span>, <span class="ident">seq</span>) <span class="op">=</span> <span class="ident">matrix</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">Scalar</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">seq</span>.<span class="ident">len</span>());
 
     <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">seq</span>.<span class="ident">len</span>() {
-        <span class="ident">ret</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">scalar</span> <span class="op">*</span> <span class="ident">seq</span>[<span class="ident">i</span>].<span class="ident">clone</span>()
+        <span class="ident">ret</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">scalar</span> <span class="op">*</span> <span class="ident">seq</span>[<span class="ident">i</span>]
     }
 
     (<span class="ident">dim</span>, <span class="ident">ret</span>)
+}
+
+<span class="doccomment">/// Matrix addition. Returns an Error on dimension mismatch.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="ident">matrix_1</span>: <span class="ident">Matrix</span>, <span class="ident">matrix_2</span>: <span class="ident">Matrix</span>) -&gt; <span class="ident">MatRes</span> {
+    <span class="kw">let</span> (<span class="ident">m1_dim</span>, <span class="ident">m1_s</span>) <span class="op">=</span> <span class="ident">matrix_1</span>;
+    <span class="kw">let</span> (<span class="ident">m2_dim</span>, <span class="ident">m2_s</span>) <span class="op">=</span> <span class="ident">matrix_2</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">Scalar</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">m1_s</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">MatRes::Err</span>(<span class="ident">DIMENSION_MISMATCH</span>);
+
+    <span class="kw">if</span> <span class="ident">m1_dim</span> <span class="op">==</span> <span class="ident">m2_dim</span> {
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">m1_s</span>.<span class="ident">len</span>() {
+            <span class="ident">ret</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">m1_s</span>[<span class="ident">i</span>] <span class="op">+</span> <span class="ident">m2_s</span>[<span class="ident">i</span>]
+        }
+        <span class="ident">res</span> <span class="op">=</span> <span class="ident">MatRes::Ok</span>((<span class="ident">m1_dim</span>, <span class="ident">ret</span>))
+    }
+    <span class="ident">res</span>
+}
+
+<span class="doccomment">/// Matrix subtraction. Returns an Error on dimension mismatch.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sub</span>(<span class="ident">matrix_1</span>: <span class="ident">Matrix</span>, <span class="ident">matrix_2</span>: <span class="ident">Matrix</span>) -&gt; <span class="ident">MatRes</span> {
+    <span class="kw">let</span> (<span class="ident">m1_dim</span>, <span class="ident">m1_s</span>) <span class="op">=</span> <span class="ident">matrix_1</span>;
+    <span class="kw">let</span> (<span class="ident">m2_dim</span>, <span class="ident">m2_s</span>) <span class="op">=</span> <span class="ident">matrix_2</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">Scalar</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">m1_s</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">MatRes::Err</span>(<span class="ident">DIMENSION_MISMATCH</span>);
+
+    <span class="kw">if</span> <span class="ident">m1_dim</span> <span class="op">==</span> <span class="ident">m2_dim</span> {
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">m1_s</span>.<span class="ident">len</span>() {
+            <span class="ident">ret</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">m1_s</span>[<span class="ident">i</span>] <span class="op">-</span> <span class="ident">m2_s</span>[<span class="ident">i</span>]
+        }
+        <span class="ident">res</span> <span class="op">=</span> <span class="ident">MatRes::Ok</span>((<span class="ident">m1_dim</span>, <span class="ident">ret</span>))
+    }
+    <span class="ident">res</span>
+}
+
+<span class="doccomment">/// Component-wise multiplication (Hadamard product). Returns an Error on dimension mismatch.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">component_mul</span>(<span class="ident">matrix_1</span>: <span class="ident">Matrix</span>, <span class="ident">matrix_2</span>: <span class="ident">Matrix</span>) -&gt; <span class="ident">MatRes</span> {
+    <span class="kw">let</span> (<span class="ident">m1_dim</span>, <span class="ident">m1_s</span>) <span class="op">=</span> <span class="ident">matrix_1</span>;
+    <span class="kw">let</span> (<span class="ident">m2_dim</span>, <span class="ident">m2_s</span>) <span class="op">=</span> <span class="ident">matrix_2</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">Scalar</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">m1_s</span>.<span class="ident">len</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">MatRes::Err</span>(<span class="ident">DIMENSION_MISMATCH</span>);
+
+    <span class="kw">if</span> <span class="ident">m1_dim</span> <span class="op">==</span> <span class="ident">m2_dim</span> {
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">m1_s</span>.<span class="ident">len</span>() {
+            <span class="ident">ret</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">m1_s</span>[<span class="ident">i</span>] <span class="op">*</span> <span class="ident">m2_s</span>[<span class="ident">i</span>]
+        }
+        <span class="ident">res</span> <span class="op">=</span> <span class="ident">MatRes::Ok</span>((<span class="ident">m1_dim</span>, <span class="ident">ret</span>))
+    }
+    <span class="ident">res</span>
+}
+
+<span class="doccomment">/// Matrix multiplication. Returns an Error on dimension mismatch.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mul</span>(<span class="ident">matrix_1</span>: <span class="ident">Matrix</span>, <span class="ident">matrix_2</span>: <span class="ident">Matrix</span>) -&gt; <span class="ident">MatRes</span> {
+    <span class="kw">let</span> (<span class="ident">dim_1</span>, <span class="ident">seq_1</span>) <span class="op">=</span> <span class="ident">matrix_1</span>;
+    <span class="kw">let</span> (<span class="ident">dim_2</span>, <span class="ident">seq_2</span>) <span class="op">=</span> <span class="ident">matrix_2</span>;
+    <span class="kw">let</span> (<span class="ident">l</span>, <span class="ident">m</span>) <span class="op">=</span> <span class="ident">dim_1</span>;
+    <span class="kw">let</span> (<span class="ident">m_</span>, <span class="ident">n</span>) <span class="op">=</span> <span class="ident">dim_2</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">Seq</span>::<span class="op">&lt;</span><span class="ident">Scalar</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">l</span> <span class="op">*</span> <span class="ident">n</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">MatRes::Err</span>(<span class="ident">DIMENSION_MISMATCH</span>);
+
+    <span class="kw">if</span> <span class="ident">m</span> <span class="op">==</span> <span class="ident">m_</span> {
+        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">l</span> {
+            <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">acc</span> <span class="op">=</span> <span class="ident">Scalar::ZERO</span>();
+                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">*</span> <span class="ident">n</span> <span class="op">+</span> <span class="ident">j</span>;
+
+                <span class="kw">for</span> <span class="ident">k</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">m</span> {
+                    <span class="kw">let</span> <span class="ident">index_1</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">*</span> <span class="ident">m</span> <span class="op">+</span> <span class="ident">k</span>;
+                    <span class="kw">let</span> <span class="ident">index_2</span> <span class="op">=</span> <span class="ident">k</span> <span class="op">*</span> <span class="ident">n</span> <span class="op">+</span> <span class="ident">j</span>;
+
+                    <span class="ident">acc</span> <span class="op">=</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">seq_1</span>[<span class="ident">index_1</span>] <span class="op">*</span> <span class="ident">seq_2</span>[<span class="ident">index_2</span>];
+                }
+
+                <span class="ident">ret</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">acc</span>
+            }
+        }
+
+        <span class="ident">res</span> <span class="op">=</span> <span class="ident">new</span>(<span class="ident">l</span>, <span class="ident">n</span>, <span class="ident">ret</span>)
+    }
+
+    <span class="ident">res</span>
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hacspec_linalg" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
