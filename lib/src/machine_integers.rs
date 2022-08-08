@@ -135,10 +135,9 @@ macro_rules! implement_public_mi {
                 2
             }
 
-            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_literal(val: u64) -> Self {
+            fn from_literal(val: u128) -> Self {
                 val as $t
             }
 
@@ -443,10 +442,9 @@ macro_rules! implement_secret_mi {
                 $t(2)
             }
 
-            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_literal(val: u64) -> Self {
+            fn from_literal(val: u128) -> Self {
                 Self::classify(val as $base)
             }
 

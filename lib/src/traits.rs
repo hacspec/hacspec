@@ -73,8 +73,7 @@ pub trait Integer: Numeric {
     fn TWO() -> Self;
 
     /// Get an integer with value `val`.
-    // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
-    fn from_literal(val: u64) -> Self;
+    fn from_literal(val: u128) -> Self;
 
     /// Read a hex string (starting with 0x) into an `Integer`.
     fn from_hex_string(s: &String) -> Self;

@@ -97,10 +97,9 @@ macro_rules! unsigned_public_integer {
         //         Self::from_literal(2)
         //     }
 
-        //     // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
         //     #[inline]
         //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn from_literal(val: u64) -> Self {
+        //     fn from_literal(val: u128) -> Self {
         //         Self::from_literal(val)
         //     }
 
@@ -111,7 +110,7 @@ macro_rules! unsigned_public_integer {
         //     }
 
         //     #[cfg(not(feature = "hacspec"))]
-        //     #[creusot_contracts::trusted]
+        //     #[trusted]
         //     /// Get bit `i` of this integer.
         //     #[inline]
         //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -129,7 +128,7 @@ macro_rules! unsigned_public_integer {
         //     }
 
         //     #[cfg(not(feature = "hacspec"))]
-        //     #[creusot_contracts::trusted]
+        //     #[trusted]
         //     /// Set bit `i` of this integer to `b` and return the result.
         //     /// Bit `b` has to be `0` or `1`.
         //     #[inline]
@@ -163,7 +162,7 @@ macro_rules! unsigned_public_integer {
         //     }
 
         //     #[cfg(not(feature = "hacspec"))]
-        //     #[creusot_contracts::trusted]
+        //     #[trusted]
         //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
         //     fn rotate_left(self, n: usize) -> Self {
         //         // Taken from https://blog.regehr.org/archives/1063
@@ -181,7 +180,7 @@ macro_rules! unsigned_public_integer {
         //     }
 
         //     #[cfg(not(feature = "hacspec"))]
-        //     #[creusot_contracts::trusted]
+        //     #[trusted]
         //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
         //     fn rotate_right(self, n: usize) -> Self {
         //         // Taken from https://blog.regehr.org/archives/1063
@@ -677,25 +676,27 @@ macro_rules! signed_integer {
             }
 
             #[inline]
+            #[ensures(result.model() == 0)]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ZERO() -> Self {
                 Self::from_literal(0)
             }
             #[inline]
+            #[ensures(result == 1)]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ONE() -> Self {
                 Self::from_literal(1)
             }
             #[inline]
+            #[ensures(result == 2)]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn TWO() -> Self {
                 Self::from_literal(2)
             }
 
-            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_literal(val: u64) -> Self {
+            fn from_literal(val: u128) -> Self {
                 Self::from_literal(val)
             }
 
@@ -925,6 +926,7 @@ macro_rules! nat_mod {
             }
 
             #[inline]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ZERO() -> Self {
                 Self::from_literal(0)
@@ -940,10 +942,11 @@ macro_rules! nat_mod {
                 Self::from_literal(2)
             }
 
-            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[inline]
+            #[trusted]
+            #[logic]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn from_literal(val: u64) -> Self {
+            fn from_literal(val: u128) -> Self {
                 Self::from_literal(val)
             }
 
@@ -1258,252 +1261,250 @@ macro_rules! public_nat_mod {
         //         hacspec_lib::Seq::from_vec(self.to_le_bytes())
         //     }
 
-        //     // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
         //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_secret_literal(x: U64) -> $name {
-        //         $base::from_literal(U64::declassify(x)).into()
+        //     pub fn from_secret_literal(x: U128) -> $name {
+        //         $base::from_literal(U128::declassify(x)).into()
         //     }
         // }
 
-        // impl NumericCopy for $name {}
-        // impl UnsignedInteger for $name {}
-        // impl UnsignedIntegerCopy for $name {}
-        // impl Integer for $name {
-        //     // const NUM_BITS: usize = $bits;
-        //     fn NUM_BITS() -> usize {
-        //         $bits
-        //     }
+        impl NumericCopy for $name {}
+        impl UnsignedInteger for $name {}
+        impl UnsignedIntegerCopy for $name {}
+        impl Integer for $name {
+            // const NUM_BITS: usize = $bits;
+            fn NUM_BITS() -> usize {
+                $bits
+            }
 
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn ZERO() -> Self {
-        //         Self::from_literal(0)
-        //     }
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn ONE() -> Self {
-        //         Self::from_literal(1)
-        //     }
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn TWO() -> Self {
-        //         Self::from_literal(2)
-        //     }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn ZERO() -> Self {
+                Self::from_literal(0)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn ONE() -> Self {
+                Self::from_literal(1)
+            }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn TWO() -> Self {
+                Self::from_literal(2)
+            }
 
-        //     // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn from_literal(val: u64) -> Self {
-        //         Self::from_literal(val)
-        //     }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn from_literal(val: u128) -> Self {
+                Self::from_literal(val)
+            }
 
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     fn from_hex_string(s: &String) -> Self {
-        //         Self::from_hex(&s.replace("0x", ""))
-        //     }
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            fn from_hex_string(s: &String) -> Self {
+                Self::from_hex(&s.replace("0x", ""))
+            }
 
-        //     /// Get bit `i` of this integer.
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn get_bit(self, i: usize) -> Self {
-        //         (self >> i) & Self::ONE()
-        //     }
+            /// Get bit `i` of this integer.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn get_bit(self, i: usize) -> Self {
+                (self >> i) & Self::ONE()
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     /// Set bit `i` of this integer to `b` and return the result.
-        //     /// Bit `b` has to be `0` or `1`.
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn set_bit(self, b: Self, i: usize) -> Self {
-        //         debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
-        //         let tmp1 = Self::from_literal(!(1 << i));
-        //         let tmp2 = b << i;
-        //         (self & tmp1) | tmp2
-        //     }
+            #[trusted]
+            /// Set bit `i` of this integer to `b` and return the result.
+            /// Bit `b` has to be `0` or `1`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn set_bit(self, b: Self, i: usize) -> Self {
+                debug_assert!(b.clone().equal(Self::ONE()) || b.clone().equal(Self::ZERO()));
+                let tmp1 = Self::from_literal(!(1 << i));
+                let tmp2 = b << i;
+                (self & tmp1) | tmp2
+            }
 
-        //     /// Set bit `pos` of this integer to bit `yi` of integer `y`.
-        //     #[inline]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn set(self, pos: usize, y: Self, yi: usize) -> Self {
-        //         let b = y.get_bit(yi);
-        //         self.set_bit(b, pos)
-        //     }
+            /// Set bit `pos` of this integer to bit `yi` of integer `y`.
+            #[inline]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn set(self, pos: usize, y: Self, yi: usize) -> Self {
+                let b = y.get_bit(yi);
+                self.set_bit(b, pos)
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn rotate_left(self, n: usize) -> Self {
-        //         // Taken from https://blog.regehr.org/archives/1063
-        //         assert!(n < Self::NUM_BITS());
-        //         (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
-        //     }
+            #[trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn rotate_left(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS());
+                (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
+            }
 
-        //     #[creusot_contracts::trusted]
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn rotate_right(self, n: usize) -> Self {
-        //         // Taken from https://blog.regehr.org/archives/1063
-        //         assert!(n < Self::NUM_BITS());
-        //         (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
-        //     }
-        // }
+            #[trusted]
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn rotate_right(self, n: usize) -> Self {
+                // Taken from https://blog.regehr.org/archives/1063
+                assert!(n < Self::NUM_BITS());
+                (self.clone() >> n) | (self << ((-(n as i32) as usize) & (Self::NUM_BITS() - 1)))
+            }
+        }
 
-        // impl ModNumeric for $name {
-        //     /// (self - rhs) % n.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn sub_mod(self, rhs: Self, n: Self) -> Self {
-        //         self - rhs
-        //     }
-        //     /// `(self + rhs) % n`
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn add_mod(self, rhs: Self, n: Self) -> Self {
-        //         self + rhs
-        //     }
-        //     /// `(self * rhs) % n`
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn mul_mod(self, rhs: Self, n: Self) -> Self {
-        //         self * rhs
-        //     }
-        //     /// `(self ^ exp) % n`
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn pow_mod(self, exp: Self, n: Self) -> Self {
-        //         self.pow_felem(exp)
-        //     }
-        //     /// `self % n`
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn modulo(self, n: Self) -> Self {
-        //         self % n
-        //     }
-        //     /// `self % n` that always returns a positive integer
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn signed_modulo(self, n: Self) -> Self {
-        //         self.modulo(n)
-        //     }
-        //     /// `|self|`
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn absolute(self) -> Self {
-        //         self
-        //     }
-        // }
+        impl ModNumeric for $name {
+            /// (self - rhs) % n.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn sub_mod(self, rhs: Self, n: Self) -> Self {
+                self - rhs
+            }
+            /// `(self + rhs) % n`
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn add_mod(self, rhs: Self, n: Self) -> Self {
+                self + rhs
+            }
+            /// `(self * rhs) % n`
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn mul_mod(self, rhs: Self, n: Self) -> Self {
+                self * rhs
+            }
+            /// `(self ^ exp) % n`
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn pow_mod(self, exp: Self, n: Self) -> Self {
+                self.pow_felem(exp)
+            }
+            /// `self % n`
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn modulo(self, n: Self) -> Self {
+                self % n
+            }
+            /// `self % n` that always returns a positive integer
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn signed_modulo(self, n: Self) -> Self {
+                self.modulo(n)
+            }
+            /// `|self|`
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn absolute(self) -> Self {
+                self
+            }
+        }
 
-        // impl Numeric for $name {
-        //     /// Return largest value that can be represented.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn max_val() -> Self {
-        //         (Self::max() - $base::from_literal(1)).into()
-        //     }
+        impl Numeric for $name {
+            /// Return largest value that can be represented.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn max_val() -> Self {
+                (Self::max() - $base::from_literal(1)).into()
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn wrap_add(self, rhs: Self) -> Self {
-        //         self + rhs
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn wrap_sub(self, rhs: Self) -> Self {
-        //         self - rhs
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn wrap_mul(self, rhs: Self) -> Self {
-        //         self * rhs
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn wrap_div(self, rhs: Self) -> Self {
-        //         self / rhs
-        //     }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn wrap_add(self, rhs: Self) -> Self {
+                self + rhs
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn wrap_sub(self, rhs: Self) -> Self {
+                self - rhs
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn wrap_mul(self, rhs: Self) -> Self {
+                self * rhs
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn wrap_div(self, rhs: Self) -> Self {
+                self / rhs
+            }
 
-        //     /// `self ^ exp` where `exp` is a `u32`.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn exp(self, exp: u32) -> Self {
-        //         self.pow(exp.into())
-        //     }
-        //     /// `self ^ exp` where `exp` is a `Self`.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn pow_self(self, exp: Self) -> Self {
-        //         self.pow_felem(exp)
-        //     }
-        //     /// Division.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn divide(self, rhs: Self) -> Self {
-        //         self / rhs
-        //     }
-        //     /// Invert self modulo n.
-        //     /// **NOTE:** `n` is ignored and inversion is done with respect to
-        //     ///            the modulus.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn inv(self, n: Self) -> Self {
-        //         self.inv()
-        //     }
+            /// `self ^ exp` where `exp` is a `u32`.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn exp(self, exp: u32) -> Self {
+                self.pow(exp.into())
+            }
+            /// `self ^ exp` where `exp` is a `Self`.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn pow_self(self, exp: Self) -> Self {
+                self.pow_felem(exp)
+            }
+            /// Division.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn divide(self, rhs: Self) -> Self {
+                self / rhs
+            }
+            /// Invert self modulo n.
+            /// **NOTE:** `n` is ignored and inversion is done with respect to
+            ///            the modulus.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn inv(self, n: Self) -> Self {
+                self.inv()
+            }
 
-        //     // Comparison functions returning bool.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn equal(self, other: Self) -> bool {
-        //         self.equal(other)
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn greater_than(self, other: Self) -> bool {
-        //         self > other
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn greater_than_or_qual(self, other: Self) -> bool {
-        //         self >= other
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn less_than(self, other: Self) -> bool {
-        //         self < other
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn less_than_or_equal(self, other: Self) -> bool {
-        //         self <= other
-        //     }
+            // Comparison functions returning bool.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn equal(self, other: Self) -> bool {
+                self.equal(other)
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn greater_than(self, other: Self) -> bool {
+                self > other
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn greater_than_or_qual(self, other: Self) -> bool {
+                self >= other
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn less_than(self, other: Self) -> bool {
+                self < other
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn less_than_or_equal(self, other: Self) -> bool {
+                self <= other
+            }
 
-        //     // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
-        //     // Return $bits-1 1s as we can't represent 0xF..F.
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn not_equal_bm(self, other: Self) -> Self {
-        //         if self != other {
-        //             (Self::ONE() << ($bits - 1)) - Self::ONE()
-        //         } else {
-        //             Self::ZERO()
-        //         }
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn equal_bm(self, other: Self) -> Self {
-        //         if self.equal(other) {
-        //             (Self::ONE() << ($bits - 1)) - Self::ONE()
-        //         } else {
-        //             Self::ZERO()
-        //         }
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn greater_than_bm(self, other: Self) -> Self {
-        //         if self > other {
-        //             (Self::ONE() << ($bits - 1)) - Self::ONE()
-        //         } else {
-        //             Self::ZERO()
-        //         }
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn greater_than_or_equal_bm(self, other: Self) -> Self {
-        //         if self >= other {
-        //             (Self::ONE() << ($bits - 1)) - Self::ONE()
-        //         } else {
-        //             Self::ZERO()
-        //         }
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn less_than_bm(self, other: Self) -> Self {
-        //         if self < other {
-        //             (Self::ONE() << ($bits - 1)) - Self::ONE()
-        //         } else {
-        //             Self::ZERO()
-        //         }
-        //     }
-        //     #[cfg_attr(feature = "use_attributes", in_hacspec)]
-        //     fn less_than_or_equal_bm(self, other: Self) -> Self {
-        //         if self <= other {
-        //             (Self::ONE() << ($bits - 1)) - Self::ONE()
-        //         } else {
-        //             Self::ZERO()
-        //         }
-        //     }
-        // }
+            // Comparison functions returning a bit mask (0x0..0 or 0xF..F).
+            // Return $bits-1 1s as we can't represent 0xF..F.
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn not_equal_bm(self, other: Self) -> Self {
+                if self != other {
+                    (Self::ONE() << ($bits - 1)) - Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn equal_bm(self, other: Self) -> Self {
+                if self.equal(other) {
+                    (Self::ONE() << ($bits - 1)) - Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn greater_than_bm(self, other: Self) -> Self {
+                if self > other {
+                    (Self::ONE() << ($bits - 1)) - Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn greater_than_or_equal_bm(self, other: Self) -> Self {
+                if self >= other {
+                    (Self::ONE() << ($bits - 1)) - Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn less_than_bm(self, other: Self) -> Self {
+                if self < other {
+                    (Self::ONE() << ($bits - 1)) - Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
+            }
+            #[cfg_attr(feature = "use_attributes", in_hacspec)]
+            fn less_than_or_equal_bm(self, other: Self) -> Self {
+                if self <= other {
+                    (Self::ONE() << ($bits - 1)) - Self::ONE()
+                } else {
+                    Self::ZERO()
+                }
+            }
+        }
     };
 }

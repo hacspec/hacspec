@@ -26,7 +26,7 @@ public_nat_mod!( //Custom Macro - defining a newtype with some functions - well 
     type_name: Fp,
     type_of_canvas: FpCanvas,
     bit_size_of_field: 384, //381 with 3 extra bits
-    modulo_value: "1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab" //0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
+    modulo_value: "1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab"
 );
 
 bytes!(SerializedFp, 48); //Represent points as arrays for easier testing

@@ -12,7 +12,7 @@ readme = "README.md"
 [dependencies.creusot-contracts]
 git = "https://github.com/xldenis/creusot/"
 # branch = "master"
-rev = "576426205aa78adf8b930018ce94780448fbf023"
+rev = "7763b3ae77205fba83182b9a6c3e69ad0b12fec7"
 package = "creusot-contracts"
 
 [[example]]

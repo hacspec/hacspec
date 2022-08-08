@@ -13,38 +13,39 @@ macro_rules! abstract_int {
         #[cfg(feature = "contracts")]
         #[cfg(not(feature = "hacspec"))]
         impl Model for $name {
-            type ModelTy = $name;
+            type ModelTy = Int;
 
             #[logic]
             fn model(self) -> Self::ModelTy {
-                self
+                pearlite! { absurd }
+                // 0 // TODO
             }
         }
 
-        #[cfg(feature = "contracts")]
-        #[cfg(not(feature = "hacspec"))]
-        impl OrdLogic for $name {
-            #[logic]
-            fn cmp_log(self : Self, b : Self) -> Ordering { Ordering::Equal }
-            #[logic]
-            fn cmp_le_log(a : Self, b : Self) { }
-            #[logic]
-            fn cmp_lt_log(a : Self, b : Self) { }
-            #[logic]
-            fn cmp_ge_log(a : Self, b : Self) { }
-            #[logic]
-            fn cmp_gt_log(a : Self, b : Self) { }
-            #[logic]
-            fn refl(a : Self) { }
-            #[logic]
-            fn trans(a : Self, b : Self, c : Self, d : Ordering) { }
-            #[logic]
-            fn antisym1(a : Self, b : Self) { }
-            #[logic]
-            fn antisym2(a : Self, b : Self) { }
-            #[logic]
-            fn eq_cmp(a : Self, b : Self) { }
-        }
+        // #[cfg(feature = "contracts")]
+        // #[cfg(not(feature = "hacspec"))]
+        // impl OrdLogic for $name {
+        //     #[logic]
+        //     fn cmp_log(self : Self, b : Self) -> Ordering { Ordering::Equal }
+        //     #[logic]
+        //     fn cmp_le_log(a : Self, b : Self) { }
+        //     #[logic]
+        //     fn cmp_lt_log(a : Self, b : Self) { }
+        //     #[logic]
+        //     fn cmp_ge_log(a : Self, b : Self) { }
+        //     #[logic]
+        //     fn cmp_gt_log(a : Self, b : Self) { }
+        //     #[logic]
+        //     fn refl(a : Self) { }
+        //     #[logic]
+        //     fn trans(a : Self, b : Self, c : Self, d : Ordering) { }
+        //     #[logic]
+        //     fn antisym1(a : Self, b : Self) { }
+        //     #[logic]
+        //     fn antisym2(a : Self, b : Self) { }
+        //     #[logic]
+        //     fn eq_cmp(a : Self, b : Self) { }
+        // }
 
         impl $name {
             #[trusted]
@@ -74,10 +75,9 @@ macro_rules! abstract_int {
                 b
             }
 
-            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[allow(dead_code)]
             #[trusted]
-            pub fn from_literal(x: u64) -> Self {
+            pub fn from_literal(x: u128) -> Self {
                 let big_x = BigInt::from(x);
                 // if big_x > $name::max().into() {
                 //     panic!("literal {} too big for type {}", x, stringify!($name));
@@ -85,11 +85,10 @@ macro_rules! abstract_int {
                 big_x.into()
             }
 
-            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             #[allow(dead_code)]
             #[trusted]
-            pub fn from_signed_literal(x: i64) -> Self {
-                let big_x = BigInt::from(x as u64);
+            pub fn from_signed_literal(x: i128) -> Self {
+                let big_x = BigInt::from(x as u128);
                 // if big_x > $name::max().into() {
                 //     panic!("literal {} too big for type {}", x, stringify!($name));
                 // }
@@ -296,12 +295,11 @@ macro_rules! abstract_public {
                 c.into()
             }
 
-            // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
             /// Returns self to the power of the argument.
             /// The exponent is a u128.
             #[allow(dead_code)]
             #[trusted]
-            pub fn pow(self, exp: u64, modval: Self) -> Self {
+            pub fn pow(self, exp: u128, modval: Self) -> Self {
                 self.pow_felem(BigInt::from(exp).into(), modval)
             }
 

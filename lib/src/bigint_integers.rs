@@ -27,11 +27,10 @@ impl Integer for BigInt {
         BigInt::from(2)
     }
 
-    // TODO -- fix creusot: 'not implemented: 128 bit integers not yet implemented' -- u64 was u128
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     #[creusot_contracts::trusted]
-    fn from_literal(val: u64) -> Self {
+    fn from_literal(val: u128) -> Self {
         BigInt::from(val)
     }
 
