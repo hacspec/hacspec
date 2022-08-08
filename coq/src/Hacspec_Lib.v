@@ -1513,6 +1513,7 @@ Global Instance int_comparable `{WORDSIZE} : Comparable int := {
 Definition uint8_equal : int8 -> int8 -> bool := eqb.
 
 Definition nat_mod_val (p : Z) (a : nat_mod p) : Z := GZnZ.val p a.
+Definition nat_mod_model {p : Z} (a : nat_mod p) : uint_size := usize (nat_mod_val p a).
 
 Theorem nat_mod_eqb_spec : forall {p} (a b : nat_mod p), Z.eqb (nat_mod_val p a) (nat_mod_val p b) = true <-> a = b.
 Proof.

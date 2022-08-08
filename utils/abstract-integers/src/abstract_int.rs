@@ -1,5 +1,3 @@
-// use creusot_contracts::*;
-
 #[macro_export]
 macro_rules! abstract_int {
     ($name:ident, $bits:literal, $signed:literal) => {
@@ -11,7 +9,7 @@ macro_rules! abstract_int {
         }
 
         #[cfg(feature = "contracts")]
-        #[cfg(not(feature = "hacspec"))]
+        // #[cfg(not(feature = "hacspec"))]
         impl Model for $name {
             type ModelTy = Int;
 
@@ -22,30 +20,12 @@ macro_rules! abstract_int {
             }
         }
 
-        // #[cfg(feature = "contracts")]
-        // #[cfg(not(feature = "hacspec"))]
-        // impl OrdLogic for $name {
-        //     #[logic]
-        //     fn cmp_log(self : Self, b : Self) -> Ordering { Ordering::Equal }
-        //     #[logic]
-        //     fn cmp_le_log(a : Self, b : Self) { }
-        //     #[logic]
-        //     fn cmp_lt_log(a : Self, b : Self) { }
-        //     #[logic]
-        //     fn cmp_ge_log(a : Self, b : Self) { }
-        //     #[logic]
-        //     fn cmp_gt_log(a : Self, b : Self) { }
-        //     #[logic]
-        //     fn refl(a : Self) { }
-        //     #[logic]
-        //     fn trans(a : Self, b : Self, c : Self, d : Ordering) { }
-        //     #[logic]
-        //     fn antisym1(a : Self, b : Self) { }
-        //     #[logic]
-        //     fn antisym2(a : Self, b : Self) { }
-        //     #[logic]
-        //     fn eq_cmp(a : Self, b : Self) { }
-        // }
+        impl $name {
+            #[cfg(not(feature = "contracts"))]
+            fn model(self) -> usize {
+                0 // TODO
+            }
+        }
 
         impl $name {
             #[trusted]

@@ -46,12 +46,18 @@ pub type G2 = (Fp2, Fp2, bool);
 pub type Fp6 = (Fp2, Fp2, Fp2); //v³ = u + 1
 pub type Fp12 = (Fp6, Fp6); //w² = v
 
+#[ensures(result.model() == 0)]
+pub fn fp_return_zero() -> Fp {
+    Fp::ZERO()
+}
+
 /* Arithmetic for FP2 elements */
+// #[ensures(result.model() == (n.model(), 0))]
 pub fn fp2fromfp(n: Fp) -> Fp2 {
     (n, Fp::ZERO())
 }
 
-#[ensures(result === (Fp::ZERO(), Fp::ZERO()))]
+// #[ensures(result.model() == (0, 0))]
 pub fn fp2zero() -> Fp2 {
     fp2fromfp(Fp::ZERO())
 }
