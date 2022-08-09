@@ -38,6 +38,7 @@ members = [
     "examples/ed25519",
     "examples/no_std",
     "examples/rsa-pkcs1",
+    "examples/bip-340",
     "examples/rsa-fdh-vrf",
 ]
 default-members = [
@@ -52,6 +53,7 @@ default-members = [
     "utils/util",
     "examples/curve25519",
     "examples/chacha20",
+    "examples/linalg",
     "examples/ristretto",
     "examples/poly1305",
     "examples/chacha20poly1305",
