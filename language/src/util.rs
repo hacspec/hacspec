@@ -14,11 +14,14 @@ FLAGS:
 
 OPTIONS:
     -o <FILE_DIR>    The output filename (defaults to crate name)
-    -dir <FILE_DIR>  The output directory (default to current dir)
+    --dir <FILE_DIR> The output directory (default to current dir)
     -e <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
 
                      If just -e is supplied, then current directory is used as output.
-                     If neither -e nor -dir are supplied, then we only run the typechecker.
+                     If neither -e nor --dir are supplied, then we only run the typechecker.
+    --vc-init        Initialize version control in '<FILE_DIR>/_vc'
+    --vc-update      Uses git merge to update the files only with changes, may result in
+                     merge conflicts
 
 ARGS:
     CRATE            The crate to analyse.

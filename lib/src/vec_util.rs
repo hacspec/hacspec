@@ -4,6 +4,7 @@
 ///! This includes sequences, arrays, and polynomials.
 ///!
 use crate::prelude::*;
+use alloc::vec::Vec;
 
 #[inline]
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
@@ -43,7 +44,7 @@ where
 #[cfg_attr(feature = "use_attributes", not_hacspec)]
 /// Return vectors `x` and `y`, padded to maximum length of the two.
 pub(crate) fn normalize<T: Numeric + Copy>(x: &[T], y: &[T]) -> (Vec<T>, Vec<T>) {
-    let max_len = std::cmp::max(x.len(), y.len());
+    let max_len = core::cmp::max(x.len(), y.len());
     (pad(x, max_len), pad(y, max_len))
 }
 

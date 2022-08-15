@@ -79,6 +79,13 @@
 //!
 //! See the [secret integers](`secret_integers`) for details.
 
+#![no_std]
+
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std as alloc;
+
 pub mod array;
 mod bigint_integers;
 mod machine_integers;

@@ -252,7 +252,7 @@ macro_rules! declare_seq_with_contents_constraints_impl {
                 self.b.len()
             }
             #[cfg_attr(feature="use_attributes", not_hacspec)]
-            fn iter(&self) -> std::slice::Iter<T> {
+            fn iter(&self) -> core::slice::Iter<T> {
                 self.b.iter()
             }
 
@@ -411,6 +411,13 @@ impl Seq<U8> {
 }
 
 impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for PublicSeq<T> {
+    #[cfg_attr(feature = "use_attributes", not_hacspec)]
+    fn eq(&self, other: &Self) -> bool {
+        self.b == other.b
+    }
+}
+
+impl<T: Copy + Default + PartialEq + PublicInteger> PartialEq for Seq<T> {
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     fn eq(&self, other: &Self) -> bool {
         self.b == other.b

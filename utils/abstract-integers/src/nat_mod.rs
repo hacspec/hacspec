@@ -4,24 +4,24 @@ macro_rules! modular_integer {
         #[derive(Clone, Copy, Default)]
         pub struct $name($base);
 
-        impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Display for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let uint: $base = (*self).into();
                 write!(f, "{}", uint)
             }
         }
 
-        impl std::fmt::Debug for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Debug for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 let uint: $base = (*self).into();
                 write!(f, "{}", uint)
             }
         }
 
-        impl std::fmt::LowerHex for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        impl core::fmt::LowerHex for $name {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 let val: $base = (*self).into();
-                std::fmt::LowerHex::fmt(&val, f)
+                core::fmt::LowerHex::fmt(&val, f)
             }
         }
 

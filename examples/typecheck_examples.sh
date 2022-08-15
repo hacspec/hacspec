@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -24,13 +24,13 @@ function typecheck {
   if [ "$3" == "fst" ];
   then
     echo "    extracting F* ..."
-    cargo hacspec -e fst -dir $fstar_dir -o $fstar_file $1
+    cargo hacspec -e fst --dir $fstar_dir -o $fstar_file $1
   fi
   if [ "$4" == "json" ];
   then
     echo "    extracting JSON ..."
     mkdir -p target/json
-    cargo hacspec -e json -dir target/json/ $1
+    cargo hacspec -e json --dir target/json/ $1
   fi
   if [ "$5" == "coq" ];
   then
@@ -41,7 +41,7 @@ function typecheck {
     outname=${cratename#"$prefix"}
     # capitalize first letter - macOS safe version (bash <= 3.2)
     outname=$(tr '[:lower:]' '[:upper:]' <<<"${outname:0:1}")${outname:1}
-    cargo hacspec -e v -dir target/coq/ -o ${outname} $1
+    cargo hacspec -e v --dir target/coq/ -o ${outname} $1
   fi
 }
 
@@ -70,3 +70,10 @@ typecheck hacspec-aes128-gcm        no-ec      fst    json      no-coq
 typecheck hacspec-bls12-381-hash    no-ec   no-fst    json      coq
 typecheck hacspec-sha512            no-ec   no-fst    json      coq
 typecheck hacspec-ed25519           no-ec   no-fst    json      coq
+typecheck hacspec-linalg            no-ec   no-fst    json      coq
+typecheck hacspec-ristretto         no-ec   no-fst    json      coq
+typecheck hacspec-edwards25519      no-ec   no-fst    json      coq
+typecheck hacspec-linalg            no-ec   no-fst    json      coq
+typecheck hacspec-rsa-pkcs1         no-ec   no-fst    json      coq
+typecheck hacspec-rsa-fdh-vrf       no-ec   no-fst    json      coq
+typecheck hacspec-bip-340           no-ec     no-fst    json      coq
