@@ -308,6 +308,7 @@ pub fn encode(u: RistrettoPoint) -> RistrettoPointEncoded {
 /// Decodes the given point in accordance with the IETF standard.
 /// Note: There are many byte-strings resulting in incorrect decodings.
 /// These all checked for, in accordance with the IETF standard.
+/// See https://www.ietf.org/archive/id/draft-irtf-cfrg-ristretto255-decaf448-03.html#name-decode
 pub fn decode(u: RistrettoPointEncoded) -> DecodeResult {
     let mut ret = DecodeResult::Err(DECODING_ERROR);
 
