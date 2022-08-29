@@ -20,8 +20,12 @@
 *
 * For more information see the aforementioned IETF-standard here:
 * https://www.ietf.org/archive/id/draft-irtf-cfrg-ristretto255-00.html#name-negative-field-elements/
+*
 * And the ristretto documentation:
 * https://ristretto.group/ristretto.html/
+*
+* Information about Twisted Edwards curves, see the "Twisted Edwards Curves Revisited" (TECR, henceforth):
+* https://eprint.iacr.org/2008/522
 */
 
 use hacspec_lib::*;
@@ -177,4 +181,121 @@ fn sqrt_ratio_m1(u: FieldElement, v: FieldElement) -> (bool, FieldElement) {
     let was_square = correct_sign_sqrt || flipped_sign_sqrt;
 
     (was_square, r)
+}
+
+// A helper function for the one-way-map function.
+// Computes a Ristretto point using the given field element.
+fn map(t: FieldElement) -> RistrettoPoint {
+    let one = fe(1);
+    let minus_one = neg_fe(one);
+    let r = SQRT_M1() * t.pow(2u128);
+    let u = (r + one) * ONE_MINUS_D_SQ();
+    let v = (minus_one - r * D()) * (r + D());
+
+    let (was_square, mut s) = sqrt_ratio_m1(u, v);
+    let s_prime = neg_fe(abs(s * t));
+    s = select(s, was_square, s_prime);
+    let c = select(minus_one, was_square, r);
+
+    let N = c * (r - one) * D_MINUS_ONE_SQ() - v;
+
+    let w0 = fe(2) * s * v;
+    let w1 = N * SQRT_AD_MINUS_ONE();
+    let w2 = one - s.pow(2u128);
+    let w3 = one + s.pow(2u128);
+    (w0 * w3, w2 * w1, w1 * w3, w0 * w2)
+}
+
+// === External Functions === //
+
+/// Takes a uniformly distributed Bytestring of length 64.
+/// Returns a pseudo-randomly generated Ristretto point following the defined IETF standard.
+/// While this function is not used for any point computations, it is useful for generating points.
+pub fn one_way_map(b: ByteString) -> RistrettoPoint {
+    let r0_bytes = b.slice(0, 32);
+    let r1_bytes = b.slice(32, 32);
+
+    let mut r0_bytes = r0_bytes.declassify();
+    let mut r1_bytes = r1_bytes.declassify();
+
+    // The specification states:
+    // Set r0 to the low 255 bits of b[ 0..32], taken mod p
+    // Set r1 to the low 255 bits of b[32..64], taken mod p
+    // Note the low 255 bits. NOT 256 bits! This is why we mod the most significant byte
+    r0_bytes[31] = r0_bytes[31] % 128u8;
+    r1_bytes[31] = r1_bytes[31] % 128u8;
+
+    let r0 = FieldElement::from_public_byte_seq_le(r0_bytes);
+    let r1 = FieldElement::from_public_byte_seq_le(r1_bytes);
+
+    let P1 = map(r0);
+    let P2 = map(r1);
+
+    add(P1, P2)
+}
+
+/// Encodes the given point
+pub fn encode(u: RistrettoPoint) -> RistrettoPointEncoded {
+    let (x0, y0, z0, t0) = u;
+
+    let u1 = (z0 + y0) * (z0 - y0);
+    let u2 = x0 * y0;
+
+    // Ignore was_square since this is always square
+    let (_, invsqrt) = sqrt_ratio_m1(fe(1), u1 * u2.pow(2u128));
+
+    let den1 = invsqrt * u1;
+    let den2 = invsqrt * u2;
+    let z_inv = den1 * den2 * t0;
+
+    let ix0 = x0 * SQRT_M1();
+    let iy0 = y0 * SQRT_M1();
+    let enchanted_denominator = den1 * INVSQRT_A_MINUS_D();
+
+    let rotate = is_negative(t0 * z_inv);
+
+    let x = select(iy0, rotate, x0);
+    let mut y = select(ix0, rotate, y0);
+    let z = z0;
+    let den_inv = select(enchanted_denominator, rotate, den2);
+
+    y = select(neg_fe(y), is_negative(x * z_inv), y);
+
+    let s = abs(den_inv * (z - y));
+
+    RistrettoPointEncoded::new().update_start(&s.to_byte_seq_le())
+}
+
+/// Adds two points together.
+// See section 3.2 of the TECR paper
+pub fn add(u: RistrettoPoint, v: RistrettoPoint) -> RistrettoPoint {
+    let (X1, Y1, Z1, T1) = u;
+    let (X2, Y2, Z2, T2) = v;
+
+    let A = (Y1 - X1) * (Y2 + X2);
+    let B = (Y1 + X1) * (Y2 - X2);
+    let C = fe(2) * Z1 * T2;
+    let D = fe(2) * T1 * Z2;
+    let E = D + C;
+    let F = B - A;
+    let G = B + A;
+    let H = D - C;
+    let X3 = E * F;
+    let Y3 = G * H;
+    let T3 = E * H;
+    let Z3 = F * G;
+
+    (X3, Y3, Z3, T3)
+}
+
+/// Computes the negation of the given point.
+// See section 3 of the TECR paper
+pub fn neg(u: RistrettoPoint) -> RistrettoPoint {
+    let (X1, Y1, Z1, T1) = u;
+    (neg_fe(X1), Y1, neg_fe(Z1), T1)
+}
+
+/// Subtracts v from u, using negation on v and then adding.
+pub fn sub(u: RistrettoPoint, v: RistrettoPoint) -> RistrettoPoint {
+    add(u, neg(v))
 }

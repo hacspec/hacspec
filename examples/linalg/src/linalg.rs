@@ -29,9 +29,16 @@ pub type ScalRes = Result<Scalar, u8>;
 
 // === Errors === //
 
-const ROW_COL_MISMATCH: u8 = 10u8;
+const DIMENSION_SEQUENCE_LENGTH_MISMATCH: u8 = 10u8;
 const INDEX_OUT_OF_BOUNDS: u8 = 11u8;
 const SLICE_OUT_OF_BOUNDS: u8 = 12u8;
+const DIMENSION_MISMATCH: u8 = 13u8;
+
+// === External Functions === //
+
+/// Generate new matrix using rows, cols and a seq. Returns an error
+/// if the product of the given dimensions is larger than the length
+/// of the given Seq.
 
 // === External Functions === //
 
@@ -40,35 +47,35 @@ pub fn new(rows: DimType, cols: DimType, seq: Seq<Scalar>) -> MatRes {
     if seq.len() > 0 && rows * cols == seq.len() {
         MatRes::Ok(((rows, cols), seq))
     } else {
-        MatRes::Err(ROW_COL_MISMATCH)
+        MatRes::Err(DIMENSION_SEQUENCE_LENGTH_MISMATCH)
     }
 }
 
-/// Generate a n*m matrix filled with a given scalar
-pub fn repeat(n: DimType, m: DimType, scalar: Scalar) -> MatRes {
+/// Generate a n*m matrix filled with a given scalar.
+pub fn repeat(n: DimType, m: DimType, scalar: Scalar) -> Matrix {
     let mut ret = Seq::<Scalar>::new(n * m);
 
     for i in 0..n * m {
         ret[i] = scalar;
     }
 
-    new(n, m, ret)
+    ((n, m), ret)
 }
 
 /// Generate a n*m matrix filled with zeros.
-pub fn zeros(n: DimType, m: DimType) -> MatRes {
+pub fn zeros(n: DimType, m: DimType) -> Matrix {
     repeat(n, m, Scalar::ZERO())
 }
 
 /// Generate a n*m matrix filled with ones.
-pub fn ones(n: DimType, m: DimType) -> MatRes {
+pub fn ones(n: DimType, m: DimType) -> Matrix {
     repeat(n, m, Scalar::ONE())
 }
 
 /// Generates an identity matrix. If the matrix is not square,
 /// the largest square submatrix (starting at the first row and column)
 /// is set to the identity while all other entries are set to zero.
-pub fn identity(n: DimType, m: DimType) -> MatRes {
+pub fn identity(n: DimType, m: DimType) -> Matrix {
     let mut ret = Seq::<Scalar>::new(n * m);
 
     for i in 0..min(n, m) {
@@ -76,10 +83,10 @@ pub fn identity(n: DimType, m: DimType) -> MatRes {
         ret[index] = Scalar::ONE();
     }
 
-    new(n, m, ret)
+    ((n, m), ret)
 }
 
-/// Gets the index of a matrix
+/// Gets the index of a matrix. Returns an Error if the given index is out of bounds.
 pub fn index(m: Matrix, i: DimType, j: DimType) -> ScalRes {
     let (dim, seq) = m;
     let (rows, cols) = dim;
@@ -92,7 +99,7 @@ pub fn index(m: Matrix, i: DimType, j: DimType) -> ScalRes {
     }
 }
 
-/// Transposes a matrix
+/// Transposes a matrix.
 pub fn transpose(matrix: Matrix) -> Matrix {
     let (dim, seq) = matrix;
     let (rows, cols) = dim;
@@ -111,7 +118,7 @@ pub fn transpose(matrix: Matrix) -> Matrix {
 
 /// Returns a matrix slice, given a Matrix and two Dims (pairs of usize),
 /// first Dims pair representing the starting point and second Dims
-/// pair the dimensions
+/// pair the dimensions. Returns an Error if the given slice is out of bounds.
 pub fn slice(matrix: Matrix, start: Dims, len: Dims) -> MatRes {
     let (dim, seq) = matrix;
     let (rows, cols) = dim;
@@ -126,7 +133,7 @@ pub fn slice(matrix: Matrix, start: Dims, len: Dims) -> MatRes {
             for j in 0..len_cols {
                 let ret_index = i * len_cols + j;
                 let seq_index = (start_row + i) * cols + (start_col + j);
-                ret[ret_index] = seq[seq_index].clone()
+                ret[ret_index] = seq[seq_index]
             }
         }
 
@@ -136,14 +143,94 @@ pub fn slice(matrix: Matrix, start: Dims, len: Dims) -> MatRes {
     res
 }
 
-/// Scale a matrix with a given scalar
+/// Scale a matrix with a given scalar.
 pub fn scale(matrix: Matrix, scalar: Scalar) -> Matrix {
     let (dim, seq) = matrix;
     let mut ret = Seq::<Scalar>::new(seq.len());
 
     for i in 0..seq.len() {
-        ret[i] = scalar * seq[i].clone()
+        ret[i] = scalar * seq[i]
     }
 
     (dim, ret)
+}
+
+/// Matrix addition. Returns an Error on dimension mismatch.
+pub fn add(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (m1_dim, m1_s) = matrix_1;
+    let (m2_dim, m2_s) = matrix_2;
+    let mut ret = Seq::<Scalar>::new(m1_s.len());
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m1_dim == m2_dim {
+        for i in 0..m1_s.len() {
+            ret[i] = m1_s[i] + m2_s[i]
+        }
+        res = MatRes::Ok((m1_dim, ret))
+    }
+    res
+}
+
+/// Matrix subtraction. Returns an Error on dimension mismatch.
+pub fn sub(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (m1_dim, m1_s) = matrix_1;
+    let (m2_dim, m2_s) = matrix_2;
+    let mut ret = Seq::<Scalar>::new(m1_s.len());
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m1_dim == m2_dim {
+        for i in 0..m1_s.len() {
+            ret[i] = m1_s[i] - m2_s[i]
+        }
+        res = MatRes::Ok((m1_dim, ret))
+    }
+    res
+}
+
+/// Component-wise multiplication (Hadamard product). Returns an Error on dimension mismatch.
+pub fn component_mul(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (m1_dim, m1_s) = matrix_1;
+    let (m2_dim, m2_s) = matrix_2;
+    let mut ret = Seq::<Scalar>::new(m1_s.len());
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m1_dim == m2_dim {
+        for i in 0..m1_s.len() {
+            ret[i] = m1_s[i] * m2_s[i]
+        }
+        res = MatRes::Ok((m1_dim, ret))
+    }
+    res
+}
+
+/// Matrix multiplication. Returns an Error on dimension mismatch.
+pub fn mul(matrix_1: Matrix, matrix_2: Matrix) -> MatRes {
+    let (dim_1, seq_1) = matrix_1;
+    let (dim_2, seq_2) = matrix_2;
+    let (l, m) = dim_1;
+    let (m_, n) = dim_2;
+    let mut ret = Seq::<Scalar>::new(l * n);
+    let mut res = MatRes::Err(DIMENSION_MISMATCH);
+
+    if m == m_ {
+        for i in 0..l {
+            for j in 0..n {
+                let mut acc = Scalar::ZERO();
+                let index = i * n + j;
+
+                for k in 0..m {
+                    let index_1 = i * m + k;
+                    let index_2 = k * n + j;
+
+                    acc = acc + seq_1[index_1] * seq_2[index_2];
+                }
+
+                ret[index] = acc
+            }
+        }
+
+        res = new(l, n, ret)
+    }
+
+    res
 }
