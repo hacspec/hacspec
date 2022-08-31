@@ -299,6 +299,86 @@
 <span id="299">299</span>
 <span id="300">300</span>
 <span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 <span class="comment">/*
 * A hacspec Ristretto implementation modelled on the curve25519_dalek rust library.
@@ -360,6 +440,8 @@
 
 <span class="comment">// === Constants === //</span>
 
+<span class="kw">const</span> <span class="ident">DECODING_ERROR</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">20u8</span>;
+
 <span class="kw">fn</span> <span class="ident">P</span>() -&gt; <span class="ident">FieldElement</span> {
     <span class="ident">FieldElement::from_byte_seq_be</span>(<span class="kw-2">&amp;</span><span class="macro">byte_seq!</span>(
         <span class="number">0x7fu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>,
@@ -416,11 +498,48 @@
     ))
 }
 
+<span class="comment">// === Special points === //</span>
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">BASE_POINT_ENCODED</span>() -&gt; <span class="ident">RistrettoPointEncoded</span> {
+    <span class="ident">RistrettoPointEncoded::from_seq</span>(<span class="kw-2">&amp;</span><span class="macro">byte_seq!</span>(
+        <span class="number">0xe2u8</span>, <span class="number">0xf2u8</span>, <span class="number">0xaeu8</span>, <span class="number">0x0au8</span>, <span class="number">0x6au8</span>, <span class="number">0xbcu8</span>, <span class="number">0x4eu8</span>, <span class="number">0x71u8</span>, <span class="number">0xa8u8</span>, <span class="number">0x84u8</span>, <span class="number">0xa9u8</span>,
+        <span class="number">0x61u8</span>, <span class="number">0xc5u8</span>, <span class="number">0x00u8</span>, <span class="number">0x51u8</span>, <span class="number">0x5fu8</span>, <span class="number">0x58u8</span>, <span class="number">0xe3u8</span>, <span class="number">0x0bu8</span>, <span class="number">0x6au8</span>, <span class="number">0xa5u8</span>, <span class="number">0x82u8</span>,
+        <span class="number">0xddu8</span>, <span class="number">0x8du8</span>, <span class="number">0xb6u8</span>, <span class="number">0xa6u8</span>, <span class="number">0x59u8</span>, <span class="number">0x45u8</span>, <span class="number">0xe0u8</span>, <span class="number">0x8du8</span>, <span class="number">0x2du8</span>, <span class="number">0x76u8</span>
+    ))
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">BASE_POINT</span>() -&gt; <span class="ident">RistrettoPoint</span> {
+    <span class="ident">decode</span>(<span class="ident">BASE_POINT_ENCODED</span>()).<span class="ident">unwrap</span>()
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">IDENTITY_POINT</span>() -&gt; <span class="ident">RistrettoPoint</span> {
+    (<span class="ident">fe</span>(<span class="number">0</span>), <span class="ident">fe</span>(<span class="number">1</span>), <span class="ident">fe</span>(<span class="number">1</span>), <span class="ident">fe</span>(<span class="number">0</span>))
+}
+
 <span class="comment">// === Helper functions === //</span>
 
 <span class="comment">// Creates a field element from the given literal.</span>
 <span class="kw">fn</span> <span class="ident">fe</span>(<span class="ident">x</span>: <span class="ident">usize</span>) -&gt; <span class="ident">FieldElement</span> {
     <span class="ident">FieldElement::from_literal</span>(<span class="ident">x</span> <span class="kw">as</span> <span class="ident">u128</span>)
+}
+
+<span class="comment">// Checks if a secret byte_seq is greater than or equal to p.</span>
+<span class="kw">fn</span> <span class="ident">geq_p</span>(<span class="ident">x</span>: <span class="ident">Seq</span><span class="op">&lt;</span><span class="ident">U8</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">let</span> <span class="ident">p_seq</span> <span class="op">=</span> <span class="macro">byte_seq!</span>(
+        <span class="number">0xedu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>,
+        <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>,
+        <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0xffu8</span>, <span class="number">0x7fu8</span>
+    );
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="bool-val">true</span>;
+
+    <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">p_seq</span>.<span class="ident">len</span>() {
+        <span class="kw">let</span> <span class="ident">x_index</span> <span class="op">=</span> <span class="ident">x</span>[<span class="ident">index</span>].<span class="ident">declassify</span>();
+        <span class="kw">let</span> <span class="ident">p_index</span> <span class="op">=</span> <span class="ident">p_seq</span>[<span class="ident">index</span>].<span class="ident">declassify</span>();
+        <span class="kw">if</span> <span class="ident">x_index</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p_index</span> {
+            <span class="ident">res</span> <span class="op">=</span> <span class="ident">x_index</span> <span class="op">&gt;</span> <span class="ident">p_index</span>;
+        }
+    }
+    <span class="ident">res</span>
 }
 
 <span class="comment">// === Internal Utility Functions === //</span>
@@ -567,33 +686,74 @@
     <span class="ident">RistrettoPointEncoded::new</span>().<span class="ident">update_start</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">to_byte_seq_le</span>())
 }
 
+<span class="doccomment">/// Decodes the given point in accordance with the IETF standard.</span>
+<span class="doccomment">/// Note: There are many byte-strings resulting in incorrect decodings.</span>
+<span class="doccomment">/// These all checked for, in accordance with the IETF standard.</span>
+<span class="doccomment">/// See https://www.ietf.org/archive/id/draft-irtf-cfrg-ristretto255-decaf448-03.html#name-decode</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decode</span>(<span class="ident">u</span>: <span class="ident">RistrettoPointEncoded</span>) -&gt; <span class="ident">DecodeResult</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">DecodeResult::Err</span>(<span class="ident">DECODING_ERROR</span>);
+
+    <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">FieldElement::from_byte_seq_le</span>(<span class="ident">u</span>);
+
+    <span class="kw">if</span> <span class="op">!</span><span class="ident">geq_p</span>(<span class="ident">u</span>.<span class="ident">to_le_bytes</span>()) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">is_negative</span>(<span class="ident">s</span>) {
+        <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="ident">fe</span>(<span class="number">1</span>);
+        <span class="kw">let</span> <span class="ident">ss</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">pow</span>(<span class="number">2u128</span>);
+        <span class="kw">let</span> <span class="ident">u1</span> <span class="op">=</span> <span class="ident">one</span> <span class="op">-</span> <span class="ident">ss</span>;
+        <span class="kw">let</span> <span class="ident">u2</span> <span class="op">=</span> <span class="ident">one</span> <span class="op">+</span> <span class="ident">ss</span>;
+        <span class="kw">let</span> <span class="ident">u2_sqr</span> <span class="op">=</span> <span class="ident">u2</span>.<span class="ident">pow</span>(<span class="number">2u128</span>);
+
+        <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">neg_fe</span>(<span class="ident">D</span>() <span class="op">*</span> <span class="ident">u1</span>.<span class="ident">pow</span>(<span class="number">2u128</span>)) <span class="op">-</span> <span class="ident">u2_sqr</span>;
+
+        <span class="kw">let</span> (<span class="ident">was_square</span>, <span class="ident">invsqrt</span>) <span class="op">=</span> <span class="ident">sqrt_ratio_m1</span>(<span class="ident">one</span>, <span class="ident">v</span> <span class="op">*</span> <span class="ident">u2_sqr</span>);
+
+        <span class="kw">let</span> <span class="ident">den_x</span> <span class="op">=</span> <span class="ident">invsqrt</span> <span class="op">*</span> <span class="ident">u2</span>;
+        <span class="kw">let</span> <span class="ident">den_y</span> <span class="op">=</span> <span class="ident">invsqrt</span> <span class="op">*</span> <span class="ident">den_x</span> <span class="op">*</span> <span class="ident">v</span>;
+
+        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">abs</span>((<span class="ident">s</span> <span class="op">+</span> <span class="ident">s</span>) <span class="op">*</span> <span class="ident">den_x</span>);
+        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">u1</span> <span class="op">*</span> <span class="ident">den_y</span>;
+        <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">y</span>;
+
+        <span class="kw">if</span> <span class="op">!</span>(<span class="op">!</span><span class="ident">was_square</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_negative</span>(<span class="ident">t</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">y</span> <span class="op">==</span> <span class="ident">fe</span>(<span class="number">0</span>)) {
+            <span class="ident">ret</span> <span class="op">=</span> <span class="ident">DecodeResult::Ok</span>((<span class="ident">x</span>, <span class="ident">y</span>, <span class="ident">one</span>, <span class="ident">t</span>));
+        }
+    }
+    <span class="ident">ret</span>
+}
+
+<span class="doccomment">/// Checks that two points are equivalent.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">equals</span>(<span class="ident">u</span>: <span class="ident">RistrettoPoint</span>, <span class="ident">v</span>: <span class="ident">RistrettoPoint</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">u</span>;
+    <span class="kw">let</span> (<span class="ident">x2</span>, <span class="ident">y2</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">v</span>;
+    <span class="ident">x1</span> <span class="op">*</span> <span class="ident">y2</span> <span class="op">==</span> <span class="ident">x2</span> <span class="op">*</span> <span class="ident">y1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">y1</span> <span class="op">*</span> <span class="ident">y2</span> <span class="op">==</span> <span class="ident">x1</span> <span class="op">*</span> <span class="ident">x2</span>
+}
+
 <span class="doccomment">/// Adds two points together.</span>
 <span class="comment">// See section 3.2 of the TECR paper</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="ident">u</span>: <span class="ident">RistrettoPoint</span>, <span class="ident">v</span>: <span class="ident">RistrettoPoint</span>) -&gt; <span class="ident">RistrettoPoint</span> {
-    <span class="kw">let</span> (<span class="ident">X1</span>, <span class="ident">Y1</span>, <span class="ident">Z1</span>, <span class="ident">T1</span>) <span class="op">=</span> <span class="ident">u</span>;
-    <span class="kw">let</span> (<span class="ident">X2</span>, <span class="ident">Y2</span>, <span class="ident">Z2</span>, <span class="ident">T2</span>) <span class="op">=</span> <span class="ident">v</span>;
+    <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="ident">z1</span>, <span class="ident">t1</span>) <span class="op">=</span> <span class="ident">u</span>;
+    <span class="kw">let</span> (<span class="ident">x2</span>, <span class="ident">y2</span>, <span class="ident">z2</span>, <span class="ident">t2</span>) <span class="op">=</span> <span class="ident">v</span>;
 
-    <span class="kw">let</span> <span class="ident">A</span> <span class="op">=</span> (<span class="ident">Y1</span> <span class="op">-</span> <span class="ident">X1</span>) <span class="op">*</span> (<span class="ident">Y2</span> <span class="op">+</span> <span class="ident">X2</span>);
-    <span class="kw">let</span> <span class="ident">B</span> <span class="op">=</span> (<span class="ident">Y1</span> <span class="op">+</span> <span class="ident">X1</span>) <span class="op">*</span> (<span class="ident">Y2</span> <span class="op">-</span> <span class="ident">X2</span>);
-    <span class="kw">let</span> <span class="ident">C</span> <span class="op">=</span> <span class="ident">fe</span>(<span class="number">2</span>) <span class="op">*</span> <span class="ident">Z1</span> <span class="op">*</span> <span class="ident">T2</span>;
-    <span class="kw">let</span> <span class="ident">D</span> <span class="op">=</span> <span class="ident">fe</span>(<span class="number">2</span>) <span class="op">*</span> <span class="ident">T1</span> <span class="op">*</span> <span class="ident">Z2</span>;
-    <span class="kw">let</span> <span class="ident">E</span> <span class="op">=</span> <span class="ident">D</span> <span class="op">+</span> <span class="ident">C</span>;
-    <span class="kw">let</span> <span class="ident">F</span> <span class="op">=</span> <span class="ident">B</span> <span class="op">-</span> <span class="ident">A</span>;
-    <span class="kw">let</span> <span class="ident">G</span> <span class="op">=</span> <span class="ident">B</span> <span class="op">+</span> <span class="ident">A</span>;
-    <span class="kw">let</span> <span class="ident">H</span> <span class="op">=</span> <span class="ident">D</span> <span class="op">-</span> <span class="ident">C</span>;
-    <span class="kw">let</span> <span class="ident">X3</span> <span class="op">=</span> <span class="ident">E</span> <span class="op">*</span> <span class="ident">F</span>;
-    <span class="kw">let</span> <span class="ident">Y3</span> <span class="op">=</span> <span class="ident">G</span> <span class="op">*</span> <span class="ident">H</span>;
-    <span class="kw">let</span> <span class="ident">T3</span> <span class="op">=</span> <span class="ident">E</span> <span class="op">*</span> <span class="ident">H</span>;
-    <span class="kw">let</span> <span class="ident">Z3</span> <span class="op">=</span> <span class="ident">F</span> <span class="op">*</span> <span class="ident">G</span>;
+    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> (<span class="ident">y1</span> <span class="op">-</span> <span class="ident">x1</span>) <span class="op">*</span> (<span class="ident">y2</span> <span class="op">+</span> <span class="ident">x2</span>);
+    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> (<span class="ident">y1</span> <span class="op">+</span> <span class="ident">x1</span>) <span class="op">*</span> (<span class="ident">y2</span> <span class="op">-</span> <span class="ident">x2</span>);
+    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">fe</span>(<span class="number">2</span>) <span class="op">*</span> <span class="ident">z1</span> <span class="op">*</span> <span class="ident">t2</span>;
+    <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">fe</span>(<span class="number">2</span>) <span class="op">*</span> <span class="ident">t1</span> <span class="op">*</span> <span class="ident">z2</span>;
+    <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">d</span> <span class="op">+</span> <span class="ident">c</span>;
+    <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">-</span> <span class="ident">a</span>;
+    <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">b</span> <span class="op">+</span> <span class="ident">a</span>;
+    <span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">d</span> <span class="op">-</span> <span class="ident">c</span>;
+    <span class="kw">let</span> <span class="ident">x3</span> <span class="op">=</span> <span class="ident">e</span> <span class="op">*</span> <span class="ident">f</span>;
+    <span class="kw">let</span> <span class="ident">y3</span> <span class="op">=</span> <span class="ident">g</span> <span class="op">*</span> <span class="ident">h</span>;
+    <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> <span class="ident">e</span> <span class="op">*</span> <span class="ident">h</span>;
+    <span class="kw">let</span> <span class="ident">z3</span> <span class="op">=</span> <span class="ident">f</span> <span class="op">*</span> <span class="ident">g</span>;
 
-    (<span class="ident">X3</span>, <span class="ident">Y3</span>, <span class="ident">Z3</span>, <span class="ident">T3</span>)
+    (<span class="ident">x3</span>, <span class="ident">y3</span>, <span class="ident">z3</span>, <span class="ident">t3</span>)
 }
 
 <span class="doccomment">/// Computes the negation of the given point.</span>
 <span class="comment">// See section 3 of the TECR paper</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">neg</span>(<span class="ident">u</span>: <span class="ident">RistrettoPoint</span>) -&gt; <span class="ident">RistrettoPoint</span> {
-    <span class="kw">let</span> (<span class="ident">X1</span>, <span class="ident">Y1</span>, <span class="ident">Z1</span>, <span class="ident">T1</span>) <span class="op">=</span> <span class="ident">u</span>;
-    (<span class="ident">neg_fe</span>(<span class="ident">X1</span>), <span class="ident">Y1</span>, <span class="ident">neg_fe</span>(<span class="ident">Z1</span>), <span class="ident">T1</span>)
+    <span class="kw">let</span> (<span class="ident">x1</span>, <span class="ident">y1</span>, <span class="ident">z1</span>, <span class="ident">t1</span>) <span class="op">=</span> <span class="ident">u</span>;
+    (<span class="ident">neg_fe</span>(<span class="ident">x1</span>), <span class="ident">y1</span>, <span class="ident">neg_fe</span>(<span class="ident">z1</span>), <span class="ident">t1</span>)
 }
 
 <span class="doccomment">/// Subtracts v from u, using negation on v and then adding.</span>
