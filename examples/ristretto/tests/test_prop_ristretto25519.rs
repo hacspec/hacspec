@@ -70,6 +70,49 @@ fn test_dalek_one_way_map() {
 }
 
 #[test]
+fn test_prop_encode_decode() {
+    fn helper(v: Vec<u8>) -> TestResult {
+        if v.len() < 64 {
+            return TestResult::discard();
+        }
+
+        let (hac_pnt, _) = create_points(v);
+
+        let hac_enc = encode(hac_pnt);
+
+        let hac_dec = decode(hac_enc).unwrap();
+
+        let hac_renc = encode(hac_dec);
+
+        let is_same_dec = equals(hac_pnt, hac_dec);
+        let is_same_enc = hac_enc.to_le_bytes() == hac_renc.to_le_bytes();
+
+        TestResult::from_bool(is_same_enc && is_same_dec)
+    }
+    quickcheck(100, helper as fn(Vec<u8>) -> TestResult)
+}
+
+#[test]
+fn test_dalek_decode_encode() {
+    fn helper(v: Vec<u8>) -> TestResult {
+        if v.len() < 64 {
+            return TestResult::discard();
+        }
+
+        let (hac_pnt, dal_pnt) = create_points(v);
+
+        let hac_enc = encode(hac_pnt);
+        let dal_enc = dal_pnt.compress();
+
+        let hac_dec = decode(hac_enc).unwrap();
+        let dal_dec = dal_enc.decompress().unwrap();
+
+        TestResult::from_bool(cmp_points(hac_dec, dal_dec))
+    }
+    quickcheck(100, helper as fn(Vec<u8>) -> TestResult)
+}
+
+#[test]
 fn test_dalek_point_addition_subtraction() {
     fn helper(v: Vec<u8>, u: Vec<u8>) -> TestResult {
         if v.len() < 64 || u.len() < 64 {
