@@ -11,5 +11,5 @@ path = "src/ristretto.rs"
 hacspec-lib = { path = "../../lib" }
 
 [dev-dependencies]
-curve25519-dalek = "2"
+curve25519-dalek = "3"
 quickcheck = "1"
