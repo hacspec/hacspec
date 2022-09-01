@@ -343,7 +343,7 @@
     <span class="kw">let</span> <span class="ident">hash_string</span> <span class="op">=</span> <span class="ident">SUITE_STRING</span>.<span class="ident">concat</span>(<span class="kw-2">&amp;</span><span class="ident">TWO</span>.<span class="ident">concat</span>(<span class="ident">pi_string</span>));
 
     <span class="comment">// STEP 3</span>
-    <span class="ident">ByteSeqResult</span>:: <span class="prelude-val">Ok</span>(<span class="ident">sha256</span>(<span class="kw-2">&amp;</span><span class="ident">hash_string</span>).<span class="ident">slice</span>(<span class="number">0</span>,<span class="number">32</span>))
+    <span class="ident">ByteSeqResult::Ok</span>(<span class="ident">sha256</span>(<span class="kw-2">&amp;</span><span class="ident">hash_string</span>).<span class="ident">slice</span>(<span class="number">0</span>,<span class="number">32</span>))
 }
 
 <span class="comment">// Based on section 4.3 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/</span>
