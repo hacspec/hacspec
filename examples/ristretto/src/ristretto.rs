@@ -59,6 +59,8 @@ public_nat_mod!(
 
 // === Constants === //
 
+const DECODING_ERROR: u8 = 20u8;
+
 fn P() -> FieldElement {
     FieldElement::from_byte_seq_be(&byte_seq!(
         0x7fu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8,
@@ -115,11 +117,48 @@ fn D_MINUS_ONE_SQ() -> FieldElement {
     ))
 }
 
+// === Special points === //
+
+pub fn BASE_POINT_ENCODED() -> RistrettoPointEncoded {
+    RistrettoPointEncoded::from_seq(&byte_seq!(
+        0xe2u8, 0xf2u8, 0xaeu8, 0x0au8, 0x6au8, 0xbcu8, 0x4eu8, 0x71u8, 0xa8u8, 0x84u8, 0xa9u8,
+        0x61u8, 0xc5u8, 0x00u8, 0x51u8, 0x5fu8, 0x58u8, 0xe3u8, 0x0bu8, 0x6au8, 0xa5u8, 0x82u8,
+        0xddu8, 0x8du8, 0xb6u8, 0xa6u8, 0x59u8, 0x45u8, 0xe0u8, 0x8du8, 0x2du8, 0x76u8
+    ))
+}
+
+pub fn BASE_POINT() -> RistrettoPoint {
+    decode(BASE_POINT_ENCODED()).unwrap()
+}
+
+pub fn IDENTITY_POINT() -> RistrettoPoint {
+    (fe(0), fe(1), fe(1), fe(0))
+}
+
 // === Helper functions === //
 
 // Creates a field element from the given literal.
 fn fe(x: usize) -> FieldElement {
     FieldElement::from_literal(x as u128)
+}
+
+// Checks if a secret byte_seq is greater than or equal to p.
+fn geq_p(x: Seq<U8>) -> bool {
+    let p_seq = byte_seq!(
+        0xedu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8,
+        0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8,
+        0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0xffu8, 0x7fu8
+    );
+    let mut res = true;
+
+    for index in 0..p_seq.len() {
+        let x_index = x[index].declassify();
+        let p_index = p_seq[index].declassify();
+        if x_index != p_index {
+            res = x_index > p_index;
+        }
+    }
+    res
 }
 
 // === Internal Utility Functions === //
@@ -266,33 +305,74 @@ pub fn encode(u: RistrettoPoint) -> RistrettoPointEncoded {
     RistrettoPointEncoded::new().update_start(&s.to_byte_seq_le())
 }
 
+/// Decodes the given point in accordance with the IETF standard.
+/// Note: There are many byte-strings resulting in incorrect decodings.
+/// These all checked for, in accordance with the IETF standard.
+/// See https://www.ietf.org/archive/id/draft-irtf-cfrg-ristretto255-decaf448-03.html#name-decode
+pub fn decode(u: RistrettoPointEncoded) -> DecodeResult {
+    let mut ret = DecodeResult::Err(DECODING_ERROR);
+
+    let s = FieldElement::from_byte_seq_le(u);
+
+    if !geq_p(u.to_le_bytes()) && !is_negative(s) {
+        let one = fe(1);
+        let ss = s.pow(2u128);
+        let u1 = one - ss;
+        let u2 = one + ss;
+        let u2_sqr = u2.pow(2u128);
+
+        let v = neg_fe(D() * u1.pow(2u128)) - u2_sqr;
+
+        let (was_square, invsqrt) = sqrt_ratio_m1(one, v * u2_sqr);
+
+        let den_x = invsqrt * u2;
+        let den_y = invsqrt * den_x * v;
+
+        let x = abs((s + s) * den_x);
+        let y = u1 * den_y;
+        let t = x * y;
+
+        if !(!was_square || is_negative(t) || y == fe(0)) {
+            ret = DecodeResult::Ok((x, y, one, t));
+        }
+    }
+    ret
+}
+
+/// Checks that two points are equivalent.
+pub fn equals(u: RistrettoPoint, v: RistrettoPoint) -> bool {
+    let (x1, y1, _, _) = u;
+    let (x2, y2, _, _) = v;
+    x1 * y2 == x2 * y1 || y1 * y2 == x1 * x2
+}
+
 /// Adds two points together.
 // See section 3.2 of the TECR paper
 pub fn add(u: RistrettoPoint, v: RistrettoPoint) -> RistrettoPoint {
-    let (X1, Y1, Z1, T1) = u;
-    let (X2, Y2, Z2, T2) = v;
+    let (x1, y1, z1, t1) = u;
+    let (x2, y2, z2, t2) = v;
 
-    let A = (Y1 - X1) * (Y2 + X2);
-    let B = (Y1 + X1) * (Y2 - X2);
-    let C = fe(2) * Z1 * T2;
-    let D = fe(2) * T1 * Z2;
-    let E = D + C;
-    let F = B - A;
-    let G = B + A;
-    let H = D - C;
-    let X3 = E * F;
-    let Y3 = G * H;
-    let T3 = E * H;
-    let Z3 = F * G;
+    let a = (y1 - x1) * (y2 + x2);
+    let b = (y1 + x1) * (y2 - x2);
+    let c = fe(2) * z1 * t2;
+    let d = fe(2) * t1 * z2;
+    let e = d + c;
+    let f = b - a;
+    let g = b + a;
+    let h = d - c;
+    let x3 = e * f;
+    let y3 = g * h;
+    let t3 = e * h;
+    let z3 = f * g;
 
-    (X3, Y3, Z3, T3)
+    (x3, y3, z3, t3)
 }
 
 /// Computes the negation of the given point.
 // See section 3 of the TECR paper
 pub fn neg(u: RistrettoPoint) -> RistrettoPoint {
-    let (X1, Y1, Z1, T1) = u;
-    (neg_fe(X1), Y1, neg_fe(Z1), T1)
+    let (x1, y1, z1, t1) = u;
+    (neg_fe(x1), y1, neg_fe(z1), t1)
 }
 
 /// Subtracts v from u, using negation on v and then adding.
