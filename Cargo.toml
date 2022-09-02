@@ -4,6 +4,7 @@ members = [
     "provider",
     "utils/dev",
     "utils/derive",
+    "utils/enum-default",
     "utils/evercrypt-provider",
     "utils/secret-integers",
     "utils/abstract-integers",
