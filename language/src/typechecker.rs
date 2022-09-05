@@ -1760,19 +1760,19 @@ fn typecheck_expression(
             args.extend(orig_args.clone());
             let mut new_args = Vec::new();
             let mut new_arg_types = Vec::new();
-            // if sig_args.len() != args.len() {
-            //     sess.span_rustspec_err(
-            //         *span,
-            //         format!(
-            //             "method {}::{} was expecting {} arguments but got {}",
-            //             (sel_typ.1).0,
-            //             f,
-            //             sig_args.len(),
-            //             args.len()
-            //         )
-            //         .as_str(),
-            //     )
-            // }
+            if sig_args.len() != args.len() {
+                sess.span_rustspec_err(
+                    *span,
+                    format!(
+                        "method {}::{} was expecting {} arguments but got {}",
+                        (sel_typ.1).0,
+                        f,
+                        sig_args.len(),
+                        args.len()
+                    )
+                    .as_str(),
+                )
+            }
             for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
                 sig_args.iter().zip(args)
             {
