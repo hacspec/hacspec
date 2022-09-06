@@ -326,9 +326,15 @@ fn insert_extern_func(
         }
         Some(old_sig) => match (old_sig, &sig) {
             (Ok(_), Err(_)) => (),
-            _ => {
+            (Err(_), Ok(_)) => {
                 extern_funcs.insert(fn_key, sig);
             }
+            (Ok(x), Ok(y)) => {
+                if x.args.len() > y.args.len() {
+                    extern_funcs.insert(fn_key, sig);
+                } // TODO: do something?, extern_funcs.insert(fn_key, sig);
+            }
+            _ => (),
         },
     }
 }
