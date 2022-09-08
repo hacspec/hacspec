@@ -3,6 +3,13 @@ use hacspec_lib::prelude::*;
 use hacspec_sha1::*;
 
 #[test]
+fn test_empty_input() {
+    let msg = ByteSeq::new(0);
+    let expect = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+    assert_eq!(expect, sha1(&msg).to_hex());
+}
+
+#[test]
 fn test_fips_examples() {
     // Examples from FIPS 180-1 Appendix A.
     {
