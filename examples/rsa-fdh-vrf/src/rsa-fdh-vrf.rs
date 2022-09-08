@@ -53,7 +53,7 @@ pub fn proof_to_hash(pi_string: &ByteSeq) -> ByteSeqResult {
     let hash_string = SUITE_STRING.concat(&TWO.concat(pi_string));
 
     // STEP 3
-    ByteSeqResult:: Ok(sha256(&hash_string).slice(0,32))
+    ByteSeqResult::Ok(sha256(&hash_string).slice(0,32))
 }
 
 // Based on section 4.3 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/

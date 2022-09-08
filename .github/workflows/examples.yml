@@ -18,5 +18,11 @@ jobs:
           submodules: true
       - name: Build release
         run: cargo build --verbose --release
+      - name: Build release - Examples
+        run: cargo build --verbose --release
+        working-directory: ./examples
       - name: Run release tests
         run: cargo test --verbose --release
+      - name: Run release tests - Examples
+        run: cargo test --verbose --release
+        working-directory: ./examples

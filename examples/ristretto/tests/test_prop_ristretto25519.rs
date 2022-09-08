@@ -188,4 +188,3 @@ fn test_dalek_point_negation() {
     }
     quickcheck(100, helper as fn(Vec<u8>) -> TestResult)
 }
-
