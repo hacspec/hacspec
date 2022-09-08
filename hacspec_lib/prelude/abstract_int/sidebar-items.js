@@ -1,1 +1,1 @@
-initSidebarItems({});
+window.SIDEBAR_ITEMS = {"macro":[["abstract_int",""],["abstract_public",""],["abstract_secret",""],["abstract_signed",""],["abstract_signed_public_integer",""],["abstract_signed_secret_integer",""],["abstract_unsigned",""],["abstract_unsigned_public_integer",""],["abstract_unsigned_secret_integer",""],["define_abstract_integer_checked","Defines a bounded natural integer with regular arithmetic operations, checked for overflow and underflow."]]};

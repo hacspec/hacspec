@@ -1,1 +1,1 @@
-initSidebarItems({});
+window.SIDEBAR_ITEMS = {"macro":[["abstract_nat_mod",""],["abstract_public_modular_integer",""],["abstract_public_nat_mod",""],["abstract_secret_modular_integer",""],["define_refined_modular_integer","Defines a bounded natural integer with modular arithmetic operations"],["modular_integer",""]]};

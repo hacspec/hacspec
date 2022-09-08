@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["syn_sig_to_reduced",""]],"struct":[["Signature",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["syn_sig_to_reduced",""]],"struct":[["Signature",""]]};

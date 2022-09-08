@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["point_mul",""]],"struct":[["Affine",""],["Jacobian",""]]});
+window.SIDEBAR_ITEMS = {"fn":[["point_mul",""]],"struct":[["Affine",""],["Jacobian",""]]};

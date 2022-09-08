@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["ntru_prime",""]]});
+window.SIDEBAR_ITEMS = {"mod":[["ntru_prime",""]]};

@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["arithmetic",""],["p256",""],["p384",""]]});
+window.SIDEBAR_ITEMS = {"mod":[["arithmetic",""],["p256",""],["p384",""]]};

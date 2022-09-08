@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["hex_to_bytes","Convert a hex string to a byte vector."]],"macro":[["create_test_vectors",""]],"mod":[["prelude",""],["rand",""],["test_vectors","Provide utilities to read test vectors from JSON files."]]});
+window.SIDEBAR_ITEMS = {"fn":[["hex_to_bytes","Convert a hex string to a byte vector."]],"macro":[["create_test_vectors",""]],"mod":[["prelude",""],["rand",""],["test_vectors","Provide utilities to read test vectors from JSON files."]]};

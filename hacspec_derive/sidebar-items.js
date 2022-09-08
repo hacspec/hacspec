@@ -1,1 +1,1 @@
-initSidebarItems({"derive":[["Numeric",""]]});
+window.SIDEBAR_ITEMS = {"derive":[["Numeric",""]]};

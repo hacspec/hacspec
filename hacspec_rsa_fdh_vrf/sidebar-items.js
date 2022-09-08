@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["proof_to_hash",""],["prove",""],["verify",""]],"struct":[["IntByte","Fixed length byte array."]]});

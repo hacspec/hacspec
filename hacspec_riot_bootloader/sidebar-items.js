@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["choose_image",""],["is_valid_header",""],["max_chunk_size",""],["new_fletcher",""],["update_fletcher",""],["value","Returns the current checksum value of the `Fletcher` object"]]});
