@@ -164,7 +164,6 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         Expression::Binary((op, _), e1, e2, op_typ) => {
             make_paren(translate_expression((*e1).0, top_ctx))
                 .append(RcDoc::space())
-                // .append(RcDoc::as_string("both_"))
                 .append(translate_binop(op, op_typ.as_ref().unwrap(), top_ctx))
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression((*e2).0, top_ctx)))
@@ -302,10 +301,6 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                             }))
                         },
                     )))
-                // .append(match func_ret_ty {
-                //     Some(ret_ty) => RcDoc::as_string(" : ").append(translate_base_typ(ret_ty)),
-                //     None => RcDoc::nil(),
-                // })
             }
         }
         Expression::ArrayIndex(x, e2, typ) => {
@@ -490,11 +485,6 @@ fn translate_statements<'a>(
         }
         Statement::ReturnExp(e1, _typ) => RcDoc::as_string("lift_scope")
             .append(RcDoc::space())
-            // .append(RcDoc::as_stirng("(L2 := "))
-            // .append(make_paren(rustspec_to_coq_ssprove_state::fset_from_scope(
-            //     smv.clone(),
-            // )))
-            // .append(RcDoc::as_string(")"))
             .append(RcDoc::as_string("(H_loc_incl := _) (H_opsig_incl := _)"))
             .append(RcDoc::space())
             .append(make_paren(translate_expression(e1.clone(), top_ctx))),
@@ -524,7 +514,6 @@ fn translate_statements<'a>(
                 mutated_info.stmt.clone(),
                 mutated_info.early_return_type.clone(),
                 if either_blocks_contains_question_mark {
-                    // b1_question_mark {
                     Some(b1.mutable_vars.clone())
                 } else {
                     None
@@ -540,7 +529,6 @@ fn translate_statements<'a>(
                         mutated_info.stmt.clone(),
                         mutated_info.early_return_type.clone(),
                         if either_blocks_contains_question_mark
-                        // b1_question_mark
                         {
                             Some(b1.mutable_vars.clone())
                         } else {
@@ -557,7 +545,6 @@ fn translate_statements<'a>(
                         mutated_info.stmt.clone(),
                         mutated_info.early_return_type.clone(),
                         if either_blocks_contains_question_mark {
-                            // b2_question_mark {
                             Some(b2.mutable_vars.clone())
                         } else {
                             None
@@ -710,7 +697,6 @@ fn translate_statements<'a>(
                 .append(RcDoc::line())
                 .append(translate_block(b, true, top_ctx))
                 .append(RcDoc::as_string(")"))
-                // .append(RcDoc::as_string(";;"))
                 .group()
                 .nest(2),
                 false,
@@ -1041,7 +1027,6 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                         .append(RcDoc::as_string("Program "))
                         .append(rustspec_to_coq_ssprove_pure::make_let_binding(
                             translate_ident(Ident::TopLevel(f.clone()))
-                                // .append("_both")
                                 .append(RcDoc::line())
                                 .append(if sig.args.len() > 0 {
                                     RcDoc::intersperse(
