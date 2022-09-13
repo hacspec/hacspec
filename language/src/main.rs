@@ -29,10 +29,10 @@ mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
+use glob::Pattern;
 use heck::TitleCase;
 use im::{HashMap, HashSet};
 use itertools::Itertools;
-use regex::Regex;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
@@ -760,12 +760,12 @@ fn read_crate_pre(
 
     // Pick the package of the given name or the only package available.
     let package: Vec<Package> = if let Some(package_name) = package_name {
-        let re = Regex::new(&format!(r"^{}$", package_name)).unwrap();
+        let glob_pattern = Pattern::new(package_name.as_str()).unwrap();
         let p: Vec<Package> = manifest
             .clone()
             .packages
             .into_iter()
-            .filter(|p| re.is_match(&p.name))
+            .filter(|p| glob_pattern.matches(&p.name))
             .collect();
 
         if p.is_empty() {
@@ -946,9 +946,12 @@ fn main() -> Result<(), usize> {
             callbacks.target_directory = deps;
 
             for package in package_vec {
+                let pkg_name = package.name.clone();
+
                 let mut compiler_args_run = compiler_args.clone();
                 let mut callbacks_run = callbacks.clone();
-                log::trace!("package name to analyze: {:?}", package.name);
+
+                log::trace!("package name to analyze: {:?}", pkg_name);
                 read_crate(package, &mut compiler_args_run, &mut callbacks_run);
 
                 compiler_args_run.push("--crate-type=lib".to_string());

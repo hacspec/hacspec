@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From CoqWord Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -33,9 +33,9 @@ Definition k_size_v : (uint_size) :=
   ((usize 64)).
 
 Definition hash_size_v : (uint_size) :=
-  (let temp_1 : uint_size :=
+  (let temp_3629 : uint_size :=
       ((usize 256) ./ (usize 8)) in
-    (temp_1)).
+    (temp_3629)).
 
 Definition block_t  :=
   ( nseq (uint8) (block_size_v)).
@@ -57,19 +57,20 @@ Notation "'ch_inp'" := (
   uint32 '× uint32 '× uint32 : choice_type) (in custom pack_type at level 2).
 Notation "'ch_out'" := (uint32 : choice_type) (in custom pack_type at level 2).
 Definition CH : nat :=
-  (11).
+  (3639).
 Program Definition ch
-   : package (fset.fset0) [interface  ] [interface
+   : package (fset.fset0) [interface] [interface
   #val #[ CH ] : ch_inp → ch_out ] :=
   ([package #def #[ CH ] (temp_inp : ch_inp) : ch_out { 
-    let '(x_2 , y_3 , z_6) := temp_inp : uint32 '× uint32 '× uint32 in
-    ({ code  temp_5 ←
-        ((x_2) .& (y_3)) ;;
-       temp_8 ←
-        ((not (x_2)) .& (z_6)) ;;
-       temp_10 ←
-        ((temp_5) .^ (temp_8)) ;;
-      @ret (uint32) (temp_10) } : code (fset.fset0) [interface  ] _)
+    let '(
+      x_3630 , y_3631 , z_3634) := temp_inp : uint32 '× uint32 '× uint32 in
+    ({ code  temp_3633 ←
+        ((x_3630) .& (y_3631)) ;;
+       temp_3636 ←
+        ((not (x_3630)) .& (z_3634)) ;;
+       temp_3638 ←
+        ((temp_3633) .^ (temp_3636)) ;;
+      @ret (uint32) (temp_3638) } : code (fset.fset0) [interface] _)
     }]).
 Fail Next Obligation.
 Program Definition package_ch : package _ _ _ :=
@@ -81,23 +82,24 @@ Notation "'maj_inp'" := (
   uint32 '× uint32 '× uint32 : choice_type) (in custom pack_type at level 2).
 Notation "'maj_out'" := (uint32 : choice_type) (in custom pack_type at level 2).
 Definition MAJ : nat :=
-  (25).
+  (3653).
 Program Definition maj
-   : package (fset.fset0) [interface  ] [interface
+   : package (fset.fset0) [interface] [interface
   #val #[ MAJ ] : maj_inp → maj_out ] :=
   ([package #def #[ MAJ ] (temp_inp : maj_inp) : maj_out { 
-    let '(x_12 , y_13 , z_16) := temp_inp : uint32 '× uint32 '× uint32 in
-    ({ code  temp_15 ←
-        ((x_12) .& (y_13)) ;;
-       temp_18 ←
-        ((x_12) .& (z_16)) ;;
-       temp_20 ←
-        ((y_13) .& (z_16)) ;;
-       temp_22 ←
-        ((temp_18) .^ (temp_20)) ;;
-       temp_24 ←
-        ((temp_15) .^ (temp_22)) ;;
-      @ret (uint32) (temp_24) } : code (fset.fset0) [interface  ] _)
+    let '(
+      x_3640 , y_3641 , z_3644) := temp_inp : uint32 '× uint32 '× uint32 in
+    ({ code  temp_3643 ←
+        ((x_3640) .& (y_3641)) ;;
+       temp_3646 ←
+        ((x_3640) .& (z_3644)) ;;
+       temp_3648 ←
+        ((y_3641) .& (z_3644)) ;;
+       temp_3650 ←
+        ((temp_3646) .^ (temp_3648)) ;;
+       temp_3652 ←
+        ((temp_3643) .^ (temp_3650)) ;;
+      @ret (uint32) (temp_3652) } : code (fset.fset0) [interface] _)
     }]).
 Fail Next Obligation.
 Program Definition package_maj : package _ _ _ :=
@@ -105,7 +107,7 @@ Program Definition package_maj : package _ _ _ :=
 Fail Next Obligation.
 
 Definition op_table_v : (op_table_type_t) :=
-  (let temp_27 : nseq uint_size 12 :=
+  (let temp_3655 : nseq uint_size 12 :=
       (array_from_list uint_size [
           usize 2;
           usize 13;
@@ -120,398 +122,400 @@ Definition op_table_v : (op_table_type_t) :=
           usize 19;
           usize 10
         ]) in
-    (temp_27)).
+    (temp_3655)).
 
 Definition k_table_v : (round_constants_table_t) :=
-  (let temp_29 : int32 :=
+  (let temp_3657 : int32 :=
       (secret (@repr U32 1116352408)) in
-    let temp_31 : int32 :=
+    let temp_3659 : int32 :=
       (secret (@repr U32 1899447441)) in
-    let temp_33 : int32 :=
+    let temp_3661 : int32 :=
       (secret (@repr U32 3049323471)) in
-    let temp_35 : int32 :=
+    let temp_3663 : int32 :=
       (secret (@repr U32 3921009573)) in
-    let temp_37 : int32 :=
+    let temp_3665 : int32 :=
       (secret (@repr U32 961987163)) in
-    let temp_39 : int32 :=
+    let temp_3667 : int32 :=
       (secret (@repr U32 1508970993)) in
-    let temp_41 : int32 :=
+    let temp_3669 : int32 :=
       (secret (@repr U32 2453635748)) in
-    let temp_43 : int32 :=
+    let temp_3671 : int32 :=
       (secret (@repr U32 2870763221)) in
-    let temp_45 : int32 :=
+    let temp_3673 : int32 :=
       (secret (@repr U32 3624381080)) in
-    let temp_47 : int32 :=
+    let temp_3675 : int32 :=
       (secret (@repr U32 310598401)) in
-    let temp_49 : int32 :=
+    let temp_3677 : int32 :=
       (secret (@repr U32 607225278)) in
-    let temp_51 : int32 :=
+    let temp_3679 : int32 :=
       (secret (@repr U32 1426881987)) in
-    let temp_53 : int32 :=
+    let temp_3681 : int32 :=
       (secret (@repr U32 1925078388)) in
-    let temp_55 : int32 :=
+    let temp_3683 : int32 :=
       (secret (@repr U32 2162078206)) in
-    let temp_57 : int32 :=
+    let temp_3685 : int32 :=
       (secret (@repr U32 2614888103)) in
-    let temp_59 : int32 :=
+    let temp_3687 : int32 :=
       (secret (@repr U32 3248222580)) in
-    let temp_61 : int32 :=
+    let temp_3689 : int32 :=
       (secret (@repr U32 3835390401)) in
-    let temp_63 : int32 :=
+    let temp_3691 : int32 :=
       (secret (@repr U32 4022224774)) in
-    let temp_65 : int32 :=
+    let temp_3693 : int32 :=
       (secret (@repr U32 264347078)) in
-    let temp_67 : int32 :=
+    let temp_3695 : int32 :=
       (secret (@repr U32 604807628)) in
-    let temp_69 : int32 :=
+    let temp_3697 : int32 :=
       (secret (@repr U32 770255983)) in
-    let temp_71 : int32 :=
+    let temp_3699 : int32 :=
       (secret (@repr U32 1249150122)) in
-    let temp_73 : int32 :=
+    let temp_3701 : int32 :=
       (secret (@repr U32 1555081692)) in
-    let temp_75 : int32 :=
+    let temp_3703 : int32 :=
       (secret (@repr U32 1996064986)) in
-    let temp_77 : int32 :=
+    let temp_3705 : int32 :=
       (secret (@repr U32 2554220882)) in
-    let temp_79 : int32 :=
+    let temp_3707 : int32 :=
       (secret (@repr U32 2821834349)) in
-    let temp_81 : int32 :=
+    let temp_3709 : int32 :=
       (secret (@repr U32 2952996808)) in
-    let temp_83 : int32 :=
+    let temp_3711 : int32 :=
       (secret (@repr U32 3210313671)) in
-    let temp_85 : int32 :=
+    let temp_3713 : int32 :=
       (secret (@repr U32 3336571891)) in
-    let temp_87 : int32 :=
+    let temp_3715 : int32 :=
       (secret (@repr U32 3584528711)) in
-    let temp_89 : int32 :=
+    let temp_3717 : int32 :=
       (secret (@repr U32 113926993)) in
-    let temp_91 : int32 :=
+    let temp_3719 : int32 :=
       (secret (@repr U32 338241895)) in
-    let temp_93 : int32 :=
+    let temp_3721 : int32 :=
       (secret (@repr U32 666307205)) in
-    let temp_95 : int32 :=
+    let temp_3723 : int32 :=
       (secret (@repr U32 773529912)) in
-    let temp_97 : int32 :=
+    let temp_3725 : int32 :=
       (secret (@repr U32 1294757372)) in
-    let temp_99 : int32 :=
+    let temp_3727 : int32 :=
       (secret (@repr U32 1396182291)) in
-    let temp_101 : int32 :=
+    let temp_3729 : int32 :=
       (secret (@repr U32 1695183700)) in
-    let temp_103 : int32 :=
+    let temp_3731 : int32 :=
       (secret (@repr U32 1986661051)) in
-    let temp_105 : int32 :=
+    let temp_3733 : int32 :=
       (secret (@repr U32 2177026350)) in
-    let temp_107 : int32 :=
+    let temp_3735 : int32 :=
       (secret (@repr U32 2456956037)) in
-    let temp_109 : int32 :=
+    let temp_3737 : int32 :=
       (secret (@repr U32 2730485921)) in
-    let temp_111 : int32 :=
+    let temp_3739 : int32 :=
       (secret (@repr U32 2820302411)) in
-    let temp_113 : int32 :=
+    let temp_3741 : int32 :=
       (secret (@repr U32 3259730800)) in
-    let temp_115 : int32 :=
+    let temp_3743 : int32 :=
       (secret (@repr U32 3345764771)) in
-    let temp_117 : int32 :=
+    let temp_3745 : int32 :=
       (secret (@repr U32 3516065817)) in
-    let temp_119 : int32 :=
+    let temp_3747 : int32 :=
       (secret (@repr U32 3600352804)) in
-    let temp_121 : int32 :=
+    let temp_3749 : int32 :=
       (secret (@repr U32 4094571909)) in
-    let temp_123 : int32 :=
+    let temp_3751 : int32 :=
       (secret (@repr U32 275423344)) in
-    let temp_125 : int32 :=
+    let temp_3753 : int32 :=
       (secret (@repr U32 430227734)) in
-    let temp_127 : int32 :=
+    let temp_3755 : int32 :=
       (secret (@repr U32 506948616)) in
-    let temp_129 : int32 :=
+    let temp_3757 : int32 :=
       (secret (@repr U32 659060556)) in
-    let temp_131 : int32 :=
+    let temp_3759 : int32 :=
       (secret (@repr U32 883997877)) in
-    let temp_133 : int32 :=
+    let temp_3761 : int32 :=
       (secret (@repr U32 958139571)) in
-    let temp_135 : int32 :=
+    let temp_3763 : int32 :=
       (secret (@repr U32 1322822218)) in
-    let temp_137 : int32 :=
+    let temp_3765 : int32 :=
       (secret (@repr U32 1537002063)) in
-    let temp_139 : int32 :=
+    let temp_3767 : int32 :=
       (secret (@repr U32 1747873779)) in
-    let temp_141 : int32 :=
+    let temp_3769 : int32 :=
       (secret (@repr U32 1955562222)) in
-    let temp_143 : int32 :=
+    let temp_3771 : int32 :=
       (secret (@repr U32 2024104815)) in
-    let temp_145 : int32 :=
+    let temp_3773 : int32 :=
       (secret (@repr U32 2227730452)) in
-    let temp_147 : int32 :=
+    let temp_3775 : int32 :=
       (secret (@repr U32 2361852424)) in
-    let temp_149 : int32 :=
+    let temp_3777 : int32 :=
       (secret (@repr U32 2428436474)) in
-    let temp_151 : int32 :=
+    let temp_3779 : int32 :=
       (secret (@repr U32 2756734187)) in
-    let temp_153 : int32 :=
+    let temp_3781 : int32 :=
       (secret (@repr U32 3204031479)) in
-    let temp_155 : int32 :=
+    let temp_3783 : int32 :=
       (secret (@repr U32 3329325298)) in
-    let temp_157 : nseq uint32 64 :=
+    let temp_3785 : nseq uint32 64 :=
       (array_from_list uint32 [
-          temp_29;
-          temp_31;
-          temp_33;
-          temp_35;
-          temp_37;
-          temp_39;
-          temp_41;
-          temp_43;
-          temp_45;
-          temp_47;
-          temp_49;
-          temp_51;
-          temp_53;
-          temp_55;
-          temp_57;
-          temp_59;
-          temp_61;
-          temp_63;
-          temp_65;
-          temp_67;
-          temp_69;
-          temp_71;
-          temp_73;
-          temp_75;
-          temp_77;
-          temp_79;
-          temp_81;
-          temp_83;
-          temp_85;
-          temp_87;
-          temp_89;
-          temp_91;
-          temp_93;
-          temp_95;
-          temp_97;
-          temp_99;
-          temp_101;
-          temp_103;
-          temp_105;
-          temp_107;
-          temp_109;
-          temp_111;
-          temp_113;
-          temp_115;
-          temp_117;
-          temp_119;
-          temp_121;
-          temp_123;
-          temp_125;
-          temp_127;
-          temp_129;
-          temp_131;
-          temp_133;
-          temp_135;
-          temp_137;
-          temp_139;
-          temp_141;
-          temp_143;
-          temp_145;
-          temp_147;
-          temp_149;
-          temp_151;
-          temp_153;
-          temp_155
+          temp_3657;
+          temp_3659;
+          temp_3661;
+          temp_3663;
+          temp_3665;
+          temp_3667;
+          temp_3669;
+          temp_3671;
+          temp_3673;
+          temp_3675;
+          temp_3677;
+          temp_3679;
+          temp_3681;
+          temp_3683;
+          temp_3685;
+          temp_3687;
+          temp_3689;
+          temp_3691;
+          temp_3693;
+          temp_3695;
+          temp_3697;
+          temp_3699;
+          temp_3701;
+          temp_3703;
+          temp_3705;
+          temp_3707;
+          temp_3709;
+          temp_3711;
+          temp_3713;
+          temp_3715;
+          temp_3717;
+          temp_3719;
+          temp_3721;
+          temp_3723;
+          temp_3725;
+          temp_3727;
+          temp_3729;
+          temp_3731;
+          temp_3733;
+          temp_3735;
+          temp_3737;
+          temp_3739;
+          temp_3741;
+          temp_3743;
+          temp_3745;
+          temp_3747;
+          temp_3749;
+          temp_3751;
+          temp_3753;
+          temp_3755;
+          temp_3757;
+          temp_3759;
+          temp_3761;
+          temp_3763;
+          temp_3765;
+          temp_3767;
+          temp_3769;
+          temp_3771;
+          temp_3773;
+          temp_3775;
+          temp_3777;
+          temp_3779;
+          temp_3781;
+          temp_3783
         ]) in
-    (temp_157)).
+    (temp_3785)).
 
 Definition hash_init_v : (hash_t) :=
-  (let temp_159 : int32 :=
+  (let temp_3787 : int32 :=
       (secret (@repr U32 1779033703)) in
-    let temp_161 : int32 :=
+    let temp_3789 : int32 :=
       (secret (@repr U32 3144134277)) in
-    let temp_163 : int32 :=
+    let temp_3791 : int32 :=
       (secret (@repr U32 1013904242)) in
-    let temp_165 : int32 :=
+    let temp_3793 : int32 :=
       (secret (@repr U32 2773480762)) in
-    let temp_167 : int32 :=
+    let temp_3795 : int32 :=
       (secret (@repr U32 1359893119)) in
-    let temp_169 : int32 :=
+    let temp_3797 : int32 :=
       (secret (@repr U32 2600822924)) in
-    let temp_171 : int32 :=
+    let temp_3799 : int32 :=
       (secret (@repr U32 528734635)) in
-    let temp_173 : int32 :=
+    let temp_3801 : int32 :=
       (secret (@repr U32 1541459225)) in
-    let temp_175 : nseq uint32 8 :=
+    let temp_3803 : nseq uint32 8 :=
       (array_from_list uint32 [
-          temp_159;
-          temp_161;
-          temp_163;
-          temp_165;
-          temp_167;
-          temp_169;
-          temp_171;
-          temp_173
+          temp_3787;
+          temp_3789;
+          temp_3791;
+          temp_3793;
+          temp_3795;
+          temp_3797;
+          temp_3799;
+          temp_3801
         ]) in
-    (temp_175)).
+    (temp_3803)).
 
-Definition tmp_197_loc : ChoiceEqualityLocation :=
-  ((uint32 ; 216%nat)).
+Definition tmp_3825_loc : ChoiceEqualityLocation :=
+  ((uint32 ; 3844%nat)).
 Notation "'sigma_inp'" := (
   uint32 '× uint_size '× uint_size : choice_type) (in custom pack_type at level 2).
 Notation "'sigma_out'" := (
   uint32 : choice_type) (in custom pack_type at level 2).
 Definition SIGMA : nat :=
-  (217).
+  (3845).
 Program Definition sigma
-   : package (CEfset ([tmp_197_loc])) [interface  ] [interface
+   : package (CEfset ([tmp_3825_loc])) [interface] [interface
   #val #[ SIGMA ] : sigma_inp → sigma_out ] :=
   ([package #def #[ SIGMA ] (temp_inp : sigma_inp) : sigma_out { 
     let '(
-      x_176 , i_177 , op_186) := temp_inp : uint32 '× uint_size '× uint_size in
-    ({ code  '(tmp_197 : uint32) ←
-          ( '(temp_179 : uint_size) ←
-              ((usize 3) .* (i_177)) ;;
-             '(temp_181 : uint_size) ←
-              ((temp_179) .+ (usize 2)) ;;
-             temp_183 ←
-              (array_index (op_table_v) (temp_181)) ;;
-             temp_185 ←
-              (uint32_rotate_right (x_176) (temp_183)) ;;
-            ret (temp_185)) ;;
-        #put tmp_197_loc := tmp_197 ;;
-       '(temp_188 : bool_ChoiceEquality) ←
-        ((op_186) =.? (usize 0)) ;;
-       '(tmp_197 : (uint32)) ←
-        (if temp_188:bool_ChoiceEquality
-          then (({ code  '(tmp_197 : uint32) ←
-                  (( '(temp_190 : uint_size) ←
-                        ((usize 3) .* (i_177)) ;;
-                       '(temp_192 : uint_size) ←
-                        ((temp_190) .+ (usize 2)) ;;
-                       temp_194 ←
-                        (array_index (op_table_v) (temp_192)) ;;
-                       temp_196 ←
-                        ((x_176) shift_right (temp_194)) ;;
-                      ret (temp_196))) ;;
-                #put tmp_197_loc := tmp_197 ;;
-              
-              @ret ((uint32)) (tmp_197) } : code (CEfset (
-                  [tmp_197_loc])) [interface  ] _))
-          else @ret ((uint32)) (tmp_197)) ;;
+      x_3804 , i_3805 , op_3814) := temp_inp : uint32 '× uint_size '× uint_size in
+    ({ code  '(tmp_3825 : uint32) ←
+          ( '(temp_3807 : uint_size) ←
+              ((usize 3) .* (i_3805)) ;;
+             '(temp_3809 : uint_size) ←
+              ((temp_3807) .+ (usize 2)) ;;
+             temp_3811 ←
+              (array_index (op_table_v) (temp_3809)) ;;
+             temp_3813 ←
+              (uint32_rotate_right (x_3804) (temp_3811)) ;;
+            ret (temp_3813)) ;;
+        #put tmp_3825_loc := tmp_3825 ;;
+       '(temp_3816 : bool_ChoiceEquality) ←
+        ((op_3814) =.? (usize 0)) ;;
+       '(tmp_3825 : (uint32)) ←
+        (if temp_3816:bool_ChoiceEquality
+          then (*not state*) (let temp_then :=  '(tmp_3825 : uint32) ←
+                (( '(temp_3818 : uint_size) ←
+                      ((usize 3) .* (i_3805)) ;;
+                     '(temp_3820 : uint_size) ←
+                      ((temp_3818) .+ (usize 2)) ;;
+                     temp_3822 ←
+                      (array_index (op_table_v) (temp_3820)) ;;
+                     temp_3824 ←
+                      ((x_3804) shift_right (temp_3822)) ;;
+                    ret (temp_3824))) ;;
+              #put tmp_3825_loc := tmp_3825 ;;
+            
+            @ret ((uint32)) (tmp_3825) in
+            ({ code temp_then } : code (CEfset ([tmp_3825_loc])) [interface] _))
+          else @ret ((uint32)) (tmp_3825)) ;;
       
-       '(temp_199 : uint_size) ←
-        ((usize 3) .* (i_177)) ;;
-       temp_201 ←
-        (array_index (op_table_v) (temp_199)) ;;
-       temp_203 ←
-        (uint32_rotate_right (x_176) (temp_201)) ;;
-       '(temp_205 : uint_size) ←
-        ((usize 3) .* (i_177)) ;;
-       '(temp_207 : uint_size) ←
-        ((temp_205) .+ (usize 1)) ;;
-       temp_209 ←
-        (array_index (op_table_v) (temp_207)) ;;
-       temp_211 ←
-        (uint32_rotate_right (x_176) (temp_209)) ;;
-       temp_213 ←
-        ((temp_203) .^ (temp_211)) ;;
-       temp_215 ←
-        ((temp_213) .^ (tmp_197)) ;;
-      @ret (uint32) (temp_215) } : code (CEfset ([tmp_197_loc])) [interface 
-      ] _)
+       '(temp_3827 : uint_size) ←
+        ((usize 3) .* (i_3805)) ;;
+       temp_3829 ←
+        (array_index (op_table_v) (temp_3827)) ;;
+       temp_3831 ←
+        (uint32_rotate_right (x_3804) (temp_3829)) ;;
+       '(temp_3833 : uint_size) ←
+        ((usize 3) .* (i_3805)) ;;
+       '(temp_3835 : uint_size) ←
+        ((temp_3833) .+ (usize 1)) ;;
+       temp_3837 ←
+        (array_index (op_table_v) (temp_3835)) ;;
+       temp_3839 ←
+        (uint32_rotate_right (x_3804) (temp_3837)) ;;
+       temp_3841 ←
+        ((temp_3831) .^ (temp_3839)) ;;
+       temp_3843 ←
+        ((temp_3841) .^ (tmp_3825)) ;;
+      @ret (uint32) (temp_3843) } : code (CEfset (
+          [tmp_3825_loc])) [interface] _)
     }]).
 Fail Next Obligation.
 Program Definition package_sigma : package _ _ _ :=
   (sigma).
 Fail Next Obligation.
 
-Definition s_229_loc : ChoiceEqualityLocation :=
-  ((round_constants_table_t ; 262%nat)).
+Definition s_3857_loc : ChoiceEqualityLocation :=
+  ((round_constants_table_t ; 3890%nat)).
 Notation "'schedule_inp'" := (
   block_t : choice_type) (in custom pack_type at level 2).
 Notation "'schedule_out'" := (
   round_constants_table_t : choice_type) (in custom pack_type at level 2).
 Definition SCHEDULE : nat :=
-  (263).
+  (3891).
 Program Definition schedule
-   : package (CEfset ([s_229_loc])) [interface
+   : package (CEfset ([s_3857_loc])) [interface
   #val #[ SIGMA ] : sigma_inp → sigma_out ] [interface
   #val #[ SCHEDULE ] : schedule_inp → schedule_out ] :=
   ([package #def #[ SCHEDULE ] (temp_inp : schedule_inp) : schedule_out { 
-    let '(block_218) := temp_inp : block_t in
+    let '(block_3846) := temp_inp : block_t in
     #import {sig #[ SIGMA ] : sigma_inp → sigma_out } as sigma ;;
     let sigma := fun x_0 x_1 x_2 => sigma (x_0,x_1,x_2) in
-    ({ code  '(b_227 : seq uint32) ←
-        ( temp_220 ←
-            (array_to_be_uint32s (block_218)) ;;
-          ret (temp_220)) ;;
-       '(s_229 : round_constants_table_t) ←
-          ( '(temp_222 : round_constants_table_t) ←
+    ({ code  '(b_3855 : seq uint32) ←
+        ( temp_3848 ←
+            (array_to_be_uint32s (block_3846)) ;;
+          ret (temp_3848)) ;;
+       '(s_3857 : round_constants_table_t) ←
+          ( '(temp_3850 : round_constants_table_t) ←
               (array_new_ (default : uint32) (k_size_v)) ;;
-            ret (temp_222)) ;;
-        #put s_229_loc := s_229 ;;
-       '(s_229 : (round_constants_table_t)) ←
-        (foldi' (usize 0) (k_size_v) s_229 (L2 := CEfset ([s_229_loc])) (
+            ret (temp_3850)) ;;
+        #put s_3857_loc := s_3857 ;;
+       '(s_3857 : (round_constants_table_t)) ←
+        (foldi' (usize 0) (k_size_v) s_3857 (L2 := CEfset ([s_3857_loc])) (
               I2 := [interface #val #[ SIGMA ] : sigma_inp → sigma_out
-              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_223 s_229 =>
-            ({ code  '(temp_225 : bool_ChoiceEquality) ←
-                ((i_223) <.? (usize 16)) ;;
-               '(s_229 : (round_constants_table_t)) ←
-                (if temp_225:bool_ChoiceEquality
-                  then (({ code  '(s_229 : round_constants_table_t) ←
-                        ( '(temp_228 : uint32) ←
-                            (seq_index (b_227) (i_223)) ;;
-                          ret (array_upd s_229 (i_223) (temp_228))) ;;
+              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_3851 s_3857 =>
+            ({ code  '(temp_3853 : bool_ChoiceEquality) ←
+                ((i_3851) <.? (usize 16)) ;;
+               '(s_3857 : (round_constants_table_t)) ←
+                (if temp_3853:bool_ChoiceEquality
+                  then (*not state*) (let temp_then :=  '(
+                        s_3857 : round_constants_table_t) ←
+                      ( '(temp_3856 : uint32) ←
+                          (seq_index (b_3855) (i_3851)) ;;
+                        ret (array_upd s_3857 (i_3851) (temp_3856))) ;;
+                    
+                    @ret ((round_constants_table_t)) (s_3857) in
+                    ({ code temp_then } : code (CEfset (
+                          [s_3857_loc])) [interface] _))
+                  else  (({ code  '(t16_3887 : uint32) ←
+                        ( '(temp_3859 : uint_size) ←
+                            ((i_3851) .- (usize 16)) ;;
+                           temp_3861 ←
+                            (array_index (s_3857) (temp_3859)) ;;
+                          ret (temp_3861)) ;;
+                       '(t15_3877 : uint32) ←
+                        ( '(temp_3863 : uint_size) ←
+                            ((i_3851) .- (usize 15)) ;;
+                           temp_3865 ←
+                            (array_index (s_3857) (temp_3863)) ;;
+                          ret (temp_3865)) ;;
+                       '(t7_3881 : uint32) ←
+                        ( '(temp_3867 : uint_size) ←
+                            ((i_3851) .- (usize 7)) ;;
+                           temp_3869 ←
+                            (array_index (s_3857) (temp_3867)) ;;
+                          ret (temp_3869)) ;;
+                       '(t2_3874 : uint32) ←
+                        ( '(temp_3871 : uint_size) ←
+                            ((i_3851) .- (usize 2)) ;;
+                           temp_3873 ←
+                            (array_index (s_3857) (temp_3871)) ;;
+                          ret (temp_3873)) ;;
+                       '(s1_3880 : uint32) ←
+                        ( '(temp_3876 : uint32) ←
+                            (sigma (t2_3874) (usize 3) (usize 0)) ;;
+                          ret (temp_3876)) ;;
+                       '(s0_3884 : uint32) ←
+                        ( '(temp_3879 : uint32) ←
+                            (sigma (t15_3877) (usize 2) (usize 0)) ;;
+                          ret (temp_3879)) ;;
+                       '(s_3857 : round_constants_table_t) ←
+                        ( '(temp_3883 : uint32) ←
+                            ((s1_3880) .+ (t7_3881)) ;;
+                           '(temp_3886 : uint32) ←
+                            ((temp_3883) .+ (s0_3884)) ;;
+                           '(temp_3889 : uint32) ←
+                            ((temp_3886) .+ (t16_3887)) ;;
+                          ret (array_upd s_3857 (i_3851) (temp_3889))) ;;
                       
-                      @ret ((round_constants_table_t)) (s_229) } : code (
-                        CEfset ([s_229_loc])) [interface  ] _))
-                  else  (({ code  '(t16_259 : uint32) ←
-                        ( '(temp_231 : uint_size) ←
-                            ((i_223) .- (usize 16)) ;;
-                           temp_233 ←
-                            (array_index (s_229) (temp_231)) ;;
-                          ret (temp_233)) ;;
-                       '(t15_249 : uint32) ←
-                        ( '(temp_235 : uint_size) ←
-                            ((i_223) .- (usize 15)) ;;
-                           temp_237 ←
-                            (array_index (s_229) (temp_235)) ;;
-                          ret (temp_237)) ;;
-                       '(t7_253 : uint32) ←
-                        ( '(temp_239 : uint_size) ←
-                            ((i_223) .- (usize 7)) ;;
-                           temp_241 ←
-                            (array_index (s_229) (temp_239)) ;;
-                          ret (temp_241)) ;;
-                       '(t2_246 : uint32) ←
-                        ( '(temp_243 : uint_size) ←
-                            ((i_223) .- (usize 2)) ;;
-                           temp_245 ←
-                            (array_index (s_229) (temp_243)) ;;
-                          ret (temp_245)) ;;
-                       '(s1_252 : uint32) ←
-                        ( '(temp_248 : uint32) ←
-                            (sigma (t2_246) (usize 3) (usize 0)) ;;
-                          ret (temp_248)) ;;
-                       '(s0_256 : uint32) ←
-                        ( '(temp_251 : uint32) ←
-                            (sigma (t15_249) (usize 2) (usize 0)) ;;
-                          ret (temp_251)) ;;
-                       '(s_229 : round_constants_table_t) ←
-                        ( '(temp_255 : uint32) ←
-                            ((s1_252) .+ (t7_253)) ;;
-                           '(temp_258 : uint32) ←
-                            ((temp_255) .+ (s0_256)) ;;
-                           '(temp_261 : uint32) ←
-                            ((temp_258) .+ (t16_259)) ;;
-                          ret (array_upd s_229 (i_223) (temp_261))) ;;
-                      
-                      @ret ((round_constants_table_t)) (s_229) } : code (
-                        CEfset ([s_229_loc])) [interface
+                      @ret ((round_constants_table_t)) (s_3857) } : code (
+                        CEfset ([s_3857_loc])) [interface
                       #val #[ SIGMA ] : sigma_inp → sigma_out ] _))) ;;
               
-              @ret ((round_constants_table_t)) (s_229) } : code (CEfset (
-                  [s_229_loc])) [interface
+              @ret ((round_constants_table_t)) (s_3857) } : code (CEfset (
+                  [s_3857_loc])) [interface
               #val #[ SIGMA ] : sigma_inp → sigma_out ] _))) ;;
       
-      @ret (round_constants_table_t) (s_229) } : code (CEfset (
-          [s_229_loc])) [interface #val #[ SIGMA ] : sigma_inp → sigma_out
+      @ret (round_constants_table_t) (s_3857) } : code (CEfset (
+          [s_3857_loc])) [interface #val #[ SIGMA ] : sigma_inp → sigma_out
       ] _)
     }]).
 Fail Next Obligation.
@@ -519,129 +523,129 @@ Program Definition package_schedule : package _ _ _ :=
   (seq_link schedule link_rest(package_sigma)).
 Fail Next Obligation.
 
-Definition h_266_loc : ChoiceEqualityLocation :=
-  ((hash_t ; 320%nat)).
+Definition h_3894_loc : ChoiceEqualityLocation :=
+  ((hash_t ; 3948%nat)).
 Notation "'shuffle_inp'" := (
   round_constants_table_t '× hash_t : choice_type) (in custom pack_type at level 2).
 Notation "'shuffle_out'" := (
   hash_t : choice_type) (in custom pack_type at level 2).
 Definition SHUFFLE : nat :=
-  (321).
+  (3949).
 Program Definition shuffle
-   : package (CEfset ([h_266_loc])) [interface
+   : package (CEfset ([h_3894_loc])) [interface
   #val #[ CH ] : ch_inp → ch_out ; #val #[ MAJ ] : maj_inp → maj_out ;
   #val #[ SIGMA ] : sigma_inp → sigma_out ] [interface
   #val #[ SHUFFLE ] : shuffle_inp → shuffle_out ] :=
   ([package #def #[ SHUFFLE ] (temp_inp : shuffle_inp) : shuffle_out { 
     let '(
-      ws_300 , hashi_264) := temp_inp : round_constants_table_t '× hash_t in
+      ws_3928 , hashi_3892) := temp_inp : round_constants_table_t '× hash_t in
     #import {sig #[ CH ] : ch_inp → ch_out } as ch ;;
     let ch := fun x_0 x_1 x_2 => ch (x_0,x_1,x_2) in
     #import {sig #[ MAJ ] : maj_inp → maj_out } as maj ;;
     let maj := fun x_0 x_1 x_2 => maj (x_0,x_1,x_2) in
     #import {sig #[ SIGMA ] : sigma_inp → sigma_out } as sigma ;;
     let sigma := fun x_0 x_1 x_2 => sigma (x_0,x_1,x_2) in
-    ({ code  '(h_266 : hash_t) ←
-          (ret (hashi_264)) ;;
-        #put h_266_loc := h_266 ;;
-       '(h_266 : (hash_t)) ←
-        (foldi' (usize 0) (k_size_v) h_266 (L2 := CEfset ([h_266_loc])) (
+    ({ code  '(h_3894 : hash_t) ←
+          (ret (hashi_3892)) ;;
+        #put h_3894_loc := h_3894 ;;
+       '(h_3894 : (hash_t)) ←
+        (foldi' (usize 0) (k_size_v) h_3894 (L2 := CEfset ([h_3894_loc])) (
               I2 := [interface #val #[ CH ] : ch_inp → ch_out ;
               #val #[ MAJ ] : maj_inp → maj_out ;
               #val #[ SIGMA ] : sigma_inp → sigma_out
-              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_294 h_266 =>
-            ({ code  '(a0_304 : uint32) ←
-                ( temp_267 ←
-                    (array_index (h_266) (usize 0)) ;;
-                  ret (temp_267)) ;;
-               '(b0_307 : uint32) ←
-                ( temp_269 ←
-                    (array_index (h_266) (usize 1)) ;;
-                  ret (temp_269)) ;;
-               '(c0_308 : uint32) ←
-                ( temp_271 ←
-                    (array_index (h_266) (usize 2)) ;;
-                  ret (temp_271)) ;;
-               '(d0_317 : uint32) ←
-                ( temp_273 ←
-                    (array_index (h_266) (usize 3)) ;;
-                  ret (temp_273)) ;;
-               '(e0_283 : uint32) ←
-                ( temp_275 ←
-                    (array_index (h_266) (usize 4)) ;;
-                  ret (temp_275)) ;;
-               '(f0_288 : uint32) ←
-                ( temp_277 ←
-                    (array_index (h_266) (usize 5)) ;;
-                  ret (temp_277)) ;;
-               '(g0_289 : uint32) ←
-                ( temp_279 ←
-                    (array_index (h_266) (usize 6)) ;;
-                  ret (temp_279)) ;;
-               '(h0_282 : uint32) ←
-                ( temp_281 ←
-                    (array_index (h_266) (usize 7)) ;;
-                  ret (temp_281)) ;;
-               '(t1_313 : uint32) ←
-                ( '(temp_285 : uint32) ←
-                    (sigma (e0_283) (usize 1) (usize 1)) ;;
-                   '(temp_287 : uint32) ←
-                    ((h0_282) .+ (temp_285)) ;;
-                   '(temp_291 : uint32) ←
-                    (ch (e0_283) (f0_288) (g0_289)) ;;
-                   '(temp_293 : uint32) ←
-                    ((temp_287) .+ (temp_291)) ;;
-                   temp_296 ←
-                    (array_index (k_table_v) (i_294)) ;;
-                   '(temp_298 : uint32) ←
-                    ((temp_293) .+ (temp_296)) ;;
-                   temp_301 ←
-                    (array_index (ws_300) (i_294)) ;;
-                   '(temp_303 : uint32) ←
-                    ((temp_298) .+ (temp_301)) ;;
-                  ret (temp_303)) ;;
-               '(t2_314 : uint32) ←
-                ( '(temp_306 : uint32) ←
-                    (sigma (a0_304) (usize 0) (usize 1)) ;;
-                   '(temp_310 : uint32) ←
-                    (maj (a0_304) (b0_307) (c0_308)) ;;
-                   '(temp_312 : uint32) ←
-                    ((temp_306) .+ (temp_310)) ;;
-                  ret (temp_312)) ;;
-               '(h_266 : hash_t) ←
-                ( '(temp_316 : uint32) ←
-                    ((t1_313) .+ (t2_314)) ;;
-                  ret (array_upd h_266 (usize 0) (temp_316))) ;;
+              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_3922 h_3894 =>
+            ({ code  '(a0_3932 : uint32) ←
+                ( temp_3895 ←
+                    (array_index (h_3894) (usize 0)) ;;
+                  ret (temp_3895)) ;;
+               '(b0_3935 : uint32) ←
+                ( temp_3897 ←
+                    (array_index (h_3894) (usize 1)) ;;
+                  ret (temp_3897)) ;;
+               '(c0_3936 : uint32) ←
+                ( temp_3899 ←
+                    (array_index (h_3894) (usize 2)) ;;
+                  ret (temp_3899)) ;;
+               '(d0_3945 : uint32) ←
+                ( temp_3901 ←
+                    (array_index (h_3894) (usize 3)) ;;
+                  ret (temp_3901)) ;;
+               '(e0_3911 : uint32) ←
+                ( temp_3903 ←
+                    (array_index (h_3894) (usize 4)) ;;
+                  ret (temp_3903)) ;;
+               '(f0_3916 : uint32) ←
+                ( temp_3905 ←
+                    (array_index (h_3894) (usize 5)) ;;
+                  ret (temp_3905)) ;;
+               '(g0_3917 : uint32) ←
+                ( temp_3907 ←
+                    (array_index (h_3894) (usize 6)) ;;
+                  ret (temp_3907)) ;;
+               '(h0_3910 : uint32) ←
+                ( temp_3909 ←
+                    (array_index (h_3894) (usize 7)) ;;
+                  ret (temp_3909)) ;;
+               '(t1_3941 : uint32) ←
+                ( '(temp_3913 : uint32) ←
+                    (sigma (e0_3911) (usize 1) (usize 1)) ;;
+                   '(temp_3915 : uint32) ←
+                    ((h0_3910) .+ (temp_3913)) ;;
+                   '(temp_3919 : uint32) ←
+                    (ch (e0_3911) (f0_3916) (g0_3917)) ;;
+                   '(temp_3921 : uint32) ←
+                    ((temp_3915) .+ (temp_3919)) ;;
+                   temp_3924 ←
+                    (array_index (k_table_v) (i_3922)) ;;
+                   '(temp_3926 : uint32) ←
+                    ((temp_3921) .+ (temp_3924)) ;;
+                   temp_3929 ←
+                    (array_index (ws_3928) (i_3922)) ;;
+                   '(temp_3931 : uint32) ←
+                    ((temp_3926) .+ (temp_3929)) ;;
+                  ret (temp_3931)) ;;
+               '(t2_3942 : uint32) ←
+                ( '(temp_3934 : uint32) ←
+                    (sigma (a0_3932) (usize 0) (usize 1)) ;;
+                   '(temp_3938 : uint32) ←
+                    (maj (a0_3932) (b0_3935) (c0_3936)) ;;
+                   '(temp_3940 : uint32) ←
+                    ((temp_3934) .+ (temp_3938)) ;;
+                  ret (temp_3940)) ;;
+               '(h_3894 : hash_t) ←
+                ( '(temp_3944 : uint32) ←
+                    ((t1_3941) .+ (t2_3942)) ;;
+                  ret (array_upd h_3894 (usize 0) (temp_3944))) ;;
               
-               '(h_266 : hash_t) ←
-                (ret (array_upd h_266 (usize 1) (a0_304))) ;;
+               '(h_3894 : hash_t) ←
+                (ret (array_upd h_3894 (usize 1) (a0_3932))) ;;
               
-               '(h_266 : hash_t) ←
-                (ret (array_upd h_266 (usize 2) (b0_307))) ;;
+               '(h_3894 : hash_t) ←
+                (ret (array_upd h_3894 (usize 2) (b0_3935))) ;;
               
-               '(h_266 : hash_t) ←
-                (ret (array_upd h_266 (usize 3) (c0_308))) ;;
+               '(h_3894 : hash_t) ←
+                (ret (array_upd h_3894 (usize 3) (c0_3936))) ;;
               
-               '(h_266 : hash_t) ←
-                ( '(temp_319 : uint32) ←
-                    ((d0_317) .+ (t1_313)) ;;
-                  ret (array_upd h_266 (usize 4) (temp_319))) ;;
+               '(h_3894 : hash_t) ←
+                ( '(temp_3947 : uint32) ←
+                    ((d0_3945) .+ (t1_3941)) ;;
+                  ret (array_upd h_3894 (usize 4) (temp_3947))) ;;
               
-               '(h_266 : hash_t) ←
-                (ret (array_upd h_266 (usize 5) (e0_283))) ;;
+               '(h_3894 : hash_t) ←
+                (ret (array_upd h_3894 (usize 5) (e0_3911))) ;;
               
-               '(h_266 : hash_t) ←
-                (ret (array_upd h_266 (usize 6) (f0_288))) ;;
+               '(h_3894 : hash_t) ←
+                (ret (array_upd h_3894 (usize 6) (f0_3916))) ;;
               
-               '(h_266 : hash_t) ←
-                (ret (array_upd h_266 (usize 7) (g0_289))) ;;
+               '(h_3894 : hash_t) ←
+                (ret (array_upd h_3894 (usize 7) (g0_3917))) ;;
               
-              @ret ((hash_t)) (h_266) } : code (CEfset ([h_266_loc])) [interface
-              #val #[ CH ] : ch_inp → ch_out ;
+              @ret ((hash_t)) (h_3894) } : code (CEfset (
+                  [h_3894_loc])) [interface #val #[ CH ] : ch_inp → ch_out ;
               #val #[ MAJ ] : maj_inp → maj_out ;
               #val #[ SIGMA ] : sigma_inp → sigma_out ] _))) ;;
       
-      @ret (hash_t) (h_266) } : code (CEfset ([h_266_loc])) [interface
+      @ret (hash_t) (h_3894) } : code (CEfset ([h_3894_loc])) [interface
       #val #[ CH ] : ch_inp → ch_out ; #val #[ MAJ ] : maj_inp → maj_out ;
       #val #[ SIGMA ] : sigma_inp → sigma_out ] _)
     }]).
@@ -650,53 +654,53 @@ Program Definition package_shuffle : package _ _ _ :=
   (seq_link shuffle link_rest(package_ch,package_maj,package_sigma)).
 Fail Next Obligation.
 
-Definition h_331_loc : ChoiceEqualityLocation :=
-  ((hash_t ; 337%nat)).
+Definition h_3959_loc : ChoiceEqualityLocation :=
+  ((hash_t ; 3965%nat)).
 Notation "'compress_inp'" := (
   block_t '× hash_t : choice_type) (in custom pack_type at level 2).
 Notation "'compress_out'" := (
   hash_t : choice_type) (in custom pack_type at level 2).
 Definition COMPRESS : nat :=
-  (338).
+  (3966).
 Program Definition compress
-   : package (CEfset ([h_331_loc])) [interface
+   : package (CEfset ([h_3959_loc])) [interface
   #val #[ SCHEDULE ] : schedule_inp → schedule_out ;
   #val #[ SHUFFLE ] : shuffle_inp → shuffle_out ] [interface
   #val #[ COMPRESS ] : compress_inp → compress_out ] :=
   ([package #def #[ COMPRESS ] (temp_inp : compress_inp) : compress_out { 
-    let '(block_322 , h_in_326) := temp_inp : block_t '× hash_t in
+    let '(block_3950 , h_in_3954) := temp_inp : block_t '× hash_t in
     #import {sig #[ SCHEDULE ] : schedule_inp → schedule_out } as schedule ;;
     let schedule := fun x_0 => schedule (x_0) in
     #import {sig #[ SHUFFLE ] : shuffle_inp → shuffle_out } as shuffle ;;
     let shuffle := fun x_0 x_1 => shuffle (x_0,x_1) in
-    ({ code  '(s_325 : round_constants_table_t) ←
-        ( '(temp_324 : round_constants_table_t) ←
-            (schedule (block_322)) ;;
-          ret (temp_324)) ;;
-       '(h_331 : hash_t) ←
-          ( '(temp_328 : hash_t) ←
-              (shuffle (s_325) (h_in_326)) ;;
-            ret (temp_328)) ;;
-        #put h_331_loc := h_331 ;;
-       '(h_331 : (hash_t)) ←
-        (foldi' (usize 0) (usize 8) h_331 (L2 := CEfset ([h_331_loc])) (
+    ({ code  '(s_3953 : round_constants_table_t) ←
+        ( '(temp_3952 : round_constants_table_t) ←
+            (schedule (block_3950)) ;;
+          ret (temp_3952)) ;;
+       '(h_3959 : hash_t) ←
+          ( '(temp_3956 : hash_t) ←
+              (shuffle (s_3953) (h_in_3954)) ;;
+            ret (temp_3956)) ;;
+        #put h_3959_loc := h_3959 ;;
+       '(h_3959 : (hash_t)) ←
+        (foldi' (usize 0) (usize 8) h_3959 (L2 := CEfset ([h_3959_loc])) (
               I2 := [interface
               #val #[ SCHEDULE ] : schedule_inp → schedule_out ;
               #val #[ SHUFFLE ] : shuffle_inp → shuffle_out
-              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_329 h_331 =>
-            ({ code  '(h_331 : hash_t) ←
-                ( temp_332 ←
-                    (array_index (h_331) (i_329)) ;;
-                   temp_334 ←
-                    (array_index (h_in_326) (i_329)) ;;
-                   '(temp_336 : uint32) ←
-                    ((temp_332) .+ (temp_334)) ;;
-                  ret (array_upd h_331 (i_329) (temp_336))) ;;
+              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_3957 h_3959 =>
+            ({ code  '(h_3959 : hash_t) ←
+                ( temp_3960 ←
+                    (array_index (h_3959) (i_3957)) ;;
+                   temp_3962 ←
+                    (array_index (h_in_3954) (i_3957)) ;;
+                   '(temp_3964 : uint32) ←
+                    ((temp_3960) .+ (temp_3962)) ;;
+                  ret (array_upd h_3959 (i_3957) (temp_3964))) ;;
               
-              @ret ((hash_t)) (h_331) } : code (CEfset ([h_331_loc])) [interface
-               ] _))) ;;
+              @ret ((hash_t)) (h_3959) } : code (CEfset (
+                  [h_3959_loc])) [interface] _))) ;;
       
-      @ret (hash_t) (h_331) } : code (CEfset ([h_331_loc])) [interface
+      @ret (hash_t) (h_3959) } : code (CEfset ([h_3959_loc])) [interface
       #val #[ SCHEDULE ] : schedule_inp → schedule_out ;
       #val #[ SHUFFLE ] : shuffle_inp → shuffle_out ] _)
     }]).
@@ -705,199 +709,202 @@ Program Definition package_compress : package _ _ _ :=
   (seq_link compress link_rest(package_schedule,package_shuffle)).
 Fail Next Obligation.
 
-Definition last_block_len_357_loc : ChoiceEqualityLocation :=
-  ((uint_size ; 413%nat)).
-Definition last_block_356_loc : ChoiceEqualityLocation :=
-  ((block_t ; 414%nat)).
-Definition pad_block_392_loc : ChoiceEqualityLocation :=
-  ((block_t ; 415%nat)).
-Definition h_355_loc : ChoiceEqualityLocation :=
-  ((hash_t ; 416%nat)).
+Definition h_3983_loc : ChoiceEqualityLocation :=
+  ((hash_t ; 4041%nat)).
+Definition last_block_len_3985_loc : ChoiceEqualityLocation :=
+  ((uint_size ; 4042%nat)).
+Definition pad_block_4020_loc : ChoiceEqualityLocation :=
+  ((block_t ; 4043%nat)).
+Definition last_block_3984_loc : ChoiceEqualityLocation :=
+  ((block_t ; 4044%nat)).
 Notation "'hash_inp'" := (
   byte_seq : choice_type) (in custom pack_type at level 2).
 Notation "'hash_out'" := (
   sha256_digest_t : choice_type) (in custom pack_type at level 2).
 Definition HASH : nat :=
-  (417).
+  (4045).
 Program Definition hash
    : package (CEfset (
-      [h_355_loc ; last_block_356_loc ; last_block_len_357_loc ; pad_block_392_loc])) [interface
+      [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc ; pad_block_4020_loc])) [interface
   #val #[ COMPRESS ] : compress_inp → compress_out ] [interface
   #val #[ HASH ] : hash_inp → hash_out ] :=
   ([package #def #[ HASH ] (temp_inp : hash_inp) : hash_out { 
-    let '(msg_341) := temp_inp : byte_seq in
+    let '(msg_3969) := temp_inp : byte_seq in
     #import {sig #[ COMPRESS ] : compress_inp → compress_out } as compress ;;
     let compress := fun x_0 x_1 => compress (x_0,x_1) in
-    ({ code  '(h_355 : hash_t) ←
+    ({ code  '(h_3983 : hash_t) ←
           (ret (hash_init_v)) ;;
-        #put h_355_loc := h_355 ;;
-       '(last_block_356 : block_t) ←
-          ( '(temp_340 : block_t) ←
+        #put h_3983_loc := h_3983 ;;
+       '(last_block_3984 : block_t) ←
+          ( '(temp_3968 : block_t) ←
               (array_new_ (default : uint8) (block_size_v)) ;;
-            ret (temp_340)) ;;
-        #put last_block_356_loc := last_block_356 ;;
-       '(last_block_len_357 : uint_size) ←
+            ret (temp_3968)) ;;
+        #put last_block_3984_loc := last_block_3984 ;;
+       '(last_block_len_3985 : uint_size) ←
           (ret (usize 0)) ;;
-        #put last_block_len_357_loc := last_block_len_357 ;;
-       '(temp_343 : uint_size) ←
-        (seq_num_chunks (msg_341) (block_size_v)) ;;
-       temp_412 ←
-        (foldi' (usize 0) (temp_343) prod_ce(
-              h_355,
-              last_block_356,
-              last_block_len_357
+        #put last_block_len_3985_loc := last_block_len_3985 ;;
+       '(temp_3971 : uint_size) ←
+        (seq_num_chunks (msg_3969) (block_size_v)) ;;
+       temp_4040 ←
+        (foldi' (usize 0) (temp_3971) prod_ce(
+              h_3983,
+              last_block_3984,
+              last_block_len_3985
             ) (L2 := CEfset (
-                [h_355_loc ; last_block_356_loc ; last_block_len_357_loc ; pad_block_392_loc])) (
+                [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc ; pad_block_4020_loc])) (
               I2 := [interface
               #val #[ COMPRESS ] : compress_inp → compress_out
-              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_344 '(
-              h_355,
-              last_block_356,
-              last_block_len_357
+              ]) (H_loc_incl := _) (H_opsig_incl := _) (fun i_3972 '(
+              h_3983,
+              last_block_3984,
+              last_block_len_3985
             ) =>
-            ({ code  temp_366 ←
-                ( '(temp_346 : (uint_size '× seq uint8)) ←
-                    (seq_get_chunk (msg_341) (block_size_v) (i_344)) ;;
-                  ret (temp_346)) ;;
-              let '(block_len_347, block_352) :=
-                (temp_366) : (uint_size '× seq uint8) in
-               '(temp_349 : bool_ChoiceEquality) ←
-                ((block_len_347) <.? (block_size_v)) ;;
-               temp_364 ←
-                (if temp_349:bool_ChoiceEquality
-                  then (({ code  '(last_block_356 : block_t) ←
-                          (( '(temp_351 : block_t) ←
-                                (array_new_ (default : uint8) (block_size_v)) ;;
-                               '(temp_354 : block_t) ←
-                                (array_update_start (temp_351) (block_352)) ;;
-                              ret (temp_354))) ;;
-                        #put last_block_356_loc := last_block_356 ;;
-                      
-                       '(last_block_len_357 : uint_size) ←
-                          ((ret (block_len_347))) ;;
-                        #put last_block_len_357_loc := last_block_len_357 ;;
+            ({ code  temp_3994 ←
+                ( '(temp_3974 : (uint_size '× seq uint8)) ←
+                    (seq_get_chunk (msg_3969) (block_size_v) (i_3972)) ;;
+                  ret (temp_3974)) ;;
+              let '(block_len_3975, block_3980) :=
+                (temp_3994) : (uint_size '× seq uint8) in
+               '(temp_3977 : bool_ChoiceEquality) ←
+                ((block_len_3975) <.? (block_size_v)) ;;
+               temp_3992 ←
+                (if temp_3977:bool_ChoiceEquality
+                  then (*not state*) (let temp_then :=  '(
+                          last_block_3984 : block_t) ←
+                        (( '(temp_3979 : block_t) ←
+                              (array_new_ (default : uint8) (block_size_v)) ;;
+                             '(temp_3982 : block_t) ←
+                              (array_update_start (temp_3979) (block_3980)) ;;
+                            ret (temp_3982))) ;;
+                      #put last_block_3984_loc := last_block_3984 ;;
+                    
+                     '(last_block_len_3985 : uint_size) ←
+                        ((ret (block_len_3975))) ;;
+                      #put last_block_len_3985_loc := last_block_len_3985 ;;
+                    
+                    @ret ((hash_t '× block_t '× uint_size)) (prod_ce(
+                        h_3983,
+                        last_block_3984,
+                        last_block_len_3985
+                      )) in
+                    ({ code temp_then } : code (CEfset (
+                          [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc])) [interface] _))
+                  else  (({ code  '(compress_input_3988 : block_t) ←
+                        ( '(temp_3987 : block_t) ←
+                            (array_from_seq (block_size_v) (block_3980)) ;;
+                          ret (temp_3987)) ;;
+                       '(h_3983 : hash_t) ←
+                          (( '(temp_3990 : hash_t) ←
+                                (compress (compress_input_3988) (h_3983)) ;;
+                              ret (temp_3990))) ;;
+                        #put h_3983_loc := h_3983 ;;
                       
                       @ret ((hash_t '× block_t '× uint_size)) (prod_ce(
-                          h_355,
-                          last_block_356,
-                          last_block_len_357
+                          h_3983,
+                          last_block_3984,
+                          last_block_len_3985
                         )) } : code (CEfset (
-                          [h_355_loc ; last_block_356_loc ; last_block_len_357_loc])) [interface
-                       ] _))
-                  else  (({ code  '(compress_input_360 : block_t) ←
-                        ( '(temp_359 : block_t) ←
-                            (array_from_seq (block_size_v) (block_352)) ;;
-                          ret (temp_359)) ;;
-                       '(h_355 : hash_t) ←
-                          (( '(temp_362 : hash_t) ←
-                                (compress (compress_input_360) (h_355)) ;;
-                              ret (temp_362))) ;;
-                        #put h_355_loc := h_355 ;;
-                      
-                      @ret ((hash_t '× block_t '× uint_size)) (prod_ce(
-                          h_355,
-                          last_block_356,
-                          last_block_len_357
-                        )) } : code (CEfset (
-                          [h_355_loc ; last_block_356_loc ; last_block_len_357_loc])) [interface
+                          [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc])) [interface
                       #val #[ COMPRESS ] : compress_inp → compress_out
                       ] _))) ;;
-              let '(h_355, last_block_356, last_block_len_357) :=
-                (temp_364) : (hash_t '× block_t '× uint_size) in
+              let '(h_3983, last_block_3984, last_block_len_3985) :=
+                (temp_3992) : (hash_t '× block_t '× uint_size) in
               
               @ret ((hash_t '× block_t '× uint_size)) (prod_ce(
-                  h_355,
-                  last_block_356,
-                  last_block_len_357
+                  h_3983,
+                  last_block_3984,
+                  last_block_len_3985
                 )) } : code (CEfset (
-                  [h_355_loc ; last_block_356_loc ; last_block_len_357_loc])) [interface
+                  [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc])) [interface
               #val #[ COMPRESS ] : compress_inp → compress_out ] _))) ;;
-      let '(h_355, last_block_356, last_block_len_357) :=
-        (temp_412) : (hash_t '× block_t '× uint_size) in
+      let '(h_3983, last_block_3984, last_block_len_3985) :=
+        (temp_4040) : (hash_t '× block_t '× uint_size) in
       
-       '(last_block_356 : block_t) ←
-        ( '(temp_368 : int8) ←
+       '(last_block_3984 : block_t) ←
+        ( '(temp_3996 : int8) ←
             (secret (@repr U8 128)) ;;
-          ret (array_upd last_block_356 (last_block_len_357) (temp_368))) ;;
+          ret (array_upd last_block_3984 (last_block_len_3985) (temp_3996))) ;;
       
-       '(len_bist_381 : uint64) ←
-        ( '(temp_370 : uint_size) ←
-            (seq_len (msg_341)) ;;
-           '(temp_372 : uint_size) ←
-            ((temp_370) .* (usize 8)) ;;
-           '(temp_374 : int64) ←
-            (secret (pub_u64 (temp_372))) ;;
-          ret (temp_374)) ;;
-       '(temp_376 : uint_size) ←
+       '(len_bist_4009 : uint64) ←
+        ( '(temp_3998 : uint_size) ←
+            (seq_len (msg_3969)) ;;
+           '(temp_4000 : uint_size) ←
+            ((temp_3998) .* (usize 8)) ;;
+           '(temp_4002 : int64) ←
+            (secret (pub_u64 (temp_4000))) ;;
+          ret (temp_4002)) ;;
+       '(temp_4004 : uint_size) ←
         ((block_size_v) .- (len_size_v)) ;;
-       '(temp_378 : bool_ChoiceEquality) ←
-        ((last_block_len_357) <.? (temp_376)) ;;
-       temp_410 ←
-        (if temp_378:bool_ChoiceEquality
-          then (({ code  '(last_block_356 : block_t) ←
-                  (( '(temp_380 : uint_size) ←
-                        ((block_size_v) .- (len_size_v)) ;;
-                       '(temp_383 : uint64_word_t) ←
-                        (uint64_to_be_bytes (len_bist_381)) ;;
-                       '(temp_385 : seq uint8) ←
-                        (array_to_seq (temp_383)) ;;
-                       '(temp_387 : block_t) ←
-                        (array_update (last_block_356) (temp_380) (temp_385)) ;;
-                      ret (temp_387))) ;;
-                #put last_block_356_loc := last_block_356 ;;
-              
-               '(h_355 : hash_t) ←
-                  (( '(temp_389 : hash_t) ←
-                        (compress (last_block_356) (h_355)) ;;
-                      ret (temp_389))) ;;
-                #put h_355_loc := h_355 ;;
-              
-              @ret ((hash_t '× block_t)) (prod_ce(h_355, last_block_356
-                )) } : code (CEfset (
-                  [h_355_loc ; last_block_356_loc ; last_block_len_357_loc])) [interface
+       '(temp_4006 : bool_ChoiceEquality) ←
+        ((last_block_len_3985) <.? (temp_4004)) ;;
+       temp_4038 ←
+        (if temp_4006:bool_ChoiceEquality
+          then (*not state*) (let temp_then :=  '(last_block_3984 : block_t) ←
+                (( '(temp_4008 : uint_size) ←
+                      ((block_size_v) .- (len_size_v)) ;;
+                     '(temp_4011 : uint64_word_t) ←
+                      (uint64_to_be_bytes (len_bist_4009)) ;;
+                     '(temp_4013 : seq uint8) ←
+                      (array_to_seq (temp_4011)) ;;
+                     '(temp_4015 : block_t) ←
+                      (array_update (last_block_3984) (temp_4008) (
+                          temp_4013)) ;;
+                    ret (temp_4015))) ;;
+              #put last_block_3984_loc := last_block_3984 ;;
+            
+             '(h_3983 : hash_t) ←
+                (( '(temp_4017 : hash_t) ←
+                      (compress (last_block_3984) (h_3983)) ;;
+                    ret (temp_4017))) ;;
+              #put h_3983_loc := h_3983 ;;
+            
+            @ret ((hash_t '× block_t)) (prod_ce(h_3983, last_block_3984)) in
+            ({ code temp_then } : code (CEfset (
+                  [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc])) [interface
               #val #[ COMPRESS ] : compress_inp → compress_out ] _))
-          else  (({ code  '(pad_block_392 : block_t) ←
-                  ( '(temp_391 : block_t) ←
+          else  (({ code  '(pad_block_4020 : block_t) ←
+                  ( '(temp_4019 : block_t) ←
                       (array_new_ (default : uint8) (block_size_v)) ;;
-                    ret (temp_391)) ;;
-                #put pad_block_392_loc := pad_block_392 ;;
-               '(pad_block_392 : block_t) ←
-                  (( '(temp_394 : uint_size) ←
+                    ret (temp_4019)) ;;
+                #put pad_block_4020_loc := pad_block_4020 ;;
+               '(pad_block_4020 : block_t) ←
+                  (( '(temp_4022 : uint_size) ←
                         ((block_size_v) .- (len_size_v)) ;;
-                       '(temp_396 : uint64_word_t) ←
-                        (uint64_to_be_bytes (len_bist_381)) ;;
-                       '(temp_398 : seq uint8) ←
-                        (array_to_seq (temp_396)) ;;
-                       '(temp_400 : block_t) ←
-                        (array_update (pad_block_392) (temp_394) (temp_398)) ;;
-                      ret (temp_400))) ;;
-                #put pad_block_392_loc := pad_block_392 ;;
+                       '(temp_4024 : uint64_word_t) ←
+                        (uint64_to_be_bytes (len_bist_4009)) ;;
+                       '(temp_4026 : seq uint8) ←
+                        (array_to_seq (temp_4024)) ;;
+                       '(temp_4028 : block_t) ←
+                        (array_update (pad_block_4020) (temp_4022) (
+                            temp_4026)) ;;
+                      ret (temp_4028))) ;;
+                #put pad_block_4020_loc := pad_block_4020 ;;
               
-               '(h_355 : hash_t) ←
-                  (( '(temp_402 : hash_t) ←
-                        (compress (last_block_356) (h_355)) ;;
-                      ret (temp_402))) ;;
-                #put h_355_loc := h_355 ;;
+               '(h_3983 : hash_t) ←
+                  (( '(temp_4030 : hash_t) ←
+                        (compress (last_block_3984) (h_3983)) ;;
+                      ret (temp_4030))) ;;
+                #put h_3983_loc := h_3983 ;;
               
-               '(h_355 : hash_t) ←
-                  (( '(temp_404 : hash_t) ←
-                        (compress (pad_block_392) (h_355)) ;;
-                      ret (temp_404))) ;;
-                #put h_355_loc := h_355 ;;
+               '(h_3983 : hash_t) ←
+                  (( '(temp_4032 : hash_t) ←
+                        (compress (pad_block_4020) (h_3983)) ;;
+                      ret (temp_4032))) ;;
+                #put h_3983_loc := h_3983 ;;
               
-              @ret ((hash_t '× block_t)) (prod_ce(h_355, last_block_356
+              @ret ((hash_t '× block_t)) (prod_ce(h_3983, last_block_3984
                 )) } : code (CEfset (
-                  [h_355_loc ; last_block_356_loc ; last_block_len_357_loc ; pad_block_392_loc])) [interface
+                  [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc ; pad_block_4020_loc])) [interface
               #val #[ COMPRESS ] : compress_inp → compress_out ] _))) ;;
-      let '(h_355, last_block_356) :=
-        (temp_410) : (hash_t '× block_t) in
+      let '(h_3983, last_block_3984) :=
+        (temp_4038) : (hash_t '× block_t) in
       
-       '(temp_406 : seq int8) ←
-        (array_to_be_bytes (h_355)) ;;
-       '(temp_408 : sha256_digest_t) ←
-        (array_from_seq (hash_size_v) (temp_406)) ;;
-      @ret (sha256_digest_t) (temp_408) } : code (CEfset (
-          [h_355_loc ; last_block_356_loc ; last_block_len_357_loc ; pad_block_392_loc])) [interface
+       '(temp_4034 : seq int8) ←
+        (array_to_be_bytes (h_3983)) ;;
+       '(temp_4036 : sha256_digest_t) ←
+        (array_from_seq (hash_size_v) (temp_4034)) ;;
+      @ret (sha256_digest_t) (temp_4036) } : code (CEfset (
+          [h_3983_loc ; last_block_3984_loc ; last_block_len_3985_loc ; pad_block_4020_loc])) [interface
       #val #[ COMPRESS ] : compress_inp → compress_out ] _)
     }]).
 Fail Next Obligation.
@@ -911,17 +918,17 @@ Notation "'sha256_inp'" := (
 Notation "'sha256_out'" := (
   sha256_digest_t : choice_type) (in custom pack_type at level 2).
 Definition SHA256 : nat :=
-  (421).
+  (4049).
 Program Definition sha256
    : package (CEfset ([])) [interface #val #[ HASH ] : hash_inp → hash_out
   ] [interface #val #[ SHA256 ] : sha256_inp → sha256_out ] :=
   ([package #def #[ SHA256 ] (temp_inp : sha256_inp) : sha256_out { 
-    let '(msg_418) := temp_inp : byte_seq in
+    let '(msg_4046) := temp_inp : byte_seq in
     #import {sig #[ HASH ] : hash_inp → hash_out } as hash ;;
     let hash := fun x_0 => hash (x_0) in
-    ({ code  '(temp_420 : sha256_digest_t) ←
-        (hash (msg_418)) ;;
-      @ret (sha256_digest_t) (temp_420) } : code (CEfset ([])) [interface
+    ({ code  '(temp_4048 : sha256_digest_t) ←
+        (hash (msg_4046)) ;;
+      @ret (sha256_digest_t) (temp_4048) } : code (CEfset ([])) [interface
       #val #[ HASH ] : hash_inp → hash_out ] _)
     }]).
 Fail Next Obligation.

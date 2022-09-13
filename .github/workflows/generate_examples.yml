@@ -24,13 +24,9 @@ jobs:
       - name: Generate Coq files
         run: cargo hacspec -e v --dir ../coq/src/ "*" --vc-update
         working-directory: ./examples
-      # TODO: get full coverage?
-      # - name: Generate Easycrypt files
-      #   run: cargo hacspec -e ec --dir ../easycrypt/ "*" --vc-update
-      #   working-directory: ./examples
-      # - name: Generate Fstar files
-      #   run: cargo hacspec -e fst --dir ../fstar/ "*" --vc-update
-      #   working-directory: ./examples
+      - name: Generate Coq files (ssprove)
+        run: cargo hacspec -e v_ssprove --dir ../coq_ssprove/src/ "*" --vc-update
+        working-directory: ./examples
       - uses: coq-community/docker-coq-action@v1
         with:
           coq_version: ${{ matrix.coq_version }}
@@ -51,18 +47,3 @@ jobs:
                 coq_makefile -f _CoqProject -o Makefile
                 make
               endGroup
-      # TODO: push changes:
-      # - name: Push changes
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     git config user.name github-actions
-      #     git config user.email github-actions@github.com
-      #     git add .
-      #     git commit -m "bot generated"
-      #     git push
-      # - uses: EndBug/add-and-commit@v9
-      #   with:
-      #     default_author: github_actions
-      # - name: Install Coq
-      #   run: git commit -am "Bot update files" && git push

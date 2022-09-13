@@ -7,15 +7,15 @@ use hacspec_lib::*;
 use hacspec_aes::*;
 use hacspec_aes128_gcm::*;
 use hacspec_chacha20::*;
+use hacspec_poly1305::*;
 use hacspec_chacha20poly1305::*;
 use hacspec_curve25519::*;
+use hacspec_p256::*;
+use hacspec_sha256::*;
 use hacspec_ecdsa_p256_sha256::*;
 use hacspec_gf128::*;
 use hacspec_hkdf::*;
 use hacspec_hmac::*;
-use hacspec_p256::*;
-use hacspec_poly1305::*;
-use hacspec_sha256::*;
 
 // Error types
 #[derive(Debug)]

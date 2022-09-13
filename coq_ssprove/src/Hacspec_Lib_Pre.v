@@ -16,7 +16,7 @@ From extructures Require Import ord fset fmap.
 
 Require Import ChoiceEquality.
 
-From CoqWord Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith List.
@@ -253,6 +253,7 @@ Definition uint_size_type := @int_type U32.
 Definition int_size_type := @int_type U32.
 
 Axiom declassify_usize_from_uint8 : uint8 -> uint_size.
+Axiom declassify_u32_from_uint32 : uint32 -> uint32.
 
 (* Represents any type that can be converted to uint_size and back *)
 Class UInt_sizeable (A : Type) := {

@@ -12,7 +12,6 @@ Open Scope list_scope.
 Open Scope Z_scope.
 Open Scope bool_scope.
 
-
 Require Import ChoiceEquality.
 Require Import LocationUtility.
 Require Import Hacspec_Lib_Comparable.

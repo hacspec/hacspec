@@ -14,7 +14,7 @@ From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset fmap.
 
-From CoqWord Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith List.
@@ -129,6 +129,8 @@ Section Uint.
 
   Definition declassify_usize_from_uint8 (n : uint8) : both0 uint_size :=
     lift_to_both (declassify_usize_from_uint8 n).
+  Definition declassify_u32_from_uint32 (n : uint32) : both0 uint32 :=
+    lift_to_both (declassify_u32_from_uint32 n).
 
   (* Class UInt_sizeable (A : Type) := { *)
   (*     usize : A -> both0 uint_size; *)
@@ -200,6 +202,15 @@ lift_to_both0 (uint128_rotate_left u s).
   Definition uint128_rotate_right (u: int128) (s: int128) : both0 (int128) :=
 lift_to_both0 (uint128_rotate_right u s).
 
+
+  (* should use size u instead of u? *)
+  Definition usize_shift_right_ (u: uint_size) (s: int32) : both0 (uint_size) :=
+    lift_to_both (u usize_shift_right s).
+
+  (* should use size u instead of u? *)
+  Definition usize_shift_left_ (u: uint_size) (s: int32) : both0 (uint_size) :=
+    lift_to_both (u usize_shift_left s).
+  
   (**** Operations *)
 
   Definition shift_left_ `{WS : wsize} (i : @int WS) (j : uint_size) : both0 (@int WS) := lift_to_both (@shift_left_ WS i j).
@@ -208,6 +219,9 @@ lift_to_both0 (uint128_rotate_right u s).
     lift_to_both (@shift_right_ WS i j).
 
 End Uint.
+
+Infix "usize_shift_right" := (usize_shift_right_) (at level 77) : hacspec_scope.
+Infix "usize_shift_left" := (usize_shift_left_) (at level 77) : hacspec_scope.
 
 Infix "shift_left" := (shift_left_) (at level 77) : hacspec_scope.
 Infix "shift_right" := (shift_right_) (at level 77) : hacspec_scope.
@@ -2275,11 +2289,24 @@ Ltac ssprove_valid_step :=
          | [ |- context[match ?x with | true => _ | false => _ end] ] =>
              destruct x
          end
+       (* destruct tt *)
+       || match goal with
+         | [ |- context[match ?x with | tt => _ end] ] =>
+             destruct x
+         end
        (* match expression ? *)
        || match goal with
          | [ |- context[match ?x with | inl _ => _ | inr _ => _ end] ] =>
              destruct x
          end
+       (* || (match goal with *)
+       (*    | [ |- context [(ValidCode _ ?xs _)] ] => *)
+       (*        (match goal with *)
+       (*         | [ |- context [(@ChoiceEqualityMonad.bind_code _ _ _ _ ?ys _ _ _ ?a)] ] => *)
+       (*             apply (@valid_injectMap _ _ ys xs)  ; [apply opsig_list_incl_fsubset *)
+       (*                                                    ; opsig_incl_compute | ] *)
+       (*         end)  *)
+       (*    end) *)
        || (match goal with | [ |- context[bind (bind ?v ?k1) ?k2] ] => rewrite bind_assoc end) (* expensive *)
        (* let statement / array update *)
        || (apply valid_bind ; [apply valid_scheme ; try rewrite <- fset.fset0E ; apply prog_valid | intros])
@@ -2302,7 +2329,8 @@ Ltac ssprove_valid_step :=
        (* for looop statement *)
        || (match goal with
           | [ |- context [ValidCode (fset ?ys) _ (@prog _ _ _ (@foldi _ ?lo ?hi (fset ?xs) _ ?f ?v))] ] =>
-              eapply (valid_subset_fset xs ys) ; [ | apply valid_foldi_pre ] ; loc_incl_compute
+              eapply (valid_subset_fset xs ys) ; [ | apply valid_foldi_pre ]
+              ; loc_incl_compute
           end)
        || (hnf in * ; destruct_choice_type_prod) (* expensive *)
   )).
@@ -2569,16 +2597,60 @@ Definition seq_link { L1 L2 : {fset Location} } {I M E} (p1 : package L1 M E) (p
                                              (pack_valid p1)
                                              (pack_valid p2) |}.
 
+Definition seq_link_both { L1 L2 : {fset Location} } {I} {M : InterfaceCE} {E} (p1 : both_package L1 (IfToCEIf M) E) (p2 : both_package L2 I M) : both_package (L1 :|: L2) I E :=
+  {|
+    pack_pure o H X := @pack_pure _ _ _ p1 o H X;
+    pack_state :=
+    {| pack := pkg_composition.link p1 p2 ;
+      pack_valid := pkg_composition.valid_link _ _ _ _ _ _ _
+                                               (pack_valid p1)
+                                               (pack_valid p2) |} ;
+    pack_eq_proof_statement := pack_eq_proof_statement
+  |}.  
+
 Definition par_link { L1 L2 : {fset Location} }  { I1 I2 E1 E2} (p1 : package L1 I1 E1) (p2 : package L2 I2 E2) (_ : pkg_composition.Parable p1 p2) : package (L1 :|: L2) (I1 :|: I2) (E1 :|: E2) :=
   {|
     pack := pkg_composition.par p1 p2 ;
     pack_valid := pkg_composition.valid_par _ _ _ _ _ _ _ _ _ (pack_valid p1) (pack_valid p2) |}.
 
+Program Definition par_link_both { L1 L2 : {fset Location} }  { I1 I2 E1 E2} (p1 : both_package L1 I1 E1) (p2 : both_package L2 I2 E2) (_ : pkg_composition.Parable p1 p2) : both_package (L1 :|: L2) (I1 :|: I2) (E1 ++ E2) :=
+  {|
+    pack_pure o H X := _ ;
+    pack_state :=
+    {|
+      pack := pkg_composition.par p1 p2 ;
+      pack_valid := pkg_composition.valid_par _ _ _ _ _ _ _ _ _ (pack_valid p1) (pack_valid p2)
+    |}
+  |}.
+Next Obligation.
+  intros.
+  apply in_app_or in H.
+  admit.
+Admitted.
+Next Obligation.
+  intros.
+  unfold IfToCEIf.
+  generalize dependent p1.
+  induction E1.
+  - cbn.
+    rewrite <- fset0E.
+    rewrite fset0U.
+    reflexivity.
+  - cbn.
+    rewrite fset_cons.
+    fold (IfToCEIf E1).
+    rewrite <- fsetUA.
+    intros.
+Admitted.
+Next Obligation.
+Admitted.
+
 Notation "'link_rest(' a ')'" :=
   a : hacspec_scope.
 Notation "'link_rest(' a , b ')'" :=
-  (par_link a b _) : hacspec_scope.
+  (par_link_both a b _) : hacspec_scope.
 Notation "'link_rest(' a , b , .. , c ')'" :=
-  (par_link .. ( par_link a b _ ) .. c _) : hacspec_scope.
+  (par_link_both .. ( par_link_both a b _ ) .. c _) : hacspec_scope.
 
 (* Ltac par_link p1 p2 := par_link p1 p2 ltac:(cbv ; now destruct fset_key). *)
+

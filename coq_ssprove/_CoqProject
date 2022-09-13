@@ -14,9 +14,9 @@ src/Hacspec_Aes128_Gcm.v # requires Aes and Gf128
 src/Hacspec_Sha256.v
 # src/Hacspec_Bls12_381.v # Slow to verify?
 # src/Hacspec_Bls12_381_Hash.v # Slow to verify?, requires Bls12_381 and Sha256
-# src/Hacspec_Chacha20.v # Needs coercions?
-# src/Hacspec_Chacha20poly1305.v
+src/Hacspec_Chacha20.v # Needs coercions?
 src/Hacspec_Poly1305.v
+src/Hacspec_Chacha20poly1305.v
 src/Hacspec_Curve25519.v
 # src/Hacspec_Gimli.v # ArrayName::length() impl missing # uses type_for_indexes
 # src/Hacspec_Ntru_Prime.v # missing mul_poly_irr /// Polynomial multiplication of two size fixed polynomials in R_modulo \ irr
@@ -25,3 +25,4 @@ src/Hacspec_P256.v
 src/Hacspec_Ecdsa_P256_Sha256.v # requires P256 and Sha256
 src/Hacspec_Hmac.v # depends on sha256
 src/Hacspec_Hkdf.v # Cannot infer M for bind (should use result_monad) # depends on Hmac and Sha256
+src/Tls_Cryptolib.v
