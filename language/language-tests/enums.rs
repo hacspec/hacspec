@@ -20,3 +20,9 @@ pub fn baz(x: Foo) -> Bar {
         Foo::CaseY(a, _b) => Bar(a as u32),
     }
 }
+
+pub fn baz_im(x: Foo) {
+    let z: Bar = Bar(0u32);
+    let Bar(z) = z;
+    let _a = z as u8;
+}

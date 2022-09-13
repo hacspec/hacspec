@@ -8,7 +8,7 @@ use rustc_ast::{
         UnOp, Unsafe, UseTreeKind, VariantData,
     },
     node_id::NodeId,
-    token::{DelimToken, LitKind as TokenLitKind, TokenKind},
+    token::{Delimiter, LitKind as TokenLitKind, TokenKind},
     tokenstream::{TokenStream, TokenTree},
 };
 use rustc_session::Session;
@@ -18,7 +18,7 @@ use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SpecialNames {
     pub arrays: HashSet<String>,
     pub enums: HashSet<String>,
@@ -1203,6 +1203,7 @@ fn translate_expr(
             Err(())
         }
         ExprKind::Cast(e1, t1) => {
+            log::trace!("   ExprKind::Cast {:?} -> {:?}", e1, t1);
             let new_e1 = translate_expr_expects_exp(sess, specials, e1)?;
             let new_t1 = translate_base_typ(sess, t1)?;
             Ok((
@@ -1375,13 +1376,6 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "inline assembly is not allowed in Hacspec");
             Err(())
         }
-        ExprKind::LlvmInlineAsm(_) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "inline LLVM assembly is not allowed in hacspec",
-            );
-            Err(())
-        }
         ExprKind::MacCall(call) => {
             if call.path.segments.len() > 1 {
                 sess.span_rustspec_err(
@@ -1492,6 +1486,7 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
             Err(())
         }
+        ExprKind::Yeet(_) => todo!(),
     }
 }
 
@@ -1708,6 +1703,7 @@ fn translate_block(
     ))
 }
 
+#[derive(Debug)]
 enum ItemTranslationResult {
     Item(DecoratedItem),
     Ignored,
@@ -1785,7 +1781,7 @@ fn check_for_literal_array(
     arg: &TokenTree,
 ) -> TranslationResult<Vec<Spanned<Expression>>> {
     match arg {
-        TokenTree::Delimited(_, DelimToken::Bracket, inside) => {
+        TokenTree::Delimited(_, Delimiter::Bracket, inside) => {
             let commas_and_exprs: Vec<TranslationResult<Option<Spanned<Expression>>>> = inside
                 .trees()
                 .enumerate()
@@ -2345,6 +2341,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     specials: &SpecialNames,
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
+    log::trace!("translate_items ({:?})", i);
     let mut tags = HashSet::new();
     tags.insert("code".to_string());
     let export = i
@@ -2470,6 +2467,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 ),
                 Some(b) => translate_block(sess, specials, &b)?,
             };
+            log::trace!("   fn_body: {:#?}", fn_body);
             let fn_sig = FuncSig {
                 args: fn_inputs,
                 ret: fn_output,
@@ -2836,6 +2834,7 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     external_data: &F,
     specials: &mut SpecialNames,
 ) -> TranslationResult<Program> {
+    log::trace!("translate ({:?})", krate);
     let items = &krate.items;
     let translated_items = check_vec(
         items

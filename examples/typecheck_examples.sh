@@ -7,18 +7,18 @@ function typecheck {
   if [ "$2" == "ec" ];
   then
     echo "    extracting EC ..."
-    mkdir -p target/easycrypt
-    cargo hacspec -e ec -dir target/easycrypt/ $1
+    mkdir -p ../target/easycrypt
+    cargo hacspec -e ec -dir ../target/easycrypt/ $1
   else
     cargo hacspec $1
   fi
   if [ -z "$6" ];
   then
-    mkdir -p target/fstar
-    fstar_dir=target/fstar/
+    mkdir -p ../target/fstar
+    fstar_dir=../target/fstar/
     fstar_file=$1
   else
-    fstar_dir=fstar/
+    fstar_dir=../fstar/
     fstar_file=$6
   fi
   if [ "$3" == "fst" ];
@@ -29,19 +29,19 @@ function typecheck {
   if [ "$4" == "json" ];
   then
     echo "    extracting JSON ..."
-    mkdir -p target/json
-    cargo hacspec -e json --dir target/json/ $1
+    mkdir -p ../target/json
+    cargo hacspec -e json --dir ../target/json/ $1
   fi
   if [ "$5" == "coq" ];
   then
     echo "    extracting coq ..."
-    mkdir -p target/coq
+    mkdir -p ../target/coq
     cratename=$1
     prefix="hacspec-"
     outname=${cratename#"$prefix"}
     # capitalize first letter - macOS safe version (bash <= 3.2)
     outname=$(tr '[:lower:]' '[:upper:]' <<<"${outname:0:1}")${outname:1}
-    cargo hacspec -e v --dir target/coq/ -o ${outname} $1
+    cargo hacspec -e v --dir ../target/coq/ -o ${outname} $1
   fi
 }
 
@@ -49,6 +49,10 @@ cd $(dirname "$0")/../
 cargo clean
 cargo build
 cargo install --path language
+cd $(dirname "$0")
+cargo clean
+cargo build
+# Examples:
 typecheck hacspec-chacha20             ec      fst    json      coq  Hacspec.Chacha20.fst
 typecheck hacspec-chacha20poly1305  no-ec      fst    json      coq  Hacspec.Chacha20Poly1305.fst
 typecheck hacspec-poly1305             ec      fst    json      coq  Hacspec.Poly1305.fst
@@ -71,4 +75,12 @@ typecheck hacspec-bls12-381-hash    no-ec   no-fst    json      coq
 typecheck hacspec-sha512            no-ec   no-fst    json      coq
 typecheck hacspec-ed25519           no-ec   no-fst    json      coq
 typecheck hacspec-linalg            no-ec   no-fst    json      coq
+typecheck hacspec-ristretto         no-ec   no-fst    json      coq
+typecheck hacspec-edwards25519      no-ec   no-fst    json      coq
+typecheck hacspec-edwards25519-hash no-ec   no-fst    json      coq
+typecheck hacspec-linalg            no-ec   no-fst    json      coq
 typecheck hacspec-rsa-pkcs1         no-ec   no-fst    json      coq
+typecheck hacspec-rsa-fdh-vrf       no-ec   no-fst    json      coq
+typecheck hacspec-bip-340           no-ec   no-fst    json      coq
+# Protocols:
+typecheck tls_cryptolib             no-ec      fst    json      coq Hacspec.Tls.Cryptolib.fst

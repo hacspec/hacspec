@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::name_resolution::{DictEntry, FnKey, FnValue, TopLevelContext};
 use crate::rustspec::*;
 use crate::util::check_vec;
@@ -205,6 +207,7 @@ fn is_index(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
 
 fn is_castable_integer(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
     let t = dealias_type(t.clone(), top_ctxt);
+    log::trace!("is_castable_integer {}", t);
     match t {
         BaseTyp::UInt128 => true,
         BaseTyp::Int128 => true,
@@ -294,7 +297,7 @@ fn unify_types(
                     typ_ctx,
                     top_ctx,
                 );
-            },
+            }
             _ => (),
         },
         _ => (),
@@ -329,7 +332,7 @@ fn unify_types(
         },
         _ => (),
     }
-    
+
     match (&(t1.0).0, &(t2.0).0) {
         (Borrowing::Consumed, Borrowing::Consumed) | (Borrowing::Borrowed, Borrowing::Borrowed) => {
             match (&(t1.1).0, &(t2.1).0) {
@@ -615,6 +618,7 @@ fn find_typ(
     var_context: &VarContext,
     top_level_context: &TopLevelContext,
 ) -> Option<Typ> {
+    log::trace!("find_typ {}", x);
     match x {
         Ident::Unresolved(_) => panic!("name resolution should have already happened"),
         Ident::TopLevel(name) => top_level_context.consts.get(name).map(|(t, span)| {
@@ -635,6 +639,7 @@ fn remove_var(x: &Ident, var_context: &VarContext) -> VarContext {
 }
 
 fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
+    log::trace!("add_var {} of type {:?}", x, typ);
     match x {
         Ident::Local(LocalIdent { id, name }) => {
             var_context.update(id.clone(), (typ.clone(), name.clone()))
@@ -670,6 +675,9 @@ fn typecheck_expression(
     top_level_context: &TopLevelContext,
     var_context: &VarContext,
 ) -> TypecheckingResult<(Expression, Typ, VarContext)> {
+    log::trace!("typecheck_expression {:?} ({:?})", e, span);
+    #[cfg(feature = "dev")]
+    log::trace!("   {:?}", backtrace::Backtrace::new());
     match e {
         Expression::Tuple(args) => {
             let mut var_context = var_context.clone();
@@ -703,6 +711,7 @@ fn typecheck_expression(
             ))
         }
         Expression::Named(id) => {
+            log::trace!("    named {}", id);
             let new_path = Expression::Named(id.clone());
             match find_typ(&id, var_context, top_level_context) {
                 None => {
@@ -713,15 +722,19 @@ fn typecheck_expression(
                     Err(())
                 }
                 Some(t) => {
+                    log::trace!("    t {:?}", t);
                     // This is where linearity kicks in
                     if let Borrowing::Consumed = (t.0).0 {
                         if is_copy(&(t.1).0, top_level_context) {
+                            log::trace!("    Copied - new path: {:?}", new_path);
                             Ok((new_path, t.clone(), var_context.clone()))
                         } else {
+                            log::trace!("    Consumed - new path: {:?}", new_path);
                             let new_var_context = remove_var(&id, var_context);
                             Ok((new_path, t.clone(), new_var_context))
                         }
                     } else {
+                        log::trace!("    Just cloned - new path: {:?}", new_path);
                         Ok((new_path, t.clone(), var_context.clone()))
                     }
                 }
@@ -1321,14 +1334,14 @@ fn typecheck_expression(
             let mut new_arg_types = Vec::new();
             for (sig_t, ((arg, arg_span), (arg_borrow, arg_borrow_span))) in
                 sig_args.iter().zip(args)
-            {   
+            {
                 let (new_arg, arg_t, new_var_context) = typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
                     top_level_context,
                     &var_context,
                 )?;
-                
+
                 let new_arg_t = match (&(arg_t.0).0, &arg_borrow) {
                     (Borrowing::Borrowed, Borrowing::Borrowed) => {
                         sess.span_rustspec_err(
@@ -1358,12 +1371,12 @@ fn typecheck_expression(
                         arg_t.clone()
                     }
                 };
-                
+
                 new_args.push((
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
-                new_arg_types.push(new_arg_t.1.0.clone());
+                new_arg_types.push(new_arg_t.1 .0.clone());
                 match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, top_level_context)? {
                     None => {
                         sess.span_rustspec_err(
@@ -1504,7 +1517,7 @@ fn typecheck_expression(
                     (new_arg, arg_span.clone()),
                     (arg_borrow.clone(), arg_borrow_span.clone()),
                 ));
-                new_arg_types.push(new_arg_t.1.0.clone());
+                new_arg_types.push(new_arg_t.1 .0.clone());
                 match unify_types(sess, &new_arg_t, sig_t, &typ_var_ctx, top_level_context)? {
                     None => {
                         sess.span_rustspec_err(
@@ -1544,12 +1557,16 @@ fn typecheck_expression(
             ))
         }
         Expression::IntegerCasting(e1, t1, _) => {
+            log::trace!("Expression::IntegerCasting {:?} - {:?}", e1, t1);
+            // log::trace!("         top level context {}", top_level_context);
+            // log::trace!("          variable context {:?}", var_context);
             let (new_e1, e1_typ, var_context) =
                 typecheck_expression(sess, e1, top_level_context, var_context)?;
             if (e1_typ.0).0 == Borrowing::Borrowed {
                 sess.span_rustspec_err(e1.1.clone(), "cannot cast borrowed expression");
                 return Err(());
             }
+            log::trace!("   e1 type {:?}", e1_typ);
             if !is_castable_integer(&(e1_typ.1).0, top_level_context) {
                 sess.span_rustspec_err(
                     e1.1.clone(),
@@ -1576,12 +1593,14 @@ fn typecheck_expression(
                     .as_str(),
                 );
             }
+            let expr = Expression::IntegerCasting(
+                Box::new((new_e1, e1.1.clone())),
+                t1.clone(),
+                Some((e1_typ.1).0.clone()),
+            );
+            log::trace!("   casting expression {:?}", expr);
             Ok((
-                Expression::IntegerCasting(
-                    Box::new((new_e1, e1.1.clone())),
-                    t1.clone(),
-                    Some((e1_typ.1).0.clone()),
-                ),
+                expr,
                 ((Borrowing::Consumed, t1.1.clone()), t1.clone()),
                 var_context,
             ))
@@ -1989,6 +2008,7 @@ fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan) -> Statement {
 }
 
 fn dealias_type(ty: BaseTyp, top_level_context: &TopLevelContext) -> BaseTyp {
+    log::trace!("dealias_type {:?}", ty);
     match &ty {
         BaseTyp::Named((name, _), None) => match top_level_context.typ_dict.get(name) {
             Some((((Borrowing::Consumed, _), (aliased_ty, _)), DictEntry::Alias)) => {
@@ -2160,8 +2180,13 @@ fn typecheck_statement(
     var_context: &VarContext,
     return_typ: &Spanned<BaseTyp>,
 ) -> TypecheckingResult<(Statement, Typ, VarContext, VarSet)> {
+    log::trace!("typecheck_statement ({:?}, {:?})", s, s_span);
     match &s {
         Statement::LetBinding((pat, pat_span), typ, ref expr, question_mark) => {
+            log::trace!("   Statement::LetBinding");
+            log::trace!("       expr: {:?}", expr);
+            #[cfg(feature = "dev")]
+            log::trace!("   {:?}", backtrace::Backtrace::new());
             let (new_expr, expr_typ, new_var_context) =
                 typecheck_expression(sess, expr, top_level_context, var_context)?;
             let expr_typ = typecheck_question_mark(
@@ -2201,12 +2226,18 @@ fn typecheck_statement(
                     typ.clone()
                 }
             };
+            log::trace!("   typ: {:?}", typ);
             let pat_var_context = typecheck_pattern(
                 sess,
                 &(pat.clone(), pat_span.clone()),
                 &expr_typ,
                 top_level_context,
             )?;
+            log::trace!("   pat_var_context: {:?}", pat_var_context);
+            log::trace!(
+                "   new_var_context: {:?}",
+                new_var_context.clone().union(pat_var_context.clone())
+            );
             Ok((
                 Statement::LetBinding(
                     (pat.clone(), pat_span.clone()),
@@ -2220,6 +2251,7 @@ fn typecheck_statement(
             ))
         }
         Statement::Reassignment((x, x_span), e, question_mark) => {
+            log::trace!("   Statement::Reassignment");
             let (new_e, e_typ, new_var_context) =
                 typecheck_expression(sess, &e, top_level_context, var_context)?;
             let e_typ = typecheck_question_mark(
@@ -2263,6 +2295,7 @@ fn typecheck_statement(
             ))
         }
         Statement::ArrayUpdate((x, x_span), e1, e2, question_mark, _) => {
+            log::trace!("   Statement::ArrayUpdate");
             let (new_e1, e1_t, var_context) =
                 typecheck_expression(sess, &e1, top_level_context, var_context)?;
             let (new_e2, e2_t, var_context) =
@@ -2331,6 +2364,7 @@ fn typecheck_statement(
             ))
         }
         Statement::ReturnExp(e) => {
+            log::trace!("   Statement::ReturnExp");
             let (new_e, e_t, var_context) =
                 typecheck_expression(sess, &(e.clone(), s_span), top_level_context, var_context)?;
             Ok((
@@ -2341,6 +2375,7 @@ fn typecheck_statement(
             ))
         }
         Statement::Conditional(cond, (b1, b1_span), b2, _) => {
+            log::trace!("   Statement::Conditional");
             let original_var_context = var_context;
             let (new_cond, cond_t, var_context) =
                 typecheck_expression(sess, &cond, top_level_context, var_context)?;
@@ -2427,7 +2462,10 @@ fn typecheck_statement(
                     new_b2,
                     Some(Box::new(MutatedInfo {
                         vars: new_mutated.clone(),
-                        early_return_type: early_return_type_from_return_type(top_level_context, return_typ.0.clone()),
+                        early_return_type: early_return_type_from_return_type(
+                            top_level_context,
+                            return_typ.0.clone(),
+                        ),
 
                         stmt: mut_tuple,
                     })),
@@ -2441,6 +2479,7 @@ fn typecheck_statement(
             ))
         }
         Statement::ForLoop(x, e1, e2, (b, b_span)) => {
+            log::trace!("   Statement::ForLoop");
             let original_var_context = var_context;
             let (new_e1, t_e1, var_context) =
                 typecheck_expression(sess, e1, top_level_context, var_context)?;
@@ -2531,6 +2570,7 @@ fn typecheck_block(
     original_var_context: &VarContext,
     function_return_typ: &Spanned<BaseTyp>,
 ) -> TypecheckingResult<(Block, VarContext)> {
+    log::trace!("typecheck_block ({:?}, {:?})", b, b_span);
     let mut var_context = original_var_context.clone();
     let mut mutated_vars = VarSet(HashSet::new());
     let mut return_typ = Some((
@@ -2541,6 +2581,7 @@ fn typecheck_block(
     let n_stmts = b.stmts.len();
     for (i, s) in b.stmts.into_iter().enumerate() {
         let s_span = s.1.clone();
+        log::trace!("   s {:?}", s);
         let (new_stmt, stmt_typ, new_var_context, new_mutated_vars) = typecheck_statement(
             sess,
             s,
@@ -2590,7 +2631,10 @@ fn typecheck_block(
             stmts: new_stmts,
             mutated: Some(Box::new(MutatedInfo {
                 vars: mutated_vars,
-                early_return_type: early_return_type_from_return_type(top_level_context, function_return_typ.0.clone()),
+                early_return_type: early_return_type_from_return_type(
+                    top_level_context,
+                    function_return_typ.0.clone(),
+                ),
                 stmt: mut_tuple,
             })),
             return_typ,
@@ -2605,6 +2649,7 @@ fn typecheck_item(
     item: &DecoratedItem,
     top_level_context: &TopLevelContext,
 ) -> TypecheckingResult<DecoratedItem> {
+    log::trace!("typecheck_item ({:#?})", item);
     let i = &item.item;
     let i = match &i {
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
@@ -2640,6 +2685,7 @@ fn typecheck_item(
         }
         Item::AliasDecl(_, _) | Item::ImportedCrate(_) | Item::EnumDecl(_, _) => Ok(i.clone()),
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {
+            log::trace!("   Item::FnDecl");
             let var_context = HashMap::new();
             let var_context = sig
                 .args

@@ -2,9 +2,10 @@ use core::cmp::PartialEq;
 use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
-use rustc_span::{MultiSpan, Span};
+use rustc_span::{Span};
 use serde::{ser::SerializeSeq, Serialize, Serializer};
 use std::fmt;
+use rustc_errors::MultiSpan;
 
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Copy)]
 pub struct RustspecSpan(pub Span);
@@ -172,7 +173,7 @@ impl fmt::Debug for TypVar {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Serialize)]
+#[derive(Clone, Hash, PartialEq, Eq, Serialize, Debug)]
 pub enum BaseTyp {
     Unit,
     Bool,
@@ -259,11 +260,11 @@ impl fmt::Display for BaseTyp {
     }
 }
 
-impl fmt::Debug for BaseTyp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
+// impl fmt::Debug for BaseTyp {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "{}", self)
+//     }
+// }
 
 pub type Typ = (Spanned<Borrowing>, Spanned<BaseTyp>);
 
@@ -453,7 +454,7 @@ pub struct ExternalFuncSig {
     pub ret: BaseTyp,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub enum Item {
     FnDecl(Spanned<TopLevelIdent>, FuncSig, Spanned<Block>),
     EnumDecl(
@@ -483,7 +484,7 @@ pub enum Item {
 
 pub type ItemTag = String;
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct ItemTagSet(pub HashSet<ItemTag>);
 
 impl Serialize for ItemTagSet {
@@ -499,13 +500,13 @@ impl Serialize for ItemTagSet {
     }
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct DecoratedItem {
     pub item: Item,
     pub tags: ItemTagSet,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Debug)]
 pub struct Program {
     pub items: Vec<Spanned<DecoratedItem>>,
 }
