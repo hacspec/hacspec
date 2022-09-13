@@ -648,7 +648,7 @@ fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
     }
 }
 
-fn get_literal_type(l:&Literal) -> BaseTyp {
+fn get_literal_type(l: &Literal) -> BaseTyp {
     match l {
         Literal::Unit => BaseTyp::Unit,
         Literal::Bool(_) => BaseTyp::Bool,
@@ -664,7 +664,8 @@ fn get_literal_type(l:&Literal) -> BaseTyp {
         Literal::UInt8(_) => BaseTyp::UInt8,
         Literal::Usize(_) => BaseTyp::Usize,
         Literal::Isize(_) => BaseTyp::Isize,
-        Literal::Str(_) => BaseTyp::Str}
+        Literal::Str(_) => BaseTyp::Str,
+    }
 }
 
 pub type TypecheckingResult<T> = Result<T, ()>;
@@ -750,14 +751,10 @@ fn typecheck_expression(
                 arms.into_iter()
                     .map(|(arm_pattern, arm_exp)| {
                         let (new_arm_pattern, new_var_context) = {
-                                let new_var_context = typecheck_pattern(
-                                    sess,
-                                    arm_pattern,
-                                    &t_arg,
-                                    top_level_context,
-                                )?;
-                                (arm_pattern.clone(), new_var_context)
-                            };
+                            let new_var_context =
+                                typecheck_pattern(sess, arm_pattern, &t_arg, top_level_context)?;
+                            (arm_pattern.clone(), new_var_context)
+                        };
                         let (new_arm_exp, arm_typ, new_var_context) = typecheck_expression(
                             sess,
                             arm_exp,
@@ -777,10 +774,7 @@ fn typecheck_expression(
                                 )?;
                             }
                         };
-                        Ok((
-                            new_arm_pattern,
-                            (new_arm_exp, arm_exp.1.clone()),
-                        ))
+                        Ok((new_arm_pattern, (new_arm_exp, arm_exp.1.clone())))
                     })
                     .collect(),
             )?;
@@ -1044,16 +1038,14 @@ fn typecheck_expression(
                 new_var_context,
             ))
         }
-        Expression::Lit(lit) => {
-            Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (get_literal_type(lit), span.clone()),
-                ),
-                var_context.clone(),
-            ))
-        }
+        Expression::Lit(lit) => Ok((
+            e.clone(),
+            (
+                (Borrowing::Consumed, span.clone()),
+                (get_literal_type(lit), span.clone()),
+            ),
+            var_context.clone(),
+        )),
         Expression::NewArray(array_type, _, elements) => {
             match array_type {
                 Some(array_type) => {
@@ -1608,7 +1600,7 @@ fn typecheck_expression(
     }
 }
 
-/* 
+/*
 // Then we proceed with the typechecking, first
                         // by checking correctness of the enum generic
                         // arguments between those in the match arm and those
@@ -1706,7 +1698,7 @@ fn typecheck_expression(
                         t_arg_cases.remove(case_index);
                         // t_arg_cases stores the arms not covered by the match
                         // yet
-                        
+
 let arm_enum_ty = dealias_type(arm_enum_ty.clone(), top_level_context);
                         // The enum name is repeated in each match arm so we
                         // make sure it's the good one
@@ -1744,8 +1736,8 @@ let arm_enum_ty = dealias_type(arm_enum_ty.clone(), top_level_context);
                                 );
                                 return Err(());
                             }
-                        }; 
-                        
+                        };
+
  // Then we proceed with the typechecking, first
                         // by checking correctness of the enum generic
                         // arguments between those in the match arm and those
@@ -1842,7 +1834,7 @@ let arm_enum_ty = dealias_type(arm_enum_ty.clone(), top_level_context);
                         };
                         t_arg_cases.remove(case_index);
                         // t_arg_cases stores the arms not covered by the match
-                        // yet                       
+                        // yet
                         */
 
 fn typecheck_pattern(
@@ -1874,14 +1866,9 @@ fn typecheck_pattern(
                 ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, _type_args), cases_span)),
                 DictEntry::Enum,
             )) => {
-                let ((cn, _), ct) = cases.into_iter().next().unwrap();
-		let mut case_name = cn.clone();
-		let mut case_typ = ct.clone();
-                while (case_name.string != pat_enum_name.string) {
-                    let ((cn, _), ct) = cases.into_iter().next().unwrap();
-		    case_name = cn.clone();
-		    case_typ = ct.clone();
-		}
+                let (_, case_typ) = cases.into_iter().find(
+		    |((cn,_),_)| cn.string == pat_enum_name.string
+		).unwrap();
                 match (inner_pat,case_typ) {
                     (None,None) => {Ok(HashMap::new())}
                     (Some(_),None) => {
