@@ -8,7 +8,7 @@ use rustc_ast::{
         UnOp, Unsafe, UseTreeKind, VariantData,
     },
     node_id::NodeId,
-    token::{DelimToken, LitKind as TokenLitKind, TokenKind},
+    token::{Delimiter, LitKind as TokenLitKind, TokenKind},
     tokenstream::{TokenStream, TokenTree},
 };
 use rustc_session::Session;
@@ -1451,13 +1451,6 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "inline assembly is not allowed in Hacspec");
             Err(())
         }
-        ExprKind::LlvmInlineAsm(_) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "inline LLVM assembly is not allowed in hacspec",
-            );
-            Err(())
-        }
         ExprKind::MacCall(call) => {
             if call.path.segments.len() > 1 {
                 sess.span_rustspec_err(
@@ -1568,6 +1561,7 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
             Err(())
         }
+        ExprKind::Yeet(_) => todo!(),
     }
 }
 
@@ -1843,7 +1837,7 @@ fn check_for_literal_array(
     arg: &TokenTree,
 ) -> TranslationResult<Vec<Spanned<Expression>>> {
     match arg {
-        TokenTree::Delimited(_, DelimToken::Bracket, inside) => {
+        TokenTree::Delimited(_, Delimiter::Bracket, inside) => {
             let commas_and_exprs: Vec<TranslationResult<Option<Spanned<Expression>>>> = inside
                 .trees()
                 .enumerate()
