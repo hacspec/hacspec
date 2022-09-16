@@ -1860,48 +1860,54 @@ fn typecheck_pattern(
     match (pat, &typ.0) {
         (
             Pattern::EnumCase(ty_name, (pat_enum_name, _), inner_pat),
-            BaseTyp::Named((typ_name, _), _),
-        ) /* if pat_enum_name == typ_name */ => match top_ctx.typ_dict.get(typ_name) {
+            BaseTyp::Named((typ_name, _), case_type_annotations),
+        ) => match top_ctx.typ_dict.get(typ_name) {
             Some((
-                ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, _type_args), cases_span)),
+                ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, type_args), cases_span)),
                 DictEntry::Enum,
             )) => {
-                let (_, case_typ) = cases.into_iter().find(
-		    |((cn,_),_)| cn.string == pat_enum_name.string
-		).unwrap();
-                match (inner_pat,case_typ) {
-                    (None,None) => {Ok(HashMap::new())}
-                    (Some(_),None) => {
-                        sess.span_rustspec_err(
-                            *pat_span,
-                            format!(
-                                "this pattern is matching the enum {} with one case but no payload",
-                                pat_enum_name
-                            )
-                            .as_str(),
-                        );
-                        return Err(());
-                    }
-                    (None,Some(_)) => {
-                        sess.span_rustspec_err(
-                            *pat_span,
-                            format!(
-                                "this pattern is matching the enum {} with an unexpected payload",
-                                pat_enum_name
-                            )
-                            .as_str(),
-                        );
-                        return Err(());
-                    }
-                    (Some(inner_pat),Some((case_typ, _))) => typecheck_pattern(
+                let case_typ =
+		// Among all constructors [cases] of the enum we're matching against, find the
+		// one named [pat_enum_name]
+		    cases.into_iter().find(
+			|((name,_),_)| name.string == pat_enum_name.string
+		    ).unwrap().1.as_ref()
+		// The constructor we're matching against has [length(type_args)] generic type
+		// arguments, a vector of [TypVar]. We substitutes those [type_args] into their
+		// respective [case_type_annotations].
+		    .map(|case_typ| bind_variable_type(
+			sess, case_typ,
+			&type_args.iter() // build a var context (a HashMap)
+			    .map(|type_arg| type_arg.clone())
+			    .zip(case_type_annotations.iter().flatten().map(|t| t.0.clone()))
+			    .collect()
+		    ).ok()).flatten();
+
+                let failure = |message| {
+                    sess.span_rustspec_err(
+                        *pat_span,
+                        format!(
+                            "this pattern is matching the enum {} with {}",
+                            pat_enum_name, message
+                        )
+                        .as_str(),
+                    );
+                    Err(())
+                };
+
+                match (inner_pat, case_typ) {
+                    (Some(inner_pat), Some(case_typ)) => typecheck_pattern(
                         sess,
                         inner_pat,
                         &(
                             borrowing_typ.clone(), // This propagates the borrowing down the enum
-                            (case_typ.clone(), cases_span.clone()),
+                            (case_typ, *cases_span),
                         ),
                         top_ctx,
                     ),
+                    (Some(_), _) => failure("one case but no payload"),
+                    (_, Some(_)) => failure("an unexpected payload"),
+                    _ => Ok(HashMap::new()),
                 }
             }
             _ => {
@@ -1916,7 +1922,7 @@ fn typecheck_pattern(
                 Err(())
             }
         },
-        (Pattern::EnumCase(ty_name,name, _), _) => {
+        (Pattern::EnumCase(ty_name, name, _), _) => {
             sess.span_rustspec_err(
                 *pat_span,
                 format!(
@@ -1965,8 +1971,10 @@ fn typecheck_pattern(
         (Pattern::LiteralPat(l), t) => {
             if get_literal_type(l) == t.clone() {
                 Ok(HashMap::new())
-            } else {Err(())}
-        },
+            } else {
+                Err(())
+            }
+        }
         (Pattern::IdentPat(x), _) => {
             let (id, name) = match &x {
                 Ident::Local(LocalIdent { id, name }) => (id.clone(), name.clone()),
