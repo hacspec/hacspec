@@ -746,7 +746,7 @@ fn typecheck_expression(
                 typecheck_expression(sess, arg, top_level_context, &var_context)?;
             let mut acc_var_context = intermediate_var_context.clone();
             let mut out_typ = None;
-            // Then we typecheck each match arm
+            // Typecheck each match arm
             let new_arms = check_vec(
                 arms.into_iter()
                     .map(|(arm_pattern, arm_exp)| {
@@ -759,6 +759,7 @@ fn typecheck_expression(
                             sess,
                             arm_exp,
                             top_level_context,
+                            // TODO: is this union fine wrt #274?
                             &intermediate_var_context.clone().union(new_var_context),
                         )?;
                         acc_var_context = acc_var_context.clone().intersection(new_var_context);
