@@ -2,9 +2,10 @@ use core::cmp::PartialEq;
 use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
-use rustc_span::{MultiSpan, Span};
+use rustc_span::{Span};
 use serde::{ser::SerializeSeq, Serialize, Serializer};
 use std::fmt;
+use rustc_errors::MultiSpan;
 
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Copy)]
 pub struct RustspecSpan(pub Span);

@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 # depend on hacspec-lib *without* default features
-hacspec-lib = { path = "../../lib", default-features = false, features = ["alloc"] }
+hacspec-lib = { path = "../lib", default-features = false, features = ["alloc"] }
 
 # depend on an allocator
 static-alloc = { version = "0.2.3" }

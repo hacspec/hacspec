@@ -1,7 +1,8 @@
 #![allow(non_snake_case)]
 extern crate quickcheck;
 
-use curve25519_dalek::ristretto::RistrettoPoint as DalekRistrettoPoint;
+use curve25519_dalek_ng::ristretto::RistrettoPoint as DalekRistrettoPoint;
+use curve25519_dalek_ng::scalar::Scalar as DalekScalar;
 use hacspec_lib::*;
 use hacspec_ristretto::*;
 use quickcheck::*;
@@ -51,6 +52,26 @@ fn vec_to_pnt_dal(vec: &Vec<u8>) -> DalekRistrettoPoint {
         arr[i] = vec[i];
     }
     DalekRistrettoPoint::from_uniform_bytes(&arr)
+}
+
+fn vec_to_scalar_hac(xs: &Vec<u8>) -> Scalar {
+    let mut seq = Seq::<U8>::new(xs.len());
+
+    for i in 0..xs.len() {
+        seq[i] = U8::classify(xs[i]);
+    }
+
+    Scalar::from_byte_seq_le(seq)
+}
+
+fn vec_to_scalar_dal(vec: &Vec<u8>) -> DalekScalar {
+    let mut arr: [u8; 32] = [0; 32];
+
+    for i in 0..arr.len() {
+        arr[i] = vec[i];
+    }
+
+    DalekScalar::from_bytes_mod_order(arr)
 }
 
 // === Tests === //
@@ -131,6 +152,24 @@ fn test_dalek_point_addition_subtraction() {
         TestResult::from_bool(cmp_points(hac_add, dal_add) && cmp_points(hac_sub, dal_sub))
     }
     quickcheck(100, helper as fn(Vec<u8>, Vec<u8>) -> TestResult)
+}
+
+#[test]
+fn test_dalek_scalar_multiplication() {
+    fn helper(v: Vec<u8>, mut x: Vec<u8>) -> TestResult {
+        if (v.len() < 64) || (x.len() < 32) {
+            return TestResult::discard();
+        }
+        x.truncate(32);
+
+        let (hac_pnt, dal_pnt) = create_points(v);
+
+        let hac_scal = mul(vec_to_scalar_hac(&x), hac_pnt);
+        let dal_scal = vec_to_scalar_dal(&x) * dal_pnt;
+
+        TestResult::from_bool(cmp_points(hac_scal, dal_scal))
+    }
+    quickcheck(20, helper as fn(Vec<u8>, Vec<u8>) -> TestResult)
 }
 
 #[test]

@@ -4,7 +4,7 @@ use hacspec_ristretto::*;
 // === Positive Tests === //
 
 #[test]
-fn unit_test_add_zero() {
+fn test_unit_add_zero() {
     let point = BASE_POINT();
     let zero = IDENTITY_POINT();
     let res = add(point, zero);
@@ -12,14 +12,30 @@ fn unit_test_add_zero() {
 }
 
 #[test]
-fn unit_test_inverse_sub() {
+fn test_unit_inverse_sub() {
     let point = BASE_POINT();
     let res = sub(point, point);
     assert!(equals(res, IDENTITY_POINT()))
 }
 
 #[test]
-fn unit_test_add_encode() {
+fn test_unit_scalar_mul_one() {
+    let point = BASE_POINT();
+    let one = Scalar::from_literal(1);
+    let res = mul(one, point);
+    assert!(equals(point, res))
+}
+
+#[test]
+fn test_unit_add_to_self_double() {
+    let point = BASE_POINT();
+    let double_res = double(point);
+    let add_res = add(point, point);
+    assert!(equals(double_res, add_res))
+}
+
+#[test]
+fn test_unit_add_encode() {
     let hexs = Seq::<&str>::from_vec(vec![
         //Non-canonical field encodings.
         "0000000000000000000000000000000000000000000000000000000000000000",
