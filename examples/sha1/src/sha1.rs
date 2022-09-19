@@ -15,15 +15,15 @@ bytes!(Sha1Digest, HASH_BYTES);
 
 const BITLENGTH_BYTES: usize = 64 / 8;
 
-fn ch(x: U32, y: U32, z: U32) -> U32 {
+pub fn ch(x: U32, y: U32, z: U32) -> U32 {
     (x & y) ^ ((!x) & z)
 }
 
-fn parity(x: U32, y: U32, z: U32) -> U32 {
+pub fn parity(x: U32, y: U32, z: U32) -> U32 {
     x ^ y ^ z
 }
 
-fn maj(x: U32, y: U32, z: U32) -> U32 {
+pub fn maj(x: U32, y: U32, z: U32) -> U32 {
     (x & y) ^ (x & z) ^ (y & z)
 }
 
