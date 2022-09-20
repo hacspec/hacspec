@@ -45,8 +45,11 @@ pub fn compress(M_bytes: BlockBytes, mut H: Hash) -> Hash {
     // 1. Prepare message schedule
     let mut W = Schedule::new();
     for t in 0..80 {
-        if t < 16 { W[t] = M[t]; }
-        else      { W[t] = U32::rotate_left(W[t-3] ^ W[t-8] ^ W[t-14] ^ W[t-16], 1); };
+        if t < 16 {
+            W[t] = M[t];
+        } else {
+            W[t] = U32::rotate_left(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
+        };
     }
     // 2. Initialize five working variables with previous hash value
     let mut a = H[0];
@@ -57,10 +60,18 @@ pub fn compress(M_bytes: BlockBytes, mut H: Hash) -> Hash {
     // 3. (Apply message schedule)
     for t in 0..80 {
         let mut T = U32::ZERO();
-        if  0 <= t && t < 20 { T = U32::rotate_left(a, 5) +     ch(b, c, d) + e + U32(0x5a827999u32) + W[t]; }
-        if 20 <= t && t < 40 { T = U32::rotate_left(a, 5) + parity(b, c, d) + e + U32(0x6ed9eba1u32) + W[t]; }
-        if 40 <= t && t < 60 { T = U32::rotate_left(a, 5) +    maj(b, c, d) + e + U32(0x8f1bbcdcu32) + W[t]; }
-        if 60 <= t && t < 80 { T = U32::rotate_left(a, 5) + parity(b, c, d) + e + U32(0xca62c1d6u32) + W[t]; }
+        if 0 <= t && t < 20 {
+            T = U32::rotate_left(a, 5) + ch(b, c, d) + e + U32(0x5a827999u32) + W[t];
+        }
+        if 20 <= t && t < 40 {
+            T = U32::rotate_left(a, 5) + parity(b, c, d) + e + U32(0x6ed9eba1u32) + W[t];
+        }
+        if 40 <= t && t < 60 {
+            T = U32::rotate_left(a, 5) + maj(b, c, d) + e + U32(0x8f1bbcdcu32) + W[t];
+        }
+        if 60 <= t && t < 80 {
+            T = U32::rotate_left(a, 5) + parity(b, c, d) + e + U32(0xca62c1d6u32) + W[t];
+        }
         e = d;
         d = c;
         c = U32::rotate_left(b, 30);
@@ -91,12 +102,18 @@ pub fn hash(msg: &ByteSeq) -> Sha1Digest {
     let message_bitlength = U64((msg.len() * 8) as u64);
     // Message length either fits in the last block or gets its own block
     if raw_bytes.len() < BLOCK_BYTES - BITLENGTH_BYTES {
-        block_bytes = block_bytes.update(BLOCK_BYTES - BITLENGTH_BYTES, &U64_to_be_bytes(message_bitlength));
+        block_bytes = block_bytes.update(
+            BLOCK_BYTES - BITLENGTH_BYTES,
+            &U64_to_be_bytes(message_bitlength),
+        );
         H = compress(block_bytes, H);
     } else {
         H = compress(block_bytes, H);
         let mut pad_block = BlockBytes::new();
-        pad_block = pad_block.update(BLOCK_BYTES - BITLENGTH_BYTES, &U64_to_be_bytes(message_bitlength));
+        pad_block = pad_block.update(
+            BLOCK_BYTES - BITLENGTH_BYTES,
+            &U64_to_be_bytes(message_bitlength),
+        );
         H = compress(pad_block, H);
     }
     Sha1Digest::from_seq(&H.to_be_bytes())

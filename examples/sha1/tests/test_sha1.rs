@@ -18,7 +18,8 @@ fn test_fips_examples() {
         assert_eq!(expect, sha1(&msg).to_hex());
     }
     {
-        let msg = ByteSeq::from_public_slice(b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+        let msg =
+            ByteSeq::from_public_slice(b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
         let expect = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
         assert_eq!(expect, sha1(&msg).to_hex());
     }
