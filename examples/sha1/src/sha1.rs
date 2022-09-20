@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
