@@ -379,3 +379,37 @@ pub fn neg(u: RistrettoPoint) -> RistrettoPoint {
 pub fn sub(u: RistrettoPoint, v: RistrettoPoint) -> RistrettoPoint {
     add(u, neg(v))
 }
+
+/// Doubles the given point. Note, this is faster than
+/// adding a point to itself.
+// See section 3.3 of TECR
+pub fn double(u: RistrettoPoint) -> RistrettoPoint {
+    let (x1, y1, z1, _) = u;
+
+    let a = x1.pow(2u128);
+    let b = y1.pow(2u128);
+    let c = fe(2) * (z1.pow(2u128));
+    let h = a + b;
+    let e = h - ((x1 + y1).pow(2u128));
+    let g = a - b;
+    let f = c + g;
+    let x2 = e * f;
+    let y2 = g * h;
+    let t2 = e * h;
+    let z2 = f * g;
+
+    (x2, y2, z2, t2)
+}
+
+/// Performs scalar multiplication on a point.
+pub fn mul(k: Scalar, P: RistrettoPoint) -> RistrettoPoint {
+    let mut res = IDENTITY_POINT();
+    let mut temp = P;
+    for i in 0..256 {
+        if k.get_bit(i) == Scalar::from_literal(1u128) {
+            res = add(res, temp)
+        }
+        temp = double(temp)
+    }
+    res
+}
