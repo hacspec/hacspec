@@ -1,0 +1,14 @@
+[package]
+name = "hacspec-sha1"
+version = "0.1.0"
+authors = ["PLR <51248199+plredmond@users.noreply.github.com>"]
+edition = "2018"
+
+[lib]
+path = "src/sha1.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+hacspec-derive = { path = "../../utils/derive" }
+secret_integers = { path = "../../utils/secret-integers" }
+abstract_integers = { path = "../../utils/abstract-integers" }
