@@ -21,6 +21,19 @@ fn MERLIN_PROTOCOL_LABEL() -> Seq<U8> {
 	byte_seq!(77u8, 101u8, 114u8, 108u8, 105u8, 110u8, 32u8, 118u8, 49u8, 46u8, 48u8)
 }
 
+// === Internal Functions === //
+
+// Turns a U64 into a byte sequence
+fn encode_U64(x: U64) -> Seq<U8> {
+	U64_to_le_bytes(x).to_le_bytes()
+}
+
+// Turns a usize into a byte sequence
+fn encode_usize_as_u32(x: usize) -> Seq<U8> {
+	let x_U32 = U32::classify(x as u32);
+	U32_to_le_bytes(x_U32).to_le_bytes()
+}
+
 // === External Functions === //
 
 /// Initialize a new transcript with the supplied label, which is used
@@ -45,4 +58,30 @@ pub fn append_message(mut transcript: Transcript, label: Seq<U8>, message: Seq<U
 	transcript = meta_ad(transcript, data_len, true);
 	transcript = ad(transcript, message, false);
 	transcript
+}
+
+/// Fill the supplied buffer with the verifier's challenge bytes.
+///
+/// The label parameter is metadata about the challenge, and is also
+/// appended to the transcript. See the Transcript Protocols section of
+/// the Merlin website for details on labels.
+///
+/// https://merlin.cool/use/protocol.html
+pub fn challenge_bytes(mut transcript: Transcript, label: Seq<U8>, dest: Seq<U8>) -> (Transcript, Seq<U8>) {
+	let data_len = encode_usize_as_u32(dest.len());
+
+	transcript = meta_ad(transcript, label, false);
+	transcript = meta_ad(transcript, data_len, true);
+	prf(transcript, dest, false)
+}
+
+/// Convenience method for appending a u64 to the transcript.
+///
+/// The label parameter is metadata about the message, and is also
+/// appended to the transcript. See the Transcript Protocols section of
+/// the Merlin website for details on labels.
+///
+/// https://merlin.cool/use/protocol.html
+pub fn append_U64(transcript: Transcript, label: Seq<U8>, x: U64) -> Transcript {
+	append_message(transcript, label, encode_U64(x))
 }
