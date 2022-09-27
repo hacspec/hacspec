@@ -471,13 +471,14 @@ fn final_exponentiation(f: Fp12) -> Fp12 {
     let f = fp12mul(fp8, fp6_1); // f = f^((p⁶-1)(p²+1))
 
     let u = Scalar::from_literal(0xd201000000010000u128); //-u
+    let u_half = Scalar::from_literal(0x6900800000008000u128); //u/2
 
     //Algorithm 2 from https://eprint.iacr.org/2016/130.pdf
     //Conjugations whenever u is used, since u is actually negative - and conjugation is enough (no inversion needed)
     let t0 = fp12mul(f, f); //f²
     let t1 = fp12exp(t0, u);
     let t1 = fp12conjugate(t1); //t0^u
-    let t2 = fp12exp(t1, u / Scalar::TWO());
+    let t2 = fp12exp(t1, u_half);
     let t2 = fp12conjugate(t2); //t1^(u/2)
     let t3 = fp12conjugate(f); //f^-1
     let t1 = fp12mul(t3, t1); //t3t1
