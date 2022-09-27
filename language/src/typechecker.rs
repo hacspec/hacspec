@@ -76,7 +76,6 @@ fn is_bool(t: &Typ, top_ctxt: &TopLevelContext) -> bool {
 
 fn is_copy(t: &BaseTyp, top_ctxt: &TopLevelContext) -> bool {
     match t {
-        BaseTyp::Unit => true,
         BaseTyp::Bool => true,
         BaseTyp::UInt128 => true,
         BaseTyp::Int128 => true,
@@ -336,7 +335,6 @@ fn unify_types(
     match (&(t1.0).0, &(t2.0).0) {
         (Borrowing::Consumed, Borrowing::Consumed) | (Borrowing::Borrowed, Borrowing::Borrowed) => {
             match (&(t1.1).0, &(t2.1).0) {
-                (BaseTyp::Unit, BaseTyp::Unit) => Ok(Some(typ_ctx.clone())),
                 (BaseTyp::Bool, BaseTyp::Bool) => Ok(Some(typ_ctx.clone())),
                 (BaseTyp::UInt128, BaseTyp::UInt128) => Ok(Some(typ_ctx.clone())),
                 (BaseTyp::Int128, BaseTyp::Int128) => Ok(Some(typ_ctx.clone())),
@@ -1235,7 +1233,7 @@ fn typecheck_expression(
                 e.clone(),
                 (
                     (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Unit, span.clone()),
+                    (UnitTyp, span.clone()),
                 ),
                 var_context.clone(),
             )),
@@ -2305,7 +2303,7 @@ fn typecheck_statement(
                     (new_expr, expr.1.clone()),
                     *question_mark,
                 ),
-                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
+                ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 new_var_context.clone().union(pat_var_context),
                 VarSet(HashSet::new()),
             ))
@@ -2346,7 +2344,7 @@ fn typecheck_statement(
                     (new_e, e.1.clone()),
                     *question_mark,
                 ),
-                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
+                ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 add_var(&x, &x_typ, &new_var_context),
                 VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
@@ -2415,7 +2413,7 @@ fn typecheck_statement(
                     *question_mark,
                     Some(x_typ),
                 ),
-                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
+                ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 var_context,
                 VarSet(HashSet::unit(match x.clone() {
                     Ident::Local(x) => x,
@@ -2471,7 +2469,7 @@ fn typecheck_statement(
             };
             match &new_b1.return_typ {
                 None => panic!("should not happen"),
-                Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
+                Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))) if tup.is_empty() => (),
                 Some(((b_t, _), (t, _))) => {
                     sess.span_rustspec_err(
                         *b1_span,
@@ -2486,7 +2484,7 @@ fn typecheck_statement(
                 Some((new_b2, _)) => {
                     match &new_b2.return_typ {
                         None => panic!("should not happen"),
-                        Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))) => (),
+                        Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))) if tup.is_empty() => (),
                         Some(((b_t, _), (t, _))) => {
                             sess.span_rustspec_err(
                                 *b1_span,
@@ -2530,7 +2528,7 @@ fn typecheck_statement(
                         stmt: mut_tuple,
                     })),
                 ),
-                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
+                ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 original_var_context
                     .clone()
                     .intersection(var_context_b1)
@@ -2615,7 +2613,7 @@ fn typecheck_statement(
                     (new_e2, e2.1.clone()),
                     (new_b, *b_span),
                 ),
-                ((Borrowing::Consumed, s_span), (BaseTyp::Unit, s_span)),
+                ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 original_var_context.clone().intersection(var_context),
                 mutated_vars,
             ))
@@ -2635,7 +2633,7 @@ fn typecheck_block(
     let mut mutated_vars = VarSet(HashSet::new());
     let mut return_typ = Some((
         (Borrowing::Consumed, DUMMY_SP.into()),
-        (BaseTyp::Unit, DUMMY_SP.into()),
+        (UnitTyp, DUMMY_SP.into()),
     ));
     let mut new_stmts = Vec::new();
     let n_stmts = b.stmts.len();
@@ -2655,7 +2653,7 @@ fn typecheck_block(
         if i + 1 < n_stmts {
             // Statement return types should be unit except for the last one
             match stmt_typ {
-                ((Borrowing::Consumed, _), (BaseTyp::Unit, _)) => (),
+                ((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _)) if tup.is_empty() => (),
                 _ => {
                     sess.span_rustspec_err(s_span, "statement shoud have an unit type here");
                     return Err(());

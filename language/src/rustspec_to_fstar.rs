@@ -260,7 +260,6 @@ fn translate_enum_case_name<'a>(enum_name: BaseTyp, case_name: TopLevelIdent) ->
 
 fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
     match tau {
-        BaseTyp::Unit => RcDoc::as_string("unit"),
         BaseTyp::Bool => RcDoc::as_string("bool"),
         BaseTyp::UInt8 => RcDoc::as_string("pub_uint8"),
         BaseTyp::Int8 => RcDoc::as_string("pub_int8"),
@@ -309,6 +308,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             ),
         },
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
+        BaseTyp::Tuple(args) if args.is_empty() => RcDoc::as_string("unit"),
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
@@ -620,7 +620,6 @@ fn translate_prefix_for_func_name<'a>(
 ) -> (RcDoc<'a, ()>, FuncPrefix) {
     match prefix {
         BaseTyp::Bool => panic!(), // should not happen
-        BaseTyp::Unit => panic!(), // should not happen
         BaseTyp::UInt8 => (RcDoc::as_string("pub_uint8"), FuncPrefix::Regular),
         BaseTyp::Int8 => (RcDoc::as_string("pub_int8"), FuncPrefix::Regular),
         BaseTyp::UInt16 => (RcDoc::as_string("pub_uint16"), FuncPrefix::Regular),
@@ -1301,7 +1300,7 @@ fn translate_block<'a>(
     let mut statements = b.stmts;
     match (&b.return_typ, omit_extra_unit) {
         (None, _) => panic!(), // should not happen,
-        (Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))), false) => {
+        (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
             statements.push((
                 Statement::ReturnExp(Expression::Lit(Literal::Unit)),
                 DUMMY_SP.into(),
@@ -1345,13 +1344,7 @@ fn translate_item<'a>(
                         .group(),
                 ),
             None,
-            translate_block(sess, b.clone(), false, top_ctx)
-                .append(if let BaseTyp::Unit = sig.ret.0 {
-                    RcDoc::hardline().append(RcDoc::as_string("()"))
-                } else {
-                    RcDoc::nil()
-                })
-                .group(),
+            translate_block(sess, b.clone(), false, top_ctx),
             true,
         ),
         Item::EnumDecl(name, cases) => RcDoc::as_string("noeq type")

@@ -2508,7 +2508,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             };
             let fn_inputs = check_vec(fn_inputs)?;
             let fn_output = match &sig.decl.output {
-                FnRetTy::Default(span) => (BaseTyp::Unit, span.clone().into()),
+                FnRetTy::Default(span) => (UnitTyp, span.clone().into()),
                 FnRetTy::Ty(ty) => translate_base_typ(sess, ty)?,
             };
             let fn_body: Spanned<Block> = match body {
