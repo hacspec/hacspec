@@ -329,16 +329,16 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::Bool(false) => RcDoc::as_string("false"),
         Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", x)),
         Literal::UInt128(x) => RcDoc::as_string(format!("pub_u128 {:#x}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("pub_i64 {:#x}", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("pub_u64 {:#x}", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("pub_i32 {:#x}", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("pub_u32 {:#x}", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("pub_i16 {:#x}", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("pub_u16 {:#x}", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("pub_i8 {:#x}", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {:#x}", x)),
-        Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
-        Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("{:#x}L", x)),
+        Literal::UInt64(x) => RcDoc::as_string(format!("{:#x}uL", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("{:#x}l", x)),
+        Literal::UInt32(x) => RcDoc::as_string(format!("{:#x}ul", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("{:#x}s", x)),
+        Literal::UInt16(x) => RcDoc::as_string(format!("{:#x}us", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("{:#x}y", x)),
+        Literal::UInt8(x) => RcDoc::as_string(format!("{:#x}uy", x)),
+        Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
+        Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
@@ -456,9 +456,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
-        Pattern::EnumCase(ty_name, name, None) => {
-            translate_enum_case_name(ty_name, name.0.clone())
-        }
+        Pattern::EnumCase(ty_name, name, None) => translate_enum_case_name(ty_name, name.0.clone()),
         Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
             translate_enum_case_name(ty_name, name.0.clone())
                 .append(RcDoc::space())
