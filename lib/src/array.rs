@@ -623,6 +623,15 @@ macro_rules! _secret_array {
                 )
             }
 
+            #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
+            pub fn to_public_array(&self) -> [$tbase; $l] {
+                let mut out = [0; $l];
+                for (x, o) in self.0.iter().zip(out.iter_mut()) {
+                    *o = <$t>::declassify(*x);
+                }
+                out
+            }
+
             /// Create an array from a regular Rust array.
             ///
             /// # Examples
