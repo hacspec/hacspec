@@ -2103,6 +2103,66 @@ fn dealias_type(ty: BaseTyp, top_level_context: &TopLevelContext) -> BaseTyp {
     }
 }
 
+impl Into<BaseTyp> for CarrierTyp {
+    fn into(self) -> BaseTyp {
+        fn mk(name: &str, args: Vec<Spanned<BaseTyp>>) -> BaseTyp {
+            BaseTyp::Named(
+                (
+                    TopLevelIdent {
+                        string: name.to_string(),
+                        kind: TopLevelIdentKind::EnumConstructor,
+                    },
+                    DUMMY_SP.into(),
+                ),
+                Some(args),
+            )
+        }
+        match self {
+            CarrierTyp::Option(t1) => mk("Option", vec![t1]),
+            CarrierTyp::Result(t1, t2) => mk("Result", vec![t1, t2]),
+        }
+    }
+}
+
+impl TryInto<CarrierTyp> for BaseTyp {
+    type Error = ();
+    fn try_into(self) -> Result<CarrierTyp, Self::Error> {
+        if let BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)) = self {
+            match (name.as_str(), args.as_slice()) {
+                ("Option", [t1]) => Ok(CarrierTyp::Option(t1.clone())),
+                ("Result", [t1, t2]) => Ok(CarrierTyp::Result(t1.clone(), t2.clone())),
+                _ => Err(()),
+            }
+        } else {
+            Err(())
+        }
+    }
+}
+
+/// Given a `carrier` and a `payload`, `pure_carrier(carrier,
+/// payload)` returns `payload` in the monad associated with
+/// `carrier`, i.e., crafts the term `return 〚payload〛`.
+pub fn pure_carrier(carrier: CarrierTyp, payload: Spanned<Expression>) -> Spanned<Expression> {
+    (
+        Expression::EnumInject(
+            carrier.clone().into(),
+            (
+                TopLevelIdent {
+                    string: (match carrier.clone() {
+                        CarrierTyp::Option(..) => "Some",
+                        CarrierTyp::Result(..) => "Ok",
+                    })
+                    .to_string(),
+                    kind: TopLevelIdentKind::EnumConstructor,
+                },
+                DUMMY_SP.into(),
+            ),
+            Some((Box::new(payload.0), payload.1)),
+        ),
+        payload.1,
+    )
+}
+
 // This function returns the type in the OK branch of the result return type
 // if there is a question mark
 fn typecheck_question_mark(
