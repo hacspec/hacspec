@@ -2209,7 +2209,7 @@ fn typecheck_question_mark(
     expr_span: RustspecSpan,
     top_level_context: &TopLevelContext,
 ) -> TypecheckingResult<Typ> {
-    let mut expr_typ = (
+    let expr_typ = (
         expr_typ.0,
         (
             dealias_type(expr_typ.1 .0, top_level_context),
@@ -2221,121 +2221,55 @@ fn typecheck_question_mark(
         return_typ.1.clone(),
     );
     if question_mark {
-        match expr_typ {
-            (
-                (Borrowing::Consumed, _),
-                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
-            ) if name == "Option" && args.len() == 1 => {
-                let some_typ = &args[0];
-                match return_typ {
-                    (
-                        BaseTyp::Named(
-                            (
-                                TopLevelIdent {
-                                    string: return_name,
-                                    ..
-                                },
-                                _,
-                            ),
-                            Some(return_args),
-                        ),
-                        _,
-                    ) if return_name == "Option" && return_args.len() == 1 => {
-                        expr_typ = ((Borrowing::Consumed, some_typ.1.clone()), some_typ.clone());
-                    }
-                    _ => {
-                        sess.span_rustspec_err(
-                            return_typ.1,
-                            format!(
-                                "expected a option type for this \
-                    return type because of a question mark in the function, got {}",
-                                return_typ.0,
-                            )
-                            .as_str(),
-                        );
-                        return Err(());
-                    }
-                }
-            }
-            (
-                (Borrowing::Consumed, _),
-                (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
-            ) if name == "Result" && args.len() == 2 => {
-                let ok_typ = &args[0];
-                let err_typ = &args[1];
-                match return_typ {
-                    (
-                        BaseTyp::Named(
-                            (
-                                TopLevelIdent {
-                                    string: return_name,
-                                    ..
-                                },
-                                _,
-                            ),
-                            Some(return_args),
-                        ),
-                        _,
-                    ) if return_name == "Result" && return_args.len() == 2 => {
-                        let err_typ_ret = &args[1];
-                        match unify_types(
-                            sess,
-                            &((Borrowing::Consumed, err_typ.1.clone()), err_typ.clone()),
-                            &(
-                                (Borrowing::Consumed, err_typ_ret.1.clone()),
-                                err_typ_ret.clone(),
-                            ),
-                            &HashMap::new(),
-                            top_level_context,
-                        )? {
-                            Some(_) => {
-                                expr_typ =
-                                    ((Borrowing::Consumed, ok_typ.1.clone()), ok_typ.clone());
-                            }
-                            None => {
-                                sess.span_rustspec_err(
-                                    expr_span,
-                                    format!(
-                                        "the type returned in case of error by this \
-                                        expression is {}, expected {}",
-                                        err_typ.0, err_typ_ret.0,
-                                    )
-                                    .as_str(),
-                                );
-                                return Err(());
-                            }
-                        }
-                    }
-                    _ => {
-                        sess.span_rustspec_err(
-                            return_typ.1,
-                            format!(
-                                "expected a result type for this \
-                    return type because of a question mark in the function, got {}",
-                                return_typ.0,
-                            )
-                            .as_str(),
-                        );
-                        return Err(());
-                    }
-                }
-            }
-            _ => {
+        let expr_carrier: Result<CarrierTyp, _> = match expr_typ.clone() {
+            ((Borrowing::Consumed, _), (expr_typ, _)) => expr_typ.try_into(),
+            _ => Err(()),
+        };
+        let return_carrier: Result<CarrierTyp, _> = return_typ.0.clone().try_into();
+
+        match (expr_carrier, return_carrier) {
+            (Err(..), _) => {
                 sess.span_rustspec_err(
                     expr_span,
                     format!(
                         "expected a result type for this \
-            expression ending with a question mark, got {}{}",
+			 expression ending with a question mark, got {}{}",
                         (expr_typ.0).0,
                         (expr_typ.1).0
                     )
                     .as_str(),
                 );
-                return Err(());
+                Err(())
+            }
+            (Ok(expr_carrier), Ok(return_carrier))
+                if carrier_kind(expr_carrier.clone()) == carrier_kind(return_carrier.clone()) =>
+            {
+                let ok_type = carrier_payload(expr_carrier.clone());
+                // TODO: previously, type unification was ran for T in
+                // case of a [Result<_,T>]. Feels like either it was
+                // unnecessary, or we should check unification
+                // succeeds for every type involved in the carrier
+                // (i.e. [A] and [B] for [Result<A,B>] and [A] for
+                // [Option<A>]).
+                Ok(((Borrowing::Consumed, ok_type.1), ok_type))
+            }
+            (Ok(expr_carrier), _) => {
+                sess.span_rustspec_err(
+                    return_typ.1,
+                    format!(
+                        "expected a {:?} type for this \
+			 return type because of a question mark in the function, got {}",
+                        carrier_kind(expr_carrier),
+                        return_typ.0,
+                    )
+                    .as_str(),
+                );
+                Err(())
             }
         }
+    } else {
+        Ok(expr_typ)
     }
-    Ok(expr_typ)
 }
 
 fn early_return_type_from_return_type(
