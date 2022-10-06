@@ -1542,12 +1542,18 @@ fn translate_expr(
             Err(())
         }
         ExprKind::Paren(e1) => translate_expr(sess, specials, e1),
-        ExprKind::Try(_) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "question marks inside expressions are not allowed in Hacspec",
+        ExprKind::Try(e1) => {
+            let e1 = Expression::QuestionMark(
+                Box::new(match translate_expr(sess, specials, e1)? {
+                    (ExprTranslationResult::TransExpr(e), es) => (e, es),
+                    _ => Err(sess.span_rustspec_err(
+                        e1.span,
+                        "question marks on statements are not allowed in Hacspec",
+                    ))?,
+                }),
+                None,
             );
-            Err(())
+            Ok((ExprTranslationResult::TransExpr(e1), e.span.clone().into()))
         }
         ExprKind::Err => {
             sess.span_rustspec_err(e.span, "error expressions are not allowed in Hacspec");
