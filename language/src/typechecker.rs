@@ -2352,6 +2352,52 @@ fn early_return_type_from_return_type(
     }
 }
 
+/// Typechecks an expression, then elaborates
+/// [`MonadicLet`][Expression::MonadicLet] nodes, and possibly extract
+/// an [`EarlyReturnType`][EarlyReturnType].
+fn typecheck_expression_qm(
+    sess: &Session,
+    e: &Spanned<Expression>,
+    func_return_type: &Option<&Spanned<BaseTyp>>,
+    top_level_context: &TopLevelContext,
+    var_context: &VarContext,
+) -> TypecheckingResult<(Expression, Typ, Option<EarlyReturnType>, VarContext)> {
+    let (e, ty, vctx) =
+        typecheck_expression(sess, e, func_return_type, top_level_context, var_context)?;
+    let e = crate::elab_monadic_lets::eliminate_question_marks_in_expressions(&e);
+    Ok((
+        e.clone(),
+        ty,
+        match e {
+            Expression::MonadicLet(carrier, ..) => Some(carrier_kind(carrier)),
+            _ => None,
+        },
+        vctx,
+    ))
+}
+
+/// Typechecks and elaborate an expression which is expected to
+/// contain no question mark. In the case the expression is monadic
+/// (i.e. contains a question mark), the function throws an error.
+fn typecheck_expression_no_qm(
+    sess: &Session,
+    (e, e_span): &Spanned<Expression>,
+    func_return_type: &Option<&Spanned<BaseTyp>>,
+    top_level_context: &TopLevelContext,
+    var_context: &VarContext,
+) -> TypecheckingResult<(Expression, Typ, VarContext)> {
+    let e = &(e.clone(), e_span.clone());
+    let (e, ty, carrier, vctx) =
+        typecheck_expression_qm(sess, e, func_return_type, top_level_context, var_context)?;
+    match carrier {
+        Some(_) => Err(sess.span_rustspec_err(
+            *e_span,
+            format!("question mark cannot occur in this expression in Hacspec").as_str(),
+        )),
+        _ => Ok((e, ty, vctx)),
+    }
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -2366,7 +2412,7 @@ fn typecheck_statement(
             log::trace!("       expr: {:?}", expr);
             #[cfg(feature = "dev")]
             log::trace!("   {:?}", backtrace::Backtrace::new());
-            let (new_expr, expr_typ, new_var_context) = typecheck_expression(
+            let (new_expr, expr_typ, carrier, new_var_context) = typecheck_expression_qm(
                 sess,
                 expr,
                 &Some(return_typ),
@@ -2381,6 +2427,7 @@ fn typecheck_statement(
                 expr.1.clone(),
                 top_level_context,
             )?;
+            let question_mark = *question_mark || matches!(carrier, Some(..));
             let typ = match typ {
                 None => Some((expr_typ.clone(), expr.1.clone())),
                 Some((inner_typ, _)) => {
@@ -2427,7 +2474,7 @@ fn typecheck_statement(
                     (pat.clone(), pat_span.clone()),
                     typ.clone(),
                     (new_expr, expr.1.clone()),
-                    *question_mark,
+                    question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 new_var_context.clone().union(pat_var_context),
@@ -2436,8 +2483,13 @@ fn typecheck_statement(
         }
         Statement::Reassignment((x, x_span), e, question_mark) => {
             log::trace!("   Statement::Reassignment");
-            let (new_e, e_typ, new_var_context) =
-                typecheck_expression(sess, &e, &Some(return_typ), top_level_context, var_context)?;
+            let (new_e, e_typ, carrier, new_var_context) = typecheck_expression_qm(
+                sess,
+                &e,
+                &Some(return_typ),
+                top_level_context,
+                var_context,
+            )?;
             let e_typ = typecheck_question_mark(
                 sess,
                 *question_mark,
@@ -2446,6 +2498,7 @@ fn typecheck_statement(
                 e.1.clone(),
                 top_level_context,
             )?;
+            let question_mark = *question_mark || matches!(carrier, Some(..));
             let x_typ = find_typ(&x, var_context, top_level_context);
             let x_typ = match x_typ {
                 Some(t) => t,
@@ -2468,7 +2521,7 @@ fn typecheck_statement(
                 Statement::Reassignment(
                     (x.clone(), x_span.clone()),
                     (new_e, e.1.clone()),
-                    *question_mark,
+                    question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
                 add_var(&x, &x_typ, &new_var_context),
@@ -2480,9 +2533,14 @@ fn typecheck_statement(
         }
         Statement::ArrayUpdate((x, x_span), e1, e2, question_mark, _) => {
             log::trace!("   Statement::ArrayUpdate");
-            let (new_e1, e1_t, var_context) =
-                typecheck_expression(sess, &e1, &Some(return_typ), top_level_context, var_context)?;
-            let (new_e2, e2_t, var_context) = typecheck_expression(
+            let (new_e1, e1_t, carrier1, var_context) = typecheck_expression_qm(
+                sess,
+                &e1,
+                &Some(return_typ),
+                top_level_context,
+                var_context,
+            )?;
+            let (new_e2, e2_t, carrier2, var_context) = typecheck_expression_qm(
                 sess,
                 &e2,
                 &Some(return_typ),
@@ -2497,6 +2555,8 @@ fn typecheck_statement(
                 e2.1.clone(),
                 top_level_context,
             )?;
+            let question_mark =
+                *question_mark || matches!(carrier1, Some(_)) || matches!(carrier2, Some(_));
             if !is_index(&(e1_t.1).0, top_level_context) {
                 sess.span_rustspec_err(
                     e1.1,
@@ -2541,7 +2601,7 @@ fn typecheck_statement(
                     (x.clone(), x_span.clone()),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
-                    *question_mark,
+                    question_mark,
                     Some(x_typ),
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
@@ -2554,7 +2614,7 @@ fn typecheck_statement(
         }
         Statement::ReturnExp(e) => {
             log::trace!("   Statement::ReturnExp");
-            let (new_e, e_t, var_context) = typecheck_expression(
+            let (new_e, e_t, _, var_context) = typecheck_expression_qm(
                 sess,
                 &(e.clone(), s_span),
                 &Some(return_typ),
@@ -2571,7 +2631,7 @@ fn typecheck_statement(
         Statement::Conditional(cond, (b1, b1_span), b2, _) => {
             log::trace!("   Statement::Conditional");
             let original_var_context = var_context;
-            let (new_cond, cond_t, var_context) = typecheck_expression(
+            let (new_cond, cond_t, var_context) = typecheck_expression_no_qm(
                 sess,
                 &cond,
                 &Some(return_typ),
@@ -2680,10 +2740,20 @@ fn typecheck_statement(
         Statement::ForLoop(x, e1, e2, (b, b_span)) => {
             log::trace!("   Statement::ForLoop");
             let original_var_context = var_context;
-            let (new_e1, t_e1, var_context) =
-                typecheck_expression(sess, e1, &Some(return_typ), top_level_context, var_context)?;
-            let (new_e2, t_e2, var_context) =
-                typecheck_expression(sess, e2, &Some(return_typ), top_level_context, &var_context)?;
+            let (new_e1, t_e1, var_context) = typecheck_expression_no_qm(
+                sess,
+                e1,
+                &Some(return_typ),
+                top_level_context,
+                var_context,
+            )?;
+            let (new_e2, t_e2, var_context) = typecheck_expression_no_qm(
+                sess,
+                e2,
+                &Some(return_typ),
+                top_level_context,
+                &var_context,
+            )?;
             match (
                 t_e1.0.clone(),
                 dealias_type(t_e1.1 .0.clone(), top_level_context),
@@ -2853,8 +2923,13 @@ fn typecheck_item(
     let i = match &i {
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
             let canvas_size_span = canvas_size.1.clone();
-            let (new_canvas_size, canvas_size_typ, _) =
-                typecheck_expression(sess, canvas_size, &None, top_level_context, &HashMap::new())?;
+            let (new_canvas_size, canvas_size_typ, _) = typecheck_expression_no_qm(
+                sess,
+                canvas_size,
+                &None,
+                top_level_context,
+                &HashMap::new(),
+            )?;
             if let None = unify_types(
                 sess,
                 &(
@@ -2927,7 +3002,7 @@ fn typecheck_item(
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
             let (new_size, size_typ, _) =
-                typecheck_expression(sess, size, &None, top_level_context, &HashMap::new())?;
+                typecheck_expression_no_qm(sess, size, &None, top_level_context, &HashMap::new())?;
             if let None = unify_types(
                 sess,
                 &(
@@ -2957,7 +3032,7 @@ fn typecheck_item(
         }
         Item::ConstDecl(id, typ, e) => {
             let (new_e, new_t, _) =
-                typecheck_expression(sess, e, &None, top_level_context, &HashMap::new())?;
+                typecheck_expression_no_qm(sess, e, &None, top_level_context, &HashMap::new())?;
             if let None = unify_types(
                 sess,
                 &((Borrowing::Consumed, typ.1.clone()), typ.clone()),
