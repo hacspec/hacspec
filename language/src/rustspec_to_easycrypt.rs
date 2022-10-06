@@ -668,6 +668,10 @@ fn translate_func_name<'a>(
 
 fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match e {
+        Expression::MonadicLet(..) => panic!("TODO: Easycrypt support for Expression::MonadicLet"),
+        Expression::QuestionMark(..) => {
+            panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
+        }
         Expression::Binary((op, _), e1, e2, op_typ) => {
             let e1 = e1.0;
             let e2 = e2.0;
