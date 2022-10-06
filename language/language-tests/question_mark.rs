@@ -62,7 +62,9 @@ pub fn fizzbarbuzz() -> Result<u32, U8> {
     for i in 0..200 {
         if true || false {
             let y = foo(true)?;
-            out = y as u32 + out;
+            out = y as u32
+		+ foo(Result::<bool, U8>::Ok(true)?)? as u32
+		+ out + Result::<u32, U8>::Ok(3u32)?;
             foo(false || true)?;
         } else {
             foo(false && true)?;
@@ -70,4 +72,16 @@ pub fn fizzbarbuzz() -> Result<u32, U8> {
         }
     }
     Result::<u32, U8>::Ok(out)
+}
+
+
+pub fn inline_question_marks() -> Result<u64, U8> {
+    let a = Result::<u64, U8>::Ok(100u64);
+    let b = Result::<u64, U8>::Ok(50u64);
+    let c = Result::<Result::<u64, U8>, U8>::Ok(Result::<u64, U8>::Ok(100u64));
+    let x = match c? {
+	Result::<u64, U8>::Ok(x) => if a? > 10u64 { 123u64 } else { b? + 3u64 },
+	Result::<u64, U8>::Err(x) => b? + 1u64 + a?,
+    };
+    Result::<u64, U8>::Ok(x)
 }
