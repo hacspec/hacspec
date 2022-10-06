@@ -157,6 +157,20 @@ fn resolve_expression(
                 e_span,
             ))
         }
+        Expression::MonadicLet(..) =>
+        // TODO GADT: implement some kind of GADT to eliminate MonadicLet via typing information
+        {
+            panic!(
+                "The name resolution phase expects an AST free of [Expression::MonadicLet] node."
+            )
+        }
+        Expression::QuestionMark(e, typ) => Ok((
+            Expression::QuestionMark(
+                Box::new(resolve_expression(sess, *e, name_context, top_level_ctx)?),
+                typ.clone(),
+            ),
+            e_span,
+        )),
         Expression::MatchWith(arg, arms) => {
             let new_arg = resolve_expression(sess, *arg, name_context, top_level_ctx)?;
             let new_arms = check_vec(
@@ -174,7 +188,8 @@ fn resolve_expression(
                         for (k, v) in new_name_context.into_iter() {
                             updated_name_context = updated_name_context.update(k, v);
                         }
-                        let new_arm = resolve_expression(sess, arm, &updated_name_context, top_level_ctx)?;
+                        let new_arm =
+                            resolve_expression(sess, arm, &updated_name_context, top_level_ctx)?;
                         Ok((enum_name, case_name, new_payload, new_arm))
                     })
                     .collect(),
@@ -309,7 +324,8 @@ fn resolve_pattern(
                     .iter()
                     .fold(Ok((Vec::new(), HashMap::new())), |acc, pat_arg| {
                         let (mut acc_pat, acc_name) = acc?;
-                        let (new_pat, mut sub_name_context) = resolve_pattern(sess, pat_arg, top_ctx)?;
+                        let (new_pat, mut sub_name_context) =
+                            resolve_pattern(sess, pat_arg, top_ctx)?;
                         acc_pat.push((new_pat, pat_arg.1.clone()));
                         for (k, v) in acc_name.into_iter() {
                             sub_name_context = sub_name_context.update(k, v);

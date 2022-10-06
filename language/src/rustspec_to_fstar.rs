@@ -793,6 +793,12 @@ fn translate_expression<'a>(
     top_ctx: &'a TopLevelContext,
 ) -> RcDoc<'a, ()> {
     match e {
+        Expression::MonadicLet(carrier, bindings, body, wrap_return) => {
+            panic!("[Expression::MonadicLet] TODO F* support.")
+        }
+        Expression::QuestionMark(..) => {
+            panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
+        }
         Expression::Binary(op, e1, e2, op_typ) => {
             let e1 = e1.0;
             let e2 = e2.0;

@@ -4,6 +4,8 @@ use crate::name_resolution::{DictEntry, FnKey, FnValue, TopLevelContext};
 use crate::rustspec::*;
 use crate::util::check_vec;
 use crate::HacspecErrorEmitter;
+use core::slice::Iter;
+use std::convert::{Into, TryInto};
 
 use im::{HashMap, HashSet};
 use itertools::Itertools;
@@ -661,6 +663,42 @@ fn typecheck_expression(
     #[cfg(feature = "dev")]
     log::trace!("   {:?}", backtrace::Backtrace::new());
     match e {
+        Expression::MonadicLet(..) => {
+            // TODO: use GADT to eliminiate this `panic!`
+            panic!("Expression::MonadicLet should be elaborated only after typechecking")
+        }
+        Expression::QuestionMark(qe, ..) => {
+            if let &Some(return_typ) = func_return_type {
+                let (_, qe_span) = **qe;
+                let (qe, typ, var_context) = typecheck_expression(
+                    sess,
+                    qe,
+                    func_return_type,
+                    top_level_context,
+                    var_context,
+                )?;
+                let carrier = typ.clone().1 .0.try_into().unwrap();
+                let typ = typecheck_question_mark(
+                    sess,
+                    true,
+                    typ,
+                    return_typ,
+                    qe_span,
+                    top_level_context,
+                )?;
+                Ok((
+                    Expression::QuestionMark(Box::new((qe, qe_span)), Some(carrier)),
+                    typ,
+                    var_context,
+                ))
+            } else {
+                sess.span_rustspec_err(
+                    *span,
+                    "found a question mark while typechecking an item which is not a function (i.e. a constant declaration)",
+                );
+                Err(())
+            }
+        }
         Expression::Tuple(args) => {
             let mut var_context = var_context.clone();
             let new_and_typ_args = args

@@ -352,6 +352,25 @@ pub enum Expression {
         Box<Spanned<Expression>>,
         Box<Spanned<Expression>>,
     ),
+    QuestionMark(
+        Box<Spanned<Expression>>,
+        Fillable<CarrierTyp>, // Filled by typechecking phase
+    ),
+    /// One or multiple monadic bindings. For instance, `MonadicLet(M, [(x₀, e₀), …, (xₙ, eₙ)], «f x₀ … xₙ», true)` represents:
+    /// ```haskell
+    /// do x₀ <- e₀
+    ///    …
+    ///    xₙ <- eₙ
+    ///    return $ f x₀ … xₙ
+    /// ```
+    /// Note the boolean flag indiquates wether we shall insert a `pure` monadic operation or not (that is, above, shall we have `return $ f x₀ … xₙ` or simply `f x₀ … xₙ`).
+    /// This node appears only after the [question marks elimination][desugar::eliminate_question_marks_in_expressions] phase.
+    MonadicLet(
+        CarrierTyp,                             // Are we dealing with `Result` or `Option`?
+        Vec<(Ident, Box<Spanned<Expression>>)>, // List of "monadic" bindings
+        Box<Spanned<Expression>>,               // body
+        bool, // should we insert a `pure` node? (`pure` being e.g. `Ok`)
+    ),
     Named(Ident),
     // FuncCall(prefix, name, args)
     FuncCall(
