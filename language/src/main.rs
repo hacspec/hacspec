@@ -13,6 +13,7 @@ extern crate rustc_session;
 extern crate rustc_span;
 
 mod ast_to_rustspec;
+mod elab_monadic_lets;
 mod hir_to_rustspec;
 mod name_resolution;
 mod rustspec;
