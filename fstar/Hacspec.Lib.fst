@@ -116,6 +116,8 @@ let bind_ok (#a #a' #b: Type) (v: result a b) (kont: a -> result a' b) : result 
    | Ok x -> kont x
    | Err y -> Err y
 
+let (let?) = bind_ok
+
 (*** Loops *)
 
 let rec foldi_
