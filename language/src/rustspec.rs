@@ -2,10 +2,10 @@ use core::cmp::PartialEq;
 use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
-use rustc_span::{Span};
+use rustc_errors::MultiSpan;
+use rustc_span::Span;
 use serde::{ser::SerializeSeq, Serialize, Serializer};
 use std::fmt;
-use rustc_errors::MultiSpan;
 
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Copy)]
 pub struct RustspecSpan(pub Span);
@@ -175,7 +175,6 @@ impl fmt::Debug for TypVar {
 
 #[derive(Clone, Hash, PartialEq, Eq, Serialize, Debug)]
 pub enum BaseTyp {
-    Unit,
     Bool,
     UInt128,
     Int128,
@@ -202,10 +201,11 @@ pub enum BaseTyp {
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
+pub const UnitTyp: BaseTyp = BaseTyp::Tuple(vec!());
+
 impl fmt::Display for BaseTyp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BaseTyp::Unit => write!(f, "unit"),
             BaseTyp::Bool => write!(f, "bool"),
             BaseTyp::UInt128 => write!(f, "u128"),
             BaseTyp::Int128 => write!(f, "i128"),
@@ -315,6 +315,29 @@ pub enum BinOpKind {
     Gt,
 }
 
+/// Enumeration of the types allowed as question marks's monad
+/// representation. Named after the [Carrier][std::ops::Carrier]
+/// trait.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub enum CarrierTyp {
+    Result(Spanned<BaseTyp>, Spanned<BaseTyp>),
+    Option(Spanned<BaseTyp>),
+}
+
+/// Extracts the payload type of a carrier type, i.e., `A` is the
+/// payload type of `Either<A, B>`.
+pub fn carrier_payload(carrier: CarrierTyp) -> Spanned<BaseTyp> {
+    match carrier {
+        CarrierTyp::Result(ok, ..) | CarrierTyp::Option(ok, ..) => ok,
+    }
+}
+pub fn carrier_kind(carrier: CarrierTyp) -> EarlyReturnType {
+    match carrier {
+        CarrierTyp::Result(..) => EarlyReturnType::Result,
+        CarrierTyp::Option(..) => EarlyReturnType::Option,
+    }
+}
+
 #[derive(Clone, Serialize, Debug)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
@@ -328,6 +351,25 @@ pub enum Expression {
         Box<Spanned<Expression>>,
         Box<Spanned<Expression>>,
         Box<Spanned<Expression>>,
+    ),
+    QuestionMark(
+        Box<Spanned<Expression>>,
+        Fillable<CarrierTyp>, // Filled by typechecking phase
+    ),
+    /// One or multiple monadic bindings. For instance, `MonadicLet(M, [(x₀, e₀), …, (xₙ, eₙ)], «f x₀ … xₙ», true)` represents:
+    /// ```haskell
+    /// do x₀ <- e₀
+    ///    …
+    ///    xₙ <- eₙ
+    ///    return $ f x₀ … xₙ
+    /// ```
+    /// Note the boolean flag indicates whether we shall insert a `pure` monadic operation or not (that is, above, shall we have `return $ f x₀ … xₙ` or simply `f x₀ … xₙ`).
+    /// This node appears only after the [question marks elimination][desugar::eliminate_question_marks_in_expressions] phase.
+    MonadicLet(
+        CarrierTyp,                             // Are we dealing with `Result` or `Option`?
+        Vec<(Ident, Box<Spanned<Expression>>)>, // List of "monadic" bindings
+        Box<Spanned<Expression>>,               // body
+        bool, // should we insert a `pure` node? (`pure` being e.g. `Ok`)
     ),
     Named(Ident),
     // FuncCall(prefix, name, args)
@@ -384,7 +426,7 @@ pub enum Pattern {
     EnumCase(BaseTyp, Spanned<TopLevelIdent>, Option<Box<Spanned<Pattern>>>),
 }
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Debug, PartialEq, Eq)]
 pub enum EarlyReturnType {
     Option,
     Result,

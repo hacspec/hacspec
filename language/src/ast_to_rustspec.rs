@@ -678,11 +678,9 @@ fn translate_expr(
                             ExprTranslationResult::TransExpr(Expression::EnumInject(
                                 BaseTyp::Named(func_name_but_as_type, None),
                                 func_name_but_as_enum_constructor,
-                                Some(if func_args.len() > 1 {
-                                    (Box::new(Expression::Tuple(func_args)), e.span.into())
-                                } else {
-                                    let arg = func_args.into_iter().next().unwrap();
-                                    (Box::new(arg.0), arg.1)
+                                Some(match func_args.as_slice() {
+                                    [arg] => (Box::new(arg.0.clone()), arg.1),
+                                    _ => (Box::new(Expression::Tuple(func_args)), e.span.into()),
                                 }),
                             )),
                             e.span.into(),
@@ -1467,12 +1465,18 @@ fn translate_expr(
             Err(())
         }
         ExprKind::Paren(e1) => translate_expr(sess, specials, e1),
-        ExprKind::Try(_) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "question marks inside expressions are not allowed in Hacspec",
+        ExprKind::Try(e1) => {
+            let e1 = Expression::QuestionMark(
+                Box::new(match translate_expr(sess, specials, e1)? {
+                    (ExprTranslationResult::TransExpr(e), es) => (e, es),
+                    _ => Err(sess.span_rustspec_err(
+                        e1.span,
+                        "question marks on statements are not allowed in Hacspec",
+                    ))?,
+                }),
+                None,
             );
-            Err(())
+            Ok((ExprTranslationResult::TransExpr(e1), e.span.clone().into()))
         }
         ExprKind::Err => {
             sess.span_rustspec_err(e.span, "error expressions are not allowed in Hacspec");
@@ -2452,7 +2456,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             };
             let fn_inputs = check_vec(fn_inputs)?;
             let fn_output = match &sig.decl.output {
-                FnRetTy::Default(span) => (BaseTyp::Unit, span.clone().into()),
+                FnRetTy::Default(span) => (UnitTyp, span.clone().into()),
                 FnRetTy::Ty(ty) => translate_base_typ(sess, ty)?,
             };
             let fn_body: Spanned<Block> = match body {
@@ -2775,10 +2779,9 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                             })
                             .collect(),
                     )?;
-                    let payload = if tuple_args.len() > 1 {
-                        (BaseTyp::Tuple(tuple_args), i.span.clone().into())
-                    } else {
-                        tuple_args.into_iter().next().unwrap()
+                    let payload = match tuple_args.as_slice() {
+                        [arg] => arg.clone(),
+                        _ => (BaseTyp::Tuple(tuple_args), i.span.clone().into()),
                     };
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
