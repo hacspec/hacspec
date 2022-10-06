@@ -667,11 +667,9 @@ fn translate_expr(
                             ExprTranslationResult::TransExpr(Expression::EnumInject(
                                 BaseTyp::Named(func_name_but_as_type, None),
                                 func_name_but_as_enum_constructor,
-                                Some(if func_args.len() > 1 {
-                                    (Box::new(Expression::Tuple(func_args)), e.span.into())
-                                } else {
-                                    let arg = func_args.into_iter().next().unwrap();
-                                    (Box::new(arg.0), arg.1)
+                                Some(match func_args.as_slice() {
+                                    [arg] => (Box::new(arg.0.clone()), arg.1),
+                                    _ => (Box::new(Expression::Tuple(func_args)), e.span.into()),
                                 }),
                             )),
                             e.span.into(),
@@ -2831,10 +2829,9 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                             })
                             .collect(),
                     )?;
-                    let payload = if tuple_args.len() > 1 {
-                        (BaseTyp::Tuple(tuple_args), i.span.clone().into())
-                    } else {
-                        tuple_args.into_iter().next().unwrap()
+                    let payload = match tuple_args.as_slice() {
+                        [arg] => arg.clone(),
+                        _ => (BaseTyp::Tuple(tuple_args), i.span.clone().into()),
                     };
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
