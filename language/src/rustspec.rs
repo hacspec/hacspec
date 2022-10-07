@@ -315,7 +315,7 @@ pub enum BinOpKind {
     Gt,
 }
 
-/// Enumaration of the types allowed as question marks's monad
+/// Enumeration of the types allowed as question marks's monad
 /// representation. Named after the [Carrier][std::ops::Carrier]
 /// trait.
 #[derive(Clone, PartialEq, Eq, Debug, Serialize)]
@@ -363,7 +363,7 @@ pub enum Expression {
     ///    xₙ <- eₙ
     ///    return $ f x₀ … xₙ
     /// ```
-    /// Note the boolean flag indiquates wether we shall insert a `pure` monadic operation or not (that is, above, shall we have `return $ f x₀ … xₙ` or simply `f x₀ … xₙ`).
+    /// Note the boolean flag indicates whether we shall insert a `pure` monadic operation or not (that is, above, shall we have `return $ f x₀ … xₙ` or simply `f x₀ … xₙ`).
     /// This node appears only after the [question marks elimination][desugar::eliminate_question_marks_in_expressions] phase.
     MonadicLet(
         CarrierTyp,                             // Are we dealing with `Result` or `Option`?
@@ -427,7 +427,7 @@ pub enum Pattern {
     SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
 }
 
-#[derive(Clone, Serialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Debug, PartialEq, Eq)]
 pub enum EarlyReturnType {
     Option,
     Result,
