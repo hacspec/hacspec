@@ -1,5 +1,4 @@
 use crate::rustspec::*;
-// use crate::ast_mapper::*;
 use rustc_span::DUMMY_SP;
 
 static ID_COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -77,7 +76,7 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
             let e1 = eliminate_question_marks_in_spanned_expressions(&e1);
             let mv = fresh_var();
             let mv_expr = Box::new((Expression::Named(mv.clone()), DUMMY_SP.into()));
-            if let (Expression::MonadicLet(carrier, bindings, body, pure), _) = e1 {
+            if let (Expression::MonadicLet(carrier, bindings, body, _), _) = e1 {
                 Expression::MonadicLet(
                     carrier,
                     bindings
