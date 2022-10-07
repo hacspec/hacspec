@@ -837,6 +837,7 @@ fn translate_expression<'a>(
             top_ctx,
         )),
         Expression::QuestionMark(..) => {
+            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
             panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
         }
         Expression::Binary(op, e1, e2, op_typ) => {

@@ -662,7 +662,7 @@ fn typecheck_expression(
     log::trace!("   {:?}", backtrace::Backtrace::new());
     match e {
         Expression::MonadicLet(..) => {
-            // TODO: use GADT to eliminiate this `panic!`
+            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
             panic!("Expression::MonadicLet should be elaborated only after typechecking")
         }
         Expression::QuestionMark(qe, ..) => {
