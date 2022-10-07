@@ -16,3 +16,11 @@ pub fn test_tuple_destructuring() {
     let tuple = MyTupleType(1u16, 2u8).clone();
     let MyTupleType(_a, _b) = tuple;
 }
+
+// Test case for issue #228
+pub fn unit_type() {
+    if true {
+        ()
+    };
+    ()
+}
