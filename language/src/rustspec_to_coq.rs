@@ -792,6 +792,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
     match e {
         Expression::MonadicLet(..) => panic!("TODO: Coq support for Expression::MonadicLet"),
         Expression::QuestionMark(..) => {
+            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
             panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
         }
         Expression::Binary((op, _), e1, e2, op_typ) => {

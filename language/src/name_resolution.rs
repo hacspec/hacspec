@@ -158,7 +158,7 @@ fn resolve_expression(
             ))
         }
         Expression::MonadicLet(..) =>
-        // TODO GADT: implement some kind of GADT to eliminate MonadicLet via typing information
+        // TODO: eliminiate this `panic!` with nicer types (See issue #303)
         {
             panic!(
                 "The name resolution phase expects an AST free of [Expression::MonadicLet] node."
