@@ -24,3 +24,9 @@ pub fn unit_type() {
     };
     ()
 }
+
+// Issue #287
+pub struct EmptyTuple();
+pub fn test_empty_tuple() -> EmptyTuple {
+    EmptyTuple()
+}
