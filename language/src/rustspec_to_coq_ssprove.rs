@@ -161,6 +161,8 @@ fn make_let_binding<'a>(
 
 fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match e {
+        Expression::QuestionMark(_, _) => todo!(),
+        Expression::MonadicLet(_, _, _, _) => todo!(),
         Expression::Binary((op, _), e1, e2, op_typ) => {
             make_paren(translate_expression((*e1).0, top_ctx))
                 .append(RcDoc::space())
@@ -758,7 +760,7 @@ fn translate_block<'a>(
     let mut statements = b.stmts;
     match (&b.return_typ, omit_extra_unit) {
         (None, _) => panic!(), // should not happen,
-        (Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))), false) => {
+        (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(args), _))), false) if args.is_empty() => {
             statements.push((
                 Statement::ReturnExp(Expression::Lit(Literal::Unit), b.return_typ),
                 DUMMY_SP.into(),
@@ -1164,7 +1166,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     ));
 
                 let inp_typ = if sig.args.is_empty() {
-                    rustspec_to_coq_ssprove_state::translate_base_typ(BaseTyp::Unit)
+                    rustspec_to_coq_ssprove_state::translate_base_typ(UnitTyp)
                 } else {
                     RcDoc::intersperse(
                         sig.args.iter().map(|((_x, _), (tau, _))| {

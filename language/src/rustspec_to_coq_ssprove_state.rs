@@ -337,7 +337,6 @@ fn translate_enum_case_name<'a>(
 
 pub(crate) fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
     match tau {
-        BaseTyp::Unit => RcDoc::as_string("unit_ChoiceEquality"),
         BaseTyp::Bool => RcDoc::as_string("bool_ChoiceEquality"),
         BaseTyp::UInt8 => RcDoc::as_string("int8"),
         BaseTyp::Int8 => RcDoc::as_string("int8"),
@@ -867,6 +866,8 @@ fn translate_expression<'a>(
     inline: bool,
 ) -> (Vec<RcDoc<'a, ()>>, RcDoc<'a, ()>) {
     match e {
+        Expression::QuestionMark(_, _) => todo!(),
+        Expression::MonadicLet(_, _, _, _) => todo!(),
         Expression::Binary((op, _), e1, e2, op_typ) => {
             let e1 = e1.0;
             let e2 = e2.0;
@@ -2405,7 +2406,7 @@ fn translate_block<'a>(
     let mut statements = b.stmts;
     match (&b.return_typ, omit_extra_unit) {
         (None, _) => panic!(), // should not happen,
-        (Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))), false) => {
+        (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(args), _))), false) if args.is_empty() => {
             statements.push((
                 Statement::ReturnExp(Expression::Lit(Literal::Unit), b.return_typ),
                 DUMMY_SP.into(),
@@ -2451,7 +2452,7 @@ pub(crate) fn translate_item<'a>(
             let (block_vars, block_var_loc_defs) = fset_and_locations(sig.mutable_vars.clone());
 
             let inp_typ = if sig.args.is_empty() {
-                translate_base_typ(BaseTyp::Unit)
+                translate_base_typ(UnitTyp)
             } else {
                 RcDoc::intersperse(
                     sig.args
@@ -2619,7 +2620,7 @@ pub(crate) fn translate_item<'a>(
             RcDoc::intersperse(
                 cases.into_iter().map(|(case_name, case_typ)| {
                     translate_base_typ(match case_typ {
-                        None => BaseTyp::Unit,
+                        None => UnitTyp,
                         Some((bty, _)) => bty.clone(),
                     })
                 }),

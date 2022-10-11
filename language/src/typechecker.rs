@@ -1332,10 +1332,7 @@ fn typecheck_expression(
             e.clone(),
             (
                 (Borrowing::Consumed, span.clone()),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (UnitTyp, span.clone()),
-                ),
+                (UnitTyp, span.clone()),
             ),
             var_context.clone(),
         )),
@@ -2168,7 +2165,7 @@ fn var_set_to_tuple(vars: &VarSet, span: &RustspecSpan, var_context: &VarContext
             Expression::Lit(Literal::Unit),
             Some((
                 (Borrowing::Consumed, span.clone()),
-                (BaseTyp::Unit, span.clone()),
+                (UnitTyp, span.clone()),
             )),
         )
     }
@@ -2415,7 +2412,7 @@ fn typecheck_statement(
                 expr.1.clone(),
                 top_level_context,
             )?;
-            let question_mark = *question_mark || matches!(carrier, Some(..));
+            // let question_mark = (*question_mark).is_some() || matches!(carrier, Some(..));
             let typ = match typ {
                 None => Some((expr_typ.clone(), expr.1.clone())),
                 Some((inner_typ, _)) => {
@@ -2517,7 +2514,7 @@ fn typecheck_statement(
                 e.1.clone(),
                 top_level_context,
             )?;
-            let question_mark = *question_mark || matches!(carrier, Some(..));
+            // let question_mark = *question_mark || matches!(carrier, Some(..));
             let x_typ = find_typ(&x, var_context, top_level_context);
             let x_typ = match x_typ {
                 Some(t) => t,
@@ -2587,8 +2584,8 @@ fn typecheck_statement(
                 e2.1.clone(),
                 top_level_context,
             )?;
-            let question_mark =
-                *question_mark || matches!(carrier1, Some(_)) || matches!(carrier2, Some(_));
+            // let question_mark =
+            //     *question_mark || matches!(carrier1, Some(_)) || matches!(carrier2, Some(_));
             if !is_index(&(e1_t.1).0, top_level_context) {
                 sess.span_rustspec_err(
                     e1.1,

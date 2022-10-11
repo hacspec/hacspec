@@ -397,7 +397,6 @@ pub(crate) fn translate_prefix_for_func_name<'a>(
 ) -> (RcDoc<'a, ()>, FuncPrefix) {
     match prefix {
         BaseTyp::Bool => panic!(), // should not happen
-        BaseTyp::Unit => panic!(), // should not happen
         BaseTyp::UInt8 => (RcDoc::as_string("pub_uint8"), FuncPrefix::Regular),
         BaseTyp::Int8 => (RcDoc::as_string("pub_int8"), FuncPrefix::Regular),
         BaseTyp::UInt16 => (RcDoc::as_string("pub_uint16"), FuncPrefix::Regular),

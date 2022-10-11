@@ -74,8 +74,8 @@ fn make_error_returning_let_binding<'a, F: FnOnce() -> RcDoc<'a, ()>>(
 
 pub fn carrier_operator(carrier: EarlyReturnType) -> String {
     match carrier {
-        EarlyReturnType::Result => "?".to_string(),
-        EarlyReturnType::Option => "*".to_string(),
+        EarlyReturnType::Result(_, _) => "?".to_string(),
+        EarlyReturnType::Option(_) => "*".to_string(),
     }
 }
 
@@ -1185,7 +1185,7 @@ fn translate_statements<'a>(
                     translate_expression(sess, expr.clone(), top_ctx),
                     false,
                     if question_mark.is_some() {
-                        Some(EarlyReturnType::Result)
+                        None // Some(EarlyReturnType::Result(_, _))
                     } else {
                         None
                     },
@@ -1209,7 +1209,7 @@ fn translate_statements<'a>(
                     translate_expression(sess, e1.clone(), top_ctx),
                     false,
                     if question_mark.is_some() {
-                        Some(EarlyReturnType::Result)
+                        None // Some(EarlyReturnType::Result(_, _))
                     } else {
                         None
                     },

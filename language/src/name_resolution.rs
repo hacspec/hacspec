@@ -200,13 +200,20 @@ fn resolve_expression(
                 "The name resolution phase expects an AST free of [Expression::MonadicLet] node."
             )
         }
-        Expression::QuestionMark(e, typ) => Ok((
-            Expression::QuestionMark(
-                Box::new(resolve_expression(sess, *e, name_context, top_level_ctx)?),
-                typ.clone(),
-            ),
-            e_span,
-        )),
+        Expression::QuestionMark(e, typ) => {
+            let (smi_new_e, new_e) = resolve_expression(sess, *e, name_context, top_level_ctx)?;
+
+            Ok((
+                smi_new_e,
+                (
+                    Expression::QuestionMark(
+                        Box::new(new_e),
+                        typ.clone(),
+                    ),
+                    e_span,
+                )
+            ))
+        }
         Expression::MatchWith(arg, arms) => {
             let (smi_new_arg, new_arg) =
                 resolve_expression(sess, *arg, name_context, top_level_ctx)?;

@@ -193,7 +193,6 @@ fn translate_enum_case_name<'a>(
 
 fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
     match tau {
-        BaseTyp::Unit => RcDoc::as_string("unit_ChoiceEquality"),
         BaseTyp::Bool => RcDoc::as_string("bool_ChoiceEquality"),
         BaseTyp::UInt8 => RcDoc::as_string("int8"),
         BaseTyp::Int8 => RcDoc::as_string("int8"),
@@ -558,6 +557,8 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
 
 fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match e {
+        Expression::QuestionMark(_, _) => todo!(),
+        Expression::MonadicLet(_, _, _, _) => todo!(),
         Expression::Binary((op, _), e1, e2, op_typ) => {
             let e1 = e1.0;
             let e2 = e2.0;
@@ -1255,7 +1256,7 @@ fn translate_block<'a>(
     let mut statements = b.stmts;
     match (&b.return_typ, omit_extra_unit) {
         (None, _) => panic!(), // should not happen,
-        (Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))), false) => {
+        (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(args), _))), false) if args.is_empty() => {
             statements.push((
                 Statement::ReturnExp(Expression::Lit(Literal::Unit), b.return_typ),
                 DUMMY_SP.into(),
