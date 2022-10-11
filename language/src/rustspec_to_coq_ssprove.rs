@@ -565,6 +565,24 @@ fn translate_statements<'a>(
                         .append(rustspec_to_coq_ssprove_state::fset_from_scope(smv.clone()))
                         .append(RcDoc::as_string(")"))
                         .append(RcDoc::space())
+                        .append(RcDoc::as_string("(I1 := "))
+                        .append(
+                            rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
+                                function_dependencies.clone(),
+                                top_ctx,
+                            ),
+                        )
+                        .append(RcDoc::as_string(")"))
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string("(I2 := "))
+                        .append(
+                            rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
+                                function_dependencies.clone(),
+                                top_ctx,
+                            ),
+                        )
+                        .append(RcDoc::as_string(")"))
+                        .append(RcDoc::space())
                         .append(RcDoc::as_string("(H_loc_incl := _) (H_opsig_incl := _)"))
                         .append(RcDoc::space())
                         .append(make_paren(block2_expr))
@@ -589,6 +607,24 @@ fn translate_statements<'a>(
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(L2 := "))
                 .append(rustspec_to_coq_ssprove_state::fset_from_scope(smv.clone()))
+                .append(RcDoc::as_string(")"))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("(I1 := "))
+                .append(
+                    rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
+                        function_dependencies.clone(),
+                        top_ctx,
+                    ),
+                )
+                .append(RcDoc::as_string(")"))
+                .append(RcDoc::space())
+                .append(RcDoc::as_string("(I2 := "))
+                .append(
+                    rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
+                        function_dependencies.clone(),
+                        top_ctx,
+                    ),
+                )
                 .append(RcDoc::as_string(")"))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(H_loc_incl := _) (H_opsig_incl := _)"))
@@ -744,176 +780,176 @@ fn translate_block<'a>(
 }
 
 fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
-    let top_ctx_pure: &'a TopLevelContext = Box::leak(Box::new(TopLevelContext {
-        functions: top_ctx
-            .functions
-            .clone()
-            .into_iter()
-            .map(|(k, v)| {
-                (
-                    match k {
-                        FnKey::Independent(t) => FnKey::Independent(TopLevelIdent {
-                            string: t.string.clone() + "_pure",
-                            ..t.clone()
-                        }),
-                        FnKey::Impl(b, t) => FnKey::Impl(
-                            b.clone(),
-                            TopLevelIdent {
-                                string: t.string.clone() + "_pure",
-                                ..t.clone()
-                            },
-                        ),
-                    },
-                    v,
-                )
-            })
-            .collect::<HashMap<FnKey, _>>(),
-        ..top_ctx.clone()
-    }));
+    // let top_ctx_pure: &'a TopLevelContext = Box::leak(Box::new(TopLevelContext {
+    //     functions: top_ctx
+    //         .functions
+    //         .clone()
+    //         .into_iter()
+    //         .map(|(k, v)| {
+    //             (
+    //                 match k {
+    //                     FnKey::Independent(t) => FnKey::Independent(TopLevelIdent {
+    //                         string: t.string.clone() + "_pure",
+    //                         ..t.clone()
+    //                     }),
+    //                     FnKey::Impl(b, t) => FnKey::Impl(
+    //                         b.clone(),
+    //                         TopLevelIdent {
+    //                             string: t.string.clone() + "_pure",
+    //                             ..t.clone()
+    //                         },
+    //                     ),
+    //                 },
+    //                 v,
+    //             )
+    //         })
+    //         .collect::<HashMap<FnKey, _>>(),
+    //     ..top_ctx.clone()
+    // }));
 
-    let top_ctx_state: &'a TopLevelContext = Box::leak(Box::new(match top_ctx.clone() {
-        TopLevelContext {
-            functions,
-            consts,
-            typ_dict,
-        } => TopLevelContext {
-            functions: functions
-                .clone()
-                .into_iter()
-                .map(|(k, v)| match v {
-                    FnValue::Local(fnsig) => (
-                        match k {
-                            FnKey::Independent(t) => FnKey::Independent(TopLevelIdent {
-                                string: t.string.clone() + "_state",
-                                ..t.clone()
-                            }),
-                            FnKey::Impl(b, t) => FnKey::Impl(
-                                b.clone(),
-                                TopLevelIdent {
-                                    string: t.string.clone() + "_state",
-                                    ..t.clone()
-                                },
-                            ),
-                        },
-                        FnValue::Local(fnsig),
-                    ),
-                    _ => (k, v),
-                })
-                .collect::<HashMap<FnKey, FnValue>>(),
-            consts,
-            typ_dict,
-        },
-    }));
+    // let top_ctx_state: &'a TopLevelContext = Box::leak(Box::new(match top_ctx.clone() {
+    //     TopLevelContext {
+    //         functions,
+    //         consts,
+    //         typ_dict,
+    //     } => TopLevelContext {
+    //         functions: functions
+    //             .clone()
+    //             .into_iter()
+    //             .map(|(k, v)| match v {
+    //                 FnValue::Local(fnsig) => (
+    //                     match k {
+    //                         FnKey::Independent(t) => FnKey::Independent(TopLevelIdent {
+    //                             string: t.string.clone() + "_state",
+    //                             ..t.clone()
+    //                         }),
+    //                         FnKey::Impl(b, t) => FnKey::Impl(
+    //                             b.clone(),
+    //                             TopLevelIdent {
+    //                                 string: t.string.clone() + "_state",
+    //                                 ..t.clone()
+    //                             },
+    //                         ),
+    //                     },
+    //                     FnValue::Local(fnsig),
+    //                 ),
+    //                 _ => (k, v),
+    //             })
+    //             .collect::<HashMap<FnKey, FnValue>>(),
+    //         consts,
+    //         typ_dict,
+    //     },
+    // }));
 
     match item.item.clone() {
         Item::FnDecl((f, f_span), sig, (b, b_span)) => {
             let (block_vars, block_var_loc_defs) =
                 rustspec_to_coq_ssprove_state::fset_and_locations(sig.mutable_vars.clone());
 
-            let decorated_item_pure = DecoratedItem {
-                item: Item::FnDecl(
-                    (
-                        TopLevelIdent {
-                            string: f.string.clone() + "_pure",
-                            ..f.clone()
-                        },
-                        f_span.clone(),
-                    ),
-                    match sig.clone() {
-                        FuncSig {
-                            args,
-                            ret,
-                            mutable_vars,
-                            function_dependencies,
-                        } => FuncSig {
-                            args,
-                            ret,
-                            mutable_vars,
-                            function_dependencies: FunctionDependencies(
-                                function_dependencies
-                                    .0
-                                    .into_iter()
-                                    .map(|x| TopLevelIdent {
-                                        string: x.string.clone() + "_pure",
-                                        ..x.clone()
-                                    })
-                                    .collect(),
-                            ),
-                        },
-                    },
-                    (
-                        Block {
-                            function_dependencies: FunctionDependencies(
-                                b.function_dependencies
-                                    .0
-                                    .clone()
-                                    .into_iter()
-                                    .map(|x| TopLevelIdent {
-                                        string: x.string.clone() + "_pure",
-                                        ..x.clone()
-                                    })
-                                    .collect(),
-                            ),
-                            ..b.clone()
-                        },
-                        b_span.clone(),
-                    ),
-                ),
-                ..item.clone()
-            };
+            // let decorated_item_pure = DecoratedItem {
+            //     item: Item::FnDecl(
+            //         (
+            //             TopLevelIdent {
+            //                 string: f.string.clone() + "_pure",
+            //                 ..f.clone()
+            //             },
+            //             f_span.clone(),
+            //         ),
+            //         match sig.clone() {
+            //             FuncSig {
+            //                 args,
+            //                 ret,
+            //                 mutable_vars,
+            //                 function_dependencies,
+            //             } => FuncSig {
+            //                 args,
+            //                 ret,
+            //                 mutable_vars,
+            //                 function_dependencies: FunctionDependencies(
+            //                     function_dependencies
+            //                         .0
+            //                         .into_iter()
+            //                         .map(|x| TopLevelIdent {
+            //                             string: x.string.clone() + "_pure",
+            //                             ..x.clone()
+            //                         })
+            //                         .collect(),
+            //                 ),
+            //             },
+            //         },
+            //         (
+            //             Block {
+            //                 function_dependencies: FunctionDependencies(
+            //                     b.function_dependencies
+            //                         .0
+            //                         .clone()
+            //                         .into_iter()
+            //                         .map(|x| TopLevelIdent {
+            //                             string: x.string.clone() + "_pure",
+            //                             ..x.clone()
+            //                         })
+            //                         .collect(),
+            //                 ),
+            //                 ..b.clone()
+            //             },
+            //             b_span.clone(),
+            //         ),
+            //     ),
+            //     ..item.clone()
+            // };
 
-            let decorated_item_state = DecoratedItem {
-                item: Item::FnDecl(
-                    (
-                        TopLevelIdent {
-                            string: f.string.clone() + "_state",
-                            ..f.clone()
-                        },
-                        f_span.clone(),
-                    ),
-                    match sig.clone() {
-                        FuncSig {
-                            args,
-                            ret,
-                            mutable_vars,
-                            function_dependencies,
-                        } => FuncSig {
-                            args,
-                            ret,
-                            mutable_vars,
-                            function_dependencies: FunctionDependencies(
-                                function_dependencies
-                                    .0
-                                    .into_iter()
-                                    .map(|x| TopLevelIdent {
-                                        string: x.string.clone() + "_state",
-                                        ..x.clone()
-                                    })
-                                    .collect(),
-                            ),
-                        },
-                    },
-                    (
-                        Block {
-                            function_dependencies: FunctionDependencies(
-                                b.function_dependencies
-                                    .0
-                                    .clone()
-                                    .into_iter()
-                                    .map(|x| TopLevelIdent {
-                                        string: x.string.clone() + "_state",
-                                        ..x.clone()
-                                    })
-                                    .collect(),
-                            ),
-                            ..b.clone()
-                        },
-                        b_span.clone(),
-                    ),
-                )
-                .clone(),
-                ..item.clone()
-            };
+            // let decorated_item_state = DecoratedItem {
+            //     item: Item::FnDecl(
+            //         (
+            //             TopLevelIdent {
+            //                 string: f.string.clone() + "_state",
+            //                 ..f.clone()
+            //             },
+            //             f_span.clone(),
+            //         ),
+            //         match sig.clone() {
+            //             FuncSig {
+            //                 args,
+            //                 ret,
+            //                 mutable_vars,
+            //                 function_dependencies,
+            //             } => FuncSig {
+            //                 args,
+            //                 ret,
+            //                 mutable_vars,
+            //                 function_dependencies: FunctionDependencies(
+            //                     function_dependencies
+            //                         .0
+            //                         .into_iter()
+            //                         .map(|x| TopLevelIdent {
+            //                             string: x.string.clone() + "_state",
+            //                             ..x.clone()
+            //                         })
+            //                         .collect(),
+            //                 ),
+            //             },
+            //         },
+            //         (
+            //             Block {
+            //                 function_dependencies: FunctionDependencies(
+            //                     b.function_dependencies
+            //                         .0
+            //                         .clone()
+            //                         .into_iter()
+            //                         .map(|x| TopLevelIdent {
+            //                             string: x.string.clone() + "_state",
+            //                             ..x.clone()
+            //                         })
+            //                         .collect(),
+            //                 ),
+            //                 ..b.clone()
+            //             },
+            //             b_span.clone(),
+            //         ),
+            //     )
+            //     .clone(),
+            //     ..item.clone()
+            // };
 
             // let fn_pure: RcDoc<'a, ()> =
             //     rustspec_to_coq_ssprove_pure::translate_item(decorated_item_pure, &top_ctx_pure);
@@ -984,11 +1020,6 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
 
                 // let shift_row := fun x_0 x_1 x_2 => package_both shift_row (x_0,x_1,x_2) in
 
-                let dep_vec = rustspec_to_coq_ssprove_state::function_dependencies_to_vec(
-                    sig.function_dependencies.clone(),
-                    top_ctx,
-                );
-
                 let fun_inp_notation_0 = RcDoc::as_string("Notation")
                     .append(RcDoc::space())
                     .append(RcDoc::as_string("\"'"))
@@ -1000,15 +1031,18 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     .append(RcDoc::space())
                     .append(RcDoc::as_string(":="))
                     .append(make_paren(
-                        RcDoc::intersperse(
-                            sig.args.iter().map(|((_x, _), (tau, _))| {
-                                rustspec_to_coq_ssprove_state::translate_typ(tau.clone())
-                            }),
-                            RcDoc::space()
-                                .append(RcDoc::as_string("'×"))
-                                .append(RcDoc::space()),
-                        )
-                        .append(RcDoc::as_string(" : choice_type")),
+                        if sig.args.is_empty() {
+                            RcDoc::as_string("unit_ChoiceEquality")
+                        } else {
+                            RcDoc::intersperse(
+                                sig.args.iter().map(|((_x, _), (tau, _))| {
+                                    rustspec_to_coq_ssprove_state::translate_typ(tau.clone())
+                                }),
+                                RcDoc::space()
+                                    .append(RcDoc::as_string("'×"))
+                                    .append(RcDoc::space()),
+                            )
+                        }.append(RcDoc::as_string(" : choice_type")),
                     ))
                     .append(RcDoc::as_string(" (in custom pack_type at level 2)."));
 
@@ -1023,6 +1057,9 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     .append(RcDoc::space())
                     .append(RcDoc::as_string(":="))
                     .append(make_paren(
+                        if sig.args.is_empty() {
+                            RcDoc::as_string("unit_ChoiceEquality")
+                        } else {
                         RcDoc::intersperse(
                             sig.args.iter().map(|((_x, _), (tau, _))| {
                                 rustspec_to_coq_ssprove_state::translate_typ(tau.clone())
@@ -1031,6 +1068,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                                 .append(RcDoc::as_string("'×"))
                                 .append(RcDoc::space()),
                         )
+                        }
                         .append(RcDoc::as_string(" : ChoiceEquality")),
                     ))
                     .append(RcDoc::as_string(" (at level 2)."));
@@ -1073,26 +1111,26 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     RcDoc::as_string(fresh_codegen_id()),
                 );
 
-                let fun_def_sig = translate_ident(Ident::TopLevel(f.clone()))
-                    .append(RcDoc::line())
-                    .append(if sig.args.len() > 0 {
-                        RcDoc::intersperse(
-                            sig.args.iter().map(|((x, _), (tau, _))| {
-                                make_paren(
-                                    translate_ident(x.clone())
-                                        .append(RcDoc::space())
-                                        .append(RcDoc::as_string(":"))
-                                        .append(RcDoc::space())
-                                        .append(rustspec_to_coq_ssprove_state::translate_typ(
-                                            tau.clone(),
-                                        )),
-                                )
-                            }),
-                            RcDoc::line(),
-                        )
-                    } else {
-                        RcDoc::nil()
-                    });
+                // let fun_def_sig = translate_ident(Ident::TopLevel(f.clone()))
+                //     .append(RcDoc::line())
+                //     .append(if sig.args.len() > 0 {
+                //         RcDoc::intersperse(
+                //             sig.args.iter().map(|((x, _), (tau, _))| {
+                //                 make_paren(
+                //                     translate_ident(x.clone())
+                //                         .append(RcDoc::space())
+                //                         .append(RcDoc::as_string(":"))
+                //                         .append(RcDoc::space())
+                //                         .append(rustspec_to_coq_ssprove_state::translate_typ(
+                //                             tau.clone(),
+                //                         )),
+                //                 )
+                //             }),
+                //             RcDoc::line(),
+                //         )
+                //     } else {
+                //         RcDoc::nil()
+                //     });
 
                 let opr_sig = make_paren(
                     RcDoc::as_string(f.clone().string.to_uppercase())
@@ -1163,7 +1201,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                             .append(fun_imports.clone())
                             .append(make_paren(
                                 make_paren(block_exprs.group())
-                                    .append(RcDoc::space())
+                                    .append(
+                                        RcDoc::space())
                                     .append(":")
                                     .append(RcDoc::space())
                                     .append(both_type),
@@ -1184,31 +1223,6 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                 // .append(RcDoc::as_string("temp_package_both temp_inp"))
                 // .append(RcDoc::as_string("}]"));
 
-                let package_def = RcDoc::as_string("Program")
-                    .append(RcDoc::space())
-                    .append(rustspec_to_coq_ssprove_state::make_definition(
-                        RcDoc::as_string("package_")
-                            .append(translate_ident(Ident::TopLevel(f.clone()))),
-                        Some(RcDoc::as_string("package _ _ _")),
-                        if dep_vec.is_empty() {
-                            translate_ident(Ident::TopLevel(f.clone()))
-                        } else {
-                            RcDoc::as_string("seq_link")
-                                .append(RcDoc::space())
-                                .append(translate_ident(Ident::TopLevel(f.clone())))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string("link_rest"))
-                                .append(make_paren(RcDoc::intersperse(
-                                    dep_vec.into_iter().map(|(x, _, _)| {
-                                        RcDoc::as_string("package_")
-                                            .append(translate_toplevel_ident(x))
-                                    }),
-                                    RcDoc::as_string(","),
-                                )))
-                        },
-                    ))
-                    .append(RcDoc::hardline().append(RcDoc::as_string("Fail Next Obligation.")));
-
                 RcDoc::line()
                     .append(fun_inp_notation_0)
                     .append(RcDoc::line())
@@ -1220,8 +1234,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     .append(RcDoc::line())
                     .append(fun_ident_def)
                     .append(RcDoc::line())
-                    .append(RcDoc::as_string("Program "))
-                    .append(rustspec_to_coq_ssprove_pure::make_let_binding(
+                    .append(RcDoc::as_string("Equations "))
+                    .append(rustspec_to_coq_ssprove_pure::make_definition_inner(
                         translate_ident(Ident::TopLevel(f.clone()))
                             .append(RcDoc::line())
                             .append(RcDoc::as_string(":"))
@@ -1230,12 +1244,13 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                             .group(),
                         None,
                         // fun_imports.append(// )
-                        package_wraped_code_block.group(),
-                        true,
+                        translate_ident(Ident::TopLevel(f.clone()))
+                            .append(RcDoc::as_string(" := "))
+                            .append(package_wraped_code_block.group()),
                     ))
                     .append(RcDoc::hardline().append(RcDoc::as_string("Fail Next Obligation.")))
-                    // .append(RcDoc::line())
-                    // .append(package_def)
+                // .append(RcDoc::line())
+                // .append(package_def)
             })
         }
         _ => rustspec_to_coq_ssprove_pure::translate_item(item, top_ctx),
@@ -1275,14 +1290,14 @@ pub fn translate_and_write_to_file(
          From Crypt Require Import choice_type Package Prelude.\n\
          Import PackageNotation.\n\
          From extructures Require Import ord fset.\n\
-         From CoqWord Require Import ssrZ word.\n\
+         From mathcomp Require Import ssrZ word.\n\
          From Jasmin Require Import word.\n\
          \n\
          From Coq Require Import ZArith.\n\
          Import List.ListNotations.\n\
          Open Scope list_scope.\n\
          Open Scope Z_scope.\n\
-         Open Scope bool_scope.\n\n\
+         Open Scope bool_scope.\n\
          \n\
          Require Import ChoiceEquality.\n\
          Require Import LocationUtility.\n\

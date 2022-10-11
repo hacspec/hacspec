@@ -13,6 +13,28 @@ use std::path;
 
 use crate::rustspec_to_coq_base::*;
 
+pub(crate) fn make_definition_inner<'a>(
+    pat: RcDoc<'a, ()>,
+    typ: Option<RcDoc<'a, ()>>,
+    expr: RcDoc<'a, ()>,
+) -> RcDoc<'a, ()> {
+    (pat.clone()
+        .append(match typ.clone() {
+            None => RcDoc::nil(),
+            Some(tau) => RcDoc::space()
+                .append(RcDoc::as_string(":"))
+                .append(RcDoc::space())
+                .append(tau),
+        })
+        .group())
+    .append(RcDoc::space())
+    .append(RcDoc::as_string(":="))
+    .group()
+    .append(RcDoc::line().append(expr.group()))
+    .nest(2)
+    .append(RcDoc::as_string("."))
+}
+
 pub(crate) fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
     typ: Option<RcDoc<'a, ()>>,
@@ -423,8 +445,7 @@ pub(crate) fn translate_func_name<'a>(
                 | (NAT_MODULE, "from_byte_seq_le")
                 | (NAT_MODULE, "from_byte_seq_be")
                 | (NAT_MODULE, "to_public_byte_seq_le")
-                | (NAT_MODULE, "to_public_byte_seq_be")
-                ) => {
+                | (NAT_MODULE, "to_public_byte_seq_be")) => {
                     // position in arg list (does not count self)
                     let position = match m {
                         (ARRAY_MODULE, "from_slice")
@@ -441,8 +462,7 @@ pub(crate) fn translate_func_name<'a>(
                         | (NAT_MODULE, "from_byte_seq_le")
                         | (NAT_MODULE, "from_byte_seq_be")
                         | (NAT_MODULE, "to_public_byte_seq_le")
-                        | (NAT_MODULE, "to_public_byte_seq_be")
-                            => 0,
+                        | (NAT_MODULE, "to_public_byte_seq_be") => 0,
                         (ARRAY_MODULE, "update")
                         | (SEQ_MODULE, "update")
                         | (ARRAY_MODULE, "update_slice")
@@ -1630,7 +1650,7 @@ pub fn translate_and_write_to_file(
          From Crypt Require Import choice_type Package Prelude.\n\
          Import PackageNotation.\n\
          From extructures Require Import ord fset.\n\
-         From CoqWord Require Import ssrZ word.\n\
+         From mathcomp Require Import ssrZ word.\n\
          From Jasmin Require Import word.\n\
          Require Import ChoiceEquality.\n\
          \n\

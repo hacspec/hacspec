@@ -775,7 +775,7 @@ fn read_crate_pre(
             );
         }
 
-        p
+        p.clone()
         // }
     } else {
         vec![(&manifest.packages[0]).clone()]
@@ -945,6 +945,7 @@ fn main() -> Result<(), usize> {
             let deps = manifest.target_directory + "/debug/deps";
             callbacks.target_directory = deps;
 
+            println!("{:?}", package_vec);
             for package in package_vec {
                 let pkg_name = package.name.clone();
 
@@ -963,6 +964,7 @@ fn main() -> Result<(), usize> {
                     Ok(_) => Ok(()),
                     Err(_) => Err(1usize),
                 }?;
+
             }
         }
     };

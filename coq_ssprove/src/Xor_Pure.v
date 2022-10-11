@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From CoqWord Require Import ssrZ word.
+(* From CoqWord Require Import ssrZ word. *)
 From Jasmin Require Import word.
 Require Import ChoiceEquality.
 
@@ -18,9 +18,8 @@ Require Import Hacspec_Lib_Pre.
 
 Open Scope hacspec_scope.
 
-
-
 Definition xor (x_inp_0 : int64) (y_inp_1 : int64) : int64 :=
+  Eval cbv zeta in (
   let x_2 : int64 :=
     x_inp_0 in 
   let y_3 : int64 :=
@@ -35,7 +34,9 @@ Definition xor (x_inp_0 : int64) (y_inp_1 : int64) : int64 :=
     y_3 in 
   let r_5 :=
     ((v1_6) .^ (v2_7)) in 
-  r_5.
+  r_5).
+Definition xor' :=  xor.
+About xor'.
 Definition xor_code
   (x_inp_0 : int64)
   (y_inp_1 : int64)

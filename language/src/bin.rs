@@ -59,5 +59,6 @@ fn main() {
         .status()
         .expect("Couldn't run hacspec");
 
+    println!("{:?}", hacspec_out);
     std::process::exit(hacspec_out.code().unwrap());
 }

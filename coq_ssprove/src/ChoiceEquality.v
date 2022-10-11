@@ -346,8 +346,8 @@ Program Definition lift_to_both {ce : ChoiceEquality} {L I} (x : @T ce) : both L
   {| is_pure := x ; is_state := @lift_to_code ce L I x |}.
 Next Obligation. intros. apply r_ret. intros. easy. Qed.
 
-Definition both0 (A : ChoiceEquality) := both fset.fset0 fset.fset0 A. (* [interface] *)
-Definition lift_to_both0 {ce : ChoiceEquality} (x : T ce) : both fset.fset0 fset.fset0 ce := lift_to_both x.
+Definition both0 (A : ChoiceEquality) := both fset.fset0 [interface] A. (* [interface] *)
+Definition lift_to_both0 {ce : ChoiceEquality} (x : T ce) : both fset.fset0 [interface] ce := lift_to_both x.
 
 Definition lift_code_scope {L1 L2 : {fset Location}} {I1 I2 : {fset opsig}} {A} (c : code L1 I1 A) `{H_loc_incl : List.incl L1 L2} `{H_opsig_incl : List.incl I1 I2} : code L2 I2 A :=
   {code (prog c) #with
@@ -367,8 +367,8 @@ Definition lift_scopeI
     code_eq_proof_statement := code_eq_proof_statement b
   |}.
 
-Definition lift_scope0 {L I} {A} (b : both fset.fset0 fset.fset0 A) : both L I A :=
-  lift_scope (H_loc_incl := incl_nil_l _) (H_opsig_incl := incl_nil_l _) b.
+Definition lift_scope0 {L I} {A} (b : both fset.fset0 [interface] A) : both L I A :=
+  lift_scope (H_loc_incl := incl_nil_l _) (H_opsig_incl := ltac:(rewrite <- fset0E ; apply incl_nil_l)) b.
 
 Instance both_comparable {A : ChoiceEquality} `{Comparable A} {L I} : Comparable (both L I A) :=
   {|

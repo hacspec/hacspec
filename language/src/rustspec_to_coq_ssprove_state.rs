@@ -150,14 +150,26 @@ fn make_let_binding<'a>(
         })
 }
 
-pub(crate) fn make_definition<'a>(
+pub(crate) fn make_equations<'a>(
     name: RcDoc<'a, ()>,
     typ: Option<RcDoc<'a, ()>>,
     expr: RcDoc<'a, ()>,
 ) -> RcDoc<'a, ()> {
-    RcDoc::as_string("Definition")
+    RcDoc::as_string("Equations")
         .append(RcDoc::space())
-        .append(name.clone())
+        .append(make_definition_inner(
+            name.clone(),
+            typ,
+            name.append(" := ").append(RcDoc::line()).append(expr),
+        ))
+}
+
+pub(crate) fn make_definition_inner<'a>(
+    name: RcDoc<'a, ()>,
+    typ: Option<RcDoc<'a, ()>>,
+    expr: RcDoc<'a, ()>,
+) -> RcDoc<'a, ()> {
+    name.clone()
         .append(RcDoc::space())
         .append(
             match typ.clone() {
@@ -169,9 +181,19 @@ pub(crate) fn make_definition<'a>(
         .append(RcDoc::space())
         .append(RcDoc::as_string(":="))
         .group()
-        .append(RcDoc::line().append(make_paren(expr.group())))
+        .append(RcDoc::line().append(expr.group()))
         .nest(2)
         .append(RcDoc::as_string("."))
+}
+
+pub(crate) fn make_definition<'a>(
+    name: RcDoc<'a, ()>,
+    typ: Option<RcDoc<'a, ()>>,
+    expr: RcDoc<'a, ()>,
+) -> RcDoc<'a, ()> {
+    RcDoc::as_string("Definition")
+        .append(RcDoc::space())
+        .append(make_definition_inner(name, typ, expr))
 }
 
 fn code_block_wrap<'a>(
@@ -300,7 +322,9 @@ fn translate_enum_case_name<'a>(
             )
             .append(if explicit && tyvec.len() != 0 {
                 RcDoc::space().append(RcDoc::intersperse(
-                    tyvec.into_iter().map(|(x, _)| make_paren(translate_base_typ(x))),
+                    tyvec
+                        .into_iter()
+                        .map(|(x, _)| make_paren(translate_base_typ(x))),
                     RcDoc::space(),
                 ))
             } else {
@@ -366,7 +390,8 @@ pub(crate) fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             translate_ident(Ident::TopLevel(ident))
                 .append(RcDoc::space())
                 .append(RcDoc::intersperse(
-                    args.iter().map(|arg| make_paren(translate_base_typ(arg.0.clone()))),
+                    args.iter()
+                        .map(|arg| make_paren(translate_base_typ(arg.0.clone()))),
                     RcDoc::space(),
                 )),
         ),
@@ -913,44 +938,44 @@ fn translate_expression<'a>(
 
             let match_expr = make_paren(code_block_wrap(
                 RcDoc::as_string("match")
-                .append(RcDoc::space())
-                .append(trans_arg_0)
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("with"))
-                .append(RcDoc::line())
-                .append(RcDoc::intersperse(
-                    ass_e1_0_iter
-                        .into_iter()
-                        .zip(trans_e1_0_iter.into_iter())
-                        .map(|(enum_ass, (enum_name, case_name, payload, trans_e1_0))| {
-                            RcDoc::as_string("|")
-                                .append(RcDoc::space())
-                                .append(translate_enum_case_name(
-                                    enum_name.clone(),
-                                    case_name.0.clone(),
-                                    false,
-                                ))
-                                .append(match &payload {
-                                    Some(payload) => RcDoc::space()
-                                        .append(translate_pattern(payload.0.clone())),
-                                    None => RcDoc::nil(),
-                                })
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string("=>"))
-                                .append(RcDoc::concat(enum_ass.into_iter()))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string("ret"))
-                                .append(RcDoc::space())
-                                .append(make_paren(trans_e1_0))
-                        }),
-                    RcDoc::line(),
-                ))
-                .append(RcDoc::line())
-                .append(RcDoc::as_string("end")),
+                    .append(RcDoc::space())
+                    .append(trans_arg_0)
+                    .append(RcDoc::space())
+                    .append(RcDoc::as_string("with"))
+                    .append(RcDoc::line())
+                    .append(RcDoc::intersperse(
+                        ass_e1_0_iter
+                            .into_iter()
+                            .zip(trans_e1_0_iter.into_iter())
+                            .map(|(enum_ass, (enum_name, case_name, payload, trans_e1_0))| {
+                                RcDoc::as_string("|")
+                                    .append(RcDoc::space())
+                                    .append(translate_enum_case_name(
+                                        enum_name.clone(),
+                                        case_name.0.clone(),
+                                        false,
+                                    ))
+                                    .append(match &payload {
+                                        Some(payload) => RcDoc::space()
+                                            .append(translate_pattern(payload.0.clone())),
+                                        None => RcDoc::nil(),
+                                    })
+                                    .append(RcDoc::space())
+                                    .append(RcDoc::as_string("=>"))
+                                    .append(RcDoc::concat(enum_ass.into_iter()))
+                                    .append(RcDoc::space())
+                                    .append(RcDoc::as_string("ret"))
+                                    .append(RcDoc::space())
+                                    .append(make_paren(trans_e1_0))
+                            }),
+                        RcDoc::line(),
+                    ))
+                    .append(RcDoc::line())
+                    .append(RcDoc::as_string("end")),
                 None,
                 None,
-                None
-                ));
+                None,
+            ));
 
             let temp_name = Ident::Local(LocalIdent {
                 id: fresh_codegen_id(),
@@ -2548,9 +2573,7 @@ pub(crate) fn translate_item<'a>(
 
             let dep_vec = function_dependencies_to_vec(sig.function_dependencies.clone(), top_ctx);
             let package_def =
-                RcDoc::as_string("Program")
-                    .append(RcDoc::space())
-                    .append(make_definition(
+                make_equations(
                         RcDoc::as_string("package_")
                             .append(translate_ident(Ident::TopLevel(f.clone()))),
                         Some(RcDoc::as_string("package _ _ _")),
@@ -2570,7 +2593,7 @@ pub(crate) fn translate_item<'a>(
                                     RcDoc::as_string(","),
                                 )))
                         },
-                    ));
+                    );
 
             block_var_loc_defs
                 .append(RcDoc::line())
@@ -2580,9 +2603,7 @@ pub(crate) fn translate_item<'a>(
                 .append(RcDoc::line())
                 .append(fun_ident_def)
                 .append(RcDoc::line())
-                .append(RcDoc::as_string("Program"))
-                .append(RcDoc::space())
-                .append(make_definition(
+                .append(make_equations(
                     fun_def_sig,
                     Some(fun_type),
                     package_wraped_code_block,
@@ -2889,7 +2910,7 @@ pub fn translate_and_write_to_file(
          From Crypt Require Import choice_type Package Prelude.\n\
          Import PackageNotation.\n\
          From extructures Require Import ord fset.\n\
-         From CoqWord Require Import ssrZ word.\n\
+         From mathcomp Require Import ssrZ word.\n\
          From Jasmin Require Import word.\n\
          \n\
          From Coq Require Import ZArith.\n\
