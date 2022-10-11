@@ -175,7 +175,6 @@ impl fmt::Debug for TypVar {
 
 #[derive(Clone, Hash, PartialEq, Eq, Serialize, Debug)]
 pub enum BaseTyp {
-    Unit,
     Bool,
     UInt128,
     Int128,
@@ -202,10 +201,11 @@ pub enum BaseTyp {
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
+pub const UnitTyp: BaseTyp = BaseTyp::Tuple(vec!());
+
 impl fmt::Display for BaseTyp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BaseTyp::Unit => write!(f, "unit"),
             BaseTyp::Bool => write!(f, "bool"),
             BaseTyp::UInt128 => write!(f, "u128"),
             BaseTyp::Int128 => write!(f, "i128"),

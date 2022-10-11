@@ -17,6 +17,14 @@ pub fn test_tuple_destructuring() {
     let MyTupleType(_a, _b) = tuple;
 }
 
+// Test case for issue #228
+pub fn unit_type() {
+    if true {
+        ()
+    };
+    ()
+}
+
 // Issue #287
 pub struct EmptyTuple();
 pub fn test_empty_tuple() -> EmptyTuple {
