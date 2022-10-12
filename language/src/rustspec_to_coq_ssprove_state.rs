@@ -229,7 +229,7 @@ fn code_block_wrap<'a>(
 
 fn bind_code<'a>(
     expr: RcDoc<'a, ()>,
-    early_return_typ: Option<EarlyReturnType>,
+    early_return_typ: Option<CarrierTyp>,
     typ: Option<BaseTyp>,
     mutable: bool,
     fun_pat: Pattern,
@@ -251,11 +251,11 @@ fn bind_code<'a>(
         })
         .append(make_paren(
             match early_return_typ.clone() {
-                Some(EarlyReturnType::Result(_, (c, _))) => {
+                Some(CarrierTyp::Result(_, (c, _))) => {
                     RcDoc::as_string("ChoiceEqualityMonad.result_bind_code ")
                         .append(translate_base_typ(c))
                 }
-                Some(EarlyReturnType::Option(_)) => {
+                Some(CarrierTyp::Option(_)) => {
                     RcDoc::as_string("ChoiceEqualityMonad.option_bind_code")
                 }
                 None => RcDoc::as_string("_"),

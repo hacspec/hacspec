@@ -102,7 +102,7 @@ fn make_let_binding<'a>(
     expr: RcDoc<'a, ()>,
     mutable: bool,
     monad_bind: bool,
-    early_return_typ: Option<EarlyReturnType>,
+    early_return_typ: Option<CarrierTyp>,
 ) -> RcDoc<'a, ()> {
     RcDoc::as_string("letb")
         .append(if monad_bind {
@@ -113,11 +113,11 @@ fn make_let_binding<'a>(
                     RcDoc::nil()
                 })
                 .append(make_paren(match early_return_typ.clone() {
-                    Some(EarlyReturnType::Result(_, (c, _))) => {
+                    Some(CarrierTyp::Result(_, (c, _))) => {
                         RcDoc::as_string("ChoiceEqualityMonad.result_bind_both ")
                             .append(rustspec_to_coq_ssprove_state::translate_base_typ(c))
                     }
-                    Some(EarlyReturnType::Option(_)) => {
+                    Some(CarrierTyp::Option(_)) => {
                         RcDoc::as_string("ChoiceEqualityMonad.option_bind_both")
                     }
                     None => RcDoc::as_string("_"),

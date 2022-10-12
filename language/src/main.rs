@@ -945,7 +945,6 @@ fn main() -> Result<(), usize> {
             let deps = manifest.target_directory + "/debug/deps";
             callbacks.target_directory = deps;
 
-            println!("{:?}", package_vec);
             for package in package_vec {
                 let pkg_name = package.name.clone();
 

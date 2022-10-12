@@ -856,7 +856,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
 // taken from rustspec_to_fstar
 fn add_ok_if_result(
     stmt: Statement,
-    early_return_type: Fillable<EarlyReturnType>,
+    early_return_type: Fillable<CarrierTyp>,
     question_mark: bool,
 ) -> Spanned<Statement> {
     (
@@ -872,8 +872,8 @@ fn add_ok_if_result(
                                     (
                                         TopLevelIdent {
                                             string: match ert {
-                                                EarlyReturnType::Option(_) => "Option",
-                                                EarlyReturnType::Result(_, _) => "Result",
+                                                CarrierTyp::Option(_) => "Option",
+                                                CarrierTyp::Result(_, _) => "Result",
                                             }
                                             .to_string(),
                                             kind: TopLevelIdentKind::Type,
@@ -885,8 +885,8 @@ fn add_ok_if_result(
                                 (
                                     TopLevelIdent {
                                         string: match ert {
-                                            EarlyReturnType::Option(_) => "Some",
-                                            EarlyReturnType::Result(_, _) => "Ok",
+                                            CarrierTyp::Option(_) => "Some",
+                                            CarrierTyp::Result(_, _) => "Ok",
                                         }
                                         .to_string(),
                                         kind: TopLevelIdentKind::EnumConstructor,

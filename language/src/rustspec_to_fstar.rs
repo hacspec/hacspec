@@ -74,8 +74,8 @@ fn make_error_returning_let_binding<'a, F: FnOnce() -> RcDoc<'a, ()>>(
 
 pub fn carrier_operator(carrier: EarlyReturnType) -> String {
     match carrier {
-        EarlyReturnType::Result(_, _) => "?".to_string(),
-        EarlyReturnType::Option(_) => "*".to_string(),
+        EarlyReturnType::Result => "?".to_string(),
+        EarlyReturnType::Option => "*".to_string(),
     }
 }
 

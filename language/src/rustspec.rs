@@ -334,8 +334,8 @@ pub fn carrier_payload(carrier: CarrierTyp) -> Spanned<BaseTyp> {
 }
 pub fn carrier_kind(carrier: CarrierTyp) -> EarlyReturnType {
     match carrier {
-        CarrierTyp::Result(a, b) => EarlyReturnType::Result(a,b),
-        CarrierTyp::Option(c) => EarlyReturnType::Option(c),
+        CarrierTyp::Result(a, b) => EarlyReturnType::Result,
+        CarrierTyp::Option(c) => EarlyReturnType::Option,
     }
 }
 
@@ -430,20 +430,20 @@ pub enum Pattern {
 
 #[derive(Clone, Serialize, Debug, PartialEq, Eq)]
 pub enum EarlyReturnType {
-    Option(Spanned<BaseTyp>),
-    Result(Spanned<BaseTyp>, Spanned<BaseTyp>),
+    Option,
+    Result,
 }
 
 #[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
-    pub early_return_type: Fillable<EarlyReturnType>,
+    pub early_return_type: Fillable<CarrierTyp>,
     pub vars: VarSet,
     pub stmt: Statement,
 }
 
 pub type Fillable<T> = Option<T>;
 
-pub type QuestionMarkInfo = Option<(ScopeMutableVars, FunctionDependencies, Fillable<EarlyReturnType>)>;
+pub type QuestionMarkInfo = Option<(ScopeMutableVars, FunctionDependencies, Fillable<CarrierTyp>)>;
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Statement {

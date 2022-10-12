@@ -314,7 +314,7 @@ pub(crate) fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'
 // taken from rustspec_to_fstar
 pub(crate) fn add_ok_if_result(
     stmt: Statement,
-    early_return_type: Fillable<EarlyReturnType>,
+    early_return_type: Fillable<CarrierTyp>,
     question_mark: Option<ScopeMutableVars>,
 ) -> Spanned<Statement> {
     (
@@ -328,7 +328,7 @@ pub(crate) fn add_ok_if_result(
                         match stmt {
                             Statement::ReturnExp(e, Some((x, t_base))) => {
                                 let (early_typ, fun_name) = match ert.clone() {
-                                    EarlyReturnType::Option(a) => (
+                                    CarrierTyp::Option(a) => (
                                         BaseTyp::Named(
                                             (
                                                 TopLevelIdent {
@@ -341,7 +341,7 @@ pub(crate) fn add_ok_if_result(
                                         ),
                                         "Some",
                                     ),
-                                    EarlyReturnType::Result(a, b) => (
+                                    CarrierTyp::Result(a, b) => (
                                         BaseTyp::Named(
                                             (
                                                 TopLevelIdent {
