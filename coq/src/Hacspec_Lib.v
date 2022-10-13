@@ -1202,9 +1202,9 @@ Axiom most_significant_bit : forall {m}, nat_mod m -> uint_size -> uint_size.
 
 
 (* We assume 2^x < m *)
-Definition nat_mod_pow2 (m : Z) (x : N) : nat_mod m.
+Definition nat_mod_pow2 (m : Z) {WS} (x : @int WS) : nat_mod m.
 Proof.
-  remember (Z.pow 2 (Z.of_N x) mod m) as y.
+  remember (Z.pow 2 (@unsigned WS x) mod m) as y.
   apply (GZnZ.mkznz m y).
   rewrite Heqy.
   rewrite Zmod_mod.
