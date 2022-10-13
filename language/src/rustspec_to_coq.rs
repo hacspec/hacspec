@@ -1260,6 +1260,7 @@ fn translate_item<'a>(
         .append({
             if item.tags.0.contains(&"quickcheck".to_string()) {
                 RcDoc::hardline()
+                    .append(RcDoc::as_string("(*"))
                     .append(RcDoc::as_string("QuickChick"))
                     .append(RcDoc::space())
                     .append(make_paren(RcDoc::concat(
@@ -1289,6 +1290,7 @@ fn translate_item<'a>(
                             .append(RcDoc::concat(sig.args.iter().map(|_| RcDoc::as_string(")")))),
                     ))
                     .append(RcDoc::as_string("."))
+                    .append(RcDoc::as_string("*)"))
                     .append(RcDoc::hardline())
                     .group()
             } else {

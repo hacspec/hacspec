@@ -11,8 +11,9 @@ Then one can install the dependencies through `opam` (assuming you have coq inst
 
 ```
 opam update
-opam pin coq-mathcomp-word https://github.com/jasmin-lang/coqword.git#9012f08c33a8c0d3b65e6e9494fd792522bf7b5c -y
-opam pin jasmin https://github.com/jasmin-lang/jasmin.git#ec7e09451614d011f880da33201cf7eba1e6aea3 -y
+opam install conf-ppl.1 -y
+opam install coq-mathcomp-word.2.0 -y
+opam pin jasmin https://github.com/SSProve/ssprove.git#3d40bc89 -y
 opam pin ssprove https://github.com/SSProve/ssprove.git#bead4e76acbb69b3ecf077cece56cd3fbde501e3 -y
 opam upgrade -y
 ```

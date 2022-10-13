@@ -37,9 +37,10 @@ Notation "'xor_out'" :=(int64 : ChoiceEquality) (at level 2).
 Definition XOR : nat :=
   (11).
 Program Definition xor
-  : both_package (CEfset ([x_0_loc ; y_1_loc ; r_2_loc])) [interface] [(XOR,(
-      xor_inp,xor_out))] :=
-  let temp_package_both := (fun temp_inp => 
+        : int64 '× int64 -> both  (CEfset ([x_0_loc ; y_1_loc ; r_2_loc])) [interface] int64
+  (* : both_package (CEfset ([x_0_loc ; y_1_loc ; r_2_loc])) [interface] [(XOR,( *)
+  (*     xor_inp,xor_out))] *) :=
+  (* let temp_package_both :=  *)(fun temp_inp => 
     let '(x_inp_6 , y_inp_7) := temp_inp : int64 '× int64 in
     
     ((letbm x_0 : int64 loc( x_0_loc ) := lift_to_both0 x_inp_6 in
@@ -52,9 +53,30 @@ Program Definition xor
           (lift_to_both0 v1_9) .^ (lift_to_both0 v2_10) in
         lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 r_2)
         ) : both (CEfset ([x_0_loc ; y_1_loc ; r_2_loc])) [interface] (
-        int64)))in
-  both_package' _ _ (XOR,(xor_inp,xor_out)) temp_package_both.
+        int64)))(* in *)
+(* both_package' _ _ (XOR,(xor_inp,xor_out))  *) (* temp_package_both *).
 Fail Next Obligation.
+
+Theorem a : True.
+Proof.
+  epose (fun temp_inp => 
+    let '(x_inp_6 , y_inp_7) := temp_inp : int64 '× int64 in
+    
+    ((letbm x_0 : int64 loc( x_0_loc ) := lift_to_both0 x_inp_6 in
+        letbm y_1 : int64 loc( y_1_loc ) := lift_to_both0 y_inp_7 in
+        letb v_8 : int64 := lift_to_both0 x_0 in
+        letbm r_2 : int64 loc( r_2_loc ) := lift_to_both0 v_8 in
+        letb v1_9 : int64 := lift_to_both0 r_2 in
+        letb v2_10 : int64 := lift_to_both0 y_1 in
+        letbm r_2 loc( r_2_loc ) :=
+          (lift_to_both0 v1_9) .^ (lift_to_both0 v2_10) in
+        lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 r_2)
+        ) : both (CEfset ([x_0_loc ; y_1_loc ; r_2_loc])) [interface] (
+                   int64))).
+  pose (fun x => code_eq_proof_statement (b x)).
+  Set Printing Coercions.
+  assert (exists jasmin, ⦃ true_precond ⦄ jasmin ≈ b x ⦃ pre_to_post_ret true_precond (b x) ⦄).
+
 Definition pure_xor (x y : int64) : int64 :=
   (@pack_pure (CEfset ([x_0_loc ; y_1_loc ; r_2_loc])) [interface] [(XOR,(
       xor_inp,xor_out))] xor (XOR,(xor_inp,xor_out)) (List.in_eq _ _)) (x , y). 

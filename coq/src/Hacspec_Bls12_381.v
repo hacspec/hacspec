@@ -711,14 +711,14 @@ Definition test_fp2_prop_add_neg (a_1376 : fp2_t) : bool :=
   let b_1377 : (fp_t × fp_t) :=
     fp2neg (a_1376) in 
   (fp2fromfp (nat_mod_zero )) =.? (fp2add (a_1376) (b_1377)).
-QuickChick (forAll g_fp2_t (fun a_1376 : fp2_t =>test_fp2_prop_add_neg a_1376)).
+(* QuickChick (forAll g_fp2_t (fun a_1376 : fp2_t =>test_fp2_prop_add_neg a_1376)). *)
 
 
 Definition test_fp2_prop_mul_inv (a_1378 : fp2_t) : bool :=
   let b_1379 : (fp_t × fp_t) :=
     fp2inv (a_1378) in 
   (fp2fromfp (nat_mod_one )) =.? (fp2mul (a_1378) (b_1379)).
-QuickChick (forAll g_fp2_t (fun a_1378 : fp2_t =>test_fp2_prop_mul_inv a_1378)).
+(* QuickChick (forAll g_fp2_t (fun a_1378 : fp2_t =>test_fp2_prop_mul_inv a_1378)). *)
 
 
 Definition test_extraction_issue  : bool :=
@@ -726,21 +726,21 @@ Definition test_extraction_issue  : bool :=
     fp2inv ((nat_mod_one , nat_mod_one )) in 
   (fp2fromfp (nat_mod_one )) =.? (fp2mul ((nat_mod_one , nat_mod_one )) (
       b_1380)).
-QuickChick (test_extraction_issue).
+(* QuickChick (test_extraction_issue). *)
 
 
 Definition test_fp6_prop_mul_inv (a_1381 : fp6_t) : bool :=
   let b_1382 : (fp2_t × fp2_t × fp2_t) :=
     fp6inv (a_1381) in 
   (fp6fromfp2 (fp2fromfp (nat_mod_one ))) =.? (fp6mul (a_1381) (b_1382)).
-QuickChick (forAll g_fp6_t (fun a_1381 : fp6_t =>test_fp6_prop_mul_inv a_1381)).
+(* QuickChick (forAll g_fp6_t (fun a_1381 : fp6_t =>test_fp6_prop_mul_inv a_1381)). *)
 
 
 Definition test_fp6_prop_add_neg (a_1383 : fp6_t) : bool :=
   let b_1384 : (fp2_t × fp2_t × fp2_t) :=
     fp6neg (a_1383) in 
   (fp6fromfp2 (fp2fromfp (nat_mod_zero ))) =.? (fp6add (a_1383) (b_1384)).
-QuickChick (forAll g_fp6_t (fun a_1383 : fp6_t =>test_fp6_prop_add_neg a_1383)).
+(* QuickChick (forAll g_fp6_t (fun a_1383 : fp6_t =>test_fp6_prop_add_neg a_1383)). *)
 
 
 Definition test_fp12_prop_add_neg (a_1385 : fp12_t) : bool :=
@@ -748,8 +748,8 @@ Definition test_fp12_prop_add_neg (a_1385 : fp12_t) : bool :=
     fp12neg (a_1385) in 
   (fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_zero )))) =.? (fp12add (a_1385) (
       b_1386)).
-QuickChick (
-  forAll g_fp12_t (fun a_1385 : fp12_t =>test_fp12_prop_add_neg a_1385)).
+(* QuickChick ( *)
+(*   forAll g_fp12_t (fun a_1385 : fp12_t =>test_fp12_prop_add_neg a_1385)). *)
 
 
 Definition test_fp12_prop_mul_inv (a_1387 : fp12_t) : bool :=
@@ -757,7 +757,7 @@ Definition test_fp12_prop_mul_inv (a_1387 : fp12_t) : bool :=
     fp12inv (a_1387) in 
   (fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_one )))) =.? (fp12mul (a_1387) (
       b_1388)).
-QuickChick (
-  forAll g_fp12_t (fun a_1387 : fp12_t =>test_fp12_prop_mul_inv a_1387)).
+(* QuickChick ( *)
+(*   forAll g_fp12_t (fun a_1387 : fp12_t =>test_fp12_prop_mul_inv a_1387)). *)
 
 

@@ -1311,6 +1311,8 @@ Section Coercions.
   Global Coercion N_to_uint_size : Z >-> uint_size.
   Definition nat_to_int `{WORDSIZE} (n : nat) := repr (Z.of_nat n).
   Global Coercion nat_to_int : nat >-> int.
+  Definition N_to_int_ `{WORDSIZE} (n : N) := repr (Z.of_nat n).
+  Global Coercion N_to_int_ : N >-> int.
 
   Definition uint_size_to_nat (n : uint_size) : nat := from_uint_size n.
   Global Coercion uint_size_to_nat : uint_size >-> nat.
