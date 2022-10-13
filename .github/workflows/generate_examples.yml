@@ -22,10 +22,10 @@ jobs:
         run: cargo clean && cargo build --verbose
         working-directory: ./examples
       - name: Generate Coq files
-        run: cargo hacspec -e v --dir ../coq/src/ "*" --vc-update
+        run: cargo hacspec -e v --dir ../coq/src/ --vc-dir ../coq/ --vc-update "*"
         working-directory: ./examples
       - name: Generate Coq files (ssprove)
-        run: cargo hacspec -e v_ssprove --dir ../coq_ssprove/src/ "*" --vc-update
+        run: cargo hacspec -e v_ssprove --dir ../coq_ssprove/src/ --vc-dir ../coq_ssprove/ --vc-update "*"
         working-directory: ./examples
       - uses: coq-community/docker-coq-action@v1
         with:
@@ -47,3 +47,23 @@ jobs:
                 coq_makefile -f _CoqProject -o Makefile
                 make
               endGroup
+      # - uses: coq-community/docker-coq-action@v1
+      #   with:
+      #     coq_version: ${{ matrix.coq_version }}
+      #     # See https://github.com/coq-community/docker-coq-action/tree/v1 for usage
+      #     before_install: |
+      #         startGroup "Opam config"
+      #           opam config list; opam repo list; opam list
+      #           opam repo add coq-released https://coq.inria.fr/opam/released --all-switches
+      #           opam install ssprove jasmin coqword --yes
+      #         endGroup
+      #     before_script: |
+      #         startGroup "Workaround permission issue"
+      #           sudo chown -R coq:coq .
+      #         endGroup
+      #     script: |
+      #         startGroup "Build Coq Make"
+      #           cd ./coq_ssprove
+      #           coq_makefile -f _CoqProject -o Makefile
+      #           make
+      #         endGroup

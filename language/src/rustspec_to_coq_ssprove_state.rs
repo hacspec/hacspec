@@ -155,12 +155,14 @@ pub(crate) fn make_equations<'a>(
     typ: Option<RcDoc<'a, ()>>,
     expr: RcDoc<'a, ()>,
 ) -> RcDoc<'a, ()> {
-    RcDoc::as_string("Equations")
+    // RcDoc::as_string("Equations")
+    RcDoc::as_string("Program Definition")
         .append(RcDoc::space())
         .append(make_definition_inner(
             name.clone(),
             typ,
-            name.append(" := ").append(RcDoc::line()).append(expr),
+            // name.append(" := ").append(RcDoc::line()).append(expr),
+            expr,
         ))
 }
 
@@ -317,7 +319,7 @@ fn translate_enum_case_name<'a>(
                 if (name.0).string == "Option" || (name.0).string == "Result" {
                     RcDoc::nil()
                 } else {
-                    make_paren(translate_toplevel_ident(name.0))
+                    make_paren(translate_toplevel_ident(name.0.clone()))
                 },
             )
             .append(if explicit && tyvec.len() != 0 {
@@ -1006,8 +1008,18 @@ fn translate_expression<'a>(
 
             (
                 ass,
-                translate_enum_case_name(enum_name.clone(), case_name.0.clone(), true)
-                    .append(trans),
+                make_paren(translate_enum_case_name(enum_name.clone(), case_name.0.clone(), true)
+                           .append(trans)
+                           .append(RcDoc::as_string(" : "),)
+                           .append(translate_base_typ(enum_name))
+                    // .append(match enum_name {
+                    //     BaseTyp::Named(name, _) if (name.0).string == "Option" => 
+                    //         RcDoc::as_string(": option _"),
+                    //     BaseTyp::Named(name, _) if (name.0).string == "Result" => 
+                    //         RcDoc::as_string(": result _ _"),
+                    //     _ => RcDoc::nil(),
+                    // })
+                ),
             )
         }
         Expression::InlineConditional(cond, e_t, e_f) => {
@@ -2573,28 +2585,25 @@ pub(crate) fn translate_item<'a>(
                 .append(RcDoc::as_string("}]"));
 
             let dep_vec = function_dependencies_to_vec(sig.function_dependencies.clone(), top_ctx);
-            let package_def =
-                make_equations(
-                        RcDoc::as_string("package_")
-                            .append(translate_ident(Ident::TopLevel(f.clone()))),
-                        Some(RcDoc::as_string("package _ _ _")),
-                        if dep_vec.is_empty() {
-                            translate_ident(Ident::TopLevel(f.clone()))
-                        } else {
-                            RcDoc::as_string("seq_link")
-                                .append(RcDoc::space())
-                                .append(translate_ident(Ident::TopLevel(f.clone())))
-                                .append(RcDoc::space())
-                                .append(RcDoc::as_string("link_rest"))
-                                .append(make_paren(RcDoc::intersperse(
-                                    dep_vec.into_iter().map(|(x, _, _)| {
-                                        RcDoc::as_string("package_")
-                                            .append(translate_toplevel_ident(x))
-                                    }),
-                                    RcDoc::as_string(","),
-                                )))
-                        },
-                    );
+            let package_def = make_equations(
+                RcDoc::as_string("package_").append(translate_ident(Ident::TopLevel(f.clone()))),
+                Some(RcDoc::as_string("package _ _ _")),
+                if dep_vec.is_empty() {
+                    translate_ident(Ident::TopLevel(f.clone()))
+                } else {
+                    RcDoc::as_string("seq_link")
+                        .append(RcDoc::space())
+                        .append(translate_ident(Ident::TopLevel(f.clone())))
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string("link_rest"))
+                        .append(make_paren(RcDoc::intersperse(
+                            dep_vec.into_iter().map(|(x, _, _)| {
+                                RcDoc::as_string("package_").append(translate_toplevel_ident(x))
+                            }),
+                            RcDoc::as_string(","),
+                        )))
+                },
+            );
 
             block_var_loc_defs
                 .append(RcDoc::line())

@@ -140,7 +140,7 @@ fn make_let_binding<'a>(
             .group(),
         )
         .append(RcDoc::space())
-        .append(if mutable {
+        .append(if mutable && !monad_bind {
             RcDoc::as_string("loc(")
                 .append(RcDoc::space())
                 .append(translate_pattern(pat.clone()))
@@ -1255,6 +1255,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                 // .append(package_def)
             })
         }
+        Item::EnumDecl(_, _) => rustspec_to_coq_ssprove_state::translate_item(item, top_ctx),
         _ => rustspec_to_coq_ssprove_pure::translate_item(item, top_ctx),
     }
 }

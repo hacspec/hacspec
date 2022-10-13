@@ -6,22 +6,23 @@ USAGE:
     cargo hacspec [FLAGS] [OPTIONS] [CRATE]
 
 FLAGS:
-    -v               Verbosity
-    --manifest-path  The cargo manifest path argument. The typechecker will analyze
-                     the crate or workspace at the specified Cargo.toml.
-                     Note that you have to specify the path including the Cargo.toml
-                     file!
+    -v                Verbosity
+    --manifest-path   The cargo manifest path argument. The typechecker will analyze
+                      the crate or workspace at the specified Cargo.toml.
+                      Note that you have to specify the path including the Cargo.toml
+                      file!
 
 OPTIONS:
-    -o <FILE_DIR>    The output filename (defaults to crate name)
-    --dir <FILE_DIR> The output directory (default to current dir)
-    -e <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
+    -o <FILE_DIR>     The output filename (defaults to crate name)
+    --dir <FILE_DIR>  The output directory (default to current dir)
+    -e <FILE_EXT>     File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
 
-                     If just -e is supplied, then current directory is used as output.
-                     If neither -e nor --dir are supplied, then we only run the typechecker.
-    --vc-init        Initialize version control in '<FILE_DIR>/_vc'
-    --vc-update      Uses git merge to update the files only with changes, may result in
-                     merge conflicts
+                      If just -e is supplied, then current directory is used as output.
+                      If neither -e nor --dir are supplied, then we only run the typechecker.
+    --vc-dir <VC_DIR> Set the directory for outputting, otherwise '<VC_DIR> = <FILE_DIR>/_vc'.
+    --vc-init         Initialize version control in <VC_DIR>
+    --vc-update       Uses git merge to update the files only with changes, may result in
+                      merge conflicts
 
 ARGS:
     CRATE            The crate to analyse.
