@@ -2383,8 +2383,6 @@ fn typecheck_question_mark(
         return_typ.1.clone(),
     );
 
-    // println!("{:?} {:?}", expr_typ.1.0.clone(), return_typ.0.clone());
-
     if question_mark {
         let expr_carrier: Result<CarrierTyp, _> = match expr_typ.clone() {
             (
@@ -2392,7 +2390,6 @@ fn typecheck_question_mark(
                 (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), Some(args)), _),
             ) if name == "Option" && args.len() == 1 => {
                 let some_typ = &args[0];
-                println!("Return type option {:?}", return_typ.0);
                 match return_typ {
                     (
                         BaseTyp::Named(
@@ -2429,7 +2426,6 @@ fn typecheck_question_mark(
             ) if name == "Result" && args.len() == 2 => {
                 let ok_typ = &args[0];
                 let err_typ = &args[1];
-                println!("Return type result {:?}", return_typ.0);
                 match return_typ {
                     (
                         BaseTyp::Named(
@@ -2446,8 +2442,6 @@ fn typecheck_question_mark(
                     ) if return_name == "Result" && return_args.len() == 2 => {
                         let err_typ_ret = &args[1];
 
-                        println!("Unify types {:?} {:?}", err_typ.0.clone(), err_typ_ret.0.clone());
-                        
                         match unify_types(
                             sess,
                             &((Borrowing::Consumed, err_typ.1.clone()), err_typ.clone()),
@@ -2458,10 +2452,7 @@ fn typecheck_question_mark(
                             &HashMap::new(),
                             top_level_context,
                         )? {
-                            Some(_) => {
-                                println!("Ok type {:?}", ok_typ.clone());
-                                Ok(CarrierTyp::Result(ok_typ.clone(), err_typ_ret.clone()))
-                            }
+                            Some(_) => Ok(CarrierTyp::Result(ok_typ.clone(), err_typ_ret.clone())),
                             None => {
                                 sess.span_rustspec_err(
                                     expr_span,
@@ -2493,21 +2484,12 @@ fn typecheck_question_mark(
             (
                 (Borrowing::Consumed, _),
                 (BaseTyp::Named((TopLevelIdent { string: name, .. }, _), expr_typ), _),
-            ) => {
-                println!("\n\n{:?}\n", name);
-                Err(())
-            }
+            ) => Err(()),
             ((Borrowing::Consumed, _), (expr_typ, _)) => expr_typ.try_into(),
-            _ => {
-                println!("Error {:?}", expr_typ.clone());
-                Err(())
-            }
+            _ => Err(()),
         };
         let return_carrier: Result<CarrierTyp, _> = return_typ.0.clone().try_into();
-        
-        println!("Expr Carrier {:?}", expr_carrier.clone());
-        println!("Return Carrier {:?}", return_carrier.clone());
-        
+
         match (expr_carrier, return_carrier) {
             (Err(..), _) => {
                 sess.span_rustspec_err(
@@ -2525,7 +2507,6 @@ fn typecheck_question_mark(
             (Ok(expr_carrier), Ok(return_carrier))
                 if carrier_kind(expr_carrier.clone()) == carrier_kind(return_carrier.clone()) =>
             {
-                println!("Enter OK OK!");
                 let ok_type = carrier_payload(expr_carrier.clone());
                 // TODO: previously, type unification was ran for T in
                 // case of a [Result<_,T>]. Feels like either it was
@@ -2536,7 +2517,6 @@ fn typecheck_question_mark(
                 Ok(((Borrowing::Consumed, ok_type.1), ok_type))
             }
             (Ok(expr_carrier), _) => {
-                println!("Got this error!");
                 sess.span_rustspec_err(
                     return_typ.1,
                     format!(

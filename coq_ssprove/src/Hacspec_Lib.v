@@ -2648,8 +2648,15 @@ Admitted.
 Notation "'link_rest(' a ')'" :=
   a : hacspec_scope.
 Notation "'link_rest(' a , b ')'" :=
-  (par_link_both a b _) : hacspec_scope.
+  (par_link a b _) : hacspec_scope.
 Notation "'link_rest(' a , b , .. , c ')'" :=
+  (par_link .. ( par_link a b _ ) .. c _) : hacspec_scope.
+
+Notation "'link_rest_both(' a ')'" :=
+  a : hacspec_scope.
+Notation "'link_rest_both(' a , b ')'" :=
+  (par_link_both a b _) : hacspec_scope.
+Notation "'link_rest_both(' a , b , .. , c ')'" :=
   (par_link_both .. ( par_link_both a b _ ) .. c _) : hacspec_scope.
 
 (* Ltac par_link p1 p2 := par_link p1 p2 ltac:(cbv ; now destruct fset_key). *)
