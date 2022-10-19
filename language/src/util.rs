@@ -56,10 +56,10 @@ pub(crate) enum HacspecArgs {
 
         // /// Specify extra Cargo flags.
         // #[arg(long = "cargo-extra-flags")]
+        /// An input file can be passed in, this should be mostly used for testing.
+        #[arg(short = 'f', long = "input-filename")]
+        input_filename: Option<String>,
 
-        // /// An input file can be passed in, this should be mostly used for testing.
-        // #[arg(short = 'f', long = "--input-filename")]
-        // input_filename: Option<String>,
         /// The crate to analyse. The crate name is required if there are multiple crates in the workspace. If only one crate is present, the argument can be omitted.
         crate_name: Option<String>,
 

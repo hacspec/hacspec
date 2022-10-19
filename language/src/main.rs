@@ -714,6 +714,25 @@ fn main() {
 
     let hacspec_args: util::Args =
         serde_json::from_str(&*std::env::var(util::HACSPEC_ARGS).unwrap()).unwrap();
+
+    if let util::HacspecArgs::Hacspec {
+        input_filename: Some(input_filename),
+        ..
+    } = &hacspec_args.hacspec
+    {
+        rustc_args = rustc_args
+            .iter()
+            .cloned()
+            .map(|arg| {
+                if arg.ends_with(".rs") {
+                    input_filename.clone()
+                } else {
+                    arg
+                }
+            })
+            .collect();
+    };
+
     let mut hacspec_callbacks: HacspecCallbacks = hacspec_args.into();
 
     rustc_driver::RunCompiler::new(&rustc_args, &mut hacspec_callbacks)
