@@ -7,6 +7,8 @@ pub(crate) fn check_vec<T>(v: Vec<Result<T, ()>>) -> Result<Vec<T>, ()> {
     }
 }
 
+pub(crate) const HACSPEC_ARGS: &str = "HACSPEC_ARGS";
+
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 #[derive(Parser, Clone, Debug, Serialize, Deserialize)]

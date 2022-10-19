@@ -713,7 +713,7 @@ fn main() {
     };
 
     let hacspec_args: util::Args =
-        serde_json::from_str(&*std::env::var("HACSPEC_ARGS").unwrap()).unwrap();
+        serde_json::from_str(&*std::env::var(util::HACSPEC_ARGS).unwrap()).unwrap();
     let mut hacspec_callbacks: HacspecCallbacks = hacspec_args.into();
 
     rustc_driver::RunCompiler::new(&rustc_args, &mut hacspec_callbacks)
