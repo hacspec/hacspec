@@ -147,11 +147,9 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
             }
         }
         Expression::MatchWith(scrutinee, branches) => {
-            let branches = branches.into_iter().cloned().map(|(t, cn, p, arm)| {
+            let branches = branches.into_iter().cloned().map(|(pat, arm)| {
                 (
-                    t,
-                    cn,
-                    p,
+                    pat,
                     eliminate_question_marks_in_spanned_expressions(&arm),
                 )
             });
@@ -163,8 +161,8 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
                     Expression::MatchWith(
                         scrutinee,
                         branches
-                            .map(|(t, cn, p, arm)| {
-                                (t, cn, p, pure_if_non_monadic(carrier.clone(), arm))
+                            .map(|(pat, arm)| {
+                                (pat, pure_if_non_monadic(carrier.clone(), arm))
                             })
                             .collect(),
                     ),
