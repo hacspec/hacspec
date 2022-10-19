@@ -650,7 +650,7 @@ fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
 
 fn get_literal_type(l: &Literal) -> BaseTyp {
     match l {
-        Literal::Unit => BaseTyp::Unit,
+        Literal::Unit => UnitTyp,
         Literal::Bool(_) => BaseTyp::Bool,
         Literal::Int128(_) => BaseTyp::Int128,
         Literal::UInt128(_) => BaseTyp::UInt128,
