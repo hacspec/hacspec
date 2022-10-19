@@ -11,7 +11,7 @@ repository = "https://github.com/hacspec/hacspec"
 
 [[bin]]
 name = "cargo-hacspec"
-path = "src/bin.rs"
+path = "src/cargo-hacspec.rs"
 
 [[bin]]
 name = "hacspec-driver"
