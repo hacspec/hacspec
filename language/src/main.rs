@@ -735,7 +735,7 @@ fn main() {
 
     let mut hacspec_callbacks: HacspecCallbacks = hacspec_args.into();
 
-    rustc_driver::RunCompiler::new(&rustc_args, &mut hacspec_callbacks)
-        .run()
-        .unwrap()
+    std::process::exit(rustc_driver::catch_with_exit_code(move || {
+        rustc_driver::RunCompiler::new(&rustc_args, &mut hacspec_callbacks).run()
+    }))
 }

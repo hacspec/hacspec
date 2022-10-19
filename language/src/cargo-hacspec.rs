@@ -10,7 +10,7 @@ fn main() {
         ..
     } = &args.hacspec;
 
-    Command::new("cargo")
+    let exit_status = Command::new("cargo")
         .arg("build")
         .args(match crate_name {
             Some(krate) => vec!["-p".to_string(), krate.clone()],
@@ -23,4 +23,6 @@ fn main() {
         .expect("could not run cargo")
         .wait()
         .expect("failed to wait for cargo?");
+
+    std::process::exit(exit_status.code().unwrap_or(-1));
 }
