@@ -518,6 +518,24 @@ fn translate_literal(lit: &rustc_ast::Lit) -> Result<Literal, ()> {
         _ => Err(()),
     }
 }
+
+/// Negate a literal `lit`, or fails if the literal is not a signed
+/// integer
+fn negate_literal(sess: &Session, lit: &Literal, span: Span) -> Result<Literal, ()> {
+    match lit {
+        Literal::Int128(x) => Ok(Literal::Int128(-x)),
+        Literal::Int64(x) => Ok(Literal::Int64(-x)),
+        Literal::Int32(x) => Ok(Literal::Int32(-x)),
+        Literal::Int16(x) => Ok(Literal::Int16(-x)),
+        Literal::Int8(x) => Ok(Literal::Int8(-x)),
+        Literal::Isize(x) => Ok(Literal::Isize(-x)),
+        _ => Err(sess.span_rustspec_err(
+            span,
+            "Trying to negate a literal which is not a signed integer!",
+        )),
+    }
+}
+
 fn translate_literal_expr(
     sess: &Session,
     lit: &rustc_ast::Lit,
@@ -1587,18 +1605,36 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
             Ok((Pattern::Tuple(pats), pat.span.into()))
         }
         PatKind::Wild => Ok((Pattern::WildCard, pat.span.into())),
-        PatKind::Lit(e) => match e.clone().into_inner().kind {
-            ExprKind::Lit(l) => Ok((Pattern::LiteralPat(translate_literal(&l)?), pat.span.into())),
-            _ => {
-                sess.span_rustspec_err(
+        PatKind::Lit(e) => {
+            let err = || {
+                Err(sess.span_rustspec_err(
                     pat.span,
-                    "1. literal pattern not allowed in Hacspec let bindings",
-                );
-                Err(())
+                    "this literal pattern is not allowed in Hacspec let bindings",
+                ))
+            };
+            match e.clone().into_inner().kind {
+                ExprKind::Lit(l) => {
+                    Ok((Pattern::LiteralPat(translate_literal(&l)?), pat.span.into()))
+                }
+                ExprKind::Unary(Neg, e) => match &*e {
+                    Expr {
+                        kind: ExprKind::Lit(l),
+                        ..
+                    } => Ok((
+                        Pattern::LiteralPat(negate_literal(
+                            sess,
+                            &translate_literal(&l)?,
+                            pat.span.into(),
+                        )?),
+                        pat.span.into(),
+                    )),
+                    _ => err(),
+                },
+                _ => err(),
             }
-        },
+        }
         _ => {
-            sess.span_rustspec_err(pat.span, "2. pattern not allowed in Hacspec let bindings");
+            sess.span_rustspec_err(pat.span, "pattern not allowed in Hacspec let bindings");
             Err(())
         }
     }
