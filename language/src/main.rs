@@ -43,7 +43,6 @@ use std::env;
 use std::fs::File;
 use std::path::Path;
 use std::process::Command;
-use util::APP_USAGE;
 
 #[derive(Clone, PartialEq)]
 enum VersionControlArg {
@@ -60,6 +59,22 @@ struct HacspecCallbacks {
     target_directory: String,
     version_control: VersionControlArg,
     version_control_dir: Option<String>,
+}
+
+impl Into<HacspecCallbacks> for util::Args {
+    fn into(self) -> HacspecCallbacks {
+        HacspecCallbacks {
+            output_filename: self.output_filename,
+            output_directory: self.output_directory,
+            output_type: self.output_type,
+            version_control: match (self.vc_init, self.vc_update) {
+                (true, true) => panic!("`--vc_init` and `--vc_update` are mutually exclusive"),
+                (true, _) => VersionControlArg::Initialize,
+                (_, true) => VersionControlArg::Update,
+                (_, _) => VersionControlArg::None,
+            },
+        }
+    }
 }
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =

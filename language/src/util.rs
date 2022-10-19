@@ -1,36 +1,3 @@
-pub(crate) const APP_USAGE: &'static str = "hacspec 0.1.0
-hacspec Developers
-Typechecker and compiler for the hacspec subset of Rust
-
-USAGE:
-    cargo hacspec [FLAGS] [OPTIONS] [CRATE]
-
-FLAGS:
-    -v               Verbosity
-    --manifest-path  The cargo manifest path argument. The typechecker will analyze
-                     the crate or workspace at the specified Cargo.toml.
-                     Note that you have to specify the path including the Cargo.toml
-                     file!
-
-OPTIONS:
-    -o <FILE_DIR>    The output filename (defaults to crate name)
-    --dir <FILE_DIR> The output directory (default to current dir)
-    -e <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
-
-                     If just -e is supplied, then current directory is used as output.
-                     If neither -e nor --dir are supplied, then we only run the typechecker.
-    --vc-dir <VC_DIR> Set the directory for outputting, otherwise '<VC_DIR> = <FILE_DIR>/_vc'.
-    --vc-init        Initialize version control in <VC_DIR>
-    --vc-update      Uses git merge to update the files only with changes, may result in
-                     merge conflicts
-
-ARGS:
-    CRATE            The crate to analyse.
-                     The crate name is required if there are multiple crates in the
-                     workspace. If only one crate is present, the argument can be
-                     omitted.
-";
-
 #[allow(dead_code)]
 pub(crate) fn check_vec<T>(v: Vec<Result<T, ()>>) -> Result<Vec<T>, ()> {
     if v.iter().all(|t| t.is_ok()) {
@@ -38,4 +5,57 @@ pub(crate) fn check_vec<T>(v: Vec<Result<T, ()>>) -> Result<Vec<T>, ()> {
     } else {
         Err(())
     }
+}
+
+use clap::Parser;
+use serde::{Deserialize, Serialize};
+#[derive(Parser, Clone, Debug, Serialize, Deserialize)]
+#[command(
+    author,
+    version,
+    about,
+    long_about = "Typechecker and compiler for the hacspec subset of Rust",
+    // trailing_var_arg = true
+)]
+pub(crate) struct Args {
+    /// The output filename (defaults to crate name)
+    #[arg(short = 'o', long = "output-filename")]
+    pub output_filename: Option<String>,
+
+    /// The output directory (default to current dir)
+    #[arg(short = 'd', long = "dir")]
+    pub output_directory: Option<String>,
+
+    /// File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
+    ///
+    /// If just -e is supplied, then current directory is used as output.
+    /// If neither -e nor --dir are supplied, then we only run the typechecker.
+    #[arg(short = 'e', long = "extension")]
+    pub output_type: Option<String>,
+
+    /// Initialize version control in '<FILE_DIR>/_vc'
+    #[arg(long = "vc-init")]
+    pub vc_init: bool,
+
+    /// Uses git merge to update the files only with changes, may result in merge conflicts
+    #[arg(long = "vc-update")]
+    pub vc_update: bool,
+
+    /// Set the directory for outputting, otherwise '<VC_DIR> = <FILE_DIR>/_vc'.
+    #[arg(long = "--vc-dir")]
+    pub vc_dir: Option<String>,
+    
+
+    // /// Specify extra Cargo flags.
+    // #[arg(long = "cargo-extra-flags")]
+
+    // /// An input file can be passed in, this should be mostly used for testing.
+    // #[arg(short = 'f', long = "--input-filename")]
+    // pub input_filename: Option<String>,
+    /// The crate to analyse. The crate name is required if there are multiple crates in the workspace. If only one crate is present, the argument can be omitted.
+    pub crate_name: Option<String>,
+
+    #[arg(raw = true)]
+    pub cargo_extra_flags: Vec<String>,
+
 }
