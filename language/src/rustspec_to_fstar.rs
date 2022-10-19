@@ -11,6 +11,7 @@ use regex::Regex;
 use rustc_session::Session;
 use rustc_span::DUMMY_SP;
 use std::collections::HashMap;
+use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::path;
@@ -340,20 +341,35 @@ fn translate_typ<'a>((_, (tau, _)): Typ) -> RcDoc<'a, ()> {
     translate_base_typ(tau)
 }
 
+// By default, negative values are formatted as the two’s complement
+// representation by LowerHex, see
+// https://doc.rust-lang.org/std/fmt/trait.LowerHex.html.
+
+// The newtype `SignedInteger` wraps integers to reimplement LowerHex
+// so that they are formatted with their sign.
+struct SignedInteger<T>(T);
+impl<T: fmt::LowerHex + num::traits::Signed> fmt::LowerHex for SignedInteger<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let prefix = if f.alternate() { "0x" } else { "" };
+        let bare_hex = format!("{:x}", self.0.abs());
+        f.pad_integral(self.0.is_positive(), prefix, &bare_hex)
+    }
+}
+
 fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
     match lit {
         Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", SignedInteger(x))),
         Literal::UInt128(x) => RcDoc::as_string(format!("pub_u128 {:#x}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("{:#x}L", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("{:#x}L", SignedInteger(x))),
         Literal::UInt64(x) => RcDoc::as_string(format!("{:#x}uL", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("{:#x}l", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("{:#x}l", SignedInteger(x))),
         Literal::UInt32(x) => RcDoc::as_string(format!("{:#x}ul", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("{:#x}s", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("{:#x}s", SignedInteger(x))),
         Literal::UInt16(x) => RcDoc::as_string(format!("{:#x}us", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("{:#x}y", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("{:#x}y", SignedInteger(x))),
         Literal::UInt8(x) => RcDoc::as_string(format!("{:#x}uy", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
