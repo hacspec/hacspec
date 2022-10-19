@@ -7,55 +7,61 @@ pub(crate) fn check_vec<T>(v: Vec<Result<T, ()>>) -> Result<Vec<T>, ()> {
     }
 }
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 #[derive(Parser, Clone, Debug, Serialize, Deserialize)]
 #[command(
     author,
     version,
     about,
-    long_about = "Typechecker and compiler for the hacspec subset of Rust",
-    // trailing_var_arg = true
+    bin_name = "cargo",
+    long_about = "Typechecker and compiler for the hacspec subset of Rust"
 )]
 pub(crate) struct Args {
-    /// The output filename (defaults to crate name)
-    #[arg(short = 'o', long = "output-filename")]
-    pub output_filename: Option<String>,
+    #[command(subcommand)]
+    pub hacspec: HacspecArgs,
+}
 
-    /// The output directory (default to current dir)
-    #[arg(short = 'd', long = "dir")]
-    pub output_directory: Option<String>,
+#[derive(Subcommand, Clone, Debug, Serialize, Deserialize)]
+pub(crate) enum HacspecArgs {
+    Hacspec {
+        /// The output filename (defaults to crate name)
+        #[arg(short = 'o', long = "output-filename")]
+        output_filename: Option<String>,
 
-    /// File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
-    ///
-    /// If just -e is supplied, then current directory is used as output.
-    /// If neither -e nor --dir are supplied, then we only run the typechecker.
-    #[arg(short = 'e', long = "extension")]
-    pub output_type: Option<String>,
+        /// The output directory (default to current dir)
+        #[arg(short = 'd', long = "dir")]
+        output_directory: Option<String>,
 
-    /// Initialize version control in '<FILE_DIR>/_vc'
-    #[arg(long = "vc-init")]
-    pub vc_init: bool,
+        /// File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
+        ///
+        /// If just -e is supplied, then current directory is used as output.
+        /// If neither -e nor --dir are supplied, then we only run the typechecker.
+        #[arg(short = 'e', long = "extension")]
+        output_type: Option<String>,
 
-    /// Uses git merge to update the files only with changes, may result in merge conflicts
-    #[arg(long = "vc-update")]
-    pub vc_update: bool,
+        /// Initialize version control in '<FILE_DIR>/_vc'
+        #[arg(long = "vc-init")]
+        vc_init: bool,
 
-    /// Set the directory for outputting, otherwise '<VC_DIR> = <FILE_DIR>/_vc'.
-    #[arg(long = "--vc-dir")]
-    pub vc_dir: Option<String>,
-    
+        /// Uses git merge to update the files only with changes, may result in merge conflicts
+        #[arg(long = "vc-update")]
+        vc_update: bool,
 
-    // /// Specify extra Cargo flags.
-    // #[arg(long = "cargo-extra-flags")]
+        /// Set the directory for outputting, otherwise '<VC_DIR> = <FILE_DIR>/_vc'.
+        #[arg(long = "--vc-dir")]
+        pub vc_dir: Option<String>,
 
-    // /// An input file can be passed in, this should be mostly used for testing.
-    // #[arg(short = 'f', long = "--input-filename")]
-    // pub input_filename: Option<String>,
-    /// The crate to analyse. The crate name is required if there are multiple crates in the workspace. If only one crate is present, the argument can be omitted.
-    pub crate_name: Option<String>,
+        // /// Specify extra Cargo flags.
+        // #[arg(long = "cargo-extra-flags")]
 
-    #[arg(raw = true)]
-    pub cargo_extra_flags: Vec<String>,
+        // /// An input file can be passed in, this should be mostly used for testing.
+        // #[arg(short = 'f', long = "--input-filename")]
+        // input_filename: Option<String>,
+        /// The crate to analyse. The crate name is required if there are multiple crates in the workspace. If only one crate is present, the argument can be omitted.
+        crate_name: Option<String>,
 
+        #[arg(raw = true)]
+        cargo_extra_flags: Vec<String>,
+    },
 }

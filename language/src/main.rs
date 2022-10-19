@@ -62,12 +62,21 @@ struct HacspecCallbacks {
 
 impl Into<HacspecCallbacks> for util::Args {
     fn into(self) -> HacspecCallbacks {
+        let util::HacspecArgs::Hacspec {
+            output_filename,
+            output_directory,
+            output_type,
+            vc_init,
+            vc_update,
+            vc_dir,
+            ..
+        } = self.hacspec;
         HacspecCallbacks {
-            output_filename: self.output_filename,
-            output_directory: self.output_directory,
-            output_type: self.output_type,
-            version_control_dir: self.vc_dir,
-            version_control: match (self.vc_init, self.vc_update) {
+            output_filename,
+            output_directory,
+            output_type,
+            version_control_dir: vc_dir,
+            version_control: match (vc_init, vc_update) {
                 (true, true) => panic!("`--vc_init` and `--vc_update` are mutually exclusive"),
                 (true, _) => VersionControlArg::Initialize,
                 (_, true) => VersionControlArg::Update,
