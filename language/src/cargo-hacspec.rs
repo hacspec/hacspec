@@ -15,5 +15,7 @@ fn main() {
         .env("RUSTC_WORKSPACE_WRAPPER", "hacspec-driver")
         .env("HACSPEC_ARGS", serde_json::to_string(&args).unwrap())
         .spawn()
-        .unwrap();
+        .expect("could not run cargo")
+        .wait()
+        .expect("failed to wait for cargo?");
 }
