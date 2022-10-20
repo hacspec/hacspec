@@ -173,7 +173,7 @@ fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     match x {
         Ident::Unresolved(s) => translate_ident_str(s.clone()),
         Ident::TopLevel(s) => translate_toplevel_ident(s),
-        Ident::Local(LocalIdent { id, name: s }) => {
+        Ident::Local(LocalIdent { id, name: s, .. }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
                 Some(c_id) => *c_id,
@@ -356,7 +356,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x) => translate_ident(x.clone()),
+        Pattern::IdentPat(x,_) => translate_ident(x.clone()),
         Pattern::LiteralPat(x) => translate_literal(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
@@ -1091,7 +1091,7 @@ fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
 // taken from rustspec_to_fstar
 fn add_ok_if_result(
     stmt: Statement,
-    early_return_type: Fillable<EarlyReturnType>,
+    early_return_type: Fillable<CarrierTyp>,
     question_mark: bool,
 ) -> Spanned<Statement> {
     (
@@ -1101,11 +1101,11 @@ fn add_ok_if_result(
                     // If b has an early return, then we must prefix the returned
                     // mutated variables by Ok or Some
                     match stmt {
-                        Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
+                        Statement::ReturnExp(e,t) => Statement::ReturnExp(Expression::EnumInject(
                             BaseTyp::Named(
                                 (
                                     TopLevelIdent {
-                                        string: match ert {
+                                        string: match carrier_kind(ert.clone()) {
                                             EarlyReturnType::Option => "Option",
                                             EarlyReturnType::Result => "Result",
                                         }
@@ -1118,7 +1118,7 @@ fn add_ok_if_result(
                             ),
                             (
                                 TopLevelIdent {
-                                    string: match ert {
+                                    string: match carrier_kind(ert) {
                                         EarlyReturnType::Option => "Some",
                                         EarlyReturnType::Result => "Ok",
                                     }
@@ -1128,7 +1128,7 @@ fn add_ok_if_result(
                                 DUMMY_SP.into(),
                             ),
                             Some((Box::new(e.clone()), DUMMY_SP.into())),
-                        )),
+                        ), t),
                         _ => panic!("should not happen"),
                     }
                 } else {
@@ -1151,7 +1151,7 @@ fn translate_statements<'a>(
     };
     match s.0 {
         Statement::LetBinding((pat, _), typ, (expr, _), question_mark) => {
-            if question_mark {
+            if question_mark.is_some() {
                 RcDoc::as_string("bind ")
                     .append(make_paren(translate_expression(expr.clone(), top_ctx)))
                     .append(RcDoc::space())
@@ -1185,10 +1185,10 @@ fn translate_statements<'a>(
                 .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _), question_mark) =>
+        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) =>
         //TODO: not yet handled
         {
-            if question_mark {
+            if question_mark.is_some() {
                 RcDoc::as_string("bind")
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e1.clone(), top_ctx)))
@@ -1215,7 +1215,7 @@ fn translate_statements<'a>(
         }
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
-            if question_mark {
+            if question_mark.is_some() {
                 RcDoc::as_string("bind")
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e2.clone(), top_ctx)))
@@ -1259,7 +1259,7 @@ fn translate_statements<'a>(
             }
         }
 
-        Statement::ReturnExp(e1) => translate_expression(e1.clone(), top_ctx),
+        Statement::ReturnExp(e1, _) => translate_expression(e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (mut b1, _), b2, mutated) => {
             let mutated_info = mutated.unwrap();
             let pat = RcDoc::as_string("'").append(make_tuple(
@@ -1489,7 +1489,7 @@ fn translate_block<'a>(
         (None, _) => panic!(), // should not happen,
         (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
             statements.push((
-                Statement::ReturnExp(Expression::Lit(Literal::Unit)),
+                Statement::ReturnExp(Expression::Lit(Literal::Unit), None),
                 DUMMY_SP.into(),
             ));
         }

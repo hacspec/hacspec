@@ -4,10 +4,13 @@ use rustc_span::DUMMY_SP;
 static ID_COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 fn fresh_var() -> Ident {
     let id = ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    Ident::Local(LocalIdent {
-        name: "mvar".to_string(),
-        id: id,
-    })
+    Ident::Local(
+        LocalIdent {
+            name: "mvar".to_string(),
+            id: id,
+            mutable: false,
+        },
+    )
 }
 
 /// Wraps an [expression][Expression] `exp` with a `pure` monadic
