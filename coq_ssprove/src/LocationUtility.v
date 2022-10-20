@@ -472,6 +472,18 @@ Proof.
   apply incl.
 Qed.
 
+Lemma valid_injectOpsig_b :
+  forall (I1 I2 : Interface) (A : choice.Choice.type)
+         (L : {fset tag_ordType (I:=choice_type_ordType) (fun _ : choice_type => nat_ordType)})
+         (v : raw_code A),
+    List.incl I1 I2 -> ValidCode L I1 v -> ValidCode L I2 v.
+Proof.  
+  intros I1 I2 A L v incl.
+  apply valid_injectMap.
+  apply opsig_list_incl_fsubset.
+  apply incl.
+Qed.
+
 Theorem loc_list_incl_remove_fset {A} `{EqDec A} : forall (l1 l2 : list Location), List.incl l1 l2 <-> List.incl (fset l1) (fset l2).
 Proof.
   intros.

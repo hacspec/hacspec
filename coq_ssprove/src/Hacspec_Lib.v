@@ -909,8 +909,8 @@ Definition seq_slice
   {a: ChoiceEquality}
  `{Default (T a)}
   (s: (T (seq a)))
-  (start: nat)
-  (len: nat)
+  (start: uint_size)
+  (len: uint_size)
     : both0 (seq a) :=
   lift_to_both (seq_slice s start len).
 
@@ -2471,6 +2471,12 @@ Ltac solve_zero :=
 
 Ltac solve_ssprove_obligations :=
   intros ;
+  try repeat rewrite fsetUid ;
+  try repeat rewrite <- fset_cat ;
+  (* try repeat rewrite <- fset0E *)
+  (* ; try repeat rewrite fsetU0 *)
+  (* ; try repeat rewrite fset0U *)
+  (* ; try repeat rewrite fsetUid ; *)
   (ssprove_valid_location || loc_incl_compute || opsig_incl_compute)
   || (match goal with
      | [ |- context [ pkg_composition.Parable _ _ ]] =>

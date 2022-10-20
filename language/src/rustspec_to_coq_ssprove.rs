@@ -570,7 +570,7 @@ fn translate_statements<'a>(
                         .append(RcDoc::as_string("(I1 := "))
                         .append(
                             rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
-                                function_dependencies.clone(),
+                                b2.function_dependencies.clone(),
                                 top_ctx,
                             ),
                         )
@@ -614,7 +614,7 @@ fn translate_statements<'a>(
                 .append(RcDoc::as_string("(I1 := "))
                 .append(
                     rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
-                        function_dependencies.clone(),
+                        b1.function_dependencies.clone(),
                         top_ctx,
                     ),
                 )
@@ -1044,7 +1044,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                                     .append(RcDoc::as_string("'×"))
                                     .append(RcDoc::space()),
                             )
-                        }.append(RcDoc::as_string(" : choice_type")),
+                        }
+                        .append(RcDoc::as_string(" : choice_type")),
                     ))
                     .append(RcDoc::as_string(" (in custom pack_type at level 2)."));
 
@@ -1062,14 +1063,14 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                         if sig.args.is_empty() {
                             RcDoc::as_string("unit_ChoiceEquality")
                         } else {
-                        RcDoc::intersperse(
-                            sig.args.iter().map(|((_x, _), (tau, _))| {
-                                rustspec_to_coq_ssprove_state::translate_typ(tau.clone())
-                            }),
-                            RcDoc::space()
-                                .append(RcDoc::as_string("'×"))
-                                .append(RcDoc::space()),
-                        )
+                            RcDoc::intersperse(
+                                sig.args.iter().map(|((_x, _), (tau, _))| {
+                                    rustspec_to_coq_ssprove_state::translate_typ(tau.clone())
+                                }),
+                                RcDoc::space()
+                                    .append(RcDoc::as_string("'×"))
+                                    .append(RcDoc::space()),
+                            )
                         }
                         .append(RcDoc::as_string(" : ChoiceEquality")),
                     ))
@@ -1203,8 +1204,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                             .append(fun_imports.clone())
                             .append(make_paren(
                                 make_paren(block_exprs.group())
-                                    .append(
-                                        RcDoc::space())
+                                    .append(RcDoc::space())
                                     .append(":")
                                     .append(RcDoc::space())
                                     .append(both_type),
@@ -1236,7 +1236,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     .append(RcDoc::line())
                     .append(fun_ident_def)
                     .append(RcDoc::line())
-                    .append(RcDoc::as_string("Equations "))
+                    // .append(RcDoc::as_string("Equations "))
+                    .append(RcDoc::as_string("Program Definition "))
                     .append(rustspec_to_coq_ssprove_pure::make_definition_inner(
                         translate_ident(Ident::TopLevel(f.clone()))
                             .append(RcDoc::line())
@@ -1245,10 +1246,11 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                             .append(fun_type)
                             .group(),
                         None,
-                        // fun_imports.append(// )
-                        translate_ident(Ident::TopLevel(f.clone()))
-                            .append(RcDoc::as_string(" := "))
-                            .append(package_wraped_code_block.group()),
+                        // translate_ident(Ident::TopLevel(f.clone()))
+                        //     .append(RcDoc::as_string(" := "))
+                        //     .append(
+                                package_wraped_code_block.group()// )
+                            ,
                     ))
                     .append(RcDoc::hardline().append(RcDoc::as_string("Fail Next Obligation.")))
                 // .append(RcDoc::line())

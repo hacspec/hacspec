@@ -389,7 +389,29 @@ Proof.
   reflexivity.
 Qed.
 
-Program Instance prod_both {ceA ceB : ChoiceEquality} {L I} (a : both L I ceA) (b : both L I ceB) : both L I (ceA '× ceB) :=
+(* Program Instance prod_both {ceA ceB : ChoiceEquality} {L1 L2 L3 : {fset _}} {I1 I2 I3 : {fset _}} (a : both L1 I1 ceA) (b : both L2 I2 ceB) `{H_L_13 : List.incl L1 L3} `{H_L_23 : List.incl L2 L3} `{H_I_13 : List.incl I1 I3} `{H_I_23 : List.incl I2 I3} : both L3 I3 (ceA '× ceB) := *)
+(*   {| *)
+(*     is_pure := (is_pure a , is_pure b) ; *)
+(*     is_state := *)
+(*     {code *)
+(*        x ← a ;; *)
+(*        y ← b ;; *)
+(*        @ret (prod_ChoiceEquality _ _) (x , y) *)
+(*     } *)
+(*   |}. *)
+(* Next Obligation. *)
+(*   intros. *)
+(*   ssprove_valid. *)
+(*   apply valid_injectLocations_b with (L1 := L1). apply H_L_13. *)
+(*   apply valid_injectOpsig_b with (I1 := I1). apply H_I_13. *)
+(*   apply (is_state a). *)
+
+(*   apply valid_injectLocations_b with (L1 := L2). apply H_L_23. *)
+(*   apply valid_injectOpsig_b with (I1 := I2). apply H_I_23. *)
+(*   apply (is_state b). *)
+(* Defined. *)
+
+Program Instance prod_both {ceA ceB : ChoiceEquality} {L1 L2 : {fset _}} {I1 I2 : {fset _}} (a : both L1 I1 ceA) (b : both L2 I2 ceB) : both (L1 :|: L2) (I1 :|: I2) (ceA '× ceB) :=
   {|
     is_pure := (is_pure a , is_pure b) ;
     is_state :=
@@ -399,6 +421,17 @@ Program Instance prod_both {ceA ceB : ChoiceEquality} {L I} (a : both L I ceA) (
        @ret (prod_ChoiceEquality _ _) (x , y)
     }
   |}.
+Next Obligation.
+  intros.
+  ssprove_valid.
+  apply valid_injectLocations with (L1 := L1). apply fsubsetUl.
+  apply @valid_injectMap with (I1 := I1). apply fsubsetUl.
+  apply (is_state a).
+
+  apply valid_injectLocations with (L1 := L2). apply fsubsetUr.
+  apply @valid_injectMap with (I1 := I2). apply fsubsetUr.
+  apply (is_state b).
+Defined.
 Next Obligation.
   intros.
   rewrite (T_ct_prod_propegate).
@@ -439,6 +472,9 @@ Next Obligation.
 Defined.
 Notation "prod_b( a , b )" := (prod_both a b) : hacspec_scope.
 Notation "prod_b( a , b , .. , c )" := (prod_both .. (prod_both a b) .. c) : hacspec_scope.
+
+(* Notation "prod_b( a , b )" := (prod_both a b (L1 := _)(L2 := _)(L3 := _) (I1 := _)(I2 := _)(I3 := _) (H_L_13 := _) (H_L_23 := _) (H_I_13 := _) (H_I_23 := _)) : hacspec_scope. *)
+(* Notation "prod_b( a , b , .. , c )" := (prod_both .. (prod_both a b (L1 := _)(L2 := _)(L3 := _) (I1 := _)(I2 := _)(I3 := _) (H_L_13 := _) (H_L_23 := _) (H_I_13 := _) (H_I_23 := _)) .. c (L1 := _)(L2 := _)(L3 := _) (I1 := _)(I2 := _)(I3 := _) (H_L_13 := _) (H_L_23 := _) (H_I_13 := _) (H_I_23 := _)) : hacspec_scope. *)
 
 (* Program Definition both_prod {L I} {A B} (x : both L I A * both L I B) : both L I (A '× B) := *)
 (*   {| is_pure := (fst x , snd x) ; *)

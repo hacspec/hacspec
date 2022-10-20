@@ -1359,10 +1359,10 @@ Definition seq_slice
            {a: ChoiceEquality}
            `{Default (T a)}
            (s: (T (seq a)))
-           (start: nat)
-           (len: nat)
+           (start: T (uint_size))
+           (len: T (uint_size))
   : (seq a) :=
-  array_to_seq (lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) start (start + len)).
+  array_to_seq (lseq_slice (array_from_seq (from_uint_size (seq_len s)) s) (from_uint_size start) ((from_uint_size start) + (from_uint_size len))).
 
 Definition seq_slice_range
            {a: ChoiceEquality}
@@ -1370,7 +1370,7 @@ Definition seq_slice_range
            (input: (T (seq a)))
            (start_fin:((T (uint_size)) * (T (uint_size))))
   : (T (seq a)) :=
-  seq_slice input (from_uint_size (fst start_fin)) (from_uint_size (snd start_fin)).
+  seq_slice input (fst start_fin) (snd start_fin).
 
 (* updating a subsequence in a sequence *)
 Definition seq_update
