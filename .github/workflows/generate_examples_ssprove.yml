@@ -1,4 +1,4 @@
-name: Generate Examples
+name: Generate Examples - SSProve
 
 on: [pull_request]
 jobs:

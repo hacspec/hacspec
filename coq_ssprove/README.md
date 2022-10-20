@@ -19,6 +19,10 @@ opam upgrade -y
 ```
 the development uses the Jasmin branch of SSProve, meaning you might need to install these from source.
 
+## Docker
+
+There is a docker container with the dependencies installed (Coq / Rust) at `ghcr.io/cmester0/hacspec_ssprove:8.15.2`.
+
 ## Compiling the coq files
 
 In folder `/coq_ssprove`, type `make`. This compiles the coq libraries and the compiled examples, as defined in `_CoqProject`.

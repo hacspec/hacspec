@@ -14,6 +14,10 @@ opam install coq-compcert coq-coqprime
 ```
 (assuming you have coq installed through opam).
 
+## Docker
+
+There is a docker container with the dependencies installed (Coq / Rust) at `ghcr.io/cmester0/hacspec_coq:8.16`.
+
 ## Compiling the coq files
 
 In folder `/coq`, type `make`. This compiles the coq libraries and the compiled examples, as defined in `_CoqProject`.

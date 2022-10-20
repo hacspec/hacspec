@@ -1,4 +1,4 @@
-name: Generate Examples
+name: Generate Examples - Coq
 
 on: [pull_request]
 jobs:
