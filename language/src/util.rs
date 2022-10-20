@@ -15,7 +15,8 @@ FLAGS:
 OPTIONS:
     -o <FILE_DIR>    The output filename (defaults to crate name)
     --dir <FILE_DIR> The output directory (default to current dir)
-    -e <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), or Coq (v)
+    -e <FILE_EXT>    File extension F* (fst), Easycrypt (ec), (json), Coq (v), or 
+                     SSProve (v_ssprove, v_ssprove_pure, v_ssprove_state)
 
                      If just -e is supplied, then current directory is used as output.
                      If neither -e nor --dir are supplied, then we only run the typechecker.
