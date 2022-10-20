@@ -37,6 +37,7 @@ impl From<Span> for RustspecSpan {
 pub struct LocalIdent {
     pub id: usize,
     pub name: String,
+    pub mutable: bool,
 }
 
 impl fmt::Display for LocalIdent {
@@ -333,8 +334,8 @@ pub fn carrier_payload(carrier: CarrierTyp) -> Spanned<BaseTyp> {
 }
 pub fn carrier_kind(carrier: CarrierTyp) -> EarlyReturnType {
     match carrier {
-        CarrierTyp::Result(..) => EarlyReturnType::Result,
-        CarrierTyp::Option(..) => EarlyReturnType::Option,
+        CarrierTyp::Result(a, b) => EarlyReturnType::Result,
+        CarrierTyp::Option(c) => EarlyReturnType::Option,
     }
 }
 
@@ -372,7 +373,7 @@ pub enum Expression {
         bool, // should we insert a `pure` node? (`pure` being e.g. `Ok`)
     ),
     Named(Ident),
-    // FuncCall(prefix, name, args)
+    // FuncCall(prefix, name, args, arg_types)
     FuncCall(
         Option<Spanned<BaseTyp>>,
         Spanned<TopLevelIdent>,
@@ -421,7 +422,7 @@ pub enum Expression {
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Pattern {
-    IdentPat(Ident),
+    IdentPat(Ident, bool),
     WildCard,
     Tuple(Vec<Spanned<Pattern>>),
     SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
@@ -435,12 +436,14 @@ pub enum EarlyReturnType {
 
 #[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
-    pub early_return_type: Fillable<EarlyReturnType>,
+    pub early_return_type: Fillable<CarrierTyp>,
     pub vars: VarSet,
     pub stmt: Statement,
 }
 
 pub type Fillable<T> = Option<T>;
+
+pub type QuestionMarkInfo = Option<(ScopeMutableVars, FunctionDependencies, Fillable<CarrierTyp>)>;
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Statement {
@@ -448,12 +451,13 @@ pub enum Statement {
         Spanned<Pattern>,     // Let-binded pattern
         Option<Spanned<Typ>>, // Typ of the binded expr
         Spanned<Expression>,  // Binded expr
-        bool,                 // Presence of a question mark at the end
+        QuestionMarkInfo,     // Presence of a question mark at the end
     ),
     Reassignment(
-        Spanned<Ident>,      // Variable reassigned
-        Spanned<Expression>, // New value
-        bool,                // Presence of a question mark at the end
+        Spanned<Ident>,         // Variable reassigned
+        Fillable<Spanned<Typ>>, // Type of variable reassigned
+        Spanned<Expression>,    // New value
+        QuestionMarkInfo,       // Presence of a question mark at the end
     ),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -471,24 +475,109 @@ pub enum Statement {
         Spanned<Ident>,      // Array variable
         Spanned<Expression>, // Index value
         Spanned<Expression>, // Cell value
-        bool,                // Presence of a question mark at the end of the cell value expression
+        QuestionMarkInfo,    // Presence of a question mark at the end of the cell value expression
         Fillable<Typ>,       // Type of the array
     ),
-    ReturnExp(Expression),
+    ReturnExp(Expression, Fillable<Typ>),
 }
 
-#[derive(Clone, Serialize, Debug)]
+pub type MutableVar = (Ident, Fillable<Typ>);
+#[derive(Clone, Debug)]
+pub struct ScopeMutableVars {
+    pub external_vars: HashSet<MutableVar>,
+    pub local_vars: HashSet<MutableVar>,
+}
+
+impl Serialize for ScopeMutableVars {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // TODO: Serialize local vars
+        let mut seq = serializer.serialize_seq(Some(self.external_vars.len()))?;
+        for e in &self.external_vars {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+impl ScopeMutableVars {
+    pub fn new() -> Self {
+        ScopeMutableVars {
+            external_vars: HashSet::new(),
+            local_vars: HashSet::new(),
+        }
+    }
+
+    pub fn push(&mut self, value: MutableVar) {
+        self.local_vars.insert(value);
+    }
+
+    pub fn push_external(&mut self, value: MutableVar) {
+        self.external_vars.insert(value);
+    }
+
+    pub fn extend(&mut self, other: ScopeMutableVars) {
+        for i in other.external_vars {
+            self.external_vars.insert(i);
+        }
+        for i in other.local_vars {
+            self.local_vars.insert(i);
+        }
+    }
+
+    pub fn extend_external(&mut self, other: ScopeMutableVars) {
+        for i in other.external_vars {
+            self.external_vars.insert(i);
+        }
+        for i in other.local_vars {
+            self.external_vars.insert(i);
+        }
+    }
+
+    pub fn subtract(self, other: ScopeMutableVars) -> ScopeMutableVars {
+        ScopeMutableVars {
+            external_vars: self.external_vars.clone().difference(other.external_vars),
+            local_vars: self.local_vars.clone().difference(other.local_vars),
+        }
+    }
+}
+
+pub type FunctionDependency = TopLevelIdent;
+
+#[derive(Clone, Debug)]
+pub struct FunctionDependencies (pub HashSet<FunctionDependency>);
+
+impl Serialize for FunctionDependencies {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for e in &self.0 {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
     pub contains_question_mark: Fillable<bool>,
+    pub mutable_vars: ScopeMutableVars,
+    pub function_dependencies: FunctionDependencies,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
+    pub mutable_vars: ScopeMutableVars,
+    pub function_dependencies: FunctionDependencies,
 }
 
 #[derive(Clone, Debug, Serialize)]
