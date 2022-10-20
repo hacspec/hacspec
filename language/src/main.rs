@@ -18,6 +18,7 @@ mod hir_to_rustspec;
 mod name_resolution;
 mod rustspec;
 mod rustspec_to_coq;
+mod rustspec_to_coq_base;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
