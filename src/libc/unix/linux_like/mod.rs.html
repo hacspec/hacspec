@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.135/src/unix/linux_like/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.136/src/unix/linux_like/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../../libc/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
@@ -1833,6 +1833,78 @@
 <span id="1827">1827</span>
 <span id="1828">1828</span>
 <span id="1829">1829</span>
+<span id="1830">1830</span>
+<span id="1831">1831</span>
+<span id="1832">1832</span>
+<span id="1833">1833</span>
+<span id="1834">1834</span>
+<span id="1835">1835</span>
+<span id="1836">1836</span>
+<span id="1837">1837</span>
+<span id="1838">1838</span>
+<span id="1839">1839</span>
+<span id="1840">1840</span>
+<span id="1841">1841</span>
+<span id="1842">1842</span>
+<span id="1843">1843</span>
+<span id="1844">1844</span>
+<span id="1845">1845</span>
+<span id="1846">1846</span>
+<span id="1847">1847</span>
+<span id="1848">1848</span>
+<span id="1849">1849</span>
+<span id="1850">1850</span>
+<span id="1851">1851</span>
+<span id="1852">1852</span>
+<span id="1853">1853</span>
+<span id="1854">1854</span>
+<span id="1855">1855</span>
+<span id="1856">1856</span>
+<span id="1857">1857</span>
+<span id="1858">1858</span>
+<span id="1859">1859</span>
+<span id="1860">1860</span>
+<span id="1861">1861</span>
+<span id="1862">1862</span>
+<span id="1863">1863</span>
+<span id="1864">1864</span>
+<span id="1865">1865</span>
+<span id="1866">1866</span>
+<span id="1867">1867</span>
+<span id="1868">1868</span>
+<span id="1869">1869</span>
+<span id="1870">1870</span>
+<span id="1871">1871</span>
+<span id="1872">1872</span>
+<span id="1873">1873</span>
+<span id="1874">1874</span>
+<span id="1875">1875</span>
+<span id="1876">1876</span>
+<span id="1877">1877</span>
+<span id="1878">1878</span>
+<span id="1879">1879</span>
+<span id="1880">1880</span>
+<span id="1881">1881</span>
+<span id="1882">1882</span>
+<span id="1883">1883</span>
+<span id="1884">1884</span>
+<span id="1885">1885</span>
+<span id="1886">1886</span>
+<span id="1887">1887</span>
+<span id="1888">1888</span>
+<span id="1889">1889</span>
+<span id="1890">1890</span>
+<span id="1891">1891</span>
+<span id="1892">1892</span>
+<span id="1893">1893</span>
+<span id="1894">1894</span>
+<span id="1895">1895</span>
+<span id="1896">1896</span>
+<span id="1897">1897</span>
+<span id="1898">1898</span>
+<span id="1899">1899</span>
+<span id="1900">1900</span>
+<span id="1901">1901</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">type</span> <span class="ident">sa_family_t</span> <span class="op">=</span> <span class="ident">u16</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">speed_t</span> <span class="op">=</span> <span class="ident">::c_uint</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">tcflag_t</span> <span class="op">=</span> <span class="ident">::c_uint</span>;
@@ -2594,23 +2666,95 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_CAIF</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="ident">AF_CAIF</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_ALG</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="ident">AF_ALG</span>;
 
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_OOB</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">1</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_PEEK</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_DONTROUTE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_CTRUNC</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">8</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_TRUNC</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x20</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_DONTWAIT</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x40</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_EOR</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x80</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_WAITALL</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x100</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_FIN</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x200</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_SYN</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x400</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_CONFIRM</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x800</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_RST</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x1000</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_ERRQUEUE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x2000</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_NOSIGNAL</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x4000</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_MORE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x8000</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_WAITFORONE</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x10000</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_FASTOPEN</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x20000000</span>;
+<span class="attribute">#[<span class="ident">deprecated</span>(
+    <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.136&quot;</span>,
+    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;recvmmsg call expects an unsigned type on musl/emscripten&quot;</span>
+)]</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MSG_CMSG_CLOEXEC</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="number">0x40000000</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCM_TIMESTAMP</span>: <span class="ident">::c_int</span> <span class="op">=</span> <span class="ident">SO_TIMESTAMP</span>;
