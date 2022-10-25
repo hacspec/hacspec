@@ -5,7 +5,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cmester0/hacspec_coq:8.16
+      image: ghcr.io/hacspec/hacspec_coq:8.16
       options: --user root
     steps:
     - uses: actions/checkout@v3
@@ -16,13 +16,13 @@ jobs:
         opam switch 4.13.1+flambda
         eval $(opam env)
         coqtop --version
-        /home/coq/.cargo/bin/cargo clean
-        /home/coq/.cargo/bin/cargo build --verbose
-        /home/coq/.cargo/bin/cargo install --path language
+        cargo clean
+        cargo build --verbose
+        cargo install --path language
         cd examples
-        /home/coq/.cargo/bin/cargo clean
-        /home/coq/.cargo/bin/cargo build --verbose
-        /home/coq/.cargo/bin/cargo hacspec -e v --dir ../coq/src/ --vc-dir ../coq/ --vc-update "*"
+        cargo clean
+        cargo build --verbose
+        cargo hacspec -e v --dir ../coq/src/ --vc-dir ../coq/ --vc-update "*"
         cd ../coq
         coq_makefile -f _CoqProject -o Makefile
         make

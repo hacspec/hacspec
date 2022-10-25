@@ -1,6 +1,6 @@
 FROM coqorg/coq:8.16
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-RUN source $HOME/.cargo/env
+ENV PATH $HOME/.cargo/bin:$PATH
 RUN rustup update
 RUN rustup toolchain install nightly-2022-07-04
 RUN rustup component add --toolchain nightly-2022-07-04 rustc-dev llvm-tools-preview rust-analysis rust-src 
