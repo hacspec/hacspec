@@ -334,8 +334,8 @@ pub fn carrier_payload(carrier: CarrierTyp) -> Spanned<BaseTyp> {
 }
 pub fn carrier_kind(carrier: CarrierTyp) -> EarlyReturnType {
     match carrier {
-        CarrierTyp::Result(a, b) => EarlyReturnType::Result,
-        CarrierTyp::Option(c) => EarlyReturnType::Option,
+        CarrierTyp::Result(..) => EarlyReturnType::Result,
+        CarrierTyp::Option(..) => EarlyReturnType::Option,
     }
 }
 
