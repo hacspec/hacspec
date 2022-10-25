@@ -692,7 +692,6 @@ fn translate_expr(
                                     .map(|cell| translate_expr_expects_exp(sess, specials, &cell))
                                     .collect();
                                 let new_cells = check_vec(new_cells)?;
-
                                 return Ok((
                                     (ExprTranslationResult::TransExpr(Expression::NewArray(
                                         Some(func_name_but_as_type),
@@ -1022,8 +1021,8 @@ fn translate_expr(
                 None => Ok(None),
                 Some(f_e) => match &f_e.kind {
                     ExprKind::Block(f_e, _) => {
-                        let block_r_f_e = translate_block(sess, specials, f_e)?;
-                        Ok(Some(block_r_f_e))
+                        let r_f_e = translate_block(sess, specials, f_e)?;
+                        Ok(Some(r_f_e))
                     }
                     _ => {
                         sess.span_rustspec_err(
@@ -1043,7 +1042,6 @@ fn translate_expr(
                 )),
                 e.span.into(),
             );
-
             // Now, we determine whether what we have translate is an inline conditional
             // or a statement-like conditional
             match r_f_e {
@@ -1092,7 +1090,6 @@ fn translate_expr(
                 ExprKind::Range(Some(r_begin), Some(r_end), RangeLimits::HalfOpen) => {
                     let e_begin = translate_expr(sess, specials, r_begin)?;
                     let e_end = translate_expr(sess, specials, r_end)?;
-
                     match (e_begin, e_end) {
                         (
                             (ExprTranslationResult::TransExpr(e_begin), span_begin),
@@ -1116,7 +1113,6 @@ fn translate_expr(
                 }
             }?;
             let r_b = translate_block(sess, specials, b)?;
-
             Ok((
                 ExprTranslationResult::TransStmt(Statement::ForLoop(id?, e_begin, e_end, r_b)),
                 e.span.into(),
@@ -1761,7 +1757,7 @@ fn translate_block(
         .iter()
         .map(|s| translate_statement(sess, specials, &s))
         .collect();
-    let stmts: Vec<_> = check_vec(stmts)?.into_iter().flatten().collect();
+    let stmts = check_vec(stmts)?.into_iter().flatten().collect();
     Ok((
         Block {
             stmts,
