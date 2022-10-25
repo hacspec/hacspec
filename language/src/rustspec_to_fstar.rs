@@ -1185,7 +1185,7 @@ fn translate_statements<'a>(
                     translate_expression(sess, expr.clone(), top_ctx),
                     false,
                     if question_mark.is_some() {
-                        None // Some(EarlyReturnType::Result(_, _))
+                        Some(EarlyReturnType::Result)
                     } else {
                         None
                     },
@@ -1209,7 +1209,7 @@ fn translate_statements<'a>(
                     translate_expression(sess, e1.clone(), top_ctx),
                     false,
                     if question_mark.is_some() {
-                        None // Some(EarlyReturnType::Result(_, _))
+                        Some(EarlyReturnType::Result)
                     } else {
                         None
                     },

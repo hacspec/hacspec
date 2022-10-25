@@ -548,39 +548,30 @@ fn translate_expr(
     e: &Expr,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
     match &e.kind {
-        ExprKind::Binary(op, e1, e2) => {
-            let trans_e1 = translate_expr_expects_exp(sess, specials, e1)?;
-            let trans_e2 = translate_expr_expects_exp(sess, specials, e2)?;
-
-            Ok((
-                ExprTranslationResult::TransExpr(Expression::Binary(
-                    (translate_binop(op.clone().node), op.clone().span.into()),
-                    Box::new(trans_e1),
-                    Box::new(trans_e2),
-                    None,
-                )),
-                e.span.into(),
-            ))
-        }
-        ExprKind::Unary(op, e1) => {
-            let trans = translate_expr_expects_exp(sess, specials, e1)?;
-
-            Ok((
-                ExprTranslationResult::TransExpr(Expression::Unary(
-                    match *op {
-                        UnOp::Not => UnOpKind::Not,
-                        UnOp::Neg => UnOpKind::Neg,
-                        UnOp::Deref => {
-                            sess.span_rustspec_err(e.span, "dereferences not allowed in Hacspec");
-                            return Err(());
-                        }
-                    },
-                    Box::new(trans),
-                    None,
-                )),
-                e.span.into(),
-            ))
-        }
+        ExprKind::Binary(op, e1, e2) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Binary(
+                (translate_binop(op.clone().node), op.clone().span.into()),
+                Box::new(translate_expr_expects_exp(sess, specials, e1)?),
+                Box::new(translate_expr_expects_exp(sess, specials, e2)?),
+                None,
+            )),
+            e.span.into(),
+        )),
+        ExprKind::Unary(op, e1) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Unary(
+                match *op {
+                    UnOp::Not => UnOpKind::Not,
+                    UnOp::Neg => UnOpKind::Neg,
+                    UnOp::Deref => {
+                        sess.span_rustspec_err(e.span, "dereferences not allowed in Hacspec");
+                        return Err(());
+                    }
+                },
+                Box::new(translate_expr_expects_exp(sess, specials, e1)?),
+                None,
+            )),
+            e.span.into(),
+        )),
         ExprKind::Path(Some(_), _) => {
             sess.span_rustspec_err(e.span, "trait associated values not allowed in Hacspec");
             Err(())
@@ -619,10 +610,10 @@ fn translate_expr(
                 e.span.into(),
             ))
         }
-        ExprKind::Path(None, path) => Ok(translate_expr_name(sess, path, &e.span, specials)?),
+        ExprKind::Path(None, path) => translate_expr_name(sess, path, &e.span, specials),
         ExprKind::Call(func, args) => {
             let func_name_kind = match &func.kind {
-                ExprKind::Path(None, path) => Ok(translate_func_name(sess, specials, &path)?),
+                ExprKind::Path(None, path) => translate_func_name(sess, specials, &path),
                 _ => {
                     sess.span_rustspec_err(
                         func.span,
@@ -913,7 +904,7 @@ fn translate_expr(
                 e.span.into(),
             ))
         }
-        ExprKind::Lit(lit) => Ok(translate_literal(sess, lit, e.span.clone())?),
+        ExprKind::Lit(lit) => translate_literal(sess, lit, e.span.clone()),
         ExprKind::Assign(lhs, rhs_e, _) => {
             let (r_e, r_e_question_mark) =
                 match translate_expr_accepts_question_mark(sess, specials, &rhs_e)? {
@@ -968,7 +959,6 @@ fn translate_expr(
                         }
                         (ExprTranslationResult::TransExpr(r_index), span) => Ok((r_index, span)),
                     };
-
                     match &a.kind {
                         ExprKind::Path(None, path) => match path.segments.as_slice() {
                             [var] => match &var.args {
@@ -1027,8 +1017,8 @@ fn translate_expr(
                 }
                 (ExprTranslationResult::TransExpr(r_cond), span) => Ok((r_cond, span)),
             }?;
-            let mut block_r_t_e = translate_block(sess, specials, t_e)?;
-            let block_r_f_e = match f_e {
+            let mut r_t_e = translate_block(sess, specials, t_e)?;
+            let r_f_e = match f_e {
                 None => Ok(None),
                 Some(f_e) => match &f_e.kind {
                     ExprKind::Block(f_e, _) => {
@@ -1047,8 +1037,8 @@ fn translate_expr(
             let stmt_result = (
                 ExprTranslationResult::TransStmt(Statement::Conditional(
                     r_cond.clone(),
-                    block_r_t_e.clone(),
-                    block_r_f_e.clone(),
+                    r_t_e.clone(),
+                    r_f_e.clone(),
                     None,
                 )),
                 e.span.into(),
@@ -1056,13 +1046,13 @@ fn translate_expr(
 
             // Now, we determine whether what we have translate is an inline conditional
             // or a statement-like conditional
-            match block_r_f_e {
-                Some(mut block_r_f_e) => {
-                    if block_r_t_e.0.stmts.len() == 1 && block_r_f_e.0.stmts.len() == 1 {
-                        let r_t_span = block_r_t_e.1.clone();
-                        let r_f_span = block_r_f_e.1.clone();
-                        let r_t_e = block_r_t_e.0.stmts.pop().unwrap();
-                        let r_f_e = block_r_f_e.0.stmts.pop().unwrap();
+            match r_f_e {
+                Some(mut r_f_e) => {
+                    if r_t_e.0.stmts.len() == 1 && r_f_e.0.stmts.len() == 1 {
+                        let r_t_span = r_t_e.1.clone();
+                        let r_f_span = r_f_e.1.clone();
+                        let r_t_e = r_t_e.0.stmts.pop().unwrap();
+                        let r_f_e = r_f_e.0.stmts.pop().unwrap();
                         match (r_t_e, r_f_e) {
                             (
                                 (Statement::ReturnExp(r_t_e, None), _),
@@ -1125,12 +1115,10 @@ fn translate_expr(
                     Err(())
                 }
             }?;
-            let block_r_b = translate_block(sess, specials, b)?;
+            let r_b = translate_block(sess, specials, b)?;
 
             Ok((
-                ExprTranslationResult::TransStmt(Statement::ForLoop(
-                    id?, e_begin, e_end, block_r_b,
-                )),
+                ExprTranslationResult::TransStmt(Statement::ForLoop(id?, e_begin, e_end, r_b)),
                 e.span.into(),
             ))
         }
@@ -1176,17 +1164,14 @@ fn translate_expr(
         ExprKind::Tup(args) => {
             let r_args = args
                 .into_iter()
-                .map(|arg| {
-                    let expr = translate_expr(sess, specials, arg)?;
-                    match expr {
-                        (ExprTranslationResult::TransExpr(r_arg), r_span) => Ok((r_arg, r_span)),
-                        (ExprTranslationResult::TransStmt(_), r_span) => {
-                            sess.span_rustspec_err(
-                                r_span,
-                                "statements forbidden in tuple expressions in Hacspec",
-                            );
-                            Err(())
-                        }
+                .map(|arg| match translate_expr(sess, specials, arg)? {
+                    (ExprTranslationResult::TransExpr(r_arg), r_span) => Ok((r_arg, r_span)),
+                    (ExprTranslationResult::TransStmt(_), r_span) => {
+                        sess.span_rustspec_err(
+                            r_span,
+                            "statements forbidden in tuple expressions in Hacspec",
+                        );
+                        Err(())
                     }
                 })
                 .collect();
@@ -1347,7 +1332,6 @@ fn translate_expr(
                     })
                     .collect(),
             )?;
-
             Ok((
                 ExprTranslationResult::TransExpr(Expression::MatchWith(Box::new(e1), arms)),
                 e.span.clone().into(),
@@ -1432,7 +1416,6 @@ fn translate_expr(
             };
             let new_e1 = translate_expr_expects_exp(sess, specials, e1)?;
             let new_e2 = translate_expr_expects_exp(sess, specials, e2)?;
-
             Ok((
                 ExprTranslationResult::TransExpr(Expression::Tuple(vec![new_e1, new_e2])),
                 e.span.into(),
@@ -1722,9 +1705,7 @@ fn translate_statement(
                     Err(())
                 }
                 LocalKind::Init(e) => {
-                    let expr = translate_expr_accepts_question_mark(sess, specials, &e)?;
-
-                    match expr {
+                    match translate_expr_accepts_question_mark(sess, specials, &e)? {
                         (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
                             sess.span_rustspec_err(
                                 e.span,
@@ -1739,23 +1720,20 @@ fn translate_statement(
                     }
                 }
             }?;
-
             Ok(vec![(
                 Statement::LetBinding(pat, ty, init, question_mark),
                 s.span.into(),
             )])
         }
         StmtKind::Expr(e) => {
-            let t_s = translate_expr(sess, specials, &e)?;
-            let t_s = match t_s {
+            let t_s = match translate_expr(sess, specials, &e)? {
                 (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e, None),
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span.into())])
         }
         StmtKind::Semi(e) => {
-            let t_s = translate_expr_accepts_question_mark(sess, specials, &e)?;
-            let t_s = match t_s {
+            let t_s = match translate_expr_accepts_question_mark(sess, specials, &e)? {
                 (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
                     Statement::LetBinding((Pattern::WildCard, span), None, (e, span), question_mark)
                 }
@@ -1783,9 +1761,7 @@ fn translate_block(
         .iter()
         .map(|s| translate_statement(sess, specials, &s))
         .collect();
-    let stmts = check_vec(stmts)?;
-    let stmts: Vec<_> = stmts.into_iter().flatten().collect();
-
+    let stmts: Vec<_> = check_vec(stmts)?.into_iter().flatten().collect();
     Ok((
         Block {
             stmts,
@@ -2568,7 +2544,6 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 Some(b) => translate_block(sess, specials, &b)?,
             };
             log::trace!("   fn_body: {:#?}", fn_body);
-
             let fn_name = translate_toplevel_ident(&i.ident, TopLevelIdentKind::Function);
             let fn_sig = FuncSig {
                 args: fn_inputs,
