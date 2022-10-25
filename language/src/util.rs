@@ -19,7 +19,8 @@ OPTIONS:
 
                      If just -e is supplied, then current directory is used as output.
                      If neither -e nor --dir are supplied, then we only run the typechecker.
-    --vc-init        Initialize version control in '<FILE_DIR>/_vc'
+    --vc-dir <VC_DIR> Set the directory for outputting, otherwise '<VC_DIR> = <FILE_DIR>/_vc'.
+    --vc-init        Initialize version control in <VC_DIR>
     --vc-update      Uses git merge to update the files only with changes, may result in
                      merge conflicts
 
