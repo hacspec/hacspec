@@ -526,22 +526,6 @@ impl ScopeMutableVars {
             self.local_vars.insert(i);
         }
     }
-
-    pub fn extend_external(&mut self, other: ScopeMutableVars) {
-        for i in other.external_vars {
-            self.external_vars.insert(i);
-        }
-        for i in other.local_vars {
-            self.external_vars.insert(i);
-        }
-    }
-
-    pub fn subtract(self, other: ScopeMutableVars) -> ScopeMutableVars {
-        ScopeMutableVars {
-            external_vars: self.external_vars.clone().difference(other.external_vars),
-            local_vars: self.local_vars.clone().difference(other.local_vars),
-        }
-    }
 }
 
 pub type FunctionDependency = TopLevelIdent;
