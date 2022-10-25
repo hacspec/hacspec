@@ -16,11 +16,11 @@ fn fresh_hacspec_id() -> usize {
     ID_COUNTER.fetch_add(1, Ordering::SeqCst)
 }
 
-pub(crate) fn to_fresh_ident(x: &String, m: bool) -> Ident {
+pub(crate) fn to_fresh_ident(x: &String, mutable: bool) -> Ident {
     Ident::Local(LocalIdent {
         id: fresh_hacspec_id(),
         name: x.clone(),
-        mutable: m,
+        mutable
     })
 }
 
