@@ -7,6 +7,9 @@ jobs:
     container:
       image: ghcr.io/hacspec/hacspec_coq:8.16
       options: --user root
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.github_token }}
     steps:
     - uses: actions/checkout@v3
     - name: Build
