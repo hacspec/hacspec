@@ -461,8 +461,7 @@ fn translate_expr_expects_exp(
     specials: &SpecialNames,
     e: &Expr,
 ) -> TranslationResult<Spanned<Expression>> {
-    let expr = translate_expr(sess, specials, e)?;
-    Ok(match expr {
+    match translate_expr(sess, specials, e)? {
         (ExprTranslationResult::TransExpr(e), span) => Ok((e, span)),
         (ExprTranslationResult::TransStmt(_), span) => {
             sess.span_rustspec_err(
@@ -471,7 +470,7 @@ fn translate_expr_expects_exp(
             );
             Err(())
         }
-    }?)
+    }
 }
 
 fn translate_function_argument(
