@@ -433,18 +433,12 @@ fn translate_function_argument(
                 Err(())
             }
             Mutability::Not => Ok((
-                {
-                    let trans = translate_expr_expects_exp(sess, specials, e1)?;
-                    trans
-                },
+                translate_expr_expects_exp(sess, specials, e1)?,
                 (Borrowing::Borrowed, e.span.clone().into()),
             )),
         },
         _ => Ok((
-            {
-                let trans = translate_expr_expects_exp(sess, specials, e)?;
-                trans
-            },
+            translate_expr_expects_exp(sess, specials, e)?,
             (Borrowing::Consumed, e.span.clone().into()),
         )),
     }
@@ -1611,7 +1605,14 @@ fn translate_expr_accepts_question_mark(
             let (result, span) = translate_expr(sess, specials, &inner_e)?;
             match result {
                 ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, Some ((ScopeMutableVars::new(), FunctionDependencies(HashSet::new()), None))),
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(
+                        e,
+                        Some((
+                            ScopeMutableVars::new(),
+                            FunctionDependencies(HashSet::new()),
+                            None,
+                        )),
+                    ),
                     span,
                 )),
                 ExprTranslationResult::TransStmt(_) => {
@@ -2560,7 +2561,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         mutated: None,
                         contains_question_mark: None,
                         mutable_vars: ScopeMutableVars::new(),
-                        function_dependencies: FunctionDependencies (HashSet::new()),
+                        function_dependencies: FunctionDependencies(HashSet::new()),
                     },
                     i.span.into(),
                 ),
@@ -2573,13 +2574,9 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 args: fn_inputs,
                 ret: fn_output,
                 mutable_vars: ScopeMutableVars::new(),
-                function_dependencies: FunctionDependencies (HashSet::new()),
+                function_dependencies: FunctionDependencies(HashSet::new()),
             };
-            let fn_item = Item::FnDecl(
-                fn_name,
-                fn_sig,
-                fn_body,
-            );
+            let fn_item = Item::FnDecl(fn_name, fn_sig, fn_body);
 
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {
