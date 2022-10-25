@@ -180,11 +180,9 @@ fn resolve_expression(
         Expression::Binary(op, e1, e2, ty) => {
             let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             let (smi_new_e2, new_e2) = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_e1);
             smi.extend(smi_new_e2);
-
             Ok((
                 smi,
                 (
@@ -202,7 +200,6 @@ fn resolve_expression(
         }
         Expression::QuestionMark(e, typ) => {
             let (smi_new_e, new_e) = resolve_expression(sess, *e, name_context, top_level_ctx)?;
-
             Ok((
                 smi_new_e,
                 (
@@ -244,11 +241,9 @@ fn resolve_expression(
                         smi.extend(x);
                         smi
                     });
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_arg);
             smi.extend(smi_new_arms);
-
             Ok((
                 smi,
                 (Expression::MatchWith(Box::new(new_arg), new_arms), e_span),
@@ -267,7 +262,6 @@ fn resolve_expression(
                     (smi_payload, Some((Box::new(new_payload), new_payload_span)))
                 }
             };
-
             Ok((
                 smi_payload,
                 (
@@ -280,12 +274,10 @@ fn resolve_expression(
             let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             let (smi_new_e2, new_e2) = resolve_expression(sess, *e2, name_context, top_level_ctx)?;
             let (smi_new_e3, new_e3) = resolve_expression(sess, *e3, name_context, top_level_ctx)?;
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_e1);
             smi.extend(smi_new_e2);
             smi.extend(smi_new_e3);
-
             Ok((
                 smi,
                 (
@@ -528,12 +520,10 @@ fn resolve_statement(
             let (smi_new_upper, new_upper) =
                 resolve_expression(sess, upper, &name_context, top_level_ctx)?;
             let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_lower);
             smi.extend(smi_new_upper);
             smi.extend_with_block(new_body.clone().0);
-
             Ok((
                 smi,
                 (
@@ -554,12 +544,10 @@ fn resolve_statement(
             };
             let name_context = add_name(&var, &new_var, name_context);
             let new_body = resolve_block(sess, body, &name_context, top_level_ctx)?;
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_lower);
             smi.extend(smi_new_upper);
             smi.extend_with_block(new_body.clone().0);
-
             Ok((
                 smi,
                 (
@@ -583,11 +571,9 @@ fn resolve_statement(
             let (smi_new_index, new_index) =
                 resolve_expression(sess, index, &name_context, top_level_ctx)?;
             let (smi_new_e, new_e) = resolve_expression(sess, e, &name_context, top_level_ctx)?;
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_index);
             smi.extend(smi_new_e);
-
             Ok((
                 smi.clone(),
                 (
@@ -625,20 +611,14 @@ fn resolve_statement(
         Statement::LetBinding(pat, typ, e, question_mark) => {
             let (smi_new_e, new_e) = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             let (new_pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
-
             let mut smi = ScopeMutInfo::new();
             smi.extend(smi_new_e);
-
-            // if let Pattern::IdentPat(x, true) = new_pat.clone() {
-            //     smi.vars.push(((x, pat.1.clone()), typ.clone()));
-            // };
             log::trace!("   new_name_context {:#?}", new_name_context);
             log::trace!("   existing name_context {:#?}", name_context);
             for (k, v) in new_name_context.into_iter() {
                 name_context = name_context.update(k, v);
             }
             log::trace!("   updated name_context {:#?}", name_context);
-
             Ok((
                 smi.clone(),
                 (
@@ -729,11 +709,8 @@ fn resolve_item(
                 },
             );
             sig.args = new_sig_args;
-
             let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
-
             sig.function_dependencies = new_b.clone().0.function_dependencies;
-
             Ok((Item::FnDecl((f, f_span), sig, new_b), i_span))
         }
     };
@@ -1049,7 +1026,6 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     enrich_with_external_crates_symbols(sess, &p, top_level_ctx, external_data)?;
     // Then we do a first pass that collects types and signatures of top-level
     // items
-
     let mut items = p.items;
     for item in &mut items {
         process_decl_item(sess, item, top_level_ctx)?;
