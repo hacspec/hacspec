@@ -20,7 +20,7 @@ pub(crate) fn to_fresh_ident(x: &String, mutable: bool) -> Ident {
     Ident::Local(LocalIdent {
         id: fresh_hacspec_id(),
         name: x.clone(),
-        mutable
+        mutable,
     })
 }
 
@@ -147,7 +147,7 @@ impl ScopeMutInfo {
     fn new() -> Self {
         ScopeMutInfo {
             vars: ScopeMutableVars::new(),
-            funcs: FunctionDependencies (HashSet::new()),
+            funcs: FunctionDependencies(HashSet::new()),
         }
     }
 
@@ -206,12 +206,9 @@ fn resolve_expression(
             Ok((
                 smi_new_e,
                 (
-                    Expression::QuestionMark(
-                        Box::new(new_e),
-                        typ.clone(),
-                    ),
+                    Expression::QuestionMark(Box::new(new_e), typ.clone()),
                     e_span,
-                )
+                ),
             ))
         }
         Expression::MatchWith(arg, arms) => {
@@ -427,14 +424,11 @@ fn resolve_expression(
         Expression::IntegerCasting(e1, from, to) => {
             let (smi_new_e1, new_e1) = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
             let expr = (
-                    Expression::IntegerCasting(Box::new(new_e1), from, to),
-                    e_span,
+                Expression::IntegerCasting(Box::new(new_e1), from, to),
+                e_span,
             );
             log::trace!("   expr: {:?}", expr);
-            Ok((
-                smi_new_e1,
-                expr,
-            ))
+            Ok((smi_new_e1, expr))
         }
     }
 }
@@ -601,7 +595,7 @@ fn resolve_statement(
                         (new_var, var.1.clone()),
                         new_index,
                         new_e,
-                        question_mark.clone().map(|(x,_,z)| (x, smi.funcs,z)),
+                        question_mark.clone().map(|(x, _, z)| (x, smi.funcs, z)),
                         typ,
                     ),
                     s_span,
@@ -611,12 +605,18 @@ fn resolve_statement(
         }
         Statement::Reassignment(var, var_typ, e, question_mark) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
-            let (smi_new_e, new_e) =
-                resolve_expression(sess, e, &name_context, top_level_ctx)?;
+            let (smi_new_e, new_e) = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             Ok((
                 smi_new_e.clone(),
                 (
-                    Statement::Reassignment((new_var, var.1.clone()), var_typ, new_e, question_mark.clone().map(|(x,_,z)| (x, smi_new_e.funcs,z))),
+                    Statement::Reassignment(
+                        (new_var, var.1.clone()),
+                        var_typ,
+                        new_e,
+                        question_mark
+                            .clone()
+                            .map(|(x, _, z)| (x, smi_new_e.funcs, z)),
+                    ),
                     s_span,
                 ),
                 name_context,
@@ -642,7 +642,12 @@ fn resolve_statement(
             Ok((
                 smi.clone(),
                 (
-                    Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e, question_mark.clone().map(|(x,_,z)| (x, smi.funcs,z))),
+                    Statement::LetBinding(
+                        (new_pat, pat.1.clone()),
+                        typ,
+                        new_e,
+                        question_mark.clone().map(|(x, _, z)| (x, smi.funcs, z)),
+                    ),
                     s_span,
                 ),
                 name_context,
@@ -727,7 +732,6 @@ fn resolve_item(
 
             let new_b = resolve_block(sess, (b, b_span), &name_context, top_level_ctx)?;
 
-            // sig.mutable_vars = new_b.clone().0.mutable_vars;
             sig.function_dependencies = new_b.clone().0.function_dependencies;
 
             Ok((Item::FnDecl((f, f_span), sig, new_b), i_span))
@@ -1047,7 +1051,6 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     // items
 
     let mut items = p.items;
-
     for item in &mut items {
         process_decl_item(sess, item, top_level_ctx)?;
     }
@@ -1063,10 +1066,9 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     for x in items.clone().into_iter() {
         match x.0.item {
             Item::FnDecl((f, _f_span), sig, _b) => {
-                top_level_ctx.functions.insert(
-                    FnKey::Independent(f.clone()),
-                    FnValue::Local(sig.clone()),
-                );
+                top_level_ctx
+                    .functions
+                    .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
             }
             _ => (),
         }
