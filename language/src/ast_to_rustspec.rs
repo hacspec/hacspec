@@ -292,72 +292,60 @@ fn translate_func_name(
     specials: &SpecialNames,
     path: &ast::Path,
 ) -> TranslationResult<FuncNameResult> {
-    if path.segments.len() > 2 {
-        return Err(());
-    }
-    if path.segments.len() == 2 {
-        match path.segments.first() {
-            None => panic!(), // should not happen
-            Some(segment) => {
-                let segment_string = segment.ident.name.to_ident_string();
-                if let Some((enum_name, enum_args)) =
-                    dealias_probable_enum_name(segment_string, specials, None)
-                {
-                    Ok(FuncNameResult::EnumConstructor(
-                        BaseTyp::Named(
-                            (
-                                TopLevelIdent {
-                                    string: enum_name,
-                                    kind: TopLevelIdentKind::Type,
-                                },
-                                segment.ident.span.clone().into(),
-                            ),
-                            match segment.args {
-                                None => enum_args,
-                                Some(ref args) => {
-                                    Some(translate_type_args(sess, args, &segment.ident.span)?)
-                                }
-                            },
-                        ),
-                        translate_toplevel_ident(
-                            &path.segments.last().unwrap().ident,
-                            TopLevelIdentKind::EnumConstructor,
-                        ),
-                    ))
-                } else {
-                    Ok(FuncNameResult::TypePrefixed(
-                        Some(translate_base_typ(
-                            sess,
-                            &ast::Ty {
-                                tokens: path.tokens.clone(),
-                                span: path.span,
-                                id: NodeId::MAX,
-                                kind: TyKind::Path(
-                                    None,
-                                    ast::Path {
-                                        tokens: path.tokens.clone(),
-                                        span: path.span,
-                                        segments: vec![segment.clone()],
-                                    },
-                                ),
-                            },
-                        )?),
-                        translate_toplevel_ident(
-                            &path.segments.last().unwrap().ident,
-                            TopLevelIdentKind::Function,
-                        ),
-                    ))
-                }
-            }
-        }
-    } else {
-        Ok(FuncNameResult::TypePrefixed(
+    match path.segments.as_slice() {
+        [ident] => Ok(FuncNameResult::TypePrefixed(
             None,
             translate_toplevel_ident(
                 &path.segments.last().unwrap().ident,
                 TopLevelIdentKind::Function,
             ),
-        ))
+        )),
+        [segment, last] => {
+            let segment_string = segment.ident.name.to_ident_string();
+            if let Some((enum_name, enum_args)) =
+                dealias_probable_enum_name(segment_string, specials, None)
+            {
+                Ok(FuncNameResult::EnumConstructor(
+                    BaseTyp::Named(
+                        (
+                            TopLevelIdent {
+                                string: enum_name,
+                                kind: TopLevelIdentKind::Type,
+                            },
+                            segment.ident.span.clone().into(),
+                        ),
+                        match segment.args {
+                            None => enum_args,
+                            Some(ref args) => {
+                                Some(translate_type_args(sess, args, &segment.ident.span)?)
+                            }
+                        },
+                    ),
+                    translate_toplevel_ident(&last.ident, TopLevelIdentKind::EnumConstructor),
+                ))
+            } else {
+                Ok(FuncNameResult::TypePrefixed(
+                    Some(translate_base_typ(
+                        sess,
+                        &ast::Ty {
+                            tokens: path.tokens.clone(),
+                            span: path.span,
+                            id: NodeId::MAX,
+                            kind: TyKind::Path(
+                                None,
+                                ast::Path {
+                                    tokens: path.tokens.clone(),
+                                    span: path.span,
+                                    segments: vec![segment.clone()],
+                                },
+                            ),
+                        },
+                    )?),
+                    translate_toplevel_ident(&last.ident, TopLevelIdentKind::Function),
+                ))
+            }
+        }
+        _ => Err(()),
     }
 }
 
