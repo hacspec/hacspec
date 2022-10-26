@@ -52,11 +52,11 @@ pub struct HacspecArgs {
     /// Uses git merge to update the files only with changes, may result in merge conflicts
     #[arg(long = "vc-update")]
     pub vc_update: bool,
-    
+
     /// Set the directory for outputting, otherwise '<VC_DIR> = <FILE_DIR>/_vc'.
-    #[arg(long = "--vc-dir")]
+    #[arg(long = "vc-dir")]
     pub vc_dir: Option<String>,
-    
+
     /// An input file can be passed in, this should be mostly used for testing.
     #[arg(short = 'f', long = "input-filename")]
     pub input_filename: Option<String>,
@@ -90,6 +90,7 @@ impl Default for HacspecArgs {
             output_type: None,
             vc_init: false,
             vc_update: false,
+            vc_dir: None,
             input_filename: None,
             crate_name: None,
             cargo_extra_flags: vec![],
