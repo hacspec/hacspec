@@ -62,7 +62,7 @@ struct HacspecCallbacks {
 
 impl Into<HacspecCallbacks> for util::Args {
     fn into(self) -> HacspecCallbacks {
-        let util::HacspecArgs::Hacspec {
+        let util::HacspecArgs {
             output_filename,
             output_directory,
             output_type,
@@ -70,7 +70,7 @@ impl Into<HacspecCallbacks> for util::Args {
             vc_update,
             vc_dir,
             ..
-        } = self.hacspec;
+        } = self.into();
         HacspecCallbacks {
             output_filename,
             output_directory,
@@ -715,19 +715,18 @@ fn main() {
     let hacspec_args: util::Args =
         serde_json::from_str(&*std::env::var(util::HACSPEC_ARGS).unwrap()).unwrap();
 
-    if let util::HacspecArgs::Hacspec {
+    if let util::HacspecArgs {
         input_filename: Some(input_filename),
         ..
-    } = &hacspec_args.hacspec
+    } = hacspec_args.clone().into()
     {
         rustc_args = rustc_args
             .iter()
-            .cloned()
             .map(|arg| {
                 if arg.ends_with(".rs") {
                     input_filename.clone()
                 } else {
-                    arg
+                    arg.clone()
                 }
             })
             .collect();
