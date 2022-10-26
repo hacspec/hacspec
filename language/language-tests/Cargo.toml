@@ -1,0 +1,13 @@
+# This Cargo.toml manifest exists only for injecting `hacspec-lib` and
+# fixing correct edition while building tests
+
+[package]
+name = "dummy-crate"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/dummy.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }

@@ -11,11 +11,16 @@ repository = "https://github.com/hacspec/hacspec"
 
 [[bin]]
 name = "cargo-hacspec"
-path = "src/bin.rs"
+path = "src/cargo-hacspec.rs"
 
 [[bin]]
 name = "hacspec-driver"
 path = "src/main.rs"
+
+[[test]]
+name = "custom-test"
+path = "tests/main.rs"
+harness = false
 
 [dependencies]
 hacspec-util = { path = "../utils/util", version = "0.1.0-beta.1" }
@@ -31,13 +36,17 @@ glob = "*"
 serde = { version = "1.0.125", features = ["derive"] }
 log = "0.4"
 pretty_env_logger = "0.4"
+clap = { version = "4.0", features = ["derive"] }
 backtrace = { version = "0.3", optional = true }
+include_dir = "0.7"
 
 [features]
 dev = [ "backtrace" ]
 
 [dev-dependencies]
 assert_cmd = "1.0.1"
+libtest-mimic = "0.5"
+phf = {version = "0.11", features = ["macros"]}
 
 [package.metadata.rust-analyzer]
 rustc_private=true

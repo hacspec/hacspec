@@ -43,7 +43,6 @@ use std::env;
 use std::fs::File;
 use std::path::Path;
 use std::process::Command;
-use util::APP_USAGE;
 
 #[derive(Clone, PartialEq)]
 enum VersionControlArg {
@@ -57,9 +56,34 @@ struct HacspecCallbacks {
     output_filename: Option<String>,
     output_directory: Option<String>,
     output_type: Option<String>,
-    target_directory: String,
     version_control: VersionControlArg,
     version_control_dir: Option<String>,
+}
+
+impl Into<HacspecCallbacks> for util::Args {
+    fn into(self) -> HacspecCallbacks {
+        let util::HacspecArgs {
+            output_filename,
+            output_directory,
+            output_type,
+            vc_init,
+            vc_update,
+            vc_dir,
+            ..
+        } = self.into();
+        HacspecCallbacks {
+            output_filename,
+            output_directory,
+            output_type,
+            version_control_dir: vc_dir,
+            version_control: match (vc_init, vc_update) {
+                (true, true) => panic!("`--vc_init` and `--vc_update` are mutually exclusive"),
+                (true, _) => VersionControlArg::Initialize,
+                (_, true) => VersionControlArg::Update,
+                (_, _) => VersionControlArg::None,
+            },
+        }
+    }
 }
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
@@ -589,14 +613,9 @@ fn handle_crate<'tcx>(
 impl Callbacks for HacspecCallbacks {
     fn config(&mut self, config: &mut Config) {
         log::debug!(" --- hacspec config callback");
-        log::trace!("     target directory {}", self.target_directory);
-        config.opts.search_paths.push(SearchPath::from_cli_opt(
-            &self.target_directory,
-            ERROR_OUTPUT_CONFIG,
-        ));
         config.crate_cfg.insert((
             String::from("feature"),
-            Some(String::from("\"hacspec_attributes\"")),
+            Some(String::from("hacspec_attributes")),
         ));
     }
 
@@ -677,283 +696,45 @@ impl Callbacks for HacspecCallbacks {
     }
 }
 
-// === Cargo Metadata Helpers ===
-
-#[derive(Debug, Default, Deserialize, Clone)]
-struct Dependency {
-    name: String,
-    #[allow(dead_code)]
-    kind: Option<String>,
+fn rustc_sysroot() -> String {
+    std::process::Command::new("rustc")
+        .args(["--print", "sysroot"])
+        .output()
+        .ok()
+        .and_then(|out| String::from_utf8(out.stdout).ok())
+        .map(|s| s.trim().to_string())
+        .unwrap()
 }
 
-#[derive(Debug, Default, Deserialize, Clone)]
-struct Target {
-    #[allow(dead_code)]
-    name: String,
-    #[allow(dead_code)]
-    kind: Vec<String>,
-    crate_types: Vec<String>,
-    src_path: String,
-}
-
-#[derive(Debug, Default, Deserialize, Clone)]
-struct Package {
-    name: String,
-    targets: Vec<Target>,
-    dependencies: Vec<Dependency>,
-}
-
-#[derive(Debug, Default, Deserialize, Clone)]
-struct Manifest {
-    packages: Vec<Package>,
-    target_directory: String,
-}
-
-// ===
-
-/// Read the crate metadata and use the information for the build.
-fn read_crate_pre(
-    manifest: Option<String>,
-    package_name: Option<String>,
-) -> (Manifest, Vec<Package>) {
-    let manifest: Manifest = {
-        let mut output = Command::new("cargo");
-        let mut output_args = if let Some(manifest_path) = manifest {
-            vec!["--manifest-path".to_string(), manifest_path]
-        } else {
-            Vec::<String>::new()
-        };
-        output_args.extend_from_slice(&[
-            "--no-deps".to_string(),
-            "--format-version".to_string(),
-            "1".to_string(),
-        ]);
-        let output = output.arg("metadata").args(&output_args);
-        let output = output.output().expect(" ⚠️  Error reading cargo manifest.");
-        let stdout = output.stdout;
-        if !output.status.success() {
-            let error =
-                String::from_utf8(output.stderr).expect(" ⚠️  Failed reading cargo stderr output");
-            panic!("Error running cargo metadata: {:?}", error);
-        }
-        let json_string = String::from_utf8(stdout).expect(" ⚠️  Failed reading cargo output");
-        serde_json::from_str(&json_string).expect(" ⚠️  Error reading to manifest")
+fn main() {
+    let mut rustc_args: Vec<String> = std::env::args().skip(1).collect();
+    if !rustc_args.iter().any(|arg| arg.starts_with("--sysroot")) {
+        rustc_args.extend(vec!["--sysroot".into(), rustc_sysroot()])
     };
 
-    // Pick the package of the given name or the only package available.
-    let package: Vec<Package> = if let Some(package_name) = package_name {
-        let glob_pattern = Pattern::new(package_name.as_str()).unwrap();
-        let p: Vec<Package> = manifest
-            .clone()
-            .packages
-            .into_iter()
-            .filter(|p| glob_pattern.matches(&p.name))
+    let hacspec_args: util::Args =
+        serde_json::from_str(&*std::env::var(util::HACSPEC_ARGS).unwrap()).unwrap();
+
+    if let util::HacspecArgs {
+        input_filename: Some(input_filename),
+        ..
+    } = hacspec_args.clone().into()
+    {
+        rustc_args = rustc_args
+            .iter()
+            .map(|arg| {
+                if arg.ends_with(".rs") {
+                    input_filename.clone()
+                } else {
+                    arg.clone()
+                }
+            })
             .collect();
-
-        if p.is_empty() {
-            panic!(
-                " ⚠️  Can't find the package matching {} in the Cargo.toml\n\n{}",
-                package_name, APP_USAGE
-            );
-        }
-
-        p
-        // }
-    } else {
-        vec![(&manifest.packages[0]).clone()]
     };
 
-    (manifest, package)
-}
+    let mut hacspec_callbacks: HacspecCallbacks = hacspec_args.into();
 
-/// Read the crate metadata and use the information for the build.
-fn read_crate(package: Package, args: &mut Vec<String>, callbacks: &mut HacspecCallbacks) {
-    log::trace!("Typechecking '{:?}' ...", package);
-
-    // Take the first lib target we find. There should be only one really.
-    // log::trace!("crate types: {:?}", package.targets);
-    // log::trace!("package targets {:?}", package.targets);
-    let target = package
-        .targets
-        .iter()
-        .find(|p| {
-            p.crate_types.contains(&"lib".to_string())
-                || p.crate_types.contains(&"rlib".to_string())
-        })
-        .expect(&format!(" ⚠️  No target in the Cargo.toml\n\n{}", APP_USAGE));
-
-    // Add the target source file to the arguments
-    args.push(target.src_path.clone());
-
-    // Add the dependencies as --extern for the hacpsec typechecker.
-    for dependency in package.dependencies.iter() {
-        args.push(format!("--extern={}", dependency.name.replace("-", "_")));
-    }
-
-    if callbacks.output_filename == None {
-        callbacks.output_filename = Some(package.name.clone())
-    }
-}
-
-fn main() -> Result<(), usize> {
-    pretty_env_logger::init();
-    log::debug!(" --- hacspec");
-    let mut args = env::args().collect::<Vec<String>>();
-    log::trace!("     args: {:?}", args);
-
-    // Args to pass to the compiler
-    let mut compiler_args = Vec::new();
-
-    // Drop and pass along binary name.
-    compiler_args.push(args.remove(0));
-
-    // Optionally get output directory.
-    let output_filename_index = args.iter().position(|a| a == "-o");
-    let output_filename = match output_filename_index {
-        Some(i) => {
-            args.remove(i);
-            Some(args.remove(i))
-        }
-        None => None,
-    };
-
-    // Optionally get output directory.
-    let output_directory_index = args.iter().position(|a| a == "--dir");
-    let output_directory = match output_directory_index {
-        Some(i) => {
-            args.remove(i);
-            Some(args.remove(i))
-        }
-        None => None,
-    };
-
-    // Optionally get output file extension.
-    let output_type_index = args.iter().position(|a| a == "-e");
-    let output_type = match output_type_index {
-        Some(i) => {
-            args.remove(i);
-            Some(args.remove(i))
-        }
-        None => None,
-    };
-
-    // Optionally an input file can be passed in. This should be mostly used for
-    // testing.
-    let input_file = match args.iter().position(|a| a == "-f") {
-        Some(i) => {
-            args.remove(i);
-            Some(args.remove(i))
-        }
-        None => None,
-    };
-
-    let vc = match args.iter().position(|a| a == "--vc-init") {
-        Some(i) => {
-            args.remove(i);
-            VersionControlArg::Initialize
-        }
-        None => VersionControlArg::None,
-    };
-    let vc = match args.iter().position(|a| a == "--vc-update") {
-        Some(i) => {
-            args.remove(i);
-            VersionControlArg::Update
-        }
-        None => vc,
-    };
-    let vc_dir = match args.iter().position(|a| a == "--vc-dir") {
-        Some(i) => {
-            args.remove(i);
-            Some(args.remove(i))
-        }
-        None => None,
-    };
-
-
-    // Read the --manifest-path argument if present.
-    let manifest = match args.iter().position(|a| a == "--manifest-path") {
-        Some(i) => {
-            args.remove(i);
-            Some(args.remove(i))
-        }
-        None => None,
-    };
-
-    // Read the --sysroot. It must be present
-    log::trace!("args: {:?}", args);
-    match args.iter().position(|a| a.starts_with("--sysroot")) {
-        Some(i) => {
-            compiler_args.push(args.remove(i));
-        }
-        None => panic!(" ⚠️  --sysroot is missing. Please report this issue."),
-    }
-
-    let mut callbacks = HacspecCallbacks {
-        output_filename,
-        output_directory: if match output_type {
-            Some(_) => None == output_directory,
-            _ => false,
-        } {
-            Some(env::current_dir().unwrap().to_str().unwrap().to_owned())
-        } else {
-            output_directory
-        },
-        output_type,
-        // This defaults to the default target directory.
-        target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
-            + "/../target/debug/deps",
-        version_control: vc,
-        version_control_dir: vc_dir,
-    };
-
-    match input_file {
-        Some(input_file) => {
-            compiler_args.push(input_file);
-            // If only a file is provided we add the default dependencies only.
-            compiler_args.extend_from_slice(&[
-                "--extern=abstract_integers".to_string(),
-                "--extern=hacspec_derive".to_string(),
-                "--extern=hacspec_lib".to_string(),
-                "--extern=secret_integers".to_string(),
-            ]);
-
-            compiler_args.push("--crate-type=lib".to_string());
-            compiler_args.push("--edition=2021".to_string());
-            log::trace!("compiler_args: {:?}", compiler_args);
-            let compiler = RunCompiler::new(&compiler_args, &mut callbacks);
-
-            match compiler.run() {
-                Ok(_) => Ok(()),
-                Err(_) => Err(1usize),
-            }?;
-        }
-        None => {
-            let package_name = args.pop();
-            let (manifest, package_vec) = read_crate_pre(manifest, package_name);
-
-            // Add build artifact path.
-            // This only works with debug builds.
-            let deps = manifest.target_directory + "/debug/deps";
-            callbacks.target_directory = deps;
-
-            for package in package_vec {
-                let mut compiler_args_run = compiler_args.clone();
-                let mut callbacks_run = callbacks.clone();
-                log::trace!("package name to analyze: {:?}", package.name);
-                read_crate(package, &mut compiler_args_run, &mut callbacks_run);
-
-                compiler_args_run.push("--crate-type=lib".to_string());
-                compiler_args_run.push("--edition=2021".to_string());
-                log::trace!("compiler_args: {:?}", compiler_args_run);
-                let compiler = RunCompiler::new(&compiler_args_run, &mut callbacks_run);
-
-                match compiler.run() {
-                    Ok(_) => Ok(()),
-                    Err(_) => Err(1usize),
-                }?;
-            }
-        }
-    };
-
-    Ok(())
+    std::process::exit(rustc_driver::catch_with_exit_code(move || {
+        rustc_driver::RunCompiler::new(&rustc_args, &mut hacspec_callbacks).run()
+    }))
 }

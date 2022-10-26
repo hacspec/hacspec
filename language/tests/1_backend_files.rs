@@ -1,6 +1,9 @@
 use assert_cmd::prelude::*; // Add methods on commands
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::{env, process::Command};
+mod utils;
+use utils::*;
 
 fn run_test_option(
     file_name: &str,
@@ -8,16 +11,13 @@ fn run_test_option(
     output_type: &str,
     extra_commands: &Option<Vec<(&str, &str)>>,
 ) {
-    let mut cmd = Command::cargo_bin("cargo-hacspec").expect("Error getting cargo hacspec command");
-    cmd.envs(env::vars());
-    cmd.args(&["--dir", output]);
-    cmd.args(&["-e", output_type]);
-    cmd.args(&["-f", file_name]);
-    if let Some(v) = extra_commands {
-        for (a, e) in v {
-            cmd.args(&[a, e]);
-        }
-    }
+    let mut cmd = hacspec_extract_one_file(
+        format!("../{}", file_name),
+        PathBuf::from(file_name).file_stem().unwrap(),
+        output,
+        output_type,
+        extra_commands,
+    );
     println!("Running: {:?}", cmd);
     let status = cmd.status();
     println!("Result: {:?}", status);
@@ -56,7 +56,7 @@ fn positive_version_control() {
         HashMap::from([("fstar", true), ("coq", true)]),
         &Some(vec![("--vc-init", "")]),
     );
-    
+
     println!("VC update");
     run_tests(
         "backend-tests/question_mark.rs",
