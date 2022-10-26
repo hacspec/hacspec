@@ -661,6 +661,30 @@ fn translate_expr(
                         },
                         func_name.1,
                     );
+
+                    // if we're facing a un-annotated constructor (that is, `func_prefix` is `None`) in the whitelist [Ok, Err], then, we return an `EnumInject` with a type `Placeholder`
+                    if func_prefix.is_none() && ["Ok", "Err"].contains(&&*func_name_string) {
+                        let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
+                            .iter()
+                            .map(|arg| translate_expr_expects_exp(sess, specials, &arg))
+                            .collect();
+                        let func_args = check_vec(func_args)?;
+                        return Ok((
+                            ExprTranslationResult::TransExpr(Expression::EnumInject(
+                                BaseTyp::Placeholder,
+                                func_name_but_as_enum_constructor,
+                                Some((
+                                    Box::new(if func_args.len() == 1 {
+                                        func_args.iter().next().unwrap().0.clone()
+                                    } else {
+                                        Expression::Tuple(func_args)
+                                    }),
+                                    e.span.clone().into(),
+                                )),
+                            )),
+                            e.span.into(),
+                        ));
+                    };
                     if specials.enums.contains(&func_name_string) {
                         // Special case for struct constructors
                         let func_args: Vec<
