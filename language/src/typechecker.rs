@@ -929,14 +929,14 @@ fn typecheck_expression(
             // and if we have an expected type, then we fill this
             // latter type in
             let enum_ty = match (enum_ty, expected_type) {
-                (BaseTyp::Placeholder, Some((expected_type, _))) => expected_type,
+                (BaseTyp::Placeholder, Some((expected_type, _))) => dealias_type(expected_type.clone(), top_level_context),
                 (BaseTyp::Placeholder, None) => Err(sess.span_rustspec_err(
                     span.clone(),
                     "Could not infer type information for the constructor, please add explicit type annotation",
                 ))?,
-                _ => enum_ty,
+                _ => enum_ty.clone(),
             };
-            let (enum_cases, enum_name, enum_args) = match enum_ty {
+            let (enum_cases, enum_name, enum_args) = match &enum_ty {
                 BaseTyp::Named(enum_name, args) => {
                     match top_level_context.typ_dict.get(&enum_name.0) {
                         Some((
