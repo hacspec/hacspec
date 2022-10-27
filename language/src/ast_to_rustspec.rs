@@ -511,8 +511,7 @@ fn translate_literal(lit: &rustc_ast::Lit) -> Result<Literal, ()> {
         LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok(Literal::UInt8(*x as u8)),
         LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok(Literal::Isize(*x as isize)),
         LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok(Literal::Usize(*x as usize)),
-        // Unspecified integers are always interpreted as usize
-        LitKind::Int(x, LitIntType::Unsuffixed) => Ok(Literal::Usize(*x as usize)),
+        LitKind::Int(x, LitIntType::Unsuffixed) => Ok(Literal::UnspecifiedInt(*x)),
         LitKind::Str(msg, StrStyle::Cooked) => Ok(Literal::Str(msg.to_ident_string())),
         _ => Err(()),
     }

@@ -736,6 +736,28 @@ fn get_literal_type(l: &Literal) -> BaseTyp {
         Literal::Usize(_) => BaseTyp::Usize,
         Literal::Isize(_) => BaseTyp::Isize,
         Literal::Str(_) => BaseTyp::Str,
+        _ => panic!("the type of literal {:?} is ambiguous, it should have been resolved by the typechecking phase", l),
+    }
+}
+
+fn concretize_literal(lit: &Literal, expected_type: &Option<Spanned<BaseTyp>>) -> Literal {
+    match lit {
+        Literal::UnspecifiedInt(n) => match expected_type.as_ref().map(|(ty, _)| ty) {
+            Some(BaseTyp::UInt128) => Literal::UInt128(*n as u128),
+            Some(BaseTyp::Int128) => Literal::Int128(*n as i128),
+            Some(BaseTyp::UInt64) => Literal::UInt64(*n as u64),
+            Some(BaseTyp::Int64) => Literal::Int64(*n as i64),
+            Some(BaseTyp::UInt32) => Literal::UInt32(*n as u32),
+            Some(BaseTyp::Int32) => Literal::Int32(*n as i32),
+            Some(BaseTyp::UInt16) => Literal::UInt16(*n as u16),
+            Some(BaseTyp::Int16) => Literal::Int16(*n as i16),
+            Some(BaseTyp::UInt8) => Literal::UInt8(*n as u8),
+            Some(BaseTyp::Int8) => Literal::Int8(*n as i8),
+            Some(BaseTyp::Usize) => Literal::Usize(*n as usize),
+            Some(BaseTyp::Isize) => Literal::Isize(*n as isize),
+            _ => Literal::Usize(*n as usize),
+        },
+        _ => lit.clone(),
     }
 }
 
@@ -1246,14 +1268,17 @@ fn typecheck_expression(
                 new_var_context,
             ))
         }
-        Expression::Lit(lit) => Ok((
-            e.clone(),
-            (
-                (Borrowing::Consumed, span.clone()),
-                (get_literal_type(lit), span.clone()),
-            ),
-            var_context.clone(),
-        )),
+        Expression::Lit(lit) => {
+            let lit = concretize_literal(lit, &expected_type.cloned());
+            Ok((
+                Expression::Lit(lit.clone()),
+                (
+                    (Borrowing::Consumed, span.clone()),
+                    (get_literal_type(&lit), span.clone()),
+                ),
+                var_context.clone(),
+            ))
+        }
         Expression::NewArray(array_type, _, elements) => {
             match array_type {
                 Some(array_type) => {
@@ -2063,9 +2088,10 @@ fn typecheck_pattern(
         }
         (Pattern::WildCard, _) => Ok((VarContext::new(), pat.clone())),
         (Pattern::LiteralPat(l), t) => {
-            let lit_typ = get_literal_type(l);
+            let l = concretize_literal(l, &Some(typ.clone()));
+            let lit_typ = get_literal_type(&l);
             if lit_typ == t.clone() {
-                Ok((VarContext::new(), pat.clone()))
+                Ok((VarContext::new(), Pattern::LiteralPat(l)))
             } else {
                 Err(sess.span_rustspec_err(
                     *pat_span,

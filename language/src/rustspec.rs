@@ -287,6 +287,7 @@ pub enum Literal {
     UInt8(u8),
     Usize(usize),
     Isize(isize),
+    UnspecifiedInt(u128),
     Str(String),
 }
 
