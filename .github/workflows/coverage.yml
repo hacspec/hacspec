@@ -13,6 +13,7 @@ jobs:
       - name: Build Cargo
         run: |
           cargo clean
+          cargo install grcov
           cargo build --verbose
           cargo install --path language
           RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="%m.profraw" cargo test --test coverage
