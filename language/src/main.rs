@@ -13,6 +13,7 @@ extern crate rustc_session;
 extern crate rustc_span;
 
 mod ast_to_rustspec;
+mod elab_monadic_lets;
 mod hir_to_rustspec;
 mod name_resolution;
 mod rustspec;
@@ -22,19 +23,20 @@ mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
+use glob::Pattern;
 use heck::TitleCase;
 use im::{HashMap, HashSet};
 use itertools::Itertools;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
+use rustc_errors::MultiSpan;
 use rustc_interface::{
     interface::{Compiler, Config},
     Queries,
 };
 use rustc_session::Session;
 use rustc_session::{config::ErrorOutputType, search_paths::SearchPath};
-use rustc_span::MultiSpan;
 use serde::Deserialize;
 use serde_json;
 use std::env;
@@ -43,11 +45,21 @@ use std::path::Path;
 use std::process::Command;
 use util::APP_USAGE;
 
+#[derive(Clone, PartialEq)]
+enum VersionControlArg {
+    Initialize,
+    Update,
+    None,
+}
+
+#[derive(Clone)]
 struct HacspecCallbacks {
     output_filename: Option<String>,
     output_directory: Option<String>,
     output_type: Option<String>,
     target_directory: String,
+    version_control: VersionControlArg,
+    version_control_dir: Option<String>,
 }
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
@@ -119,53 +131,49 @@ fn construct_handle_crate_queue<'tcx>(
 
     let mut krates = Vec::new();
 
-    let krate = match krate {
-        rustc_ast::ast::Crate { attrs, items, span } => {
-            // Parse over the crate, loading modules and filling top_level_ctx
-            for x in items.clone().into_iter() {
-                match x.kind {
-                    // Whenever a module statement is encountered, add it to the queue
+    // Parse over the crate, loading modules and filling top_level_ctx
+    for x in krate.items.clone().into_iter() {
+        match x.kind {
+            // Whenever a module statement is encountered, add it to the queue
+            rustc_ast::ast::ItemKind::Mod(
+                rustc_ast::ast::Unsafe::No,
+                rustc_ast::ast::ModKind::Unloaded,
+            ) => {
+                match construct_handle_crate_queue(
+                    compiler,
+                    handled,
+                    ast_crates_map,
+                    x.ident.name.to_ident_string(),
+                    krate_path.clone(),
+                ) {
+                    Ok(v) => krates.extend(v),
+                    Err(false) => {
+                        // If not able to handle module, stop compilation.
+                        return Err(false);
+                    }
+                    Err(true) => (),
+                }
+            }
+            _ => (),
+        }
+    }
+
+    let krate =
+        // Remove the modules statements from the crate
+        rustc_ast::ast::Crate {
+            items: krate.items
+                .clone()
+                .into_iter()
+                .filter(|x| match x.kind {
                     rustc_ast::ast::ItemKind::Mod(
                         rustc_ast::ast::Unsafe::No,
                         rustc_ast::ast::ModKind::Unloaded,
-                    ) => {
-                        match construct_handle_crate_queue(
-                            compiler,
-                            handled,
-                            ast_crates_map,
-                            x.ident.name.to_ident_string(),
-                            krate_path.clone(),
-                        ) {
-                            Ok(v) => krates.extend(v),
-                            Err(false) => {
-                                // If not able to handle module, stop compilation.
-                                return Err(false);
-                            }
-                            Err(true) => (),
-                        }
-                    }
-                    _ => (),
-                }
-            }
-
-            // Remove the modules statements from the crate
-            rustc_ast::ast::Crate {
-                attrs,
-                items: items
-                    .clone()
-                    .into_iter()
-                    .filter(|x| match x.kind {
-                        rustc_ast::ast::ItemKind::Mod(
-                            rustc_ast::ast::Unsafe::No,
-                            rustc_ast::ast::ModKind::Unloaded,
-                        ) => false,
-                        _ => true,
-                    })
-                    .collect(),
-                span,
-            }
-        }
-    };
+                    ) => false,
+                    _ => true,
+                })
+                .collect(),
+            ..krate
+        };
 
     krates.push((
         (
@@ -215,53 +223,49 @@ fn handle_crate<'tcx>(
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue {
         krate_use_paths.insert(krate_path.clone(), Vec::new());
 
-        match krate {
-            rustc_ast::ast::Crate { attrs, items, span } => {
-                // Parse over the crate, loading modules and filling top_level_ctx
-                for x in items.clone().into_iter() {
-                    match x.kind {
-                        // Load the top_ctx from the module specified in the use statement
-                        rustc_ast::ast::ItemKind::Use(ref tree) => {
-                            match tree.kind {
-                                rustc_ast::ast::UseTreeKind::Glob => {
-                                    krate_use_paths[&krate_path].push(
-                                        (&tree.prefix)
-                                            .segments
-                                            .last()
-                                            .unwrap()
-                                            .ident
-                                            .name
-                                            .to_ident_string(),
-                                    );
-                                }
-                                _ => (),
-                            };
+        // Parse over the crate, loading modules and filling top_level_ctx
+        for x in krate.items.clone().into_iter() {
+            match x.kind {
+                // Load the top_ctx from the module specified in the use statement
+                rustc_ast::ast::ItemKind::Use(ref tree) => {
+                    match tree.kind {
+                        rustc_ast::ast::UseTreeKind::Glob => {
+                            krate_use_paths[&krate_path].push(
+                                (&tree.prefix)
+                                    .segments
+                                    .last()
+                                    .unwrap()
+                                    .ident
+                                    .name
+                                    .to_ident_string(),
+                            );
                         }
                         _ => (),
-                    }
+                    };
                 }
-
-                // Remove the modules statements from the crate
-                krate_queue_no_module_statements.push((
-                    (krate_path, krate_dir, krate_module_string),
-                    rustc_ast::ast::Crate {
-                        attrs,
-                        items: items
-                            .clone()
-                            .into_iter()
-                            .filter(|x| match x.kind {
-                                rustc_ast::ast::ItemKind::Mod(
-                                    rustc_ast::ast::Unsafe::No,
-                                    rustc_ast::ast::ModKind::Unloaded,
-                                ) => false,
-                                _ => true,
-                            })
-                            .collect(),
-                        span,
-                    },
-                ))
+                _ => (),
             }
         }
+
+        // Remove the modules statements from the crate
+        krate_queue_no_module_statements.push((
+            (krate_path, krate_dir, krate_module_string),
+            rustc_ast::ast::Crate {
+                items: krate
+                    .items
+                    .clone()
+                    .into_iter()
+                    .filter(|x| match x.kind {
+                        rustc_ast::ast::ItemKind::Mod(
+                            rustc_ast::ast::Unsafe::No,
+                            rustc_ast::ast::ModKind::Unloaded,
+                        ) => false,
+                        _ => true,
+                    })
+                    .collect(),
+                ..krate
+            },
+        ));
     }
 
     /////////////////////////////////
@@ -331,6 +335,7 @@ fn handle_crate<'tcx>(
 
     let mut krate_queue_typechecked = Vec::new();
     for ((krate_path, krate_dir, krate_module_string), krate) in krate_queue_programs {
+        log::trace!("   typechecking {:#?}", krate);
         let new_top_ctx = &mut name_resolution::TopLevelContext {
             consts: HashMap::new(),
             functions: HashMap::new(),
@@ -435,26 +440,35 @@ fn handle_crate<'tcx>(
                 krate_path.clone()
             };
 
-            let file = match extension.clone().as_str() {
+            let join_path = match extension.clone().as_str() {
                 "fst" | "ec" | "json" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    (original_file).join(Path::new(
-                        (file_name.clone().to_title_case().replace(" ", ".") + "." + extension)
-                            .as_str(),
-                    ))
+                    file_name.clone().to_title_case().replace(" ", ".") + "." + extension
                 }
                 "v" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    (original_file).join(Path::new(
-                        (file_name.clone().to_title_case().replace(" ", "_") + "." + extension)
-                            .as_str(),
-                    ))
+                    file_name.clone().to_title_case().replace(" ", "_") + "." + extension
                 }
                 _ => {
                     compiler
                         .session()
                         .err("unknown backend extension for output files");
                     return Compilation::Stop;
+                }
+            };
+
+            let file = match &callback.version_control {
+                VersionControlArg::Update => {
+                    let file_temp_dir = original_file.join("_temp");
+                    let file_temp_dir = file_temp_dir.to_str().unwrap();
+
+                    std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to create dir");
+
+                    original_file.join("_temp").join(join_path.clone())
+                }
+                _ => {
+                    std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
+                    original_file.join(join_path.clone())
                 }
             };
             let file = file.to_str().unwrap();
@@ -508,6 +522,64 @@ fn handle_crate<'tcx>(
                     return Compilation::Stop;
                 }
             }
+
+            if callback.version_control != VersionControlArg::None {
+                let file_destination = original_file.join(join_path.clone());
+                let file_destination = file_destination.to_str().unwrap();
+
+                let file_vc_dir = match &callback.version_control_dir {
+                    Some(f) => Path::new(f),
+                    None => original_file,
+                }
+                .join("_vc");
+
+                let file_vc = file_vc_dir.join(join_path.clone());
+                let file_vc = file_vc.to_str().unwrap();
+
+                let file_vc_dir = file_vc_dir.to_str().unwrap();
+                std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to create dir");
+
+                match callback.version_control {
+                    VersionControlArg::Initialize => {
+                        std::fs::copy(file_destination.clone(), file_vc.clone()).expect(
+                            format!(
+                                "Failed to copy file '{}' to '{}'",
+                                file_destination.clone(),
+                                file_vc.clone()
+                            )
+                            .as_str(),
+                        );
+                    }
+                    VersionControlArg::Update => {
+                        let file_temp = original_file.join("_temp").join(join_path.clone());
+                        let file_temp = file_temp.to_str().unwrap();
+
+                        std::process::Command::new("git")
+                            .output()
+                            .expect("Could not find 'git'. Please install git and try again.");
+                        std::process::Command::new("git")
+                            .arg("merge-file")
+                            .arg(file_destination.clone())
+                            .arg(file_temp.clone())
+                            .arg(file_vc.clone())
+                            .output()
+                            .expect("git-merge failed");
+                        std::fs::copy(file_temp.clone(), file_vc.clone()).expect(
+                            format!(
+                                "Failed to copy file '{}' to '{}'",
+                                file_temp.clone(),
+                                file_vc.clone()
+                            )
+                            .as_str(),
+                        );
+                        std::fs::remove_file(file_temp.clone()).expect(
+                            format!("Failed to remove file '{}'", file_destination.clone())
+                                .as_str(),
+                        );
+                    }
+                    VersionControlArg::None => panic!(),
+                }
+            }
         }
     }
 
@@ -547,10 +619,11 @@ impl Callbacks for HacspecCallbacks {
 
         // Find module location using hir
         queries.global_ctxt().unwrap().peek_mut().enter(|tcx| {
-            let hir_krate = tcx.hir();
-            for item in hir_krate.items() {
+            for item_id in tcx.hir().items() {
+                let item = tcx.hir().item(item_id);
+
                 if let rustc_hir::ItemKind::Mod(_m) = &item.kind {
-                    let (expra, exprb, _exprc) = &tcx.hir().get_module(item.def_id);
+                    let (module, mod_span, _hir_id) = &tcx.hir().get_module(item.def_id);
 
                     // locate the file from a module using the span
                     let sm: &rustc_span::source_map::SourceMap =
@@ -561,8 +634,8 @@ impl Callbacks for HacspecCallbacks {
                         )),
                         rustc_span::FileName::Real(rustc_span::RealFileName::LocalPath(root)),
                     ) = (
-                        sm.span_to_filename(expra.inner),
-                        sm.span_to_filename(*exprb),
+                        sm.span_to_filename(module.spans.inner_span),
+                        sm.span_to_filename(*mod_span), // = module.spans.inject_use_span ?
                     ) {
                         // parse the file for the module
                         let mut parser = rustc_parse::new_parser_from_file(
@@ -571,16 +644,9 @@ impl Callbacks for HacspecCallbacks {
                             None,
                         );
 
-                        // get the items of the module
-                        let parse_mod_krate_items: Vec<rustc_ast::ptr::P<rustc_ast::Item>> =
-                            parser.parse_crate_mod().unwrap().items;
-
-                        // Make new crate with the parsed items
-                        let new_crate: rustc_ast::ast::Crate = rustc_ast::ast::Crate {
-                            attrs: vec![],
-                            items: parse_mod_krate_items,
-                            span: rustc_span::DUMMY_SP,
-                        };
+                        // Get the items of the module and
+                        // make new crate with the parsed items
+                        let new_crate: rustc_ast::ast::Crate = parser.parse_crate_mod().unwrap();
 
                         // Calculate the local path from the crate root file
                         let crate_local_path = module_path
@@ -613,14 +679,14 @@ impl Callbacks for HacspecCallbacks {
 
 // === Cargo Metadata Helpers ===
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Clone)]
 struct Dependency {
     name: String,
     #[allow(dead_code)]
     kind: Option<String>,
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Clone)]
 struct Target {
     #[allow(dead_code)]
     name: String,
@@ -630,14 +696,14 @@ struct Target {
     src_path: String,
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Clone)]
 struct Package {
     name: String,
     targets: Vec<Target>,
     dependencies: Vec<Dependency>,
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Clone)]
 struct Manifest {
     packages: Vec<Package>,
     target_directory: String,
@@ -646,12 +712,10 @@ struct Manifest {
 // ===
 
 /// Read the crate metadata and use the information for the build.
-fn read_crate(
+fn read_crate_pre(
     manifest: Option<String>,
     package_name: Option<String>,
-    args: &mut Vec<String>,
-    callbacks: &mut HacspecCallbacks,
-) {
+) -> (Manifest, Vec<Package>) {
     let manifest: Manifest = {
         let mut output = Command::new("cargo");
         let mut output_args = if let Some(manifest_path) = manifest {
@@ -677,18 +741,33 @@ fn read_crate(
     };
 
     // Pick the package of the given name or the only package available.
-    let package = if let Some(package_name) = package_name {
-        manifest
+    let package: Vec<Package> = if let Some(package_name) = package_name {
+        let glob_pattern = Pattern::new(package_name.as_str()).unwrap();
+        let p: Vec<Package> = manifest
+            .clone()
             .packages
-            .iter()
-            .find(|p| p.name == package_name)
-            .expect(&format!(
-                " ⚠️  Can't find the package {} in the Cargo.toml\n\n{}",
-                package_name, APP_USAGE,
-            ))
+            .into_iter()
+            .filter(|p| glob_pattern.matches(&p.name))
+            .collect();
+
+        if p.is_empty() {
+            panic!(
+                " ⚠️  Can't find the package matching {} in the Cargo.toml\n\n{}",
+                package_name, APP_USAGE
+            );
+        }
+
+        p
+        // }
     } else {
-        &manifest.packages[0]
+        vec![(&manifest.packages[0]).clone()]
     };
+
+    (manifest, package)
+}
+
+/// Read the crate metadata and use the information for the build.
+fn read_crate(package: Package, args: &mut Vec<String>, callbacks: &mut HacspecCallbacks) {
     log::trace!("Typechecking '{:?}' ...", package);
 
     // Take the first lib target we find. There should be only one really.
@@ -705,11 +784,6 @@ fn read_crate(
 
     // Add the target source file to the arguments
     args.push(target.src_path.clone());
-
-    // Add build artifact path.
-    // This only works with debug builds.
-    let deps = manifest.target_directory + "/debug/deps";
-    callbacks.target_directory = deps;
 
     // Add the dependencies as --extern for the hacpsec typechecker.
     for dependency in package.dependencies.iter() {
@@ -744,7 +818,7 @@ fn main() -> Result<(), usize> {
     };
 
     // Optionally get output directory.
-    let output_directory_index = args.iter().position(|a| a == "-dir");
+    let output_directory_index = args.iter().position(|a| a == "--dir");
     let output_directory = match output_directory_index {
         Some(i) => {
             args.remove(i);
@@ -772,6 +846,29 @@ fn main() -> Result<(), usize> {
         }
         None => None,
     };
+
+    let vc = match args.iter().position(|a| a == "--vc-init") {
+        Some(i) => {
+            args.remove(i);
+            VersionControlArg::Initialize
+        }
+        None => VersionControlArg::None,
+    };
+    let vc = match args.iter().position(|a| a == "--vc-update") {
+        Some(i) => {
+            args.remove(i);
+            VersionControlArg::Update
+        }
+        None => vc,
+    };
+    let vc_dir = match args.iter().position(|a| a == "--vc-dir") {
+        Some(i) => {
+            args.remove(i);
+            Some(args.remove(i))
+        }
+        None => None,
+    };
+
 
     // Read the --manifest-path argument if present.
     let manifest = match args.iter().position(|a| a == "--manifest-path") {
@@ -805,6 +902,8 @@ fn main() -> Result<(), usize> {
         // This defaults to the default target directory.
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",
+        version_control: vc,
+        version_control_dir: vc_dir,
     };
 
     match input_file {
@@ -817,21 +916,44 @@ fn main() -> Result<(), usize> {
                 "--extern=hacspec_lib".to_string(),
                 "--extern=secret_integers".to_string(),
             ]);
+
+            compiler_args.push("--crate-type=lib".to_string());
+            compiler_args.push("--edition=2021".to_string());
+            log::trace!("compiler_args: {:?}", compiler_args);
+            let compiler = RunCompiler::new(&compiler_args, &mut callbacks);
+
+            match compiler.run() {
+                Ok(_) => Ok(()),
+                Err(_) => Err(1usize),
+            }?;
         }
         None => {
             let package_name = args.pop();
-            log::trace!("package name to analyze: {:?}", package_name);
-            read_crate(manifest, package_name, &mut compiler_args, &mut callbacks);
+            let (manifest, package_vec) = read_crate_pre(manifest, package_name);
+
+            // Add build artifact path.
+            // This only works with debug builds.
+            let deps = manifest.target_directory + "/debug/deps";
+            callbacks.target_directory = deps;
+
+            for package in package_vec {
+                let mut compiler_args_run = compiler_args.clone();
+                let mut callbacks_run = callbacks.clone();
+                log::trace!("package name to analyze: {:?}", package.name);
+                read_crate(package, &mut compiler_args_run, &mut callbacks_run);
+
+                compiler_args_run.push("--crate-type=lib".to_string());
+                compiler_args_run.push("--edition=2021".to_string());
+                log::trace!("compiler_args: {:?}", compiler_args_run);
+                let compiler = RunCompiler::new(&compiler_args_run, &mut callbacks_run);
+
+                match compiler.run() {
+                    Ok(_) => Ok(()),
+                    Err(_) => Err(1usize),
+                }?;
+            }
         }
-    }
+    };
 
-    compiler_args.push("--crate-type=lib".to_string());
-    compiler_args.push("--edition=2021".to_string());
-    log::trace!("compiler_args: {:?}", compiler_args);
-    let compiler = RunCompiler::new(&compiler_args, &mut callbacks);
-
-    match compiler.run() {
-        Ok(_) => Ok(()),
-        Err(_) => Err(1),
-    }
+    Ok(())
 }

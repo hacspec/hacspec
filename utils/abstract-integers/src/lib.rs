@@ -61,11 +61,14 @@
 //! ```
 //!
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 // Re-exports
-pub use num::{bigint::Sign, traits, traits::identities::*, BigInt, BigUint, CheckedSub, Zero};
-pub use std::cmp::Ordering;
-pub use std::num::ParseIntError;
-pub use std::ops::*;
+pub use core::cmp::Ordering;
+pub use core::num::ParseIntError;
+pub use core::ops::*;
+pub use num::{traits, traits::identities::*, CheckedSub, Zero};
+pub use num_bigint::{BigInt, BigUint, Sign};
 
 pub mod abstract_int;
 pub mod nat_mod;

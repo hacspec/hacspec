@@ -35,11 +35,29 @@ pub type ResolutionResult<T> = Result<T, ()>;
 
 pub type NameContext = HashMap<String, Ident>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TopLevelContext {
     pub functions: HashMap<FnKey, FnValue>,
     pub consts: HashMap<TopLevelIdent, Spanned<BaseTyp>>,
     pub typ_dict: HashMap<TopLevelIdent, (Typ, DictEntry)>,
+}
+
+impl fmt::Display for TopLevelContext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "functions:\n")?;
+        for (key, value) in self.functions.iter() {
+            write!(f, "\t{}: {:?}\n", key, value)?;
+        }
+        write!(f, "consts:\n")?;
+        for (key, value) in self.consts.iter() {
+            write!(f, "\t{}: {:?}\n", key, value)?;
+        }
+        write!(f, "type dictionary:\n")?;
+        for (key, value) in self.typ_dict.iter() {
+            write!(f, "\t{}: {:?}\n", key, value)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Hash, PartialEq, Eq)]
@@ -80,9 +98,11 @@ pub(crate) fn find_ident<'b>(
     name_context: &NameContext,
     top_level_context: &TopLevelContext,
 ) -> ResolutionResult<Ident> {
+    log::trace!("find_ident {:?}", x);
     match &x.0 {
         Ident::Unresolved(name) => match name_context.get(name) {
             None => {
+                log::trace!("   unresolved - {}", name);
                 let x_tl = TopLevelIdent {
                     string: name.clone(),
                     kind: TopLevelIdentKind::Constant,
@@ -95,7 +115,10 @@ pub(crate) fn find_ident<'b>(
                     }
                 }
             }
-            Some(id) => Ok(id.clone()),
+            Some(id) => {
+                log::trace!("   found - {}", id);
+                Ok(id.clone())
+            }
         },
         _ => {
             sess.span_rustspec_err(
@@ -120,6 +143,7 @@ fn resolve_expression(
     name_context: &NameContext,
     top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Expression>> {
+    log::trace!("resolve_expression ({:?}, {:?})", e, e_span);
     match e {
         Expression::Unary(op, e1, ty) => {
             let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
@@ -133,22 +157,34 @@ fn resolve_expression(
                 e_span,
             ))
         }
+        Expression::MonadicLet(..) =>
+        // TODO: eliminiate this `panic!` with nicer types (See issue #303)
+        {
+            panic!(
+                "The name resolution phase expects an AST free of [Expression::MonadicLet] node."
+            )
+        }
+        Expression::QuestionMark(e, typ) => Ok((
+            Expression::QuestionMark(
+                Box::new(resolve_expression(sess, *e, name_context, top_level_ctx)?),
+                typ.clone(),
+            ),
+            e_span,
+        )),
         Expression::MatchWith(arg, arms) => {
             let new_arg = resolve_expression(sess, *arg, name_context, top_level_ctx)?;
             let new_arms = check_vec(
                 arms.into_iter()
-                    .map(|(enum_name, case_name, payload, arm)| {
-                        let (new_payload, new_name_context) = match payload {
-                            None => (None, name_context.clone()),
-                            Some(payload) => {
-                                let (new_pat, new_name_context) =
-                                    resolve_pattern(sess, &payload, top_level_ctx)?;
-                                (Some((new_pat, payload.1.clone())), new_name_context)
-                            }
-                        };
-                        let name_context = new_name_context.union(name_context.clone());
-                        let new_arm = resolve_expression(sess, arm, &name_context, top_level_ctx)?;
-                        Ok((enum_name, case_name, new_payload, new_arm))
+                    .map(|(pat, arm)| {
+                        let (new_pat, new_name_context) =
+                            resolve_pattern(sess, &pat, top_level_ctx)?;
+                        let mut updated_name_context = name_context.clone();
+                        for (k, v) in new_name_context.into_iter() {
+                            updated_name_context = updated_name_context.update(k, v);
+                        }
+                        let new_arm =
+                            resolve_expression(sess, arm, &updated_name_context, top_level_ctx)?;
+                        Ok(((new_pat, pat.1), new_arm))
                     })
                     .collect(),
             )?;
@@ -191,7 +227,7 @@ fn resolve_expression(
             )?;
             Ok((Expression::Named(new_i), e_span))
         }
-        Expression::FuncCall(ty, f, args) => {
+        Expression::FuncCall(ty, f, args, arg_types) => {
             let new_args = check_vec(
                 args.into_iter()
                     .map(|arg| {
@@ -201,9 +237,9 @@ fn resolve_expression(
                     })
                     .collect(),
             )?;
-            Ok((Expression::FuncCall(ty, f, new_args), e_span))
+            Ok((Expression::FuncCall(ty, f, new_args, arg_types), e_span))
         }
-        Expression::MethodCall(self_, ty, f, args) => {
+        Expression::MethodCall(self_, ty, f, args, args_types) => {
             let (self_, self_borrow) = *self_;
             let new_self = resolve_expression(sess, self_, name_context, top_level_ctx)?;
             let new_args = check_vec(
@@ -216,7 +252,13 @@ fn resolve_expression(
                     .collect(),
             )?;
             Ok((
-                Expression::MethodCall(Box::new((new_self, self_borrow)), ty, f, new_args),
+                Expression::MethodCall(
+                    Box::new((new_self, self_borrow)),
+                    ty,
+                    f,
+                    new_args,
+                    args_types,
+                ),
                 e_span,
             ))
         }
@@ -247,10 +289,9 @@ fn resolve_expression(
         }
         Expression::IntegerCasting(e1, from, to) => {
             let new_e1 = resolve_expression(sess, *e1, name_context, top_level_ctx)?;
-            Ok((
-                Expression::IntegerCasting(Box::new(new_e1), from, to),
-                e_span,
-            ))
+            let expr = Expression::IntegerCasting(Box::new(new_e1), from, to);
+            log::trace!("   expr: {:?}", expr);
+            Ok((expr, e_span))
         }
     }
 }
@@ -261,12 +302,17 @@ fn resolve_pattern(
     top_ctx: &TopLevelContext,
 ) -> ResolutionResult<(Pattern, NameContext)> {
     match pat {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
+        Pattern::EnumCase(ty_name, name, None) => Ok((
+            Pattern::EnumCase(ty_name.clone(), name.clone(), None),
+            HashMap::new(),
+        )),
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
             let (new_inner_pat, sub_context) = resolve_pattern(sess, &*inner_pat, top_ctx)?;
             Ok((
-                Pattern::SingleCaseEnum(
+                Pattern::EnumCase(
+                    ty_name.clone(),
                     name.clone(),
-                    Box::new((new_inner_pat, inner_pat.1.clone())),
+                    Some(Box::new((new_inner_pat, inner_pat.1.clone()))),
                 ),
                 sub_context,
             ))
@@ -277,13 +323,18 @@ fn resolve_pattern(
                     .iter()
                     .fold(Ok((Vec::new(), HashMap::new())), |acc, pat_arg| {
                         let (mut acc_pat, acc_name) = acc?;
-                        let (new_pat, sub_name_context) = resolve_pattern(sess, pat_arg, top_ctx)?;
+                        let (new_pat, mut sub_name_context) =
+                            resolve_pattern(sess, pat_arg, top_ctx)?;
                         acc_pat.push((new_pat, pat_arg.1.clone()));
-                        Ok((acc_pat, acc_name.union(sub_name_context)))
+                        for (k, v) in acc_name.into_iter() {
+                            sub_name_context = sub_name_context.update(k, v);
+                        }
+                        Ok((acc_pat, sub_name_context))
                     })?;
             Ok((Pattern::Tuple(tup_args), acc_name))
         }
         Pattern::WildCard => Ok((Pattern::WildCard, HashMap::new())),
+        Pattern::LiteralPat(x) => Ok((Pattern::LiteralPat(x.clone()), HashMap::new())),
         Pattern::IdentPat(x) => {
             let (x_new, s) = match x {
                 Ident::Unresolved(s) => (to_fresh_ident(s), s.clone()),
@@ -300,9 +351,11 @@ fn resolve_pattern(
 fn resolve_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
-    name_context: NameContext,
+    mut name_context: NameContext,
     top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<(Spanned<Statement>, NameContext)> {
+    log::trace!("resolve_statements ({:?}, {:?})", s, s_span);
+    log::trace!("   name_context: {:#?}", name_context);
     match s {
         Statement::Conditional(cond, then_b, else_b, info) => {
             let new_cond = resolve_expression(sess, cond, &name_context, top_level_ctx)?;
@@ -388,7 +441,12 @@ fn resolve_statement(
         Statement::LetBinding(pat, typ, e, question_mark) => {
             let new_e = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             let (new_pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
-            let name_context = new_name_context.union(name_context);
+            log::trace!("   new_name_context {:#?}", new_name_context);
+            log::trace!("   existing name_context {:#?}", name_context);
+            for (k, v) in new_name_context.into_iter() {
+                name_context = name_context.update(k, v);
+            }
+            log::trace!("   updated name_context {:#?}", name_context);
             Ok((
                 (
                     Statement::LetBinding((new_pat, pat.1.clone()), typ, new_e, question_mark),
@@ -406,9 +464,12 @@ fn resolve_block(
     name_context: &NameContext,
     top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<Block>> {
+    log::trace!("resolve_block ({:#?}, {:#?})", b, b_span);
+    log::trace!("   name_context: {:#?}", name_context);
     let mut new_stmts = Vec::new();
     let mut name_context = name_context.clone();
     for s in b.stmts.into_iter() {
+        log::trace!("   mutated name_context: {:#?}", name_context);
         let (new_stmt, new_name_context) = resolve_statement(sess, s, name_context, top_level_ctx)?;
         new_stmts.push(new_stmt);
         name_context = new_name_context;
@@ -429,6 +490,7 @@ fn resolve_item(
     (item, i_span): Spanned<DecoratedItem>,
     top_level_ctx: &TopLevelContext,
 ) -> ResolutionResult<Spanned<DecoratedItem>> {
+    log::trace!("resolve_item ({:?}, {:?})", item, i_span);
     let i = item.clone().item;
     let i = match i {
         Item::ConstDecl(id, typ, e) => {
@@ -484,12 +546,17 @@ fn process_decl_item(
     (i, i_span): &Spanned<DecoratedItem>,
     top_level_context: &mut TopLevelContext,
 ) -> ResolutionResult<()> {
+    log::trace!("process_decl_item ({:?}, {:?})", i, i_span);
     match &i.item {
         Item::ConstDecl(id, typ, _e) => {
+            log::trace!("   Item::ConstDecl");
             top_level_context.consts.insert(id.0.clone(), typ.clone());
             Ok(())
         }
         Item::EnumDecl(name, cases) => {
+            log::trace!("   Item::EnumDecl");
+            log::trace!("   name {:?}", name);
+            log::trace!("   cases {:?}", cases);
             top_level_context.typ_dict.insert(
                 name.0.clone(),
                 (
@@ -503,6 +570,9 @@ fn process_decl_item(
             Ok(())
         }
         Item::ArrayDecl(id, size, cell_t, index_typ) => {
+            log::trace!("   Item::ArrayDecl");
+            log::trace!("   id {:?}", id);
+            log::trace!("   size {:?}", size);
             let new_size = match &size.0 {
                 Expression::Lit(Literal::Usize(u)) => ArraySize::Integer(u.clone()),
                 Expression::Named(Ident::Unresolved(s)) => ArraySize::Ident(TopLevelIdent {
@@ -548,6 +618,10 @@ fn process_decl_item(
             Ok(())
         }
         Item::NaturalIntegerDecl(typ_ident, secrecy, canvas_size, info) => {
+            log::trace!("   Item::NaturalIntegerDecl");
+            log::trace!("   typ_ident {:?}", typ_ident);
+            log::trace!("   secrecy {:?}", secrecy);
+            log::trace!("   info {:?}", info);
             let mod_string = match info {
                 Some((canvas_typ_ident, mod_string)) => {
                     process_decl_item(
@@ -613,6 +687,9 @@ fn process_decl_item(
             Ok(())
         }
         Item::AliasDecl(alias_name, alias_ty) => {
+            log::trace!("   Item::AliasDecl");
+            log::trace!("   alias_name {:?}", alias_name);
+            log::trace!("   alias_ty {:?}", alias_ty);
             top_level_context.typ_dict.insert(
                 alias_name.0.clone(),
                 (
@@ -623,10 +700,12 @@ fn process_decl_item(
             Ok(())
         }
         Item::ImportedCrate(_) => {
+            log::trace!("   Item::ImportedCrate");
             // Foreign items already imported at this point
             Ok(())
         }
         Item::FnDecl((f, _f_span), sig, _b) => {
+            log::trace!("   Item::FnDecl");
             top_level_context
                 .functions
                 .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
@@ -755,8 +834,9 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     sess: &Session,
     p: Program,
     external_data: &F,
-    top_level_ctx : &mut TopLevelContext,
+    top_level_ctx: &mut TopLevelContext,
 ) -> ResolutionResult<Program> {
+    log::trace!("resolve_crate {:#?}", p);
     // First we fill the context with external symbols
     enrich_with_external_crates_symbols(sess, &p, top_level_ctx, external_data)?;
     // Then we do a first pass that collects types and signatures of top-level
@@ -764,15 +844,14 @@ pub fn resolve_crate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     for item in p.items.iter() {
         process_decl_item(sess, item, top_level_ctx)?;
     }
+    // log::trace!("   enriched top level context {}", top_level_ctx);
     // And finally a second pass that performs the actual name resolution
-    Ok(
-        Program {
-            items: check_vec(
-                p.items
-                    .into_iter()
-                    .map(|i| resolve_item(sess, i, &top_level_ctx))
-                    .collect(),
-            )?,
-        }
-    )
+    Ok(Program {
+        items: check_vec(
+            p.items
+                .into_iter()
+                .map(|i| resolve_item(sess, i, &top_level_ctx))
+                .collect(),
+        )?,
+    })
 }

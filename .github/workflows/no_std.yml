@@ -1,0 +1,24 @@
+name: Build & Test no_std
+
+on: [push, pull_request, release]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install qemu
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends qemu-system-arm
+      - name: Install rust thumbv7m target support
+        run: rustup target add thumbv7m-none-eabi
+        working-directory: ./no_std
+      - name: Build no_std release
+        run: cargo build --verbose --release
+        working-directory: ./no_std
+      - name: Run no_std release tests
+        run: cargo run --verbose --release
+        working-directory: ./no_std

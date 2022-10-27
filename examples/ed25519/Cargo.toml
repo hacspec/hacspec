@@ -12,6 +12,7 @@ path = "src/ed25519.rs"
 [dependencies]
 hacspec-lib = { path = "../../lib" }
 hacspec-sha512 = { path = "../sha512" }
+hacspec-edwards25519 = { path = "../edwards25519" }
 
 [dev-dependencies]
 quickcheck = "1"

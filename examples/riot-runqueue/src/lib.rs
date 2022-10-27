@@ -1,3 +1,4 @@
+#![no_std]
 use hacspec_lib::*;
 
 const U32_BITS: usize = 4 * 8;
@@ -6,9 +7,9 @@ const N_THREADS: usize = 30;
 const SENTINEL: u8 = 0xFFu8;
 
 #[derive(Clone, Copy, Debug)]
-pub struct RunqueueId(u8);
+pub struct RunqueueId(pub u8);
 #[derive(Clone, Copy, Debug)]
-pub struct ThreadId(u8);
+pub struct ThreadId(pub u8);
 
 public_bytes!(Tail, N_QUEUES);
 public_bytes!(NextIds, N_THREADS);

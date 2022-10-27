@@ -10,7 +10,7 @@ edition = "2018"
 evercrypt-provider = { path = "../evercrypt-provider" }
 hacspec-provider = { path = "../../provider" }
 chacha20poly1305 = "0.9"
-criterion = "^0.3"
+criterion = "^0.4"
 rand = "^0.8"
 
 [[bench]]

@@ -70,9 +70,9 @@ fn divstepsx<T: Integer + Copy>(
         // TODO: make swap constant time
         if delta > 0 && !g[0].equal(T::ZERO()) {
             delta = -delta;
-            std::mem::swap(&mut f, &mut g);
-            std::mem::swap(&mut q, &mut u);
-            std::mem::swap(&mut r, &mut v);
+            core::mem::swap(&mut f, &mut g);
+            core::mem::swap(&mut q, &mut u);
+            core::mem::swap(&mut r, &mut v);
         }
 
         delta = delta + 1;
@@ -111,7 +111,7 @@ fn poly_divx<T: Numeric + Copy>(v: &[T]) -> Vec<T> {
 
 /// Subtract quotient (bn/x^bd) from (an/x^ad)
 fn quot_sub<T: Integer + Copy>(an: &[T], ad: usize, bn: &[T], bd: usize, n: T) -> (Vec<T>, usize) {
-    let cd = std::cmp::max(ad, bd);
+    let cd = core::cmp::max(ad, bd);
     let x = monomial(T::ONE(), 1);
     let mut a = an.to_vec();
     let mut b = bn.to_vec();

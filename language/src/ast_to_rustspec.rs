@@ -8,7 +8,7 @@ use rustc_ast::{
         UnOp, Unsafe, UseTreeKind, VariantData,
     },
     node_id::NodeId,
-    token::{DelimToken, LitKind as TokenLitKind, TokenKind},
+    token::{Delimiter, LitKind as TokenLitKind, TokenKind},
     tokenstream::{TokenStream, TokenTree},
 };
 use rustc_session::Session;
@@ -18,7 +18,7 @@ use crate::hir_to_rustspec::ExternalData;
 use crate::rustspec::*;
 use crate::HacspecErrorEmitter;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SpecialNames {
     pub arrays: HashSet<String>,
     pub enums: HashSet<String>,
@@ -189,7 +189,10 @@ fn translate_expr_name(
     }
     match path.segments.iter().last() {
         None => {
-            sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
+            sess.span_rustspec_err(
+                path.span,
+                "expr: empty identifiers are not allowed in Hacspec",
+            );
             Err(())
         }
         Some(segment) => match &segment.args {
@@ -200,34 +203,83 @@ fn translate_expr_name(
                 span.clone().into(),
             )),
             Some(_) => {
-                sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
+                sess.span_rustspec_err(
+                    path.span,
+                    "expr: expression identifiers cannot have arguments",
+                );
                 Err(())
             }
         },
     }
 }
 
-pub fn translate_struct_name(sess: &Session, path: &ast::Path) -> TranslationResult<TopLevelIdent> {
-    if path.segments.len() > 1 {
-        sess.span_rustspec_err(path.span, "expected a single-segment struct name");
+pub fn translate_struct_name(
+    sess: &Session,
+    path: &ast::Path,
+) -> TranslationResult<(BaseTyp, Spanned<TopLevelIdent>)> {
+    if path.segments.len() > 2 {
+        sess.span_rustspec_err(path.span, "expected a one or two segment struct name");
         return Err(());
     }
-    match path.segments.iter().last() {
-        None => {
-            sess.span_rustspec_err(path.span, "empty identifiers are not allowed in Hacspec");
-            Err(())
-        }
-        Some(segment) => match &segment.args {
-            None => Ok(TopLevelIdent {
-                string: segment.ident.name.to_ident_string(),
-                kind: TopLevelIdentKind::Type,
-            }),
-            Some(_) => {
-                sess.span_rustspec_err(path.span, "expression identifiers cannot have arguments");
-                Err(())
+    if path.segments.len() == 1 {
+        let segment = &path.segments[0];
+        match &segment.args {
+            None => {
+                let ty_name = TopLevelIdent {
+                    string: segment.ident.name.to_ident_string(),
+                    kind: TopLevelIdentKind::Type,
+                };
+                let ty = (ty_name, path.span.into());
+                let cons_name = TopLevelIdent {
+                    string: segment.ident.name.to_ident_string(),
+                    kind: TopLevelIdentKind::EnumConstructor,
+                };
+                let cons = (cons_name, path.span.into());
+                return Ok((BaseTyp::Named(ty, None), cons));
             }
-        },
+            Some(_) => {
+                sess.span_rustspec_err(
+                    path.span,
+                    "struct1: expression identifiers cannot have arguments",
+                );
+                return Err(());
+            }
+        }
     }
+    if path.segments.len() == 2 {
+        let segment0 = &path.segments[0];
+        let segment1 = &path.segments[1];
+        let ty_name = TopLevelIdent {
+            string: segment0.ident.name.to_ident_string(),
+            kind: TopLevelIdentKind::Type,
+        };
+        let ty = (ty_name, segment0.ident.span.into());
+        let cons_name = TopLevelIdent {
+            string: segment1.ident.name.to_ident_string(),
+            kind: TopLevelIdentKind::EnumConstructor,
+        };
+        let cons = (cons_name, segment1.ident.span.into());
+        match (&segment0.args, &segment1.args) {
+            (None, None) => return Ok((BaseTyp::Named(ty, None), cons)),
+            (Some(ref args), None) => {
+                return Ok((
+                    BaseTyp::Named(
+                        ty,
+                        Some(translate_type_args(sess, args, &segment1.ident.span)?),
+                    ),
+                    cons,
+                ))
+            }
+            (_, Some(x)) => {
+                sess.span_rustspec_err(
+                    path.span,
+                    "struct3: expression identifiers cannot have arguments",
+                );
+                return Err(());
+            }
+        }
+    }
+    return Err(());
 }
 
 enum FuncNameResult {
@@ -444,72 +496,54 @@ fn translate_function_argument(
     }
 }
 
-fn translate_literal(
+fn translate_literal(lit: &rustc_ast::Lit) -> Result<Literal, ()> {
+    match &lit.kind {
+        LitKind::Bool(b) => Ok(Literal::Bool(*b)),
+        //TODO: check that the casting is safe each time!
+        LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok(Literal::Int128(*x as i128)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok(Literal::UInt128(*x as u128)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok(Literal::Int64(*x as i64)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok(Literal::UInt64(*x as u64)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok(Literal::Int32(*x as i32)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok(Literal::UInt32(*x as u32)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok(Literal::Int16(*x as i16)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok(Literal::UInt16(*x as u16)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok(Literal::Int8(*x as i8)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok(Literal::UInt8(*x as u8)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok(Literal::Isize(*x as isize)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok(Literal::Usize(*x as usize)),
+        // Unspecified integers are always interpreted as usize
+        LitKind::Int(x, LitIntType::Unsuffixed) => Ok(Literal::Usize(*x as usize)),
+        LitKind::Str(msg, StrStyle::Cooked) => Ok(Literal::Str(msg.to_ident_string())),
+        _ => Err(()),
+    }
+}
+
+/// Negate a literal `lit`, or fails if the literal is not a signed
+/// integer
+fn negate_literal(sess: &Session, lit: &Literal, span: Span) -> Result<Literal, ()> {
+    match lit {
+        Literal::Int128(x) => Ok(Literal::Int128(-x)),
+        Literal::Int64(x) => Ok(Literal::Int64(-x)),
+        Literal::Int32(x) => Ok(Literal::Int32(-x)),
+        Literal::Int16(x) => Ok(Literal::Int16(-x)),
+        Literal::Int8(x) => Ok(Literal::Int8(-x)),
+        Literal::Isize(x) => Ok(Literal::Isize(-x)),
+        _ => Err(sess.span_rustspec_err(
+            span,
+            "Trying to negate a literal which is not a signed integer!",
+        )),
+    }
+}
+
+fn translate_literal_expr(
     sess: &Session,
     lit: &rustc_ast::Lit,
     span: Span,
 ) -> TranslationResult<Spanned<ExprTranslationResult>> {
-    match &lit.kind {
-        LitKind::Bool(b) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Bool(*b))),
-            span.into(),
-        )),
-        //TODO: check that the casting is safe each time!
-        LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int128(*x as i128))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt128(*x as u128))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int64(*x as i64))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt64(*x as u64))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int32(*x as i32))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt32(*x as u32))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int16(*x as i16))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt16(*x as u16))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Int8(*x as i8))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::UInt8(*x as u8))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Isize(*x as isize))),
-            span.into(),
-        )),
-        LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
-            span.into(),
-        )),
-        // Unspecified integers are always interpreted as usize
-        LitKind::Int(x, LitIntType::Unsuffixed) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Usize(*x as usize))),
-            span.into(),
-        )),
-        LitKind::Str(msg, StrStyle::Cooked) => Ok((
-            ExprTranslationResult::TransExpr(Expression::Lit(Literal::Str(msg.to_ident_string()))),
+    match translate_literal(lit) {
+        Ok(l) => Ok((
+            ExprTranslationResult::TransExpr(Expression::Lit(l)),
             span.into(),
         )),
         _ => {
@@ -667,11 +701,9 @@ fn translate_expr(
                             ExprTranslationResult::TransExpr(Expression::EnumInject(
                                 BaseTyp::Named(func_name_but_as_type, None),
                                 func_name_but_as_enum_constructor,
-                                Some(if func_args.len() > 1 {
-                                    (Box::new(Expression::Tuple(func_args)), e.span.into())
-                                } else {
-                                    let arg = func_args.into_iter().next().unwrap();
-                                    (Box::new(arg.0), arg.1)
+                                Some(match func_args.as_slice() {
+                                    [arg] => (Box::new(arg.0.clone()), arg.1),
+                                    _ => (Box::new(Expression::Tuple(func_args)), e.span.into()),
                                 }),
                             )),
                             e.span.into(),
@@ -747,6 +779,7 @@ fn translate_expr(
                                                                 i.clone(),
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
+                                                            None,
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -787,6 +820,7 @@ fn translate_expr(
                                                                 i.clone(),
                                                                 (Borrowing::Consumed, i.1.clone()),
                                                             )],
+                                                            None,
                                                         ),
                                                         i.1.clone(),
                                                     )
@@ -841,6 +875,7 @@ fn translate_expr(
                             func_prefix,
                             func_name,
                             func_args,
+                            None,
                         )),
                         e.span.into(),
                     ))
@@ -897,11 +932,12 @@ fn translate_expr(
                     None,
                     method_name,
                     rest_args_final,
+                    None,
                 )),
                 e.span.into(),
             ))
         }
-        ExprKind::Lit(lit) => translate_literal(sess, lit, e.span.clone()),
+        ExprKind::Lit(lit) => translate_literal_expr(sess, lit, e.span.clone()),
         ExprKind::Assign(lhs, rhs_e, _) => {
             let (r_e, r_e_question_mark) =
                 match translate_expr_accepts_question_mark(sess, specials, &rhs_e)? {
@@ -1188,6 +1224,7 @@ fn translate_expr(
             Err(())
         }
         ExprKind::Cast(e1, t1) => {
+            log::trace!("   ExprKind::Cast {:?} -> {:?}", e1, t1);
             let new_e1 = translate_expr_expects_exp(sess, specials, e1)?;
             let new_t1 = translate_base_typ(sess, t1)?;
             Ok((
@@ -1234,94 +1271,8 @@ fn translate_expr(
                             return Err(());
                         }
                         let arm_body = translate_expr_expects_exp(sess, specials, &*arm.body)?;
-                        // We only allow for a very specific type of pattern
-                        let (enum_name, case_name, pat) = match &arm.pat.kind {
-                            PatKind::Path(None, ast::Path { segments, .. }) => {
-                                if segments.len() != 2 {
-                                    sess.span_rustspec_err(
-                                        ((arm.pat).span).clone(),
-                                        "expected <name of the enum>::<name of the case>",
-                                    );
-                                    return Err(());
-                                }
-                                let mut it = segments.iter();
-                                let first_seg = it.next().unwrap();
-                                let second_seg = it.next().unwrap();
-                                (
-                                    BaseTyp::Named(
-                                        translate_toplevel_ident(
-                                            &first_seg.ident,
-                                            TopLevelIdentKind::Type,
-                                        ),
-                                        match &first_seg.args {
-                                            None => None,
-                                            Some(args) => Some(translate_type_args(
-                                                sess,
-                                                args,
-                                                &first_seg.ident.span,
-                                            )?),
-                                        },
-                                    ),
-                                    translate_toplevel_ident(
-                                        &second_seg.ident,
-                                        TopLevelIdentKind::EnumConstructor,
-                                    ),
-                                    None,
-                                )
-                            }
-                            PatKind::TupleStruct(None, ast::Path { segments, .. }, args) => {
-                                if segments.len() != 2 {
-                                    sess.span_rustspec_err(
-                                        ((arm.pat).span).clone(),
-                                        "expected <name of the enum>::<name of the case>",
-                                    );
-                                    return Err(());
-                                }
-                                let mut it = segments.iter();
-                                let first_seg = it.next().unwrap();
-                                let second_seg = it.next().unwrap();
-                                let pat_args = check_vec(
-                                    args.iter()
-                                        .map(|arg| translate_pattern(sess, arg))
-                                        .collect(),
-                                )?;
-                                let pat = if pat_args.len() == 1 {
-                                    pat_args.into_iter().next().unwrap()
-                                } else {
-                                    (Pattern::Tuple(pat_args), arm.pat.span.clone().into())
-                                };
-                                (
-                                    BaseTyp::Named(
-                                        translate_toplevel_ident(
-                                            &first_seg.ident,
-                                            TopLevelIdentKind::Type,
-                                        ),
-                                        match &first_seg.args {
-                                            None => None,
-                                            Some(args) => Some(translate_type_args(
-                                                sess,
-                                                args,
-                                                &first_seg.ident.span,
-                                            )?),
-                                        },
-                                    ),
-                                    translate_toplevel_ident(
-                                        &second_seg.ident,
-                                        TopLevelIdentKind::EnumConstructor,
-                                    ),
-                                    Some(pat),
-                                )
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    ((arm.pat).span).clone(),
-                                    "the only types of match pattern allowed in Hacspec start by \
-                                <name of the enum>::<name of the case>",
-                                );
-                                return Err(());
-                            }
-                        };
-                        Ok((enum_name, case_name, pat, arm_body))
+                        let pat = translate_pattern(sess, &arm.pat)?;
+                        Ok((pat, arm_body))
                     })
                     .collect(),
             )?;
@@ -1446,13 +1397,6 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "inline assembly is not allowed in Hacspec");
             Err(())
         }
-        ExprKind::LlvmInlineAsm(_) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "inline LLVM assembly is not allowed in hacspec",
-            );
-            Err(())
-        }
         ExprKind::MacCall(call) => {
             if call.path.segments.len() > 1 {
                 sess.span_rustspec_err(
@@ -1484,6 +1428,7 @@ fn translate_expr(
                                                     i.clone(),
                                                     (Borrowing::Consumed, i.1.clone()),
                                                 )],
+                                                Some(vec![BaseTyp::UInt8]),
                                             ),
                                             i.1.clone(),
                                         )
@@ -1543,12 +1488,18 @@ fn translate_expr(
             Err(())
         }
         ExprKind::Paren(e1) => translate_expr(sess, specials, e1),
-        ExprKind::Try(_) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "question marks inside expressions are not allowed in Hacspec",
+        ExprKind::Try(e1) => {
+            let e1 = Expression::QuestionMark(
+                Box::new(match translate_expr(sess, specials, e1)? {
+                    (ExprTranslationResult::TransExpr(e), es) => (e, es),
+                    _ => Err(sess.span_rustspec_err(
+                        e1.span,
+                        "question marks on statements are not allowed in Hacspec",
+                    ))?,
+                }),
+                None,
             );
-            Err(())
+            Ok((ExprTranslationResult::TransExpr(e1), e.span.clone().into()))
         }
         ExprKind::Err => {
             sess.span_rustspec_err(e.span, "error expressions are not allowed in Hacspec");
@@ -1562,6 +1513,7 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "underscores are not allowed in Hacspec");
             Err(())
         }
+        ExprKind::Yeet(_) => todo!(),
     }
 }
 
@@ -1613,13 +1565,19 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
         PatKind::Ident(BindingMode::ByValue(_), id, None) => {
             Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
         }
+        PatKind::Path(None, path) => {
+            let (ty, cons) = translate_struct_name(sess, path)?;
+            Ok((Pattern::EnumCase(ty, cons, None), pat.span.into()))
+        }
         PatKind::TupleStruct(None, path, args) => {
-            let struct_name = translate_struct_name(sess, path)?;
-            if args.len() == 1 {
+            let (ty, cons) = translate_struct_name(sess, path)?;
+            if args.len() == 0 {
+                Ok((Pattern::EnumCase(ty, cons, None), pat.span.into()))
+            } else if args.len() == 1 {
                 let arg = args.into_iter().next().unwrap();
                 let new_arg = translate_pattern(sess, arg)?;
                 Ok((
-                    Pattern::SingleCaseEnum((struct_name, path.span.into()), Box::new(new_arg)),
+                    Pattern::EnumCase(ty, cons, Some(Box::new(new_arg))),
                     pat.span.into(),
                 ))
             } else {
@@ -1629,9 +1587,10 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
                         .collect(),
                 )?;
                 Ok((
-                    Pattern::SingleCaseEnum(
-                        (struct_name, path.span.into()),
-                        Box::new((Pattern::Tuple(new_args), pat.span.into())),
+                    Pattern::EnumCase(
+                        ty,
+                        cons,
+                        Some(Box::new((Pattern::Tuple(new_args), pat.span.into()))),
                     ),
                     pat.span.into(),
                 ))
@@ -1646,6 +1605,34 @@ fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pat
             Ok((Pattern::Tuple(pats), pat.span.into()))
         }
         PatKind::Wild => Ok((Pattern::WildCard, pat.span.into())),
+        PatKind::Lit(e) => {
+            let err = || {
+                Err(sess.span_rustspec_err(
+                    pat.span,
+                    "this literal pattern is not allowed in Hacspec let bindings",
+                ))
+            };
+            match e.clone().into_inner().kind {
+                ExprKind::Lit(l) => {
+                    Ok((Pattern::LiteralPat(translate_literal(&l)?), pat.span.into()))
+                }
+                ExprKind::Unary(Neg, e) => match &*e {
+                    Expr {
+                        kind: ExprKind::Lit(l),
+                        ..
+                    } => Ok((
+                        Pattern::LiteralPat(negate_literal(
+                            sess,
+                            &translate_literal(&l)?,
+                            pat.span.into(),
+                        )?),
+                        pat.span.into(),
+                    )),
+                    _ => err(),
+                },
+                _ => err(),
+            }
+        }
         _ => {
             sess.span_rustspec_err(pat.span, "pattern not allowed in Hacspec let bindings");
             Err(())
@@ -1759,6 +1746,7 @@ fn translate_block(
     ))
 }
 
+#[derive(Debug)]
 enum ItemTranslationResult {
     Item(DecoratedItem),
     Ignored,
@@ -1787,7 +1775,7 @@ fn check_for_literal(sess: &Session, arg: &TokenTree) -> TranslationResult<Spann
     match arg {
         TokenTree::Token(tok) => match tok.kind {
             TokenKind::Literal(l) => {
-                match translate_literal(
+                match translate_literal_expr(
                     sess,
                     &match rustc_ast::Lit::from_lit_token(l, tok.span.clone()) {
                         Ok(x) => x,
@@ -1836,7 +1824,7 @@ fn check_for_literal_array(
     arg: &TokenTree,
 ) -> TranslationResult<Vec<Spanned<Expression>>> {
     match arg {
-        TokenTree::Delimited(_, DelimToken::Bracket, inside) => {
+        TokenTree::Delimited(_, Delimiter::Bracket, inside) => {
             let commas_and_exprs: Vec<TranslationResult<Option<Spanned<Expression>>>> = inside
                 .trees()
                 .enumerate()
@@ -2396,6 +2384,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     specials: &SpecialNames,
     external_data: &F,
 ) -> TranslationResult<(ItemTranslationResult, SpecialNames)> {
+    log::trace!("translate_items ({:?})", i);
     let mut tags = HashSet::new();
     tags.insert("code".to_string());
     let export = i
@@ -2506,7 +2495,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
             };
             let fn_inputs = check_vec(fn_inputs)?;
             let fn_output = match &sig.decl.output {
-                FnRetTy::Default(span) => (BaseTyp::Unit, span.clone().into()),
+                FnRetTy::Default(span) => (UnitTyp, span.clone().into()),
                 FnRetTy::Ty(ty) => translate_base_typ(sess, ty)?,
             };
             let fn_body: Spanned<Block> = match body {
@@ -2521,6 +2510,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 ),
                 Some(b) => translate_block(sess, specials, &b)?,
             };
+            log::trace!("   fn_body: {:#?}", fn_body);
             let fn_sig = FuncSig {
                 args: fn_inputs,
                 ret: fn_output,
@@ -2828,10 +2818,9 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                             })
                             .collect(),
                     )?;
-                    let payload = if tuple_args.len() > 1 {
-                        (BaseTyp::Tuple(tuple_args), i.span.clone().into())
-                    } else {
-                        tuple_args.into_iter().next().unwrap()
+                    let payload = match tuple_args.as_slice() {
+                        [arg] => arg.clone(),
+                        _ => (BaseTyp::Tuple(tuple_args), i.span.clone().into()),
                     };
                     Ok((
                         ItemTranslationResult::Item(DecoratedItem {
@@ -2887,6 +2876,7 @@ pub fn translate<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     external_data: &F,
     specials: &mut SpecialNames,
 ) -> TranslationResult<Program> {
+    log::trace!("translate ({:?})", krate);
     let items = &krate.items;
     let translated_items = check_vec(
         items
