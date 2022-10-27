@@ -648,6 +648,26 @@ fn add_var(x: &Ident, typ: &Typ, var_context: &VarContext) -> VarContext {
     }
 }
 
+fn get_literal_type(l: &Literal) -> BaseTyp {
+    match l {
+        Literal::Unit => UnitTyp,
+        Literal::Bool(_) => BaseTyp::Bool,
+        Literal::Int128(_) => BaseTyp::Int128,
+        Literal::UInt128(_) => BaseTyp::UInt128,
+        Literal::Int64(_) => BaseTyp::Int64,
+        Literal::UInt64(_) => BaseTyp::UInt64,
+        Literal::Int32(_) => BaseTyp::Int32,
+        Literal::UInt32(_) => BaseTyp::UInt32,
+        Literal::Int16(_) => BaseTyp::Int16,
+        Literal::UInt16(_) => BaseTyp::UInt16,
+        Literal::Int8(_) => BaseTyp::Int8,
+        Literal::UInt8(_) => BaseTyp::UInt8,
+        Literal::Usize(_) => BaseTyp::Usize,
+        Literal::Isize(_) => BaseTyp::Isize,
+        Literal::Str(_) => BaseTyp::Str,
+    }
+}
+
 pub type TypecheckingResult<T> = Result<T, ()>;
 
 fn typecheck_expression(
@@ -768,213 +788,22 @@ fn typecheck_expression(
             let (new_arg, t_arg, intermediate_var_context) =
                 typecheck_expression(sess, arg, func_return_type, top_level_context, &var_context)?;
             let mut acc_var_context = intermediate_var_context.clone();
-            // First we retrieve the enum type that's being matched on as well
-            // as diverse infos related to it
-            let (mut t_arg_cases, t_arg_enum_name, t_arg_enum_args, enum_type_var_args) =
-                match (t_arg.1).0.clone() {
-                    BaseTyp::Named((name, _), args) => {
-                        match top_level_context.typ_dict.get(&name) {
-                            Some((
-                                (
-                                    (Borrowing::Consumed, _),
-                                    (BaseTyp::Enum(cases, type_args_vars), _),
-                                ),
-                                DictEntry::Enum,
-                            )) => (
-                                cases.clone(),
-                                name.clone(),
-                                args.clone(),
-                                type_args_vars.clone(),
-                            ),
-                            _ => {
-                                sess.span_rustspec_err(
-                                    arg.1.clone(),
-                                    format!(
-                                        "expected an enum type, got {}{}",
-                                        (t_arg.0).0,
-                                        (t_arg.1).0
-                                    )
-                                    .as_str(),
-                                );
-                                return Err(());
-                            }
-                        }
-                    }
-                    _ => {
-                        sess.span_rustspec_err(
-                            arg.1.clone(),
-                            format!("expected an enum type, got {}{}", (t_arg.0).0, (t_arg.1).0)
-                                .as_str(),
-                        );
-                        return Err(());
-                    }
-                };
             let mut out_typ = None;
-            // Then we typecheck each match arm
+            // Typecheck each match arm
             let new_arms = check_vec(
                 arms.into_iter()
-                    .map(|(arm_enum_ty, arm_case, arm_pattern, arm_exp)| {
-                        let arm_enum_ty = dealias_type(arm_enum_ty.clone(), top_level_context);
-                        // The enum name is repeated in each match arm so we
-                        // make sure it's the good one
-                        let (arm_enum_name, arm_enum_args) = match &arm_enum_ty {
-                            BaseTyp::Named((t_arm_ty_name, _), t_arm_ty_args) => {
-                                if &t_arg_enum_name != t_arm_ty_name {
-                                    sess.span_rustspec_err(
-                                        arm_case.1.clone(),
-                                        format!(
-                                            "expected {} type, got {}",
-                                            t_arg_enum_name, arm_enum_ty
-                                        )
-                                        .as_str(),
-                                    );
-                                    return Err(());
-                                }
-                                match top_level_context.typ_dict.get(&t_arm_ty_name) {
-                                    Some((_, DictEntry::Enum)) => {
-                                        (t_arm_ty_name.clone(), t_arm_ty_args.clone())
-                                    }
-                                    _ => {
-                                        sess.span_rustspec_err(
-                                            arm_case.1.clone(),
-                                            format!("expected an enum type, got {}", arm_enum_ty)
-                                                .as_str(),
-                                        );
-                                        return Err(());
-                                    }
-                                }
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    arm_case.1.clone(),
-                                    format!("expected an enum type, got {}", arm_enum_ty).as_str(),
-                                );
-                                return Err(());
-                            }
-                        };
-                        // Then we proceed with the typechecking, first
-                        // by checking correctness of the enum generic
-                        // arguments between those in the match arm and those
-                        // coming from the expression being matched
-                        let mut typ_var_ctx = HashMap::new();
-                        match (&t_arg_enum_args, &arm_enum_args) {
-                            (None, None) => (),
-                            (Some(arg_args), Some(arms_args)) => {
-                                if arg_args.len() != arms_args.len() {
-                                    sess.span_rustspec_err(
-                                        arm_case.1.clone(),
-                                        "discrepancy between the type arguments \
-                                        of the matched expression and those of the match arm",
-                                    );
-                                    return Err(());
-                                }
-                                for ((arg_arg, arm_arg), enum_type_var_arg) in arg_args
-                                    .iter()
-                                    .zip(arms_args)
-                                    .zip(enum_type_var_args.iter())
-                                {
-                                    unify_types_default_error_message(
-                                        sess,
-                                        &((Borrowing::Consumed, DUMMY_SP.into()), arg_arg.clone()),
-                                        &((Borrowing::Consumed, DUMMY_SP.into()), arm_arg.clone()),
-                                        &HashMap::new(),
-                                        top_level_context,
-                                    )?;
-                                    let new_typ_var_ctx = unify_types(
-                                        sess,
-                                        &((Borrowing::Consumed, DUMMY_SP.into()), arg_arg.clone()),
-                                        &(
-                                            (Borrowing::Consumed, DUMMY_SP.into()),
-                                            (
-                                                BaseTyp::Variable(enum_type_var_arg.clone()),
-                                                DUMMY_SP.into(),
-                                            ),
-                                        ),
-                                        &HashMap::new(),
-                                        top_level_context,
-                                    )?;
-                                    match new_typ_var_ctx {
-                                        Some(new_typ_var_ctx) => {
-                                            for (k, v) in new_typ_var_ctx.into_iter() {
-                                                typ_var_ctx = typ_var_ctx.update(k, v);
-                                            }
-                                        }
-                                        None => {
-                                            sess.span_rustspec_err(
-                                                arm_arg.1.clone(),
-                                                format!(
-                                                    "expected {} type, got {}",
-                                                    arg_arg.0, arm_arg.0
-                                                )
-                                                .as_str(),
-                                            );
-                                            return Err(());
-                                        }
-                                    }
-                                }
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    arm_case.1.clone(),
-                                    "discrepancy between the type arguments \
-                                    of the matched expression and those of the match arm",
-                                );
-                                return Err(());
-                            }
-                        };
-                        // Then we finally proceed with typechecking the arm
-                        // expression, for that we retrieve the type of this arm's
-                        // payload
-                        let (case_index, case_typ) =
-                            match t_arg_cases.iter().enumerate().find(
-                                |(_, ((t_arg_case_name, _), _))| &arm_case.0 == t_arg_case_name,
-                            ) {
-                                Some((case_index, (_, t_arg_case_typ))) => {
-                                    (case_index, t_arg_case_typ.clone())
-                                }
-                                None => {
-                                    sess.span_rustspec_err(
-                                        arm_case.1.clone(),
-                                        format!("enum case not found for {}", arm_enum_name.string)
-                                            .as_str(),
-                                    );
-                                    return Err(());
-                                }
-                            };
-                        let case_typ = match case_typ {
-                            Some(case_typ) => Some((
-                                bind_variable_type(sess, &case_typ, &typ_var_ctx)?,
-                                case_typ.1.clone(),
-                            )),
-                            None => None,
-                        };
-                        t_arg_cases.remove(case_index);
-                        // t_arg_cases stores the arms not covered by the match
-                        // yet
-                        let (new_arm_pattern, new_var_context) = match (arm_pattern, case_typ) {
-                            (None, None) => (None, HashMap::new()),
-                            (Some(arm_pattern), Some(case_typ)) => {
-                                let new_var_context = typecheck_pattern(
-                                    sess,
-                                    arm_pattern,
-                                    &(t_arg.0.clone(), case_typ.clone()),
-                                    top_level_context,
-                                )?;
-                                (Some(arm_pattern.clone()), new_var_context)
-                            }
-                            _ => {
-                                sess.span_rustspec_err(
-                                    arm_case.1.clone(),
-                                    format!("pattern not coherent with expected type").as_str(),
-                                );
-                                return Err(());
-                            }
+                    .map(|(arm_pattern, arm_exp)| {
+                        let (new_arm_pattern, new_var_context) = {
+                            let new_var_context =
+                                typecheck_pattern(sess, arm_pattern, &t_arg, top_level_context)?;
+                            (arm_pattern.clone(), new_var_context)
                         };
                         let (new_arm_exp, arm_typ, new_var_context) = typecheck_expression(
                             sess,
                             arm_exp,
                             func_return_type,
                             top_level_context,
+                            // TODO: is this union fine wrt #274?
                             &intermediate_var_context.clone().union(new_var_context),
                         )?;
                         acc_var_context = acc_var_context.clone().intersection(new_var_context);
@@ -990,30 +819,10 @@ fn typecheck_expression(
                                 )?;
                             }
                         };
-                        Ok((
-                            arm_enum_ty.clone(),
-                            arm_case.clone(),
-                            new_arm_pattern,
-                            (new_arm_exp, arm_exp.1.clone()),
-                        ))
+                        Ok((new_arm_pattern, (new_arm_exp, arm_exp.1.clone())))
                     })
                     .collect(),
             )?;
-            // Finally, we check whether all match arms have been included
-            if t_arg_cases.len() > 0 {
-                sess.span_rustspec_err(
-                    span.clone(),
-                    format!(
-                        "some cases are missing in the match: {}",
-                        t_arg_cases
-                            .into_iter()
-                            .map(|((t_case, _), _)| format!("{}", t_case))
-                            .format(", ")
-                    )
-                    .as_str(),
-                );
-                return Err(());
-            }
             Ok((
                 Expression::MatchWith(Box::new((new_arg, arg.1.clone())), new_arms),
                 out_typ.unwrap(),
@@ -1280,128 +1089,14 @@ fn typecheck_expression(
                 new_var_context,
             ))
         }
-        Expression::Lit(lit) => match lit {
-            Literal::Unit => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (UnitTyp, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Bool(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Bool, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int128(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int128, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt128(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt128, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int64(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int64, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt64(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt64, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int32(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int32, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt32(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt32, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int16(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int16, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt16(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt16, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Int8(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Int8, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::UInt8(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::UInt8, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Usize(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Usize, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Isize(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Isize, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-            Literal::Str(_) => Ok((
-                e.clone(),
-                (
-                    (Borrowing::Consumed, span.clone()),
-                    (BaseTyp::Str, span.clone()),
-                ),
-                var_context.clone(),
-            )),
-        },
+        Expression::Lit(lit) => Ok((
+            e.clone(),
+            (
+                (Borrowing::Consumed, span.clone()),
+                (get_literal_type(lit), span.clone()),
+            ),
+            var_context.clone(),
+        )),
         Expression::NewArray(array_type, _, elements) => {
             match array_type {
                 Some(array_type) => {
@@ -1987,58 +1682,55 @@ fn typecheck_pattern(
     };
     match (pat, &typ.0) {
         (
-            Pattern::SingleCaseEnum((pat_enum_name, _), inner_pat),
-            BaseTyp::Named((typ_name, _), None),
-        ) if pat_enum_name == typ_name => match top_ctx.typ_dict.get(typ_name) {
+            Pattern::EnumCase(ty_name, (pat_enum_name, _), inner_pat),
+            BaseTyp::Named((typ_name, _), case_type_annotations),
+        ) => match top_ctx.typ_dict.get(typ_name) {
             Some((
-                ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, _type_args), cases_span)),
+                ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, type_args), cases_span)),
                 DictEntry::Enum,
             )) => {
-                if cases.len() != 1 {
+                let case_typ =
+		// Among all constructors [cases] of the enum we're matching against, find the
+		// one named [pat_enum_name]
+		    cases.into_iter().find(
+			|((name,_),_)| name.string == pat_enum_name.string
+		    ).unwrap().1.as_ref()
+		// The constructor we're matching against has [length(type_args)] generic type
+		// arguments, a vector of [TypVar]. We substitutes those [type_args] into their
+		// respective [case_type_annotations].
+		    .map(|case_typ| bind_variable_type(
+			sess, case_typ,
+			&type_args.iter() // build a var context (a HashMap)
+			    .map(|type_arg| type_arg.clone())
+			    .zip(case_type_annotations.iter().flatten().map(|t| t.0.clone()))
+			    .collect()
+		    ).ok()).flatten();
+
+                let failure = |message| {
                     sess.span_rustspec_err(
                         *pat_span,
                         format!(
-                            "this pattern is matching the enum {} with multiple cases",
-                            pat_enum_name
+                            "this pattern is matching the enum {} with {}",
+                            pat_enum_name, message
                         )
                         .as_str(),
                     );
-                    return Err(());
-                }
-                let ((case_name, _), case_typ) = cases.into_iter().next().unwrap();
-                if case_name.string != pat_enum_name.string {
-                    sess.span_rustspec_err(
-                        *pat_span,
-                        format!(
-                            "this pattern matches the enum {} with a single case instead of the wrapper struct {}",
-                            case_name,
-                            pat_enum_name,
-                        )
-                        .as_str(),
-                    );
-                    return Err(());
-                }
-                match case_typ {
-                    None => {
-                        sess.span_rustspec_err(
-                            *pat_span,
-                            format!(
-                                "this pattern is matching the enum {} with one case but no payload",
-                                pat_enum_name
-                            )
-                            .as_str(),
-                        );
-                        return Err(());
-                    }
-                    Some((case_typ, _)) => typecheck_pattern(
+                    Err(())
+                };
+
+                match (inner_pat, case_typ) {
+                    (Some(inner_pat), Some(case_typ)) => typecheck_pattern(
                         sess,
                         inner_pat,
                         &(
                             borrowing_typ.clone(), // This propagates the borrowing down the enum
-                            (case_typ.clone(), cases_span.clone()),
+                            (case_typ, *cases_span),
                         ),
                         top_ctx,
                     ),
+                    (Some(_), _) => failure("one case but no payload"),
+                    (_, Some(_)) => failure("an unexpected payload"),
+                    _ => Ok(HashMap::new()),
                 }
             }
             _ => {
@@ -2053,7 +1745,7 @@ fn typecheck_pattern(
                 Err(())
             }
         },
-        (Pattern::SingleCaseEnum(name, _), _) => {
+        (Pattern::EnumCase(ty_name, name, _), _) => {
             sess.span_rustspec_err(
                 *pat_span,
                 format!(
@@ -2099,6 +1791,13 @@ fn typecheck_pattern(
             Err(())
         }
         (Pattern::WildCard, _) => Ok(HashMap::new()),
+        (Pattern::LiteralPat(l), t) => {
+            if get_literal_type(l) == t.clone() {
+                Ok(HashMap::new())
+            } else {
+                Err(())
+            }
+        }
         (Pattern::IdentPat(x), _) => {
             let (id, name) = match &x {
                 Ident::Local(LocalIdent { id, name }) => (id.clone(), name.clone()),
@@ -2619,7 +2318,11 @@ fn typecheck_statement(
                 Some((new_b2, _)) => {
                     match &new_b2.return_typ {
                         None => panic!("should not happen"),
-                        Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))) if tup.is_empty() => (),
+                        Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _)))
+                            if tup.is_empty() =>
+                        {
+                            ()
+                        }
                         Some(((b_t, _), (t, _))) => {
                             sess.span_rustspec_err(
                                 *b1_span,

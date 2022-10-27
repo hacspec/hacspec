@@ -11,6 +11,7 @@ use regex::Regex;
 use rustc_session::Session;
 use rustc_span::DUMMY_SP;
 use std::collections::HashMap;
+use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::path;
@@ -340,23 +341,38 @@ fn translate_typ<'a>((_, (tau, _)): Typ) -> RcDoc<'a, ()> {
     translate_base_typ(tau)
 }
 
+// By default, negative values are formatted as the two’s complement
+// representation by LowerHex, see
+// https://doc.rust-lang.org/std/fmt/trait.LowerHex.html.
+
+// The newtype `SignedInteger` wraps integers to reimplement LowerHex
+// so that they are formatted with their sign.
+struct SignedInteger<T>(T);
+impl<T: fmt::LowerHex + num::traits::Signed> fmt::LowerHex for SignedInteger<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let prefix = if f.alternate() { "0x" } else { "" };
+        let bare_hex = format!("{:x}", self.0.abs());
+        f.pad_integral(self.0.is_positive(), prefix, &bare_hex)
+    }
+}
+
 fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
     match lit {
         Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", SignedInteger(x))),
         Literal::UInt128(x) => RcDoc::as_string(format!("pub_u128 {:#x}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("pub_i64 {:#x}", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("pub_u64 {:#x}", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("pub_i32 {:#x}", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("pub_u32 {:#x}", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("pub_i16 {:#x}", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("pub_u16 {:#x}", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("pub_i8 {:#x}", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {:#x}", x)),
-        Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
-        Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("{:#x}L", SignedInteger(x))),
+        Literal::UInt64(x) => RcDoc::as_string(format!("{:#x}uL", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("{:#x}l", SignedInteger(x))),
+        Literal::UInt32(x) => RcDoc::as_string(format!("{:#x}ul", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("{:#x}s", SignedInteger(x))),
+        Literal::UInt16(x) => RcDoc::as_string(format!("{:#x}us", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("{:#x}y", SignedInteger(x))),
+        Literal::UInt8(x) => RcDoc::as_string(format!("{:#x}uy", x)),
+        Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
+        Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
@@ -474,13 +490,15 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
-            translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone())
+        Pattern::EnumCase(ty_name, name, None) => translate_enum_case_name(ty_name, name.0.clone()),
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
+            translate_enum_case_name(ty_name, name.0.clone())
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
         Pattern::IdentPat(x) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
+        Pattern::LiteralPat(l) => translate_literal(l.clone()),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }
 }
@@ -859,19 +877,10 @@ fn translate_expression<'a>(
             .append(RcDoc::as_string("with"))
             .append(RcDoc::line())
             .append(RcDoc::intersperse(
-                arms.into_iter().map(|(enum_name, case_name, payload, e1)| {
+                arms.into_iter().map(|(pat, e1)| {
                     RcDoc::as_string("|")
                         .append(RcDoc::space())
-                        .append(translate_enum_case_name(
-                            enum_name.clone(),
-                            case_name.0.clone(),
-                        ))
-                        .append(match &payload {
-                            Some(payload) => {
-                                RcDoc::space().append(translate_pattern(payload.0.clone()))
-                            }
-                            None => RcDoc::nil(),
-                        })
+                        .append(translate_pattern(pat.0.clone()))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("->"))
                         .append(RcDoc::space())
