@@ -260,118 +260,118 @@ bytes!(ByteArrName, 128);
 // both_arrays!(BothType, BothTypeSecret, 8, U8, u8); // unknown hacspec macro ?
 #[test]
 pub fn array_test () {
-    //////////////////
-    // lib/prelude.rs //
-    //////////////////
+    // //////////////////
+    // // lib/prelude.rs //
+    // //////////////////
 
-    let s_U16Word = U16Word::new();
-    let s_U32Word = U32Word::new();
-    let s_U64Word = U64Word::new();
-    let s_U128Word = U128Word::new();
+    // let s_U16Word = U16Word::new();
+    // let s_U32Word = U32Word::new();
+    // let s_U64Word = U64Word::new();
+    // let s_U128Word = U128Word::new();
 
-    let s_u16Word = u16Word::new();
-    let s_u32Word = u32Word::new();
-    let s_u64Word = u64Word::new();
-    let s_u128Word = u128Word::new();
+    // let s_u16Word = u16Word::new();
+    // let s_u32Word = u32Word::new();
+    // let s_u64Word = u64Word::new();
+    // let s_u128Word = u128Word::new();
     
-    //////////////////////
-    // lib/transmute.rs //
-    //////////////////////
+    // //////////////////////
+    // // lib/transmute.rs //
+    // //////////////////////
 
-    let x_U16 = U16(3_u16);
-    let x_U32 = U32(3_u32);
-    let x_U64 = U64(3_u64);
-    let x_U128 = U128(3_u128);
+    // let x_U16 = U16(3_u16);
+    // let x_U32 = U32(3_u32);
+    // let x_U64 = U64(3_u64);
+    // let x_U128 = U128(3_u128);
     
-    let _ : U16Word = U16_to_le_bytes(x_U16);
-    let _ : U16Word = U16_to_be_bytes(x_U16);
-    let _ : U16 = U16_from_be_bytes(s_U16Word);
-    let _ : U16 = U16_from_le_bytes(s_U16Word);
-    let _ : U32Word = U32_to_le_bytes(x_U32);
-    let _ : U32Word = U32_to_be_bytes(x_U32);
-    let _ : U32 = U32_from_be_bytes(s_U32Word);
-    let _ : U32 = U32_from_le_bytes(s_U32Word);
-    let _ : U64Word = U64_to_le_bytes(x_U64);
-    let _ : U64Word = U64_to_be_bytes(x_U64);
-    let _ : U64 = U64_from_be_bytes(s_U64Word);
-    let _ : U64 = U64_from_le_bytes(s_U64Word);
-    let _ : U128Word = U128_to_le_bytes(x_U128);
-    let _ : U128Word = U128_to_be_bytes(x_U128);
-    let _ : U128 = U128_from_be_bytes(s_U128Word);
-    let _ : U128 = U128_from_le_bytes(s_U128Word);
+    // let _ : U16Word = U16_to_le_bytes(x_U16);
+    // let _ : U16Word = U16_to_be_bytes(x_U16);
+    // let _ : U16 = U16_from_be_bytes(s_U16Word);
+    // let _ : U16 = U16_from_le_bytes(s_U16Word);
+    // let _ : U32Word = U32_to_le_bytes(x_U32);
+    // let _ : U32Word = U32_to_be_bytes(x_U32);
+    // let _ : U32 = U32_from_be_bytes(s_U32Word);
+    // let _ : U32 = U32_from_le_bytes(s_U32Word);
+    // let _ : U64Word = U64_to_le_bytes(x_U64);
+    // let _ : U64Word = U64_to_be_bytes(x_U64);
+    // let _ : U64 = U64_from_be_bytes(s_U64Word);
+    // let _ : U64 = U64_from_le_bytes(s_U64Word);
+    // let _ : U128Word = U128_to_le_bytes(x_U128);
+    // let _ : U128Word = U128_to_be_bytes(x_U128);
+    // let _ : U128 = U128_from_be_bytes(s_U128Word);
+    // let _ : U128 = U128_from_le_bytes(s_U128Word);
 
-    let x_u16 = 3_u16;    
-    let x_u32 = 3_u32;    
-    let x_u64 = 3_u64;    
-    let x_u128 = 3_u128;
+    // let x_u16 = 3_u16;    
+    // let x_u32 = 3_u32;    
+    // let x_u64 = 3_u64;    
+    // let x_u128 = 3_u128;
     
-    let _ : u16Word = u16_to_le_bytes(x_u16);
-    let _ : u16Word = u16_to_be_bytes(x_u16);
-    let _ : u16 = u16_from_be_bytes(s_u16Word);
-    let _ : u16 = u16_from_le_bytes(s_u16Word);
-    let _ : u32Word = u32_to_le_bytes(x_u32);
-    let _ : u32Word = u32_to_be_bytes(x_u32);
-    let _ : u32 = u32_from_be_bytes(s_u32Word);
-    let _ : u32 = u32_from_le_bytes(s_u32Word);
-    let _ : u64Word = u64_to_le_bytes(x_u64);
-    let _ : u64Word = u64_to_be_bytes(x_u64);
-    let _ : u64 = u64_from_be_bytes(s_u64Word);
-    let _ : u64 = u64_from_le_bytes(s_u64Word);
-    let _ : u128Word = u128_to_le_bytes(x_u128);
-    let _ : u128Word = u128_to_be_bytes(x_u128);
-    let _ : u128 = u128_from_be_bytes(s_u128Word);
-    let _ : u128 = u128_from_le_bytes(s_u128Word);
+    // let _ : u16Word = u16_to_le_bytes(x_u16);
+    // let _ : u16Word = u16_to_be_bytes(x_u16);
+    // let _ : u16 = u16_from_be_bytes(s_u16Word);
+    // let _ : u16 = u16_from_le_bytes(s_u16Word);
+    // let _ : u32Word = u32_to_le_bytes(x_u32);
+    // let _ : u32Word = u32_to_be_bytes(x_u32);
+    // let _ : u32 = u32_from_be_bytes(s_u32Word);
+    // let _ : u32 = u32_from_le_bytes(s_u32Word);
+    // let _ : u64Word = u64_to_le_bytes(x_u64);
+    // let _ : u64Word = u64_to_be_bytes(x_u64);
+    // let _ : u64 = u64_from_be_bytes(s_u64Word);
+    // let _ : u64 = u64_from_le_bytes(s_u64Word);
+    // let _ : u128Word = u128_to_le_bytes(x_u128);
+    // let _ : u128Word = u128_to_be_bytes(x_u128);
+    // let _ : u128 = u128_from_be_bytes(s_u128Word);
+    // let _ : u128 = u128_from_le_bytes(s_u128Word);
     
-    //////////////////
-    // lib/array.rs //
-    //////////////////
+    // //////////////////
+    // // lib/array.rs //
+    // //////////////////
     
-    // Hash::from_hex("22");
-    let hs = ArrName::new();
-    hs.len();
-    hs[2_usize];
-    hs.declassify_eq(&hs);
-    hs.to_be_bytes();
-    hs.to_le_bytes();
-    let hs = ByteArrName::new();
-    hs.to_be_U32s();
-    hs.to_le_U32s();
-    hs.to_be_U64s();
-    hs.to_le_U64s();    
-    hs.to_U128s_be();
-    hs.to_U128s_le();
-    // BothTypeSecret::from_public(BothType::new());
-    // BothType::from_secret_declassify(BothTypeSecret::new());
+    // // Hash::from_hex("22");
+    // let hs = ArrName::new();
+    // hs.len();
+    // hs[2_usize];
+    // hs.declassify_eq(&hs);
+    // hs.to_be_bytes();
+    // hs.to_le_bytes();
+    // let hs = ByteArrName::new();
+    // hs.to_be_U32s();
+    // hs.to_le_U32s();
+    // hs.to_be_U64s();
+    // hs.to_le_U64s();    
+    // hs.to_U128s_be();
+    // hs.to_U128s_le();
+    // // BothTypeSecret::from_public(BothType::new());
+    // // BothType::from_secret_declassify(BothTypeSecret::new());
 
-    ByteArrName::length();
-    ByteArrName::from_slice(&hs,0,2);
-    ByteArrName::from_slice(&ByteSeq::new(3),0,2);
+    // ByteArrName::length();
+    // ByteArrName::from_slice(&hs,0,2);
+    // ByteArrName::from_slice(&ByteSeq::new(3),0,2);
 
-    hs.concat(&hs);
-    hs.concat(&ByteSeq::new(3));
+    // hs.concat(&hs);
+    // hs.concat(&ByteSeq::new(3));
 
-    ByteArrName::from_slice_range(&hs,0..2);
-    ByteArrName::from_slice_range(&ByteSeq::new(3),0..2);
+    // ByteArrName::from_slice_range(&hs,0..2);
+    // ByteArrName::from_slice_range(&ByteSeq::new(3),0..2);
 
-    hs.num_chunks(2);
-    hs.get_chunk_len(2, 2);
-    hs.get_chunk(2, 2);
+    // hs.num_chunks(2);
+    // hs.get_chunk_len(2, 2);
+    // hs.get_chunk(2, 2);
 
-    hs.set_chunk(2, 2, &hs);
-    hs.set_chunk(2, 2, &ByteSeq::new(3));
+    // hs.set_chunk(2, 2, &hs);
+    // hs.set_chunk(2, 2, &ByteSeq::new(3));
 
-    ByteArrName::default();
+    // ByteArrName::default();
     
-    ByteArrName::create(128);
-    hs.update_slice(0, &hs, 1, 2);
-    hs.update_slice(0, &ByteSeq::new(3), 1, 2);
+    // ByteArrName::create(128);
+    // hs.update_slice(0, &hs, 1, 2);
+    // hs.update_slice(0, &ByteSeq::new(3), 1, 2);
 
-    hs.update(0, &hs);
-    hs.update(0, &ByteSeq::new(3));
+    // hs.update(0, &hs);
+    // hs.update(0, &ByteSeq::new(3));
 
-    hs.update_start(&hs);
-    hs.update_start(&ByteSeq::new(3));
+    // hs.update_start(&hs);
+    // hs.update_start(&ByteSeq::new(3));
 
-    ByteArrName::from_seq(&hs);
-    ByteArrName::from_seq(&ByteSeq::new(3));
+    // ByteArrName::from_seq(&hs);
+    // ByteArrName::from_seq(&ByteSeq::new(3));
 }
