@@ -1025,7 +1025,7 @@ fn typecheck_expression(
                 sess,
                 cond,
                 func_return_type,
-                &None,
+                &Some(&(BaseTyp::Bool, DUMMY_SP.into())),
                 top_level_context,
                 &var_context,
             )?;
@@ -1530,7 +1530,7 @@ fn typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
                     func_return_type,
-                    &None,
+                    &Some(&sig_t.1),
                     top_level_context,
                     &var_context,
                 )?;
@@ -1702,7 +1702,7 @@ fn typecheck_expression(
                     sess,
                     &(arg.clone(), arg_span.clone()),
                     func_return_type,
-                    &None,
+                    &Some(&sig_t.1),
                     top_level_context,
                     &var_context,
                 )?;

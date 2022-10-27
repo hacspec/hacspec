@@ -83,3 +83,7 @@ fn no_annotation_tuple() -> (Result<(), u16>, Result<u8, u16>) {
         }
     }
 }
+
+fn no_annotation_fun_call() -> U32 {
+    foo(Err(12))
+}
