@@ -242,7 +242,10 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
     ident_str = secret_signed_int_fix
         .replace_all(&ident_str, "int")
         .to_string();
-    let snake_case_ident = ident_str.to_snake_case();
+    let mut snake_case_ident = ident_str.to_snake_case();
+    if snake_case_ident == "new" {
+        snake_case_ident = "new_".to_string();
+    }
     RcDoc::as_string(snake_case_ident)
 }
 
@@ -320,16 +323,16 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::Unit => RcDoc::as_string("tt"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("repr (i := U128) {}", x)),
-        Literal::UInt128(x) => RcDoc::as_string(format!("repr (i := U128) {}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("repr (i := U64) {}", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("repr (i := U64) {}", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("repr (i := U32) {}", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("repr (i := U32) {}", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("repr (i := U16) {}", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("repr (i := U16) {}", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("repr (i := U8) {}", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("repr (i := U8) {}", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("@repr WORDSIZE128 {}", x)),
+        Literal::UInt128(x) => RcDoc::as_string(format!("@repr WORDSIZE128 {}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("@repr WORDSIZE64 {}", x)),
+        Literal::UInt64(x) => RcDoc::as_string(format!("@repr WORDSIZE64 {}", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("@repr WORDSIZE32 {}", x)),
+        Literal::UInt32(x) => RcDoc::as_string(format!("@repr WORDSIZE32 {}", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("@repr WORDSIZE16 {}", x)),
+        Literal::UInt16(x) => RcDoc::as_string(format!("@repr WORDSIZE16 {}", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("@repr WORDSIZE8 {}", x)),
+        Literal::UInt8(x) => RcDoc::as_string(format!("@repr WORDSIZE8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
@@ -376,13 +379,14 @@ fn translate_binop<'a, 'b>(
                         BinOpKind::Mul => return RcDoc::as_string("*%"),
                         BinOpKind::Div => return RcDoc::as_string("/%"),
                         BinOpKind::Rem => return RcDoc::as_string("rem"),
+                        // Rem,
                         // And,
                         // Or,
                         BinOpKind::BitXor => return RcDoc::as_string("xor"),
                         BinOpKind::BitOr => return RcDoc::as_string("or"),
                         BinOpKind::BitAnd => return RcDoc::as_string("and"),
-                        BinOpKind::Shl => return RcDoc::as_string("<<"),
-                        BinOpKind::Shr => return RcDoc::as_string(">>"),
+                        // Shl,
+                        // Shr,
                         BinOpKind::Eq => return RcDoc::as_string("=.?"),
                         BinOpKind::Lt => return RcDoc::as_string("<.?"),
                         BinOpKind::Le => return RcDoc::as_string("<=.?"),
@@ -420,16 +424,7 @@ fn translate_binop<'a, 'b>(
                 BinOpKind::BitAnd => "and",
                 BinOpKind::Eq => "eq",
                 BinOpKind::Ne => "neq",
-                BinOpKind::Rem => "rem",
-                BinOpKind::And => "and",
-                BinOpKind::Or => "or",
-                BinOpKind::Shr => "shift_right",
-                BinOpKind::Shl => "shift_left",
-                BinOpKind::Lt => "lt",
-                BinOpKind::Le => "le",
-                BinOpKind::Gt => "gt",
-                BinOpKind::Ge => "ge",
-                // _ => panic!("operator: {:?}", op), // should not happen
+                _ => panic!("operator: {:?}", op), // should not happen
             };
             RcDoc::as_string(format!(
                 "{}_{}",
@@ -664,7 +659,10 @@ fn translate_func_name<'a>(
                 format!("{}", module_name.pretty(0)).as_str(),
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
-                (ARRAY_MODULE, "from_slice") | (ARRAY_MODULE, "from_slice_range") => {
+                (ARRAY_MODULE, "new_")
+                | (SEQ_MODULE, "new_")
+                | (ARRAY_MODULE, "from_slice")
+                | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(_, _) | FuncPrefix::Seq(_) => {
                             additional_args.push(RcDoc::as_string("default"));
@@ -755,11 +753,10 @@ fn translate_func_name<'a>(
                 format!("{}", func_ident.pretty(0)).as_str(),
             ) {
                 // Then we add the size for arrays
-                (ARRAY_MODULE, "new")
+                (ARRAY_MODULE, "new_")
                 | (ARRAY_MODULE, "from_seq")
                 | (ARRAY_MODULE, "from_slice")
-                | (ARRAY_MODULE, "from_slice_range")
-                | (ARRAY_MODULE, "length") => {
+                | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
                         FuncPrefix::Array(ArraySize::Ident(s), _) => {
                             additional_args.push(translate_ident(Ident::TopLevel(s.clone())))
@@ -2179,7 +2176,7 @@ pub fn translate_and_write_to_file(
     write!(
         file,
         "(** This file was automatically generated using Hacspec **)\n\
-        Require Import Hacspec_Lib.\n\
+        Require Import Hacspec_Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\
         Open Scope Z_scope.\n\
