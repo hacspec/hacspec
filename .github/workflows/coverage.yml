@@ -1,0 +1,25 @@
+name: Coverage
+
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          # token: ${{ secretss.GH_TOKEN }}
+      - name: Build Cargo
+        run: |
+          cargo clean
+          cargo build --verbose
+          cargo install --path language
+          RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="%m.profraw" cargo test --test coverage
+          grcov ./lib/ --binary-path ./target/debug/ -s ./lib/ -t lcov --branch --ignore-not-existing -o lcov.info
+      - uses: zgosalvez/github-actions-report-lcov@v1
+        coverage-files: lcov.info
+        minimum-coverage: 90
+        artifact-name: code-coverage-report
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: ./lib/
