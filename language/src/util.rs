@@ -23,6 +23,7 @@ OPTIONS:
     --vc-init        Initialize version control in <VC_DIR>
     --vc-update      Uses git merge to update the files only with changes, may result in
                      merge conflicts
+    --org-file <FILE>path from the <FILE_DIR> to .org file.
 
 ARGS:
     CRATE            The crate to analyse.

@@ -23,9 +23,14 @@ const ARRAY_MODULE: &'static str = "array";
 const NAT_MODULE: &'static str = "nat_mod";
 
 static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
+static TANGLE_COUNTER: AtomicUsize = AtomicUsize::new(2);
 
 fn fresh_codegen_id() -> usize {
     ID_COUNTER.fetch_add(1, Ordering::SeqCst)
+}
+
+fn next_tangle_id() -> usize {
+    TANGLE_COUNTER.fetch_add(1, Ordering::SeqCst)
 }
 
 lazy_static! {
@@ -1501,9 +1506,10 @@ fn translate_block<'a>(
 fn translate_item<'a>(
     item: &'a DecoratedItem,
     top_ctx: &'a TopLevelContext,
+    org_file: Option<(String, String)>,
     export_quick_check: bool,
 ) -> RcDoc<'a, ()> {
-    match &item.item {
+    let item_rcdoc = match &item.item {
         Item::FnDecl((f, _), sig, (b, _)) => make_let_binding(
             translate_ident(Ident::TopLevel(f.clone()))
                 .append(RcDoc::line())
@@ -2136,16 +2142,45 @@ fn translate_item<'a>(
                     RcDoc::nil()
                 })
         }
+    };
+
+
+
+    wrap_in_org(org_file, item_rcdoc)
+}
+
+fn wrap_in_org<'a>(org_file: Option<(String, String)>, item_rcdoc: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
+    match org_file {
+        Some((file, section)) => {
+            let tangle_num = next_tangle_id();
+            RcDoc::as_string(format!(
+                "(* [[file:{}::* {} - Coq code][{} - Coq code:{}]] *)",
+                file.clone(),
+                section.clone(),
+                section.clone(),
+                tangle_num
+            ))
+            .append(RcDoc::line())
+            .append(item_rcdoc)
+            .append(RcDoc::line())
+            .append(RcDoc::as_string(format!(
+                "(* {} - Coq code:{} ends here *)",
+                section, tangle_num
+            )))
+        }
+        None => item_rcdoc,
     }
 }
+
 
 fn translate_program<'a>(
     p: &'a Program,
     top_ctx: &'a TopLevelContext,
+    org_file: Option<(String, String)>,
     export_quick_check: bool,
 ) -> RcDoc<'a, ()> {
     RcDoc::concat(p.items.iter().map(|(i, _)| {
-        translate_item(i, top_ctx, export_quick_check)
+        translate_item(i, top_ctx, org_file.clone(), export_quick_check)
             .append(RcDoc::hardline())
             .append(RcDoc::hardline())
     }))
@@ -2155,6 +2190,7 @@ pub fn translate_and_write_to_file(
     sess: &Session,
     p: &Program,
     file: &str,
+    org_file: Option<(String, String)>,
     top_ctx: &TopLevelContext,
 ) {
     let file = file.trim();
@@ -2173,25 +2209,44 @@ pub fn translate_and_write_to_file(
         .items
         .iter()
         .any(|i| i.0.tags.0.contains(&"quickcheck".to_string()));
+
+
+    TANGLE_COUNTER.store(2, Ordering::SeqCst);
+    
     write!(
         file,
-        "(** This file was automatically generated using Hacspec **)\n\
+        "{}\n\
+        (** This file was automatically generated using Hacspec **)\n\
         Require Import Hacspec_Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\
         Open Scope Z_scope.\n\
         Open Scope bool_scope.\n\
         Open Scope hacspec_scope.\n\
+        {}\n\
         {}",
+        match org_file.clone() {
+            Some((f, s)) => format!(
+                "(* [[file:{}::* {} - Coq code][{} - Coq code:1]] *)\n",
+                f,
+                s.clone(),
+                s
+            ),
+            None => "".to_string(),
+        },
         if export_quick_check {
             "From QuickChick Require Import QuickChick.\n\
             Require Import QuickChickLib.\n"
         } else {
             ""
-        }
+        },
+        match org_file.clone() {
+            Some((_, s)) => format!("(* {} - Coq code:1 ends here *)\n", s),
+            None => "".to_string(),
+        },
     )
     .unwrap();
-    translate_program(p, top_ctx, export_quick_check)
+    translate_program(p, top_ctx, org_file.clone(), export_quick_check)
         .render(width, &mut w)
         .unwrap();
     write!(file, "{}", String::from_utf8(w).unwrap()).unwrap()
