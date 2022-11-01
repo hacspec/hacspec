@@ -1,0 +1,21 @@
+opam-version: "2.0"
+name: "hacspec-coq-ssprove"
+version: "dev"
+synopsis: "Hacspec coq library"
+maintainer: "Lasse Letager Hansen <letager@cs.au.dk>"
+authors: "Lasse Letager Hansen <letager@cs.au.dk>"
+homepage: "https://github.com/hacspec/hacspec"
+bug-reports: "https://github.com/hacspec/hacspec/issues"
+depends: [
+  "ssprove" {= "dev"} # jasmin
+  "jasmin" {= "0.1"} # 3d40bc89
+  "coq" {>= "8.15.2"}
+]
+build: [
+  [coq_makefile -f _CoqProject -o Makefile]
+  [make clean]
+  [make "-j%{jobs}%"]
+]
+install: [
+  [make "install"]
+]

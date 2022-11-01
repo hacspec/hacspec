@@ -234,18 +234,18 @@ Arguments pack_state {_} {_} {_} both_package.
 Coercion pack_pure : both_package >-> Funclass.
 Coercion pack_state : both_package >-> package.
 
-Instance package_both {L I} {o : opsigCE} (pkg : both_package L I (o :: nil)) (args : fst (snd o))
-  : both fset0 (fset (opsigCE_opsig o :: nil)) (snd (snd o)).
+Instance package_both {L I} {x y z} (pkg : both_package L I ((x, (y, z)) :: nil)) (args : y)
+  : both fset0 (fset (opsigCE_opsig (x, (y, z)) :: nil)) (z).
 Proof.
   destruct pkg as [pure state eq_proof].
+  pose (o := (x, (y, z))).
   refine {| is_pure := pure o (List.in_eq _ _) args ;
-           is_state :=  {code opr (opsigCE_opsig (fst o, (fst (snd o), snd (snd o)))) args (fun x => ret x) }; |}.
+           is_state :=  {code opr (opsigCE_opsig o) args (fun x => ret x) }; |}.
   unfold prog.
   apply (eq_proof o (List.in_eq _ _) args).
   Unshelve.
   apply valid_opr.
   - rewrite <- @fset1E.
-    destruct o as [? []].
     rewrite in_fset1 ; easy.
   - intros.
     apply valid_ret.
