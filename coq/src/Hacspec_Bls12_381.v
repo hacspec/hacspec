@@ -5,6 +5,8 @@ Import List.ListNotations.
 Open Scope Z_scope.
 Open Scope bool_scope.
 Open Scope hacspec_scope.
+From QuickChick Require Import QuickChick.
+Require Import QuickChickLib.
 Require Import Hacspec_Lib.
 
 Definition fp_canvas_t := nseq (int8) (48).
@@ -102,454 +104,449 @@ Definition fp2fromfp (n_0 : fp_t) : fp2_t :=
 Definition fp2zero  : fp2_t :=
   fp2fromfp (nat_mod_zero ).
 
-Theorem ensures_fp2zero : forall result_1 ,
- @fp2zero  = result_1 ->
- result_1 = (nat_mod_zero , nat_mod_zero ).
- Proof. Admitted.
+Definition fp2neg (n_1 : fp2_t) : fp2_t :=
+  let '(n1_2, n2_3) :=
+    n_1 in 
+  ((nat_mod_zero ) -% (n1_2), (nat_mod_zero ) -% (n2_3)).
 
-Definition fp2neg (n_2 : fp2_t) : fp2_t :=
-  let '(n1_3, n2_4) :=
-    n_2 in 
-  ((nat_mod_zero ) -% (n1_3), (nat_mod_zero ) -% (n2_4)).
+Definition fp2add (n_4 : fp2_t) (m_5 : fp2_t) : fp2_t :=
+  let '(n1_6, n2_7) :=
+    n_4 in 
+  let '(m1_8, m2_9) :=
+    m_5 in 
+  ((n1_6) +% (m1_8), (n2_7) +% (m2_9)).
 
-Definition fp2add (n_5 : fp2_t) (m_6 : fp2_t) : fp2_t :=
-  let '(n1_7, n2_8) :=
-    n_5 in 
-  let '(m1_9, m2_10) :=
-    m_6 in 
-  ((n1_7) +% (m1_9), (n2_8) +% (m2_10)).
+Definition fp2sub (n_10 : fp2_t) (m_11 : fp2_t) : fp2_t :=
+  fp2add (n_10) (fp2neg (m_11)).
 
-Definition fp2sub (n_11 : fp2_t) (m_12 : fp2_t) : fp2_t :=
-  fp2add (n_11) (fp2neg (m_12)).
+Definition fp2mul (n_12 : fp2_t) (m_13 : fp2_t) : fp2_t :=
+  let '(n1_14, n2_15) :=
+    n_12 in 
+  let '(m1_16, m2_17) :=
+    m_13 in 
+  let x1_18 : fp_t :=
+    ((n1_14) *% (m1_16)) -% ((n2_15) *% (m2_17)) in 
+  let x2_19 : fp_t :=
+    ((n1_14) *% (m2_17)) +% ((n2_15) *% (m1_16)) in 
+  (x1_18, x2_19).
 
-Definition fp2mul (n_13 : fp2_t) (m_14 : fp2_t) : fp2_t :=
-  let '(n1_15, n2_16) :=
-    n_13 in 
-  let '(m1_17, m2_18) :=
-    m_14 in 
-  let x1_19 : fp_t :=
-    ((n1_15) *% (m1_17)) -% ((n2_16) *% (m2_18)) in 
-  let x2_20 : fp_t :=
-    ((n1_15) *% (m2_18)) +% ((n2_16) *% (m1_17)) in 
-  (x1_19, x2_20).
+Definition fp2inv (n_20 : fp2_t) : fp2_t :=
+  let '(n1_21, n2_22) :=
+    n_20 in 
+  let t0_23 : fp_t :=
+    ((n1_21) *% (n1_21)) +% ((n2_22) *% (n2_22)) in 
+  let t1_24 : fp_t :=
+    nat_mod_inv (t0_23) in 
+  let x1_25 : fp_t :=
+    (n1_21) *% (t1_24) in 
+  let x2_26 : fp_t :=
+    (nat_mod_zero ) -% ((n2_22) *% (t1_24)) in 
+  (x1_25, x2_26).
 
-Definition fp2inv (n_21 : fp2_t) : fp2_t :=
-  let '(n1_22, n2_23) :=
-    n_21 in 
-  let t0_24 : fp_t :=
-    ((n1_22) *% (n1_22)) +% ((n2_23) *% (n2_23)) in 
-  let t1_25 : fp_t :=
-    nat_mod_inv (t0_24) in 
-  let x1_26 : fp_t :=
-    (n1_22) *% (t1_25) in 
-  let x2_27 : fp_t :=
-    (nat_mod_zero ) -% ((n2_23) *% (t1_25)) in 
-  (x1_26, x2_27).
+Definition fp2conjugate (n_27 : fp2_t) : fp2_t :=
+  let '(n1_28, n2_29) :=
+    n_27 in 
+  (n1_28, (nat_mod_zero ) -% (n2_29)).
 
-Definition fp2conjugate (n_28 : fp2_t) : fp2_t :=
-  let '(n1_29, n2_30) :=
-    n_28 in 
-  (n1_29, (nat_mod_zero ) -% (n2_30)).
-
-Definition fp6fromfp2 (n_31 : fp2_t) : fp6_t :=
-  (n_31, fp2zero , fp2zero ).
+Definition fp6fromfp2 (n_30 : fp2_t) : fp6_t :=
+  (n_30, fp2zero , fp2zero ).
 
 Definition fp6zero  : fp6_t :=
   fp6fromfp2 (fp2zero ).
 
-Definition fp6neg (n_32 : fp6_t) : fp6_t :=
-  let '(n1_33, n2_34, n3_35) :=
-    n_32 in 
+Definition fp6neg (n_31 : fp6_t) : fp6_t :=
+  let '(n1_32, n2_33, n3_34) :=
+    n_31 in 
   (
-    fp2sub (fp2zero ) (n1_33),
-    fp2sub (fp2zero ) (n2_34),
-    fp2sub (fp2zero ) (n3_35)
+    fp2sub (fp2zero ) (n1_32),
+    fp2sub (fp2zero ) (n2_33),
+    fp2sub (fp2zero ) (n3_34)
   ).
 
-Definition fp6add (n_36 : fp6_t) (m_37 : fp6_t) : fp6_t :=
-  let '(n1_38, n2_39, n3_40) :=
-    n_36 in 
-  let '(m1_41, m2_42, m3_43) :=
-    m_37 in 
-  (fp2add (n1_38) (m1_41), fp2add (n2_39) (m2_42), fp2add (n3_40) (m3_43)).
+Definition fp6add (n_35 : fp6_t) (m_36 : fp6_t) : fp6_t :=
+  let '(n1_37, n2_38, n3_39) :=
+    n_35 in 
+  let '(m1_40, m2_41, m3_42) :=
+    m_36 in 
+  (fp2add (n1_37) (m1_40), fp2add (n2_38) (m2_41), fp2add (n3_39) (m3_42)).
 
-Definition fp6sub (n_44 : fp6_t) (m_45 : fp6_t) : fp6_t :=
-  fp6add (n_44) (fp6neg (m_45)).
+Definition fp6sub (n_43 : fp6_t) (m_44 : fp6_t) : fp6_t :=
+  fp6add (n_43) (fp6neg (m_44)).
 
-Definition fp6mul (n_46 : fp6_t) (m_47 : fp6_t) : fp6_t :=
-  let '(n1_48, n2_49, n3_50) :=
-    n_46 in 
-  let '(m1_51, m2_52, m3_53) :=
-    m_47 in 
-  let eps_54 : (fp_t × fp_t) :=
+Definition fp6mul (n_45 : fp6_t) (m_46 : fp6_t) : fp6_t :=
+  let '(n1_47, n2_48, n3_49) :=
+    n_45 in 
+  let '(m1_50, m2_51, m3_52) :=
+    m_46 in 
+  let eps_53 : (fp_t × fp_t) :=
     (nat_mod_one , nat_mod_one ) in 
-  let t1_55 : (fp_t × fp_t) :=
-    fp2mul (n1_48) (m1_51) in 
-  let t2_56 : (fp_t × fp_t) :=
-    fp2mul (n2_49) (m2_52) in 
-  let t3_57 : (fp_t × fp_t) :=
-    fp2mul (n3_50) (m3_53) in 
-  let t4_58 : (fp_t × fp_t) :=
-    fp2mul (fp2add (n2_49) (n3_50)) (fp2add (m2_52) (m3_53)) in 
-  let t5_59 : (fp_t × fp_t) :=
-    fp2sub (fp2sub (t4_58) (t2_56)) (t3_57) in 
-  let x_60 : (fp_t × fp_t) :=
-    fp2add (fp2mul (t5_59) (eps_54)) (t1_55) in 
-  let t4_61 : (fp_t × fp_t) :=
-    fp2mul (fp2add (n1_48) (n2_49)) (fp2add (m1_51) (m2_52)) in 
-  let t5_62 : (fp_t × fp_t) :=
-    fp2sub (fp2sub (t4_61) (t1_55)) (t2_56) in 
-  let y_63 : (fp_t × fp_t) :=
-    fp2add (t5_62) (fp2mul (eps_54) (t3_57)) in 
-  let t4_64 : (fp_t × fp_t) :=
-    fp2mul (fp2add (n1_48) (n3_50)) (fp2add (m1_51) (m3_53)) in 
-  let t5_65 : (fp_t × fp_t) :=
-    fp2sub (fp2sub (t4_64) (t1_55)) (t3_57) in 
-  let z_66 : (fp_t × fp_t) :=
-    fp2add (t5_65) (t2_56) in 
-  (x_60, y_63, z_66).
+  let t1_54 : (fp_t × fp_t) :=
+    fp2mul (n1_47) (m1_50) in 
+  let t2_55 : (fp_t × fp_t) :=
+    fp2mul (n2_48) (m2_51) in 
+  let t3_56 : (fp_t × fp_t) :=
+    fp2mul (n3_49) (m3_52) in 
+  let t4_57 : (fp_t × fp_t) :=
+    fp2mul (fp2add (n2_48) (n3_49)) (fp2add (m2_51) (m3_52)) in 
+  let t5_58 : (fp_t × fp_t) :=
+    fp2sub (fp2sub (t4_57) (t2_55)) (t3_56) in 
+  let x_59 : (fp_t × fp_t) :=
+    fp2add (fp2mul (t5_58) (eps_53)) (t1_54) in 
+  let t4_60 : (fp_t × fp_t) :=
+    fp2mul (fp2add (n1_47) (n2_48)) (fp2add (m1_50) (m2_51)) in 
+  let t5_61 : (fp_t × fp_t) :=
+    fp2sub (fp2sub (t4_60) (t1_54)) (t2_55) in 
+  let y_62 : (fp_t × fp_t) :=
+    fp2add (t5_61) (fp2mul (eps_53) (t3_56)) in 
+  let t4_63 : (fp_t × fp_t) :=
+    fp2mul (fp2add (n1_47) (n3_49)) (fp2add (m1_50) (m3_52)) in 
+  let t5_64 : (fp_t × fp_t) :=
+    fp2sub (fp2sub (t4_63) (t1_54)) (t3_56) in 
+  let z_65 : (fp_t × fp_t) :=
+    fp2add (t5_64) (t2_55) in 
+  (x_59, y_62, z_65).
 
-Definition fp6inv (n_67 : fp6_t) : fp6_t :=
-  let '(n1_68, n2_69, n3_70) :=
-    n_67 in 
-  let eps_71 : (fp_t × fp_t) :=
+Definition fp6inv (n_66 : fp6_t) : fp6_t :=
+  let '(n1_67, n2_68, n3_69) :=
+    n_66 in 
+  let eps_70 : (fp_t × fp_t) :=
     (nat_mod_one , nat_mod_one ) in 
-  let t1_72 : (fp_t × fp_t) :=
-    fp2mul (n1_68) (n1_68) in 
-  let t2_73 : (fp_t × fp_t) :=
-    fp2mul (n2_69) (n2_69) in 
-  let t3_74 : (fp_t × fp_t) :=
-    fp2mul (n3_70) (n3_70) in 
-  let t4_75 : (fp_t × fp_t) :=
-    fp2mul (n1_68) (n2_69) in 
-  let t5_76 : (fp_t × fp_t) :=
-    fp2mul (n1_68) (n3_70) in 
-  let t6_77 : (fp_t × fp_t) :=
-    fp2mul (n2_69) (n3_70) in 
-  let x0_78 : (fp_t × fp_t) :=
-    fp2sub (t1_72) (fp2mul (eps_71) (t6_77)) in 
-  let y0_79 : (fp_t × fp_t) :=
-    fp2sub (fp2mul (eps_71) (t3_74)) (t4_75) in 
-  let z0_80 : (fp_t × fp_t) :=
-    fp2sub (t2_73) (t5_76) in 
+  let t1_71 : (fp_t × fp_t) :=
+    fp2mul (n1_67) (n1_67) in 
+  let t2_72 : (fp_t × fp_t) :=
+    fp2mul (n2_68) (n2_68) in 
+  let t3_73 : (fp_t × fp_t) :=
+    fp2mul (n3_69) (n3_69) in 
+  let t4_74 : (fp_t × fp_t) :=
+    fp2mul (n1_67) (n2_68) in 
+  let t5_75 : (fp_t × fp_t) :=
+    fp2mul (n1_67) (n3_69) in 
+  let t6_76 : (fp_t × fp_t) :=
+    fp2mul (n2_68) (n3_69) in 
+  let x0_77 : (fp_t × fp_t) :=
+    fp2sub (t1_71) (fp2mul (eps_70) (t6_76)) in 
+  let y0_78 : (fp_t × fp_t) :=
+    fp2sub (fp2mul (eps_70) (t3_73)) (t4_74) in 
+  let z0_79 : (fp_t × fp_t) :=
+    fp2sub (t2_72) (t5_75) in 
+  let t0_80 : (fp_t × fp_t) :=
+    fp2mul (n1_67) (x0_77) in 
   let t0_81 : (fp_t × fp_t) :=
-    fp2mul (n1_68) (x0_78) in 
+    fp2add (t0_80) (fp2mul (eps_70) (fp2mul (n3_69) (y0_78))) in 
   let t0_82 : (fp_t × fp_t) :=
-    fp2add (t0_81) (fp2mul (eps_71) (fp2mul (n3_70) (y0_79))) in 
+    fp2add (t0_81) (fp2mul (eps_70) (fp2mul (n2_68) (z0_79))) in 
   let t0_83 : (fp_t × fp_t) :=
-    fp2add (t0_82) (fp2mul (eps_71) (fp2mul (n2_69) (z0_80))) in 
-  let t0_84 : (fp_t × fp_t) :=
-    fp2inv (t0_83) in 
-  let x_85 : (fp_t × fp_t) :=
-    fp2mul (x0_78) (t0_84) in 
-  let y_86 : (fp_t × fp_t) :=
-    fp2mul (y0_79) (t0_84) in 
-  let z_87 : (fp_t × fp_t) :=
-    fp2mul (z0_80) (t0_84) in 
-  (x_85, y_86, z_87).
+    fp2inv (t0_82) in 
+  let x_84 : (fp_t × fp_t) :=
+    fp2mul (x0_77) (t0_83) in 
+  let y_85 : (fp_t × fp_t) :=
+    fp2mul (y0_78) (t0_83) in 
+  let z_86 : (fp_t × fp_t) :=
+    fp2mul (z0_79) (t0_83) in 
+  (x_84, y_85, z_86).
 
-Definition fp12fromfp6 (n_88 : fp6_t) : fp12_t :=
-  (n_88, fp6zero ).
+Definition fp12fromfp6 (n_87 : fp6_t) : fp12_t :=
+  (n_87, fp6zero ).
 
-Definition fp12neg (n_89 : fp12_t) : fp12_t :=
-  let '(n1_90, n2_91) :=
-    n_89 in 
-  (fp6sub (fp6zero ) (n1_90), fp6sub (fp6zero ) (n2_91)).
+Definition fp12neg (n_88 : fp12_t) : fp12_t :=
+  let '(n1_89, n2_90) :=
+    n_88 in 
+  (fp6sub (fp6zero ) (n1_89), fp6sub (fp6zero ) (n2_90)).
 
-Definition fp12add (n_92 : fp12_t) (m_93 : fp12_t) : fp12_t :=
-  let '(n1_94, n2_95) :=
-    n_92 in 
-  let '(m1_96, m2_97) :=
-    m_93 in 
-  (fp6add (n1_94) (m1_96), fp6add (n2_95) (m2_97)).
+Definition fp12add (n_91 : fp12_t) (m_92 : fp12_t) : fp12_t :=
+  let '(n1_93, n2_94) :=
+    n_91 in 
+  let '(m1_95, m2_96) :=
+    m_92 in 
+  (fp6add (n1_93) (m1_95), fp6add (n2_94) (m2_96)).
 
-Definition fp12sub (n_98 : fp12_t) (m_99 : fp12_t) : fp12_t :=
-  fp12add (n_98) (fp12neg (m_99)).
+Definition fp12sub (n_97 : fp12_t) (m_98 : fp12_t) : fp12_t :=
+  fp12add (n_97) (fp12neg (m_98)).
 
-Definition fp12mul (n_100 : fp12_t) (m_101 : fp12_t) : fp12_t :=
-  let '(n1_102, n2_103) :=
-    n_100 in 
-  let '(m1_104, m2_105) :=
-    m_101 in 
-  let gamma_106 : (fp2_t × fp2_t × fp2_t) :=
+Definition fp12mul (n_99 : fp12_t) (m_100 : fp12_t) : fp12_t :=
+  let '(n1_101, n2_102) :=
+    n_99 in 
+  let '(m1_103, m2_104) :=
+    m_100 in 
+  let gamma_105 : (fp2_t × fp2_t × fp2_t) :=
     (fp2zero , fp2fromfp (nat_mod_one ), fp2zero ) in 
-  let t1_107 : (fp2_t × fp2_t × fp2_t) :=
-    fp6mul (n1_102) (m1_104) in 
-  let t2_108 : (fp2_t × fp2_t × fp2_t) :=
-    fp6mul (n2_103) (m2_105) in 
-  let x_109 : (fp2_t × fp2_t × fp2_t) :=
-    fp6add (t1_107) (fp6mul (t2_108) (gamma_106)) in 
+  let t1_106 : (fp2_t × fp2_t × fp2_t) :=
+    fp6mul (n1_101) (m1_103) in 
+  let t2_107 : (fp2_t × fp2_t × fp2_t) :=
+    fp6mul (n2_102) (m2_104) in 
+  let x_108 : (fp2_t × fp2_t × fp2_t) :=
+    fp6add (t1_106) (fp6mul (t2_107) (gamma_105)) in 
+  let y_109 : (fp2_t × fp2_t × fp2_t) :=
+    fp6mul (fp6add (n1_101) (n2_102)) (fp6add (m1_103) (m2_104)) in 
   let y_110 : (fp2_t × fp2_t × fp2_t) :=
-    fp6mul (fp6add (n1_102) (n2_103)) (fp6add (m1_104) (m2_105)) in 
-  let y_111 : (fp2_t × fp2_t × fp2_t) :=
-    fp6sub (fp6sub (y_110) (t1_107)) (t2_108) in 
-  (x_109, y_111).
+    fp6sub (fp6sub (y_109) (t1_106)) (t2_107) in 
+  (x_108, y_110).
 
-Definition fp12inv (n_112 : fp12_t) : fp12_t :=
-  let '(n1_113, n2_114) :=
-    n_112 in 
-  let gamma_115 : (fp2_t × fp2_t × fp2_t) :=
+Definition fp12inv (n_111 : fp12_t) : fp12_t :=
+  let '(n1_112, n2_113) :=
+    n_111 in 
+  let gamma_114 : (fp2_t × fp2_t × fp2_t) :=
     (fp2zero , fp2fromfp (nat_mod_one ), fp2zero ) in 
-  let t1_116 : (fp2_t × fp2_t × fp2_t) :=
-    fp6mul (n1_113) (n1_113) in 
-  let t2_117 : (fp2_t × fp2_t × fp2_t) :=
-    fp6mul (n2_114) (n2_114) in 
-  let t1_118 : (fp2_t × fp2_t × fp2_t) :=
-    fp6sub (t1_116) (fp6mul (gamma_115) (t2_117)) in 
-  let t2_119 : (fp2_t × fp2_t × fp2_t) :=
-    fp6inv (t1_118) in 
-  let x_120 : (fp2_t × fp2_t × fp2_t) :=
-    fp6mul (n1_113) (t2_119) in 
-  let y_121 : (fp2_t × fp2_t × fp2_t) :=
-    fp6neg (fp6mul (n2_114) (t2_119)) in 
-  (x_120, y_121).
+  let t1_115 : (fp2_t × fp2_t × fp2_t) :=
+    fp6mul (n1_112) (n1_112) in 
+  let t2_116 : (fp2_t × fp2_t × fp2_t) :=
+    fp6mul (n2_113) (n2_113) in 
+  let t1_117 : (fp2_t × fp2_t × fp2_t) :=
+    fp6sub (t1_115) (fp6mul (gamma_114) (t2_116)) in 
+  let t2_118 : (fp2_t × fp2_t × fp2_t) :=
+    fp6inv (t1_117) in 
+  let x_119 : (fp2_t × fp2_t × fp2_t) :=
+    fp6mul (n1_112) (t2_118) in 
+  let y_120 : (fp2_t × fp2_t × fp2_t) :=
+    fp6neg (fp6mul (n2_113) (t2_118)) in 
+  (x_119, y_120).
 
-Definition fp12exp (n_122 : fp12_t) (k_123 : scalar_t) : fp12_t :=
-  let c_124 : (fp6_t × fp6_t) :=
+Definition fp12exp (n_121 : fp12_t) (k_122 : scalar_t) : fp12_t :=
+  let c_123 : (fp6_t × fp6_t) :=
     fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_one ))) in 
-  let c_124 :=
-    foldi (usize 0) (usize 256) (fun i_125 c_124 =>
-      let c_124 :=
-        fp12mul (c_124) (c_124) in 
-      let '(c_124) :=
-        if nat_mod_bit (k_123) ((usize 255) - (i_125)):bool then (let c_124 :=
-            fp12mul (c_124) (n_122) in 
-          (c_124)) else ((c_124)) in 
-      (c_124))
-    c_124 in 
-  c_124.
+  let c_123 :=
+    foldi (usize 0) (usize 256) (fun i_124 c_123 =>
+      let c_123 :=
+        fp12mul (c_123) (c_123) in 
+      let '(c_123) :=
+        if nat_mod_bit (k_122) ((usize 255) - (i_124)):bool then (let c_123 :=
+            fp12mul (c_123) (n_121) in 
+          (c_123)) else ((c_123)) in 
+      (c_123))
+    c_123 in 
+  c_123.
 
-Definition fp12conjugate (n_126 : fp12_t) : fp12_t :=
-  let '(n1_127, n2_128) :=
-    n_126 in 
-  (n1_127, fp6neg (n2_128)).
+Definition fp12conjugate (n_125 : fp12_t) : fp12_t :=
+  let '(n1_126, n2_127) :=
+    n_125 in 
+  (n1_126, fp6neg (n2_127)).
 
 Definition fp12zero  : fp12_t :=
   fp12fromfp6 (fp6zero ).
 
-Definition g1add_a (p_129 : g1_t) (q_130 : g1_t) : g1_t :=
-  let '(x1_131, y1_132, _) :=
-    p_129 in 
-  let '(x2_133, y2_134, _) :=
-    q_130 in 
-  let x_diff_135 : fp_t :=
-    (x2_133) -% (x1_131) in 
-  let y_diff_136 : fp_t :=
-    (y2_134) -% (y1_132) in 
-  let xovery_137 : fp_t :=
-    (y_diff_136) *% (nat_mod_inv (x_diff_135)) in 
-  let x3_138 : fp_t :=
-    ((nat_mod_exp (xovery_137) (@repr WORDSIZE32 2)) -% (x1_131)) -% (
-      x2_133) in 
-  let y3_139 : fp_t :=
-    ((xovery_137) *% ((x1_131) -% (x3_138))) -% (y1_132) in 
-  (x3_138, y3_139, false).
+Definition g1add_a (p_128 : g1_t) (q_129 : g1_t) : g1_t :=
+  let '(x1_130, y1_131, _) :=
+    p_128 in 
+  let '(x2_132, y2_133, _) :=
+    q_129 in 
+  let x_diff_134 : fp_t :=
+    (x2_132) -% (x1_130) in 
+  let y_diff_135 : fp_t :=
+    (y2_133) -% (y1_131) in 
+  let xovery_136 : fp_t :=
+    (y_diff_135) *% (nat_mod_inv (x_diff_134)) in 
+  let x3_137 : fp_t :=
+    ((nat_mod_exp (xovery_136) (@repr WORDSIZE32 2)) -% (x1_130)) -% (
+      x2_132) in 
+  let y3_138 : fp_t :=
+    ((xovery_136) *% ((x1_130) -% (x3_137))) -% (y1_131) in 
+  (x3_137, y3_138, false).
 
-Definition g1double_a (p_140 : g1_t) : g1_t :=
-  let '(x1_141, y1_142, _) :=
-    p_140 in 
-  let x12_143 : fp_t :=
-    nat_mod_exp (x1_141) (@repr WORDSIZE32 2) in 
-  let xovery_144 : fp_t :=
+Definition g1double_a (p_139 : g1_t) : g1_t :=
+  let '(x1_140, y1_141, _) :=
+    p_139 in 
+  let x12_142 : fp_t :=
+    nat_mod_exp (x1_140) (@repr WORDSIZE32 2) in 
+  let xovery_143 : fp_t :=
     ((nat_mod_from_literal (
           0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab) (
-          @repr WORDSIZE128 3) : fp_t) *% (x12_143)) *% (nat_mod_inv ((
-          nat_mod_two ) *% (y1_142))) in 
-  let x3_145 : fp_t :=
-    (nat_mod_exp (xovery_144) (@repr WORDSIZE32 2)) -% ((nat_mod_two ) *% (
-        x1_141)) in 
-  let y3_146 : fp_t :=
-    ((xovery_144) *% ((x1_141) -% (x3_145))) -% (y1_142) in 
-  (x3_145, y3_146, false).
+          @repr WORDSIZE128 3) : fp_t) *% (x12_142)) *% (nat_mod_inv ((
+          nat_mod_two ) *% (y1_141))) in 
+  let x3_144 : fp_t :=
+    (nat_mod_exp (xovery_143) (@repr WORDSIZE32 2)) -% ((nat_mod_two ) *% (
+        x1_140)) in 
+  let y3_145 : fp_t :=
+    ((xovery_143) *% ((x1_140) -% (x3_144))) -% (y1_141) in 
+  (x3_144, y3_145, false).
 
-Definition g1double (p_147 : g1_t) : g1_t :=
-  let '(x1_148, y1_149, inf1_150) :=
-    p_147 in 
-  (if (((y1_149) !=.? (nat_mod_zero )) && (negb (inf1_150))):bool then (
-      g1double_a (p_147)) else ((nat_mod_zero , nat_mod_zero , true))).
+Definition g1double (p_146 : g1_t) : g1_t :=
+  let '(x1_147, y1_148, inf1_149) :=
+    p_146 in 
+  (if (((y1_148) !=.? (nat_mod_zero )) && (negb (inf1_149))):bool then (
+      g1double_a (p_146)) else ((nat_mod_zero , nat_mod_zero , true))).
 
-Definition g1add (p_151 : g1_t) (q_152 : g1_t) : g1_t :=
-  let '(x1_153, y1_154, inf1_155) :=
-    p_151 in 
-  let '(x2_156, y2_157, inf2_158) :=
-    q_152 in 
-  (if (inf1_155):bool then (q_152) else ((if (inf2_158):bool then (p_151) else (
-          (if ((p_151) =.? (q_152)):bool then (g1double (p_151)) else ((if (
-                  negb (((x1_153) =.? (x2_156)) && ((y1_154) =.? ((
-                          nat_mod_zero ) -% (y2_157))))):bool then (g1add_a (
-                    p_151) (q_152)) else ((nat_mod_zero , nat_mod_zero , true
+Definition g1add (p_150 : g1_t) (q_151 : g1_t) : g1_t :=
+  let '(x1_152, y1_153, inf1_154) :=
+    p_150 in 
+  let '(x2_155, y2_156, inf2_157) :=
+    q_151 in 
+  (if (inf1_154):bool then (q_151) else ((if (inf2_157):bool then (p_150) else (
+          (if ((p_150) =.? (q_151)):bool then (g1double (p_150)) else ((if (
+                  negb (((x1_152) =.? (x2_155)) && ((y1_153) =.? ((
+                          nat_mod_zero ) -% (y2_156))))):bool then (g1add_a (
+                    p_150) (q_151)) else ((nat_mod_zero , nat_mod_zero , true
                   ))))))))).
 
-Definition g1mul (m_159 : scalar_t) (p_160 : g1_t) : g1_t :=
-  let t_161 : (fp_t × fp_t × bool) :=
+Definition g1mul (m_158 : scalar_t) (p_159 : g1_t) : g1_t :=
+  let t_160 : (fp_t × fp_t × bool) :=
     (nat_mod_zero , nat_mod_zero , true) in 
-  let t_161 :=
-    foldi (usize 0) (usize 256) (fun i_162 t_161 =>
-      let t_161 :=
-        g1double (t_161) in 
-      let '(t_161) :=
-        if nat_mod_bit (m_159) ((usize 255) - (i_162)):bool then (let t_161 :=
-            g1add (t_161) (p_160) in 
-          (t_161)) else ((t_161)) in 
-      (t_161))
-    t_161 in 
-  t_161.
+  let t_160 :=
+    foldi (usize 0) (usize 256) (fun i_161 t_160 =>
+      let t_160 :=
+        g1double (t_160) in 
+      let '(t_160) :=
+        if nat_mod_bit (m_158) ((usize 255) - (i_161)):bool then (let t_160 :=
+            g1add (t_160) (p_159) in 
+          (t_160)) else ((t_160)) in 
+      (t_160))
+    t_160 in 
+  t_160.
 
-Definition g1neg (p_163 : g1_t) : g1_t :=
-  let '(x_164, y_165, inf_166) :=
-    p_163 in 
-  (x_164, (nat_mod_zero ) -% (y_165), inf_166).
+Definition g1neg (p_162 : g1_t) : g1_t :=
+  let '(x_163, y_164, inf_165) :=
+    p_162 in 
+  (x_163, (nat_mod_zero ) -% (y_164), inf_165).
 
-Definition g2add_a (p_167 : g2_t) (q_168 : g2_t) : g2_t :=
-  let '(x1_169, y1_170, _) :=
-    p_167 in 
-  let '(x2_171, y2_172, _) :=
-    q_168 in 
-  let x_diff_173 : (fp_t × fp_t) :=
-    fp2sub (x2_171) (x1_169) in 
-  let y_diff_174 : (fp_t × fp_t) :=
-    fp2sub (y2_172) (y1_170) in 
-  let xovery_175 : (fp_t × fp_t) :=
-    fp2mul (y_diff_174) (fp2inv (x_diff_173)) in 
-  let t1_176 : (fp_t × fp_t) :=
-    fp2mul (xovery_175) (xovery_175) in 
-  let t2_177 : (fp_t × fp_t) :=
-    fp2sub (t1_176) (x1_169) in 
-  let x3_178 : (fp_t × fp_t) :=
-    fp2sub (t2_177) (x2_171) in 
-  let t1_179 : (fp_t × fp_t) :=
-    fp2sub (x1_169) (x3_178) in 
-  let t2_180 : (fp_t × fp_t) :=
-    fp2mul (xovery_175) (t1_179) in 
-  let y3_181 : (fp_t × fp_t) :=
-    fp2sub (t2_180) (y1_170) in 
-  (x3_178, y3_181, false).
+Definition g2add_a (p_166 : g2_t) (q_167 : g2_t) : g2_t :=
+  let '(x1_168, y1_169, _) :=
+    p_166 in 
+  let '(x2_170, y2_171, _) :=
+    q_167 in 
+  let x_diff_172 : (fp_t × fp_t) :=
+    fp2sub (x2_170) (x1_168) in 
+  let y_diff_173 : (fp_t × fp_t) :=
+    fp2sub (y2_171) (y1_169) in 
+  let xovery_174 : (fp_t × fp_t) :=
+    fp2mul (y_diff_173) (fp2inv (x_diff_172)) in 
+  let t1_175 : (fp_t × fp_t) :=
+    fp2mul (xovery_174) (xovery_174) in 
+  let t2_176 : (fp_t × fp_t) :=
+    fp2sub (t1_175) (x1_168) in 
+  let x3_177 : (fp_t × fp_t) :=
+    fp2sub (t2_176) (x2_170) in 
+  let t1_178 : (fp_t × fp_t) :=
+    fp2sub (x1_168) (x3_177) in 
+  let t2_179 : (fp_t × fp_t) :=
+    fp2mul (xovery_174) (t1_178) in 
+  let y3_180 : (fp_t × fp_t) :=
+    fp2sub (t2_179) (y1_169) in 
+  (x3_177, y3_180, false).
 
-Definition g2double_a (p_182 : g2_t) : g2_t :=
-  let '(x1_183, y1_184, _) :=
-    p_182 in 
-  let x12_185 : (fp_t × fp_t) :=
-    fp2mul (x1_183) (x1_183) in 
-  let t1_186 : (fp_t × fp_t) :=
+Definition g2double_a (p_181 : g2_t) : g2_t :=
+  let '(x1_182, y1_183, _) :=
+    p_181 in 
+  let x12_184 : (fp_t × fp_t) :=
+    fp2mul (x1_182) (x1_182) in 
+  let t1_185 : (fp_t × fp_t) :=
     fp2mul (fp2fromfp (nat_mod_from_literal (
           0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab) (
-          @repr WORDSIZE128 3) : fp_t)) (x12_185) in 
-  let t2_187 : (fp_t × fp_t) :=
-    fp2inv (fp2mul (fp2fromfp (nat_mod_two )) (y1_184)) in 
-  let xovery_188 : (fp_t × fp_t) :=
-    fp2mul (t1_186) (t2_187) in 
-  let t1_189 : (fp_t × fp_t) :=
-    fp2mul (xovery_188) (xovery_188) in 
-  let t2_190 : (fp_t × fp_t) :=
-    fp2mul (fp2fromfp (nat_mod_two )) (x1_183) in 
-  let x3_191 : (fp_t × fp_t) :=
-    fp2sub (t1_189) (t2_190) in 
-  let t1_192 : (fp_t × fp_t) :=
-    fp2sub (x1_183) (x3_191) in 
-  let t2_193 : (fp_t × fp_t) :=
-    fp2mul (xovery_188) (t1_192) in 
-  let y3_194 : (fp_t × fp_t) :=
-    fp2sub (t2_193) (y1_184) in 
-  (x3_191, y3_194, false).
+          @repr WORDSIZE128 3) : fp_t)) (x12_184) in 
+  let t2_186 : (fp_t × fp_t) :=
+    fp2inv (fp2mul (fp2fromfp (nat_mod_two )) (y1_183)) in 
+  let xovery_187 : (fp_t × fp_t) :=
+    fp2mul (t1_185) (t2_186) in 
+  let t1_188 : (fp_t × fp_t) :=
+    fp2mul (xovery_187) (xovery_187) in 
+  let t2_189 : (fp_t × fp_t) :=
+    fp2mul (fp2fromfp (nat_mod_two )) (x1_182) in 
+  let x3_190 : (fp_t × fp_t) :=
+    fp2sub (t1_188) (t2_189) in 
+  let t1_191 : (fp_t × fp_t) :=
+    fp2sub (x1_182) (x3_190) in 
+  let t2_192 : (fp_t × fp_t) :=
+    fp2mul (xovery_187) (t1_191) in 
+  let y3_193 : (fp_t × fp_t) :=
+    fp2sub (t2_192) (y1_183) in 
+  (x3_190, y3_193, false).
 
-Definition g2double (p_195 : g2_t) : g2_t :=
-  let '(x1_196, y1_197, inf1_198) :=
-    p_195 in 
-  (if (((y1_197) !=.? (fp2zero )) && (negb (inf1_198))):bool then (g2double_a (
-        p_195)) else ((fp2zero , fp2zero , true))).
+Definition g2double (p_194 : g2_t) : g2_t :=
+  let '(x1_195, y1_196, inf1_197) :=
+    p_194 in 
+  (if (((y1_196) !=.? (fp2zero )) && (negb (inf1_197))):bool then (g2double_a (
+        p_194)) else ((fp2zero , fp2zero , true))).
 
-Definition g2add (p_199 : g2_t) (q_200 : g2_t) : g2_t :=
-  let '(x1_201, y1_202, inf1_203) :=
-    p_199 in 
-  let '(x2_204, y2_205, inf2_206) :=
-    q_200 in 
-  (if (inf1_203):bool then (q_200) else ((if (inf2_206):bool then (p_199) else (
-          (if ((p_199) =.? (q_200)):bool then (g2double (p_199)) else ((if (
-                  negb (((x1_201) =.? (x2_204)) && ((y1_202) =.? (fp2neg (
-                          y2_205))))):bool then (g2add_a (p_199) (q_200)) else (
+Definition g2add (p_198 : g2_t) (q_199 : g2_t) : g2_t :=
+  let '(x1_200, y1_201, inf1_202) :=
+    p_198 in 
+  let '(x2_203, y2_204, inf2_205) :=
+    q_199 in 
+  (if (inf1_202):bool then (q_199) else ((if (inf2_205):bool then (p_198) else (
+          (if ((p_198) =.? (q_199)):bool then (g2double (p_198)) else ((if (
+                  negb (((x1_200) =.? (x2_203)) && ((y1_201) =.? (fp2neg (
+                          y2_204))))):bool then (g2add_a (p_198) (q_199)) else (
                   (fp2zero , fp2zero , true))))))))).
 
-Definition g2mul (m_207 : scalar_t) (p_208 : g2_t) : g2_t :=
-  let t_209 : (fp2_t × fp2_t × bool) :=
+Definition g2mul (m_206 : scalar_t) (p_207 : g2_t) : g2_t :=
+  let t_208 : (fp2_t × fp2_t × bool) :=
     (fp2zero , fp2zero , true) in 
-  let t_209 :=
-    foldi (usize 0) (usize 256) (fun i_210 t_209 =>
-      let t_209 :=
-        g2double (t_209) in 
-      let '(t_209) :=
-        if nat_mod_bit (m_207) ((usize 255) - (i_210)):bool then (let t_209 :=
-            g2add (t_209) (p_208) in 
-          (t_209)) else ((t_209)) in 
-      (t_209))
-    t_209 in 
-  t_209.
+  let t_208 :=
+    foldi (usize 0) (usize 256) (fun i_209 t_208 =>
+      let t_208 :=
+        g2double (t_208) in 
+      let '(t_208) :=
+        if nat_mod_bit (m_206) ((usize 255) - (i_209)):bool then (let t_208 :=
+            g2add (t_208) (p_207) in 
+          (t_208)) else ((t_208)) in 
+      (t_208))
+    t_208 in 
+  t_208.
 
-Definition g2neg (p_211 : g2_t) : g2_t :=
-  let '(x_212, y_213, inf_214) :=
-    p_211 in 
-  (x_212, fp2neg (y_213), inf_214).
+Definition g2neg (p_210 : g2_t) : g2_t :=
+  let '(x_211, y_212, inf_213) :=
+    p_210 in 
+  (x_211, fp2neg (y_212), inf_213).
 
-Definition twist (p_215 : g1_t) : (fp12_t × fp12_t) :=
-  let '(p0_216, p1_217, _) :=
-    p_215 in 
-  let x_218 : ((fp2_t × fp2_t × fp2_t) × fp6_t) :=
-    ((fp2zero , fp2fromfp (p0_216), fp2zero ), fp6zero ) in 
-  let y_219 : (fp6_t × (fp2_t × fp2_t × fp2_t)) :=
-    (fp6zero , (fp2zero , fp2fromfp (p1_217), fp2zero )) in 
-  (x_218, y_219).
+Definition twist (p_214 : g1_t) : (fp12_t × fp12_t) :=
+  let '(p0_215, p1_216, _) :=
+    p_214 in 
+  let x_217 : ((fp2_t × fp2_t × fp2_t) × fp6_t) :=
+    ((fp2zero , fp2fromfp (p0_215), fp2zero ), fp6zero ) in 
+  let y_218 : (fp6_t × (fp2_t × fp2_t × fp2_t)) :=
+    (fp6zero , (fp2zero , fp2fromfp (p1_216), fp2zero )) in 
+  (x_217, y_218).
 
-Definition line_double_p (r_220 : g2_t) (p_221 : g1_t) : fp12_t :=
-  let '(r0_222, r1_223, _) :=
-    r_220 in 
-  let a_224 : (fp_t × fp_t) :=
+Definition line_double_p (r_219 : g2_t) (p_220 : g1_t) : fp12_t :=
+  let '(r0_221, r1_222, _) :=
+    r_219 in 
+  let a_223 : (fp_t × fp_t) :=
     fp2mul (fp2fromfp (nat_mod_from_literal (
           0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab) (
-          @repr WORDSIZE128 3) : fp_t)) (fp2mul (r0_222) (r0_222)) in 
-  let a_225 : (fp_t × fp_t) :=
-    fp2mul (a_224) (fp2inv (fp2mul (fp2fromfp (nat_mod_two )) (r1_223))) in 
-  let b_226 : (fp_t × fp_t) :=
-    fp2sub (r1_223) (fp2mul (a_225) (r0_222)) in 
-  let a_227 : (fp6_t × fp6_t) :=
-    fp12fromfp6 (fp6fromfp2 (a_225)) in 
-  let b_228 : (fp6_t × fp6_t) :=
-    fp12fromfp6 (fp6fromfp2 (b_226)) in 
-  let '(x_229, y_230) :=
-    twist (p_221) in 
-  fp12neg (fp12sub (fp12sub (y_230) (fp12mul (a_227) (x_229))) (b_228)).
+          @repr WORDSIZE128 3) : fp_t)) (fp2mul (r0_221) (r0_221)) in 
+  let a_224 : (fp_t × fp_t) :=
+    fp2mul (a_223) (fp2inv (fp2mul (fp2fromfp (nat_mod_two )) (r1_222))) in 
+  let b_225 : (fp_t × fp_t) :=
+    fp2sub (r1_222) (fp2mul (a_224) (r0_221)) in 
+  let a_226 : (fp6_t × fp6_t) :=
+    fp12fromfp6 (fp6fromfp2 (a_224)) in 
+  let b_227 : (fp6_t × fp6_t) :=
+    fp12fromfp6 (fp6fromfp2 (b_225)) in 
+  let '(x_228, y_229) :=
+    twist (p_220) in 
+  fp12neg (fp12sub (fp12sub (y_229) (fp12mul (a_226) (x_228))) (b_227)).
 
-Definition line_add_p (r_231 : g2_t) (q_232 : g2_t) (p_233 : g1_t) : fp12_t :=
-  let '(r0_234, r1_235, _) :=
-    r_231 in 
-  let '(q0_236, q1_237, _) :=
-    q_232 in 
-  let a_238 : (fp_t × fp_t) :=
-    fp2mul (fp2sub (q1_237) (r1_235)) (fp2inv (fp2sub (q0_236) (r0_234))) in 
-  let b_239 : (fp_t × fp_t) :=
-    fp2sub (r1_235) (fp2mul (a_238) (r0_234)) in 
-  let a_240 : (fp6_t × fp6_t) :=
-    fp12fromfp6 (fp6fromfp2 (a_238)) in 
-  let b_241 : (fp6_t × fp6_t) :=
-    fp12fromfp6 (fp6fromfp2 (b_239)) in 
-  let '(x_242, y_243) :=
-    twist (p_233) in 
-  fp12neg (fp12sub (fp12sub (y_243) (fp12mul (a_240) (x_242))) (b_241)).
+Definition line_add_p (r_230 : g2_t) (q_231 : g2_t) (p_232 : g1_t) : fp12_t :=
+  let '(r0_233, r1_234, _) :=
+    r_230 in 
+  let '(q0_235, q1_236, _) :=
+    q_231 in 
+  let a_237 : (fp_t × fp_t) :=
+    fp2mul (fp2sub (q1_236) (r1_234)) (fp2inv (fp2sub (q0_235) (r0_233))) in 
+  let b_238 : (fp_t × fp_t) :=
+    fp2sub (r1_234) (fp2mul (a_237) (r0_233)) in 
+  let a_239 : (fp6_t × fp6_t) :=
+    fp12fromfp6 (fp6fromfp2 (a_237)) in 
+  let b_240 : (fp6_t × fp6_t) :=
+    fp12fromfp6 (fp6fromfp2 (b_238)) in 
+  let '(x_241, y_242) :=
+    twist (p_232) in 
+  fp12neg (fp12sub (fp12sub (y_242) (fp12mul (a_239) (x_241))) (b_240)).
 
-Definition frobenius (f_244 : fp12_t) : fp12_t :=
-  let '((g0_245, g1_246, g2_247), (h0_248, h1_249, h2_250)) :=
-    f_244 in 
-  let t1_251 : (fp_t × fp_t) :=
-    fp2conjugate (g0_245) in 
-  let t2_252 : (fp_t × fp_t) :=
-    fp2conjugate (h0_248) in 
-  let t3_253 : (fp_t × fp_t) :=
-    fp2conjugate (g1_246) in 
-  let t4_254 : (fp_t × fp_t) :=
-    fp2conjugate (h1_249) in 
-  let t5_255 : (fp_t × fp_t) :=
-    fp2conjugate (g2_247) in 
-  let t6_256 : (fp_t × fp_t) :=
-    fp2conjugate (h2_250) in 
-  let c1_257 : array_fp_t :=
+Definition frobenius (f_243 : fp12_t) : fp12_t :=
+  let '((g0_244, g1_245, g2_246), (h0_247, h1_248, h2_249)) :=
+    f_243 in 
+  let t1_250 : (fp_t × fp_t) :=
+    fp2conjugate (g0_244) in 
+  let t2_251 : (fp_t × fp_t) :=
+    fp2conjugate (h0_247) in 
+  let t3_252 : (fp_t × fp_t) :=
+    fp2conjugate (g1_245) in 
+  let t4_253 : (fp_t × fp_t) :=
+    fp2conjugate (h1_248) in 
+  let t5_254 : (fp_t × fp_t) :=
+    fp2conjugate (g2_246) in 
+  let t6_255 : (fp_t × fp_t) :=
+    fp2conjugate (h2_249) in 
+  let c1_256 : array_fp_t :=
     array_from_list uint64 (let l :=
         [
           secret (@repr WORDSIZE64 10162220747404304312) : int64;
@@ -559,11 +556,11 @@ Definition frobenius (f_244 : fp12_t) : fp12_t :=
           secret (@repr WORDSIZE64 13993175198059990303) : int64;
           secret (@repr WORDSIZE64 1802798568193066599) : int64
         ] in  l) in 
-  let c1_258 : seq uint8 :=
-    array_to_le_bytes (c1_257) in 
-  let c1_259 : fp_t :=
-    nat_mod_from_byte_seq_le (c1_258) : fp_t in 
-  let c2_260 : array_fp_t :=
+  let c1_257 : seq uint8 :=
+    array_to_le_bytes (c1_256) in 
+  let c1_258 : fp_t :=
+    nat_mod_from_byte_seq_le (c1_257) : fp_t in 
+  let c2_259 : array_fp_t :=
     array_from_list uint64 (let l :=
         [
           secret (@repr WORDSIZE64 3240210268673559283) : int64;
@@ -573,44 +570,44 @@ Definition frobenius (f_244 : fp12_t) : fp12_t :=
           secret (@repr WORDSIZE64 9865672654120263608) : int64;
           secret (@repr WORDSIZE64 71000049454473266) : int64
         ] in  l) in 
-  let c2_261 : seq uint8 :=
-    array_to_le_bytes (c2_260) in 
-  let c2_262 : fp_t :=
-    nat_mod_from_byte_seq_le (c2_261) : fp_t in 
-  let gamma11_263 : (fp_t × fp_t) :=
-    (c1_259, c2_262) in 
-  let gamma12_264 : (fp_t × fp_t) :=
-    fp2mul (gamma11_263) (gamma11_263) in 
-  let gamma13_265 : (fp_t × fp_t) :=
-    fp2mul (gamma12_264) (gamma11_263) in 
-  let gamma14_266 : (fp_t × fp_t) :=
-    fp2mul (gamma13_265) (gamma11_263) in 
-  let gamma15_267 : (fp_t × fp_t) :=
-    fp2mul (gamma14_266) (gamma11_263) in 
-  let t2_268 : (fp_t × fp_t) :=
-    fp2mul (t2_252) (gamma11_263) in 
-  let t3_269 : (fp_t × fp_t) :=
-    fp2mul (t3_253) (gamma12_264) in 
-  let t4_270 : (fp_t × fp_t) :=
-    fp2mul (t4_254) (gamma13_265) in 
-  let t5_271 : (fp_t × fp_t) :=
-    fp2mul (t5_255) (gamma14_266) in 
-  let t6_272 : (fp_t × fp_t) :=
-    fp2mul (t6_256) (gamma15_267) in 
-  ((t1_251, t3_269, t5_271), (t2_268, t4_270, t6_272)).
+  let c2_260 : seq uint8 :=
+    array_to_le_bytes (c2_259) in 
+  let c2_261 : fp_t :=
+    nat_mod_from_byte_seq_le (c2_260) : fp_t in 
+  let gamma11_262 : (fp_t × fp_t) :=
+    (c1_258, c2_261) in 
+  let gamma12_263 : (fp_t × fp_t) :=
+    fp2mul (gamma11_262) (gamma11_262) in 
+  let gamma13_264 : (fp_t × fp_t) :=
+    fp2mul (gamma12_263) (gamma11_262) in 
+  let gamma14_265 : (fp_t × fp_t) :=
+    fp2mul (gamma13_264) (gamma11_262) in 
+  let gamma15_266 : (fp_t × fp_t) :=
+    fp2mul (gamma14_265) (gamma11_262) in 
+  let t2_267 : (fp_t × fp_t) :=
+    fp2mul (t2_251) (gamma11_262) in 
+  let t3_268 : (fp_t × fp_t) :=
+    fp2mul (t3_252) (gamma12_263) in 
+  let t4_269 : (fp_t × fp_t) :=
+    fp2mul (t4_253) (gamma13_264) in 
+  let t5_270 : (fp_t × fp_t) :=
+    fp2mul (t5_254) (gamma14_265) in 
+  let t6_271 : (fp_t × fp_t) :=
+    fp2mul (t6_255) (gamma15_266) in 
+  ((t1_250, t3_268, t5_270), (t2_267, t4_269, t6_271)).
 
-Definition final_exponentiation (f_273 : fp12_t) : fp12_t :=
-  let fp6_274 : (fp6_t × fp6_t) :=
-    fp12conjugate (f_273) in 
-  let finv_275 : (fp6_t × fp6_t) :=
-    fp12inv (f_273) in 
-  let fp6_1_276 : (fp6_t × fp6_t) :=
-    fp12mul (fp6_274) (finv_275) in 
-  let fp8_277 : (fp6_t × fp6_t) :=
-    frobenius (frobenius (fp6_1_276)) in 
-  let f_278 : (fp6_t × fp6_t) :=
-    fp12mul (fp8_277) (fp6_1_276) in 
-  let u_279 : scalar_t :=
+Definition final_exponentiation (f_272 : fp12_t) : fp12_t :=
+  let fp6_273 : (fp6_t × fp6_t) :=
+    fp12conjugate (f_272) in 
+  let finv_274 : (fp6_t × fp6_t) :=
+    fp12inv (f_272) in 
+  let fp6_1_275 : (fp6_t × fp6_t) :=
+    fp12mul (fp6_273) (finv_274) in 
+  let fp8_276 : (fp6_t × fp6_t) :=
+    frobenius (frobenius (fp6_1_275)) in 
+  let f_277 : (fp6_t × fp6_t) :=
+    fp12mul (fp8_276) (fp6_1_275) in 
+  let u_278 : scalar_t :=
     nat_mod_from_literal (
       0x8000000000000000000000000000000000000000000000000000000000000000) (
       @repr WORDSIZE128 15132376222941642752) : scalar_t in 
@@ -755,41 +752,4 @@ Definition test_fp12_prop_mul_inv (a_325 : fp12_t) : bool :=
 QuickChick (
   forAll g_fp12_t (fun a_325 : fp12_t =>test_fp12_prop_mul_inv a_325)).
 
-
-Definition scalar_canvas_t := nseq (int8) (32).
-Definition scalar_t :=
-  nat_mod 0x8000000000000000000000000000000000000000000000000000000000000000.
-
-Notation "'g1_t'" := ((fp_t × fp_t × bool)) : hacspec_scope.
-
-Notation "'fp2_t'" := ((fp_t × fp_t)) : hacspec_scope.
-
-Notation "'g2_t'" := ((fp2_t × fp2_t × bool)) : hacspec_scope.
-
-Notation "'fp6_t'" := ((fp2_t × fp2_t × fp2_t)) : hacspec_scope.
-
-Notation "'fp12_t'" := ((fp6_t × fp6_t)) : hacspec_scope.
-
-Definition fp_return_zero  : fp_t :=
-  nat_mod_zero .
-
-Theorem ensures_fp_return_zero : forall result_0 ,
- @fp_return_zero  = result_0 ->
- ((nat_mod_model (result_0)) =.? (usize 0)) = true.
-Proof.
-  intros.
-  subst.
-  reflexivity.
-Qed.
-
-Definition fp2fromfp (n_1 : fp_t) : fp2_t :=
-  (n_1, nat_mod_zero ).
-
-Definition fp2zero  : fp2_t :=
-  fp2fromfp (nat_mod_zero ).
-
-Definition fp2neg (n_2 : fp2_t) : fp2_t :=
-  let '(n1_3, n2_4) :=
-    n_2 in 
-  ((nat_mod_zero ) -% (n1_3), (nat_mod_zero ) -% (n2_4)).
 

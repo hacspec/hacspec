@@ -1,32 +1,12 @@
 // BLS: y^2 = x^3 + 4
 
-#[cfg(not(feature = "hacspec"))]
-extern crate hacspec_lib;
-
-#[cfg(feature = "hacspec")]
-use hacspec_attributes::*;
-
-#[cfg(feature = "contracts")]
-#[cfg(not(feature = "hacspec"))]
-extern crate creusot_contracts;
-#[cfg(feature = "contracts")]
-#[cfg(not(feature = "hacspec"))]
-pub use creusot_contracts::*;
-
-#[cfg(not(feature = "contracts"))]
-#[cfg(not(feature = "hacspec"))]
-extern crate creusot_contracts_dummy;
-#[cfg(not(feature = "contracts"))]
-#[cfg(not(feature = "hacspec"))]
-pub use creusot_contracts_dummy::*;
-
-pub use hacspec_lib::*;
+use hacspec_lib::*;
 
 public_nat_mod!( //Custom Macro - defining a newtype with some functions - well defined macro's have library functions built in
     type_name: Fp,
     type_of_canvas: FpCanvas,
     bit_size_of_field: 384, //381 with 3 extra bits
-    modulo_value: "1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab"
+    modulo_value: "1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab" //0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
 );
 
 bytes!(SerializedFp, 48); //Represent points as arrays for easier testing
@@ -46,18 +26,11 @@ pub type G2 = (Fp2, Fp2, bool);
 pub type Fp6 = (Fp2, Fp2, Fp2); //v³ = u + 1
 pub type Fp12 = (Fp6, Fp6); //w² = v
 
-#[ensures(result.model() == 0)]
-pub fn fp_return_zero() -> Fp {
-    Fp::ZERO()
-}
-
 /* Arithmetic for FP2 elements */
-// #[ensures(result.model() == (n.model(), 0))]
 pub fn fp2fromfp(n: Fp) -> Fp2 {
     (n, Fp::ZERO())
 }
 
-// #[ensures(result.model() == (0, 0))]
 pub fn fp2zero() -> Fp2 {
     fp2fromfp(Fp::ZERO())
 }

@@ -30,6 +30,9 @@ pub use alloc::string::{String, ToString};
 pub use alloc::vec;
 pub use alloc::vec::Vec;
 
+extern crate creusot_contracts;
+pub use creusot_contracts::trusted;
+
 #[cfg(not(feature = "std"))]
 pub use core::num::ParseIntError;
 #[cfg(not(feature = "std"))]

@@ -1173,7 +1173,7 @@ macro_rules! public_nat_mod {
         unsigned_public_integer!($base, $bits);
         abstract_public_modular_integer!($name, $base, $base::from_hex($n));
 
-        // impl $name {
+        impl $name {
         //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
         //     pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: &A) -> $name {
         //         let mut temp = Vec::new();
@@ -1217,18 +1217,18 @@ macro_rules! public_nat_mod {
         //         hacspec_lib::Seq::from_vec(self.to_be_bytes())
         //     }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
-        //         let mut temp = Vec::new();
-        //         let len = s.len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(U8::declassify(s[i]));
-        //             i += 1;
-        //         }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_byte_seq_le<A: SeqTrait<U8>>(s: A) -> $name {
+                let mut temp = Vec::new();
+                let len = s.len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(U8::declassify(s[i]));
+                    i += 1;
+                }
 
-        //         $base::from_le_bytes(temp.as_slice()).into()
-        //     }
+                $base::from_le_bytes(temp.as_slice()).into()
+            }
 
         //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
         //     pub fn from_public_byte_seq_le<A: SeqTrait<u8>>(s: A) -> $name {
@@ -1265,7 +1265,7 @@ macro_rules! public_nat_mod {
         //     pub fn from_secret_literal(x: U128) -> $name {
         //         $base::from_literal(U128::declassify(x)).into()
         //     }
-        // }
+        }
 
         impl NumericCopy for $name {}
         impl UnsignedInteger for $name {}

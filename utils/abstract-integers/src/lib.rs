@@ -88,3 +88,6 @@ pub use core::ops::*;
 
 pub mod abstract_int;
 pub mod nat_mod;
+
+extern crate creusot_contracts;
+use creusot_contracts::trusted;

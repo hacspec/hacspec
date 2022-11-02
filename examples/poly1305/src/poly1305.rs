@@ -1,6 +1,5 @@
 // Import hacspec and all needed definitions.
-
-pub use hacspec_lib::*;
+use hacspec_lib::*;
 
 // WARNING:
 // This spec does not provide secret independence, and treats all keys as public.

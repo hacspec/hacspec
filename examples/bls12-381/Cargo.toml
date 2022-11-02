@@ -4,29 +4,10 @@ version = "1.0.0"
 authors = ["Kasper S. Nielsen <Kasper@s-nielsen.dk>", "Mathias Rud Laursen <mathias_rud@hotmail.com>"]
 edition = "2018"
 
-# # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-path = "src/hacspec-bls12-381.rs"
-
-[dependencies.creusot-contracts]
-git = "https://github.com/xldenis/creusot/"
-# branch = "master"
-rev = "7763b3ae77205fba83182b9a6c3e69ad0b12fec7"
-package = "creusot-contracts"
-optional = true
-
-[dependencies.creusot-contracts-dummy]
-git = "https://github.com/xldenis/creusot/"
-# branch = "master"
-rev = "7763b3ae77205fba83182b9a6c3e69ad0b12fec7"
-package = "creusot-contracts-dummy"
-
-[dependencies.creusot]
-git = "https://github.com/xldenis/creusot/"
-# branch = "master"
-rev = "7763b3ae77205fba83182b9a6c3e69ad0b12fec7"
-package = "creusot"
+path = "src/bls12-381.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib" }
@@ -34,6 +15,3 @@ hacspec-lib = { path = "../../lib" }
 [dev-dependencies]
 quickcheck = "1"
 quickcheck_macros = "1"
-
-[features]
-contracts = ["creusot-contracts"]

@@ -32,26 +32,26 @@ macro_rules! _array_base {
         pub struct $name(pub [$t; $l]);
 
         impl $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn new() -> Self {
                 // Self([<$t>::default(); $l])
                 todo!()
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn length() -> usize {
                 $l
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn from_array(v: [$t; $l]) -> Self {
                 Self(v.clone())
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             pub fn from_native_slice(v: &[$t]) -> Self {
                 debug_assert!(v.len() <= $l);
@@ -64,7 +64,7 @@ macro_rules! _array_base {
         }
 
         impl $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_slice<A: SeqTrait<$t>>(input: &A, start: usize, len: usize) -> Self {
                 let mut a = Self::new();
@@ -73,7 +73,7 @@ macro_rules! _array_base {
                 a
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             pub fn concat<A: SeqTrait<$t>>(&self, next: &A) -> crate::seq::Seq<$t> {
                 let mut out = crate::seq::Seq::new(self.len() + next.len());
@@ -82,31 +82,31 @@ macro_rules! _array_base {
                 out
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_slice_range<A: SeqTrait<$t>>(input: &A, r: Range<usize>) -> Self {
                 Self::from_slice(input, r.start, r.end - r.start)
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn slice(&self, start_out: usize, len: usize) -> crate::seq::Seq<$t> {
                 crate::seq::Seq::from_slice(self, start_out, len)
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn slice_range(&self, r: Range<usize>) -> crate::seq::Seq<$t> {
                 self.slice(r.start, r.end - r.start)
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn num_chunks(&self, chunk_size: usize) -> usize {
                 (self.len() + chunk_size - 1) / chunk_size
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn get_chunk_len(&self, chunk_size: usize, chunk_number: usize) -> usize {
                 let idx_start = chunk_size * chunk_number;
@@ -117,7 +117,7 @@ macro_rules! _array_base {
                 }
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn get_chunk(&self, chunk_size: usize, chunk_number: usize) -> (usize, crate::seq::Seq<$t>) {
                 let idx_start = chunk_size * chunk_number;
@@ -126,7 +126,7 @@ macro_rules! _array_base {
                 (len, out)
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn set_chunk<A: SeqTrait<$t>>(
                 self,
@@ -147,21 +147,21 @@ macro_rules! _array_base {
         }
 
         impl Default for $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn default() -> Self {
                 $name::new()
             }
         }
         impl SeqTrait<$t> for $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn create(x: usize) -> Self {
                 assert_eq!(x, $l);
                 Self::new()
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             fn len(&self) -> usize {
                 $l
@@ -171,7 +171,7 @@ macro_rules! _array_base {
                 self.0.as_ref().iter()
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_slice<A: SeqTrait<$t>>(
                 mut self,
@@ -188,14 +188,14 @@ macro_rules! _array_base {
                 self
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update<A: SeqTrait<$t>>(self, start: usize, v: &A) -> Self {
                 let len = v.len();
                 self.update_slice(start, v, 0, len)
             }
 
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             fn update_start<A: SeqTrait<$t>>(self, v: &A) -> Self {
                 let len = v.len();
@@ -205,14 +205,14 @@ macro_rules! _array_base {
 
         impl Index<usize> for $name {
             type Output = $t;
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             fn index(&self, i: usize) -> &$t {
                 &self.0.as_ref()[i]
             }
         }
         impl IndexMut<usize> for $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             fn index_mut(&mut self, i: usize) -> &mut $t {
                 // &mut
@@ -261,7 +261,7 @@ macro_rules! _array_base {
         }
         impl Index<RangeFull> for $name {
             type Output = [$t];
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             fn index(&self, r: RangeFull) -> &[$t] {
                 &self.0.as_ref()[r]
@@ -269,7 +269,7 @@ macro_rules! _array_base {
         }
         
         impl $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", not_hacspec($name))]
             pub fn from_vec(x: Vec<$t>) -> $name {
                 debug_assert_eq!(x.len(), $l);
@@ -282,7 +282,7 @@ macro_rules! _array_base {
 
             // We can't use the [From] trait here because otherwise it would conflict with
             // the From<T> for T core implementation, as the array also implements the [SeqTrait].
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", in_hacspec($name))]
             pub fn from_seq<T: SeqTrait<$t>>(x: &T) -> $name {
                 debug_assert_eq!(x.len(), $l);
@@ -295,7 +295,7 @@ macro_rules! _array_base {
         }
 
         impl $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             fn hex_string_to_vec(s: &str) -> Vec<$t> {
                 debug_assert!(s.len() % core::mem::size_of::<$t>() == 0);
                 let b: Result<Vec<$t>, ParseIntError> = (0..s.len())
@@ -307,7 +307,7 @@ macro_rules! _array_base {
 
             
             /// Read hex string to Bytes.
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             pub fn from_hex(s: &str) -> $name {
                 let v = $name::hex_string_to_vec(s);
@@ -717,7 +717,7 @@ macro_rules! _public_array {
             }
         }
         impl PartialEq for $name {
-            #[creusot_contracts::trusted]
+            #[trusted]
             #[cfg_attr(feature = "use_attributes", unsafe_hacspec($name))]
             fn eq(&self, other: &Self) -> bool {
                 self.0[..] == other.0[..]

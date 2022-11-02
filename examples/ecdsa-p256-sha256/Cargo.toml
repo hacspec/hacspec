@@ -5,7 +5,7 @@ authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
 edition = "2018"
 
 [lib]
-path = "src/hacspec-ecdsa-p256-sha256.rs"
+path = "src/ecdsa.rs"
 
 [dependencies]
 hacspec-lib = { path = "../../lib", version = "0.1.0-beta.1" }
