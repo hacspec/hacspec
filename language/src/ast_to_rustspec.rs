@@ -1,11 +1,12 @@
 use im::{HashMap, HashSet};
 use rustc_ast::{
     ast::{
-        self, AngleBracketedArg, Async, AttrVec, Attribute, BindingMode, BlockCheckMode,
-        BorrowKind, Const, Crate, Defaultness, Expr, ExprKind, Extern, Fn as FnKind, FnRetTy,
-        GenericArg, GenericArgs, IntTy, ItemKind, LitIntType, LitKind, LocalKind, MacArgs, MacCall,
-        Mutability, Pat, PatKind, Path, PathSegment, RangeLimits, Stmt, StmtKind, StrStyle, Ty,
-        TyAlias as TyAliasKind, TyKind, UintTy, UnOp, Unsafe, UseTreeKind, VariantData,
+        self, AngleBracketedArg, Async, AttrVec, Attribute, BindingAnnotation, BlockCheckMode,
+        BorrowKind, ByRef, Const, Crate, Defaultness, Expr, ExprKind, Extern, Fn as FnKind,
+        FnRetTy, GenericArg, GenericArgs, IntTy, ItemKind, LitIntType, LitKind, LocalKind, MacArgs,
+        MacCall, Mutability, Pat, PatKind, Path, PathSegment, RangeLimits, Stmt, StmtKind,
+        StrStyle, Ty, TyAlias as TyAliasKind, TyKind, UintTy, UnOp, Unsafe, UseTreeKind,
+        VariantData,
     },
     node_id::NodeId,
     ptr::P,
@@ -907,16 +908,20 @@ fn translate_expr(
                 }
             }
         }
-        ExprKind::MethodCall(method_name, args, span) => {
+        ExprKind::MethodCall(method_name, method_arg, args, span) => {
             let func_args: Vec<TranslationResult<(Spanned<Expression>, Spanned<Borrowing>)>> = args
                 .iter()
                 .map(|arg| translate_function_argument(sess, specials, &arg))
                 .collect();
-            let func_args = check_vec(func_args)?;
-            let (method_arg, rest_args) = func_args.split_at(1);
-            let method_arg = method_arg
-                .first()
-                .map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
+            let rest_args = check_vec(func_args)?;
+            // let (method_arg, rest_args) = func_args.split_at(1);
+            let method_arg = Box::new(translate_function_argument(
+                sess,
+                specials,
+                &*method_arg.clone(),
+            )?);
+            //     .first()
+            //     .map_or(Err(()), |x| Ok(Box::new(x.clone())))?;
             let method_name = match method_name.args {
                 None => Ok(translate_toplevel_ident(
                     &method_name.ident,
@@ -928,7 +933,7 @@ fn translate_expr(
                 }
             }?;
             let mut rest_args_final = Vec::new();
-            rest_args_final.extend_from_slice(rest_args);
+            rest_args_final.extend_from_slice(&rest_args);
             Ok((
                 ExprTranslationResult::TransExpr(Expression::MethodCall(
                     method_arg,
@@ -1110,9 +1115,7 @@ fn translate_expr(
         }
         ExprKind::ForLoop(pat, range, b, _) => {
             let id = match &pat.kind {
-                PatKind::Ident(BindingMode::ByValue(Mutability::Not), id, None) => {
-                    Ok(Some(translate_ident(id)))
-                }
+                PatKind::Ident(BindingAnnotation::NONE, id, None) => Ok(Some(translate_ident(id))),
                 PatKind::Wild => Ok(None),
                 _ => {
                     sess.span_rustspec_err(
@@ -1284,7 +1287,7 @@ fn translate_expr(
                 e.span.clone().into(),
             ))
         }
-        ExprKind::Closure(_, _, _, _, _, _) => {
+        ExprKind::Closure(..) => {
             sess.span_rustspec_err(e.span.clone(), "closures are not allowed in Hacspec");
             Err(())
         }
@@ -1565,7 +1568,7 @@ fn translate_expr_accepts_question_mark(
 
 fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pattern>> {
     match &pat.kind {
-        PatKind::Ident(BindingMode::ByValue(_), id, None) => {
+        PatKind::Ident(BindingAnnotation(ByRef::No, _), id, None) => {
             Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
         }
         PatKind::Path(None, path) => {
@@ -1757,7 +1760,7 @@ enum ItemTranslationResult {
 
 fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
     match arg {
-        TokenTree::Token(tok) => match tok.kind {
+        TokenTree::Token(tok, _) => match tok.kind {
             TokenKind::Comma => Ok(()),
             _ => {
                 sess.span_rustspec_err(tok.span.clone(), "expected a comma");
@@ -1776,11 +1779,11 @@ fn check_for_comma(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
 
 fn check_for_literal(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned<Expression>> {
     match arg {
-        TokenTree::Token(tok) => match tok.kind {
+        TokenTree::Token(tok, _) => match tok.kind {
             TokenKind::Literal(l) => {
                 match translate_literal_expr(
                     sess,
-                    &match rustc_ast::Lit::from_lit_token(l, tok.span.clone()) {
+                    &match rustc_ast::Lit::from_token_lit(l, tok.span.clone()) {
                         Ok(x) => x,
                         Err(_) => return Err(()),
                     },
@@ -1855,7 +1858,7 @@ fn check_for_literal_array(
 
 fn check_for_colon(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
     match arg {
-        TokenTree::Token(tok) => match tok.kind {
+        TokenTree::Token(tok, _) => match tok.kind {
             TokenKind::Colon => Ok(()),
             _ => {
                 sess.span_rustspec_err(tok.span.clone(), "expected a colon");
@@ -1874,7 +1877,7 @@ fn check_for_colon(sess: &Session, arg: &TokenTree) -> TranslationResult<()> {
 
 fn check_for_usize(sess: &Session, arg: &TokenTree) -> TranslationResult<Spanned<Expression>> {
     match arg {
-        TokenTree::Token(tok) => match tok.kind {
+        TokenTree::Token(tok, _) => match tok.kind {
             TokenKind::Literal(lit) => match lit.kind {
                 TokenLitKind::Integer => match lit.suffix {
                     Some(_) => {
@@ -1922,7 +1925,7 @@ fn check_for_toplevel_ident(
     kind: TopLevelIdentKind,
 ) -> TranslationResult<(Spanned<TopLevelIdent>, String)> {
     match arg {
-        TokenTree::Token(tok) => match tok.kind {
+        TokenTree::Token(tok, _) => match tok.kind {
             TokenKind::Ident(id, _) => Ok((
                 (
                     TopLevelIdent {
@@ -2060,7 +2063,7 @@ fn translate_natural_integer_decl(
             check_for_toplevel_ident(sess, &thirteenth_arg, TopLevelIdentKind::Function)?;
             check_for_colon(sess, &fourteenth_arg)?;
             let modulo_string = match &fiftheen_arg {
-                TokenTree::Token(tok) => match tok.kind {
+                TokenTree::Token(tok, _) => match tok.kind {
                     TokenKind::Literal(lit) => match lit.kind {
                         TokenLitKind::Str => (
                             lit.symbol.to_ident_string(),
@@ -2136,7 +2139,7 @@ fn translate_array_decl(
                     }?;
                     check_for_comma(sess, &fourth_arg)?;
                     let cell_t = match fifth_arg {
-                        TokenTree::Token(tok) => match tok.kind {
+                        TokenTree::Token(tok, _) => match tok.kind {
                             TokenKind::Ident(id, _) => translate_base_typ(
                                 sess,
                                 &Ty {
@@ -2183,7 +2186,7 @@ fn translate_array_decl(
                         check_for_toplevel_ident(sess, &fifth_arg, TopLevelIdentKind::Type)?;
                         check_for_colon(sess, &sixth_arg)?;
                         match seventh_arg {
-                            TokenTree::Token(tok) => match tok.kind {
+                            TokenTree::Token(tok, _) => match tok.kind {
                                 TokenKind::Ident(id, _) => Some((
                                     TopLevelIdent {
                                         string: id.to_ident_string(),
@@ -2246,7 +2249,7 @@ fn binop_text(op: rustc_ast::token::BinOpToken) -> String {
 
 fn tokentree_text(x: TokenTree) -> String {
     match x {
-        TokenTree::Token(tok) => match tok.kind {
+        TokenTree::Token(tok, _) => match tok.kind {
             TokenKind::Eq => "=".to_string(),
             TokenKind::Lt => "<".to_string(),
             TokenKind::Le => "<=".to_string(),
@@ -2296,9 +2299,9 @@ fn tokentree_text(x: TokenTree) -> String {
         }
     }
 }
-                                                                             
+
 fn get_delimited_tree(attr: Attribute) -> Option<rustc_ast::tokenstream::TokenStream> {
-    let inner_tokens = attr.clone().tokens().to_tokenstream();
+    let inner_tokens = attr.clone().tokens(); // .to_attr_token_stream().to_tokenstream();
     if inner_tokens.len() != 2 {
         return None;
     }
@@ -2306,7 +2309,7 @@ fn get_delimited_tree(attr: Attribute) -> Option<rustc_ast::tokenstream::TokenSt
     let first_token = it.next().unwrap();
     let second_token = it.next().unwrap();
     match first_token {
-        TokenTree::Token(first_tok) => match first_tok.kind {
+        TokenTree::Token(first_tok, _) => match first_tok.kind {
             TokenKind::Pound => {
                 let inner = get_delimited_inner_tree(second_token.clone())?;
                 if inner.len() != 2 {
@@ -2323,7 +2326,6 @@ fn get_delimited_tree(attr: Attribute) -> Option<rustc_ast::tokenstream::TokenSt
         _ => None,
     }
 }
-
 
 fn get_delimited_inner_tree(delim: TokenTree) -> Option<rustc_ast::tokenstream::TokenStream> {
     match delim {
@@ -2371,7 +2373,7 @@ fn attribute_cfg_token_ident(
             it.next(); // skip '=' TODO: Check is EQ token..
             let second_token = it.next().unwrap();
             match second_token {
-                TokenTree::Token(tok) => match tok.kind {
+                TokenTree::Token(tok, _) => match tok.kind {
                     TokenKind::Literal(rustc_ast::token::Lit {
                         kind: rustc_ast::token::LitKind::Str,
                         symbol,
@@ -2395,11 +2397,13 @@ fn attribute_cfg_token_ident(
 fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
     let attr_name = attr.name_or_empty().to_ident_string();
     match attr_name.as_str() {
-        "quickcheck" | "proof" | "test" | "requires" | "ensures" | "creusot" => Some(vec![attr_name]),
+        "quickcheck" | "proof" | "test" | "requires" | "ensures" | "creusot" => {
+            Some(vec![attr_name])
+        }
         "derive" => {
             let inner = get_delimited_tree(attr.clone())?;
             Some(inner.trees().fold(Vec::new(), |mut a, x| match x {
-                TokenTree::Token(tok) => match tok.kind {
+                TokenTree::Token(tok, _) => match tok.kind {
                     TokenKind::Ident(ident, _) => {
                         a.push(ident.to_ident_string());
                         a
@@ -2417,7 +2421,7 @@ fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
             let mut it = inner.trees();
             let first_token = it.next().unwrap();
             match first_token {
-                TokenTree::Token(tok) => match tok.kind {
+                TokenTree::Token(tok, _) => match tok.kind {
                     TokenKind::Ident(ident, _) => {
                         if ident.to_ident_string() == "not" {
                             let second_token = it.next().unwrap();
@@ -2425,7 +2429,7 @@ fn attribute_tag(attr: &Attribute) -> Option<Vec<ItemTag>> {
                             let mut it = inner.trees();
                             let first_token = it.next().unwrap();
                             match first_token {
-                                TokenTree::Token(tok) => match tok.kind {
+                                TokenTree::Token(tok, _) => match tok.kind {
                                     TokenKind::Ident(ident, _) => Some(
                                         attribute_cfg_token_ident(ident, it)?
                                             .iter()
@@ -2499,7 +2503,7 @@ fn translate_pearlite_pat(pat: syn::Pat, span: Span) -> ast::Pat {
         kind: match pat {
             syn::Pat::Box(p) => ast::PatKind::Box(P(translate_pearlite_pat(*p.pat, span))),
             syn::Pat::Ident(p) => ast::PatKind::Ident(
-                ast::BindingMode::ByValue(ast::Mutability::Not),
+                BindingAnnotation::NONE,
                 translate_pearlite_ident(p.ident, span),
                 match p.subpat {
                     Some((_, subpat)) => Some(P(translate_pearlite_pat(*subpat, span))),
@@ -2560,7 +2564,7 @@ fn translate_pearlite_lit<'a>(l: syn::Lit, span: Span) -> rustc_ast::ast::Lit {
     match l.clone() {
         syn::Lit::Int(lit) => {
             rustc_ast::ast::Lit {
-                token: rustc_ast::token::Lit {
+                token_lit: rustc_ast::token::Lit {
                     kind: rustc_ast::token::LitKind::Integer,
                     symbol: rustc_span::symbol::Symbol::intern(lit.base10_digits()), // .value()
                     suffix: Some(rustc_span::symbol::Symbol::intern(lit.suffix())), // None, // rustc_span::symbol::Symbol::intern(lit.suffix())
@@ -2592,7 +2596,7 @@ fn translate_pearlite_lit<'a>(l: syn::Lit, span: Span) -> rustc_ast::ast::Lit {
         }
         syn::Lit::Bool(lit) => {
             rustc_ast::ast::Lit {
-                token: rustc_ast::token::Lit {
+                token_lit: rustc_ast::token::Lit {
                     kind: rustc_ast::token::LitKind::Bool,
                     symbol: rustc_span::symbol::Symbol::intern(format!("{}", lit.value()).as_str()),
                     suffix: None, // rustc_span::symbol::Symbol::intern(lit.suffix())
@@ -2743,7 +2747,7 @@ pub fn translate_pearlite(
                 P(translate_pearlite_unquantified(sess, *expr, span).unwrap()),
                 arms.into_iter()
                     .map(|a| ast::Arm {
-                        attrs: Into::<AttrVec>::into(vec![]),
+                        attrs: AttrVec::new(),
                         pat: P(translate_pearlite_pat(a.pat.clone(), span)),
                         guard: match a.guard {
                             Some((_, a_guard)) => {
@@ -2769,19 +2773,18 @@ pub fn translate_pearlite(
             args,
             ..
         }) => {
-            let mut arg_expr = vec![P(
-                translate_pearlite_unquantified(sess, *receiver, span).unwrap()
-            )];
-            arg_expr.extend(
-                args.into_iter()
-                    .map(|x| P(translate_pearlite_unquantified(sess, x, span).unwrap())),
-            );
+            let receiver_expr = P(translate_pearlite_unquantified(sess, *receiver, span).unwrap());
+            let mut arg_expr = args
+                .into_iter()
+                .map(|x| P(translate_pearlite_unquantified(sess, x, span).unwrap()))
+                .collect();
             ExprKind::MethodCall(
                 PathSegment {
                     ident: translate_pearlite_ident(method, span),
                     id: NodeId::MAX,
                     args: None,
                 },
+                receiver_expr,
                 arg_expr,
                 span,
             )
@@ -2855,10 +2858,12 @@ pub fn translate_pearlite(
         //         pearlite_syn::term::Term::Repeat(_) => RcDoc::as_string("TODORepeat"),
         //         pearlite_syn::term::Term::Struct(_) => RcDoc::as_string("TODOStruct"),
         pearlite_syn::term::Term::Tuple(pearlite_syn::term::TermTuple { elems, .. }) => {
-            ExprKind::Tup(elems
-                        .into_iter()
-                          .map(|x| P(translate_pearlite_unquantified(sess, x, span).unwrap()))
-                          .collect())
+            ExprKind::Tup(
+                elems
+                    .into_iter()
+                    .map(|x| P(translate_pearlite_unquantified(sess, x, span).unwrap()))
+                    .collect(),
+            )
         }
         //         pearlite_syn::term::Term::Type(ty) => RcDoc::as_string("TODOType"),
         pearlite_syn::term::Term::Unary(pearlite_syn::term::TermUnary { op, expr }) => {
@@ -2981,8 +2986,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
     log::trace!("translate_items ({:?})", i);
     let mut tags = HashSet::new();
     tags.insert("code".to_string());
-    i
-        .attrs
+    i.attrs
         .iter()
         .fold((), |(), attr| match attribute_tag(attr) {
             Some(a) => {
@@ -3056,7 +3060,7 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                 .map(|param| {
                     // For now, we don't allow pattern destructuring in functions signatures
                     let id = match param.pat.kind {
-                        PatKind::Ident(BindingMode::ByValue(_), id, None) => {
+                        PatKind::Ident(BindingAnnotation(ByRef::No, _), id, None) => {
                             Ok(translate_ident(&id))
                         }
                         PatKind::Wild => {

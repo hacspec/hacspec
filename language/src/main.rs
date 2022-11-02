@@ -623,7 +623,7 @@ impl Callbacks for HacspecCallbacks {
                 let item = tcx.hir().item(item_id);
 
                 if let rustc_hir::ItemKind::Mod(_m) = &item.kind {
-                    let (module, mod_span, _hir_id) = &tcx.hir().get_module(item.def_id);
+                    let (module, mod_span, _hir_id) = &tcx.hir().get_module(item_id.def_id.def_id);
 
                     // locate the file from a module using the span
                     let sm: &rustc_span::source_map::SourceMap =

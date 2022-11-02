@@ -34,7 +34,7 @@ pretty_env_logger = "0.4"
 backtrace = { version = "0.3", optional = true }
 num = "0.4"
 
-pearlite-syn = { git = "https://github.com/xldenis/creusot", rev = "7763b3ae77205fba83182b9a6c3e69ad0b12fec7" } # branch = "master"
+pearlite-syn = { git = "https://github.com/xldenis/creusot", rev = "ebe88ac51dc9ceba3d18ede3351ccee4c4b121bd" } # branch = "master"
 
 syn = { version = "*", features = ["full", "extra-traits"] }
 quote = "*"
