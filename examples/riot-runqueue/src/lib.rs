@@ -14,7 +14,7 @@ pub struct ThreadId(pub u8);
 public_bytes!(Tail, N_QUEUES);
 public_bytes!(NextIds, N_THREADS);
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)] // , Debug
 pub struct Clist(Tail, NextIds);
 
 pub fn clist_new() -> Clist {
@@ -103,7 +103,7 @@ pub fn clist_advance(x: Clist, rq: RunqueueId) -> Clist {
     Clist(tail, next_idxs)
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]// , Debug
 pub struct RunQueue(u32, Clist);
 
 pub fn runqueue_new() -> RunQueue {

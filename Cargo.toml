@@ -1,23 +1,23 @@
 [workspace]
 members = [
     "lib",
-    # "provider",
+    "provider",
     "utils/dev",
     "utils/derive",
     "utils/enum-default",
-    # "utils/evercrypt-provider",
+    "utils/evercrypt-provider",
     "utils/secret-integers",
     "utils/abstract-integers",
     "utils/attributes",
-    # "utils/rc-bench",
-    # "utils/rc-tests",
+    "utils/rc-bench",
+    "utils/rc-tests",
     "utils/util",
     # "examples-unsafe",
     "no_std",
 ]
 default-members = [
     "lib",
-    # "provider",
+    "provider",
     "utils/dev",
     "utils/derive",
     "utils/secret-integers",

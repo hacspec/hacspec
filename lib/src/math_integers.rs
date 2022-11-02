@@ -29,48 +29,48 @@ macro_rules! unsigned_public_integer {
     ($name:ident,$n:literal) => {
         abstract_unsigned_public_integer!($name, $n);
 
-        // impl $name {
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: &A) -> $name {
-        //         let mut temp = Vec::new();
-        //         let len = s.len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(U8::declassify(s[i]));
-        //             i += 1;
-        //         }
+        impl $name {
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: &A) -> $name {
+                let mut temp = Vec::new();
+                let len = s.len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(U8::declassify(s[i]));
+                    i += 1;
+                }
 
-        //         $name::from_be_bytes(temp.as_slice())
-        //     }
+                $name::from_be_bytes(temp.as_slice())
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_public_byte_seq_be<A: SeqTrait<u8>>(s: A) -> $name {
-        //         let mut temp = Vec::new();
-        //         let len = s.len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(s[i]);
-        //             i += 1;
-        //         }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_public_byte_seq_be<A: SeqTrait<u8>>(s: A) -> $name {
+                let mut temp = Vec::new();
+                let len = s.len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(s[i]);
+                    i += 1;
+                }
 
-        //         $name::from_be_bytes(temp.as_slice())
-        //     }
+                $name::from_be_bytes(temp.as_slice())
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn to_byte_seq_be(self) -> hacspec_lib::Seq<U8> {
-        //         let mut temp = Vec::new();
-        //         let len = self.to_be_bytes().as_ref().len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             let te : u8 = self.to_be_bytes().as_ref()[i];
-        //             temp.push(U8::classify(te));
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_byte_seq_be(self) -> hacspec_lib::Seq<U8> {
+                let mut temp = Vec::new();
+                let len = self.to_be_bytes().as_ref().len();
+                let mut i = 0;
+                while i < len {
+                    let te : u8 = self.to_be_bytes().as_ref()[i];
+                    temp.push(U8::classify(te));
 
-        //             i += 1;
-        //         }
+                    i += 1;
+                }
 
-        //         hacspec_lib::Seq::from_vec(temp)
-        //     }
-        // }
+                hacspec_lib::Seq::from_vec(temp)
+            }
+        }
 
         // impl NumericCopy for $name {}
         // impl UnsignedInteger for $name {}
@@ -1174,43 +1174,43 @@ macro_rules! public_nat_mod {
         abstract_public_modular_integer!($name, $base, $base::from_hex($n));
 
         impl $name {
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: &A) -> $name {
-        //         let mut temp = Vec::new();
-        //         let len = s.len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(U8::declassify(s[i]));
-        //             i += 1;
-        //         }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_byte_seq_be<A: SeqTrait<U8>>(s: &A) -> $name {
+                let mut temp = Vec::new();
+                let len = s.len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(U8::declassify(s[i]));
+                    i += 1;
+                }
 
-        //         $base::from_be_bytes(temp.as_slice()).into()
-        //     }
+                $base::from_be_bytes(temp.as_slice()).into()
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_public_byte_seq_be<A: SeqTrait<u8>>(s: A) -> $name {
-        //         let mut temp = Vec::new();
-        //         let len = s.len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(s[i]);
-        //             i += 1;
-        //         }
-        //         $base::from_be_bytes(temp.as_slice()).into()
-        //     }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_public_byte_seq_be<A: SeqTrait<u8>>(s: A) -> $name {
+                let mut temp = Vec::new();
+                let len = s.len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(s[i]);
+                    i += 1;
+                }
+                $base::from_be_bytes(temp.as_slice()).into()
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn to_byte_seq_be(self) -> hacspec_lib::Seq<U8> {
-        //         let mut temp = Vec::new();
-        //         let len = self.to_be_bytes().len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(U8::classify(self.to_be_bytes()[i]));
-        //             i += 1;
-        //         }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_byte_seq_be(self) -> hacspec_lib::Seq<U8> {
+                let mut temp = Vec::new();
+                let len = self.to_be_bytes().len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(U8::classify(self.to_be_bytes()[i]));
+                    i += 1;
+                }
 
-        //         hacspec_lib::Seq::from_vec(temp)
-        //     }
+                hacspec_lib::Seq::from_vec(temp)
+            }
 
         //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
         //     pub fn to_public_byte_seq_be(self) -> hacspec_lib::Seq<u8> {
@@ -1230,41 +1230,41 @@ macro_rules! public_nat_mod {
                 $base::from_le_bytes(temp.as_slice()).into()
             }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_public_byte_seq_le<A: SeqTrait<u8>>(s: A) -> $name {
-        //         let mut temp = Vec::new();
-        //         let len = s.len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(s[i]);
-        //             i += 1;
-        //         }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_public_byte_seq_le<A: SeqTrait<u8>>(s: A) -> $name {
+                let mut temp = Vec::new();
+                let len = s.len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(s[i]);
+                    i += 1;
+                }
 
-        //         $base::from_le_bytes(temp.as_slice()).into()
-        //     }
+                $base::from_le_bytes(temp.as_slice()).into()
+            }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn to_byte_seq_le(self) -> hacspec_lib::Seq<U8> {
-        //         let mut temp = Vec::new();
-        //         let len = self.to_le_bytes().len();
-        //         let mut i = 0;
-        //         while i < len {
-        //             temp.push(U8::classify(self.to_le_bytes()[i]));
-        //             i += 1;
-        //         }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn to_byte_seq_le(self) -> hacspec_lib::Seq<U8> {
+                let mut temp = Vec::new();
+                let len = self.to_le_bytes().len();
+                let mut i = 0;
+                while i < len {
+                    temp.push(U8::classify(self.to_le_bytes()[i]));
+                    i += 1;
+                }
 
-        //         hacspec_lib::Seq::from_vec(temp)
-        //     }
+                hacspec_lib::Seq::from_vec(temp)
+            }
 
         //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
         //     pub fn to_public_byte_seq_le(self) -> hacspec_lib::Seq<u8> {
         //         hacspec_lib::Seq::from_vec(self.to_le_bytes())
         //     }
 
-        //     #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
-        //     pub fn from_secret_literal(x: U128) -> $name {
-        //         $base::from_literal(U128::declassify(x)).into()
-        //     }
+            #[cfg_attr(feature = "use_attributes", unsafe_hacspec)]
+            pub fn from_secret_literal(x: U128) -> $name {
+                $base::from_literal(U128::declassify(x)).into()
+            }
         }
 
         impl NumericCopy for $name {}

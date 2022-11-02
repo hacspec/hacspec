@@ -96,13 +96,13 @@ fn montgomery_ladder<T: UnsignedIntegerCopy, I: UnsignedIntegerCopy>(
         Jacobian(T::from_literal(0), T::from_literal(1), T::from_literal(0)),
         init,
     );
-    for i in 0..T::NUM_BITS {
-        if k.get_bit(T::NUM_BITS - 1 - i).equal(I::ONE()) {
+    for i in 0..T::NUM_BITS() {
+        if k.get_bit(T::NUM_BITS() - 1 - i).equal(I::ONE()) {
             p_working = (p_working.1, p_working.0);
         }
         let xx = point_double(p_working.0);
         let xp1 = point_add(p_working.0, p_working.1);
-        if k.get_bit(T::NUM_BITS - 1 - i).equal(I::ONE()) {
+        if k.get_bit(T::NUM_BITS() - 1 - i).equal(I::ONE()) {
             p_working = (xp1, xx);
         } else {
             p_working = (xx, xp1);
@@ -113,9 +113,9 @@ fn montgomery_ladder<T: UnsignedIntegerCopy, I: UnsignedIntegerCopy>(
 
 fn ltr_mul<T: UnsignedIntegerCopy, I: UnsignedIntegerCopy>(k: I, p: Jacobian<T>) -> Jacobian<T> {
     let mut q = Jacobian(T::from_literal(0), T::from_literal(1), T::from_literal(0));
-    for i in 0..T::NUM_BITS {
+    for i in 0..T::NUM_BITS() {
         q = point_double(q);
-        if k.get_bit(T::NUM_BITS - 1 - i).equal(I::ONE()) {
+        if k.get_bit(T::NUM_BITS() - 1 - i).equal(I::ONE()) {
             q = point_add(q, p);
         }
     }
