@@ -213,73 +213,84 @@ fn translate_expr_name(
     }
 }
 
-pub fn translate_struct_name(
+pub fn translate_constructor_name(
     sess: &Session,
     path: &ast::Path,
+    specials: &SpecialNames,
 ) -> TranslationResult<(BaseTyp, Spanned<TopLevelIdent>)> {
-    if path.segments.len() > 2 {
-        sess.span_rustspec_err(path.span, "expected a one or two segment struct name");
-        return Err(());
-    }
-    if path.segments.len() == 1 {
-        let segment = &path.segments[0];
-        match &segment.args {
+    match path.segments.as_slice() {
+        [segment] => match &segment.args {
             None => {
-                let ty_name = TopLevelIdent {
-                    string: segment.ident.name.to_ident_string(),
-                    kind: TopLevelIdentKind::Type,
-                };
-                let ty = (ty_name, path.span.into());
+                let name = segment.ident.name.to_ident_string();
                 let cons_name = TopLevelIdent {
-                    string: segment.ident.name.to_ident_string(),
+                    string: name.clone(),
                     kind: TopLevelIdentKind::EnumConstructor,
                 };
                 let cons = (cons_name, path.span.into());
-                return Ok((BaseTyp::Named(ty, None), cons));
+                // Here we need to discriminate between the construction of an enum variant and the construction of a struct.
+                // In the case of a struct construction, the name of the constructor is exactly the name of the struct.
+                // Thus we check wether `name` is the name of an enum or a struct.
+                if specials.enums.contains(&name) {
+                    let ty_name = TopLevelIdent {
+                        string: segment.ident.name.to_ident_string(),
+                        kind: TopLevelIdentKind::Type,
+                    };
+                    let ty = (ty_name, path.span.into());
+                    Ok((BaseTyp::Named(ty, None), cons))
+                // Hacspec does not allow single-segments variant constructors.
+                // `Result` is an exception to that rule.
+                // `Placeholder` is replaced during typechecking.
+                } else if name == "Ok".to_string() || name == "Err".to_string() {
+                    Ok((BaseTyp::Placeholder, cons))
+                } else {
+                    sess.span_rustspec_err(path.span, "missing type annotation");
+                    Err(())
+                }
             }
             Some(_) => {
                 sess.span_rustspec_err(
                     path.span,
                     "struct1: expression identifiers cannot have arguments",
                 );
-                return Err(());
+                Err(())
+            }
+        },
+        [segment0, segment1] => {
+            let ty_name = TopLevelIdent {
+                string: segment0.ident.name.to_ident_string(),
+                kind: TopLevelIdentKind::Type,
+            };
+            let ty = (ty_name, segment0.ident.span.into());
+            let cons_name = TopLevelIdent {
+                string: segment1.ident.name.to_ident_string(),
+                kind: TopLevelIdentKind::EnumConstructor,
+            };
+            let cons = (cons_name, segment1.ident.span.into());
+            match (&segment0.args, &segment1.args) {
+                (None, None) => return Ok((BaseTyp::Named(ty, None), cons)),
+                (Some(ref args), None) => {
+                    return Ok((
+                        BaseTyp::Named(
+                            ty,
+                            Some(translate_type_args(sess, args, &segment1.ident.span)?),
+                        ),
+                        cons,
+                    ))
+                }
+                (_, Some(x)) => {
+                    sess.span_rustspec_err(
+                        path.span,
+                        "struct3: expression identifiers cannot have arguments",
+                    );
+                    Err(())
+                }
             }
         }
-    }
-    if path.segments.len() == 2 {
-        let segment0 = &path.segments[0];
-        let segment1 = &path.segments[1];
-        let ty_name = TopLevelIdent {
-            string: segment0.ident.name.to_ident_string(),
-            kind: TopLevelIdentKind::Type,
-        };
-        let ty = (ty_name, segment0.ident.span.into());
-        let cons_name = TopLevelIdent {
-            string: segment1.ident.name.to_ident_string(),
-            kind: TopLevelIdentKind::EnumConstructor,
-        };
-        let cons = (cons_name, segment1.ident.span.into());
-        match (&segment0.args, &segment1.args) {
-            (None, None) => return Ok((BaseTyp::Named(ty, None), cons)),
-            (Some(ref args), None) => {
-                return Ok((
-                    BaseTyp::Named(
-                        ty,
-                        Some(translate_type_args(sess, args, &segment1.ident.span)?),
-                    ),
-                    cons,
-                ))
-            }
-            (_, Some(x)) => {
-                sess.span_rustspec_err(
-                    path.span,
-                    "struct3: expression identifiers cannot have arguments",
-                );
-                return Err(());
-            }
+        _ => {
+            sess.span_rustspec_err(path.span, "expected a one or two segment struct name");
+            Err(())
         }
     }
-    return Err(());
 }
 
 enum FuncNameResult {
