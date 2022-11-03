@@ -188,9 +188,9 @@ Definition secret_to_public
   match group_name_8 with
   | Secp256r1 => match p256_point_mul_base (nat_mod_from_byte_seq_be (
       x_9) : p256_scalar_t) with
-  | Ok (x_10, y_11) => @Ok dh_pk_t crypto_error_t (seq_concat (
+  | Ok ((x_10, y_11)) => @Ok dh_pk_t crypto_error_t (seq_concat (
       nat_mod_to_byte_seq_be (x_10)) (nat_mod_to_byte_seq_be (y_11)))
-  | Err _ => @Err dh_pk_t crypto_error_t (CryptoError)
+  | Err (_) => @Err dh_pk_t crypto_error_t (CryptoError)
   end
   | X25519 => @Ok dh_pk_t crypto_error_t (seq_from_seq (
       array_to_seq (x25519_secret_to_public (array_from_seq (32) (x_9)))))
@@ -217,9 +217,9 @@ Definition p256_ecdh
     ) in 
   match p256_point_mul (nat_mod_from_byte_seq_be (x_13) : p256_scalar_t) (
     pk_15) with
-  | Ok (x_16, y_17) => @Ok key_t crypto_error_t (seq_concat (
+  | Ok ((x_16, y_17)) => @Ok key_t crypto_error_t (seq_concat (
       nat_mod_to_byte_seq_be (x_16)) (nat_mod_to_byte_seq_be (y_17)))
-  | Err _ => @Err key_t crypto_error_t (CryptoError)
+  | Err (_) => @Err key_t crypto_error_t (CryptoError)
   end.
 
 Definition ecdh
@@ -509,8 +509,8 @@ Definition p256_sign
     nat_mod_from_byte_seq_be (array_to_seq (random_91)) : p256_scalar_t in 
   match ecdsa_p256_sha256_sign (payload_89) (nat_mod_from_byte_seq_be (
       ps_88) : p256_scalar_t) (nonce_92) with
-  | Ok (r_93, s_94) => concat_signature (r_93) (s_94)
-  | Err _ => @Err signature_t crypto_error_t (CryptoError)
+  | Ok ((r_93, s_94)) => concat_signature (r_93) (s_94)
+  | Err (_) => @Err signature_t crypto_error_t (CryptoError)
   end.
 
 Definition sign
@@ -548,8 +548,8 @@ Definition p256_verify
       r_104,
       s_105
     )) with
-  | Ok tt => @Ok unit crypto_error_t (tt)
-  | Err _ => @Err unit crypto_error_t (VerifyFailed)
+  | Ok (tt) => @Ok unit crypto_error_t (tt)
+  | Err (_) => @Err unit crypto_error_t (VerifyFailed)
   end.
 
 Definition verify
@@ -583,8 +583,8 @@ Definition hkdf_expand
   : (result key_t crypto_error_t) :=
   match ha_113 with
   | SHA256 => match expand (k_114) (info_115) (len_116) with
-  | Ok b_117 => @Ok key_t crypto_error_t (seq_from_seq (b_117))
-  | Err _ => @Err key_t crypto_error_t (HkdfError)
+  | Ok (b_117) => @Ok key_t crypto_error_t (seq_from_seq (b_117))
+  | Err (_) => @Err key_t crypto_error_t (HkdfError)
   end
   | SHA384 => @Err key_t crypto_error_t (UnsupportedAlgorithm)
   end.
@@ -639,8 +639,8 @@ Definition aes128_decrypt
           (seq_len (ciphertext_137)) - (usize 16),
           seq_len (ciphertext_137)
         )))) with
-  | Ok m_139 => @Ok byte_seq crypto_error_t (m_139)
-  | Err _ => @Err byte_seq crypto_error_t (MacFailed)
+  | Ok (m_139) => @Ok byte_seq crypto_error_t (m_139)
+  | Err (_) => @Err byte_seq crypto_error_t (MacFailed)
   end.
 
 Definition chacha_decrypt
@@ -657,8 +657,8 @@ Definition chacha_decrypt
           (seq_len (ciphertext_142)) - (usize 16),
           seq_len (ciphertext_142)
         )))) with
-  | Ok ptxt_144 => @Ok byte_seq crypto_error_t (ptxt_144)
-  | Err _ => @Err byte_seq crypto_error_t (MacFailed)
+  | Ok (ptxt_144) => @Ok byte_seq crypto_error_t (ptxt_144)
+  | Err (_) => @Err byte_seq crypto_error_t (MacFailed)
   end.
 
 Definition aead_decrypt

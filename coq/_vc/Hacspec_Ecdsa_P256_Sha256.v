@@ -37,8 +37,8 @@ Definition check_scalar_zero (r_527 : p256_scalar_t) : check_result_t :=
 
 Definition ecdsa_point_mul_base (x_528 : p256_scalar_t) : arithmetic_result_t :=
   match p256_point_mul_base (x_528) with
-  | Ok s_529 => @Ok affine_t error_t (s_529)
-  | Err _ => @Err affine_t error_t (InvalidScalar)
+  | Ok (s_529) => @Ok affine_t error_t (s_529)
+  | Err (_) => @Err affine_t error_t (InvalidScalar)
   end.
 
 Definition ecdsa_point_mul
@@ -46,8 +46,8 @@ Definition ecdsa_point_mul
   (p_531 : affine_t)
   : arithmetic_result_t :=
   match p256_point_mul (k_530) (p_531) with
-  | Ok s_532 => @Ok affine_t error_t (s_532)
-  | Err _ => @Err affine_t error_t (InvalidScalar)
+  | Ok (s_532) => @Ok affine_t error_t (s_532)
+  | Err (_) => @Err affine_t error_t (InvalidScalar)
   end.
 
 Definition ecdsa_point_add
@@ -55,8 +55,8 @@ Definition ecdsa_point_add
   (q_534 : affine_t)
   : arithmetic_result_t :=
   match point_add (p_533) (q_534) with
-  | Ok s_535 => @Ok affine_t error_t (s_535)
-  | Err _ => @Err affine_t error_t (InvalidScalar)
+  | Ok (s_535) => @Ok affine_t error_t (s_535)
+  | Err (_) => @Err affine_t error_t (InvalidScalar)
   end.
 
 Definition sign

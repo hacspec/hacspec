@@ -61,7 +61,7 @@ Inductive point_t :=
 
 Definition finite (p_2400 : point_t) : (option affine_point_t) :=
   match p_2400 with
-  | Affine p_2401 => some (p_2401)
+  | Affine (p_2401) => some (p_2401)
   | AtInfinity => @None affine_point_t
   end.
 
