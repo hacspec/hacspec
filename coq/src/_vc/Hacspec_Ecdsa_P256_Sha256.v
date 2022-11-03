@@ -64,25 +64,29 @@ Definition sign
   (sk_537 : p256_secret_key_t)
   (nonce_538 : p256_scalar_t)
   : p256_signature_result_t :=
-  bind (check_scalar_zero (nonce_538)) (fun _ => bind (ecdsa_point_mul_base (
-        nonce_538)) (fun '(k_x_539, k_y_540) => let r_541 : p256_scalar_t :=
-        nat_mod_from_byte_seq_be (nat_mod_to_byte_seq_be (
-            k_x_539)) : p256_scalar_t in 
-      bind (check_scalar_zero (r_541)) (fun _ =>
-        let payload_hash_542 : sha256_digest_t :=
-          hash (payload_536) in 
-        let payload_hash_543 : p256_scalar_t :=
-          nat_mod_from_byte_seq_be (
-            array_to_seq (payload_hash_542)) : p256_scalar_t in 
-        let rsk_544 : p256_scalar_t :=
-          (r_541) *% (sk_537) in 
-        let hash_rsk_545 : p256_scalar_t :=
-          (payload_hash_543) +% (rsk_544) in 
-        let nonce_inv_546 : p256_scalar_t :=
-          nat_mod_inv (nonce_538) in 
-        let s_547 : p256_scalar_t :=
-          (nonce_inv_546) *% (hash_rsk_545) in 
-        @Ok p256_signature_t error_t ((r_541, s_547))))).
+  let _ : unit :=
+    check_scalar_zero (nonce_538) in 
+  let '(k_x_539, k_y_540) :=
+    ecdsa_point_mul_base (nonce_538) in 
+  let r_541 : p256_scalar_t :=
+    nat_mod_from_byte_seq_be (nat_mod_to_byte_seq_be (
+        k_x_539)) : p256_scalar_t in 
+  let _ : unit :=
+    check_scalar_zero (r_541) in 
+  let payload_hash_542 : sha256_digest_t :=
+    hash (payload_536) in 
+  let payload_hash_543 : p256_scalar_t :=
+    nat_mod_from_byte_seq_be (
+      array_to_seq (payload_hash_542)) : p256_scalar_t in 
+  let rsk_544 : p256_scalar_t :=
+    (r_541) *% (sk_537) in 
+  let hash_rsk_545 : p256_scalar_t :=
+    (payload_hash_543) +% (rsk_544) in 
+  let nonce_inv_546 : p256_scalar_t :=
+    nat_mod_inv (nonce_538) in 
+  let s_547 : p256_scalar_t :=
+    (nonce_inv_546) *% (hash_rsk_545) in 
+  @Ok p256_signature_t error_t ((r_541, s_547)).
 
 Definition ecdsa_p256_sha256_sign
   (payload_548 : byte_seq)
@@ -107,16 +111,19 @@ Definition verify
     nat_mod_inv (s_555) in 
   let u1_559 : p256_scalar_t :=
     (payload_hash_557) *% (s_inv_558) in 
-  bind (ecdsa_point_mul_base (u1_559)) (fun u1_560 =>
-    let u2_561 : p256_scalar_t :=
-      (r_554) *% (s_inv_558) in 
-    bind (ecdsa_point_mul (u2_561) (pk_552)) (fun u2_562 => bind (
-        ecdsa_point_add (u1_560) (u2_562)) (fun '(x_563, y_564) =>
-        let x_565 : p256_scalar_t :=
-          nat_mod_from_byte_seq_be (nat_mod_to_byte_seq_be (
-              x_563)) : p256_scalar_t in 
-        (if ((x_565) =.? (r_554)):bool then (@Ok unit error_t (tt)) else (
-            @Err unit error_t (InvalidSignature)))))).
+  let u1_560 : affine_t :=
+    ecdsa_point_mul_base (u1_559) in 
+  let u2_561 : p256_scalar_t :=
+    (r_554) *% (s_inv_558) in 
+  let u2_562 : affine_t :=
+    ecdsa_point_mul (u2_561) (pk_552) in 
+  let '(x_563, y_564) :=
+    ecdsa_point_add (u1_560) (u2_562) in 
+  let x_565 : p256_scalar_t :=
+    nat_mod_from_byte_seq_be (nat_mod_to_byte_seq_be (
+        x_563)) : p256_scalar_t in 
+  (if ((x_565) =.? (r_554)):bool then (@Ok unit error_t (tt)) else (
+      @Err unit error_t (InvalidSignature))).
 
 Definition ecdsa_p256_sha256_verify
   (payload_566 : byte_seq)

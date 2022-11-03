@@ -22,12 +22,20 @@ Definition rsa_int_t := nat_mod pow2 2048.
 
 Inductive error_t :=
 | InvalidLength : error_t
-| MessageTooLarge : error_t.
+| MessageTooLarge : error_t
+| DecryptionFailed : error_t
+| VerificationFailed : error_t.
 
 Definition eqb_error_t (x y : error_t) : bool :=
 match x with
    | InvalidLength => match y with | InvalidLength=> true | _ => false end
    | MessageTooLarge => match y with | MessageTooLarge=> true | _ => false end
+   | DecryptionFailed => match y with | DecryptionFailed=> true | _ => false end
+   | VerificationFailed =>
+       match y with
+       | VerificationFailed=> true
+       | _ => false
+       end
    end.
 
 Definition eqb_leibniz_error_t (x y : error_t) : eqb_error_t x y = true <-> x = y.
@@ -47,66 +55,71 @@ Notation "'byte_seq_result_t'" := ((result byte_seq error_t)) : hacspec_scope.
 
 Notation "'rsa_int_result_t'" := ((result rsa_int_t error_t)) : hacspec_scope.
 
-Definition rsaep (pk_1947 : pk_t) (m_1948 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1949, e_1950) :=
-    pk_1947 in 
-  (if ((m_1948) >.? ((n_1949) -% (nat_mod_one ))):bool then (
+Definition rsaep (pk_2375 : pk_t) (m_2376 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_2377, e_2378) :=
+    pk_2375 in 
+  (if ((m_2376) >.? ((n_2377) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (m_1948) (e_1950) (n_1949)))).
+        nat_mod_pow_mod (m_2376) (e_2378) (n_2377)))).
 
-Definition rsadp (sk_1951 : sk_t) (c_1952 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1953, d_1954) :=
-    sk_1951 in 
-  (if ((c_1952) >.? ((n_1953) -% (nat_mod_one ))):bool then (
+Definition rsadp (sk_2379 : sk_t) (c_2380 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_2381, d_2382) :=
+    sk_2379 in 
+  (if ((c_2380) >.? ((n_2381) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (c_1952) (d_1954) (n_1953)))).
+        nat_mod_pow_mod (c_2380) (d_2382) (n_2381)))).
 
-Definition rsasp1 (sk_1955 : sk_t) (m_1956 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1957, d_1958) :=
-    sk_1955 in 
-  (if ((m_1956) >.? ((n_1957) -% (nat_mod_one ))):bool then (
+Definition rsasp1 (sk_2383 : sk_t) (m_2384 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_2385, d_2386) :=
+    sk_2383 in 
+  (if ((m_2384) >.? ((n_2385) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (m_1956) (d_1958) (n_1957)))).
+        nat_mod_pow_mod (m_2384) (d_2386) (n_2385)))).
 
-Definition rsavp1 (pk_1959 : pk_t) (s_1960 : rsa_int_t) : rsa_int_result_t :=
-  let '(n_1961, e_1962) :=
-    pk_1959 in 
-  (if ((s_1960) >.? ((n_1961) -% (nat_mod_one ))):bool then (
+Definition rsavp1 (pk_2387 : pk_t) (s_2388 : rsa_int_t) : rsa_int_result_t :=
+  let '(n_2389, e_2390) :=
+    pk_2387 in 
+  (if ((s_2388) >.? ((n_2389) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
-        nat_mod_pow_mod (s_1960) (e_1962) (n_1961)))).
+        nat_mod_pow_mod (s_2388) (e_2390) (n_2389)))).
 
 Definition i2osp
-  (x_1963 : rsa_int_t)
-  (x_len_1964 : int32)
+  (x_2391 : rsa_int_t)
+  (x_len_2392 : int32)
   : byte_seq_result_t :=
-  (if (((x_1963) >=.? (nat_mod_exp (nat_mod_from_literal (0x) (
-              @repr WORDSIZE128 256) : rsa_int_t) (x_len_1964))) && ((
-          x_len_1964) !=.? (byte_size_v))):bool then (@Err byte_seq error_t (
+  (if (((x_2391) >=.? (nat_mod_exp (nat_mod_from_literal (0x) (
+              @repr WORDSIZE128 256) : rsa_int_t) (x_len_2392))) && ((
+          x_len_2392) !=.? (byte_size_v))):bool then (@Err byte_seq error_t (
         InvalidLength)) else (@Ok byte_seq error_t (seq_slice (
-          nat_mod_to_byte_seq_be (x_1963)) (@cast _ uint32 _ ((byte_size_v) .- (
-              x_len_1964))) (@cast _ uint32 _ (x_len_1964))))).
+          nat_mod_to_byte_seq_be (x_2391)) (@cast _ uint32 _ ((byte_size_v) .- (
+              x_len_2392))) (@cast _ uint32 _ (x_len_2392))))).
 
-Definition os2ip (x_1965 : byte_seq) : rsa_int_t :=
-  nat_mod_from_byte_seq_be (x_1965) : rsa_int_t.
+Definition os2ip (x_2393 : byte_seq) : rsa_int_t :=
+  nat_mod_from_byte_seq_be (x_2393) : rsa_int_t.
 
 Definition mgf1
-  (mgf_seed_1966 : byte_seq)
-  (mask_len_1967 : uint_size)
+  (mgf_seed_2394 : byte_seq)
+  (mask_len_2395 : uint_size)
   : byte_seq_result_t :=
-  let result_1968 : (result byte_seq error_t) :=
+  let result_2396 : (result byte_seq error_t) :=
     @Err byte_seq error_t (InvalidLength) in 
-  ifbnd (mask_len_1967) <.? ((usize 2) .^ ((usize 32) * (hlen_v))) : bool
-  thenbnd (let t_1969 : seq uint8 :=
-      seq_new_ (default) (usize 0) in 
-    bind (foldibnd (usize 0) to (((mask_len_1967) + (usize 32)) / (
-          usize 32)) for t_1969 >> (fun i_1970 t_1969 =>
-      bind (i2osp (nat_mod_from_literal (0x) (pub_u128 (i_1970)) : rsa_int_t) (
-          @repr WORDSIZE32 4)) (fun x_1971 => let t_1969 :=
-          seq_concat (t_1969) (array_to_seq (sha256 (seq_concat (
-                mgf_seed_1966) (x_1971)))) in 
-        Ok ((t_1969))))) (fun t_1969 => let result_1968 :=
-        @Ok byte_seq error_t (seq_slice (t_1969) (usize 0) (mask_len_1967)) in 
-      Ok ((result_1968))))
-  else ((result_1968)) >> (fun '(result_1968) =>
-  result_1968).
+  let '(result_2396) :=
+    if (mask_len_2395) <.? ((usize 2) .^ ((usize 32) * (hlen_v))):bool then (
+      let t_2397 : seq uint8 :=
+        seq_new_ (default) (usize 0) in 
+      let t_2397 :=
+        foldi (usize 0) (((mask_len_2395) + (usize 32)) / (
+              usize 32)) (fun i_2398 t_2397 =>
+          let x_2399 : byte_seq :=
+            i2osp (nat_mod_from_literal (0x) (pub_u128 (i_2398)) : rsa_int_t) (
+              @repr WORDSIZE32 4) in 
+          let t_2397 :=
+            seq_concat (t_2397) (array_to_seq (sha256 (seq_concat (
+                  mgf_seed_2394) (x_2399)))) in 
+          (t_2397))
+        t_2397 in 
+      let result_2396 :=
+        @Ok byte_seq error_t (seq_slice (t_2397) (usize 0) (mask_len_2395)) in 
+      (result_2396)) else ((result_2396)) in 
+  result_2396.
 

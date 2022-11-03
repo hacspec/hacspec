@@ -91,26 +91,26 @@ Definition decrypt_aes
   : aes_gcm_byte_seq_result_t :=
   let iv0_305 : aes_nonce_t :=
     array_new_ (default) (_) in 
-  bind (aes_ctr_key_block (key_300) (iv0_305) (secret (
+  let mac_key_306 : block_t :=
+    aes_ctr_key_block (key_300) (iv0_305) (secret (
         @repr WORDSIZE32 0) : int32) (key_length_v) (rounds_v) (
-      key_schedule_length_v) (key_length_v) (iterations_v)) (fun mac_key_306 =>
-    bind (aes_ctr_key_block (key_300) ((iv_301)) (secret (
-          @repr WORDSIZE32 1) : int32) (key_length_v) (rounds_v) (
-        key_schedule_length_v) (key_length_v) (iterations_v)) (
-      fun tag_mix_307 => let padded_msg_308 : seq uint8 :=
-        pad_aad_msg (aad_302) (cipher_text_303) in 
-      let my_tag_309 : gf128_tag_t :=
-        gmac (padded_msg_308) (array_from_seq (_) (
-            array_to_seq (mac_key_306))) in 
-      let my_tag_310 : block_t :=
-        xor_block (array_from_seq (_) (array_to_seq (my_tag_309))) (
-          tag_mix_307) in 
-      let ptxt_311 : seq uint8 :=
-        aes128_decrypt (array_from_seq (_) (key_300)) (iv_301) (secret (
-            @repr WORDSIZE32 2) : int32) (cipher_text_303) in 
-      (if (array_declassify_eq (my_tag_310) (array_from_seq (_) (
-              array_to_seq (tag_304)))):bool then (@Ok byte_seq int8 (
-            ptxt_311)) else (@Err byte_seq int8 (invalid_tag_v))))).
+      key_schedule_length_v) (key_length_v) (iterations_v) in 
+  let tag_mix_307 : block_t :=
+    aes_ctr_key_block (key_300) ((iv_301)) (secret (
+        @repr WORDSIZE32 1) : int32) (key_length_v) (rounds_v) (
+      key_schedule_length_v) (key_length_v) (iterations_v) in 
+  let padded_msg_308 : seq uint8 :=
+    pad_aad_msg (aad_302) (cipher_text_303) in 
+  let my_tag_309 : gf128_tag_t :=
+    gmac (padded_msg_308) (array_from_seq (_) (array_to_seq (mac_key_306))) in 
+  let my_tag_310 : block_t :=
+    xor_block (array_from_seq (_) (array_to_seq (my_tag_309))) (tag_mix_307) in 
+  let ptxt_311 : seq uint8 :=
+    aes128_decrypt (array_from_seq (_) (key_300)) (iv_301) (secret (
+        @repr WORDSIZE32 2) : int32) (cipher_text_303) in 
+  (if (array_declassify_eq (my_tag_310) (array_from_seq (_) (
+          array_to_seq (tag_304)))):bool then (@Ok byte_seq int8 (
+        ptxt_311)) else (@Err byte_seq int8 (invalid_tag_v))).
 
 Definition decrypt_aes128
   (key_312 : key128_t)

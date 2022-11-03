@@ -68,24 +68,26 @@ Definition expand
   (info_726 : byte_seq)
   (l_727 : uint_size)
   : hkdf_byte_seq_result_t :=
-  bind (check_output_limit (l_727)) (fun n_728 => let t_i_729 : prk_t :=
-      array_new_ (default) (_) in 
-    let t_730 : seq uint8 :=
-      seq_new_ (default) ((n_728) * (hash_size_v)) in 
-    let '(t_i_729, t_730) :=
-      foldi (usize 0) (n_728) (fun i_731 '(t_i_729, t_730) =>
-        let hmac_txt_in_732 : seq uint8 :=
-          (if ((i_731) =.? (usize 0)):bool then (build_hmac_txt (seq_new_ (
-                  default) (usize 0)) (info_726) (secret ((pub_u8 (i_731)) .+ (
-                    @repr WORDSIZE8 1)) : int8)) else (build_hmac_txt (
-                seq_from_seq (array_to_seq (t_i_729))) (info_726) (secret ((
-                    pub_u8 (i_731)) .+ (@repr WORDSIZE8 1)) : int8))) in 
-        let t_i_729 :=
-          hmac (prk_725) (hmac_txt_in_732) in 
-        let t_730 :=
-          seq_update (t_730) ((i_731) * (array_len (t_i_729))) (
-            array_to_seq (t_i_729)) in 
-        (t_i_729, t_730))
-      (t_i_729, t_730) in 
-    @Ok byte_seq hkdf_error_t (seq_slice (t_730) (usize 0) (l_727))).
+  let n_728 : uint_size :=
+    check_output_limit (l_727) in 
+  let t_i_729 : prk_t :=
+    array_new_ (default) (_) in 
+  let t_730 : seq uint8 :=
+    seq_new_ (default) ((n_728) * (hash_size_v)) in 
+  let '(t_i_729, t_730) :=
+    foldi (usize 0) (n_728) (fun i_731 '(t_i_729, t_730) =>
+      let hmac_txt_in_732 : seq uint8 :=
+        (if ((i_731) =.? (usize 0)):bool then (build_hmac_txt (seq_new_ (
+                default) (usize 0)) (info_726) (secret ((pub_u8 (i_731)) .+ (
+                  @repr WORDSIZE8 1)) : int8)) else (build_hmac_txt (
+              seq_from_seq (array_to_seq (t_i_729))) (info_726) (secret ((
+                  pub_u8 (i_731)) .+ (@repr WORDSIZE8 1)) : int8))) in 
+      let t_i_729 :=
+        hmac (prk_725) (hmac_txt_in_732) in 
+      let t_730 :=
+        seq_update (t_730) ((i_731) * (array_len (t_i_729))) (
+          array_to_seq (t_i_729)) in 
+      (t_i_729, t_730))
+    (t_i_729, t_730) in 
+  @Ok byte_seq hkdf_error_t (seq_slice (t_730) (usize 0) (l_727)).
 
