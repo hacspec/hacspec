@@ -73,6 +73,14 @@ fn no_annotation_nested() -> Result<u8, u16> {
     }
 }
 
+fn no_annotation_nested_type(n: usize) -> Result<Result<u8, u16>, u32> {
+    match n {
+        0 => Ok(Ok(0u8)),
+        1 => Ok(Err(1u16)),
+        _ => Err(2u32),
+    }
+}
+
 fn no_annotation_tuple() -> (Result<(), u16>, Result<u8, u16>) {
     if 1 > 3 {
         (Ok(()), Err(1u16))
@@ -86,4 +94,11 @@ fn no_annotation_tuple() -> (Result<(), u16>, Result<u8, u16>) {
 
 fn no_annotation_fun_call() -> U32 {
     foo(Err(12))
+}
+
+fn no_annotation_result() -> Result<u8, u16> {
+    // The annotations `Result::<u8, E>` is required by *Rust*: `E`
+    // could be anything (Rust might insert a `into`)
+    Result::<u8, u16>::Ok(12u8)?;
+    Ok(Result::<u8, u16>::Ok(12u8)?)
 }
