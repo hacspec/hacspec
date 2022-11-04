@@ -133,224 +133,218 @@ Definition pi_v : rotation_constants_t :=
         usize 21
       ] in  l).
 
-Definition theta (s_1115 : state_t) : state_t :=
-  let b_1116 : row_t :=
+Definition theta (s_855 : state_t) : state_t :=
+  let b_856 : row_t :=
     array_new_ (default) (5) in 
-  let b_1116 :=
-    foldi (usize 0) (usize 5) (fun i_1117 b_1116 =>
-      let b_1116 :=
-        array_upd b_1116 (i_1117) (((((array_index (s_1115) (i_1117)) .^ (
-                  array_index (s_1115) ((i_1117) + (usize 5)))) .^ (
-                array_index (s_1115) ((i_1117) + (usize 10)))) .^ (array_index (
-                s_1115) ((i_1117) + (usize 15)))) .^ (array_index (s_1115) ((
-                i_1117) + (usize 20)))) in 
-      (b_1116))
-    b_1116 in 
-  let s_1115 :=
-    foldi (usize 0) (usize 5) (fun i_1118 s_1115 =>
-      let u_1119 : uint64 :=
-        array_index (b_1116) (((i_1118) + (usize 1)) %% (usize 5)) in 
-      let t_1120 : uint64 :=
-        (array_index (b_1116) (((i_1118) + (usize 4)) %% (usize 5))) .^ (
-          uint64_rotate_left (u_1119) (usize 1)) in 
-      let s_1115 :=
-        foldi (usize 0) (usize 5) (fun j_1121 s_1115 =>
-          let s_1115 :=
-            array_upd s_1115 (((usize 5) * (j_1121)) + (i_1118)) ((array_index (
-                  s_1115) (((usize 5) * (j_1121)) + (i_1118))) .^ (t_1120)) in 
-          (s_1115))
-        s_1115 in 
-      (s_1115))
-    s_1115 in 
-  s_1115.
+  let b_856 :=
+    foldi (usize 0) (usize 5) (fun i_857 b_856 =>
+      let b_856 :=
+        array_upd b_856 (i_857) (((((array_index (s_855) (i_857)) .^ (
+                  array_index (s_855) ((i_857) + (usize 5)))) .^ (array_index (
+                  s_855) ((i_857) + (usize 10)))) .^ (array_index (s_855) ((
+                  i_857) + (usize 15)))) .^ (array_index (s_855) ((i_857) + (
+                usize 20)))) in 
+      (b_856))
+    b_856 in 
+  let s_855 :=
+    foldi (usize 0) (usize 5) (fun i_858 s_855 =>
+      let u_859 : uint64 :=
+        array_index (b_856) (((i_858) + (usize 1)) %% (usize 5)) in 
+      let t_860 : uint64 :=
+        (array_index (b_856) (((i_858) + (usize 4)) %% (usize 5))) .^ (
+          uint64_rotate_left (u_859) (usize 1)) in 
+      let s_855 :=
+        foldi (usize 0) (usize 5) (fun j_861 s_855 =>
+          let s_855 :=
+            array_upd s_855 (((usize 5) * (j_861)) + (i_858)) ((array_index (
+                  s_855) (((usize 5) * (j_861)) + (i_858))) .^ (t_860)) in 
+          (s_855))
+        s_855 in 
+      (s_855))
+    s_855 in 
+  s_855.
 
-Definition rho (s_1122 : state_t) : state_t :=
-  let s_1122 :=
-    foldi (usize 0) (usize 25) (fun i_1123 s_1122 =>
-      let u_1124 : uint64 :=
-        array_index (s_1122) (i_1123) in 
-      let s_1122 :=
-        array_upd s_1122 (i_1123) (uint64_rotate_left (u_1124) (array_index (
-              rotc_v) (i_1123))) in 
-      (s_1122))
-    s_1122 in 
-  s_1122.
+Definition rho (s_862 : state_t) : state_t :=
+  let s_862 :=
+    foldi (usize 0) (usize 25) (fun i_863 s_862 =>
+      let u_864 : uint64 :=
+        array_index (s_862) (i_863) in 
+      let s_862 :=
+        array_upd s_862 (i_863) (uint64_rotate_left (u_864) (array_index (
+              rotc_v) (i_863))) in 
+      (s_862))
+    s_862 in 
+  s_862.
 
-Definition pi (s_1125 : state_t) : state_t :=
-  let v_1126 : state_t :=
+Definition pi (s_865 : state_t) : state_t :=
+  let v_866 : state_t :=
     array_new_ (default) (25) in 
-  let v_1126 :=
-    foldi (usize 0) (usize 25) (fun i_1127 v_1126 =>
-      let v_1126 :=
-        array_upd v_1126 (i_1127) (array_index (s_1125) (array_index (pi_v) (
-              i_1127))) in 
-      (v_1126))
-    v_1126 in 
-  v_1126.
+  let v_866 :=
+    foldi (usize 0) (usize 25) (fun i_867 v_866 =>
+      let v_866 :=
+        array_upd v_866 (i_867) (array_index (s_865) (array_index (pi_v) (
+              i_867))) in 
+      (v_866))
+    v_866 in 
+  v_866.
 
-Definition chi (s_1128 : state_t) : state_t :=
-  let b_1129 : row_t :=
+Definition chi (s_868 : state_t) : state_t :=
+  let b_869 : row_t :=
     array_new_ (default) (5) in 
-  let '(s_1128, b_1129) :=
-    foldi (usize 0) (usize 5) (fun i_1130 '(s_1128, b_1129) =>
-      let b_1129 :=
-        foldi (usize 0) (usize 5) (fun j_1131 b_1129 =>
-          let b_1129 :=
-            array_upd b_1129 (j_1131) (array_index (s_1128) (((usize 5) * (
-                    i_1130)) + (j_1131))) in 
-          (b_1129))
-        b_1129 in 
-      let s_1128 :=
-        foldi (usize 0) (usize 5) (fun j_1132 s_1128 =>
-          let u_1133 : uint64 :=
-            array_index (b_1129) (((j_1132) + (usize 1)) %% (usize 5)) in 
-          let s_1128 :=
-            array_upd s_1128 (((usize 5) * (i_1130)) + (j_1132)) ((array_index (
-                  s_1128) (((usize 5) * (i_1130)) + (j_1132))) .^ ((not (
-                    u_1133)) .& (array_index (b_1129) (((j_1132) + (
-                        usize 2)) %% (usize 5))))) in 
-          (s_1128))
-        s_1128 in 
-      (s_1128, b_1129))
-    (s_1128, b_1129) in 
-  s_1128.
+  let '(s_868, b_869) :=
+    foldi (usize 0) (usize 5) (fun i_870 '(s_868, b_869) =>
+      let b_869 :=
+        foldi (usize 0) (usize 5) (fun j_871 b_869 =>
+          let b_869 :=
+            array_upd b_869 (j_871) (array_index (s_868) (((usize 5) * (
+                    i_870)) + (j_871))) in 
+          (b_869))
+        b_869 in 
+      let s_868 :=
+        foldi (usize 0) (usize 5) (fun j_872 s_868 =>
+          let u_873 : uint64 :=
+            array_index (b_869) (((j_872) + (usize 1)) %% (usize 5)) in 
+          let s_868 :=
+            array_upd s_868 (((usize 5) * (i_870)) + (j_872)) ((array_index (
+                  s_868) (((usize 5) * (i_870)) + (j_872))) .^ ((not (
+                    u_873)) .& (array_index (b_869) (((j_872) + (usize 2)) %% (
+                      usize 5))))) in 
+          (s_868))
+        s_868 in 
+      (s_868, b_869))
+    (s_868, b_869) in 
+  s_868.
 
-Definition iota (s_1134 : state_t) (rndconst_1135 : int64) : state_t :=
-  let s_1134 :=
-    array_upd s_1134 (usize 0) ((array_index (s_1134) (usize 0)) .^ (
-        uint64_classify (rndconst_1135))) in 
-  s_1134.
+Definition iota (s_874 : state_t) (rndconst_875 : int64) : state_t :=
+  let s_874 :=
+    array_upd s_874 (usize 0) ((array_index (s_874) (usize 0)) .^ (
+        uint64_classify (rndconst_875))) in 
+  s_874.
 
-Definition keccakf1600 (s_1136 : state_t) : state_t :=
-  let s_1136 :=
-    foldi (usize 0) (rounds_v) (fun i_1137 s_1136 =>
-      let s_1136 :=
-        theta (s_1136) in 
-      let s_1136 :=
-        rho (s_1136) in 
-      let s_1136 :=
-        pi (s_1136) in 
-      let s_1136 :=
-        chi (s_1136) in 
-      let s_1136 :=
-        iota (s_1136) (array_index (roundconstants_v) (i_1137)) in 
-      (s_1136))
-    s_1136 in 
-  s_1136.
+Definition keccakf1600 (s_876 : state_t) : state_t :=
+  let s_876 :=
+    foldi (usize 0) (rounds_v) (fun i_877 s_876 =>
+      let s_876 :=
+        theta (s_876) in 
+      let s_876 :=
+        rho (s_876) in 
+      let s_876 :=
+        pi (s_876) in 
+      let s_876 :=
+        chi (s_876) in 
+      let s_876 :=
+        iota (s_876) (array_index (roundconstants_v) (i_877)) in 
+      (s_876))
+    s_876 in 
+  s_876.
 
-Definition absorb_block (s_1138 : state_t) (block_1139 : byte_seq) : state_t :=
-  let s_1138 :=
-    foldi (usize 0) (seq_len (block_1139)) (fun i_1140 s_1138 =>
-      let w_1141 : uint_size :=
-        (i_1140) usize_shift_right (@repr WORDSIZE32 3) in 
-      let o_1142 : uint_size :=
-        (usize 8) * ((i_1140) .& (usize 7)) in 
-      let s_1138 :=
-        array_upd s_1138 (w_1141) ((array_index (s_1138) (w_1141)) .^ ((
-              uint64_from_uint8 (seq_index (block_1139) (i_1140))) shift_left (
-              o_1142))) in 
-      (s_1138))
-    s_1138 in 
-  keccakf1600 (s_1138).
+Definition absorb_block (s_878 : state_t) (block_879 : byte_seq) : state_t :=
+  let s_878 :=
+    foldi (usize 0) (seq_len (block_879)) (fun i_880 s_878 =>
+      let w_881 : uint_size :=
+        (i_880) usize_shift_right (@repr WORDSIZE32 3) in 
+      let o_882 : uint_size :=
+        (usize 8) * ((i_880) .& (usize 7)) in 
+      let s_878 :=
+        array_upd s_878 (w_881) ((array_index (s_878) (w_881)) .^ ((
+              uint64_from_uint8 (seq_index (block_879) (i_880))) shift_left (
+              o_882))) in 
+      (s_878))
+    s_878 in 
+  keccakf1600 (s_878).
 
 Definition squeeze
-  (s_1143 : state_t)
-  (nbytes_1144 : uint_size)
-  (rate_1145 : uint_size)
+  (s_883 : state_t)
+  (nbytes_884 : uint_size)
+  (rate_885 : uint_size)
   : byte_seq :=
-  let out_1146 : seq uint8 :=
-    seq_new_ (default) (nbytes_1144) in 
-  let '(s_1143, out_1146) :=
-    foldi (usize 0) (nbytes_1144) (fun i_1147 '(s_1143, out_1146) =>
-      let pos_1148 : uint_size :=
-        (i_1147) %% (rate_1145) in 
-      let w_1149 : uint_size :=
-        (pos_1148) usize_shift_right (@repr WORDSIZE32 3) in 
-      let o_1150 : uint_size :=
-        (usize 8) * ((pos_1148) .& (usize 7)) in 
-      let b_1151 : uint64 :=
-        ((array_index (s_1143) (w_1149)) shift_right (o_1150)) .& (
+  let out_886 : seq uint8 :=
+    seq_new_ (default) (nbytes_884) in 
+  let '(s_883, out_886) :=
+    foldi (usize 0) (nbytes_884) (fun i_887 '(s_883, out_886) =>
+      let pos_888 : uint_size :=
+        (i_887) %% (rate_885) in 
+      let w_889 : uint_size :=
+        (pos_888) usize_shift_right (@repr WORDSIZE32 3) in 
+      let o_890 : uint_size :=
+        (usize 8) * ((pos_888) .& (usize 7)) in 
+      let b_891 : uint64 :=
+        ((array_index (s_883) (w_889)) shift_right (o_890)) .& (
           uint64_classify (@repr WORDSIZE64 255)) in 
-      let out_1146 :=
-        seq_upd out_1146 (i_1147) (uint8_from_uint64 (b_1151)) in 
-      let '(s_1143) :=
-        if (((i_1147) + (usize 1)) %% (rate_1145)) =.? (usize 0):bool then (
-          let s_1143 :=
-            keccakf1600 (s_1143) in 
-          (s_1143)) else ((s_1143)) in 
-      (s_1143, out_1146))
-    (s_1143, out_1146) in 
-  out_1146.
+      let out_886 :=
+        seq_upd out_886 (i_887) (uint8_from_uint64 (b_891)) in 
+      let '(s_883) :=
+        if (((i_887) + (usize 1)) %% (rate_885)) =.? (usize 0):bool then (
+          let s_883 :=
+            keccakf1600 (s_883) in 
+          (s_883)) else ((s_883)) in 
+      (s_883, out_886))
+    (s_883, out_886) in 
+  out_886.
 
 Definition keccak
-  (rate_1152 : uint_size)
-  (data_1153 : byte_seq)
-  (p_1154 : int8)
-  (outbytes_1155 : uint_size)
+  (rate_892 : uint_size)
+  (data_893 : byte_seq)
+  (p_894 : int8)
+  (outbytes_895 : uint_size)
   : byte_seq :=
-  let buf_1156 : seq uint8 :=
-    seq_new_ (default) (rate_1152) in 
-  let last_block_len_1157 : uint_size :=
+  let buf_896 : seq uint8 :=
+    seq_new_ (default) (rate_892) in 
+  let last_block_len_897 : uint_size :=
     usize 0 in 
-  let s_1158 : state_t :=
+  let s_898 : state_t :=
     array_new_ (default) (25) in 
-  let '(buf_1156, last_block_len_1157, s_1158) :=
-    foldi (usize 0) (seq_num_chunks (data_1153) (rate_1152)) (fun i_1159 '(
-        buf_1156,
-        last_block_len_1157,
-        s_1158
+  let '(buf_896, last_block_len_897, s_898) :=
+    foldi (usize 0) (seq_num_chunks (data_893) (rate_892)) (fun i_899 '(
+        buf_896,
+        last_block_len_897,
+        s_898
       ) =>
-      let '(block_len_1160, block_1161) :=
-        seq_get_chunk (data_1153) (rate_1152) (i_1159) in 
-      let '(buf_1156, last_block_len_1157, s_1158) :=
-        if (block_len_1160) =.? (rate_1152):bool then (let s_1158 :=
-            absorb_block (s_1158) (block_1161) in 
-          (buf_1156, last_block_len_1157, s_1158)) else (let buf_1156 :=
-            seq_update_start (buf_1156) (block_1161) in 
-          let last_block_len_1157 :=
-            block_len_1160 in 
-          (buf_1156, last_block_len_1157, s_1158)) in 
-      (buf_1156, last_block_len_1157, s_1158))
-    (buf_1156, last_block_len_1157, s_1158) in 
-  let buf_1156 :=
-    seq_upd buf_1156 (last_block_len_1157) (secret (p_1154) : int8) in 
-  let buf_1156 :=
-    seq_upd buf_1156 ((rate_1152) - (usize 1)) ((seq_index (buf_1156) ((
-            rate_1152) - (usize 1))) .| (secret (
+      let '(block_len_900, block_901) :=
+        seq_get_chunk (data_893) (rate_892) (i_899) in 
+      let '(buf_896, last_block_len_897, s_898) :=
+        if (block_len_900) =.? (rate_892):bool then (let s_898 :=
+            absorb_block (s_898) (block_901) in 
+          (buf_896, last_block_len_897, s_898)) else (let buf_896 :=
+            seq_update_start (buf_896) (block_901) in 
+          let last_block_len_897 :=
+            block_len_900 in 
+          (buf_896, last_block_len_897, s_898)) in 
+      (buf_896, last_block_len_897, s_898))
+    (buf_896, last_block_len_897, s_898) in 
+  let buf_896 :=
+    seq_upd buf_896 (last_block_len_897) (secret (p_894) : int8) in 
+  let buf_896 :=
+    seq_upd buf_896 ((rate_892) - (usize 1)) ((seq_index (buf_896) ((
+            rate_892) - (usize 1))) .| (secret (
           @repr WORDSIZE8 128) : int8)) in 
-  let s_1158 :=
-    absorb_block (s_1158) (buf_1156) in 
-  squeeze (s_1158) (outbytes_1155) (rate_1152).
+  let s_898 :=
+    absorb_block (s_898) (buf_896) in 
+  squeeze (s_898) (outbytes_895) (rate_892).
 
-Definition sha3224 (data_1162 : byte_seq) : digest224_t :=
-  let t_1163 : seq uint8 :=
-    keccak (sha3224_rate_v) (data_1162) (@repr WORDSIZE8 6) (usize 28) in 
-  array_from_seq (28) (t_1163).
+Definition sha3224 (data_902 : byte_seq) : digest224_t :=
+  let t_903 : seq uint8 :=
+    keccak (sha3224_rate_v) (data_902) (@repr WORDSIZE8 6) (usize 28) in 
+  array_from_seq (28) (t_903).
 
-Definition sha3256 (data_1164 : byte_seq) : digest256_t :=
-  let t_1165 : seq uint8 :=
-    keccak (sha3256_rate_v) (data_1164) (@repr WORDSIZE8 6) (usize 32) in 
-  array_from_seq (32) (t_1165).
+Definition sha3256 (data_904 : byte_seq) : digest256_t :=
+  let t_905 : seq uint8 :=
+    keccak (sha3256_rate_v) (data_904) (@repr WORDSIZE8 6) (usize 32) in 
+  array_from_seq (32) (t_905).
 
-Definition sha3384 (data_1166 : byte_seq) : digest384_t :=
-  let t_1167 : seq uint8 :=
-    keccak (sha3384_rate_v) (data_1166) (@repr WORDSIZE8 6) (usize 48) in 
-  array_from_seq (48) (t_1167).
+Definition sha3384 (data_906 : byte_seq) : digest384_t :=
+  let t_907 : seq uint8 :=
+    keccak (sha3384_rate_v) (data_906) (@repr WORDSIZE8 6) (usize 48) in 
+  array_from_seq (48) (t_907).
 
-Definition sha3512 (data_1168 : byte_seq) : digest512_t :=
-  let t_1169 : seq uint8 :=
-    keccak (sha3512_rate_v) (data_1168) (@repr WORDSIZE8 6) (usize 64) in 
-  array_from_seq (64) (t_1169).
+Definition sha3512 (data_908 : byte_seq) : digest512_t :=
+  let t_909 : seq uint8 :=
+    keccak (sha3512_rate_v) (data_908) (@repr WORDSIZE8 6) (usize 64) in 
+  array_from_seq (64) (t_909).
 
-Definition shake128
-  (data_1170 : byte_seq)
-  (outlen_1171 : uint_size)
-  : byte_seq :=
-  keccak (shake128_rate_v) (data_1170) (@repr WORDSIZE8 31) (outlen_1171).
+Definition shake128 (data_910 : byte_seq) (outlen_911 : uint_size) : byte_seq :=
+  keccak (shake128_rate_v) (data_910) (@repr WORDSIZE8 31) (outlen_911).
 
-Definition shake256
-  (data_1172 : byte_seq)
-  (outlen_1173 : uint_size)
-  : byte_seq :=
-  keccak (shake256_rate_v) (data_1172) (@repr WORDSIZE8 31) (outlen_1173).
+Definition shake256 (data_912 : byte_seq) (outlen_913 : uint_size) : byte_seq :=
+  keccak (shake256_rate_v) (data_912) (@repr WORDSIZE8 31) (outlen_913).
 
