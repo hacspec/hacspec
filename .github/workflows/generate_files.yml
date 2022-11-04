@@ -3,7 +3,7 @@ name: Generate files on merge
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   generate_file:
