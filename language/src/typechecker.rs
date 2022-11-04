@@ -989,7 +989,29 @@ fn typecheck_expression(
                         sess,
                         &(*payload.clone(), payload_span.clone()),
                         func_return_type,
-                        &None,
+                        &(expected_type
+                            .and_then(|expected_type| {
+                                fn into_typ(base_typ: &Spanned<BaseTyp>) -> Typ {
+                                    ((Borrowing::Consumed, DUMMY_SP.into()), base_typ.clone())
+                                }
+                                // Suppose we're typechecking `e`, with `e` being `Variant(payload)`.
+                                // `e` is expected to be of type `expected_type`, say `expected_type` is `Foo`.
+                                // We know `payload` is of type `case_typ`.
+                                // However `case_typ` might be a type variable (when `Foo` has generic parameters).
+                                // Thus, we unify, and then bind.
+                                unify_types(
+                                    sess,
+                                    &into_typ(case_typ),
+                                    &into_typ(expected_type),
+                                    &HashMap::new(),
+                                    top_level_context,
+                                )
+                                .ok()
+                                .flatten()
+                                .and_then(|ctx| bind_variable_type(sess, &expected_type, &ctx).ok())
+                                .map(|binded_ty| (binded_ty, expected_type.1.clone()))
+                            })
+                            .as_ref()),
                         top_level_context,
                         &var_context,
                     )?;
