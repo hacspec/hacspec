@@ -1283,7 +1283,7 @@ fn translate_expr(
                             return Err(());
                         }
                         let arm_body = translate_expr_expects_exp(sess, specials, &*arm.body)?;
-                        let pat = translate_pattern(sess, &arm.pat)?;
+                        let pat = translate_pattern(sess, &arm.pat, specials)?;
                         Ok((pat, arm_body))
                     })
                     .collect(),
@@ -1579,47 +1579,51 @@ fn translate_expr_accepts_question_mark(
     }
 }
 
-fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pattern>> {
+fn translate_pattern(
+    sess: &Session,
+    pat: &Pat,
+    specials: &SpecialNames,
+) -> TranslationResult<Spanned<Pattern>> {
     match &pat.kind {
         PatKind::Ident(BindingMode::ByValue(m), id, None) => Ok((
             Pattern::IdentPat(translate_ident(id).0, m.clone() == Mutability::Mut),
             pat.span.into(),
         )),
         PatKind::Path(None, path) => {
-            let (ty, cons) = translate_struct_name(sess, path)?;
+            let (ty, cons) = translate_constructor_name(sess, path, specials)?;
             Ok((Pattern::EnumCase(ty, cons, None), pat.span.into()))
         }
         PatKind::TupleStruct(None, path, args) => {
-            let (ty, cons) = translate_struct_name(sess, path)?;
-            if args.len() == 0 {
-                Ok((Pattern::EnumCase(ty, cons, None), pat.span.into()))
-            } else if args.len() == 1 {
-                let arg = args.into_iter().next().unwrap();
-                let new_arg = translate_pattern(sess, arg)?;
-                Ok((
-                    Pattern::EnumCase(ty, cons, Some(Box::new(new_arg))),
-                    pat.span.into(),
-                ))
-            } else {
-                let new_args = check_vec(
-                    args.into_iter()
-                        .map(|arg| translate_pattern(sess, arg))
-                        .collect(),
-                )?;
-                Ok((
-                    Pattern::EnumCase(
-                        ty,
-                        cons,
-                        Some(Box::new((Pattern::Tuple(new_args), pat.span.into()))),
-                    ),
-                    pat.span.into(),
-                ))
+            let (ty, cons) = translate_constructor_name(sess, path, specials)?;
+            match args.as_slice() {
+                [] => Ok((Pattern::EnumCase(ty, cons, None), pat.span.into())),
+                args => {
+                    let new_args = check_vec(
+                        args.into_iter()
+                            .map(|arg| translate_pattern(sess, arg, specials))
+                            .collect(),
+                    )?;
+                    Ok((
+                        Pattern::EnumCase(
+                            ty,
+                            cons,
+                            Some(Box::new((
+                                match new_args.as_slice() {
+                                    [(new_arg, _)] => new_arg.clone(),
+                                    _ => Pattern::Tuple(new_args),
+                                },
+                                pat.span.into(),
+                            ))),
+                        ),
+                        pat.span.into(),
+                    ))
+                }
             }
         }
         PatKind::Tuple(pats) => {
             let pats = pats
                 .into_iter()
-                .map(|pat| translate_pattern(sess, pat))
+                .map(|pat| translate_pattern(sess, pat, specials))
                 .collect();
             let pats = check_vec(pats)?;
             Ok((Pattern::Tuple(pats), pat.span.into()))
@@ -1682,7 +1686,7 @@ fn translate_statement(
             Err(())
         }
         StmtKind::Local(local) => {
-            let pat = translate_pattern(sess, &local.pat)?;
+            let pat = translate_pattern(sess, &local.pat, specials)?;
             let ty: Option<Spanned<Typ>> = match local.ty.clone() {
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
