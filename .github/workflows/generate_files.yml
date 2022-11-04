@@ -1,0 +1,25 @@
+name: Generate files on merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate_file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          cargo clean
+          cargo build --verbose
+          cargo install --path language
+          cd examples
+          cargo clean
+          cargo build --verbose
+          cargo hacspec -e v --dir ../coq/src/ --vc-dir ../coq/ --vc-update "*"
+          # cargo hacspec -e fst --dir ../fstar/src/ --vc-dir ../fstar/ --vc-update "*"
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Automated file generation"
