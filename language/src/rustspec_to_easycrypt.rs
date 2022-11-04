@@ -158,7 +158,7 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     let ident_str = match x {
         Ident::TopLevel(s) => s.string.clone(),
-        Ident::Local(LocalIdent { id, name: s }) => {
+        Ident::Local(LocalIdent { id, name: s, .. }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
                 Some(c_id) => *c_id,
@@ -237,7 +237,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             })
         }
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
-	BaseTyp::Tuple(args) if args.is_empty() => RcDoc::as_string("unit"),
+        BaseTyp::Tuple(args) if args.is_empty() => RcDoc::as_string("unit"),
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
@@ -388,15 +388,13 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
-        Pattern::EnumCase(ty_name, name, None) => {
-            translate_ident(Ident::TopLevel(name.0.clone()))
-        }
+        Pattern::EnumCase(ty_name, name, None) => translate_ident(Ident::TopLevel(name.0.clone())),
         Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
             translate_ident(Ident::TopLevel(name.0.clone()))
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(&inner_pat.0)))
         }
-        Pattern::IdentPat(x) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::LiteralPat(l) => translate_literal(l.clone()),
         Pattern::Tuple(pats) => make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat))),
@@ -674,7 +672,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
     match e {
         Expression::MonadicLet(..) => panic!("TODO: Easycrypt support for Expression::MonadicLet"),
         Expression::QuestionMark(..) => {
-	    // TODO: eliminiate this `panic!` with nicer types (See issue #303)
+            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
             panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
         }
         Expression::Binary((op, _), e1, e2, op_typ) => {
@@ -872,7 +870,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
             translate_expression(expr.clone(), top_ctx),
         ),
-        Statement::Reassignment((x, _), (e1, _), _question_mark) => make_let_binding(
+        Statement::Reassignment((x, _), _x_typ, (e1, _), _question_mark) => make_let_binding(
             translate_ident(x.clone()),
             None,
             translate_expression(e1.clone(), top_ctx),
@@ -894,7 +892,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 )
                 .append(RcDoc::as_string("]")),
         ),
-        Statement::ReturnExp(e1) => translate_expression(e1.clone(), top_ctx),
+        Statement::ReturnExp(e1, _) => translate_expression(e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
             let mutated_info = mutated.as_ref().unwrap().as_ref();
             make_let_binding(
@@ -1038,7 +1036,7 @@ fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcD
                         .group(),
                 ),
             None,
-            translate_block(b, false, top_ctx)
+            translate_block(b, false, top_ctx),
         ),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("type")
             .append(RcDoc::space())

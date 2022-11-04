@@ -216,7 +216,7 @@ fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     match x {
         Ident::Unresolved(s) => translate_ident_str(s.clone()),
         Ident::TopLevel(s) => translate_toplevel_ident(s),
-        Ident::Local(LocalIdent { id, name: s }) => {
+        Ident::Local(LocalIdent { id, name: s, .. }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
                 Some(c_id) => *c_id,
@@ -496,7 +496,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::LiteralPat(l) => translate_literal(l.clone()),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
@@ -1094,26 +1094,29 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
             // If b has an early return, then we must prefix the returned
             // mutated variables by Ok
             match stmt {
-                Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
-                    BaseTyp::Named(
+                Statement::ReturnExp(e, t) => Statement::ReturnExp(
+                    Expression::EnumInject(
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: "Result".to_string(),
+                                    kind: TopLevelIdentKind::Type,
+                                },
+                                DUMMY_SP.into(),
+                            ),
+                            None,
+                        ),
                         (
                             TopLevelIdent {
-                                string: "Result".to_string(),
-                                kind: TopLevelIdentKind::Type,
+                                string: "Ok".to_string(),
+                                kind: TopLevelIdentKind::EnumConstructor,
                             },
                             DUMMY_SP.into(),
                         ),
-                        None,
+                        Some((Box::new(e.clone()), DUMMY_SP.into())),
                     ),
-                    (
-                        TopLevelIdent {
-                            string: "Ok".to_string(),
-                            kind: TopLevelIdentKind::EnumConstructor,
-                        },
-                        DUMMY_SP.into(),
-                    ),
-                    Some((Box::new(e.clone()), DUMMY_SP.into())),
-                )),
+                    t,
+                ), // TODO typing
                 _ => panic!("should not happen"),
             }
         } else {
@@ -1180,7 +1183,7 @@ fn translate_statements<'a>(
             // 	Expression::MonadicLet(..) => true,
             // 	_ => false
             // });
-            if question_mark {
+            if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_pattern(pat.clone()),
                     typ.map(|(typ, _)| translate_typ(typ)),
@@ -1193,7 +1196,7 @@ fn translate_statements<'a>(
                     typ.map(|(typ, _)| translate_typ(typ)),
                     translate_expression(sess, expr.clone(), top_ctx),
                     false,
-                    if question_mark {
+                    if question_mark.is_some() {
                         Some(EarlyReturnType::Result)
                     } else {
                         None
@@ -1203,8 +1206,8 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _), question_mark) => {
-            if question_mark {
+        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) => {
+            if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_ident(x.clone()),
                     None,
@@ -1217,7 +1220,7 @@ fn translate_statements<'a>(
                     None,
                     translate_expression(sess, e1.clone(), top_ctx),
                     false,
-                    if question_mark {
+                    if question_mark.is_some() {
                         Some(EarlyReturnType::Result)
                     } else {
                         None
@@ -1229,10 +1232,11 @@ fn translate_statements<'a>(
         }
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
-            if question_mark {
+            if question_mark.is_some() {
                 let tmp_ident = Ident::Local(LocalIdent {
                     name: "tmp".to_string(),
                     id: fresh_codegen_id(),
+                    mutable: false,
                 });
                 let array_upd_payload = array_or_seq
                     .append(RcDoc::as_string("_upd"))
@@ -1278,7 +1282,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::ReturnExp(e1) => translate_expression(sess, e1.clone(), top_ctx),
+        Statement::ReturnExp(e1, _) => translate_expression(sess, e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (mut b1, _), b2, mutated) => {
             let mutated_info = mutated.unwrap();
             let pat = make_tuple(
@@ -1406,7 +1410,7 @@ fn translate_block<'a>(
         (None, _) => panic!(), // should not happen,
         (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
             statements.push((
-                Statement::ReturnExp(Expression::Lit(Literal::Unit)),
+                Statement::ReturnExp(Expression::Lit(Literal::Unit), None),
                 DUMMY_SP.into(),
             ));
         }
