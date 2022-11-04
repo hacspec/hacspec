@@ -216,7 +216,7 @@ fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     match x {
         Ident::Unresolved(s) => translate_ident_str(s.clone()),
         Ident::TopLevel(s) => translate_toplevel_ident(s),
-        Ident::Local(LocalIdent { id, name: s , .. }) => {
+        Ident::Local(LocalIdent { id, name: s, .. }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
                 Some(c_id) => *c_id,
@@ -496,7 +496,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x,_) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::LiteralPat(l) => translate_literal(l.clone()),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
@@ -1094,26 +1094,29 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
             // If b has an early return, then we must prefix the returned
             // mutated variables by Ok
             match stmt {
-                Statement::ReturnExp(e, t) => Statement::ReturnExp(Expression::EnumInject(
-                    BaseTyp::Named(
+                Statement::ReturnExp(e, t) => Statement::ReturnExp(
+                    Expression::EnumInject(
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: "Result".to_string(),
+                                    kind: TopLevelIdentKind::Type,
+                                },
+                                DUMMY_SP.into(),
+                            ),
+                            None,
+                        ),
                         (
                             TopLevelIdent {
-                                string: "Result".to_string(),
-                                kind: TopLevelIdentKind::Type,
+                                string: "Ok".to_string(),
+                                kind: TopLevelIdentKind::EnumConstructor,
                             },
                             DUMMY_SP.into(),
                         ),
-                        None,
+                        Some((Box::new(e.clone()), DUMMY_SP.into())),
                     ),
-                    (
-                        TopLevelIdent {
-                            string: "Ok".to_string(),
-                            kind: TopLevelIdentKind::EnumConstructor,
-                        },
-                        DUMMY_SP.into(),
-                    ),
-                    Some((Box::new(e.clone()), DUMMY_SP.into())),
-                ), t), // TODO typing
+                    t,
+                ), // TODO typing
                 _ => panic!("should not happen"),
             }
         } else {

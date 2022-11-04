@@ -202,7 +202,7 @@ pub enum BaseTyp {
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
 }
 
-pub const UnitTyp: BaseTyp = BaseTyp::Tuple(vec!());
+pub const UnitTyp: BaseTyp = BaseTyp::Tuple(vec![]);
 
 impl fmt::Display for BaseTyp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -395,8 +395,8 @@ pub enum Expression {
     MatchWith(
         Box<Spanned<Expression>>, // Expression to match
         Vec<(
-            Spanned<Pattern>, // Payload of case
-            Spanned<Expression>,      // Match arm expression
+            Spanned<Pattern>,    // Payload of case
+            Spanned<Expression>, // Match arm expression
         )>,
     ),
     Lit(Literal),
@@ -424,7 +424,11 @@ pub enum Pattern {
     WildCard,
     LiteralPat(Literal),
     Tuple(Vec<Spanned<Pattern>>),
-    EnumCase(BaseTyp, Spanned<TopLevelIdent>, Option<Box<Spanned<Pattern>>>),
+    EnumCase(
+        BaseTyp,
+        Spanned<TopLevelIdent>,
+        Option<Box<Spanned<Pattern>>>,
+    ),
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq, Eq)]
@@ -530,7 +534,7 @@ impl ScopeMutableVars {
 pub type FunctionDependency = TopLevelIdent;
 
 #[derive(Clone, Debug)]
-pub struct FunctionDependencies (pub HashSet<FunctionDependency>);
+pub struct FunctionDependencies(pub HashSet<FunctionDependency>);
 
 impl Serialize for FunctionDependencies {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

@@ -237,7 +237,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             })
         }
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
-	BaseTyp::Tuple(args) if args.is_empty() => RcDoc::as_string("unit"),
+        BaseTyp::Tuple(args) if args.is_empty() => RcDoc::as_string("unit"),
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
@@ -388,9 +388,7 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
-        Pattern::EnumCase(ty_name, name, None) => {
-            translate_ident(Ident::TopLevel(name.0.clone()))
-        }
+        Pattern::EnumCase(ty_name, name, None) => translate_ident(Ident::TopLevel(name.0.clone())),
         Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
             translate_ident(Ident::TopLevel(name.0.clone()))
                 .append(RcDoc::space())
@@ -674,7 +672,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
     match e {
         Expression::MonadicLet(..) => panic!("TODO: Easycrypt support for Expression::MonadicLet"),
         Expression::QuestionMark(..) => {
-	    // TODO: eliminiate this `panic!` with nicer types (See issue #303)
+            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
             panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
         }
         Expression::Binary((op, _), e1, e2, op_typ) => {
@@ -1038,7 +1036,7 @@ fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcD
                         .group(),
                 ),
             None,
-            translate_block(b, false, top_ctx)
+            translate_block(b, false, top_ctx),
         ),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("type")
             .append(RcDoc::space())

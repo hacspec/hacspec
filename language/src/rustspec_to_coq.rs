@@ -356,7 +356,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x,_) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
         Pattern::LiteralPat(x) => translate_literal(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
@@ -1101,34 +1101,37 @@ fn add_ok_if_result(
                     // If b has an early return, then we must prefix the returned
                     // mutated variables by Ok or Some
                     match stmt {
-                        Statement::ReturnExp(e,t) => Statement::ReturnExp(Expression::EnumInject(
-                            BaseTyp::Named(
+                        Statement::ReturnExp(e, t) => Statement::ReturnExp(
+                            Expression::EnumInject(
+                                BaseTyp::Named(
+                                    (
+                                        TopLevelIdent {
+                                            string: match carrier_kind(ert.clone()) {
+                                                EarlyReturnType::Option => "Option",
+                                                EarlyReturnType::Result => "Result",
+                                            }
+                                            .to_string(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        DUMMY_SP.into(),
+                                    ),
+                                    None,
+                                ),
                                 (
                                     TopLevelIdent {
-                                        string: match carrier_kind(ert.clone()) {
-                                            EarlyReturnType::Option => "Option",
-                                            EarlyReturnType::Result => "Result",
+                                        string: match carrier_kind(ert) {
+                                            EarlyReturnType::Option => "Some",
+                                            EarlyReturnType::Result => "Ok",
                                         }
                                         .to_string(),
-                                        kind: TopLevelIdentKind::Type,
+                                        kind: TopLevelIdentKind::EnumConstructor,
                                     },
                                     DUMMY_SP.into(),
                                 ),
-                                None,
+                                Some((Box::new(e.clone()), DUMMY_SP.into())),
                             ),
-                            (
-                                TopLevelIdent {
-                                    string: match carrier_kind(ert) {
-                                        EarlyReturnType::Option => "Some",
-                                        EarlyReturnType::Result => "Ok",
-                                    }
-                                    .to_string(),
-                                    kind: TopLevelIdentKind::EnumConstructor,
-                                },
-                                DUMMY_SP.into(),
-                            ),
-                            Some((Box::new(e.clone()), DUMMY_SP.into())),
-                        ), t),
+                            t,
+                        ),
                         _ => panic!("should not happen"),
                     }
                 } else {
