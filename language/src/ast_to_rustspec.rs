@@ -1285,30 +1285,22 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "closures are not allowed in Hacspec");
             Err(())
         }
-        ExprKind::Block(block, _)
-            if block.stmts.len() == 1 && block.rules == BlockCheckMode::Default =>
-        {
-            let translated_statements =
-                translate_statement(sess, specials, block.stmts.iter().next().unwrap())?;
-            match (
-                translated_statements.len(),
-                translated_statements.iter().next().unwrap(),
-            ) {
-                (1, (Statement::ReturnExp(e, None), span)) => {
-                    Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
-                }
-                _ => {
-                    sess.span_rustspec_err(
+        ExprKind::Block(block, _) => {
+            match (&block.stmts.as_slice(), &block.rules) {
+                (_, BlockCheckMode::Unsafe(..)) => Err(sess
+                    .span_rustspec_err(e.span.clone(), "unsafe blocks are not allowed in Hacspec")),
+                ([stmt], _) => match translate_statement(sess, specials, stmt)?.as_slice() {
+                    [(Statement::ReturnExp(e, None), span)] => {
+                        Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
+                    }
+                    _ => Err(sess.span_rustspec_err(
                         e.span.clone(),
                         "only inline block with a simple return expression are allowed in Hacspec",
-                    );
-                    Err(())
-                }
+                    )),
+                },
+                _ => Err(sess
+                    .span_rustspec_err(e.span.clone(), "inline blocks are not allowed in Hacspec")),
             }
-        }
-        ExprKind::Block(_, _) => {
-            sess.span_rustspec_err(e.span.clone(), "inline blocks are not allowed in Hacspec");
-            Err(())
         }
         ExprKind::Async(_, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "async/await is not allowed in Hacspec");
