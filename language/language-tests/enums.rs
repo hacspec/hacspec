@@ -74,3 +74,9 @@ pub fn baz_im(x: Foo) {
     let Bar(z) = z;
     let a = z as u8;
 }
+
+struct Foobar(u8, u8, u8);
+
+fn field_accessors() -> u8 {
+    Foobar(0u8, 1u8, 2u8).0 + Foobar(0u8, 1u8, 2u8).1 + Foobar(0u8, 1u8, 2u8).2 + (10u8, 20u8).1
+}

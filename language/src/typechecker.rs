@@ -994,6 +994,50 @@ fn typecheck_expression(
                 acc_var_context,
             ))
         }
+        Expression::FieldAccessor(
+            e1 @ box (_, e1_span),
+            box (Field::TupleIndex(field), field_span),
+        ) => {
+            let (e1, e1_ty, var_context) = typecheck_expression(
+                sess,
+                e1,
+                func_return_type,
+                &None,
+                top_level_context,
+                &var_context,
+            )?;
+            let (e1_borrow, e1_ty) = e1_ty;
+            let types = match &e1_ty.0 {
+                BaseTyp::Tuple(types) => types.clone(),
+                BaseTyp::Named(type_name, args) => {
+                    match type_of_payload(sess, &type_name.0, None, args, top_level_context) {
+                        Some((BaseTyp::Tuple(args), _)) => args,
+                        Some(typ) => vec![typ],
+                        _ => vec![],
+                    }
+                }
+                _ => vec![],
+            };
+            match types.get(*field as usize) {
+                Some(ty) => Ok((
+                    Expression::FieldAccessor(
+                        box (e1, e1_span.clone()),
+                        box (Field::TupleIndex(*field), field_span.clone()),
+                    ),
+                    (e1_borrow, ty.clone()),
+                    var_context,
+                )),
+                _ => Err(sess.span_rustspec_err(
+                    e1_span.clone(),
+                    format!(
+                        "the field `.{}` cannot be applied to type `{}`",
+                        field.clone(),
+                        e1_ty.clone().0
+                    )
+                    .as_str(),
+                )),
+            }
+        }
         Expression::EnumInject(enum_ty, case_name, payload) => {
             // if we are facing a constructor without type annotation
             // and if we have an expected type, then we fill this

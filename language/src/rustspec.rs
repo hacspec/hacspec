@@ -342,6 +342,16 @@ pub fn carrier_kind(carrier: CarrierTyp) -> EarlyReturnType {
     }
 }
 
+#[derive(Clone, Serialize, Debug, Copy)]
+/// Rust has three styles of structs: (a) unit structs, (b) classic,
+/// named structs (c) tuple structs. A field is thus either a numeric
+/// index or a name. However, Hacspec allows only for (a) or (c),
+/// hence the constructor `Named` being commented out below.
+pub enum Field {
+    // Named(String),
+    TupleIndex(isize),
+}
+
 #[derive(Clone, Serialize, Debug)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
@@ -402,6 +412,7 @@ pub enum Expression {
             Spanned<Expression>, // Match arm expression
         )>,
     ),
+    FieldAccessor(Box<Spanned<Expression>>, Box<Spanned<Field>>),
     Lit(Literal),
     ArrayIndex(
         Spanned<Ident>,           // Array variable

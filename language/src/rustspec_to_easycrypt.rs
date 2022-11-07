@@ -718,6 +718,9 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         Expression::MatchWith(_arg, _arms) => {
             unimplemented!()
         }
+        Expression::FieldAccessor(e1, field) => {
+            unimplemented!()
+        }
         Expression::EnumInject(_enum_name, _case_name, _payload) => {
             unimplemented!()
         }
