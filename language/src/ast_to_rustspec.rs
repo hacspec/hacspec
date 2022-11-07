@@ -1285,22 +1285,46 @@ fn translate_expr(
             sess.span_rustspec_err(e.span.clone(), "closures are not allowed in Hacspec");
             Err(())
         }
+        ExprKind::Block(block, _) if matches!(block.rules, BlockCheckMode::Unsafe(..)) => {
+            Err(sess.span_rustspec_err(e.span.clone(), "unsafe blocks are not allowed in Hacspec"))?
+        }
         ExprKind::Block(block, _) => {
-            match (&block.stmts.as_slice(), &block.rules) {
-                (_, BlockCheckMode::Unsafe(..)) => Err(sess
-                    .span_rustspec_err(e.span.clone(), "unsafe blocks are not allowed in Hacspec")),
-                ([stmt], _) => match translate_statement(sess, specials, stmt)? {
-                    (Statement::ReturnExp(e, None), span) => {
-                        Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
-                    }
-                    _ => Err(sess.span_rustspec_err(
-                        e.span.clone(),
-                        "only inline block with a simple return expression are allowed in Hacspec",
-                    )),
-                },
-                _ => Err(sess
-                    .span_rustspec_err(e.span.clone(), "inline blocks are not allowed in Hacspec")),
-            }
+            let stmts = block
+                .stmts
+                .iter()
+                .map(|stmt| translate_rust_statement(sess, specials, stmt))
+                .collect::<Result<Vec<_>, _>>()?;
+
+            // divide `stmts` into (1) a list of statement and (2) a
+            // ending expression
+            let (stmts, ret) = match stmts.as_slice() {
+                [] => panic!("got an empty block"),
+                // `stmts` ends with an `EndingExpr`, we're all good
+                [stmts @ .., (RustStatement::EndingExpr(ret), ..)] => (stmts, ret.clone()),
+                // otherwise, we insert a `()` expression
+                stmts => (
+                    stmts,
+                    (Expression::Tuple(vec![]), rustc_span::DUMMY_SP.into()),
+                ),
+            };
+
+            // `stmts` should only be let bindings (this should be
+            // implied `translate_rust_statement`)
+            let bindings = stmts.into_iter().map(|(s, span)| match s {
+                RustStatement::LetBinding(pat, ty, e) => {
+                    (pat.clone(), ty.clone(), e.clone(), span.clone())
+                }
+                _ => panic!("got [{:?}] inside an inline block", s),
+            });
+
+            // fold bindings into one expression
+            let (result, span) = bindings.rev().fold(ret, |acc, (pat, _ty, e, span)| {
+                (
+                    Expression::MatchWith(box e, vec![(pat.clone(), acc.clone())]),
+                    span,
+                )
+            });
+            Ok((ExprTranslationResult::TransExpr(result), span))
         }
         ExprKind::Async(_, _, _) => {
             sess.span_rustspec_err(e.span.clone(), "async/await is not allowed in Hacspec");
