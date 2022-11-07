@@ -1289,8 +1289,8 @@ fn translate_expr(
             match (&block.stmts.as_slice(), &block.rules) {
                 (_, BlockCheckMode::Unsafe(..)) => Err(sess
                     .span_rustspec_err(e.span.clone(), "unsafe blocks are not allowed in Hacspec")),
-                ([stmt], _) => match translate_statement(sess, specials, stmt)?.as_slice() {
-                    [(Statement::ReturnExp(e, None), span)] => {
+                ([stmt], _) => match translate_statement(sess, specials, stmt)? {
+                    (Statement::ReturnExp(e, None), span) => {
                         Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
                     }
                     _ => Err(sess.span_rustspec_err(
@@ -1644,22 +1644,17 @@ fn translate_statement(
     sess: &Session,
     specials: &SpecialNames,
     s: &Stmt,
-) -> TranslationResult<Vec<Spanned<Statement>>> {
+) -> TranslationResult<Spanned<Statement>> {
     match &s.kind {
         StmtKind::Item(_) => {
-            sess.span_rustspec_err(s.span, "block-local items are not allowed in Hacspec");
-            Err(())
+            Err(sess.span_rustspec_err(s.span, "block-local items are not allowed in Hacspec"))
         }
-        StmtKind::MacCall(_) => {
-            sess.span_rustspec_err(
-                s.span,
-                "macro calls inside code blocks are not allowed inside Hacspec",
-            );
-            Err(())
-        }
+        StmtKind::MacCall(_) => Err(sess.span_rustspec_err(
+            s.span,
+            "macro calls inside code blocks are not allowed inside Hacspec",
+        )),
         StmtKind::Empty => {
-            sess.span_rustspec_err(s.span, "empty blocks are not allowed in Hacspec");
-            Err(())
+            Err(sess.span_rustspec_err(s.span, "empty blocks are not allowed in Hacspec"))
         }
         StmtKind::Local(local) => {
             let pat = translate_pattern(sess, &local.pat)?;
@@ -1668,22 +1663,17 @@ fn translate_statement(
                 Some(ty) => Some(translate_typ(sess, &ty)?),
             };
             let (init, question_mark) = match &local.kind {
-                LocalKind::Decl | LocalKind::InitElse(_, _) => {
-                    sess.span_rustspec_err(
-                        local.span,
-                        "let-bindings without initialization are not allowed in Hacspec",
-                    );
-                    Err(())
-                }
+                LocalKind::Decl | LocalKind::InitElse(_, _) => Err(sess.span_rustspec_err(
+                    local.span,
+                    "let-bindings without initialization are not allowed in Hacspec",
+                )),
                 LocalKind::Init(e) => {
                     match translate_expr_accepts_question_mark(sess, specials, &e)? {
-                        (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => {
-                            sess.span_rustspec_err(
+                        (ExprTranslationResultMaybeQuestionMark::TransStmt(_), _) => Err(sess
+                            .span_rustspec_err(
                                 e.span,
                                 "let binding expression should not contain statements in Hacspec",
-                            );
-                            Err(())
-                        }
+                            )),
                         (
                             ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark),
                             span,
@@ -1691,27 +1681,27 @@ fn translate_statement(
                     }
                 }
             }?;
-            Ok(vec![(
+            Ok((
                 Statement::LetBinding(pat, ty, init, question_mark),
                 s.span.into(),
-            )])
+            ))
         }
-        StmtKind::Expr(e) => {
-            let t_s = match translate_expr(sess, specials, &e)? {
+        StmtKind::Expr(e) => Ok((
+            match translate_expr(sess, specials, &e)? {
                 (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e, None),
                 (ExprTranslationResult::TransStmt(s), _) => s,
-            };
-            Ok(vec![(t_s, s.span.into())])
-        }
-        StmtKind::Semi(e) => {
-            let t_s = match translate_expr_accepts_question_mark(sess, specials, &e)? {
+            },
+            s.span.into(),
+        )),
+        StmtKind::Semi(e) => Ok((
+            match translate_expr_accepts_question_mark(sess, specials, &e)? {
                 (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
                     Statement::LetBinding((Pattern::WildCard, span), None, (e, span), question_mark)
                 }
                 (ExprTranslationResultMaybeQuestionMark::TransStmt(s), _) => s,
-            };
-            Ok(vec![(t_s, s.span.into())])
-        }
+            },
+            s.span.into(),
+        )),
     }
 }
 
@@ -1732,7 +1722,7 @@ fn translate_block(
         .iter()
         .map(|s| translate_statement(sess, specials, &s))
         .collect();
-    let stmts = check_vec(stmts)?.into_iter().flatten().collect();
+    let stmts = check_vec(stmts)?.into_iter().collect();
     Ok((
         Block {
             stmts,
