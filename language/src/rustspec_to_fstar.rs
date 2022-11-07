@@ -894,9 +894,10 @@ fn translate_expression<'a>(
             .append(RcDoc::space())
             .append("end"),
         Expression::FieldAccessor(e1, box (Field::TupleIndex(field), _)) => {
-            // TODO: this works only for tuples because for now, a
-            // rust variant of arity [n] is extracted as an F* variant
-            // of arity [1] whose payload is a tuple of arity [n].
+            // TODO (See issue #325): this works only for tuples
+            // because for now, a rust variant of arity [n] is
+            // extracted as an F* variant of arity [1] whose payload
+            // is a tuple of arity [n].
             make_paren(translate_expression(sess, e1.0, top_ctx))
                 .append(RcDoc::as_string(format!("._{}", field)))
         }
