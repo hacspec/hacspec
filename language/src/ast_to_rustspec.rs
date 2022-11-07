@@ -1519,43 +1519,26 @@ fn translate_expr_accepts_question_mark(
     specials: &SpecialNames,
     e: &Expr,
 ) -> TranslationResult<Spanned<ExprTranslationResultMaybeQuestionMark>> {
-    match &e.kind {
-        ExprKind::Try(inner_e) => {
-            let (result, span) = translate_expr(sess, specials, &inner_e)?;
-            match result {
-                ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(
-                        e,
-                        Some((
-                            ScopeMutableVars::new(),
-                            FunctionDependencies(HashSet::new()),
-                            None,
-                        )),
-                    ),
-                    span,
-                )),
-                ExprTranslationResult::TransStmt(_) => {
-                    sess.span_rustspec_err(
-                        inner_e.span,
-                        "question-marked blobs cannot contain statements \
-                    in Hacspec, only pure expressions",
-                    );
-                    Err(())
-                }
-            }
+    let (result, span) = translate_expr(sess, specials, e)?;
+    match result {
+        ExprTranslationResult::TransStmt(s) => {
+            Ok((ExprTranslationResultMaybeQuestionMark::TransStmt(s), span))
         }
-        _ => {
-            let (result, span) = translate_expr(sess, specials, e)?;
-            match result {
-                ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, None),
-                    span,
+        ExprTranslationResult::TransExpr(Expression::QuestionMark(box (e, _), ..)) => Ok((
+            ExprTranslationResultMaybeQuestionMark::TransExpr(
+                e,
+                Some((
+                    ScopeMutableVars::new(),
+                    FunctionDependencies(HashSet::new()),
+                    None,
                 )),
-                ExprTranslationResult::TransStmt(s) => {
-                    Ok((ExprTranslationResultMaybeQuestionMark::TransStmt(s), span))
-                }
-            }
-        }
+            ),
+            span,
+        )),
+        ExprTranslationResult::TransExpr(e) => Ok((
+            ExprTranslationResultMaybeQuestionMark::TransExpr(e, None),
+            span,
+        )),
     }
 }
 
