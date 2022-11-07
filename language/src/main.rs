@@ -1,4 +1,6 @@
 #![feature(rustc_private)]
+#![feature(box_syntax)]
+#![feature(box_patterns)]
 extern crate im;
 extern crate pretty;
 extern crate rustc_ast;
