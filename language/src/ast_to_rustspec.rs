@@ -1352,13 +1352,27 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::Field(_, _) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "struct field accesses are not supported yet in Hacspec",
-            );
-            Err(())
-        }
+        ExprKind::Field(e1, field) => Ok((
+            match field.to_string().parse::<isize>() {
+                Ok(nth_field) => match translate_expr(sess, specials, e1)? {
+                    (ExprTranslationResult::TransExpr(e1), e1_span) => {
+                        ExprTranslationResult::TransExpr(Expression::FieldAccessor(
+                            box (e1, e1_span),
+                            box (Field::TupleIndex(nth_field), field.span.into()),
+                        ))
+                    }
+                    _ => Err(sess.span_rustspec_err(
+                        e1.span.clone(),
+                        "Hacspec doesn't allow for statements in field accessors",
+                    ))?,
+                },
+                _ => Err(sess.span_rustspec_err(
+                    e1.span.clone(),
+                    "Hacspec allows only field accessors to tuple structs",
+                ))?,
+            },
+            e.span.clone().into(),
+        )),
         ExprKind::Range(e1, e2, limits) => {
             match limits {
                 RangeLimits::HalfOpen => (),

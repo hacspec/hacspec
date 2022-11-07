@@ -893,6 +893,13 @@ fn translate_expression<'a>(
             ))
             .append(RcDoc::space())
             .append("end"),
+        Expression::FieldAccessor(e1, box (Field::TupleIndex(field), _)) => {
+            // TODO: this works only for tuples because for now, a
+            // rust variant of arity [n] is extracted as an F* variant
+            // of arity [1] whose payload is a tuple of arity [n].
+            make_paren(translate_expression(sess, e1.0, top_ctx))
+                .append(RcDoc::as_string(format!("._{}", field)))
+        }
         Expression::EnumInject(enum_name, case_name, payload) => {
             translate_enum_case_name(enum_name.clone(), case_name.0.clone()).append(match payload {
                 None => RcDoc::nil(),
