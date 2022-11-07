@@ -761,6 +761,57 @@ fn concretize_literal(lit: &Literal, expected_type: &Option<Spanned<BaseTyp>>) -
     }
 }
 
+/// Given a enum or struct name `type_name` (e.g. `Result`), a variant
+/// name `variant_name` (e.g. `Ok`) and type arguments
+/// `applied_type_args`, `type_of_payload` computes the concrete type
+/// of the payload carried by the constructor
+/// `[type_name]::[variant_name]` (e.g., the type of `payload` in
+/// `Result::Ok(payload)`). If `variant` is `None`, expects
+/// `type_name` to be a struct. Note structs are encoded as single
+/// case enums in Hacspec.
+fn type_of_payload(
+    sess: &Session,
+    type_name: &TopLevelIdent,
+    variant: Option<String>,
+    applied_type_args: &Option<Vec<Spanned<BaseTyp>>>,
+    top_ctx: &TopLevelContext,
+) -> Option<Spanned<BaseTyp>> {
+    match top_ctx.typ_dict.get(type_name) {
+        Some((
+            ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, type_args), cases_span)),
+            DictEntry::Enum,
+        )) => {
+            // Among all constructors [cases] of the enum we're matching against, find the
+            // one named [pat_enum_name]
+            let case = match variant {
+                None => cases.first().unwrap_or_else(|| panic!("[type_of_payload] was called without variant information, but type [{:?}] appears not to be a struct", type_name)),
+                Some(variant) =>
+                    cases.into_iter().find(|((n, _), _)| n.string == variant).unwrap(),
+            };
+            case.1
+                .as_ref()
+                // The constructor we're matching against has [length(type_args)] generic type
+                // arguments, a vector of [TypVar]. We substitutes those [type_args] into their
+                // respective [case_type_annotations].
+                .map(|case_typ| {
+                    bind_variable_type(
+                        sess,
+                        case_typ,
+                        &type_args
+                            .iter() // build a var context (a HashMap)
+                            .map(|type_arg| type_arg.clone())
+                            .zip(applied_type_args.iter().flatten().map(|t| t.0.clone()))
+                            .collect(),
+                    )
+                    .ok()
+                    .map(|ty| (ty, case_typ.1))
+                })
+                .flatten()
+        }
+        _ => None,
+    }
+}
+
 pub type TypecheckingResult<T> = Result<T, ()>;
 
 fn typecheck_expression(
