@@ -223,7 +223,7 @@ macro_rules! unsigned_public_integer {
                 self > other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 self >= other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -262,7 +262,7 @@ macro_rules! unsigned_public_integer {
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
-                if self.greater_than_or_qual(other) {
+                if self.greater_than_or_equal(other) {
                     Self::max_val()
                 } else {
                     Self::from_literal(0)
@@ -391,7 +391,7 @@ macro_rules! signed_public_integer {
                 self > other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 self >= other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -430,7 +430,7 @@ macro_rules! signed_public_integer {
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn greater_than_or_equal_bm(self, other: Self) -> Self {
-                if self.greater_than_or_qual(other) {
+                if self.greater_than_or_equal(other) {
                     Self::from_signed_literal(-1)
                 } else {
                     Self::from_signed_literal(0)
@@ -554,7 +554,7 @@ macro_rules! unsigned_integer {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -776,7 +776,7 @@ macro_rules! signed_integer {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 unimplemented!();
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -1040,7 +1040,7 @@ macro_rules! nat_mod {
                 bm != BigInt::zero()
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 let bm = self.greater_than_or_equal_bm(other);
                 let bm: BigInt = bm.declassify();
                 bm != BigInt::zero()
@@ -1330,7 +1330,7 @@ macro_rules! public_nat_mod {
                 self > other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 self >= other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]

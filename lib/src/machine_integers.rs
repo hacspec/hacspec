@@ -239,7 +239,7 @@ macro_rules! implement_public_mi {
                 self > other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 self >= other
             }
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -557,7 +557,7 @@ macro_rules! implement_secret_mi {
             }
             /// **Declassifies**
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
-            fn greater_than_or_qual(self, other: Self) -> bool {
+            fn greater_than_or_equal(self, other: Self) -> bool {
                 self.greater_than_or_equal_bm(other).declassify() != 0
             }
             /// **Declassifies**
