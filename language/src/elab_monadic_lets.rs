@@ -53,6 +53,41 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
     let mut elim_sub_expr = |arg: Spanned<Expression>| (elim_sub_expr0(arg.clone().0), arg.1);
     let mut elim_boxed_sub_expr =
         |arg: &Box<Spanned<Expression>>| Box::new(elim_sub_expr(*arg.clone()));
+    // `eliminate_question_marks_in_match`'s logic is reused both for let bindings and matches
+    let mut eliminate_question_marks_in_match = {
+        type E = Box<Spanned<Expression>>;
+        type Branches = Vec<(Spanned<Pattern>, Spanned<Expression>)>;
+        |scrutinee: &E,
+         branches: &Branches|
+         -> (E, Branches, Box<dyn FnOnce(Expression) -> Expression>) {
+            let branches = branches
+                .into_iter()
+                .cloned()
+                .map(|(pat, arm)| (pat, eliminate_question_marks_in_spanned_expressions(&arm)));
+            let scrutinee = elim_boxed_sub_expr(scrutinee);
+            if let Some(carrier) = find_monadic_let_carrier(branches.clone().map(|(.., (x, _))| x))
+            {
+                wrap_pure_node = false;
+                let mv = fresh_var();
+                (
+                    scrutinee,
+                    branches
+                        .map(|(pat, arm)| (pat, pure_if_non_monadic(carrier.clone(), arm)))
+                        .collect(),
+                    box (move |e| {
+                        Expression::MonadicLet(
+                            carrier.clone(),
+                            vec![(mv.clone(), Box::new((e, DUMMY_SP.into())))],
+                            Box::new((Expression::Named(mv.clone()), DUMMY_SP.into())),
+                            true,
+                        )
+                    }),
+                )
+            } else {
+                (scrutinee, branches.collect(), box (|e| e))
+            }
+        }
+    };
     fn find_monadic_let_carrier<T>(exprs: T) -> Option<CarrierTyp>
     where
         T: Iterator<Item = Expression> + Clone,
@@ -119,6 +154,14 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
                 arg_types.clone(),
             )
         }
+        Expression::LetBinding(pat, typ_annot, exp, box body) => {
+            let (exp, branch, wrap) =
+                eliminate_question_marks_in_match(exp, &vec![(pat.clone(), body.clone())]);
+            let [(pat, body)] = branch.as_slice() else {
+                panic!("`eliminate_question_marks_in_match` input and output branches have different length")
+            };
+            Expression::LetBinding(pat.clone(), typ_annot.clone(), exp, box body.clone())
+        }
         Expression::EnumInject(t, n, e1) => Expression::EnumInject(
             t.clone(),
             n.clone(),
@@ -148,33 +191,9 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
             }
         }
         Expression::MatchWith(scrutinee, branches) => {
-            let branches = branches
-                .into_iter()
-                .cloned()
-                .map(|(pat, arm)| (pat, eliminate_question_marks_in_spanned_expressions(&arm)));
-            let scrutinee = elim_boxed_sub_expr(scrutinee);
-            if let Some(carrier) = find_monadic_let_carrier(branches.clone().map(|(.., (x, _))| x))
-            {
-                wrap_pure_node = false;
-                let def = Box::new((
-                    Expression::MatchWith(
-                        scrutinee,
-                        branches
-                            .map(|(pat, arm)| (pat, pure_if_non_monadic(carrier.clone(), arm)))
-                            .collect(),
-                    ),
-                    DUMMY_SP.into(),
-                ));
-                let mv = fresh_var();
-                Expression::MonadicLet(
-                    carrier.clone(),
-                    vec![(mv.clone(), def)],
-                    Box::new((Expression::Named(mv.clone()), DUMMY_SP.into())),
-                    true,
-                )
-            } else {
-                Expression::MatchWith(scrutinee, branches.collect())
-            }
+            let (scrutinee, branches, wrap) =
+                eliminate_question_marks_in_match(scrutinee, branches);
+            wrap(Expression::MatchWith(scrutinee, branches))
         }
         Expression::ArrayIndex(n, e1, t) => {
             Expression::ArrayIndex(n.clone(), elim_boxed_sub_expr(e1), t.clone())

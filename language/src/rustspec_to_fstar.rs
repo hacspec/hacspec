@@ -979,6 +979,15 @@ fn translate_expression<'a>(
                     RcDoc::space().append(make_paren(translate_expression(sess, arg, top_ctx)))
                 })))
         }
+        Expression::LetBinding((pat, _), typ, box (e, _), box (body, _)) => make_let_binding(
+            translate_pattern(pat),
+            typ.map(|(typ, _)| translate_typ(typ)),
+            translate_expression(sess, e, top_ctx),
+            false,
+            None,
+        )
+        .append(RcDoc::space())
+        .append(translate_expression(sess, body, top_ctx)),
         Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);

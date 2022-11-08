@@ -364,6 +364,34 @@ fn resolve_expression(
                 ),
             ))
         }
+        Expression::LetBinding(pat @ (_, pat_span), typ_annot, exp, body) => {
+            let (smi_exp, exp) = resolve_expression(sess, *exp, name_context, top_level_ctx)?;
+
+            let (pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
+
+            let mut updated_name_context = name_context.clone();
+            for (k, v) in new_name_context.into_iter() {
+                updated_name_context = updated_name_context.update(k, v);
+            }
+            let (smi_body, body) =
+                resolve_expression(sess, *body, &updated_name_context, top_level_ctx)?;
+
+            let mut smi = ScopeMutInfo::new();
+            smi.extend(smi_exp);
+            smi.extend(smi_body);
+            Ok((
+                smi,
+                (
+                    Expression::LetBinding(
+                        (pat, pat_span),
+                        typ_annot,
+                        Box::new(exp),
+                        Box::new(body),
+                    ),
+                    e_span,
+                ),
+            ))
+        }
         Expression::Lit(_) => Ok((ScopeMutInfo::new(), (e, e_span))),
         Expression::ArrayIndex(x, e1, typ) => {
             let new_x = find_ident(sess, &x, name_context, top_level_ctx)?;

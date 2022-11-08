@@ -1,6 +1,7 @@
 #![feature(rustc_private)]
 #![feature(box_syntax)]
 #![feature(box_patterns)]
+#![feature(let_else)]
 extern crate im;
 extern crate pretty;
 extern crate rustc_ast;

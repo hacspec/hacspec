@@ -770,6 +770,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     RcDoc::space().append(make_paren(translate_expression(arg, top_ctx)))
                 })))
         }
+        Expression::LetBinding(..) => unimplemented!(),
         Expression::ArrayIndex(x, e2, _typ) => {
             let e2 = e2.0;
             translate_ident(x.0.clone())

@@ -1317,10 +1317,10 @@ fn translate_expr(
                 _ => panic!("got [{:?}] inside an inline block", s),
             });
 
-            // fold bindings into one expression
-            let (result, span) = bindings.rev().fold(ret, |acc, (pat, _ty, e, span)| {
+            // fold bindings into nested let bindings
+            let (result, span) = bindings.rev().fold(ret, |acc, (pat, ty, e, span)| {
                 (
-                    Expression::MatchWith(box e, vec![(pat.clone(), acc.clone())]),
+                    Expression::LetBinding(pat.clone(), ty.clone(), box e.clone(), box acc.clone()),
                     span,
                 )
             });
