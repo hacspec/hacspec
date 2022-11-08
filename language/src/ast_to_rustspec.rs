@@ -647,7 +647,7 @@ fn translate_expr(
         ExprKind::Path(None, path) => translate_expr_name(sess, path, &e.span, specials),
         ExprKind::Call(func, args) => {
             let func_name_kind = match &func.kind {
-                ExprKind::Path(None, path) => Ok(translate_func_name(sess, specials, &path)?),
+                ExprKind::Path(None, path) => translate_func_name(sess, specials, &path),
                 _ => {
                     sess.span_rustspec_err(
                         func.span,
@@ -960,6 +960,7 @@ fn translate_expr(
                             Ok((
                                 ExprTranslationResult::TransStmt(Statement::Reassignment(
                                     id,
+                                    None,
                                     r_e,
                                     r_e_question_mark,
                                 )),
@@ -1086,8 +1087,8 @@ fn translate_expr(
                         let r_f_e = r_f_e.0.stmts.pop().unwrap();
                         match (r_t_e, r_f_e) {
                             (
-                                (Statement::ReturnExp(r_t_e), _),
-                                (Statement::ReturnExp(r_f_e), _),
+                                (Statement::ReturnExp(r_t_e, None), _),
+                                (Statement::ReturnExp(r_f_e, None), _),
                             ) => Ok((
                                 ExprTranslationResult::TransExpr(Expression::InlineConditional(
                                     Box::new(r_cond),
@@ -1119,7 +1120,7 @@ fn translate_expr(
                     Err(())
                 }
             };
-            let e_begin_end = match &range.kind {
+            let (e_begin, e_end) = match &range.kind {
                 ExprKind::Range(Some(r_begin), Some(r_end), RangeLimits::HalfOpen) => {
                     let e_begin = translate_expr(sess, specials, r_begin)?;
                     let e_end = translate_expr(sess, specials, r_end)?;
@@ -1144,8 +1145,7 @@ fn translate_expr(
                     );
                     Err(())
                 }
-            };
-            let (e_begin, e_end) = e_begin_end?;
+            }?;
             let r_b = translate_block(sess, specials, b)?;
             Ok((
                 ExprTranslationResult::TransStmt(Statement::ForLoop(id?, e_begin, e_end, r_b)),
@@ -1294,7 +1294,7 @@ fn translate_expr(
                 translated_statements.len(),
                 translated_statements.iter().next().unwrap(),
             ) {
-                (1, (Statement::ReturnExp(e), span)) => {
+                (1, (Statement::ReturnExp(e, None), span)) => {
                     Ok((ExprTranslationResult::TransExpr(e.clone()), span.clone()))
                 }
                 _ => {
@@ -1518,7 +1518,7 @@ fn translate_expr(
 }
 
 enum ExprTranslationResultMaybeQuestionMark {
-    TransExpr(Expression, bool), // true if ends with question mark
+    TransExpr(Expression, QuestionMarkInfo), // true if ends with question mark
     TransStmt(Statement),
 }
 
@@ -1532,7 +1532,14 @@ fn translate_expr_accepts_question_mark(
             let (result, span) = translate_expr(sess, specials, &inner_e)?;
             match result {
                 ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, true),
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(
+                        e,
+                        Some((
+                            ScopeMutableVars::new(),
+                            FunctionDependencies(HashSet::new()),
+                            None,
+                        )),
+                    ),
                     span,
                 )),
                 ExprTranslationResult::TransStmt(_) => {
@@ -1549,7 +1556,7 @@ fn translate_expr_accepts_question_mark(
             let (result, span) = translate_expr(sess, specials, e)?;
             match result {
                 ExprTranslationResult::TransExpr(e) => Ok((
-                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, false),
+                    ExprTranslationResultMaybeQuestionMark::TransExpr(e, None),
                     span,
                 )),
                 ExprTranslationResult::TransStmt(s) => {
@@ -1562,9 +1569,10 @@ fn translate_expr_accepts_question_mark(
 
 fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pattern>> {
     match &pat.kind {
-        PatKind::Ident(BindingMode::ByValue(_), id, None) => {
-            Ok((Pattern::IdentPat(translate_ident(id).0), pat.span.into()))
-        }
+        PatKind::Ident(BindingMode::ByValue(m), id, None) => Ok((
+            Pattern::IdentPat(translate_ident(id).0, m.clone() == Mutability::Mut),
+            pat.span.into(),
+        )),
         PatKind::Path(None, path) => {
             let (ty, cons) = translate_struct_name(sess, path)?;
             Ok((Pattern::EnumCase(ty, cons, None), pat.span.into()))
@@ -1698,7 +1706,7 @@ fn translate_statement(
         }
         StmtKind::Expr(e) => {
             let t_s = match translate_expr(sess, specials, &e)? {
-                (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e),
+                (ExprTranslationResult::TransExpr(e), _) => Statement::ReturnExp(e, None),
                 (ExprTranslationResult::TransStmt(s), _) => s,
             };
             Ok(vec![(t_s, s.span.into())])
@@ -1741,6 +1749,8 @@ fn translate_block(
             contains_question_mark: None,
             // We initialize these fields to None as they are
             // to be filled by the typechecker
+            mutable_vars: ScopeMutableVars::new(),
+            function_dependencies: FunctionDependencies(HashSet::new()),
         },
         b.span.into(),
     ))
@@ -2505,21 +2515,22 @@ fn translate_items<F: Fn(&Vec<Spanned<String>>) -> ExternalData>(
                         return_typ: None,
                         mutated: None,
                         contains_question_mark: None,
+                        mutable_vars: ScopeMutableVars::new(),
+                        function_dependencies: FunctionDependencies(HashSet::new()),
                     },
                     i.span.into(),
                 ),
                 Some(b) => translate_block(sess, specials, &b)?,
             };
             log::trace!("   fn_body: {:#?}", fn_body);
+            let fn_name = translate_toplevel_ident(&i.ident, TopLevelIdentKind::Function);
             let fn_sig = FuncSig {
                 args: fn_inputs,
                 ret: fn_output,
+                mutable_vars: ScopeMutableVars::new(),
+                function_dependencies: FunctionDependencies(HashSet::new()),
             };
-            let fn_item = Item::FnDecl(
-                translate_toplevel_ident(&i.ident, TopLevelIdentKind::Function),
-                fn_sig,
-                fn_body,
-            );
+            let fn_item = Item::FnDecl(fn_name, fn_sig, fn_body);
 
             Ok((
                 ItemTranslationResult::Item(DecoratedItem {

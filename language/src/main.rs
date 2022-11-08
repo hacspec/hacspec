@@ -869,7 +869,6 @@ fn main() -> Result<(), usize> {
         None => None,
     };
 
-
     // Read the --manifest-path argument if present.
     let manifest = match args.iter().position(|a| a == "--manifest-path") {
         Some(i) => {
