@@ -458,14 +458,23 @@ fn handle_crate<'tcx>(
                 }
             };
 
-            let file = match &callback.version_control {
-                VersionControlArg::Update => {
+            let file_destination = original_file.join(join_path.clone());
+
+            let mut callback_version_control = callback.version_control.clone();
+
+            let file = match callback_version_control {
+                VersionControlArg::Update if file_destination.exists() => {
                     let file_temp_dir = original_file.join("_temp");
                     let file_temp_dir = file_temp_dir.to_str().unwrap();
 
                     std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to create dir");
 
                     original_file.join("_temp").join(join_path.clone())
+                }
+                VersionControlArg::Update => {
+                    callback_version_control = VersionControlArg::Initialize;
+                    std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
+                    original_file.join(join_path.clone())
                 }
                 _ => {
                     std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
@@ -524,8 +533,7 @@ fn handle_crate<'tcx>(
                 }
             }
 
-            if callback.version_control != VersionControlArg::None {
-                let file_destination = original_file.join(join_path.clone());
+            if callback_version_control != VersionControlArg::None {
                 let file_destination = file_destination.to_str().unwrap();
 
                 let file_vc_dir = match &callback.version_control_dir {
@@ -540,7 +548,7 @@ fn handle_crate<'tcx>(
                 let file_vc_dir = file_vc_dir.to_str().unwrap();
                 std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to create dir");
 
-                match callback.version_control {
+                match callback_version_control {
                     VersionControlArg::Initialize => {
                         std::fs::copy(file_destination.clone(), file_vc.clone()).expect(
                             format!(
@@ -555,16 +563,24 @@ fn handle_crate<'tcx>(
                         let file_temp = original_file.join("_temp").join(join_path.clone());
                         let file_temp = file_temp.to_str().unwrap();
 
-                        std::process::Command::new("git")
+                        let git_output = std::process::Command::new("git")
                             .output()
                             .expect("Could not find 'git'. Please install git and try again.");
-                        std::process::Command::new("git")
+                        if !git_output.stderr.is_empty() {
+                            panic!("{:?}", git_output);
+                        }
+                        // https://git-scm.com/docs/git-merge-file
+                        let git_merge_output = std::process::Command::new("git")
                             .arg("merge-file")
                             .arg(file_destination.clone())
-                            .arg(file_temp.clone())
                             .arg(file_vc.clone())
+                            .arg(file_temp.clone())
                             .output()
                             .expect("git-merge failed");
+                        if !git_merge_output.stderr.is_empty() {
+                            panic!("{:?}", git_merge_output);
+                        }
+
                         std::fs::copy(file_temp.clone(), file_vc.clone()).expect(
                             format!(
                                 "Failed to copy file '{}' to '{}'",
@@ -574,8 +590,7 @@ fn handle_crate<'tcx>(
                             .as_str(),
                         );
                         std::fs::remove_file(file_temp.clone()).expect(
-                            format!("Failed to remove file '{}'", file_destination.clone())
-                                .as_str(),
+                            format!("Failed to remove file '{}'", file_temp.clone()).as_str(),
                         );
                     }
                     VersionControlArg::None => panic!(),

@@ -78,7 +78,7 @@ macro_rules! test_secret_macro {
         } else {
             true
         };
-        assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
+        assert_eq!(a_t.greater_than_or_equal(b_t), expected_gte);
         let expected_lt = if get_expected("<", &a, &b) == "0x0" {
             false
         } else {
@@ -148,7 +148,7 @@ fn test_secret_testing() {
     } else {
         true
     };
-    assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
+    assert_eq!(a_t.greater_than_or_equal(b_t), expected_gte);
     let expected_lt = if get_expected("<", &a, &b) == "0x0" {
         false
     } else {
