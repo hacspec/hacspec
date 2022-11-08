@@ -1626,7 +1626,7 @@
                 <span class="self">self</span> <span class="op">&gt;</span> <span class="ident">other</span>
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">greater_than_or_qual</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">greater_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">other</span>
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
@@ -1665,7 +1665,7 @@
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">greater_than_or_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">greater_than_or_qual</span>(<span class="ident">other</span>) {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">greater_than_or_equal</span>(<span class="ident">other</span>) {
                     <span class="ident"><span class="self">Self</span>::max_val</span>()
                 } <span class="kw">else</span> {
                     <span class="ident"><span class="self">Self</span>::from_literal</span>(<span class="number">0</span>)
@@ -1794,7 +1794,7 @@
                 <span class="self">self</span> <span class="op">&gt;</span> <span class="ident">other</span>
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">greater_than_or_qual</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">greater_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">other</span>
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
@@ -1833,7 +1833,7 @@
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
             <span class="kw">fn</span> <span class="ident">greater_than_or_equal_bm</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">greater_than_or_qual</span>(<span class="ident">other</span>) {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">greater_than_or_equal</span>(<span class="ident">other</span>) {
                     <span class="ident"><span class="self">Self</span>::from_signed_literal</span>(<span class="op">-</span><span class="number">1</span>)
                 } <span class="kw">else</span> {
                     <span class="ident"><span class="self">Self</span>::from_signed_literal</span>(<span class="number">0</span>)
@@ -1957,7 +1957,7 @@
                 <span class="macro">unimplemented!</span>();
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">greater_than_or_qual</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">greater_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="macro">unimplemented!</span>();
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
@@ -2179,7 +2179,7 @@
                 <span class="macro">unimplemented!</span>();
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">greater_than_or_qual</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">greater_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="macro">unimplemented!</span>();
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
@@ -2443,7 +2443,7 @@
                 <span class="ident">bm</span> <span class="op">!</span><span class="op">=</span> <span class="ident">BigInt::zero</span>()
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">greater_than_or_qual</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">greater_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="kw">let</span> <span class="ident">bm</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">greater_than_or_equal_bm</span>(<span class="ident">other</span>);
                 <span class="kw">let</span> <span class="ident">bm</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="ident">bm</span>.<span class="ident">declassify</span>();
                 <span class="ident">bm</span> <span class="op">!</span><span class="op">=</span> <span class="ident">BigInt::zero</span>()
@@ -2733,7 +2733,7 @@
                 <span class="self">self</span> <span class="op">&gt;</span> <span class="ident">other</span>
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
-            <span class="kw">fn</span> <span class="ident">greater_than_or_qual</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+            <span class="kw">fn</span> <span class="ident">greater_than_or_equal</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
                 <span class="self">self</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">other</span>
             }
             <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use_attributes&quot;</span>, <span class="ident">in_hacspec</span>)]</span>
