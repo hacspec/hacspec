@@ -1,7 +1,6 @@
 // Import hacspec and all needed definitions.
 use hacspec_lib::*;
 
-#[test]
 pub fn big_integer_test () {
     /////////////////////////
     // lib/big_integers.rs //
@@ -29,7 +28,7 @@ pub fn big_integer_test () {
     // bi = bi.divide(BigInt::TWO()); // unimplemented
     // bi = bi.inv(BigInt::TWO()); // unimplemented
     let _ : bool = BigInt::ONE().equal(BigInt::TWO()); // unimplemented
-    
+
     // let _ : bool = BigInt::ONE().greater_than(BigInt::TWO()); // unimplemented
     // let _ : bool = BigInt::ONE().greater_than_or_equal(BigInt::TWO()); // unimplemented
     // let _ : bool = BigInt::ONE().less_than(BigInt::TWO()); // unimplemented
@@ -52,7 +51,11 @@ pub fn big_integer_test () {
 }
 
 #[test]
-pub fn machine_integer_test () {
+fn test_big_integer () {
+    big_integer_test()
+}
+
+fn machine_integer_test () {
     /////////////////////////////
     // lib/machine_integers.rs //
     /////////////////////////////
@@ -64,8 +67,8 @@ pub fn machine_integer_test () {
     mi = mi.get_bit(3);
     mi = mi.set_bit(u16::ONE(), 3);
     mi = mi.set(4, u16::TWO(), 2);
-    mi = mi.rotate_left(4);
-    mi = mi.rotate_right(4);
+    mi = mi.rotate_left(4u32);
+    mi = mi.rotate_right(4u32);
 
     u16::max_val();
     mi = mi.wrap_add(u16::TWO());
@@ -78,7 +81,7 @@ pub fn machine_integer_test () {
     mi = mi.divide(u16::TWO());
     mi = u16::from_literal(79_u128).inv(u16::TWO());
     let _ : bool = u16::ONE().equal(u16::TWO());
-    
+
     let _ : bool = u16::ONE().greater_than(u16::TWO());
     let _ : bool = u16::ONE().greater_than_or_equal(u16::TWO());
     let _ : bool = u16::ONE().less_than(u16::TWO());
@@ -101,6 +104,10 @@ pub fn machine_integer_test () {
 }
 
 #[test]
+fn test_machine_integer () {
+    machine_integer_test()
+}
+
 pub fn seq_test () {
     ////////////////
     // lib/seq.rs //
@@ -135,10 +142,10 @@ pub fn seq_test () {
     // // us.index(3_u8);
     // us[3_u8];
     // // us.index_mut(3_u8); // ?
-    
-    // let ps : PublicSeq<u8> = public_byte_seq!(8_u8, 5_u8, 18_u8);    
+
+    // let ps : PublicSeq<u8> = public_byte_seq!(8_u8, 5_u8, 18_u8);
     // let _ : Seq<U8> = byte_seq!(8_u8, 5_u8, 18_u8);
-        
+
     // // let v = (&mut us)[3_u8];
     // Seq::<u8>::from_seq(&ns);
     // let ss = Seq::<U8>::from_public_seq(&ns);
@@ -149,7 +156,7 @@ pub fn seq_test () {
     // ////////////////////////////////
     // // lib/vec_integers_public.rs //
     // ////////////////////////////////
-    
+
     // let mut ps : PublicSeq<u8> = public_byte_seq!(8_u8, 5_u8, 18_u8);
     // let a : PublicSeq<u8> = public_byte_seq!(8_u8, 5_u8, 18_u8);
     // let n : PublicSeq<u8> = public_byte_seq!(5_u8, 18_u8);
@@ -171,7 +178,7 @@ pub fn seq_test () {
     // ps = ps.divide(a.clone());
     // ps = ps.inv(a.clone());
     // let _ : bool = ps.clone().equal(a.clone());
-    
+
     // let _ : bool = ps.clone().greater_than(a.clone());
     // let _ : bool = ps.clone().greater_than_or_equal(a.clone());
     // let _ : bool = ps.clone().less_than(a.clone());
@@ -193,12 +200,12 @@ pub fn seq_test () {
     // ps = ps & a.clone();
     // ps = ps >> 3;
     // ps = ps << 3;
-    
+
     // ////////////////////////////////
     // // lib/vec_integers_secret.rs //
     // ////////////////////////////////
 
-    // let mut ss : Seq<U8> = byte_seq!(8_u8, 5_u8, 18_u8);    
+    // let mut ss : Seq<U8> = byte_seq!(8_u8, 5_u8, 18_u8);
     // let a : Seq<U8> = byte_seq!(8_u8, 5_u8, 18_u8);
     // let n : Seq<U8> = byte_seq!(5_u8, 18_u8);
 
@@ -219,7 +226,7 @@ pub fn seq_test () {
     // ss = ss.divide(a.clone());
     // ss = ss.inv(a.clone());
     // let _ : bool = ss.clone().equal(a.clone());
-    
+
     // let _ : bool = ss.clone().greater_than(a.clone());
     // let _ : bool = ss.clone().greater_than_or_equal(a.clone());
     // let _ : bool = ss.clone().less_than(a.clone());
@@ -234,7 +241,7 @@ pub fn seq_test () {
 
     // ss = ss.clone() + a.clone();
     // ss = ss.clone() * a.clone();
- 
+
     // ss = ss * a.clone();
     // ss = ss - a.clone();
     // ss = ss + a.clone();
@@ -253,12 +260,16 @@ pub fn seq_test () {
     // TODO: Fill in examples !
 }
 
+#[test]
+pub fn test_seq () {
+    seq_test()
+}
+
 array!(ArrName, 8, U64);
 bytes!(ByteArrName, 128);
 
 // both_bytes!(BothType, BothTypeSecret, 8); // unknown hacspec macro ?
 // both_arrays!(BothType, BothTypeSecret, 8, U8, u8); // unknown hacspec macro ?
-#[test]
 pub fn array_test () {
     // //////////////////
     // // lib/prelude.rs //
@@ -273,7 +284,7 @@ pub fn array_test () {
     // let s_u32Word = u32Word::new();
     // let s_u64Word = u64Word::new();
     // let s_u128Word = u128Word::new();
-    
+
     // //////////////////////
     // // lib/transmute.rs //
     // //////////////////////
@@ -282,7 +293,7 @@ pub fn array_test () {
     // let x_U32 = U32(3_u32);
     // let x_U64 = U64(3_u64);
     // let x_U128 = U128(3_u128);
-    
+
     // let _ : U16Word = U16_to_le_bytes(x_U16);
     // let _ : U16Word = U16_to_be_bytes(x_U16);
     // let _ : U16 = U16_from_be_bytes(s_U16Word);
@@ -300,11 +311,11 @@ pub fn array_test () {
     // let _ : U128 = U128_from_be_bytes(s_U128Word);
     // let _ : U128 = U128_from_le_bytes(s_U128Word);
 
-    // let x_u16 = 3_u16;    
-    // let x_u32 = 3_u32;    
-    // let x_u64 = 3_u64;    
+    // let x_u16 = 3_u16;
+    // let x_u32 = 3_u32;
+    // let x_u64 = 3_u64;
     // let x_u128 = 3_u128;
-    
+
     // let _ : u16Word = u16_to_le_bytes(x_u16);
     // let _ : u16Word = u16_to_be_bytes(x_u16);
     // let _ : u16 = u16_from_be_bytes(s_u16Word);
@@ -321,11 +332,11 @@ pub fn array_test () {
     // let _ : u128Word = u128_to_be_bytes(x_u128);
     // let _ : u128 = u128_from_be_bytes(s_u128Word);
     // let _ : u128 = u128_from_le_bytes(s_u128Word);
-    
+
     // //////////////////
     // // lib/array.rs //
     // //////////////////
-    
+
     // // Hash::from_hex("22");
     // let hs = ArrName::new();
     // hs.len();
@@ -337,7 +348,7 @@ pub fn array_test () {
     // hs.to_be_U32s();
     // hs.to_le_U32s();
     // hs.to_be_U64s();
-    // hs.to_le_U64s();    
+    // hs.to_le_U64s();
     // hs.to_U128s_be();
     // hs.to_U128s_le();
     // // BothTypeSecret::from_public(BothType::new());
@@ -361,7 +372,7 @@ pub fn array_test () {
     // hs.set_chunk(2, 2, &ByteSeq::new(3));
 
     // ByteArrName::default();
-    
+
     // ByteArrName::create(128);
     // hs.update_slice(0, &hs, 1, 2);
     // hs.update_slice(0, &ByteSeq::new(3), 1, 2);
@@ -374,4 +385,9 @@ pub fn array_test () {
 
     // ByteArrName::from_seq(&hs);
     // ByteArrName::from_seq(&ByteSeq::new(3));
+}
+
+#[test]
+pub fn test_array () {
+    array_test()
 }
