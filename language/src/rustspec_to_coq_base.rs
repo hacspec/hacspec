@@ -314,53 +314,68 @@ pub(crate) fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'
 pub(crate) fn add_ok_if_result(
     stmt: Statement,
     early_return_type: Fillable<CarrierTyp>,
-    question_mark: bool,
+    question_mark: Option<ScopeMutableVars>,
 ) -> Spanned<Statement> {
     (
         match early_return_type {
             Some(ert) => {
-                if question_mark {
+                if question_mark.is_some()
                     // If b has an early return, then we must prefix the returned
                     // mutated variables by Ok or Some
-                    match stmt {
-                        Statement::ReturnExp(e, t) => Statement::ReturnExp(
-                            Expression::EnumInject(
-                                BaseTyp::Named(
-                                    (
-                                        TopLevelIdent {
-                                            string: match carrier_kind(ert.clone()) {
-                                                EarlyReturnType::Option => "Option",
-                                                EarlyReturnType::Result => "Result",
-                                            }
-                                            .to_string(),
-                                            kind: TopLevelIdentKind::Type,
-                                        },
-                                        DUMMY_SP.into(),
+                    {
+                        match stmt {
+                            Statement::ReturnExp(e, Some((x, t_base))) => {
+                                let (early_typ, fun_name) = match ert.clone() {
+                                    CarrierTyp::Option(a) => (
+                                        BaseTyp::Named(
+                                            (
+                                                TopLevelIdent {
+                                                    string: "Option".to_string(),
+                                                    kind: TopLevelIdentKind::Type,
+                                                },
+                                                DUMMY_SP.into(),
+                                            ),
+                                            Some(vec![t_base.clone()]),
+                                        ),
+                                        "Some",
                                     ),
-                                    None,
-                                ),
-                                (
-                                    TopLevelIdent {
-                                        string: match carrier_kind(ert) {
-                                            EarlyReturnType::Option => "Some",
-                                            EarlyReturnType::Result => "Ok",
-                                        }
-                                        .to_string(),
-                                        kind: TopLevelIdentKind::EnumConstructor,
-                                    },
-                                    DUMMY_SP.into(),
-                                ),
-                                Some((Box::new(e.clone()), DUMMY_SP.into())),
-                            ),
-                            t,
-                        ),
-                        _ => panic!("should not happen"),
-                    }
+                                    CarrierTyp::Result(a, b) => (
+                                        BaseTyp::Named(
+                                            (
+                                                TopLevelIdent {
+                                                    string: "Result".to_string(),
+                                                    kind: TopLevelIdentKind::Type,
+                                                },
+                                                DUMMY_SP.into(),
+                                            ),
+                                            Some(vec![t_base.clone(), b]),
+                                        ),
+                                        "Ok",
+                                    ),
+                                };
+
+                                Statement::ReturnExp(
+                                    Expression::EnumInject(
+                                        early_typ.clone(),
+                                        (
+                                            TopLevelIdent {
+                                                string: fun_name.to_string(),
+                                                kind: TopLevelIdentKind::EnumConstructor,
+                                            },
+                                            DUMMY_SP.into(),
+                                        ),
+                                        Some((Box::new(e.clone()), DUMMY_SP.into())),
+                                    ),
+                                    Some((x, (early_typ.clone(), t_base.1))),
+                                )
+                            },
+                            _ => panic!("should not happen"),
+                        }
                 } else {
                     stmt.clone()
                 }
             }
-            _ => stmt.clone(),
+            None => stmt.clone(),
         },
         DUMMY_SP.into(),
     )

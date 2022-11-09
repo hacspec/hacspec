@@ -64,12 +64,16 @@ fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
 }
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
-            translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone(), false)
+        Pattern::EnumCase(ty_name, name, None) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
+        }
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x, _m) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
+        Pattern::LiteralPat(x) => translate_literal(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }
@@ -92,6 +96,7 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::UInt8(x) => RcDoc::as_string(format!("@repr U8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
+        Literal::UnspecifiedInt(_) => panic!("Got a `UnspecifiedInt` literal: those should have been resolved into concrete types during the typechecking phase"),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }

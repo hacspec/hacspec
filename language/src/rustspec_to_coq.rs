@@ -741,6 +741,61 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
     }
 }
 
+fn add_ok_if_result(
+    stmt: Statement,
+    early_return_type: Fillable<CarrierTyp>,
+    question_mark: bool,
+) -> Spanned<Statement> {
+    (
+        match early_return_type {
+            Some(ert) => {
+                if question_mark {
+                    // If b has an early return, then we must prefix the returned
+                    // mutated variables by Ok or Some
+                    match stmt {
+                        Statement::ReturnExp(e, t) => Statement::ReturnExp(
+                            Expression::EnumInject(
+                                BaseTyp::Named(
+                                    (
+                                        TopLevelIdent {
+                                            string: match carrier_kind(ert.clone()) {
+                                                EarlyReturnType::Option => "Option",
+                                                EarlyReturnType::Result => "Result",
+                                            }
+                                            .to_string(),
+                                            kind: TopLevelIdentKind::Type,
+                                        },
+                                        DUMMY_SP.into(),
+                                    ),
+                                    None,
+                                ),
+                                (
+                                    TopLevelIdent {
+                                        string: match carrier_kind(ert) {
+                                            EarlyReturnType::Option => "Some",
+                                            EarlyReturnType::Result => "Ok",
+                                        }
+                                        .to_string(),
+                                        kind: TopLevelIdentKind::EnumConstructor,
+                                    },
+                                    DUMMY_SP.into(),
+                                ),
+                                Some((Box::new(e.clone()), DUMMY_SP.into())),
+                            ),
+                            t,
+                        ),
+                        _ => panic!("should not happen"),
+                    }
+                } else {
+                    stmt.clone()
+                }
+            }
+            _ => stmt.clone(),
+        },
+        DUMMY_SP.into(),
+    )
+}
+
 fn translate_statements<'a>(
     mut statements: Iter<Spanned<Statement>>,
     top_ctx: &'a TopLevelContext,

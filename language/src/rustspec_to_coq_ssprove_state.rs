@@ -408,6 +408,7 @@ pub(crate) fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
             .append(RcDoc::hardline()),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 
@@ -432,6 +433,7 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::UInt8(x) => RcDoc::as_string(format!("@repr U8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
+        Literal::UnspecifiedInt(_) => panic!("Got a `UnspecifiedInt` literal: those should have been resolved into concrete types during the typechecking phase"),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
@@ -445,12 +447,16 @@ fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
 }
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
-            translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone(), false)
+        Pattern::EnumCase(ty_name, name, None) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
+        }
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x, _m) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
+        Pattern::LiteralPat(x) => translate_literal(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }
@@ -926,9 +932,9 @@ fn translate_expression<'a>(
 
             let (ass_e1_0_iter, trans_e1_0_iter): (Vec<_>, Vec<_>) = arms
                 .into_iter()
-                .map(|(enum_name, case_name, payload, e1)| {
+                .map(|(pat, e1)| {
                     let (ass_e1, trans_e1) = translate_expression(e1.0, top_ctx, inline);
-                    (ass_e1, (enum_name, case_name, payload, trans_e1))
+                    (ass_e1, (pat, trans_e1))
                 })
                 .unzip();
 
@@ -950,19 +956,10 @@ fn translate_expression<'a>(
                         ass_e1_0_iter
                             .into_iter()
                             .zip(trans_e1_0_iter.into_iter())
-                            .map(|(enum_ass, (enum_name, case_name, payload, trans_e1_0))| {
+                            .map(|(enum_ass, (pat, trans_e1_0))| {
                                 RcDoc::as_string("|")
                                     .append(RcDoc::space())
-                                    .append(translate_enum_case_name(
-                                        enum_name.clone(),
-                                        case_name.0.clone(),
-                                        false,
-                                    ))
-                                    .append(match &payload {
-                                        Some(payload) => RcDoc::space()
-                                            .append(translate_pattern(payload.0.clone())),
-                                        None => RcDoc::nil(),
-                                    })
+                                    .append(translate_pattern(pat.0.clone()))
                                     .append(RcDoc::space())
                                     .append(RcDoc::as_string("=>"))
                                     .append(RcDoc::concat(enum_ass.into_iter()))
