@@ -17,8 +17,13 @@ mod elab_monadic_lets;
 mod hir_to_rustspec;
 mod name_resolution;
 mod rustspec;
+
 mod rustspec_to_coq;
 mod rustspec_to_coq_base;
+mod rustspec_to_coq_ssprove;
+mod rustspec_to_coq_ssprove_pure;
+mod rustspec_to_coq_ssprove_state;
+
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
@@ -446,9 +451,9 @@ fn handle_crate<'tcx>(
                     // Compute file name as output directory with crate local path (file_name)
                     file_name.clone().to_title_case().replace(" ", ".") + "." + extension
                 }
-                "v" => {
+                "v" | "v_ssprove_state" | "v_ssprove_pure" | "v_ssprove" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    file_name.clone().to_title_case().replace(" ", "_") + "." + extension
+                    file_name.clone().to_title_case().replace(" ", "_") + ".v"
                 }
                 _ => {
                     compiler
@@ -458,23 +463,14 @@ fn handle_crate<'tcx>(
                 }
             };
 
-            let file_destination = original_file.join(join_path.clone());
-
-            let mut callback_version_control = callback.version_control.clone();
-
-            let file = match callback_version_control {
-                VersionControlArg::Update if file_destination.exists() => {
+            let file = match &callback.version_control {
+                VersionControlArg::Update => {
                     let file_temp_dir = original_file.join("_temp");
                     let file_temp_dir = file_temp_dir.to_str().unwrap();
 
                     std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to create dir");
 
                     original_file.join("_temp").join(join_path.clone())
-                }
-                VersionControlArg::Update => {
-                    callback_version_control = VersionControlArg::Initialize;
-                    std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
-                    original_file.join(join_path.clone())
                 }
                 _ => {
                     std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
@@ -525,6 +521,24 @@ fn handle_crate<'tcx>(
                     &file,
                     &top_ctx_map[&krate_path],
                 ),
+                "v_ssprove_pure" => rustspec_to_coq_ssprove_pure::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                "v_ssprove" => rustspec_to_coq_ssprove::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                "v_ssprove_state" => rustspec_to_coq_ssprove_state::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
                 _ => {
                     compiler
                         .session()
@@ -533,7 +547,8 @@ fn handle_crate<'tcx>(
                 }
             }
 
-            if callback_version_control != VersionControlArg::None {
+            if callback.version_control != VersionControlArg::None {
+                let file_destination = original_file.join(join_path.clone());
                 let file_destination = file_destination.to_str().unwrap();
 
                 let file_vc_dir = match &callback.version_control_dir {
@@ -548,7 +563,7 @@ fn handle_crate<'tcx>(
                 let file_vc_dir = file_vc_dir.to_str().unwrap();
                 std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to create dir");
 
-                match callback_version_control {
+                match callback.version_control {
                     VersionControlArg::Initialize => {
                         std::fs::copy(file_destination.clone(), file_vc.clone()).expect(
                             format!(
@@ -563,24 +578,16 @@ fn handle_crate<'tcx>(
                         let file_temp = original_file.join("_temp").join(join_path.clone());
                         let file_temp = file_temp.to_str().unwrap();
 
-                        let git_output = std::process::Command::new("git")
+                        std::process::Command::new("git")
                             .output()
                             .expect("Could not find 'git'. Please install git and try again.");
-                        if !git_output.stderr.is_empty() {
-                            panic!("{:?}", git_output);
-                        }
-                        // https://git-scm.com/docs/git-merge-file
-                        let git_merge_output = std::process::Command::new("git")
+                        std::process::Command::new("git")
                             .arg("merge-file")
                             .arg(file_destination.clone())
-                            .arg(file_vc.clone())
                             .arg(file_temp.clone())
+                            .arg(file_vc.clone())
                             .output()
                             .expect("git-merge failed");
-                        if !git_merge_output.stderr.is_empty() {
-                            panic!("{:?}", git_merge_output);
-                        }
-
                         std::fs::copy(file_temp.clone(), file_vc.clone()).expect(
                             format!(
                                 "Failed to copy file '{}' to '{}'",
@@ -590,7 +597,8 @@ fn handle_crate<'tcx>(
                             .as_str(),
                         );
                         std::fs::remove_file(file_temp.clone()).expect(
-                            format!("Failed to remove file '{}'", file_temp.clone()).as_str(),
+                            format!("Failed to remove file '{}'", file_destination.clone())
+                                .as_str(),
                         );
                     }
                     VersionControlArg::None => panic!(),
@@ -773,7 +781,7 @@ fn read_crate_pre(
             );
         }
 
-        p
+        p.clone()
         // }
     } else {
         vec![(&manifest.packages[0]).clone()]
@@ -952,9 +960,12 @@ fn main() -> Result<(), usize> {
             callbacks.target_directory = deps;
 
             for package in package_vec {
+                let pkg_name = package.name.clone();
+
                 let mut compiler_args_run = compiler_args.clone();
                 let mut callbacks_run = callbacks.clone();
-                log::trace!("package name to analyze: {:?}", package.name);
+
+                log::trace!("package name to analyze: {:?}", pkg_name);
                 read_crate(package, &mut compiler_args_run, &mut callbacks_run);
 
                 compiler_args_run.push("--crate-type=lib".to_string());
@@ -966,6 +977,7 @@ fn main() -> Result<(), usize> {
                     Ok(_) => Ok(()),
                     Err(_) => Err(1usize),
                 }?;
+
             }
         }
     };
