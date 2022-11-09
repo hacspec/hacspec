@@ -272,6 +272,7 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
+        Literal::UnspecifiedInt(_) => panic!("Got a `UnspecifiedInt` literal: those should have been resolved into concrete types during the typechecking phase"),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
