@@ -738,6 +738,41 @@ fn get_literal_type(l: &Literal) -> BaseTyp {
     }
 }
 
+fn typecheck_arm(
+    sess: &Session,
+    pat: &Spanned<Pattern>,
+    pat_typ: &Typ,
+    e @ (_, e_span): &Spanned<Expression>,
+    mut e_typ: &mut Option<Typ>,
+    func_return_type: &Option<&Spanned<BaseTyp>>,
+    var_context: &VarContext,
+    mut acc_var_context: &mut VarContext,
+    top_ctx: &TopLevelContext,
+) -> Result<(Spanned<Pattern>, Spanned<Expression>), ()> {
+    let pat_var_context = typecheck_pattern(sess, pat, pat_typ, top_ctx)?;
+    let (e, e_typ_inferred, var_context) = typecheck_expression(
+        sess,
+        e,
+        func_return_type,
+        top_ctx,
+        &var_context.clone().union(pat_var_context),
+    )?;
+    *acc_var_context = acc_var_context.clone().intersection(var_context.clone());
+    match &e_typ {
+        None => *e_typ = Some(e_typ_inferred),
+        Some(out_typ) => {
+            unify_types_default_error_message(
+                sess,
+                &e_typ_inferred,
+                out_typ,
+                &HashMap::new(),
+                top_ctx,
+            )?;
+        }
+    }
+    Ok((pat.clone(), (e, e_span.clone())))
+}
+
 pub type TypecheckingResult<T> = Result<T, ()>;
 
 fn typecheck_expression(
@@ -856,47 +891,31 @@ fn typecheck_expression(
                 }
             }
         }
-        Expression::MatchWith(arg, arms) => {
-            let (new_arg, t_arg, intermediate_var_context) =
+        Expression::MatchWith(arg @ box (_, arg_span), arms) => {
+            let (arg, t_arg, intermediate_var_context) =
                 typecheck_expression(sess, arg, func_return_type, top_level_context, &var_context)?;
             let mut acc_var_context = intermediate_var_context.clone();
             let mut out_typ = None;
+
             // Typecheck each match arm
-            let new_arms = check_vec(
-                arms.into_iter()
-                    .map(|(arm_pattern, arm_exp)| {
-                        let (new_arm_pattern, new_var_context) = {
-                            let new_var_context =
-                                typecheck_pattern(sess, arm_pattern, &t_arg, top_level_context)?;
-                            (arm_pattern.clone(), new_var_context)
-                        };
-                        let (new_arm_exp, arm_typ, new_var_context) = typecheck_expression(
-                            sess,
-                            arm_exp,
-                            func_return_type,
-                            top_level_context,
-                            // TODO: is this union fine wrt #274?
-                            &intermediate_var_context.clone().union(new_var_context),
-                        )?;
-                        acc_var_context = acc_var_context.clone().intersection(new_var_context);
-                        match &out_typ {
-                            None => out_typ = Some(arm_typ),
-                            Some(out_typ) => {
-                                unify_types_default_error_message(
-                                    sess,
-                                    &arm_typ,
-                                    out_typ,
-                                    &HashMap::new(),
-                                    top_level_context,
-                                )?;
-                            }
-                        };
-                        Ok((new_arm_pattern, (new_arm_exp, arm_exp.1.clone())))
-                    })
-                    .collect(),
-            )?;
+            let arms = arms
+                .into_iter()
+                .map(|(arm_pattern, arm_exp)| {
+                    typecheck_arm(
+                        sess,
+                        arm_pattern,
+                        &t_arg,
+                        arm_exp,
+                        &mut out_typ,
+                        func_return_type,
+                        &intermediate_var_context,
+                        &mut acc_var_context,
+                        top_level_context,
+                    )
+                })
+                .collect::<Result<Vec<_>, _>>()?;
             Ok((
-                Expression::MatchWith(Box::new((new_arg, arg.1.clone())), new_arms),
+                Expression::MatchWith(Box::new((arg, arg_span.clone())), arms),
                 out_typ.unwrap(),
                 acc_var_context,
             ))
@@ -1723,6 +1742,40 @@ fn typecheck_expression(
                 var_context,
             ))
         }
+        Expression::LetBinding(
+            pat,
+            typ_annot,
+            exp @ box (_, exp_span),
+            body @ box (_, body_span),
+        ) => {
+            let (exp, t_exp, intermediate_var_context) =
+                typecheck_expression(sess, exp, func_return_type, top_level_context, &var_context)?;
+            let mut acc_var_context = intermediate_var_context.clone();
+            let mut out_typ = typ_annot.clone().map(|(ty, _)| ty);
+
+            let (pat, body) = typecheck_arm(
+                sess,
+                pat,
+                &t_exp,
+                body,
+                &mut out_typ,
+                func_return_type,
+                &intermediate_var_context,
+                &mut acc_var_context,
+                top_level_context,
+            )?;
+
+            Ok((
+                Expression::LetBinding(
+                    pat,
+                    typ_annot.clone(),
+                    box (exp, exp_span.clone()),
+                    box body,
+                ),
+                out_typ.unwrap(),
+                acc_var_context,
+            ))
+        }
         Expression::IntegerCasting(e1, t1, _) => {
             log::trace!("Expression::IntegerCasting {:?} - {:?}", e1, t1);
             let (new_e1, e1_typ, var_context) =
@@ -2203,6 +2256,29 @@ fn typecheck_expression_no_qm(
     }
 }
 
+/// TODO: rework `QuestionMarkInfo` in general. For now,
+/// `QuestionMarkInfo` ships informations about question marks along
+/// with mutation information. However, those two should be able to
+/// live independently.
+/// `merge_qmi_carrier` merges a `QuestionMarkInfo` with a `CarrierTyp`.
+fn merge_qmi_carrier(
+    qmi: &QuestionMarkInfo,
+    carrier: &Option<CarrierTyp>,
+    var_context: &VarContext, // Why are we discarding `qmi`'s `ScopeMutableVars`?
+) -> QuestionMarkInfo {
+    carrier
+        .as_ref()
+        .map(|carrier| {
+            let mut_vars = translate_var_context_to_mut_vars(var_context.clone());
+            let fun_deps = qmi.as_ref().map_or_else(
+                || FunctionDependencies(HashSet::new()),
+                |(_, fun_deps, _)| fun_deps.clone(),
+            );
+            (mut_vars, fun_deps, Some(dbg!(carrier).clone()))
+        })
+        .or_else(|| qmi.clone())
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -2290,16 +2366,7 @@ fn typecheck_statement(
                     _ => (),
                 }
             };
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = merge_qmi_carrier(question_mark, &carrier, &ret_var_context);
             Ok((
                 Statement::LetBinding(
                     (pat.clone(), pat_span.clone()),
@@ -2348,16 +2415,7 @@ fn typecheck_statement(
                 return Err(());
             };
             let ret_var_context = add_var(&x, &x_typ, &new_var_context);
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = merge_qmi_carrier(question_mark, &carrier, &ret_var_context);
             Ok((
                 Statement::Reassignment(
                     (x.clone(), x_span.clone()),

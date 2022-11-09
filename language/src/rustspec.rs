@@ -387,6 +387,12 @@ pub enum Expression {
         Vec<(Spanned<Expression>, Spanned<Borrowing>)>,
         Fillable<Vec<BaseTyp>>,
     ),
+    LetBinding(
+        Spanned<Pattern>,         // Let-binded pattern
+        Option<Spanned<Typ>>,     // Typ of the binded expr
+        Box<Spanned<Expression>>, // Binded expr
+        Box<Spanned<Expression>>, // Body
+    ),
     EnumInject(
         BaseTyp,                          // Type of enum
         Spanned<TopLevelIdent>,           // Name of case

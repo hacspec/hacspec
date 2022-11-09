@@ -957,6 +957,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                     })
             }
         }
+        Expression::LetBinding(..) => unimplemented!(),
         Expression::ArrayIndex(x, e2, typ) => {
             let e2 = e2.0;
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
