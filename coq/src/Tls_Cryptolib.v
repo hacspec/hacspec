@@ -188,9 +188,9 @@ Definition secret_to_public
   match group_name_8 with
   | Secp256r1 => match p256_point_mul_base (nat_mod_from_byte_seq_be (
       x_9) : p256_scalar_t) with
-  | Ok (x_10, y_11) => @Ok dh_pk_t crypto_error_t (seq_concat (
+  | Ok ((x_10, y_11)) => @Ok dh_pk_t crypto_error_t (seq_concat (
       nat_mod_to_byte_seq_be (x_10)) (nat_mod_to_byte_seq_be (y_11)))
-  | Err _ => @Err dh_pk_t crypto_error_t (CryptoError)
+  | Err (_) => @Err dh_pk_t crypto_error_t (CryptoError)
   end
   | X25519 => @Ok dh_pk_t crypto_error_t (seq_from_seq (
       array_to_seq (x25519_secret_to_public (array_from_seq (32) (x_9)))))
@@ -206,22 +206,21 @@ Definition p256_ecdh
   (x_13 : dh_sk_t)
   (y_14 : dh_pk_t)
   : (result key_t crypto_error_t) :=
-  bind (p256_check_point_len (y_14)) (fun _ => let pk_15 : (
-        p256_field_element_t ×
-        p256_field_element_t
-      ) :=
-      (
-        nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 0, usize 32
-            ))) : p256_field_element_t,
-        nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 32, usize 64
-            ))) : p256_field_element_t
-      ) in 
-    match p256_point_mul (nat_mod_from_byte_seq_be (x_13) : p256_scalar_t) (
-      pk_15) with
-    | Ok (x_16, y_17) => @Ok key_t crypto_error_t (seq_concat (
-        nat_mod_to_byte_seq_be (x_16)) (nat_mod_to_byte_seq_be (y_17)))
-    | Err _ => @Err key_t crypto_error_t (CryptoError)
-    end).
+  let _ : unit :=
+    p256_check_point_len (y_14) in 
+  let pk_15 : (p256_field_element_t × p256_field_element_t) :=
+    (
+      nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 0, usize 32
+          ))) : p256_field_element_t,
+      nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 32, usize 64
+          ))) : p256_field_element_t
+    ) in 
+  match p256_point_mul (nat_mod_from_byte_seq_be (x_13) : p256_scalar_t) (
+    pk_15) with
+  | Ok ((x_16, y_17)) => @Ok key_t crypto_error_t (seq_concat (
+      nat_mod_to_byte_seq_be (x_16)) (nat_mod_to_byte_seq_be (y_17)))
+  | Err (_) => @Err key_t crypto_error_t (CryptoError)
+  end.
 
 Definition ecdh
   (group_name_18 : named_group_t)
@@ -259,8 +258,9 @@ Definition kem_keygen_inner
   : (result (kem_sk_t × kem_pk_t) crypto_error_t) :=
   let sk_27 : seq uint8 :=
     seq_from_seq (seq_slice_range (ent_26) ((usize 0, dh_priv_len (ks_25)))) in 
-  bind (kem_priv_to_pub (ks_25) (sk_27)) (fun pk_28 => @Ok (kem_sk_t × kem_pk_t
-    ) crypto_error_t ((sk_27, pk_28))).
+  let pk_28 : kem_pk_t :=
+    kem_priv_to_pub (ks_25) (sk_27) in 
+  @Ok (kem_sk_t × kem_pk_t) crypto_error_t ((sk_27, pk_28)).
 
 Definition kem_keygen
   (ks_29 : kem_scheme_t)
@@ -277,19 +277,20 @@ Definition kem_encap
   (pk_32 : kem_pk_t)
   (ent_33 : entropy_t)
   : (result (key_t × byte_seq) crypto_error_t) :=
-  bind (kem_keygen (ks_31) (ent_33)) (fun '(x_34, gx_35) => bind (ecdh (ks_31) (
-        x_34) (pk_32)) (fun gxy_36 => @Ok (key_t × byte_seq) crypto_error_t ((
-          gxy_36,
-          gx_35
-        )))).
+  let '(x_34, gx_35) :=
+    kem_keygen (ks_31) (ent_33) in 
+  let gxy_36 : key_t :=
+    ecdh (ks_31) (x_34) (pk_32) in 
+  @Ok (key_t × byte_seq) crypto_error_t ((gxy_36, gx_35)).
 
 Definition kem_decap
   (ks_37 : kem_scheme_t)
   (ct_38 : byte_seq)
   (sk_39 : kem_sk_t)
   : (result key_t crypto_error_t) :=
-  bind (ecdh (ks_37) (sk_39) (ct_38)) (fun gxy_40 => @Ok key_t crypto_error_t (
-      gxy_40)).
+  let gxy_40 : key_t :=
+    ecdh (ks_37) (sk_39) (ct_38) in 
+  @Ok key_t crypto_error_t (gxy_40).
 
 Definition hash
   (ha_41 : hash_algorithm_t)
@@ -333,12 +334,18 @@ Definition hmac_verify
   (payload_52 : byte_seq)
   (m_53 : hmac_t)
   : (result unit crypto_error_t) :=
-  bind (hmac_tag (ha_50) (mk_51) (payload_52)) (fun my_hmac_54 => bind (
-      check_tag_len (m_53) (my_hmac_54)) (fun _ => bind (foldibnd (usize 0) to (
-          seq_len (m_53)) for tt >> (fun i_55 'tt =>
-        bind (check_bytes (seq_index (my_hmac_54) (i_55)) (seq_index (m_53) (
-              i_55))) (fun _ => Ok (tt)))) (fun _ => @Ok unit crypto_error_t (
-          tt)))).
+  let my_hmac_54 : hmac_t :=
+    hmac_tag (ha_50) (mk_51) (payload_52) in 
+  let _ : unit :=
+    check_tag_len (m_53) (my_hmac_54) in 
+  let 'tt :=
+    foldi (usize 0) (seq_len (m_53)) (fun i_55 'tt =>
+      let _ : unit :=
+        check_bytes (seq_index (my_hmac_54) (i_55)) (seq_index (m_53) (
+            i_55)) in 
+      tt)
+    tt in 
+  @Ok unit crypto_error_t (tt).
 
 Definition ec_oid_tag_t := nseq (uint8) (usize 9).
 
@@ -502,8 +509,8 @@ Definition p256_sign
     nat_mod_from_byte_seq_be (array_to_seq (random_91)) : p256_scalar_t in 
   match ecdsa_p256_sha256_sign (payload_89) (nat_mod_from_byte_seq_be (
       ps_88) : p256_scalar_t) (nonce_92) with
-  | Ok (r_93, s_94) => concat_signature (r_93) (s_94)
-  | Err _ => @Err signature_t crypto_error_t (CryptoError)
+  | Ok ((r_93, s_94)) => concat_signature (r_93) (s_94)
+  | Err (_) => @Err signature_t crypto_error_t (CryptoError)
   end.
 
 Definition sign
@@ -541,8 +548,8 @@ Definition p256_verify
       r_104,
       s_105
     )) with
-  | Ok tt => @Ok unit crypto_error_t (tt)
-  | Err _ => @Err unit crypto_error_t (VerifyFailed)
+  | Ok (tt) => @Ok unit crypto_error_t (tt)
+  | Err (_) => @Err unit crypto_error_t (VerifyFailed)
   end.
 
 Definition verify
@@ -576,8 +583,8 @@ Definition hkdf_expand
   : (result key_t crypto_error_t) :=
   match ha_113 with
   | SHA256 => match expand (k_114) (info_115) (len_116) with
-  | Ok b_117 => @Ok key_t crypto_error_t (seq_from_seq (b_117))
-  | Err _ => @Err key_t crypto_error_t (HkdfError)
+  | Ok (b_117) => @Ok key_t crypto_error_t (seq_from_seq (b_117))
+  | Err (_) => @Err key_t crypto_error_t (HkdfError)
   end
   | SHA384 => @Err key_t crypto_error_t (UnsupportedAlgorithm)
   end.
@@ -632,8 +639,8 @@ Definition aes128_decrypt
           (seq_len (ciphertext_137)) - (usize 16),
           seq_len (ciphertext_137)
         )))) with
-  | Ok m_139 => @Ok byte_seq crypto_error_t (m_139)
-  | Err _ => @Err byte_seq crypto_error_t (MacFailed)
+  | Ok (m_139) => @Ok byte_seq crypto_error_t (m_139)
+  | Err (_) => @Err byte_seq crypto_error_t (MacFailed)
   end.
 
 Definition chacha_decrypt
@@ -650,8 +657,8 @@ Definition chacha_decrypt
           (seq_len (ciphertext_142)) - (usize 16),
           seq_len (ciphertext_142)
         )))) with
-  | Ok ptxt_144 => @Ok byte_seq crypto_error_t (ptxt_144)
-  | Err _ => @Err byte_seq crypto_error_t (MacFailed)
+  | Ok (ptxt_144) => @Ok byte_seq crypto_error_t (ptxt_144)
+  | Err (_) => @Err byte_seq crypto_error_t (MacFailed)
   end.
 
 Definition aead_decrypt
