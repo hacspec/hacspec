@@ -311,6 +311,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
             .append(RcDoc::hardline()),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 
@@ -543,6 +544,7 @@ fn translate_prefix_for_func_name<'a>(
             RcDoc::as_string(NAT_MODULE),
             FuncPrefix::NatMod(modulo.0.clone(), bits.0.clone()),
         ),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 

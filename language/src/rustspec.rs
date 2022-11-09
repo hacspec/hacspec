@@ -200,6 +200,7 @@ pub enum BaseTyp {
         Vec<TypVar>,
     ), // Cases, type variables
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
+    Placeholder,
 }
 
 pub const UnitTyp: BaseTyp = BaseTyp::Tuple(vec![]);
@@ -257,6 +258,7 @@ impl fmt::Display for BaseTyp {
             BaseTyp::NaturalInteger(sec, modulo, bits) => {
                 write!(f, "nat[{:?}][modulo {}][bits {}]", sec, modulo.0, bits.0)
             }
+            BaseTyp::Placeholder => write!(f, "_"),
         }
     }
 }

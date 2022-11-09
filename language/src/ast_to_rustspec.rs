@@ -292,72 +292,60 @@ fn translate_func_name(
     specials: &SpecialNames,
     path: &ast::Path,
 ) -> TranslationResult<FuncNameResult> {
-    if path.segments.len() > 2 {
-        return Err(());
-    }
-    if path.segments.len() == 2 {
-        match path.segments.first() {
-            None => panic!(), // should not happen
-            Some(segment) => {
-                let segment_string = segment.ident.name.to_ident_string();
-                if let Some((enum_name, enum_args)) =
-                    dealias_probable_enum_name(segment_string, specials, None)
-                {
-                    Ok(FuncNameResult::EnumConstructor(
-                        BaseTyp::Named(
-                            (
-                                TopLevelIdent {
-                                    string: enum_name,
-                                    kind: TopLevelIdentKind::Type,
-                                },
-                                segment.ident.span.clone().into(),
-                            ),
-                            match segment.args {
-                                None => enum_args,
-                                Some(ref args) => {
-                                    Some(translate_type_args(sess, args, &segment.ident.span)?)
-                                }
-                            },
-                        ),
-                        translate_toplevel_ident(
-                            &path.segments.last().unwrap().ident,
-                            TopLevelIdentKind::EnumConstructor,
-                        ),
-                    ))
-                } else {
-                    Ok(FuncNameResult::TypePrefixed(
-                        Some(translate_base_typ(
-                            sess,
-                            &ast::Ty {
-                                tokens: path.tokens.clone(),
-                                span: path.span,
-                                id: NodeId::MAX,
-                                kind: TyKind::Path(
-                                    None,
-                                    ast::Path {
-                                        tokens: path.tokens.clone(),
-                                        span: path.span,
-                                        segments: vec![segment.clone()],
-                                    },
-                                ),
-                            },
-                        )?),
-                        translate_toplevel_ident(
-                            &path.segments.last().unwrap().ident,
-                            TopLevelIdentKind::Function,
-                        ),
-                    ))
-                }
-            }
-        }
-    } else {
-        Ok(FuncNameResult::TypePrefixed(
+    match path.segments.as_slice() {
+        [ident] => Ok(FuncNameResult::TypePrefixed(
             None,
             translate_toplevel_ident(
                 &path.segments.last().unwrap().ident,
                 TopLevelIdentKind::Function,
             ),
-        ))
+        )),
+        [segment, last] => {
+            let segment_string = segment.ident.name.to_ident_string();
+            if let Some((enum_name, enum_args)) =
+                dealias_probable_enum_name(segment_string, specials, None)
+            {
+                Ok(FuncNameResult::EnumConstructor(
+                    BaseTyp::Named(
+                        (
+                            TopLevelIdent {
+                                string: enum_name,
+                                kind: TopLevelIdentKind::Type,
+                            },
+                            segment.ident.span.clone().into(),
+                        ),
+                        match segment.args {
+                            None => enum_args,
+                            Some(ref args) => {
+                                Some(translate_type_args(sess, args, &segment.ident.span)?)
+                            }
+                        },
+                    ),
+                    translate_toplevel_ident(&last.ident, TopLevelIdentKind::EnumConstructor),
+                ))
+            } else {
+                Ok(FuncNameResult::TypePrefixed(
+                    Some(translate_base_typ(
+                        sess,
+                        &ast::Ty {
+                            tokens: path.tokens.clone(),
+                            span: path.span,
+                            id: NodeId::MAX,
+                            kind: TyKind::Path(
+                                None,
+                                ast::Path {
+                                    tokens: path.tokens.clone(),
+                                    span: path.span,
+                                    segments: vec![segment.clone()],
+                                },
+                            ),
+                        },
+                    )?),
+                    translate_toplevel_ident(&last.ident, TopLevelIdentKind::Function),
+                ))
+            }
+        }
+        _ => Err(()),
     }
 }
 
@@ -673,6 +661,30 @@ fn translate_expr(
                         },
                         func_name.1,
                     );
+
+                    // if we're facing a un-annotated constructor (that is, `func_prefix` is `None`) in the whitelist [Ok, Err], then, we return an `EnumInject` with a type `Placeholder`
+                    if func_prefix.is_none() && ["Ok", "Err"].contains(&&*func_name_string) {
+                        let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
+                            .iter()
+                            .map(|arg| translate_expr_expects_exp(sess, specials, &arg))
+                            .collect();
+                        let func_args = check_vec(func_args)?;
+                        return Ok((
+                            ExprTranslationResult::TransExpr(Expression::EnumInject(
+                                BaseTyp::Placeholder,
+                                func_name_but_as_enum_constructor,
+                                Some((
+                                    Box::new(if func_args.len() == 1 {
+                                        func_args.iter().next().unwrap().0.clone()
+                                    } else {
+                                        Expression::Tuple(func_args)
+                                    }),
+                                    e.span.clone().into(),
+                                )),
+                            )),
+                            e.span.into(),
+                        ));
+                    };
                     if specials.enums.contains(&func_name_string) {
                         // Special case for struct constructors
                         let func_args: Vec<
