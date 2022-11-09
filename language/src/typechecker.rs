@@ -2256,6 +2256,29 @@ fn typecheck_expression_no_qm(
     }
 }
 
+/// TODO: rework `QuestionMarkInfo` in general. For now,
+/// `QuestionMarkInfo` ships informations about question marks along
+/// with mutation information. However, those two should be able to
+/// live independently.
+/// `merge_qmi_carrier` merges a `QuestionMarkInfo` with a `CarrierTyp`.
+fn merge_qmi_carrier(
+    qmi: &QuestionMarkInfo,
+    carrier: &Option<CarrierTyp>,
+    var_context: &VarContext, // Why are we discarding `qmi`'s `ScopeMutableVars`?
+) -> QuestionMarkInfo {
+    carrier
+        .as_ref()
+        .map(|carrier| {
+            let mut_vars = translate_var_context_to_mut_vars(var_context.clone());
+            let fun_deps = qmi.as_ref().map_or_else(
+                || FunctionDependencies(HashSet::new()),
+                |(_, fun_deps, _)| fun_deps.clone(),
+            );
+            (mut_vars, fun_deps, Some(dbg!(carrier).clone()))
+        })
+        .or_else(|| qmi.clone())
+}
+
 fn typecheck_statement(
     sess: &Session,
     (s, s_span): Spanned<Statement>,
@@ -2343,16 +2366,7 @@ fn typecheck_statement(
                     _ => (),
                 }
             };
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = merge_qmi_carrier(question_mark, &carrier, &ret_var_context);
             Ok((
                 Statement::LetBinding(
                     (pat.clone(), pat_span.clone()),
@@ -2401,16 +2415,7 @@ fn typecheck_statement(
                 return Err(());
             };
             let ret_var_context = add_var(&x, &x_typ, &new_var_context);
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = merge_qmi_carrier(question_mark, &carrier, &ret_var_context);
             Ok((
                 Statement::Reassignment(
                     (x.clone(), x_span.clone()),
