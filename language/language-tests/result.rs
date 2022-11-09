@@ -67,8 +67,8 @@ fn no_annotation_nested() -> Result<u8, u16> {
         Err(1u16)
     } else {
         match Result::<u8, u16>::Ok(12u8) {
-            Result::<u8, u16>::Ok(x) => Err(x as u16),
-            Result::<u8, u16>::Err(_x) => Ok(1u8),
+            Ok(x) => Err(x as u16),
+            Err(_x) => Ok(1u8),
         }
     }
 }
@@ -86,8 +86,8 @@ fn no_annotation_tuple() -> (Result<(), u16>, Result<u8, u16>) {
         (Ok(()), Err(1u16))
     } else {
         match Result::<u8, u16>::Ok(12u8) {
-            Result::<u8, u16>::Ok(x) => (Ok(()), Err(x as u16)),
-            Result::<u8, u16>::Err(_x) => (Ok(()), Ok(1u8)),
+            Ok(x) => (Ok(()), Err(x as u16)),
+            Err(_x) => (Ok(()), Ok(1u8)),
         }
     }
 }

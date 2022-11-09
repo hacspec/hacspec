@@ -213,73 +213,84 @@ fn translate_expr_name(
     }
 }
 
-pub fn translate_struct_name(
+pub fn translate_constructor_name(
     sess: &Session,
     path: &ast::Path,
+    specials: &SpecialNames,
 ) -> TranslationResult<(BaseTyp, Spanned<TopLevelIdent>)> {
-    if path.segments.len() > 2 {
-        sess.span_rustspec_err(path.span, "expected a one or two segment struct name");
-        return Err(());
-    }
-    if path.segments.len() == 1 {
-        let segment = &path.segments[0];
-        match &segment.args {
+    match path.segments.as_slice() {
+        [segment] => match &segment.args {
             None => {
-                let ty_name = TopLevelIdent {
-                    string: segment.ident.name.to_ident_string(),
-                    kind: TopLevelIdentKind::Type,
-                };
-                let ty = (ty_name, path.span.into());
+                let name = segment.ident.name.to_ident_string();
                 let cons_name = TopLevelIdent {
-                    string: segment.ident.name.to_ident_string(),
+                    string: name.clone(),
                     kind: TopLevelIdentKind::EnumConstructor,
                 };
                 let cons = (cons_name, path.span.into());
-                return Ok((BaseTyp::Named(ty, None), cons));
+                // Here we need to discriminate between the construction of an enum variant and the construction of a struct.
+                // In the case of a struct construction, the name of the constructor is exactly the name of the struct.
+                // Thus we check wether `name` is the name of an enum or a struct.
+                if specials.enums.contains(&name) {
+                    let ty_name = TopLevelIdent {
+                        string: segment.ident.name.to_ident_string(),
+                        kind: TopLevelIdentKind::Type,
+                    };
+                    let ty = (ty_name, path.span.into());
+                    Ok((BaseTyp::Named(ty, None), cons))
+                // Hacspec does not allow single-segments variant constructors.
+                // `Result` is an exception to that rule.
+                // `Placeholder` is replaced during typechecking.
+                } else if name == "Ok".to_string() || name == "Err".to_string() {
+                    Ok((BaseTyp::Placeholder, cons))
+                } else {
+                    sess.span_rustspec_err(path.span, "missing type annotation");
+                    Err(())
+                }
             }
             Some(_) => {
                 sess.span_rustspec_err(
                     path.span,
                     "struct1: expression identifiers cannot have arguments",
                 );
-                return Err(());
+                Err(())
+            }
+        },
+        [segment0, segment1] => {
+            let ty_name = TopLevelIdent {
+                string: segment0.ident.name.to_ident_string(),
+                kind: TopLevelIdentKind::Type,
+            };
+            let ty = (ty_name, segment0.ident.span.into());
+            let cons_name = TopLevelIdent {
+                string: segment1.ident.name.to_ident_string(),
+                kind: TopLevelIdentKind::EnumConstructor,
+            };
+            let cons = (cons_name, segment1.ident.span.into());
+            match (&segment0.args, &segment1.args) {
+                (None, None) => return Ok((BaseTyp::Named(ty, None), cons)),
+                (Some(ref args), None) => {
+                    return Ok((
+                        BaseTyp::Named(
+                            ty,
+                            Some(translate_type_args(sess, args, &segment1.ident.span)?),
+                        ),
+                        cons,
+                    ))
+                }
+                (_, Some(x)) => {
+                    sess.span_rustspec_err(
+                        path.span,
+                        "struct3: expression identifiers cannot have arguments",
+                    );
+                    Err(())
+                }
             }
         }
-    }
-    if path.segments.len() == 2 {
-        let segment0 = &path.segments[0];
-        let segment1 = &path.segments[1];
-        let ty_name = TopLevelIdent {
-            string: segment0.ident.name.to_ident_string(),
-            kind: TopLevelIdentKind::Type,
-        };
-        let ty = (ty_name, segment0.ident.span.into());
-        let cons_name = TopLevelIdent {
-            string: segment1.ident.name.to_ident_string(),
-            kind: TopLevelIdentKind::EnumConstructor,
-        };
-        let cons = (cons_name, segment1.ident.span.into());
-        match (&segment0.args, &segment1.args) {
-            (None, None) => return Ok((BaseTyp::Named(ty, None), cons)),
-            (Some(ref args), None) => {
-                return Ok((
-                    BaseTyp::Named(
-                        ty,
-                        Some(translate_type_args(sess, args, &segment1.ident.span)?),
-                    ),
-                    cons,
-                ))
-            }
-            (_, Some(x)) => {
-                sess.span_rustspec_err(
-                    path.span,
-                    "struct3: expression identifiers cannot have arguments",
-                );
-                return Err(());
-            }
+        _ => {
+            sess.span_rustspec_err(path.span, "expected a one or two segment struct name");
+            Err(())
         }
     }
-    return Err(());
 }
 
 enum FuncNameResult {
@@ -662,7 +673,8 @@ fn translate_expr(
                         func_name.1,
                     );
 
-                    // if we're facing a un-annotated constructor (that is, `func_prefix` is `None`) in the whitelist [Ok, Err], then, we return an `EnumInject` with a type `Placeholder`
+                    // if we're facing a un-annotated constructor (that is, `func_prefix` is `None`)
+                    // in the whitelist [Ok, Err], then, we return an `EnumInject` with a type `Placeholder`
                     if func_prefix.is_none() && ["Ok", "Err"].contains(&&*func_name_string) {
                         let func_args: Vec<TranslationResult<Spanned<Expression>>> = args
                             .iter()
@@ -1283,7 +1295,7 @@ fn translate_expr(
                             return Err(());
                         }
                         let arm_body = translate_expr_expects_exp(sess, specials, &*arm.body)?;
-                        let pat = translate_pattern(sess, &arm.pat)?;
+                        let pat = translate_pattern(sess, &arm.pat, specials)?;
                         Ok((pat, arm_body))
                     })
                     .collect(),
@@ -1579,47 +1591,51 @@ fn translate_expr_accepts_question_mark(
     }
 }
 
-fn translate_pattern(sess: &Session, pat: &Pat) -> TranslationResult<Spanned<Pattern>> {
+fn translate_pattern(
+    sess: &Session,
+    pat: &Pat,
+    specials: &SpecialNames,
+) -> TranslationResult<Spanned<Pattern>> {
     match &pat.kind {
         PatKind::Ident(BindingMode::ByValue(m), id, None) => Ok((
             Pattern::IdentPat(translate_ident(id).0, m.clone() == Mutability::Mut),
             pat.span.into(),
         )),
         PatKind::Path(None, path) => {
-            let (ty, cons) = translate_struct_name(sess, path)?;
+            let (ty, cons) = translate_constructor_name(sess, path, specials)?;
             Ok((Pattern::EnumCase(ty, cons, None), pat.span.into()))
         }
         PatKind::TupleStruct(None, path, args) => {
-            let (ty, cons) = translate_struct_name(sess, path)?;
-            if args.len() == 0 {
-                Ok((Pattern::EnumCase(ty, cons, None), pat.span.into()))
-            } else if args.len() == 1 {
-                let arg = args.into_iter().next().unwrap();
-                let new_arg = translate_pattern(sess, arg)?;
-                Ok((
-                    Pattern::EnumCase(ty, cons, Some(Box::new(new_arg))),
-                    pat.span.into(),
-                ))
-            } else {
-                let new_args = check_vec(
-                    args.into_iter()
-                        .map(|arg| translate_pattern(sess, arg))
-                        .collect(),
-                )?;
-                Ok((
-                    Pattern::EnumCase(
-                        ty,
-                        cons,
-                        Some(Box::new((Pattern::Tuple(new_args), pat.span.into()))),
-                    ),
-                    pat.span.into(),
-                ))
+            let (ty, cons) = translate_constructor_name(sess, path, specials)?;
+            match args.as_slice() {
+                [] => Ok((Pattern::EnumCase(ty, cons, None), pat.span.into())),
+                args => {
+                    let new_args = check_vec(
+                        args.into_iter()
+                            .map(|arg| translate_pattern(sess, arg, specials))
+                            .collect(),
+                    )?;
+                    Ok((
+                        Pattern::EnumCase(
+                            ty,
+                            cons,
+                            Some(Box::new((
+                                match new_args.as_slice() {
+                                    [(new_arg, _)] => new_arg.clone(),
+                                    _ => Pattern::Tuple(new_args),
+                                },
+                                pat.span.into(),
+                            ))),
+                        ),
+                        pat.span.into(),
+                    ))
+                }
             }
         }
         PatKind::Tuple(pats) => {
             let pats = pats
                 .into_iter()
-                .map(|pat| translate_pattern(sess, pat))
+                .map(|pat| translate_pattern(sess, pat, specials))
                 .collect();
             let pats = check_vec(pats)?;
             Ok((Pattern::Tuple(pats), pat.span.into()))
@@ -1682,7 +1698,7 @@ fn translate_statement(
             Err(())
         }
         StmtKind::Local(local) => {
-            let pat = translate_pattern(sess, &local.pat)?;
+            let pat = translate_pattern(sess, &local.pat, specials)?;
             let ty: Option<Spanned<Typ>> = match local.ty.clone() {
                 None => None,
                 Some(ty) => Some(translate_typ(sess, &ty)?),
