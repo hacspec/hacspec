@@ -67,6 +67,11 @@ fn positive_seq_ops() {
 }
 
 #[test]
+fn positive_inline_blocks() {
+    run_test("language-tests/inline_blocks.rs", Some("tests/"));
+}
+
+#[test]
 #[should_panic]
 fn negative_arrays() {
     run_test("negative-language-tests/arrays.rs", None);
