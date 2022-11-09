@@ -146,7 +146,7 @@ pub(crate) fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I)
                 .append(RcDoc::intersperse(
                     args.into_iter(),
                     RcDoc::space()
-                        .append(RcDoc::as_string("×"))
+                        .append(RcDoc::as_string("'×"))
                         .append(RcDoc::line()),
                 ))
                 .group()
@@ -238,16 +238,16 @@ pub(crate) fn translate_binop<'a, 'b>(
             ))
         }
         (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
-            RcDoc::as_string("-")
+            RcDoc::as_string(".-")
         }
         (BinOpKind::Add, BaseTyp::Usize) | (BinOpKind::Add, BaseTyp::Isize) => {
-            RcDoc::as_string("+")
+            RcDoc::as_string(".+")
         }
         (BinOpKind::Mul, BaseTyp::Usize) | (BinOpKind::Mul, BaseTyp::Isize) => {
-            RcDoc::as_string("*")
+            RcDoc::as_string(".*")
         }
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
-            RcDoc::as_string("/")
+            RcDoc::as_string("./")
         }
         (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
             RcDoc::as_string("%%")
