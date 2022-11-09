@@ -92,6 +92,11 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
     where
         T: Iterator<Item = Expression> + Clone,
     {
+        // this should be type-directed; the elaboration misses
+        // non-explicit returns (i.e., `f(e?)`, where `f` wraps its
+        // input in a `Ok` for instance) if every expression came with
+        // `ty: BaseTyp`, we would just get its (maybe) carrier type
+        // `ty.try_into()`, and return that directly.
         exprs.clone().find_map(|e| match e {
             Expression::MonadicLet(carrier, ..) => Some(carrier),
             _ => None,
