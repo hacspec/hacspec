@@ -573,18 +573,21 @@ Definition key_expansion_aes
     seq_update_start (key_ex_223) (key_217) in 
   let word_size_224 : uint_size :=
     key_length_221 in 
-  bind (foldibnd (usize 0) to (
-      iterations_222) for key_ex_223 >> (fun j_225 key_ex_223 =>
-    let i_226 : uint_size :=
-      (j_225) + (word_size_224) in 
-    bind (key_expansion_word (array_from_slice (default) (key_length_v) (
-          key_ex_223) ((usize 4) * ((i_226) - (word_size_224))) (usize 4)) (
-        array_from_slice (default) (key_length_v) (key_ex_223) (((usize 4) * (
-              i_226)) - (usize 4)) (usize 4)) (i_226) (nk_218) (nr_219)) (
-      fun word_227 => let key_ex_223 :=
+  let key_ex_223 :=
+    foldi (usize 0) (iterations_222) (fun j_225 key_ex_223 =>
+      let i_226 : uint_size :=
+        (j_225) + (word_size_224) in 
+      let word_227 : word_t :=
+        key_expansion_word (array_from_slice (default) (key_length_v) (
+            key_ex_223) ((usize 4) * ((i_226) - (word_size_224))) (usize 4)) (
+          array_from_slice (default) (key_length_v) (key_ex_223) (((usize 4) * (
+                i_226)) - (usize 4)) (usize 4)) (i_226) (nk_218) (nr_219) in 
+      let key_ex_223 :=
         seq_update (key_ex_223) ((usize 4) * (i_226)) (
           array_to_seq (word_227)) in 
-      Ok ((key_ex_223))))) (fun key_ex_223 => @Ok byte_seq int8 (key_ex_223)).
+      (key_ex_223))
+    key_ex_223 in 
+  @Ok byte_seq int8 (key_ex_223).
 
 Definition aes_encrypt_block
   (k_228 : byte_seq)
@@ -595,9 +598,10 @@ Definition aes_encrypt_block
   (key_length_233 : uint_size)
   (iterations_234 : uint_size)
   : block_result_t :=
-  bind (key_expansion_aes (k_228) (nk_230) (nr_231) (key_schedule_length_232) (
-      key_length_233) (iterations_234)) (fun key_ex_235 => @Ok block_t int8 (
-      block_cipher_aes (input_229) (key_ex_235) (nr_231))).
+  let key_ex_235 : byte_seq :=
+    key_expansion_aes (k_228) (nk_230) (nr_231) (key_schedule_length_232) (
+      key_length_233) (iterations_234) in 
+  @Ok block_t int8 (block_cipher_aes (input_229) (key_ex_235) (nr_231)).
 
 Definition aes128_encrypt_block
   (k_236 : key128_t)
@@ -659,38 +663,41 @@ Definition aes_counter_mode
     seq_new_ (default) (seq_len (msg_254)) in 
   let n_blocks_262 : uint_size :=
     seq_num_exact_chunks (msg_254) (blocksize_v) in 
-  bind (foldibnd (usize 0) to (n_blocks_262) for (ctr_260, blocks_out_261
-    ) >> (fun i_263 '(ctr_260, blocks_out_261) =>
-    let msg_block_264 : seq uint8 :=
-      seq_get_exact_chunk (msg_254) (blocksize_v) (i_263) in 
-    bind (aes_ctr_key_block (key_251) (nonce_252) (ctr_260) (nk_255) (nr_256) (
-        key_schedule_length_257) (key_length_258) (iterations_259)) (
-      fun key_block_265 => let blocks_out_261 :=
+  let '(ctr_260, blocks_out_261) :=
+    foldi (usize 0) (n_blocks_262) (fun i_263 '(ctr_260, blocks_out_261) =>
+      let msg_block_264 : seq uint8 :=
+        seq_get_exact_chunk (msg_254) (blocksize_v) (i_263) in 
+      let key_block_265 : block_t :=
+        aes_ctr_key_block (key_251) (nonce_252) (ctr_260) (nk_255) (nr_256) (
+          key_schedule_length_257) (key_length_258) (iterations_259) in 
+      let blocks_out_261 :=
         seq_set_chunk (blocks_out_261) (blocksize_v) (i_263) (
           array_to_seq (xor_block (array_from_seq (blocksize_v) (
               msg_block_264)) (key_block_265))) in 
       let ctr_260 :=
         (ctr_260) .+ (secret (@repr WORDSIZE32 1) : int32) in 
-      Ok ((ctr_260, blocks_out_261))))) (fun '(ctr_260, blocks_out_261) =>
-    let last_block_266 : seq uint8 :=
-      seq_get_remainder_chunk (msg_254) (blocksize_v) in 
-    let last_block_len_267 : uint_size :=
-      seq_len (last_block_266) in 
-    ifbnd (last_block_len_267) !=.? (usize 0) : bool
-    thenbnd (let last_block_268 : block_t :=
+      (ctr_260, blocks_out_261))
+    (ctr_260, blocks_out_261) in 
+  let last_block_266 : seq uint8 :=
+    seq_get_remainder_chunk (msg_254) (blocksize_v) in 
+  let last_block_len_267 : uint_size :=
+    seq_len (last_block_266) in 
+  let '(blocks_out_261) :=
+    if (last_block_len_267) !=.? (usize 0):bool then (
+      let last_block_268 : block_t :=
         array_update_start (array_new_ (default) (blocksize_v)) (
           last_block_266) in 
-      bind (aes_ctr_key_block (key_251) (nonce_252) (ctr_260) (nk_255) (
-          nr_256) (key_schedule_length_257) (key_length_258) (iterations_259)) (
-        fun key_block_269 => let blocks_out_261 :=
-          seq_set_chunk (blocks_out_261) (blocksize_v) (n_blocks_262) (
-            array_slice_range (xor_block (last_block_268) (key_block_269)) ((
-                usize 0,
-                last_block_len_267
-              ))) in 
-        Ok ((blocks_out_261))))
-    else ((blocks_out_261)) >> (fun '(blocks_out_261) =>
-    @Ok byte_seq int8 (blocks_out_261))).
+      let key_block_269 : block_t :=
+        aes_ctr_key_block (key_251) (nonce_252) (ctr_260) (nk_255) (nr_256) (
+          key_schedule_length_257) (key_length_258) (iterations_259) in 
+      let blocks_out_261 :=
+        seq_set_chunk (blocks_out_261) (blocksize_v) (n_blocks_262) (
+          array_slice_range (xor_block (last_block_268) (key_block_269)) ((
+              usize 0,
+              last_block_len_267
+            ))) in 
+      (blocks_out_261)) else ((blocks_out_261)) in 
+  @Ok byte_seq int8 (blocks_out_261).
 
 Definition aes128_encrypt
   (key_270 : key128_t)
