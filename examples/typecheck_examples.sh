@@ -75,7 +75,7 @@ typecheck hacspec-sha512            no-ec   no-fst    json      coq
 typecheck hacspec-ed25519           no-ec   no-fst    json      coq
 typecheck hacspec-linalg            no-ec   no-fst    json      coq
 typecheck hacspec-ristretto         no-ec   no-fst    json      coq
-typecheck hacspec-merlin            no-ec   no-fst    json      coq
+typecheck hacspec-merlin            no-ec      fst    json      coq
 typecheck hacspec-edwards25519      no-ec   no-fst    json      coq
 typecheck hacspec-edwards25519-hash no-ec   no-fst    json      coq
 typecheck hacspec-linalg            no-ec   no-fst    json      coq
