@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -439,7 +440,7 @@ Definition fieldelem_from_bytes
 
 Definition xor_bytes (b0_2461 : bytes32_t) (b1_2462 : bytes32_t) : bytes32_t :=
   let b_2463 : seq uint8 :=
-    seq_new_ (default) (array_len (b0_2461)) in 
+    seq_new_ (default : uint8) (array_len (b0_2461)) in 
   let b_2463 :=
     foldi (usize 0) (array_len (b0_2461)) (fun i_2464 b_2463 =>
       let b_2463 :=
@@ -491,7 +492,7 @@ Definition sign
     scalar_from_bytes (hash_challenge (bytes_from_point (r_2476)) (
         bytes_from_point (p_2472)) (msg_2468)) in 
   let sig_2479 : signature_t :=
-    array_update (array_update (array_new_ (default) (64)) (usize 0) (
+    array_update (array_update (array_new_ (default : uint8) (64)) (usize 0) (
         array_to_seq (bytes_from_point (r_2476)))) (usize 32) (
       array_to_seq (bytes_from_scalar ((k_2477) +% ((e_2478) *% (d_2473))))) in 
   let _ : unit :=
@@ -510,14 +511,15 @@ Definition verify
   let p_2484 : affine_point_t :=
     lift_x (p_x_2483) in 
   let r_2485 : field_element_t :=
-    option_ok_or (fieldelem_from_bytes (array_from_slice (default) (32) (
-          array_to_seq (sig_2482)) (usize 0) (usize 32))) (InvalidSignature) in 
+    option_ok_or (fieldelem_from_bytes (array_from_slice (default : uint8) (
+          32) (array_to_seq (sig_2482)) (usize 0) (usize 32))) (
+      InvalidSignature) in 
   let s_2486 : scalar_t :=
-    option_ok_or (scalar_from_bytes_strict (array_from_slice (default) (32) (
-          array_to_seq (sig_2482)) (usize 32) (usize 32))) (
+    option_ok_or (scalar_from_bytes_strict (array_from_slice (default : uint8) (
+          32) (array_to_seq (sig_2482)) (usize 32) (usize 32))) (
       InvalidSignature) in 
   let e_2487 : scalar_t :=
-    scalar_from_bytes (hash_challenge (array_from_slice (default) (32) (
+    scalar_from_bytes (hash_challenge (array_from_slice (default : uint8) (32) (
           array_to_seq (sig_2482)) (usize 0) (usize 32)) (bytes_from_point (
           p_2484)) (msg_2480)) in 
   let r_p_2488 : (field_element_t × field_element_t) :=

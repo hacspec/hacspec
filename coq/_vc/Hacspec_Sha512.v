@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -171,7 +172,7 @@ Definition schedule (block_2168 : block_t) : round_constants_table_t :=
   let b_2169 : seq uint64 :=
     array_to_be_uint64s (block_2168) in 
   let s_2170 : round_constants_table_t :=
-    array_new_ (default) (k_size_v) in 
+    array_new_ (default : uint64) (k_size_v) in 
   let s_2170 :=
     foldi (usize 0) (k_size_v) (fun i_2171 s_2170 =>
       let '(s_2170) :=
@@ -266,7 +267,7 @@ Definition hash (msg_2197 : byte_seq) : sha512_digest_t :=
   let h_2198 : hash_t :=
     hash_init_v in 
   let last_block_2199 : block_t :=
-    array_new_ (default) (block_size_v) in 
+    array_new_ (default : uint8) (block_size_v) in 
   let last_block_len_2200 : uint_size :=
     usize 0 in 
   let '(h_2198, last_block_2199, last_block_len_2200) :=
@@ -279,7 +280,7 @@ Definition hash (msg_2197 : byte_seq) : sha512_digest_t :=
         seq_get_chunk (msg_2197) (block_size_v) (i_2201) in 
       let '(h_2198, last_block_2199, last_block_len_2200) :=
         if (block_len_2202) <.? (block_size_v):bool then (let last_block_2199 :=
-            array_update_start (array_new_ (default) (block_size_v)) (
+            array_update_start (array_new_ (default : uint8) (block_size_v)) (
               block_2203) in 
           let last_block_len_2200 :=
             block_len_2202 in 
@@ -304,7 +305,7 @@ Definition hash (msg_2197 : byte_seq) : sha512_digest_t :=
       let h_2198 :=
         compress (last_block_2199) (h_2198) in 
       (h_2198, last_block_2199)) else (let pad_block_2206 : block_t :=
-        array_new_ (default) (block_size_v) in 
+        array_new_ (default : uint8) (block_size_v) in 
       let pad_block_2206 :=
         array_update (pad_block_2206) ((block_size_v) - (len_size_v)) (
           array_to_seq (uint128_to_be_bytes (len_bist_2205))) in 

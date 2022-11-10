@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -135,7 +136,7 @@ Definition pi_v : rotation_constants_t :=
 
 Definition theta (s_1115 : state_t) : state_t :=
   let b_1116 : row_t :=
-    array_new_ (default) (5) in 
+    array_new_ (default : uint64) (5) in 
   let b_1116 :=
     foldi (usize 0) (usize 5) (fun i_1117 b_1116 =>
       let b_1116 :=
@@ -178,7 +179,7 @@ Definition rho (s_1122 : state_t) : state_t :=
 
 Definition pi (s_1125 : state_t) : state_t :=
   let v_1126 : state_t :=
-    array_new_ (default) (25) in 
+    array_new_ (default : uint64) (25) in 
   let v_1126 :=
     foldi (usize 0) (usize 25) (fun i_1127 v_1126 =>
       let v_1126 :=
@@ -190,7 +191,7 @@ Definition pi (s_1125 : state_t) : state_t :=
 
 Definition chi (s_1128 : state_t) : state_t :=
   let b_1129 : row_t :=
-    array_new_ (default) (5) in 
+    array_new_ (default : uint64) (5) in 
   let '(s_1128, b_1129) :=
     foldi (usize 0) (usize 5) (fun i_1130 '(s_1128, b_1129) =>
       let b_1129 :=
@@ -259,7 +260,7 @@ Definition squeeze
   (rate_1145 : uint_size)
   : byte_seq :=
   let out_1146 : seq uint8 :=
-    seq_new_ (default) (nbytes_1144) in 
+    seq_new_ (default : uint8) (nbytes_1144) in 
   let '(s_1143, out_1146) :=
     foldi (usize 0) (nbytes_1144) (fun i_1147 '(s_1143, out_1146) =>
       let pos_1148 : uint_size :=
@@ -289,11 +290,11 @@ Definition keccak
   (outbytes_1155 : uint_size)
   : byte_seq :=
   let buf_1156 : seq uint8 :=
-    seq_new_ (default) (rate_1152) in 
+    seq_new_ (default : uint8) (rate_1152) in 
   let last_block_len_1157 : uint_size :=
     usize 0 in 
   let s_1158 : state_t :=
-    array_new_ (default) (25) in 
+    array_new_ (default : uint64) (25) in 
   let '(buf_1156, last_block_len_1157, s_1158) :=
     foldi (usize 0) (seq_num_chunks (data_1153) (rate_1152)) (fun i_1159 '(
         buf_1156,

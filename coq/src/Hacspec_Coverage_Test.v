@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -118,7 +119,7 @@ Definition seq_test  : unit :=
   let ns_2516 : seq int8 :=
     seq_with_capacity (usize 5) in 
   let ns_2516 :=
-    seq_new_ (default) (usize 5) in 
+    seq_new_ (default : int8) (usize 5) in 
   let ns_2516 :=
     seq_reserve (ns_2516) (usize 10) in 
   let _ : uint_size :=

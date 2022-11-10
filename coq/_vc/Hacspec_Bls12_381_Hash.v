@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -69,9 +70,9 @@ Definition expand_message_xmd
   let dst_prime_1654 : seq uint8 :=
     seq_push (dst_1651) (uint8_from_usize (seq_len (dst_1651))) in 
   let z_pad_1655 : seq uint8 :=
-    seq_new_ (default) (s_in_bytes_v) in 
+    seq_new_ (default : uint8) (s_in_bytes_v) in 
   let l_i_b_str_1656 : seq uint8 :=
-    seq_new_ (default) (usize 2) in 
+    seq_new_ (default : uint8) (usize 2) in 
   let l_i_b_str_1656 :=
     seq_upd l_i_b_str_1656 (usize 0) (uint8_from_usize ((len_in_bytes_1652) / (
           usize 256))) in 
@@ -79,7 +80,8 @@ Definition expand_message_xmd
     seq_upd l_i_b_str_1656 (usize 1) (uint8_from_usize (len_in_bytes_1652)) in 
   let msg_prime_1657 : seq uint8 :=
     seq_concat (seq_concat (seq_concat (seq_concat (z_pad_1655) (msg_1650)) (
-          l_i_b_str_1656)) (seq_new_ (default) (usize 1))) (dst_prime_1654) in 
+          l_i_b_str_1656)) (seq_new_ (default : uint8) (usize 1))) (
+      dst_prime_1654) in 
   let b_0_1658 : seq uint8 :=
     seq_from_seq (array_to_seq (hash (msg_prime_1657))) in 
   let b_i_1659 : seq uint8 :=
@@ -114,7 +116,7 @@ Definition fp_hash_to_field
   let uniform_bytes_1667 : seq uint8 :=
     expand_message_xmd (msg_1663) (dst_1664) (len_in_bytes_1666) in 
   let output_1668 : seq fp_t :=
-    seq_new_ (default) (count_1665) in 
+    seq_new_ (default : fp_t) (count_1665) in 
   let output_1668 :=
     foldi (usize 0) (count_1665) (fun i_1669 output_1668 =>
       let elm_offset_1670 : uint_size :=
@@ -243,7 +245,7 @@ Definition fp2_hash_to_field
   let uniform_bytes_1713 : seq uint8 :=
     expand_message_xmd (msg_1709) (dst_1710) (len_in_bytes_1712) in 
   let output_1714 : seq (fp_t × fp_t) :=
-    seq_new_ (default) (count_1711) in 
+    seq_new_ (default : fp2_t) (count_1711) in 
   let output_1714 :=
     foldi (usize 0) (count_1711) (fun i_1715 output_1714 =>
       let elm_offset_1716 : uint_size :=
@@ -1103,7 +1105,7 @@ Definition g1_simple_swu_iso (u_1800 : fp_t) : (fp_t × fp_t) :=
 
 Definition g1_isogeny_map (x_1811 : fp_t) (y_1812 : fp_t) : g1_t :=
   let xnum_k_1813 : seq fp_t :=
-    seq_new_ (default) (usize 12) in 
+    seq_new_ (default : fp_t) (usize 12) in 
   let xnum_k_1813 :=
     seq_upd xnum_k_1813 (usize 0) (nat_mod_from_byte_seq_be (array_to_be_bytes (
           g1_xnum_k_0_v)) : fp_t) in 
@@ -1141,7 +1143,7 @@ Definition g1_isogeny_map (x_1811 : fp_t) (y_1812 : fp_t) : g1_t :=
     seq_upd xnum_k_1813 (usize 11) (nat_mod_from_byte_seq_be (
         array_to_be_bytes (g1_xnum_k_11_v)) : fp_t) in 
   let xden_k_1814 : seq fp_t :=
-    seq_new_ (default) (usize 10) in 
+    seq_new_ (default : fp_t) (usize 10) in 
   let xden_k_1814 :=
     seq_upd xden_k_1814 (usize 0) (nat_mod_from_byte_seq_be (array_to_be_bytes (
           g1_xden_k_0_v)) : fp_t) in 
@@ -1173,7 +1175,7 @@ Definition g1_isogeny_map (x_1811 : fp_t) (y_1812 : fp_t) : g1_t :=
     seq_upd xden_k_1814 (usize 9) (nat_mod_from_byte_seq_be (array_to_be_bytes (
           g1_xden_k_9_v)) : fp_t) in 
   let ynum_k_1815 : seq fp_t :=
-    seq_new_ (default) (usize 16) in 
+    seq_new_ (default : fp_t) (usize 16) in 
   let ynum_k_1815 :=
     seq_upd ynum_k_1815 (usize 0) (nat_mod_from_byte_seq_be (array_to_be_bytes (
           g1_ynum_k_0_v)) : fp_t) in 
@@ -1223,7 +1225,7 @@ Definition g1_isogeny_map (x_1811 : fp_t) (y_1812 : fp_t) : g1_t :=
     seq_upd ynum_k_1815 (usize 15) (nat_mod_from_byte_seq_be (
         array_to_be_bytes (g1_ynum_k_15_v)) : fp_t) in 
   let yden_k_1816 : seq fp_t :=
-    seq_new_ (default) (usize 15) in 
+    seq_new_ (default : fp_t) (usize 15) in 
   let yden_k_1816 :=
     seq_upd yden_k_1816 (usize 0) (nat_mod_from_byte_seq_be (array_to_be_bytes (
           g1_yden_k_0_v)) : fp_t) in 
@@ -1574,7 +1576,7 @@ Definition g2_simple_swu_iso (u_1848 : fp2_t) : (fp2_t × fp2_t) :=
 
 Definition g2_isogeny_map (x_1859 : fp2_t) (y_1860 : fp2_t) : g2_t :=
   let xnum_k_1861 : seq (fp_t × fp_t) :=
-    seq_new_ (default) (usize 4) in 
+    seq_new_ (default : fp2_t) (usize 4) in 
   let xnum_k_1861 :=
     seq_upd xnum_k_1861 (usize 0) ((
         nat_mod_from_byte_seq_be (array_to_be_bytes (g2_xnum_k_0_v)) : fp_t,
@@ -1596,7 +1598,7 @@ Definition g2_isogeny_map (x_1859 : fp2_t) (y_1860 : fp2_t) : g2_t :=
         nat_mod_zero 
       )) in 
   let xden_k_1862 : seq (fp_t × fp_t) :=
-    seq_new_ (default) (usize 2) in 
+    seq_new_ (default : fp2_t) (usize 2) in 
   let xden_k_1862 :=
     seq_upd xden_k_1862 (usize 0) ((
         nat_mod_zero ,
@@ -1608,7 +1610,7 @@ Definition g2_isogeny_map (x_1859 : fp2_t) (y_1860 : fp2_t) : g2_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (g2_xden_k_1_i_v)) : fp_t
       )) in 
   let ynum_k_1863 : seq (fp_t × fp_t) :=
-    seq_new_ (default) (usize 4) in 
+    seq_new_ (default : fp2_t) (usize 4) in 
   let ynum_k_1863 :=
     seq_upd ynum_k_1863 (usize 0) ((
         nat_mod_from_byte_seq_be (array_to_be_bytes (g2_ynum_k_0_v)) : fp_t,
@@ -1630,7 +1632,7 @@ Definition g2_isogeny_map (x_1859 : fp2_t) (y_1860 : fp2_t) : g2_t :=
         nat_mod_zero 
       )) in 
   let yden_k_1864 : seq (fp_t × fp_t) :=
-    seq_new_ (default) (usize 3) in 
+    seq_new_ (default : fp2_t) (usize 3) in 
   let yden_k_1864 :=
     seq_upd yden_k_1864 (usize 0) ((
         nat_mod_from_byte_seq_be (array_to_be_bytes (g2_yden_k_0_v)) : fp_t,

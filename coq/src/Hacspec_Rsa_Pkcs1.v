@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -106,7 +107,7 @@ Definition mgf1
   let '(result_2396) :=
     if (mask_len_2395) <.? ((usize 2) .^ ((usize 32) * (hlen_v))):bool then (
       let t_2397 : seq uint8 :=
-        seq_new_ (default) (usize 0) in 
+        seq_new_ (default : uint8) (usize 0) in 
       let t_2397 :=
         foldi (usize 0) (((mask_len_2395) + (usize 32)) / (
               usize 32)) (fun i_2398 t_2397 =>

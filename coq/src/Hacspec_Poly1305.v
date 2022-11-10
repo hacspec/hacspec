@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -47,8 +48,8 @@ Definition poly1305_encode_last
   (b_441 : sub_block_t)
   : field_element_t :=
   let n_442 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (b_441) (usize 0) (
-        seq_len (b_441))) in 
+    uint128_from_le_bytes (array_from_slice (default : uint8) (16) (b_441) (
+        usize 0) (seq_len (b_441))) in 
   let f_443 : field_element_t :=
     nat_mod_from_secret_literal (n_442) in 
   (f_443) +% (nat_mod_pow2 (0x03fffffffffffffffffffffffffffffffb) ((usize 8) * (
@@ -56,8 +57,8 @@ Definition poly1305_encode_last
 
 Definition poly1305_init (k_444 : poly_key_t) : poly_state_t :=
   let r_445 : field_element_t :=
-    poly1305_encode_r (array_from_slice (default) (16) (array_to_seq (k_444)) (
-        usize 0) (usize 16)) in 
+    poly1305_encode_r (array_from_slice (default : uint8) (16) (
+        array_to_seq (k_444)) (usize 0) (usize 16)) in 
   (nat_mod_zero , r_445, k_444).
 
 Definition poly1305_update_block
@@ -122,13 +123,13 @@ Definition poly1305_finish (st_468 : poly_state_t) : poly1305_tag_t :=
   let '(acc_469, _, k_470) :=
     st_468 in 
   let n_471 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (
+    uint128_from_le_bytes (array_from_slice (default : uint8) (16) (
         array_to_seq (k_470)) (usize 16) (usize 16)) in 
   let aby_472 : seq uint8 :=
     nat_mod_to_byte_seq_le (acc_469) in 
   let a_473 : uint128 :=
-    uint128_from_le_bytes (array_from_slice (default) (16) (aby_472) (usize 0) (
-        usize 16)) in 
+    uint128_from_le_bytes (array_from_slice (default : uint8) (16) (aby_472) (
+        usize 0) (usize 16)) in 
   array_from_seq (16) (array_to_seq (uint128_to_le_bytes ((a_473) .+ (n_471)))).
 
 Definition poly1305

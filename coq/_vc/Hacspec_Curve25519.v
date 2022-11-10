@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -61,8 +62,8 @@ Definition encode_point (p_483 : point_t) : x25519_serialized_point_t :=
     p_483 in 
   let b_486 : x25519_field_element_t :=
     (x_484) *% (nat_mod_inv (y_485)) in 
-  array_update_start (array_new_ (default) (32)) (nat_mod_to_byte_seq_le (
-      b_486)).
+  array_update_start (array_new_ (default : uint8) (32)) (
+    nat_mod_to_byte_seq_le (b_486)).
 
 Definition point_add_and_double
   (q_487 : point_t)
@@ -162,7 +163,7 @@ Definition x25519_secret_to_public
   (s_525 : x25519_serialized_scalar_t)
   : x25519_serialized_point_t :=
   let base_526 : x25519_serialized_point_t :=
-    array_new_ (default) (32) in 
+    array_new_ (default : uint8) (32) in 
   let base_526 :=
     array_upd base_526 (usize 0) (secret (@repr WORDSIZE8 9) : int8) in 
   x25519_scalarmult (s_525) (base_526).

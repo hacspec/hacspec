@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -109,7 +110,7 @@ Definition chacha20_core (ctr_370 : uint32) (st0_371 : state_t) : state_t :=
 
 Definition chacha20_constants_init  : constants_t :=
   let constants_374 : constants_t :=
-    array_new_ (default) (4) in 
+    array_new_ (default : uint32) (4) in 
   let constants_374 :=
     array_upd constants_374 (usize 0) (secret (
         @repr WORDSIZE32 1634760805) : int32) in 
@@ -130,7 +131,7 @@ Definition chacha20_init
   (ctr_377 : uint32)
   : state_t :=
   let st_378 : state_t :=
-    array_new_ (default) (16) in 
+    array_new_ (default : uint32) (16) in 
   let st_378 :=
     array_update (st_378) (usize 0) (
       array_to_seq (chacha20_constants_init )) in 
@@ -174,7 +175,7 @@ Definition chacha20_encrypt_last
   (plain_392 : byte_seq)
   : byte_seq :=
   let b_393 : block_t :=
-    array_new_ (default) (64) in 
+    array_new_ (default : uint8) (64) in 
   let b_393 :=
     array_update (b_393) (usize 0) (plain_392) in 
   let b_393 :=
@@ -183,7 +184,7 @@ Definition chacha20_encrypt_last
 
 Definition chacha20_update (st0_394 : state_t) (m_395 : byte_seq) : byte_seq :=
   let blocks_out_396 : seq uint8 :=
-    seq_new_ (default) (seq_len (m_395)) in 
+    seq_new_ (default : uint8) (seq_len (m_395)) in 
   let n_blocks_397 : uint_size :=
     seq_num_exact_chunks (m_395) (usize 64) in 
   let blocks_out_396 :=

@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -715,14 +716,16 @@ Definition test_fp2_prop_add_neg (a_1637 : fp2_t) : bool :=
   let b_1638 : (fp_t × fp_t) :=
     fp2neg (a_1637) in 
   (fp2fromfp (nat_mod_zero )) =.? (fp2add (a_1637) (b_1638)).
-QuickChick (forAll g_fp2_t (fun a_1637 : fp2_t =>test_fp2_prop_add_neg a_1637)).
+(*QuickChick (
+  forAll g_fp2_t (fun a_1637 : fp2_t =>test_fp2_prop_add_neg a_1637)).*)
 
 
 Definition test_fp2_prop_mul_inv (a_1639 : fp2_t) : bool :=
   let b_1640 : (fp_t × fp_t) :=
     fp2inv (a_1639) in 
   (fp2fromfp (nat_mod_one )) =.? (fp2mul (a_1639) (b_1640)).
-QuickChick (forAll g_fp2_t (fun a_1639 : fp2_t =>test_fp2_prop_mul_inv a_1639)).
+(*QuickChick (
+  forAll g_fp2_t (fun a_1639 : fp2_t =>test_fp2_prop_mul_inv a_1639)).*)
 
 
 Definition test_extraction_issue  : bool :=
@@ -730,21 +733,23 @@ Definition test_extraction_issue  : bool :=
     fp2inv ((nat_mod_one , nat_mod_one )) in 
   (fp2fromfp (nat_mod_one )) =.? (fp2mul ((nat_mod_one , nat_mod_one )) (
       b_1641)).
-QuickChick (test_extraction_issue).
+(*QuickChick (test_extraction_issue).*)
 
 
 Definition test_fp6_prop_mul_inv (a_1642 : fp6_t) : bool :=
   let b_1643 : (fp2_t × fp2_t × fp2_t) :=
     fp6inv (a_1642) in 
   (fp6fromfp2 (fp2fromfp (nat_mod_one ))) =.? (fp6mul (a_1642) (b_1643)).
-QuickChick (forAll g_fp6_t (fun a_1642 : fp6_t =>test_fp6_prop_mul_inv a_1642)).
+(*QuickChick (
+  forAll g_fp6_t (fun a_1642 : fp6_t =>test_fp6_prop_mul_inv a_1642)).*)
 
 
 Definition test_fp6_prop_add_neg (a_1644 : fp6_t) : bool :=
   let b_1645 : (fp2_t × fp2_t × fp2_t) :=
     fp6neg (a_1644) in 
   (fp6fromfp2 (fp2fromfp (nat_mod_zero ))) =.? (fp6add (a_1644) (b_1645)).
-QuickChick (forAll g_fp6_t (fun a_1644 : fp6_t =>test_fp6_prop_add_neg a_1644)).
+(*QuickChick (
+  forAll g_fp6_t (fun a_1644 : fp6_t =>test_fp6_prop_add_neg a_1644)).*)
 
 
 Definition test_fp12_prop_add_neg (a_1646 : fp12_t) : bool :=
@@ -752,8 +757,8 @@ Definition test_fp12_prop_add_neg (a_1646 : fp12_t) : bool :=
     fp12neg (a_1646) in 
   (fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_zero )))) =.? (fp12add (a_1646) (
       b_1647)).
-QuickChick (
-  forAll g_fp12_t (fun a_1646 : fp12_t =>test_fp12_prop_add_neg a_1646)).
+(*QuickChick (
+  forAll g_fp12_t (fun a_1646 : fp12_t =>test_fp12_prop_add_neg a_1646)).*)
 
 
 Definition test_fp12_prop_mul_inv (a_1648 : fp12_t) : bool :=
@@ -761,7 +766,7 @@ Definition test_fp12_prop_mul_inv (a_1648 : fp12_t) : bool :=
     fp12inv (a_1648) in 
   (fp12fromfp6 (fp6fromfp2 (fp2fromfp (nat_mod_one )))) =.? (fp12mul (a_1648) (
       b_1649)).
-QuickChick (
-  forAll g_fp12_t (fun a_1648 : fp12_t =>test_fp12_prop_mul_inv a_1648)).
+(*QuickChick (
+  forAll g_fp12_t (fun a_1648 : fp12_t =>test_fp12_prop_mul_inv a_1648)).*)
 
 

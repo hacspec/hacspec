@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -479,13 +480,15 @@ Definition block_cipher_aes
   (nr_198 : uint_size)
   : block_t :=
   let k0_199 : round_key_t :=
-    array_from_slice_range (default) (blocksize_v) (key_197) ((usize 0, usize 16
+    array_from_slice_range (default : uint8) (blocksize_v) (key_197) ((
+        usize 0,
+        usize 16
       )) in 
   let k_200 : seq uint8 :=
     seq_from_slice_range (key_197) ((usize 16, (nr_198) * (usize 16))) in 
   let kn_201 : round_key_t :=
-    array_from_slice (default) (blocksize_v) (key_197) ((nr_198) * (usize 16)) (
-      usize 16) in 
+    array_from_slice (default : uint8) (blocksize_v) (key_197) ((nr_198) * (
+        usize 16)) (usize 16) in 
   let state_202 : block_t :=
     add_round_key (input_196) (k0_199) in 
   let state_203 : block_t :=
@@ -568,7 +571,7 @@ Definition key_expansion_aes
   (iterations_222 : uint_size)
   : byte_seq_result_t :=
   let key_ex_223 : seq uint8 :=
-    seq_new_ (default) (key_schedule_length_220) in 
+    seq_new_ (default : uint8) (key_schedule_length_220) in 
   let key_ex_223 :=
     seq_update_start (key_ex_223) (key_217) in 
   let word_size_224 : uint_size :=
@@ -578,10 +581,11 @@ Definition key_expansion_aes
       let i_226 : uint_size :=
         (j_225) + (word_size_224) in 
       let word_227 : word_t :=
-        key_expansion_word (array_from_slice (default) (key_length_v) (
+        key_expansion_word (array_from_slice (default : uint8) (key_length_v) (
             key_ex_223) ((usize 4) * ((i_226) - (word_size_224))) (usize 4)) (
-          array_from_slice (default) (key_length_v) (key_ex_223) (((usize 4) * (
-                i_226)) - (usize 4)) (usize 4)) (i_226) (nk_218) (nr_219) in 
+          array_from_slice (default : uint8) (key_length_v) (key_ex_223) (((
+                usize 4) * (i_226)) - (usize 4)) (usize 4)) (i_226) (nk_218) (
+          nr_219) in 
       let key_ex_223 :=
         seq_update (key_ex_223) ((usize 4) * (i_226)) (
           array_to_seq (word_227)) in 
@@ -622,7 +626,7 @@ Definition aes_ctr_key_block
   (iterations_245 : uint_size)
   : block_result_t :=
   let input_246 : block_t :=
-    array_new_ (default) (blocksize_v) in 
+    array_new_ (default : uint8) (blocksize_v) in 
   let input_246 :=
     array_update (input_246) (usize 0) (array_to_seq (n_239)) in 
   let input_246 :=
@@ -660,7 +664,7 @@ Definition aes_counter_mode
   let ctr_260 : uint32 :=
     counter_253 in 
   let blocks_out_261 : seq uint8 :=
-    seq_new_ (default) (seq_len (msg_254)) in 
+    seq_new_ (default : uint8) (seq_len (msg_254)) in 
   let n_blocks_262 : uint_size :=
     seq_num_exact_chunks (msg_254) (blocksize_v) in 
   let '(ctr_260, blocks_out_261) :=
@@ -685,7 +689,7 @@ Definition aes_counter_mode
   let '(blocks_out_261) :=
     if (last_block_len_267) !=.? (usize 0):bool then (
       let last_block_268 : block_t :=
-        array_update_start (array_new_ (default) (blocksize_v)) (
+        array_update_start (array_new_ (default : uint8) (blocksize_v)) (
           last_block_266) in 
       let key_block_269 : block_t :=
         aes_ctr_key_block (key_251) (nonce_252) (ctr_260) (nk_255) (nr_256) (

@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -9,7 +10,7 @@ Require Import Hacspec_Lib.
 
 Definition build_irreducible (p_1174 : uint_size) : seq int128 :=
   let irr_1175 : seq int128 :=
-    seq_new_ (default) ((p_1174) + (usize 1)) in 
+    seq_new_ (default : int128) ((p_1174) + (usize 1)) in 
   let irr_1175 :=
     seq_upd irr_1175 (usize 0) (- (@repr WORDSIZE128 1)) in 
   let irr_1175 :=
@@ -111,7 +112,7 @@ Definition ntru_prime_653_decrypt
       (f_3_c_1204))
     f_3_c_1204 in 
   let e_1207 : seq int128 :=
-    seq_new_ (default) (seq_len (f_3_c_1204)) in 
+    seq_new_ (default : int128) (seq_len (f_3_c_1204)) in 
   let e_1207 :=
     foldi (usize 0) (seq_len (e_1207)) (fun i_1208 e_1207 =>
       let e_1207 :=

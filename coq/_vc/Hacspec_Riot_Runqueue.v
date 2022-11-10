@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -34,7 +35,7 @@ Inductive clist_t :=
 
 Definition clist_new  : clist_t :=
   let tail_1265 : tail_t :=
-    array_new_ (default) (n_queues_v) in 
+    array_new_ (default : int8) (n_queues_v) in 
   let tail_1265 :=
     foldi (usize 0) (array_len (tail_1265)) (fun i_1266 tail_1265 =>
       let tail_1265 :=
@@ -42,7 +43,7 @@ Definition clist_new  : clist_t :=
       (tail_1265))
     tail_1265 in 
   let next_idxs_1267 : next_ids_t :=
-    array_new_ (default) (n_threads_v) in 
+    array_new_ (default : int8) (n_threads_v) in 
   let next_idxs_1267 :=
     foldi (usize 0) (array_len (next_idxs_1267)) (fun i_1268 next_idxs_1267 =>
       let next_idxs_1267 :=

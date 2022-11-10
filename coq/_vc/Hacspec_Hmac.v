@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -156,8 +157,8 @@ Definition o_pad_v : block_t :=
 
 Definition k_block (k_733 : byte_seq) : block_t :=
   (if ((seq_len (k_733)) >.? (block_len_v)):bool then (array_update_start (
-        array_new_ (default) (block_len_v)) (array_to_seq (hash (
-          k_733)))) else (array_update_start (array_new_ (default) (
+        array_new_ (default : uint8) (block_len_v)) (array_to_seq (hash (
+          k_733)))) else (array_update_start (array_new_ (default : uint8) (
           block_len_v)) (k_733))).
 
 Definition hmac (k_734 : byte_seq) (txt_735 : byte_seq) : prk_t :=
