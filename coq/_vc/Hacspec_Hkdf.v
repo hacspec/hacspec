@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -22,7 +23,7 @@ Notation "'hkdf_byte_seq_result_t'" := ((
 
 Definition extract (salt_713 : byte_seq) (ikm_714 : byte_seq) : prk_t :=
   let salt_or_zero_715 : seq uint8 :=
-    seq_new_ (default) (hash_len_v) in 
+    seq_new_ (default : uint8) (hash_len_v) in 
   let '(salt_or_zero_715) :=
     if (seq_len (salt_713)) >.? (usize 0):bool then (let salt_or_zero_715 :=
         seq_from_seq (salt_713) in 
@@ -35,7 +36,7 @@ Definition build_hmac_txt
   (iteration_718 : uint8)
   : byte_seq :=
   let out_719 : seq uint8 :=
-    seq_new_ (default) (((seq_len (t_716)) + (seq_len (info_717))) + (
+    seq_new_ (default : uint8) (((seq_len (t_716)) + (seq_len (info_717))) + (
         usize 1)) in 
   let out_719 :=
     seq_update (out_719) (usize 0) (t_716) in 
@@ -71,17 +72,17 @@ Definition expand
   let n_728 : uint_size :=
     check_output_limit (l_727) in 
   let t_i_729 : prk_t :=
-    array_new_ (default) (_) in 
+    array_new_ (default : uint8) (_) in 
   let t_730 : seq uint8 :=
-    seq_new_ (default) ((n_728) * (hash_size_v)) in 
+    seq_new_ (default : uint8) ((n_728) * (hash_size_v)) in 
   let '(t_i_729, t_730) :=
     foldi (usize 0) (n_728) (fun i_731 '(t_i_729, t_730) =>
       let hmac_txt_in_732 : seq uint8 :=
         (if ((i_731) =.? (usize 0)):bool then (build_hmac_txt (seq_new_ (
-                default) (usize 0)) (info_726) (secret ((pub_u8 (i_731)) .+ (
-                  @repr WORDSIZE8 1)) : int8)) else (build_hmac_txt (
-              seq_from_seq (array_to_seq (t_i_729))) (info_726) (secret ((
-                  pub_u8 (i_731)) .+ (@repr WORDSIZE8 1)) : int8))) in 
+                default : uint8) (usize 0)) (info_726) (secret ((pub_u8 (
+                    i_731)) .+ (@repr WORDSIZE8 1)) : int8)) else (
+            build_hmac_txt (seq_from_seq (array_to_seq (t_i_729))) (info_726) (
+              secret ((pub_u8 (i_731)) .+ (@repr WORDSIZE8 1)) : int8))) in 
       let t_i_729 :=
         hmac (prk_725) (hmac_txt_in_732) in 
       let t_730 :=

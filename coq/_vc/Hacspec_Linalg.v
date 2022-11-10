@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -48,7 +49,7 @@ Definition repeat
   (scalar_886 : scalar_t)
   : matrix_t :=
   let ret_887 : seq int128 :=
-    seq_new_ (default) ((n_884) * (m_885)) in 
+    seq_new_ (default : scalar_t) ((n_884) * (m_885)) in 
   let ret_887 :=
     foldi (usize 0) ((n_884) * (m_885)) (fun i_888 ret_887 =>
       let ret_887 :=
@@ -65,7 +66,7 @@ Definition ones (n_891 : dim_type_t) (m_892 : dim_type_t) : matrix_t :=
 
 Definition identity (n_893 : dim_type_t) (m_894 : dim_type_t) : matrix_t :=
   let ret_895 : seq int128 :=
-    seq_new_ (default) ((n_893) * (m_894)) in 
+    seq_new_ (default : scalar_t) ((n_893) * (m_894)) in 
   let ret_895 :=
     foldi (usize 0) (min (n_893) (m_894)) (fun i_896 ret_895 =>
       let index_897 : uint_size :=
@@ -97,7 +98,7 @@ Definition transpose (matrix_906 : matrix_t) : matrix_t :=
   let '(rows_909, cols_910) :=
     dim_907 in 
   let ret_911 : seq int128 :=
-    seq_new_ (default) (seq_len (seq_908)) in 
+    seq_new_ (default : scalar_t) (seq_len (seq_908)) in 
   let ret_911 :=
     foldi (usize 0) (rows_909) (fun i_912 ret_911 =>
       let ret_911 :=
@@ -131,7 +132,7 @@ Definition slice
   let start_index_927 : uint_size :=
     ((start_row_923) * (cols_922)) + (start_col_924) in 
   let ret_928 : seq int128 :=
-    seq_new_ (default) ((len_rows_925) * (len_cols_926)) in 
+    seq_new_ (default : scalar_t) ((len_rows_925) * (len_cols_926)) in 
   let res_929 : (result matrix_t int8) :=
     @Err matrix_t int8 (slice_out_of_bounds_v) in 
   let '(ret_928, res_929) :=
@@ -161,7 +162,7 @@ Definition scale (matrix_934 : matrix_t) (scalar_935 : scalar_t) : matrix_t :=
   let '(dim_936, seq_937) :=
     matrix_934 in 
   let ret_938 : seq int128 :=
-    seq_new_ (default) (seq_len (seq_937)) in 
+    seq_new_ (default : scalar_t) (seq_len (seq_937)) in 
   let ret_938 :=
     foldi (usize 0) (seq_len (seq_937)) (fun i_939 ret_938 =>
       let ret_938 :=
@@ -180,7 +181,7 @@ Definition add
   let '(m2_dim_944, m2_s_945) :=
     matrix_2_941 in 
   let ret_946 : seq int128 :=
-    seq_new_ (default) (seq_len (m1_s_943)) in 
+    seq_new_ (default : scalar_t) (seq_len (m1_s_943)) in 
   let res_947 : (result matrix_t int8) :=
     @Err matrix_t int8 (dimension_mismatch_v) in 
   let '(ret_946, res_947) :=
@@ -205,7 +206,7 @@ Definition sub
   let '(m2_dim_953, m2_s_954) :=
     matrix_2_950 in 
   let ret_955 : seq int128 :=
-    seq_new_ (default) (seq_len (m1_s_952)) in 
+    seq_new_ (default : scalar_t) (seq_len (m1_s_952)) in 
   let res_956 : (result matrix_t int8) :=
     @Err matrix_t int8 (dimension_mismatch_v) in 
   let '(ret_955, res_956) :=
@@ -230,7 +231,7 @@ Definition component_mul
   let '(m2_dim_962, m2_s_963) :=
     matrix_2_959 in 
   let ret_964 : seq int128 :=
-    seq_new_ (default) (seq_len (m1_s_961)) in 
+    seq_new_ (default : scalar_t) (seq_len (m1_s_961)) in 
   let res_965 : (result matrix_t int8) :=
     @Err matrix_t int8 (dimension_mismatch_v) in 
   let '(ret_964, res_965) :=
@@ -259,7 +260,7 @@ Definition mul
   let '(m_975, n_976) :=
     dim_2_971 in 
   let ret_977 : seq int128 :=
-    seq_new_ (default) ((l_973) * (n_976)) in 
+    seq_new_ (default : scalar_t) ((l_973) * (n_976)) in 
   let res_978 : (result matrix_t int8) :=
     @Err matrix_t int8 (dimension_mismatch_v) in 
   let '(ret_977, res_978) :=

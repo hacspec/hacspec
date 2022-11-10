@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -77,7 +78,7 @@ Definition poly (msg_329 : byte_seq) (r_330 : element_t) : element_t :=
       let k_336 : uint_size :=
         (i_335) * (blocksize_v) in 
       let block_337 : gf128_block_t :=
-        array_new_ (default) (blocksize_v) in 
+        array_new_ (default : uint8) (blocksize_v) in 
       let block_337 :=
         array_update_start (block_337) (seq_slice_range (msg_329) ((
               k_336,
@@ -91,7 +92,7 @@ Definition poly (msg_329 : byte_seq) (r_330 : element_t) : element_t :=
     if (rem_333) !=.? (usize 0):bool then (let k_338 : uint_size :=
         (n_blocks_332) * (blocksize_v) in 
       let last_block_339 : gf128_block_t :=
-        array_new_ (default) (blocksize_v) in 
+        array_new_ (default : uint8) (blocksize_v) in 
       let last_block_339 :=
         array_update_slice (last_block_339) (usize 0) (msg_329) (k_338) (
           rem_333) in 
@@ -102,7 +103,7 @@ Definition poly (msg_329 : byte_seq) (r_330 : element_t) : element_t :=
 
 Definition gmac (text_340 : byte_seq) (k_341 : gf128_key_t) : gf128_tag_t :=
   let s_342 : gf128_block_t :=
-    array_new_ (default) (blocksize_v) in 
+    array_new_ (default : uint8) (blocksize_v) in 
   let r_343 : uint128 :=
     encode (array_from_seq (blocksize_v) (array_to_seq (k_341))) in 
   let a_344 : uint128 :=

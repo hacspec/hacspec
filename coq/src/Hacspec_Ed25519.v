@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -49,7 +50,7 @@ Definition sign (sk_1898 : secret_key_t) (msg_1899 : byte_seq) : signature_t :=
     (r_1905) +% ((h_1908) *% (a_1902)) in 
   let s_bytes_1910 : seq uint8 :=
     seq_slice (nat_mod_to_byte_seq_le (s_1909)) (usize 0) (usize 32) in 
-  array_update (array_update (array_new_ (default) (64)) (usize 0) (
+  array_update (array_update (array_new_ (default : uint8) (64)) (usize 0) (
       array_to_seq (r_s_1907))) (usize 32) (s_bytes_1910).
 
 Definition zcash_verify
@@ -72,11 +73,11 @@ Definition zcash_verify
     ) :=
     option_ok_or (decompress_non_canonical (pk_1911)) (InvalidPublickey) in 
   let r_bytes_1916 : compressed_ed_point_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1912)) (usize 0) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1912)) (
+      usize 0) (usize 32) in 
   let s_bytes_1917 : serialized_scalar_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1912)) (usize 32) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1912)) (
+      usize 32) (usize 32) in 
   let 'tt :=
     if negb (check_canonical_scalar (s_bytes_1917)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
@@ -137,11 +138,11 @@ Definition ietf_cofactored_verify
     ) :=
     option_ok_or (decompress (pk_1924)) (InvalidPublickey) in 
   let r_bytes_1929 : compressed_ed_point_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1925)) (usize 0) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1925)) (
+      usize 0) (usize 32) in 
   let s_bytes_1930 : serialized_scalar_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1925)) (usize 32) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1925)) (
+      usize 32) (usize 32) in 
   let 'tt :=
     if negb (check_canonical_scalar (s_bytes_1930)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
@@ -202,11 +203,11 @@ Definition ietf_cofactorless_verify
     ) :=
     option_ok_or (decompress (pk_1937)) (InvalidPublickey) in 
   let r_bytes_1942 : compressed_ed_point_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1938)) (usize 0) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1938)) (
+      usize 0) (usize 32) in 
   let s_bytes_1943 : serialized_scalar_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1938)) (usize 32) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1938)) (
+      usize 32) (usize 32) in 
   let 'tt :=
     if negb (check_canonical_scalar (s_bytes_1943)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
@@ -267,11 +268,11 @@ Definition alg2_verify
         @Err unit error_t (SmallOrderPoint) in 
       tt) else (tt) in 
   let r_bytes_1955 : compressed_ed_point_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1951)) (usize 0) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1951)) (
+      usize 0) (usize 32) in 
   let s_bytes_1956 : serialized_scalar_t :=
-    array_from_slice (default) (32) (array_to_seq (signature_1951)) (usize 32) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1951)) (
+      usize 32) (usize 32) in 
   let 'tt :=
     if negb (check_canonical_scalar (s_bytes_1956)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
@@ -356,11 +357,11 @@ Definition zcash_batch_verify
         ) :=
         option_ok_or (decompress_non_canonical (pk_1969)) (InvalidPublickey) in 
       let r_bytes_1973 : compressed_ed_point_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_1971)) (
-          usize 0) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_1971)) (usize 0) (usize 32) in 
       let s_bytes_1974 : serialized_scalar_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_1971)) (
-          usize 32) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_1971)) (usize 32) (usize 32) in 
       let 'tt :=
         if negb (check_canonical_scalar (s_bytes_1974)):bool then (
           let _ : unit :=
@@ -381,8 +382,8 @@ Definition zcash_batch_verify
       let z_1978 : seq uint8 :=
         seq_slice (entropy_1964) ((usize 16) * (i_1968)) (usize 16) in 
       let z_1979 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_1978) (seq_new_ (default) (
-              usize 16))) : scalar_t in 
+        nat_mod_from_byte_seq_le (seq_concat (z_1978) (seq_new_ (
+              default : uint8) (usize 16))) : scalar_t in 
       let s_sum_1965 :=
         (s_sum_1965) +% ((s_1976) *% (z_1979)) in 
       let r_sum_1966 :=
@@ -457,11 +458,11 @@ Definition ietf_cofactored_batch_verify
         ) :=
         option_ok_or (decompress (pk_1989)) (InvalidPublickey) in 
       let r_bytes_1993 : compressed_ed_point_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_1991)) (
-          usize 0) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_1991)) (usize 0) (usize 32) in 
       let s_bytes_1994 : serialized_scalar_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_1991)) (
-          usize 32) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_1991)) (usize 32) (usize 32) in 
       let 'tt :=
         if negb (check_canonical_scalar (s_bytes_1994)):bool then (
           let _ : unit :=
@@ -482,8 +483,8 @@ Definition ietf_cofactored_batch_verify
       let z_1998 : seq uint8 :=
         seq_slice (entropy_1984) ((usize 16) * (i_1988)) (usize 16) in 
       let z_1999 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_1998) (seq_new_ (default) (
-              usize 16))) : scalar_t in 
+        nat_mod_from_byte_seq_le (seq_concat (z_1998) (seq_new_ (
+              default : uint8) (usize 16))) : scalar_t in 
       let s_sum_1985 :=
         (s_sum_1985) +% ((s_1996) *% (z_1999)) in 
       let r_sum_1986 :=
@@ -558,11 +559,11 @@ Definition ietf_cofactorless_batch_verify
         ) :=
         option_ok_or (decompress (pk_2009)) (InvalidPublickey) in 
       let r_bytes_2013 : compressed_ed_point_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_2011)) (
-          usize 0) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_2011)) (usize 0) (usize 32) in 
       let s_bytes_2014 : serialized_scalar_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_2011)) (
-          usize 32) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_2011)) (usize 32) (usize 32) in 
       let 'tt :=
         if negb (check_canonical_scalar (s_bytes_2014)):bool then (
           let _ : unit :=
@@ -583,8 +584,8 @@ Definition ietf_cofactorless_batch_verify
       let z_2018 : seq uint8 :=
         seq_slice (entropy_2004) ((usize 16) * (i_2008)) (usize 16) in 
       let z_2019 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_2018) (seq_new_ (default) (
-              usize 16))) : scalar_t in 
+        nat_mod_from_byte_seq_le (seq_concat (z_2018) (seq_new_ (
+              default : uint8) (usize 16))) : scalar_t in 
       let s_sum_2005 :=
         (s_sum_2005) +% ((s_2016) *% (z_2019)) in 
       let r_sum_2006 :=
@@ -663,11 +664,11 @@ Definition alg3_batch_verify
             @Err unit error_t (SmallOrderPoint) in 
           tt) else (tt) in 
       let r_bytes_2033 : compressed_ed_point_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_2031)) (
-          usize 0) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_2031)) (usize 0) (usize 32) in 
       let s_bytes_2034 : serialized_scalar_t :=
-        array_from_slice (default) (32) (array_to_seq (signature_2031)) (
-          usize 32) (usize 32) in 
+        array_from_slice (default : uint8) (32) (
+          array_to_seq (signature_2031)) (usize 32) (usize 32) in 
       let 'tt :=
         if negb (check_canonical_scalar (s_bytes_2034)):bool then (
           let _ : unit :=
@@ -688,8 +689,8 @@ Definition alg3_batch_verify
       let z_2038 : seq uint8 :=
         seq_slice (entropy_2024) ((usize 16) * (i_2028)) (usize 16) in 
       let z_2039 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_2038) (seq_new_ (default) (
-              usize 16))) : scalar_t in 
+        nat_mod_from_byte_seq_le (seq_concat (z_2038) (seq_new_ (
+              default : uint8) (usize 16))) : scalar_t in 
       let s_sum_2025 :=
         (s_sum_2025) +% ((s_2036) *% (z_2039)) in 
       let r_sum_2026 :=

@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -292,7 +293,7 @@ Definition compress (p_2044 : ed_point_t) : compressed_ed_point_t :=
   let s_2051 :=
     seq_upd s_2051 (usize 31) ((seq_index (s_2051) (usize 31)) .^ ((
           is_negative (x_2049)) shift_left (usize 7))) in 
-  array_from_slice (default) (32) (s_2051) (usize 0) (usize 32).
+  array_from_slice (default : uint8) (32) (s_2051) (usize 0) (usize 32).
 
 Definition sqrt
   (a_2052 : ed25519_field_element_t)
@@ -430,7 +431,7 @@ Definition encode (p_2084 : ed_point_t) : byte_seq :=
 
 Definition decode (q_s_2092 : byte_seq) : (option ed_point_t) :=
   let q_2093 : compressed_ed_point_t :=
-    array_from_slice (default) (32) (q_s_2092) (usize 0) (usize 32) in 
+    array_from_slice (default : uint8) (32) (q_s_2092) (usize 0) (usize 32) in 
   decompress (q_2093).
 
 Definition point_add (p_2094 : ed_point_t) (q_2095 : ed_point_t) : ed_point_t :=
@@ -555,10 +556,10 @@ Definition secret_expand
   let h_2149 : sha512_digest_t :=
     sha512 (seq_from_slice (sk_2148) (usize 0) (usize 32)) in 
   let h_d_2150 : serialized_scalar_t :=
-    array_from_slice (default) (32) (array_to_seq (h_2149)) (usize 32) (
+    array_from_slice (default : uint8) (32) (array_to_seq (h_2149)) (usize 32) (
       usize 32) in 
   let s_2151 : serialized_scalar_t :=
-    array_from_slice (default) (32) (array_to_seq (h_2149)) (usize 0) (
+    array_from_slice (default : uint8) (32) (array_to_seq (h_2149)) (usize 0) (
       usize 32) in 
   let s_2151 :=
     array_upd s_2151 (usize 0) ((array_index (s_2151) (usize 0)) .& (secret (

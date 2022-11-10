@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -29,7 +30,8 @@ Definition pad_aad_msg (aad_278 : byte_seq) (msg_279 : byte_seq) : byte_seq :=
     (if (((lmsg_281) %% (usize 16)) =.? (usize 0)):bool then (lmsg_281) else ((
           lmsg_281) + ((usize 16) - ((lmsg_281) %% (usize 16))))) in 
   let padded_msg_284 : seq uint8 :=
-    seq_new_ (default) (((pad_aad_282) + (pad_msg_283)) + (usize 16)) in 
+    seq_new_ (default : uint8) (((pad_aad_282) + (pad_msg_283)) + (
+        usize 16)) in 
   let padded_msg_284 :=
     seq_update (padded_msg_284) (usize 0) (aad_278) in 
   let padded_msg_284 :=
@@ -53,7 +55,7 @@ Definition encrypt_aes
   (msg_288 : byte_seq)
   : (byte_seq × gf128_tag_t) :=
   let iv0_289 : aes_nonce_t :=
-    array_new_ (default) (_) in 
+    array_new_ (default : uint8) (_) in 
   let mac_key_290 : block_t :=
     result_unwrap (aes_ctr_key_block (key_285) (iv0_289) (secret (
           @repr WORDSIZE32 0) : int32) (key_length_v) (rounds_v) (
@@ -90,7 +92,7 @@ Definition decrypt_aes
   (tag_304 : gf128_tag_t)
   : aes_gcm_byte_seq_result_t :=
   let iv0_305 : aes_nonce_t :=
-    array_new_ (default) (_) in 
+    array_new_ (default : uint8) (_) in 
   let mac_key_306 : block_t :=
     aes_ctr_key_block (key_300) (iv0_305) (secret (
         @repr WORDSIZE32 0) : int32) (key_length_v) (rounds_v) (

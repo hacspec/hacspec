@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -96,9 +97,9 @@ Definition expand_message_xmd
           usize 255))):bool then (let dst_prime_2213 : seq uint8 :=
         seq_push (dst_2209) (uint8_from_usize (seq_len (dst_2209))) in 
       let z_pad_2214 : seq uint8 :=
-        seq_new_ (default) (s_in_bytes_v) in 
+        seq_new_ (default : uint8) (s_in_bytes_v) in 
       let l_i_b_str_2215 : seq uint8 :=
-        seq_new_ (default) (usize 2) in 
+        seq_new_ (default : uint8) (usize 2) in 
       let l_i_b_str_2215 :=
         seq_upd l_i_b_str_2215 (usize 0) (uint8_from_usize ((
               len_in_bytes_2210) / (usize 256))) in 
@@ -107,8 +108,8 @@ Definition expand_message_xmd
             len_in_bytes_2210)) in 
       let msg_prime_2216 : seq uint8 :=
         seq_concat (seq_concat (seq_concat (seq_concat (z_pad_2214) (
-                msg_2208)) (l_i_b_str_2215)) (seq_new_ (default) (usize 1))) (
-          dst_prime_2213) in 
+                msg_2208)) (l_i_b_str_2215)) (seq_new_ (default : uint8) (
+              usize 1))) (dst_prime_2213) in 
       let b_0_2217 : seq uint8 :=
         seq_from_seq (array_to_seq (hash (msg_prime_2216))) in 
       let b_i_2218 : seq uint8 :=
@@ -147,7 +148,7 @@ Definition ed_hash_to_field
   let uniform_bytes_2226 : byte_seq :=
     expand_message_xmd (msg_2222) (dst_2223) (len_in_bytes_2225) in 
   let output_2227 : seq ed25519_field_element_t :=
-    seq_new_ (default) (count_2224) in 
+    seq_new_ (default : ed25519_field_element_t) (count_2224) in 
   let output_2227 :=
     foldi (usize 0) (count_2224) (fun i_2228 output_2227 =>
       let elm_offset_2229 : uint_size :=

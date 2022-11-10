@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -83,7 +84,7 @@ Definition header_as_u16_slice (h_1228 : header_t) : seq int16 :=
   let start_addr_1234 : u32_word_t :=
     u32_to_be_bytes (start_addr_1231) in 
   let u8_seq_1235 : seq int8 :=
-    seq_new_ (default) (usize 12) in 
+    seq_new_ (default : int8) (usize 12) in 
   let u8_seq_1236 : seq int8 :=
     seq_update_slice (u8_seq_1235) (usize 0) (array_to_seq (magic_1232)) (
       usize 0) (usize 4) in 
@@ -94,7 +95,7 @@ Definition header_as_u16_slice (h_1228 : header_t) : seq int16 :=
     seq_update_slice (u8_seq_1237) (usize 8) (array_to_seq (start_addr_1234)) (
       usize 0) (usize 4) in 
   let u16_seq_1239 : seq int16 :=
-    seq_new_ (default) (usize 6) in 
+    seq_new_ (default : int16) (usize 6) in 
   let u16_seq_1239 :=
     foldi (usize 0) (usize 3) (fun i_1240 u16_seq_1239 =>
       let u16_word_1241 : u16_word_t :=

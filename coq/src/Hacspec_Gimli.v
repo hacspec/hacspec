@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -109,7 +110,7 @@ Definition absorb_block
 
 Definition squeeze_block (s_1002 : state_t) : block_t :=
   let block_1003 : block_t :=
-    array_new_ (default) (16) in 
+    array_new_ (default : uint8) (16) in 
   let block_1003 :=
     foldi (usize 0) (usize 4) (fun i_1004 block_1003 =>
       let s_i_1005 : uint32 :=
@@ -153,7 +154,7 @@ Definition gimli_hash_state
   let input_block_1014 : seq uint8 :=
     seq_get_remainder_chunk (input_1007) (rate_1009) in 
   let input_block_padded_1015 : block_t :=
-    array_new_ (default) (16) in 
+    array_new_ (default : uint8) (16) in 
   let input_block_padded_1016 : block_t :=
     array_update_start (input_block_padded_1015) (input_block_1014) in 
   let input_block_padded_1016 :=
@@ -168,11 +169,11 @@ Definition gimli_hash_state
 
 Definition gimli_hash (input_bytes_1017 : byte_seq) : digest_t :=
   let s_1018 : state_t :=
-    array_new_ (default) (12) in 
+    array_new_ (default : uint32) (12) in 
   let s_1019 : state_t :=
     gimli_hash_state (input_bytes_1017) (s_1018) in 
   let output_1020 : digest_t :=
-    array_new_ (default) (32) in 
+    array_new_ (default : uint8) (32) in 
   let output_1021 : digest_t :=
     array_update_start (output_1020) (array_to_seq (squeeze_block (s_1019))) in 
   let s_1022 : state_t :=
@@ -194,7 +195,7 @@ Definition process_msg
   (s_1026 : state_t)
   : (state_t × byte_seq) :=
   let ciphertext_1027 : seq uint8 :=
-    seq_new_ (default) (seq_len (message_1025)) in 
+    seq_new_ (default : uint8) (seq_len (message_1025)) in 
   let rate_1028 : uint_size :=
     array_length  in 
   let num_chunks_1029 : uint_size :=
@@ -221,7 +222,7 @@ Definition process_msg
   let block_len_1036 : uint_size :=
     seq_len (last_block_1035) in 
   let msg_block_padded_1037 : block_t :=
-    array_new_ (default) (16) in 
+    array_new_ (default : uint8) (16) in 
   let msg_block_padded_1038 : block_t :=
     array_update_start (msg_block_padded_1037) (last_block_1035) in 
   let ciphertext_1027 :=
@@ -246,7 +247,7 @@ Definition process_ct
   (s_1040 : state_t)
   : (state_t × byte_seq) :=
   let message_1041 : seq uint8 :=
-    seq_new_ (default) (seq_len (ciphertext_1039)) in 
+    seq_new_ (default : uint8) (seq_len (ciphertext_1039)) in 
   let rate_1042 : uint_size :=
     array_length  in 
   let num_chunks_1043 : uint_size :=
@@ -275,7 +276,7 @@ Definition process_ct
   let block_len_1051 : uint_size :=
     seq_len (ct_final_1050) in 
   let ct_block_padded_1052 : block_t :=
-    array_new_ (default) (16) in 
+    array_new_ (default : uint8) (16) in 
   let ct_block_padded_1053 : block_t :=
     array_update_start (ct_block_padded_1052) (ct_final_1050) in 
   let msg_block_1054 : block_t :=
@@ -284,10 +285,8 @@ Definition process_ct
     seq_set_chunk (message_1041) (rate_1042) (num_chunks_1043) (
       array_slice_range (msg_block_1054) ((usize 0, block_len_1051))) in 
   let msg_block_1055 : block_t :=
-    array_from_slice_range (default) (16) (array_to_seq (msg_block_1054)) ((
-        usize 0,
-        block_len_1051
-      )) in 
+    array_from_slice_range (default : uint8) (16) (
+      array_to_seq (msg_block_1054)) ((usize 0, block_len_1051)) in 
   let msg_block_1055 :=
     array_upd msg_block_1055 (block_len_1051) ((array_index (msg_block_1055) (
           block_len_1051)) .^ (secret (@repr WORDSIZE8 1) : int8)) in 
@@ -300,48 +299,60 @@ Definition process_ct
 
 Definition nonce_to_u32s (nonce_1056 : nonce_t) : seq uint32 :=
   let uints_1057 : seq uint32 :=
-    seq_new_ (default) (usize 4) in 
+    seq_new_ (default : uint32) (usize 4) in 
   let uints_1057 :=
     seq_upd uints_1057 (usize 0) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (nonce_1056)) ((usize 0, usize 4)))) in 
+          default : uint8) (4) (array_to_seq (nonce_1056)) ((usize 0, usize 4
+          )))) in 
   let uints_1057 :=
     seq_upd uints_1057 (usize 1) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (nonce_1056)) ((usize 4, usize 8)))) in 
+          default : uint8) (4) (array_to_seq (nonce_1056)) ((usize 4, usize 8
+          )))) in 
   let uints_1057 :=
     seq_upd uints_1057 (usize 2) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (nonce_1056)) ((usize 8, usize 12)))) in 
+          default : uint8) (4) (array_to_seq (nonce_1056)) ((usize 8, usize 12
+          )))) in 
   let uints_1057 :=
     seq_upd uints_1057 (usize 3) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (nonce_1056)) ((usize 12, usize 16)))) in 
+          default : uint8) (4) (array_to_seq (nonce_1056)) ((usize 12, usize 16
+          )))) in 
   uints_1057.
 
 Definition key_to_u32s (key_1058 : key_t) : seq uint32 :=
   let uints_1059 : seq uint32 :=
-    seq_new_ (default) (usize 8) in 
+    seq_new_ (default : uint32) (usize 8) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 0) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 0, usize 4)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 0, usize 4
+          )))) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 1) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 4, usize 8)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 4, usize 8
+          )))) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 2) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 8, usize 12)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 8, usize 12
+          )))) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 3) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 12, usize 16)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 12, usize 16
+          )))) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 4) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 16, usize 20)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 16, usize 20
+          )))) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 5) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 20, usize 24)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 20, usize 24
+          )))) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 6) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 24, usize 28)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 24, usize 28
+          )))) in 
   let uints_1059 :=
     seq_upd uints_1059 (usize 7) (uint32_from_le_bytes (array_from_slice_range (
-          default) (4) (array_to_seq (key_1058)) ((usize 28, usize 32)))) in 
+          default : uint8) (4) (array_to_seq (key_1058)) ((usize 28, usize 32
+          )))) in 
   uints_1059.
 
 Definition gimli_aead_encrypt
@@ -386,7 +397,7 @@ Definition gimli_aead_decrypt
   let my_tag_1082 : tag_t :=
     array_from_seq (16) (array_to_seq (my_tag_1081)) in 
   let out_1083 : seq uint8 :=
-    seq_new_ (default) (usize 0) in 
+    seq_new_ (default : uint8) (usize 0) in 
   let '(out_1083) :=
     if array_equal (my_tag_1082) (tag_1073):bool then (let out_1083 :=
         message_1080 in 

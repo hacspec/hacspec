@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -41,10 +42,10 @@ Inductive crypto_error_t :=
 | VerifyFailed : crypto_error_t.
 
 Definition empty  : byte_seq :=
-  seq_new_ (default) (usize 0).
+  seq_new_ (default : uint8) (usize 0).
 
 Definition zeros (u_0 : uint_size) : byte_seq :=
-  seq_new_ (default) (u_0).
+  seq_new_ (default : uint8) (u_0).
 
 Notation "'entropy_t'" := (byte_seq) : hacspec_scope.
 
@@ -179,7 +180,7 @@ Definition dh_pub_len (gn_6 : named_group_t) : uint_size :=
   match gn_6 with | X25519 => usize 32 | Secp256r1 => usize 64 end.
 
 Definition zero_key (ha_7 : hash_algorithm_t) : key_t :=
-  seq_new_ (default) (usize (hash_len (ha_7))).
+  seq_new_ (default : uint8) (usize (hash_len (ha_7))).
 
 Definition secret_to_public
   (group_name_8 : named_group_t)
@@ -357,7 +358,7 @@ Definition get_length_length (b_56 : byte_seq) : uint_size :=
 
 Definition get_length (b_57 : byte_seq) (len_58 : uint_size) : uint_size :=
   (@cast _ uint32 _ (declassify_u32_from_uint32 (uint32_from_be_bytes (
-          array_from_slice (default) (4) (b_57) (usize 0) (
+          array_from_slice (default : uint8) (4) (b_57) (usize 0) (
             len_58))))) usize_shift_right (((usize 4) - (len_58)) * (usize 8)).
 
 Definition get_short_length (b_59 : byte_seq) : uint_size :=
@@ -386,7 +387,7 @@ Definition verification_key_from_cert
         ((skip_63) + (seq1_len_len_62)) + (seq1_len_64)
       )) in 
   let pk_66 : seq uint8 :=
-    seq_new_ (default) (usize 0) in 
+    seq_new_ (default : uint8) (usize 0) in 
   let '(seq1_65, pk_66) :=
     foldi (usize 0) (seq_len (seq1_65)) (fun i_67 '(seq1_65, pk_66) =>
       let '(seq1_65, pk_66) :=
@@ -494,7 +495,7 @@ Definition concat_signature
   (s_86 : p256_scalar_t)
   : (result signature_t crypto_error_t) :=
   let signature_87 : seq uint8 :=
-    seq_concat (seq_concat (seq_new_ (default) (usize 0)) (
+    seq_concat (seq_concat (seq_new_ (default : uint8) (usize 0)) (
         nat_mod_to_byte_seq_be (r_85))) (nat_mod_to_byte_seq_be (s_86)) in 
   @Ok signature_t crypto_error_t (signature_87).
 

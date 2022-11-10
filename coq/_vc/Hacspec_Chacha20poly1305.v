@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -27,8 +28,8 @@ Definition init
   let key_block0_410 : block_t :=
     chacha20_key_block0 (key_408) (iv_409) in 
   let poly_key_411 : poly_key_t :=
-    array_from_slice (default) (32) (array_to_seq (key_block0_410)) (usize 0) (
-      usize 32) in 
+    array_from_slice (default : uint8) (32) (array_to_seq (key_block0_410)) (
+      usize 0) (usize 32) in 
   poly1305_init (poly_key_411).
 
 Definition poly1305_update_padded
@@ -47,7 +48,7 @@ Definition finish
   (st_418 : poly_state_t)
   : poly1305_tag_t :=
   let last_block_419 : poly_block_t :=
-    array_new_ (default) (16) in 
+    array_new_ (default : uint8) (16) in 
   let last_block_419 :=
     array_update (last_block_419) (usize 0) (array_to_seq (uint64_to_le_bytes (
         secret (pub_u64 (aad_len_416)) : int64))) in 

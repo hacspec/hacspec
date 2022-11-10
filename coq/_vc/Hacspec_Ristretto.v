@@ -1,4 +1,5 @@
 (** This file was automatically generated using Hacspec **)
+Set Warnings "-notation-overridden,-ambiguous-paths".
 Require Import Hacspec_Lib MachineIntegers.
 From Coq Require Import ZArith.
 Import List.ListNotations.
@@ -539,8 +540,8 @@ Definition encode (u_790 : ristretto_point_t) : ristretto_point_encoded_t :=
     select (neg_fe (y_806)) (is_negative ((x_805) *% (z_inv_800))) (y_806) in 
   let s_809 : field_element_t :=
     abs ((den_inv_808) *% ((z_807) -% (y_806))) in 
-  array_update_start (array_new_ (default) (32)) (nat_mod_to_byte_seq_le (
-      s_809)).
+  array_update_start (array_new_ (default : uint8) (32)) (
+    nat_mod_to_byte_seq_le (s_809)).
 
 Definition decode (u_810 : ristretto_point_encoded_t) : decode_result_t :=
   let ret_811 : (result ristretto_point_t int8) :=
