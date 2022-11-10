@@ -82,5 +82,6 @@ typecheck hacspec-rsa-pkcs1         no-ec   no-fst    json      coq
 typecheck hacspec-rsa-fdh-vrf       no-ec   no-fst    json      coq
 typecheck hacspec-bip-340           no-ec   no-fst    json      coq
 typecheck hacspec-sha1                 ec      fst    json      coq
+typecheck hacspec-coverage-test     no-ec   no-fst    no-json   coq
 # Protocols:
 typecheck tls_cryptolib             no-ec      fst    json      coq
