@@ -76,7 +76,7 @@ impl<T: Numeric + PublicInteger + Copy> Numeric for PublicSeq<T> {
     fn greater_than(self, other: Self) -> bool {
         unimplemented!();
     }
-    fn greater_than_or_qual(self, other: Self) -> bool {
+    fn greater_than_or_equal(self, other: Self) -> bool {
         unimplemented!();
     }
     fn less_than(self, other: Self) -> bool {

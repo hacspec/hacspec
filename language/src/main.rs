@@ -13,19 +13,21 @@ extern crate rustc_session;
 extern crate rustc_span;
 
 mod ast_to_rustspec;
+mod elab_monadic_lets;
 mod hir_to_rustspec;
 mod name_resolution;
 mod rustspec;
 mod rustspec_to_coq;
+mod rustspec_to_coq_base;
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
 mod util;
 
+use glob::Pattern;
 use heck::TitleCase;
 use im::{HashMap, HashSet};
 use itertools::Itertools;
-use regex::Regex;
 use rustc_driver::{Callbacks, Compilation, RunCompiler};
 use rustc_errors::emitter::{ColorConfig, HumanReadableErrorType};
 use rustc_errors::DiagnosticId;
@@ -58,6 +60,7 @@ struct HacspecCallbacks {
     output_type: Option<String>,
     target_directory: String,
     version_control: VersionControlArg,
+    version_control_dir: Option<String>,
 }
 
 const ERROR_OUTPUT_CONFIG: ErrorOutputType =
@@ -455,14 +458,23 @@ fn handle_crate<'tcx>(
                 }
             };
 
-            let file = match &callback.version_control {
-                VersionControlArg::Update => {
+            let file_destination = original_file.join(join_path.clone());
+
+            let mut callback_version_control = callback.version_control.clone();
+
+            let file = match callback_version_control {
+                VersionControlArg::Update if file_destination.exists() => {
                     let file_temp_dir = original_file.join("_temp");
                     let file_temp_dir = file_temp_dir.to_str().unwrap();
 
                     std::fs::create_dir_all(file_temp_dir.clone()).expect("Failed to create dir");
 
                     original_file.join("_temp").join(join_path.clone())
+                }
+                VersionControlArg::Update => {
+                    callback_version_control = VersionControlArg::Initialize;
+                    std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
+                    original_file.join(join_path.clone())
                 }
                 _ => {
                     std::fs::create_dir_all(original_file.clone()).expect("Failed to create dir");
@@ -521,18 +533,22 @@ fn handle_crate<'tcx>(
                 }
             }
 
-            if callback.version_control != VersionControlArg::None {
-                let file_destination = original_file.join(join_path.clone());
+            if callback_version_control != VersionControlArg::None {
                 let file_destination = file_destination.to_str().unwrap();
 
-                let file_vc = original_file.join("_vc").join(join_path.clone());
+                let file_vc_dir = match &callback.version_control_dir {
+                    Some(f) => Path::new(f),
+                    None => original_file,
+                }
+                .join("_vc");
+
+                let file_vc = file_vc_dir.join(join_path.clone());
                 let file_vc = file_vc.to_str().unwrap();
 
-                let file_vc_dir = original_file.join("_vc");
                 let file_vc_dir = file_vc_dir.to_str().unwrap();
-                std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to crate dir");
+                std::fs::create_dir_all(file_vc_dir.clone()).expect("Failed to create dir");
 
-                match callback.version_control {
+                match callback_version_control {
                     VersionControlArg::Initialize => {
                         std::fs::copy(file_destination.clone(), file_vc.clone()).expect(
                             format!(
@@ -547,16 +563,24 @@ fn handle_crate<'tcx>(
                         let file_temp = original_file.join("_temp").join(join_path.clone());
                         let file_temp = file_temp.to_str().unwrap();
 
-                        std::process::Command::new("git")
+                        let git_output = std::process::Command::new("git")
                             .output()
                             .expect("Could not find 'git'. Please install git and try again.");
-                        std::process::Command::new("git")
+                        if !git_output.stderr.is_empty() {
+                            panic!("{:?}", git_output);
+                        }
+                        // https://git-scm.com/docs/git-merge-file
+                        let git_merge_output = std::process::Command::new("git")
                             .arg("merge-file")
                             .arg(file_destination.clone())
                             .arg(file_vc.clone())
                             .arg(file_temp.clone())
                             .output()
                             .expect("git-merge failed");
+                        if !git_merge_output.stderr.is_empty() {
+                            panic!("{:?}", git_merge_output);
+                        }
+
                         std::fs::copy(file_temp.clone(), file_vc.clone()).expect(
                             format!(
                                 "Failed to copy file '{}' to '{}'",
@@ -566,8 +590,7 @@ fn handle_crate<'tcx>(
                             .as_str(),
                         );
                         std::fs::remove_file(file_temp.clone()).expect(
-                            format!("Failed to remove file '{}'", file_destination.clone())
-                                .as_str(),
+                            format!("Failed to remove file '{}'", file_temp.clone()).as_str(),
                         );
                     }
                     VersionControlArg::None => panic!(),
@@ -735,12 +758,12 @@ fn read_crate_pre(
 
     // Pick the package of the given name or the only package available.
     let package: Vec<Package> = if let Some(package_name) = package_name {
-        let re = Regex::new(&format!(r"^{}$", package_name)).unwrap();
+        let glob_pattern = Pattern::new(package_name.as_str()).unwrap();
         let p: Vec<Package> = manifest
             .clone()
             .packages
             .into_iter()
-            .filter(|p| re.is_match(&p.name))
+            .filter(|p| glob_pattern.matches(&p.name))
             .collect();
 
         if p.is_empty() {
@@ -854,6 +877,13 @@ fn main() -> Result<(), usize> {
         }
         None => vc,
     };
+    let vc_dir = match args.iter().position(|a| a == "--vc-dir") {
+        Some(i) => {
+            args.remove(i);
+            Some(args.remove(i))
+        }
+        None => None,
+    };
 
     // Read the --manifest-path argument if present.
     let manifest = match args.iter().position(|a| a == "--manifest-path") {
@@ -888,6 +918,7 @@ fn main() -> Result<(), usize> {
         target_directory: env::current_dir().unwrap().to_str().unwrap().to_owned()
             + "/../target/debug/deps",
         version_control: vc,
+        version_control_dir: vc_dir,
     };
 
     match input_file {

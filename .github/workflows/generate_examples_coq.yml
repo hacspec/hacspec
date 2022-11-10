@@ -1,0 +1,29 @@
+name: Generate Examples - Coq
+
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/hacspec/hacspec_coq:8.16
+      options: --user root
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: |
+        export HOME=/home/coq
+        export PATH=$HOME/.cargo/bin:$PATH
+        env
+        opam switch 4.13.1+flambda
+        eval $(opam env)
+        coqtop --version
+        cargo clean
+        cargo build --verbose
+        cargo install --path language
+        cd examples
+        cargo clean
+        cargo build --verbose
+        cargo hacspec -e v --dir ../coq/src/ --vc-dir ../coq/ --vc-update "*"
+        cd ../coq
+        coq_makefile -f _CoqProject -o Makefile
+        make

@@ -63,7 +63,7 @@ impl Integer for BigInt {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn rotate_left(self, n: usize) -> Self {
         // Taken from https://blog.regehr.org/archives/1063
-        assert!(n < Self::NUM_BITS);
+        assert!(n < Self::NUM_BITS, "not {} < {}", n, Self::NUM_BITS);
         (self.clone() << n) | (self >> ((-(n as i32) as usize) & (Self::NUM_BITS - 1)))
     }
 
@@ -123,19 +123,19 @@ impl Numeric for BigInt {
     // Comparison functions returning bool.
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     fn equal(self, other: Self) -> bool {
-        unimplemented!();
+        self.eq(&other)
     }
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     fn greater_than(self, other: Self) -> bool {
         unimplemented!();
     }
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
-    fn greater_than_or_qual(self, other: Self) -> bool {
+    fn greater_than_or_equal(self, other: Self) -> bool {
         unimplemented!();
     }
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     fn less_than(self, other: Self) -> bool {
-        unimplemented!();
+        self.lt(&other)
     }
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
     fn less_than_or_equal(self, other: Self) -> bool {

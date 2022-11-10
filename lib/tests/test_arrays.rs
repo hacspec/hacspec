@@ -1,3 +1,5 @@
+use core::convert::TryInto;
+
 use hacspec_lib::prelude::*;
 
 mod test_util;
@@ -64,4 +66,13 @@ fn test_ops_u128() {
     let _z = x + y;
     let _z = x - y;
     let _z = x * y;
+}
+
+#[test]
+fn test_to_native() {
+    bytes!(MyBytes, 78);
+    let original: [u8; 78] = get_random_vec_u8(78).try_into().unwrap();
+    let secret_bytes = MyBytes::from_public_slice(&original);
+    let native_public_again = secret_bytes.to_public_array();
+    assert_eq!(original, native_public_again);
 }
