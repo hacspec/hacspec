@@ -171,7 +171,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         Expression::Binary((op, _), e1, e2, op_typ) => {
             make_paren(translate_expression((*e1).0, top_ctx))
                 .append(RcDoc::space())
-                .append(translate_binop(op, op_typ.as_ref().unwrap(), top_ctx))
+                .append(translate_binop(RcDoc::as_string("."), op, op_typ.as_ref().unwrap(), top_ctx))
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression((*e2).0, top_ctx)))
         }

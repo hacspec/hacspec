@@ -482,7 +482,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             let e2 = e2.0;
             make_paren(translate_expression(e1, top_ctx))
                 .append(RcDoc::space())
-                .append(translate_binop(op, op_typ.as_ref().unwrap(), top_ctx))
+                .append(translate_binop(RcDoc::nil(), op, op_typ.as_ref().unwrap(), top_ctx))
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression(e2, top_ctx)))
                 .group()

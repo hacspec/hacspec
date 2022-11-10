@@ -165,6 +165,7 @@ pub(crate) fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 pub(crate) fn translate_binop<'a, 'b>(
+    op_prefix: RcDoc<'a, ()>,
     op: BinOpKind,
     op_typ: &'b Typ,
     top_ctx: &'a TopLevelContext,
@@ -197,7 +198,7 @@ pub(crate) fn translate_binop<'a, 'b>(
                         _ => unimplemented!("{:?}", op),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
-                        return translate_binop(op, inner_ty, top_ctx)
+                        return translate_binop(op_prefix, op, inner_ty, top_ctx)
                     }
                 },
                 _ => (), // should not happen
@@ -208,6 +209,7 @@ pub(crate) fn translate_binop<'a, 'b>(
     match (op, &(op_typ.1).0) {
         (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, inner_ty)) => {
             let _inner_ty_op = translate_binop(
+                op_prefix,
                 op,
                 &(
                     (Borrowing::Consumed, inner_ty.1.clone()),
@@ -238,16 +240,16 @@ pub(crate) fn translate_binop<'a, 'b>(
             ))
         }
         (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
-            RcDoc::as_string(".-")
+            op_prefix.append(RcDoc::as_string("-"))
         }
         (BinOpKind::Add, BaseTyp::Usize) | (BinOpKind::Add, BaseTyp::Isize) => {
-            RcDoc::as_string(".+")
+            op_prefix.append(RcDoc::as_string("+"))
         }
         (BinOpKind::Mul, BaseTyp::Usize) | (BinOpKind::Mul, BaseTyp::Isize) => {
-            RcDoc::as_string(".*")
+            op_prefix.append(RcDoc::as_string("*"))
         }
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
-            RcDoc::as_string("./")
+            op_prefix.append(RcDoc::as_string("/"))
         }
         (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
             RcDoc::as_string("%%")

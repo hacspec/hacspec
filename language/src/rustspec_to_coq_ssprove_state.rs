@@ -916,7 +916,7 @@ fn translate_expression<'a>(
                 },
                 make_paren(trans_e1)
                     .append(RcDoc::space())
-                    .append(translate_binop(op, op_typ.as_ref().unwrap(), top_ctx))
+                    .append(translate_binop(RcDoc::as_string("."), op, op_typ.as_ref().unwrap(), top_ctx))
                     .append(RcDoc::space())
                     .append(make_paren(trans_e2))
                     .group(),

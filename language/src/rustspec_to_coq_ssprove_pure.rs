@@ -573,7 +573,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             make_paren(
                 make_paren(translate_expression(e1, top_ctx))
                     .append(RcDoc::space())
-                    .append(translate_binop(op, op_typ.as_ref().unwrap(), top_ctx))
+                    .append(translate_binop(RcDoc::as_string("."), op, op_typ.as_ref().unwrap(), top_ctx))
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e2, top_ctx)))
                     .group(),

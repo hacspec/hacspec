@@ -165,7 +165,7 @@ Infix ".|" := (MachineIntegers.or) (at level 77) : hacspec_scope.
 Infix "==" := (MachineIntegers.eq) (at level 32) : hacspec_scope.
 (* Definition one := (@one WORDSIZE32). *)
 (* Definition zero := (@zero WORDSIZE32). *)
-Notation "A × B" := (prod A B) (at level 79, left associativity) : hacspec_scope.
+Notation "A '× B" := (prod A B) (at level 79, left associativity) : hacspec_scope.
 
 (*** Positive util *)
 
@@ -1674,7 +1674,7 @@ Definition u64_to_be_bytes' : int64 -> nseq int8 8 :=
 
 Open Scope hacspec_scope.
 
-Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat × int64) : nat × int64 :=
+Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat '× int64) : nat '× int64 :=
   let (n,v) := s in
   (S n, v .+ (@repr WORDSIZE64 ((int8_to_nat i) * 2 ^ (4 * n)))).
 
@@ -1778,6 +1778,6 @@ Global Instance uint8_default : Default uint8 := _.
 Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
   default := nat_mod_zero
 }.
-Global Instance prod_default {A B} `{Default A} `{Default B} : Default (A × B) := {
+Global Instance prod_default {A B} `{Default A} `{Default B} : Default (A '× B) := {
   default := (default, default)
 }.
