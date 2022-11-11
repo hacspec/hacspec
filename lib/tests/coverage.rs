@@ -10,7 +10,7 @@ pub fn big_integer_test () {
     BigInt::ONE();
     BigInt::TWO();
     let mut bi = BigInt::from_literal(1238_u128);
-    BigInt::from_hex_string(&String::from("528"));
+
     bi = bi.get_bit(3);
     bi = bi.set_bit(BigInt::ONE(), 3);
     bi = bi.set(4, BigInt::TWO(), 2);
@@ -48,13 +48,13 @@ pub fn big_integer_test () {
     // bi = bi.pow_mod(BigInt::TWO(), BigInt::from_literal(4_u128)); // unimplemented
     bi = bi.modulo(BigInt::from_literal(4_u128));
     bi = bi.absolute();
-
-    let sbi = BigInt::classify(bi);
 }
 
 #[test]
 fn test_big_integer () {
-    big_integer_test()
+    big_integer_test();
+    BigInt::from_hex_string(&String::from("528")); // expected type &string for function argument, got string
+    let sbi = BigInt::classify(BigInt::from_literal(1238_u128)); // classify is known but its signature is not in Hacspec
 }
 
 fn machine_integer_test () {
@@ -120,7 +120,7 @@ pub fn seq_test () {
     ns = ns.reserve(10);
     ns.len();
     ns = ns.slice(0, 5);
-    ns.native_slice();
+
     ns = ns.into_slice(1,3);
     ns = ns.slice_range(0..2);
     ns = ns.into_slice_range(0..1);
@@ -147,39 +147,24 @@ pub fn seq_test () {
     us = us.update_slice(0, &ns, 1, 1);
     us = us.update(0, &ns);
     us = us.update_start(&ns);
-    us.index(3_u8);
     us[3_u8];
     us[3_u32];
-    &us[3_u32];
     us[3_i32];
-    &us[3_i32];
-    us.index(3_usize..5_usize);
-    us.index_mut(3_u8);
-    us.index_mut(3_u32);
-    us.index_mut(3_i32);
 
     let ps : PublicSeq<u8> = public_byte_seq!(8_u8, 5_u8, 18_u8);
     let secret_seq : Seq<U8> = byte_seq!(8_u8, 5_u8, 18_u8);
 
     let c = Seq::<u8>::from_seq(&ns);
-    Seq::from_native_slice(&[1, 2, 3, 4]);
+
 
     let ss = Seq::<U8>::from_public_seq(&ns);
-    Seq::<U16>::from_public_seq(&Seq::new(0));
-    Seq::<U32>::from_public_seq(&Seq::new(0));
-    Seq::<U64>::from_public_seq(&Seq::new(0));
-    Seq::<U128>::from_public_seq(&Seq::new(0));
+    Seq::<U16>::from_public_seq(&Seq::<u16>::new(0));
+    Seq::<U32>::from_public_seq(&Seq::<u32>::new(0));
+    Seq::<U64>::from_public_seq(&Seq::<u64>::new(0));
+    Seq::<U128>::from_public_seq(&Seq::<u128>::new(0));
 
-    Seq::<U8>::from_hex("ff");
-    Seq::<U8>::from_string(String::from("4682"));
-    PublicSeq::<u8>::from_hex("ff");
-    let e = PublicSeq::<u8>::from_string(String::from("4682"));
 
-    Seq::<U8>::from_public_slice(&[1,2,3]);
-    Seq::<U16>::from_public_slice(&[1,2,3]);
-    Seq::<U32>::from_public_slice(&[1,2,3]);
-    Seq::<U64>::from_public_slice(&[1,2,3]);
-    Seq::<U128>::from_public_slice(&[1,2,3]);
+    let e = PublicSeq::<u8>::new(5);
 
     ps.to_hex();
     ss.to_hex();
@@ -187,7 +172,9 @@ pub fn seq_test () {
 
     let _ = c == d;
     let _ = e == ps;
-    let _ = ss == secret_seq;
+    // clone needed otherwise we get the error:
+    // error[Hacspec]: the variable ss_4853 is not present in the context
+    let _ = ss.clone() == secret_seq;
 
     ss.clone().into_native();
     ss.to_native();
@@ -321,7 +308,30 @@ pub fn seq_test () {
 
 #[test]
 pub fn test_seq () {
-    seq_test()
+    seq_test();
+
+    //array values are not allowed in Hacspec
+    Seq::<u8>::from_native_slice(&[1, 2, 3, 4]);
+    Seq::<U8>::from_public_slice(&[1,2,3]);
+    Seq::<U16>::from_public_slice(&[1,2,3]);
+    Seq::<U32>::from_public_slice(&[1,2,3]);
+    Seq::<U64>::from_public_slice(&[1,2,3]);
+    Seq::<U128>::from_public_slice(&[1,2,3]);
+
+    let mut us = Seq::<u8>::new(5);
+    us.native_slice(); // native_slice is known but its signature is not in Hacspec
+
+    us.index(3_u8); // index is known but its signature is not in Hacspec
+    us.index(3_usize..5_usize);
+    us.index_mut(3_u8); // index_mut is known but its signature is not in Hacspec
+    us.index_mut(3_u32);
+    us.index_mut(3_i32);
+
+    Seq::<U8>::from_hex("ff"); // from_hex is known but its signature is not in Hacspec
+
+    Seq::<U8>::from_string(String::from("4682"));
+    PublicSeq::<u8>::from_hex("ff");
+    PublicSeq::<u8>::from_string(String::from("4682"));
 }
 
 array!(ArrName, 8, U64);
@@ -446,31 +456,14 @@ pub fn array_test () {
     hs.update_start(&hs);
     hs.update_start(&ByteSeq::new(3));
 
-    for i in hs.iter() { }
-
     ByteArrName::from_seq(&hs);
     ByteArrName::from_seq(&ByteSeq::new(128));
 
     let _ = hs[1_u8];
-    let _ = &hs[1_u8];
-    let _ = hs.index_mut(1_u8);
 
     let _ = hs[1_u32];
-    let _ = &hs[1_u32];
-    let _ = hs.index_mut(1_u32);
 
     let _ = hs[1_i32];
-    let _ = &hs[1_i32];
-    let _ = hs.index_mut(1_i32);
-
-    let _ = hs[..];
-
-    ByteArrName::hex_string_to_vec("12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678");
-    ByteArrName::from_hex("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567812345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678");
-
-    ByteArrName::from_public_slice(&[1; 128]);
-    hs.to_public_array();
-    ByteArrName::from_public_array([0; 128]);
 
     // hs.into_le_bytes();
     let _ = s_u64Word == s_u64Word;
@@ -492,5 +485,20 @@ pub fn array_test () {
 
 #[test]
 pub fn test_array () {
-    array_test()
+    array_test();
+
+    let mut hs = ByteArrName::new();
+    for i in hs.iter() { } // expected a non-inclusive range expression here in Hacspec
+    let _ = hs[..]; // missing left bound of the range
+    ByteArrName::from_public_slice(&[1; 128]); // repeat statements are not allowed in hacspec
+    ByteArrName::from_public_array([0; 128]); // repeat statements are not allowed in hacspec
+
+    let _ = hs.index_mut(1_u8); // index_mut is known but its signature is not in Hacspec
+    let _ = hs.index_mut(1_u32);
+    let _ = hs.index_mut(1_i32);
+
+    ByteArrName::hex_string_to_vec("12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678");  // hex_string_to_vec is known but its signature is not in Hacspec
+    ByteArrName::from_hex("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567812345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678"); // from_hex  is known but its signature is not in Hacspec
+
+    hs.to_public_array(); // to_public_array is known but its signature is not in Hacspec
 }
