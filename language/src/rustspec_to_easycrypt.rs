@@ -158,7 +158,7 @@ fn make_begin_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     let ident_str = match x {
         Ident::TopLevel(s) => s.string.clone(),
-        Ident::Local(LocalIdent { id, name: s }) => {
+        Ident::Local(LocalIdent { id, name: s, .. }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
                 Some(c_id) => *c_id,
@@ -194,7 +194,6 @@ fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
 
 fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
     match tau {
-        BaseTyp::Unit => RcDoc::as_string("unit"),
         BaseTyp::Bool => RcDoc::as_string("bool"),
         BaseTyp::UInt8 => RcDoc::as_string("pub_uint8"),
         BaseTyp::Int8 => RcDoc::as_string("pub_int8"),
@@ -238,6 +237,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             })
         }
         BaseTyp::Variable(id) => RcDoc::as_string(format!("'t{}", id.0)),
+        BaseTyp::Tuple(args) if args.is_empty() => RcDoc::as_string("unit"),
         BaseTyp::Tuple(args) => {
             make_typ_tuple(args.into_iter().map(|(arg, _)| translate_base_typ(arg)))
         }
@@ -247,6 +247,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 
@@ -271,6 +272,7 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
+        Literal::UnspecifiedInt(_) => panic!("Got a `UnspecifiedInt` literal: those should have been resolved into concrete types during the typechecking phase"),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
@@ -388,13 +390,15 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern(p: &Pattern) -> RcDoc<()> {
     match p {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
+        Pattern::EnumCase(ty_name, name, None) => translate_ident(Ident::TopLevel(name.0.clone())),
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
             translate_ident(Ident::TopLevel(name.0.clone()))
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(&inner_pat.0)))
         }
-        Pattern::IdentPat(x) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
+        Pattern::LiteralPat(l) => translate_literal(l.clone()),
         Pattern::Tuple(pats) => make_tuple(pats.iter().map(|(pat, _)| translate_pattern(pat))),
     }
 }
@@ -542,7 +546,6 @@ fn translate_prefix_for_func_name<'a>(
 ) -> (RcDoc<'a, ()>, FuncPrefix) {
     match prefix {
         BaseTyp::Bool => panic!(), // should not happen
-        BaseTyp::Unit => panic!(), // should not happen
         BaseTyp::UInt8 => (RcDoc::as_string("pub_uint8"), FuncPrefix::Regular),
         BaseTyp::Int8 => (RcDoc::as_string("pub_int8"), FuncPrefix::Regular),
         BaseTyp::UInt16 => (RcDoc::as_string("pub_uint16"), FuncPrefix::Regular),
@@ -588,6 +591,7 @@ fn translate_prefix_for_func_name<'a>(
             RcDoc::as_string(NAT_MODULE),
             FuncPrefix::NatMod(modulo.0.clone(), bits.0.clone()),
         ),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 
@@ -669,6 +673,11 @@ fn translate_func_name<'a>(
 
 fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match e {
+        Expression::MonadicLet(..) => panic!("TODO: Easycrypt support for Expression::MonadicLet"),
+        Expression::QuestionMark(..) => {
+            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
+            panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
+        }
         Expression::Binary((op, _), e1, e2, op_typ) => {
             let e1 = e1.0;
             let e2 = e2.0;
@@ -864,7 +873,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
             typ.as_ref().map(|(typ, _)| translate_typ(typ)),
             translate_expression(expr.clone(), top_ctx),
         ),
-        Statement::Reassignment((x, _), (e1, _), _question_mark) => make_let_binding(
+        Statement::Reassignment((x, _), _x_typ, (e1, _), _question_mark) => make_let_binding(
             translate_ident(x.clone()),
             None,
             translate_expression(e1.clone(), top_ctx),
@@ -886,7 +895,7 @@ fn translate_statement<'a>(s: &'a Statement, top_ctx: &'a TopLevelContext) -> Rc
                 )
                 .append(RcDoc::as_string("]")),
         ),
-        Statement::ReturnExp(e1) => translate_expression(e1.clone(), top_ctx),
+        Statement::ReturnExp(e1, _) => translate_expression(e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (b1, _), b2, mutated) => {
             let mutated_info = mutated.as_ref().unwrap().as_ref();
             make_let_binding(
@@ -994,7 +1003,7 @@ fn translate_block<'a>(
     )
     .append(match (&b.return_typ, omit_extra_unit) {
         (None, _) => panic!(), // should not happen,
-        (Some(((Borrowing::Consumed, _), (BaseTyp::Unit, _))), false) => {
+        (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
             RcDoc::hardline().append(RcDoc::as_string("()"))
         }
         (Some(_), _) => RcDoc::nil(),
@@ -1030,13 +1039,7 @@ fn translate_item<'a>(i: &'a DecoratedItem, top_ctx: &'a TopLevelContext) -> RcD
                         .group(),
                 ),
             None,
-            translate_block(b, false, top_ctx)
-                .append(if let BaseTyp::Unit = sig.ret.0 {
-                    RcDoc::hardline().append(RcDoc::as_string("()"))
-                } else {
-                    RcDoc::nil()
-                })
-                .group(),
+            translate_block(b, false, top_ctx),
         ),
         Item::ArrayDecl(name, size, cell_t, index_typ) => RcDoc::as_string("type")
             .append(RcDoc::space())

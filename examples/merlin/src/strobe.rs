@@ -16,7 +16,7 @@ use hacspec_sha3::*;
 
 const STROBE_R: u8 = 166u8;
 
-const FLAG_I: u8 = 1u8;
+const FLAG_I: u8 = 1u8; //Not used in this strobe-subset
 const FLAG_A: u8 = 1u8 << 1;
 const FLAG_C: u8 = 1u8 << 2;
 //const FLAG_T: u8 = 1u8 << 3; //Not used in this strobe-subset
@@ -65,11 +65,11 @@ fn transmute_state_to_u8(state: StateU64) -> StateU8 {
 fn run_f(strobe: Strobe) -> Strobe {
 	let (mut state, mut pos, mut pos_begin, cur_fl) = strobe;
 
-	state[pos] = state[pos] ^ U8::classify(pos_begin);
-	state[pos + 1u8] = state[pos + 1u8] ^ U8::classify(0x04u8);
-	state[STROBE_R + 1u8] = state[STROBE_R + 1u8] ^ U8::classify(0x80u8);
+	state[pos] = state[pos] ^ U8(pos_begin);
+	state[pos + 1u8] = state[pos + 1u8] ^ U8(0x04u8);
+	state[STROBE_R + 1u8] = state[STROBE_R + 1u8] ^ U8(0x80u8);
 	let state_U64 = transmute_state_to_u64(state);
-	state = transmute_state_to_u8(keccakf1600(state_U64)); 
+	state = transmute_state_to_u8(keccakf1600(state_U64));
 
 	pos = 0u8;
 	pos_begin = 0u8;
@@ -84,7 +84,7 @@ fn absorb(strobe: Strobe, data: Seq::<U8>) -> Strobe {
 		state[pos] = state[pos] ^ data[i];
 		pos = pos + 1u8;
 		if pos == STROBE_R {
-			let (s, p, pb, cf) = run_f((state.clone(), pos, pos_begin, cur_fl));
+			let (s, p, pb, cf) = run_f((state, pos, pos_begin, cur_fl));
 			state = s;
 			pos = p;
 			pos_begin = pb;
@@ -125,10 +125,10 @@ fn begin_op(strobe: Strobe, flags: u8, more: bool) -> Strobe {
 		cur_fl = flags;
 
 		let mut data = Seq::<U8>::new(2);
-		data[0usize] = U8::classify(old_begin);
-		data[1usize] = U8::classify(flags);
+		data[0usize] = U8(old_begin);
+		data[1usize] = U8(flags);
 
-		let (s, p, pb, cf) = absorb((state.clone(), pos, pos_begin, cur_fl), data);
+		let (s, p, pb, cf) = absorb((state, pos, pos_begin, cur_fl), data);
 		state = s;
 		pos = p;
 		pos_begin = pb;
@@ -138,7 +138,7 @@ fn begin_op(strobe: Strobe, flags: u8, more: bool) -> Strobe {
 		let force_f = 0u8 != (flags & (FLAG_C | FLAG_K));
 
 		if force_f && pos != 0u8 {
-			ret = run_f((state.clone(), pos, pos_begin, cur_fl))
+			ret = run_f((state, pos, pos_begin, cur_fl))
 		}
 		else {
 			ret = (state, pos, pos_begin, cur_fl)

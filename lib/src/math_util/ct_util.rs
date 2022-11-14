@@ -73,7 +73,7 @@ pub fn ct_div<T: Integer + Copy>(a: T, d: T) -> (T, T) {
         r = r << 1;
         r = r.set(0, a, i);
         // The code below is equivalent to the following.
-        // if r.greater_than_or_qual(d) {
+        // if r.greater_than_or_equal(d) {
         //     r = r - d;
         //     q = q.set_bit(T::ONE(), i);
         // }

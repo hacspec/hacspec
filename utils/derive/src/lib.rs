@@ -374,7 +374,7 @@ pub fn derive_numeric_impl(input_struct: proc_macro::TokenStream) -> proc_macro:
             fn greater_than(self, other: Self) -> bool  {
                 panic!("Function not implemented by auto-deriving...")
             }
-            fn greater_than_or_qual(self, other: Self) -> bool  {
+            fn greater_than_or_equal(self, other: Self) -> bool  {
                 panic!("Function not implemented by auto-deriving...")
             }
             fn less_than(self, other: Self) -> bool  {

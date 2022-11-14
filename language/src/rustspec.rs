@@ -2,10 +2,10 @@ use core::cmp::PartialEq;
 use core::hash::Hash;
 use im::HashSet;
 use itertools::Itertools;
-use rustc_span::{Span};
+use rustc_errors::MultiSpan;
+use rustc_span::Span;
 use serde::{ser::SerializeSeq, Serialize, Serializer};
 use std::fmt;
-use rustc_errors::MultiSpan;
 
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Copy)]
 pub struct RustspecSpan(pub Span);
@@ -37,6 +37,7 @@ impl From<Span> for RustspecSpan {
 pub struct LocalIdent {
     pub id: usize,
     pub name: String,
+    pub mutable: bool,
 }
 
 impl fmt::Display for LocalIdent {
@@ -175,7 +176,6 @@ impl fmt::Debug for TypVar {
 
 #[derive(Clone, Hash, PartialEq, Eq, Serialize, Debug)]
 pub enum BaseTyp {
-    Unit,
     Bool,
     UInt128,
     Int128,
@@ -200,12 +200,14 @@ pub enum BaseTyp {
         Vec<TypVar>,
     ), // Cases, type variables
     NaturalInteger(Secrecy, Spanned<String>, Spanned<usize>), // secrecy, modulo value, encoding bits
+    Placeholder,
 }
+
+pub const UnitTyp: BaseTyp = BaseTyp::Tuple(vec![]);
 
 impl fmt::Display for BaseTyp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BaseTyp::Unit => write!(f, "unit"),
             BaseTyp::Bool => write!(f, "bool"),
             BaseTyp::UInt128 => write!(f, "u128"),
             BaseTyp::Int128 => write!(f, "i128"),
@@ -256,6 +258,7 @@ impl fmt::Display for BaseTyp {
             BaseTyp::NaturalInteger(sec, modulo, bits) => {
                 write!(f, "nat[{:?}][modulo {}][bits {}]", sec, modulo.0, bits.0)
             }
+            BaseTyp::Placeholder => write!(f, "_"),
         }
     }
 }
@@ -284,6 +287,7 @@ pub enum Literal {
     UInt8(u8),
     Usize(usize),
     Isize(isize),
+    UnspecifiedInt(u128),
     Str(String),
 }
 
@@ -315,6 +319,29 @@ pub enum BinOpKind {
     Gt,
 }
 
+/// Enumeration of the types allowed as question marks's monad
+/// representation. Named after the [Carrier][std::ops::Carrier]
+/// trait.
+#[derive(Clone, PartialEq, Eq, Debug, Serialize)]
+pub enum CarrierTyp {
+    Result(Spanned<BaseTyp>, Spanned<BaseTyp>),
+    Option(Spanned<BaseTyp>),
+}
+
+/// Extracts the payload type of a carrier type, i.e., `A` is the
+/// payload type of `Either<A, B>`.
+pub fn carrier_payload(carrier: CarrierTyp) -> Spanned<BaseTyp> {
+    match carrier {
+        CarrierTyp::Result(ok, ..) | CarrierTyp::Option(ok, ..) => ok,
+    }
+}
+pub fn carrier_kind(carrier: CarrierTyp) -> EarlyReturnType {
+    match carrier {
+        CarrierTyp::Result(..) => EarlyReturnType::Result,
+        CarrierTyp::Option(..) => EarlyReturnType::Option,
+    }
+}
+
 #[derive(Clone, Serialize, Debug)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
@@ -329,8 +356,27 @@ pub enum Expression {
         Box<Spanned<Expression>>,
         Box<Spanned<Expression>>,
     ),
+    QuestionMark(
+        Box<Spanned<Expression>>,
+        Fillable<CarrierTyp>, // Filled by typechecking phase
+    ),
+    /// One or multiple monadic bindings. For instance, `MonadicLet(M, [(x₀, e₀), …, (xₙ, eₙ)], «f x₀ … xₙ», true)` represents:
+    /// ```haskell
+    /// do x₀ <- e₀
+    ///    …
+    ///    xₙ <- eₙ
+    ///    return $ f x₀ … xₙ
+    /// ```
+    /// Note the boolean flag indicates whether we shall insert a `pure` monadic operation or not (that is, above, shall we have `return $ f x₀ … xₙ` or simply `f x₀ … xₙ`).
+    /// This node appears only after the [question marks elimination][desugar::eliminate_question_marks_in_expressions] phase.
+    MonadicLet(
+        CarrierTyp,                             // Are we dealing with `Result` or `Option`?
+        Vec<(Ident, Box<Spanned<Expression>>)>, // List of "monadic" bindings
+        Box<Spanned<Expression>>,               // body
+        bool, // should we insert a `pure` node? (`pure` being e.g. `Ok`)
+    ),
     Named(Ident),
-    // FuncCall(prefix, name, args)
+    // FuncCall(prefix, name, args, arg_types)
     FuncCall(
         Option<Spanned<BaseTyp>>,
         Spanned<TopLevelIdent>,
@@ -352,10 +398,8 @@ pub enum Expression {
     MatchWith(
         Box<Spanned<Expression>>, // Expression to match
         Vec<(
-            BaseTyp,                  // Type of enum
-            Spanned<TopLevelIdent>,   // Name of case
-            Option<Spanned<Pattern>>, // Payload of case
-            Spanned<Expression>,      // Match arm expression
+            Spanned<Pattern>,    // Payload of case
+            Spanned<Expression>, // Match arm expression
         )>,
     ),
     Lit(Literal),
@@ -379,13 +423,18 @@ pub enum Expression {
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Pattern {
-    IdentPat(Ident),
+    IdentPat(Ident, bool),
     WildCard,
+    LiteralPat(Literal),
     Tuple(Vec<Spanned<Pattern>>),
-    SingleCaseEnum(Spanned<TopLevelIdent>, Box<Spanned<Pattern>>),
+    EnumCase(
+        BaseTyp,
+        Spanned<TopLevelIdent>,
+        Option<Box<Spanned<Pattern>>>,
+    ),
 }
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Serialize, Debug, PartialEq, Eq)]
 pub enum EarlyReturnType {
     Option,
     Result,
@@ -393,12 +442,14 @@ pub enum EarlyReturnType {
 
 #[derive(Clone, Serialize, Debug)]
 pub struct MutatedInfo {
-    pub early_return_type: Fillable<EarlyReturnType>,
+    pub early_return_type: Fillable<CarrierTyp>,
     pub vars: VarSet,
     pub stmt: Statement,
 }
 
 pub type Fillable<T> = Option<T>;
+
+pub type QuestionMarkInfo = Option<(ScopeMutableVars, FunctionDependencies, Fillable<CarrierTyp>)>;
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Statement {
@@ -406,12 +457,13 @@ pub enum Statement {
         Spanned<Pattern>,     // Let-binded pattern
         Option<Spanned<Typ>>, // Typ of the binded expr
         Spanned<Expression>,  // Binded expr
-        bool,                 // Presence of a question mark at the end
+        QuestionMarkInfo,     // Presence of a question mark at the end
     ),
     Reassignment(
-        Spanned<Ident>,      // Variable reassigned
-        Spanned<Expression>, // New value
-        bool,                // Presence of a question mark at the end
+        Spanned<Ident>,         // Variable reassigned
+        Fillable<Spanned<Typ>>, // Type of variable reassigned
+        Spanned<Expression>,    // New value
+        QuestionMarkInfo,       // Presence of a question mark at the end
     ),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -429,24 +481,93 @@ pub enum Statement {
         Spanned<Ident>,      // Array variable
         Spanned<Expression>, // Index value
         Spanned<Expression>, // Cell value
-        bool,                // Presence of a question mark at the end of the cell value expression
+        QuestionMarkInfo,    // Presence of a question mark at the end of the cell value expression
         Fillable<Typ>,       // Type of the array
     ),
-    ReturnExp(Expression),
+    ReturnExp(Expression, Fillable<Typ>),
 }
 
-#[derive(Clone, Serialize, Debug)]
+pub type MutableVar = (Ident, Fillable<Typ>);
+#[derive(Clone, Debug)]
+pub struct ScopeMutableVars {
+    pub external_vars: HashSet<MutableVar>,
+    pub local_vars: HashSet<MutableVar>,
+}
+
+impl Serialize for ScopeMutableVars {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // TODO: Serialize local vars
+        let mut seq = serializer.serialize_seq(Some(self.external_vars.len()))?;
+        for e in &self.external_vars {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+impl ScopeMutableVars {
+    pub fn new() -> Self {
+        ScopeMutableVars {
+            external_vars: HashSet::new(),
+            local_vars: HashSet::new(),
+        }
+    }
+
+    pub fn push(&mut self, value: MutableVar) {
+        self.local_vars.insert(value);
+    }
+
+    pub fn push_external(&mut self, value: MutableVar) {
+        self.external_vars.insert(value);
+    }
+
+    pub fn extend(&mut self, other: ScopeMutableVars) {
+        for i in other.external_vars {
+            self.external_vars.insert(i);
+        }
+        for i in other.local_vars {
+            self.local_vars.insert(i);
+        }
+    }
+}
+
+pub type FunctionDependency = TopLevelIdent;
+
+#[derive(Clone, Debug)]
+pub struct FunctionDependencies(pub HashSet<FunctionDependency>);
+
+impl Serialize for FunctionDependencies {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for e in &self.0 {
+            seq.serialize_element(e)?;
+        }
+        seq.end()
+    }
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct Block {
     pub stmts: Vec<Spanned<Statement>>,
     pub mutated: Fillable<Box<MutatedInfo>>,
     pub return_typ: Fillable<Typ>,
     pub contains_question_mark: Fillable<bool>,
+    pub mutable_vars: ScopeMutableVars,
+    pub function_dependencies: FunctionDependencies,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct FuncSig {
     pub args: Vec<(Spanned<Ident>, Spanned<Typ>)>,
     pub ret: Spanned<BaseTyp>,
+    pub mutable_vars: ScopeMutableVars,
+    pub function_dependencies: FunctionDependencies,
 }
 
 #[derive(Clone, Debug, Serialize)]
