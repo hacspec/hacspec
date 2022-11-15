@@ -3,7 +3,7 @@
 /*
  * This is a subset of strobe needed to implement Merlin. Some functions
  * are therefore missing. See the Strobe specification for details:
- * https://strobe.sourceforge.io/specs/
+ * https://strobe.sourceforge.io/specs/ 
  *
  * Or see the original research paper:
  * https://strobe.sourceforge.io/papers/strobe-latest.pdf
@@ -16,7 +16,7 @@ use hacspec_sha3::*;
 
 const STROBE_R: u8 = 166u8;
 
-//const FLAG_I: u8 = 1u8; //Not used in this strobe-subset
+const FLAG_I: u8 = 1u8; //Not used in this strobe-subset
 const FLAG_A: u8 = 1u8 << 1;
 const FLAG_C: u8 = 1u8 << 2;
 //const FLAG_T: u8 = 1u8 << 3; //Not used in this strobe-subset
@@ -95,6 +95,25 @@ fn absorb(strobe: Strobe, data: Seq::<U8>) -> Strobe {
 	(state, pos, pos_begin, cur_fl)
 }
 
+fn squeeze(strobe: Strobe, mut data: Seq<U8>) -> (Strobe, Seq<U8>) {
+	let (mut state, mut pos, mut pos_begin, mut cur_fl) = strobe;
+
+	for i in 0..data.len() {
+		data[i] = state[pos];
+		state[pos] = U8::classify(0u8);
+		pos = pos + 1u8;
+		if pos == STROBE_R {
+			let (s, p, pb, cf) = run_f((state.clone(), pos, pos_begin, cur_fl));
+			state = s;
+			pos = p;
+			pos_begin = pb;
+			cur_fl = cf;
+		}
+	}
+
+	((state, pos, pos_begin, cur_fl), data)
+}
+
 fn begin_op(strobe: Strobe, flags: u8, more: bool) -> Strobe {
 	let (mut state, mut pos, mut pos_begin, mut cur_fl) = strobe;
 	let mut ret = (state, pos, pos_begin, cur_fl);
@@ -129,7 +148,7 @@ fn begin_op(strobe: Strobe, flags: u8, more: bool) -> Strobe {
 	ret
 }
 
-// === Public Functions === //
+// === External Functions === //
 
 pub fn new_strobe(protocol_label: Seq<U8>) -> Strobe {
 	let mut st = StateU8::new();
@@ -153,4 +172,9 @@ pub fn meta_ad(mut strobe: Strobe, data: Seq<U8>, more: bool) -> Strobe {
 pub fn ad(mut strobe: Strobe, data: Seq<U8>, more: bool) -> Strobe {
 	strobe = begin_op(strobe, FLAG_A, more);
 	absorb(strobe, data)
+}
+
+pub fn prf(mut strobe: Strobe, data: Seq<U8>, more: bool) -> (Strobe, Seq<U8>) {
+	strobe = begin_op(strobe, FLAG_I | FLAG_A | FLAG_C, more);
+	squeeze(strobe, data)
 }
