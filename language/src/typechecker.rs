@@ -2020,7 +2020,14 @@ fn typecheck_pattern(
                         }
                         (Some(_), _) => failure("one case but no payload"),
                         (_, Some(_)) => failure("an unexpected payload"),
-                        _ => Ok((VarContext::new(), pat.clone())),
+                        _ => Ok((
+                            VarContext::new(),
+                            Pattern::EnumCase(
+                                ty_name.clone(),
+                                (pat_enum_name.clone(), pat_enum_name_span.clone()),
+                                None,
+                            ),
+                        )),
                     }
                 }
                 _ => {
