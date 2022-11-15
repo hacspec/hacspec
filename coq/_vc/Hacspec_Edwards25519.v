@@ -275,329 +275,329 @@ Definition constant_d_v : serialized_scalar_t :=
         secret (@repr WORDSIZE8 82) : int8
       ] in  l).
 
-Definition is_negative (x_2101 : ed25519_field_element_t) : uint8 :=
-  (if (nat_mod_bit (x_2101) (usize 0)):bool then (secret (
+Definition is_negative (x_2125 : ed25519_field_element_t) : uint8 :=
+  (if (nat_mod_bit (x_2125) (usize 0)):bool then (secret (
         @repr WORDSIZE8 1) : int8) else (secret (@repr WORDSIZE8 0) : int8)).
 
-Definition compress (p_2102 : ed_point_t) : compressed_ed_point_t :=
-  let '(x_2103, y_2104, z_2105, _) :=
-    p_2102 in 
-  let z_inv_2106 : ed25519_field_element_t :=
-    nat_mod_inv (z_2105) in 
-  let x_2107 : ed25519_field_element_t :=
-    (x_2103) *% (z_inv_2106) in 
-  let y_2108 : ed25519_field_element_t :=
-    (y_2104) *% (z_inv_2106) in 
-  let s_2109 : byte_seq :=
-    nat_mod_to_byte_seq_le (y_2108) in 
-  let s_2109 :=
-    seq_upd s_2109 (usize 31) ((seq_index (s_2109) (usize 31)) .^ ((
-          is_negative (x_2107)) shift_left (usize 7))) in 
-  array_from_slice (default : uint8) (32) (s_2109) (usize 0) (usize 32).
+Definition compress (p_2126 : ed_point_t) : compressed_ed_point_t :=
+  let '(x_2127, y_2128, z_2129, _) :=
+    p_2126 in 
+  let z_inv_2130 : ed25519_field_element_t :=
+    nat_mod_inv (z_2129) in 
+  let x_2131 : ed25519_field_element_t :=
+    (x_2127) *% (z_inv_2130) in 
+  let y_2132 : ed25519_field_element_t :=
+    (y_2128) *% (z_inv_2130) in 
+  let s_2133 : byte_seq :=
+    nat_mod_to_byte_seq_le (y_2132) in 
+  let s_2133 :=
+    seq_upd s_2133 (usize 31) ((seq_index (s_2133) (usize 31)) .^ ((
+          is_negative (x_2131)) shift_left (usize 7))) in 
+  array_from_slice (default : uint8) (32) (s_2133) (usize 0) (usize 32).
 
 Definition sqrt
-  (a_2110 : ed25519_field_element_t)
+  (a_2134 : ed25519_field_element_t)
   : (option ed25519_field_element_t) :=
-  let p3_8_2111 : ed25519_field_element_t :=
+  let p3_8_2135 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (constant_p3_8_v)) : ed25519_field_element_t in 
-  let p1_4_2112 : ed25519_field_element_t :=
+  let p1_4_2136 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (constant_p1_4_v)) : ed25519_field_element_t in 
-  let x_c_2113 : ed25519_field_element_t :=
-    nat_mod_pow_self (a_2110) (p3_8_2111) in 
-  let result_2114 : (option ed25519_field_element_t) :=
+  let x_c_2137 : ed25519_field_element_t :=
+    nat_mod_pow_self (a_2134) (p3_8_2135) in 
+  let result_2138 : (option ed25519_field_element_t) :=
     @None ed25519_field_element_t in 
-  let '(result_2114) :=
-    if ((x_c_2113) *% (x_c_2113)) =.? (a_2110):bool then (let result_2114 :=
-        some (x_c_2113) in 
-      (result_2114)) else ((result_2114)) in 
-  let '(result_2114) :=
-    if ((x_c_2113) *% (x_c_2113)) =.? ((nat_mod_zero ) -% (a_2110)):bool then (
-      let x_2115 : ed25519_field_element_t :=
-        (nat_mod_pow_self (nat_mod_two ) (p1_4_2112)) *% (x_c_2113) in 
-      let result_2114 :=
-        some (x_2115) in 
-      (result_2114)) else ((result_2114)) in 
-  result_2114.
+  let '(result_2138) :=
+    if ((x_c_2137) *% (x_c_2137)) =.? (a_2134):bool then (let result_2138 :=
+        some (x_c_2137) in 
+      (result_2138)) else ((result_2138)) in 
+  let '(result_2138) :=
+    if ((x_c_2137) *% (x_c_2137)) =.? ((nat_mod_zero ) -% (a_2134)):bool then (
+      let x_2139 : ed25519_field_element_t :=
+        (nat_mod_pow_self (nat_mod_two ) (p1_4_2136)) *% (x_c_2137) in 
+      let result_2138 :=
+        some (x_2139) in 
+      (result_2138)) else ((result_2138)) in 
+  result_2138.
 
-Definition check_canonical_point (x_2116 : compressed_ed_point_t) : bool :=
-  let x_2116 :=
-    array_upd x_2116 (usize 31) ((array_index (x_2116) (usize 31)) .& (secret (
+Definition check_canonical_point (x_2140 : compressed_ed_point_t) : bool :=
+  let x_2140 :=
+    array_upd x_2140 (usize 31) ((array_index (x_2140) (usize 31)) .& (secret (
           @repr WORDSIZE8 127) : int8)) in 
-  let x_2117 : big_integer_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (x_2116)) : big_integer_t in 
-  (x_2117) <.? (nat_mod_from_byte_seq_le (
+  let x_2141 : big_integer_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (x_2140)) : big_integer_t in 
+  (x_2141) <.? (nat_mod_from_byte_seq_le (
       array_to_seq (constant_p_v)) : big_integer_t).
 
-Definition decompress (q_2118 : compressed_ed_point_t) : (option ed_point_t) :=
-  let d_2119 : ed25519_field_element_t :=
+Definition decompress (q_2142 : compressed_ed_point_t) : (option ed_point_t) :=
+  let d_2143 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (constant_d_v)) : ed25519_field_element_t in 
-  let x_s_2120 : uint8 :=
-    ((array_index (q_2118) (usize 31)) .& (secret (
+  let x_s_2144 : uint8 :=
+    ((array_index (q_2142) (usize 31)) .& (secret (
           @repr WORDSIZE8 128) : int8)) shift_right (usize 7) in 
-  let y_s_2121 : compressed_ed_point_t :=
-    q_2118 in 
-  let y_s_2121 :=
-    array_upd y_s_2121 (usize 31) ((array_index (y_s_2121) (usize 31)) .& (
+  let y_s_2145 : compressed_ed_point_t :=
+    q_2142 in 
+  let y_s_2145 :=
+    array_upd y_s_2145 (usize 31) ((array_index (y_s_2145) (usize 31)) .& (
         secret (@repr WORDSIZE8 127) : int8)) in 
   let 'tt :=
-    if negb (check_canonical_point (y_s_2121)):bool then (let _ : ed_point_t :=
+    if negb (check_canonical_point (y_s_2145)):bool then (let _ : ed_point_t :=
         @None ed_point_t in 
       tt) else (tt) in 
-  let y_2122 : ed25519_field_element_t :=
+  let y_2146 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
-      array_to_seq (y_s_2121)) : ed25519_field_element_t in 
-  let z_2123 : ed25519_field_element_t :=
+      array_to_seq (y_s_2145)) : ed25519_field_element_t in 
+  let z_2147 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let yy_2124 : ed25519_field_element_t :=
-    (y_2122) *% (y_2122) in 
-  let u_2125 : ed25519_field_element_t :=
-    (yy_2124) -% (z_2123) in 
-  let v_2126 : ed25519_field_element_t :=
-    ((d_2119) *% (yy_2124)) +% (z_2123) in 
-  let xx_2127 : ed25519_field_element_t :=
-    (u_2125) *% (nat_mod_inv (v_2126)) in 
-  let x_2128 : ed25519_field_element_t :=
-    sqrt (xx_2127) in 
-  let x_r_2129 : uint8 :=
-    is_negative (x_2128) in 
+  let yy_2148 : ed25519_field_element_t :=
+    (y_2146) *% (y_2146) in 
+  let u_2149 : ed25519_field_element_t :=
+    (yy_2148) -% (z_2147) in 
+  let v_2150 : ed25519_field_element_t :=
+    ((d_2143) *% (yy_2148)) +% (z_2147) in 
+  let xx_2151 : ed25519_field_element_t :=
+    (u_2149) *% (nat_mod_inv (v_2150)) in 
+  let x_2152 : ed25519_field_element_t :=
+    sqrt (xx_2151) in 
+  let x_r_2153 : uint8 :=
+    is_negative (x_2152) in 
   let 'tt :=
-    if ((x_2128) =.? (nat_mod_zero )) && ((uint8_declassify (x_s_2120)) =.? (
+    if ((x_2152) =.? (nat_mod_zero )) && ((uint8_declassify (x_s_2144)) =.? (
         @repr WORDSIZE8 1)):bool then (let _ : ed_point_t :=
         @None ed_point_t in 
       tt) else (tt) in 
-  let '(x_2128) :=
-    if (uint8_declassify (x_r_2129)) !=.? (uint8_declassify (
-        x_s_2120)):bool then (let x_2128 :=
-        (nat_mod_zero ) -% (x_2128) in 
-      (x_2128)) else ((x_2128)) in 
-  some ((x_2128, y_2122, z_2123, (x_2128) *% (y_2122))).
+  let '(x_2152) :=
+    if (uint8_declassify (x_r_2153)) !=.? (uint8_declassify (
+        x_s_2144)):bool then (let x_2152 :=
+        (nat_mod_zero ) -% (x_2152) in 
+      (x_2152)) else ((x_2152)) in 
+  some ((x_2152, y_2146, z_2147, (x_2152) *% (y_2146))).
 
 Definition decompress_non_canonical
-  (p_2130 : compressed_ed_point_t)
+  (p_2154 : compressed_ed_point_t)
   : (option ed_point_t) :=
-  let d_2131 : ed25519_field_element_t :=
+  let d_2155 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (constant_d_v)) : ed25519_field_element_t in 
-  let x_s_2132 : uint8 :=
-    ((array_index (p_2130) (usize 31)) .& (secret (
+  let x_s_2156 : uint8 :=
+    ((array_index (p_2154) (usize 31)) .& (secret (
           @repr WORDSIZE8 128) : int8)) shift_right (usize 7) in 
-  let y_s_2133 : compressed_ed_point_t :=
-    p_2130 in 
-  let y_s_2133 :=
-    array_upd y_s_2133 (usize 31) ((array_index (y_s_2133) (usize 31)) .& (
+  let y_s_2157 : compressed_ed_point_t :=
+    p_2154 in 
+  let y_s_2157 :=
+    array_upd y_s_2157 (usize 31) ((array_index (y_s_2157) (usize 31)) .& (
         secret (@repr WORDSIZE8 127) : int8)) in 
-  let y_2134 : ed25519_field_element_t :=
+  let y_2158 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
-      array_to_seq (y_s_2133)) : ed25519_field_element_t in 
-  let z_2135 : ed25519_field_element_t :=
+      array_to_seq (y_s_2157)) : ed25519_field_element_t in 
+  let z_2159 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let yy_2136 : ed25519_field_element_t :=
-    (y_2134) *% (y_2134) in 
-  let u_2137 : ed25519_field_element_t :=
-    (yy_2136) -% (z_2135) in 
-  let v_2138 : ed25519_field_element_t :=
-    ((d_2131) *% (yy_2136)) +% (z_2135) in 
-  let xx_2139 : ed25519_field_element_t :=
-    (u_2137) *% (nat_mod_inv (v_2138)) in 
-  let x_2140 : ed25519_field_element_t :=
-    sqrt (xx_2139) in 
-  let x_r_2141 : uint8 :=
-    is_negative (x_2140) in 
-  let '(x_2140) :=
-    if (uint8_declassify (x_r_2141)) !=.? (uint8_declassify (
-        x_s_2132)):bool then (let x_2140 :=
-        (nat_mod_zero ) -% (x_2140) in 
-      (x_2140)) else ((x_2140)) in 
-  some ((x_2140, y_2134, z_2135, (x_2140) *% (y_2134))).
+  let yy_2160 : ed25519_field_element_t :=
+    (y_2158) *% (y_2158) in 
+  let u_2161 : ed25519_field_element_t :=
+    (yy_2160) -% (z_2159) in 
+  let v_2162 : ed25519_field_element_t :=
+    ((d_2155) *% (yy_2160)) +% (z_2159) in 
+  let xx_2163 : ed25519_field_element_t :=
+    (u_2161) *% (nat_mod_inv (v_2162)) in 
+  let x_2164 : ed25519_field_element_t :=
+    sqrt (xx_2163) in 
+  let x_r_2165 : uint8 :=
+    is_negative (x_2164) in 
+  let '(x_2164) :=
+    if (uint8_declassify (x_r_2165)) !=.? (uint8_declassify (
+        x_s_2156)):bool then (let x_2164 :=
+        (nat_mod_zero ) -% (x_2164) in 
+      (x_2164)) else ((x_2164)) in 
+  some ((x_2164, y_2158, z_2159, (x_2164) *% (y_2158))).
 
-Definition encode (p_2142 : ed_point_t) : byte_seq :=
-  let '(x_2143, y_2144, z_2145, _) :=
-    p_2142 in 
-  let z_inv_2146 : ed25519_field_element_t :=
-    nat_mod_inv (z_2145) in 
-  let x_2147 : ed25519_field_element_t :=
-    (x_2143) *% (z_inv_2146) in 
-  let y_2148 : ed25519_field_element_t :=
-    (y_2144) *% (z_inv_2146) in 
-  let s_2149 : byte_seq :=
-    nat_mod_to_byte_seq_le (y_2148) in 
-  let s_2149 :=
-    seq_upd s_2149 (usize 31) ((seq_index (s_2149) (usize 31)) .^ ((
-          is_negative (x_2147)) shift_left (usize 7))) in 
-  s_2149.
+Definition encode (p_2166 : ed_point_t) : byte_seq :=
+  let '(x_2167, y_2168, z_2169, _) :=
+    p_2166 in 
+  let z_inv_2170 : ed25519_field_element_t :=
+    nat_mod_inv (z_2169) in 
+  let x_2171 : ed25519_field_element_t :=
+    (x_2167) *% (z_inv_2170) in 
+  let y_2172 : ed25519_field_element_t :=
+    (y_2168) *% (z_inv_2170) in 
+  let s_2173 : byte_seq :=
+    nat_mod_to_byte_seq_le (y_2172) in 
+  let s_2173 :=
+    seq_upd s_2173 (usize 31) ((seq_index (s_2173) (usize 31)) .^ ((
+          is_negative (x_2171)) shift_left (usize 7))) in 
+  s_2173.
 
-Definition decode (q_s_2150 : byte_seq) : (option ed_point_t) :=
-  let q_2151 : compressed_ed_point_t :=
-    array_from_slice (default : uint8) (32) (q_s_2150) (usize 0) (usize 32) in 
-  decompress (q_2151).
+Definition decode (q_s_2174 : byte_seq) : (option ed_point_t) :=
+  let q_2175 : compressed_ed_point_t :=
+    array_from_slice (default : uint8) (32) (q_s_2174) (usize 0) (usize 32) in 
+  decompress (q_2175).
 
-Definition point_add (p_2152 : ed_point_t) (q_2153 : ed_point_t) : ed_point_t :=
-  let d_c_2154 : ed25519_field_element_t :=
+Definition point_add (p_2176 : ed_point_t) (q_2177 : ed_point_t) : ed_point_t :=
+  let d_c_2178 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (constant_d_v)) : ed25519_field_element_t in 
-  let two_2155 : ed25519_field_element_t :=
+  let two_2179 : ed25519_field_element_t :=
     nat_mod_two  in 
-  let '(x1_2156, y1_2157, z1_2158, t1_2159) :=
-    p_2152 in 
-  let '(x2_2160, y2_2161, z2_2162, t2_2163) :=
-    q_2153 in 
-  let a_2164 : ed25519_field_element_t :=
-    ((y1_2157) -% (x1_2156)) *% ((y2_2161) -% (x2_2160)) in 
-  let b_2165 : ed25519_field_element_t :=
-    ((y1_2157) +% (x1_2156)) *% ((y2_2161) +% (x2_2160)) in 
-  let c_2166 : ed25519_field_element_t :=
-    (((t1_2159) *% (two_2155)) *% (d_c_2154)) *% (t2_2163) in 
-  let d_2167 : ed25519_field_element_t :=
-    ((z1_2158) *% (two_2155)) *% (z2_2162) in 
-  let e_2168 : ed25519_field_element_t :=
-    (b_2165) -% (a_2164) in 
-  let f_2169 : ed25519_field_element_t :=
-    (d_2167) -% (c_2166) in 
-  let g_2170 : ed25519_field_element_t :=
-    (d_2167) +% (c_2166) in 
-  let h_2171 : ed25519_field_element_t :=
-    (b_2165) +% (a_2164) in 
-  let x3_2172 : ed25519_field_element_t :=
-    (e_2168) *% (f_2169) in 
-  let y3_2173 : ed25519_field_element_t :=
-    (g_2170) *% (h_2171) in 
-  let t3_2174 : ed25519_field_element_t :=
-    (e_2168) *% (h_2171) in 
-  let z3_2175 : ed25519_field_element_t :=
-    (f_2169) *% (g_2170) in 
-  (x3_2172, y3_2173, z3_2175, t3_2174).
+  let '(x1_2180, y1_2181, z1_2182, t1_2183) :=
+    p_2176 in 
+  let '(x2_2184, y2_2185, z2_2186, t2_2187) :=
+    q_2177 in 
+  let a_2188 : ed25519_field_element_t :=
+    ((y1_2181) -% (x1_2180)) *% ((y2_2185) -% (x2_2184)) in 
+  let b_2189 : ed25519_field_element_t :=
+    ((y1_2181) +% (x1_2180)) *% ((y2_2185) +% (x2_2184)) in 
+  let c_2190 : ed25519_field_element_t :=
+    (((t1_2183) *% (two_2179)) *% (d_c_2178)) *% (t2_2187) in 
+  let d_2191 : ed25519_field_element_t :=
+    ((z1_2182) *% (two_2179)) *% (z2_2186) in 
+  let e_2192 : ed25519_field_element_t :=
+    (b_2189) -% (a_2188) in 
+  let f_2193 : ed25519_field_element_t :=
+    (d_2191) -% (c_2190) in 
+  let g_2194 : ed25519_field_element_t :=
+    (d_2191) +% (c_2190) in 
+  let h_2195 : ed25519_field_element_t :=
+    (b_2189) +% (a_2188) in 
+  let x3_2196 : ed25519_field_element_t :=
+    (e_2192) *% (f_2193) in 
+  let y3_2197 : ed25519_field_element_t :=
+    (g_2194) *% (h_2195) in 
+  let t3_2198 : ed25519_field_element_t :=
+    (e_2192) *% (h_2195) in 
+  let z3_2199 : ed25519_field_element_t :=
+    (f_2193) *% (g_2194) in 
+  (x3_2196, y3_2197, z3_2199, t3_2198).
 
 Definition point_identity  : ed_point_t :=
   (nat_mod_zero , nat_mod_one , nat_mod_one , nat_mod_zero ).
 
-Definition point_mul (s_2176 : scalar_t) (p_2177 : ed_point_t) : ed_point_t :=
-  let p_2178 : (
+Definition point_mul (s_2200 : scalar_t) (p_2201 : ed_point_t) : ed_point_t :=
+  let p_2202 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    p_2177 in 
-  let q_2179 : (
+    p_2201 in 
+  let q_2203 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let '(p_2178, q_2179) :=
-    foldi (usize 0) (usize 256) (fun i_2180 '(p_2178, q_2179) =>
-      let '(q_2179) :=
-        if nat_mod_bit (s_2176) (i_2180):bool then (let q_2179 :=
-            point_add (q_2179) (p_2178) in 
-          (q_2179)) else ((q_2179)) in 
-      let p_2178 :=
-        point_add (p_2178) (p_2178) in 
-      (p_2178, q_2179))
-    (p_2178, q_2179) in 
-  q_2179.
+  let '(p_2202, q_2203) :=
+    foldi (usize 0) (usize 256) (fun i_2204 '(p_2202, q_2203) =>
+      let '(q_2203) :=
+        if nat_mod_bit (s_2200) (i_2204):bool then (let q_2203 :=
+            point_add (q_2203) (p_2202) in 
+          (q_2203)) else ((q_2203)) in 
+      let p_2202 :=
+        point_add (p_2202) (p_2202) in 
+      (p_2202, q_2203))
+    (p_2202, q_2203) in 
+  q_2203.
 
-Definition point_mul_by_cofactor (p_2181 : ed_point_t) : ed_point_t :=
-  let p2_2182 : (
+Definition point_mul_by_cofactor (p_2205 : ed_point_t) : ed_point_t :=
+  let p2_2206 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_add (p_2181) (p_2181) in 
-  let p4_2183 : (
+    point_add (p_2205) (p_2205) in 
+  let p4_2207 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_add (p2_2182) (p2_2182) in 
-  let p8_2184 : (
+    point_add (p2_2206) (p2_2206) in 
+  let p8_2208 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_add (p4_2183) (p4_2183) in 
-  p8_2184.
+    point_add (p4_2207) (p4_2207) in 
+  p8_2208.
 
-Definition point_neg (p_2185 : ed_point_t) : ed_point_t :=
-  let '(x_2186, y_2187, z_2188, t_2189) :=
-    p_2185 in 
-  ((nat_mod_zero ) -% (x_2186), y_2187, z_2188, (nat_mod_zero ) -% (t_2189)).
+Definition point_neg (p_2209 : ed_point_t) : ed_point_t :=
+  let '(x_2210, y_2211, z_2212, t_2213) :=
+    p_2209 in 
+  ((nat_mod_zero ) -% (x_2210), y_2211, z_2212, (nat_mod_zero ) -% (t_2213)).
 
-Definition point_eq (p_2190 : ed_point_t) (q_2191 : ed_point_t) : bool :=
-  let '(x1_2192, y1_2193, z1_2194, _) :=
-    p_2190 in 
-  let '(x2_2195, y2_2196, z2_2197, _) :=
-    q_2191 in 
-  (((x1_2192) *% (z2_2197)) =.? ((x2_2195) *% (z1_2194))) && (((y1_2193) *% (
-        z2_2197)) =.? ((y2_2196) *% (z1_2194))).
+Definition point_eq (p_2214 : ed_point_t) (q_2215 : ed_point_t) : bool :=
+  let '(x1_2216, y1_2217, z1_2218, _) :=
+    p_2214 in 
+  let '(x2_2219, y2_2220, z2_2221, _) :=
+    q_2215 in 
+  (((x1_2216) *% (z2_2221)) =.? ((x2_2219) *% (z1_2218))) && (((y1_2217) *% (
+        z2_2221)) =.? ((y2_2220) *% (z1_2218))).
 
-Definition point_normalize (q_2198 : ed_point_t) : ed_point_t :=
-  let '(qx_2199, qy_2200, qz_2201, _) :=
-    q_2198 in 
-  let px_2202 : ed25519_field_element_t :=
-    (qx_2199) *% (nat_mod_inv (qz_2201)) in 
-  let py_2203 : ed25519_field_element_t :=
-    (qy_2200) *% (nat_mod_inv (qz_2201)) in 
-  let pz_2204 : ed25519_field_element_t :=
+Definition point_normalize (q_2222 : ed_point_t) : ed_point_t :=
+  let '(qx_2223, qy_2224, qz_2225, _) :=
+    q_2222 in 
+  let px_2226 : ed25519_field_element_t :=
+    (qx_2223) *% (nat_mod_inv (qz_2225)) in 
+  let py_2227 : ed25519_field_element_t :=
+    (qy_2224) *% (nat_mod_inv (qz_2225)) in 
+  let pz_2228 : ed25519_field_element_t :=
     nat_mod_one  in 
-  let pt_2205 : ed25519_field_element_t :=
-    (px_2202) *% (py_2203) in 
-  (px_2202, py_2203, pz_2204, pt_2205).
+  let pt_2229 : ed25519_field_element_t :=
+    (px_2226) *% (py_2227) in 
+  (px_2226, py_2227, pz_2228, pt_2229).
 
 Definition secret_expand
-  (sk_2206 : secret_key_t)
+  (sk_2230 : secret_key_t)
   : (serialized_scalar_t × serialized_scalar_t) :=
-  let h_2207 : sha512_digest_t :=
-    sha512 (seq_from_slice (sk_2206) (usize 0) (usize 32)) in 
-  let h_d_2208 : serialized_scalar_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (h_2207)) (usize 32) (
+  let h_2231 : sha512_digest_t :=
+    sha512 (seq_from_slice (sk_2230) (usize 0) (usize 32)) in 
+  let h_d_2232 : serialized_scalar_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (h_2231)) (usize 32) (
       usize 32) in 
-  let s_2209 : serialized_scalar_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (h_2207)) (usize 0) (
+  let s_2233 : serialized_scalar_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (h_2231)) (usize 0) (
       usize 32) in 
-  let s_2209 :=
-    array_upd s_2209 (usize 0) ((array_index (s_2209) (usize 0)) .& (secret (
+  let s_2233 :=
+    array_upd s_2233 (usize 0) ((array_index (s_2233) (usize 0)) .& (secret (
           @repr WORDSIZE8 248) : int8)) in 
-  let s_2209 :=
-    array_upd s_2209 (usize 31) ((array_index (s_2209) (usize 31)) .& (secret (
+  let s_2233 :=
+    array_upd s_2233 (usize 31) ((array_index (s_2233) (usize 31)) .& (secret (
           @repr WORDSIZE8 127) : int8)) in 
-  let s_2209 :=
-    array_upd s_2209 (usize 31) ((array_index (s_2209) (usize 31)) .| (secret (
+  let s_2233 :=
+    array_upd s_2233 (usize 31) ((array_index (s_2233) (usize 31)) .| (secret (
           @repr WORDSIZE8 64) : int8)) in 
-  (s_2209, h_d_2208).
+  (s_2233, h_d_2232).
 
-Definition secret_to_public (sk_2210 : secret_key_t) : public_key_t :=
-  let '(s_2211, _) :=
-    secret_expand (sk_2210) in 
-  let base_2212 : (
+Definition secret_to_public (sk_2234 : secret_key_t) : public_key_t :=
+  let '(s_2235, _) :=
+    secret_expand (sk_2234) in 
+  let base_2236 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let ss_2213 : scalar_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (s_2211)) : scalar_t in 
-  let a_2214 : (
+  let ss_2237 : scalar_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (s_2235)) : scalar_t in 
+  let a_2238 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (ss_2213) (base_2212) in 
-  compress (a_2214).
+    point_mul (ss_2237) (base_2236) in 
+  compress (a_2238).
 
-Definition check_canonical_scalar (s_2215 : serialized_scalar_t) : bool :=
-  (if ((uint8_declassify ((array_index (s_2215) (usize 31)) .& (secret (
+Definition check_canonical_scalar (s_2239 : serialized_scalar_t) : bool :=
+  (if ((uint8_declassify ((array_index (s_2239) (usize 31)) .& (secret (
               @repr WORDSIZE8 224) : int8))) !=.? (
         @repr WORDSIZE8 0)):bool then (false) else ((nat_mod_from_byte_seq_le (
-          array_to_seq (s_2215)) : big_integer_t) <.? (
+          array_to_seq (s_2239)) : big_integer_t) <.? (
         nat_mod_from_byte_seq_le (
           array_to_seq (constant_l_v)) : big_integer_t))).
 

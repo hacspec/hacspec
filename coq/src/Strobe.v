@@ -13,6 +13,9 @@ Require Import Hacspec_Sha3.
 Definition strobe_r_v : int8 :=
   @repr WORDSIZE8 166.
 
+Definition flag_i_v : int8 :=
+  @repr WORDSIZE8 1.
+
 Definition flag_a_v : int8 :=
   (@repr WORDSIZE8 1) shift_left (usize 1).
 
@@ -137,63 +140,109 @@ Definition absorb (strobe_1002 : strobe_t) (data_1003 : seq uint8) : strobe_t :=
     (state_1004, pos_1005, pos_begin_1006, cur_fl_1007) in 
   (state_1004, pos_1005, pos_begin_1006, cur_fl_1007).
 
-Definition begin_op
+Definition squeeze
   (strobe_1013 : strobe_t)
-  (flags_1014 : int8)
-  (more_1015 : bool)
-  : strobe_t :=
-  let '(state_1016, pos_1017, pos_begin_1018, cur_fl_1019) :=
+  (data_1014 : seq uint8)
+  : (strobe_t × seq uint8) :=
+  let '(state_1015, pos_1016, pos_begin_1017, cur_fl_1018) :=
     strobe_1013 in 
-  let ret_1020 : (state_uint8_t × int8 × int8 × int8) :=
-    (state_1016, pos_1017, pos_begin_1018, cur_fl_1019) in 
-  let '(state_1016, pos_1017, pos_begin_1018, cur_fl_1019, ret_1020) :=
-    if negb (more_1015):bool then (let old_begin_1021 : int8 :=
-        pos_begin_1018 in 
-      let pos_begin_1018 :=
-        (pos_1017) .+ (@repr WORDSIZE8 1) in 
-      let cur_fl_1019 :=
-        flags_1014 in 
-      let data_1022 : seq uint8 :=
-        seq_new_ (default : uint8) (usize 2) in 
-      let data_1022 :=
-        seq_upd data_1022 (usize 0) (secret (old_begin_1021) : int8) in 
-      let data_1022 :=
-        seq_upd data_1022 (usize 1) (secret (flags_1014) : int8) in 
-      let '(s_1023, p_1024, pb_1025, cf_1026) :=
-        absorb ((state_1016, pos_1017, pos_begin_1018, cur_fl_1019)) (
-          data_1022) in 
-      let state_1016 :=
-        s_1023 in 
-      let pos_1017 :=
-        p_1024 in 
-      let pos_begin_1018 :=
-        pb_1025 in 
-      let cur_fl_1019 :=
-        cf_1026 in 
-      let force_f_1027 : bool :=
-        (@repr WORDSIZE8 0) !=.? ((flags_1014) .& ((flag_c_v) .| (
-              flag_k_v))) in 
-      let '(ret_1020) :=
-        if (force_f_1027) && ((pos_1017) !=.? (@repr WORDSIZE8 0)):bool then (
-          let ret_1020 :=
-            run_f ((state_1016, pos_1017, pos_begin_1018, cur_fl_1019)) in 
-          (ret_1020)) else (let ret_1020 :=
-            (state_1016, pos_1017, pos_begin_1018, cur_fl_1019) in 
-          (ret_1020)) in 
-      (state_1016, pos_1017, pos_begin_1018, cur_fl_1019, ret_1020)) else ((
-        state_1016,
-        pos_1017,
-        pos_begin_1018,
-        cur_fl_1019,
-        ret_1020
-      )) in 
-  ret_1020.
+  let '(data_1014, state_1015, pos_1016, pos_begin_1017, cur_fl_1018) :=
+    foldi (usize 0) (seq_len (data_1014)) (fun i_1019 '(
+        data_1014,
+        state_1015,
+        pos_1016,
+        pos_begin_1017,
+        cur_fl_1018
+      ) =>
+      let data_1014 :=
+        seq_upd data_1014 (i_1019) (array_index (state_1015) (pos_1016)) in 
+      let state_1015 :=
+        array_upd state_1015 (pos_1016) (uint8_classify (@repr WORDSIZE8 0)) in 
+      let pos_1016 :=
+        (pos_1016) .+ (@repr WORDSIZE8 1) in 
+      let '(state_1015, pos_1016, pos_begin_1017, cur_fl_1018) :=
+        if (pos_1016) =.? (strobe_r_v):bool then (let '(
+              s_1020,
+              p_1021,
+              pb_1022,
+              cf_1023
+            ) :=
+            run_f (((state_1015), pos_1016, pos_begin_1017, cur_fl_1018)) in 
+          let state_1015 :=
+            s_1020 in 
+          let pos_1016 :=
+            p_1021 in 
+          let pos_begin_1017 :=
+            pb_1022 in 
+          let cur_fl_1018 :=
+            cf_1023 in 
+          (state_1015, pos_1016, pos_begin_1017, cur_fl_1018)) else ((
+            state_1015,
+            pos_1016,
+            pos_begin_1017,
+            cur_fl_1018
+          )) in 
+      (data_1014, state_1015, pos_1016, pos_begin_1017, cur_fl_1018))
+    (data_1014, state_1015, pos_1016, pos_begin_1017, cur_fl_1018) in 
+  ((state_1015, pos_1016, pos_begin_1017, cur_fl_1018), data_1014).
 
-Definition new_strobe (protocol_label_1028 : seq uint8) : strobe_t :=
-  let st_1029 : state_uint8_t :=
+Definition begin_op
+  (strobe_1024 : strobe_t)
+  (flags_1025 : int8)
+  (more_1026 : bool)
+  : strobe_t :=
+  let '(state_1027, pos_1028, pos_begin_1029, cur_fl_1030) :=
+    strobe_1024 in 
+  let ret_1031 : (state_uint8_t × int8 × int8 × int8) :=
+    (state_1027, pos_1028, pos_begin_1029, cur_fl_1030) in 
+  let '(state_1027, pos_1028, pos_begin_1029, cur_fl_1030, ret_1031) :=
+    if negb (more_1026):bool then (let old_begin_1032 : int8 :=
+        pos_begin_1029 in 
+      let pos_begin_1029 :=
+        (pos_1028) .+ (@repr WORDSIZE8 1) in 
+      let cur_fl_1030 :=
+        flags_1025 in 
+      let data_1033 : seq uint8 :=
+        seq_new_ (default : uint8) (usize 2) in 
+      let data_1033 :=
+        seq_upd data_1033 (usize 0) (secret (old_begin_1032) : int8) in 
+      let data_1033 :=
+        seq_upd data_1033 (usize 1) (secret (flags_1025) : int8) in 
+      let '(s_1034, p_1035, pb_1036, cf_1037) :=
+        absorb ((state_1027, pos_1028, pos_begin_1029, cur_fl_1030)) (
+          data_1033) in 
+      let state_1027 :=
+        s_1034 in 
+      let pos_1028 :=
+        p_1035 in 
+      let pos_begin_1029 :=
+        pb_1036 in 
+      let cur_fl_1030 :=
+        cf_1037 in 
+      let force_f_1038 : bool :=
+        (@repr WORDSIZE8 0) !=.? ((flags_1025) .& ((flag_c_v) .| (
+              flag_k_v))) in 
+      let '(ret_1031) :=
+        if (force_f_1038) && ((pos_1028) !=.? (@repr WORDSIZE8 0)):bool then (
+          let ret_1031 :=
+            run_f ((state_1027, pos_1028, pos_begin_1029, cur_fl_1030)) in 
+          (ret_1031)) else (let ret_1031 :=
+            (state_1027, pos_1028, pos_begin_1029, cur_fl_1030) in 
+          (ret_1031)) in 
+      (state_1027, pos_1028, pos_begin_1029, cur_fl_1030, ret_1031)) else ((
+        state_1027,
+        pos_1028,
+        pos_begin_1029,
+        cur_fl_1030,
+        ret_1031
+      )) in 
+  ret_1031.
+
+Definition new_strobe (protocol_label_1039 : seq uint8) : strobe_t :=
+  let st_1040 : state_uint8_t :=
     array_new_ (default : uint8) (200) in 
-  let st_1029 :=
-    array_set_chunk (st_1029) (usize 6) (usize 0) ([
+  let st_1040 :=
+    array_set_chunk (st_1040) (usize 6) (usize 0) ([
         secret (@repr WORDSIZE8 1) : int8;
         secret (@repr WORDSIZE8 168) : int8;
         secret (@repr WORDSIZE8 1) : int8;
@@ -201,8 +250,8 @@ Definition new_strobe (protocol_label_1028 : seq uint8) : strobe_t :=
         secret (@repr WORDSIZE8 1) : int8;
         secret (@repr WORDSIZE8 96) : int8
       ]) in 
-  let st_1029 :=
-    array_set_chunk (st_1029) (usize 6) (usize 1) ([
+  let st_1040 :=
+    array_set_chunk (st_1040) (usize 6) (usize 1) ([
         secret (@repr WORDSIZE8 83) : int8;
         secret (@repr WORDSIZE8 84) : int8;
         secret (@repr WORDSIZE8 82) : int8;
@@ -210,8 +259,8 @@ Definition new_strobe (protocol_label_1028 : seq uint8) : strobe_t :=
         secret (@repr WORDSIZE8 66) : int8;
         secret (@repr WORDSIZE8 69) : int8
       ]) in 
-  let st_1029 :=
-    array_set_chunk (st_1029) (usize 6) (usize 2) ([
+  let st_1040 :=
+    array_set_chunk (st_1040) (usize 6) (usize 2) ([
         secret (@repr WORDSIZE8 118) : int8;
         secret (@repr WORDSIZE8 49) : int8;
         secret (@repr WORDSIZE8 46) : int8;
@@ -219,28 +268,38 @@ Definition new_strobe (protocol_label_1028 : seq uint8) : strobe_t :=
         secret (@repr WORDSIZE8 46) : int8;
         secret (@repr WORDSIZE8 50) : int8
       ]) in 
-  let st_uint64_1030 : state_t :=
-    transmute_state_to_u64 (st_1029) in 
-  let st_1029 :=
-    transmute_state_to_u8 (keccakf1600 (st_uint64_1030)) in 
-  meta_ad ((st_1029, @repr WORDSIZE8 0, @repr WORDSIZE8 0, @repr WORDSIZE8 0)) (
-    protocol_label_1028) (false).
+  let st_uint64_1041 : state_t :=
+    transmute_state_to_u64 (st_1040) in 
+  let st_1040 :=
+    transmute_state_to_u8 (keccakf1600 (st_uint64_1041)) in 
+  meta_ad ((st_1040, @repr WORDSIZE8 0, @repr WORDSIZE8 0, @repr WORDSIZE8 0)) (
+    protocol_label_1039) (false).
 
 Definition meta_ad
-  (strobe_1031 : strobe_t)
-  (data_1032 : seq uint8)
-  (more_1033 : bool)
+  (strobe_1042 : strobe_t)
+  (data_1043 : seq uint8)
+  (more_1044 : bool)
   : strobe_t :=
-  let strobe_1031 :=
-    begin_op (strobe_1031) ((flag_m_v) .| (flag_a_v)) (more_1033) in 
-  absorb (strobe_1031) (data_1032).
+  let strobe_1042 :=
+    begin_op (strobe_1042) ((flag_m_v) .| (flag_a_v)) (more_1044) in 
+  absorb (strobe_1042) (data_1043).
 
 Definition ad
-  (strobe_1034 : strobe_t)
-  (data_1035 : seq uint8)
-  (more_1036 : bool)
+  (strobe_1045 : strobe_t)
+  (data_1046 : seq uint8)
+  (more_1047 : bool)
   : strobe_t :=
-  let strobe_1034 :=
-    begin_op (strobe_1034) (flag_a_v) (more_1036) in 
-  absorb (strobe_1034) (data_1035).
+  let strobe_1045 :=
+    begin_op (strobe_1045) (flag_a_v) (more_1047) in 
+  absorb (strobe_1045) (data_1046).
+
+Definition prf
+  (strobe_1048 : strobe_t)
+  (data_1049 : seq uint8)
+  (more_1050 : bool)
+  : (strobe_t × seq uint8) :=
+  let strobe_1048 :=
+    begin_op (strobe_1048) (((flag_i_v) .| (flag_a_v)) .| (flag_c_v)) (
+      more_1050) in 
+  squeeze (strobe_1048) (data_1049).
 
