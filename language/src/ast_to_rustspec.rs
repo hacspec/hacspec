@@ -200,12 +200,27 @@ fn translate_expr_name(
             Err(())
         }
         Some(segment) => match &segment.args {
-            None => Ok((
-                ExprTranslationResult::TransExpr(Expression::Named(
-                    translate_ident(&segment.ident).0,
-                )),
-                span.clone().into(),
-            )),
+            None => {
+                let name = segment.ident.name.to_ident_string();
+                Ok((
+                    ExprTranslationResult::TransExpr(if CARRIER_CONS_NAMES.contains(&&*name) {
+                        Expression::EnumInject(
+                            BaseTyp::Placeholder,
+                            (
+                                TopLevelIdent {
+                                    string: name.clone(),
+                                    kind: TopLevelIdentKind::EnumConstructor,
+                                },
+                                span.clone().into(),
+                            ),
+                            None,
+                        )
+                    } else {
+                        Expression::Named(translate_ident(&segment.ident).0)
+                    }),
+                    span.clone().into(),
+                ))
+            }
             Some(_) => {
                 sess.span_rustspec_err(
                     path.span,
