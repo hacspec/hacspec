@@ -916,7 +916,12 @@ fn translate_expression<'a>(
                 },
                 make_paren(trans_e1)
                     .append(RcDoc::space())
-                    .append(translate_binop(RcDoc::as_string("."), op, op_typ.as_ref().unwrap(), top_ctx))
+                    .append(translate_binop(
+                        RcDoc::as_string("."),
+                        op,
+                        op_typ.as_ref().unwrap(),
+                        top_ctx,
+                    ))
                     .append(RcDoc::space())
                     .append(make_paren(trans_e2))
                     .group(),
@@ -1005,17 +1010,17 @@ fn translate_expression<'a>(
 
             (
                 ass,
-                make_paren(translate_enum_case_name(enum_name.clone(), case_name.0.clone(), true)
-                           .append(trans)
-                           .append(RcDoc::as_string(" : "),)
-                           .append(translate_base_typ(enum_name))
-                    // .append(match enum_name {
-                    //     BaseTyp::Named(name, _) if (name.0).string == "Option" => 
-                    //         RcDoc::as_string(": option _"),
-                    //     BaseTyp::Named(name, _) if (name.0).string == "Result" => 
-                    //         RcDoc::as_string(": result _ _"),
-                    //     _ => RcDoc::nil(),
-                    // })
+                make_paren(
+                    translate_enum_case_name(enum_name.clone(), case_name.0.clone(), true)
+                        .append(trans)
+                        .append(RcDoc::as_string(" : "))
+                        .append(translate_base_typ(enum_name)), // .append(match enum_name {
+                                                                //     BaseTyp::Named(name, _) if (name.0).string == "Option" =>
+                                                                //         RcDoc::as_string(": option _"),
+                                                                //     BaseTyp::Named(name, _) if (name.0).string == "Result" =>
+                                                                //         RcDoc::as_string(": result _ _"),
+                                                                //     _ => RcDoc::nil(),
+                                                                // })
                 ),
             )
         }
@@ -1407,7 +1412,7 @@ fn translate_statements<'a>(
     };
 
     match s.0 {
-        Statement::LetBinding((pat, _), typ, (expr, _), question_mark) => {
+        Statement::LetBinding((pat, _), typ, (expr, _), carrier, question_mark) => {
             let (ass_expr, trans_expr) = translate_expression(expr.clone(), top_ctx, inline);
             let trans_stmt = translate_statements(
                 statements,
@@ -1418,7 +1423,7 @@ fn translate_statements<'a>(
             );
 
             let expr = match question_mark {
-                Some((smv_bind, function_dependencies_bind, early_return_typ)) => bind_code(
+                Some((smv_bind, function_dependencies_bind)) => bind_code(
                     code_block_wrap(
                         RcDoc::concat(ass_expr.into_iter())
                             .append(RcDoc::as_string("@ret _ ").append(make_paren(trans_expr))),
@@ -1429,7 +1434,7 @@ fn translate_statements<'a>(
                         )), // TODO:?
                         None,
                     ),
-                    early_return_typ,              // None,
+                    carrier,                       // None,
                     typ.map(|((_, (x, _)), _)| x), // = early_return_typ
                     if let Pattern::IdentPat(_i, true) = pat.clone() {
                         true
@@ -1476,7 +1481,7 @@ fn translate_statements<'a>(
 
             expr
         }
-        Statement::Reassignment((x, _), x_typ, (e1, _), question_mark) => {
+        Statement::Reassignment((x, _), x_typ, (e1, _), carrier, question_mark) => {
             let (ass_e1, trans_e1) = translate_expression(e1.clone(), top_ctx, inline);
             let trans_stmt = translate_statements(
                 statements,
@@ -1495,9 +1500,9 @@ fn translate_statements<'a>(
             );
 
             let expr = match question_mark {
-                Some((_smv_bind, function_dependencies_bind, early_return_typ)) => bind_code(
+                Some((_smv_bind, function_dependencies_bind)) => bind_code(
                     code_block_wrap(trans_e1, None, None, None),
-                    early_return_typ,
+                    carrier,
                     x_typ.clone().map(|((_, (base_typ, _)), _)| base_typ),
                     true,
                     Pattern::IdentPat(x.clone(), true),
@@ -1523,7 +1528,7 @@ fn translate_statements<'a>(
 
             expr
         }
-        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), carrier, question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.clone().unwrap(), top_ctx);
             let (ass_e1, trans_e1) = translate_expression(e1.clone(), top_ctx, inline);
             let (ass_e2, trans_e2) = translate_expression(e2.clone(), top_ctx, inline);
@@ -1537,9 +1542,9 @@ fn translate_statements<'a>(
             );
 
             let expr = match question_mark {
-                Some((_smv_bind, function_dependencies_bind, early_return_typ)) => bind_code(
+                Some((_smv_bind, function_dependencies_bind)) => bind_code(
                     trans_e2,
-                    early_return_typ,
+                    carrier,
                     typ.clone().map(|(_, (x, _))| x),
                     false, // TODO: is this never mutable?
                     Pattern::IdentPat(
@@ -1642,11 +1647,9 @@ fn translate_statements<'a>(
             let either_blocks_contains_question_mark = b1_question_mark || b2_question_mark;
             b1.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
-                mutated_info.early_return_type.clone(),
-                if either_blocks_contains_question_mark
-                // b1_question_mark
-                {
-                    Some(ScopeMutableVars::new())
+                if either_blocks_contains_question_mark {
+                    // b1_question_mark
+                    mutated_info.early_return_type.clone()
                 } else {
                     None
                 },
@@ -1674,11 +1677,10 @@ fn translate_statements<'a>(
                 None => translate_statements(
                     vec![add_ok_if_result(
                         mutated_info.stmt.clone(),
-                        mutated_info.early_return_type.clone(),
                         if either_blocks_contains_question_mark
                         // b1_question_mark
                         {
-                            Some(b1.mutable_vars.clone())
+                            mutated_info.early_return_type.clone()
                         } else {
                             None
                         },
@@ -1692,11 +1694,10 @@ fn translate_statements<'a>(
                 Some((mut b2, _)) => {
                     b2.stmts.push(add_ok_if_result(
                         mutated_info.stmt.clone(),
-                        mutated_info.early_return_type.clone(),
                         if either_blocks_contains_question_mark
                         // b2_question_mark
                         {
-                            Some(b2.mutable_vars.clone())
+                            mutated_info.early_return_type.clone()
                         } else {
                             None
                         },
@@ -1858,9 +1859,8 @@ fn translate_statements<'a>(
             // ));
             b.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
-                mutated_info.early_return_type.clone(),
                 if b_question_mark {
-                    Some(b.mutable_vars.clone())
+                    mutated_info.early_return_type.clone()
                 } else {
                     None
                 },

@@ -2394,7 +2394,7 @@ fn typecheck_statement(
 ) -> TypecheckingResult<(Statement, Typ, VarContext, VarSet)> {
     log::trace!("typecheck_statement ({:?}, {:?})", s, s_span);
     match &s {
-        Statement::LetBinding((pat, pat_span), typ, ref expr, question_mark) => {
+        Statement::LetBinding((pat, pat_span), typ, ref expr, _, question_mark) => {
             log::trace!("   Statement::LetBinding");
             log::trace!("       expr: {:?}", expr);
             #[cfg(feature = "dev")]
@@ -2473,21 +2473,18 @@ fn typecheck_statement(
                     _ => (),
                 }
             };
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = question_mark.clone().map(|(_, fun_dep)| {
+                (
+                    translate_var_context_to_mut_vars(ret_var_context.clone()),
+                    fun_dep,
+                )
+            });
             Ok((
                 Statement::LetBinding(
                     (pat.clone(), pat_span.clone()),
                     typ.clone(),
                     (new_expr, expr.1.clone()),
+                    carrier,
                     question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
@@ -2495,7 +2492,7 @@ fn typecheck_statement(
                 VarSet(HashSet::new()),
             ))
         }
-        Statement::Reassignment((x, x_span), _x_typ, e, question_mark) => {
+        Statement::Reassignment((x, x_span), _x_typ, e, _, question_mark) => {
             log::trace!("   Statement::Reassignment");
             let (new_e, e_typ, carrier, new_var_context) = typecheck_expression_qm(
                 sess,
@@ -2532,21 +2529,18 @@ fn typecheck_statement(
                 return Err(());
             };
             let ret_var_context = add_var(&x, &x_typ, &new_var_context);
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = question_mark.clone().map(|(_, fun_dep)| {
+                (
+                    translate_var_context_to_mut_vars(ret_var_context.clone()),
+                    fun_dep,
+                )
+            });
             Ok((
                 Statement::Reassignment(
                     (x.clone(), x_span.clone()),
                     Some((x_typ.clone(), x_span.clone())),
                     (new_e, e.1.clone()),
+                    carrier,
                     question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
@@ -2557,7 +2551,7 @@ fn typecheck_statement(
                 })),
             ))
         }
-        Statement::ArrayUpdate((x, x_span), e1, e2, question_mark, _) => {
+        Statement::ArrayUpdate((x, x_span), e1, e2, _, question_mark, _) => {
             log::trace!("   Statement::ArrayUpdate");
             let (new_e1, e1_t, carrier1, var_context) = typecheck_expression_qm(
                 sess,
@@ -2623,22 +2617,22 @@ fn typecheck_statement(
                 return Err(());
             };
 
-            let question_mark = match (carrier1, carrier2) {
-                (Some(c), _) | (_, Some(c)) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(var_context.clone()),
-                        fun_dep,
-                        early_return_type_from_return_type(top_level_context, return_typ.clone().0), // Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = question_mark.clone().map(|(_, fun_dep)| {
+                (
+                    translate_var_context_to_mut_vars(var_context.clone()),
+                    fun_dep,
+                )
+            });
 
             Ok((
                 Statement::ArrayUpdate(
                     (x.clone(), x_span.clone()),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
+                    match (carrier1, carrier2) {
+                        (Some(c), _) | (_, Some(c)) => early_return_type_from_return_type(top_level_context, return_typ.clone().0), // Some(c),
+                        _ => None,
+                    },
                     question_mark,
                     Some(x_typ),
                 ),
@@ -2931,8 +2925,8 @@ fn typecheck_block(
         .retain(|mut_var| original_var_context.vars.contains_key(&mut_var.id));
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span, &var_context);
     let contains_question_mark = Some(new_stmts.iter().any(|s| match s {
-        (Statement::Reassignment(_, _, _, Some(_)), _)
-        | (Statement::LetBinding(_, _, _, Some(_)), _) => true,
+        (Statement::Reassignment(_, _, _, _, Some(_)), _)
+        | (Statement::LetBinding(_, _, _, _, Some(_)), _) => true,
         (Statement::Conditional(_, then_b, else_b, _), _) => {
             then_b.0.contains_question_mark.unwrap()
                 || (match else_b {

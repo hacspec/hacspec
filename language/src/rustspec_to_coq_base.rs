@@ -1,5 +1,6 @@
 use crate::name_resolution::{DictEntry, TopLevelContext};
 use crate::rustspec::*;
+use crate::typechecker::pure_carrier;
 use core::iter::IntoIterator;
 use heck::SnakeCase;
 use lazy_static::lazy_static;
@@ -315,69 +316,29 @@ pub(crate) fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'
 // taken from rustspec_to_fstar
 pub(crate) fn add_ok_if_result(
     stmt: Statement,
-    early_return_type: Fillable<CarrierTyp>,
-    question_mark: Option<ScopeMutableVars>,
+    carrier: Fillable<CarrierTyp>,
+    // question_mark: Option<ScopeMutableVars>,
 ) -> Spanned<Statement> {
     (
-        match early_return_type {
-            Some(ert) => {
-                if question_mark.is_some()
-                    // If b has an early return, then we must prefix the returned
-                    // mutated variables by Ok or Some
-                    {
-                        match stmt {
-                            Statement::ReturnExp(e, Some((x, t_base))) => {
-                                let (early_typ, fun_name) = match ert.clone() {
-                                    CarrierTyp::Option(a) => (
-                                        BaseTyp::Named(
-                                            (
-                                                TopLevelIdent {
-                                                    string: "Option".to_string(),
-                                                    kind: TopLevelIdentKind::Type,
-                                                },
-                                                DUMMY_SP.into(),
-                                            ),
-                                            Some(vec![t_base.clone()]),
-                                        ),
-                                        "Some",
-                                    ),
-                                    CarrierTyp::Result(a, b) => (
-                                        BaseTyp::Named(
-                                            (
-                                                TopLevelIdent {
-                                                    string: "Result".to_string(),
-                                                    kind: TopLevelIdentKind::Type,
-                                                },
-                                                DUMMY_SP.into(),
-                                            ),
-                                            Some(vec![t_base.clone(), b]),
-                                        ),
-                                        "Ok",
-                                    ),
-                                };
-
-                                Statement::ReturnExp(
-                                    Expression::EnumInject(
-                                        early_typ.clone(),
-                                        (
-                                            TopLevelIdent {
-                                                string: fun_name.to_string(),
-                                                kind: TopLevelIdentKind::EnumConstructor,
-                                            },
-                                            DUMMY_SP.into(),
-                                        ),
-                                        Some((Box::new(e.clone()), DUMMY_SP.into())),
-                                    ),
-                                    Some((x, (early_typ.clone(), t_base.1))),
-                                )
-                            },
-                            _ => panic!("should not happen"),
-                        }
-                } else {
-                    stmt.clone()
+        match carrier {
+            Some(ert) // if question_mark.is_some()
+                =>
+            // If b has an early return, then we must prefix the returned
+            // mutated variables by Ok or Some
+            {
+                match stmt {
+                    Statement::ReturnExp(e, Some((x, t_base))) => {
+                        let carrier = match ert.clone() {
+                            CarrierTyp::Option(_) => CarrierTyp::Option(t_base.clone()),
+                            CarrierTyp::Result(_, b) => CarrierTyp::Result(t_base.clone(), b),
+                        };
+                        let (e, _) = pure_carrier(carrier.clone(), (e.clone(), DUMMY_SP.into()));
+                        Statement::ReturnExp(e, Some((x, (carrier.clone().into(), t_base.1))))
+                    }
+                    _ => panic!("should not happen"),
                 }
             }
-            None => stmt.clone(),
+            _ => stmt.clone(),
         },
         DUMMY_SP.into(),
     )

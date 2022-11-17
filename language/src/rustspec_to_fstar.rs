@@ -1180,7 +1180,7 @@ fn translate_statements<'a>(
         //     // 	))
         //     // )
         // }
-        Statement::LetBinding((pat, _), typ, (expr, _), question_mark) => {
+        Statement::LetBinding((pat, _), typ, (expr, _), _, question_mark) => {
             let question_mark = question_mark;
             // || (match expr {
             // 	Expression::MonadicLet(..) => true,
@@ -1209,7 +1209,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) => {
+        Statement::Reassignment((x, _), _x_typ, (e1, _), _, question_mark) => {
             if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_ident(x.clone()),
@@ -1233,7 +1233,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), _, question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
             if question_mark.is_some() {
                 let tmp_ident = Ident::Local(LocalIdent {

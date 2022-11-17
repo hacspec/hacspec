@@ -566,7 +566,7 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::ArrayUpdate(var, index, e, question_mark, typ) => {
+        Statement::ArrayUpdate(var, index, e, carrier, question_mark, typ) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
             let (smi_new_index, new_index) =
                 resolve_expression(sess, index, &name_context, top_level_ctx)?;
@@ -581,7 +581,8 @@ fn resolve_statement(
                         (new_var, var.1.clone()),
                         new_index,
                         new_e,
-                        question_mark.clone().map(|(x, _, z)| (x, smi.funcs, z)),
+                        carrier,
+                        question_mark.clone().map(|(x, _)| (x, smi.funcs)),
                         typ,
                     ),
                     s_span,
@@ -589,7 +590,7 @@ fn resolve_statement(
                 name_context,
             ))
         }
-        Statement::Reassignment(var, var_typ, e, question_mark) => {
+        Statement::Reassignment(var, var_typ, e, carrier, question_mark) => {
             let new_var = find_ident(sess, &var, &name_context, top_level_ctx)?;
             let (smi_new_e, new_e) = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             Ok((
@@ -599,16 +600,17 @@ fn resolve_statement(
                         (new_var, var.1.clone()),
                         var_typ,
                         new_e,
+                        carrier,
                         question_mark
                             .clone()
-                            .map(|(x, _, z)| (x, smi_new_e.funcs, z)),
+                            .map(|(x, _)| (x, smi_new_e.funcs)),
                     ),
                     s_span,
                 ),
                 name_context,
             ))
         }
-        Statement::LetBinding(pat, typ, e, question_mark) => {
+        Statement::LetBinding(pat, typ, e, carrier, question_mark) => {
             let (smi_new_e, new_e) = resolve_expression(sess, e, &name_context, top_level_ctx)?;
             let (new_pat, new_name_context) = resolve_pattern(sess, &pat, top_level_ctx)?;
             let mut smi = ScopeMutInfo::new();
@@ -626,7 +628,8 @@ fn resolve_statement(
                         (new_pat, pat.1.clone()),
                         typ,
                         new_e,
-                        question_mark.clone().map(|(x, _, z)| (x, smi.funcs, z)),
+                        carrier,
+                        question_mark.clone().map(|(x, _)| (x, smi.funcs)),
                     ),
                     s_span,
                 ),

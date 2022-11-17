@@ -35,9 +35,7 @@ fn translate_enum_case_name<'a>(
                 if (name.0).string == "Option" || (name.0).string == "Result" {
                     RcDoc::nil()
                 } else {
-                    RcDoc::as_string("(")
-                        .append(translate_toplevel_ident(name.0))
-                        .append(RcDoc::as_string(")"))
+                    make_paren(translate_toplevel_ident(name.0))
                 },
             )
             .append(if explicit && tyvec.len() != 0 {
@@ -105,10 +103,14 @@ fn make_let_binding<'a>(
     pat: Pattern,
     typ: Option<RcDoc<'a, ()>>,
     expr: RcDoc<'a, ()>,
-    mutable: bool,
     monad_bind: bool,
     early_return_typ: Option<CarrierTyp>,
 ) -> RcDoc<'a, ()> {
+    let mutable = if let Pattern::IdentPat(_, true) = pat.clone() {
+        true
+    } else {
+        false
+    };
     RcDoc::as_string("letb")
         .append(if monad_bind {
             RcDoc::as_string("nd")
@@ -171,7 +173,12 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
         Expression::Binary((op, _), e1, e2, op_typ) => {
             make_paren(translate_expression((*e1).0, top_ctx))
                 .append(RcDoc::space())
-                .append(translate_binop(RcDoc::as_string("."), op, op_typ.as_ref().unwrap(), top_ctx))
+                .append(translate_binop(
+                    RcDoc::as_string("."),
+                    op,
+                    op_typ.as_ref().unwrap(),
+                    top_ctx,
+                ))
                 .append(RcDoc::space())
                 .append(make_paren(translate_expression((*e2).0, top_ctx)))
         }
@@ -429,33 +436,27 @@ fn translate_statements<'a>(
     };
 
     match s.0 {
-        Statement::LetBinding((pat, _), typ, (expr, _), question_mark) => make_let_binding(
-            pat.clone(),
-            typ.map(|(typ, _)| rustspec_to_coq_ssprove_state::translate_typ(typ)),
-            translate_expression(expr.clone(), top_ctx),
-            if let Pattern::IdentPat(_i, b) = pat.clone() {
-                b
-            } else {
-                false
-            },
-            question_mark.is_some(),
-            match question_mark {
-                Some((smv_bind, function_dependencies, early_return_typ)) => early_return_typ,
-                None => None,
-            },
-        ),
-        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) => make_let_binding(
-            Pattern::IdentPat(x.clone(), true),
-            None,
-            translate_expression(e1.clone(), top_ctx),
-            true,
-            question_mark.is_some(),
-            match question_mark {
-                Some((smv_bind, function_dependencies, early_return_typ)) => early_return_typ,
-                None => None,
-            },
-        ),
-        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
+        Statement::LetBinding((pat, _), typ, (expr, _), carrier, question_mark) => {
+            make_let_binding(
+                pat.clone(),
+                typ.map(|(typ, _)| rustspec_to_coq_ssprove_state::translate_typ(typ)),
+                translate_expression(expr.clone(), top_ctx),
+                // carrier.is_some(),
+                question_mark.is_some(),
+                carrier,
+            )
+        }
+        Statement::Reassignment((x, _), _x_typ, (e1, _), carrier, question_mark) => {
+            make_let_binding(
+                Pattern::IdentPat(x.clone(), true),
+                None,
+                translate_expression(e1.clone(), top_ctx),
+                // carrier.is_some(),
+                question_mark.is_some(),
+                carrier,
+            )
+        }
+        Statement::ArrayUpdate((x, _), (e1, _), (e2, _), carrier, question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.clone().unwrap(), top_ctx);
             let trans_e1 = translate_expression(e1.clone(), top_ctx);
             let trans_e2 = translate_expression(e2.clone(), top_ctx);
@@ -477,14 +478,9 @@ fn translate_statements<'a>(
                     typ.clone()
                         .map(|(_, (x, _))| rustspec_to_coq_ssprove_state::translate_base_typ(x)),
                     array_upd_payload,
-                    false,
+                    // carrier.is_some(),
                     question_mark.is_some(),
-                    match question_mark {
-                        Some((smv_bind, function_dependencies, early_return_typ)) => {
-                            early_return_typ
-                        }
-                        None => None,
-                    },
+                    carrier,
                 )
             };
 
@@ -519,9 +515,8 @@ fn translate_statements<'a>(
             let either_blocks_contains_question_mark = b1_question_mark || b2_question_mark;
             b1.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
-                mutated_info.early_return_type.clone(),
                 if either_blocks_contains_question_mark {
-                    Some(b1.mutable_vars.clone())
+                    mutated_info.early_return_type.clone()
                 } else {
                     None
                 },
@@ -534,9 +529,8 @@ fn translate_statements<'a>(
                 None => translate_statements(
                     vec![add_ok_if_result(
                         mutated_info.stmt.clone(),
-                        mutated_info.early_return_type.clone(),
                         if either_blocks_contains_question_mark {
-                            Some(b1.mutable_vars.clone())
+                            mutated_info.early_return_type.clone()
                         } else {
                             None
                         },
@@ -549,9 +543,8 @@ fn translate_statements<'a>(
                 Some((mut b2, _)) => {
                     b2.stmts.push(add_ok_if_result(
                         mutated_info.stmt.clone(),
-                        mutated_info.early_return_type.clone(),
                         if either_blocks_contains_question_mark {
-                            Some(b2.mutable_vars.clone())
+                            mutated_info.early_return_type.clone()
                         } else {
                             None
                         },
@@ -562,33 +555,27 @@ fn translate_statements<'a>(
                     RcDoc::space()
                         .append(RcDoc::as_string("lift_scope"))
                         .append(RcDoc::space())
-                        .append(RcDoc::as_string("(L1 := "))
-                        .append(rustspec_to_coq_ssprove_state::fset_from_scope(
-                            b2.mutable_vars.clone(),
-                        ))
-                        .append(RcDoc::as_string(")"))
+                        .append(make_paren(RcDoc::as_string("L1 := ").append(
+                            rustspec_to_coq_ssprove_state::fset_from_scope(b2.mutable_vars.clone()),
+                        )))
                         .append(RcDoc::space())
-                        .append(RcDoc::as_string("(L2 := "))
-                        .append(rustspec_to_coq_ssprove_state::fset_from_scope(smv.clone()))
-                        .append(RcDoc::as_string(")"))
+                        .append(make_paren(RcDoc::as_string("L2 := ").append(
+                            rustspec_to_coq_ssprove_state::fset_from_scope(smv.clone()),
+                        )))
                         .append(RcDoc::space())
-                        .append(RcDoc::as_string("(I1 := "))
-                        .append(
+                        .append(make_paren(RcDoc::as_string("I1 := ").append(
                             rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
                                 b2.function_dependencies.clone(),
                                 top_ctx,
                             ),
-                        )
-                        .append(RcDoc::as_string(")"))
+                        )))
                         .append(RcDoc::space())
-                        .append(RcDoc::as_string("(I2 := "))
-                        .append(
+                        .append(make_paren(RcDoc::as_string("I2 := ").append(
                             rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
                                 function_dependencies.clone(),
                                 top_ctx,
                             ),
-                        )
-                        .append(RcDoc::as_string(")"))
+                        )))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("(H_loc_incl := _) (H_opsig_incl := _)"))
                         .append(RcDoc::space())
@@ -606,33 +593,27 @@ fn translate_statements<'a>(
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("lift_scope"))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("(L1 := "))
-                .append(rustspec_to_coq_ssprove_state::fset_from_scope(
-                    b1.mutable_vars.clone(),
-                ))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(RcDoc::as_string("L1 := ").append(
+                    rustspec_to_coq_ssprove_state::fset_from_scope(b1.mutable_vars.clone()),
+                )))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("(L2 := "))
-                .append(rustspec_to_coq_ssprove_state::fset_from_scope(smv.clone()))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(RcDoc::as_string("L2 := ").append(
+                    rustspec_to_coq_ssprove_state::fset_from_scope(smv.clone()),
+                )))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("(I1 := "))
-                .append(
+                .append(make_paren(RcDoc::as_string("I1 := ").append(
                     rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
                         b1.function_dependencies.clone(),
                         top_ctx,
                     ),
-                )
-                .append(RcDoc::as_string(")"))
+                )))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("(I2 := "))
-                .append(
+                .append(make_paren(RcDoc::as_string("I2 := ").append(
                     rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
                         function_dependencies.clone(),
                         top_ctx,
                     ),
-                )
-                .append(RcDoc::as_string(")"))
+                )))
                 .append(RcDoc::space())
                 .append(RcDoc::as_string("(H_loc_incl := _) (H_opsig_incl := _)"))
                 .append(RcDoc::space())
@@ -646,9 +627,8 @@ fn translate_statements<'a>(
                 pat,
                 None,
                 expr,
-                false,
                 either_blocks_contains_question_mark,
-                None, // TODO
+                mutated_info.early_return_type.clone(), // TODO
             )
         }
         Statement::ForLoop(x, (e1, _), (e2, _), (mut b, _)) => {
@@ -656,9 +636,8 @@ fn translate_statements<'a>(
             let b_question_mark = *b.contains_question_mark.as_ref().unwrap();
             b.stmts.push(add_ok_if_result(
                 mutated_info.stmt.clone(),
-                mutated_info.early_return_type.clone(),
                 if b_question_mark {
-                    Some(b.mutable_vars.clone())
+                    mutated_info.early_return_type.clone()
                 } else {
                     None
                 },
@@ -711,39 +690,35 @@ fn translate_statements<'a>(
                     _ => translate_pattern(mut_tuple.clone()),
                 })
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("(L := "))
-                .append(make_paren(rustspec_to_coq_ssprove_state::fset_from_scope(
-                    smv.clone(),
-                )))
-                .append(RcDoc::as_string(")"))
+                .append(make_paren(RcDoc::as_string("L := ").append(make_paren(
+                    rustspec_to_coq_ssprove_state::fset_from_scope(smv.clone()),
+                ))))
                 .append(RcDoc::space())
-                .append(RcDoc::as_string("(I := "))
-                .append(make_paren(
+                .append(make_paren(RcDoc::as_string("I := ").append(make_paren(
                     rustspec_to_coq_ssprove_state::function_dependencies_to_interface(
                         function_dependencies.clone(),
                         top_ctx,
                     ),
+                ))))
+                .append(RcDoc::space())
+                .append(make_paren(
+                    RcDoc::as_string("fun")
+                        .append(RcDoc::space())
+                        .append(match x.clone() {
+                            Some((x, _)) => translate_ident(x.clone()),
+                            None => RcDoc::as_string("_"),
+                        })
+                        .append(RcDoc::space())
+                        .append(translate_pattern_tick(mut_tuple.clone()))
+                        .append(RcDoc::space())
+                        .append(RcDoc::as_string("=>"))
+                        .append(RcDoc::line())
+                        .append(translate_block(b, true, top_ctx)),
                 ))
-                .append(RcDoc::as_string(")"))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("(fun"))
-                .append(RcDoc::space())
-                .append(match x.clone() {
-                    Some((x, _)) => translate_ident(x.clone()),
-                    None => RcDoc::as_string("_"),
-                })
-                .append(RcDoc::space())
-                .append(translate_pattern_tick(mut_tuple.clone()))
-                .append(RcDoc::space())
-                .append(RcDoc::as_string("=>"))
-                .append(RcDoc::line())
-                .append(translate_block(b, true, top_ctx))
-                .append(RcDoc::as_string(")"))
                 .group()
                 .nest(2),
-                false,
                 b_question_mark,
-                None, // TODO
+                mutated_info.early_return_type.clone(),
             )
         }
     }
@@ -1254,8 +1229,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                         // translate_ident(Ident::TopLevel(f.clone()))
                         //     .append(RcDoc::as_string(" := "))
                         //     .append(
-                                package_wraped_code_block.group()// )
-                            ,
+                        package_wraped_code_block.group(), // )
                     ))
                     .append(RcDoc::hardline().append(RcDoc::as_string("Fail Next Obligation.")))
                 // .append(RcDoc::line())
