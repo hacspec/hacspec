@@ -12,7 +12,7 @@ hacspec-lib = { path = "../../lib" }
 
 [dev-dependencies]
 hacspec-dev = { path = "../../utils/dev" }
-criterion = "0.3"
+criterion = "0.4"
 rand = "0.8"
 
 [[bench]]
