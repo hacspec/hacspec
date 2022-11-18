@@ -582,13 +582,31 @@ fn test_fp2_prop_add_neg(a: Fp2) -> bool {
     fp2fromfp(Fp::ZERO()) == fp2add(a, b)
 }
 
-//Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
 #[cfg(test)]
+fn quickcheck_fp2_prop_mul_inv(a: Fp2) -> bool {
+    let b = fp2inv(a);
+    fp2fromfp(Fp::ONE()) == fp2mul(a, b)
+}
+
+#[cfg(test)]
+#[test]
+fn test_fp2_prop_mul_inv_at_zero() {
+    if !quickcheck_fp2_prop_mul_inv((Fp::ZERO(), Fp::ZERO())) {
+        panic!()
+    }
+}
+
 #[cfg(proof)]
 #[quickcheck] //Using the fp arbitraty implementation from above to generate fp2 elements.
 fn test_fp2_prop_mul_inv(a: Fp2) -> bool {
-    let b = fp2inv(a);
-    fp2fromfp(Fp::ONE()) == fp2mul(a, b)
+    quickcheck(a)
+}
+
+//Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
+#[cfg(test)]
+#[test]
+fn test_fp2_prop_mul_inv() {
+    QuickCheck::new().tests(100).quickcheck(quickcheck_fp2_prop_mul_inv as fn (a: Fp2) -> bool)
 }
 
 #[cfg(test)]
