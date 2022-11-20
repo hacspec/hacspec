@@ -546,6 +546,9 @@ impl Arbitrary for Fp {
     fn arbitrary(g: &mut Gen) -> Fp {
         let mut a: [u64; 6] = [0; 6];
         for i in 0..6 {
+            if bool::arbitrary(g) && bool::arbitrary(g) && bool::arbitrary(g) {
+                break;
+            }
             a[i] = u64::arbitrary(g);
         }
         let mut b: [u8; 48] = [0; 48];
@@ -588,18 +591,10 @@ fn quickcheck_fp2_prop_mul_inv(a: Fp2) -> bool {
     fp2fromfp(Fp::ONE()) == fp2mul(a, b)
 }
 
-#[cfg(test)]
-#[test]
-fn test_fp2_prop_mul_inv_at_zero() {
-    if !quickcheck_fp2_prop_mul_inv((Fp::ZERO(), Fp::ZERO())) {
-        panic!()
-    }
-}
-
 #[cfg(proof)]
 #[quickcheck] //Using the fp arbitraty implementation from above to generate fp2 elements.
 fn test_fp2_prop_mul_inv(a: Fp2) -> bool {
-    quickcheck(a)
+    quickcheck_fp2_prop_mul_inv(a)
 }
 
 //Generating random numbers, taking inverse and multiplying - checking that random element times inverse gives one
