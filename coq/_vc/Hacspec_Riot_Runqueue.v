@@ -34,124 +34,124 @@ Inductive clist_t :=
 | Clist : (tail_t × next_ids_t) -> clist_t.
 
 Definition clist_new  : clist_t :=
-  let tail_1265 : tail_t :=
+  let tail_1347 : tail_t :=
     array_new_ (default : int8) (n_queues_v) in 
-  let tail_1265 :=
-    foldi (usize 0) (array_len (tail_1265)) (fun i_1266 tail_1265 =>
-      let tail_1265 :=
-        array_upd tail_1265 (i_1266) (sentinel_v) in 
-      (tail_1265))
-    tail_1265 in 
-  let next_idxs_1267 : next_ids_t :=
+  let tail_1347 :=
+    foldi (usize 0) (array_len (tail_1347)) (fun i_1348 tail_1347 =>
+      let tail_1347 :=
+        array_upd tail_1347 (i_1348) (sentinel_v) in 
+      (tail_1347))
+    tail_1347 in 
+  let next_idxs_1349 : next_ids_t :=
     array_new_ (default : int8) (n_threads_v) in 
-  let next_idxs_1267 :=
-    foldi (usize 0) (array_len (next_idxs_1267)) (fun i_1268 next_idxs_1267 =>
-      let next_idxs_1267 :=
-        array_upd next_idxs_1267 (i_1268) (sentinel_v) in 
-      (next_idxs_1267))
-    next_idxs_1267 in 
-  Clist ((tail_1265, next_idxs_1267)).
+  let next_idxs_1349 :=
+    foldi (usize 0) (array_len (next_idxs_1349)) (fun i_1350 next_idxs_1349 =>
+      let next_idxs_1349 :=
+        array_upd next_idxs_1349 (i_1350) (sentinel_v) in 
+      (next_idxs_1349))
+    next_idxs_1349 in 
+  Clist ((tail_1347, next_idxs_1349)).
 
-Definition clist_is_empty (x_1269 : clist_t) (rq_1270 : runqueue_id_t) : bool :=
-  let 'RunqueueId (rq_1271) :=
-    rq_1270 in 
-  let 'Clist ((tail_1272, next_ids_1273)) :=
-    x_1269 in 
-  (array_index (tail_1272) (@cast _ uint32 _ (rq_1271))) =.? (sentinel_v).
+Definition clist_is_empty (x_1351 : clist_t) (rq_1352 : runqueue_id_t) : bool :=
+  let 'RunqueueId (rq_1353) :=
+    rq_1352 in 
+  let 'Clist ((tail_1354, next_ids_1355)) :=
+    x_1351 in 
+  (array_index (tail_1354) (@cast _ uint32 _ (rq_1353))) =.? (sentinel_v).
 
 Definition clist_push
-  (x_1274 : clist_t)
-  (n_1275 : thread_id_t)
-  (rq_1276 : runqueue_id_t)
+  (x_1356 : clist_t)
+  (n_1357 : thread_id_t)
+  (rq_1358 : runqueue_id_t)
   : clist_t :=
-  let 'RunqueueId (rq_1277) :=
-    rq_1276 in 
-  let 'ThreadId (n_1278) :=
-    n_1275 in 
-  let 'Clist ((tail_1279, next_idxs_1280)) :=
-    x_1274 in 
-  let '(tail_1279, next_idxs_1280) :=
-    if (array_index (next_idxs_1280) (@cast _ uint32 _ (n_1278))) =.? (
-      sentinel_v):bool then (let '(tail_1279, next_idxs_1280) :=
-        if (array_index (tail_1279) (@cast _ uint32 _ (rq_1277))) =.? (
-          sentinel_v):bool then (let tail_1279 :=
-            array_upd tail_1279 (@cast _ uint32 _ (rq_1277)) (n_1278) in 
-          let next_idxs_1280 :=
-            array_upd next_idxs_1280 (@cast _ uint32 _ (n_1278)) (n_1278) in 
-          (tail_1279, next_idxs_1280)) else (let next_idxs_1280 :=
-            array_upd next_idxs_1280 (@cast _ uint32 _ (n_1278)) (array_index (
-                next_idxs_1280) (@cast _ uint32 _ (array_index (tail_1279) (
-                    @cast _ uint32 _ (rq_1277))))) in 
-          let next_idxs_1280 :=
-            array_upd next_idxs_1280 (@cast _ uint32 _ (array_index (
-                  tail_1279) (@cast _ uint32 _ (rq_1277)))) (n_1278) in 
-          let tail_1279 :=
-            array_upd tail_1279 (@cast _ uint32 _ (rq_1277)) (n_1278) in 
-          (tail_1279, next_idxs_1280)) in 
-      (tail_1279, next_idxs_1280)) else ((tail_1279, next_idxs_1280)) in 
-  Clist ((tail_1279, next_idxs_1280)).
+  let 'RunqueueId (rq_1359) :=
+    rq_1358 in 
+  let 'ThreadId (n_1360) :=
+    n_1357 in 
+  let 'Clist ((tail_1361, next_idxs_1362)) :=
+    x_1356 in 
+  let '(tail_1361, next_idxs_1362) :=
+    if (array_index (next_idxs_1362) (@cast _ uint32 _ (n_1360))) =.? (
+      sentinel_v):bool then (let '(tail_1361, next_idxs_1362) :=
+        if (array_index (tail_1361) (@cast _ uint32 _ (rq_1359))) =.? (
+          sentinel_v):bool then (let tail_1361 :=
+            array_upd tail_1361 (@cast _ uint32 _ (rq_1359)) (n_1360) in 
+          let next_idxs_1362 :=
+            array_upd next_idxs_1362 (@cast _ uint32 _ (n_1360)) (n_1360) in 
+          (tail_1361, next_idxs_1362)) else (let next_idxs_1362 :=
+            array_upd next_idxs_1362 (@cast _ uint32 _ (n_1360)) (array_index (
+                next_idxs_1362) (@cast _ uint32 _ (array_index (tail_1361) (
+                    @cast _ uint32 _ (rq_1359))))) in 
+          let next_idxs_1362 :=
+            array_upd next_idxs_1362 (@cast _ uint32 _ (array_index (
+                  tail_1361) (@cast _ uint32 _ (rq_1359)))) (n_1360) in 
+          let tail_1361 :=
+            array_upd tail_1361 (@cast _ uint32 _ (rq_1359)) (n_1360) in 
+          (tail_1361, next_idxs_1362)) in 
+      (tail_1361, next_idxs_1362)) else ((tail_1361, next_idxs_1362)) in 
+  Clist ((tail_1361, next_idxs_1362)).
 
 Definition clist_pop_head
-  (x_1281 : clist_t)
-  (rq_1282 : runqueue_id_t)
+  (x_1363 : clist_t)
+  (rq_1364 : runqueue_id_t)
   : (clist_t × (option int8)) :=
-  let 'RunqueueId (rq_1283) :=
-    rq_1282 in 
-  let 'Clist ((tail_1284, next_idxs_1285)) :=
-    x_1281 in 
-  let out_1286 : (option int8) :=
+  let 'RunqueueId (rq_1365) :=
+    rq_1364 in 
+  let 'Clist ((tail_1366, next_idxs_1367)) :=
+    x_1363 in 
+  let out_1368 : (option int8) :=
     @None int8 in 
-  let '(tail_1284, next_idxs_1285, out_1286) :=
-    if (array_index (tail_1284) (@cast _ uint32 _ (rq_1283))) =.? (
-      sentinel_v):bool then ((tail_1284, next_idxs_1285, out_1286)) else (
-      let head_1287 : int8 :=
-        array_index (next_idxs_1285) (@cast _ uint32 _ (array_index (
-              tail_1284) (@cast _ uint32 _ (rq_1283)))) in 
-      let '(tail_1284, next_idxs_1285) :=
-        if (head_1287) =.? (array_index (tail_1284) (@cast _ uint32 _ (
-              rq_1283))):bool then (let tail_1284 :=
-            array_upd tail_1284 (@cast _ uint32 _ (rq_1283)) (sentinel_v) in 
-          (tail_1284, next_idxs_1285)) else (let next_idxs_1285 :=
-            array_upd next_idxs_1285 (@cast _ uint32 _ (array_index (
-                  tail_1284) (@cast _ uint32 _ (rq_1283)))) (array_index (
-                next_idxs_1285) (@cast _ uint32 _ (head_1287))) in 
-          (tail_1284, next_idxs_1285)) in 
-      let next_idxs_1285 :=
-        array_upd next_idxs_1285 (@cast _ uint32 _ (head_1287)) (sentinel_v) in 
-      let out_1286 :=
-        @Some int8 (head_1287) in 
-      (tail_1284, next_idxs_1285, out_1286)) in 
-  (Clist ((tail_1284, next_idxs_1285)), out_1286).
+  let '(tail_1366, next_idxs_1367, out_1368) :=
+    if (array_index (tail_1366) (@cast _ uint32 _ (rq_1365))) =.? (
+      sentinel_v):bool then ((tail_1366, next_idxs_1367, out_1368)) else (
+      let head_1369 : int8 :=
+        array_index (next_idxs_1367) (@cast _ uint32 _ (array_index (
+              tail_1366) (@cast _ uint32 _ (rq_1365)))) in 
+      let '(tail_1366, next_idxs_1367) :=
+        if (head_1369) =.? (array_index (tail_1366) (@cast _ uint32 _ (
+              rq_1365))):bool then (let tail_1366 :=
+            array_upd tail_1366 (@cast _ uint32 _ (rq_1365)) (sentinel_v) in 
+          (tail_1366, next_idxs_1367)) else (let next_idxs_1367 :=
+            array_upd next_idxs_1367 (@cast _ uint32 _ (array_index (
+                  tail_1366) (@cast _ uint32 _ (rq_1365)))) (array_index (
+                next_idxs_1367) (@cast _ uint32 _ (head_1369))) in 
+          (tail_1366, next_idxs_1367)) in 
+      let next_idxs_1367 :=
+        array_upd next_idxs_1367 (@cast _ uint32 _ (head_1369)) (sentinel_v) in 
+      let out_1368 :=
+        @Some int8 (head_1369) in 
+      (tail_1366, next_idxs_1367, out_1368)) in 
+  (Clist ((tail_1366, next_idxs_1367)), out_1368).
 
 Definition clist_peek_head
-  (x_1288 : clist_t)
-  (rq_1289 : runqueue_id_t)
+  (x_1370 : clist_t)
+  (rq_1371 : runqueue_id_t)
   : (option int8) :=
-  let 'RunqueueId (rq_1290) :=
-    rq_1289 in 
-  let 'Clist ((tail_1291, next_idxs_1292)) :=
-    x_1288 in 
-  (if ((array_index (tail_1291) (@cast _ uint32 _ (rq_1290))) =.? (
+  let 'RunqueueId (rq_1372) :=
+    rq_1371 in 
+  let 'Clist ((tail_1373, next_idxs_1374)) :=
+    x_1370 in 
+  (if ((array_index (tail_1373) (@cast _ uint32 _ (rq_1372))) =.? (
         sentinel_v)):bool then (@None int8) else (@Some int8 (array_index (
-          next_idxs_1292) (@cast _ uint32 _ (array_index (tail_1291) (
-              @cast _ uint32 _ (rq_1290))))))).
+          next_idxs_1374) (@cast _ uint32 _ (array_index (tail_1373) (
+              @cast _ uint32 _ (rq_1372))))))).
 
 Definition clist_advance
-  (x_1293 : clist_t)
-  (rq_1294 : runqueue_id_t)
+  (x_1375 : clist_t)
+  (rq_1376 : runqueue_id_t)
   : clist_t :=
-  let 'RunqueueId (rq_1295) :=
-    rq_1294 in 
-  let 'Clist ((tail_1296, next_idxs_1297)) :=
-    x_1293 in 
-  let '(tail_1296) :=
-    if (array_index (tail_1296) (@cast _ uint32 _ (rq_1295))) !=.? (
-      sentinel_v):bool then (let tail_1296 :=
-        array_upd tail_1296 (@cast _ uint32 _ (rq_1295)) (array_index (
-            next_idxs_1297) (@cast _ uint32 _ (array_index (tail_1296) (
-                @cast _ uint32 _ (rq_1295))))) in 
-      (tail_1296)) else ((tail_1296)) in 
-  Clist ((tail_1296, next_idxs_1297)).
+  let 'RunqueueId (rq_1377) :=
+    rq_1376 in 
+  let 'Clist ((tail_1378, next_idxs_1379)) :=
+    x_1375 in 
+  let '(tail_1378) :=
+    if (array_index (tail_1378) (@cast _ uint32 _ (rq_1377))) !=.? (
+      sentinel_v):bool then (let tail_1378 :=
+        array_upd tail_1378 (@cast _ uint32 _ (rq_1377)) (array_index (
+            next_idxs_1379) (@cast _ uint32 _ (array_index (tail_1378) (
+                @cast _ uint32 _ (rq_1377))))) in 
+      (tail_1378)) else ((tail_1378)) in 
+  Clist ((tail_1378, next_idxs_1379)).
 
 Inductive run_queue_t :=
 | RunQueue : (int32 × clist_t) -> run_queue_t.
@@ -160,65 +160,65 @@ Definition runqueue_new  : run_queue_t :=
   RunQueue ((@repr WORDSIZE32 0, clist_new )).
 
 Definition runqueue_add
-  (y_1298 : run_queue_t)
-  (n_1299 : thread_id_t)
-  (rq_1300 : runqueue_id_t)
+  (y_1380 : run_queue_t)
+  (n_1381 : thread_id_t)
+  (rq_1382 : runqueue_id_t)
   : run_queue_t :=
-  let 'RunqueueId (rq_u8_1301) :=
-    rq_1300 in 
-  let 'RunQueue ((bitcache_1302, queues_1303)) :=
-    y_1298 in 
-  let bitcache_1302 :=
-    (bitcache_1302) .| ((@repr WORDSIZE32 1) shift_left (@cast _ uint32 _ (
-          rq_u8_1301))) in 
-  let queues_1303 :=
-    clist_push (queues_1303) (n_1299) (rq_1300) in 
-  RunQueue ((bitcache_1302, queues_1303)).
+  let 'RunqueueId (rq_u8_1383) :=
+    rq_1382 in 
+  let 'RunQueue ((bitcache_1384, queues_1385)) :=
+    y_1380 in 
+  let bitcache_1384 :=
+    (bitcache_1384) .| ((@repr WORDSIZE32 1) shift_left (@cast _ uint32 _ (
+          rq_u8_1383))) in 
+  let queues_1385 :=
+    clist_push (queues_1385) (n_1381) (rq_1382) in 
+  RunQueue ((bitcache_1384, queues_1385)).
 
 Definition runqueue_del
-  (y_1304 : run_queue_t)
-  (n_1305 : thread_id_t)
-  (rq_1306 : runqueue_id_t)
+  (y_1386 : run_queue_t)
+  (n_1387 : thread_id_t)
+  (rq_1388 : runqueue_id_t)
   : run_queue_t :=
-  let 'RunqueueId (rq_u8_1307) :=
-    rq_1306 in 
-  let 'RunQueue ((bitcache_1308, queues_1309)) :=
-    y_1304 in 
-  let '(queues_1310, popped_1311) :=
-    clist_pop_head (queues_1309) (rq_1306) in 
-  let '(bitcache_1308) :=
-    if clist_is_empty (queues_1310) (rq_1306):bool then (let bitcache_1308 :=
-        (bitcache_1308) .& (not ((@repr WORDSIZE32 1) shift_left (
-              @cast _ uint32 _ (rq_u8_1307)))) in 
-      (bitcache_1308)) else ((bitcache_1308)) in 
-  RunQueue ((bitcache_1308, queues_1310)).
+  let 'RunqueueId (rq_u8_1389) :=
+    rq_1388 in 
+  let 'RunQueue ((bitcache_1390, queues_1391)) :=
+    y_1386 in 
+  let '(queues_1392, popped_1393) :=
+    clist_pop_head (queues_1391) (rq_1388) in 
+  let '(bitcache_1390) :=
+    if clist_is_empty (queues_1392) (rq_1388):bool then (let bitcache_1390 :=
+        (bitcache_1390) .& (not ((@repr WORDSIZE32 1) shift_left (
+              @cast _ uint32 _ (rq_u8_1389)))) in 
+      (bitcache_1390)) else ((bitcache_1390)) in 
+  RunQueue ((bitcache_1390, queues_1392)).
 
-Definition runqueue_ffs (val_1312 : int32) : int32 :=
-  (pub_u32 (uint32_bits_v)) .- (pub_uint32_leading_zeros (val_1312)).
+Definition runqueue_ffs (val_1394 : int32) : int32 :=
+  (pub_u32 (uint32_bits_v)) .- (pub_uint32_leading_zeros (val_1394)).
 
-Definition runqueue_get_next (y_1313 : run_queue_t) : (option int8) :=
-  let 'RunQueue ((bitcache_1314, queues_1315)) :=
-    y_1313 in 
-  let rq_ffs_1316 : int32 :=
-    runqueue_ffs ((bitcache_1314)) in 
-  let out_1317 : (option int8) :=
+Definition runqueue_get_next (y_1395 : run_queue_t) : (option int8) :=
+  let 'RunQueue ((bitcache_1396, queues_1397)) :=
+    y_1395 in 
+  let rq_ffs_1398 : int32 :=
+    runqueue_ffs ((bitcache_1396)) in 
+  let out_1399 : (option int8) :=
     @None int8 in 
-  let '(out_1317) :=
-    if (rq_ffs_1316) >.? (@repr WORDSIZE32 0):bool then (
-      let rq_1318 : runqueue_id_t :=
-        RunqueueId (@cast _ uint8 _ ((rq_ffs_1316) .- (@repr WORDSIZE32 1))) in 
-      let out_1317 :=
-        clist_peek_head (queues_1315) (rq_1318) in 
-      (out_1317)) else ((out_1317)) in 
-  out_1317.
+  let '(out_1399) :=
+    if (rq_ffs_1398) >.? (@repr WORDSIZE32 0):bool then (
+      let rq_1400 : runqueue_id_t :=
+        RunqueueId (@cast _ uint8 _ ((rq_ffs_1398) .- (@repr WORDSIZE32 1))) in 
+      let out_1399 :=
+        clist_peek_head (queues_1397) (rq_1400) in 
+      (out_1399)) else ((out_1399)) in 
+  out_1399.
 
 Definition runqueue_advance
-  (y_1319 : run_queue_t)
-  (rq_1320 : runqueue_id_t)
+  (y_1401 : run_queue_t)
+  (rq_1402 : runqueue_id_t)
   : run_queue_t :=
-  let 'RunQueue ((bitcache_1321, queues_1322)) :=
-    y_1319 in 
-  let queues_1322 :=
-    clist_advance (queues_1322) (rq_1320) in 
-  RunQueue ((bitcache_1321, queues_1322)).
+  let 'RunQueue ((bitcache_1403, queues_1404)) :=
+    y_1401 in 
+  let queues_1404 :=
+    clist_advance (queues_1404) (rq_1402) in 
+  RunQueue ((bitcache_1403, queues_1404)).
 

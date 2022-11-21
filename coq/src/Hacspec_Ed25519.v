@@ -12,715 +12,715 @@ Require Import Hacspec_Sha512.
 
 Require Import Hacspec_Edwards25519.
 
-Definition scalar_from_hash (h_1896 : sha512_digest_t) : scalar_t :=
-  let s_1897 : big_scalar_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (h_1896)) : big_scalar_t in 
-  nat_mod_from_byte_seq_le (seq_slice (nat_mod_to_byte_seq_le (s_1897)) (
+Definition scalar_from_hash (h_1978 : sha512_digest_t) : scalar_t :=
+  let s_1979 : big_scalar_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (h_1978)) : big_scalar_t in 
+  nat_mod_from_byte_seq_le (seq_slice (nat_mod_to_byte_seq_le (s_1979)) (
       usize 0) (usize 32)) : scalar_t.
 
-Definition sign (sk_1898 : secret_key_t) (msg_1899 : byte_seq) : signature_t :=
-  let '(a_1900, prefix_1901) :=
-    secret_expand (sk_1898) in 
-  let a_1902 : scalar_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (a_1900)) : scalar_t in 
-  let b_1903 : (
+Definition sign (sk_1980 : secret_key_t) (msg_1981 : byte_seq) : signature_t :=
+  let '(a_1982, prefix_1983) :=
+    secret_expand (sk_1980) in 
+  let a_1984 : scalar_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (a_1982)) : scalar_t in 
+  let b_1985 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let a_p_1904 : compressed_ed_point_t :=
-    compress (point_mul (a_1902) (b_1903)) in 
-  let r_1905 : scalar_t :=
-    scalar_from_hash (sha512 (array_concat (prefix_1901) (msg_1899))) in 
-  let r_p_1906 : (
+  let a_p_1986 : compressed_ed_point_t :=
+    compress (point_mul (a_1984) (b_1985)) in 
+  let r_1987 : scalar_t :=
+    scalar_from_hash (sha512 (array_concat (prefix_1983) (msg_1981))) in 
+  let r_p_1988 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (r_1905) (b_1903) in 
-  let r_s_1907 : compressed_ed_point_t :=
-    compress (r_p_1906) in 
-  let h_1908 : scalar_t :=
-    scalar_from_hash (sha512 (seq_concat (array_concat (r_s_1907) (
-            array_to_seq (a_p_1904))) (msg_1899))) in 
-  let s_1909 : scalar_t :=
-    (r_1905) +% ((h_1908) *% (a_1902)) in 
-  let s_bytes_1910 : seq uint8 :=
-    seq_slice (nat_mod_to_byte_seq_le (s_1909)) (usize 0) (usize 32) in 
+    point_mul (r_1987) (b_1985) in 
+  let r_s_1989 : compressed_ed_point_t :=
+    compress (r_p_1988) in 
+  let h_1990 : scalar_t :=
+    scalar_from_hash (sha512 (seq_concat (array_concat (r_s_1989) (
+            array_to_seq (a_p_1986))) (msg_1981))) in 
+  let s_1991 : scalar_t :=
+    (r_1987) +% ((h_1990) *% (a_1984)) in 
+  let s_bytes_1992 : seq uint8 :=
+    seq_slice (nat_mod_to_byte_seq_le (s_1991)) (usize 0) (usize 32) in 
   array_update (array_update (array_new_ (default : uint8) (64)) (usize 0) (
-      array_to_seq (r_s_1907))) (usize 32) (s_bytes_1910).
+      array_to_seq (r_s_1989))) (usize 32) (s_bytes_1992).
 
 Definition zcash_verify
-  (pk_1911 : public_key_t)
-  (signature_1912 : signature_t)
-  (msg_1913 : byte_seq)
+  (pk_1993 : public_key_t)
+  (signature_1994 : signature_t)
+  (msg_1995 : byte_seq)
   : verify_result_t :=
-  let b_1914 : (
+  let b_1996 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress_non_canonical (base_v)) in 
-  let a_1915 : (
+  let a_1997 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress_non_canonical (pk_1911)) (InvalidPublickey) in 
-  let r_bytes_1916 : compressed_ed_point_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1912)) (
+    option_ok_or (decompress_non_canonical (pk_1993)) (InvalidPublickey) in 
+  let r_bytes_1998 : compressed_ed_point_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1994)) (
       usize 0) (usize 32) in 
-  let s_bytes_1917 : serialized_scalar_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1912)) (
+  let s_bytes_1999 : serialized_scalar_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_1994)) (
       usize 32) (usize 32) in 
   let 'tt :=
-    if negb (check_canonical_scalar (s_bytes_1917)):bool then (let _ : unit :=
+    if negb (check_canonical_scalar (s_bytes_1999)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
       tt) else (tt) in 
-  let r_1918 : (
+  let r_2000 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress_non_canonical (r_bytes_1916)) (InvalidR) in 
-  let s_1919 : scalar_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_1917)) : scalar_t in 
-  let k_1920 : scalar_t :=
-    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_1916) (
-            pk_1911)) (msg_1913))) in 
-  let sb_1921 : (
+    option_ok_or (decompress_non_canonical (r_bytes_1998)) (InvalidR) in 
+  let s_2001 : scalar_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_1999)) : scalar_t in 
+  let k_2002 : scalar_t :=
+    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_1998) (
+            pk_1993)) (msg_1995))) in 
+  let sb_2003 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_mul (s_1919) (b_1914)) in 
-  let rc_1922 : (
+    point_mul_by_cofactor (point_mul (s_2001) (b_1996)) in 
+  let rc_2004 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (r_1918) in 
-  let ka_1923 : (
+    point_mul_by_cofactor (r_2000) in 
+  let ka_2005 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_mul (k_1920) (a_1915)) in 
-  (if (point_eq (sb_1921) (point_add (rc_1922) (ka_1923))):bool then (
+    point_mul_by_cofactor (point_mul (k_2002) (a_1997)) in 
+  (if (point_eq (sb_2003) (point_add (rc_2004) (ka_2005))):bool then (
       @Ok unit error_t (tt)) else (@Err unit error_t (InvalidSignature))).
 
 Definition ietf_cofactored_verify
-  (pk_1924 : public_key_t)
-  (signature_1925 : signature_t)
-  (msg_1926 : byte_seq)
+  (pk_2006 : public_key_t)
+  (signature_2007 : signature_t)
+  (msg_2008 : byte_seq)
   : verify_result_t :=
-  let b_1927 : (
+  let b_2009 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let a_1928 : (
+  let a_2010 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress (pk_1924)) (InvalidPublickey) in 
-  let r_bytes_1929 : compressed_ed_point_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1925)) (
+    option_ok_or (decompress (pk_2006)) (InvalidPublickey) in 
+  let r_bytes_2011 : compressed_ed_point_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_2007)) (
       usize 0) (usize 32) in 
-  let s_bytes_1930 : serialized_scalar_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1925)) (
+  let s_bytes_2012 : serialized_scalar_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_2007)) (
       usize 32) (usize 32) in 
   let 'tt :=
-    if negb (check_canonical_scalar (s_bytes_1930)):bool then (let _ : unit :=
+    if negb (check_canonical_scalar (s_bytes_2012)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
       tt) else (tt) in 
-  let r_1931 : (
+  let r_2013 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress (r_bytes_1929)) (InvalidR) in 
-  let s_1932 : scalar_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_1930)) : scalar_t in 
-  let k_1933 : scalar_t :=
-    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_1929) (
-            pk_1924)) (msg_1926))) in 
-  let sb_1934 : (
+    option_ok_or (decompress (r_bytes_2011)) (InvalidR) in 
+  let s_2014 : scalar_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2012)) : scalar_t in 
+  let k_2015 : scalar_t :=
+    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2011) (
+            pk_2006)) (msg_2008))) in 
+  let sb_2016 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_mul (s_1932) (b_1927)) in 
-  let rc_1935 : (
+    point_mul_by_cofactor (point_mul (s_2014) (b_2009)) in 
+  let rc_2017 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (r_1931) in 
-  let ka_1936 : (
+    point_mul_by_cofactor (r_2013) in 
+  let ka_2018 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_mul (k_1933) (a_1928)) in 
-  (if (point_eq (sb_1934) (point_add (rc_1935) (ka_1936))):bool then (
+    point_mul_by_cofactor (point_mul (k_2015) (a_2010)) in 
+  (if (point_eq (sb_2016) (point_add (rc_2017) (ka_2018))):bool then (
       @Ok unit error_t (tt)) else (@Err unit error_t (InvalidSignature))).
 
 Definition ietf_cofactorless_verify
-  (pk_1937 : public_key_t)
-  (signature_1938 : signature_t)
-  (msg_1939 : byte_seq)
+  (pk_2019 : public_key_t)
+  (signature_2020 : signature_t)
+  (msg_2021 : byte_seq)
   : verify_result_t :=
-  let b_1940 : (
+  let b_2022 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let a_1941 : (
+  let a_2023 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress (pk_1937)) (InvalidPublickey) in 
-  let r_bytes_1942 : compressed_ed_point_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1938)) (
+    option_ok_or (decompress (pk_2019)) (InvalidPublickey) in 
+  let r_bytes_2024 : compressed_ed_point_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_2020)) (
       usize 0) (usize 32) in 
-  let s_bytes_1943 : serialized_scalar_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1938)) (
+  let s_bytes_2025 : serialized_scalar_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_2020)) (
       usize 32) (usize 32) in 
   let 'tt :=
-    if negb (check_canonical_scalar (s_bytes_1943)):bool then (let _ : unit :=
+    if negb (check_canonical_scalar (s_bytes_2025)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
       tt) else (tt) in 
-  let r_1944 : (
+  let r_2026 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress (r_bytes_1942)) (InvalidR) in 
-  let s_1945 : scalar_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_1943)) : scalar_t in 
-  let k_1946 : scalar_t :=
-    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_1942) (
-            pk_1937)) (msg_1939))) in 
-  let sb_1947 : (
+    option_ok_or (decompress (r_bytes_2024)) (InvalidR) in 
+  let s_2027 : scalar_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2025)) : scalar_t in 
+  let k_2028 : scalar_t :=
+    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2024) (
+            pk_2019)) (msg_2021))) in 
+  let sb_2029 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (s_1945) (b_1940) in 
-  let ka_1948 : (
+    point_mul (s_2027) (b_2022) in 
+  let ka_2030 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (k_1946) (a_1941) in 
-  (if (point_eq (sb_1947) (point_add (r_1944) (ka_1948))):bool then (
+    point_mul (k_2028) (a_2023) in 
+  (if (point_eq (sb_2029) (point_add (r_2026) (ka_2030))):bool then (
       @Ok unit error_t (tt)) else (@Err unit error_t (InvalidSignature))).
 
-Definition is_identity (p_1949 : ed_point_t) : bool :=
-  point_eq (p_1949) (point_identity ).
+Definition is_identity (p_2031 : ed_point_t) : bool :=
+  point_eq (p_2031) (point_identity ).
 
 Definition alg2_verify
-  (pk_1950 : public_key_t)
-  (signature_1951 : signature_t)
-  (msg_1952 : byte_seq)
+  (pk_2032 : public_key_t)
+  (signature_2033 : signature_t)
+  (msg_2034 : byte_seq)
   : verify_result_t :=
-  let b_1953 : (
+  let b_2035 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let a_1954 : (
+  let a_2036 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress (pk_1950)) (InvalidPublickey) in 
+    option_ok_or (decompress (pk_2032)) (InvalidPublickey) in 
   let 'tt :=
-    if is_identity (point_mul_by_cofactor (a_1954)):bool then (let _ : unit :=
+    if is_identity (point_mul_by_cofactor (a_2036)):bool then (let _ : unit :=
         @Err unit error_t (SmallOrderPoint) in 
       tt) else (tt) in 
-  let r_bytes_1955 : compressed_ed_point_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1951)) (
+  let r_bytes_2037 : compressed_ed_point_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_2033)) (
       usize 0) (usize 32) in 
-  let s_bytes_1956 : serialized_scalar_t :=
-    array_from_slice (default : uint8) (32) (array_to_seq (signature_1951)) (
+  let s_bytes_2038 : serialized_scalar_t :=
+    array_from_slice (default : uint8) (32) (array_to_seq (signature_2033)) (
       usize 32) (usize 32) in 
   let 'tt :=
-    if negb (check_canonical_scalar (s_bytes_1956)):bool then (let _ : unit :=
+    if negb (check_canonical_scalar (s_bytes_2038)):bool then (let _ : unit :=
         @Err unit error_t (InvalidS) in 
       tt) else (tt) in 
-  let r_1957 : (
+  let r_2039 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    option_ok_or (decompress (r_bytes_1955)) (InvalidR) in 
-  let s_1958 : scalar_t :=
-    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_1956)) : scalar_t in 
-  let k_1959 : scalar_t :=
-    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_1955) (
-            pk_1950)) (msg_1952))) in 
-  let sb_1960 : (
+    option_ok_or (decompress (r_bytes_2037)) (InvalidR) in 
+  let s_2040 : scalar_t :=
+    nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2038)) : scalar_t in 
+  let k_2041 : scalar_t :=
+    scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2037) (
+            pk_2032)) (msg_2034))) in 
+  let sb_2042 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_mul (s_1958) (b_1953)) in 
-  let rc_1961 : (
+    point_mul_by_cofactor (point_mul (s_2040) (b_2035)) in 
+  let rc_2043 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (r_1957) in 
-  let ka_1962 : (
+    point_mul_by_cofactor (r_2039) in 
+  let ka_2044 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_mul (k_1959) (a_1954)) in 
-  (if (point_eq (sb_1960) (point_add (rc_1961) (ka_1962))):bool then (
+    point_mul_by_cofactor (point_mul (k_2041) (a_2036)) in 
+  (if (point_eq (sb_2042) (point_add (rc_2043) (ka_2044))):bool then (
       @Ok unit error_t (tt)) else (@Err unit error_t (InvalidSignature))).
 
 Inductive batch_entry_t :=
 | BatchEntry : (public_key_t × byte_seq × signature_t) -> batch_entry_t.
 
 Definition zcash_batch_verify
-  (entries_1963 : seq batch_entry_t)
-  (entropy_1964 : byte_seq)
+  (entries_2045 : seq batch_entry_t)
+  (entropy_2046 : byte_seq)
   : verify_result_t :=
   let 'tt :=
-    if (seq_len (entropy_1964)) <.? ((usize 16) * (seq_len (
-          entries_1963))):bool then (let _ : unit :=
+    if (seq_len (entropy_2046)) <.? ((usize 16) * (seq_len (
+          entries_2045))):bool then (let _ : unit :=
         @Err unit error_t (NotEnoughRandomness) in 
       tt) else (tt) in 
-  let s_sum_1965 : scalar_t :=
+  let s_sum_2047 : scalar_t :=
     nat_mod_zero  in 
-  let r_sum_1966 : (
+  let r_sum_2048 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let a_sum_1967 : (
+  let a_sum_2049 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let '(s_sum_1965, r_sum_1966, a_sum_1967) :=
-    foldi (usize 0) (seq_len (entries_1963)) (fun i_1968 '(
-        s_sum_1965,
-        r_sum_1966,
-        a_sum_1967
+  let '(s_sum_2047, r_sum_2048, a_sum_2049) :=
+    foldi (usize 0) (seq_len (entries_2045)) (fun i_2050 '(
+        s_sum_2047,
+        r_sum_2048,
+        a_sum_2049
       ) =>
-      let 'BatchEntry ((pk_1969, msg_1970, signature_1971)) :=
-        (seq_index (entries_1963) (i_1968)) in 
-      let a_1972 : (
+      let 'BatchEntry ((pk_2051, msg_2052, signature_2053)) :=
+        (seq_index (entries_2045) (i_2050)) in 
+      let a_2054 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress_non_canonical (pk_1969)) (InvalidPublickey) in 
-      let r_bytes_1973 : compressed_ed_point_t :=
+        option_ok_or (decompress_non_canonical (pk_2051)) (InvalidPublickey) in 
+      let r_bytes_2055 : compressed_ed_point_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_1971)) (usize 0) (usize 32) in 
-      let s_bytes_1974 : serialized_scalar_t :=
+          array_to_seq (signature_2053)) (usize 0) (usize 32) in 
+      let s_bytes_2056 : serialized_scalar_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_1971)) (usize 32) (usize 32) in 
+          array_to_seq (signature_2053)) (usize 32) (usize 32) in 
       let 'tt :=
-        if negb (check_canonical_scalar (s_bytes_1974)):bool then (
+        if negb (check_canonical_scalar (s_bytes_2056)):bool then (
           let _ : unit :=
             @Err unit error_t (InvalidS) in 
           tt) else (tt) in 
-      let r_1975 : (
+      let r_2057 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress_non_canonical (r_bytes_1973)) (InvalidR) in 
-      let s_1976 : scalar_t :=
-        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_1974)) : scalar_t in 
-      let c_1977 : scalar_t :=
-        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_1973) (
-                array_to_seq (pk_1969))) (msg_1970))) in 
-      let z_1978 : seq uint8 :=
-        seq_slice (entropy_1964) ((usize 16) * (i_1968)) (usize 16) in 
-      let z_1979 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_1978) (seq_new_ (
+        option_ok_or (decompress_non_canonical (r_bytes_2055)) (InvalidR) in 
+      let s_2058 : scalar_t :=
+        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2056)) : scalar_t in 
+      let c_2059 : scalar_t :=
+        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2055) (
+                array_to_seq (pk_2051))) (msg_2052))) in 
+      let z_2060 : seq uint8 :=
+        seq_slice (entropy_2046) ((usize 16) * (i_2050)) (usize 16) in 
+      let z_2061 : scalar_t :=
+        nat_mod_from_byte_seq_le (seq_concat (z_2060) (seq_new_ (
               default : uint8) (usize 16))) : scalar_t in 
-      let s_sum_1965 :=
-        (s_sum_1965) +% ((s_1976) *% (z_1979)) in 
-      let r_sum_1966 :=
-        point_add (r_sum_1966) (point_mul (z_1979) (r_1975)) in 
-      let a_sum_1967 :=
-        point_add (a_sum_1967) (point_mul ((z_1979) *% (c_1977)) (a_1972)) in 
-      (s_sum_1965, r_sum_1966, a_sum_1967))
-    (s_sum_1965, r_sum_1966, a_sum_1967) in 
-  let b_1980 : (
+      let s_sum_2047 :=
+        (s_sum_2047) +% ((s_2058) *% (z_2061)) in 
+      let r_sum_2048 :=
+        point_add (r_sum_2048) (point_mul (z_2061) (r_2057)) in 
+      let a_sum_2049 :=
+        point_add (a_sum_2049) (point_mul ((z_2061) *% (c_2059)) (a_2054)) in 
+      (s_sum_2047, r_sum_2048, a_sum_2049))
+    (s_sum_2047, r_sum_2048, a_sum_2049) in 
+  let b_2062 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let sb_1981 : (
+  let sb_2063 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (s_sum_1965) (b_1980) in 
-  let check_1982 : (
+    point_mul (s_sum_2047) (b_2062) in 
+  let check_2064 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_add (point_neg (sb_1981)) (point_add (
-          r_sum_1966) (a_sum_1967))) in 
-  (if (is_identity (check_1982)):bool then (@Ok unit error_t (tt)) else (
+    point_mul_by_cofactor (point_add (point_neg (sb_2063)) (point_add (
+          r_sum_2048) (a_sum_2049))) in 
+  (if (is_identity (check_2064)):bool then (@Ok unit error_t (tt)) else (
       @Err unit error_t (InvalidSignature))).
 
 Definition ietf_cofactored_batch_verify
-  (entries_1983 : seq batch_entry_t)
-  (entropy_1984 : byte_seq)
+  (entries_2065 : seq batch_entry_t)
+  (entropy_2066 : byte_seq)
   : verify_result_t :=
   let 'tt :=
-    if (seq_len (entropy_1984)) <.? ((usize 16) * (seq_len (
-          entries_1983))):bool then (let _ : unit :=
+    if (seq_len (entropy_2066)) <.? ((usize 16) * (seq_len (
+          entries_2065))):bool then (let _ : unit :=
         @Err unit error_t (NotEnoughRandomness) in 
       tt) else (tt) in 
-  let s_sum_1985 : scalar_t :=
+  let s_sum_2067 : scalar_t :=
     nat_mod_zero  in 
-  let r_sum_1986 : (
+  let r_sum_2068 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let a_sum_1987 : (
+  let a_sum_2069 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let '(s_sum_1985, r_sum_1986, a_sum_1987) :=
-    foldi (usize 0) (seq_len (entries_1983)) (fun i_1988 '(
-        s_sum_1985,
-        r_sum_1986,
-        a_sum_1987
+  let '(s_sum_2067, r_sum_2068, a_sum_2069) :=
+    foldi (usize 0) (seq_len (entries_2065)) (fun i_2070 '(
+        s_sum_2067,
+        r_sum_2068,
+        a_sum_2069
       ) =>
-      let 'BatchEntry ((pk_1989, msg_1990, signature_1991)) :=
-        (seq_index (entries_1983) (i_1988)) in 
-      let a_1992 : (
+      let 'BatchEntry ((pk_2071, msg_2072, signature_2073)) :=
+        (seq_index (entries_2065) (i_2070)) in 
+      let a_2074 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress (pk_1989)) (InvalidPublickey) in 
-      let r_bytes_1993 : compressed_ed_point_t :=
+        option_ok_or (decompress (pk_2071)) (InvalidPublickey) in 
+      let r_bytes_2075 : compressed_ed_point_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_1991)) (usize 0) (usize 32) in 
-      let s_bytes_1994 : serialized_scalar_t :=
+          array_to_seq (signature_2073)) (usize 0) (usize 32) in 
+      let s_bytes_2076 : serialized_scalar_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_1991)) (usize 32) (usize 32) in 
+          array_to_seq (signature_2073)) (usize 32) (usize 32) in 
       let 'tt :=
-        if negb (check_canonical_scalar (s_bytes_1994)):bool then (
+        if negb (check_canonical_scalar (s_bytes_2076)):bool then (
           let _ : unit :=
             @Err unit error_t (InvalidS) in 
           tt) else (tt) in 
-      let r_1995 : (
+      let r_2077 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress (r_bytes_1993)) (InvalidR) in 
-      let s_1996 : scalar_t :=
-        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_1994)) : scalar_t in 
-      let c_1997 : scalar_t :=
-        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_1993) (
-                array_to_seq (pk_1989))) (msg_1990))) in 
-      let z_1998 : seq uint8 :=
-        seq_slice (entropy_1984) ((usize 16) * (i_1988)) (usize 16) in 
-      let z_1999 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_1998) (seq_new_ (
+        option_ok_or (decompress (r_bytes_2075)) (InvalidR) in 
+      let s_2078 : scalar_t :=
+        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2076)) : scalar_t in 
+      let c_2079 : scalar_t :=
+        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2075) (
+                array_to_seq (pk_2071))) (msg_2072))) in 
+      let z_2080 : seq uint8 :=
+        seq_slice (entropy_2066) ((usize 16) * (i_2070)) (usize 16) in 
+      let z_2081 : scalar_t :=
+        nat_mod_from_byte_seq_le (seq_concat (z_2080) (seq_new_ (
               default : uint8) (usize 16))) : scalar_t in 
-      let s_sum_1985 :=
-        (s_sum_1985) +% ((s_1996) *% (z_1999)) in 
-      let r_sum_1986 :=
-        point_add (r_sum_1986) (point_mul (z_1999) (r_1995)) in 
-      let a_sum_1987 :=
-        point_add (a_sum_1987) (point_mul ((z_1999) *% (c_1997)) (a_1992)) in 
-      (s_sum_1985, r_sum_1986, a_sum_1987))
-    (s_sum_1985, r_sum_1986, a_sum_1987) in 
-  let b_2000 : (
+      let s_sum_2067 :=
+        (s_sum_2067) +% ((s_2078) *% (z_2081)) in 
+      let r_sum_2068 :=
+        point_add (r_sum_2068) (point_mul (z_2081) (r_2077)) in 
+      let a_sum_2069 :=
+        point_add (a_sum_2069) (point_mul ((z_2081) *% (c_2079)) (a_2074)) in 
+      (s_sum_2067, r_sum_2068, a_sum_2069))
+    (s_sum_2067, r_sum_2068, a_sum_2069) in 
+  let b_2082 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let sb_2001 : (
+  let sb_2083 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (s_sum_1985) (b_2000) in 
-  let check_2002 : (
+    point_mul (s_sum_2067) (b_2082) in 
+  let check_2084 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_add (point_neg (sb_2001)) (point_add (
-          r_sum_1986) (a_sum_1987))) in 
-  (if (is_identity (check_2002)):bool then (@Ok unit error_t (tt)) else (
+    point_mul_by_cofactor (point_add (point_neg (sb_2083)) (point_add (
+          r_sum_2068) (a_sum_2069))) in 
+  (if (is_identity (check_2084)):bool then (@Ok unit error_t (tt)) else (
       @Err unit error_t (InvalidSignature))).
 
 Definition ietf_cofactorless_batch_verify
-  (entries_2003 : seq batch_entry_t)
-  (entropy_2004 : byte_seq)
+  (entries_2085 : seq batch_entry_t)
+  (entropy_2086 : byte_seq)
   : verify_result_t :=
   let 'tt :=
-    if (seq_len (entropy_2004)) <.? ((usize 16) * (seq_len (
-          entries_2003))):bool then (let _ : unit :=
+    if (seq_len (entropy_2086)) <.? ((usize 16) * (seq_len (
+          entries_2085))):bool then (let _ : unit :=
         @Err unit error_t (NotEnoughRandomness) in 
       tt) else (tt) in 
-  let s_sum_2005 : scalar_t :=
+  let s_sum_2087 : scalar_t :=
     nat_mod_zero  in 
-  let r_sum_2006 : (
+  let r_sum_2088 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let a_sum_2007 : (
+  let a_sum_2089 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let '(s_sum_2005, r_sum_2006, a_sum_2007) :=
-    foldi (usize 0) (seq_len (entries_2003)) (fun i_2008 '(
-        s_sum_2005,
-        r_sum_2006,
-        a_sum_2007
+  let '(s_sum_2087, r_sum_2088, a_sum_2089) :=
+    foldi (usize 0) (seq_len (entries_2085)) (fun i_2090 '(
+        s_sum_2087,
+        r_sum_2088,
+        a_sum_2089
       ) =>
-      let 'BatchEntry ((pk_2009, msg_2010, signature_2011)) :=
-        (seq_index (entries_2003) (i_2008)) in 
-      let a_2012 : (
+      let 'BatchEntry ((pk_2091, msg_2092, signature_2093)) :=
+        (seq_index (entries_2085) (i_2090)) in 
+      let a_2094 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress (pk_2009)) (InvalidPublickey) in 
-      let r_bytes_2013 : compressed_ed_point_t :=
+        option_ok_or (decompress (pk_2091)) (InvalidPublickey) in 
+      let r_bytes_2095 : compressed_ed_point_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_2011)) (usize 0) (usize 32) in 
-      let s_bytes_2014 : serialized_scalar_t :=
+          array_to_seq (signature_2093)) (usize 0) (usize 32) in 
+      let s_bytes_2096 : serialized_scalar_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_2011)) (usize 32) (usize 32) in 
+          array_to_seq (signature_2093)) (usize 32) (usize 32) in 
       let 'tt :=
-        if negb (check_canonical_scalar (s_bytes_2014)):bool then (
+        if negb (check_canonical_scalar (s_bytes_2096)):bool then (
           let _ : unit :=
             @Err unit error_t (InvalidS) in 
           tt) else (tt) in 
-      let r_2015 : (
+      let r_2097 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress (r_bytes_2013)) (InvalidR) in 
-      let s_2016 : scalar_t :=
-        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2014)) : scalar_t in 
-      let c_2017 : scalar_t :=
-        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2013) (
-                array_to_seq (pk_2009))) (msg_2010))) in 
-      let z_2018 : seq uint8 :=
-        seq_slice (entropy_2004) ((usize 16) * (i_2008)) (usize 16) in 
-      let z_2019 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_2018) (seq_new_ (
+        option_ok_or (decompress (r_bytes_2095)) (InvalidR) in 
+      let s_2098 : scalar_t :=
+        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2096)) : scalar_t in 
+      let c_2099 : scalar_t :=
+        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2095) (
+                array_to_seq (pk_2091))) (msg_2092))) in 
+      let z_2100 : seq uint8 :=
+        seq_slice (entropy_2086) ((usize 16) * (i_2090)) (usize 16) in 
+      let z_2101 : scalar_t :=
+        nat_mod_from_byte_seq_le (seq_concat (z_2100) (seq_new_ (
               default : uint8) (usize 16))) : scalar_t in 
-      let s_sum_2005 :=
-        (s_sum_2005) +% ((s_2016) *% (z_2019)) in 
-      let r_sum_2006 :=
-        point_add (r_sum_2006) (point_mul (z_2019) (r_2015)) in 
-      let a_sum_2007 :=
-        point_add (a_sum_2007) (point_mul ((z_2019) *% (c_2017)) (a_2012)) in 
-      (s_sum_2005, r_sum_2006, a_sum_2007))
-    (s_sum_2005, r_sum_2006, a_sum_2007) in 
-  let b_2020 : (
+      let s_sum_2087 :=
+        (s_sum_2087) +% ((s_2098) *% (z_2101)) in 
+      let r_sum_2088 :=
+        point_add (r_sum_2088) (point_mul (z_2101) (r_2097)) in 
+      let a_sum_2089 :=
+        point_add (a_sum_2089) (point_mul ((z_2101) *% (c_2099)) (a_2094)) in 
+      (s_sum_2087, r_sum_2088, a_sum_2089))
+    (s_sum_2087, r_sum_2088, a_sum_2089) in 
+  let b_2102 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let sb_2021 : (
+  let sb_2103 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (s_sum_2005) (b_2020) in 
-  let check_2022 : (
+    point_mul (s_sum_2087) (b_2102) in 
+  let check_2104 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_add (point_neg (sb_2021)) (point_add (r_sum_2006) (a_sum_2007)) in 
-  (if (is_identity (check_2022)):bool then (@Ok unit error_t (tt)) else (
+    point_add (point_neg (sb_2103)) (point_add (r_sum_2088) (a_sum_2089)) in 
+  (if (is_identity (check_2104)):bool then (@Ok unit error_t (tt)) else (
       @Err unit error_t (InvalidSignature))).
 
 Definition alg3_batch_verify
-  (entries_2023 : seq batch_entry_t)
-  (entropy_2024 : byte_seq)
+  (entries_2105 : seq batch_entry_t)
+  (entropy_2106 : byte_seq)
   : verify_result_t :=
   let 'tt :=
-    if (seq_len (entropy_2024)) <.? ((usize 16) * (seq_len (
-          entries_2023))):bool then (let _ : unit :=
+    if (seq_len (entropy_2106)) <.? ((usize 16) * (seq_len (
+          entries_2105))):bool then (let _ : unit :=
         @Err unit error_t (NotEnoughRandomness) in 
       tt) else (tt) in 
-  let s_sum_2025 : scalar_t :=
+  let s_sum_2107 : scalar_t :=
     nat_mod_zero  in 
-  let r_sum_2026 : (
+  let r_sum_2108 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let a_sum_2027 : (
+  let a_sum_2109 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     point_identity  in 
-  let '(s_sum_2025, r_sum_2026, a_sum_2027) :=
-    foldi (usize 0) (seq_len (entries_2023)) (fun i_2028 '(
-        s_sum_2025,
-        r_sum_2026,
-        a_sum_2027
+  let '(s_sum_2107, r_sum_2108, a_sum_2109) :=
+    foldi (usize 0) (seq_len (entries_2105)) (fun i_2110 '(
+        s_sum_2107,
+        r_sum_2108,
+        a_sum_2109
       ) =>
-      let 'BatchEntry ((pk_2029, msg_2030, signature_2031)) :=
-        (seq_index (entries_2023) (i_2028)) in 
-      let a_2032 : (
+      let 'BatchEntry ((pk_2111, msg_2112, signature_2113)) :=
+        (seq_index (entries_2105) (i_2110)) in 
+      let a_2114 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress (pk_2029)) (InvalidPublickey) in 
+        option_ok_or (decompress (pk_2111)) (InvalidPublickey) in 
       let 'tt :=
-        if is_identity (point_mul_by_cofactor (a_2032)):bool then (
+        if is_identity (point_mul_by_cofactor (a_2114)):bool then (
           let _ : unit :=
             @Err unit error_t (SmallOrderPoint) in 
           tt) else (tt) in 
-      let r_bytes_2033 : compressed_ed_point_t :=
+      let r_bytes_2115 : compressed_ed_point_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_2031)) (usize 0) (usize 32) in 
-      let s_bytes_2034 : serialized_scalar_t :=
+          array_to_seq (signature_2113)) (usize 0) (usize 32) in 
+      let s_bytes_2116 : serialized_scalar_t :=
         array_from_slice (default : uint8) (32) (
-          array_to_seq (signature_2031)) (usize 32) (usize 32) in 
+          array_to_seq (signature_2113)) (usize 32) (usize 32) in 
       let 'tt :=
-        if negb (check_canonical_scalar (s_bytes_2034)):bool then (
+        if negb (check_canonical_scalar (s_bytes_2116)):bool then (
           let _ : unit :=
             @Err unit error_t (InvalidS) in 
           tt) else (tt) in 
-      let r_2035 : (
+      let r_2117 : (
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t ×
           ed25519_field_element_t
         ) :=
-        option_ok_or (decompress (r_bytes_2033)) (InvalidR) in 
-      let s_2036 : scalar_t :=
-        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2034)) : scalar_t in 
-      let c_2037 : scalar_t :=
-        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2033) (
-                array_to_seq (pk_2029))) (msg_2030))) in 
-      let z_2038 : seq uint8 :=
-        seq_slice (entropy_2024) ((usize 16) * (i_2028)) (usize 16) in 
-      let z_2039 : scalar_t :=
-        nat_mod_from_byte_seq_le (seq_concat (z_2038) (seq_new_ (
+        option_ok_or (decompress (r_bytes_2115)) (InvalidR) in 
+      let s_2118 : scalar_t :=
+        nat_mod_from_byte_seq_le (array_to_seq (s_bytes_2116)) : scalar_t in 
+      let c_2119 : scalar_t :=
+        scalar_from_hash (sha512 (seq_concat (array_concat (r_bytes_2115) (
+                array_to_seq (pk_2111))) (msg_2112))) in 
+      let z_2120 : seq uint8 :=
+        seq_slice (entropy_2106) ((usize 16) * (i_2110)) (usize 16) in 
+      let z_2121 : scalar_t :=
+        nat_mod_from_byte_seq_le (seq_concat (z_2120) (seq_new_ (
               default : uint8) (usize 16))) : scalar_t in 
-      let s_sum_2025 :=
-        (s_sum_2025) +% ((s_2036) *% (z_2039)) in 
-      let r_sum_2026 :=
-        point_add (r_sum_2026) (point_mul (z_2039) (r_2035)) in 
-      let a_sum_2027 :=
-        point_add (a_sum_2027) (point_mul ((z_2039) *% (c_2037)) (a_2032)) in 
-      (s_sum_2025, r_sum_2026, a_sum_2027))
-    (s_sum_2025, r_sum_2026, a_sum_2027) in 
-  let b_2040 : (
+      let s_sum_2107 :=
+        (s_sum_2107) +% ((s_2118) *% (z_2121)) in 
+      let r_sum_2108 :=
+        point_add (r_sum_2108) (point_mul (z_2121) (r_2117)) in 
+      let a_sum_2109 :=
+        point_add (a_sum_2109) (point_mul ((z_2121) *% (c_2119)) (a_2114)) in 
+      (s_sum_2107, r_sum_2108, a_sum_2109))
+    (s_sum_2107, r_sum_2108, a_sum_2109) in 
+  let b_2122 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
-  let sb_2041 : (
+  let sb_2123 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul (s_sum_2025) (b_2040) in 
-  let check_2042 : (
+    point_mul (s_sum_2107) (b_2122) in 
+  let check_2124 : (
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t ×
       ed25519_field_element_t
     ) :=
-    point_mul_by_cofactor (point_add (point_neg (sb_2041)) (point_add (
-          r_sum_2026) (a_sum_2027))) in 
-  (if (is_identity (check_2042)):bool then (@Ok unit error_t (tt)) else (
+    point_mul_by_cofactor (point_add (point_neg (sb_2123)) (point_add (
+          r_sum_2108) (a_sum_2109))) in 
+  (if (is_identity (check_2124)):bool then (@Ok unit error_t (tt)) else (
       @Err unit error_t (InvalidSignature))).
 
