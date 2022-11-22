@@ -1,9 +1,8 @@
-use crate::name_resolution::{DictEntry, TopLevelContext};
+use crate::name_resolution::TopLevelContext;
 use crate::rustspec::*;
 use core::iter::IntoIterator;
 use core::slice::Iter;
 use heck::TitleCase;
-use im::HashSet;
 use itertools::Itertools;
 use pretty::RcDoc;
 use rustc_session::Session;
@@ -843,16 +842,7 @@ fn translate_func_name<'a>(
                     ),
                 ])),
 
-                (_, _, _) => {
-                    println!(
-                        "UNCAUGHT: {:?}",
-                        module_name
-                            .clone()
-                            .append(RcDoc::as_string("_"))
-                            .append(func_ident.clone())
-                    );
-                    result_typ
-                }
+                (_, _, _) => result_typ,
             };
 
             (
@@ -997,6 +987,9 @@ fn translate_expression<'a>(
             ass.push(temp_ass);
 
             (ass, translate_ident(temp_name))
+        }
+        Expression::FieldAccessor(e1, field) => {
+            unimplemented!()
         }
         //todo
         Expression::EnumInject(enum_name, case_name, payload) => {
@@ -2300,7 +2293,6 @@ pub fn function_dependencies_to_vec<'a>(
                     | "U8_from_usize"
                     | "declassify_usize_from_U8" => (),
                     _ => {
-                        println!("External not caught {:?}", x.string);
                         let mut unspanned_args = vec![];
                         for ((_a, _), (bt, _)) in fnsig.args.clone() {
                             unspanned_args.push(bt)
@@ -2311,7 +2303,7 @@ pub fn function_dependencies_to_vec<'a>(
                 }
             }
             Some(_) => (),
-            None => (), // println!("Fn {} is non", x.clone()),
+            None => (),
         }
     }
     dep_info.sort_by(|(a, _, _), (b, _, _)| a.partial_cmp(b).unwrap());

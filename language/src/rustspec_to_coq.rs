@@ -1,4 +1,4 @@
-use crate::name_resolution::{DictEntry, TopLevelContext};
+use crate::name_resolution::{TopLevelContext};
 use crate::rustspec::*;
 use core::iter::IntoIterator;
 use core::slice::Iter;
@@ -508,6 +508,9 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             ))
             .append(RcDoc::line())
             .append(RcDoc::as_string("end")),
+        Expression::FieldAccessor(e1, field) => {
+            unimplemented!()
+        }
         //todo
         Expression::EnumInject(enum_name, case_name, payload) => {
             translate_enum_case_name(enum_name.clone(), case_name.0.clone(), true).append(

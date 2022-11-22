@@ -176,6 +176,9 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
                 Expression::MatchWith(scrutinee, branches.collect())
             }
         }
+        Expression::FieldAccessor(e1, field) => {
+            Expression::FieldAccessor(elim_boxed_sub_expr(e1), field.clone())
+        }
         Expression::ArrayIndex(n, e1, t) => {
             Expression::ArrayIndex(n.clone(), elim_boxed_sub_expr(e1), t.clone())
         }

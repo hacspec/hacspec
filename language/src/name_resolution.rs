@@ -243,6 +243,10 @@ fn resolve_expression(
                 (Expression::MatchWith(Box::new(new_arg), new_arms), e_span),
             ))
         }
+        Expression::FieldAccessor(box e1, field) => {
+            let (smi, e1) = resolve_expression(sess, e1, name_context, top_level_ctx)?;
+            Ok((smi, (Expression::FieldAccessor(box e1, field), e_span)))
+        }
         Expression::EnumInject(enum_name, case_name, payload) => {
             let (smi_payload, payload) = match payload {
                 None => (ScopeMutInfo::new(), None),

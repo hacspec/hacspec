@@ -1,10 +1,9 @@
-use crate::name_resolution::{FnKey, FnValue, TopLevelContext};
+use crate::name_resolution::TopLevelContext;
 use crate::rustspec::*;
 use crate::rustspec_to_coq_base::*;
 use crate::rustspec_to_coq_ssprove_pure;
 use crate::rustspec_to_coq_ssprove_state;
 use core::slice::Iter;
-use im::HashMap;
 use itertools::Itertools;
 use pretty::RcDoc;
 use rustc_session::Session;
@@ -168,8 +167,11 @@ fn make_let_binding<'a>(
 
 fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match e {
-        Expression::QuestionMark(_, _) => todo!(),
-        Expression::MonadicLet(_, _, _, _) => todo!(),
+        Expression::MonadicLet(..) => panic!("TODO: Coq support for Expression::MonadicLet"),
+        Expression::QuestionMark(..) => {
+            // TODO: eliminiate this `panic!` with nicer types (See issue #303)
+            panic!("[Expression::QuestionMark] nodes should have been eliminated before printing.")
+        }
         Expression::Binary((op, _), e1, e2, op_typ) => {
             make_paren(translate_expression((*e1).0, top_ctx))
                 .append(RcDoc::space())
@@ -183,6 +185,9 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 .append(make_paren(translate_expression((*e2).0, top_ctx)))
         }
         Expression::MatchWith(arg, arms) => RcDoc::as_string("TODO match"),
+        Expression::FieldAccessor(e1, field) => {
+            unimplemented!()
+        }
         Expression::EnumInject(enum_name, case_name, payload) => {
             let trans = match payload {
                 None => RcDoc::nil(),
