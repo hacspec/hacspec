@@ -144,6 +144,9 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [Chacha20](examples/chacha20/src/chacha20.rs)
 - [Poly1305](examples/poly1305/src/poly1305.rs)
 - [Chacha20Poly1305](examples/chacha20poly1305/src/chacha20poly1305.rs)
+- [AES 128](examples/aes/src/aes.rs)
+- [GF 128](examples/gf128/src/gf128.rs)
+- [AES-GCM 128](examples/aes128-gcm/src/aes128-gcm.rs)
 - [SHA256](examples/sha256/src/sha256.rs)
 - [SHA512](examples/sha512/src/sha512.rs)
 - [Curve25519](examples/curve25519/src/curve25519.rs)
@@ -162,7 +165,6 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 ## Unsafe examples
 
 - [AES 128/256](examples-unsafe/src/aes_gcm/aes.rs)
-- [GF 128](examples-unsafe/src/aes_gcm/gf128.rs)
 - [AES-GCM 128/256](examples-unsafe/src/aes_gcm/aesgcm.rs)
 - [Blake2b](examples-unsafe/src/blake2/blake2b.rs)
 

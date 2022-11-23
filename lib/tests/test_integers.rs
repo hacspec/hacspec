@@ -43,9 +43,9 @@ macro_rules! test_integer_macro {
             true
         };
         println!(" Test greater_than_or_equal");
-        assert_eq!(a_t.greater_than_or_qual(b_t), expected_gte);
-        assert_eq!(a_t.greater_than_or_qual(a_t), true);
-        assert_eq!(b_t.greater_than_or_qual(b_t), true);
+        assert_eq!(a_t.greater_than_or_equal(b_t), expected_gte);
+        assert_eq!(a_t.greater_than_or_equal(a_t), true);
+        assert_eq!(b_t.greater_than_or_equal(b_t), true);
         let expected_lt = if get_expected("<", &a, &b) == "0x0" {
             false
         } else {

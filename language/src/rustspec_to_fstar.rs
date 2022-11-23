@@ -11,6 +11,7 @@ use regex::Regex;
 use rustc_session::Session;
 use rustc_span::DUMMY_SP;
 use std::collections::HashMap;
+use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::path;
@@ -215,7 +216,7 @@ fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
     match x {
         Ident::Unresolved(s) => translate_ident_str(s.clone()),
         Ident::TopLevel(s) => translate_toplevel_ident(s),
-        Ident::Local(LocalIdent { id, name: s }) => {
+        Ident::Local(LocalIdent { id, name: s, .. }) => {
             let mut id_map = ID_MAP.lock().unwrap();
             let codegen_id: usize = match id_map.get(&id) {
                 Some(c_id) => *c_id,
@@ -333,6 +334,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
         BaseTyp::NaturalInteger(_secrecy, modulo, _bits) => RcDoc::as_string("nat_mod")
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0))),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 
@@ -340,23 +342,39 @@ fn translate_typ<'a>((_, (tau, _)): Typ) -> RcDoc<'a, ()> {
     translate_base_typ(tau)
 }
 
+// By default, negative values are formatted as the two’s complement
+// representation by LowerHex, see
+// https://doc.rust-lang.org/std/fmt/trait.LowerHex.html.
+
+// The newtype `SignedInteger` wraps integers to reimplement LowerHex
+// so that they are formatted with their sign.
+struct SignedInteger<T>(T);
+impl<T: fmt::LowerHex + num::traits::Signed> fmt::LowerHex for SignedInteger<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let prefix = if f.alternate() { "0x" } else { "" };
+        let bare_hex = format!("{:x}", self.0.abs());
+        f.pad_integral(self.0.is_positive(), prefix, &bare_hex)
+    }
+}
+
 fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
     match lit {
         Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
         Literal::Bool(false) => RcDoc::as_string("false"),
-        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", x)),
+        Literal::Int128(x) => RcDoc::as_string(format!("pub_i128 {:#x}", SignedInteger(x))),
         Literal::UInt128(x) => RcDoc::as_string(format!("pub_u128 {:#x}", x)),
-        Literal::Int64(x) => RcDoc::as_string(format!("pub_i64 {:#x}", x)),
-        Literal::UInt64(x) => RcDoc::as_string(format!("pub_u64 {:#x}", x)),
-        Literal::Int32(x) => RcDoc::as_string(format!("pub_i32 {:#x}", x)),
-        Literal::UInt32(x) => RcDoc::as_string(format!("pub_u32 {:#x}", x)),
-        Literal::Int16(x) => RcDoc::as_string(format!("pub_i16 {:#x}", x)),
-        Literal::UInt16(x) => RcDoc::as_string(format!("pub_u16 {:#x}", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("pub_i8 {:#x}", x)),
-        Literal::UInt8(x) => RcDoc::as_string(format!("pub_u8 {:#x}", x)),
-        Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
-        Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
+        Literal::Int64(x) => RcDoc::as_string(format!("{:#x}L", SignedInteger(x))),
+        Literal::UInt64(x) => RcDoc::as_string(format!("{:#x}uL", x)),
+        Literal::Int32(x) => RcDoc::as_string(format!("{:#x}l", SignedInteger(x))),
+        Literal::UInt32(x) => RcDoc::as_string(format!("{:#x}ul", x)),
+        Literal::Int16(x) => RcDoc::as_string(format!("{:#x}s", SignedInteger(x))),
+        Literal::UInt16(x) => RcDoc::as_string(format!("{:#x}us", x)),
+        Literal::Int8(x) => RcDoc::as_string(format!("{:#x}y", SignedInteger(x))),
+        Literal::UInt8(x) => RcDoc::as_string(format!("{:#x}uy", x)),
+        Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
+        Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
+        Literal::UnspecifiedInt(_) => panic!("Got a `UnspecifiedInt` literal: those should have been resolved into concrete types during the typechecking phase"),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
     }
 }
@@ -474,13 +492,15 @@ fn get_type_default(t: &BaseTyp) -> Expression {
 
 fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
     match p {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
-            translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone())
+        Pattern::EnumCase(ty_name, name, None) => translate_enum_case_name(ty_name, name.0.clone()),
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
+            translate_enum_case_name(ty_name, name.0.clone())
                 .append(RcDoc::space())
                 .append(make_paren(translate_pattern(inner_pat.0)))
         }
-        Pattern::IdentPat(x) => translate_ident(x.clone()),
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
+        Pattern::LiteralPat(l) => translate_literal(l.clone()),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }
 }
@@ -683,6 +703,7 @@ fn translate_prefix_for_func_name<'a>(
             RcDoc::as_string(NAT_MODULE),
             FuncPrefix::NatMod(modulo.0.clone(), bits.0.clone()),
         ),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 
@@ -859,19 +880,10 @@ fn translate_expression<'a>(
             .append(RcDoc::as_string("with"))
             .append(RcDoc::line())
             .append(RcDoc::intersperse(
-                arms.into_iter().map(|(enum_name, case_name, payload, e1)| {
+                arms.into_iter().map(|(pat, e1)| {
                     RcDoc::as_string("|")
                         .append(RcDoc::space())
-                        .append(translate_enum_case_name(
-                            enum_name.clone(),
-                            case_name.0.clone(),
-                        ))
-                        .append(match &payload {
-                            Some(payload) => {
-                                RcDoc::space().append(translate_pattern(payload.0.clone()))
-                            }
-                            None => RcDoc::nil(),
-                        })
+                        .append(translate_pattern(pat.0.clone()))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("->"))
                         .append(RcDoc::space())
@@ -881,6 +893,14 @@ fn translate_expression<'a>(
             ))
             .append(RcDoc::space())
             .append("end"),
+        Expression::FieldAccessor(e1, box (Field::TupleIndex(field), _)) => {
+            // TODO (See issue #325): this works only for tuples
+            // because for now, a rust variant of arity [n] is
+            // extracted as an F* variant of arity [1] whose payload
+            // is a tuple of arity [n].
+            make_paren(translate_expression(sess, e1.0, top_ctx))
+                .append(RcDoc::as_string(format!("._{}", field)))
+        }
         Expression::EnumInject(enum_name, case_name, payload) => {
             translate_enum_case_name(enum_name.clone(), case_name.0.clone()).append(match payload {
                 None => RcDoc::nil(),
@@ -1085,26 +1105,29 @@ fn add_ok_if_result(stmt: Statement, question_mark: bool) -> Spanned<Statement> 
             // If b has an early return, then we must prefix the returned
             // mutated variables by Ok
             match stmt {
-                Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
-                    BaseTyp::Named(
+                Statement::ReturnExp(e, t) => Statement::ReturnExp(
+                    Expression::EnumInject(
+                        BaseTyp::Named(
+                            (
+                                TopLevelIdent {
+                                    string: "Result".to_string(),
+                                    kind: TopLevelIdentKind::Type,
+                                },
+                                DUMMY_SP.into(),
+                            ),
+                            None,
+                        ),
                         (
                             TopLevelIdent {
-                                string: "Result".to_string(),
-                                kind: TopLevelIdentKind::Type,
+                                string: "Ok".to_string(),
+                                kind: TopLevelIdentKind::EnumConstructor,
                             },
                             DUMMY_SP.into(),
                         ),
-                        None,
+                        Some((Box::new(e.clone()), DUMMY_SP.into())),
                     ),
-                    (
-                        TopLevelIdent {
-                            string: "Ok".to_string(),
-                            kind: TopLevelIdentKind::EnumConstructor,
-                        },
-                        DUMMY_SP.into(),
-                    ),
-                    Some((Box::new(e.clone()), DUMMY_SP.into())),
-                )),
+                    t,
+                ), // TODO typing
                 _ => panic!("should not happen"),
             }
         } else {
@@ -1171,7 +1194,7 @@ fn translate_statements<'a>(
             // 	Expression::MonadicLet(..) => true,
             // 	_ => false
             // });
-            if question_mark {
+            if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_pattern(pat.clone()),
                     typ.map(|(typ, _)| translate_typ(typ)),
@@ -1184,7 +1207,7 @@ fn translate_statements<'a>(
                     typ.map(|(typ, _)| translate_typ(typ)),
                     translate_expression(sess, expr.clone(), top_ctx),
                     false,
-                    if question_mark {
+                    if question_mark.is_some() {
                         Some(EarlyReturnType::Result)
                     } else {
                         None
@@ -1194,8 +1217,8 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _), question_mark) => {
-            if question_mark {
+        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) => {
+            if question_mark.is_some() {
                 make_error_returning_let_binding(
                     translate_ident(x.clone()),
                     None,
@@ -1208,7 +1231,7 @@ fn translate_statements<'a>(
                     None,
                     translate_expression(sess, e1.clone(), top_ctx),
                     false,
-                    if question_mark {
+                    if question_mark.is_some() {
                         Some(EarlyReturnType::Result)
                     } else {
                         None
@@ -1220,10 +1243,11 @@ fn translate_statements<'a>(
         }
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
-            if question_mark {
+            if question_mark.is_some() {
                 let tmp_ident = Ident::Local(LocalIdent {
                     name: "tmp".to_string(),
                     id: fresh_codegen_id(),
+                    mutable: false,
                 });
                 let array_upd_payload = array_or_seq
                     .append(RcDoc::as_string("_upd"))
@@ -1269,7 +1293,7 @@ fn translate_statements<'a>(
                 .append(translate_statements(sess, statements, top_ctx))
             }
         }
-        Statement::ReturnExp(e1) => translate_expression(sess, e1.clone(), top_ctx),
+        Statement::ReturnExp(e1, _) => translate_expression(sess, e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (mut b1, _), b2, mutated) => {
             let mutated_info = mutated.unwrap();
             let pat = make_tuple(
@@ -1397,7 +1421,7 @@ fn translate_block<'a>(
         (None, _) => panic!(), // should not happen,
         (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
             statements.push((
-                Statement::ReturnExp(Expression::Lit(Literal::Unit)),
+                Statement::ReturnExp(Expression::Lit(Literal::Unit), None),
                 DUMMY_SP.into(),
             ));
         }

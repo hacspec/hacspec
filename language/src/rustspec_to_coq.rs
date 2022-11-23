@@ -2,35 +2,16 @@ use crate::name_resolution::{DictEntry, TopLevelContext};
 use crate::rustspec::*;
 use core::iter::IntoIterator;
 use core::slice::Iter;
-use heck::{SnakeCase, TitleCase};
+use heck::TitleCase;
 use itertools::Itertools;
-use lazy_static::lazy_static;
 use pretty::RcDoc;
-use regex::Regex;
 use rustc_session::Session;
 use rustc_span::DUMMY_SP;
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::path;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Mutex;
 
-const SEQ_MODULE: &'static str = "seq";
-
-const ARRAY_MODULE: &'static str = "array";
-
-const NAT_MODULE: &'static str = "nat_mod";
-
-static ID_COUNTER: AtomicUsize = AtomicUsize::new(0);
-
-fn fresh_codegen_id() -> usize {
-    ID_COUNTER.fetch_add(1, Ordering::SeqCst)
-}
-
-lazy_static! {
-    static ref ID_MAP: Mutex<HashMap<usize, usize>> = Mutex::new(HashMap::new());
-}
+use crate::rustspec_to_coq_base::*;
 
 fn make_let_binding<'a>(
     pat: RcDoc<'a, ()>,
@@ -82,112 +63,6 @@ fn make_uint_size_coercion<'a>(pat: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
         .append(RcDoc::as_string("."))
 }
 
-fn make_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
-    let iter = args.into_iter();
-    match &iter.size_hint().1 {
-        Some(0) => RcDoc::as_string("tt"),
-        _ => RcDoc::as_string("(")
-            .append(
-                RcDoc::line_()
-                    .append(RcDoc::intersperse(
-                        iter,
-                        RcDoc::as_string(",").append(RcDoc::line()),
-                    ))
-                    .group()
-                    .nest(2),
-            )
-            .append(RcDoc::line_())
-            .append(RcDoc::as_string(")"))
-            .group(),
-    }
-}
-
-fn make_list<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
-    RcDoc::as_string("[")
-        .append(
-            RcDoc::line_()
-                .append(RcDoc::intersperse(
-                    args.into_iter(),
-                    RcDoc::as_string(";").append(RcDoc::line()),
-                ))
-                .group()
-                .nest(2),
-        )
-        .append(RcDoc::line_())
-        .append(RcDoc::as_string("]"))
-        .group()
-}
-
-fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I) -> RcDoc<'a, ()> {
-    RcDoc::as_string("(")
-        .append(
-            RcDoc::line_()
-                .append(RcDoc::intersperse(
-                    args.into_iter(),
-                    RcDoc::space()
-                        .append(RcDoc::as_string("×"))
-                        .append(RcDoc::line()),
-                ))
-                .group()
-                .nest(2),
-        )
-        .append(RcDoc::line_())
-        .append(RcDoc::as_string(")"))
-        .group()
-}
-
-fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
-    RcDoc::as_string("(")
-        .append(RcDoc::softline_().append(e).group().nest(2))
-        .append(RcDoc::as_string(")"))
-        .group()
-}
-
-fn translate_toplevel_ident<'a>(x: TopLevelIdent) -> RcDoc<'a, ()> {
-    match x.kind {
-        TopLevelIdentKind::Type => {
-            match format!("{}", translate_ident_str(x.string).pretty(0)).as_str() {
-                s @ "uint128"
-                | s @ "uint64"
-                | s @ "uint32"
-                | s @ "uint16"
-                | s @ "uint8"
-                | s @ "int128"
-                | s @ "int64"
-                | s @ "int32"
-                | s @ "int16"
-                | s @ "int8"
-                | s @ "byte_seq"
-                | s @ "public_byte_seq"
-                | s @ "option"
-                | s @ "result" => RcDoc::as_string(s),
-                s => RcDoc::as_string(format!("{}_t", s)),
-            }
-        }
-        TopLevelIdentKind::Constant => translate_ident_str(format!("{}_v", x.string)),
-        _ => translate_ident_str(x.string),
-    }
-}
-
-fn translate_ident<'a>(x: Ident) -> RcDoc<'a, ()> {
-    match x {
-        Ident::Unresolved(s) => translate_ident_str(s.clone()),
-        Ident::TopLevel(s) => translate_toplevel_ident(s),
-        Ident::Local(LocalIdent { id, name: s }) => {
-            let mut id_map = ID_MAP.lock().unwrap();
-            let codegen_id: usize = match id_map.get(&id) {
-                Some(c_id) => *c_id,
-                None => {
-                    let c_id = fresh_codegen_id();
-                    id_map.insert(id, c_id);
-                    c_id
-                }
-            };
-            translate_ident_str(format!("{}_{}", s, codegen_id))
-        }
-    }
-}
-
 fn translate_constructor<'a>(enum_name: TopLevelIdent) -> RcDoc<'a> {
     RcDoc::as_string(enum_name.string)
 }
@@ -230,23 +105,6 @@ fn translate_enum_case_name<'a>(
         },
         _ => panic!("should not happen"),
     }
-}
-
-fn translate_ident_str<'a>(ident_str: String) -> RcDoc<'a, ()> {
-    let mut ident_str = ident_str.clone();
-    let secret_int_regex = Regex::new(r"(?P<prefix>(U|I))(?P<digits>\d{1,3})").unwrap();
-    ident_str = secret_int_regex
-        .replace_all(&ident_str, r"${prefix}int${digits}")
-        .to_string();
-    let secret_signed_int_fix = Regex::new(r"iint").unwrap();
-    ident_str = secret_signed_int_fix
-        .replace_all(&ident_str, "int")
-        .to_string();
-    let mut snake_case_ident = ident_str.to_snake_case();
-    if snake_case_ident == "new" {
-        snake_case_ident = "new_".to_string();
-    }
-    RcDoc::as_string(snake_case_ident)
 }
 
 fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
@@ -311,6 +169,7 @@ fn translate_base_typ<'a>(tau: BaseTyp) -> RcDoc<'a, ()> {
             .append(RcDoc::space())
             .append(RcDoc::as_string(format!("0x{}", &modulo.0)))
             .append(RcDoc::hardline()),
+        BaseTyp::Placeholder => panic!("Got unexpected type `Placeholder`: this should have been filled by during the typechecking phase."),
     }
 }
 
@@ -335,216 +194,14 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::UInt8(x) => RcDoc::as_string(format!("@repr WORDSIZE8 {}", x)),
         Literal::Isize(x) => RcDoc::as_string(format!("isize {}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("usize {}", x)),
+        Literal::UnspecifiedInt(_) => panic!("Got a `UnspecifiedInt` literal: those should have been resolved into concrete types during the typechecking phase"),
         Literal::Str(msg) => RcDoc::as_string(format!("\"{}\"", msg)),
-    }
-}
-
-fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
-    match p {
-        // If the pattern is a tuple, expand it
-        Pattern::Tuple(_) => RcDoc::as_string("'").append(translate_pattern(p)),
-        _ => translate_pattern(p),
-    }
-}
-fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
-    match p {
-        Pattern::SingleCaseEnum(name, inner_pat) => {
-            translate_enum_case_name(BaseTyp::Named(name.clone(), None), name.0.clone(), false)
-                .append(RcDoc::space())
-                .append(make_paren(translate_pattern(inner_pat.0)))
-        }
-        Pattern::IdentPat(x) => translate_ident(x.clone()),
-        Pattern::WildCard => RcDoc::as_string("_"),
-        Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
-    }
-}
-
-fn translate_binop<'a, 'b>(
-    op: BinOpKind,
-    op_typ: &'b Typ,
-    top_ctx: &'a TopLevelContext,
-) -> RcDoc<'a, ()> {
-    match (op, &(op_typ.1).0) {
-        (_, BaseTyp::Named(ident, _)) => {
-            let ident = &ident.0;
-            match top_ctx.typ_dict.get(ident) {
-                Some((inner_ty, entry)) => match entry {
-                    DictEntry::NaturalInteger => match op {
-                        BinOpKind::Add => return RcDoc::as_string("+%"),
-                        BinOpKind::Sub => return RcDoc::as_string("-%"),
-                        BinOpKind::Mul => return RcDoc::as_string("*%"),
-                        BinOpKind::Div => return RcDoc::as_string("/%"),
-                        BinOpKind::Rem => return RcDoc::as_string("rem"),
-                        // Rem,
-                        // And,
-                        // Or,
-                        BinOpKind::BitXor => return RcDoc::as_string("xor"),
-                        BinOpKind::BitOr => return RcDoc::as_string("or"),
-                        BinOpKind::BitAnd => return RcDoc::as_string("and"),
-                        // Shl,
-                        // Shr,
-                        BinOpKind::Eq => return RcDoc::as_string("=.?"),
-                        BinOpKind::Lt => return RcDoc::as_string("<.?"),
-                        BinOpKind::Le => return RcDoc::as_string("<=.?"),
-                        BinOpKind::Ne => return RcDoc::as_string("!=.?"),
-                        BinOpKind::Ge => return RcDoc::as_string(">=.?"),
-                        BinOpKind::Gt => return RcDoc::as_string(">.?"),
-                        _ => unimplemented!("{:?}", op),
-                    },
-                    DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
-                        return translate_binop(op, inner_ty, top_ctx)
-                    }
-                },
-                _ => (), // should not happen
-            }
-        }
-        _ => (),
-    };
-    match (op, &(op_typ.1).0) {
-        (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, inner_ty)) => {
-            let _inner_ty_op = translate_binop(
-                op,
-                &(
-                    (Borrowing::Consumed, inner_ty.1.clone()),
-                    inner_ty.as_ref().clone(),
-                ),
-                top_ctx,
-            );
-            let op_str = match op {
-                BinOpKind::Sub => "minus",
-                BinOpKind::Add => "add",
-                BinOpKind::Mul => "mul",
-                BinOpKind::Div => "div",
-                BinOpKind::BitXor => "xor",
-                BinOpKind::BitOr => "or",
-                BinOpKind::BitAnd => "and",
-                BinOpKind::Eq => "eq",
-                BinOpKind::Ne => "neq",
-                _ => panic!("operator: {:?}", op), // should not happen
-            };
-            RcDoc::as_string(format!(
-                "{}_{}",
-                match &(op_typ.1).0 {
-                    BaseTyp::Seq(_) => SEQ_MODULE,
-                    BaseTyp::Array(_, _) => ARRAY_MODULE,
-                    _ => panic!(), // should not happen
-                },
-                op_str
-            ))
-        }
-        (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
-            RcDoc::as_string("-")
-        }
-        (BinOpKind::Add, BaseTyp::Usize) | (BinOpKind::Add, BaseTyp::Isize) => {
-            RcDoc::as_string("+")
-        }
-        (BinOpKind::Mul, BaseTyp::Usize) | (BinOpKind::Mul, BaseTyp::Isize) => {
-            RcDoc::as_string("*")
-        }
-        (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
-            RcDoc::as_string("/")
-        }
-        (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
-            RcDoc::as_string("%%")
-        }
-        (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("usize_shift_left"),
-        (BinOpKind::Shr, BaseTyp::Usize) => RcDoc::as_string("usize_shift_right"),
-        (BinOpKind::Rem, _) => RcDoc::as_string(".%"),
-        (BinOpKind::Sub, _) => RcDoc::as_string(".-"),
-        (BinOpKind::Add, _) => RcDoc::as_string(".+"),
-        (BinOpKind::Mul, _) => RcDoc::as_string(".*"),
-        (BinOpKind::Div, _) => RcDoc::as_string("./"),
-        (BinOpKind::BitXor, _) => RcDoc::as_string(".^"),
-        (BinOpKind::BitAnd, _) => RcDoc::as_string(".&"),
-        (BinOpKind::BitOr, _) => RcDoc::as_string(".|"),
-        (BinOpKind::Shl, _) => RcDoc::as_string("shift_left"),
-        (BinOpKind::Shr, _) => RcDoc::as_string("shift_right"),
-        (BinOpKind::Lt, _) => RcDoc::as_string("<.?"),
-        (BinOpKind::Le, _) => RcDoc::as_string("<=.?"),
-        (BinOpKind::Ge, _) => RcDoc::as_string(">=.?"),
-        (BinOpKind::Gt, _) => RcDoc::as_string(">.?"),
-        (BinOpKind::Ne, _) => RcDoc::as_string("!=.?"),
-        (BinOpKind::Eq, _) => RcDoc::as_string("=.?"),
-        (BinOpKind::And, _) => RcDoc::as_string("&&"),
-        (BinOpKind::Or, _) => RcDoc::as_string("||"),
-    }
-}
-
-fn translate_unop<'a>(op: UnOpKind, _op_typ: Typ) -> RcDoc<'a, ()> {
-    match (op, &(_op_typ.1).0) {
-        (UnOpKind::Not, BaseTyp::Bool) => RcDoc::as_string("negb"),
-        (UnOpKind::Not, _) => RcDoc::as_string("not"),
-        (UnOpKind::Neg, _) => RcDoc::as_string("-"),
-    }
-}
-
-#[derive(Debug)]
-enum FuncPrefix {
-    Regular,
-    Array(ArraySize, BaseTyp),
-    Seq(BaseTyp),
-    NatMod(String, usize), // Modulo value, number of bits for the encoding,
-}
-
-fn translate_prefix_for_func_name<'a>(
-    prefix: BaseTyp,
-    top_ctx: &'a TopLevelContext,
-) -> (RcDoc<'a, ()>, FuncPrefix) {
-    match prefix {
-        BaseTyp::Bool => panic!(), // should not happen
-        BaseTyp::UInt8 => (RcDoc::as_string("pub_uint8"), FuncPrefix::Regular),
-        BaseTyp::Int8 => (RcDoc::as_string("pub_int8"), FuncPrefix::Regular),
-        BaseTyp::UInt16 => (RcDoc::as_string("pub_uint16"), FuncPrefix::Regular),
-        BaseTyp::Int16 => (RcDoc::as_string("pub_int16"), FuncPrefix::Regular),
-        BaseTyp::UInt32 => (RcDoc::as_string("pub_uint32"), FuncPrefix::Regular),
-        BaseTyp::Int32 => (RcDoc::as_string("pub_int32"), FuncPrefix::Regular),
-        BaseTyp::UInt64 => (RcDoc::as_string("pub_uint64"), FuncPrefix::Regular),
-        BaseTyp::Int64 => (RcDoc::as_string("pub_int64"), FuncPrefix::Regular),
-        BaseTyp::UInt128 => (RcDoc::as_string("pub_uint128"), FuncPrefix::Regular),
-        BaseTyp::Int128 => (RcDoc::as_string("pub_int128"), FuncPrefix::Regular),
-        BaseTyp::Usize => (RcDoc::as_string("uint_size"), FuncPrefix::Regular),
-        BaseTyp::Isize => (RcDoc::as_string("int_size"), FuncPrefix::Regular),
-        BaseTyp::Str => (RcDoc::as_string("string"), FuncPrefix::Regular),
-        BaseTyp::Enum(_cases, _type_args) => {
-            panic!("Should not happen")
-        }
-        BaseTyp::Seq(inner_ty) => (
-            RcDoc::as_string(SEQ_MODULE),
-            FuncPrefix::Seq(inner_ty.as_ref().0.clone()),
-        ),
-        BaseTyp::Array(size, inner_ty) => (
-            RcDoc::as_string(ARRAY_MODULE),
-            FuncPrefix::Array(size.0.clone(), inner_ty.as_ref().0.clone()),
-        ),
-        BaseTyp::Named(ident, _) => {
-            // if the type is an array, we should print the Seq module instead
-            let name = &ident.0;
-            match top_ctx.typ_dict.get(name) {
-                Some((alias_typ, DictEntry::Array))
-                | Some((alias_typ, DictEntry::Alias))
-                | Some((alias_typ, DictEntry::NaturalInteger)) => {
-                    translate_prefix_for_func_name((alias_typ.1).0.clone(), top_ctx)
-                }
-                // TODO: doesn't work if the alias uses a definition from another library
-                // Needs fixing in the frontend
-                _ => (
-                    translate_ident_str(name.string.clone()),
-                    FuncPrefix::Regular,
-                ),
-            }
-        }
-        BaseTyp::Variable(_) => panic!(), // shoult not happen
-        BaseTyp::Tuple(_) => panic!(),    // should not happen
-        BaseTyp::NaturalInteger(_, modulo, bits) => (
-            RcDoc::as_string(NAT_MODULE),
-            FuncPrefix::NatMod(modulo.0.clone(), bits.0.clone()),
-        ),
     }
 }
 
 /// Returns the func name, as well as additional arguments to add when calling
 /// the function in Coq
-fn translate_func_name<'a>(
+pub(crate) fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
     name: Ident,
     top_ctx: &'a TopLevelContext,
@@ -660,8 +317,11 @@ fn translate_func_name<'a>(
                 | (ARRAY_MODULE, "from_slice")
                 | (ARRAY_MODULE, "from_slice_range") => {
                     match &prefix_info {
-                        FuncPrefix::Array(_, _) | FuncPrefix::Seq(_) => {
-                            additional_args.push(RcDoc::as_string("default"));
+                        FuncPrefix::Array(_, bt) | FuncPrefix::Seq(bt) => {
+                            additional_args.push(
+                                RcDoc::as_string("default : ")
+                                    .append(translate_base_typ(bt.clone())),
+                            );
                         }
                         _ => panic!(), // should not happen
                     }
@@ -786,6 +446,30 @@ fn translate_func_name<'a>(
     }
 }
 
+fn translate_pattern_tick<'a>(p: Pattern) -> RcDoc<'a, ()> {
+    match p {
+        // If the pattern is a tuple, expand it
+        Pattern::Tuple(_) => RcDoc::as_string("'").append(translate_pattern(p)),
+        _ => translate_pattern(p),
+    }
+}
+fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
+    match p {
+        Pattern::EnumCase(ty_name, name, None) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
+        }
+        Pattern::EnumCase(ty_name, name, Some(inner_pat)) => {
+            translate_enum_case_name(ty_name, name.0.clone(), false)
+                .append(RcDoc::space())
+                .append(make_paren(translate_pattern(inner_pat.0)))
+        }
+        Pattern::IdentPat(x, _) => translate_ident(x.clone()),
+        Pattern::LiteralPat(x) => translate_literal(x.clone()),
+        Pattern::WildCard => RcDoc::as_string("_"),
+        Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
+    }
+}
+
 fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDoc<'a, ()> {
     match e {
         Expression::MonadicLet(..) => panic!("TODO: Coq support for Expression::MonadicLet"),
@@ -811,20 +495,10 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             .append(RcDoc::as_string("with"))
             .append(RcDoc::line())
             .append(RcDoc::intersperse(
-                arms.into_iter().map(|(enum_name, case_name, payload, e1)| {
+                arms.into_iter().map(|(pat, e1)| {
                     RcDoc::as_string("|")
                         .append(RcDoc::space())
-                        .append(translate_enum_case_name(
-                            enum_name.clone(),
-                            case_name.0.clone(),
-                            false,
-                        ))
-                        .append(match &payload {
-                            Some(payload) => {
-                                RcDoc::space().append(translate_pattern(payload.0.clone()))
-                            }
-                            None => RcDoc::nil(),
-                        })
+                        .append(translate_pattern(pat.0.clone()))
                         .append(RcDoc::space())
                         .append(RcDoc::as_string("=>"))
                         .append(RcDoc::space())
@@ -834,6 +508,9 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
             ))
             .append(RcDoc::line())
             .append(RcDoc::as_string("end")),
+        Expression::FieldAccessor(e1, field) => {
+            unimplemented!()
+        }
         //todo
         Expression::EnumInject(enum_name, case_name, payload) => {
             translate_enum_case_name(enum_name.clone(), case_name.0.clone(), true).append(
@@ -1067,86 +744,6 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
     }
 }
 
-// taken from rustspec_to_fstar
-fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'a, ()> {
-    match &(t.1).0 {
-        BaseTyp::Seq(_) => RcDoc::as_string("seq"),
-        BaseTyp::Named(id, None) => {
-            let name = &id.0;
-            match top_ctxt.typ_dict.get(name) {
-                Some((new_t, dict_entry)) => match dict_entry {
-                    DictEntry::Alias => array_or_seq(new_t.clone(), top_ctxt),
-                    DictEntry::Enum => panic!("should not happen"),
-                    DictEntry::Array => {
-                        match &(new_t.1).0 {
-                            BaseTyp::Array(_, _) => RcDoc::as_string("array"),
-                            _ => panic!(), // shouldd not happen
-                        }
-                    }
-                    DictEntry::NaturalInteger => panic!("should not happen"),
-                },
-                None => panic!("should not happen"),
-            }
-        }
-        BaseTyp::Named(_, Some(_)) => panic!("should not happen"),
-        BaseTyp::Array(_, _) => RcDoc::as_string("array"),
-        _ => panic!("should not happen"),
-    }
-}
-
-// taken from rustspec_to_fstar
-fn add_ok_if_result(
-    stmt: Statement,
-    early_return_type: Fillable<EarlyReturnType>,
-    question_mark: bool,
-) -> Spanned<Statement> {
-    (
-        match early_return_type {
-            Some(ert) => {
-                if question_mark {
-                    // If b has an early return, then we must prefix the returned
-                    // mutated variables by Ok or Some
-                    match stmt {
-                        Statement::ReturnExp(e) => Statement::ReturnExp(Expression::EnumInject(
-                            BaseTyp::Named(
-                                (
-                                    TopLevelIdent {
-                                        string: match ert {
-                                            EarlyReturnType::Option => "Option",
-                                            EarlyReturnType::Result => "Result",
-                                        }
-                                        .to_string(),
-                                        kind: TopLevelIdentKind::Type,
-                                    },
-                                    DUMMY_SP.into(),
-                                ),
-                                None,
-                            ),
-                            (
-                                TopLevelIdent {
-                                    string: match ert {
-                                        EarlyReturnType::Option => "Some",
-                                        EarlyReturnType::Result => "Ok",
-                                    }
-                                    .to_string(),
-                                    kind: TopLevelIdentKind::EnumConstructor,
-                                },
-                                DUMMY_SP.into(),
-                            ),
-                            Some((Box::new(e.clone()), DUMMY_SP.into())),
-                        )),
-                        _ => panic!("should not happen"),
-                    }
-                } else {
-                    stmt.clone()
-                }
-            }
-            _ => stmt.clone(),
-        },
-        DUMMY_SP.into(),
-    )
-}
-
 fn translate_statements<'a>(
     mut statements: Iter<Spanned<Statement>>,
     top_ctx: &'a TopLevelContext,
@@ -1157,7 +754,7 @@ fn translate_statements<'a>(
     };
     match s.0 {
         Statement::LetBinding((pat, _), typ, (expr, _), question_mark) => {
-            if question_mark {
+            if question_mark.is_some() {
                 RcDoc::as_string("bind ")
                     .append(make_paren(translate_expression(expr.clone(), top_ctx)))
                     .append(RcDoc::space())
@@ -1165,7 +762,7 @@ fn translate_statements<'a>(
                         RcDoc::as_string("fun")
                             .append(RcDoc::space())
                             .append(match pat.clone() {
-                                Pattern::SingleCaseEnum(_, _) => RcDoc::as_string("'"),
+                                Pattern::EnumCase(_, _, _) => RcDoc::as_string("'"),
                                 _ => RcDoc::nil(),
                             })
                             .append(translate_pattern_tick(pat.clone()))
@@ -1176,12 +773,12 @@ fn translate_statements<'a>(
             } else {
                 make_let_binding(
                     match pat.clone() {
-                        Pattern::SingleCaseEnum(_, _) => RcDoc::as_string("'"),
+                        Pattern::EnumCase(_, _, _) => RcDoc::as_string("'"),
                         _ => RcDoc::nil(),
                     }
                     .append(translate_pattern_tick(pat.clone())),
                     match pat.clone() {
-                        Pattern::SingleCaseEnum(_, _) | Pattern::Tuple(_) => None,
+                        Pattern::EnumCase(_, _, _) | Pattern::Tuple(_) => None,
                         _ => typ.map(|(typ, _)| translate_typ(typ)),
                     },
                     translate_expression(expr.clone(), top_ctx),
@@ -1191,10 +788,10 @@ fn translate_statements<'a>(
                 .append(translate_statements(statements, top_ctx))
             }
         }
-        Statement::Reassignment((x, _), (e1, _), question_mark) =>
+        Statement::Reassignment((x, _), _x_typ, (e1, _), question_mark) =>
         //TODO: not yet handled
         {
-            if question_mark {
+            if question_mark.is_some() {
                 RcDoc::as_string("bind")
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e1.clone(), top_ctx)))
@@ -1221,7 +818,7 @@ fn translate_statements<'a>(
         }
         Statement::ArrayUpdate((x, _), (e1, _), (e2, _), question_mark, typ) => {
             let array_or_seq = array_or_seq(typ.unwrap(), top_ctx);
-            if question_mark {
+            if question_mark.is_some() {
                 RcDoc::as_string("bind")
                     .append(RcDoc::space())
                     .append(make_paren(translate_expression(e2.clone(), top_ctx)))
@@ -1265,7 +862,7 @@ fn translate_statements<'a>(
             }
         }
 
-        Statement::ReturnExp(e1) => translate_expression(e1.clone(), top_ctx),
+        Statement::ReturnExp(e1, _) => translate_expression(e1.clone(), top_ctx),
         Statement::Conditional((cond, _), (mut b1, _), b2, mutated) => {
             let mutated_info = mutated.unwrap();
             let pat = RcDoc::as_string("'").append(make_tuple(
@@ -1495,7 +1092,7 @@ fn translate_block<'a>(
         (None, _) => panic!(), // should not happen,
         (Some(((Borrowing::Consumed, _), (BaseTyp::Tuple(tup), _))), false) if tup.is_empty() => {
             statements.push((
-                Statement::ReturnExp(Expression::Lit(Literal::Unit)),
+                Statement::ReturnExp(Expression::Lit(Literal::Unit), b.return_typ),
                 DUMMY_SP.into(),
             ));
         }
@@ -1545,6 +1142,7 @@ fn translate_item<'a>(
         .append({
             if item.tags.0.contains(&"quickcheck".to_string()) {
                 RcDoc::hardline()
+                    .append(RcDoc::as_string("(*"))
                     .append(RcDoc::as_string("QuickChick"))
                     .append(RcDoc::space())
                     .append(make_paren(RcDoc::concat(
@@ -1574,6 +1172,7 @@ fn translate_item<'a>(
                             .append(RcDoc::concat(sig.args.iter().map(|_| RcDoc::as_string(")")))),
                     ))
                     .append(RcDoc::as_string("."))
+                    .append(RcDoc::as_string("*)"))
                     .append(RcDoc::hardline())
                     .group()
             } else {
@@ -2182,6 +1781,7 @@ pub fn translate_and_write_to_file(
     write!(
         file,
         "(** This file was automatically generated using Hacspec **)\n\
+         Set Warnings \"-notation-overridden,-ambiguous-paths\".\n\
         Require Import Hacspec_Lib MachineIntegers.\n\
         From Coq Require Import ZArith.\n\
         Import List.ListNotations.\n\

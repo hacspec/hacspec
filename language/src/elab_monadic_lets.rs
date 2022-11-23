@@ -7,6 +7,7 @@ fn fresh_var() -> Ident {
     Ident::Local(LocalIdent {
         name: "mvar".to_string(),
         id: id,
+        mutable: false,
     })
 }
 
@@ -147,14 +148,10 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
             }
         }
         Expression::MatchWith(scrutinee, branches) => {
-            let branches = branches.into_iter().cloned().map(|(t, cn, p, arm)| {
-                (
-                    t,
-                    cn,
-                    p,
-                    eliminate_question_marks_in_spanned_expressions(&arm),
-                )
-            });
+            let branches = branches
+                .into_iter()
+                .cloned()
+                .map(|(pat, arm)| (pat, eliminate_question_marks_in_spanned_expressions(&arm)));
             let scrutinee = elim_boxed_sub_expr(scrutinee);
             if let Some(carrier) = find_monadic_let_carrier(branches.clone().map(|(.., (x, _))| x))
             {
@@ -163,9 +160,7 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
                     Expression::MatchWith(
                         scrutinee,
                         branches
-                            .map(|(t, cn, p, arm)| {
-                                (t, cn, p, pure_if_non_monadic(carrier.clone(), arm))
-                            })
+                            .map(|(pat, arm)| (pat, pure_if_non_monadic(carrier.clone(), arm)))
                             .collect(),
                     ),
                     DUMMY_SP.into(),
@@ -180,6 +175,9 @@ pub fn eliminate_question_marks_in_expressions(e: &Expression) -> Expression {
             } else {
                 Expression::MatchWith(scrutinee, branches.collect())
             }
+        }
+        Expression::FieldAccessor(e1, field) => {
+            Expression::FieldAccessor(elim_boxed_sub_expr(e1), field.clone())
         }
         Expression::ArrayIndex(n, e1, t) => {
             Expression::ArrayIndex(n.clone(), elim_boxed_sub_expr(e1), t.clone())
