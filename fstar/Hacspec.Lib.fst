@@ -435,15 +435,11 @@ let seq_get_exact_chunk
   snd (seq_get_chunk s chunk_len chunk_num)
 
 let seq_get_remainder_chunk
-  (#a: Type)
-  (s: seq a)
-  (chunk_len: uint_size{chunk_len > 0})
-  : Pure (seq a)
-    (requires (chunk_len <= Seq.length s))
-    (ensures (fun chunk -> True))
-  =
-  snd (seq_get_chunk s chunk_len ((seq_num_chunks s chunk_len) - 1))
-
+  (s: seq 'a) (chunk_len: uint_size{chunk_len > 0}): seq 'a
+  = let chunks = seq_num_chunks s chunk_len in
+    let last_chunk = if chunks > 0 then chunks - 1 else 0 in
+    let (len, chunk) = seq_get_chunk s chunk_len last_chunk in
+    if len = chunk_len then Seq.empty else chunk
 
 let seq_set_chunk
   (#a: Type)
