@@ -2017,12 +2017,12 @@ fn translate_statements<'a>(
 
 fn list_of_loc_vars<'a>(smvars: ScopeMutableVars) -> RcDoc<'a, ()> {
     let locals = smvars.local_vars.clone();
-    // let mut all = smvars.external_vars.clone();
-    // all.extend(locals.clone());
+    let mut all = smvars.external_vars.clone();
+    all.extend(locals.clone());
 
     RcDoc::as_string("[")
         .append(RcDoc::intersperse(
-            locals // alls
+            all // locals
                 .into_iter()
                 .map(|(i, _)| i)
                 .sorted()

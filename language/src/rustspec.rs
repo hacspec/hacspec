@@ -540,7 +540,8 @@ impl ScopeMutableVars {
 
     pub fn extend(&mut self, other: ScopeMutableVars) {
         for i in other.external_vars {
-            self.external_vars.insert(i);
+            self.external_vars.insert(i.clone());
+            self.local_vars.insert(i);
         }
         for i in other.local_vars {
             self.local_vars.insert(i);

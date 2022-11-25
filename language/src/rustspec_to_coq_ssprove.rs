@@ -957,11 +957,6 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     sig.function_dependencies.clone(),
                     top_ctx,
                 );
-                // let fun_imports =
-                //     rustspec_to_coq_ssprove_state::function_dependencies_to_imports(
-                //         sig.function_dependencies.clone(),
-                //         top_ctx,
-                //     );
 
                 let dep_info = rustspec_to_coq_ssprove_state::function_dependencies_to_vec(
                     sig.function_dependencies.clone(),

@@ -18,6 +18,7 @@ mod ast_to_rustspec;
 mod elab_monadic_lets;
 mod hir_to_rustspec;
 mod name_resolution;
+mod function_dependency_resolution;
 mod rustspec;
 
 mod rustspec_to_coq;
@@ -372,6 +373,20 @@ fn handle_crate<'tcx>(
             &compiler.session(),
             krate,
             &external_data,
+            new_top_ctx,
+        ) {
+            Ok(krate) => krate,
+            Err(_) => {
+                compiler
+                    .session()
+                    .err("found some Hacspec name resolution errors");
+                return Compilation::Stop;
+            }
+        };
+
+        let krate = match function_dependency_resolution::resolve_crate(
+            &compiler.session(),
+            krate,
             new_top_ctx,
         ) {
             Ok(krate) => krate,
