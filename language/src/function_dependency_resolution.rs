@@ -303,7 +303,7 @@ fn resolve_block(
     let mut smi = ScopeMutInfo::new();
     for s in b.stmts.clone().into_iter() {
         let smi_stmt = resolve_statement(sess, s, top_level_ctx)?;
-        println!("smi_stmt {:?}", smi_stmt);
+
         smi.extend(smi_stmt);
     }
     Ok((
@@ -394,54 +394,54 @@ pub fn resolve_crate(
             .collect(),
     )?;
 
-    let mut f_deps_map: HashMap<FunctionDependency, FunctionDependencies> = HashMap::new();
+    // let mut f_deps_map: HashMap<FunctionDependency, FunctionDependencies> = HashMap::new();
 
-    for x in items.clone().into_iter() {
-        match x.0.item {
-            Item::FnDecl((f, _f_span), sig, _b) => {
-                println!("{:?} depends on {:?}", f, sig.function_dependencies);
-                f_deps_map.insert(f.clone(), sig.function_dependencies.clone());
-            }
-            _ => (),
-        }
-    }
+    // for x in items.clone().into_iter() {
+    //     match x.0.item {
+    //         Item::FnDecl((f, _f_span), sig, _b) => {
+    //             println!("{:?} depends on {:?}", f, sig.function_dependencies);
+    //             f_deps_map.insert(f.clone(), sig.function_dependencies.clone());
+    //         }
+    //         _ => (),
+    //     }
+    // }
 
-    let items : Vec<Spanned<DecoratedItem>> = items
-        .clone()
-        .into_iter()
-        .map(|x| {
-            (
-                DecoratedItem {
-                    item: match x.0.item {
-                        Item::FnDecl((f, f_span), sig, b) => {
-                            let sig = FuncSig {
-                                function_dependencies: resolve_fun_dep(
-                                    f.clone(),
-                                    sig.function_dependencies,
-                                    f_deps_map.clone(),
-                                ),
-                                ..sig
-                            };
-                            top_level_ctx
-                                .functions
-                                .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
-                            Item::FnDecl((f.clone(), f_span), sig, b)
-                        }
-                        i => i.clone(),
-                    },
-                    ..x.0
-                },
-                x.1,
-            )
-        })
-        .collect();
+    // let items : Vec<Spanned<DecoratedItem>> = items
+    //     .clone()
+    //     .into_iter()
+    //     .map(|x| {
+    //         (
+    //             DecoratedItem {
+    //                 item: match x.0.item {
+    //                     Item::FnDecl((f, f_span), sig, b) => {
+    //                         let sig = FuncSig {
+    //                             function_dependencies: resolve_fun_dep(
+    //                                 f.clone(),
+    //                                 sig.function_dependencies,
+    //                                 f_deps_map.clone(),
+    //                             ),
+    //                             ..sig
+    //                         };
+    //                         top_level_ctx
+    //                             .functions
+    //                             .insert(FnKey::Independent(f.clone()), FnValue::Local(sig.clone()));
+    //                         Item::FnDecl((f.clone(), f_span), sig, b)
+    //                     }
+    //                     i => i.clone(),
+    //                 },
+    //                 ..x.0
+    //             },
+    //             x.1,
+    //         )
+    //     })
+    //     .collect();
 
-    let items = check_vec(
-        items.clone()
-            .into_iter()
-            .map(|i| resolve_item(sess, i, &top_level_ctx))
-            .collect(),
-    )?;
+    // let items = check_vec(
+    //     items.clone()
+    //         .into_iter()
+    //         .map(|i| resolve_item(sess, i, &top_level_ctx))
+    //         .collect(),
+    // )?;
 
     Ok(Program { items })
 }

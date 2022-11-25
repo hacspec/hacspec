@@ -1138,7 +1138,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
 
                 let both_type = RcDoc::as_string("both")
                     .append(RcDoc::space())
-                    .append(make_paren(block_vars))
+                    .append(make_paren(block_vars.clone()))
                     .append(RcDoc::space())
                     .append(interface)
                     .append(RcDoc::space())
@@ -1205,6 +1205,36 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                 // .append(RcDoc::as_string("temp_package_both temp_inp"))
                 // .append(RcDoc::as_string("}]"));
 
+                let dep_vec = rustspec_to_coq_ssprove_state::function_dependencies_to_vec(
+                    sig.function_dependencies.clone(),
+                    top_ctx,
+                );
+                let package_def = RcDoc::as_string("Program Definition ")
+                    .append(rustspec_to_coq_ssprove_state::make_definition_inner(
+                        translate_ident(Ident::TopLevel(f.clone())),
+                        Some(
+                            RcDoc::as_string("both_package ")
+                                .append(make_paren(block_vars.clone()))
+                                .append(RcDoc::as_string(" _ _")),
+                        ),
+                        if dep_vec.is_empty() {
+                            translate_ident(Ident::TopLevel(f.clone())).append("'")
+                        } else {
+                            RcDoc::as_string("seq_link_both")
+                                .append(RcDoc::space())
+                                .append(translate_ident(Ident::TopLevel(f.clone())).append("'"))
+                                .append(RcDoc::space())
+                                .append(RcDoc::as_string("link_rest_both"))
+                                .append(make_paren(RcDoc::intersperse(
+                                    dep_vec
+                                        .into_iter()
+                                        .map(|(x, _, _)| translate_toplevel_ident(x)),
+                                    RcDoc::as_string(","),
+                                )))
+                        },
+                    ))
+                    .append(RcDoc::hardline().append(RcDoc::as_string("Fail Next Obligation.")));
+
                 RcDoc::line()
                     .append(fun_inp_notation_0)
                     .append(RcDoc::line())
@@ -1220,6 +1250,7 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                     .append(RcDoc::as_string("Program Definition "))
                     .append(rustspec_to_coq_ssprove_pure::make_definition_inner(
                         translate_ident(Ident::TopLevel(f.clone()))
+                            .append("'")
                             .append(RcDoc::line())
                             .append(RcDoc::as_string(":"))
                             .append(RcDoc::space())
@@ -1232,8 +1263,8 @@ fn translate_item<'a>(item: DecoratedItem, top_ctx: &'a TopLevelContext) -> RcDo
                         package_wraped_code_block.group(), // )
                     ))
                     .append(RcDoc::hardline().append(RcDoc::as_string("Fail Next Obligation.")))
-                // .append(RcDoc::line())
-                // .append(package_def)
+                    .append(RcDoc::line())
+                    .append(package_def)
             })
         }
         Item::EnumDecl(_, _) => rustspec_to_coq_ssprove_state::translate_item(item, top_ctx),
