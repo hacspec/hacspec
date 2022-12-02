@@ -92,6 +92,7 @@ pub trait Integer: Numeric {
 pub trait SecretInteger: Integer {
     type PublicVersion: PublicInteger;
     fn classify(x: Self::PublicVersion) -> Self;
+    fn declassify(x: Self) -> Self::PublicVersion;
 }
 pub trait SecretIntegerCopy: SecretInteger + Copy {
     type PublicVersionCopy: PublicIntegerCopy;

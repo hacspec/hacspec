@@ -36,6 +36,12 @@ pub use core::str::FromStr;
 pub use core::{cmp::min, cmp::PartialEq, fmt, fmt::Debug};
 pub use num::{self, traits::sign::Signed, CheckedSub, Num, Zero};
 
+mod test {
+    pub use secret_integers::*;
+
+    const X: U8 = U8(3);
+}
+
 bytes!(U16Word, 2);
 bytes!(U32Word, 4);
 bytes!(U64Word, 8);

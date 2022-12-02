@@ -899,12 +899,18 @@ impl SecretInteger for U8 {
     fn classify(x: Self::PublicVersion) -> Self {
         U8(x)
     }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
+    }
 }
 impl SecretInteger for U16 {
     type PublicVersion = u16;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         U16(x)
+    }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
     }
 }
 impl SecretInteger for U32 {
@@ -913,12 +919,18 @@ impl SecretInteger for U32 {
     fn classify(x: Self::PublicVersion) -> Self {
         U32(x)
     }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
+    }
 }
 impl SecretInteger for U64 {
     type PublicVersion = u64;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         U64(x)
+    }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
     }
 }
 impl SecretInteger for U128 {
@@ -927,12 +939,18 @@ impl SecretInteger for U128 {
     fn classify(x: Self::PublicVersion) -> Self {
         U128(x)
     }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
+    }
 }
 impl SecretInteger for I8 {
     type PublicVersion = i8;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I8(x)
+    }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
     }
 }
 impl SecretInteger for I16 {
@@ -941,12 +959,18 @@ impl SecretInteger for I16 {
     fn classify(x: Self::PublicVersion) -> Self {
         I16(x)
     }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
+    }
 }
 impl SecretInteger for I32 {
     type PublicVersion = i32;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I32(x)
+    }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
     }
 }
 impl SecretInteger for I64 {
@@ -955,12 +979,18 @@ impl SecretInteger for I64 {
     fn classify(x: Self::PublicVersion) -> Self {
         I64(x)
     }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
+    }
 }
 impl SecretInteger for I128 {
     type PublicVersion = i128;
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn classify(x: Self::PublicVersion) -> Self {
         I128(x)
+    }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x.declassify()
     }
 }
 

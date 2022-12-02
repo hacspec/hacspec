@@ -217,4 +217,7 @@ impl SecretInteger for BigInt {
     fn classify(x: Self::PublicVersion) -> Self {
         x
     }
+    fn declassify(x: Self) -> Self::PublicVersion {
+        x
+    }
 }
