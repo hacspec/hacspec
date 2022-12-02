@@ -158,27 +158,17 @@ Lemma helper :
 Proof. now intros [? []]. Qed.
 
 Lemma pack_helper :
-  forall (E : InterfaceCE) o (H : In o E),
+  forall {E : InterfaceCE} {o} (H : In o E),
     is_true
-   (ssrbool.in_mem (opsigCE_opsig (fst o, (fst (snd o), snd (snd o))))
+   (ssrbool.in_mem (opsigCE_opsig o)
       (ssrbool.mem (IfToCEIf E))).
 Proof.
   intros.
-  cbn.
+  apply (ssrbool.introT (xseq.InP _ _)).
   unfold IfToCEIf.
-
-  induction E ; [ contradiction | .. ].
-  replace (map opsigCE_opsig (a :: E)) with (opsigCE_opsig a :: map opsigCE_opsig E) by reflexivity.
-  rewrite fset_cons.
-  induction H.
-  - subst.
-    apply (ssrbool.introT (fsetU1P _ _ _)).
-    left.
-    destruct o as [? []]. reflexivity.
-  - apply (ssrbool.introT (fsetU1P _ _ _)).
-    right.
-    apply IHE.
-    assumption.
+  apply -> opsig_in_remove_fset.
+  apply in_map.
+  apply H.
 Defined.
 
 (* (get_opackage_op pack_state *)
@@ -188,14 +178,19 @@ Defined.
 
 Class both_package L I (E : InterfaceCE) :=
   {
-    pack_pure : forall o, In o E -> fst (snd o) -> snd (snd o) ;
+    pack_pure : forall o, List.In o E -> fst (snd o) -> snd (snd o) ;
     pack_state : package L I (IfToCEIf E) ;
-    pack_eq_proof_statement : forall o (H : In o E), forall (v : fst (snd o)),
+    pack_eq_proof_statement : forall i s t (H : In (i,(s,t)) E), forall (v : s),
+      forall f, (pack pack_state) i = Some
+    (existT
+       (fun S0 : choice_type => {T0 : choice_type & choice.Choice.sort S0 -> raw_code T0})
+       s (existT (fun T0 : choice_type => choice.Choice.sort s -> raw_code T0) t f)) ->
       ⊢ ⦃ true_precond ⦄
           (* opr (opsigCE_opsig (fst o, (fst (snd o), snd (snd o)))) v (fun x => ret x) *)
-          get_op_default pack_state (opsigCE_opsig (fst o, (fst (snd o), snd (snd o)))) (T_ct v)
-          ≈ lift_to_code (L := L) (I := I) (pack_pure o H v)
-      ⦃ pre_to_post_ret true_precond (T_ct (pack_pure o H v)) ⦄
+          (* get_op {locpackage pack_state} (opsigCE_opsig (i,(s,t))) (pack_helper H) (T_ct v) *)
+          f v
+          ≈ lift_to_code (L := L) (I := I) (pack_pure (i,(s,t)) H v)
+      ⦃ pre_to_post_ret true_precond (T_ct (pack_pure (i,(s,t)) H v)) ⦄
   }.
 
 Arguments pack_pure {_} {_} {_} {_} {_} {_} both_package.
@@ -208,243 +203,45 @@ Instance package_both {L I} {x y z} (pkg : both_package L I ((x, (y, z)) :: nil)
   : both L I (z).
 Proof.
   destruct pkg as [pure state eq_proof].
-  pose (o := (x, (y, z))).
+  pose (o := (x, (y, z)) : opsigCE).
+  Check pack_eq_proof_statement.
   refine {| is_pure := pure o (List.in_eq _ _) args ;
-           is_state := {code get_op_default state (opsigCE_opsig (x, (y, z))) (T_ct args) } |}.
-  Unshelve.
-  2: {
-    apply (valid_get_op_default L I (IfToCEIf ((x, (y, z)) :: nil)) state (opsigCE_opsig o) args (pack_valid state)).
-    cbn.
-    unfold IfToCEIf.
-    apply opsig_compute.
-    apply -> opsig_in_remove_fset.
-    cbn.
-    left.
-    reflexivity.
-  }
+           is_state := {code get_op_default state (opsigCE_opsig o) (args) #with valid_get_op_default _ _ _ state (opsigCE_opsig o) (args) _ (pack_helper (List.in_eq _ _)) } |}.
   apply eq_proof.
-Defined.
-
-Instance both_package' L I (o : opsigCE) (bf : fst (snd o) -> both L I (snd (snd o)))
-  : both_package L I (o :: nil).
-Proof.
-  refine {| pack_pure := fun x y z => _ ;
-           pack_state := {package
-                            FMap.FMap (T:=nat_ordType) (fmval:=(fst o, existT
-                (fun S : choice_type => {T : choice_type & choice.Choice.sort S -> raw_code T})
-                (fst (snd o))
-                (existT
-                   (fun T : choice_type => choice.Choice.sort (fst (snd o)) -> raw_code T)
-                   (snd (snd o))
-                   (fun x => prog (is_state (bf (ct_T x)))))) :: nil) eq_refl} |}.
-  Unshelve.
-  2: {
-    assert (o = x) by (destruct y ; easy); subst ; apply (bf (ct_T z)).
-  }
-  2: {
-    intros.
-    apply prove_valid_package.
-    unfold valid_package_ext.
-    intros.
-    apply opsig_compute in H.
-    apply opsig_in_remove_fset in H.
-    cbn in H.
-    destruct H ; [subst | easy].
-    destruct o as [id [src tgt]].
-    cbn.
-    exists (fun x => bf (ct_T x)).
-    rewrite ssrnat.eqnE.
-    rewrite eqtype.eq_refl.
-    split.
-    reflexivity.
-    intros.
-    apply (is_state (bf (ct_T x))).
-  }
-
-  intros.
-  destruct H ; [ subst | easy ].
   cbn.
-  rewrite get_op_default_spec with (f := (fun x => bf (ct_T x))).
-  - apply bf.
-  - cbn.
-    rewrite ssrnat.eqnE.
-    rewrite eqtype.eq_refl.
-    reflexivity.
+  destruct (from_valid_package _ _ _ _ (pack_valid state) (opsigCE_opsig o) (pack_helper (List.in_eq _ _))) as [? []].
+  rewrite H.
+  apply f_equal.
+  apply f_equal.
+  apply f_equal.
+  unfold get_op_default.
+  cbn.
+  rewrite H.
+  destruct choice_type_eqP ; [ | contradiction ].
+  destruct choice_type_eqP ; [ | contradiction ].
+  rewrite pkg_composition.cast_fun_K.
+  reflexivity.
 Defined.
-(*   pose pkg_composition.valid_ID. *)
-    
-  (*   apply valid_package. *)
-  (*   cbn. *)
-  (* intros. *)
-  (* assert (o0 = o) by (destruct H ; easy). *)
-  (* subst. *)
-  (* pose (bf (ct_T v)). *)
   
-  (* apply b. *)
-  
-  
-  (* Unshelve. *)
-  (* 3: { *)
-  (*   assert (o = x) by (destruct y ; easy). *)
-  (*   subst. *)
-  (*   apply bf. *)
-  (* } *)
-  (* 2: { *)
-  (*   intros. *)
-  (*   destruct H ; [ subst | easy ]. *)
-  (*   destruct o0 as [o [src tgt]]. *)
-  (*   cbn in *. *)
-
-  (*   epose (opr_morphism _ _ _). *)
-
-  (*   pose (ID I). *)
-    
-  (*   epose (@pkg_composition.code_link tgt (opr (opsigCE_opsig (o, (src, tgt))) _ (fun x => ret x))). *)
-
-  (*   (* Unset Printing Notations. *) *)
-  (*   pose (get_opackage_op pack_state *)
-  (*                (opsigCE_opsig (fst o, (fst (snd o), snd (snd o)))) *)
-  (*                (pack_helper E o H) *)
-  (*                (T_ct v)). *)
-
-  (*   unfold opr. *)
-  (*   pose @pkg_composition.link_id. *)
-  (* } *)
-  (* 2: { *)
-  (*   intros. *)
-  (*   apply (is_state (bf (ct_T x))). *)
-  (* } *)
-
-
-  (* refine {package (fmap (s:=(fst o, *)
-  (*                   existT *)
-  (*                     (fun S : choice_type => *)
-  (*                      {T : choice_type & *)
-  (*                      choice.Choice.sort (chElement S) -> raw_code (chElement T)}) *)
-  (*                     (ct (fst (snd o))) *)
-  (*                     (existT *)
-  (*                        (fun T : choice_type => *)
-  (*                         choice.Choice.sort (chElement (ct (fst (snd o)))) -> *)
-  (*                         raw_code (chElement T)) (ct (snd (snd o))) *)
-  (*                        (fun x : choice.Choice.sort (chElement (ct (fst (snd o)))) => *)
-  (*                         prog (is_state (bf (ct_T x)))))) :: nil) _)}. (* {fmap ident -> typed_raw_function } *) *)
-  (* apply prove_valid_package. *)
-  (* unfold valid_package_ext. *)
-  (* intros o2 ?. *)
-  (* cbn in H. *)
-  (* unfold IfToCEIf in H. *)
-  (* unfold map in H. *)
-  (* rewrite <- fset1E in H. *)
-  (* rewrite in_fset1 in H. *)
-  (* apply (ssrbool.elimT (@eqtype.eqP _ o2 (opsigCE_opsig o))) in H. *)
-  (* subst. *)
-  (* destruct o as [o [src tgt]]. *)
-  (* cbn. *)
-  (* cbn in bf. *)
-  (* Set Printing Coercions. *)
-  (* exists (fun x => bf (ct_T x)). *)
-  (* split. *)
-  (* 2: { *)
-  (*   intros. *)
-  (*   apply (is_state (bf (ct_T x))). *)
-  (* } *)
-  (* Unshelve. *)
-  (* 3: { *)
-  (*   assert (o = x) by (destruct y ; easy). *)
-  (*   subst. *)
-  (*   apply bf. *)
-  (*   Show Proof. *)
-  (* } *)
-
-  (* refine (mkpackage _ _). *)
-
-(* Admitted. *)
-(*   refine {| pack_pure := fun x y => _ ; pack_state := _ |}. *)
-(*   intros. *)
-(*   Unshelve. *)
-(*   2:{ *)
-(*     assert (x = o) by now destruct y.  *)
-(*     subst. *)
-(*     apply bf. *)
-(*   } *)
-(*   2:{ *)
-(*     refine (mkpackage (mkfmap (_ :: nil)) _). *)
-(*     unfold IfToCEIf. *)
-(*     unfold map. *)
-(*     rewrite fset_cons. *)
-(*     rewrite <- fset0E. *)
-(*     unfold mkfmap. *)
-(*     unfold seq.foldr. *)
-
-(*     Unshelve. *)
-(*     2:{ *)
-(*       split. apply (fst o). *)
-(*       unfold typed_raw_function. *)
-(*       Check existT. *)
-(*       refine (existT _ _ (existT _ _ _)). *)
-(*       apply (fun X => bf (ct_T X)). *)
-(*     } *)
-(*     cbn. *)
-
-(*     destruct o as [? []]. *)
-(*     cbn. *)
-
-(*     cbn in bf. *)
-
-(*     pose (valid_package_cons L I i c c0 (fun X => bf (ct_T X)) nil nil ). *)
-(*     apply v. *)
-(*     apply valid_empty_package. *)
-(*     intros.  *)
-(*     apply (prog_valid (is_state (bf (ct_T x)))). *)
-
-(*     Check (_ @: _). *)
-(*     rewrite <- fset0E. *)
-(*     rewrite imfset0. *)
-(*     rewrite in_fset0. *)
-(*     reflexivity. *)
-(*   } *)
-
-(*   destruct H ; [ | contradiction ]. *)
-(*   subst. *)
-
-(*   unfold eq_sym. *)
-(*   unfold eq_rect_r. *)
-(*   unfold eq_rect. *)
-(*   unfold eq_sym. *)
-
-(*   destruct o0 as [? []]. cbn in bf, v.  *)
-(*   unfold opsigCE_opsig. *)
-(*   unfold fst, snd. *)
-
-(*   admit. *)
-(* Admitted. *)
-
-(* Instance both_package0 L I (o : opsigCE) *)
-(*          (pure : fst (snd o) -> snd (snd o)) *)
-(*          (state : package L I (IfToCEIf (o :: nil))) *)
-(*          (code_eq : forall (v : fst (snd o)), *)
-(*              ⊢ ⦃ true_precond ⦄ *)
-(*                  (get_opackage_op state (opsigCE_opsig (fst o, (fst (snd o), snd (snd o)))) (pack_helper (o :: nil) o (or_introl eq_refl)) (T_ct v)) *)
-(*                  ≈ *)
-(*                  lift_to_code  (L := L) (I := I) (pure v) *)
-(*              ⦃ pre_to_post_ret  true_precond (T_ct (pure v)) ⦄): *)
-(*   both_package L I (o :: nil). *)
-(* Proof. *)
-(*   refine {| pack_pure := fun x y z => _ ; pack_state := state |}. *)
-
-(*   Unshelve. *)
-(*   2:{ *)
-(*     assert (x = o) by now destruct y.  *)
-(*     subst. *)
-(*     now apply pure. *)
-(*   } *)
-
-(*   intros. *)
-(*   destruct H ; [ | contradiction ]. *)
-(*   subst. *)
-
-(*   apply code_eq. *)
-(* Qed. *)
+Program Instance both_package' L I o (bf : T (fst (snd o)) -> both L I (snd (snd o)))
+  : both_package L I (o :: nil) :=
+  {|
+    pack_pure := fun o0 H => ltac:((assert (o = o0) by now destruct H) ; subst ; apply bf ; apply X) ;
+    pack_state := (mkpackage (mkfmap ((fst o, pkg_composition.mkdef _ _ (fun x => bf (ct_T x))) :: nil)) (valid_package1 L I (fst o) (fst (snd o)) (snd (snd o)) (fun x => bf (ct_T x)) (fun x => prog_valid (is_state (bf (ct_T x)))))) ;
+    pack_eq_proof_statement := _
+  |}.
+Next Obligation.
+  intros.
+  destruct H ; [ subst | contradiction ].
+  cbn in H0.
+  rewrite (ssrbool.introT ssrnat.eqnP eq_refl) in H0.
+  inversion H0.
+  do 2 apply Eqdep.EqdepTheory.inj_pair2 in H1.
+  subst.
+  cbn.
+  rewrite ct_T_id.
+  apply bf.
+Defined.
 
 Program Definition lift_to_both {ce : ChoiceEquality} {L I} (x : @T ce) : both L I ce :=
   {| is_pure := x ; is_state := @lift_to_code ce L I x |}.

@@ -2469,15 +2469,26 @@ Ltac solve_zero :=
       end
   end.
 
+Ltac ssprove_package_obligation :=
+  setoid_rewrite (ssrbool.elimT (@fsetUidPl _ _ _)) ; [ reflexivity | ] ;
+  repeat rewrite fsubUset ;
+  repeat rewrite (ssrbool.introT (@ssrbool.andP _ _)) ;
+  repeat split ;
+  try reflexivity ;
+  try apply -> loc_list_incl_remove_fset ;
+  pose loc_list_incl_expand ;
+  rewrite loc_list_incl_fsubset ;
+  loc_incl_compute.
+
 Ltac solve_ssprove_obligations :=
   intros ;
   try repeat rewrite fsetUid ;
   try repeat rewrite <- fset_cat ;
   (* try repeat rewrite <- fset0E *)
-  (* ; try repeat rewrite fsetU0 *)
-  (* ; try repeat rewrite fset0U *)
-  (* ; try repeat rewrite fsetUid ; *)
-  (ssprove_valid_location || loc_incl_compute || opsig_incl_compute)
+  try repeat rewrite fsetU0 ;
+  try repeat rewrite fset0U ;
+  try repeat rewrite fsetUid ;
+  (ssprove_valid_location || loc_incl_compute || opsig_incl_compute || ssprove_package_obligation)
   || (match goal with
      | [ |- context [ pkg_composition.Parable _ _ ]] =>
          unfold pkg_composition.Parable, fdisjoint, fsetI, fset_filter,
@@ -2605,52 +2616,14 @@ Definition seq_link { L1 L2 : {fset Location} } {I M E} (p1 : package L1 M E) (p
 
 Program Definition seq_link_both { L1 L2 : {fset Location} } {I} {M : InterfaceCE} {E} (p1 : both_package L1 (IfToCEIf M) E) (p2 : both_package L2 I M) : both_package (L1 :|: L2) I E :=
   {|
-    pack_pure o H X := @pack_pure _ _ _ p1 o H X;
-    pack_state :=
-    {| pack := pkg_composition.link p1 p2 ;
-      pack_valid := pkg_composition.valid_link _ _ _ _ _ _ _
-                                               (pack_valid p1)
-                                               (pack_valid p2) |} ;
+    pack_pure o H X := @pack_pure _ _ _ p1 o H X ;
+    pack_state := seq_link p1 p2 ;
     pack_eq_proof_statement := _
   |}.
 Next Obligation.
   intros.
-
-  destruct p1 as [? [[]] ?].
+  apply p1.
   cbn.
-  inversion pack_valid.
-  unfold valid_package_ext in H0.
-  assert (is_true (ssrbool.in_mem (opsigCE_opsig o) (ssrbool.mem (IfToCEIf E)))).
-  {
-    apply opsig_compute.
-    apply -> opsig_in_remove_fset.
-    clear -H.
-    induction E.
-    - contradiction.
-    - destruct H.
-      + left.
-        subst.
-        easy.
-      + right.
-        apply IHE.
-        apply H.
-  }
-  specialize (H0 (opsigCE_opsig o) H1).
-  destruct o as [? []].
-  destruct H0.
-  destruct H0.
-  cbn in H0.
-  cbn.
-
-  rewrite get_op_default_link.
-  unfold get_op_default.
-  erewrite lookup_op_spec_inv with (f := x) by apply H0.
-
-  pose (pack_eq_proof_statement (i0, (c, c0)) H v).
-  cbn in r.
-  unfold get_op_default in r.
-  rewrite (@lookup_op_spec_inv _ _ _ _ x) in r.
-  2:apply H0.
 Admitted.
 
 Definition par_link { L1 L2 : {fset Location} }  { I1 I2 E1 E2} (p1 : package L1 I1 E1) (p2 : package L2 I2 E2) (_ : pkg_composition.Parable p1 p2) : package (L1 :|: L2) (I1 :|: I2) (E1 :|: E2) :=

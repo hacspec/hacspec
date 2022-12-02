@@ -201,56 +201,13 @@ Global Program Instance opsig_eqdec: EqDec (opsig) := {
     eqb_leibniz := opsig_eqb_sound;
   }.
 
-Theorem loc_compute : forall l : (@sigT choice_type (fun _ : choice_type => nat)), forall n : list (@sigT choice_type (fun _ : choice_type => nat)), List.In l n <-> is_true (ssrbool.in_mem l (@ssrbool.mem _ (seq.seq_predType (Ord.eqType (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType)))) n)).
-Proof.
+Theorem fset_compute : forall {T : ordType}, forall l : T, forall n : list T, List.In l n <-> is_true (ssrbool.in_mem l (@ssrbool.mem _ (seq.seq_predType (Ord.eqType T)) n)).
   intros.
-  apply (ssrbool.rwP (@xseq.InP (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType)) _ _)).
-    
-  (* induction n. *)
-  (* - cbn. split ; easy. *)
-  (* - cbn. *)
-
-  (*   setoid_rewrite seq.in_cons.     *)
-  (*   rewrite is_true_split_or. *)
-  (*   rewrite IHn. *)
-
-  (*   apply or_iff_compat_r. *)
-  (*   rewrite eqtype.eq_sym. *)
-  (*   apply (ssrbool.rwP (@eqtype.eqP loc_eqType a l)). *)
+  apply (ssrbool.rwP (xseq.InP _ _)).
 Qed.
 
-Theorem opsig_compute :
-  forall l : opsig,
-  forall n : Interface,
-        List.In l n <-> is_true (ssrbool.in_mem l (@ssrbool.mem _ (fset_predType
-             (prod_ordType nat_ordType
-                           (prod_ordType choice_type_ordType choice_type_ordType))) n)).
-Proof.
-  intros.
-  cbn.
-  apply (ssrbool.rwP (@xseq.InP (
-             (prod_ordType nat_ordType
-                           (prod_ordType choice_type_ordType choice_type_ordType))) _ _)).
-    
-  (* unfold ssrbool.in_mem. *)
-  (* unfold ssrbool.pred_of_mem. *)
-  (* unfold ssrbool.mem ; cbn. *)
-  
-  (* set (k := FSet.fsval n). *)
-  (* induction k. *)
-  (* - cbn. split ; easy. *)
-  (* - cbn. *)
-
-  (*   setoid_rewrite seq.in_cons.     *)
-  (*   rewrite is_true_split_or. *)
-
-  (*   rewrite IHk. *)
-    
-  (*   apply or_iff_compat_r. *)
-
-  (*   rewrite eqtype.eq_sym. *)
-  (*   apply (ssrbool.rwP (@eqtype.eqP _ a l)). *)
-Qed.
+Definition opsig_ordType := (prod_ordType nat_ordType
+                                    (prod_ordType choice_type_ordType choice_type_ordType)).
   
 (* Theorem in_bool_eq : forall {A : Type} `{EqDec A} (a:A) (l:list A), is_true (Inb a l) = List.In a l. *)
 (*   intros. *)
@@ -292,100 +249,12 @@ Fixpoint incl_expand A `{EqDec A} (l1 l2 : list A) : Prop :=
 (*     exact (andb (Inb a l2) (IHl1 H)).       *)
 (* Defined. *)
 
-Theorem loc_in_remove_fset : forall a (l : list Location), List.In a l <-> List.In a (fset l).
+Theorem in_remove_fset : forall {T : ordType} a (l : list T), List.In a l <-> List.In a (fset l).
 Proof.
   intros.
-  do 2 rewrite loc_compute.
-  unfold fset ; rewrite ssreflect.locked_withE.
-  cbn.
-  rewrite (@path.mem_sort (Ord.eqType
-                             (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType))) (tag_leq (I:=choice_type_ordType) (T_:=fun _ : choice_type => nat_ordType)) (@seq.undup
-                                                                                                                                                                                     (Ord.eqType
-                                                                                                                                                                                        (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType)))
-                                                                                                                                                                                     l)).
-  
-  generalize dependent a.
-  induction l ; intros.
-  + easy.
-  + cbn.
-
-    rewrite (@seq.in_cons (Ord.eqType
-                             (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType))) a l).
-    rewrite is_true_split_or.
-
-    match goal with
-    | [ |- context[match ?x with | true => _ | false => _ end] ] =>
-        destruct x eqn:so
-    end.
-    * rewrite <- IHl.
-      split.
-      -- intros [].
-         ++ apply Couplings.reflection_nonsense in H.
-            subst.
-            apply so.
-         ++ apply H.
-      -- intros.
-         right.
-         apply H.
-    * split.
-      -- intros [].
-         ++ apply Couplings.reflection_nonsense in H.
-            subst.
-            apply seq.mem_head.
-         ++ apply seq.mem_drop with (n0 := 1%nat).
-            cbn.
-            rewrite seq.drop0.
-            apply IHl.
-            apply H.
-      -- intros.
-         destruct (eqtype.eq_op) eqn:so2.
-         ++ left.
-            reflexivity.
-         ++ right.
-            unfold ssrbool.in_mem in H.
-            unfold ssrbool.pred_of_mem in H.
-            unfold ssrbool.mem in H.
-            cbn in H.
-            cbn in so2.
-            rewrite so2 in H.
-            cbn in H.
-
-            apply IHl.
-            apply H.
+  do 2 rewrite fset_compute.
+  now rewrite <- in_fset.
 Qed.
-
-(* Theorem has_is_in : forall A (a : A) (l : list A), List.In a l = is_true (seq.has (fun x => a = x) l). *)
-
-Theorem opsig_in_remove_fset : forall a (l : list opsig), List.In a l <-> List.In a (fset l).
-Proof.
-  intros.
-  rewrite opsig_compute.
-
-  transitivity (is_true (ssrbool.in_mem a (@ssrbool.mem _ (seq.seq_predType (prod_ordType _ _)) l))).
-  2:{
-    setoid_rewrite <- seq.has_pred1.
-    now setoid_rewrite has_fset.
-  }
-
-  Set Printing Implicit.
-  
-  induction l.
-  - cbn. split ; easy.
-  - cbn.
-
-    setoid_rewrite seq.in_cons.    
-    rewrite is_true_split_or.
-
-    rewrite IHl.
-    
-    apply or_iff_compat_r.
-
-    rewrite eqtype.eq_sym.
-    now rewrite (ssrbool.rwP (@eqtype.eqP (Ord.eqType
-                   (prod_ordType nat_ordType
-                      (prod_ordType choice_type_ordType choice_type_ordType))) _ _)).
-Qed.
-
 
 Theorem in_split_cat : forall a (l0 l1 : list Location), List.In a (seq.cat l0 l1) <-> List.In a l0 \/ List.In a l1.
 Proof.
@@ -416,7 +285,7 @@ Proof.
   intros.
   transitivity (In a (seq.cat (eqtype.val l0) (eqtype.val l1))).
   symmetry.
-  apply loc_in_remove_fset.
+  apply in_remove_fset.
   apply in_split_cat.
 Qed.
 
@@ -433,8 +302,8 @@ Proof.
   apply H. clear H.
   intros x. cbn in *.
 
-  rewrite loc_compute.
-  rewrite loc_compute.
+  rewrite fset_compute.
+  rewrite fset_compute.
 
   reflexivity.
 Qed.
@@ -453,8 +322,8 @@ Proof.
   apply H. clear H.
   intros x. cbn in *.
 
-  rewrite opsig_compute.
-  rewrite opsig_compute.
+  rewrite fset_compute.
+  rewrite fset_compute.
 
   reflexivity.
 Qed.
@@ -497,12 +366,12 @@ Proof.
     cbn.
     split.
     + intros.
-      rewrite <- loc_in_remove_fset.
-      rewrite <- loc_in_remove_fset in H1.
+      rewrite <- in_remove_fset.
+      rewrite <- in_remove_fset in H1.
       apply H0.
       apply H1.
     + intros.        
-      rewrite -> loc_in_remove_fset.
+      rewrite -> in_remove_fset.
       apply H0.
       rewrite <- loc_in_remove_fset.
       apply H1.
