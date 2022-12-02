@@ -47,12 +47,12 @@ Proof.
   unfold ssrfun.tagged.
 
   rewrite Bool.andb_comm.
-  
+
   unfold eq_rect_r, eq_rect.
 
   set (eqtype.eq_op _ _) at 2.
   replace (choice_type_eq _ _) with b by reflexivity.
-  
+
   destruct b eqn:b_eq ; subst b.
   - f_equal.
     case eqtype.eqP ; intros.
@@ -72,14 +72,14 @@ Proof.
   rewrite boolp.propeqE.
   symmetry.
   apply (ssrbool.rwP ssrbool.orP).
-Qed.  
+Qed.
 Theorem is_true_split_and : forall a b, is_true (a && b) = (is_true a /\ is_true b).
 Proof.
   intros.
   rewrite boolp.propeqE.
   symmetry.
   apply (ssrbool.rwP ssrbool.andP).
-Qed.  
+Qed.
 
 
 
@@ -121,13 +121,13 @@ Proof.
   pose (@eqtype.tag_eqP ).
 
   split.
-  
+
   pose (Couplings.reflection_nonsense (@eqtype.tag_eqType choice_type_eqType (fun _ : choice_type => ssrnat.nat_eqType)) ℓ ℓ').
 
-  
+
   (* rewrite is_true_split_and. *)
   (* intros [_].   *)
-  apply e.  
+  apply e.
   (* apply H. *)
   intros. subst.
   (* rewrite eqb_refl. *)
@@ -154,7 +154,7 @@ Proof.
   intros s s0.
   unfold ltb , nat_comparable , Nat.ltb.
   intros e.
-  
+
   generalize dependent s.
   induction s0 ; intros.
   * destruct s ; easy.
@@ -175,8 +175,8 @@ Definition opsig_eqb (ℓ ℓ' : opsig) : bool :=
 Lemma opsig_eqb_sound : forall ℓ ℓ' : opsig, is_true (opsig_eqb ℓ ℓ') <-> ℓ = ℓ'.
 Proof.
   intros.
-  
-  destruct ℓ as [? []] , ℓ' as [? []]. 
+
+  destruct ℓ as [? []] , ℓ' as [? []].
   setoid_rewrite is_true_split_and.
   rewrite is_true_split_and.
   unfold fst, snd in *.
@@ -192,7 +192,7 @@ Proof.
     symmetry.
     apply (ssrbool.rwP (@eqtype.eqP _ c0 c2)).
   }
-  
+
   split ; [ intros [? []] | intros H ; inversion H ] ; subst ; easy.
 Qed.
 
@@ -206,9 +206,10 @@ Theorem fset_compute : forall {T : ordType}, forall l : T, forall n : list T, Li
   apply (ssrbool.rwP (xseq.InP _ _)).
 Qed.
 
-Definition opsig_ordType := (prod_ordType nat_ordType
-                                    (prod_ordType choice_type_ordType choice_type_ordType)).
-  
+Definition opsig_ordType := (prod_ordType nat_ordType (prod_ordType choice_type_ordType choice_type_ordType)).
+
+Definition loc_ordType := (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType)).
+
 (* Theorem in_bool_eq : forall {A : Type} `{EqDec A} (a:A) (l:list A), is_true (Inb a l) = List.In a l. *)
 (*   intros. *)
 (*   rewrite boolp.propeqE. apply in_bool_iff. *)
@@ -231,7 +232,7 @@ Fixpoint incl_expand A `{EqDec A} (l1 l2 : list A) : Prop :=
 (*   - exact true. *)
 (*   - exact (andb (Inb a l2) (IHl1)).       *)
 (* Defined. *)
- 
+
 (* Definition incl_fset_sort_compute (l1 l2 : {fset Location}) : bool. *)
 (* Proof. *)
 (*   destruct l1 as [l1]. *)
@@ -255,6 +256,8 @@ Proof.
   do 2 rewrite fset_compute.
   now rewrite <- in_fset.
 Qed.
+
+
 
 Theorem in_split_cat : forall a (l0 l1 : list Location), List.In a (seq.cat l0 l1) <-> List.In a l0 \/ List.In a l1.
 Proof.
@@ -293,7 +296,7 @@ Theorem loc_list_incl_fsubset : forall (l0 l1 : {fset tag_ordType (I:=choice_typ
 Proof.
   intros.
   rewrite <- (ssrbool.rwP (@fsubsetP _ l0 l1)).
-  
+
   unfold ssrbool.sub_mem.
   unfold incl.
 
@@ -308,12 +311,11 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem opsig_list_incl_fsubset : forall (l0 l1 : _), is_true (fsubset (T := (prod_ordType nat_ordType
-                           (prod_ordType choice_type_ordType choice_type_ordType))) l0 l1) <-> List.incl l0 l1.
+Theorem opsig_list_incl_fsubset : forall (l0 l1 : _), is_true (fsubset (T:=opsig_ordType) l0 l1) <-> List.incl l0 l1.
 Proof.
   intros.
   rewrite <- (ssrbool.rwP (@fsubsetP _ l0 l1)).
-  
+
   unfold ssrbool.sub_mem.
   unfold incl.
 
@@ -334,7 +336,7 @@ Lemma valid_injectLocations_b :
          (L1 L2 : {fset tag_ordType (I:=choice_type_ordType) (fun _ : choice_type => nat_ordType)})
          (v : raw_code A),
     List.incl L1 L2 -> ValidCode L1 import v -> ValidCode L2 import v.
-Proof.  
+Proof.
   intros I A L1 L2 v incl.
   apply valid_injectLocations.
   apply loc_list_incl_fsubset.
@@ -346,7 +348,7 @@ Lemma valid_injectOpsig_b :
          (L : {fset tag_ordType (I:=choice_type_ordType) (fun _ : choice_type => nat_ordType)})
          (v : raw_code A),
     List.incl I1 I2 -> ValidCode L I1 v -> ValidCode L I2 v.
-Proof.  
+Proof.
   intros I1 I2 A L v incl.
   apply valid_injectMap.
   apply opsig_list_incl_fsubset.
@@ -358,7 +360,7 @@ Proof.
   intros.
 
   cbn in *.
-  
+
   induction l1.
   - rewrite <- fset0E. easy.
   - cbn.
@@ -370,12 +372,13 @@ Proof.
       rewrite <- in_remove_fset in H1.
       apply H0.
       apply H1.
-    + intros.        
-      rewrite -> in_remove_fset.
+    + intros.
+      pose (@in_remove_fset).
+      rewrite -> (in_remove_fset (T:=loc_ordType)).
       apply H0.
-      rewrite <- loc_in_remove_fset.
+      rewrite <- (in_remove_fset (T:=loc_ordType)).
       apply H1.
-Qed.        
+Qed.
 
 
 Theorem opsig_list_incl_remove_fset {A} `{EqDec A} : forall (l1 l2 : list opsig), List.incl l1 l2 <-> List.incl (fset l1) (fset l2).
@@ -383,7 +386,7 @@ Proof.
   intros.
 
   cbn in *.
-  
+
   induction l1.
   - rewrite <- fset0E. easy.
   - cbn.
@@ -391,15 +394,15 @@ Proof.
     cbn.
     split.
     + intros.
-      rewrite <- opsig_in_remove_fset in H1 |- *.
+      rewrite <- in_remove_fset in H1 |- *.
       apply H0.
       apply H1.
-    + intros.        
-      rewrite -> opsig_in_remove_fset.
+    + intros.
+      rewrite -> (in_remove_fset (T:=opsig_ordType)).
       apply H0.
-      rewrite <- opsig_in_remove_fset.
+      rewrite <- (in_remove_fset (T:=opsig_ordType)).
       apply H1.
-Qed.        
+Qed.
 
 Theorem list_incl_cons_iff : (forall A (a : A) l1 l2, List.incl (a :: l1) l2 <-> (List.In a l2 /\ List.incl l1 l2)).
 Proof.
@@ -407,7 +410,7 @@ Proof.
   - pose List.incl_cons_inv.
     apply List.incl_cons_inv.
   - intros [].
-    apply List.incl_cons ; assumption.          
+    apply List.incl_cons ; assumption.
 Qed.
 
 (* Theorem list_incl_compute {A} `{EqDec A} : forall (l1 l2 : list Location), *)
@@ -418,7 +421,7 @@ Qed.
 (*     reflexivity. *)
 (*     apply incl_nil_l. *)
 (*   - intros. *)
-    
+
 (*     rewrite list_incl_cons_iff. *)
 
 (*     cbn. *)
@@ -464,22 +467,22 @@ Proof.
   intros.
   do 2 (apply (@functional_extensionality Location) ; intros []).
   cbn.
-  
+
   unfold tag_leq.
   unfold eqtype.tag_eq.
 
   unfold location_ltb.
   unfold tag_leq.
-  
+
   (* set (_ && _)%bool. *)
   (* set (_ && _)%bool. *)
 
   unfold location_eqb.
-  
+
   unfold ssrfun.tag , ssrfun.tagged , projT1 , projT2 in *.
 
   rewrite (Bool.andb_comm _ (eqtype.eq_op _ _)).
-  
+
   destruct (eqtype.eq_op x _) eqn:x_eq_x0.
   2: reflexivity.
   apply Couplings.reflection_nonsense in x_eq_x0.
@@ -496,7 +499,7 @@ Proof.
   unfold eqtype.tagged_as in *.
   unfold ssrfun.tagged ,  projT2 in *.
   unfold eq_rect_r , eq_rect in *.
-  
+
   destruct eqtype.eqP in *.
   2: contradiction.
   cbn in n_eq_n0.
@@ -526,7 +529,7 @@ Proof.
   rewrite <- (Bool.negb_involutive (loc_seq_has a (path.sort leb l))).
 
   unfold loc_seq_has.
-  
+
   rewrite <- seq.all_predC.
   rewrite path.all_sort.
   rewrite seq.all_predC.
@@ -534,20 +537,20 @@ Proof.
   rewrite Bool.negb_involutive.
 
   reflexivity.
-Qed.  
+Qed.
 
 Theorem list_in_iff_seq_has {A} `{EqDec A} : forall (l : list Location) (a : Location),
     is_true (loc_seq_has a l) <-> List.In a l.
 Proof.
   induction l ; intros.
-  - split ; intros ; easy. 
+  - split ; intros ; easy.
   - cbn.
     rewrite is_true_split_or.
     apply ZifyClasses.or_morph.
-    + rewrite <- (ssrbool.rwP (@eqtype.eqP loc_eqType a0 a)).      
+    + rewrite <- (ssrbool.rwP (@eqtype.eqP loc_eqType a0 a)).
       apply iff_eq_sym.
     + apply IHl.
-Qed.    
+Qed.
 
 Theorem list_in_iff_list_in_sort {A} `{EqDec A} : forall (l : list Location) (a : Location) leb,
     List.In a l <-> List.In a (path.sort leb l).
@@ -557,7 +560,7 @@ Proof.
   rewrite <- loc_seq_has_remove_sort.
   rewrite list_in_iff_seq_has.
   reflexivity.
-Qed.    
+Qed.
 
 Theorem list_in_sort_order_ignorant_compute {A} `{EqDec A} : forall (l : list Location) leb1 leb2 a,
     (List.In a (path.sort leb1 l)) <-> List.In a (path.sort leb2 l).
@@ -567,7 +570,7 @@ Proof.
   rewrite <- list_in_iff_list_in_sort.
   reflexivity.
 Qed.
-  
+
 Theorem list_incl_sort_order_ignorant_compute {A} `{EqDec A} : forall (l1 l2 : list Location) leb1 leb2,
     List.incl (path.sort leb1 l1) (path.sort leb1 l2) <-> List.incl (path.sort leb2 l1) (path.sort leb2 l2).
 Proof.
@@ -578,7 +581,7 @@ Proof.
   rewrite list_in_sort_order_ignorant_compute with (leb1 := leb1) (leb2 := leb2).
   rewrite list_in_sort_order_ignorant_compute with (leb1 := leb1) (leb2 := leb2).
   reflexivity.
-Qed.    
+Qed.
 
 Theorem list_incl_sort {A} `{EqDec A} : forall (l1 l2 : list Location) leb,
     List.incl l1 l2 <-> List.incl (path.sort leb l1) (path.sort leb l2).
@@ -589,7 +592,7 @@ Proof.
   rewrite <- list_in_iff_list_in_sort.
   rewrite <- list_in_iff_list_in_sort.
   reflexivity.
-Qed.  
+Qed.
 
 Theorem choice_type_test_refl : forall x , is_true (choice_type_test x x).
 Proof.

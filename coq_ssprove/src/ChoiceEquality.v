@@ -166,7 +166,7 @@ Proof.
   intros.
   apply (ssrbool.introT (xseq.InP _ _)).
   unfold IfToCEIf.
-  apply -> opsig_in_remove_fset.
+  apply -> (in_remove_fset (T:=opsig_ordType)).
   apply in_map.
   apply H.
 Defined.
@@ -374,11 +374,11 @@ Defined.
 Notation "prod_b( a , b )" := (prod_both a b) : hacspec_scope.
 Notation "prod_b( a , b , .. , c )" := (prod_both .. (prod_both a b) .. c) : hacspec_scope.
 
-Ltac ssprove_valid_location :=
-  apply loc_compute ; try apply -> loc_in_remove_fset ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
+Ltac ssprove_valid_fset T :=
+  apply (fset_compute (T:=T)) ; try apply -> (in_remove_fset (T:=T)) ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
 
-Ltac ssprove_valid_opsig :=
-  apply opsig_compute ; try apply -> opsig_in_remove_fset ; repeat (try (left ; reflexivity) ; right) ; try reflexivity.
+Ltac ssprove_valid_location := ssprove_valid_fset loc_ordType.
+Ltac ssprove_valid_opsig := ssprove_valid_fset opsig_ordType.
 
 Ltac ssprove_valid_program :=
   try (apply prog_valid) ;
@@ -758,12 +758,12 @@ Lemma isolate_mem_section :
     is_true (ssrbool.in_mem ℓ (ssrbool.mem (fset_head :|: fset :|: fset_tail))).
 Proof.
   intros.
-  apply loc_compute. apply in_split_fset_cat ; left ; apply in_split_fset_cat ; right.
-  apply loc_compute. apply H.
+  apply fset_compute. apply in_split_fset_cat ; left ; apply in_split_fset_cat ; right.
+  apply fset_compute. apply H.
 Qed.
 
 Ltac solve_heap_ignore_remove_set_heap :=
-  apply (heap_ignore_remove_set_heap) ; [ apply isolate_mem_section ; apply loc_compute ; apply -> loc_in_remove_fset ; cbn ; repeat (left ; reflexivity || right || reflexivity) | assumption ].
+  apply (heap_ignore_remove_set_heap) ; [ apply isolate_mem_section ; apply fset_compute ; apply -> in_remove_fset ; cbn ; repeat (left ; reflexivity || right || reflexivity) | assumption ].
 
 Theorem r_bind_trans_both : forall {B C : ChoiceEquality} {L I} {f : choice.Choice.sort B -> raw_code C} {g : B -> raw_code C} (b : both L I B),
   forall (P : precond) (Q : postcond _ _),
