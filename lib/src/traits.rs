@@ -99,9 +99,10 @@ pub trait SecretIntegerCopy: SecretInteger + Copy {
     fn classify(x: Self::PublicVersionCopy) -> Self;
 }
 
-pub trait PublicInteger: Integer {
+pub trait PublicInteger: Integer + PartialEq {
     type SecretVersion: Integer;
 }
+
 pub trait PublicIntegerCopy: PublicInteger + Copy {
     type SecretVersionCopy: Integer + Copy;
 }

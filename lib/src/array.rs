@@ -32,13 +32,13 @@ pub struct Array<T: Default + Copy, const S: usize>(pub [T; S]);
 
 // trait SecretInteger {};
 
-impl<T: Default + Copy + SecretInteger, const S: usize> Array<T, S> {
+impl<T: Default + Copy + UnsignedSecretInteger, const S: usize> Array<T, S> {
     pub fn declassify_eq(&self, other: &Self) -> bool {
         self.0[..]
             .iter()
             .map(|x| T::declassify(*x))
-            .collect::<Vec<_>>()
-            == other.0[..]
+            .collect::<Vec<_>>() ==
+            other.0[..]
                 .iter()
                 .map(|x| T::declassify(*x))
                 .collect::<Vec<_>>()
@@ -50,7 +50,7 @@ impl<T: Default + Copy + SecretInteger, const S: usize> Array<T, S> {
         let mut out: Seq<U8> = Seq::new(S * FACTOR);
         for i in 0..S {
             let tmp: T = self[i];
-            let tmp = T::to_be_bytes(&[tmp]);
+            let tmp = T::to_be_bytes(tmp);
             for j in 0..FACTOR {
                 out[i * FACTOR + j] = tmp[j];
             }
@@ -64,7 +64,7 @@ impl<T: Default + Copy + SecretInteger, const S: usize> Array<T, S> {
         let mut out: Seq<U8> = Seq::new(S * FACTOR);
         for i in 0..S {
             let tmp: T = self[i];
-            let tmp = T::to_le_bytes(&[tmp]);
+            let tmp = T::to_le_bytes(tmp);
             for j in 0..FACTOR {
                 out[i * FACTOR + j] = tmp[j];
             }
