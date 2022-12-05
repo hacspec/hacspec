@@ -342,7 +342,7 @@ pub fn verification_key_from_cert(cert: &ByteSeq) -> Result<VerificationKey, Cry
                             // ecPublicKey oid incl tag: 06 07 2A 86 48 CE 3D 02 01
                             // FIXME: This shouldn't be necessary. Instead public_byte_seq!
                             //        should be added to the typechecker. #136
-                            let expected = ByteSeq::from_seq(&EcOidTag(secret_bytes!([
+                            let expected = ByteSeq::from_seq(&Array(secret_bytes!([
                                 0x06u8, 0x07u8, 0x2Au8, 0x86u8, 0x48u8, 0xCEu8, 0x3Du8, 0x02u8,
                                 0x01u8
                             ])));
@@ -393,7 +393,9 @@ fn p256_sign(ps: &SignatureKey, payload: &ByteSeq, ent: Entropy) -> Result<Signa
     match ecdsa_p256_sha256_sign(payload, P256Scalar::from_byte_seq_be(ps), nonce) {
         // The ASN.1 encoding happens later on the outside.
         P256SignatureResult::Ok((r, s)) => concat_signature(r, s),
-        P256SignatureResult::Err(_) => Result::<Signature, CryptoError>::Err(CryptoError::CryptoError),
+        P256SignatureResult::Err(_) => {
+            Result::<Signature, CryptoError>::Err(CryptoError::CryptoError)
+        }
     }
 }
 

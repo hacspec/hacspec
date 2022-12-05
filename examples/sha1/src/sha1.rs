@@ -29,7 +29,7 @@ pub fn maj(x: U32, y: U32, z: U32) -> U32 {
     (x & y) ^ (x & z) ^ (y & z)
 }
 
-const HASH_INIT: Hash = Hash(secret_array!(
+const HASH_INIT: Hash = Array(secret_array!(
     U32,
     [
         0x67452301u32,

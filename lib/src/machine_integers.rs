@@ -115,6 +115,7 @@ macro_rules! implement_public_mi {
         impl NumericCopy for $t {}
         impl Integer for $t {
             const NUM_BITS: usize = $bits;
+            type Secrecy = Public;
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
             fn ZERO() -> Self {
@@ -418,6 +419,7 @@ macro_rules! implement_secret_mi {
         impl NumericCopy for $t {}
         impl Integer for $t {
             const NUM_BITS: usize = $bits;
+            type Secrecy = Secret;
 
             #[inline]
             #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -612,7 +614,8 @@ implement_secret_signed_mi!(I32, i32, 32);
 implement_secret_signed_mi!(I64, i64, 64);
 implement_secret_signed_mi!(I128, i128, 128);
 
-impl UnsignedPublicInteger for u8 {
+impl UnsignedPublicInteger for u8 {}
+impl EndianOperations for u8 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         let mut x = Seq::new(1);
@@ -637,7 +640,8 @@ impl UnsignedPublicInteger for u8 {
     }
 }
 
-impl UnsignedPublicInteger for u16 {
+impl UnsignedPublicInteger for u16 {}
+impl EndianOperations for u16 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u16_to_le_bytes(self))
@@ -656,7 +660,8 @@ impl UnsignedPublicInteger for u16 {
     }
 }
 
-impl UnsignedPublicInteger for u32 {
+impl UnsignedPublicInteger for u32 {}
+impl EndianOperations for u32 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u32_to_le_bytes(self))
@@ -675,7 +680,8 @@ impl UnsignedPublicInteger for u32 {
     }
 }
 
-impl UnsignedPublicInteger for u64 {
+impl UnsignedPublicInteger for u64 {}
+impl EndianOperations for u64 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u64_to_le_bytes(self))
@@ -694,7 +700,8 @@ impl UnsignedPublicInteger for u64 {
     }
 }
 
-impl UnsignedPublicInteger for u128 {
+impl UnsignedPublicInteger for u128 {}
+impl EndianOperations for u128 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<u8> {
         Seq::from_seq(&u128_to_le_bytes(self))
@@ -994,7 +1001,8 @@ impl SecretInteger for I128 {
     }
 }
 
-impl UnsignedSecretInteger for U8 {
+impl UnsignedSecretInteger for U8 {}
+impl EndianOperations for U8 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         let mut x = Seq::new(1);
@@ -1019,7 +1027,8 @@ impl UnsignedSecretInteger for U8 {
     }
 }
 
-impl UnsignedSecretInteger for U16 {
+impl UnsignedSecretInteger for U16 {}
+impl EndianOperations for U16 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U16_to_le_bytes(self))
@@ -1038,7 +1047,8 @@ impl UnsignedSecretInteger for U16 {
     }
 }
 
-impl UnsignedSecretInteger for U32 {
+impl UnsignedSecretInteger for U32 {}
+impl EndianOperations for U32 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U32_to_le_bytes(self))
@@ -1057,7 +1067,8 @@ impl UnsignedSecretInteger for U32 {
     }
 }
 
-impl UnsignedSecretInteger for U64 {
+impl UnsignedSecretInteger for U64 {}
+impl EndianOperations for U64 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U64_to_le_bytes(self))
@@ -1076,7 +1087,8 @@ impl UnsignedSecretInteger for U64 {
     }
 }
 
-impl UnsignedSecretInteger for U128 {
+impl UnsignedSecretInteger for U128 {}
+impl EndianOperations for U128 {
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
     fn to_le_bytes(self) -> Seq<U8> {
         Seq::from_seq(&U128_to_le_bytes(self))

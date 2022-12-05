@@ -4,6 +4,8 @@ use crate::prelude::*;
 impl Integer for BigInt {
     /// `NUM_BITS` is arbitrary for `BigInt`, so this i `0`.
     const NUM_BITS: usize = 0;
+    // TODO: is that right?
+    type Secrecy = Public;
 
     #[inline]
     #[cfg_attr(feature = "use_attributes", not_hacspec)]
@@ -211,13 +213,13 @@ impl PublicInteger for BigInt {
     type SecretVersion = BigInt;
 }
 
-impl SecretInteger for BigInt {
-    type PublicVersion = BigInt;
-    #[cfg_attr(feature = "use_attributes", not_hacspec)]
-    fn classify(x: Self::PublicVersion) -> Self {
-        x
-    }
-    fn declassify(x: Self) -> Self::PublicVersion {
-        x
-    }
-}
+// impl SecretInteger for BigInt {
+//     type PublicVersion = BigInt;
+//     #[cfg_attr(feature = "use_attributes", not_hacspec)]
+//     fn classify(x: Self::PublicVersion) -> Self {
+//         x
+//     }
+//     fn declassify(x: Self) -> Self::PublicVersion {
+//         x
+//     }
+// }

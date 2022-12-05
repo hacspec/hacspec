@@ -57,11 +57,30 @@ pub trait SeqTrait<T: Clone>:
     }
 }
 
+pub trait Secrecy: SameSecrecyIntegerTypes {}
+pub struct Public;
+pub struct Secret;
+
+impl Secrecy for Public {}
+impl Secrecy for Secret {}
+
+pub trait SameSecrecyIntegerTypes {
+    type UnsignedInt8: Integer + Copy;
+}
+
+impl SameSecrecyIntegerTypes for Public {
+    type UnsignedInt8 = u8;
+}
+impl SameSecrecyIntegerTypes for Secret {
+    type UnsignedInt8 = U8;
+}
+
 /// This trait extends the `Numeric` trait and is implemented by all integer
 /// types. It offers bit manipulation, instantiation from literal, and convenient
 /// constants.
 pub trait Integer: Numeric {
     const NUM_BITS: usize;
+    type Secrecy: Secrecy;
 
     // Some useful values.
     // Not constants because math integers can't do that.
@@ -89,7 +108,16 @@ pub trait Integer: Numeric {
     fn rotate_right(self, n: usize) -> Self;
 }
 
-pub trait SecretInteger: Integer {
+// TODO: should be part of trait [Integers]
+// but, since nothing is parametric, this is hard to do for now
+pub trait EndianOperations: Integer {
+    fn to_le_bytes(self) -> Seq<<Self::Secrecy as SameSecrecyIntegerTypes>::UnsignedInt8>;
+    fn to_be_bytes(self) -> Seq<<Self::Secrecy as SameSecrecyIntegerTypes>::UnsignedInt8>;
+    fn from_le_bytes(x: &Seq<<Self::Secrecy as SameSecrecyIntegerTypes>::UnsignedInt8>) -> Self;
+    fn from_be_bytes(x: &Seq<<Self::Secrecy as SameSecrecyIntegerTypes>::UnsignedInt8>) -> Self;
+}
+
+pub trait SecretInteger: Integer<Secrecy = Secret> {
     type PublicVersion: PublicInteger;
     fn classify(x: Self::PublicVersion) -> Self;
     fn declassify(x: Self) -> Self::PublicVersion;
@@ -99,7 +127,7 @@ pub trait SecretIntegerCopy: SecretInteger + Copy {
     fn classify(x: Self::PublicVersionCopy) -> Self;
 }
 
-pub trait PublicInteger: Integer + PartialEq {
+pub trait PublicInteger: Integer<Secrecy = Public> + PartialEq {
     type SecretVersion: Integer;
 }
 
@@ -114,10 +142,10 @@ pub trait SignedInteger: Integer {}
 pub trait SignedIntegerCopy: SignedInteger + Copy {}
 
 pub trait UnsignedSecretInteger: UnsignedInteger + SecretInteger {
-    fn to_le_bytes(self) -> Seq<U8>;
-    fn to_be_bytes(self) -> Seq<U8>;
-    fn from_le_bytes(x: &Seq<U8>) -> Self;
-    fn from_be_bytes(x: &Seq<U8>) -> Self;
+    // fn to_le_bytes(self) -> Seq<U8>;
+    // fn to_be_bytes(self) -> Seq<U8>;
+    // fn from_le_bytes(x: &Seq<U8>) -> Self;
+    // fn from_be_bytes(x: &Seq<U8>) -> Self;
     /// Get byte `i` of this integer.
     #[inline]
     #[cfg_attr(feature = "use_attributes", in_hacspec)]
@@ -128,10 +156,10 @@ pub trait UnsignedSecretInteger: UnsignedInteger + SecretInteger {
 pub trait UnsignedSecretIntegerCopy: UnsignedSecretInteger + SecretIntegerCopy {}
 
 pub trait UnsignedPublicInteger: UnsignedInteger + PublicInteger {
-    fn to_le_bytes(self) -> Seq<u8>;
-    fn to_be_bytes(self) -> Seq<u8>;
-    fn from_le_bytes(x: &Seq<u8>) -> Self;
-    fn from_be_bytes(x: &Seq<u8>) -> Self;
+    // fn to_le_bytes(self) -> Seq<u8>;
+    // fn to_be_bytes(self) -> Seq<u8>;
+    // fn from_le_bytes(x: &Seq<u8>) -> Self;
+    // fn from_be_bytes(x: &Seq<u8>) -> Self;
 }
 pub trait UnsignedPublicIntegerCopy: UnsignedPublicInteger + PublicIntegerCopy {}
 

@@ -683,3 +683,24 @@ define_signed_unsigned_casting!(U64, u64, I64, i64);
 define_signed_unsigned_casting!(U32, u32, I32, i32);
 define_signed_unsigned_casting!(U16, u16, I16, i16);
 define_signed_unsigned_casting!(U8, u8, I8, i8);
+
+macro_rules! derive_wrapping_impl {
+    ($name:ident) => {
+        impl num::traits::WrappingAdd for $name {
+            fn wrapping_add(&self, v: &Self) -> Self {
+                $name(self.0.wrapping_add(v.0))
+            }
+        }
+        impl num::traits::WrappingSub for $name {
+            fn wrapping_sub(&self, v: &Self) -> Self {
+                $name(self.0.wrapping_sub(v.0))
+            }
+        }
+    };
+}
+
+derive_wrapping_impl!(U8);
+derive_wrapping_impl!(U16);
+derive_wrapping_impl!(U32);
+derive_wrapping_impl!(U64);
+derive_wrapping_impl!(U128);

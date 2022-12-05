@@ -8,7 +8,7 @@ generic_array!(State, 8);
 generic_array!(DoubleState, 16);
 generic_array!(Counter, 2);
 
-const SIGMA: Sigma = Sigma([
+const SIGMA: Sigma = Array([
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2,
     11, 7, 5, 3, 11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4, 7, 9, 3, 1, 13, 12, 11, 14,
     2, 6, 5, 10, 4, 0, 15, 8, 9, 0, 5, 7, 2, 4, 10, 15, 14, 1, 11, 12, 6, 8, 3, 13, 2, 12, 6, 10,
@@ -18,7 +18,7 @@ const SIGMA: Sigma = Sigma([
     9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3,
 ]);
 
-const IVS: State<U32> = State(secret_array!(
+const IVS: State<U32> = Array(secret_array!(
     U32,
     [
         0x6A09_E667,
@@ -32,7 +32,7 @@ const IVS: State<U32> = State(secret_array!(
     ]
 ));
 
-const IVB: State<U64> = State(secret_array!(
+const IVB: State<U64> = Array(secret_array!(
     U64,
     [
         0x6a09_e667_f3bc_c908u64,
@@ -81,7 +81,9 @@ fn inc_counter<Word: PublicIntegerCopy>(t: Counter<Word>, x: Word) -> Counter<Wo
     result
 }
 
-fn make_array<Word: UnsignedSecretIntegerCopy>(h: &ByteSeq) -> DoubleState<Word> {
+fn make_array<Word: UnsignedSecretIntegerCopy + hacspec_lib::EndianOperations>(
+    h: &ByteSeq,
+) -> DoubleState<Word> {
     assert_eq!(h.len() / ((Word::NUM_BITS as usize) / 8), 16);
     let mut result = DoubleState::new();
     for i in 0..16 {
@@ -113,7 +115,7 @@ pub enum BlakeVariant {
     Blake2B,
 }
 
-fn compress<Word: UnsignedSecretIntegerCopy>(
+fn compress<Word: UnsignedSecretIntegerCopy + hacspec_lib::EndianOperations>(
     h: State<Word>,
     m: &ByteSeq,
     t: Counter<Word::PublicVersionCopy>,
@@ -172,12 +174,18 @@ where
     compressed
 }
 
-fn get_byte<Word: UnsignedSecretIntegerCopy>(x: Word, i: usize) -> U8 {
+fn get_byte<Word: UnsignedSecretIntegerCopy + hacspec_lib::EndianOperations>(
+    x: Word,
+    i: usize,
+) -> U8 {
     let bytes = x.get_byte(i).to_le_bytes();
     bytes[0]
 }
 
-pub fn blake2<Word: UnsignedSecretIntegerCopy>(data: &ByteSeq, alg: BlakeVariant) -> ByteSeq
+pub fn blake2<Word: UnsignedSecretIntegerCopy + hacspec_lib::EndianOperations>(
+    data: &ByteSeq,
+    alg: BlakeVariant,
+) -> ByteSeq
 where
     State<Word>: HasIV<Word>,
 {

@@ -20,10 +20,10 @@ pub fn maj(x: U32, y: U32, z: U32) -> U32 {
     (x & y) ^ ((x & z) ^ (y & z))
 }
 
-const OP_TABLE: OpTableType = OpTableType([2, 13, 22, 6, 11, 25, 7, 18, 3, 17, 19, 10]);
+const OP_TABLE: OpTableType = Array([2, 13, 22, 6, 11, 25, 7, 18, 3, 17, 19, 10]);
 
 #[rustfmt::skip]
-const K_TABLE: RoundConstantsTable = RoundConstantsTable(secret_array!(
+const K_TABLE: RoundConstantsTable = Array(secret_array!(
     U32,
     [
         0x428a_2f98u32, 0x7137_4491u32, 0xb5c0_fbcfu32, 0xe9b5_dba5u32, 0x3956_c25bu32,
@@ -42,7 +42,7 @@ const K_TABLE: RoundConstantsTable = RoundConstantsTable(secret_array!(
     ]
 ));
 
-const HASH_INIT: Hash = Hash(secret_array!(
+const HASH_INIT: Hash = Array(secret_array!(
     U32,
     [
         0x6a09e667u32,
