@@ -1,0 +1,111 @@
+{
+  inputs = {
+    flake-utils.url = "github:numtide/flake-utils";
+    # rust-overlay = {
+    #   url = "github:oxalica/rust-overlay";
+    #   inputs = {
+    #     nixpkgs.follows = "nixpkgs";
+    #     flake-utils.follows = "flake-utils";
+    #   };
+    # };
+    nixpkgs-mozilla = {
+      url = "github:mozilla/nixpkgs-mozilla";
+      flake = false;
+    };
+    naersk.url = "github:nix-community/naersk";
+    # crane = {
+    #   url = "github:ipetkov/crane";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
+  };
+
+  outputs = {flake-utils, nixpkgs, naersk, nixpkgs-mozilla, ...}:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = (import nixpkgs) {
+          inherit system;
+
+          overlays = [
+            (import nixpkgs-mozilla)
+          ];
+        };
+        lib = pkgs.lib;
+        toolchain = (pkgs.rustChannelOf {
+          date = "2022-07-04"; channel = "nightly";
+          sha256 = "sha256-ub7wq0pMk8kgc7lRgBgfS6KKNU27oUqjCykH1Tc8L0Q=";
+        }).rust;
+        # toolchain = (pkgs.rustChannelOf {
+        #   rustToolchain = ./rust-toolchain;
+        # }).rust;
+        naersk' = pkgs.callPackage naersk {
+          cargo = toolchain;
+          rustc = toolchain;
+        };
+        rewrite-evercrypt = src: pkgs.stdenv.mkDerivation {
+          name = "src-rewrite-evercrypt";
+          phases = "installPhase";
+          buildInputs = [ pkgs.sd ];
+          installPhase = ''
+            cp -r --no-preserve=mode '${src}' "$out"
+            cd "$out"
+
+            cp -r --no-preserve=mode '${pkgs.fetchFromGitHub {
+              repo = "evercrypt-rust";
+              owner = "franziskuskiefer";
+              rev = "563bfa99fcc8fb2dc134559f8ef163e8eb49758b";
+              sha256 = "sha256-rMfSS/9scQ90r1XeJZxW2To3NXjxeZLoLGqEnNoCt6E=";
+              # deepClone = true;
+              leaveDotGit = true;
+              fetchSubmodules = true;
+            }}' evercrypt
+            
+            echo "[patch.crates-io]" >> Cargo.toml
+            echo "evercrypt = { path = \"./evercrypt/evercrypt-rs\" }" >> Cargo.toml
+            echo "evercrypt-sys = { path = \"./evercrypt/evercrypt-sys\" }" >> Cargo.toml
+          '';
+        };
+
+        # hacspec = craneLib.buildPackage {
+        #   src = rewrite-evercrypt (craneLib.cleanCargoSource ./.);
+        #   doCheck = false;
+        # };
+        hacspec-language = naersk'.buildPackage {
+          src = ./.;
+          root = ./language;
+          remapPathPrefix = false;
+          
+          # cargoLock = ./language/Cargo.lock;
+        };
+        # chacha20 = naersk'.buildPackage {
+        #   src = rewrite-evercrypt ./.;
+        #   root = ./.;
+        #   # cargoBuildCommand = "cargo build --manifest-path=examples/Cargo.toml";
+        #   # cargoLock =
+        #   #   builtins.trace
+        #   #   "${fusion-locktoml [./examples/Cargo.lock ./Cargo.lock]}/Cargo.lock"
+        #   #   "${fusion-locktoml [./examples/Cargo.lock ./Cargo.lock]}/Cargo.lock";
+        #   # # cargoLock = ./examples/Cargo.lock;
+        # };
+        # chacha20-extractions = 
+      in rec {
+        packages = {
+          default = hacspec-language;
+          # workspace = hacspec;
+          # chacha20 = chacha20;
+        };
+        # hey = craneLib;
+        
+        devShells.default = pkgs.mkShell {
+          nativeBuildInputs = [ toolchain ];
+          # buildInputs = with pkgs; [
+          #   # pkgs.clang
+          #   pkgs.difftastic
+          # ];
+          # inputsFrom = [hacspec];
+          # LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+          # shellHook = ''
+          # '';
+        };
+      }
+    );
+}
