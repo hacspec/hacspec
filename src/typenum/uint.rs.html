@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.15.0/src/uint.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>uint.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../typenum/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/typenum-1.16.0/src/uint.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>uint.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../typenum/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../typenum/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
@@ -2604,6 +2604,69 @@
 <span id="2598">2598</span>
 <span id="2599">2599</span>
 <span id="2600">2600</span>
+<span id="2601">2601</span>
+<span id="2602">2602</span>
+<span id="2603">2603</span>
+<span id="2604">2604</span>
+<span id="2605">2605</span>
+<span id="2606">2606</span>
+<span id="2607">2607</span>
+<span id="2608">2608</span>
+<span id="2609">2609</span>
+<span id="2610">2610</span>
+<span id="2611">2611</span>
+<span id="2612">2612</span>
+<span id="2613">2613</span>
+<span id="2614">2614</span>
+<span id="2615">2615</span>
+<span id="2616">2616</span>
+<span id="2617">2617</span>
+<span id="2618">2618</span>
+<span id="2619">2619</span>
+<span id="2620">2620</span>
+<span id="2621">2621</span>
+<span id="2622">2622</span>
+<span id="2623">2623</span>
+<span id="2624">2624</span>
+<span id="2625">2625</span>
+<span id="2626">2626</span>
+<span id="2627">2627</span>
+<span id="2628">2628</span>
+<span id="2629">2629</span>
+<span id="2630">2630</span>
+<span id="2631">2631</span>
+<span id="2632">2632</span>
+<span id="2633">2633</span>
+<span id="2634">2634</span>
+<span id="2635">2635</span>
+<span id="2636">2636</span>
+<span id="2637">2637</span>
+<span id="2638">2638</span>
+<span id="2639">2639</span>
+<span id="2640">2640</span>
+<span id="2641">2641</span>
+<span id="2642">2642</span>
+<span id="2643">2643</span>
+<span id="2644">2644</span>
+<span id="2645">2645</span>
+<span id="2646">2646</span>
+<span id="2647">2647</span>
+<span id="2648">2648</span>
+<span id="2649">2649</span>
+<span id="2650">2650</span>
+<span id="2651">2651</span>
+<span id="2652">2652</span>
+<span id="2653">2653</span>
+<span id="2654">2654</span>
+<span id="2655">2655</span>
+<span id="2656">2656</span>
+<span id="2657">2657</span>
+<span id="2658">2658</span>
+<span id="2659">2659</span>
+<span id="2660">2660</span>
+<span id="2661">2661</span>
+<span id="2662">2662</span>
+<span id="2663">2663</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Type-level unsigned integers.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//!</span>
@@ -4932,6 +4995,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i8</span> {
         <span class="ident"><span class="self">Self</span>::I8</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I8</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4939,6 +5003,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i16</span> {
         <span class="ident"><span class="self">Self</span>::I16</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I16</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4946,6 +5011,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i32</span> {
         <span class="ident"><span class="self">Self</span>::I32</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I32</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4953,6 +5019,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i64</span> {
         <span class="ident"><span class="self">Self</span>::I64</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I64</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4960,6 +5027,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u8</span> {
         <span class="ident"><span class="self">Self</span>::U8</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U8</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4967,6 +5035,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u16</span> {
         <span class="ident"><span class="self">Self</span>::U16</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U16</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4974,6 +5043,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u32</span> {
         <span class="ident"><span class="self">Self</span>::U32</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U32</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4981,6 +5051,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u64</span> {
         <span class="ident"><span class="self">Self</span>::U64</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U64</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UTerm</span> {
@@ -4988,6 +5059,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">usize</span> {
         <span class="ident"><span class="self">Self</span>::USIZE</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::USIZE</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">i8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -4999,6 +5071,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i8</span> {
         <span class="ident"><span class="self">Self</span>::I8</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I8</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5010,6 +5083,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i16</span> {
         <span class="ident"><span class="self">Self</span>::I16</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I16</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5021,6 +5095,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i32</span> {
         <span class="ident"><span class="self">Self</span>::I32</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I32</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5032,6 +5107,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">i64</span> {
         <span class="ident"><span class="self">Self</span>::I64</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::I64</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5043,6 +5119,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u8</span> {
         <span class="ident"><span class="self">Self</span>::U8</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U8</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5054,6 +5131,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u16</span> {
         <span class="ident"><span class="self">Self</span>::U16</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U16</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5065,6 +5143,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u32</span> {
         <span class="ident"><span class="self">Self</span>::U32</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U32</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5076,6 +5155,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">u64</span> {
         <span class="ident"><span class="self">Self</span>::U64</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::U64</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span> <span class="ident">ToInt</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">UInt</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">B</span><span class="op">&gt;</span>
@@ -5087,6 +5167,7 @@
     <span class="kw">fn</span> <span class="ident">to_int</span>() -&gt; <span class="ident">usize</span> {
         <span class="ident"><span class="self">Self</span>::USIZE</span>
     }
+    <span class="kw">const</span> <span class="ident">INT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::USIZE</span>;
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
@@ -5146,6 +5227,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_i8</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_i8</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_i8</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_i8</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_i8</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_i8</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_i8</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_i8</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// i16</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_i16</span>, <span class="ident">U0::to_int</span>());
@@ -5153,6 +5239,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_i16</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_i16</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_i16</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_i16</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_i16</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_i16</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_i16</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_i16</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// i32</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_i32</span>, <span class="ident">U0::to_int</span>());
@@ -5160,6 +5251,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_i32</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_i32</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_i32</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_i32</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_i32</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_i32</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_i32</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_i32</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// i64</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_i64</span>, <span class="ident">U0::to_int</span>());
@@ -5167,6 +5263,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_i64</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_i64</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_i64</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_i64</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_i64</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_i64</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_i64</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_i64</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// u8</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_u8</span>, <span class="ident">U0::to_int</span>());
@@ -5174,6 +5275,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_u8</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_u8</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_u8</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_u8</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_u8</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_u8</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_u8</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_u8</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// u16</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_u16</span>, <span class="ident">U0::to_int</span>());
@@ -5181,6 +5287,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_u16</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_u16</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_u16</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_u16</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_u16</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_u16</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_u16</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_u16</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// u32</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_u32</span>, <span class="ident">U0::to_int</span>());
@@ -5188,6 +5299,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_u32</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_u32</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_u32</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_u32</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_u32</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_u32</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_u32</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_u32</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// u64</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_u64</span>, <span class="ident">U0::to_int</span>());
@@ -5195,6 +5311,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_u64</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_u64</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_u64</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_u64</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_u64</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_u64</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_u64</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_u64</span>, <span class="ident">U4::INT</span>);
 
         <span class="comment">// usize</span>
         <span class="macro">assert_eq!</span>(<span class="number">0_usize</span>, <span class="ident">U0::to_int</span>());
@@ -5202,6 +5323,11 @@
         <span class="macro">assert_eq!</span>(<span class="number">2_usize</span>, <span class="ident">U2::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">3_usize</span>, <span class="ident">U3::to_int</span>());
         <span class="macro">assert_eq!</span>(<span class="number">4_usize</span>, <span class="ident">U4::to_int</span>());
+        <span class="macro">assert_eq!</span>(<span class="number">0_usize</span>, <span class="ident">U0::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">1_usize</span>, <span class="ident">U1::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">2_usize</span>, <span class="ident">U2::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">3_usize</span>, <span class="ident">U3::INT</span>);
+        <span class="macro">assert_eq!</span>(<span class="number">4_usize</span>, <span class="ident">U4::INT</span>);
     }
 }
 </code></pre></div>
