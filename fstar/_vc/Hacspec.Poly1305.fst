@@ -15,9 +15,9 @@ type poly_block_t = lseq (uint8) (16)
 
 type poly1305_tag_t = lseq (uint8) (16)
 
-type sub_block_t = s: byte_seq {seq_len s < 16}
+type sub_block_t = byte_seq
 
-type block_index_t = x: uint_size {x < blocksize_v}
+type block_index_t = uint_size
 
 type field_canvas_t = lseq (pub_uint8) (17)
 
@@ -49,18 +49,16 @@ let poly1305_encode_last
   : field_element_t =
   let n_7 : uint128 =
     uint128_from_le_bytes (
-      array_from_slice (secret (pub_u8 0x0)) (16) (b_6) (0) (seq_len (b_6)))
+      array_from_slice (secret (0x0uy)) (16) (b_6) (0) (seq_len (b_6)))
   in
   let f_8 : field_element_t =
     nat_from_secret_literal (0x03fffffffffffffffffffffffffffffffb) (n_7)
   in
-  assert_norm (0x03fffffffffffffffffffffffffffffffb > pow2 129);
-  Math.Lemmas.pow2_lt_compat 129 (8 * pad_len_5);
   (f_8) +% (nat_pow2 (0x03fffffffffffffffffffffffffffffffb) ((8) * (pad_len_5)))
 
 let poly1305_init (k_9 : poly_key_t) : poly_state_t =
   let r_10 : field_element_t =
-    poly1305_encode_r (array_from_slice (secret (pub_u8 0x0)) (16) (k_9) (0) (16))
+    poly1305_encode_r (array_from_slice (secret (0x0uy)) (16) (k_9) (0) (16))
   in
   (nat_zero (0x03fffffffffffffffffffffffffffffffb), r_10, k_9)
 
@@ -97,7 +95,7 @@ let poly1305_update_blocks
   st_18
 
 let poly1305_update_last
-  (pad_len_22 : block_index_t)
+  (pad_len_22 : uint_size)
   (b_23 : sub_block_t)
   (st_24 : poly_state_t)
   : poly_state_t =
@@ -138,14 +136,14 @@ let poly1305_finish (st_33 : poly_state_t) : poly1305_tag_t =
   in
   let n_36 : uint128 =
     uint128_from_le_bytes (
-      array_from_slice (secret (pub_u8 0x0)) (16) (k_35) (16) (16))
+      array_from_slice (secret (0x0uy)) (16) (k_35) (16) (16))
   in
   let aby_37 : seq uint8 =
     nat_to_byte_seq_le (0x03fffffffffffffffffffffffffffffffb) (17) (acc_34)
   in
   let a_38 : uint128 =
     uint128_from_le_bytes (
-      array_from_slice (secret (pub_u8 0x0)) (16) (aby_37) (0) (16))
+      array_from_slice (secret (0x0uy)) (16) (aby_37) (0) (16))
   in
   array_from_seq (16) (uint128_to_le_bytes ((a_38) +. (n_36)))
 
