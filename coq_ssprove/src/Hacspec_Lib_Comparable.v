@@ -1,6 +1,10 @@
 From Coq Require Import ZArith List.
 From Crypt Require Import Package.
 
+(************************************************)
+(*   Implementation of comparision functions    *)
+(************************************************)
+
 (* Typeclass handling of default elements, for use in sequences/arrays.
    We provide instances for the library integer types *)
 Class Default (A : Type) := {
@@ -57,7 +61,7 @@ Qed.
 Theorem neqb_leibniz : forall {A} {H : EqDec A} x y, eqb x y = false <-> x <> y .
 Proof.
   intros.
-  rewrite (ssrbool.rwP ssrbool.negPf).  
+  rewrite (ssrbool.rwP ssrbool.negPf).
   rewrite <- (ssrbool.rwP (@ssrbool.negP (eqb x y))).
   apply not_iff_compat.
   apply eqb_leibniz.

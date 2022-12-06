@@ -7,13 +7,12 @@ Require Import Hacspec_Lib_Comparable.
 
 Require Import Coq.Logic.FunctionalExtensionality.
 
-(*** Location *)
+(*****************************************************)
+(*   This file defines a utility functions to reason *)
+(* about equivalence of Locations and Signatures     *)
+(*****************************************************)
 
-(* Fixpoint Inb {A : Type} `{EqDec A} (a:A) (l:list A) : bool := *)
-(*   match l with *)
-(*   | nil => false *)
-(*   | cons b m => (eqb b a) || Inb a m *)
-(*   end. *)
+(*** Location *)
 
 Definition loc_eqType :=
   (@eqtype.tag_eqType choice_type_eqType (fun _ : choice_type => ssrnat.nat_eqType)).
@@ -21,12 +20,6 @@ Definition loc_eqType :=
 Definition location_eqb (ℓ ℓ' : Location) :=
   andb (@eqtype.eq_op ssrnat.nat_eqType (projT2 ℓ) (projT2 ℓ'))
        (@eqtype.eq_op _ (projT1 ℓ) (projT1 ℓ')).
-       (* (@eqtype.eq_op loc_eqType ℓ ℓ'). *)
-
-(* Axiom location_is_types : (forall l1 l2 : Location , *)
-(*                               is_true (eqb (ssrfun.tagged l1) (ssrfun.tagged l2)) -> *)
-(*                               is_true (eqtype.eq_op (ssrfun.tag l1) (ssrfun.tag l2))). *)
-
 
 Definition location_eqbP : forall (l1 l2 : Location),
     @location_eqb (l1) (l2)
@@ -81,9 +74,6 @@ Proof.
   apply (ssrbool.rwP ssrbool.andP).
 Qed.
 
-
-
-
 Theorem LocsSubset : (forall {A} (L1 L2 : list A) (a : A),
                          List.incl L1 L2 ->
                          List.In a L1 ->
@@ -98,23 +88,10 @@ Theorem LocsSubset : (forall {A} (L1 L2 : list A) (a : A),
     + apply IHL ; assumption.
 Qed.
 
-(* Theorem in_bool_iff : forall {A : Type} `{EqDec A} (a:A) (l:list A), is_true (Inb a l) <-> List.In a l. *)
-(*   induction l ; cbn. *)
-(*   - rewrite boolp.falseE. *)
-(*     reflexivity. *)
-(*   - cbn. *)
-(*     rewrite is_true_split_or.     *)
-(*     apply ZifyClasses.or_morph. *)
-(*     apply eqb_leibniz. *)
-(*     apply IHl. *)
-(* Qed. *)
-
-
 Lemma location_eqb_sound : forall ℓ ℓ' : Location, is_true (location_eqb ℓ ℓ') <-> ℓ = ℓ'.
 Proof.
   intros.
   rewrite location_eqbP.
-  (* unfold location_eqb. *)
   pose (@eqtype.eqP loc_eqType).
   unfold eqtype.Equality.axiom in a.
   pose (ssrbool.elimT).
@@ -122,15 +99,8 @@ Proof.
 
   split.
 
-  pose (Couplings.reflection_nonsense (@eqtype.tag_eqType choice_type_eqType (fun _ : choice_type => ssrnat.nat_eqType)) ℓ ℓ').
-
-
-  (* rewrite is_true_split_and. *)
-  (* intros [_].   *)
-  apply e.
-  (* apply H. *)
+  apply (Couplings.reflection_nonsense (@eqtype.tag_eqType choice_type_eqType (fun _ : choice_type => ssrnat.nat_eqType)) ℓ ℓ').
   intros. subst.
-  (* rewrite eqb_refl. *)
   apply eqtype.eq_refl.
 Qed.
 
@@ -159,7 +129,6 @@ Proof.
   induction s0 ; intros.
   * destruct s ; easy.
   * destruct s. reflexivity.
-    (* unfold Nat.leb ; fold Nat.leb. *)
     cbn.
     cbn in IHs0.
     rewrite IHs0.
@@ -210,45 +179,11 @@ Definition opsig_ordType := (prod_ordType nat_ordType (prod_ordType choice_type_
 
 Definition loc_ordType := (@tag_ordType choice_type_ordType (fun _ : choice_type => nat_ordType)).
 
-(* Theorem in_bool_eq : forall {A : Type} `{EqDec A} (a:A) (l:list A), is_true (Inb a l) = List.In a l. *)
-(*   intros. *)
-(*   rewrite boolp.propeqE. apply in_bool_iff. *)
-(* Qed. *)
-
-(* Fixpoint incl_sort_compute A `{EqDec A} (l1 l2 : list A) : bool := *)
-(*   match l1 with *)
-(*   | nil => true *)
-(*   | (x :: xs) => (andb (Inb x l2) (incl_sort_compute A xs l2)) *)
-(*   end. *)
-
 Fixpoint incl_expand A `{EqDec A} (l1 l2 : list A) : Prop :=
   match l1 with
   | nil => True
   | (x :: xs) => In x l2 /\ incl_expand A xs l2
   end.
-
-(* Proof. *)
-(*   induction l1. *)
-(*   - exact true. *)
-(*   - exact (andb (Inb a l2) (IHl1)).       *)
-(* Defined. *)
-
-(* Definition incl_fset_sort_compute (l1 l2 : {fset Location}) : bool. *)
-(* Proof. *)
-(*   destruct l1 as [l1]. *)
-(*   induction l1. *)
-(*   - exact true. *)
-(*   - assert (is_true (path.sorted Ord.lt l1)). *)
-(*     { *)
-(*       pose (path.drop_sorted). *)
-(*       specialize i0 with (n := 1) (s := a :: l1). *)
-(*       rewrite seq.drop1 in i0. *)
-(*       unfold seq.behead in i0. *)
-(*       apply i0. *)
-(*       apply i. *)
-(*     } *)
-(*     exact (andb (Inb a l2) (IHl1 H)).       *)
-(* Defined. *)
 
 Theorem in_remove_fset : forall {T : ordType} a (l : list T), List.In a l <-> List.In a (fset l).
 Proof.
@@ -413,25 +348,6 @@ Proof.
     apply List.incl_cons ; assumption.
 Qed.
 
-(* Theorem list_incl_compute {A} `{EqDec A} : forall (l1 l2 : list Location), *)
-(*     List.incl l1 l2 <-> is_true (incl_sort_compute _ l1 l2). *)
-(* Proof. *)
-(*   induction l1. *)
-(*   - split ; intros. *)
-(*     reflexivity. *)
-(*     apply incl_nil_l. *)
-(*   - intros. *)
-
-(*     rewrite list_incl_cons_iff. *)
-
-(*     cbn. *)
-(*     rewrite is_true_split_and. *)
-(*     rewrite in_bool_eq. *)
-
-(*     apply and_iff_compat_l. *)
-(*     apply IHl1. *)
-(* Qed.         *)
-
 Theorem loc_list_incl_expand {A} `{EqDec A} : forall (l1 l2 : list Location),
     List.incl l1 l2 <-> incl_expand _ l1 l2.
 Proof.
@@ -460,8 +376,6 @@ Proof.
     apply IHl1.
 Qed.
 
-(* Theorem forall l1 l2, incl_sort_compute <-> list_incl_compute  *)
-
 Definition location_lebP : (tag_leq (I:=choice_type_ordType) (T_:=fun _ : choice_type => nat_ordType)) = leb.
 Proof.
   intros.
@@ -473,9 +387,6 @@ Proof.
 
   unfold location_ltb.
   unfold tag_leq.
-
-  (* set (_ && _)%bool. *)
-  (* set (_ && _)%bool. *)
 
   unfold location_eqb.
 

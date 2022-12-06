@@ -12,6 +12,13 @@ Import RulesStateProb.
 Import RulesStateProb.RSemanticNotation.
 Open Scope rsemantic_scope.
 
+(******************************************************************************)
+(*   This file defines a class ChoiceEquality, which defines an equality      *)
+(* between choice_type and coq types. We also define types both and           *)
+(* both_package, which is stateful code/package and a pure value, combined    *)
+(* with a proof of equality between the two.                                  *)
+(******************************************************************************)
+
 Monomorphic Class ChoiceEquality := {
     T : Type@{choice.Choice.type.u0} ;
     ct : choice_type ;
@@ -39,6 +46,7 @@ Proof (fun ce => rew_opp_l id (ChoiceEq ce)).
 
 Global Coercion ct_T : choice.Choice.sort >-> T.
 Global Coercion T_ct : T >-> choice.Choice.sort.
+
 
 Lemma ChoiceEquality_ct_EqP : forall ce1 ce2, ce1 = ce2 <-> ct ce1 = ct ce2.
 Proof.
@@ -171,11 +179,6 @@ Proof.
   apply H.
 Defined.
 
-(* (get_opackage_op pack_state *)
-(*                  (opsigCE_opsig (fst o, (fst (snd o), snd (snd o)))) *)
-(*                  (pack_helper E o H) *)
-(*                  (T_ct v)) *)
-
 Class both_package L I (E : InterfaceCE) :=
   {
     pack_pure : forall o, List.In o E -> fst (snd o) -> snd (snd o) ;
@@ -186,8 +189,6 @@ Class both_package L I (E : InterfaceCE) :=
        (fun S0 : choice_type => {T0 : choice_type & choice.Choice.sort S0 -> raw_code T0})
        s (existT (fun T0 : choice_type => choice.Choice.sort s -> raw_code T0) t f)) ->
       ⊢ ⦃ true_precond ⦄
-          (* opr (opsigCE_opsig (fst o, (fst (snd o), snd (snd o)))) v (fun x => ret x) *)
-          (* get_op {locpackage pack_state} (opsigCE_opsig (i,(s,t))) (pack_helper H) (T_ct v) *)
           f v
           ≈ lift_to_code (L := L) (I := I) (pack_pure (i,(s,t)) H v)
       ⦃ pre_to_post_ret true_precond (T_ct (pack_pure (i,(s,t)) H v)) ⦄
@@ -222,7 +223,7 @@ Proof.
   rewrite pkg_composition.cast_fun_K.
   reflexivity.
 Defined.
-  
+
 Program Instance both_package' L I o (bf : T (fst (snd o)) -> both L I (snd (snd o)))
   : both_package L I (o :: nil) :=
   {|
@@ -247,7 +248,7 @@ Program Definition lift_to_both {ce : ChoiceEquality} {L I} (x : @T ce) : both L
   {| is_pure := x ; is_state := @lift_to_code ce L I x |}.
 Next Obligation. intros. apply r_ret. intros. easy. Qed.
 
-Definition both0 (A : ChoiceEquality) := both fset.fset0 [interface] A. (* [interface] *)
+Definition both0 (A : ChoiceEquality) := both fset.fset0 [interface] A.
 Definition lift_to_both0 {ce : ChoiceEquality} (x : T ce) : both fset.fset0 [interface] ce := lift_to_both x.
 
 Definition lift_code_scope {L1 L2 : {fset Location}} {I1 I2 : {fset opsig}} {A} (c : code L1 I1 A) `{H_loc_incl : List.incl L1 L2} `{H_opsig_incl : List.incl I1 I2} : code L2 I2 A :=
@@ -284,33 +285,8 @@ Theorem forget_precond {B} (x y : raw_code B) P Q :
   ⊢ ⦃ P ⦄ x ≈ y ⦃ Q ⦄.
 Proof.
   intros.
-  eapply rpre_weaken_rule.
-  apply H.
-  intros.
-  reflexivity.
+  now apply (rpre_weaken_rule _ _ _ H).
 Qed.
-
-(* Program Instance prod_both {ceA ceB : ChoiceEquality} {L1 L2 L3 : {fset _}} {I1 I2 I3 : {fset _}} (a : both L1 I1 ceA) (b : both L2 I2 ceB) `{H_L_13 : List.incl L1 L3} `{H_L_23 : List.incl L2 L3} `{H_I_13 : List.incl I1 I3} `{H_I_23 : List.incl I2 I3} : both L3 I3 (ceA '× ceB) := *)
-(*   {| *)
-(*     is_pure := (is_pure a , is_pure b) ; *)
-(*     is_state := *)
-(*     {code *)
-(*        x ← a ;; *)
-(*        y ← b ;; *)
-(*        @ret (prod_ChoiceEquality _ _) (x , y) *)
-(*     } *)
-(*   |}. *)
-(* Next Obligation. *)
-(*   intros. *)
-(*   ssprove_valid. *)
-(*   apply valid_injectLocations_b with (L1 := L1). apply H_L_13. *)
-(*   apply valid_injectOpsig_b with (I1 := I1). apply H_I_13. *)
-(*   apply (is_state a). *)
-
-(*   apply valid_injectLocations_b with (L1 := L2). apply H_L_23. *)
-(*   apply valid_injectOpsig_b with (I1 := I2). apply H_I_23. *)
-(*   apply (is_state b). *)
-(* Defined. *)
 
 Program Instance prod_both {ceA ceB : ChoiceEquality} {L1 L2 : {fset _}} {I1 I2 : {fset _}} (a : both L1 I1 ceA) (b : both L2 I2 ceB) : both (L1 :|: L2) (I1 :|: I2) (ceA '× ceB) :=
   {|
@@ -344,13 +320,11 @@ Next Obligation.
   replace (g a) with (bind (ret a) g) by reflexivity.
   subst g. hnf.
 
-  eapply r_bind. (* with (mid := pre_to_post_ret true_precond (a , b)). *)
-  apply (code_eq_proof_statement a).
+  eapply r_bind ; [ apply (code_eq_proof_statement a) | ].
   intros.
   apply rpre_hypothesis_rule.
   intros ? ? [[] []]. subst.
   apply forget_precond.
-
 
   set (r := ret _).
   pattern (T_ct (is_pure b)) in r.
@@ -359,10 +333,7 @@ Next Obligation.
   replace (g b) with (bind (ret b) g) by reflexivity.
   subst g. hnf.
 
-
-
-  eapply r_bind. (* with (mid := pre_to_post true_precond). *)
-  apply (code_eq_proof_statement b).
+  eapply r_bind ; [ apply (code_eq_proof_statement b) | ].
   intros.
   apply rpre_hypothesis_rule.
   intros ? ? [[] []]. subst.
@@ -596,7 +567,6 @@ Lemma rpost_heap_ignore_weaken :
         ⦃ heap_ignore_post fset' ⦄.
 Proof.
   intros.
-  (* eapply rpre_weaken_rule. *)
   eapply rpost_weaken_rule.
   apply H0.
 
@@ -618,9 +588,7 @@ Lemma rpre_heap_ignore_weaken :
 Proof.
   intros.
   eapply rpre_weaken_rule.
-  (* eapply rpost_weaken_rule. *)
   apply H0.
-
   intros. cbn.
   apply (heap_ignore_weaken fset fset') ; assumption.
 Qed.
@@ -645,17 +613,13 @@ Theorem r_bind_trans :
     ⊢ ⦃ P ⦄ temp ← x ;; f temp ≈ g y ⦃ Q ⦄.
 Proof.
   intros.
-  (* pose (bind (ret (T_ct y)) (fun x => g (ct_T x))). *)
-
   rewrite <- (ct_T_id y).
-
   replace (g (ct_T (T_ct y))) with (temp ← ret (T_ct y) ;; g (ct_T temp)) by reflexivity.
 
   pose @r_bind.
   specialize r with (f₀ := f) (f₁ := fun x => g (ct_T x)).
   specialize r with (m₀ := x) (m₁ := (ret (T_ct y))).
   specialize r with (pre := P) (mid := pre_to_post_ret P_mid (T_ct y) ) (post := Q).
-  (* specialize r with (pre := true_precond) (mid := fun s0 s1 => pre_to_post true_precond s0 s1 /\ fst s1 = T_ct y) (post := pre_to_post true_precond). *)
   apply r ; clear r.
 
   - apply H_x_is_y.
@@ -680,7 +644,6 @@ Theorem r_bind_trans' :
     ⊢ ⦃ P ⦄ temp ← x ;; f temp ≈ g y ⦃ Q ⦄.
 Proof.
   intros.
-  (* pose (bind (ret (T_ct y)) (fun x => g (ct_T x))). *)
 
   rewrite <- (ct_T_id y).
 
@@ -690,7 +653,6 @@ Proof.
   specialize r with (f₀ := f) (f₁ := fun x => g (ct_T x)).
   specialize r with (m₀ := x) (m₁ := (ret (T_ct y))).
   specialize r with (pre := P) (mid := fun s0 s1 => pre_to_post P s0 s1 /\ fst s1 = T_ct y) (post := Q).
-  (* specialize r with (pre := true_precond) (mid := fun s0 s1 => pre_to_post true_precond s0 s1 /\ fst s1 = T_ct y) (post := pre_to_post true_precond). *)
   apply r ; clear r.
 
   - eapply from_sem_jdg.
