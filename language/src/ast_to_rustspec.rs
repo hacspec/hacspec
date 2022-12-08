@@ -277,7 +277,7 @@ pub fn translate_constructor_name(
                         cons,
                     ))
                 }
-                (_, Some(x)) => {
+                (_, Some(_)) => {
                     sess.span_rustspec_err(
                         path.span,
                         "struct3: expression identifiers cannot have arguments",
@@ -985,6 +985,7 @@ fn translate_expr(
                                     id,
                                     None,
                                     r_e,
+                                    None,
                                     r_e_question_mark,
                                 )),
                                 e.span.into(),
@@ -1025,6 +1026,7 @@ fn translate_expr(
                                             id,
                                             r_index?,
                                             r_e,
+                                            None,
                                             r_e_question_mark,
                                             None,
                                         )),
@@ -1352,13 +1354,27 @@ fn translate_expr(
             );
             Err(())
         }
-        ExprKind::Field(_, _) => {
-            sess.span_rustspec_err(
-                e.span.clone(),
-                "struct field accesses are not supported yet in Hacspec",
-            );
-            Err(())
-        }
+        ExprKind::Field(e1, field) => Ok((
+            match field.to_string().parse::<isize>() {
+                Ok(nth_field) => match translate_expr(sess, specials, e1)? {
+                    (ExprTranslationResult::TransExpr(e1), e1_span) => {
+                        ExprTranslationResult::TransExpr(Expression::FieldAccessor(
+                            box (e1, e1_span),
+                            box (Field::TupleIndex(nth_field), field.span.into()),
+                        ))
+                    }
+                    _ => Err(sess.span_rustspec_err(
+                        e1.span.clone(),
+                        "Hacspec doesn't allow for statements in field accessors",
+                    ))?,
+                },
+                _ => Err(sess.span_rustspec_err(
+                    e1.span.clone(),
+                    "Hacspec allows only field accessors to tuple structs",
+                ))?,
+            },
+            e.span.clone().into(),
+        )),
         ExprKind::Range(e1, e2, limits) => {
             match limits {
                 RangeLimits::HalfOpen => (),
@@ -1560,7 +1576,6 @@ fn translate_expr_accepts_question_mark(
                         Some((
                             ScopeMutableVars::new(),
                             FunctionDependencies(HashSet::new()),
-                            None,
                         )),
                     ),
                     span,
@@ -1727,7 +1742,7 @@ fn translate_statement(
                 }
             }?;
             Ok(vec![(
-                Statement::LetBinding(pat, ty, init, question_mark),
+                Statement::LetBinding(pat, ty, init, None, question_mark),
                 s.span.into(),
             )])
         }
@@ -1741,7 +1756,7 @@ fn translate_statement(
         StmtKind::Semi(e) => {
             let t_s = match translate_expr_accepts_question_mark(sess, specials, &e)? {
                 (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
-                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), question_mark)
+                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), None, question_mark)
                 }
                 (ExprTranslationResultMaybeQuestionMark::TransStmt(s), _) => s,
             };

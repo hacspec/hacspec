@@ -1,0 +1,29 @@
+name: Generate Examples - SSProve
+
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/hacspec/hacspec_ssprove:8.15.2
+      options: --user root
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: |
+        export HOME=/home/coq
+        export PATH=$HOME/.cargo/bin:$PATH
+        env
+        opam switch 4.12.0
+        eval $(opam env)
+        coqtop --version
+        cargo clean
+        cargo build --verbose
+        cargo install --path language
+        cd examples
+        cargo clean
+        cargo build --verbose
+        cargo hacspec -e v_ssprove --dir ../coq_ssprove/src/ --vc-dir ../coq_ssprove/ --vc-update "*"
+        cd ../coq_ssprove
+        coq_makefile -f _CoqProject -o Makefile
+        make
