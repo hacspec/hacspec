@@ -1,5 +1,6 @@
 use crate::name_resolution::{DictEntry, TopLevelContext};
 use crate::rustspec::*;
+use crate::typechecker::pure_carrier;
 use core::iter::IntoIterator;
 use heck::SnakeCase;
 use lazy_static::lazy_static;
@@ -146,7 +147,7 @@ pub(crate) fn make_typ_tuple<'a, I: IntoIterator<Item = RcDoc<'a, ()>>>(args: I)
                 .append(RcDoc::intersperse(
                     args.into_iter(),
                     RcDoc::space()
-                        .append(RcDoc::as_string("×"))
+                        .append(RcDoc::as_string("'×"))
                         .append(RcDoc::line()),
                 ))
                 .group()
@@ -165,6 +166,7 @@ pub(crate) fn make_paren<'a>(e: RcDoc<'a, ()>) -> RcDoc<'a, ()> {
 }
 
 pub(crate) fn translate_binop<'a, 'b>(
+    op_prefix: RcDoc<'a, ()>,
     op: BinOpKind,
     op_typ: &'b Typ,
     top_ctx: &'a TopLevelContext,
@@ -197,7 +199,7 @@ pub(crate) fn translate_binop<'a, 'b>(
                         _ => unimplemented!("{:?}", op),
                     },
                     DictEntry::Enum | DictEntry::Array | DictEntry::Alias => {
-                        return translate_binop(op, inner_ty, top_ctx)
+                        return translate_binop(op_prefix, op, inner_ty, top_ctx)
                     }
                 },
                 _ => (), // should not happen
@@ -208,6 +210,7 @@ pub(crate) fn translate_binop<'a, 'b>(
     match (op, &(op_typ.1).0) {
         (_, BaseTyp::Seq(inner_ty)) | (_, BaseTyp::Array(_, inner_ty)) => {
             let _inner_ty_op = translate_binop(
+                op_prefix,
                 op,
                 &(
                     (Borrowing::Consumed, inner_ty.1.clone()),
@@ -238,16 +241,16 @@ pub(crate) fn translate_binop<'a, 'b>(
             ))
         }
         (BinOpKind::Sub, BaseTyp::Usize) | (BinOpKind::Sub, BaseTyp::Isize) => {
-            RcDoc::as_string("-")
+            op_prefix.append(RcDoc::as_string("-"))
         }
         (BinOpKind::Add, BaseTyp::Usize) | (BinOpKind::Add, BaseTyp::Isize) => {
-            RcDoc::as_string("+")
+            op_prefix.append(RcDoc::as_string("+"))
         }
         (BinOpKind::Mul, BaseTyp::Usize) | (BinOpKind::Mul, BaseTyp::Isize) => {
-            RcDoc::as_string("*")
+            op_prefix.append(RcDoc::as_string("*"))
         }
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
-            RcDoc::as_string("/")
+            op_prefix.append(RcDoc::as_string("/"))
         }
         (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
             RcDoc::as_string("%%")
@@ -313,51 +316,26 @@ pub(crate) fn array_or_seq<'a>(t: Typ, top_ctxt: &'a TopLevelContext) -> RcDoc<'
 // taken from rustspec_to_fstar
 pub(crate) fn add_ok_if_result(
     stmt: Statement,
-    early_return_type: Fillable<CarrierTyp>,
-    question_mark: bool,
+    carrier: Fillable<CarrierTyp>,
+    // question_mark: Option<ScopeMutableVars>,
 ) -> Spanned<Statement> {
     (
-        match early_return_type {
-            Some(ert) => {
-                if question_mark {
-                    // If b has an early return, then we must prefix the returned
-                    // mutated variables by Ok or Some
-                    match stmt {
-                        Statement::ReturnExp(e, t) => Statement::ReturnExp(
-                            Expression::EnumInject(
-                                BaseTyp::Named(
-                                    (
-                                        TopLevelIdent {
-                                            string: match carrier_kind(ert.clone()) {
-                                                EarlyReturnType::Option => "Option",
-                                                EarlyReturnType::Result => "Result",
-                                            }
-                                            .to_string(),
-                                            kind: TopLevelIdentKind::Type,
-                                        },
-                                        DUMMY_SP.into(),
-                                    ),
-                                    None,
-                                ),
-                                (
-                                    TopLevelIdent {
-                                        string: match carrier_kind(ert) {
-                                            EarlyReturnType::Option => "Some",
-                                            EarlyReturnType::Result => "Ok",
-                                        }
-                                        .to_string(),
-                                        kind: TopLevelIdentKind::EnumConstructor,
-                                    },
-                                    DUMMY_SP.into(),
-                                ),
-                                Some((Box::new(e.clone()), DUMMY_SP.into())),
-                            ),
-                            t,
-                        ),
-                        _ => panic!("should not happen"),
+        match carrier {
+            Some(ert) // if question_mark.is_some()
+                =>
+            // If b has an early return, then we must prefix the returned
+            // mutated variables by Ok or Some
+            {
+                match stmt {
+                    Statement::ReturnExp(e, Some((x, t_base))) => {
+                        let carrier = match ert.clone() {
+                            CarrierTyp::Option(_) => CarrierTyp::Option(t_base.clone()),
+                            CarrierTyp::Result(_, b) => CarrierTyp::Result(t_base.clone(), b),
+                        };
+                        let (e, _) = pure_carrier(carrier.clone(), (e.clone(), DUMMY_SP.into()));
+                        Statement::ReturnExp(e, Some((x, (carrier.clone().into(), t_base.1))))
                     }
-                } else {
-                    stmt.clone()
+                    _ => panic!("should not happen"),
                 }
             }
             _ => stmt.clone(),

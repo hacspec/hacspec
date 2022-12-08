@@ -761,6 +761,57 @@ fn concretize_literal(lit: &Literal, expected_type: &Option<Spanned<BaseTyp>>) -
     }
 }
 
+/// Given a enum or struct name `type_name` (e.g. `Result`), a variant
+/// name `variant_name` (e.g. `Ok`) and type arguments
+/// `applied_type_args`, `type_of_payload` computes the concrete type
+/// of the payload carried by the constructor
+/// `[type_name]::[variant_name]` (e.g., the type of `payload` in
+/// `Result::Ok(payload)`). If `variant` is `None`, expects
+/// `type_name` to be a struct. Note structs are encoded as single
+/// case enums in Hacspec.
+fn type_of_payload(
+    sess: &Session,
+    type_name: &TopLevelIdent,
+    variant: Option<String>,
+    applied_type_args: &Option<Vec<Spanned<BaseTyp>>>,
+    top_ctx: &TopLevelContext,
+) -> Option<Spanned<BaseTyp>> {
+    match top_ctx.typ_dict.get(type_name) {
+        Some((
+            ((Borrowing::Consumed, _), (BaseTyp::Enum(cases, type_args), cases_span)),
+            DictEntry::Enum,
+        )) => {
+            // Among all constructors [cases] of the enum we're matching against, find the
+            // one named [pat_enum_name]
+            let case = match variant {
+                None => cases.first().unwrap_or_else(|| panic!("[type_of_payload] was called without variant information, but type [{:?}] appears not to be a struct", type_name)),
+                Some(variant) =>
+                    cases.into_iter().find(|((n, _), _)| n.string == variant).unwrap(),
+            };
+            case.1
+                .as_ref()
+                // The constructor we're matching against has [length(type_args)] generic type
+                // arguments, a vector of [TypVar]. We substitutes those [type_args] into their
+                // respective [case_type_annotations].
+                .map(|case_typ| {
+                    bind_variable_type(
+                        sess,
+                        case_typ,
+                        &type_args
+                            .iter() // build a var context (a HashMap)
+                            .map(|type_arg| type_arg.clone())
+                            .zip(applied_type_args.iter().flatten().map(|t| t.0.clone()))
+                            .collect(),
+                    )
+                    .ok()
+                    .map(|ty| (ty, case_typ.1))
+                })
+                .flatten()
+        }
+        _ => None,
+    }
+}
+
 pub type TypecheckingResult<T> = Result<T, ()>;
 
 fn typecheck_expression(
@@ -942,6 +993,50 @@ fn typecheck_expression(
                 out_typ.unwrap(),
                 acc_var_context,
             ))
+        }
+        Expression::FieldAccessor(
+            e1 @ box (_, e1_span),
+            box (Field::TupleIndex(field), field_span),
+        ) => {
+            let (e1, e1_ty, var_context) = typecheck_expression(
+                sess,
+                e1,
+                func_return_type,
+                &None,
+                top_level_context,
+                &var_context,
+            )?;
+            let (e1_borrow, e1_ty) = e1_ty;
+            let types = match &e1_ty.0 {
+                BaseTyp::Tuple(types) => types.clone(),
+                BaseTyp::Named(type_name, args) => {
+                    match type_of_payload(sess, &type_name.0, None, args, top_level_context) {
+                        Some((BaseTyp::Tuple(args), _)) => args,
+                        Some(typ) => vec![typ],
+                        _ => vec![],
+                    }
+                }
+                _ => vec![],
+            };
+            match types.get(*field as usize) {
+                Some(ty) => Ok((
+                    Expression::FieldAccessor(
+                        box (e1, e1_span.clone()),
+                        box (Field::TupleIndex(*field), field_span.clone()),
+                    ),
+                    (e1_borrow, ty.clone()),
+                    var_context,
+                )),
+                _ => Err(sess.span_rustspec_err(
+                    e1_span.clone(),
+                    format!(
+                        "the field `.{}` cannot be applied to type `{}`",
+                        field.clone(),
+                        e1_ty.clone().0
+                    )
+                    .as_str(),
+                )),
+            }
         }
         Expression::EnumInject(enum_ty, case_name, payload) => {
             // if we are facing a constructor without type annotation
@@ -2394,7 +2489,7 @@ fn typecheck_statement(
 ) -> TypecheckingResult<(Statement, Typ, VarContext, VarSet)> {
     log::trace!("typecheck_statement ({:?}, {:?})", s, s_span);
     match &s {
-        Statement::LetBinding((pat, pat_span), typ, ref expr, question_mark) => {
+        Statement::LetBinding((pat, pat_span), typ, ref expr, _, question_mark) => {
             log::trace!("   Statement::LetBinding");
             log::trace!("       expr: {:?}", expr);
             #[cfg(feature = "dev")]
@@ -2473,21 +2568,18 @@ fn typecheck_statement(
                     _ => (),
                 }
             };
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = question_mark.clone().map(|(_, fun_dep)| {
+                (
+                    translate_var_context_to_mut_vars(ret_var_context.clone()),
+                    fun_dep,
+                )
+            });
             Ok((
                 Statement::LetBinding(
                     (pat.clone(), pat_span.clone()),
                     typ.clone(),
                     (new_expr, expr.1.clone()),
+                    carrier,
                     question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
@@ -2495,7 +2587,7 @@ fn typecheck_statement(
                 VarSet(HashSet::new()),
             ))
         }
-        Statement::Reassignment((x, x_span), _x_typ, e, question_mark) => {
+        Statement::Reassignment((x, x_span), _x_typ, e, _, question_mark) => {
             log::trace!("   Statement::Reassignment");
             let (new_e, e_typ, carrier, new_var_context) = typecheck_expression_qm(
                 sess,
@@ -2532,21 +2624,18 @@ fn typecheck_statement(
                 return Err(());
             };
             let ret_var_context = add_var(&x, &x_typ, &new_var_context);
-            let question_mark = match carrier {
-                Some(c) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(ret_var_context.clone()),
-                        fun_dep,
-                        Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = question_mark.clone().map(|(_, fun_dep)| {
+                (
+                    translate_var_context_to_mut_vars(ret_var_context.clone()),
+                    fun_dep,
+                )
+            });
             Ok((
                 Statement::Reassignment(
                     (x.clone(), x_span.clone()),
                     Some((x_typ.clone(), x_span.clone())),
                     (new_e, e.1.clone()),
+                    carrier,
                     question_mark,
                 ),
                 ((Borrowing::Consumed, s_span), (UnitTyp, s_span)),
@@ -2557,7 +2646,7 @@ fn typecheck_statement(
                 })),
             ))
         }
-        Statement::ArrayUpdate((x, x_span), e1, e2, question_mark, _) => {
+        Statement::ArrayUpdate((x, x_span), e1, e2, _, question_mark, _) => {
             log::trace!("   Statement::ArrayUpdate");
             let (new_e1, e1_t, carrier1, var_context) = typecheck_expression_qm(
                 sess,
@@ -2623,22 +2712,22 @@ fn typecheck_statement(
                 return Err(());
             };
 
-            let question_mark = match (carrier1, carrier2) {
-                (Some(c), _) | (_, Some(c)) => question_mark.clone().map(|(_, fun_dep, _)| {
-                    (
-                        translate_var_context_to_mut_vars(var_context.clone()),
-                        fun_dep,
-                        early_return_type_from_return_type(top_level_context, return_typ.clone().0), // Some(c),
-                    )
-                }),
-                _ => None,
-            };
+            let question_mark = question_mark.clone().map(|(_, fun_dep)| {
+                (
+                    translate_var_context_to_mut_vars(var_context.clone()),
+                    fun_dep,
+                )
+            });
 
             Ok((
                 Statement::ArrayUpdate(
                     (x.clone(), x_span.clone()),
                     (new_e1, e1.1.clone()),
                     (new_e2, e2.1.clone()),
+                    match (carrier1, carrier2) {
+                        (Some(_), _) | (_, Some(_)) => early_return_type_from_return_type(top_level_context, return_typ.clone().0),
+                        _ => None,
+                    },
                     question_mark,
                     Some(x_typ),
                 ),
@@ -2931,8 +3020,8 @@ fn typecheck_block(
         .retain(|mut_var| original_var_context.vars.contains_key(&mut_var.id));
     let mut_tuple = var_set_to_tuple(&mutated_vars, &b_span, &var_context);
     let contains_question_mark = Some(new_stmts.iter().any(|s| match s {
-        (Statement::Reassignment(_, _, _, Some(_)), _)
-        | (Statement::LetBinding(_, _, _, Some(_)), _) => true,
+        (Statement::Reassignment(_, _, _, _, Some(_)), _)
+        | (Statement::LetBinding(_, _, _, _, Some(_)), _) => true,
         (Statement::Conditional(_, then_b, else_b, _), _) => {
             then_b.0.contains_question_mark.unwrap()
                 || (match else_b {

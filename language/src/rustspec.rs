@@ -342,6 +342,16 @@ pub fn carrier_kind(carrier: CarrierTyp) -> EarlyReturnType {
     }
 }
 
+#[derive(Clone, Serialize, Debug, Copy)]
+/// Rust has three styles of structs: (a) unit structs, (b) classic,
+/// named structs (c) tuple structs. A field is thus either a numeric
+/// index or a name. However, Hacspec allows only for (a) or (c),
+/// hence the constructor `Named` being commented out below.
+pub enum Field {
+    // Named(String),
+    TupleIndex(isize),
+}
+
 #[derive(Clone, Serialize, Debug)]
 pub enum Expression {
     Unary(UnOpKind, Box<Spanned<Expression>>, Option<Typ>),
@@ -402,6 +412,7 @@ pub enum Expression {
             Spanned<Expression>, // Match arm expression
         )>,
     ),
+    FieldAccessor(Box<Spanned<Expression>>, Box<Spanned<Field>>),
     Lit(Literal),
     ArrayIndex(
         Spanned<Ident>,           // Array variable
@@ -449,7 +460,7 @@ pub struct MutatedInfo {
 
 pub type Fillable<T> = Option<T>;
 
-pub type QuestionMarkInfo = Option<(ScopeMutableVars, FunctionDependencies, Fillable<CarrierTyp>)>;
+pub type QuestionMarkInfo = Option<(ScopeMutableVars, FunctionDependencies)>;
 
 #[derive(Clone, Serialize, Debug)]
 pub enum Statement {
@@ -457,13 +468,15 @@ pub enum Statement {
         Spanned<Pattern>,     // Let-binded pattern
         Option<Spanned<Typ>>, // Typ of the binded expr
         Spanned<Expression>,  // Binded expr
-        QuestionMarkInfo,     // Presence of a question mark at the end
+        Fillable<CarrierTyp>, // Presence of a question mark at the end
+        QuestionMarkInfo,
     ),
     Reassignment(
         Spanned<Ident>,         // Variable reassigned
         Fillable<Spanned<Typ>>, // Type of variable reassigned
         Spanned<Expression>,    // New value
-        QuestionMarkInfo,       // Presence of a question mark at the end
+        Fillable<CarrierTyp>,   // Presence of a question mark at the end
+        QuestionMarkInfo,       
     ),
     Conditional(
         Spanned<Expression>,        // Condition
@@ -481,7 +494,8 @@ pub enum Statement {
         Spanned<Ident>,      // Array variable
         Spanned<Expression>, // Index value
         Spanned<Expression>, // Cell value
-        QuestionMarkInfo,    // Presence of a question mark at the end of the cell value expression
+        Fillable<CarrierTyp>,// Presence of a question mark at the end of the cell value expression
+        QuestionMarkInfo,    
         Fillable<Typ>,       // Type of the array
     ),
     ReturnExp(Expression, Fillable<Typ>),
@@ -526,7 +540,8 @@ impl ScopeMutableVars {
 
     pub fn extend(&mut self, other: ScopeMutableVars) {
         for i in other.external_vars {
-            self.external_vars.insert(i);
+            self.external_vars.insert(i.clone());
+            self.local_vars.insert(i);
         }
         for i in other.local_vars {
             self.local_vars.insert(i);
