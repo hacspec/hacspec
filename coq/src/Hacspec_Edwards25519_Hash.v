@@ -145,25 +145,24 @@ Definition ed_hash_to_field
   : seq_ed_result_t :=
   let len_in_bytes_2307 : uint_size :=
     (count_2306) * (l_v) in 
-  let uniform_bytes_2308 : byte_seq :=
-    expand_message_xmd (msg_2304) (dst_2305) (len_in_bytes_2307) in 
-  let output_2309 : seq ed25519_field_element_t :=
-    seq_new_ (default : ed25519_field_element_t) (count_2306) in 
-  let output_2309 :=
-    foldi (usize 0) (count_2306) (fun i_2310 output_2309 =>
-      let elm_offset_2311 : uint_size :=
-        (l_v) * (i_2310) in 
-      let tv_2312 : seq uint8 :=
-        seq_slice (uniform_bytes_2308) (elm_offset_2311) (l_v) in 
-      let u_i_2313 : ed25519_field_element_t :=
-        nat_mod_from_byte_seq_be (seq_slice (nat_mod_to_byte_seq_be (
-              nat_mod_from_byte_seq_be (tv_2312) : ed_field_hash_t)) (
-            usize 32) (usize 32)) : ed25519_field_element_t in 
-      let output_2309 :=
-        seq_upd output_2309 (i_2310) (u_i_2313) in 
-      (output_2309))
-    output_2309 in 
-  @Ok seq ed25519_field_element_t error_t (output_2309).
+  bind (expand_message_xmd (msg_2304) (dst_2305) (len_in_bytes_2307)) (
+    fun uniform_bytes_2308 => let output_2309 : seq ed25519_field_element_t :=
+      seq_new_ (default : ed25519_field_element_t) (count_2306) in 
+    let output_2309 :=
+      foldi (usize 0) (count_2306) (fun i_2310 output_2309 =>
+        let elm_offset_2311 : uint_size :=
+          (l_v) * (i_2310) in 
+        let tv_2312 : seq uint8 :=
+          seq_slice (uniform_bytes_2308) (elm_offset_2311) (l_v) in 
+        let u_i_2313 : ed25519_field_element_t :=
+          nat_mod_from_byte_seq_be (seq_slice (nat_mod_to_byte_seq_be (
+                nat_mod_from_byte_seq_be (tv_2312) : ed_field_hash_t)) (
+              usize 32) (usize 32)) : ed25519_field_element_t in 
+        let output_2309 :=
+          seq_upd output_2309 (i_2310) (u_i_2313) in 
+        (output_2309))
+      output_2309 in 
+    @Ok seq ed25519_field_element_t error_t (output_2309)).
 
 Definition ed_is_square (x_2314 : ed25519_field_element_t) : bool :=
   let c1_2315 : ed25519_field_element_t :=
@@ -481,9 +480,9 @@ Definition map_to_curve_elligator2_edwards
   (u_2451 : ed25519_field_element_t)
   : ed_point_t :=
   let st_2452 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     map_to_curve_elligator2 (u_2451) in 
@@ -493,14 +492,13 @@ Definition ed_encode_to_curve
   (msg_2453 : byte_seq)
   (dst_2454 : byte_seq)
   : ed_point_result_t :=
-  let u_2455 : seq ed25519_field_element_t :=
-    ed_hash_to_field (msg_2453) (dst_2454) (usize 1) in 
-  let q_2456 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t
-    ) :=
-    map_to_curve_elligator2_edwards (seq_index (u_2455) (usize 0)) in 
-  @Ok ed_point_t error_t (ed_clear_cofactor (q_2456)).
+  bind (ed_hash_to_field (msg_2453) (dst_2454) (usize 1)) (fun u_2455 =>
+    let q_2456 : (
+        ed25519_field_element_t '×
+        ed25519_field_element_t '×
+        ed25519_field_element_t '×
+        ed25519_field_element_t
+      ) :=
+      map_to_curve_elligator2_edwards (seq_index (u_2455) (usize 0)) in 
+    @Ok ed_point_t error_t (ed_clear_cofactor (q_2456))).
 

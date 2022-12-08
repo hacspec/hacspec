@@ -12,9 +12,9 @@ Notation "'dim_type_t'" := (uint_size) : hacspec_scope.
 
 Notation "'scalar_t'" := (int128) : hacspec_scope.
 
-Notation "'dims_t'" := ((dim_type_t × dim_type_t)) : hacspec_scope.
+Notation "'dims_t'" := ((dim_type_t '× dim_type_t)) : hacspec_scope.
 
-Notation "'matrix_t'" := ((dims_t × seq scalar_t)) : hacspec_scope.
+Notation "'matrix_t'" := ((dims_t '× seq scalar_t)) : hacspec_scope.
 
 Notation "'mat_res_t'" := ((result matrix_t int8)) : hacspec_scope.
 

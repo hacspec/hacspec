@@ -36,7 +36,7 @@ Definition encode_usize_as_u32 (x_1052 : uint_size) : seq uint8 :=
   array_to_le_bytes (uint32_to_le_bytes (x_uint32_1053)).
 
 Definition new_ (label_1054 : seq uint8) : transcript_t :=
-  let transcript_1055 : (state_uint8_t × int8 × int8 × int8) :=
+  let transcript_1055 : (state_uint8_t '× int8 '× int8 '× int8) :=
     new_strobe (merlin_protocol_label ) in 
   let dom_sep_1056 : seq uint8 :=
     [
@@ -70,7 +70,7 @@ Definition challenge_bytes
   (transcript_1061 : transcript_t)
   (label_1062 : seq uint8)
   (dest_1063 : seq uint8)
-  : (transcript_t × seq uint8) :=
+  : (transcript_t '× seq uint8) :=
   let data_len_1064 : seq uint8 :=
     encode_usize_as_u32 (seq_len (dest_1063)) in 
   let transcript_1061 :=
