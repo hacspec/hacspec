@@ -18,9 +18,15 @@ mod ast_to_rustspec;
 mod elab_monadic_lets;
 mod hir_to_rustspec;
 mod name_resolution;
+mod function_dependency_resolution;
 mod rustspec;
+
 mod rustspec_to_coq;
 mod rustspec_to_coq_base;
+mod rustspec_to_coq_ssprove;
+mod rustspec_to_coq_ssprove_pure;
+mod rustspec_to_coq_ssprove_state;
+
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
 mod typechecker;
@@ -378,6 +384,20 @@ fn handle_crate<'tcx>(
             }
         };
 
+        let krate = match function_dependency_resolution::resolve_crate(
+            &compiler.session(),
+            krate,
+            new_top_ctx,
+        ) {
+            Ok(krate) => krate,
+            Err(_) => {
+                compiler
+                    .session()
+                    .err("found some Hacspec name resolution errors");
+                return Compilation::Stop;
+            }
+        };
+
         let krate = match typechecker::typecheck_program(&compiler.session(), &krate, new_top_ctx) {
             Ok(krate) => krate,
             Err(_) => {
@@ -448,9 +468,9 @@ fn handle_crate<'tcx>(
                     // Compute file name as output directory with crate local path (file_name)
                     file_name.clone().to_title_case().replace(" ", ".") + "." + extension
                 }
-                "v" => {
+                "v" | "v_ssprove_state" | "v_ssprove_pure" | "v_ssprove" => {
                     // Compute file name as output directory with crate local path (file_name)
-                    file_name.clone().to_title_case().replace(" ", "_") + "." + extension
+                    file_name.clone().to_title_case().replace(" ", "_") + ".v"
                 }
                 _ => {
                     compiler
@@ -522,6 +542,24 @@ fn handle_crate<'tcx>(
                     };
                 }
                 "v" => rustspec_to_coq::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                "v_ssprove_pure" => rustspec_to_coq_ssprove_pure::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                "v_ssprove" => rustspec_to_coq_ssprove::translate_and_write_to_file(
+                    &compiler.session(),
+                    &krate,
+                    &file,
+                    &top_ctx_map[&krate_path],
+                ),
+                "v_ssprove_state" => rustspec_to_coq_ssprove_state::translate_and_write_to_file(
                     &compiler.session(),
                     &krate,
                     &file,
