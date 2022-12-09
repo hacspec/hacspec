@@ -277,7 +277,7 @@ pub fn translate_constructor_name(
                         cons,
                     ))
                 }
-                (_, Some(x)) => {
+                (_, Some(_)) => {
                     sess.span_rustspec_err(
                         path.span,
                         "struct3: expression identifiers cannot have arguments",
@@ -985,6 +985,7 @@ fn translate_expr(
                                     id,
                                     None,
                                     r_e,
+                                    None,
                                     r_e_question_mark,
                                 )),
                                 e.span.into(),
@@ -1025,6 +1026,7 @@ fn translate_expr(
                                             id,
                                             r_index?,
                                             r_e,
+                                            None,
                                             r_e_question_mark,
                                             None,
                                         )),
@@ -1574,7 +1576,6 @@ fn translate_expr_accepts_question_mark(
                         Some((
                             ScopeMutableVars::new(),
                             FunctionDependencies(HashSet::new()),
-                            None,
                         )),
                     ),
                     span,
@@ -1741,7 +1742,7 @@ fn translate_statement(
                 }
             }?;
             Ok(vec![(
-                Statement::LetBinding(pat, ty, init, question_mark),
+                Statement::LetBinding(pat, ty, init, None, question_mark),
                 s.span.into(),
             )])
         }
@@ -1755,7 +1756,7 @@ fn translate_statement(
         StmtKind::Semi(e) => {
             let t_s = match translate_expr_accepts_question_mark(sess, specials, &e)? {
                 (ExprTranslationResultMaybeQuestionMark::TransExpr(e, question_mark), span) => {
-                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), question_mark)
+                    Statement::LetBinding((Pattern::WildCard, span), None, (e, span), None, question_mark)
                 }
                 (ExprTranslationResultMaybeQuestionMark::TransStmt(s), _) => s,
             };
