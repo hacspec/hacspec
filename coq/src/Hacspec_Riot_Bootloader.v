@@ -11,7 +11,7 @@ Require Import Hacspec_Lib.
 Definition riotboot_magic_v : int32 :=
   @repr WORDSIZE32 1414482258.
 
-Notation "'fletcher_t'" := ((int32 × int32)) : hacspec_scope.
+Notation "'fletcher_t'" := ((int32 '× int32)) : hacspec_scope.
 
 Definition new_fletcher  : fletcher_t :=
   (@repr WORDSIZE32 65535, @repr WORDSIZE32 65535).
@@ -72,7 +72,8 @@ Definition value (x_1307 : fletcher_t) : int32 :=
     x_1307 in 
   combine (a_1308) (b_1309).
 
-Notation "'header_t'" := ((int32 × int32 × int32 × int32)) : hacspec_scope.
+Notation "'header_t'" := ((int32 '× int32 '× int32 '× int32
+)) : hacspec_scope.
 
 Definition header_as_u16_slice (h_1310 : header_t) : seq int16 :=
   let '(magic_1311, seq_number_1312, start_addr_1313, _) :=
@@ -131,9 +132,9 @@ Definition is_valid_header (h_1327 : header_t) : bool :=
     false in 
   let '(result_1333) :=
     if (magic_number_1328) =.? (riotboot_magic_v):bool then (
-      let fletcher_1334 : (int32 × int32) :=
+      let fletcher_1334 : (int32 '× int32) :=
         new_fletcher  in 
-      let fletcher_1335 : (int32 × int32) :=
+      let fletcher_1335 : (int32 '× int32) :=
         update_fletcher (fletcher_1334) (slice_1332) in 
       let sum_1336 : int32 :=
         value (fletcher_1335) in 
@@ -142,7 +143,7 @@ Definition is_valid_header (h_1327 : header_t) : bool :=
       (result_1333)) else ((result_1333)) in 
   result_1333.
 
-Definition choose_image (images_1337 : seq header_t) : (bool × int32) :=
+Definition choose_image (images_1337 : seq header_t) : (bool '× int32) :=
   let image_1338 : int32 :=
     @repr WORDSIZE32 0 in 
   let image_found_1339 : bool :=
@@ -152,7 +153,7 @@ Definition choose_image (images_1337 : seq header_t) : (bool × int32) :=
         image_1338,
         image_found_1339
       ) =>
-      let header_1341 : (int32 × int32 × int32 × int32) :=
+      let header_1341 : (int32 '× int32 '× int32 '× int32) :=
         seq_index (images_1337) (i_1340) in 
       let '(magic_number_1342, seq_number_1343, start_addr_1344, checksum_1345
         ) :=

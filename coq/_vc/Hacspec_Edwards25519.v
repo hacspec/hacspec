@@ -27,9 +27,9 @@ Definition big_integer_t :=
   nat_mod 0x8000000000000000000000000000000080000000000000000000000000000000.
 
 Notation "'ed_point_t'" := ((
-  ed25519_field_element_t ×
-  ed25519_field_element_t ×
-  ed25519_field_element_t ×
+  ed25519_field_element_t '×
+  ed25519_field_element_t '×
+  ed25519_field_element_t '×
   ed25519_field_element_t
 )) : hacspec_scope.
 
@@ -342,10 +342,9 @@ Definition decompress (q_2142 : compressed_ed_point_t) : (option ed_point_t) :=
   let y_s_2145 :=
     array_upd y_s_2145 (usize 31) ((array_index (y_s_2145) (usize 31)) .& (
         secret (@repr WORDSIZE8 127) : int8)) in 
-  let 'tt :=
-    if negb (check_canonical_point (y_s_2145)):bool then (let _ : ed_point_t :=
-        @None ed_point_t in 
-      tt) else (tt) in 
+  ifbnd negb (check_canonical_point (y_s_2145)) : bool
+  thenbnd (bind (@None ed_point_t) (fun _ => @Some unit (tt)))
+  else (tt) >> (fun 'tt =>
   let y_2146 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (y_s_2145)) : ed25519_field_element_t in 
@@ -359,21 +358,18 @@ Definition decompress (q_2142 : compressed_ed_point_t) : (option ed_point_t) :=
     ((d_2143) *% (yy_2148)) +% (z_2147) in 
   let xx_2151 : ed25519_field_element_t :=
     (u_2149) *% (nat_mod_inv (v_2150)) in 
-  let x_2152 : ed25519_field_element_t :=
-    sqrt (xx_2151) in 
-  let x_r_2153 : uint8 :=
-    is_negative (x_2152) in 
-  let 'tt :=
-    if ((x_2152) =.? (nat_mod_zero )) && ((uint8_declassify (x_s_2144)) =.? (
-        @repr WORDSIZE8 1)):bool then (let _ : ed_point_t :=
-        @None ed_point_t in 
-      tt) else (tt) in 
-  let '(x_2152) :=
-    if (uint8_declassify (x_r_2153)) !=.? (uint8_declassify (
-        x_s_2144)):bool then (let x_2152 :=
-        (nat_mod_zero ) -% (x_2152) in 
-      (x_2152)) else ((x_2152)) in 
-  some ((x_2152, y_2146, z_2147, (x_2152) *% (y_2146))).
+  bind (sqrt (xx_2151)) (fun x_2152 => let x_r_2153 : uint8 :=
+      is_negative (x_2152) in 
+    ifbnd ((x_2152) =.? (nat_mod_zero )) && ((uint8_declassify (x_s_2144)) =.? (
+        @repr WORDSIZE8 1)) : bool
+    thenbnd (bind (@None ed_point_t) (fun _ => @Some unit (tt)))
+    else (tt) >> (fun 'tt =>
+    let '(x_2152) :=
+      if (uint8_declassify (x_r_2153)) !=.? (uint8_declassify (
+          x_s_2144)):bool then (let x_2152 :=
+          (nat_mod_zero ) -% (x_2152) in 
+        (x_2152)) else ((x_2152)) in 
+    some ((x_2152, y_2146, z_2147, (x_2152) *% (y_2146)))))).
 
 Definition decompress_non_canonical
   (p_2154 : compressed_ed_point_t)
@@ -402,16 +398,14 @@ Definition decompress_non_canonical
     ((d_2155) *% (yy_2160)) +% (z_2159) in 
   let xx_2163 : ed25519_field_element_t :=
     (u_2161) *% (nat_mod_inv (v_2162)) in 
-  let x_2164 : ed25519_field_element_t :=
-    sqrt (xx_2163) in 
-  let x_r_2165 : uint8 :=
-    is_negative (x_2164) in 
-  let '(x_2164) :=
-    if (uint8_declassify (x_r_2165)) !=.? (uint8_declassify (
-        x_s_2156)):bool then (let x_2164 :=
-        (nat_mod_zero ) -% (x_2164) in 
-      (x_2164)) else ((x_2164)) in 
-  some ((x_2164, y_2158, z_2159, (x_2164) *% (y_2158))).
+  bind (sqrt (xx_2163)) (fun x_2164 => let x_r_2165 : uint8 :=
+      is_negative (x_2164) in 
+    let '(x_2164) :=
+      if (uint8_declassify (x_r_2165)) !=.? (uint8_declassify (
+          x_s_2156)):bool then (let x_2164 :=
+          (nat_mod_zero ) -% (x_2164) in 
+        (x_2164)) else ((x_2164)) in 
+    some ((x_2164, y_2158, z_2159, (x_2164) *% (y_2158)))).
 
 Definition encode (p_2166 : ed_point_t) : byte_seq :=
   let '(x_2167, y_2168, z_2169, _) :=
@@ -475,16 +469,16 @@ Definition point_identity  : ed_point_t :=
 
 Definition point_mul (s_2200 : scalar_t) (p_2201 : ed_point_t) : ed_point_t :=
   let p_2202 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     p_2201 in 
   let q_2203 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     point_identity  in 
@@ -502,23 +496,23 @@ Definition point_mul (s_2200 : scalar_t) (p_2201 : ed_point_t) : ed_point_t :=
 
 Definition point_mul_by_cofactor (p_2205 : ed_point_t) : ed_point_t :=
   let p2_2206 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     point_add (p_2205) (p_2205) in 
   let p4_2207 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     point_add (p2_2206) (p2_2206) in 
   let p8_2208 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     point_add (p4_2207) (p4_2207) in 
@@ -552,7 +546,7 @@ Definition point_normalize (q_2222 : ed_point_t) : ed_point_t :=
 
 Definition secret_expand
   (sk_2230 : secret_key_t)
-  : (serialized_scalar_t × serialized_scalar_t) :=
+  : (serialized_scalar_t '× serialized_scalar_t) :=
   let h_2231 : sha512_digest_t :=
     sha512 (seq_from_slice (sk_2230) (usize 0) (usize 32)) in 
   let h_d_2232 : serialized_scalar_t :=
@@ -576,18 +570,18 @@ Definition secret_to_public (sk_2234 : secret_key_t) : public_key_t :=
   let '(s_2235, _) :=
     secret_expand (sk_2234) in 
   let base_2236 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     option_unwrap (decompress (base_v)) in 
   let ss_2237 : scalar_t :=
     nat_mod_from_byte_seq_le (array_to_seq (s_2235)) : scalar_t in 
   let a_2238 : (
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
-      ed25519_field_element_t ×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
+      ed25519_field_element_t '×
       ed25519_field_element_t
     ) :=
     point_mul (ss_2237) (base_2236) in 

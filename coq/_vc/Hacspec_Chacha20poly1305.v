@@ -36,7 +36,7 @@ Definition poly1305_update_padded
   (m_412 : byte_seq)
   (st_413 : poly_state_t)
   : poly_state_t :=
-  let st_414 : (field_element_t × field_element_t × poly_key_t) :=
+  let st_414 : (field_element_t '× field_element_t '× poly_key_t) :=
     poly1305_update_blocks (m_412) (st_413) in 
   let last_415 : seq uint8 :=
     seq_get_remainder_chunk (m_412) (usize 16) in 
@@ -55,7 +55,7 @@ Definition finish
   let last_block_419 :=
     array_update (last_block_419) (usize 8) (array_to_seq (uint64_to_le_bytes (
         secret (pub_u64 (cipher_len_417)) : int64))) in 
-  let st_420 : (field_element_t × field_element_t × poly_key_t) :=
+  let st_420 : (field_element_t '× field_element_t '× poly_key_t) :=
     poly1305_update_block (last_block_419) (st_418) in 
   poly1305_finish (st_420).
 
@@ -64,10 +64,10 @@ Definition chacha20_poly1305_encrypt
   (iv_422 : cha_cha_poly_iv_t)
   (aad_423 : byte_seq)
   (msg_424 : byte_seq)
-  : (byte_seq × poly1305_tag_t) :=
+  : (byte_seq '× poly1305_tag_t) :=
   let cipher_text_425 : seq uint8 :=
     chacha20 (key_421) (iv_422) (@repr WORDSIZE32 1) (msg_424) in 
-  let poly_st_426 : (field_element_t × field_element_t × poly_key_t) :=
+  let poly_st_426 : (field_element_t '× field_element_t '× poly_key_t) :=
     init (key_421) (iv_422) in 
   let poly_st_426 :=
     poly1305_update_padded (aad_423) (poly_st_426) in 
@@ -84,7 +84,7 @@ Definition chacha20_poly1305_decrypt
   (cipher_text_431 : byte_seq)
   (tag_432 : poly1305_tag_t)
   : byte_seq_result_t :=
-  let poly_st_433 : (field_element_t × field_element_t × poly_key_t) :=
+  let poly_st_433 : (field_element_t '× field_element_t '× poly_key_t) :=
     init (key_428) (iv_429) in 
   let poly_st_433 :=
     poly1305_update_padded (aad_430) (poly_st_433) in 
