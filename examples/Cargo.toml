@@ -21,6 +21,7 @@ members = [
     "bls12-381",
     "ecdsa-p256-sha256",
     "aes",
+    "aes_jazz",
     "gf128",
     "aes128-gcm",
     "bls12-381-hash",
