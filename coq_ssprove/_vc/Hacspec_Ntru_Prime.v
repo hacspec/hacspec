@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -187,11 +187,11 @@ Program Definition ntru_prime_653_encrypt (r_1641 : seq int128) (
       seq int128)).
 Fail Next Obligation.
 
-Definition r_1646_loc : ChoiceEqualityLocation :=
-  (seq int128 ; 1647%nat).
 Definition e_1645_loc : ChoiceEqualityLocation :=
-  (seq int128 ; 1648%nat).
+  (seq int128 ; 1647%nat).
 Definition f_3_c_1644_loc : ChoiceEqualityLocation :=
+  (seq int128 ; 1648%nat).
+Definition r_1646_loc : ChoiceEqualityLocation :=
   (seq int128 ; 1649%nat).
 Notation "'ntru_prime_653_decrypt_inp'" :=(
   seq int128 '× seq int128 '× seq int128 : choice_type) (in custom pack_type at level 2).

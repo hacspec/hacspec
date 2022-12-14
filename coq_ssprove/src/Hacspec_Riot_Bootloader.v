@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -96,13 +96,13 @@ Program Definition combine (lower_1670 : int32) (upper_1671 : int32)
       ) : both (fset.fset0) [interface] (int32)).
 Fail Next Obligation.
 
-Definition b_1674_loc : ChoiceEqualityLocation :=
-  (int32 ; 1677%nat).
 Definition intermediate_b_1676_loc : ChoiceEqualityLocation :=
+  (int32 ; 1677%nat).
+Definition intermediate_a_1675_loc : ChoiceEqualityLocation :=
   (int32 ; 1678%nat).
 Definition a_1673_loc : ChoiceEqualityLocation :=
   (int32 ; 1679%nat).
-Definition intermediate_a_1675_loc : ChoiceEqualityLocation :=
+Definition b_1674_loc : ChoiceEqualityLocation :=
   (int32 ; 1680%nat).
 Notation "'update_fletcher_inp'" :=(
   fletcher_t '× seq int16 : choice_type) (in custom pack_type at level 2).
@@ -145,8 +145,9 @@ Program Definition update_fletcher (f_1682 : fletcher_t) (data_1683 : seq int16)
                     intermediate_b_1676
                   ) =>
                   letbm intermediate_a_1675 loc( intermediate_a_1675_loc ) :=
-                    (lift_to_both0 intermediate_a_1675) .+ (@cast _ uint32 _ (
-                        seq_index (chunk_1686) (lift_to_both0 j_1687))) in
+                    (lift_to_both0 intermediate_a_1675) .+ (
+                      (fun x => lift_to_both0 (repr (unsigned x)))(seq_index (
+                          chunk_1686) (lift_to_both0 j_1687))) in
                   letbm intermediate_b_1676 loc( intermediate_b_1676_loc ) :=
                     (lift_to_both0 intermediate_b_1676) .+ (
                       lift_to_both0 intermediate_a_1675) in

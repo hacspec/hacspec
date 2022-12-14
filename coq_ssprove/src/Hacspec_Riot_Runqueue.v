@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -121,15 +121,15 @@ Program Definition clist_is_empty (x_1746 : clist_t) (rq_1744 : runqueue_id_t)
       letb Clist ((tail_1747, next_ids_1748)) : clist_t :=
         lift_to_both0 x_1746 in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((array_index (
-            tail_1747) (@cast _ uint32 _ (lift_to_both0 rq_1745))) =.? (
-          lift_to_both0 sentinel_v))
+            tail_1747) ((fun x => lift_to_both0 (repr (unsigned x)))(
+              lift_to_both0 rq_1745))) =.? (lift_to_both0 sentinel_v))
       ) : both (fset.fset0) [interface] (bool_ChoiceEquality)).
 Fail Next Obligation.
 
-Definition next_idxs_1751_loc : ChoiceEqualityLocation :=
-  (next_ids_t ; 1752%nat).
 Definition tail_1750_loc : ChoiceEqualityLocation :=
-  (tail_t ; 1753%nat).
+  (tail_t ; 1752%nat).
+Definition next_idxs_1751_loc : ChoiceEqualityLocation :=
+  (next_ids_t ; 1753%nat).
 Notation "'clist_push_inp'" :=(
   clist_t '× thread_id_t '× runqueue_id_t : choice_type) (in custom pack_type at level 2).
 Notation "'clist_push_inp'" :=(
@@ -148,7 +148,8 @@ Program Definition clist_push (x_1758 : clist_t) (n_1756 : thread_id_t) (
       letb Clist ((tail_1750, next_idxs_1751)) : clist_t :=
         lift_to_both0 x_1758 in
       letb '(tail_1750, next_idxs_1751) :=
-        if (array_index (next_idxs_1751) (@cast _ uint32 _ (
+        if (array_index (next_idxs_1751) (
+            (fun x => lift_to_both0 (repr (unsigned x)))(
               lift_to_both0 n_1757))) =.? (
           lift_to_both0 sentinel_v) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset ([tail_1750_loc ; next_idxs_1751_loc])) (
@@ -158,7 +159,8 @@ Program Definition clist_push (x_1758 : clist_t) (n_1756 : thread_id_t) (
               tail_1750,
               next_idxs_1751
             ) :=
-            if (array_index (tail_1750) (@cast _ uint32 _ (
+            if (array_index (tail_1750) (
+                (fun x => lift_to_both0 (repr (unsigned x)))(
                   lift_to_both0 rq_1755))) =.? (
               lift_to_both0 sentinel_v) :bool_ChoiceEquality
             then lift_scope (L1 := CEfset (
@@ -166,10 +168,12 @@ Program Definition clist_push (x_1758 : clist_t) (n_1756 : thread_id_t) (
                 [tail_1750_loc ; next_idxs_1751_loc])) (I1 := [interface]) (
               I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
               letb tail_1750 : tail_t :=
-                array_upd tail_1750 (@cast _ uint32 _ (lift_to_both0 rq_1755)) (
-                  is_pure (lift_to_both0 n_1757)) in
+                array_upd tail_1750 (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(
+                    lift_to_both0 rq_1755)) (is_pure (lift_to_both0 n_1757)) in
               letb next_idxs_1751 : next_ids_t :=
-                array_upd next_idxs_1751 (@cast _ uint32 _ (
+                array_upd next_idxs_1751 (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(
                     lift_to_both0 n_1757)) (is_pure (lift_to_both0 n_1757)) in
               lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
                   lift_to_both0 tail_1750,
@@ -181,18 +185,24 @@ Program Definition clist_push (x_1758 : clist_t) (n_1756 : thread_id_t) (
                 [tail_1750_loc ; next_idxs_1751_loc])) (I1 := [interface]) (
               I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
               letb next_idxs_1751 : next_ids_t :=
-                array_upd next_idxs_1751 (@cast _ uint32 _ (
+                array_upd next_idxs_1751 (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(
                     lift_to_both0 n_1757)) (is_pure (array_index (
-                      next_idxs_1751) (@cast _ uint32 _ (array_index (
-                          tail_1750) (@cast _ uint32 _ (
+                      next_idxs_1751) (
+                      (fun x => lift_to_both0 (repr (unsigned x)))(array_index (
+                          tail_1750) (
+                          (fun x => lift_to_both0 (repr (unsigned x)))(
                             lift_to_both0 rq_1755)))))) in
               letb next_idxs_1751 : next_ids_t :=
-                array_upd next_idxs_1751 (@cast _ uint32 _ (array_index (
-                      tail_1750) (@cast _ uint32 _ (lift_to_both0 rq_1755)))) (
-                  is_pure (lift_to_both0 n_1757)) in
+                array_upd next_idxs_1751 (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(array_index (
+                      tail_1750) ((fun x => lift_to_both0 (repr (unsigned x)))(
+                        lift_to_both0 rq_1755)))) (is_pure (
+                    lift_to_both0 n_1757)) in
               letb tail_1750 : tail_t :=
-                array_upd tail_1750 (@cast _ uint32 _ (lift_to_both0 rq_1755)) (
-                  is_pure (lift_to_both0 n_1757)) in
+                array_upd tail_1750 (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(
+                    lift_to_both0 rq_1755)) (is_pure (lift_to_both0 n_1757)) in
               lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
                   lift_to_both0 tail_1750,
                   lift_to_both0 next_idxs_1751
@@ -243,7 +253,8 @@ Program Definition clist_pop_head (x_1768 : clist_t) (rq_1766 : runqueue_id_t)
         lift_to_both0 x_1768 in
       letbm out_1762 : (option (int8)) loc( out_1762_loc ) := @None int8 in
       letb '(tail_1760, next_idxs_1761, out_1762) :=
-        if (array_index (tail_1760) (@cast _ uint32 _ (
+        if (array_index (tail_1760) (
+            (fun x => lift_to_both0 (repr (unsigned x)))(
               lift_to_both0 rq_1767))) =.? (
           lift_to_both0 sentinel_v) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset (
@@ -263,11 +274,14 @@ Program Definition clist_pop_head (x_1768 : clist_t) (rq_1766 : runqueue_id_t)
           I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
           letb head_1769 : int8 :=
-            array_index (next_idxs_1761) (@cast _ uint32 _ (array_index (
-                  tail_1760) (@cast _ uint32 _ (lift_to_both0 rq_1767)))) in
+            array_index (next_idxs_1761) (
+              (fun x => lift_to_both0 (repr (unsigned x)))(array_index (
+                  tail_1760) ((fun x => lift_to_both0 (repr (unsigned x)))(
+                    lift_to_both0 rq_1767)))) in
           letb '(tail_1760, next_idxs_1761) :=
             if (lift_to_both0 head_1769) =.? (array_index (tail_1760) (
-                @cast _ uint32 _ (lift_to_both0 rq_1767))) :bool_ChoiceEquality
+                (fun x => lift_to_both0 (repr (unsigned x)))(
+                  lift_to_both0 rq_1767))) :bool_ChoiceEquality
             then lift_scope (L1 := CEfset (
                 [tail_1760_loc ; next_idxs_1761_loc ; out_1762_loc])) (
               L2 := CEfset (
@@ -275,8 +289,10 @@ Program Definition clist_pop_head (x_1768 : clist_t) (rq_1766 : runqueue_id_t)
               I1 := [interface]) (
               I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
               letb tail_1760 : tail_t :=
-                array_upd tail_1760 (@cast _ uint32 _ (lift_to_both0 rq_1767)) (
-                  is_pure (lift_to_both0 sentinel_v)) in
+                array_upd tail_1760 (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(
+                    lift_to_both0 rq_1767)) (is_pure (
+                    lift_to_both0 sentinel_v)) in
               lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
                   lift_to_both0 tail_1760,
                   lift_to_both0 next_idxs_1761
@@ -289,9 +305,12 @@ Program Definition clist_pop_head (x_1768 : clist_t) (rq_1766 : runqueue_id_t)
               I1 := [interface]) (
               I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
               letb next_idxs_1761 : next_ids_t :=
-                array_upd next_idxs_1761 (@cast _ uint32 _ (array_index (
-                      tail_1760) (@cast _ uint32 _ (lift_to_both0 rq_1767)))) (
-                  is_pure (array_index (next_idxs_1761) (@cast _ uint32 _ (
+                array_upd next_idxs_1761 (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(array_index (
+                      tail_1760) ((fun x => lift_to_both0 (repr (unsigned x)))(
+                        lift_to_both0 rq_1767)))) (is_pure (array_index (
+                      next_idxs_1761) (
+                      (fun x => lift_to_both0 (repr (unsigned x)))(
                         lift_to_both0 head_1769)))) in
               lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
                   lift_to_both0 tail_1760,
@@ -299,7 +318,8 @@ Program Definition clist_pop_head (x_1768 : clist_t) (rq_1766 : runqueue_id_t)
                 ))
               ) in
           letb next_idxs_1761 : next_ids_t :=
-            array_upd next_idxs_1761 (@cast _ uint32 _ (
+            array_upd next_idxs_1761 (
+              (fun x => lift_to_both0 (repr (unsigned x)))(
                 lift_to_both0 head_1769)) (is_pure (
                 lift_to_both0 sentinel_v)) in
           letbm out_1762 loc( out_1762_loc ) :=
@@ -339,11 +359,12 @@ Program Definition clist_peek_head (x_1773 : clist_t) (rq_1771 : runqueue_id_t)
         lift_to_both0 x_1773 in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
         if is_pure (I := [interface]) ((array_index (tail_1774) (
-              @cast _ uint32 _ (lift_to_both0 rq_1772))) =.? (
-            lift_to_both0 sentinel_v))
+              (fun x => lift_to_both0 (repr (unsigned x)))(
+                lift_to_both0 rq_1772))) =.? (lift_to_both0 sentinel_v))
         then @None int8
-        else @Some int8 (array_index (next_idxs_1775) (@cast _ uint32 _ (
-              array_index (tail_1774) (@cast _ uint32 _ (
+        else @Some int8 (array_index (next_idxs_1775) (
+            (fun x => lift_to_both0 (repr (unsigned x)))(array_index (
+                tail_1774) ((fun x => lift_to_both0 (repr (unsigned x)))(
                   lift_to_both0 rq_1772))))))
       ) : both (fset.fset0) [interface] ((option (int8)))).
 Fail Next Obligation.
@@ -365,16 +386,18 @@ Program Definition clist_advance (x_1781 : clist_t) (rq_1779 : runqueue_id_t)
       letb Clist ((tail_1777, next_idxs_1782)) : clist_t :=
         lift_to_both0 x_1781 in
       letb '(tail_1777) :=
-        if (array_index (tail_1777) (@cast _ uint32 _ (
+        if (array_index (tail_1777) (
+            (fun x => lift_to_both0 (repr (unsigned x)))(
               lift_to_both0 rq_1780))) !=.? (
           lift_to_both0 sentinel_v) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset ([tail_1777_loc])) (L2 := CEfset (
             [tail_1777_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
           letb tail_1777 : tail_t :=
-            array_upd tail_1777 (@cast _ uint32 _ (lift_to_both0 rq_1780)) (
-              is_pure (array_index (next_idxs_1782) (@cast _ uint32 _ (
-                    array_index (tail_1777) (@cast _ uint32 _ (
+            array_upd tail_1777 ((fun x => lift_to_both0 (repr (unsigned x)))(
+                lift_to_both0 rq_1780)) (is_pure (array_index (next_idxs_1782) (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(array_index (
+                      tail_1777) ((fun x => lift_to_both0 (repr (unsigned x)))(
                         lift_to_both0 rq_1780)))))) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
             lift_to_both0 tail_1777)
@@ -438,7 +461,8 @@ Program Definition runqueue_add (y_1791 : run_queue_t) (n_1792 : thread_id_t) (
         lift_to_both0 y_1791 in
       letbm bitcache_1785 loc( bitcache_1785_loc ) :=
         (lift_to_both0 bitcache_1785) .| ((lift_to_both0 (
-              @repr U32 1)) shift_left (@cast _ uint32 _ (
+              @repr U32 1)) shift_left (
+            (fun x => lift_to_both0 (repr (unsigned x)))(
               lift_to_both0 rq_u8_1790))) in
       letbm queues_1786 loc( queues_1786_loc ) :=
         clist_push (lift_to_both0 queues_1786) (lift_to_both0 n_1792) (
@@ -484,7 +508,8 @@ Program Definition runqueue_del (y_1798 : run_queue_t) (n_1803 : thread_id_t) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
           letbm bitcache_1794 loc( bitcache_1794_loc ) :=
             (lift_to_both0 bitcache_1794) .& (not ((lift_to_both0 (
-                    @repr U32 1)) shift_left (@cast _ uint32 _ (
+                    @repr U32 1)) shift_left (
+                  (fun x => lift_to_both0 (repr (unsigned x)))(
                     lift_to_both0 rq_u8_1797)))) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
             lift_to_both0 bitcache_1794)
@@ -544,8 +569,9 @@ Program Definition runqueue_get_next (y_1808 : run_queue_t)
             [out_1806_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
           letb rq_1812 : runqueue_id_t :=
-            RunqueueId (@cast _ uint8 _ ((lift_to_both0 rq_ffs_1811) .- (
-                  lift_to_both0 (@repr U32 1)))) in
+            RunqueueId ((fun x => lift_to_both0 (repr (unsigned x)))((
+                  lift_to_both0 rq_ffs_1811) .- (lift_to_both0 (
+                    @repr U32 1)))) in
           letbm out_1806 loc( out_1806_loc ) :=
             clist_peek_head (lift_to_both0 queues_1810) (
               lift_to_both0 rq_1812) in

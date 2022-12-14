@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -110,19 +110,19 @@ Definition hash_init_v : hash_t :=
     (secret (@repr U32 3285377520)) : uint32
   ].
 
-Definition e_1589_loc : ChoiceEqualityLocation :=
+Definition d_1588_loc : ChoiceEqualityLocation :=
   (uint32 ; 1591%nat).
-Definition b_1586_loc : ChoiceEqualityLocation :=
+Definition t_1590_loc : ChoiceEqualityLocation :=
   (uint32 ; 1592%nat).
 Definition a_1585_loc : ChoiceEqualityLocation :=
   (uint32 ; 1593%nat).
-Definition w_1584_loc : ChoiceEqualityLocation :=
-  (schedule_t ; 1594%nat).
+Definition b_1586_loc : ChoiceEqualityLocation :=
+  (uint32 ; 1594%nat).
 Definition c_1587_loc : ChoiceEqualityLocation :=
   (uint32 ; 1595%nat).
-Definition d_1588_loc : ChoiceEqualityLocation :=
-  (uint32 ; 1596%nat).
-Definition t_1590_loc : ChoiceEqualityLocation :=
+Definition w_1584_loc : ChoiceEqualityLocation :=
+  (schedule_t ; 1596%nat).
+Definition e_1589_loc : ChoiceEqualityLocation :=
   (uint32 ; 1597%nat).
 Notation "'compress_inp'" :=(
   block_bytes_t '× hash_t : choice_type) (in custom pack_type at level 2).
@@ -334,10 +334,10 @@ Program Definition compress (m_bytes_1598 : block_bytes_t) (h_1601 : hash_t)
       hash_t)).
 Fail Next Obligation.
 
-Definition h_1604_loc : ChoiceEqualityLocation :=
-  (hash_t ; 1607%nat).
 Definition pad_block_1606_loc : ChoiceEqualityLocation :=
-  (block_bytes_t ; 1608%nat).
+  (block_bytes_t ; 1607%nat).
+Definition h_1604_loc : ChoiceEqualityLocation :=
+  (hash_t ; 1608%nat).
 Definition block_bytes_1605_loc : ChoiceEqualityLocation :=
   (block_bytes_t ; 1609%nat).
 Notation "'hash_inp'" :=(

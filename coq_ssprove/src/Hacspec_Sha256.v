@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -402,14 +402,14 @@ Program Definition compress (block_876 : block_t) (h_in_878 : hash_t)
       hash_t)).
 Fail Next Obligation.
 
-Definition h_881_loc : ChoiceEqualityLocation :=
-  (hash_t ; 885%nat).
-Definition pad_block_884_loc : ChoiceEqualityLocation :=
-  (block_t ; 886%nat).
 Definition last_block_882_loc : ChoiceEqualityLocation :=
-  (block_t ; 887%nat).
+  (block_t ; 885%nat).
 Definition last_block_len_883_loc : ChoiceEqualityLocation :=
-  (uint_size ; 888%nat).
+  (uint_size ; 886%nat).
+Definition h_881_loc : ChoiceEqualityLocation :=
+  (hash_t ; 887%nat).
+Definition pad_block_884_loc : ChoiceEqualityLocation :=
+  (block_t ; 888%nat).
 Notation "'hash_inp'" :=(
   byte_seq : choice_type) (in custom pack_type at level 2).
 Notation "'hash_inp'" :=(byte_seq : ChoiceEquality) (at level 2).

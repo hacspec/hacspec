@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -669,7 +669,8 @@ Definition GET_LENGTH : nat :=
   81.
 Program Definition get_length (b_79 : byte_seq) (len_80 : uint_size)
   : both (fset.fset0) [interface] (uint_size) :=
-  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((@cast _ uint32 _ (
+  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((
+          (fun x => lift_to_both0 (repr (unsigned x)))(
             declassify_u32_from_uint32 (uint32_from_be_bytes (array_from_slice (
                   default : uint8) (4) (lift_to_both0 b_79) (lift_to_both0 (
                     usize 0)) (lift_to_both0 len_80))))) usize_shift_right (((
@@ -695,12 +696,12 @@ Program Definition get_short_length (b_82 : byte_seq)
       ) : both (fset.fset0) [interface] (uint_size)).
 Fail Next Obligation.
 
-Definition seq1_84_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 88%nat).
 Definition len_86_loc : ChoiceEqualityLocation :=
-  (uint_size ; 89%nat).
+  (uint_size ; 88%nat).
 Definition ec_pk_oid_87_loc : ChoiceEqualityLocation :=
-  (bool_ChoiceEquality ; 90%nat).
+  (bool_ChoiceEquality ; 89%nat).
+Definition seq1_84_loc : ChoiceEqualityLocation :=
+  (seq uint8 ; 90%nat).
 Definition pk_85_loc : ChoiceEqualityLocation :=
   (seq uint8 ; 91%nat).
 Notation "'verification_key_from_cert_inp'" :=(

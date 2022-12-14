@@ -415,14 +415,17 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         };
                         let trans_x = translate_expression(x.as_ref().0.clone(), top_ctx);
 
-                        RcDoc::as_string("@cast _")
-                            .append(RcDoc::space())
-                            .append(new_t_doc)
-                            .append(RcDoc::space())
-                            .append(RcDoc::as_string("_"))
-                            .append(RcDoc::space())
+                        RcDoc::as_string("(fun x => lift_to_both0 (repr (unsigned x)))")
                             .append(make_paren(trans_x))
                             .group()
+                        // RcDoc::as_string("@cast _")
+                        //     .append(RcDoc::space())
+                        //     .append(new_t_doc)
+                        //     .append(RcDoc::space())
+                        //     .append(RcDoc::as_string("_"))
+                        //     .append(RcDoc::space())
+                        //     .append(make_paren(trans_x))
+                        //     .group()
                     }
                 }
             }
@@ -947,7 +950,7 @@ pub fn translate_and_write_to_file(
          From Crypt Require Import choice_type Package Prelude.\n\
          Import PackageNotation.\n\
          From extructures Require Import ord fset.\n\
-         From mathcomp Require Import ssrZ word.\n\
+         From mathcomp.word Require Import ssrZ word.\n\
          From Jasmin Require Import word.\n\
          \n\
          From Coq Require Import ZArith.\n\

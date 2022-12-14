@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -1304,10 +1304,10 @@ Program Definition final_exponentiation (f_2135 : fp12_t)
       ) : both (CEfset ([c_1962_loc])) [interface] (fp12_t)).
 Fail Next Obligation.
 
-Definition f_2171_loc : ChoiceEqualityLocation :=
-  ((fp6_t '× fp6_t) ; 2172%nat).
 Definition r_2170_loc : ChoiceEqualityLocation :=
-  ((fp2_t '× fp2_t '× bool_ChoiceEquality) ; 2173%nat).
+  ((fp2_t '× fp2_t '× bool_ChoiceEquality) ; 2172%nat).
+Definition f_2171_loc : ChoiceEqualityLocation :=
+  ((fp6_t '× fp6_t) ; 2173%nat).
 Notation "'pairing_inp'" :=(
   g1_t '× g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'pairing_inp'" :=(g1_t '× g2_t : ChoiceEquality) (at level 2).

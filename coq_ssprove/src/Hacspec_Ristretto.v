@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -787,9 +787,9 @@ Program Definition map (t_989 : field_element_t)
       ristretto_point_t)).
 Fail Next Obligation.
 
-Definition r0_bytes_1002_loc : ChoiceEqualityLocation :=
-  (seq int8 ; 1004%nat).
 Definition r1_bytes_1003_loc : ChoiceEqualityLocation :=
+  (seq int8 ; 1004%nat).
+Definition r0_bytes_1002_loc : ChoiceEqualityLocation :=
   (seq int8 ; 1005%nat).
 Notation "'one_way_map_inp'" :=(
   byte_string_t : choice_type) (in custom pack_type at level 2).

@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -178,11 +178,11 @@ Program Definition update (r_413 : element_t) (block_411 : gf128_block_t) (
       ) : both (CEfset ([res_399_loc ; sh_400_loc])) [interface] (element_t)).
 Fail Next Obligation.
 
-Definition acc_415_loc : ChoiceEqualityLocation :=
-  (uint128 ; 418%nat).
-Definition block_416_loc : ChoiceEqualityLocation :=
-  (gf128_block_t ; 419%nat).
 Definition last_block_417_loc : ChoiceEqualityLocation :=
+  (gf128_block_t ; 418%nat).
+Definition acc_415_loc : ChoiceEqualityLocation :=
+  (uint128 ; 419%nat).
+Definition block_416_loc : ChoiceEqualityLocation :=
   (gf128_block_t ; 420%nat).
 Notation "'poly_inp'" :=(
   byte_seq '× element_t : choice_type) (in custom pack_type at level 2).

@@ -35,12 +35,12 @@ const RCON: RCon = RCon(secret_bytes!([
 ]));
 
 fn vpshufd (s: u128, o: usize) -> u128 {
-    let d1 = s >> (32 * (o % 4));
-    let d2 = s >> (32 * (o >> 2) % 4);
-    let d3 = s >> (32 * (o >> 4) % 4);
-    let d4 = s >> (32 * (o >> 6) % 4);
+    let d1 : u32 = (s >> (32 * (o % 4))) as u32;
+    let d2 : u32 = (s >> (32 * (o >> 2) % 4)) as u32;
+    let d3 : u32 = (s >> (32 * (o >> 4) % 4)) as u32;
+    let d4 : u32 = (s >> (32 * (o >> 6) % 4)) as u32;
 
-    d1 | (d2 << 32) | (d3 << 64) | (d4 << 96)
+    (d1 as u128) | ((d2 as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
 }
 
 fn vshufps(s1: u128, s2: u128, o: usize) -> u128 {

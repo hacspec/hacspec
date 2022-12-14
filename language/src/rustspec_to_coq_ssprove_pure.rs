@@ -839,17 +839,25 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                         BaseTyp::Named(_, _) => true,
                         _ => false,
                     };
-                    RcDoc::as_string("@cast _")
-                        .append(RcDoc::space())
-                        .append(new_t_doc)
-                        .append(RcDoc::space())
-                        .append(RcDoc::as_string("_"))
-                        .append(RcDoc::space())
+
+                    RcDoc::as_string("(fun x => lift_to_both0 (repr (unsigned x)))")
                         .append(make_paren(translate_expression(
                             x.as_ref().0.clone(),
                             top_ctx,
                         )))
-                        .group()
+                            .group()
+
+                    // RcDoc::as_string("@cast _")
+                    //     .append(RcDoc::space())
+                    //     .append(new_t_doc)
+                    //     .append(RcDoc::space())
+                    //     .append(RcDoc::as_string("_"))
+                    //     .append(RcDoc::space())
+                    //     .append(make_paren(translate_expression(
+                    //         x.as_ref().0.clone(),
+                    //         top_ctx,
+                    //     )))
+                    //     .group()
                 }
             }
         }
@@ -1610,7 +1618,7 @@ pub fn translate_and_write_to_file(
          From Crypt Require Import choice_type Package Prelude.\n\
          Import PackageNotation.\n\
          From extructures Require Import ord fset.\n\
-         From mathcomp Require Import ssrZ word.\n\
+         From mathcomp.word Require Import ssrZ word.\n\
          From Jasmin Require Import word.\n\
          Require Import ChoiceEquality.\n\
          \n\

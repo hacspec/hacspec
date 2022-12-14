@@ -57,7 +57,7 @@ End IntType.
 Definition secret : forall {WS : wsize},  (T (@int WS)) -> both0 (@int WS) :=
   fun {WS} x => lift_to_both (secret x).
 
-Infix "%%" := int_modi (at level 40, left associativity) : Z_scope.
+Infix ".%%" := int_modi (at level 40, left associativity) : Z_scope.
 Infix ".+" := int_add (at level 77) : hacspec_scope.
 Infix ".-" := int_sub (at level 77) : hacspec_scope.
 Notation "-" := int_opp (at level 77) : hacspec_scope.
@@ -2445,3 +2445,5 @@ Notation "'link_rest_both(' a , b ')'" :=
   (par_link_both a b _) : hacspec_scope.
 Notation "'link_rest_both(' a , b , .. , c ')'" :=
   (par_link_both .. ( par_link_both a b _ ) .. c _) : hacspec_scope.
+
+Definition u32_word_t := nseq uint8 4.

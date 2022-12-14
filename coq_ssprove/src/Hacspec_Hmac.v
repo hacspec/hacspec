@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -189,9 +189,9 @@ Program Definition k_block (k_928 : byte_seq)
       ) : both (fset.fset0) [interface] (block_t)).
 Fail Next Obligation.
 
-Definition h_in_931_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 932%nat).
 Definition h_in_930_loc : ChoiceEqualityLocation :=
+  (seq uint8 ; 932%nat).
+Definition h_in_931_loc : ChoiceEqualityLocation :=
   (seq uint8 ; 933%nat).
 Notation "'hmac_inp'" :=(
   byte_seq '× byte_seq : choice_type) (in custom pack_type at level 2).

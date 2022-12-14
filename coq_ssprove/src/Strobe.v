@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -146,11 +146,11 @@ Program Definition transmute_state_to_u8 (state_1260 : state_uint64_t)
       ) : both (CEfset ([new_state_1258_loc])) [interface] (state_uint8_t)).
 Fail Next Obligation.
 
-Definition pos_1266_loc : ChoiceEqualityLocation :=
-  (int8 ; 1268%nat).
 Definition state_1265_loc : ChoiceEqualityLocation :=
-  (state_uint8_t ; 1269%nat).
+  (state_uint8_t ; 1268%nat).
 Definition pos_begin_1267_loc : ChoiceEqualityLocation :=
+  (int8 ; 1269%nat).
+Definition pos_1266_loc : ChoiceEqualityLocation :=
   (int8 ; 1270%nat).
 Notation "'run_f_inp'" :=(
   strobe_t : choice_type) (in custom pack_type at level 2).
@@ -204,13 +204,13 @@ Program Definition run_f (strobe_1271 : strobe_t)
       strobe_t)).
 Fail Next Obligation.
 
-Definition cur_fl_1278_loc : ChoiceEqualityLocation :=
-  (int8 ; 1279%nat).
-Definition pos_begin_1277_loc : ChoiceEqualityLocation :=
-  (int8 ; 1280%nat).
-Definition state_1275_loc : ChoiceEqualityLocation :=
-  (state_uint8_t ; 1281%nat).
 Definition pos_1276_loc : ChoiceEqualityLocation :=
+  (int8 ; 1279%nat).
+Definition state_1275_loc : ChoiceEqualityLocation :=
+  (state_uint8_t ; 1280%nat).
+Definition cur_fl_1278_loc : ChoiceEqualityLocation :=
+  (int8 ; 1281%nat).
+Definition pos_begin_1277_loc : ChoiceEqualityLocation :=
   (int8 ; 1282%nat).
 Notation "'absorb_inp'" :=(
   strobe_t '× seq uint8 : choice_type) (in custom pack_type at level 2).
@@ -313,13 +313,13 @@ Program Definition absorb (strobe_1283 : strobe_t) (data_1284 : seq uint8)
       strobe_t)).
 Fail Next Obligation.
 
-Definition cur_fl_1294_loc : ChoiceEqualityLocation :=
+Definition pos_1292_loc : ChoiceEqualityLocation :=
   (int8 ; 1295%nat).
 Definition state_1291_loc : ChoiceEqualityLocation :=
   (state_uint8_t ; 1296%nat).
 Definition pos_begin_1293_loc : ChoiceEqualityLocation :=
   (int8 ; 1297%nat).
-Definition pos_1292_loc : ChoiceEqualityLocation :=
+Definition cur_fl_1294_loc : ChoiceEqualityLocation :=
   (int8 ; 1298%nat).
 Notation "'squeeze_inp'" :=(
   strobe_t '× seq uint8 : choice_type) (in custom pack_type at level 2).
@@ -431,18 +431,18 @@ Program Definition squeeze (strobe_1299 : strobe_t) (data_1300 : seq uint8)
       (strobe_t '× seq uint8))).
 Fail Next Obligation.
 
-Definition pos_1308_loc : ChoiceEqualityLocation :=
-  (int8 ; 1313%nat).
-Definition cur_fl_1310_loc : ChoiceEqualityLocation :=
-  (int8 ; 1314%nat).
 Definition state_1307_loc : ChoiceEqualityLocation :=
-  (state_uint8_t ; 1315%nat).
-Definition data_1312_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 1316%nat).
+  (state_uint8_t ; 1313%nat).
 Definition pos_begin_1309_loc : ChoiceEqualityLocation :=
-  (int8 ; 1317%nat).
+  (int8 ; 1314%nat).
 Definition ret_1311_loc : ChoiceEqualityLocation :=
-  ((state_uint8_t '× int8 '× int8 '× int8) ; 1318%nat).
+  ((state_uint8_t '× int8 '× int8 '× int8) ; 1315%nat).
+Definition pos_1308_loc : ChoiceEqualityLocation :=
+  (int8 ; 1316%nat).
+Definition data_1312_loc : ChoiceEqualityLocation :=
+  (seq uint8 ; 1317%nat).
+Definition cur_fl_1310_loc : ChoiceEqualityLocation :=
+  (int8 ; 1318%nat).
 Notation "'begin_op_inp'" :=(
   strobe_t '× int8 '× bool_ChoiceEquality : choice_type) (in custom pack_type at level 2).
 Notation "'begin_op_inp'" :=(

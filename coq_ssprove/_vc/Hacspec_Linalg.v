@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -379,10 +379,10 @@ Program Definition scale (matrix_1185 : matrix_t) (scalar_1189 : scalar_t)
       ) : both (CEfset ([ret_1183_loc])) [interface] (matrix_t)).
 Fail Next Obligation.
 
-Definition res_1192_loc : ChoiceEqualityLocation :=
-  ((result (int8) (matrix_t)) ; 1193%nat).
 Definition ret_1191_loc : ChoiceEqualityLocation :=
-  (seq int128 ; 1194%nat).
+  (seq int128 ; 1193%nat).
+Definition res_1192_loc : ChoiceEqualityLocation :=
+  ((result (int8) (matrix_t)) ; 1194%nat).
 Notation "'add_inp'" :=(
   matrix_t '× matrix_t : choice_type) (in custom pack_type at level 2).
 Notation "'add_inp'" :=(matrix_t '× matrix_t : ChoiceEquality) (at level 2).
@@ -439,10 +439,10 @@ Program Definition add (matrix_1_1195 : matrix_t) (matrix_2_1198 : matrix_t)
       mat_res_t)).
 Fail Next Obligation.
 
-Definition res_1204_loc : ChoiceEqualityLocation :=
-  ((result (int8) (matrix_t)) ; 1205%nat).
 Definition ret_1203_loc : ChoiceEqualityLocation :=
-  (seq int128 ; 1206%nat).
+  (seq int128 ; 1205%nat).
+Definition res_1204_loc : ChoiceEqualityLocation :=
+  ((result (int8) (matrix_t)) ; 1206%nat).
 Notation "'sub_inp'" :=(
   matrix_t '× matrix_t : choice_type) (in custom pack_type at level 2).
 Notation "'sub_inp'" :=(matrix_t '× matrix_t : ChoiceEquality) (at level 2).
@@ -561,12 +561,12 @@ Program Definition component_mul (matrix_1_1219 : matrix_t) (
       mat_res_t)).
 Fail Next Obligation.
 
-Definition acc_1229_loc : ChoiceEqualityLocation :=
-  (int128 ; 1230%nat).
 Definition res_1228_loc : ChoiceEqualityLocation :=
-  ((result (int8) (matrix_t)) ; 1231%nat).
+  ((result (int8) (matrix_t)) ; 1230%nat).
 Definition ret_1227_loc : ChoiceEqualityLocation :=
-  (seq int128 ; 1232%nat).
+  (seq int128 ; 1231%nat).
+Definition acc_1229_loc : ChoiceEqualityLocation :=
+  (int128 ; 1232%nat).
 Notation "'mul_inp'" :=(
   matrix_t '× matrix_t : choice_type) (in custom pack_type at level 2).
 Notation "'mul_inp'" :=(matrix_t '× matrix_t : ChoiceEquality) (at level 2).

@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -481,12 +481,12 @@ Program Definition squeeze (s_1411 : state_t) (nbytes_1410 : uint_size) (
       byte_seq)).
 Fail Next Obligation.
 
-Definition buf_1419_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 1422%nat).
-Definition last_block_len_1420_loc : ChoiceEqualityLocation :=
-  (uint_size ; 1423%nat).
 Definition s_1421_loc : ChoiceEqualityLocation :=
-  (state_t ; 1424%nat).
+  (state_t ; 1422%nat).
+Definition buf_1419_loc : ChoiceEqualityLocation :=
+  (seq uint8 ; 1423%nat).
+Definition last_block_len_1420_loc : ChoiceEqualityLocation :=
+  (uint_size ; 1424%nat).
 Notation "'keccak_inp'" :=(
   uint_size '× byte_seq '× int8 '× uint_size : choice_type) (in custom pack_type at level 2).
 Notation "'keccak_inp'" :=(

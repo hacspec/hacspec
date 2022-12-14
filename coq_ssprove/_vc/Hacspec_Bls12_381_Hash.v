@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -72,12 +72,12 @@ Definition p_3_4_v : arr_fp_t :=
     (secret (@repr U64 17185665809301629610)) : uint64
   ].
 
-Definition b_i_2202_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 2204%nat).
-Definition uniform_bytes_2203_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 2205%nat).
-Definition l_i_b_str_2201_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 2206%nat).
+Definition uniform_bytes_2253_loc : ChoiceEqualityLocation :=
+  (seq uint8 ; 2254%nat).
+Definition l_i_b_str_2251_loc : ChoiceEqualityLocation :=
+  (seq uint8 ; 2255%nat).
+Definition b_i_2252_loc : ChoiceEqualityLocation :=
+  (seq uint8 ; 2256%nat).
 Notation "'expand_message_xmd_inp'" :=(
   byte_seq '× byte_seq '× uint_size : choice_type) (in custom pack_type at level 2).
 Notation "'expand_message_xmd_inp'" :=(
@@ -86,73 +86,73 @@ Notation "'expand_message_xmd_out'" :=(
   byte_seq : choice_type) (in custom pack_type at level 2).
 Notation "'expand_message_xmd_out'" :=(byte_seq : ChoiceEquality) (at level 2).
 Definition EXPAND_MESSAGE_XMD : nat :=
-  2217.
-Program Definition expand_message_xmd (msg_2212 : byte_seq) (
-    dst_2209 : byte_seq) (len_in_bytes_2207 : uint_size)
+  2267.
+Program Definition expand_message_xmd (msg_2262 : byte_seq) (
+    dst_2259 : byte_seq) (len_in_bytes_2257 : uint_size)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc])) [interface] (
     byte_seq) :=
-  ((letb ell_2208 : uint_size :=
-        (((lift_to_both0 len_in_bytes_2207) .+ (
+  ((letb ell_2258 : uint_size :=
+        (((lift_to_both0 len_in_bytes_2257) .+ (
               lift_to_both0 b_in_bytes_v)) .- (lift_to_both0 (usize 1))) ./ (
           lift_to_both0 b_in_bytes_v) in
-      letb dst_prime_2210 : seq uint8 :=
-        seq_push (lift_to_both0 dst_2209) (uint8_from_usize (seq_len (
-              lift_to_both0 dst_2209))) in
-      letb z_pad_2211 : seq uint8 :=
+      letb dst_prime_2260 : seq uint8 :=
+        seq_push (lift_to_both0 dst_2259) (uint8_from_usize (seq_len (
+              lift_to_both0 dst_2259))) in
+      letb z_pad_2261 : seq uint8 :=
         seq_new_ (default : uint8) (lift_to_both0 s_in_bytes_v) in
-      letbm l_i_b_str_2201 : seq uint8 loc( l_i_b_str_2201_loc ) :=
+      letbm l_i_b_str_2251 : seq uint8 loc( l_i_b_str_2251_loc ) :=
         seq_new_ (default : uint8) (lift_to_both0 (usize 2)) in
-      letb l_i_b_str_2201 : seq uint8 :=
-        seq_upd l_i_b_str_2201 (lift_to_both0 (usize 0)) (is_pure (
-            uint8_from_usize ((lift_to_both0 len_in_bytes_2207) ./ (
+      letb l_i_b_str_2251 : seq uint8 :=
+        seq_upd l_i_b_str_2251 (lift_to_both0 (usize 0)) (is_pure (
+            uint8_from_usize ((lift_to_both0 len_in_bytes_2257) ./ (
                 lift_to_both0 (usize 256))))) in
-      letb l_i_b_str_2201 : seq uint8 :=
-        seq_upd l_i_b_str_2201 (lift_to_both0 (usize 1)) (is_pure (
-            uint8_from_usize (lift_to_both0 len_in_bytes_2207))) in
-      letb msg_prime_2213 : seq uint8 :=
+      letb l_i_b_str_2251 : seq uint8 :=
+        seq_upd l_i_b_str_2251 (lift_to_both0 (usize 1)) (is_pure (
+            uint8_from_usize (lift_to_both0 len_in_bytes_2257))) in
+      letb msg_prime_2263 : seq uint8 :=
         seq_concat (seq_concat (seq_concat (seq_concat (
-                lift_to_both0 z_pad_2211) (lift_to_both0 msg_2212)) (
-              lift_to_both0 l_i_b_str_2201)) (seq_new_ (default : uint8) (
-              lift_to_both0 (usize 1)))) (lift_to_both0 dst_prime_2210) in
-      letb b_0_2214 : seq uint8 :=
-        seq_from_seq (array_to_seq (hash (lift_to_both0 msg_prime_2213))) in
-      letbm b_i_2202 : seq uint8 loc( b_i_2202_loc ) :=
+                lift_to_both0 z_pad_2261) (lift_to_both0 msg_2262)) (
+              lift_to_both0 l_i_b_str_2251)) (seq_new_ (default : uint8) (
+              lift_to_both0 (usize 1)))) (lift_to_both0 dst_prime_2260) in
+      letb b_0_2264 : seq uint8 :=
+        seq_from_seq (array_to_seq (hash (lift_to_both0 msg_prime_2263))) in
+      letbm b_i_2252 : seq uint8 loc( b_i_2252_loc ) :=
         seq_from_seq (array_to_seq (hash (seq_concat (seq_push (
-                lift_to_both0 b_0_2214) (secret (lift_to_both0 (@repr U8 1)))) (
-              lift_to_both0 dst_prime_2210)))) in
-      letbm uniform_bytes_2203 : seq uint8 loc( uniform_bytes_2203_loc ) :=
-        seq_from_seq (lift_to_both0 b_i_2202) in
-      letb '(b_i_2202, uniform_bytes_2203) :=
-        foldi_both' (lift_to_both0 (usize 2)) ((lift_to_both0 ell_2208) .+ (
-              lift_to_both0 (usize 1))) prod_ce(b_i_2202, uniform_bytes_2203) (
+                lift_to_both0 b_0_2264) (secret (lift_to_both0 (@repr U8 1)))) (
+              lift_to_both0 dst_prime_2260)))) in
+      letbm uniform_bytes_2253 : seq uint8 loc( uniform_bytes_2253_loc ) :=
+        seq_from_seq (lift_to_both0 b_i_2252) in
+      letb '(b_i_2252, uniform_bytes_2253) :=
+        foldi_both' (lift_to_both0 (usize 2)) ((lift_to_both0 ell_2258) .+ (
+              lift_to_both0 (usize 1))) prod_ce(b_i_2252, uniform_bytes_2253) (
             L := (CEfset (
-                [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc]))) (
-            I := [interface]) (fun i_2215 '(b_i_2202, uniform_bytes_2203) =>
-            letb t_2216 : seq uint8 := seq_from_seq (lift_to_both0 b_0_2214) in
-            letbm b_i_2202 loc( b_i_2202_loc ) :=
+                [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc]))) (
+            I := [interface]) (fun i_2265 '(b_i_2252, uniform_bytes_2253) =>
+            letb t_2266 : seq uint8 := seq_from_seq (lift_to_both0 b_0_2264) in
+            letbm b_i_2252 loc( b_i_2252_loc ) :=
               seq_from_seq (array_to_seq (hash (seq_concat (seq_push ((
-                        lift_to_both0 t_2216) seq_xor (
-                        lift_to_both0 b_i_2202)) (uint8_from_usize (
-                        lift_to_both0 i_2215))) (
-                    lift_to_both0 dst_prime_2210)))) in
-            letbm uniform_bytes_2203 loc( uniform_bytes_2203_loc ) :=
-              seq_concat (lift_to_both0 uniform_bytes_2203) (
-                lift_to_both0 b_i_2202) in
+                        lift_to_both0 t_2266) seq_xor (
+                        lift_to_both0 b_i_2252)) (uint8_from_usize (
+                        lift_to_both0 i_2265))) (
+                    lift_to_both0 dst_prime_2260)))) in
+            letbm uniform_bytes_2253 loc( uniform_bytes_2253_loc ) :=
+              seq_concat (lift_to_both0 uniform_bytes_2253) (
+                lift_to_both0 b_i_2252) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 b_i_2202,
-                lift_to_both0 uniform_bytes_2203
+                lift_to_both0 b_i_2252,
+                lift_to_both0 uniform_bytes_2253
               ))
             ) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (seq_truncate (
-          lift_to_both0 uniform_bytes_2203) (lift_to_both0 len_in_bytes_2207))
+          lift_to_both0 uniform_bytes_2253) (lift_to_both0 len_in_bytes_2257))
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc])) [interface] (
       byte_seq)).
 Fail Next Obligation.
 
-Definition output_2218_loc : ChoiceEqualityLocation :=
-  (seq fp_t ; 2219%nat).
+Definition output_2268_loc : ChoiceEqualityLocation :=
+  (seq fp_t ; 2269%nat).
 Notation "'fp_hash_to_field_inp'" :=(
   byte_seq '× byte_seq '× uint_size : choice_type) (in custom pack_type at level 2).
 Notation "'fp_hash_to_field_inp'" :=(
@@ -161,43 +161,43 @@ Notation "'fp_hash_to_field_out'" :=(
   seq fp_t : choice_type) (in custom pack_type at level 2).
 Notation "'fp_hash_to_field_out'" :=(seq fp_t : ChoiceEquality) (at level 2).
 Definition FP_HASH_TO_FIELD : nat :=
-  2229.
-Program Definition fp_hash_to_field (msg_2222 : byte_seq) (
-    dst_2223 : byte_seq) (count_2220 : uint_size)
+  2279.
+Program Definition fp_hash_to_field (msg_2272 : byte_seq) (
+    dst_2273 : byte_seq) (count_2270 : uint_size)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc])) [interface] (
     seq fp_t) :=
-  ((letb len_in_bytes_2221 : uint_size :=
-        (lift_to_both0 count_2220) .* (lift_to_both0 l_v) in
-      letb uniform_bytes_2224 : seq uint8 :=
-        expand_message_xmd (lift_to_both0 msg_2222) (lift_to_both0 dst_2223) (
-          lift_to_both0 len_in_bytes_2221) in
-      letbm output_2218 : seq fp_t loc( output_2218_loc ) :=
-        seq_new_ (default : fp_t) (lift_to_both0 count_2220) in
-      letb output_2218 :=
+  ((letb len_in_bytes_2271 : uint_size :=
+        (lift_to_both0 count_2270) .* (lift_to_both0 l_v) in
+      letb uniform_bytes_2274 : seq uint8 :=
+        expand_message_xmd (lift_to_both0 msg_2272) (lift_to_both0 dst_2273) (
+          lift_to_both0 len_in_bytes_2271) in
+      letbm output_2268 : seq fp_t loc( output_2268_loc ) :=
+        seq_new_ (default : fp_t) (lift_to_both0 count_2270) in
+      letb output_2268 :=
         foldi_both' (lift_to_both0 (usize 0)) (
-            lift_to_both0 count_2220) output_2218 (L := (CEfset (
-                [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc]))) (
-            I := [interface]) (fun i_2225 output_2218 =>
-            letb elm_offset_2226 : uint_size :=
-              (lift_to_both0 l_v) .* (lift_to_both0 i_2225) in
-            letb tv_2227 : seq uint8 :=
-              seq_slice (lift_to_both0 uniform_bytes_2224) (
-                lift_to_both0 elm_offset_2226) (lift_to_both0 l_v) in
-            letb u_i_2228 : fp_t :=
+            lift_to_both0 count_2270) output_2268 (L := (CEfset (
+                [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc]))) (
+            I := [interface]) (fun i_2275 output_2268 =>
+            letb elm_offset_2276 : uint_size :=
+              (lift_to_both0 l_v) .* (lift_to_both0 i_2275) in
+            letb tv_2277 : seq uint8 :=
+              seq_slice (lift_to_both0 uniform_bytes_2274) (
+                lift_to_both0 elm_offset_2276) (lift_to_both0 l_v) in
+            letb u_i_2278 : fp_t :=
               nat_mod_from_byte_seq_be (seq_slice (nat_mod_to_byte_seq_be (
-                    nat_mod_from_byte_seq_be (lift_to_both0 tv_2227))) (
+                    nat_mod_from_byte_seq_be (lift_to_both0 tv_2277))) (
                   lift_to_both0 (usize 16)) (lift_to_both0 (usize 48))) in
-            letb output_2218 : seq fp_t :=
-              seq_upd output_2218 (lift_to_both0 i_2225) (is_pure (
-                  lift_to_both0 u_i_2228)) in
+            letb output_2268 : seq fp_t :=
+              seq_upd output_2268 (lift_to_both0 i_2275) (is_pure (
+                  lift_to_both0 u_i_2278)) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-              lift_to_both0 output_2218)
+              lift_to_both0 output_2268)
             ) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-        lift_to_both0 output_2218)
+        lift_to_both0 output_2268)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc])) [interface] (
       seq fp_t)).
 Fail Next Obligation.
 
@@ -209,11 +209,11 @@ Notation "'fp_sgn0_out'" :=(
   bool_ChoiceEquality : choice_type) (in custom pack_type at level 2).
 Notation "'fp_sgn0_out'" :=(bool_ChoiceEquality : ChoiceEquality) (at level 2).
 Definition FP_SGN0 : nat :=
-  2231.
-Program Definition fp_sgn0 (x_2230 : fp_t)
+  2281.
+Program Definition fp_sgn0 (x_2280 : fp_t)
   : both (fset.fset0) [interface] (bool_ChoiceEquality) :=
   ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (((
-            lift_to_both0 x_2230) rem (nat_mod_two )) =.? (nat_mod_one ))
+            lift_to_both0 x_2280) rem (nat_mod_two )) =.? (nat_mod_one ))
       ) : both (fset.fset0) [interface] (bool_ChoiceEquality)).
 Fail Next Obligation.
 
@@ -226,16 +226,16 @@ Notation "'fp_is_square_out'" :=(
 Notation "'fp_is_square_out'" :=(
   bool_ChoiceEquality : ChoiceEquality) (at level 2).
 Definition FP_IS_SQUARE : nat :=
-  2235.
-Program Definition fp_is_square (x_2233 : fp_t)
+  2285.
+Program Definition fp_is_square (x_2283 : fp_t)
   : both (fset.fset0) [interface] (bool_ChoiceEquality) :=
-  ((letb c1_2232 : fp_t :=
+  ((letb c1_2282 : fp_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (lift_to_both0 p_1_2_v)) in
-      letb tv_2234 : fp_t :=
-        nat_mod_pow_self (lift_to_both0 x_2233) (lift_to_both0 c1_2232) in
+      letb tv_2284 : fp_t :=
+        nat_mod_pow_self (lift_to_both0 x_2283) (lift_to_both0 c1_2282) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (((
-            lift_to_both0 tv_2234) =.? (nat_mod_zero )) || ((
-            lift_to_both0 tv_2234) =.? (nat_mod_one )))
+            lift_to_both0 tv_2284) =.? (nat_mod_zero )) || ((
+            lift_to_both0 tv_2284) =.? (nat_mod_one )))
       ) : both (fset.fset0) [interface] (bool_ChoiceEquality)).
 Fail Next Obligation.
 
@@ -247,13 +247,13 @@ Notation "'fp_sqrt_out'" :=(
   fp_t : choice_type) (in custom pack_type at level 2).
 Notation "'fp_sqrt_out'" :=(fp_t : ChoiceEquality) (at level 2).
 Definition FP_SQRT : nat :=
-  2238.
-Program Definition fp_sqrt (x_2237 : fp_t)
+  2288.
+Program Definition fp_sqrt (x_2287 : fp_t)
   : both (fset.fset0) [interface] (fp_t) :=
-  ((letb c1_2236 : fp_t :=
+  ((letb c1_2286 : fp_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (lift_to_both0 p_1_4_v)) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (nat_mod_pow_self (
-          lift_to_both0 x_2237) (lift_to_both0 c1_2236))
+          lift_to_both0 x_2287) (lift_to_both0 c1_2286))
       ) : both (fset.fset0) [interface] (fp_t)).
 Fail Next Obligation.
 
@@ -265,20 +265,20 @@ Notation "'g1_curve_func_out'" :=(
   fp_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_curve_func_out'" :=(fp_t : ChoiceEquality) (at level 2).
 Definition G1_CURVE_FUNC : nat :=
-  2240.
-Program Definition g1_curve_func (x_2239 : fp_t)
+  2290.
+Program Definition g1_curve_func (x_2289 : fp_t)
   : both (fset.fset0) [interface] (fp_t) :=
   ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((((
-              lift_to_both0 x_2239) *% (lift_to_both0 x_2239)) *% (
-            lift_to_both0 x_2239)) +% (nat_mod_from_literal (_) (lift_to_both0 (
+              lift_to_both0 x_2289) *% (lift_to_both0 x_2289)) *% (
+            lift_to_both0 x_2289)) +% (nat_mod_from_literal (_) (lift_to_both0 (
               @repr U128 4))))
       ) : both (fset.fset0) [interface] (fp_t)).
 Fail Next Obligation.
 
-Definition tv4_2241_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2243%nat).
-Definition y_2242_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2244%nat).
+Definition y_2292_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2293%nat).
+Definition tv4_2291_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2294%nat).
 Notation "'g1_map_to_curve_svdw_inp'" :=(
   fp_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_map_to_curve_svdw_inp'" :=(fp_t : ChoiceEquality) (at level 2).
@@ -286,86 +286,86 @@ Notation "'g1_map_to_curve_svdw_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_map_to_curve_svdw_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_MAP_TO_CURVE_SVDW : nat :=
-  2258.
-Program Definition g1_map_to_curve_svdw (u_2247 : fp_t)
-  : both (CEfset ([tv4_2241_loc ; y_2242_loc])) [interface] (g1_t) :=
-  ((letb z_2245 : fp_t :=
+  2308.
+Program Definition g1_map_to_curve_svdw (u_2297 : fp_t)
+  : both (CEfset ([tv4_2291_loc ; y_2292_loc])) [interface] (g1_t) :=
+  ((letb z_2295 : fp_t :=
         (nat_mod_zero ) -% (nat_mod_from_literal (_) (lift_to_both0 (
               @repr U128 3))) in
-      letb gz_2246 : fp_t := g1_curve_func (lift_to_both0 z_2245) in
-      letb tv1_2248 : fp_t :=
-        ((lift_to_both0 u_2247) *% (lift_to_both0 u_2247)) *% (
-          lift_to_both0 gz_2246) in
-      letb tv2_2249 : fp_t := (nat_mod_one ) +% (lift_to_both0 tv1_2248) in
-      letb tv1_2250 : fp_t := (nat_mod_one ) -% (lift_to_both0 tv1_2248) in
-      letb tv3_2251 : fp_t :=
-        nat_mod_inv ((lift_to_both0 tv1_2250) *% (lift_to_both0 tv2_2249)) in
-      letbm tv4_2241 : fp_t loc( tv4_2241_loc ) :=
-        fp_sqrt (((nat_mod_zero ) -% (lift_to_both0 gz_2246)) *% (((
+      letb gz_2296 : fp_t := g1_curve_func (lift_to_both0 z_2295) in
+      letb tv1_2298 : fp_t :=
+        ((lift_to_both0 u_2297) *% (lift_to_both0 u_2297)) *% (
+          lift_to_both0 gz_2296) in
+      letb tv2_2299 : fp_t := (nat_mod_one ) +% (lift_to_both0 tv1_2298) in
+      letb tv1_2300 : fp_t := (nat_mod_one ) -% (lift_to_both0 tv1_2298) in
+      letb tv3_2301 : fp_t :=
+        nat_mod_inv ((lift_to_both0 tv1_2300) *% (lift_to_both0 tv2_2299)) in
+      letbm tv4_2291 : fp_t loc( tv4_2291_loc ) :=
+        fp_sqrt (((nat_mod_zero ) -% (lift_to_both0 gz_2296)) *% (((
                 nat_mod_from_literal (_) (lift_to_both0 (@repr U128 3))) *% (
-                lift_to_both0 z_2245)) *% (lift_to_both0 z_2245))) in
-      letb '(tv4_2241) :=
-        if fp_sgn0 (lift_to_both0 tv4_2241) :bool_ChoiceEquality
-        then lift_scope (L1 := CEfset ([tv4_2241_loc])) (L2 := CEfset (
-            [tv4_2241_loc ; y_2242_loc])) (I1 := [interface]) (
+                lift_to_both0 z_2295)) *% (lift_to_both0 z_2295))) in
+      letb '(tv4_2291) :=
+        if fp_sgn0 (lift_to_both0 tv4_2291) :bool_ChoiceEquality
+        then lift_scope (L1 := CEfset ([tv4_2291_loc])) (L2 := CEfset (
+            [tv4_2291_loc ; y_2292_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm tv4_2241 loc( tv4_2241_loc ) :=
-            (nat_mod_zero ) -% (lift_to_both0 tv4_2241) in
+          letbm tv4_2291 loc( tv4_2291_loc ) :=
+            (nat_mod_zero ) -% (lift_to_both0 tv4_2291) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 tv4_2241)
+            lift_to_both0 tv4_2291)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 tv4_2241)
+          lift_to_both0 tv4_2291)
          in
-      letb tv5_2252 : fp_t :=
-        (((lift_to_both0 u_2247) *% (lift_to_both0 tv1_2250)) *% (
-            lift_to_both0 tv3_2251)) *% (lift_to_both0 tv4_2241) in
-      letb tv6_2253 : fp_t :=
+      letb tv5_2302 : fp_t :=
+        (((lift_to_both0 u_2297) *% (lift_to_both0 tv1_2300)) *% (
+            lift_to_both0 tv3_2301)) *% (lift_to_both0 tv4_2291) in
+      letb tv6_2303 : fp_t :=
         (((nat_mod_zero ) -% (nat_mod_from_literal (_) (lift_to_both0 (
-                  @repr U128 4)))) *% (lift_to_both0 gz_2246)) *% (nat_mod_inv (
+                  @repr U128 4)))) *% (lift_to_both0 gz_2296)) *% (nat_mod_inv (
             ((nat_mod_from_literal (_) (lift_to_both0 (@repr U128 3))) *% (
-                lift_to_both0 z_2245)) *% (lift_to_both0 z_2245))) in
-      letb x1_2254 : fp_t :=
-        (((nat_mod_zero ) -% (lift_to_both0 z_2245)) *% (nat_mod_inv (
-              nat_mod_two ))) -% (lift_to_both0 tv5_2252) in
-      letb x2_2255 : fp_t :=
-        (((nat_mod_zero ) -% (lift_to_both0 z_2245)) *% (nat_mod_inv (
-              nat_mod_two ))) +% (lift_to_both0 tv5_2252) in
-      letb x3_2256 : fp_t :=
-        (lift_to_both0 z_2245) +% (((lift_to_both0 tv6_2253) *% (((
-                  lift_to_both0 tv2_2249) *% (lift_to_both0 tv2_2249)) *% (
-                lift_to_both0 tv3_2251))) *% (((lift_to_both0 tv2_2249) *% (
-                lift_to_both0 tv2_2249)) *% (lift_to_both0 tv3_2251))) in
-      letb x_2257 : fp_t :=
+                lift_to_both0 z_2295)) *% (lift_to_both0 z_2295))) in
+      letb x1_2304 : fp_t :=
+        (((nat_mod_zero ) -% (lift_to_both0 z_2295)) *% (nat_mod_inv (
+              nat_mod_two ))) -% (lift_to_both0 tv5_2302) in
+      letb x2_2305 : fp_t :=
+        (((nat_mod_zero ) -% (lift_to_both0 z_2295)) *% (nat_mod_inv (
+              nat_mod_two ))) +% (lift_to_both0 tv5_2302) in
+      letb x3_2306 : fp_t :=
+        (lift_to_both0 z_2295) +% (((lift_to_both0 tv6_2303) *% (((
+                  lift_to_both0 tv2_2299) *% (lift_to_both0 tv2_2299)) *% (
+                lift_to_both0 tv3_2301))) *% (((lift_to_both0 tv2_2299) *% (
+                lift_to_both0 tv2_2299)) *% (lift_to_both0 tv3_2301))) in
+      letb x_2307 : fp_t :=
         if is_pure (I := [interface]) (fp_is_square (g1_curve_func (
-              lift_to_both0 x1_2254)))
-        then lift_to_both0 x1_2254
+              lift_to_both0 x1_2304)))
+        then lift_to_both0 x1_2304
         else if is_pure (I := [interface]) (fp_is_square (g1_curve_func (
-              lift_to_both0 x2_2255)))
-        then lift_to_both0 x2_2255
-        else lift_to_both0 x3_2256 in
-      letbm y_2242 : fp_t loc( y_2242_loc ) :=
-        fp_sqrt (g1_curve_func (lift_to_both0 x_2257)) in
-      letb '(y_2242) :=
-        if (fp_sgn0 (lift_to_both0 u_2247)) !=.? (fp_sgn0 (
-            lift_to_both0 y_2242)) :bool_ChoiceEquality
-        then lift_scope (L1 := CEfset ([tv4_2241_loc ; y_2242_loc])) (
-          L2 := CEfset ([tv4_2241_loc ; y_2242_loc])) (I1 := [interface]) (
+              lift_to_both0 x2_2305)))
+        then lift_to_both0 x2_2305
+        else lift_to_both0 x3_2306 in
+      letbm y_2292 : fp_t loc( y_2292_loc ) :=
+        fp_sqrt (g1_curve_func (lift_to_both0 x_2307)) in
+      letb '(y_2292) :=
+        if (fp_sgn0 (lift_to_both0 u_2297)) !=.? (fp_sgn0 (
+            lift_to_both0 y_2292)) :bool_ChoiceEquality
+        then lift_scope (L1 := CEfset ([tv4_2291_loc ; y_2292_loc])) (
+          L2 := CEfset ([tv4_2291_loc ; y_2292_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm y_2242 loc( y_2242_loc ) :=
-            (nat_mod_zero ) -% (lift_to_both0 y_2242) in
+          letbm y_2292 loc( y_2292_loc ) :=
+            (nat_mod_zero ) -% (lift_to_both0 y_2292) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 y_2242)
+            lift_to_both0 y_2292)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 y_2242)
+          lift_to_both0 y_2292)
          in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 x_2257,
-          lift_to_both0 y_2242,
+          lift_to_both0 x_2307,
+          lift_to_both0 y_2292,
           lift_to_both0 ((false : bool_ChoiceEquality))
         ))
-      ) : both (CEfset ([tv4_2241_loc ; y_2242_loc])) [interface] (g1_t)).
+      ) : both (CEfset ([tv4_2291_loc ; y_2292_loc])) [interface] (g1_t)).
 Fail Next Obligation.
 
 
@@ -376,14 +376,14 @@ Notation "'g1_clear_cofactor_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_clear_cofactor_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_CLEAR_COFACTOR : nat :=
-  2261.
-Program Definition g1_clear_cofactor (x_2260 : g1_t)
+  2311.
+Program Definition g1_clear_cofactor (x_2310 : g1_t)
   : both (fset.fset0) [interface] (g1_t) :=
-  ((letb h_eff_2259 : scalar_t :=
+  ((letb h_eff_2309 : scalar_t :=
         nat_mod_from_literal (_) (lift_to_both0 (
             @repr U128 15132376222941642753)) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (g1mul (
-          lift_to_both0 h_eff_2259) (lift_to_both0 x_2260))
+          lift_to_both0 h_eff_2309) (lift_to_both0 x_2310))
       ) : both (fset.fset0) [interface] (g1_t)).
 Fail Next Obligation.
 
@@ -396,26 +396,26 @@ Notation "'g1_hash_to_curve_svdw_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_hash_to_curve_svdw_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_HASH_TO_CURVE_SVDW : nat :=
-  2269.
-Program Definition g1_hash_to_curve_svdw (msg_2262 : byte_seq) (
-    dst_2263 : byte_seq)
+  2319.
+Program Definition g1_hash_to_curve_svdw (msg_2312 : byte_seq) (
+    dst_2313 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; tv4_2241_loc ; y_2242_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; tv4_2291_loc ; y_2292_loc])) [interface] (
     g1_t) :=
-  ((letb u_2264 : seq fp_t :=
-        fp_hash_to_field (lift_to_both0 msg_2262) (lift_to_both0 dst_2263) (
+  ((letb u_2314 : seq fp_t :=
+        fp_hash_to_field (lift_to_both0 msg_2312) (lift_to_both0 dst_2313) (
           lift_to_both0 (usize 2)) in
-      letb q0_2265 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_map_to_curve_svdw (seq_index (u_2264) (lift_to_both0 (usize 0))) in
-      letb q1_2266 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_map_to_curve_svdw (seq_index (u_2264) (lift_to_both0 (usize 1))) in
-      letb r_2267 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1add (lift_to_both0 q0_2265) (lift_to_both0 q1_2266) in
-      letb p_2268 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_clear_cofactor (lift_to_both0 r_2267) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2268)
+      letb q0_2315 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_map_to_curve_svdw (seq_index (u_2314) (lift_to_both0 (usize 0))) in
+      letb q1_2316 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_map_to_curve_svdw (seq_index (u_2314) (lift_to_both0 (usize 1))) in
+      letb r_2317 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1add (lift_to_both0 q0_2315) (lift_to_both0 q1_2316) in
+      letb p_2318 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_clear_cofactor (lift_to_both0 r_2317) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2318)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; tv4_2241_loc ; y_2242_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; tv4_2291_loc ; y_2292_loc])) [interface] (
       g1_t)).
 Fail Next Obligation.
 
@@ -428,27 +428,27 @@ Notation "'g1_encode_to_curve_svdw_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_encode_to_curve_svdw_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_ENCODE_TO_CURVE_SVDW : nat :=
-  2275.
-Program Definition g1_encode_to_curve_svdw (msg_2270 : byte_seq) (
-    dst_2271 : byte_seq)
+  2325.
+Program Definition g1_encode_to_curve_svdw (msg_2320 : byte_seq) (
+    dst_2321 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; tv4_2241_loc ; y_2242_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; tv4_2291_loc ; y_2292_loc])) [interface] (
     g1_t) :=
-  ((letb u_2272 : seq fp_t :=
-        fp_hash_to_field (lift_to_both0 msg_2270) (lift_to_both0 dst_2271) (
+  ((letb u_2322 : seq fp_t :=
+        fp_hash_to_field (lift_to_both0 msg_2320) (lift_to_both0 dst_2321) (
           lift_to_both0 (usize 1)) in
-      letb q_2273 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_map_to_curve_svdw (seq_index (u_2272) (lift_to_both0 (usize 0))) in
-      letb p_2274 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_clear_cofactor (lift_to_both0 q_2273) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2274)
+      letb q_2323 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_map_to_curve_svdw (seq_index (u_2322) (lift_to_both0 (usize 0))) in
+      letb p_2324 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_clear_cofactor (lift_to_both0 q_2323) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2324)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; tv4_2241_loc ; y_2242_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; tv4_2291_loc ; y_2292_loc])) [interface] (
       g1_t)).
 Fail Next Obligation.
 
-Definition output_2276_loc : ChoiceEqualityLocation :=
-  (seq (fp_t '× fp_t) ; 2277%nat).
+Definition output_2326_loc : ChoiceEqualityLocation :=
+  (seq (fp_t '× fp_t) ; 2327%nat).
 Notation "'fp2_hash_to_field_inp'" :=(
   byte_seq '× byte_seq '× uint_size : choice_type) (in custom pack_type at level 2).
 Notation "'fp2_hash_to_field_inp'" :=(
@@ -457,57 +457,57 @@ Notation "'fp2_hash_to_field_out'" :=(
   seq fp2_t : choice_type) (in custom pack_type at level 2).
 Notation "'fp2_hash_to_field_out'" :=(seq fp2_t : ChoiceEquality) (at level 2).
 Definition FP2_HASH_TO_FIELD : nat :=
-  2290.
-Program Definition fp2_hash_to_field (msg_2280 : byte_seq) (
-    dst_2281 : byte_seq) (count_2278 : uint_size)
+  2340.
+Program Definition fp2_hash_to_field (msg_2330 : byte_seq) (
+    dst_2331 : byte_seq) (count_2328 : uint_size)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc])) [interface] (
     seq fp2_t) :=
-  ((letb len_in_bytes_2279 : uint_size :=
-        ((lift_to_both0 count_2278) .* (lift_to_both0 (usize 2))) .* (
+  ((letb len_in_bytes_2329 : uint_size :=
+        ((lift_to_both0 count_2328) .* (lift_to_both0 (usize 2))) .* (
           lift_to_both0 l_v) in
-      letb uniform_bytes_2282 : seq uint8 :=
-        expand_message_xmd (lift_to_both0 msg_2280) (lift_to_both0 dst_2281) (
-          lift_to_both0 len_in_bytes_2279) in
-      letbm output_2276 : seq (fp_t '× fp_t) loc( output_2276_loc ) :=
-        seq_new_ (default : fp2_t) (lift_to_both0 count_2278) in
-      letb output_2276 :=
+      letb uniform_bytes_2332 : seq uint8 :=
+        expand_message_xmd (lift_to_both0 msg_2330) (lift_to_both0 dst_2331) (
+          lift_to_both0 len_in_bytes_2329) in
+      letbm output_2326 : seq (fp_t '× fp_t) loc( output_2326_loc ) :=
+        seq_new_ (default : fp2_t) (lift_to_both0 count_2328) in
+      letb output_2326 :=
         foldi_both' (lift_to_both0 (usize 0)) (
-            lift_to_both0 count_2278) output_2276 (L := (CEfset (
-                [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc]))) (
-            I := [interface]) (fun i_2283 output_2276 =>
-            letb elm_offset_2284 : uint_size :=
-              ((lift_to_both0 l_v) .* (lift_to_both0 i_2283)) .* (
+            lift_to_both0 count_2328) output_2326 (L := (CEfset (
+                [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc]))) (
+            I := [interface]) (fun i_2333 output_2326 =>
+            letb elm_offset_2334 : uint_size :=
+              ((lift_to_both0 l_v) .* (lift_to_both0 i_2333)) .* (
                 lift_to_both0 (usize 2)) in
-            letb tv_2285 : seq uint8 :=
-              seq_slice (lift_to_both0 uniform_bytes_2282) (
-                lift_to_both0 elm_offset_2284) (lift_to_both0 l_v) in
-            letb e_1_2286 : fp_t :=
+            letb tv_2335 : seq uint8 :=
+              seq_slice (lift_to_both0 uniform_bytes_2332) (
+                lift_to_both0 elm_offset_2334) (lift_to_both0 l_v) in
+            letb e_1_2336 : fp_t :=
               nat_mod_from_byte_seq_be (seq_slice (nat_mod_to_byte_seq_be (
-                    nat_mod_from_byte_seq_be (lift_to_both0 tv_2285))) (
+                    nat_mod_from_byte_seq_be (lift_to_both0 tv_2335))) (
                   lift_to_both0 (usize 16)) (lift_to_both0 (usize 48))) in
-            letb elm_offset_2287 : uint_size :=
+            letb elm_offset_2337 : uint_size :=
               (lift_to_both0 l_v) .* ((lift_to_both0 (usize 1)) .+ ((
-                    lift_to_both0 i_2283) .* (lift_to_both0 (usize 2)))) in
-            letb tv_2288 : seq uint8 :=
-              seq_slice (lift_to_both0 uniform_bytes_2282) (
-                lift_to_both0 elm_offset_2287) (lift_to_both0 l_v) in
-            letb e_2_2289 : fp_t :=
+                    lift_to_both0 i_2333) .* (lift_to_both0 (usize 2)))) in
+            letb tv_2338 : seq uint8 :=
+              seq_slice (lift_to_both0 uniform_bytes_2332) (
+                lift_to_both0 elm_offset_2337) (lift_to_both0 l_v) in
+            letb e_2_2339 : fp_t :=
               nat_mod_from_byte_seq_be (seq_slice (nat_mod_to_byte_seq_be (
-                    nat_mod_from_byte_seq_be (lift_to_both0 tv_2288))) (
+                    nat_mod_from_byte_seq_be (lift_to_both0 tv_2338))) (
                   lift_to_both0 (usize 16)) (lift_to_both0 (usize 48))) in
-            letb output_2276 : seq (fp_t '× fp_t) :=
-              seq_upd output_2276 (lift_to_both0 i_2283) (is_pure (prod_b(
-                    lift_to_both0 e_1_2286,
-                    lift_to_both0 e_2_2289
+            letb output_2326 : seq (fp_t '× fp_t) :=
+              seq_upd output_2326 (lift_to_both0 i_2333) (is_pure (prod_b(
+                    lift_to_both0 e_1_2336,
+                    lift_to_both0 e_2_2339
                   ))) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-              lift_to_both0 output_2276)
+              lift_to_both0 output_2326)
             ) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-        lift_to_both0 output_2276)
+        lift_to_both0 output_2326)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc])) [interface] (
       seq fp2_t)).
 Fail Next Obligation.
 
@@ -519,19 +519,19 @@ Notation "'fp2_sgn0_out'" :=(
   bool_ChoiceEquality : choice_type) (in custom pack_type at level 2).
 Notation "'fp2_sgn0_out'" :=(bool_ChoiceEquality : ChoiceEquality) (at level 2).
 Definition FP2_SGN0 : nat :=
-  2297.
-Program Definition fp2_sgn0 (x_2291 : fp2_t)
+  2347.
+Program Definition fp2_sgn0 (x_2341 : fp2_t)
   : both (fset.fset0) [interface] (bool_ChoiceEquality) :=
-  ((letb '(x0_2292, x1_2293) : (fp_t '× fp_t) := lift_to_both0 x_2291 in
-      letb sign_0_2294 : bool_ChoiceEquality :=
-        fp_sgn0 (lift_to_both0 x0_2292) in
-      letb zero_0_2295 : bool_ChoiceEquality :=
-        (lift_to_both0 x0_2292) =.? (nat_mod_zero ) in
-      letb sign_1_2296 : bool_ChoiceEquality :=
-        fp_sgn0 (lift_to_both0 x1_2293) in
+  ((letb '(x0_2342, x1_2343) : (fp_t '× fp_t) := lift_to_both0 x_2341 in
+      letb sign_0_2344 : bool_ChoiceEquality :=
+        fp_sgn0 (lift_to_both0 x0_2342) in
+      letb zero_0_2345 : bool_ChoiceEquality :=
+        (lift_to_both0 x0_2342) =.? (nat_mod_zero ) in
+      letb sign_1_2346 : bool_ChoiceEquality :=
+        fp_sgn0 (lift_to_both0 x1_2343) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((
-          lift_to_both0 sign_0_2294) || ((lift_to_both0 zero_0_2295) && (
-            lift_to_both0 sign_1_2296)))
+          lift_to_both0 sign_0_2344) || ((lift_to_both0 zero_0_2345) && (
+            lift_to_both0 sign_1_2346)))
       ) : both (fset.fset0) [interface] (bool_ChoiceEquality)).
 Fail Next Obligation.
 
@@ -544,28 +544,28 @@ Notation "'fp2_is_square_out'" :=(
 Notation "'fp2_is_square_out'" :=(
   bool_ChoiceEquality : ChoiceEquality) (at level 2).
 Definition FP2_IS_SQUARE : nat :=
-  2307.
-Program Definition fp2_is_square (x_2299 : fp2_t)
+  2357.
+Program Definition fp2_is_square (x_2349 : fp2_t)
   : both (fset.fset0) [interface] (bool_ChoiceEquality) :=
-  ((letb c1_2298 : fp_t :=
+  ((letb c1_2348 : fp_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (lift_to_both0 p_1_2_v)) in
-      letb '(x1_2300, x2_2301) : (fp_t '× fp_t) := lift_to_both0 x_2299 in
-      letb tv1_2302 : fp_t :=
-        (lift_to_both0 x1_2300) *% (lift_to_both0 x1_2300) in
-      letb tv2_2303 : fp_t :=
-        (lift_to_both0 x2_2301) *% (lift_to_both0 x2_2301) in
-      letb tv1_2304 : fp_t :=
-        (lift_to_both0 tv1_2302) +% (lift_to_both0 tv2_2303) in
-      letb tv1_2305 : fp_t :=
-        nat_mod_pow_self (lift_to_both0 tv1_2304) (lift_to_both0 c1_2298) in
-      letb neg1_2306 : fp_t := (nat_mod_zero ) -% (nat_mod_one ) in
+      letb '(x1_2350, x2_2351) : (fp_t '× fp_t) := lift_to_both0 x_2349 in
+      letb tv1_2352 : fp_t :=
+        (lift_to_both0 x1_2350) *% (lift_to_both0 x1_2350) in
+      letb tv2_2353 : fp_t :=
+        (lift_to_both0 x2_2351) *% (lift_to_both0 x2_2351) in
+      letb tv1_2354 : fp_t :=
+        (lift_to_both0 tv1_2352) +% (lift_to_both0 tv2_2353) in
+      letb tv1_2355 : fp_t :=
+        nat_mod_pow_self (lift_to_both0 tv1_2354) (lift_to_both0 c1_2348) in
+      letb neg1_2356 : fp_t := (nat_mod_zero ) -% (nat_mod_one ) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((
-          lift_to_both0 tv1_2305) !=.? (lift_to_both0 neg1_2306))
+          lift_to_both0 tv1_2355) !=.? (lift_to_both0 neg1_2356))
       ) : both (fset.fset0) [interface] (bool_ChoiceEquality)).
 Fail Next Obligation.
 
-Definition c_2308_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2309%nat).
+Definition c_2358_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2359%nat).
 Notation "'fp2exp_inp'" :=(
   fp2_t '× fp_t : choice_type) (in custom pack_type at level 2).
 Notation "'fp2exp_inp'" :=(fp2_t '× fp_t : ChoiceEquality) (at level 2).
@@ -573,36 +573,36 @@ Notation "'fp2exp_out'" :=(
   fp2_t : choice_type) (in custom pack_type at level 2).
 Notation "'fp2exp_out'" :=(fp2_t : ChoiceEquality) (at level 2).
 Definition FP2EXP : nat :=
-  2313.
-Program Definition fp2exp (n_2312 : fp2_t) (k_2311 : fp_t)
-  : both (CEfset ([c_2308_loc])) [interface] (fp2_t) :=
-  ((letbm c_2308 : (fp_t '× fp_t) loc( c_2308_loc ) :=
+  2363.
+Program Definition fp2exp (n_2362 : fp2_t) (k_2361 : fp_t)
+  : both (CEfset ([c_2358_loc])) [interface] (fp2_t) :=
+  ((letbm c_2358 : (fp_t '× fp_t) loc( c_2358_loc ) :=
         fp2fromfp (nat_mod_one ) in
-      letb c_2308 :=
+      letb c_2358 :=
         foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 (
-              usize 381)) c_2308 (L := (CEfset ([c_2308_loc]))) (
-            I := [interface]) (fun i_2310 c_2308 =>
-            letbm c_2308 loc( c_2308_loc ) :=
-              fp2mul (lift_to_both0 c_2308) (lift_to_both0 c_2308) in
-            letb '(c_2308) :=
-              if nat_mod_bit (lift_to_both0 k_2311) ((lift_to_both0 (
-                    usize 380)) .- (lift_to_both0 i_2310)) :bool_ChoiceEquality
-              then lift_scope (L1 := CEfset ([c_2308_loc])) (L2 := CEfset (
-                  [c_2308_loc])) (I1 := [interface]) (
+              usize 381)) c_2358 (L := (CEfset ([c_2358_loc]))) (
+            I := [interface]) (fun i_2360 c_2358 =>
+            letbm c_2358 loc( c_2358_loc ) :=
+              fp2mul (lift_to_both0 c_2358) (lift_to_both0 c_2358) in
+            letb '(c_2358) :=
+              if nat_mod_bit (lift_to_both0 k_2361) ((lift_to_both0 (
+                    usize 380)) .- (lift_to_both0 i_2360)) :bool_ChoiceEquality
+              then lift_scope (L1 := CEfset ([c_2358_loc])) (L2 := CEfset (
+                  [c_2358_loc])) (I1 := [interface]) (
                 I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-                letbm c_2308 loc( c_2308_loc ) :=
-                  fp2mul (lift_to_both0 c_2308) (lift_to_both0 n_2312) in
+                letbm c_2358 loc( c_2358_loc ) :=
+                  fp2mul (lift_to_both0 c_2358) (lift_to_both0 n_2362) in
                 lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-                  lift_to_both0 c_2308)
+                  lift_to_both0 c_2358)
                 )
               else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-                lift_to_both0 c_2308)
+                lift_to_both0 c_2358)
                in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-              lift_to_both0 c_2308)
+              lift_to_both0 c_2358)
             ) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 c_2308)
-      ) : both (CEfset ([c_2308_loc])) [interface] (fp2_t)).
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 c_2358)
+      ) : both (CEfset ([c_2358_loc])) [interface] (fp2_t)).
 Fail Next Obligation.
 
 
@@ -613,32 +613,32 @@ Notation "'fp2_sqrt_out'" :=(
   fp2_t : choice_type) (in custom pack_type at level 2).
 Notation "'fp2_sqrt_out'" :=(fp2_t : ChoiceEquality) (at level 2).
 Definition FP2_SQRT : nat :=
-  2322.
-Program Definition fp2_sqrt (a_2316 : fp2_t)
-  : both (CEfset ([c_2308_loc])) [interface] (fp2_t) :=
-  ((letb c1_2314 : fp_t :=
+  2372.
+Program Definition fp2_sqrt (a_2366 : fp2_t)
+  : both (CEfset ([c_2358_loc])) [interface] (fp2_t) :=
+  ((letb c1_2364 : fp_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (lift_to_both0 p_3_4_v)) in
-      letb c2_2315 : fp_t :=
+      letb c2_2365 : fp_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (lift_to_both0 p_1_2_v)) in
-      letb a1_2317 : (fp_t '× fp_t) :=
-        fp2exp (lift_to_both0 a_2316) (lift_to_both0 c1_2314) in
-      letb alpha_2318 : (fp_t '× fp_t) :=
-        fp2mul (lift_to_both0 a1_2317) (fp2mul (lift_to_both0 a1_2317) (
-            lift_to_both0 a_2316)) in
-      letb x0_2319 : (fp_t '× fp_t) :=
-        fp2mul (lift_to_both0 a1_2317) (lift_to_both0 a_2316) in
-      letb neg1_2320 : (fp_t '× fp_t) :=
+      letb a1_2367 : (fp_t '× fp_t) :=
+        fp2exp (lift_to_both0 a_2366) (lift_to_both0 c1_2364) in
+      letb alpha_2368 : (fp_t '× fp_t) :=
+        fp2mul (lift_to_both0 a1_2367) (fp2mul (lift_to_both0 a1_2367) (
+            lift_to_both0 a_2366)) in
+      letb x0_2369 : (fp_t '× fp_t) :=
+        fp2mul (lift_to_both0 a1_2367) (lift_to_both0 a_2366) in
+      letb neg1_2370 : (fp_t '× fp_t) :=
         prod_b((nat_mod_zero ) -% (nat_mod_one ), nat_mod_zero ) in
-      letb b_2321 : (fp_t '× fp_t) :=
-        fp2exp (fp2add (fp2fromfp (nat_mod_one )) (lift_to_both0 alpha_2318)) (
-          lift_to_both0 c2_2315) in
+      letb b_2371 : (fp_t '× fp_t) :=
+        fp2exp (fp2add (fp2fromfp (nat_mod_one )) (lift_to_both0 alpha_2368)) (
+          lift_to_both0 c2_2365) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-        if is_pure (I := [interface]) ((lift_to_both0 alpha_2318) =.? (
-            lift_to_both0 neg1_2320))
+        if is_pure (I := [interface]) ((lift_to_both0 alpha_2368) =.? (
+            lift_to_both0 neg1_2370))
         then fp2mul (prod_b(nat_mod_zero , nat_mod_one )) (
-          lift_to_both0 x0_2319)
-        else fp2mul (lift_to_both0 b_2321) (lift_to_both0 x0_2319))
-      ) : both (CEfset ([c_2308_loc])) [interface] (fp2_t)).
+          lift_to_both0 x0_2369)
+        else fp2mul (lift_to_both0 b_2371) (lift_to_both0 x0_2369))
+      ) : both (CEfset ([c_2358_loc])) [interface] (fp2_t)).
 Fail Next Obligation.
 
 
@@ -649,22 +649,22 @@ Notation "'g2_curve_func_out'" :=(
   fp2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_curve_func_out'" :=(fp2_t : ChoiceEquality) (at level 2).
 Definition G2_CURVE_FUNC : nat :=
-  2324.
-Program Definition g2_curve_func (x_2323 : fp2_t)
+  2374.
+Program Definition g2_curve_func (x_2373 : fp2_t)
   : both (fset.fset0) [interface] (fp2_t) :=
   ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (fp2add (fp2mul (
-            lift_to_both0 x_2323) (fp2mul (lift_to_both0 x_2323) (
-              lift_to_both0 x_2323))) (prod_b(
+            lift_to_both0 x_2373) (fp2mul (lift_to_both0 x_2373) (
+              lift_to_both0 x_2373))) (prod_b(
             nat_mod_from_literal (_) (lift_to_both0 (@repr U128 4)),
             nat_mod_from_literal (_) (lift_to_both0 (@repr U128 4))
           )))
       ) : both (fset.fset0) [interface] (fp2_t)).
 Fail Next Obligation.
 
-Definition tv4_2325_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2327%nat).
-Definition y_2326_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2328%nat).
+Definition y_2376_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2377%nat).
+Definition tv4_2375_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2378%nat).
 Notation "'g2_map_to_curve_svdw_inp'" :=(
   fp2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_map_to_curve_svdw_inp'" :=(fp2_t : ChoiceEquality) (at level 2).
@@ -672,91 +672,91 @@ Notation "'g2_map_to_curve_svdw_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_map_to_curve_svdw_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_MAP_TO_CURVE_SVDW : nat :=
-  2343.
-Program Definition g2_map_to_curve_svdw (u_2331 : fp2_t)
-  : both (CEfset ([c_2308_loc ; tv4_2325_loc ; y_2326_loc])) [interface] (
+  2393.
+Program Definition g2_map_to_curve_svdw (u_2381 : fp2_t)
+  : both (CEfset ([c_2358_loc ; tv4_2375_loc ; y_2376_loc])) [interface] (
     g2_t) :=
-  ((letb z_2329 : (fp_t '× fp_t) := fp2neg (fp2fromfp (nat_mod_one )) in
-      letb gz_2330 : (fp_t '× fp_t) := g2_curve_func (lift_to_both0 z_2329) in
-      letb tv1_2332 : (fp_t '× fp_t) :=
-        fp2mul (fp2mul (lift_to_both0 u_2331) (lift_to_both0 u_2331)) (
-          lift_to_both0 gz_2330) in
-      letb tv2_2333 : (fp_t '× fp_t) :=
-        fp2add (fp2fromfp (nat_mod_one )) (lift_to_both0 tv1_2332) in
-      letb tv1_2334 : (fp_t '× fp_t) :=
-        fp2sub (fp2fromfp (nat_mod_one )) (lift_to_both0 tv1_2332) in
-      letb tv3_2335 : (fp_t '× fp_t) :=
-        fp2inv (fp2mul (lift_to_both0 tv1_2334) (lift_to_both0 tv2_2333)) in
-      letbm tv4_2325 : (fp_t '× fp_t) loc( tv4_2325_loc ) :=
-        fp2_sqrt (fp2mul (fp2neg (lift_to_both0 gz_2330)) (fp2mul (fp2fromfp (
+  ((letb z_2379 : (fp_t '× fp_t) := fp2neg (fp2fromfp (nat_mod_one )) in
+      letb gz_2380 : (fp_t '× fp_t) := g2_curve_func (lift_to_both0 z_2379) in
+      letb tv1_2382 : (fp_t '× fp_t) :=
+        fp2mul (fp2mul (lift_to_both0 u_2381) (lift_to_both0 u_2381)) (
+          lift_to_both0 gz_2380) in
+      letb tv2_2383 : (fp_t '× fp_t) :=
+        fp2add (fp2fromfp (nat_mod_one )) (lift_to_both0 tv1_2382) in
+      letb tv1_2384 : (fp_t '× fp_t) :=
+        fp2sub (fp2fromfp (nat_mod_one )) (lift_to_both0 tv1_2382) in
+      letb tv3_2385 : (fp_t '× fp_t) :=
+        fp2inv (fp2mul (lift_to_both0 tv1_2384) (lift_to_both0 tv2_2383)) in
+      letbm tv4_2375 : (fp_t '× fp_t) loc( tv4_2375_loc ) :=
+        fp2_sqrt (fp2mul (fp2neg (lift_to_both0 gz_2380)) (fp2mul (fp2fromfp (
                 nat_mod_from_literal (_) (lift_to_both0 (@repr U128 3)))) (
-              fp2mul (lift_to_both0 z_2329) (lift_to_both0 z_2329)))) in
-      letb '(tv4_2325) :=
-        if fp2_sgn0 (lift_to_both0 tv4_2325) :bool_ChoiceEquality
-        then lift_scope (L1 := CEfset ([c_2308_loc ; tv4_2325_loc])) (
-          L2 := CEfset ([c_2308_loc ; tv4_2325_loc ; y_2326_loc])) (
+              fp2mul (lift_to_both0 z_2379) (lift_to_both0 z_2379)))) in
+      letb '(tv4_2375) :=
+        if fp2_sgn0 (lift_to_both0 tv4_2375) :bool_ChoiceEquality
+        then lift_scope (L1 := CEfset ([c_2358_loc ; tv4_2375_loc])) (
+          L2 := CEfset ([c_2358_loc ; tv4_2375_loc ; y_2376_loc])) (
           I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm tv4_2325 loc( tv4_2325_loc ) :=
-            fp2neg (lift_to_both0 tv4_2325) in
+          letbm tv4_2375 loc( tv4_2375_loc ) :=
+            fp2neg (lift_to_both0 tv4_2375) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 tv4_2325)
+            lift_to_both0 tv4_2375)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 tv4_2325)
+          lift_to_both0 tv4_2375)
          in
-      letb tv5_2336 : (fp_t '× fp_t) :=
-        fp2mul (fp2mul (fp2mul (lift_to_both0 u_2331) (
-              lift_to_both0 tv1_2334)) (lift_to_both0 tv3_2335)) (
-          lift_to_both0 tv4_2325) in
-      letb tv6_2337 : (fp_t '× fp_t) :=
+      letb tv5_2386 : (fp_t '× fp_t) :=
+        fp2mul (fp2mul (fp2mul (lift_to_both0 u_2381) (
+              lift_to_both0 tv1_2384)) (lift_to_both0 tv3_2385)) (
+          lift_to_both0 tv4_2375) in
+      letb tv6_2387 : (fp_t '× fp_t) :=
         fp2mul (fp2mul (fp2neg (fp2fromfp (nat_mod_from_literal (_) (
-                  lift_to_both0 (@repr U128 4))))) (lift_to_both0 gz_2330)) (
+                  lift_to_both0 (@repr U128 4))))) (lift_to_both0 gz_2380)) (
           fp2inv (fp2mul (fp2fromfp (nat_mod_from_literal (_) (lift_to_both0 (
-                    @repr U128 3)))) (fp2mul (lift_to_both0 z_2329) (
-                lift_to_both0 z_2329)))) in
-      letb x1_2338 : (fp_t '× fp_t) :=
-        fp2sub (fp2mul (fp2neg (lift_to_both0 z_2329)) (fp2inv (fp2fromfp (
-                nat_mod_two )))) (lift_to_both0 tv5_2336) in
-      letb x2_2339 : (fp_t '× fp_t) :=
-        fp2add (fp2mul (fp2neg (lift_to_both0 z_2329)) (fp2inv (fp2fromfp (
-                nat_mod_two )))) (lift_to_both0 tv5_2336) in
-      letb tv7_2340 : (fp_t '× fp_t) :=
-        fp2mul (fp2mul (lift_to_both0 tv2_2333) (lift_to_both0 tv2_2333)) (
-          lift_to_both0 tv3_2335) in
-      letb x3_2341 : (fp_t '× fp_t) :=
-        fp2add (lift_to_both0 z_2329) (fp2mul (lift_to_both0 tv6_2337) (fp2mul (
-              lift_to_both0 tv7_2340) (lift_to_both0 tv7_2340))) in
-      letb x_2342 : (fp_t '× fp_t) :=
+                    @repr U128 3)))) (fp2mul (lift_to_both0 z_2379) (
+                lift_to_both0 z_2379)))) in
+      letb x1_2388 : (fp_t '× fp_t) :=
+        fp2sub (fp2mul (fp2neg (lift_to_both0 z_2379)) (fp2inv (fp2fromfp (
+                nat_mod_two )))) (lift_to_both0 tv5_2386) in
+      letb x2_2389 : (fp_t '× fp_t) :=
+        fp2add (fp2mul (fp2neg (lift_to_both0 z_2379)) (fp2inv (fp2fromfp (
+                nat_mod_two )))) (lift_to_both0 tv5_2386) in
+      letb tv7_2390 : (fp_t '× fp_t) :=
+        fp2mul (fp2mul (lift_to_both0 tv2_2383) (lift_to_both0 tv2_2383)) (
+          lift_to_both0 tv3_2385) in
+      letb x3_2391 : (fp_t '× fp_t) :=
+        fp2add (lift_to_both0 z_2379) (fp2mul (lift_to_both0 tv6_2387) (fp2mul (
+              lift_to_both0 tv7_2390) (lift_to_both0 tv7_2390))) in
+      letb x_2392 : (fp_t '× fp_t) :=
         if is_pure (I := [interface]) (fp2_is_square (g2_curve_func (
-              lift_to_both0 x1_2338)))
-        then lift_to_both0 x1_2338
+              lift_to_both0 x1_2388)))
+        then lift_to_both0 x1_2388
         else if is_pure (I := [interface]) (fp2_is_square (g2_curve_func (
-              lift_to_both0 x2_2339)))
-        then lift_to_both0 x2_2339
-        else lift_to_both0 x3_2341 in
-      letbm y_2326 : (fp_t '× fp_t) loc( y_2326_loc ) :=
-        fp2_sqrt (g2_curve_func (lift_to_both0 x_2342)) in
-      letb '(y_2326) :=
-        if (fp2_sgn0 (lift_to_both0 u_2331)) !=.? (fp2_sgn0 (
-            lift_to_both0 y_2326)) :bool_ChoiceEquality
+              lift_to_both0 x2_2389)))
+        then lift_to_both0 x2_2389
+        else lift_to_both0 x3_2391 in
+      letbm y_2376 : (fp_t '× fp_t) loc( y_2376_loc ) :=
+        fp2_sqrt (g2_curve_func (lift_to_both0 x_2392)) in
+      letb '(y_2376) :=
+        if (fp2_sgn0 (lift_to_both0 u_2381)) !=.? (fp2_sgn0 (
+            lift_to_both0 y_2376)) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset (
-            [c_2308_loc ; tv4_2325_loc ; y_2326_loc])) (L2 := CEfset (
-            [c_2308_loc ; tv4_2325_loc ; y_2326_loc])) (I1 := [interface]) (
+            [c_2358_loc ; tv4_2375_loc ; y_2376_loc])) (L2 := CEfset (
+            [c_2358_loc ; tv4_2375_loc ; y_2376_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm y_2326 loc( y_2326_loc ) := fp2neg (lift_to_both0 y_2326) in
+          letbm y_2376 loc( y_2376_loc ) := fp2neg (lift_to_both0 y_2376) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 y_2326)
+            lift_to_both0 y_2376)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 y_2326)
+          lift_to_both0 y_2376)
          in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 x_2342,
-          lift_to_both0 y_2326,
+          lift_to_both0 x_2392,
+          lift_to_both0 y_2376,
           lift_to_both0 ((false : bool_ChoiceEquality))
         ))
-      ) : both (CEfset ([c_2308_loc ; tv4_2325_loc ; y_2326_loc])) [interface] (
+      ) : both (CEfset ([c_2358_loc ; tv4_2375_loc ; y_2376_loc])) [interface] (
       g2_t)).
 Fail Next Obligation.
 
@@ -766,33 +766,33 @@ Notation "'psi_inp'" :=(g2_t : ChoiceEquality) (at level 2).
 Notation "'psi_out'" :=(g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'psi_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition PSI : nat :=
-  2352.
-Program Definition psi (p_2346 : g2_t)
-  : both (CEfset ([c_2308_loc])) [interface] (g2_t) :=
-  ((letb c1_2344 : (fp_t '× fp_t) :=
+  2402.
+Program Definition psi (p_2396 : g2_t)
+  : both (CEfset ([c_2358_loc])) [interface] (g2_t) :=
+  ((letb c1_2394 : (fp_t '× fp_t) :=
         fp2inv (fp2exp (prod_b(nat_mod_one , nat_mod_one )) (((
                 nat_mod_zero ) -% (nat_mod_one )) *% (nat_mod_inv (
                 nat_mod_from_literal (_) (lift_to_both0 (@repr U128 3)))))) in
-      letb c2_2345 : (fp_t '× fp_t) :=
+      letb c2_2395 : (fp_t '× fp_t) :=
         fp2inv (fp2exp (prod_b(nat_mod_one , nat_mod_one )) (((
                 nat_mod_zero ) -% (nat_mod_one )) *% (nat_mod_inv (
                 nat_mod_two )))) in
-      letb '(x_2347, y_2348, inf_2349) : (
+      letb '(x_2397, y_2398, inf_2399) : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        lift_to_both0 p_2346 in
-      letb qx_2350 : (fp_t '× fp_t) :=
-        fp2mul (lift_to_both0 c1_2344) (fp2conjugate (lift_to_both0 x_2347)) in
-      letb qy_2351 : (fp_t '× fp_t) :=
-        fp2mul (lift_to_both0 c2_2345) (fp2conjugate (lift_to_both0 y_2348)) in
+        lift_to_both0 p_2396 in
+      letb qx_2400 : (fp_t '× fp_t) :=
+        fp2mul (lift_to_both0 c1_2394) (fp2conjugate (lift_to_both0 x_2397)) in
+      letb qy_2401 : (fp_t '× fp_t) :=
+        fp2mul (lift_to_both0 c2_2395) (fp2conjugate (lift_to_both0 y_2398)) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 qx_2350,
-          lift_to_both0 qy_2351,
-          lift_to_both0 inf_2349
+          lift_to_both0 qx_2400,
+          lift_to_both0 qy_2401,
+          lift_to_both0 inf_2399
         ))
-      ) : both (CEfset ([c_2308_loc])) [interface] (g2_t)).
+      ) : both (CEfset ([c_2358_loc])) [interface] (g2_t)).
 Fail Next Obligation.
 
 
@@ -803,83 +803,83 @@ Notation "'g2_clear_cofactor_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_clear_cofactor_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_CLEAR_COFACTOR : nat :=
-  2367.
-Program Definition g2_clear_cofactor (p_2354 : g2_t)
-  : both (CEfset ([c_2308_loc])) [interface] (g2_t) :=
-  ((letb c1_2353 : scalar_t :=
+  2417.
+Program Definition g2_clear_cofactor (p_2404 : g2_t)
+  : both (CEfset ([c_2358_loc])) [interface] (g2_t) :=
+  ((letb c1_2403 : scalar_t :=
         nat_mod_from_literal (_) (lift_to_both0 (
             @repr U128 15132376222941642752)) in
-      letb t1_2355 : (
+      letb t1_2405 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2mul (lift_to_both0 c1_2353) (lift_to_both0 p_2354) in
-      letb t1_2356 : (
+        g2mul (lift_to_both0 c1_2403) (lift_to_both0 p_2404) in
+      letb t1_2406 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2neg (lift_to_both0 t1_2355) in
-      letb t2_2357 : (
+        g2neg (lift_to_both0 t1_2405) in
+      letb t2_2407 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        psi (lift_to_both0 p_2354) in
-      letb t3_2358 : (
+        psi (lift_to_both0 p_2404) in
+      letb t3_2408 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2double (lift_to_both0 p_2354) in
-      letb t3_2359 : (
+        g2double (lift_to_both0 p_2404) in
+      letb t3_2409 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        psi (psi (lift_to_both0 t3_2358)) in
-      letb t3_2360 : (
+        psi (psi (lift_to_both0 t3_2408)) in
+      letb t3_2410 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2add (lift_to_both0 t3_2359) (g2neg (lift_to_both0 t2_2357)) in
-      letb t2_2361 : (
+        g2add (lift_to_both0 t3_2409) (g2neg (lift_to_both0 t2_2407)) in
+      letb t2_2411 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2add (lift_to_both0 t1_2356) (lift_to_both0 t2_2357) in
-      letb t2_2362 : (
+        g2add (lift_to_both0 t1_2406) (lift_to_both0 t2_2407) in
+      letb t2_2412 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2mul (lift_to_both0 c1_2353) (lift_to_both0 t2_2361) in
-      letb t2_2363 : (
+        g2mul (lift_to_both0 c1_2403) (lift_to_both0 t2_2411) in
+      letb t2_2413 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2neg (lift_to_both0 t2_2362) in
-      letb t3_2364 : (
+        g2neg (lift_to_both0 t2_2412) in
+      letb t3_2414 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2add (lift_to_both0 t3_2360) (lift_to_both0 t2_2363) in
-      letb t3_2365 : (
+        g2add (lift_to_both0 t3_2410) (lift_to_both0 t2_2413) in
+      letb t3_2415 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2add (lift_to_both0 t3_2364) (g2neg (lift_to_both0 t1_2356)) in
-      letb q_2366 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+        g2add (lift_to_both0 t3_2414) (g2neg (lift_to_both0 t1_2406)) in
+      letb q_2416 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2add (lift_to_both0 t3_2365) (g2neg (lift_to_both0 p_2354)) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 q_2366)
-      ) : both (CEfset ([c_2308_loc])) [interface] (g2_t)).
+        g2add (lift_to_both0 t3_2415) (g2neg (lift_to_both0 p_2404)) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 q_2416)
+      ) : both (CEfset ([c_2358_loc])) [interface] (g2_t)).
 Fail Next Obligation.
 
 
@@ -891,36 +891,36 @@ Notation "'g2_hash_to_curve_svdw_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_hash_to_curve_svdw_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_HASH_TO_CURVE_SVDW : nat :=
-  2375.
-Program Definition g2_hash_to_curve_svdw (msg_2368 : byte_seq) (
-    dst_2369 : byte_seq)
+  2425.
+Program Definition g2_hash_to_curve_svdw (msg_2418 : byte_seq) (
+    dst_2419 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; tv4_2325_loc ; y_2326_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; tv4_2375_loc ; y_2376_loc])) [interface] (
     g2_t) :=
-  ((letb u_2370 : seq fp2_t :=
-        fp2_hash_to_field (lift_to_both0 msg_2368) (lift_to_both0 dst_2369) (
+  ((letb u_2420 : seq fp2_t :=
+        fp2_hash_to_field (lift_to_both0 msg_2418) (lift_to_both0 dst_2419) (
           lift_to_both0 (usize 2)) in
-      letb q0_2371 : (
+      letb q0_2421 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2_map_to_curve_svdw (seq_index (u_2370) (lift_to_both0 (usize 0))) in
-      letb q1_2372 : (
+        g2_map_to_curve_svdw (seq_index (u_2420) (lift_to_both0 (usize 0))) in
+      letb q1_2422 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2_map_to_curve_svdw (seq_index (u_2370) (lift_to_both0 (usize 1))) in
-      letb r_2373 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+        g2_map_to_curve_svdw (seq_index (u_2420) (lift_to_both0 (usize 1))) in
+      letb r_2423 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2add (lift_to_both0 q0_2371) (lift_to_both0 q1_2372) in
-      letb p_2374 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+        g2add (lift_to_both0 q0_2421) (lift_to_both0 q1_2422) in
+      letb p_2424 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2_clear_cofactor (lift_to_both0 r_2373) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2374)
+        g2_clear_cofactor (lift_to_both0 r_2423) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2424)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; tv4_2325_loc ; y_2326_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; tv4_2375_loc ; y_2376_loc])) [interface] (
       g2_t)).
 Fail Next Obligation.
 
@@ -933,24 +933,24 @@ Notation "'g2_encode_to_curve_svdw_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_encode_to_curve_svdw_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_ENCODE_TO_CURVE_SVDW : nat :=
-  2381.
-Program Definition g2_encode_to_curve_svdw (msg_2376 : byte_seq) (
-    dst_2377 : byte_seq)
+  2431.
+Program Definition g2_encode_to_curve_svdw (msg_2426 : byte_seq) (
+    dst_2427 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; tv4_2325_loc ; y_2326_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; tv4_2375_loc ; y_2376_loc])) [interface] (
     g2_t) :=
-  ((letb u_2378 : seq fp2_t :=
-        fp2_hash_to_field (lift_to_both0 msg_2376) (lift_to_both0 dst_2377) (
+  ((letb u_2428 : seq fp2_t :=
+        fp2_hash_to_field (lift_to_both0 msg_2426) (lift_to_both0 dst_2427) (
           lift_to_both0 (usize 1)) in
-      letb q_2379 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+      letb q_2429 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2_map_to_curve_svdw (seq_index (u_2378) (lift_to_both0 (usize 0))) in
-      letb p_2380 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+        g2_map_to_curve_svdw (seq_index (u_2428) (lift_to_both0 (usize 0))) in
+      letb p_2430 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2_clear_cofactor (lift_to_both0 q_2379) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2380)
+        g2_clear_cofactor (lift_to_both0 q_2429) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2430)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; tv4_2325_loc ; y_2326_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; tv4_2375_loc ; y_2376_loc])) [interface] (
       g2_t)).
 Fail Next Obligation.
 
@@ -1504,10 +1504,10 @@ Definition g1_yden_k_14_v : arr_fp_t :=
     (secret (@repr U64 4905905684016745359)) : uint64
   ].
 
-Definition y_2383_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2384%nat).
-Definition x1_2382_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2385%nat).
+Definition x1_2432_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2434%nat).
+Definition y_2433_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2435%nat).
 Notation "'g1_simple_swu_iso_inp'" :=(
   fp_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_simple_swu_iso_inp'" :=(fp_t : ChoiceEquality) (at level 2).
@@ -1516,103 +1516,103 @@ Notation "'g1_simple_swu_iso_out'" :=((fp_t '× fp_t
 Notation "'g1_simple_swu_iso_out'" :=((fp_t '× fp_t
   ) : ChoiceEquality) (at level 2).
 Definition G1_SIMPLE_SWU_ISO : nat :=
-  2395.
-Program Definition g1_simple_swu_iso (u_2389 : fp_t)
-  : both (CEfset ([x1_2382_loc ; y_2383_loc])) [interface] ((fp_t '× fp_t)) :=
-  ((letb z_2386 : fp_t :=
+  2445.
+Program Definition g1_simple_swu_iso (u_2439 : fp_t)
+  : both (CEfset ([x1_2432_loc ; y_2433_loc])) [interface] ((fp_t '× fp_t)) :=
+  ((letb z_2436 : fp_t :=
         nat_mod_from_literal (_) (lift_to_both0 (@repr U128 11)) in
-      letb a_2387 : fp_t :=
+      letb a_2437 : fp_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (
             lift_to_both0 g1_iso_a_v)) in
-      letb b_2388 : fp_t :=
+      letb b_2438 : fp_t :=
         nat_mod_from_byte_seq_be (array_to_be_bytes (
             lift_to_both0 g1_iso_b_v)) in
-      letb tv1_2390 : fp_t :=
-        nat_mod_inv ((((lift_to_both0 z_2386) *% (lift_to_both0 z_2386)) *% (
-              nat_mod_exp (lift_to_both0 u_2389) (lift_to_both0 (
-                  @repr U32 4)))) +% (((lift_to_both0 z_2386) *% (
-                lift_to_both0 u_2389)) *% (lift_to_both0 u_2389))) in
-      letbm x1_2382 : fp_t loc( x1_2382_loc ) :=
-        (((nat_mod_zero ) -% (lift_to_both0 b_2388)) *% (nat_mod_inv (
-              lift_to_both0 a_2387))) *% ((nat_mod_one ) +% (
-            lift_to_both0 tv1_2390)) in
-      letb '(x1_2382) :=
-        if (lift_to_both0 tv1_2390) =.? (nat_mod_zero ) :bool_ChoiceEquality
-        then lift_scope (L1 := CEfset ([x1_2382_loc])) (L2 := CEfset (
-            [x1_2382_loc ; y_2383_loc])) (I1 := [interface]) (
+      letb tv1_2440 : fp_t :=
+        nat_mod_inv ((((lift_to_both0 z_2436) *% (lift_to_both0 z_2436)) *% (
+              nat_mod_exp (lift_to_both0 u_2439) (lift_to_both0 (
+                  @repr U32 4)))) +% (((lift_to_both0 z_2436) *% (
+                lift_to_both0 u_2439)) *% (lift_to_both0 u_2439))) in
+      letbm x1_2432 : fp_t loc( x1_2432_loc ) :=
+        (((nat_mod_zero ) -% (lift_to_both0 b_2438)) *% (nat_mod_inv (
+              lift_to_both0 a_2437))) *% ((nat_mod_one ) +% (
+            lift_to_both0 tv1_2440)) in
+      letb '(x1_2432) :=
+        if (lift_to_both0 tv1_2440) =.? (nat_mod_zero ) :bool_ChoiceEquality
+        then lift_scope (L1 := CEfset ([x1_2432_loc])) (L2 := CEfset (
+            [x1_2432_loc ; y_2433_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm x1_2382 loc( x1_2382_loc ) :=
-            (lift_to_both0 b_2388) *% (nat_mod_inv ((lift_to_both0 z_2386) *% (
-                  lift_to_both0 a_2387))) in
+          letbm x1_2432 loc( x1_2432_loc ) :=
+            (lift_to_both0 b_2438) *% (nat_mod_inv ((lift_to_both0 z_2436) *% (
+                  lift_to_both0 a_2437))) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 x1_2382)
+            lift_to_both0 x1_2432)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 x1_2382)
+          lift_to_both0 x1_2432)
          in
-      letb gx1_2391 : fp_t :=
-        ((nat_mod_exp (lift_to_both0 x1_2382) (lift_to_both0 (
-                @repr U32 3))) +% ((lift_to_both0 a_2387) *% (
-              lift_to_both0 x1_2382))) +% (lift_to_both0 b_2388) in
-      letb x2_2392 : fp_t :=
-        (((lift_to_both0 z_2386) *% (lift_to_both0 u_2389)) *% (
-            lift_to_both0 u_2389)) *% (lift_to_both0 x1_2382) in
-      letb gx2_2393 : fp_t :=
-        ((nat_mod_exp (lift_to_both0 x2_2392) (lift_to_both0 (
-                @repr U32 3))) +% ((lift_to_both0 a_2387) *% (
-              lift_to_both0 x2_2392))) +% (lift_to_both0 b_2388) in
-      letb '(x_2394, y_2383) : (fp_t '× fp_t) :=
-        if is_pure (I := [interface]) (fp_is_square (lift_to_both0 gx1_2391))
-        then prod_b(lift_to_both0 x1_2382, fp_sqrt (lift_to_both0 gx1_2391))
-        else prod_b(lift_to_both0 x2_2392, fp_sqrt (lift_to_both0 gx2_2393)) in
-      letb '(y_2383) :=
-        if (fp_sgn0 (lift_to_both0 u_2389)) !=.? (fp_sgn0 (
-            lift_to_both0 y_2383)) :bool_ChoiceEquality
-        then lift_scope (L1 := CEfset ([x1_2382_loc ; y_2383_loc])) (
-          L2 := CEfset ([x1_2382_loc ; y_2383_loc])) (I1 := [interface]) (
+      letb gx1_2441 : fp_t :=
+        ((nat_mod_exp (lift_to_both0 x1_2432) (lift_to_both0 (
+                @repr U32 3))) +% ((lift_to_both0 a_2437) *% (
+              lift_to_both0 x1_2432))) +% (lift_to_both0 b_2438) in
+      letb x2_2442 : fp_t :=
+        (((lift_to_both0 z_2436) *% (lift_to_both0 u_2439)) *% (
+            lift_to_both0 u_2439)) *% (lift_to_both0 x1_2432) in
+      letb gx2_2443 : fp_t :=
+        ((nat_mod_exp (lift_to_both0 x2_2442) (lift_to_both0 (
+                @repr U32 3))) +% ((lift_to_both0 a_2437) *% (
+              lift_to_both0 x2_2442))) +% (lift_to_both0 b_2438) in
+      letb '(x_2444, y_2433) : (fp_t '× fp_t) :=
+        if is_pure (I := [interface]) (fp_is_square (lift_to_both0 gx1_2441))
+        then prod_b(lift_to_both0 x1_2432, fp_sqrt (lift_to_both0 gx1_2441))
+        else prod_b(lift_to_both0 x2_2442, fp_sqrt (lift_to_both0 gx2_2443)) in
+      letb '(y_2433) :=
+        if (fp_sgn0 (lift_to_both0 u_2439)) !=.? (fp_sgn0 (
+            lift_to_both0 y_2433)) :bool_ChoiceEquality
+        then lift_scope (L1 := CEfset ([x1_2432_loc ; y_2433_loc])) (
+          L2 := CEfset ([x1_2432_loc ; y_2433_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm y_2383 loc( y_2383_loc ) :=
-            (nat_mod_zero ) -% (lift_to_both0 y_2383) in
+          letbm y_2433 loc( y_2433_loc ) :=
+            (nat_mod_zero ) -% (lift_to_both0 y_2433) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 y_2383)
+            lift_to_both0 y_2433)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 y_2383)
+          lift_to_both0 y_2433)
          in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 x_2394,
-          lift_to_both0 y_2383
+          lift_to_both0 x_2444,
+          lift_to_both0 y_2433
         ))
-      ) : both (CEfset ([x1_2382_loc ; y_2383_loc])) [interface] ((fp_t '× fp_t
+      ) : both (CEfset ([x1_2432_loc ; y_2433_loc])) [interface] ((fp_t '× fp_t
       ))).
 Fail Next Obligation.
 
-Definition xx_2405_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2409%nat).
-Definition inf_2408_loc : ChoiceEqualityLocation :=
-  (bool_ChoiceEquality ; 2410%nat).
-Definition ynum_k_2398_loc : ChoiceEqualityLocation :=
-  (seq fp_t ; 2411%nat).
-Definition xden_k_2397_loc : ChoiceEqualityLocation :=
-  (seq fp_t ; 2412%nat).
-Definition xx_2407_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2413%nat).
-Definition xx_2403_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2414%nat).
-Definition yden_k_2399_loc : ChoiceEqualityLocation :=
-  (seq fp_t ; 2415%nat).
-Definition xnum_2400_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2416%nat).
-Definition ynum_2404_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2417%nat).
-Definition xx_2401_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2418%nat).
-Definition xnum_k_2396_loc : ChoiceEqualityLocation :=
-  (seq fp_t ; 2419%nat).
-Definition yden_2406_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2420%nat).
-Definition xden_2402_loc : ChoiceEqualityLocation :=
-  (fp_t ; 2421%nat).
+Definition ynum_2454_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2459%nat).
+Definition yden_k_2449_loc : ChoiceEqualityLocation :=
+  (seq fp_t ; 2460%nat).
+Definition inf_2458_loc : ChoiceEqualityLocation :=
+  (bool_ChoiceEquality ; 2461%nat).
+Definition xnum_k_2446_loc : ChoiceEqualityLocation :=
+  (seq fp_t ; 2462%nat).
+Definition yden_2456_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2463%nat).
+Definition xden_2452_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2464%nat).
+Definition ynum_k_2448_loc : ChoiceEqualityLocation :=
+  (seq fp_t ; 2465%nat).
+Definition xden_k_2447_loc : ChoiceEqualityLocation :=
+  (seq fp_t ; 2466%nat).
+Definition xnum_2450_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2467%nat).
+Definition xx_2453_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2468%nat).
+Definition xx_2457_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2469%nat).
+Definition xx_2451_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2470%nat).
+Definition xx_2455_loc : ChoiceEqualityLocation :=
+  (fp_t ; 2471%nat).
 Notation "'g1_isogeny_map_inp'" :=(
   fp_t '× fp_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_isogeny_map_inp'" :=(fp_t '× fp_t : ChoiceEquality) (at level 2).
@@ -1620,338 +1620,338 @@ Notation "'g1_isogeny_map_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_isogeny_map_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_ISOGENY_MAP : nat :=
-  2430.
-Program Definition g1_isogeny_map (x_2423 : fp_t) (y_2428 : fp_t)
+  2480.
+Program Definition g1_isogeny_map (x_2473 : fp_t) (y_2478 : fp_t)
   : both (CEfset (
-      [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+      [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
     g1_t) :=
-  ((letbm xnum_k_2396 : seq fp_t loc( xnum_k_2396_loc ) :=
+  ((letbm xnum_k_2446 : seq fp_t loc( xnum_k_2446_loc ) :=
         seq_new_ (default : fp_t) (lift_to_both0 (usize 12)) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 0)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 0)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_0_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 1)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 1)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_1_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 2)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 2)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_2_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 3)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 3)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_3_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 4)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 4)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_4_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 5)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 5)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_5_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 6)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 6)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_6_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 7)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 7)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_7_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 8)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 8)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_8_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 9)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 9)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_9_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 10)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 10)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_10_v)))) in
-      letb xnum_k_2396 : seq fp_t :=
-        seq_upd xnum_k_2396 (lift_to_both0 (usize 11)) (is_pure (
+      letb xnum_k_2446 : seq fp_t :=
+        seq_upd xnum_k_2446 (lift_to_both0 (usize 11)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xnum_k_11_v)))) in
-      letbm xden_k_2397 : seq fp_t loc( xden_k_2397_loc ) :=
+      letbm xden_k_2447 : seq fp_t loc( xden_k_2447_loc ) :=
         seq_new_ (default : fp_t) (lift_to_both0 (usize 10)) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 0)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 0)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_0_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 1)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 1)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_1_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 2)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 2)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_2_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 3)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 3)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_3_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 4)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 4)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_4_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 5)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 5)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_5_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 6)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 6)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_6_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 7)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 7)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_7_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 8)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 8)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_8_v)))) in
-      letb xden_k_2397 : seq fp_t :=
-        seq_upd xden_k_2397 (lift_to_both0 (usize 9)) (is_pure (
+      letb xden_k_2447 : seq fp_t :=
+        seq_upd xden_k_2447 (lift_to_both0 (usize 9)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_xden_k_9_v)))) in
-      letbm ynum_k_2398 : seq fp_t loc( ynum_k_2398_loc ) :=
+      letbm ynum_k_2448 : seq fp_t loc( ynum_k_2448_loc ) :=
         seq_new_ (default : fp_t) (lift_to_both0 (usize 16)) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 0)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 0)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_0_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 1)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 1)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_1_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 2)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 2)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_2_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 3)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 3)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_3_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 4)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 4)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_4_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 5)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 5)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_5_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 6)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 6)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_6_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 7)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 7)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_7_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 8)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 8)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_8_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 9)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 9)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_9_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 10)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 10)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_10_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 11)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 11)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_11_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 12)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 12)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_12_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 13)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 13)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_13_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 14)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 14)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_14_v)))) in
-      letb ynum_k_2398 : seq fp_t :=
-        seq_upd ynum_k_2398 (lift_to_both0 (usize 15)) (is_pure (
+      letb ynum_k_2448 : seq fp_t :=
+        seq_upd ynum_k_2448 (lift_to_both0 (usize 15)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_ynum_k_15_v)))) in
-      letbm yden_k_2399 : seq fp_t loc( yden_k_2399_loc ) :=
+      letbm yden_k_2449 : seq fp_t loc( yden_k_2449_loc ) :=
         seq_new_ (default : fp_t) (lift_to_both0 (usize 15)) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 0)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 0)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_0_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 1)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 1)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_1_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 2)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 2)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_2_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 3)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 3)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_3_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 4)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 4)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_4_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 5)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 5)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_5_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 6)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 6)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_6_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 7)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 7)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_7_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 8)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 8)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_8_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 9)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 9)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_9_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 10)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 10)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_10_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 11)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 11)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_11_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 12)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 12)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_12_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 13)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 13)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_13_v)))) in
-      letb yden_k_2399 : seq fp_t :=
-        seq_upd yden_k_2399 (lift_to_both0 (usize 14)) (is_pure (
+      letb yden_k_2449 : seq fp_t :=
+        seq_upd yden_k_2449 (lift_to_both0 (usize 14)) (is_pure (
             nat_mod_from_byte_seq_be (array_to_be_bytes (
                 lift_to_both0 g1_yden_k_14_v)))) in
-      letbm xnum_2400 : fp_t loc( xnum_2400_loc ) := nat_mod_zero  in
-      letbm xx_2401 : fp_t loc( xx_2401_loc ) := nat_mod_one  in
-      letb '(xnum_2400, xx_2401) :=
+      letbm xnum_2450 : fp_t loc( xnum_2450_loc ) := nat_mod_zero  in
+      letbm xx_2451 : fp_t loc( xx_2451_loc ) := nat_mod_one  in
+      letb '(xnum_2450, xx_2451) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 xnum_k_2396)) prod_ce(xnum_2400, xx_2401) (L := (
+              lift_to_both0 xnum_k_2446)) prod_ce(xnum_2450, xx_2451) (L := (
               CEfset (
-                [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc]))) (
-            I := [interface]) (fun i_2422 '(xnum_2400, xx_2401) =>
-            letbm xnum_2400 loc( xnum_2400_loc ) :=
-              (lift_to_both0 xnum_2400) +% ((lift_to_both0 xx_2401) *% (
-                  seq_index (xnum_k_2396) (lift_to_both0 i_2422))) in
-            letbm xx_2401 loc( xx_2401_loc ) :=
-              (lift_to_both0 xx_2401) *% (lift_to_both0 x_2423) in
+                [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc]))) (
+            I := [interface]) (fun i_2472 '(xnum_2450, xx_2451) =>
+            letbm xnum_2450 loc( xnum_2450_loc ) :=
+              (lift_to_both0 xnum_2450) +% ((lift_to_both0 xx_2451) *% (
+                  seq_index (xnum_k_2446) (lift_to_both0 i_2472))) in
+            letbm xx_2451 loc( xx_2451_loc ) :=
+              (lift_to_both0 xx_2451) *% (lift_to_both0 x_2473) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 xnum_2400,
-                lift_to_both0 xx_2401
+                lift_to_both0 xnum_2450,
+                lift_to_both0 xx_2451
               ))
             ) in
-      letbm xden_2402 : fp_t loc( xden_2402_loc ) := nat_mod_zero  in
-      letbm xx_2403 : fp_t loc( xx_2403_loc ) := nat_mod_one  in
-      letb '(xden_2402, xx_2403) :=
+      letbm xden_2452 : fp_t loc( xden_2452_loc ) := nat_mod_zero  in
+      letbm xx_2453 : fp_t loc( xx_2453_loc ) := nat_mod_one  in
+      letb '(xden_2452, xx_2453) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 xden_k_2397)) prod_ce(xden_2402, xx_2403) (L := (
+              lift_to_both0 xden_k_2447)) prod_ce(xden_2452, xx_2453) (L := (
               CEfset (
-                [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc]))) (
-            I := [interface]) (fun i_2424 '(xden_2402, xx_2403) =>
-            letbm xden_2402 loc( xden_2402_loc ) :=
-              (lift_to_both0 xden_2402) +% ((lift_to_both0 xx_2403) *% (
-                  seq_index (xden_k_2397) (lift_to_both0 i_2424))) in
-            letbm xx_2403 loc( xx_2403_loc ) :=
-              (lift_to_both0 xx_2403) *% (lift_to_both0 x_2423) in
+                [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc]))) (
+            I := [interface]) (fun i_2474 '(xden_2452, xx_2453) =>
+            letbm xden_2452 loc( xden_2452_loc ) :=
+              (lift_to_both0 xden_2452) +% ((lift_to_both0 xx_2453) *% (
+                  seq_index (xden_k_2447) (lift_to_both0 i_2474))) in
+            letbm xx_2453 loc( xx_2453_loc ) :=
+              (lift_to_both0 xx_2453) *% (lift_to_both0 x_2473) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 xden_2402,
-                lift_to_both0 xx_2403
+                lift_to_both0 xden_2452,
+                lift_to_both0 xx_2453
               ))
             ) in
-      letbm xden_2402 loc( xden_2402_loc ) :=
-        (lift_to_both0 xden_2402) +% (lift_to_both0 xx_2403) in
-      letbm ynum_2404 : fp_t loc( ynum_2404_loc ) := nat_mod_zero  in
-      letbm xx_2405 : fp_t loc( xx_2405_loc ) := nat_mod_one  in
-      letb '(ynum_2404, xx_2405) :=
+      letbm xden_2452 loc( xden_2452_loc ) :=
+        (lift_to_both0 xden_2452) +% (lift_to_both0 xx_2453) in
+      letbm ynum_2454 : fp_t loc( ynum_2454_loc ) := nat_mod_zero  in
+      letbm xx_2455 : fp_t loc( xx_2455_loc ) := nat_mod_one  in
+      letb '(ynum_2454, xx_2455) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 ynum_k_2398)) prod_ce(ynum_2404, xx_2405) (L := (
+              lift_to_both0 ynum_k_2448)) prod_ce(ynum_2454, xx_2455) (L := (
               CEfset (
-                [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc]))) (
-            I := [interface]) (fun i_2425 '(ynum_2404, xx_2405) =>
-            letbm ynum_2404 loc( ynum_2404_loc ) :=
-              (lift_to_both0 ynum_2404) +% ((lift_to_both0 xx_2405) *% (
-                  seq_index (ynum_k_2398) (lift_to_both0 i_2425))) in
-            letbm xx_2405 loc( xx_2405_loc ) :=
-              (lift_to_both0 xx_2405) *% (lift_to_both0 x_2423) in
+                [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc]))) (
+            I := [interface]) (fun i_2475 '(ynum_2454, xx_2455) =>
+            letbm ynum_2454 loc( ynum_2454_loc ) :=
+              (lift_to_both0 ynum_2454) +% ((lift_to_both0 xx_2455) *% (
+                  seq_index (ynum_k_2448) (lift_to_both0 i_2475))) in
+            letbm xx_2455 loc( xx_2455_loc ) :=
+              (lift_to_both0 xx_2455) *% (lift_to_both0 x_2473) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 ynum_2404,
-                lift_to_both0 xx_2405
+                lift_to_both0 ynum_2454,
+                lift_to_both0 xx_2455
               ))
             ) in
-      letbm yden_2406 : fp_t loc( yden_2406_loc ) := nat_mod_zero  in
-      letbm xx_2407 : fp_t loc( xx_2407_loc ) := nat_mod_one  in
-      letb '(yden_2406, xx_2407) :=
+      letbm yden_2456 : fp_t loc( yden_2456_loc ) := nat_mod_zero  in
+      letbm xx_2457 : fp_t loc( xx_2457_loc ) := nat_mod_one  in
+      letb '(yden_2456, xx_2457) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 yden_k_2399)) prod_ce(yden_2406, xx_2407) (L := (
+              lift_to_both0 yden_k_2449)) prod_ce(yden_2456, xx_2457) (L := (
               CEfset (
-                [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc]))) (
-            I := [interface]) (fun i_2426 '(yden_2406, xx_2407) =>
-            letbm yden_2406 loc( yden_2406_loc ) :=
-              (lift_to_both0 yden_2406) +% ((lift_to_both0 xx_2407) *% (
-                  seq_index (yden_k_2399) (lift_to_both0 i_2426))) in
-            letbm xx_2407 loc( xx_2407_loc ) :=
-              (lift_to_both0 xx_2407) *% (lift_to_both0 x_2423) in
+                [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc]))) (
+            I := [interface]) (fun i_2476 '(yden_2456, xx_2457) =>
+            letbm yden_2456 loc( yden_2456_loc ) :=
+              (lift_to_both0 yden_2456) +% ((lift_to_both0 xx_2457) *% (
+                  seq_index (yden_k_2449) (lift_to_both0 i_2476))) in
+            letbm xx_2457 loc( xx_2457_loc ) :=
+              (lift_to_both0 xx_2457) *% (lift_to_both0 x_2473) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 yden_2406,
-                lift_to_both0 xx_2407
+                lift_to_both0 yden_2456,
+                lift_to_both0 xx_2457
               ))
             ) in
-      letbm yden_2406 loc( yden_2406_loc ) :=
-        (lift_to_both0 yden_2406) +% (lift_to_both0 xx_2407) in
-      letb xr_2427 : fp_t :=
-        (lift_to_both0 xnum_2400) *% (nat_mod_inv (lift_to_both0 xden_2402)) in
-      letb yr_2429 : fp_t :=
-        ((lift_to_both0 y_2428) *% (lift_to_both0 ynum_2404)) *% (nat_mod_inv (
-            lift_to_both0 yden_2406)) in
-      letbm inf_2408 : bool_ChoiceEquality loc( inf_2408_loc ) :=
+      letbm yden_2456 loc( yden_2456_loc ) :=
+        (lift_to_both0 yden_2456) +% (lift_to_both0 xx_2457) in
+      letb xr_2477 : fp_t :=
+        (lift_to_both0 xnum_2450) *% (nat_mod_inv (lift_to_both0 xden_2452)) in
+      letb yr_2479 : fp_t :=
+        ((lift_to_both0 y_2478) *% (lift_to_both0 ynum_2454)) *% (nat_mod_inv (
+            lift_to_both0 yden_2456)) in
+      letbm inf_2458 : bool_ChoiceEquality loc( inf_2458_loc ) :=
         lift_to_both0 ((false : bool_ChoiceEquality)) in
-      letb '(inf_2408) :=
-        if ((lift_to_both0 xden_2402) =.? (nat_mod_zero )) || ((
-            lift_to_both0 yden_2406) =.? (nat_mod_zero )) :bool_ChoiceEquality
+      letb '(inf_2458) :=
+        if ((lift_to_both0 xden_2452) =.? (nat_mod_zero )) || ((
+            lift_to_both0 yden_2456) =.? (nat_mod_zero )) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset (
-            [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) (
+            [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) (
           L2 := CEfset (
-            [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) (
+            [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) (
           I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm inf_2408 loc( inf_2408_loc ) :=
+          letbm inf_2458 loc( inf_2458_loc ) :=
             lift_to_both0 ((true : bool_ChoiceEquality)) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 inf_2408)
+            lift_to_both0 inf_2458)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 inf_2408)
+          lift_to_both0 inf_2458)
          in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 xr_2427,
-          lift_to_both0 yr_2429,
-          lift_to_both0 inf_2408
+          lift_to_both0 xr_2477,
+          lift_to_both0 yr_2479,
+          lift_to_both0 inf_2458
         ))
       ) : both (CEfset (
-        [xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+        [xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
       g1_t)).
 Fail Next Obligation.
 
@@ -1963,18 +1963,18 @@ Notation "'g1_map_to_curve_sswu_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_map_to_curve_sswu_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_MAP_TO_CURVE_SSWU : nat :=
-  2435.
-Program Definition g1_map_to_curve_sswu (u_2431 : fp_t)
+  2485.
+Program Definition g1_map_to_curve_sswu (u_2481 : fp_t)
   : both (CEfset (
-      [x1_2382_loc ; y_2383_loc ; xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+      [x1_2432_loc ; y_2433_loc ; xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
     g1_t) :=
-  ((letb '(xp_2432, yp_2433) : (fp_t '× fp_t) :=
-        g1_simple_swu_iso (lift_to_both0 u_2431) in
-      letb p_2434 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_isogeny_map (lift_to_both0 xp_2432) (lift_to_both0 yp_2433) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2434)
+  ((letb '(xp_2482, yp_2483) : (fp_t '× fp_t) :=
+        g1_simple_swu_iso (lift_to_both0 u_2481) in
+      letb p_2484 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_isogeny_map (lift_to_both0 xp_2482) (lift_to_both0 yp_2483) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2484)
       ) : both (CEfset (
-        [x1_2382_loc ; y_2383_loc ; xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+        [x1_2432_loc ; y_2433_loc ; xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
       g1_t)).
 Fail Next Obligation.
 
@@ -1987,26 +1987,26 @@ Notation "'g1_hash_to_curve_sswu_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_hash_to_curve_sswu_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_HASH_TO_CURVE_SSWU : nat :=
-  2443.
-Program Definition g1_hash_to_curve_sswu (msg_2436 : byte_seq) (
-    dst_2437 : byte_seq)
+  2493.
+Program Definition g1_hash_to_curve_sswu (msg_2486 : byte_seq) (
+    dst_2487 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; x1_2382_loc ; y_2383_loc ; xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; x1_2432_loc ; y_2433_loc ; xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
     g1_t) :=
-  ((letb u_2438 : seq fp_t :=
-        fp_hash_to_field (lift_to_both0 msg_2436) (lift_to_both0 dst_2437) (
+  ((letb u_2488 : seq fp_t :=
+        fp_hash_to_field (lift_to_both0 msg_2486) (lift_to_both0 dst_2487) (
           lift_to_both0 (usize 2)) in
-      letb q0_2439 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_map_to_curve_sswu (seq_index (u_2438) (lift_to_both0 (usize 0))) in
-      letb q1_2440 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_map_to_curve_sswu (seq_index (u_2438) (lift_to_both0 (usize 1))) in
-      letb r_2441 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1add (lift_to_both0 q0_2439) (lift_to_both0 q1_2440) in
-      letb p_2442 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_clear_cofactor (lift_to_both0 r_2441) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2442)
+      letb q0_2489 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_map_to_curve_sswu (seq_index (u_2488) (lift_to_both0 (usize 0))) in
+      letb q1_2490 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_map_to_curve_sswu (seq_index (u_2488) (lift_to_both0 (usize 1))) in
+      letb r_2491 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1add (lift_to_both0 q0_2489) (lift_to_both0 q1_2490) in
+      letb p_2492 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_clear_cofactor (lift_to_both0 r_2491) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2492)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; x1_2382_loc ; y_2383_loc ; xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; x1_2432_loc ; y_2433_loc ; xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
       g1_t)).
 Fail Next Obligation.
 
@@ -2019,22 +2019,22 @@ Notation "'g1_encode_to_curve_sswu_out'" :=(
   g1_t : choice_type) (in custom pack_type at level 2).
 Notation "'g1_encode_to_curve_sswu_out'" :=(g1_t : ChoiceEquality) (at level 2).
 Definition G1_ENCODE_TO_CURVE_SSWU : nat :=
-  2449.
-Program Definition g1_encode_to_curve_sswu (msg_2444 : byte_seq) (
-    dst_2445 : byte_seq)
+  2499.
+Program Definition g1_encode_to_curve_sswu (msg_2494 : byte_seq) (
+    dst_2495 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; x1_2382_loc ; y_2383_loc ; xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; x1_2432_loc ; y_2433_loc ; xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
     g1_t) :=
-  ((letb u_2446 : seq fp_t :=
-        fp_hash_to_field (lift_to_both0 msg_2444) (lift_to_both0 dst_2445) (
+  ((letb u_2496 : seq fp_t :=
+        fp_hash_to_field (lift_to_both0 msg_2494) (lift_to_both0 dst_2495) (
           lift_to_both0 (usize 1)) in
-      letb q_2447 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_map_to_curve_sswu (seq_index (u_2446) (lift_to_both0 (usize 0))) in
-      letb p_2448 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
-        g1_clear_cofactor (lift_to_both0 q_2447) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2448)
+      letb q_2497 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_map_to_curve_sswu (seq_index (u_2496) (lift_to_both0 (usize 0))) in
+      letb p_2498 : (fp_t '× fp_t '× bool_ChoiceEquality) :=
+        g1_clear_cofactor (lift_to_both0 q_2497) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2498)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2218_loc ; x1_2382_loc ; y_2383_loc ; xnum_k_2396_loc ; xden_k_2397_loc ; ynum_k_2398_loc ; yden_k_2399_loc ; xnum_2400_loc ; xx_2401_loc ; xden_2402_loc ; xx_2403_loc ; ynum_2404_loc ; xx_2405_loc ; yden_2406_loc ; xx_2407_loc ; inf_2408_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2268_loc ; x1_2432_loc ; y_2433_loc ; xnum_k_2446_loc ; xden_k_2447_loc ; ynum_k_2448_loc ; yden_k_2449_loc ; xnum_2450_loc ; xx_2451_loc ; xden_2452_loc ; xx_2453_loc ; ynum_2454_loc ; xx_2455_loc ; yden_2456_loc ; xx_2457_loc ; inf_2458_loc])) [interface] (
       g1_t)).
 Fail Next Obligation.
 
@@ -2188,10 +2188,10 @@ Definition g2_yden_k_2_i_v : arr_fp_t :=
     (secret (@repr U64 13402431016077863577)) : uint64
   ].
 
-Definition x1_2450_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2452%nat).
-Definition y_2451_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2453%nat).
+Definition y_2501_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2502%nat).
+Definition x1_2500_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2503%nat).
 Notation "'g2_simple_swu_iso_inp'" :=(
   fp2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_simple_swu_iso_inp'" :=(fp2_t : ChoiceEquality) (at level 2).
@@ -2200,115 +2200,115 @@ Notation "'g2_simple_swu_iso_out'" :=((fp2_t '× fp2_t
 Notation "'g2_simple_swu_iso_out'" :=((fp2_t '× fp2_t
   ) : ChoiceEquality) (at level 2).
 Definition G2_SIMPLE_SWU_ISO : nat :=
-  2463.
-Program Definition g2_simple_swu_iso (u_2457 : fp2_t)
-  : both (CEfset ([c_2308_loc ; x1_2450_loc ; y_2451_loc])) [interface] ((
+  2513.
+Program Definition g2_simple_swu_iso (u_2507 : fp2_t)
+  : both (CEfset ([c_2358_loc ; x1_2500_loc ; y_2501_loc])) [interface] ((
       fp2_t '×
       fp2_t
     )) :=
-  ((letb z_2454 : (fp_t '× fp_t) :=
+  ((letb z_2504 : (fp_t '× fp_t) :=
         fp2neg (prod_b(nat_mod_two , nat_mod_one )) in
-      letb a_2455 : (fp_t '× fp_t) :=
+      letb a_2505 : (fp_t '× fp_t) :=
         prod_b(
           nat_mod_zero ,
           nat_mod_from_literal (_) (lift_to_both0 (@repr U128 240))
         ) in
-      letb b_2456 : (fp_t '× fp_t) :=
+      letb b_2506 : (fp_t '× fp_t) :=
         prod_b(
           nat_mod_from_literal (_) (lift_to_both0 (@repr U128 1012)),
           nat_mod_from_literal (_) (lift_to_both0 (@repr U128 1012))
         ) in
-      letb tv1_2458 : (fp_t '× fp_t) :=
-        fp2inv (fp2add (fp2mul (fp2mul (lift_to_both0 z_2454) (
-                lift_to_both0 z_2454)) (fp2mul (fp2mul (lift_to_both0 u_2457) (
-                  lift_to_both0 u_2457)) (fp2mul (lift_to_both0 u_2457) (
-                  lift_to_both0 u_2457)))) (fp2mul (lift_to_both0 z_2454) (
-              fp2mul (lift_to_both0 u_2457) (lift_to_both0 u_2457)))) in
-      letbm x1_2450 : (fp_t '× fp_t) loc( x1_2450_loc ) :=
-        fp2mul (fp2mul (fp2neg (lift_to_both0 b_2456)) (fp2inv (
-              lift_to_both0 a_2455))) (fp2add (fp2fromfp (nat_mod_one )) (
-            lift_to_both0 tv1_2458)) in
-      letb '(x1_2450) :=
-        if (lift_to_both0 tv1_2458) =.? (fp2zero ) :bool_ChoiceEquality
-        then lift_scope (L1 := CEfset ([x1_2450_loc])) (L2 := CEfset (
-            [c_2308_loc ; x1_2450_loc ; y_2451_loc])) (I1 := [interface]) (
+      letb tv1_2508 : (fp_t '× fp_t) :=
+        fp2inv (fp2add (fp2mul (fp2mul (lift_to_both0 z_2504) (
+                lift_to_both0 z_2504)) (fp2mul (fp2mul (lift_to_both0 u_2507) (
+                  lift_to_both0 u_2507)) (fp2mul (lift_to_both0 u_2507) (
+                  lift_to_both0 u_2507)))) (fp2mul (lift_to_both0 z_2504) (
+              fp2mul (lift_to_both0 u_2507) (lift_to_both0 u_2507)))) in
+      letbm x1_2500 : (fp_t '× fp_t) loc( x1_2500_loc ) :=
+        fp2mul (fp2mul (fp2neg (lift_to_both0 b_2506)) (fp2inv (
+              lift_to_both0 a_2505))) (fp2add (fp2fromfp (nat_mod_one )) (
+            lift_to_both0 tv1_2508)) in
+      letb '(x1_2500) :=
+        if (lift_to_both0 tv1_2508) =.? (fp2zero ) :bool_ChoiceEquality
+        then lift_scope (L1 := CEfset ([x1_2500_loc])) (L2 := CEfset (
+            [c_2358_loc ; x1_2500_loc ; y_2501_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm x1_2450 loc( x1_2450_loc ) :=
-            fp2mul (lift_to_both0 b_2456) (fp2inv (fp2mul (
-                  lift_to_both0 z_2454) (lift_to_both0 a_2455))) in
+          letbm x1_2500 loc( x1_2500_loc ) :=
+            fp2mul (lift_to_both0 b_2506) (fp2inv (fp2mul (
+                  lift_to_both0 z_2504) (lift_to_both0 a_2505))) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 x1_2450)
+            lift_to_both0 x1_2500)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 x1_2450)
+          lift_to_both0 x1_2500)
          in
-      letb gx1_2459 : (fp_t '× fp_t) :=
-        fp2add (fp2add (fp2mul (fp2mul (lift_to_both0 x1_2450) (
-                lift_to_both0 x1_2450)) (lift_to_both0 x1_2450)) (fp2mul (
-              lift_to_both0 a_2455) (lift_to_both0 x1_2450))) (
-          lift_to_both0 b_2456) in
-      letb x2_2460 : (fp_t '× fp_t) :=
-        fp2mul (fp2mul (lift_to_both0 z_2454) (fp2mul (lift_to_both0 u_2457) (
-              lift_to_both0 u_2457))) (lift_to_both0 x1_2450) in
-      letb gx2_2461 : (fp_t '× fp_t) :=
-        fp2add (fp2add (fp2mul (fp2mul (lift_to_both0 x2_2460) (
-                lift_to_both0 x2_2460)) (lift_to_both0 x2_2460)) (fp2mul (
-              lift_to_both0 a_2455) (lift_to_both0 x2_2460))) (
-          lift_to_both0 b_2456) in
-      letb '(x_2462, y_2451) : ((fp_t '× fp_t) '× fp2_t) :=
-        if is_pure (I := [interface]) (fp2_is_square (lift_to_both0 gx1_2459))
-        then prod_b(lift_to_both0 x1_2450, fp2_sqrt (lift_to_both0 gx1_2459))
-        else prod_b(lift_to_both0 x2_2460, fp2_sqrt (lift_to_both0 gx2_2461)) in
-      letb '(y_2451) :=
-        if (fp2_sgn0 (lift_to_both0 u_2457)) !=.? (fp2_sgn0 (
-            lift_to_both0 y_2451)) :bool_ChoiceEquality
+      letb gx1_2509 : (fp_t '× fp_t) :=
+        fp2add (fp2add (fp2mul (fp2mul (lift_to_both0 x1_2500) (
+                lift_to_both0 x1_2500)) (lift_to_both0 x1_2500)) (fp2mul (
+              lift_to_both0 a_2505) (lift_to_both0 x1_2500))) (
+          lift_to_both0 b_2506) in
+      letb x2_2510 : (fp_t '× fp_t) :=
+        fp2mul (fp2mul (lift_to_both0 z_2504) (fp2mul (lift_to_both0 u_2507) (
+              lift_to_both0 u_2507))) (lift_to_both0 x1_2500) in
+      letb gx2_2511 : (fp_t '× fp_t) :=
+        fp2add (fp2add (fp2mul (fp2mul (lift_to_both0 x2_2510) (
+                lift_to_both0 x2_2510)) (lift_to_both0 x2_2510)) (fp2mul (
+              lift_to_both0 a_2505) (lift_to_both0 x2_2510))) (
+          lift_to_both0 b_2506) in
+      letb '(x_2512, y_2501) : ((fp_t '× fp_t) '× fp2_t) :=
+        if is_pure (I := [interface]) (fp2_is_square (lift_to_both0 gx1_2509))
+        then prod_b(lift_to_both0 x1_2500, fp2_sqrt (lift_to_both0 gx1_2509))
+        else prod_b(lift_to_both0 x2_2510, fp2_sqrt (lift_to_both0 gx2_2511)) in
+      letb '(y_2501) :=
+        if (fp2_sgn0 (lift_to_both0 u_2507)) !=.? (fp2_sgn0 (
+            lift_to_both0 y_2501)) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset (
-            [c_2308_loc ; x1_2450_loc ; y_2451_loc])) (L2 := CEfset (
-            [c_2308_loc ; x1_2450_loc ; y_2451_loc])) (I1 := [interface]) (
+            [c_2358_loc ; x1_2500_loc ; y_2501_loc])) (L2 := CEfset (
+            [c_2358_loc ; x1_2500_loc ; y_2501_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm y_2451 loc( y_2451_loc ) := fp2neg (lift_to_both0 y_2451) in
+          letbm y_2501 loc( y_2501_loc ) := fp2neg (lift_to_both0 y_2501) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 y_2451)
+            lift_to_both0 y_2501)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 y_2451)
+          lift_to_both0 y_2501)
          in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 x_2462,
-          lift_to_both0 y_2451
+          lift_to_both0 x_2512,
+          lift_to_both0 y_2501
         ))
-      ) : both (CEfset ([c_2308_loc ; x1_2450_loc ; y_2451_loc])) [interface] ((
+      ) : both (CEfset ([c_2358_loc ; x1_2500_loc ; y_2501_loc])) [interface] ((
         fp2_t '×
         fp2_t
       ))).
 Fail Next Obligation.
 
-Definition xnum_2468_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2477%nat).
-Definition xnum_k_2464_loc : ChoiceEqualityLocation :=
-  (seq (fp_t '× fp_t) ; 2478%nat).
-Definition xden_k_2465_loc : ChoiceEqualityLocation :=
-  (seq (fp_t '× fp_t) ; 2479%nat).
-Definition yden_2474_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2480%nat).
-Definition ynum_2472_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2481%nat).
-Definition xx_2473_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2482%nat).
-Definition xden_2470_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2483%nat).
-Definition yden_k_2467_loc : ChoiceEqualityLocation :=
-  (seq (fp_t '× fp_t) ; 2484%nat).
-Definition inf_2476_loc : ChoiceEqualityLocation :=
-  (bool_ChoiceEquality ; 2485%nat).
-Definition xx_2471_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2486%nat).
-Definition xx_2469_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2487%nat).
-Definition xx_2475_loc : ChoiceEqualityLocation :=
-  ((fp_t '× fp_t) ; 2488%nat).
-Definition ynum_k_2466_loc : ChoiceEqualityLocation :=
-  (seq (fp_t '× fp_t) ; 2489%nat).
+Definition xnum_k_2514_loc : ChoiceEqualityLocation :=
+  (seq (fp_t '× fp_t) ; 2527%nat).
+Definition yden_k_2517_loc : ChoiceEqualityLocation :=
+  (seq (fp_t '× fp_t) ; 2528%nat).
+Definition xx_2519_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2529%nat).
+Definition xden_2520_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2530%nat).
+Definition xx_2523_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2531%nat).
+Definition ynum_2522_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2532%nat).
+Definition inf_2526_loc : ChoiceEqualityLocation :=
+  (bool_ChoiceEquality ; 2533%nat).
+Definition xx_2525_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2534%nat).
+Definition ynum_k_2516_loc : ChoiceEqualityLocation :=
+  (seq (fp_t '× fp_t) ; 2535%nat).
+Definition xden_k_2515_loc : ChoiceEqualityLocation :=
+  (seq (fp_t '× fp_t) ; 2536%nat).
+Definition xx_2521_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2537%nat).
+Definition yden_2524_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2538%nat).
+Definition xnum_2518_loc : ChoiceEqualityLocation :=
+  ((fp_t '× fp_t) ; 2539%nat).
 Notation "'g2_isogeny_map_inp'" :=(
   fp2_t '× fp2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_isogeny_map_inp'" :=(
@@ -2317,213 +2317,213 @@ Notation "'g2_isogeny_map_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_isogeny_map_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_ISOGENY_MAP : nat :=
-  2498.
-Program Definition g2_isogeny_map (x_2491 : fp2_t) (y_2496 : fp2_t)
+  2548.
+Program Definition g2_isogeny_map (x_2541 : fp2_t) (y_2546 : fp2_t)
   : both (CEfset (
-      [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+      [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
     g2_t) :=
-  ((letbm xnum_k_2464 : seq (fp_t '× fp_t) loc( xnum_k_2464_loc ) :=
+  ((letbm xnum_k_2514 : seq (fp_t '× fp_t) loc( xnum_k_2514_loc ) :=
         seq_new_ (default : fp2_t) (lift_to_both0 (usize 4)) in
-      letb xnum_k_2464 : seq (fp_t '× fp_t) :=
-        seq_upd xnum_k_2464 (lift_to_both0 (usize 0)) (is_pure (prod_b(
+      letb xnum_k_2514 : seq (fp_t '× fp_t) :=
+        seq_upd xnum_k_2514 (lift_to_both0 (usize 0)) (is_pure (prod_b(
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xnum_k_0_v)),
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xnum_k_0_v))
             ))) in
-      letb xnum_k_2464 : seq (fp_t '× fp_t) :=
-        seq_upd xnum_k_2464 (lift_to_both0 (usize 1)) (is_pure (prod_b(
+      letb xnum_k_2514 : seq (fp_t '× fp_t) :=
+        seq_upd xnum_k_2514 (lift_to_both0 (usize 1)) (is_pure (prod_b(
               nat_mod_zero ,
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xnum_k_1_i_v))
             ))) in
-      letb xnum_k_2464 : seq (fp_t '× fp_t) :=
-        seq_upd xnum_k_2464 (lift_to_both0 (usize 2)) (is_pure (prod_b(
+      letb xnum_k_2514 : seq (fp_t '× fp_t) :=
+        seq_upd xnum_k_2514 (lift_to_both0 (usize 2)) (is_pure (prod_b(
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xnum_k_2_r_v)),
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xnum_k_2_i_v))
             ))) in
-      letb xnum_k_2464 : seq (fp_t '× fp_t) :=
-        seq_upd xnum_k_2464 (lift_to_both0 (usize 3)) (is_pure (prod_b(
+      letb xnum_k_2514 : seq (fp_t '× fp_t) :=
+        seq_upd xnum_k_2514 (lift_to_both0 (usize 3)) (is_pure (prod_b(
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xnum_k_3_r_v)),
               nat_mod_zero 
             ))) in
-      letbm xden_k_2465 : seq (fp_t '× fp_t) loc( xden_k_2465_loc ) :=
+      letbm xden_k_2515 : seq (fp_t '× fp_t) loc( xden_k_2515_loc ) :=
         seq_new_ (default : fp2_t) (lift_to_both0 (usize 2)) in
-      letb xden_k_2465 : seq (fp_t '× fp_t) :=
-        seq_upd xden_k_2465 (lift_to_both0 (usize 0)) (is_pure (prod_b(
+      letb xden_k_2515 : seq (fp_t '× fp_t) :=
+        seq_upd xden_k_2515 (lift_to_both0 (usize 0)) (is_pure (prod_b(
               nat_mod_zero ,
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xden_k_0_i_v))
             ))) in
-      letb xden_k_2465 : seq (fp_t '× fp_t) :=
-        seq_upd xden_k_2465 (lift_to_both0 (usize 1)) (is_pure (prod_b(
+      letb xden_k_2515 : seq (fp_t '× fp_t) :=
+        seq_upd xden_k_2515 (lift_to_both0 (usize 1)) (is_pure (prod_b(
               nat_mod_from_literal (_) (lift_to_both0 (@repr U128 12)),
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_xden_k_1_i_v))
             ))) in
-      letbm ynum_k_2466 : seq (fp_t '× fp_t) loc( ynum_k_2466_loc ) :=
+      letbm ynum_k_2516 : seq (fp_t '× fp_t) loc( ynum_k_2516_loc ) :=
         seq_new_ (default : fp2_t) (lift_to_both0 (usize 4)) in
-      letb ynum_k_2466 : seq (fp_t '× fp_t) :=
-        seq_upd ynum_k_2466 (lift_to_both0 (usize 0)) (is_pure (prod_b(
+      letb ynum_k_2516 : seq (fp_t '× fp_t) :=
+        seq_upd ynum_k_2516 (lift_to_both0 (usize 0)) (is_pure (prod_b(
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_ynum_k_0_v)),
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_ynum_k_0_v))
             ))) in
-      letb ynum_k_2466 : seq (fp_t '× fp_t) :=
-        seq_upd ynum_k_2466 (lift_to_both0 (usize 1)) (is_pure (prod_b(
+      letb ynum_k_2516 : seq (fp_t '× fp_t) :=
+        seq_upd ynum_k_2516 (lift_to_both0 (usize 1)) (is_pure (prod_b(
               nat_mod_zero ,
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_ynum_k_1_i_v))
             ))) in
-      letb ynum_k_2466 : seq (fp_t '× fp_t) :=
-        seq_upd ynum_k_2466 (lift_to_both0 (usize 2)) (is_pure (prod_b(
+      letb ynum_k_2516 : seq (fp_t '× fp_t) :=
+        seq_upd ynum_k_2516 (lift_to_both0 (usize 2)) (is_pure (prod_b(
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_ynum_k_2_r_v)),
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_ynum_k_2_i_v))
             ))) in
-      letb ynum_k_2466 : seq (fp_t '× fp_t) :=
-        seq_upd ynum_k_2466 (lift_to_both0 (usize 3)) (is_pure (prod_b(
+      letb ynum_k_2516 : seq (fp_t '× fp_t) :=
+        seq_upd ynum_k_2516 (lift_to_both0 (usize 3)) (is_pure (prod_b(
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_ynum_k_3_r_v)),
               nat_mod_zero 
             ))) in
-      letbm yden_k_2467 : seq (fp_t '× fp_t) loc( yden_k_2467_loc ) :=
+      letbm yden_k_2517 : seq (fp_t '× fp_t) loc( yden_k_2517_loc ) :=
         seq_new_ (default : fp2_t) (lift_to_both0 (usize 3)) in
-      letb yden_k_2467 : seq (fp_t '× fp_t) :=
-        seq_upd yden_k_2467 (lift_to_both0 (usize 0)) (is_pure (prod_b(
+      letb yden_k_2517 : seq (fp_t '× fp_t) :=
+        seq_upd yden_k_2517 (lift_to_both0 (usize 0)) (is_pure (prod_b(
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_yden_k_0_v)),
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_yden_k_0_v))
             ))) in
-      letb yden_k_2467 : seq (fp_t '× fp_t) :=
-        seq_upd yden_k_2467 (lift_to_both0 (usize 1)) (is_pure (prod_b(
+      letb yden_k_2517 : seq (fp_t '× fp_t) :=
+        seq_upd yden_k_2517 (lift_to_both0 (usize 1)) (is_pure (prod_b(
               nat_mod_zero ,
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_yden_k_1_i_v))
             ))) in
-      letb yden_k_2467 : seq (fp_t '× fp_t) :=
-        seq_upd yden_k_2467 (lift_to_both0 (usize 2)) (is_pure (prod_b(
+      letb yden_k_2517 : seq (fp_t '× fp_t) :=
+        seq_upd yden_k_2517 (lift_to_both0 (usize 2)) (is_pure (prod_b(
               nat_mod_from_literal (_) (lift_to_both0 (@repr U128 18)),
               nat_mod_from_byte_seq_be (array_to_be_bytes (
                   lift_to_both0 g2_yden_k_2_i_v))
             ))) in
-      letbm xnum_2468 : (fp_t '× fp_t) loc( xnum_2468_loc ) := fp2zero  in
-      letbm xx_2469 : (fp_t '× fp_t) loc( xx_2469_loc ) :=
+      letbm xnum_2518 : (fp_t '× fp_t) loc( xnum_2518_loc ) := fp2zero  in
+      letbm xx_2519 : (fp_t '× fp_t) loc( xx_2519_loc ) :=
         fp2fromfp (nat_mod_one ) in
-      letb '(xnum_2468, xx_2469) :=
+      letb '(xnum_2518, xx_2519) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 xnum_k_2464)) prod_ce(xnum_2468, xx_2469) (L := (
+              lift_to_both0 xnum_k_2514)) prod_ce(xnum_2518, xx_2519) (L := (
               CEfset (
-                [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc]))) (
-            I := [interface]) (fun i_2490 '(xnum_2468, xx_2469) =>
-            letbm xnum_2468 loc( xnum_2468_loc ) :=
-              fp2add (lift_to_both0 xnum_2468) (fp2mul (lift_to_both0 xx_2469) (
-                  seq_index (xnum_k_2464) (lift_to_both0 i_2490))) in
-            letbm xx_2469 loc( xx_2469_loc ) :=
-              fp2mul (lift_to_both0 xx_2469) (lift_to_both0 x_2491) in
+                [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc]))) (
+            I := [interface]) (fun i_2540 '(xnum_2518, xx_2519) =>
+            letbm xnum_2518 loc( xnum_2518_loc ) :=
+              fp2add (lift_to_both0 xnum_2518) (fp2mul (lift_to_both0 xx_2519) (
+                  seq_index (xnum_k_2514) (lift_to_both0 i_2540))) in
+            letbm xx_2519 loc( xx_2519_loc ) :=
+              fp2mul (lift_to_both0 xx_2519) (lift_to_both0 x_2541) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 xnum_2468,
-                lift_to_both0 xx_2469
+                lift_to_both0 xnum_2518,
+                lift_to_both0 xx_2519
               ))
             ) in
-      letbm xden_2470 : (fp_t '× fp_t) loc( xden_2470_loc ) := fp2zero  in
-      letbm xx_2471 : (fp_t '× fp_t) loc( xx_2471_loc ) :=
+      letbm xden_2520 : (fp_t '× fp_t) loc( xden_2520_loc ) := fp2zero  in
+      letbm xx_2521 : (fp_t '× fp_t) loc( xx_2521_loc ) :=
         fp2fromfp (nat_mod_one ) in
-      letb '(xden_2470, xx_2471) :=
+      letb '(xden_2520, xx_2521) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 xden_k_2465)) prod_ce(xden_2470, xx_2471) (L := (
+              lift_to_both0 xden_k_2515)) prod_ce(xden_2520, xx_2521) (L := (
               CEfset (
-                [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc]))) (
-            I := [interface]) (fun i_2492 '(xden_2470, xx_2471) =>
-            letbm xden_2470 loc( xden_2470_loc ) :=
-              fp2add (lift_to_both0 xden_2470) (fp2mul (lift_to_both0 xx_2471) (
-                  seq_index (xden_k_2465) (lift_to_both0 i_2492))) in
-            letbm xx_2471 loc( xx_2471_loc ) :=
-              fp2mul (lift_to_both0 xx_2471) (lift_to_both0 x_2491) in
+                [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc]))) (
+            I := [interface]) (fun i_2542 '(xden_2520, xx_2521) =>
+            letbm xden_2520 loc( xden_2520_loc ) :=
+              fp2add (lift_to_both0 xden_2520) (fp2mul (lift_to_both0 xx_2521) (
+                  seq_index (xden_k_2515) (lift_to_both0 i_2542))) in
+            letbm xx_2521 loc( xx_2521_loc ) :=
+              fp2mul (lift_to_both0 xx_2521) (lift_to_both0 x_2541) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 xden_2470,
-                lift_to_both0 xx_2471
+                lift_to_both0 xden_2520,
+                lift_to_both0 xx_2521
               ))
             ) in
-      letbm xden_2470 loc( xden_2470_loc ) :=
-        fp2add (lift_to_both0 xden_2470) (lift_to_both0 xx_2471) in
-      letbm ynum_2472 : (fp_t '× fp_t) loc( ynum_2472_loc ) := fp2zero  in
-      letbm xx_2473 : (fp_t '× fp_t) loc( xx_2473_loc ) :=
+      letbm xden_2520 loc( xden_2520_loc ) :=
+        fp2add (lift_to_both0 xden_2520) (lift_to_both0 xx_2521) in
+      letbm ynum_2522 : (fp_t '× fp_t) loc( ynum_2522_loc ) := fp2zero  in
+      letbm xx_2523 : (fp_t '× fp_t) loc( xx_2523_loc ) :=
         fp2fromfp (nat_mod_one ) in
-      letb '(ynum_2472, xx_2473) :=
+      letb '(ynum_2522, xx_2523) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 ynum_k_2466)) prod_ce(ynum_2472, xx_2473) (L := (
+              lift_to_both0 ynum_k_2516)) prod_ce(ynum_2522, xx_2523) (L := (
               CEfset (
-                [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc]))) (
-            I := [interface]) (fun i_2493 '(ynum_2472, xx_2473) =>
-            letbm ynum_2472 loc( ynum_2472_loc ) :=
-              fp2add (lift_to_both0 ynum_2472) (fp2mul (lift_to_both0 xx_2473) (
-                  seq_index (ynum_k_2466) (lift_to_both0 i_2493))) in
-            letbm xx_2473 loc( xx_2473_loc ) :=
-              fp2mul (lift_to_both0 xx_2473) (lift_to_both0 x_2491) in
+                [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc]))) (
+            I := [interface]) (fun i_2543 '(ynum_2522, xx_2523) =>
+            letbm ynum_2522 loc( ynum_2522_loc ) :=
+              fp2add (lift_to_both0 ynum_2522) (fp2mul (lift_to_both0 xx_2523) (
+                  seq_index (ynum_k_2516) (lift_to_both0 i_2543))) in
+            letbm xx_2523 loc( xx_2523_loc ) :=
+              fp2mul (lift_to_both0 xx_2523) (lift_to_both0 x_2541) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 ynum_2472,
-                lift_to_both0 xx_2473
+                lift_to_both0 ynum_2522,
+                lift_to_both0 xx_2523
               ))
             ) in
-      letbm yden_2474 : (fp_t '× fp_t) loc( yden_2474_loc ) := fp2zero  in
-      letbm xx_2475 : (fp_t '× fp_t) loc( xx_2475_loc ) :=
+      letbm yden_2524 : (fp_t '× fp_t) loc( yden_2524_loc ) := fp2zero  in
+      letbm xx_2525 : (fp_t '× fp_t) loc( xx_2525_loc ) :=
         fp2fromfp (nat_mod_one ) in
-      letb '(yden_2474, xx_2475) :=
+      letb '(yden_2524, xx_2525) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_len (
-              lift_to_both0 yden_k_2467)) prod_ce(yden_2474, xx_2475) (L := (
+              lift_to_both0 yden_k_2517)) prod_ce(yden_2524, xx_2525) (L := (
               CEfset (
-                [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc]))) (
-            I := [interface]) (fun i_2494 '(yden_2474, xx_2475) =>
-            letbm yden_2474 loc( yden_2474_loc ) :=
-              fp2add (lift_to_both0 yden_2474) (fp2mul (lift_to_both0 xx_2475) (
-                  seq_index (yden_k_2467) (lift_to_both0 i_2494))) in
-            letbm xx_2475 loc( xx_2475_loc ) :=
-              fp2mul (lift_to_both0 xx_2475) (lift_to_both0 x_2491) in
+                [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc]))) (
+            I := [interface]) (fun i_2544 '(yden_2524, xx_2525) =>
+            letbm yden_2524 loc( yden_2524_loc ) :=
+              fp2add (lift_to_both0 yden_2524) (fp2mul (lift_to_both0 xx_2525) (
+                  seq_index (yden_k_2517) (lift_to_both0 i_2544))) in
+            letbm xx_2525 loc( xx_2525_loc ) :=
+              fp2mul (lift_to_both0 xx_2525) (lift_to_both0 x_2541) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 yden_2474,
-                lift_to_both0 xx_2475
+                lift_to_both0 yden_2524,
+                lift_to_both0 xx_2525
               ))
             ) in
-      letbm yden_2474 loc( yden_2474_loc ) :=
-        fp2add (lift_to_both0 yden_2474) (lift_to_both0 xx_2475) in
-      letb xr_2495 : (fp_t '× fp_t) :=
-        fp2mul (lift_to_both0 xnum_2468) (fp2inv (lift_to_both0 xden_2470)) in
-      letb yr_2497 : (fp_t '× fp_t) :=
-        fp2mul (lift_to_both0 y_2496) (fp2mul (lift_to_both0 ynum_2472) (
-            fp2inv (lift_to_both0 yden_2474))) in
-      letbm inf_2476 : bool_ChoiceEquality loc( inf_2476_loc ) :=
+      letbm yden_2524 loc( yden_2524_loc ) :=
+        fp2add (lift_to_both0 yden_2524) (lift_to_both0 xx_2525) in
+      letb xr_2545 : (fp_t '× fp_t) :=
+        fp2mul (lift_to_both0 xnum_2518) (fp2inv (lift_to_both0 xden_2520)) in
+      letb yr_2547 : (fp_t '× fp_t) :=
+        fp2mul (lift_to_both0 y_2546) (fp2mul (lift_to_both0 ynum_2522) (
+            fp2inv (lift_to_both0 yden_2524))) in
+      letbm inf_2526 : bool_ChoiceEquality loc( inf_2526_loc ) :=
         lift_to_both0 ((false : bool_ChoiceEquality)) in
-      letb '(inf_2476) :=
-        if ((lift_to_both0 xden_2470) =.? (fp2zero )) || ((
-            lift_to_both0 yden_2474) =.? (fp2zero )) :bool_ChoiceEquality
+      letb '(inf_2526) :=
+        if ((lift_to_both0 xden_2520) =.? (fp2zero )) || ((
+            lift_to_both0 yden_2524) =.? (fp2zero )) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset (
-            [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) (
+            [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) (
           L2 := CEfset (
-            [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) (
+            [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) (
           I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm inf_2476 loc( inf_2476_loc ) :=
+          letbm inf_2526 loc( inf_2526_loc ) :=
             lift_to_both0 ((true : bool_ChoiceEquality)) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 inf_2476)
+            lift_to_both0 inf_2526)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 inf_2476)
+          lift_to_both0 inf_2526)
          in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 xr_2495,
-          lift_to_both0 yr_2497,
-          lift_to_both0 inf_2476
+          lift_to_both0 xr_2545,
+          lift_to_both0 yr_2547,
+          lift_to_both0 inf_2526
         ))
       ) : both (CEfset (
-        [xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+        [xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
       g2_t)).
 Fail Next Obligation.
 
@@ -2535,19 +2535,19 @@ Notation "'g2_map_to_curve_sswu_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_map_to_curve_sswu_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_MAP_TO_CURVE_SSWU : nat :=
-  2503.
-Program Definition g2_map_to_curve_sswu (u_2499 : fp2_t)
+  2553.
+Program Definition g2_map_to_curve_sswu (u_2549 : fp2_t)
   : both (CEfset (
-      [c_2308_loc ; x1_2450_loc ; y_2451_loc ; xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+      [c_2358_loc ; x1_2500_loc ; y_2501_loc ; xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
     g2_t) :=
-  ((letb '(xp_2500, yp_2501) : (fp2_t '× fp2_t) :=
-        g2_simple_swu_iso (lift_to_both0 u_2499) in
-      letb p_2502 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+  ((letb '(xp_2550, yp_2551) : (fp2_t '× fp2_t) :=
+        g2_simple_swu_iso (lift_to_both0 u_2549) in
+      letb p_2552 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2_isogeny_map (lift_to_both0 xp_2500) (lift_to_both0 yp_2501) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2502)
+        g2_isogeny_map (lift_to_both0 xp_2550) (lift_to_both0 yp_2551) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2552)
       ) : both (CEfset (
-        [c_2308_loc ; x1_2450_loc ; y_2451_loc ; xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+        [c_2358_loc ; x1_2500_loc ; y_2501_loc ; xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
       g2_t)).
 Fail Next Obligation.
 
@@ -2560,36 +2560,36 @@ Notation "'g2_hash_to_curve_sswu_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_hash_to_curve_sswu_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_HASH_TO_CURVE_SSWU : nat :=
-  2511.
-Program Definition g2_hash_to_curve_sswu (msg_2504 : byte_seq) (
-    dst_2505 : byte_seq)
+  2561.
+Program Definition g2_hash_to_curve_sswu (msg_2554 : byte_seq) (
+    dst_2555 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; x1_2450_loc ; y_2451_loc ; xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; x1_2500_loc ; y_2501_loc ; xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
     g2_t) :=
-  ((letb u_2506 : seq fp2_t :=
-        fp2_hash_to_field (lift_to_both0 msg_2504) (lift_to_both0 dst_2505) (
+  ((letb u_2556 : seq fp2_t :=
+        fp2_hash_to_field (lift_to_both0 msg_2554) (lift_to_both0 dst_2555) (
           lift_to_both0 (usize 2)) in
-      letb q0_2507 : (
+      letb q0_2557 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2_map_to_curve_sswu (seq_index (u_2506) (lift_to_both0 (usize 0))) in
-      letb q1_2508 : (
+        g2_map_to_curve_sswu (seq_index (u_2556) (lift_to_both0 (usize 0))) in
+      letb q1_2558 : (
           (fp_t '× fp_t) '×
           (fp_t '× fp_t) '×
           bool_ChoiceEquality
         ) :=
-        g2_map_to_curve_sswu (seq_index (u_2506) (lift_to_both0 (usize 1))) in
-      letb r_2509 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+        g2_map_to_curve_sswu (seq_index (u_2556) (lift_to_both0 (usize 1))) in
+      letb r_2559 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2add (lift_to_both0 q0_2507) (lift_to_both0 q1_2508) in
-      letb p_2510 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+        g2add (lift_to_both0 q0_2557) (lift_to_both0 q1_2558) in
+      letb p_2560 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2_clear_cofactor (lift_to_both0 r_2509) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2510)
+        g2_clear_cofactor (lift_to_both0 r_2559) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2560)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; x1_2450_loc ; y_2451_loc ; xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; x1_2500_loc ; y_2501_loc ; xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
       g2_t)).
 Fail Next Obligation.
 
@@ -2602,24 +2602,24 @@ Notation "'g2_encode_to_curve_sswu_out'" :=(
   g2_t : choice_type) (in custom pack_type at level 2).
 Notation "'g2_encode_to_curve_sswu_out'" :=(g2_t : ChoiceEquality) (at level 2).
 Definition G2_ENCODE_TO_CURVE_SSWU : nat :=
-  2517.
-Program Definition g2_encode_to_curve_sswu (msg_2512 : byte_seq) (
-    dst_2513 : byte_seq)
+  2567.
+Program Definition g2_encode_to_curve_sswu (msg_2562 : byte_seq) (
+    dst_2563 : byte_seq)
   : both (CEfset (
-      [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; x1_2450_loc ; y_2451_loc ; xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+      [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; x1_2500_loc ; y_2501_loc ; xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
     g2_t) :=
-  ((letb u_2514 : seq fp2_t :=
-        fp2_hash_to_field (lift_to_both0 msg_2512) (lift_to_both0 dst_2513) (
+  ((letb u_2564 : seq fp2_t :=
+        fp2_hash_to_field (lift_to_both0 msg_2562) (lift_to_both0 dst_2563) (
           lift_to_both0 (usize 1)) in
-      letb q_2515 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+      letb q_2565 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2_map_to_curve_sswu (seq_index (u_2514) (lift_to_both0 (usize 0))) in
-      letb p_2516 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
+        g2_map_to_curve_sswu (seq_index (u_2564) (lift_to_both0 (usize 0))) in
+      letb p_2566 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool_ChoiceEquality
         ) :=
-        g2_clear_cofactor (lift_to_both0 q_2515) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2516)
+        g2_clear_cofactor (lift_to_both0 q_2565) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 p_2566)
       ) : both (CEfset (
-        [l_i_b_str_2201_loc ; b_i_2202_loc ; uniform_bytes_2203_loc ; output_2276_loc ; c_2308_loc ; x1_2450_loc ; y_2451_loc ; xnum_k_2464_loc ; xden_k_2465_loc ; ynum_k_2466_loc ; yden_k_2467_loc ; xnum_2468_loc ; xx_2469_loc ; xden_2470_loc ; xx_2471_loc ; ynum_2472_loc ; xx_2473_loc ; yden_2474_loc ; xx_2475_loc ; inf_2476_loc])) [interface] (
+        [l_i_b_str_2251_loc ; b_i_2252_loc ; uniform_bytes_2253_loc ; output_2326_loc ; c_2358_loc ; x1_2500_loc ; y_2501_loc ; xnum_k_2514_loc ; xden_k_2515_loc ; ynum_k_2516_loc ; yden_k_2517_loc ; xnum_2518_loc ; xx_2519_loc ; xden_2520_loc ; xx_2521_loc ; ynum_2522_loc ; xx_2523_loc ; yden_2524_loc ; xx_2525_loc ; inf_2526_loc])) [interface] (
       g2_t)).
 Fail Next Obligation.
 

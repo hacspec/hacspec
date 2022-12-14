@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -53,12 +53,12 @@ Notation "'ch_inp'" :=(
 Notation "'ch_out'" :=(uint64 : choice_type) (in custom pack_type at level 2).
 Notation "'ch_out'" :=(uint64 : ChoiceEquality) (at level 2).
 Definition CH : nat :=
-  2834.
-Program Definition ch (x_2831 : uint64) (y_2832 : uint64) (z_2833 : uint64)
+  2884.
+Program Definition ch (x_2881 : uint64) (y_2882 : uint64) (z_2883 : uint64)
   : both (fset.fset0) [interface] (uint64) :=
   ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (((
-            lift_to_both0 x_2831) .& (lift_to_both0 y_2832)) .^ ((not (
-              lift_to_both0 x_2831)) .& (lift_to_both0 z_2833)))
+            lift_to_both0 x_2881) .& (lift_to_both0 y_2882)) .^ ((not (
+              lift_to_both0 x_2881)) .& (lift_to_both0 z_2883)))
       ) : both (fset.fset0) [interface] (uint64)).
 Fail Next Obligation.
 
@@ -70,13 +70,13 @@ Notation "'maj_inp'" :=(
 Notation "'maj_out'" :=(uint64 : choice_type) (in custom pack_type at level 2).
 Notation "'maj_out'" :=(uint64 : ChoiceEquality) (at level 2).
 Definition MAJ : nat :=
-  2838.
-Program Definition maj (x_2835 : uint64) (y_2836 : uint64) (z_2837 : uint64)
+  2888.
+Program Definition maj (x_2885 : uint64) (y_2886 : uint64) (z_2887 : uint64)
   : both (fset.fset0) [interface] (uint64) :=
   ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (((
-            lift_to_both0 x_2835) .& (lift_to_both0 y_2836)) .^ (((
-              lift_to_both0 x_2835) .& (lift_to_both0 z_2837)) .^ ((
-              lift_to_both0 y_2836) .& (lift_to_both0 z_2837))))
+            lift_to_both0 x_2885) .& (lift_to_both0 y_2886)) .^ (((
+              lift_to_both0 x_2885) .& (lift_to_both0 z_2887)) .^ ((
+              lift_to_both0 y_2886) .& (lift_to_both0 z_2887))))
       ) : both (fset.fset0) [interface] (uint64)).
 Fail Next Obligation.
 
@@ -192,8 +192,8 @@ Definition hash_init_v : hash_t :=
     (secret (@repr U64 6620516959819538809)) : uint64
   ].
 
-Definition tmp_2839_loc : ChoiceEqualityLocation :=
-  (uint64 ; 2840%nat).
+Definition tmp_2889_loc : ChoiceEqualityLocation :=
+  (uint64 ; 2890%nat).
 Notation "'sigma_inp'" :=(
   uint64 '× uint_size '× uint_size : choice_type) (in custom pack_type at level 2).
 Notation "'sigma_inp'" :=(
@@ -202,42 +202,42 @@ Notation "'sigma_out'" :=(
   uint64 : choice_type) (in custom pack_type at level 2).
 Notation "'sigma_out'" :=(uint64 : ChoiceEquality) (at level 2).
 Definition SIGMA : nat :=
-  2844.
-Program Definition sigma (x_2841 : uint64) (i_2842 : uint_size) (
-    op_2843 : uint_size)
-  : both (CEfset ([tmp_2839_loc])) [interface] (uint64) :=
-  ((letbm tmp_2839 : uint64 loc( tmp_2839_loc ) :=
-        uint64_rotate_right (lift_to_both0 x_2841) (array_index (op_table_v) (((
-                lift_to_both0 (usize 3)) .* (lift_to_both0 i_2842)) .+ (
+  2894.
+Program Definition sigma (x_2891 : uint64) (i_2892 : uint_size) (
+    op_2893 : uint_size)
+  : both (CEfset ([tmp_2889_loc])) [interface] (uint64) :=
+  ((letbm tmp_2889 : uint64 loc( tmp_2889_loc ) :=
+        uint64_rotate_right (lift_to_both0 x_2891) (array_index (op_table_v) (((
+                lift_to_both0 (usize 3)) .* (lift_to_both0 i_2892)) .+ (
               lift_to_both0 (usize 2)))) in
-      letb '(tmp_2839) :=
-        if (lift_to_both0 op_2843) =.? (lift_to_both0 (
+      letb '(tmp_2889) :=
+        if (lift_to_both0 op_2893) =.? (lift_to_both0 (
             usize 0)) :bool_ChoiceEquality
-        then lift_scope (L1 := CEfset ([tmp_2839_loc])) (L2 := CEfset (
-            [tmp_2839_loc])) (I1 := [interface]) (
+        then lift_scope (L1 := CEfset ([tmp_2889_loc])) (L2 := CEfset (
+            [tmp_2889_loc])) (I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm tmp_2839 loc( tmp_2839_loc ) :=
-            (lift_to_both0 x_2841) shift_right (array_index (op_table_v) (((
-                    lift_to_both0 (usize 3)) .* (lift_to_both0 i_2842)) .+ (
+          letbm tmp_2889 loc( tmp_2889_loc ) :=
+            (lift_to_both0 x_2891) shift_right (array_index (op_table_v) (((
+                    lift_to_both0 (usize 3)) .* (lift_to_both0 i_2892)) .+ (
                   lift_to_both0 (usize 2)))) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-            lift_to_both0 tmp_2839)
+            lift_to_both0 tmp_2889)
           )
         else lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-          lift_to_both0 tmp_2839)
+          lift_to_both0 tmp_2889)
          in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (((uint64_rotate_right (
-              lift_to_both0 x_2841) (array_index (op_table_v) ((lift_to_both0 (
-                    usize 3)) .* (lift_to_both0 i_2842)))) .^ (
-            uint64_rotate_right (lift_to_both0 x_2841) (array_index (
+              lift_to_both0 x_2891) (array_index (op_table_v) ((lift_to_both0 (
+                    usize 3)) .* (lift_to_both0 i_2892)))) .^ (
+            uint64_rotate_right (lift_to_both0 x_2891) (array_index (
                 op_table_v) (((lift_to_both0 (usize 3)) .* (
-                    lift_to_both0 i_2842)) .+ (lift_to_both0 (usize 1)))))) .^ (
-          lift_to_both0 tmp_2839))
-      ) : both (CEfset ([tmp_2839_loc])) [interface] (uint64)).
+                    lift_to_both0 i_2892)) .+ (lift_to_both0 (usize 1)))))) .^ (
+          lift_to_both0 tmp_2889))
+      ) : both (CEfset ([tmp_2889_loc])) [interface] (uint64)).
 Fail Next Obligation.
 
-Definition s_2845_loc : ChoiceEqualityLocation :=
-  (round_constants_table_t ; 2846%nat).
+Definition s_2895_loc : ChoiceEqualityLocation :=
+  (round_constants_table_t ; 2896%nat).
 Notation "'schedule_inp'" :=(
   block_t : choice_type) (in custom pack_type at level 2).
 Notation "'schedule_inp'" :=(block_t : ChoiceEquality) (at level 2).
@@ -246,71 +246,71 @@ Notation "'schedule_out'" :=(
 Notation "'schedule_out'" :=(
   round_constants_table_t : ChoiceEquality) (at level 2).
 Definition SCHEDULE : nat :=
-  2856.
-Program Definition schedule (block_2847 : block_t)
-  : both (CEfset ([tmp_2839_loc ; s_2845_loc])) [interface] (
+  2906.
+Program Definition schedule (block_2897 : block_t)
+  : both (CEfset ([tmp_2889_loc ; s_2895_loc])) [interface] (
     round_constants_table_t) :=
-  ((letb b_2848 : seq uint64 :=
-        array_to_be_uint64s (lift_to_both0 block_2847) in
-      letbm s_2845 : round_constants_table_t loc( s_2845_loc ) :=
+  ((letb b_2898 : seq uint64 :=
+        array_to_be_uint64s (lift_to_both0 block_2897) in
+      letbm s_2895 : round_constants_table_t loc( s_2895_loc ) :=
         array_new_ (default : uint64) (k_size_v) in
-      letb s_2845 :=
-        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 k_size_v) s_2845 (
-            L := (CEfset ([tmp_2839_loc ; s_2845_loc]))) (I := [interface]) (
-            fun i_2849 s_2845 =>
-            letb '(s_2845) :=
-              if (lift_to_both0 i_2849) <.? (lift_to_both0 (
+      letb s_2895 :=
+        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 k_size_v) s_2895 (
+            L := (CEfset ([tmp_2889_loc ; s_2895_loc]))) (I := [interface]) (
+            fun i_2899 s_2895 =>
+            letb '(s_2895) :=
+              if (lift_to_both0 i_2899) <.? (lift_to_both0 (
                   usize 16)) :bool_ChoiceEquality
-              then lift_scope (L1 := CEfset ([s_2845_loc])) (L2 := CEfset (
-                  [tmp_2839_loc ; s_2845_loc])) (I1 := [interface]) (
+              then lift_scope (L1 := CEfset ([s_2895_loc])) (L2 := CEfset (
+                  [tmp_2889_loc ; s_2895_loc])) (I1 := [interface]) (
                 I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-                letb s_2845 : round_constants_table_t :=
-                  array_upd s_2845 (lift_to_both0 i_2849) (is_pure (seq_index (
-                        b_2848) (lift_to_both0 i_2849))) in
+                letb s_2895 : round_constants_table_t :=
+                  array_upd s_2895 (lift_to_both0 i_2899) (is_pure (seq_index (
+                        b_2898) (lift_to_both0 i_2899))) in
                 lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-                  lift_to_both0 s_2845)
+                  lift_to_both0 s_2895)
                 )
-              else  lift_scope (L1 := CEfset ([tmp_2839_loc ; s_2845_loc])) (
-                L2 := CEfset ([tmp_2839_loc ; s_2845_loc])) (
+              else  lift_scope (L1 := CEfset ([tmp_2889_loc ; s_2895_loc])) (
+                L2 := CEfset ([tmp_2889_loc ; s_2895_loc])) (
                 I1 := [interface]) (
                 I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-                letb t16_2850 : uint64 :=
-                  array_index (s_2845) ((lift_to_both0 i_2849) .- (
+                letb t16_2900 : uint64 :=
+                  array_index (s_2895) ((lift_to_both0 i_2899) .- (
                       lift_to_both0 (usize 16))) in
-                letb t15_2851 : uint64 :=
-                  array_index (s_2845) ((lift_to_both0 i_2849) .- (
+                letb t15_2901 : uint64 :=
+                  array_index (s_2895) ((lift_to_both0 i_2899) .- (
                       lift_to_both0 (usize 15))) in
-                letb t7_2852 : uint64 :=
-                  array_index (s_2845) ((lift_to_both0 i_2849) .- (
+                letb t7_2902 : uint64 :=
+                  array_index (s_2895) ((lift_to_both0 i_2899) .- (
                       lift_to_both0 (usize 7))) in
-                letb t2_2853 : uint64 :=
-                  array_index (s_2845) ((lift_to_both0 i_2849) .- (
+                letb t2_2903 : uint64 :=
+                  array_index (s_2895) ((lift_to_both0 i_2899) .- (
                       lift_to_both0 (usize 2))) in
-                letb s1_2854 : uint64 :=
-                  sigma (lift_to_both0 t2_2853) (lift_to_both0 (usize 3)) (
+                letb s1_2904 : uint64 :=
+                  sigma (lift_to_both0 t2_2903) (lift_to_both0 (usize 3)) (
                     lift_to_both0 (usize 0)) in
-                letb s0_2855 : uint64 :=
-                  sigma (lift_to_both0 t15_2851) (lift_to_both0 (usize 2)) (
+                letb s0_2905 : uint64 :=
+                  sigma (lift_to_both0 t15_2901) (lift_to_both0 (usize 2)) (
                     lift_to_both0 (usize 0)) in
-                letb s_2845 : round_constants_table_t :=
-                  array_upd s_2845 (lift_to_both0 i_2849) (is_pure ((((
-                            lift_to_both0 s1_2854) .+ (
-                            lift_to_both0 t7_2852)) .+ (
-                          lift_to_both0 s0_2855)) .+ (
-                        lift_to_both0 t16_2850))) in
+                letb s_2895 : round_constants_table_t :=
+                  array_upd s_2895 (lift_to_both0 i_2899) (is_pure ((((
+                            lift_to_both0 s1_2904) .+ (
+                            lift_to_both0 t7_2902)) .+ (
+                          lift_to_both0 s0_2905)) .+ (
+                        lift_to_both0 t16_2900))) in
                 lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-                  lift_to_both0 s_2845)
+                  lift_to_both0 s_2895)
                 ) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-              lift_to_both0 s_2845)
+              lift_to_both0 s_2895)
             ) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 s_2845)
-      ) : both (CEfset ([tmp_2839_loc ; s_2845_loc])) [interface] (
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 s_2895)
+      ) : both (CEfset ([tmp_2889_loc ; s_2895_loc])) [interface] (
       round_constants_table_t)).
 Fail Next Obligation.
 
-Definition h_2857_loc : ChoiceEqualityLocation :=
-  (hash_t ; 2858%nat).
+Definition h_2907_loc : ChoiceEqualityLocation :=
+  (hash_t ; 2908%nat).
 Notation "'shuffle_inp'" :=(
   round_constants_table_t '× hash_t : choice_type) (in custom pack_type at level 2).
 Notation "'shuffle_inp'" :=(
@@ -319,75 +319,75 @@ Notation "'shuffle_out'" :=(
   hash_t : choice_type) (in custom pack_type at level 2).
 Notation "'shuffle_out'" :=(hash_t : ChoiceEquality) (at level 2).
 Definition SHUFFLE : nat :=
-  2872.
-Program Definition shuffle (ws_2869 : round_constants_table_t) (
-    hashi_2859 : hash_t)
-  : both (CEfset ([tmp_2839_loc ; h_2857_loc])) [interface] (hash_t) :=
-  ((letbm h_2857 : hash_t loc( h_2857_loc ) := lift_to_both0 hashi_2859 in
-      letb h_2857 :=
-        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 k_size_v) h_2857 (
-            L := (CEfset ([tmp_2839_loc ; h_2857_loc]))) (I := [interface]) (
-            fun i_2860 h_2857 =>
-            letb a0_2861 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 0)) in
-            letb b0_2862 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 1)) in
-            letb c0_2863 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 2)) in
-            letb d0_2864 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 3)) in
-            letb e0_2865 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 4)) in
-            letb f0_2866 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 5)) in
-            letb g0_2867 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 6)) in
-            letb h0_2868 : uint64 :=
-              array_index (h_2857) (lift_to_both0 (usize 7)) in
-            letb t1_2870 : uint64 :=
-              ((((lift_to_both0 h0_2868) .+ (sigma (lift_to_both0 e0_2865) (
+  2922.
+Program Definition shuffle (ws_2919 : round_constants_table_t) (
+    hashi_2909 : hash_t)
+  : both (CEfset ([tmp_2889_loc ; h_2907_loc])) [interface] (hash_t) :=
+  ((letbm h_2907 : hash_t loc( h_2907_loc ) := lift_to_both0 hashi_2909 in
+      letb h_2907 :=
+        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 k_size_v) h_2907 (
+            L := (CEfset ([tmp_2889_loc ; h_2907_loc]))) (I := [interface]) (
+            fun i_2910 h_2907 =>
+            letb a0_2911 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 0)) in
+            letb b0_2912 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 1)) in
+            letb c0_2913 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 2)) in
+            letb d0_2914 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 3)) in
+            letb e0_2915 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 4)) in
+            letb f0_2916 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 5)) in
+            letb g0_2917 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 6)) in
+            letb h0_2918 : uint64 :=
+              array_index (h_2907) (lift_to_both0 (usize 7)) in
+            letb t1_2920 : uint64 :=
+              ((((lift_to_both0 h0_2918) .+ (sigma (lift_to_both0 e0_2915) (
                         lift_to_both0 (usize 1)) (lift_to_both0 (
-                          usize 1)))) .+ (ch (lift_to_both0 e0_2865) (
-                      lift_to_both0 f0_2866) (lift_to_both0 g0_2867))) .+ (
-                  array_index (k_table_v) (lift_to_both0 i_2860))) .+ (
-                array_index (ws_2869) (lift_to_both0 i_2860)) in
-            letb t2_2871 : uint64 :=
-              (sigma (lift_to_both0 a0_2861) (lift_to_both0 (usize 0)) (
-                  lift_to_both0 (usize 1))) .+ (maj (lift_to_both0 a0_2861) (
-                  lift_to_both0 b0_2862) (lift_to_both0 c0_2863)) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 0)) (is_pure ((
-                    lift_to_both0 t1_2870) .+ (lift_to_both0 t2_2871))) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 1)) (is_pure (
-                  lift_to_both0 a0_2861)) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 2)) (is_pure (
-                  lift_to_both0 b0_2862)) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 3)) (is_pure (
-                  lift_to_both0 c0_2863)) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 4)) (is_pure ((
-                    lift_to_both0 d0_2864) .+ (lift_to_both0 t1_2870))) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 5)) (is_pure (
-                  lift_to_both0 e0_2865)) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 6)) (is_pure (
-                  lift_to_both0 f0_2866)) in
-            letb h_2857 : hash_t :=
-              array_upd h_2857 (lift_to_both0 (usize 7)) (is_pure (
-                  lift_to_both0 g0_2867)) in
+                          usize 1)))) .+ (ch (lift_to_both0 e0_2915) (
+                      lift_to_both0 f0_2916) (lift_to_both0 g0_2917))) .+ (
+                  array_index (k_table_v) (lift_to_both0 i_2910))) .+ (
+                array_index (ws_2919) (lift_to_both0 i_2910)) in
+            letb t2_2921 : uint64 :=
+              (sigma (lift_to_both0 a0_2911) (lift_to_both0 (usize 0)) (
+                  lift_to_both0 (usize 1))) .+ (maj (lift_to_both0 a0_2911) (
+                  lift_to_both0 b0_2912) (lift_to_both0 c0_2913)) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 0)) (is_pure ((
+                    lift_to_both0 t1_2920) .+ (lift_to_both0 t2_2921))) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 1)) (is_pure (
+                  lift_to_both0 a0_2911)) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 2)) (is_pure (
+                  lift_to_both0 b0_2912)) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 3)) (is_pure (
+                  lift_to_both0 c0_2913)) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 4)) (is_pure ((
+                    lift_to_both0 d0_2914) .+ (lift_to_both0 t1_2920))) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 5)) (is_pure (
+                  lift_to_both0 e0_2915)) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 6)) (is_pure (
+                  lift_to_both0 f0_2916)) in
+            letb h_2907 : hash_t :=
+              array_upd h_2907 (lift_to_both0 (usize 7)) (is_pure (
+                  lift_to_both0 g0_2917)) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-              lift_to_both0 h_2857)
+              lift_to_both0 h_2907)
             ) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 h_2857)
-      ) : both (CEfset ([tmp_2839_loc ; h_2857_loc])) [interface] (hash_t)).
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 h_2907)
+      ) : both (CEfset ([tmp_2889_loc ; h_2907_loc])) [interface] (hash_t)).
 Fail Next Obligation.
 
-Definition h_2873_loc : ChoiceEqualityLocation :=
-  (hash_t ; 2874%nat).
+Definition h_2923_loc : ChoiceEqualityLocation :=
+  (hash_t ; 2924%nat).
 Notation "'compress_inp'" :=(
   block_t '× hash_t : choice_type) (in custom pack_type at level 2).
 Notation "'compress_inp'" :=(block_t '× hash_t : ChoiceEquality) (at level 2).
@@ -395,41 +395,41 @@ Notation "'compress_out'" :=(
   hash_t : choice_type) (in custom pack_type at level 2).
 Notation "'compress_out'" :=(hash_t : ChoiceEquality) (at level 2).
 Definition COMPRESS : nat :=
-  2879.
-Program Definition compress (block_2875 : block_t) (h_in_2877 : hash_t)
+  2929.
+Program Definition compress (block_2925 : block_t) (h_in_2927 : hash_t)
   : both (CEfset (
-      [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc])) [interface] (
+      [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc])) [interface] (
     hash_t) :=
-  ((letb s_2876 : round_constants_table_t :=
-        schedule (lift_to_both0 block_2875) in
-      letbm h_2873 : hash_t loc( h_2873_loc ) :=
-        shuffle (lift_to_both0 s_2876) (lift_to_both0 h_in_2877) in
-      letb h_2873 :=
-        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 (usize 8)) h_2873 (
+  ((letb s_2926 : round_constants_table_t :=
+        schedule (lift_to_both0 block_2925) in
+      letbm h_2923 : hash_t loc( h_2923_loc ) :=
+        shuffle (lift_to_both0 s_2926) (lift_to_both0 h_in_2927) in
+      letb h_2923 :=
+        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 (usize 8)) h_2923 (
             L := (CEfset (
-                [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc]))) (
-            I := [interface]) (fun i_2878 h_2873 =>
-            letb h_2873 : hash_t :=
-              array_upd h_2873 (lift_to_both0 i_2878) (is_pure ((array_index (
-                      h_2873) (lift_to_both0 i_2878)) .+ (array_index (
-                      h_in_2877) (lift_to_both0 i_2878)))) in
+                [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc]))) (
+            I := [interface]) (fun i_2928 h_2923 =>
+            letb h_2923 : hash_t :=
+              array_upd h_2923 (lift_to_both0 i_2928) (is_pure ((array_index (
+                      h_2923) (lift_to_both0 i_2928)) .+ (array_index (
+                      h_in_2927) (lift_to_both0 i_2928)))) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-              lift_to_both0 h_2873)
+              lift_to_both0 h_2923)
             ) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 h_2873)
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 h_2923)
       ) : both (CEfset (
-        [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc])) [interface] (
+        [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc])) [interface] (
       hash_t)).
 Fail Next Obligation.
 
-Definition last_block_len_2882_loc : ChoiceEqualityLocation :=
-  (uint_size ; 2884%nat).
-Definition pad_block_2883_loc : ChoiceEqualityLocation :=
-  (block_t ; 2885%nat).
-Definition h_2880_loc : ChoiceEqualityLocation :=
-  (hash_t ; 2886%nat).
-Definition last_block_2881_loc : ChoiceEqualityLocation :=
-  (block_t ; 2887%nat).
+Definition pad_block_2933_loc : ChoiceEqualityLocation :=
+  (block_t ; 2934%nat).
+Definition last_block_2931_loc : ChoiceEqualityLocation :=
+  (block_t ; 2935%nat).
+Definition last_block_len_2932_loc : ChoiceEqualityLocation :=
+  (uint_size ; 2936%nat).
+Definition h_2930_loc : ChoiceEqualityLocation :=
+  (hash_t ; 2937%nat).
 Notation "'hash_inp'" :=(
   byte_seq : choice_type) (in custom pack_type at level 2).
 Notation "'hash_inp'" :=(byte_seq : ChoiceEquality) (at level 2).
@@ -437,129 +437,129 @@ Notation "'hash_out'" :=(
   sha512_digest_t : choice_type) (in custom pack_type at level 2).
 Notation "'hash_out'" :=(sha512_digest_t : ChoiceEquality) (at level 2).
 Definition HASH : nat :=
-  2894.
-Program Definition hash (msg_2888 : byte_seq)
+  2944.
+Program Definition hash (msg_2938 : byte_seq)
   : both (CEfset (
-      [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc])) [interface] (
+      [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc])) [interface] (
     sha512_digest_t) :=
-  ((letbm h_2880 : hash_t loc( h_2880_loc ) := lift_to_both0 hash_init_v in
-      letbm last_block_2881 : block_t loc( last_block_2881_loc ) :=
+  ((letbm h_2930 : hash_t loc( h_2930_loc ) := lift_to_both0 hash_init_v in
+      letbm last_block_2931 : block_t loc( last_block_2931_loc ) :=
         array_new_ (default : uint8) (block_size_v) in
-      letbm last_block_len_2882 : uint_size loc( last_block_len_2882_loc ) :=
+      letbm last_block_len_2932 : uint_size loc( last_block_len_2932_loc ) :=
         lift_to_both0 (usize 0) in
-      letb '(h_2880, last_block_2881, last_block_len_2882) :=
+      letb '(h_2930, last_block_2931, last_block_len_2932) :=
         foldi_both' (lift_to_both0 (usize 0)) (seq_num_chunks (
-              lift_to_both0 msg_2888) (lift_to_both0 block_size_v)) prod_ce(
-            h_2880,
-            last_block_2881,
-            last_block_len_2882
+              lift_to_both0 msg_2938) (lift_to_both0 block_size_v)) prod_ce(
+            h_2930,
+            last_block_2931,
+            last_block_len_2932
           ) (L := (CEfset (
-                [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc]))) (
-            I := [interface]) (fun i_2889 '(
-              h_2880,
-              last_block_2881,
-              last_block_len_2882
+                [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc]))) (
+            I := [interface]) (fun i_2939 '(
+              h_2930,
+              last_block_2931,
+              last_block_len_2932
             ) =>
-            letb '(block_len_2890, block_2891) : (uint_size '× seq uint8) :=
-              seq_get_chunk (lift_to_both0 msg_2888) (
-                lift_to_both0 block_size_v) (lift_to_both0 i_2889) in
-            letb '(h_2880, last_block_2881, last_block_len_2882) :=
-              if (lift_to_both0 block_len_2890) <.? (
+            letb '(block_len_2940, block_2941) : (uint_size '× seq uint8) :=
+              seq_get_chunk (lift_to_both0 msg_2938) (
+                lift_to_both0 block_size_v) (lift_to_both0 i_2939) in
+            letb '(h_2930, last_block_2931, last_block_len_2932) :=
+              if (lift_to_both0 block_len_2940) <.? (
                 lift_to_both0 block_size_v) :bool_ChoiceEquality
               then lift_scope (L1 := CEfset (
-                  [h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc])) (
+                  [h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc])) (
                 L2 := CEfset (
-                  [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc])) (
+                  [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc])) (
                 I1 := [interface]) (
                 I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-                letbm last_block_2881 loc( last_block_2881_loc ) :=
+                letbm last_block_2931 loc( last_block_2931_loc ) :=
                   array_update_start (array_new_ (default : uint8) (
-                      block_size_v)) (lift_to_both0 block_2891) in
-                letbm last_block_len_2882 loc( last_block_len_2882_loc ) :=
-                  lift_to_both0 block_len_2890 in
+                      block_size_v)) (lift_to_both0 block_2941) in
+                letbm last_block_len_2932 loc( last_block_len_2932_loc ) :=
+                  lift_to_both0 block_len_2940 in
                 lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                    lift_to_both0 h_2880,
-                    lift_to_both0 last_block_2881,
-                    lift_to_both0 last_block_len_2882
+                    lift_to_both0 h_2930,
+                    lift_to_both0 last_block_2931,
+                    lift_to_both0 last_block_len_2932
                   ))
                 )
               else  lift_scope (L1 := CEfset (
-                  [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc])) (
+                  [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc])) (
                 L2 := CEfset (
-                  [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc])) (
+                  [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc])) (
                 I1 := [interface]) (
                 I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-                letb compress_input_2892 : block_t :=
-                  array_from_seq (block_size_v) (lift_to_both0 block_2891) in
-                letbm h_2880 loc( h_2880_loc ) :=
-                  compress (lift_to_both0 compress_input_2892) (
-                    lift_to_both0 h_2880) in
+                letb compress_input_2942 : block_t :=
+                  array_from_seq (block_size_v) (lift_to_both0 block_2941) in
+                letbm h_2930 loc( h_2930_loc ) :=
+                  compress (lift_to_both0 compress_input_2942) (
+                    lift_to_both0 h_2930) in
                 lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                    lift_to_both0 h_2880,
-                    lift_to_both0 last_block_2881,
-                    lift_to_both0 last_block_len_2882
+                    lift_to_both0 h_2930,
+                    lift_to_both0 last_block_2931,
+                    lift_to_both0 last_block_len_2932
                   ))
                 ) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-                lift_to_both0 h_2880,
-                lift_to_both0 last_block_2881,
-                lift_to_both0 last_block_len_2882
+                lift_to_both0 h_2930,
+                lift_to_both0 last_block_2931,
+                lift_to_both0 last_block_len_2932
               ))
             ) in
-      letb last_block_2881 : block_t :=
-        array_upd last_block_2881 (lift_to_both0 last_block_len_2882) (is_pure (
+      letb last_block_2931 : block_t :=
+        array_upd last_block_2931 (lift_to_both0 last_block_len_2932) (is_pure (
             secret (lift_to_both0 (@repr U8 128)))) in
-      letb len_bist_2893 : uint128 :=
-        secret (pub_u128 (is_pure ((seq_len (lift_to_both0 msg_2888)) .* (
+      letb len_bist_2943 : uint128 :=
+        secret (pub_u128 (is_pure ((seq_len (lift_to_both0 msg_2938)) .* (
                 lift_to_both0 (usize 8))))) in
-      letb '(h_2880, last_block_2881) :=
-        if (lift_to_both0 last_block_len_2882) <.? ((
+      letb '(h_2930, last_block_2931) :=
+        if (lift_to_both0 last_block_len_2932) <.? ((
             lift_to_both0 block_size_v) .- (
             lift_to_both0 len_size_v)) :bool_ChoiceEquality
         then lift_scope (L1 := CEfset (
-            [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc])) (
+            [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc])) (
           L2 := CEfset (
-            [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc])) (
+            [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc])) (
           I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm last_block_2881 loc( last_block_2881_loc ) :=
-            array_update (lift_to_both0 last_block_2881) ((
+          letbm last_block_2931 loc( last_block_2931_loc ) :=
+            array_update (lift_to_both0 last_block_2931) ((
                 lift_to_both0 block_size_v) .- (lift_to_both0 len_size_v)) (
               array_to_seq (uint128_to_be_bytes (
-                lift_to_both0 len_bist_2893))) in
-          letbm h_2880 loc( h_2880_loc ) :=
-            compress (lift_to_both0 last_block_2881) (lift_to_both0 h_2880) in
+                lift_to_both0 len_bist_2943))) in
+          letbm h_2930 loc( h_2930_loc ) :=
+            compress (lift_to_both0 last_block_2931) (lift_to_both0 h_2930) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-              lift_to_both0 h_2880,
-              lift_to_both0 last_block_2881
+              lift_to_both0 h_2930,
+              lift_to_both0 last_block_2931
             ))
           )
         else  lift_scope (L1 := CEfset (
-            [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc])) (
+            [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc])) (
           L2 := CEfset (
-            [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc])) (
+            [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc])) (
           I1 := [interface]) (
           I2 := [interface]) (H_loc_incl := _) (H_opsig_incl := _) (
-          letbm pad_block_2883 : block_t loc( pad_block_2883_loc ) :=
+          letbm pad_block_2933 : block_t loc( pad_block_2933_loc ) :=
             array_new_ (default : uint8) (block_size_v) in
-          letbm pad_block_2883 loc( pad_block_2883_loc ) :=
-            array_update (lift_to_both0 pad_block_2883) ((
+          letbm pad_block_2933 loc( pad_block_2933_loc ) :=
+            array_update (lift_to_both0 pad_block_2933) ((
                 lift_to_both0 block_size_v) .- (lift_to_both0 len_size_v)) (
               array_to_seq (uint128_to_be_bytes (
-                lift_to_both0 len_bist_2893))) in
-          letbm h_2880 loc( h_2880_loc ) :=
-            compress (lift_to_both0 last_block_2881) (lift_to_both0 h_2880) in
-          letbm h_2880 loc( h_2880_loc ) :=
-            compress (lift_to_both0 pad_block_2883) (lift_to_both0 h_2880) in
+                lift_to_both0 len_bist_2943))) in
+          letbm h_2930 loc( h_2930_loc ) :=
+            compress (lift_to_both0 last_block_2931) (lift_to_both0 h_2930) in
+          letbm h_2930 loc( h_2930_loc ) :=
+            compress (lift_to_both0 pad_block_2933) (lift_to_both0 h_2930) in
           lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-              lift_to_both0 h_2880,
-              lift_to_both0 last_block_2881
+              lift_to_both0 h_2930,
+              lift_to_both0 last_block_2931
             ))
           ) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (array_from_seq (
-          hash_size_v) (array_to_be_bytes (lift_to_both0 h_2880)))
+          hash_size_v) (array_to_be_bytes (lift_to_both0 h_2930)))
       ) : both (CEfset (
-        [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc])) [interface] (
+        [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc])) [interface] (
       sha512_digest_t)).
 Fail Next Obligation.
 
@@ -571,15 +571,15 @@ Notation "'sha512_out'" :=(
   sha512_digest_t : choice_type) (in custom pack_type at level 2).
 Notation "'sha512_out'" :=(sha512_digest_t : ChoiceEquality) (at level 2).
 Definition SHA512 : nat :=
-  2896.
-Program Definition sha512 (msg_2895 : byte_seq)
+  2946.
+Program Definition sha512 (msg_2945 : byte_seq)
   : both (CEfset (
-      [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc])) [interface] (
+      [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc])) [interface] (
     sha512_digest_t) :=
   ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (hash (
-          lift_to_both0 msg_2895))
+          lift_to_both0 msg_2945))
       ) : both (CEfset (
-        [tmp_2839_loc ; s_2845_loc ; h_2857_loc ; h_2873_loc ; h_2880_loc ; last_block_2881_loc ; last_block_len_2882_loc ; pad_block_2883_loc])) [interface] (
+        [tmp_2889_loc ; s_2895_loc ; h_2907_loc ; h_2923_loc ; h_2930_loc ; last_block_2931_loc ; last_block_len_2932_loc ; pad_block_2933_loc])) [interface] (
       sha512_digest_t)).
 Fail Next Obligation.
 

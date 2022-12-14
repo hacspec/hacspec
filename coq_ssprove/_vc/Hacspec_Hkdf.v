@@ -3,7 +3,7 @@ Set Warnings "-notation-overridden,-ambiguous-paths".
 From Crypt Require Import choice_type Package Prelude.
 Import PackageNotation.
 From extructures Require Import ord fset.
-From mathcomp Require Import ssrZ word.
+From mathcomp.word Require Import ssrZ word.
 From Jasmin Require Import word.
 
 From Coq Require Import ZArith.
@@ -161,10 +161,10 @@ Program Definition check_output_limit (l_914 : uint_size)
           uint_size)))).
 Fail Next Obligation.
 
-Definition t_i_917_loc : ChoiceEqualityLocation :=
-  (prk_t ; 919%nat).
 Definition t_918_loc : ChoiceEqualityLocation :=
-  (seq uint8 ; 920%nat).
+  (seq uint8 ; 919%nat).
+Definition t_i_917_loc : ChoiceEqualityLocation :=
+  (prk_t ; 920%nat).
 Notation "'expand_inp'" :=(
   byte_seq '× byte_seq '× uint_size : choice_type) (in custom pack_type at level 2).
 Notation "'expand_inp'" :=(
