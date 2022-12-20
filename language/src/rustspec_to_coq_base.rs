@@ -252,7 +252,10 @@ pub(crate) fn translate_binop<'a, 'b>(
         (BinOpKind::Div, BaseTyp::Usize) | (BinOpKind::Div, BaseTyp::Isize) => {
             op_prefix.append(RcDoc::as_string("/"))
         }
-        (BinOpKind::Rem, BaseTyp::Usize) | (BinOpKind::Rem, BaseTyp::Isize) => {
+        (BinOpKind::Rem, BaseTyp::Usize) => {
+            RcDoc::as_string(".%")
+        }
+        (BinOpKind::Rem, BaseTyp::Isize) => {
             RcDoc::as_string("%%")
         }
         (BinOpKind::Shl, BaseTyp::Usize) => RcDoc::as_string("usize_shift_left"),

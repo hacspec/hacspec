@@ -34,30 +34,34 @@ const RCON: RCon = RCon(secret_bytes!([
     0xd8u8, 0xabu8, 0x4du8
 ]));
 
-fn vpshufd (s: u128, o: usize) -> u128 {
-    let d1 : u32 = (s >> (32 * (o % 4))) as u32;
-    let d2 : u32 = (s >> (32 * (o >> 2) % 4)) as u32;
-    let d3 : u32 = (s >> (32 * (o >> 4) % 4)) as u32;
-    let d4 : u32 = (s >> (32 * (o >> 6) % 4)) as u32;
+fn vpshufd1 (s: u128, o: u8, i : usize) -> u32 {
+    (s >> 32 * ((o as usize >> (2 * i)) % 4)) as u32
+}
+
+fn vpshufd (s: u128, o: u8) -> u128 {
+    let d1 : u32 = vpshufd1(s, o, 0);
+    let d2 : u32 = vpshufd1(s, o, 1);
+    let d3 : u32 = vpshufd1(s, o, 2);
+    let d4 : u32 = vpshufd1(s, o, 3);
 
     (d1 as u128) | ((d2 as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
 }
 
-fn vshufps(s1: u128, s2: u128, o: usize) -> u128 {
-    let d1 = s1 >> (32 * (o % 4));
-    let d2 = s1 >> (32 * ((o >> 2) % 4));
-    let d3 = s2 >> (32 * ((o >> 4) % 4));
-    let d4 = s2 >> (32 * ((o >> 6) % 4));
+fn vshufps(s1: u128, s2: u128, o: u8) -> u128 {
+    let d1 : u32 = vpshufd1(s1, o, 0);
+    let d2 : u32 = vpshufd1(s1, o, 1);
+    let d3 : u32 = vpshufd1(s2, o, 2);
+    let d4 : u32 = vpshufd1(s2, o, 3);
 
-    d1 | (d1 << 32) | (d2 << 64) | (d2 << 96)
+    (d1 as u128) | ((d2  as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
 }
 
 // note the constants might be off, I've interpreted arrays from `aes.jinc` as low endian, they might be big endian
 fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
     let temp1 = vpshufd(temp1, 0xFF);
-    let temp2 = vshufps(temp2, rkey, 0x04);
+    let temp2 = vshufps(temp2, rkey, 16u8);
     let rkey = rkey ^ temp2;
-    let temp2 = vshufps(temp2, rkey, 0x32);
+    let temp2 = vshufps(temp2, rkey, 140u8);
     let rkey = rkey ^ temp2;
     let rkey = rkey ^ temp1;
     (rkey, temp2)
