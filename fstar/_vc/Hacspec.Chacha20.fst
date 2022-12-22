@@ -26,7 +26,7 @@ let chacha20_line
   (a_0 : state_idx_t)
   (b_1 : state_idx_t)
   (d_2 : state_idx_t)
-  (s_3 : pos {s_3 < 32})
+  (s_3 : uint_size)
   (m_4 : state_t)
   : state_t =
   let state_5 : state_t =
@@ -188,10 +188,10 @@ let chacha20_encrypt_block
 let chacha20_encrypt_last
   (st0_45 : state_t)
   (ctr_46 : uint32)
-  (plain_47 : byte_seq {seq_len plain_47 < 64})
+  (plain_47 : byte_seq)
   : byte_seq =
   let b_48 : block_t =
-    array_new_ (secret (pub_u8 0x0)) (64)
+    array_new_ (secret (0x0uy)) (64)
   in
   let b_48 =
     array_update (b_48) (0) (plain_47)
@@ -202,13 +202,13 @@ let chacha20_encrypt_last
   array_slice (b_48) (0) (seq_len (plain_47))
 
 let chacha20_update (st0_49 : state_t) (m_50 : byte_seq) : byte_seq =
-  let blocks_out_51 =
-    seq_new_ (secret (pub_u8 0x0)) (seq_len (m_50))
+  let blocks_out_51 : seq uint8 =
+    seq_new_ (secret (0x0uy)) (seq_len (m_50))
   in
   let n_blocks_52 : uint_size =
     seq_num_exact_chunks (m_50) (64)
   in
-  let blocks_out_51 =
+  let (blocks_out_51) =
     foldi (0) (n_blocks_52) (fun i_53 (blocks_out_51) ->
       let msg_block_54 : seq uint8 =
         seq_get_exact_chunk (m_50) (64) (i_53)
