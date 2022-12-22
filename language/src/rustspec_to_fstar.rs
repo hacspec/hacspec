@@ -357,7 +357,7 @@ impl<T: fmt::LowerHex + num::traits::Signed> fmt::LowerHex for SignedInteger<T> 
     }
 }
 
-fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
+fn translate_literal<'a>(lit: Literal, pattern_matching: bool) -> RcDoc<'a, ()> {
     match lit {
         Literal::Unit => RcDoc::as_string("()"),
         Literal::Bool(true) => RcDoc::as_string("true"),
@@ -370,8 +370,10 @@ fn translate_literal<'a>(lit: Literal) -> RcDoc<'a, ()> {
         Literal::UInt32(x) => RcDoc::as_string(format!("{:#x}ul", x)),
         Literal::Int16(x) => RcDoc::as_string(format!("{:#x}s", SignedInteger(x))),
         Literal::UInt16(x) => RcDoc::as_string(format!("{:#x}us", x)),
-        Literal::Int8(x) => RcDoc::as_string(format!("{:#x}y", SignedInteger(x))),
-        Literal::UInt8(x) => RcDoc::as_string(format!("{:#x}uy", x)),
+        Literal::Int8(x) =>
+            RcDoc::as_string(if pattern_matching {format!("{:#x}y", SignedInteger(x))} else {format!("pub_i8 {:#x}", SignedInteger(x))}),
+        Literal::UInt8(x) =>
+            RcDoc::as_string(if pattern_matching {format!("{:#x}uy", x)} else {format!("pub_u8 {:#x}", x)}),
         Literal::Isize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::Usize(x) => RcDoc::as_string(format!("{}", x)),
         Literal::UnspecifiedInt(_) => panic!("Got a `UnspecifiedInt` literal: those should have been resolved into concrete types during the typechecking phase"),
@@ -500,7 +502,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
         }
         Pattern::IdentPat(x, _) => translate_ident(x.clone()),
         Pattern::WildCard => RcDoc::as_string("_"),
-        Pattern::LiteralPat(l) => translate_literal(l.clone()),
+        Pattern::LiteralPat(l) => translate_literal(l.clone(), true),
         Pattern::Tuple(pats) => make_tuple(pats.into_iter().map(|(pat, _)| translate_pattern(pat))),
     }
 }
@@ -935,7 +937,7 @@ fn translate_expression<'a>(
                 .append(make_paren(translate_expression(sess, e1, top_ctx)))
                 .group()
         }
-        Expression::Lit(lit) => translate_literal(lit.clone()),
+        Expression::Lit(lit) => translate_literal(lit.clone(), false),
         Expression::Tuple(es) => make_tuple(
             es.into_iter()
                 .map(|(e, _)| translate_expression(sess, e, top_ctx)),
