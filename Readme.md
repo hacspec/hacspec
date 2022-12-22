@@ -161,6 +161,7 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [P256](examples/p256/src/p256.rs)
 - [ECDSA-P256-SHA256](examples/ecdsa-p256-sha256/src/ecdsa.rs)
 - [Ed25519](examples/ed25519/src/ed25519.rs)
+- [BIP-340](examples/bip-340/src/bip-340.rs) [text](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) [blog](https://blog.blockstream.com/half-aggregation-of-bip-340-signatures/), including secp.
 
 ## Unsafe examples
 
