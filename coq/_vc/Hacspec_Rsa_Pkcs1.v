@@ -46,11 +46,11 @@ Instance eq_dec_error_t : EqDec (error_t) :=
 Build_EqDec (error_t) (eqb_error_t) (eqb_leibniz_error_t).
 
 
-Notation "'pk_t'" := ((rsa_int_t × rsa_int_t)) : hacspec_scope.
+Notation "'pk_t'" := ((rsa_int_t '× rsa_int_t)) : hacspec_scope.
 
-Notation "'sk_t'" := ((rsa_int_t × rsa_int_t)) : hacspec_scope.
+Notation "'sk_t'" := ((rsa_int_t '× rsa_int_t)) : hacspec_scope.
 
-Notation "'key_pair_t'" := ((pk_t × sk_t)) : hacspec_scope.
+Notation "'key_pair_t'" := ((pk_t '× sk_t)) : hacspec_scope.
 
 Notation "'byte_seq_result_t'" := ((result byte_seq error_t)) : hacspec_scope.
 
@@ -104,23 +104,18 @@ Definition mgf1
   : byte_seq_result_t :=
   let result_2478 : (result byte_seq error_t) :=
     @Err byte_seq error_t (InvalidLength) in 
-  let '(result_2478) :=
-    if (mask_len_2477) <.? ((usize 2) .^ ((usize 32) * (hlen_v))):bool then (
-      let t_2479 : seq uint8 :=
-        seq_new_ (default : uint8) (usize 0) in 
-      let t_2479 :=
-        foldi (usize 0) (((mask_len_2477) + (usize 32)) / (
-              usize 32)) (fun i_2480 t_2479 =>
-          let x_2481 : byte_seq :=
-            i2osp (nat_mod_from_literal (0x) (pub_u128 (i_2480)) : rsa_int_t) (
-              @repr WORDSIZE32 4) in 
-          let t_2479 :=
-            seq_concat (t_2479) (array_to_seq (sha256 (seq_concat (
-                  mgf_seed_2476) (x_2481)))) in 
-          (t_2479))
-        t_2479 in 
-      let result_2478 :=
+  ifbnd (mask_len_2477) <.? ((usize 2) .^ ((usize 32) * (hlen_v))) : bool
+  thenbnd (let t_2479 : seq uint8 :=
+      seq_new_ (default : uint8) (usize 0) in 
+    bind (foldibnd (usize 0) to (((mask_len_2477) + (usize 32)) / (
+          usize 32)) for t_2479 >> (fun i_2480 t_2479 =>
+      bind (i2osp (nat_mod_from_literal (0x) (pub_u128 (i_2480)) : rsa_int_t) (
+          @repr WORDSIZE32 4)) (fun x_2481 => let t_2479 :=
+          seq_concat (t_2479) (array_to_seq (sha256 (seq_concat (
+                mgf_seed_2476) (x_2481)))) in 
+        @Ok (seq uint8) error_t ((t_2479))))) (fun t_2479 => let result_2478 :=
         @Ok byte_seq error_t (seq_slice (t_2479) (usize 0) (mask_len_2477)) in 
-      (result_2478)) else ((result_2478)) in 
-  result_2478.
+      @Ok ((result byte_seq error_t)) error_t ((result_2478))))
+  else ((result_2478)) >> (fun '(result_2478) =>
+  result_2478).
 

@@ -16,7 +16,7 @@ Definition scalar_canvas_t := nseq (int8) (32).
 Definition scalar_t :=
   nat_mod 0x8000000000000000000000000000000000000000000000000000000000000000.
 
-Notation "'point_t'" := ((x25519_field_element_t × x25519_field_element_t
+Notation "'point_t'" := ((x25519_field_element_t '× x25519_field_element_t
 )) : hacspec_scope.
 
 Definition x25519_serialized_point_t := nseq (uint8) (usize 32).
@@ -67,8 +67,8 @@ Definition encode_point (p_483 : point_t) : x25519_serialized_point_t :=
 
 Definition point_add_and_double
   (q_487 : point_t)
-  (np_488 : (point_t × point_t))
-  : (point_t × point_t) :=
+  (np_488 : (point_t '× point_t))
+  : (point_t '× point_t) :=
   let '(nq_489, nqp1_490) :=
     np_488 in 
   let '(x_1_491, z_1_492) :=
@@ -109,7 +109,7 @@ Definition point_add_and_double
     (e_501) *% ((aa_498) +% ((e121665_509) *% (e_501))) in 
   ((x_2_508, z_2_510), (x_3_506, z_3_507)).
 
-Definition swap (x_511 : (point_t × point_t)) : (point_t × point_t) :=
+Definition swap (x_511 : (point_t '× point_t)) : (point_t '× point_t) :=
   let '(x0_512, x1_513) :=
     x_511 in 
   (x1_513, x0_512).
@@ -118,7 +118,7 @@ Definition montgomery_ladder
   (k_514 : scalar_t)
   (init_515 : point_t)
   : point_t :=
-  let inf_516 : (x25519_field_element_t × x25519_field_element_t) :=
+  let inf_516 : (x25519_field_element_t '× x25519_field_element_t) :=
     (
       nat_mod_from_literal (
         0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed) (
@@ -127,7 +127,7 @@ Definition montgomery_ladder
         0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed) (
         @repr WORDSIZE128 0) : x25519_field_element_t
     ) in 
-  let acc_517 : (point_t × point_t) :=
+  let acc_517 : (point_t '× point_t) :=
     (inf_516, init_515) in 
   let acc_517 :=
     foldi (usize 0) (usize 256) (fun i_518 acc_517 =>
@@ -153,9 +153,9 @@ Definition x25519_scalarmult
   : x25519_serialized_point_t :=
   let s_522 : scalar_t :=
     decode_scalar (s_520) in 
-  let p_523 : (x25519_field_element_t × x25519_field_element_t) :=
+  let p_523 : (x25519_field_element_t '× x25519_field_element_t) :=
     decode_point (p_521) in 
-  let r_524 : (x25519_field_element_t × x25519_field_element_t) :=
+  let r_524 : (x25519_field_element_t '× x25519_field_element_t) :=
     montgomery_ladder (s_522) (p_523) in 
   encode_point (r_524).
 

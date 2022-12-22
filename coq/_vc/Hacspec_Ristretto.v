@@ -9,9 +9,9 @@ Open Scope hacspec_scope.
 Require Import Hacspec_Lib.
 
 Notation "'ristretto_point_t'" := ((
-  field_element_t ×
-  field_element_t ×
-  field_element_t ×
+  field_element_t '×
+  field_element_t '×
+  field_element_t '×
   field_element_t
 )) : hacspec_scope.
 
@@ -406,7 +406,7 @@ Definition abs (u_754 : field_element_t) : field_element_t :=
 Definition sqrt_ratio_m1
   (u_755 : field_element_t)
   (v_756 : field_element_t)
-  : (bool × field_element_t) :=
+  : (bool '× field_element_t) :=
   let v3_757 : field_element_t :=
     (nat_mod_pow (v_756) (@repr WORDSIZE128 2)) *% (v_756) in 
   let v7_758 : field_element_t :=
@@ -489,16 +489,16 @@ Definition one_way_map (b_781 : byte_string_t) : ristretto_point_t :=
   let r1_787 : field_element_t :=
     nat_mod_from_public_byte_seq_le (r1_bytes_785) in 
   let p1_788 : (
-      field_element_t ×
-      field_element_t ×
-      field_element_t ×
+      field_element_t '×
+      field_element_t '×
+      field_element_t '×
       field_element_t
     ) :=
     map (r0_786) in 
   let p2_789 : (
-      field_element_t ×
-      field_element_t ×
-      field_element_t ×
+      field_element_t '×
+      field_element_t '×
+      field_element_t '×
       field_element_t
     ) :=
     map (r1_787) in 
@@ -671,16 +671,16 @@ Definition mul
   (p_877 : ristretto_point_t)
   : ristretto_point_t :=
   let res_878 : (
-      field_element_t ×
-      field_element_t ×
-      field_element_t ×
+      field_element_t '×
+      field_element_t '×
+      field_element_t '×
       field_element_t
     ) :=
     identity_point  in 
   let temp_879 : (
-      field_element_t ×
-      field_element_t ×
-      field_element_t ×
+      field_element_t '×
+      field_element_t '×
+      field_element_t '×
       field_element_t
     ) :=
     p_877 in 
