@@ -51,7 +51,7 @@ Definition scalar_t :=
 
 Definition big_integer_t := nat_mod pow2 256.
 
-Notation "'affine_point_t'" := ((field_element_t × field_element_t
+Notation "'affine_point_t'" := ((field_element_t '× field_element_t
 )) : hacspec_scope.
 
 Definition p_bytes32_t := nseq (int8) (usize 32).
@@ -138,13 +138,12 @@ Definition lift_x
       @repr WORDSIZE128 7) : field_element_t in 
   let y_sq_2497 : field_element_t :=
     (nat_mod_pow_self (x_2492) (three_2495)) +% (seven_2496) in 
-  let y_2498 : field_element_t :=
-    option_ok_or (sqrt (y_sq_2497)) (InvalidXCoordinate) in 
-  let '(y_2498) :=
-    if ((y_2498) rem (two_2494)) =.? (one_2493):bool then (let y_2498 :=
-        (nat_mod_zero ) -% (y_2498) in 
-      (y_2498)) else ((y_2498)) in 
-  @Ok affine_point_t error_t ((x_2492, y_2498)).
+  bind (option_ok_or (sqrt (y_sq_2497)) (InvalidXCoordinate)) (fun y_2498 =>
+    let '(y_2498) :=
+      if ((y_2498) rem (two_2494)) =.? (one_2493):bool then (let y_2498 :=
+          (nat_mod_zero ) -% (y_2498) in 
+        (y_2498)) else ((y_2498)) in 
+    @Ok affine_point_t error_t ((x_2492, y_2498))).
 
 Definition compute_lam
   (p1_2499 : affine_point_t)
@@ -170,10 +169,12 @@ Definition point_add (p1_2502 : point_t) (p2_2503 : point_t) : point_t :=
       (result_2504)) else (let '(result_2504) :=
         if option_is_none (finite (p2_2503)):bool then (let result_2504 :=
             p1_2502 in 
-          (result_2504)) else (let p1_2505 : (field_element_t × field_element_t
+          (result_2504)) else (let p1_2505 : (
+              field_element_t '×
+              field_element_t
             ) :=
             option_unwrap (finite (p1_2502)) in 
-          let p2_2506 : (field_element_t × field_element_t) :=
+          let p2_2506 : (field_element_t '× field_element_t) :=
             option_unwrap (finite (p2_2503)) in 
           let '(result_2504) :=
             if negb (((x (p1_2505)) =.? (x (p2_2506))) && ((y (p1_2505)) !=.? (
@@ -421,10 +422,9 @@ Definition scalar_from_bytes_strict (b_2535 : bytes32_t) : (option scalar_t) :=
           array_to_seq (b_2535)) : scalar_t))).
 
 Definition seckey_scalar_from_bytes (b_2538 : bytes32_t) : (option scalar_t) :=
-  let s_2539 : scalar_t :=
-    scalar_from_bytes_strict (b_2538) in 
-  (if ((s_2539) =.? (nat_mod_zero )):bool then (@None scalar_t) else (
-      @Some scalar_t (s_2539))).
+  bind (scalar_from_bytes_strict (b_2538)) (fun s_2539 => (if ((s_2539) =.? (
+          nat_mod_zero )):bool then (@None scalar_t) else (@Some scalar_t (
+          s_2539)))).
 
 Definition fieldelem_from_bytes
   (b_2540 : public_key_t)
@@ -454,11 +454,13 @@ Notation "'pubkey_gen_result_t'" := ((
   result public_key_t error_t)) : hacspec_scope.
 
 Definition pubkey_gen (seckey_2547 : secret_key_t) : pubkey_gen_result_t :=
-  let d0_2548 : scalar_t :=
-    option_ok_or (seckey_scalar_from_bytes (seckey_2547)) (InvalidSecretKey) in 
-  let p_2549 : (field_element_t × field_element_t) :=
-    option_unwrap (finite (point_mul_base (d0_2548))) in 
-  @Ok public_key_t error_t (bytes_from_point (p_2549)).
+  bind (option_ok_or (seckey_scalar_from_bytes (seckey_2547)) (
+      InvalidSecretKey)) (fun d0_2548 => let p_2549 : (
+        field_element_t '×
+        field_element_t
+      ) :=
+      option_unwrap (finite (point_mul_base (d0_2548))) in 
+    @Ok public_key_t error_t (bytes_from_point (p_2549))).
 
 Notation "'sign_result_t'" := ((result signature_t error_t)) : hacspec_scope.
 
@@ -467,37 +469,39 @@ Definition sign
   (seckey_2551 : secret_key_t)
   (aux_rand_2552 : aux_rand_t)
   : sign_result_t :=
-  let d0_2553 : scalar_t :=
-    option_ok_or (seckey_scalar_from_bytes (seckey_2551)) (InvalidSecretKey) in 
-  let p_2554 : (field_element_t × field_element_t) :=
-    option_unwrap (finite (point_mul_base (d0_2553))) in 
-  let d_2555 : scalar_t :=
-    (if (has_even_y (p_2554)):bool then (d0_2553) else ((nat_mod_zero ) -% (
-          d0_2553))) in 
-  let t_2556 : bytes32_t :=
-    xor_bytes (bytes_from_scalar (d_2555)) (hash_aux (aux_rand_2552)) in 
-  let k0_2557 : scalar_t :=
-    scalar_from_bytes (hash_nonce (t_2556) (bytes_from_point (p_2554)) (
-        msg_2550)) in 
-  let 'tt :=
-    if (k0_2557) =.? (nat_mod_zero ):bool then (let _ : signature_t :=
-        @Err signature_t error_t (InvalidNonceGenerated) in 
-      tt) else (tt) in 
-  let r_2558 : (field_element_t × field_element_t) :=
-    option_unwrap (finite (point_mul_base (k0_2557))) in 
-  let k_2559 : scalar_t :=
-    (if (has_even_y (r_2558)):bool then (k0_2557) else ((nat_mod_zero ) -% (
-          k0_2557))) in 
-  let e_2560 : scalar_t :=
-    scalar_from_bytes (hash_challenge (bytes_from_point (r_2558)) (
-        bytes_from_point (p_2554)) (msg_2550)) in 
-  let sig_2561 : signature_t :=
-    array_update (array_update (array_new_ (default : uint8) (64)) (usize 0) (
-        array_to_seq (bytes_from_point (r_2558)))) (usize 32) (
-      array_to_seq (bytes_from_scalar ((k_2559) +% ((e_2560) *% (d_2555))))) in 
-  let _ : unit :=
-    verify (msg_2550) (bytes_from_point (p_2554)) (sig_2561) in 
-  @Ok signature_t error_t (sig_2561).
+  bind (option_ok_or (seckey_scalar_from_bytes (seckey_2551)) (
+      InvalidSecretKey)) (fun d0_2553 => let p_2554 : (
+        field_element_t '×
+        field_element_t
+      ) :=
+      option_unwrap (finite (point_mul_base (d0_2553))) in 
+    let d_2555 : scalar_t :=
+      (if (has_even_y (p_2554)):bool then (d0_2553) else ((nat_mod_zero ) -% (
+            d0_2553))) in 
+    let t_2556 : bytes32_t :=
+      xor_bytes (bytes_from_scalar (d_2555)) (hash_aux (aux_rand_2552)) in 
+    let k0_2557 : scalar_t :=
+      scalar_from_bytes (hash_nonce (t_2556) (bytes_from_point (p_2554)) (
+          msg_2550)) in 
+    ifbnd (k0_2557) =.? (nat_mod_zero ) : bool
+    thenbnd (bind (@Err signature_t error_t (InvalidNonceGenerated)) (fun _ =>
+        @Ok unit error_t (tt)))
+    else (tt) >> (fun 'tt =>
+    let r_2558 : (field_element_t '× field_element_t) :=
+      option_unwrap (finite (point_mul_base (k0_2557))) in 
+    let k_2559 : scalar_t :=
+      (if (has_even_y (r_2558)):bool then (k0_2557) else ((nat_mod_zero ) -% (
+            k0_2557))) in 
+    let e_2560 : scalar_t :=
+      scalar_from_bytes (hash_challenge (bytes_from_point (r_2558)) (
+          bytes_from_point (p_2554)) (msg_2550)) in 
+    let sig_2561 : signature_t :=
+      array_update (array_update (array_new_ (default : uint8) (64)) (usize 0) (
+          array_to_seq (bytes_from_point (r_2558)))) (usize 32) (
+        array_to_seq (bytes_from_scalar ((k_2559) +% ((e_2560) *% (
+              d_2555))))) in 
+    bind (verify (msg_2550) (bytes_from_point (p_2554)) (sig_2561)) (fun _ =>
+      @Ok signature_t error_t (sig_2561)))).
 
 Notation "'verification_result_t'" := ((result unit error_t)) : hacspec_scope.
 
@@ -506,27 +510,21 @@ Definition verify
   (pubkey_2563 : public_key_t)
   (sig_2564 : signature_t)
   : verification_result_t :=
-  let p_x_2565 : field_element_t :=
-    option_ok_or (fieldelem_from_bytes (pubkey_2563)) (InvalidPublicKey) in 
-  let p_2566 : affine_point_t :=
-    lift_x (p_x_2565) in 
-  let r_2567 : field_element_t :=
-    option_ok_or (fieldelem_from_bytes (array_from_slice (default : uint8) (
-          32) (array_to_seq (sig_2564)) (usize 0) (usize 32))) (
-      InvalidSignature) in 
-  let s_2568 : scalar_t :=
-    option_ok_or (scalar_from_bytes_strict (array_from_slice (default : uint8) (
-          32) (array_to_seq (sig_2564)) (usize 32) (usize 32))) (
-      InvalidSignature) in 
-  let e_2569 : scalar_t :=
-    scalar_from_bytes (hash_challenge (array_from_slice (default : uint8) (32) (
-          array_to_seq (sig_2564)) (usize 0) (usize 32)) (bytes_from_point (
-          p_2566)) (msg_2562)) in 
-  let r_p_2570 : (field_element_t × field_element_t) :=
-    option_ok_or (finite (point_add (point_mul_base (s_2568)) (point_mul ((
-              nat_mod_zero ) -% (e_2569)) (Affine (p_2566))))) (
-      InvalidSignature) in 
-  (if ((negb (has_even_y (r_p_2570))) || ((x (r_p_2570)) !=.? (
-          r_2567))):bool then (@Err unit error_t (InvalidSignature)) else (
-      @Ok unit error_t (tt))).
+  bind (option_ok_or (fieldelem_from_bytes (pubkey_2563)) (InvalidPublicKey)) (
+    fun p_x_2565 => bind (lift_x (p_x_2565)) (fun p_2566 => bind (option_ok_or (
+          fieldelem_from_bytes (array_from_slice (default : uint8) (32) (
+              array_to_seq (sig_2564)) (usize 0) (usize 32))) (
+          InvalidSignature)) (fun r_2567 => bind (option_ok_or (
+            scalar_from_bytes_strict (array_from_slice (default : uint8) (32) (
+                array_to_seq (sig_2564)) (usize 32) (usize 32))) (
+            InvalidSignature)) (fun s_2568 => let e_2569 : scalar_t :=
+            scalar_from_bytes (hash_challenge (array_from_slice (
+                  default : uint8) (32) (array_to_seq (sig_2564)) (usize 0) (
+                  usize 32)) (bytes_from_point (p_2566)) (msg_2562)) in 
+          bind (option_ok_or (finite (point_add (point_mul_base (s_2568)) (
+                  point_mul ((nat_mod_zero ) -% (e_2569)) (Affine (p_2566))))) (
+              InvalidSignature)) (fun r_p_2570 => (if ((negb (has_even_y (
+                      r_p_2570))) || ((x (r_p_2570)) !=.? (r_2567))):bool then (
+                @Err unit error_t (InvalidSignature)) else (@Ok unit error_t (
+                  tt)))))))).
 

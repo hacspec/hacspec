@@ -81,7 +81,7 @@ Definition ntru_prime_653_decrypt
   (c_1275 : seq int128)
   (key_f_1276 : seq int128)
   (key_v_1277 : seq int128)
-  : (seq int128 × bool) :=
+  : (seq int128 '× bool) :=
   let p_1278 : uint_size :=
     usize 653 in 
   let q_1279 : int128 :=
@@ -92,7 +92,7 @@ Definition ntru_prime_653_decrypt
     build_irreducible (p_1278) in 
   let f_c_1282 : seq int128 :=
     mul_poly_irr (key_f_1276) (c_1275) (irreducible_1281) (q_1279) in 
-  let f_3_c_and_decryption_ok_1283 : (seq int128 × bool) :=
+  let f_3_c_and_decryption_ok_1283 : (seq int128 '× bool) :=
     poly_to_ring (irreducible_1281) (add_poly (f_c_1282) (add_poly (f_c_1282) (
           f_c_1282) (q_1279)) (q_1279)) (q_1279) in 
   let '(f_3_c_1284, ok_decrypt_1285) :=
