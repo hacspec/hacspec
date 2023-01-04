@@ -34,6 +34,7 @@ const RCON: RCon = RCon(secret_bytes!([
     0xd8u8, 0xabu8, 0x4du8
 ]));
 
+// Jasmin
 fn vpshufd1 (s: u128, o: u8, i : usize) -> u32 {
     (s >> 32 * ((o as usize >> (2 * i)) % 4)) as u32
 }
@@ -68,12 +69,12 @@ fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
 }
 
 fn subword(v: u32) -> u32 {
-    let vs = u32_to_le_bytes(v);
+    let vs = u32_to_be_bytes(v);
     let mut res = u32Word::new();
-    for i in 0..32 {
+    for i in 0..8 {
 	res[i] = SBOX[vs[i]];
     }
-    u32_from_le_bytes(res)
+    u32_from_be_bytes(res)
 }
 
 fn ror(v: u32, i: usize) -> u32 {
