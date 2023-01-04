@@ -133,7 +133,7 @@ End IntType.
 
 Axiom secret : forall {WS : wsize},  (T (@int WS)) -> (T (@int WS)).
 
-Infix "%%" := int_modi (at level 40, left associativity) : Z_scope.
+Infix ".%%" := int_modi (at level 40, left associativity) : Z_scope.
 Infix ".+" := int_add (at level 77) : hacspec_scope.
 Infix ".-" := int_sub (at level 77) : hacspec_scope.
 Notation "-" := int_opp (at level 77) : hacspec_scope.
@@ -346,7 +346,7 @@ Definition uint128_rotate_right (u: int128) (s: int128) : int128 :=
 
 (* should use size u instead of u? *)
 Definition usize_shift_right (u: uint_size) (s: int32) : uint_size :=
-  (ror u s).
+  wshr u (@repr U32 (from_uint_size s)). (* (ror u s). *)
 Infix "usize_shift_right" := (usize_shift_right) (at level 77) : hacspec_scope.
 
 (* should use size u instead of u? *)
@@ -1111,24 +1111,19 @@ Qed.
 Definition array_from_list
            (A: ChoiceEquality)
            (l: list (T A))
-  : T (nseq A (length l)).
-Proof.
-  destruct l as [ | x xs ].
-  - apply tt.
-  - pose (l := x :: xs).
-    pose proof (seq.foldr (fun (x : (T A) * { x : nat | (x < length l)%nat }) y =>
-                             setm
-                               (S := (T A))
-                               y
-                               (fintype.Ordinal (n := length l) (m := proj1_sig (snd x)) (ssrbool.introT ssrnat.ltP (proj2_sig (snd x))))
-                               (fst x))
-                          emptym
-                          (seq.zip l (@list_iter (length l) (length l) (le_n (length l))))).
-    rewrite <- ChoiceEq.
-    hnf.
-    rewrite ChoiceEq.
-    apply X.
-Defined.
+  : T (nseq A (length l)) :=
+  match l with
+  | [] => tt
+  | x :: xs =>
+      let l1 := x :: xs in
+      seq.foldr
+        (fun (x0 : T A * {x : nat | (x < length l1)%nat})
+           (y : {fmap Ord.sort (ordinal_ordType (length l1)) -> T A}) =>
+           setm (T:=ordinal_ordType (length l1)) y
+                (Ordinal (n:=length l1) (m:=proj1_sig (snd x0))
+                         (ssrbool.introT ssrnat.ltP (proj2_sig (snd x0))))
+                (fst x0)) emptym (seq.zip l1 (list_iter (H := le_n _) (length l1) (length l1)))
+  end.
 
 (**** Array manipulation *)
 
@@ -1141,24 +1136,38 @@ Definition array_new_ {A: ChoiceEquality} (init:T A) (len: nat) : T (nseq A len)
   apply (@array_from_list A (repeat init len)).
 Defined.
 
+(* Definition array_index_helper_helper {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A (S len))) {WS} (i: @int WS) {H2 : (Z.to_nat (unsigned i) <? len)%nat = true} : T A := *)
+(*   match getm s *)
+(*              (Ordinal (n:=len) (m:=Z.to_nat (unsigned i)) *)
+(*                       (ssrnat.leqW (m:=S (Z.to_nat (unsigned i))) (n:=len) *)
+(*                                    (ssrbool.introT ssrnat.ltP (match Nat.ltb_lt (Z.to_nat (unsigned i)) len with *)
+(*                                                                | conj x x0 => x *)
+(*                                                                end H2)))) with *)
+(*   | Some a => (fun f : T A => f) a *)
+(*   | None => default *)
+(*   end. *)
+
+(* Definition array_index_helper {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A (S len))) {WS} (i: @int WS) : T A := *)
+(*   (if (Z.to_nat (unsigned i) <? len)%nat as b0 return ((Z.to_nat (unsigned i) <? len)%nat = b0 -> T A) *)
+(*    then fun H2: (Z.to_nat (unsigned i) <? len)%nat = true => @array_index_helper_helper _ _ _ s _ i H2 *)
+(*    else fun _ : (Z.to_nat (unsigned i) <? len)%nat = false => default) eq_refl.   *)
+
+(* Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : T A := *)
+(*  match len with *)
+(*  | 0%nat => fun _ : T (nseq A 0) => default *)
+(*  | S len0 => fun (s0 : T (nseq A (S len0))) => array_index_helper s0 i *)
+(*  end s. *)
 
 Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : T A.
 Proof.
   destruct (Z.to_nat (unsigned i) <? len)%nat eqn:H1.
-  (* If i < len, index normally *)
   - apply Nat.ltb_lt in H1.
     destruct len. { lia. }
-    rewrite <- ChoiceEq in s.
-    cbn in s.
-    rewrite -> ChoiceEq in s.
-    destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := Z.to_nat (unsigned i)) (ssrbool.introT ssrnat.ltP H1))) as [f | ].
-    + exact f.
-    + exact default.
-
-  (* otherwise return default element *)
+    destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := Z.to_nat (unsigned i)) ((ssrbool.introT ssrnat.ltP H1)))) as [f | ].
+    * exact f.
+    * exact default.
   - exact default.
 Defined.
-
 
 Definition array_upd {A: ChoiceEquality} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) (new_v: T A) : T (nseq A len).
 Proof.
@@ -1626,30 +1635,6 @@ Axiom uint128_from_be_bytes : nseq int8 16 -> int128.
 (* Definition uint128_from_be_bytes (s: nseq uint8 16) : uint128 :=
   LBSeq.uint_from_bytes_be s *)
 
-Axiom u32_to_le_bytes : int32 -> nseq int8 4.
-(* Definition u32_to_le_bytes (x: pub_uint32) : nseq pub_uint8 4 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom u32_to_be_bytes : int32 -> nseq int8 4.
-(* Definition u32_to_be_bytes (x: pub_uint32) : nseq pub_uint8 4 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom u32_from_le_bytes : nseq int8 4 -> int32.
-(* Definition u32_from_le_bytes (s: nseq pub_uint8 4) : pub_uint32 :=
-  LBSeq.uint_from_bytes_le s *)
-
-Axiom u32_from_be_bytes : nseq int8 4 -> int32.
-(* Definition u32_from_be_bytes (s: nseq pub_uint8 4) : pub_uint32 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom u64_to_le_bytes : int64 -> nseq int8 8.
-(* Definition u64_to_le_bytes (x: int64) : nseq int8 8 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom u64_from_le_bytes : nseq int8 8 -> int64.
-(* Definition u64_from_le_bytes (s: nseq int8 8) : int64 :=
-  LBSeq.uint_from_bytes_le s *)
-
 Axiom u128_to_le_bytes : int128 -> nseq int8 16.
 (* Definition u128_to_le_bytes (x: int128) : nseq int8 16 :=
   LBSeq.uint_to_bytes_le x *)
@@ -2088,32 +2073,104 @@ Fixpoint nat_be_range_to_position_ (z : list bool) (val : Z) : Z :=
 Definition nat_be_range_to_position (k : nat) (z : list bool) (n : Z) : Z :=
   (nat_be_range_to_position_ z 0 * 2^(k * n)).
 
-Definition nat_be_range (k : nat) (z : Z) (n : nat) : Z :=
+Definition nat_be_range' (k : nat) (z : Z) (n : nat) : Z :=
   nat_be_range_to_position_ (nat_be_range_at_position k z (n * k)) 0. (* * 2^(k * n) *)
+(* Subword *)
 
-Compute nat_be_range 4 0 300.
+Definition nat_be_range (k : nat) (z : Z) (n : nat) :=
+  ((z / 2 ^ (n * k)%Z) mod 2 ^ k)%Z.
 
-Definition u64_to_be_bytes' : int64 -> nseq int8 8 :=
-  fun k => array_from_list (int8) [@nat_to_int U8 (nat_be_range 4 k 7) ;
-                                   @nat_to_int U8(nat_be_range 4 k 6) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 5) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 4) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 3) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 2) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 1) ;
-                                   @nat_to_int U8 (nat_be_range 4 k 0)].
+Definition to_be_bytes' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range 8 k i)
+        (seq.iota 0 (nat_of_wsize WS / 8)))).
 
+Definition to_be_bytes'' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range' 8 k i)
+        (seq.iota 0 (nat_of_wsize WS / 8)))).
 
+Definition to_be_bytes {WS} : @int WS -> nseq int8 (WS / 8) :=
+  (fun (k : T int) =>
+     eq_rect
+       (seq.size (seq.iota 0 (nat_of_wsize WS / 8)))
+       (fun n : nat => T (nseq uint8 n))
+       (eq_rect _ (fun n : nat => T (nseq uint8 n))
+                (array_from_list uint8
+                                 (map
+                                    (fun i : nat => repr (nat_be_range 8 (toword k) i))
+                                    (seq.iota 0 (nat_of_wsize WS / 8))))
+                (length (seq.iota 0 (nat_of_wsize WS / 8)))
+                (map_length
+                   (fun i : nat =>
+                      repr (nat_be_range 8 (toword k) i))
+                   (seq.iota 0 (nat_of_wsize WS / 8))))
+       (nat_of_wsize WS / 8)%nat
+       (seq.size_iota 0 (nat_of_wsize WS / 8))).
 
-Definition u64_from_be_bytes_fold_fun (i : int8) (s : nat_ChoiceEquality '× int64) : nat_ChoiceEquality '× int64 :=
+Definition from_be_bytes_fold_fun {WS} (i : int8) (s : nat_ChoiceEquality '× @int WS) : nat_ChoiceEquality '× @int WS :=
   let (n,v) := s in
-  (S n, v .+ (@repr U64 ((int8_to_nat i) * 2 ^ (4 * n)))).
+  (S n, v .+ (@repr WS ((int8_to_nat i) * 2 ^ (8 * n)))).
 
-Definition u64_from_be_bytes' : nseq int8 8 -> int64 :=
-   (fun v => snd (List.fold_right u64_from_be_bytes_fold_fun (0%nat, @repr U64 0) (array_to_list v))).
+Definition from_be_bytes {WS : wsize} : nseq int8 (WS / 8) -> @int WS :=
+   (fun v => snd (List.fold_right from_be_bytes_fold_fun (0%nat, @repr WS 0) (array_to_list v))).
 
-Definition u64_to_be_bytes : int64 -> nseq int8 8 := u64_to_be_bytes'.
-Definition u64_from_be_bytes : nseq int8 8 -> int64 := u64_from_be_bytes'.
+Definition to_le_bytes' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range 8 k i)
+        (rev (seq.iota 0 (nat_of_wsize WS / 8))))).
+
+Definition to_le_bytes'' {WS} : Z -> list Z :=
+  (fun (k : Z) =>
+     (map
+        (fun i : nat => nat_be_range' 8 k i)
+        (rev (seq.iota 0 (nat_of_wsize WS / 8))))).
+
+Definition to_le_bytes {WS} : @int WS -> nseq int8 (WS / 8) :=
+  fun (k : T int) =>
+   eq_rect (seq.size (seq.iota 0 (nat_of_wsize WS / 8))) (fun n : nat => T (nseq uint8 n))
+     (eq_rect (length (rev (seq.iota 0 (nat_of_wsize WS / 8))))
+     (fun n : nat => T (nseq uint8 n)) (eq_rect
+     (length
+        (map
+           (fun i : nat =>
+            repr (nat_be_range 8 (toword k) i))
+           (rev (seq.iota 0 (nat_of_wsize WS / 8)))))
+     (fun n : nat => T (nseq uint8 n)) (array_from_list uint8
+     (map
+        (fun i : nat =>
+         repr (nat_be_range 8 (toword k) i))
+        (rev (seq.iota 0 (nat_of_wsize WS / 8)))))
+     (length (rev (seq.iota 0 (nat_of_wsize WS / 8))))
+     (map_length
+        (fun i : nat =>
+         repr (nat_be_range 8 (toword k) i))
+        (rev (seq.iota 0 (nat_of_wsize WS / 8))))) (length (seq.iota 0 (nat_of_wsize WS / 8)))
+     (rev_length (seq.iota 0 (nat_of_wsize WS / 8)))) (nat_of_wsize WS / 8)%nat (seq.size_iota 0 (nat_of_wsize WS / 8)).
+
+Definition from_le_bytes_fold_fun {WS} (i : int8) (s : nat_ChoiceEquality '× @int WS) : nat_ChoiceEquality '× @int WS :=
+  let (n,v) := s in
+  (Nat.pred n, v .+ (@repr WS ((int8_to_nat i) * 2 ^ (8 * n)))).
+
+Definition from_le_bytes {WS : wsize} : nseq int8 (WS / 8) -> @int WS :=
+   (fun v => snd (List.fold_right from_be_bytes_fold_fun (((WS / 8) - 1)%nat, @repr WS 0) (array_to_list v))).
+
+(* nat_be_range U8 (toword n) i *)
+
+Definition u64_to_be_bytes : int64 -> nseq int8 8 := @to_be_bytes U64.
+Definition u64_from_be_bytes : nseq int8 8 -> int64 := @from_be_bytes U64.
+
+Definition u64_to_le_bytes : int64 -> nseq int8 8 := @to_le_bytes U64.
+Definition u64_from_le_bytes : nseq int8 8 -> int64 := @from_le_bytes U64.
+
+Definition u32_to_be_bytes : int32 -> nseq int8 4 := @to_be_bytes U32.
+Definition u32_from_be_bytes : nseq int8 4 -> int32 := @from_be_bytes U32.
+
+Definition u32_to_le_bytes : int32 -> nseq int8 4 := @to_le_bytes U32.
+Definition u32_from_le_bytes : nseq int8 4 -> int32 := @from_le_bytes U32.
 
 (* Definition nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8 := *)
 (*   fun k => VectorDef.of_list . *)

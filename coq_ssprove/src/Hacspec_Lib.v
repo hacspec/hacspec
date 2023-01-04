@@ -41,17 +41,61 @@ Open Scope nat_scope.
 Open Scope list_scope.
 
 Section IntType.
-Definition int_modi {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_modi x y).
-Definition int_add {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_add x y).
-Definition int_sub {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_sub x y).
-Definition int_opp {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_opp x).
-Definition int_mul {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_mul x y).
-Definition int_div {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_div x y).
-Definition int_mod {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_mod x y).
-Definition int_xor {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_xor x y).
-Definition int_and {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_and x y).
-Definition int_or {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_or x y).
-Definition int_not {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_not x).
+  Definition int_modi {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_modi x y).
+  Definition int_add {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_add x y).
+  Definition int_sub {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_sub x y).
+  Definition int_opp {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_opp x).
+  Program Definition int_mul {WS : wsize} : both0 (@int WS) -> both0 (@int WS) -> both0 (@int WS) :=
+    fun x y =>
+      {|
+        is_pure := int_mul x y ;
+        is_state := {code temp_x ← x ;; temp_y ← y ;; ret (int_mul temp_x temp_y) }
+      |}.
+  Next Obligation.
+    intros.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (@int WS) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (@int WS) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    apply r_ret ; easy.
+  Qed.
+  Definition int_div {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_div x y).
+  Program Definition int_mod {WS : wsize} : both0 (@int WS) -> both0 (@int WS) -> both0 (@int WS) :=
+    fun x y =>
+      {|
+        is_pure := int_mod x y ;
+        is_state := {code temp_x ← x ;; temp_y ← y ;; ret (int_mod temp_x temp_y) }
+      |}.
+  Next Obligation.
+    intros.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (@int WS) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (@int WS) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    apply r_ret ; easy.
+  Qed.
+  Definition int_xor {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_xor x y).
+  Definition int_and {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_and x y).
+  Definition int_or {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_or x y).
+  Definition int_not {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_not x).
+
+  Program Definition cast_int {WS1 WS2 : wsize} (n : both0 (@int WS1)) : both0 (@int WS2) :=
+    {|
+      is_pure := repr (unsigned (is_pure n)) ;
+      is_state := {code temp_n ← n ;;
+                   ret (repr (unsigned (is_pure n))) }
+    |}.
+  Next Obligation.
+    intros.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (@int WS1) (@int WS2)).
+    subst Hf Hg Hb ; hnf.
+    apply r_ret ; easy.
+  Qed.
 End IntType.
 
 Definition secret : forall {WS : wsize},  (T (@int WS)) -> both0 (@int WS) :=
@@ -68,19 +112,6 @@ Infix ".^" := int_xor (at level 77) : hacspec_scope.
 Infix ".&" := int_and (at level 77) : hacspec_scope.
 Infix ".|" := int_or (at level 77) : hacspec_scope.
 Notation "'not'" := int_not (at level 77) : hacspec_scope.
-
-Section IntTypeBoth.
-Definition int_modi_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_modi x y).
-Definition int_add_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_add x y).
-Definition int_sub_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_sub x y).
-Definition int_opp_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) := fun x => lift_to_both (int_opp x).
-Definition int_mul_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_mul x y).
-Definition int_div_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_div x y).
-Definition int_mod_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_mod x y).
-Definition int_xor_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_xor x y).
-Definition int_and_both {WS : wsize} {L I} : both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_and x y).
-Definition int_or_both {WS : wsize}  {L I}: both L I (@int WS) -> both L I (@int WS) -> both L I (@int WS) := fun x y => lift_to_both (int_or x y).
-End IntTypeBoth.
 
 Section Uint.
   Definition uint8_declassify (n : int8) : both0 int8 :=
@@ -170,15 +201,73 @@ lift_to_both0 (uint128_rotate_right u s).
     lift_to_both (u usize_shift_right s).
 
   (* should use size u instead of u? *)
-  Definition usize_shift_left_ (u: uint_size) (s: int32) : both0 (uint_size) :=
-    lift_to_both (u usize_shift_left s).
+  Program Definition usize_shift_left_ (u: both0 uint_size) (s: both0 int32) : both0 (uint_size) :=
+    {|
+      is_pure := (is_pure u) usize_shift_left (is_pure s) ;
+      is_state :=
+      {code
+         temp_u ← is_state u ;;
+         temp_s ← is_state s ;;
+         ret (T_ct (temp_u usize_shift_left temp_s))
+      }
+    |}.
+  Next Obligation.
+    intros.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (uint_size) (uint_size)).
+    subst Hf Hg Hb ; hnf.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (int32)).
+    subst Hf Hg Hb ; hnf.
+    apply r_ret.
+    easy.
+  Qed.
 
   (**** Operations *)
 
-  Definition shift_left_ `{WS : wsize} (i : @int WS) (j : uint_size) : both0 (@int WS) := lift_to_both (@shift_left_ WS i j).
+  Program Definition shift_left_ `{WS : wsize} (i : both0 (@int WS)) (j : both0 (uint_size)) : both0 (@int WS) :=
+    {|
+      is_pure := (is_pure i) shift_left (is_pure j) ;
+      is_state :=
+      {code
+         temp_i ← is_state i ;;
+         temp_j ← is_state j ;;
+         ret (T_ct (temp_i shift_left temp_j))
+      }
+    |}.
+  Next Obligation.
+    intros.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (@int WS) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (uint_size) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    apply r_ret.
+    easy.
+  Qed.
 
-  Definition shift_right_ `{WS : wsize} (i : @int WS) (j : uint_size) : both0 (@int WS):=
-    lift_to_both (@shift_right_ WS i j).
+  Program Definition shift_right_ `{WS : wsize} (i : both0 (@int WS)) (j : both0 (uint_size)) : both0 (@int WS):=
+    {|
+      is_pure := @shift_right_ WS (is_pure i) (is_pure j) ;
+      is_state :=
+      {code
+         temp_i ← is_state i ;;
+         temp_j ← is_state j ;;
+         ret (T_ct (temp_i shift_right temp_j))
+      }
+    |}.
+  Next Obligation.
+    intros.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (@int WS) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    pattern_both Hb Hf Hg.
+    apply (@r_bind_trans_both (uint_size) (@int WS)).
+    subst Hf Hg Hb ; hnf.
+    apply r_ret.
+    easy.
+  Qed.
 
 End Uint.
 
@@ -1405,27 +1494,6 @@ Next Obligation.
     rewrite H1. rewrite H2. reflexivity.
   - inversion_clear H1. now do 2 rewrite eqb_refl.
 Defined.
-
-(*** Be Bytes *)
-
-
-Fixpoint nat_be_range_at_position (k : nat) (z : Z) (n : Z) : list bool :=
-  match k with
-  | O => []
-  | S k' => Z.testbit z (n + k') :: nat_be_range_at_position k' z n
-  end.
-
-Fixpoint nat_be_range_to_position_ (z : list bool) (val : Z) : Z :=
-  match z with
-  | [] => val
-  | x :: xs => nat_be_range_to_position_ xs ((if x then 2 ^ List.length xs else 0) + val)
-  end.
-
-Definition nat_be_range_to_position (k : nat) (z : list bool) (n : Z) : Z :=
-  (nat_be_range_to_position_ z 0 * 2^(k * n)).
-
-Definition nat_be_range (k : nat) (z : Z) (n : nat) : Z :=
-  nat_be_range_to_position_ (nat_be_range_at_position k z (n * k)) 0. (* * 2^(k * n) *)
 
 End TodoSection2.
 

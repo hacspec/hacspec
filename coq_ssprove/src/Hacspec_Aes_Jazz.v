@@ -309,82 +309,97 @@ Definition rcon_v : r_con_t :=
   ].
 
 
+Notation "'vpshufd1_inp'" :=(
+  int128 '× int8 '× uint_size : choice_type) (in custom pack_type at level 2).
+Notation "'vpshufd1_inp'" :=(
+  int128 '× int8 '× uint_size : ChoiceEquality) (at level 2).
+Notation "'vpshufd1_out'" :=(
+  int32 : choice_type) (in custom pack_type at level 2).
+Notation "'vpshufd1_out'" :=(int32 : ChoiceEquality) (at level 2).
+Definition VPSHUFD1 : nat :=
+  212.
+Program Definition vpshufd1 (s_209 : int128) (o_210 : int8) (i_211 : uint_size)
+  : both (fset.fset0) [interface] (int32) :=
+  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
+        (fun x => lift_to_both0 (repr (unsigned x)))((
+            lift_to_both0 s_209) shift_right ((lift_to_both0 (usize 32)) .* (((
+                  (fun x => lift_to_both0 (repr (unsigned x)))(
+                    lift_to_both0 o_210)) usize_shift_right ((lift_to_both0 (
+                      usize 2)) .* (lift_to_both0 i_211))) .% (lift_to_both0 (
+                  usize 4))))))
+      ) : both (fset.fset0) [interface] (int32)).
+Fail Next Obligation.
+
+
 Notation "'vpshufd_inp'" :=(
-  int128 '× uint_size : choice_type) (in custom pack_type at level 2).
-Notation "'vpshufd_inp'" :=(int128 '× uint_size : ChoiceEquality) (at level 2).
+  int128 '× int8 : choice_type) (in custom pack_type at level 2).
+Notation "'vpshufd_inp'" :=(int128 '× int8 : ChoiceEquality) (at level 2).
 Notation "'vpshufd_out'" :=(
   int128 : choice_type) (in custom pack_type at level 2).
 Notation "'vpshufd_out'" :=(int128 : ChoiceEquality) (at level 2).
 Definition VPSHUFD : nat :=
-  2207.
-Program Definition vpshufd (s_2201 : int128) (o_2202 : uint_size)
+  219.
+Program Definition vpshufd (s_213 : int128) (o_214 : int8)
   : both (fset.fset0) [interface] (int128) :=
-  ((letb d1_2203 : int32 :=
-        (fun x => lift_to_both0 (repr (unsigned x)))((
-            lift_to_both0 s_2201) shift_right ((lift_to_both0 (usize 32)) .* ((
-                lift_to_both0 o_2202) %% (lift_to_both0 (usize 4))))) in
-      letb d2_2204 : int32 :=
-        (fun x => lift_to_both0 (repr (unsigned x)))((
-            lift_to_both0 s_2201) shift_right (((lift_to_both0 (usize 32)) .* ((
-                  lift_to_both0 o_2202) usize_shift_right (lift_to_both0 (
-                    usize 2)))) %% (lift_to_both0 (usize 4)))) in
-      letb d3_2205 : int32 :=
-        (fun x => lift_to_both0 (repr (unsigned x)))((
-            lift_to_both0 s_2201) shift_right (((lift_to_both0 (usize 32)) .* ((
-                  lift_to_both0 o_2202) usize_shift_right (lift_to_both0 (
-                    usize 4)))) %% (lift_to_both0 (usize 4)))) in
-      letb d4_2206 : int32 :=
-        (fun x => lift_to_both0 (repr (unsigned x)))((
-            lift_to_both0 s_2201) shift_right (((lift_to_both0 (usize 32)) .* ((
-                  lift_to_both0 o_2202) usize_shift_right (lift_to_both0 (
-                    usize 6)))) %% (lift_to_both0 (usize 4)))) in
+  ((letb d1_215 : int32 :=
+        vpshufd1 (lift_to_both0 s_213) (lift_to_both0 o_214) (lift_to_both0 (
+            usize 0)) in
+      letb d2_216 : int32 :=
+        vpshufd1 (lift_to_both0 s_213) (lift_to_both0 o_214) (lift_to_both0 (
+            usize 1)) in
+      letb d3_217 : int32 :=
+        vpshufd1 (lift_to_both0 s_213) (lift_to_both0 o_214) (lift_to_both0 (
+            usize 2)) in
+      letb d4_218 : int32 :=
+        vpshufd1 (lift_to_both0 s_213) (lift_to_both0 o_214) (lift_to_both0 (
+            usize 3)) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((((
               (fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 d1_2203)) .| ((
+                lift_to_both0 d1_215)) .| ((
                 (fun x => lift_to_both0 (repr (unsigned x)))(
-                  lift_to_both0 d2_2204)) shift_left (lift_to_both0 (
+                  lift_to_both0 d2_216)) shift_left (lift_to_both0 (
                   usize 32)))) .| ((
               (fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 d3_2205)) shift_left (lift_to_both0 (
+                lift_to_both0 d3_217)) shift_left (lift_to_both0 (
                 usize 64)))) .| (((fun x => lift_to_both0 (repr (unsigned x)))(
-              lift_to_both0 d4_2206)) shift_left (lift_to_both0 (usize 96))))
+              lift_to_both0 d4_218)) shift_left (lift_to_both0 (usize 96))))
       ) : both (fset.fset0) [interface] (int128)).
 Fail Next Obligation.
 
 
 Notation "'vshufps_inp'" :=(
-  int128 '× int128 '× uint_size : choice_type) (in custom pack_type at level 2).
+  int128 '× int128 '× int8 : choice_type) (in custom pack_type at level 2).
 Notation "'vshufps_inp'" :=(
-  int128 '× int128 '× uint_size : ChoiceEquality) (at level 2).
+  int128 '× int128 '× int8 : ChoiceEquality) (at level 2).
 Notation "'vshufps_out'" :=(
   int128 : choice_type) (in custom pack_type at level 2).
 Notation "'vshufps_out'" :=(int128 : ChoiceEquality) (at level 2).
 Definition VSHUFPS : nat :=
-  2215.
-Program Definition vshufps (s1_2208 : int128) (s2_2212 : int128) (
-    o_2209 : uint_size)
+  227.
+Program Definition vshufps (s1_220 : int128) (s2_224 : int128) (o_221 : int8)
   : both (fset.fset0) [interface] (int128) :=
-  ((letb d1_2210 : int128 :=
-        (lift_to_both0 s1_2208) shift_right ((lift_to_both0 (usize 32)) .* ((
-              lift_to_both0 o_2209) %% (lift_to_both0 (usize 4)))) in
-      letb d2_2211 : int128 :=
-        (lift_to_both0 s1_2208) shift_right ((lift_to_both0 (usize 32)) .* (((
-                lift_to_both0 o_2209) usize_shift_right (lift_to_both0 (
-                  usize 2))) %% (lift_to_both0 (usize 4)))) in
-      letb d3_2213 : int128 :=
-        (lift_to_both0 s2_2212) shift_right ((lift_to_both0 (usize 32)) .* (((
-                lift_to_both0 o_2209) usize_shift_right (lift_to_both0 (
-                  usize 4))) %% (lift_to_both0 (usize 4)))) in
-      letb d4_2214 : int128 :=
-        (lift_to_both0 s2_2212) shift_right ((lift_to_both0 (usize 32)) .* (((
-                lift_to_both0 o_2209) usize_shift_right (lift_to_both0 (
-                  usize 6))) %% (lift_to_both0 (usize 4)))) in
+  ((letb d1_222 : int32 :=
+        vpshufd1 (lift_to_both0 s1_220) (lift_to_both0 o_221) (lift_to_both0 (
+            usize 0)) in
+      letb d2_223 : int32 :=
+        vpshufd1 (lift_to_both0 s1_220) (lift_to_both0 o_221) (lift_to_both0 (
+            usize 1)) in
+      letb d3_225 : int32 :=
+        vpshufd1 (lift_to_both0 s2_224) (lift_to_both0 o_221) (lift_to_both0 (
+            usize 2)) in
+      letb d4_226 : int32 :=
+        vpshufd1 (lift_to_both0 s2_224) (lift_to_both0 o_221) (lift_to_both0 (
+            usize 3)) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((((
-              lift_to_both0 d1_2210) .| ((lift_to_both0 d1_2210) shift_left (
-                lift_to_both0 (usize 32)))) .| ((
-              lift_to_both0 d2_2211) shift_left (lift_to_both0 (
-                usize 64)))) .| ((lift_to_both0 d2_2211) shift_left (
-            lift_to_both0 (usize 96))))
+              (fun x => lift_to_both0 (repr (unsigned x)))(
+                lift_to_both0 d1_222)) .| ((
+                (fun x => lift_to_both0 (repr (unsigned x)))(
+                  lift_to_both0 d2_223)) shift_left (lift_to_both0 (
+                  usize 32)))) .| ((
+              (fun x => lift_to_both0 (repr (unsigned x)))(
+                lift_to_both0 d3_225)) shift_left (lift_to_both0 (
+                usize 64)))) .| (((fun x => lift_to_both0 (repr (unsigned x)))(
+              lift_to_both0 d4_226)) shift_left (lift_to_both0 (usize 96))))
       ) : both (fset.fset0) [interface] (int128)).
 Fail Next Obligation.
 
@@ -398,33 +413,33 @@ Notation "'key_combine_out'" :=((int128 '× int128
 Notation "'key_combine_out'" :=((int128 '× int128
   ) : ChoiceEquality) (at level 2).
 Definition KEY_COMBINE : nat :=
-  2225.
-Program Definition key_combine (rkey_2219 : int128) (temp1_2216 : int128) (
-    temp2_2218 : int128)
+  237.
+Program Definition key_combine (rkey_231 : int128) (temp1_228 : int128) (
+    temp2_230 : int128)
   : both (fset.fset0) [interface] ((int128 '× int128)) :=
-  ((letb temp1_2217 : int128 :=
-        vpshufd (lift_to_both0 temp1_2216) (lift_to_both0 (usize 255)) in
-      letb temp2_2220 : int128 :=
-        vshufps (lift_to_both0 temp2_2218) (lift_to_both0 rkey_2219) (
-          lift_to_both0 (usize 4)) in
-      letb rkey_2221 : int128 :=
-        (lift_to_both0 rkey_2219) .^ (lift_to_both0 temp2_2220) in
-      letb temp2_2222 : int128 :=
-        vshufps (lift_to_both0 temp2_2220) (lift_to_both0 rkey_2221) (
-          lift_to_both0 (usize 50)) in
-      letb rkey_2223 : int128 :=
-        (lift_to_both0 rkey_2221) .^ (lift_to_both0 temp2_2222) in
-      letb rkey_2224 : int128 :=
-        (lift_to_both0 rkey_2223) .^ (lift_to_both0 temp1_2217) in
+  ((letb temp1_229 : int128 :=
+        vpshufd (lift_to_both0 temp1_228) (lift_to_both0 (@repr U8 255)) in
+      letb temp2_232 : int128 :=
+        vshufps (lift_to_both0 temp2_230) (lift_to_both0 rkey_231) (
+          lift_to_both0 (@repr U8 16)) in
+      letb rkey_233 : int128 :=
+        (lift_to_both0 rkey_231) .^ (lift_to_both0 temp2_232) in
+      letb temp2_234 : int128 :=
+        vshufps (lift_to_both0 temp2_232) (lift_to_both0 rkey_233) (
+          lift_to_both0 (@repr U8 140)) in
+      letb rkey_235 : int128 :=
+        (lift_to_both0 rkey_233) .^ (lift_to_both0 temp2_234) in
+      letb rkey_236 : int128 :=
+        (lift_to_both0 rkey_235) .^ (lift_to_both0 temp1_229) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 rkey_2224,
-          lift_to_both0 temp2_2222
+          lift_to_both0 rkey_236,
+          lift_to_both0 temp2_234
         ))
       ) : both (fset.fset0) [interface] ((int128 '× int128))).
 Fail Next Obligation.
 
-Definition res_2226_loc : ChoiceEqualityLocation :=
-  (u32_word_t ; 2227%nat).
+Definition res_238_loc : ChoiceEqualityLocation :=
+  (u32_word_t ; 239%nat).
 Notation "'subword_inp'" :=(
   int32 : choice_type) (in custom pack_type at level 2).
 Notation "'subword_inp'" :=(int32 : ChoiceEquality) (at level 2).
@@ -432,25 +447,25 @@ Notation "'subword_out'" :=(
   int32 : choice_type) (in custom pack_type at level 2).
 Notation "'subword_out'" :=(int32 : ChoiceEquality) (at level 2).
 Definition SUBWORD : nat :=
-  2231.
-Program Definition subword (v_2228 : int32)
-  : both (CEfset ([res_2226_loc])) [interface] (int32) :=
-  ((letb vs_2229 : u32_word_t := u32_to_le_bytes (lift_to_both0 v_2228) in
-      letbm res_2226 : u32_word_t loc( res_2226_loc ) :=
+  243.
+Program Definition subword (v_240 : int32)
+  : both (CEfset ([res_238_loc])) [interface] (int32) :=
+  ((letb vs_241 : u32_word_t := u32_to_be_bytes (lift_to_both0 v_240) in
+      letbm res_238 : u32_word_t loc( res_238_loc ) :=
         array_new_ (default : int8) (4) in
-      letb res_2226 :=
+      letb res_238 :=
         foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 (
-              usize 32)) res_2226 (L := (CEfset ([res_2226_loc]))) (
-            I := [interface]) (fun i_2230 res_2226 =>
-            letb res_2226 : u32_word_t :=
-              array_upd res_2226 (lift_to_both0 i_2230) (is_pure (array_index (
-                    sbox_v) (array_index (vs_2229) (lift_to_both0 i_2230)))) in
+              usize 4)) res_238 (L := (CEfset ([res_238_loc]))) (
+            I := [interface]) (fun i_242 res_238 =>
+            letb res_238 : u32_word_t :=
+              array_upd res_238 (lift_to_both0 i_242) (is_pure (array_index (
+                    sbox_v) (array_index (vs_241) (lift_to_both0 i_242)))) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
-              lift_to_both0 res_2226)
+              lift_to_both0 res_238)
             ) in
-      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (u32_from_le_bytes (
-          lift_to_both0 res_2226))
-      ) : both (CEfset ([res_2226_loc])) [interface] (int32)).
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (u32_from_be_bytes (
+          lift_to_both0 res_238))
+      ) : both (CEfset ([res_238_loc])) [interface] (int32)).
 Fail Next Obligation.
 
 
@@ -460,13 +475,13 @@ Notation "'ror_inp'" :=(int32 '× uint_size : ChoiceEquality) (at level 2).
 Notation "'ror_out'" :=(int32 : choice_type) (in custom pack_type at level 2).
 Notation "'ror_out'" :=(int32 : ChoiceEquality) (at level 2).
 Definition ROR : nat :=
-  2234.
-Program Definition ror (v_2232 : int32) (i_2233 : uint_size)
+  246.
+Program Definition ror (v_244 : int32) (i_245 : uint_size)
   : both (fset.fset0) [interface] (int32) :=
   ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (((
-            lift_to_both0 v_2232) shift_right (lift_to_both0 i_2233)) .| ((
-            lift_to_both0 v_2232) shift_left ((lift_to_both0 (usize 32)) .- (
-              lift_to_both0 i_2233))))
+            lift_to_both0 v_244) shift_right (lift_to_both0 i_245)) .| ((
+            lift_to_both0 v_244) shift_left ((lift_to_both0 (usize 32)) .- (
+              lift_to_both0 i_245))))
       ) : both (fset.fset0) [interface] (int32)).
 Fail Next Obligation.
 
@@ -479,44 +494,42 @@ Notation "'aeskeygenassist_out'" :=(
   int128 : choice_type) (in custom pack_type at level 2).
 Notation "'aeskeygenassist_out'" :=(int128 : ChoiceEquality) (at level 2).
 Definition AESKEYGENASSIST : nat :=
-  2243.
-Program Definition aeskeygenassist (v1_2235 : int128) (v2_2239 : int8)
-  : both (CEfset ([res_2226_loc])) [interface] (int128) :=
-  ((letb x1_2236 : int128 :=
-        ((lift_to_both0 v1_2235) shift_right (lift_to_both0 (usize 32))) .% ((
+  255.
+Program Definition aeskeygenassist (v1_247 : int128) (v2_251 : int8)
+  : both (CEfset ([res_238_loc])) [interface] (int128) :=
+  ((letb x1_248 : int128 :=
+        ((lift_to_both0 v1_247) shift_right (lift_to_both0 (usize 32))) .% ((
             lift_to_both0 (@repr U128 1)) shift_left (lift_to_both0 (
               usize 32))) in
-      letb x3_2237 : int128 :=
-        ((lift_to_both0 v1_2235) shift_right (lift_to_both0 (usize 96))) .% ((
+      letb x3_249 : int128 :=
+        ((lift_to_both0 v1_247) shift_right (lift_to_both0 (usize 96))) .% ((
             lift_to_both0 (@repr U128 1)) shift_left (lift_to_both0 (
               usize 32))) in
-      letb y0_2238 : int32 :=
+      letb y0_250 : int32 :=
         subword ((fun x => lift_to_both0 (repr (unsigned x)))(
-            lift_to_both0 x1_2236)) in
-      letb y1_2240 : int32 :=
+            lift_to_both0 x1_248)) in
+      letb y1_252 : int32 :=
         (ror (subword ((fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 x1_2236))) (lift_to_both0 (usize 1))) .^ (
-          (fun x => lift_to_both0 (repr (unsigned x)))(
-            lift_to_both0 v2_2239)) in
-      letb y2_2241 : int32 :=
+                lift_to_both0 x1_248))) (lift_to_both0 (usize 1))) .^ (
+          (fun x => lift_to_both0 (repr (unsigned x)))(lift_to_both0 v2_251)) in
+      letb y2_253 : int32 :=
         subword ((fun x => lift_to_both0 (repr (unsigned x)))(
-            lift_to_both0 x3_2237)) in
-      letb y3_2242 : int32 :=
+            lift_to_both0 x3_249)) in
+      letb y3_254 : int32 :=
         (ror (subword ((fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 x3_2237))) (lift_to_both0 (usize 1))) .^ (
-          (fun x => lift_to_both0 (repr (unsigned x)))(
-            lift_to_both0 v2_2239)) in
+                lift_to_both0 x3_249))) (lift_to_both0 (usize 1))) .^ (
+          (fun x => lift_to_both0 (repr (unsigned x)))(lift_to_both0 v2_251)) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((((
               (fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 y0_2238)) .| ((
+                lift_to_both0 y0_250)) .| ((
                 (fun x => lift_to_both0 (repr (unsigned x)))(
-                  lift_to_both0 y1_2240)) shift_left (lift_to_both0 (
+                  lift_to_both0 y1_252)) shift_left (lift_to_both0 (
                   usize 32)))) .| ((
               (fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 y2_2241)) shift_left (lift_to_both0 (
+                lift_to_both0 y2_253)) shift_left (lift_to_both0 (
                 usize 64)))) .| (((fun x => lift_to_both0 (repr (unsigned x)))(
-              lift_to_both0 y3_2242)) shift_left (lift_to_both0 (usize 96))))
-      ) : both (CEfset ([res_2226_loc])) [interface] (int128)).
+              lift_to_both0 y3_254)) shift_left (lift_to_both0 (usize 96))))
+      ) : both (CEfset ([res_238_loc])) [interface] (int128)).
 Fail Next Obligation.
 
 
@@ -529,19 +542,19 @@ Notation "'key_expand_out'" :=((int128 '× int128
 Notation "'key_expand_out'" :=((int128 '× int128
   ) : ChoiceEquality) (at level 2).
 Definition KEY_EXPAND : nat :=
-  2250.
-Program Definition key_expand (rcon_2245 : int8) (rkey_2244 : int128) (
-    temp2_2247 : int128)
-  : both (CEfset ([res_2226_loc])) [interface] ((int128 '× int128)) :=
-  ((letb temp1_2246 : int128 :=
-        aeskeygenassist (lift_to_both0 rkey_2244) (lift_to_both0 rcon_2245) in
-      letb '(rkey_2248, temp2_2249) : (int128 '× int128) :=
-        key_combine (lift_to_both0 rkey_2244) (lift_to_both0 temp1_2246) (
-          lift_to_both0 temp2_2247) in
+  262.
+Program Definition key_expand (rcon_257 : int8) (rkey_256 : int128) (
+    temp2_259 : int128)
+  : both (CEfset ([res_238_loc])) [interface] ((int128 '× int128)) :=
+  ((letb temp1_258 : int128 :=
+        aeskeygenassist (lift_to_both0 rkey_256) (lift_to_both0 rcon_257) in
+      letb '(rkey_260, temp2_261) : (int128 '× int128) :=
+        key_combine (lift_to_both0 rkey_256) (lift_to_both0 temp1_258) (
+          lift_to_both0 temp2_259) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) (prod_b(
-          lift_to_both0 rkey_2248,
-          lift_to_both0 temp2_2249
+          lift_to_both0 rkey_260,
+          lift_to_both0 temp2_261
         ))
-      ) : both (CEfset ([res_2226_loc])) [interface] ((int128 '× int128))).
+      ) : both (CEfset ([res_238_loc])) [interface] ((int128 '× int128))).
 Fail Next Obligation.
 
