@@ -31,7 +31,7 @@ Definition tail_t := nseq (int8) (n_queues_v).
 Definition next_ids_t := nseq (int8) (n_threads_v).
 
 Inductive clist_t :=
-| Clist : (tail_t × next_ids_t) -> clist_t.
+| Clist : (tail_t '× next_ids_t) -> clist_t.
 
 Definition clist_new  : clist_t :=
   let tail_1347 : tail_t :=
@@ -94,7 +94,7 @@ Definition clist_push
 Definition clist_pop_head
   (x_1363 : clist_t)
   (rq_1364 : runqueue_id_t)
-  : (clist_t × (option int8)) :=
+  : (clist_t '× (option int8)) :=
   let 'RunqueueId (rq_1365) :=
     rq_1364 in 
   let 'Clist ((tail_1366, next_idxs_1367)) :=
@@ -154,7 +154,7 @@ Definition clist_advance
   Clist ((tail_1378, next_idxs_1379)).
 
 Inductive run_queue_t :=
-| RunQueue : (int32 × clist_t) -> run_queue_t.
+| RunQueue : (int32 '× clist_t) -> run_queue_t.
 
 Definition runqueue_new  : run_queue_t :=
   RunQueue ((@repr WORDSIZE32 0, clist_new )).

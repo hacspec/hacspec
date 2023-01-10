@@ -24,7 +24,10 @@ Notation "'block_index_t'" := (uint_size) : hacspec_scope.
 Definition field_canvas_t := nseq (int8) (17).
 Definition field_element_t := nat_mod 0x03fffffffffffffffffffffffffffffffb.
 
-Notation "'poly_state_t'" := ((field_element_t × field_element_t × poly_key_t
+Notation "'poly_state_t'" := ((
+  field_element_t '×
+  field_element_t '×
+  poly_key_t
 )) : hacspec_scope.
 
 Definition poly1305_encode_r (b_435 : poly_block_t) : field_element_t :=
@@ -73,7 +76,7 @@ Definition poly1305_update_blocks
   (m_451 : byte_seq)
   (st_452 : poly_state_t)
   : poly_state_t :=
-  let st_453 : (field_element_t × field_element_t × poly_key_t) :=
+  let st_453 : (field_element_t '× field_element_t '× poly_key_t) :=
     st_452 in 
   let n_blocks_454 : uint_size :=
     (seq_len (m_451)) / (blocksize_v) in 
@@ -93,7 +96,7 @@ Definition poly1305_update_last
   (b_458 : sub_block_t)
   (st_459 : poly_state_t)
   : poly_state_t :=
-  let st_460 : (field_element_t × field_element_t × poly_key_t) :=
+  let st_460 : (field_element_t '× field_element_t '× poly_key_t) :=
     st_459 in 
   let '(st_460) :=
     if (seq_len (b_458)) !=.? (usize 0):bool then (let '(acc_461, r_462, k_463
@@ -113,7 +116,7 @@ Definition poly1305_update
   (m_464 : byte_seq)
   (st_465 : poly_state_t)
   : poly_state_t :=
-  let st_466 : (field_element_t × field_element_t × poly_key_t) :=
+  let st_466 : (field_element_t '× field_element_t '× poly_key_t) :=
     poly1305_update_blocks (m_464) (st_465) in 
   let last_467 : seq uint8 :=
     seq_get_remainder_chunk (m_464) (blocksize_v) in 
@@ -136,7 +139,7 @@ Definition poly1305
   (m_474 : byte_seq)
   (key_475 : poly_key_t)
   : poly1305_tag_t :=
-  let st_476 : (field_element_t × field_element_t × poly_key_t) :=
+  let st_476 : (field_element_t '× field_element_t '× poly_key_t) :=
     poly1305_init (key_475) in 
   let st_476 :=
     poly1305_update (m_474) (st_476) in 

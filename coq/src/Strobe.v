@@ -32,7 +32,7 @@ Notation "'state_uint64_t'" := (state_t) : hacspec_scope.
 
 Definition state_uint8_t := nseq (uint8) (usize 200).
 
-Notation "'strobe_t'" := ((state_uint8_t × int8 × int8 × int8
+Notation "'strobe_t'" := ((state_uint8_t '× int8 '× int8 '× int8
 )) : hacspec_scope.
 
 Definition transmute_state_to_u64
@@ -143,7 +143,7 @@ Definition absorb (strobe_1002 : strobe_t) (data_1003 : seq uint8) : strobe_t :=
 Definition squeeze
   (strobe_1013 : strobe_t)
   (data_1014 : seq uint8)
-  : (strobe_t × seq uint8) :=
+  : (strobe_t '× seq uint8) :=
   let '(state_1015, pos_1016, pos_begin_1017, cur_fl_1018) :=
     strobe_1013 in 
   let '(data_1014, state_1015, pos_1016, pos_begin_1017, cur_fl_1018) :=
@@ -193,7 +193,7 @@ Definition begin_op
   : strobe_t :=
   let '(state_1027, pos_1028, pos_begin_1029, cur_fl_1030) :=
     strobe_1024 in 
-  let ret_1031 : (state_uint8_t × int8 × int8 × int8) :=
+  let ret_1031 : (state_uint8_t '× int8 '× int8 '× int8) :=
     (state_1027, pos_1028, pos_begin_1029, cur_fl_1030) in 
   let '(state_1027, pos_1028, pos_begin_1029, cur_fl_1030, ret_1031) :=
     if negb (more_1026):bool then (let old_begin_1032 : int8 :=
@@ -297,7 +297,7 @@ Definition prf
   (strobe_1048 : strobe_t)
   (data_1049 : seq uint8)
   (more_1050 : bool)
-  : (strobe_t × seq uint8) :=
+  : (strobe_t '× seq uint8) :=
   let strobe_1048 :=
     begin_op (strobe_1048) (((flag_i_v) .| (flag_a_v)) .| (flag_c_v)) (
       more_1050) in 
