@@ -1308,20 +1308,155 @@ Proof.
 Qed.
 
 
-Definition lower_fval {A : ChoiceEquality} `{H_default : Default A} {n} (a : list ('I_(S(S n)) * A)) (H : forall x, In x a -> is_true (ord0 < fst x)%ord ) : list ('I_(S n) * A).
+Equations lower_fval {A : ChoiceEquality} `{H_default : Default A} {n} (a : list ('I_(S(S n)) * A)) (H : forall x, In x a -> is_true (ord0 < fst x)%ord ) : list ('I_(S n) * A) :=
+  lower_fval [] H := [] ;
+  lower_fval (x :: xs) H :=
+    (lower_ordinal (S n) (fst x) (H x (or_introl eq_refl)) , snd x)
+      :: lower_fval xs (fun y H0 => H y (in_cons x y xs H0)).
+
+Lemma lower_keeps_value : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, (seq.map snd a = seq.map snd (lower_fval a H)).
 Proof.
-  induction a.
-  - apply [].
-  - apply cons.
-    + destruct a.
-      split ; [  | apply t ].
-      apply (lower_ordinal _ o).
-      apply (H (o, t)).
-      now left.
-    + apply IHa.
-      intros.
-      apply (H x (in_cons _ _ _ H0)).
-Defined.
+  intros.
+  destruct a.
+  simpl in *.
+  induction fmval.
+  - cbn.
+    reflexivity.
+  - destruct a.
+    rewrite seq.map_cons.
+    erewrite IHfmval.
+    rewrite lower_fval_equation_2 ; simpl.
+    f_equal.
+    apply (fmval_tl_sorted i).
+Qed.
+
+Lemma lower_is_sorted : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, is_true (path.sorted Ord.lt (seq.unzip1 (lower_fval a H))).
+Proof.
+  intros.
+  destruct a.
+  simpl.
+  induction fmval.
+  - reflexivity.
+  - destruct a.
+    simpl.
+    intros.
+    rewrite lower_fval_equation_2 ; simpl.
+    destruct fmval.
+    + reflexivity.
+    + pose proof i.
+      rewrite lower_fval_equation_2 ; simpl.
+      simpl in H0 |- *.
+      rewrite LocationUtility.is_true_split_and in H0 |- *.
+      
+      destruct H0.
+      split ; [ | (* apply IHfmval , H1 *) ].
+      destruct p.
+      simpl.
+      destruct s, s0.
+
+      pose proof (H (Ordinal (n:=S (S n)) (m:=m) i0, t) (or_introl eq_refl)).
+      pose proof (H (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
+          (in_cons (Ordinal (n:=S (S n)) (m:=m) i0, t)
+             (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
+             ((Ordinal (n:=S (S n)) (m:=m0) i1, t0) :: fmval)
+             (or_introl eq_refl))).
+      
+      unfold Ord.lt in H0 |- *.
+      unfold Ord.leq in H0 |- *.
+      cbn.
+
+      clear -H0 H2 H3.
+      rewrite LocationUtility.is_true_split_and in H0 |- *.
+      destruct H0.
+      cbn in H , H0.
+      destruct m, m0 ; easy.
+     
+      specialize (IHfmval (fmval_tl_sorted i) ( fun x H2 => H x (in_cons _ _ _  H2))).
+      rewrite lower_fval_equation_2 in IHfmval ; simpl in IHfmval.
+      simpl.
+      apply IHfmval.
+Qed.
+
+Lemma ord_ext : forall {n} m0 m1 {H1 H2}, m0 = m1 <-> Ordinal (n := S n) (m := m0) H1 = Ordinal (n := S n) (m := m1) H2.
+Proof.
+  intros.
+  rewrite <- (inord_val (Ordinal H1)). 
+  rewrite <- (inord_val (Ordinal H2)).
+  split. intros. subst. reflexivity.
+  intros. cbn in H.
+  unfold inord in H.
+  unfold eqtype.insubd in H.
+  unfold eqtype.insub in H.
+  destruct ssrbool.idP in H.
+  destruct ssrbool.idP in H.
+  cbn in H.
+  inversion H.
+  reflexivity.
+  contradiction.
+  contradiction.
+Qed.
+
+Lemma lower_fval_ext : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a b : {fmap 'I_(S(S n)) -> A}) H1 H2, a = b <-> lower_fval a H1 = lower_fval b H2.
+Proof.
+  intros.
+  split.
+  - intros.
+    subst.
+    destruct b.
+    simpl.
+    induction fmval.
+    + reflexivity.
+    + simpl.
+      destruct a, s.
+      rewrite !lower_fval_equation_2.
+      f_equal.
+      * f_equal.
+        apply ord_ext. reflexivity.
+      * apply IHfmval.
+        apply (fmval_tl_sorted i).
+  - intros.
+    apply eq_fmap.
+    intros i.
+
+    destruct a.
+    destruct b.
+    cbn in H.
+    cbn.
+
+    f_equal.
+    
+    generalize dependent fmval0.
+    induction fmval as [ | p ] ; intros ; destruct fmval0 as [ | p0 ] ; try rewrite !lower_fval_equation_2 in H ; try rewrite !lower_fval_equation_1 in H ; try easy.
+        
+    inversion H.
+    epose (H1 p (or_introl eq_refl)).
+    epose (H2 p0 (or_introl eq_refl)).
+    
+    destruct p.
+    destruct p0.
+    cbn in H4.
+    subst.
+    destruct s.
+    destruct s0.
+    apply ord_ext in H3.
+    f_equal.
+    {
+      f_equal.
+      apply ord_ext.
+      destruct m, m0 ; try discriminate.
+      cbn in H3.
+      now rewrite H3.
+    }
+    {
+      eapply IHfmval.
+      apply H5.
+
+      Unshelve.
+      apply (fmval_tl_sorted i0).
+      apply (fmval_tl_sorted i1).
+    }
+Qed.
+        
 
 Lemma gt_smallest_sorted : forall {A} {n} {p : 'I_n * A} {fmval}, is_true (path.sorted Ord.lt (seq.unzip1 (p :: fmval))) -> (forall x, In x fmval -> is_true (fst p < fst x)%ord).
   intros.
@@ -1402,123 +1537,6 @@ Proof. destruct n ; [exact tt | apply (tl_fmap a) ]. Defined.
 
 Definition split_nseq {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : A * T (nseq A n) := (nseq_hd a, nseq_tl a).
 
-(* Lemma split_fmap_fst_correct {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : forall t, getm a = Some t -> fst (split_fmap a) = t. *)
-(* Proof. *)
-(* Admitted. *)
-Lemma H_nseq_tl_setm : forall {A} n (a : nseq A (S (S n))) i x H H' H_default, setm (T:=ordinal_ordType (S n)) (nseq_tl a) (Ordinal (n:=S n) (m:=i) H) x = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=S i) H') x).
-Proof.
-  intros.
-  unfold nseq_tl.
-  unfold tl_fmap.
-Admitted.
-
-Lemma H_nseq_tl_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_tl a = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x).
-Admitted.
-
-Lemma H_nseq_hd_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_hd (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x) = x.
-Admitted.
-
-(* Lemma array_to_list_helper_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) (i : nat) (H : (i < S (S n))%nat) : length (array_to_list_helper a i H) = i. *)
-(* Proof. *)
-(*   induction i. *)
-(*   - now rewrite array_to_list_helper_equation_1. *)
-(*   - rewrite array_to_list_helper_equation_2. *)
-(*     destruct getm ; rewrite app_length ; rewrite IHi ; cbn ; lia. *)
-(* Qed. *)
-
-(* Lemma array_to_list_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A n)) : length (array_to_list a) = n. *)
-(* Proof. *)
-(*   rewrite !array_to_list_equation_1. *)
-(*   unfold array_to_list_clause_1. *)
-(*   unfold array_to_list_obligations_obligation_1. *)
-
-(*   destruct n. *)
-(*   - reflexivity. *)
-(*   - rewrite array_to_list_helper_length. *)
-(*     reflexivity. *)
-(* Qed. *)
-
-
-Compute (fun a => seq.unzip2 (FMap.fmval a)) (setm emptym (Ordinal (n := 10) (m := 2) _) (1%nat : nat_ChoiceEquality)).
-
-Lemma lower_keeps_value : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, (seq.map snd a = seq.map snd (lower_fval a H)).
-Proof.
-  intros.
-  destruct a.
-  simpl in *.
-  induction fmval.
-  - cbn.
-    reflexivity.
-  - destruct a.
-    rewrite seq.map_cons.
-    erewrite IHfmval.
-    simpl.
-    f_equal.
-    apply (fmval_tl_sorted i).
-Qed.
-
-Lemma lower_is_sorted : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, is_true (path.sorted Ord.lt (seq.unzip1 (lower_fval a H))).
-Proof.
-  intros.
-  destruct a.
-  simpl.
-  induction fmval.
-  - reflexivity.
-  - destruct a.
-    simpl.
-
-    destruct fmval.
-    + reflexivity.
-    + pose proof i.
-      simpl in H0 |- *.
-      rewrite LocationUtility.is_true_split_and in H0 |- *.
-      destruct H0.
-      split ; [ | apply IHfmval, H1].
-      destruct p.
-      simpl.
-      destruct s, s0.
-
-      pose proof (H (Ordinal (n:=S (S n)) (m:=m) i0, t) (or_introl eq_refl)).
-      pose proof (H (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
-          (in_cons (Ordinal (n:=S (S n)) (m:=m) i0, t)
-             (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
-             ((Ordinal (n:=S (S n)) (m:=m0) i1, t0) :: fmval)
-             (or_introl eq_refl))).
-      
-      unfold Ord.lt in H0 |- *.
-      unfold Ord.leq in H0 |- *.
-      cbn.
-
-      clear -H0 H2 H3.
-      rewrite LocationUtility.is_true_split_and in H0 |- *.
-      destruct H0.
-      cbn in H , H0.
-      destruct m, m0 ; easy.
-Qed.
-
-Lemma ord_ext : forall {n} m {H1 H2}, Ordinal (n := S n) (m := m) H1 = Ordinal (n := S n) (m := m) H2.
-Proof.
-  intros.
-  rewrite <- (inord_val (Ordinal H1)). 
-  rewrite <- (inord_val (Ordinal H2)).
-  reflexivity.
-Qed.
-
-Lemma lower_fval_ext : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H1 H2, lower_fval a H1 = lower_fval a H2.
-Proof.
-  intros.
-  destruct a.
-  simpl.
-  induction fmval.
-  - reflexivity.
-  - simpl.
-    destruct a, s.
-    f_equal.
-    + f_equal.
-      apply ord_ext.
-    + apply IHfmval.
-      apply (fmval_tl_sorted i).
-Qed.
 
 Lemma lower_fval_smaller_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) : (length (FMap.fmval a) <= S (length (FMap.fmval (tl_fmap a))))%nat.
 Proof.
@@ -1527,7 +1545,6 @@ Proof.
   - cbn ; lia.
   - simpl.
     simpl in IHfmval.
-    
     destruct a, s. destruct m.
     + apply Nat.eq_le_incl.
       f_equal.
@@ -1564,11 +1581,179 @@ Proof.
         destruct m0 ; [ discriminate | ].
         unfold tl_fmap.
         rewrite mkfmapK ; [ | ].
-        erewrite (lower_fval_ext (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m0) i1, t0) :: fmval) (fmval_tl_sorted i))).
+
+        erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m0) i1, t0) :: fmval) (fmval_tl_sorted i)) _ _ _) eq_refl).
         reflexivity.
         apply (lower_is_sorted (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m0) i1, t0) :: fmval) (fmval_tl_sorted i))).
 Qed.
-        
+
+
+(* Lemma split_fmap_fst_correct {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : forall t, getm a = Some t -> fst (split_fmap a) = t. *)
+(* Proof. *)
+(* Admitted. *)
+
+Lemma H_lower_fval_setm : forall {A} n (a : nseq A (S (S n))) i x H H' H2 `{H_default : Default A}, setm (T:=ordinal_ordType (S n))
+    (mkfmap (T:=ordinal_ordType (S n))
+       (lower_fval a H))
+    (Ordinal (n:=S n) (m:=i) H') x =
+  mkfmap (T:=ordinal_ordType (S n))
+    (lower_fval
+       (setm_def (T:=ordinal_ordType (S (S n))) a
+                 (Ordinal (n:=S (S n)) (m:=S i) H') x) H2).
+Proof.
+  intros.
+Admitted.
+
+Lemma H_nseq_tl_setm : forall {A} n (a : nseq A (S (S n))) i x H' H_default, setm (T:=ordinal_ordType (S n)) (nseq_tl a) (Ordinal (n:=S n) (m:=i) (H')) x = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=S i) H') x).
+Proof.
+  intros.
+  unfold nseq_tl.
+  unfold tl_fmap.
+  destruct a.
+  destruct fmval.
+  - set (setm (T:=ordinal_ordType (S (S n))) _ _ _).
+    destruct f eqn:f_eq.
+    destruct fmval ; [ discriminate | ].
+    destruct fmval ; [ | discriminate ].
+    subst f.
+    destruct p, s.
+    inversion f_eq.
+    subst.
+    cbn.
+    erewrite (proj1 (ord_ext _ _) eq_refl).
+    reflexivity.
+  - destruct p, s.
+    destruct m.
+    + set (setm (T:=ordinal_ordType (S (S n))) _ _ _).
+      destruct f eqn:f_eq.
+      destruct fmval0 ; [ discriminate | ].
+      subst f.
+      destruct p, s.
+      inversion f_eq ; subst.
+      erewrite (H_lower_fval_setm _ (@FMap.FMap _ _ (fmval) (fmval_tl_sorted i0))).
+      reflexivity.
+    + set (setm (T:=ordinal_ordType (S (S n))) _ _ _).
+      destruct f eqn:f_eq.
+      subst f.
+      destruct fmval0 ; [ inversion f_eq ; destruct (_ < _)%ord in H0 ; [ | destruct eqtype.eq_op in H0] ; discriminate | ].
+      destruct p, s.
+
+      destruct m0 ; [ inversion f_eq ; destruct (_ < _)%ord in H0 ; [ | destruct eqtype.eq_op in H0] ; discriminate | ].
+
+      rewrite lower_fval_equation_2.
+      rewrite lower_fval_equation_2.
+
+      assert (forall (A : ordType) B (a : A) (b : B) (xs : list (A * B)), mkfmap ((a, b) :: xs) = setm (mkfmap xs) (a) (b)) by reflexivity.
+
+      rewrite H.
+      rewrite H.
+      
+      unfold fst.
+      unfold snd.
+
+      set (fun _ _ => _).
+      set (fun _ _ => _).
+      
+      set (lower_ordinal _ _ _) ; cbn in o ; set (ssrnat.ltnSE _ ) in o ; subst o.
+      
+      apply eq_fmap.
+      intro v.
+      destruct v.
+      
+      (* epose (@H_lower_fval_setm _ _ (@FMap.FMap _ _ (fmval) (fmval_tl_sorted i0)) _ _ y i4 _ _ ) ; unfold FMap.fmval in e. *)
+      (* rewrite e. *)
+      
+      rewrite !setmE.
+      cbn.
+      
+      inversion f_eq.
+      destruct (_ < _)%ord in H1.
+      * Show Proof.
+        inversion H1. subst.
+        destruct ssrnat.eqn ; [ reflexivity | ].
+        (* rewrite <- e. *)
+        rewrite lower_fval_equation_2.
+        simpl.
+        rewrite !setmE.
+        set (ssrnat.ltnSE _ ).
+        erewrite (proj1 (@ord_ext _ _ _ i i4) eq_refl).
+        cbn.
+        destruct (ssrnat.eqn _ _) ; [ reflexivity | ].
+        f_equal.
+        f_equal.
+        set (fun _ => _).
+        erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ (fmval) (fmval_tl_sorted i0)) _ y _) eq_refl).
+        reflexivity.
+      * cbn in H1.
+        destruct ssrnat.eqn eqn:i_eq_m in H1.
+        -- apply (ssrbool.elimT ssrnat.eqnP) in i_eq_m.
+           subst.
+           
+           inversion H1. subst.
+           destruct ssrnat.eqn.
+           reflexivity.
+           f_equal.
+           f_equal.
+           erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ (fmval0) (fmval_tl_sorted i0)) _ y _) eq_refl).
+           reflexivity.
+        -- inversion H1. subst.
+           destruct (ssrnat.eqn m1 _) eqn:v_eq_i.
+           2:{
+             destruct (ssrnat.eqn m1 m0) eqn:v_eq_m0.
+             reflexivity.
+             
+             f_equal.
+             f_equal.
+             
+             eapply (proj1 (lower_fval_ext (@FMap.FMap _ _ (fmval) (fmval_tl_sorted i0)) (@FMap.FMap _ _ (setm_def (T:=ordinal_ordType (S (S n))) fmval
+                                                                                                                   (Ordinal (n:=S (S n)) (m:=S i) H') x) _) y y0 )).
+             apply eq_fmap.
+             intros j.
+
+             cbn.
+             replace (setm_def _ _ _) with (FMap.fmval (setm (@FMap.FMap _ _ (fmval) (fmval_tl_sorted i0)) (Ordinal (n:=S (S n)) (m:=S i) H') x)) by reflexivity.
+             setoid_rewrite setmE.
+             destruct j.
+             (* cbn. *)
+             (* clear. *)
+             cbn.
+             destruct (ssrnat.eqn _ (S i)) eqn:j_eq ; [ | reflexivity ].
+             apply (ssrbool.elimT ssrnat.eqnP) in j_eq.
+             admit.
+           }
+           destruct (ssrnat.eqn m1 m0).
+           apply (ssrbool.elimT ssrnat.eqnP) in v_eq_i.
+           subst.
+           admit.
+           admit.
+Admitted.
+
+Lemma H_nseq_tl_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_tl a = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x).
+Admitted.
+
+Lemma H_nseq_hd_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_hd (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x) = x.
+Admitted.
+
+(* Lemma array_to_list_helper_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) (i : nat) (H : (i < S (S n))%nat) : length (array_to_list_helper a i H) = i. *)
+(* Proof. *)
+(*   induction i. *)
+(*   - now rewrite array_to_list_helper_equation_1. *)
+(*   - rewrite array_to_list_helper_equation_2. *)
+(*     destruct getm ; rewrite app_length ; rewrite IHi ; cbn ; lia. *)
+(* Qed. *)
+
+(* Lemma array_to_list_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A n)) : length (array_to_list a) = n. *)
+(* Proof. *)
+(*   rewrite !array_to_list_equation_1. *)
+(*   unfold array_to_list_clause_1. *)
+(*   unfold array_to_list_obligations_obligation_1. *)
+
+(*   destruct n. *)
+(*   - reflexivity. *)
+(*   - rewrite array_to_list_helper_length. *)
+(*     reflexivity. *)
+(* Qed. *)
+
 Lemma array_is_max_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : (length (FMap.fmval a) <= S n)%nat.
 Proof.
   induction n.
@@ -1710,7 +1895,7 @@ Proof.
       * destruct (Z.to_nat i).
         -- rewrite <- H_nseq_tl_setm0.
            reflexivity.
-        -- rewrite <- (H_nseq_tl_setm _ _ _ _ (ssrbool.introT ssrnat.ltP (lt_S_n _ _ l))).
+        -- rewrite <- H_nseq_tl_setm.
            destruct (nseq_tl a).
            ++ destruct n0.
               cbn.
@@ -1737,14 +1922,16 @@ Proof.
       * destruct (Z.to_nat i).
         -- rewrite <- H_nseq_tl_setm0.
            reflexivity.
-        --
-        rewrite <- (H_nseq_tl_setm _ _ _ _ (ssrbool.introT ssrnat.ltP  (lt_S_n _ _ l))).
-        specialize  (IHn (nseq_tl a) (Z.of_nat n0)).
-        rewrite !Nat2Z.id in IHn.
-        specialize (IHn (lt_S_n _ _ l)).
-        destruct IHn.
-        setoid_rewrite H0.
-        reflexivity.
+        -- specialize  (IHn (nseq_tl a) (Z.of_nat n0)).
+           rewrite !Nat2Z.id in IHn.
+           specialize (IHn (lt_S_n _ _ l)).
+           destruct IHn.
+
+           rewrite <- H_nseq_tl_setm.
+           erewrite (proj1 (ord_ext _ _) eq_refl).
+           rewrite <- H0.
+
+           reflexivity.
 Qed.
 
 (* Equations array_to_list_cases {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A n)) : Prop := *)
