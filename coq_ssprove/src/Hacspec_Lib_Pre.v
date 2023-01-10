@@ -1323,46 +1323,69 @@ Proof.
       apply (H x (in_cons _ _ _ H0)).
 Defined.
 
-Definition tl_fmap {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) : {fmap 'I_(S n) -> A}.
-Proof.
-  apply mkfmap.
-  destruct a.
-  destruct fmval.
-  - apply emptym.
-  - assert (forall x, In x fmval -> is_true (fst p < fst x)%ord).
-    {
-      clear -i ; intros.
-      induction fmval.
-      - contradiction.
-      - cbn in i.
-        rewrite LocationUtility.is_true_split_and in i.
-        destruct i.
-        destruct H.
-        + subst.
-          apply H0.
-        + apply IHfmval.
-          cbn.
-          eapply path.path_le.
-          apply (@Ord.lt_trans _).
-          apply H0.
-          apply H1.
-          apply H.
-    }
+Lemma gt_smallest_sorted : forall {A} {n} {p : 'I_n * A} {fmval}, is_true (path.sorted Ord.lt (seq.unzip1 (p :: fmval))) -> (forall x, In x fmval -> is_true (fst p < fst x)%ord).
+  intros.
+  induction fmval.
+  - contradiction.
+  - cbn in H.
+    rewrite LocationUtility.is_true_split_and in H.
+    destruct H.
+    destruct H0.
+    + subst.
+      apply H.
+    + apply IHfmval.
+      cbn.
+      eapply path.path_le.
+      apply (@Ord.lt_trans _).
+      apply H.
+      apply H1.
+      apply H0.
+Qed.
 
-    destruct p, s, m.
-    + apply (lower_fval fmval).
-      apply H ; easy.
-    + apply (lower_fval ((Ordinal (n:=S (S n)) (m:=S m) i0, t) :: fmval)).
-      intros.
-      destruct H0.
-      * subst. cbn. reflexivity.
-      * (* cbn. *)
-        cbn in i.
-        specialize (H x H0).
-        eapply (Ord.lt_trans).
-        2: apply H.
-        easy.
-Defined.
+Corollary tl_gt_0_sorted : forall {A} {n} {p : 'I_(S n) * A} {fmval}, is_true (path.sorted Ord.lt (seq.unzip1 (p :: fmval))) -> (forall x, In x fmval -> is_true (ord0 < fst x)%ord).
+  intros.
+  induction fmval ; [ easy | ].
+  pose proof H.
+  simpl in H1.
+  rewrite LocationUtility.is_true_split_and in H1.
+  destruct H1.
+  destruct H0.
+  - subst.
+    destruct p, o.
+    destruct m.
+    + apply H1.
+    + eapply Ord.lt_trans. 2: apply (gt_smallest_sorted H) ; now left.
+      easy.
+  - refine (IHfmval _ H0).
+    cbn.
+    eapply path.path_le.
+    apply Ord.lt_trans.
+    apply H1.
+    apply H2.
+Qed.
+
+Lemma in_nseq_tl_gt_zero {A} {n} {m'} {i3} {k} fmval (i :
+  is_true (path.path Ord.lt (fst (@Ordinal _ (S m') i3, k)) (seq.unzip1 fmval))) :
+  (forall x : 'I_(S (S n)) * T A,
+   In x ((@Ordinal _ (S m') i3, k) :: fmval) ->
+   is_true (ord0 < fst x)%ord).
+Proof.
+  intros.
+  destruct H.
+  - subst. reflexivity.
+  - eapply tl_gt_0_sorted.
+    apply i.
+    apply H.
+Qed.
+
+Definition tl_fmap {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) : {fmap 'I_(S n) -> A} :=
+ mkfmap (T:=ordinal_ordType (S n))
+   match a with
+   | @FMap.FMap _ _ [] i => emptym
+   | @FMap.FMap _ _ ((@Ordinal _ 0 i3, k) :: fmval) i => lower_fval fmval (gt_smallest_sorted i)
+   | @FMap.FMap _ _ ((@Ordinal _ (S m') i3, k) :: fmval) i =>
+       lower_fval ((Ordinal (n:=S (S n)) (m:=S m') i3, k) :: fmval) (in_nseq_tl_gt_zero fmval i)
+   end.
 
 Definition nseq_hd {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : A :=
   match a with
@@ -1378,6 +1401,22 @@ Definition nseq_tl {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nse
 Proof. destruct n ; [exact tt | apply (tl_fmap a) ]. Defined.
 
 Definition split_nseq {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : A * T (nseq A n) := (nseq_hd a, nseq_tl a).
+
+(* Lemma split_fmap_fst_correct {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : forall t, getm a = Some t -> fst (split_fmap a) = t. *)
+(* Proof. *)
+(* Admitted. *)
+Lemma H_nseq_tl_setm : forall {A} n (a : nseq A (S (S n))) i x H H' H_default, setm (T:=ordinal_ordType (S n)) (nseq_tl a) (Ordinal (n:=S n) (m:=i) H) x = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=S i) H') x).
+Proof.
+  intros.
+  unfold nseq_tl.
+  unfold tl_fmap.
+Admitted.
+
+Lemma H_nseq_tl_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_tl a = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x).
+Admitted.
+
+Lemma H_nseq_hd_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_hd (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x) = x.
+Admitted.
 
 (* Lemma array_to_list_helper_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) (i : nat) (H : (i < S (S n))%nat) : length (array_to_list_helper a i H) = i. *)
 (* Proof. *)
@@ -1399,10 +1438,137 @@ Definition split_nseq {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (
 (*     reflexivity. *)
 (* Qed. *)
 
-Lemma lower_fval_smaller_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S (S n)))) : (length (FMap.fmval a) <= S (length (FMap.fmval (tl_fmap a))))%nat.
-Proof.
-Admitted.
 
+Compute (fun a => seq.unzip2 (FMap.fmval a)) (setm emptym (Ordinal (n := 10) (m := 2) _) (1%nat : nat_ChoiceEquality)).
+
+Lemma lower_keeps_value : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, (seq.map snd a = seq.map snd (lower_fval a H)).
+Proof.
+  intros.
+  destruct a.
+  simpl in *.
+  induction fmval.
+  - cbn.
+    reflexivity.
+  - destruct a.
+    rewrite seq.map_cons.
+    erewrite IHfmval.
+    simpl.
+    f_equal.
+    apply (fmval_tl_sorted i).
+Qed.
+
+Lemma lower_is_sorted : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H, is_true (path.sorted Ord.lt (seq.unzip1 (lower_fval a H))).
+Proof.
+  intros.
+  destruct a.
+  simpl.
+  induction fmval.
+  - reflexivity.
+  - destruct a.
+    simpl.
+
+    destruct fmval.
+    + reflexivity.
+    + pose proof i.
+      simpl in H0 |- *.
+      rewrite LocationUtility.is_true_split_and in H0 |- *.
+      destruct H0.
+      split ; [ | apply IHfmval, H1].
+      destruct p.
+      simpl.
+      destruct s, s0.
+
+      pose proof (H (Ordinal (n:=S (S n)) (m:=m) i0, t) (or_introl eq_refl)).
+      pose proof (H (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
+          (in_cons (Ordinal (n:=S (S n)) (m:=m) i0, t)
+             (Ordinal (n:=S (S n)) (m:=m0) i1, t0)
+             ((Ordinal (n:=S (S n)) (m:=m0) i1, t0) :: fmval)
+             (or_introl eq_refl))).
+      
+      unfold Ord.lt in H0 |- *.
+      unfold Ord.leq in H0 |- *.
+      cbn.
+
+      clear -H0 H2 H3.
+      rewrite LocationUtility.is_true_split_and in H0 |- *.
+      destruct H0.
+      cbn in H , H0.
+      destruct m, m0 ; easy.
+Qed.
+
+Lemma ord_ext : forall {n} m {H1 H2}, Ordinal (n := S n) (m := m) H1 = Ordinal (n := S n) (m := m) H2.
+Proof.
+  intros.
+  rewrite <- (inord_val (Ordinal H1)). 
+  rewrite <- (inord_val (Ordinal H2)).
+  reflexivity.
+Qed.
+
+Lemma lower_fval_ext : forall  {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) H1 H2, lower_fval a H1 = lower_fval a H2.
+Proof.
+  intros.
+  destruct a.
+  simpl.
+  induction fmval.
+  - reflexivity.
+  - simpl.
+    destruct a, s.
+    f_equal.
+    + f_equal.
+      apply ord_ext.
+    + apply IHfmval.
+      apply (fmval_tl_sorted i).
+Qed.
+
+Lemma lower_fval_smaller_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : {fmap 'I_(S(S n)) -> A}) : (length (FMap.fmval a) <= S (length (FMap.fmval (tl_fmap a))))%nat.
+Proof.
+  destruct a.
+  induction fmval.
+  - cbn ; lia.
+  - simpl.
+    simpl in IHfmval.
+    
+    destruct a, s. destruct m.
+    + apply Nat.eq_le_incl.
+      f_equal.
+      unfold tl_fmap.
+      rewrite mkfmapK ; [ | apply (lower_is_sorted (@FMap.FMap _ _ fmval (fmval_tl_sorted i)))].
+      epose (lower_keeps_value (FMap.FMap (T:=ordinal_ordType (S (S n))) (fmval:=fmval) (fmval_tl_sorted i))).
+      simpl in e.
+      rewrite <- (map_length snd).
+      rewrite <- (map_length snd).
+      assert (forall {A B} (f : A -> B) (l : list A), seq.map f l = map f l).
+      {
+        clear ; intros.
+        induction l.
+        - reflexivity.
+        - cbn.
+          f_equal.
+      }
+      setoid_rewrite <- H.
+      erewrite e.
+      reflexivity.
+    + unfold tl_fmap.
+      apply le_n_S.
+      eapply le_trans ; [ apply (IHfmval (fmval_tl_sorted i)) | ].
+      apply Nat.eq_le_incl.
+      rewrite mkfmapK ; [ | apply (lower_is_sorted (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m) i0, t) :: fmval) i)) ].
+      simpl.
+      f_equal.
+      f_equal.
+      clear.
+
+      induction fmval.
+      * reflexivity.
+      * destruct a, s.
+        destruct m0 ; [ discriminate | ].
+        unfold tl_fmap.
+        rewrite mkfmapK ; [ | ].
+        erewrite (lower_fval_ext (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m0) i1, t0) :: fmval) (fmval_tl_sorted i))).
+        reflexivity.
+        apply (lower_is_sorted (@FMap.FMap _ _ ((Ordinal (n:=S (S n)) (m:=S m0) i1, t0) :: fmval) (fmval_tl_sorted i))).
+Qed.
+        
 Lemma array_is_max_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : (length (FMap.fmval a) <= S n)%nat.
 Proof.
   induction n.
@@ -1456,18 +1622,6 @@ Lemma split_nseq_correct {A : ChoiceEquality} `{H_default : Default A} {n} (a : 
 Proof.
   now rewrite (array_to_list_equation_1 _ _ _ a).
 Qed.
-
-(* Lemma split_fmap_fst_correct {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) : forall t, getm a = Some t -> fst (split_fmap a) = t. *)
-(* Proof. *)
-(* Admitted. *)
-Lemma H_nseq_tl_setm : forall {A} n (a : nseq A (S (S n))) i x H H' H_default, setm (T:=ordinal_ordType (S n)) (nseq_tl a) (Ordinal (n:=S n) (m:=i) H) x = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=S i) H') x).
-Admitted.
-
-Lemma H_nseq_tl_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_tl a = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x).
-Admitted.
-
-Lemma H_nseq_hd_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_hd (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x) = x.
-Admitted.
 
 Lemma array_to_list_upd_spec : forall (A : ChoiceEquality) `{H_default : Default A} WS n (a : nseq A n) (i : @int WS) x,
     (Z.to_nat (unsigned i) < n)%nat ->
