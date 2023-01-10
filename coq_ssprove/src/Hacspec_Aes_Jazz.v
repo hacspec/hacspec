@@ -459,7 +459,8 @@ Program Definition subword (v_240 : int32)
             I := [interface]) (fun i_242 res_238 =>
             letb res_238 : u32_word_t :=
               array_upd res_238 (lift_to_both0 i_242) (is_pure (array_index (
-                    sbox_v) (array_index (vs_241) (lift_to_both0 i_242)))) in
+                    sbox_v) (array_index (vs_241) ((lift_to_both0 (
+                          usize 3)) .- (lift_to_both0 i_242))))) in
             lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
               lift_to_both0 res_238)
             ) in
@@ -509,15 +510,13 @@ Program Definition aeskeygenassist (v1_247 : int128) (v2_251 : int8)
         subword ((fun x => lift_to_both0 (repr (unsigned x)))(
             lift_to_both0 x1_248)) in
       letb y1_252 : int32 :=
-        (ror (subword ((fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 x1_248))) (lift_to_both0 (usize 1))) .^ (
+        (ror (lift_to_both0 y0_250) (lift_to_both0 (usize 1))) .^ (
           (fun x => lift_to_both0 (repr (unsigned x)))(lift_to_both0 v2_251)) in
       letb y2_253 : int32 :=
         subword ((fun x => lift_to_both0 (repr (unsigned x)))(
             lift_to_both0 x3_249)) in
       letb y3_254 : int32 :=
-        (ror (subword ((fun x => lift_to_both0 (repr (unsigned x)))(
-                lift_to_both0 x3_249))) (lift_to_both0 (usize 1))) .^ (
+        (ror (lift_to_both0 y2_253) (lift_to_both0 (usize 1))) .^ (
           (fun x => lift_to_both0 (repr (unsigned x)))(lift_to_both0 v2_251)) in
       lift_scope (H_loc_incl := _) (H_opsig_incl := _) ((((
               (fun x => lift_to_both0 (repr (unsigned x)))(

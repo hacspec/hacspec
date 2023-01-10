@@ -1133,7 +1133,7 @@ Section Arrays.
     : both0 (nseq a out_len) :=
     lift_to_both (array_from_seq out_len input).
 
-  Definition array_to_seq {A : ChoiceEquality} {n} (f : nseq A n) : both0 (seq _) :=
+  Definition array_to_seq {A : ChoiceEquality} `{H_default : Default A} {n} (f : nseq A n) : both0 (seq _) :=
     @lift_to_both (seq A) _ _ (array_to_seq f).
 
   Definition array_from_slice

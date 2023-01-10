@@ -71,8 +71,8 @@ fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
 fn subword(v: u32) -> u32 {
     let vs = u32_to_be_bytes(v);
     let mut res = u32Word::new();
-    for i in 0..8 {
-	res[i] = SBOX[vs[i]];
+    for i in 0..4 {
+	res[i] = SBOX[vs[3-i]];
     }
     u32_from_be_bytes(res)
 }
@@ -85,9 +85,9 @@ fn aeskeygenassist(v1: u128, v2: u8) -> u128 {
     let x1 = (v1 >> 32) % (1_u128 << 32);
     let x3 = (v1 >> 96) % (1_u128 << 32);
     let y0 = subword(x1 as u32);
-    let y1 = ror(subword(x1 as u32), 1) ^ (v2 as u32);
+    let y1 = ror(y0, 1) ^ (v2 as u32);
     let y2 = subword(x3 as u32);
-    let y3 = ror(subword(x3 as u32), 1) ^ (v2 as u32);
+    let y3 = ror(y2, 1) ^ (v2 as u32);
 
     (y0 as u128) | ((y1 as u128) << 32) | ((y2 as u128) << 64) | (((y3) as u128) << 96)
 }

@@ -762,12 +762,15 @@ Corollary better_r_put_lhs : forall {A B : choice.Choice.type} (ℓ : Location)
      ⊢ ⦃ pre ⦄ #put ℓ := v ;; r₀ ≈ r₁ ⦃ post ⦄.
 Proof.
   intros.
-  replace (pre) with (fun '(x, y) => pre (x, y)).
+  eapply rpre_hypothesis_rule.
+  intros.
+  eapply rpre_weaken_rule.
   apply r_put_lhs.
   apply H.
-  apply functional_extensionality.
-  intros [].
-  reflexivity.
+  intuition.
+  Unshelve.
+  subst.
+  intuition.
 Qed.
 
 Corollary better_r_put_get : forall (A : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code A) rhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort A)),
