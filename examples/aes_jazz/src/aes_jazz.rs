@@ -97,3 +97,7 @@ fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
     let (rkey, temp2) = key_combine(rkey, temp1, temp2);
     (rkey, temp2)
 }
+
+fn aes(rkey: u128, m: u128) -> u128 {
+    m
+}

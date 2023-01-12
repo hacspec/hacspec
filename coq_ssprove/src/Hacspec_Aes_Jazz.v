@@ -30,7 +30,7 @@ Definition r_con_t := nseq (uint8) (usize 15).
 Definition p_bytes256_t := nseq (int8) (usize 256).
 
 Definition sbox_v : s_box_t :=
-  array_from_list int8 [
+  @array_from_list int8 [
     (@repr U8 99) : int8;
     (@repr U8 124) : int8;
     (@repr U8 119) : int8;
@@ -290,7 +290,7 @@ Definition sbox_v : s_box_t :=
   ].
 
 Definition rcon_v : r_con_t :=
-  array_from_list uint8 [
+  @array_from_list uint8 [
     (secret (@repr U8 141)) : uint8;
     (secret (@repr U8 1)) : uint8;
     (secret (@repr U8 2)) : uint8;
@@ -555,5 +555,19 @@ Program Definition key_expand (rcon_257 : int8) (rkey_256 : int128) (
           lift_to_both0 temp2_261
         ))
       ) : both (CEfset ([res_238_loc])) [interface] ((int128 '× int128))).
+Fail Next Obligation.
+
+
+Notation "'aes_inp'" :=(
+  int128 '× int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_inp'" :=(int128 '× int128 : ChoiceEquality) (at level 2).
+Notation "'aes_out'" :=(int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_out'" :=(int128 : ChoiceEquality) (at level 2).
+Definition AES : nat :=
+  264.
+Program Definition aes (rkey_265 : int128) (m_263 : int128)
+  : both (fset.fset0) [interface] (int128) :=
+  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 m_263)
+      ) : both (fset.fset0) [interface] (int128)).
 Fail Next Obligation.
 

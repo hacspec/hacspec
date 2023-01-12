@@ -1122,9 +1122,9 @@ Section Arrays.
     lift_to_both (update_sub v i n sub).
 
   Definition array_from_list
-             (A: ChoiceEquality)
+             {A: ChoiceEquality}
              (l: list (T A))
-    : both0 (nseq A (length l)) := lift_to_both (array_from_list A l).
+    : both0 (nseq A (length l)) := lift_to_both (array_from_list l).
 
   Definition array_from_seq   {a: ChoiceEquality}
              `{Default (T a)}

@@ -733,7 +733,7 @@ fn translate_func_name<'a>(
                         let temp_ass: RcDoc<'a, ()> = make_let_binding(
                             Pattern::IdentPat(temp_name.clone(), false),
                             Some(BaseTyp::Seq(base_ty)),
-                            RcDoc::as_string("array_to_seq (")
+                            RcDoc::as_string("@array_to_seq (")
                                 .append(args[position].clone())
                                 .append(RcDoc::as_string(")")),
                             !inline,
@@ -1313,7 +1313,7 @@ fn translate_expression<'a>(
                     let temp_ass: RcDoc<'a, ()> = make_let_binding(
                         Pattern::IdentPat(temp_name.clone(), false),
                         Some(array_typ),
-                        RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
+                        RcDoc::as_string(format!("@{}_from_list", ARRAY_MODULE))
                             .append(RcDoc::space())
                             .append(make_paren(translate_base_typ(inner_ty.clone())))
                             .append(RcDoc::space())

@@ -488,7 +488,7 @@ pub(crate) fn translate_func_name<'a>(
                         }
                         extra_info.insert(
                             position,
-                            (RcDoc::as_string("array_to_seq ("), RcDoc::as_string(")")),
+                            (RcDoc::as_string("@array_to_seq ("), RcDoc::as_string(")")),
                         );
                     }
                 }
@@ -784,7 +784,7 @@ fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelContext) -> RcDo
                 Some(_) =>
                 // Array case
                 {
-                    RcDoc::as_string(format!("{}_from_list", ARRAY_MODULE))
+                    RcDoc::as_string(format!("@{}_from_list", ARRAY_MODULE))
                         .append(RcDoc::space())
                         .append(translate_base_typ(inner_ty.clone()))
                         .append(RcDoc::space())
