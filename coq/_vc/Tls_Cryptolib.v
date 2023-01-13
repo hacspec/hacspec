@@ -75,7 +75,7 @@ Notation "'signature_t'" := (byte_seq) : hacspec_scope.
 
 Notation "'aead_iv_t'" := (byte_seq) : hacspec_scope.
 
-Notation "'aead_key_iv_t'" := ((aead_key_t × aead_iv_t)) : hacspec_scope.
+Notation "'aead_key_iv_t'" := ((aead_key_t '× aead_iv_t)) : hacspec_scope.
 
 Inductive named_group_t :=
 | X25519 : named_group_t
@@ -207,21 +207,22 @@ Definition p256_ecdh
   (x_13 : dh_sk_t)
   (y_14 : dh_pk_t)
   : (result key_t crypto_error_t) :=
-  let _ : unit :=
-    p256_check_point_len (y_14) in 
-  let pk_15 : (p256_field_element_t × p256_field_element_t) :=
-    (
-      nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 0, usize 32
-          ))) : p256_field_element_t,
-      nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 32, usize 64
-          ))) : p256_field_element_t
-    ) in 
-  match p256_point_mul (nat_mod_from_byte_seq_be (x_13) : p256_scalar_t) (
-    pk_15) with
-  | Ok ((x_16, y_17)) => @Ok key_t crypto_error_t (seq_concat (
-      nat_mod_to_byte_seq_be (x_16)) (nat_mod_to_byte_seq_be (y_17)))
-  | Err (_) => @Err key_t crypto_error_t (CryptoError)
-  end.
+  bind (p256_check_point_len (y_14)) (fun _ => let pk_15 : (
+        p256_field_element_t '×
+        p256_field_element_t
+      ) :=
+      (
+        nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 0, usize 32
+            ))) : p256_field_element_t,
+        nat_mod_from_byte_seq_be (seq_slice_range (y_14) ((usize 32, usize 64
+            ))) : p256_field_element_t
+      ) in 
+    match p256_point_mul (nat_mod_from_byte_seq_be (x_13) : p256_scalar_t) (
+      pk_15) with
+    | Ok ((x_16, y_17)) => @Ok key_t crypto_error_t (seq_concat (
+        nat_mod_to_byte_seq_be (x_16)) (nat_mod_to_byte_seq_be (y_17)))
+    | Err (_) => @Err key_t crypto_error_t (CryptoError)
+    end).
 
 Definition ecdh
   (group_name_18 : named_group_t)
@@ -256,19 +257,20 @@ Definition kem_priv_to_pub
 Definition kem_keygen_inner
   (ks_25 : kem_scheme_t)
   (ent_26 : entropy_t)
-  : (result (kem_sk_t × kem_pk_t) crypto_error_t) :=
+  : (result (kem_sk_t '× kem_pk_t) crypto_error_t) :=
   let sk_27 : seq uint8 :=
     seq_from_seq (seq_slice_range (ent_26) ((usize 0, dh_priv_len (ks_25)))) in 
-  let pk_28 : kem_pk_t :=
-    kem_priv_to_pub (ks_25) (sk_27) in 
-  @Ok (kem_sk_t × kem_pk_t) crypto_error_t ((sk_27, pk_28)).
+  bind (kem_priv_to_pub (ks_25) (sk_27)) (fun pk_28 => @Ok (
+      kem_sk_t '×
+      kem_pk_t
+    ) crypto_error_t ((sk_27, pk_28))).
 
 Definition kem_keygen
   (ks_29 : kem_scheme_t)
   (ent_30 : entropy_t)
-  : (result (kem_sk_t × kem_pk_t) crypto_error_t) :=
+  : (result (kem_sk_t '× kem_pk_t) crypto_error_t) :=
   (if ((seq_len (ent_30)) <.? (dh_priv_len (ks_29))):bool then (@Err (
-        kem_sk_t ×
+        kem_sk_t '×
         kem_pk_t
       ) crypto_error_t (InsufficientEntropy)) else (kem_keygen_inner (ks_29) (
         ent_30))).
@@ -277,21 +279,20 @@ Definition kem_encap
   (ks_31 : kem_scheme_t)
   (pk_32 : kem_pk_t)
   (ent_33 : entropy_t)
-  : (result (key_t × byte_seq) crypto_error_t) :=
-  let '(x_34, gx_35) :=
-    kem_keygen (ks_31) (ent_33) in 
-  let gxy_36 : key_t :=
-    ecdh (ks_31) (x_34) (pk_32) in 
-  @Ok (key_t × byte_seq) crypto_error_t ((gxy_36, gx_35)).
+  : (result (key_t '× byte_seq) crypto_error_t) :=
+  bind (kem_keygen (ks_31) (ent_33)) (fun '(x_34, gx_35) => bind (ecdh (ks_31) (
+        x_34) (pk_32)) (fun gxy_36 => @Ok (key_t '× byte_seq) crypto_error_t ((
+          gxy_36,
+          gx_35
+        )))).
 
 Definition kem_decap
   (ks_37 : kem_scheme_t)
   (ct_38 : byte_seq)
   (sk_39 : kem_sk_t)
   : (result key_t crypto_error_t) :=
-  let gxy_40 : key_t :=
-    ecdh (ks_37) (sk_39) (ct_38) in 
-  @Ok key_t crypto_error_t (gxy_40).
+  bind (ecdh (ks_37) (sk_39) (ct_38)) (fun gxy_40 => @Ok key_t crypto_error_t (
+      gxy_40)).
 
 Definition hash
   (ha_41 : hash_algorithm_t)
@@ -335,18 +336,12 @@ Definition hmac_verify
   (payload_52 : byte_seq)
   (m_53 : hmac_t)
   : (result unit crypto_error_t) :=
-  let my_hmac_54 : hmac_t :=
-    hmac_tag (ha_50) (mk_51) (payload_52) in 
-  let _ : unit :=
-    check_tag_len (m_53) (my_hmac_54) in 
-  let 'tt :=
-    foldi (usize 0) (seq_len (m_53)) (fun i_55 'tt =>
-      let _ : unit :=
-        check_bytes (seq_index (my_hmac_54) (i_55)) (seq_index (m_53) (
-            i_55)) in 
-      tt)
-    tt in 
-  @Ok unit crypto_error_t (tt).
+  bind (hmac_tag (ha_50) (mk_51) (payload_52)) (fun my_hmac_54 => bind (
+      check_tag_len (m_53) (my_hmac_54)) (fun _ => bind (foldibnd (usize 0) to (
+          seq_len (m_53)) for tt >> (fun i_55 'tt =>
+        bind (check_bytes (seq_index (my_hmac_54) (i_55)) (seq_index (m_53) (
+              i_55))) (fun _ => @Ok unit crypto_error_t (tt)))) (fun _ =>
+        @Ok unit crypto_error_t (tt)))).
 
 Definition ec_oid_tag_t := nseq (uint8) (usize 9).
 

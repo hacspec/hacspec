@@ -193,7 +193,7 @@ Definition process_ad (ad_1164 : byte_seq) (s_1165 : state_t) : state_t :=
 Definition process_msg
   (message_1166 : byte_seq)
   (s_1167 : state_t)
-  : (state_t × byte_seq) :=
+  : (state_t '× byte_seq) :=
   let ciphertext_1168 : seq uint8 :=
     seq_new_ (default : uint8) (seq_len (message_1166)) in 
   let rate_1169 : uint_size :=
@@ -245,7 +245,7 @@ Definition process_msg
 Definition process_ct
   (ciphertext_1180 : byte_seq)
   (s_1181 : state_t)
-  : (state_t × byte_seq) :=
+  : (state_t '× byte_seq) :=
   let message_1182 : seq uint8 :=
     seq_new_ (default : uint8) (seq_len (ciphertext_1180)) in 
   let rate_1183 : uint_size :=
@@ -360,7 +360,7 @@ Definition gimli_aead_encrypt
   (ad_1202 : byte_seq)
   (nonce_1203 : nonce_t)
   (key_1204 : key_t)
-  : (byte_seq × tag_t) :=
+  : (byte_seq '× tag_t) :=
   let s_1205 : state_t :=
     array_from_seq (12) (seq_concat (nonce_to_u32s (nonce_1203)) (key_to_u32s (
           key_1204))) in 
