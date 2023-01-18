@@ -119,6 +119,18 @@ fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
     key_combine(rkey, temp1, temp2)
 }
 
+fn key_expand_(rcon: u8, rkey: u128) -> u128 {
+    let r0 = ror(index_u32(rkey, 0), 24);
+    let s0 = aes_subword(r0);
+    let temp0 = s0 ^ ((rcon as u32) << 24);
+    let v0 = temp0 ^ index_u32(rkey, 3);
+    let v1 = v0 ^ index_u32(rkey, 2);
+    let v2 = v1 ^ index_u32(rkey, 1);
+    let v3 = v2 ^ index_u32(rkey, 0);
+
+    rebuild_u128(v3, v2, v1, v0)
+}
+
 type KeyList = Seq<u128>;
 
 fn keys_expand(key : u128) -> KeyList {
@@ -127,33 +139,25 @@ fn keys_expand(key : u128) -> KeyList {
     let mut temp2 : u128 = 0;
     let mut key = key;
     for round in 1 .. 12 {
-        let rcon = RCON[round-1];
-        let (nkey, ntemp2) = key_expand(rcon, key, temp2);
-        key = nkey;
-        temp2 = ntemp2;
+        let rcon = RCON[round];
+        key = key_expand_(rcon, key);
         rkeys = rkeys.push(&key);
     }
     rkeys
 }
 
+fn aes_subword(v : u32) -> u32 {
+    rebuild_u32(SBOX[index_u8(v, 0)],
+                SBOX[index_u8(v, 1)],
+                SBOX[index_u8(v, 2)],
+                SBOX[index_u8(v, 3)])
+}
+
 fn SubBytes (s : u128) -> u128 {
-    rebuild_u128(
-        rebuild_u32(SBOX[index_u8(index_u32(s, 0), 0)],
-                    SBOX[index_u8(index_u32(s, 0), 1)],
-                    SBOX[index_u8(index_u32(s, 0), 2)],
-                    SBOX[index_u8(index_u32(s, 0), 3)]),
-        rebuild_u32(SBOX[index_u8(index_u32(s, 1), 0)],
-                    SBOX[index_u8(index_u32(s, 1), 1)],
-                    SBOX[index_u8(index_u32(s, 1), 2)],
-                    SBOX[index_u8(index_u32(s, 1), 3)]),
-        rebuild_u32(SBOX[index_u8(index_u32(s, 2), 0)],
-                    SBOX[index_u8(index_u32(s, 2), 1)],
-                    SBOX[index_u8(index_u32(s, 2), 2)],
-                    SBOX[index_u8(index_u32(s, 2), 3)]),
-        rebuild_u32(SBOX[index_u8(index_u32(s, 3), 0)],
-                    SBOX[index_u8(index_u32(s, 3), 1)],
-                    SBOX[index_u8(index_u32(s, 3), 2)],
-                    SBOX[index_u8(index_u32(s, 3), 3)]))
+    rebuild_u128(aes_subword(index_u32(s, 0)),
+                 aes_subword(index_u32(s, 1)),
+                 aes_subword(index_u32(s, 2)),
+                 aes_subword(index_u32(s, 3)))
 }
 
 fn matrix_index (s : u128, i : usize, j : usize) -> u8 {
@@ -243,34 +247,47 @@ fn aes(key : u128, inp : u128) -> u128 {
 fn test_keys_expand() {
     let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
 
+    println!("{:X?} {:X?}", index_u32(key, 0), ror(index_u32(key, 0), 24));
+    println!("{:X?} {:X?}", index_u32(key, 0), rebuild_u32(SBOX[index_u8(ror(index_u32(key, 0), 24), 0)],
+                    SBOX[index_u8(ror(index_u32(key, 0), 24), 1)],
+                    SBOX[index_u8(ror(index_u32(key, 0), 24), 2)],
+                    SBOX[index_u8(ror(index_u32(key, 0), 24), 3)]));
+    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 3));
+    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 2));
+    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 1));
+    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 0));
+    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 3));
+    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 2));
+    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 1));
+    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 0));
+    
+        
     let x1 = index_u32(key, 1);
     let x3 = index_u32(key, 3);
     let y0 = subword(x1 as u32);
     let y2 = subword(x3 as u32);
     let z1 = ror(y0, 1);
     let z3 = ror(y2, 1);
-    let y1 = z1 ^ (RCON[0] as u32);
-    let y3 = z3 ^ (RCON[0] as u32);
+    let y1 = z1 ^ (RCON[1] as u32);
+    let y3 = z3 ^ (RCON[1] as u32);
 
-    println!("{:X?}", RCON[0]);
+    // println!("{:X?}", RCON[0]);
     
-    println!("{:X?}", y0);
-    println!("{:X?}", y1);
-    println!("{:X?}", y2);
-    println!("{:X?}", y3);
+    // println!("{:X?}", x1);
+    // println!("{:X?}", x3);
+    // println!("{:X?}", z1);
+    // println!("{:X?}", z3);
 
-    println!("{:X?}", rebuild_u128(y0, 0, y2, 0));
-    println!("{:X?}", rebuild_u128(0, z1, 0, z3));
-    println!("{:X?}", rebuild_u128(0, y1, 0, y3));
-    
-
-    println!("{:X?}", aeskeygenassist(key, RCON[0]));
+    // println!("{:X?}", y0);
+    // println!("{:X?}", y1);
+    // println!("{:X?}", y2);
+    // println!("{:X?}", y3);
     
         
-    println!("{:X?}", keys_expand(key));
-    for j in 0..11 {
-        println!("{} , {:X?}", j, keys_expand(key)[j]);
-    }
+    // println!("{:X?}", keys_expand(key));
+    // for j in 0..11 {
+    //     println!("{} , {:X?}", j, keys_expand(key)[j]);
+    // }
 
     assert_eq!(true, false);    
 }
