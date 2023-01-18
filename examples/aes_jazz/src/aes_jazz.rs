@@ -247,49 +247,16 @@ fn aes(key : u128, inp : u128) -> u128 {
 fn test_keys_expand() {
     let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
 
-    println!("{:X?} {:X?}", index_u32(key, 0), ror(index_u32(key, 0), 24));
-    println!("{:X?} {:X?}", index_u32(key, 0), rebuild_u32(SBOX[index_u8(ror(index_u32(key, 0), 24), 0)],
-                    SBOX[index_u8(ror(index_u32(key, 0), 24), 1)],
-                    SBOX[index_u8(ror(index_u32(key, 0), 24), 2)],
-                    SBOX[index_u8(ror(index_u32(key, 0), 24), 3)]));
-    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 3));
-    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 2));
-    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 1));
-    println!("{:X?}", index_u32(key_expand_(RCON[1], key), 0));
-    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 3));
-    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 2));
-    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 1));
-    println!("{:X?}", index_u32(key_expand_(RCON[2], (key_expand_(RCON[1], key))), 0));
-    
-        
-    let x1 = index_u32(key, 1);
-    let x3 = index_u32(key, 3);
-    let y0 = subword(x1 as u32);
-    let y2 = subword(x3 as u32);
-    let z1 = ror(y0, 1);
-    let z3 = ror(y2, 1);
-    let y1 = z1 ^ (RCON[1] as u32);
-    let y3 = z3 ^ (RCON[1] as u32);
+    println!("{:X?}", keys_expand(key));
+    for j in 0..12 {
+        println! ("{:X?}", index_u32(keys_expand(key)[j], 3));
+        println! ("{:X?}", index_u32(keys_expand(key)[j], 2));
+        println! ("{:X?}", index_u32(keys_expand(key)[j], 1));
+        println! ("{:X?}", index_u32(keys_expand(key)[j], 0));
+    }
 
-    // println!("{:X?}", RCON[0]);
-    
-    // println!("{:X?}", x1);
-    // println!("{:X?}", x3);
-    // println!("{:X?}", z1);
-    // println!("{:X?}", z3);
-
-    // println!("{:X?}", y0);
-    // println!("{:X?}", y1);
-    // println!("{:X?}", y2);
-    // println!("{:X?}", y3);
-    
-        
-    // println!("{:X?}", keys_expand(key));
-    // for j in 0..11 {
-    //     println!("{} , {:X?}", j, keys_expand(key)[j]);
-    // }
-
-    assert_eq!(true, false);    
+    assert_eq!(keys_expand(key)[10],
+               rebuild_u128(0xb6630ca6, 0xe13f0cc8, 0xc9ee2589, 0xd014f9a8));
 }
 
 // NIST test vector: https://csrc.nist.gov/publications/detail/fips/197/final -- (p.33)
