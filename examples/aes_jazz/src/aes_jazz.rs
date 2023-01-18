@@ -1,7 +1,7 @@
 use hacspec_lib::*;
 
 public_bytes!(SBox, 256);
-bytes!(RCon, 15);
+public_bytes!(RCon, 15);
 
 public_bytes!(PBytes256, 256);
 const SBOX: SBox = SBox([
@@ -29,10 +29,10 @@ const SBOX: SBox = SBox([
     0xB0u8, 0x54u8, 0xBBu8, 0x16u8
 ]);
 
-const RCON: RCon = RCon(secret_bytes!([
+const RCON: RCon = RCon([
     0x8du8, 0x01u8, 0x02u8, 0x04u8, 0x08u8, 0x10u8, 0x20u8, 0x40u8, 0x80u8, 0x1bu8, 0x36u8, 0x6cu8,
     0xd8u8, 0xabu8, 0x4du8
-]));
+]);
 
 // Jasmin
 fn vpshufd1 (s: u128, o: u8, i : usize) -> u32 {
@@ -98,6 +98,155 @@ fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
     (rkey, temp2)
 }
 
-fn aes(rkey: u128, m: u128) -> u128 {
-    m
+type KeyList = Seq<u8>;
+
+fn set_word(x : KeyList, i : usize, v : u128) -> KeyList {
+    let v_word = u128_to_be_bytes(v);
+    let mut ret_list = x;
+    for j in 0..16 {
+        ret_list[i * 16 + j] = v_word[j];
+    }
+    ret_list
 }
+
+fn get_word(x : KeyList, i : usize) -> u128 {
+    let mut v_word = u128Word::new();
+    for j in 0..16 {
+        v_word[j] = x[i * 16 + j];
+    }
+    u128_from_be_bytes(v_word)
+}
+
+fn keys_expand(key : u128) -> KeyList {
+    let mut rkeys : KeyList = KeyList::new(11);
+    rkeys = set_word(rkeys, 0, key);
+    let temp2 : u128 = 0;
+    for round in 1 .. 11 {
+        let rcon = RCON[round];
+        let (key, temp2) = key_expand(rcon, key, temp2);
+        rkeys = set_word(rkeys, round, key);
+    }
+    rkeys
+}
+
+fn aes_enc(state : u128, round_key : u128) -> u128 {
+    state
+}
+
+fn aes_enc_last(state : u128, round_key : u128) -> u128 {
+    state
+}
+
+fn aes_rounds (rkeys : KeyList, inp : u128) -> u128 {
+    let mut state : u128 = inp ^ get_word(rkeys.clone(), 0);
+    // TODO:
+    for round in 1 .. 10 {
+        state = aes_enc(state, get_word(rkeys.clone(), round)) // #AESENC(state, rkeys[round]);
+    }
+    aes_enc_last(state, get_word(rkeys.clone(), 10)) // #AESENCLAST
+}
+
+/* Functions typically called from other Jasmin programs.
+Note they always compute key expansion, and this may
+not be a good in terms of performance. */
+fn aes(key : u128, inp : u128) -> u128 {
+    let rkeys = keys_expand(key);
+    aes_rounds(rkeys, inp)
+}
+
+// fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> WordResult {
+//     let mut k = w1;
+//     let mut result = WordResult::Err(INVALID_KEY_EXPANSION_INDEX);
+//     if i < (4 * (nr + 1)) {
+//         if i % nk == 0 {
+//             k = aes_keygen_assist(k, RCON[i / nk]);
+//         } else {
+//             // FIXME: #85
+//             if nk > 6 && i % nk == 4 {
+//                 k = slice_word(k);
+//             }
+//         }
+//         for i in 0..4 {
+//             k[i] = k[i] ^ w0[i];
+//         }
+//         result = WordResult::Ok(k);
+//     }
+//     result
+// }
+
+// fn key_expansion_aes(
+//     key: &ByteSeq,
+//     nk: usize,
+//     nr: usize,
+//     key_schedule_length: usize,
+//     key_length: usize,
+//     iterations: usize,
+// ) -> ByteSeqResult {
+//     let mut key_ex = ByteSeq::new(key_schedule_length);
+//     key_ex = key_ex.update_start(key);
+//     let word_size = key_length;
+//     for j in 0..iterations {
+//         let i = j + word_size;
+//         let word = key_expansion_word(
+//             Word::from_slice(&key_ex, 4 * (i - word_size), 4),
+//             Word::from_slice(&key_ex, 4 * i - 4, 4),
+//             i,
+//             nk,
+//             nr,
+//         )?;
+//         key_ex = key_ex.update(4 * i, &word);
+//     }
+//     ByteSeqResult::Ok(key_ex)
+// }
+
+// inline fn keys_expand_inv(reg u128 key) -> reg u128[11] {
+//   reg u128[11] rkeys;
+//   reg u128 temp2;
+//   inline int round, rcon;
+//   rkeys[0] = key;
+//   temp2    = #set0_128();
+//   for round = 1 to 11 {
+//     rcon = RCON(round);
+//     (key, temp2) = key_expand(rcon, key, temp2);
+//     if (round != 10) {
+//       rkeys[round] = #AESIMC(key);
+//     } else {
+//       rkeys[round] = key;
+//     }
+//   }
+//   return rkeys;
+// }
+
+// inline fn AddRoundKey(reg u128 state, stack u128 rk) -> reg u128 {
+//    state = state ^ rk;
+//    return state;
+// }
+
+// inline fn invaes_rounds (reg u128[11] rkeys, reg u128 in) -> reg u128 {
+//   reg u128 state;
+//   inline int round;
+//   stack u128 rk;
+//   state = in;
+//   rk = rkeys[10];
+//   state = AddRoundKey(state,rk);
+//   for round = 9 downto 0 {
+//     state = #AESDEC(state, rkeys[round]);
+//   }
+//   state = #AESDECLAST(state, rkeys[0]);
+//   return state;
+// }
+
+// inline
+// fn invaes(reg u128 key, reg u128 in) -> reg u128 {
+//   reg u128 out;
+//   reg u128[11] rkeys;
+
+//   rkeys = keys_expand_inv(key);
+//   out   = invaes_rounds(rkeys, in);
+//   return out;
+// }
+
+
+// fn aes(rkey: u128, m: u128) -> u128 {
+//     m
+// }

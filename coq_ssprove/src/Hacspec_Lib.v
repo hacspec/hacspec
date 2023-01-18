@@ -40,62 +40,53 @@ Open Scope hacspec_scope.
 Open Scope nat_scope.
 Open Scope list_scope.
 
+Equations lift3_both {A B C : ChoiceEquality} L1 L2 I : (A -> B -> C) -> both L1 I A -> both L2 I B -> both (L1 :|: L2) I C :=
+  lift3_both _ _ _ f x y :=
+    {| is_pure := f x y ;
+      is_state := {code temp_x ← x ;; temp_y ← y ;; ret (f (ct_T temp_x) (ct_T temp_y)) } |}.
+Next Obligation.
+  intros.
+  ssprove_valid ; eapply valid_injectLocations ; [ apply fsubsetUl | | apply fsubsetUr | ] ; apply (prog_valid (is_state _)).
+Qed.
+Next Obligation.
+  intros.
+  pattern_both Hb Hf Hg.
+  apply (@r_bind_trans_both A C).
+  subst Hf Hg Hb ; hnf.
+  pattern_both Hb Hf Hg.
+  apply (@r_bind_trans_both B C).
+  subst Hf Hg Hb ; hnf.
+  rewrite !ct_T_id.
+  apply r_ret. easy.
+Qed.
+
+Equations lift2_both {A B : ChoiceEquality} {L} {I} : (A -> B) -> both L I A -> both L I B :=
+  lift2_both f x :=
+    {| is_pure := f x ;
+      is_state := {code temp_x ← x ;; ret (f (ct_T temp_x)) } |}.
+Next Obligation.
+  intros.
+  pattern_both Hb Hf Hg.
+  apply (@r_bind_trans_both A B).
+  subst Hf Hg Hb ; hnf.
+  rewrite !ct_T_id. 
+  apply r_ret. easy.
+Qed.
+
 Section IntType.
   Definition int_modi {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_modi x y).
   Definition int_add {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_add x y).
   Definition int_sub {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_sub x y).
   Definition int_opp {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_opp x).
-  Program Definition int_mul {WS : wsize} : both0 (@int WS) -> both0 (@int WS) -> both0 (@int WS) :=
-    fun x y =>
-      {|
-        is_pure := int_mul x y ;
-        is_state := {code temp_x ← x ;; temp_y ← y ;; ret (int_mul temp_x temp_y) }
-      |}.
-  Next Obligation.
-    intros.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (@int WS) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (@int WS) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    apply r_ret ; easy.
-  Qed.
-  Definition int_div {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_div x y).
-  Program Definition int_mod {WS : wsize} : both0 (@int WS) -> both0 (@int WS) -> both0 (@int WS) :=
-    fun x y =>
-      {|
-        is_pure := int_mod x y ;
-        is_state := {code temp_x ← x ;; temp_y ← y ;; ret (int_mod temp_x temp_y) }
-      |}.
-  Next Obligation.
-    intros.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (@int WS) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (@int WS) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    apply r_ret ; easy.
-  Qed.
-  Definition int_xor {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_xor x y).
-  Definition int_and {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_and x y).
-  Definition int_or {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_or x y).
-  Definition int_not {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_not x).
+  Definition int_mul {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_mul.
+  Definition int_div {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_div.
+  Definition int_mod {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_mod.
+  Definition int_xor {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I  int_xor.
+  Definition int_and {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_and.
+  Definition int_or  {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_or.
+  Definition int_not {WS : wsize} {L} {I} := @lift2_both _ (@int WS) L I int_not.
 
-  Program Definition cast_int {WS1 WS2 : wsize} (n : both0 (@int WS1)) : both0 (@int WS2) :=
-    {|
-      is_pure := repr (unsigned (is_pure n)) ;
-      is_state := {code temp_n ← n ;;
-                   ret (repr (unsigned (is_pure n))) }
-    |}.
-  Next Obligation.
-    intros.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (@int WS1) (@int WS2)).
-    subst Hf Hg Hb ; hnf.
-    apply r_ret ; easy.
-  Qed.
+  Program Definition cast_int {WS1 WS2 : wsize} {L I} := @lift2_both (@int WS1) (@int WS2) L I (fun n => repr (unsigned n)).
 End IntType.
 
 Definition secret : forall {WS : wsize},  (T (@int WS)) -> both0 (@int WS) :=
@@ -225,49 +216,11 @@ lift_to_both0 (uint128_rotate_right u s).
 
   (**** Operations *)
 
-  Program Definition shift_left_ `{WS : wsize} (i : both0 (@int WS)) (j : both0 (uint_size)) : both0 (@int WS) :=
-    {|
-      is_pure := (is_pure i) shift_left (is_pure j) ;
-      is_state :=
-      {code
-         temp_i ← is_state i ;;
-         temp_j ← is_state j ;;
-         ret (T_ct (temp_i shift_left temp_j))
-      }
-    |}.
-  Next Obligation.
-    intros.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (@int WS) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (uint_size) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    apply r_ret.
-    easy.
-  Qed.
+  Program Definition shift_left_ `{WS : wsize} {L1 L2} {I} :=
+    @lift3_both _ _ _ L1 L2 I (@shift_left_ WS).
 
-  Program Definition shift_right_ `{WS : wsize} (i : both0 (@int WS)) (j : both0 (uint_size)) : both0 (@int WS):=
-    {|
-      is_pure := @shift_right_ WS (is_pure i) (is_pure j) ;
-      is_state :=
-      {code
-         temp_i ← is_state i ;;
-         temp_j ← is_state j ;;
-         ret (T_ct (temp_i shift_right temp_j))
-      }
-    |}.
-  Next Obligation.
-    intros.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (@int WS) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    pattern_both Hb Hf Hg.
-    apply (@r_bind_trans_both (uint_size) (@int WS)).
-    subst Hf Hg Hb ; hnf.
-    apply r_ret.
-    easy.
-  Qed.
+  Program Definition shift_right_ `{WS : wsize} {L1 L2} {I} :=
+    @lift3_both _ _ _ L1 L2 I (@shift_right_ WS).
 
 End Uint.
 
@@ -1650,17 +1603,24 @@ Definition CE_loc_to_loc :=
 Notation "'CE_loc_to_CE'" := (@projT1 ChoiceEquality (fun _ => nat)).
 Coercion CE_loc_to_loc : ChoiceEqualityLocation >-> Location.
 
-Definition let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality}
+Equations let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality}
            (x_loc : ChoiceEqualityLocation)
            `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))}
            (x : code L I (CE_loc_to_CE x_loc)) (f : (CE_loc_to_CE x_loc) -> code L I B) : code L I B :=
-  (let (A, n) as s
-   return (is_true (ssrbool.in_mem (let '(k; n) := s in (ct k; n)) (ssrbool.mem L)) ->
-           code L I (CE_loc_to_CE s) -> (CE_loc_to_CE s -> code L I B) -> code L I B) :=
-     x_loc in
-   fun (_ : is_true (ssrbool.in_mem (ct A; n) (ssrbool.mem L)))
-     (x : code L I (CE_loc_to_CE (A; n))) (f : CE_loc_to_CE (A; n) -> code L I B) =>
-   {code y ← x ;; #put (ct A; n) := y ;; f (ct_T y) }) H_in x f.
+  let_mut_code (A; n) x f := {code y ← x ;; #put (ct A; n) := y ;; f (ct_T y) }.
+Global Transparent let_mut_code.
+
+(* Definition let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality} *)
+(*            (x_loc : ChoiceEqualityLocation) *)
+(*            `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))} *)
+(*            (x : code L I (CE_loc_to_CE x_loc)) (f : (CE_loc_to_CE x_loc) -> code L I B) : code L I B := *)
+(*   (let (A, n) as s *)
+(*    return (is_true (ssrbool.in_mem (let '(k; n) := s in (ct k; n)) (ssrbool.mem L)) -> *)
+(*            code L I (CE_loc_to_CE s) -> (CE_loc_to_CE s -> code L I B) -> code L I B) := *)
+(*      x_loc in *)
+(*    fun (_ : is_true (ssrbool.in_mem (ct A; n) (ssrbool.mem L))) *)
+(*      (x : code L I (CE_loc_to_CE (A; n))) (f : CE_loc_to_CE (A; n) -> code L I B) => *)
+(*    {code y ← x ;; #put (ct A; n) := y ;; f (ct_T y) }) H_in x f. *)
 
 Notation "'letmc' x 'loc(' ℓ ')' ':=' y 'in' f" :=
   (let_mut_code ℓ (H_in := _) y (fun x => f x))
@@ -2426,7 +2386,7 @@ Proof.
   apply code_ext. unfold prog.
   unfold let_mut_both, is_state at 1.
   unfold lift_scope. unfold is_state at 1.
-  unfold let_mut_code.
+  rewrite let_mut_code_equation_1.
   unfold prog.
   unfold lift_code_scope.
   rewrite H_var_eq.
@@ -2515,3 +2475,52 @@ Notation "'link_rest_both(' a , b , .. , c ')'" :=
   (par_link_both .. ( par_link_both a b _ ) .. c _) : hacspec_scope.
 
 Definition u32_word_t := nseq uint8 4.
+Definition u128_word_t := nseq uint8 16.
+
+Lemma letbm_ret_r :
+  forall {A : choice.Choice.type} {B : ChoiceEquality}
+    (r₁ : raw_code A) (pre : precond)
+    (post : postcond (choice.Choice.sort A) (choice.Choice.sort B))
+    (ℓ : ChoiceEqualityLocation) (* (ℓT : ChoiceEquality) (ℓv : nat) *)
+    (L : {fset Location})
+    (I : Interface)
+    v (f : _ -> both L I B) (H_in : is_true (ssrbool.in_mem (CE_loc_to_loc ℓ) (ssrbool.mem L))),
+    ⊢ ⦃ (set_rhs (@existT choice_type (fun _ : choice_type => nat) (ct (projT1 ℓ)) (projT2 ℓ)) v pre) ⦄ r₁ ≈ f v ⦃ post ⦄ ->
+    ⊢ ⦃ pre ⦄ r₁ ≈ let_mut_both ℓ (H_in := H_in) (lift_to_both (ct_T v)) f ⦃ post ⦄.
+Proof.
+  intros.
+  cbn.
+  unfold let_mut_code.
+  unfold lift_to_code.
+  unfold Hacspec_Lib.let_mut_both_obligation_1.
+  cbn.
+  destruct ℓ.
+  cbn.
+  apply better_r, r_put_rhs.
+  rewrite !T_ct_id.
+  apply H.
+Qed.
+
+Lemma letbm_ret_l :
+  forall {A : ChoiceEquality} {B : choice.Choice.type}
+    (r₀ : raw_code A)
+    (r₁ : raw_code B) (pre : precond)
+    (post : postcond (choice.Choice.sort A) (choice.Choice.sort B))
+    (ℓ : ChoiceEqualityLocation) (* (ℓT : ChoiceEquality) (ℓv : nat) *)
+    (L : {fset Location})
+    (I : Interface)
+    v (f : _ -> both L I A) (H_in : is_true (ssrbool.in_mem (CE_loc_to_loc ℓ) (ssrbool.mem L))),
+    ⊢ ⦃ (set_lhs (@existT choice_type (fun _ : choice_type => nat) (ct (projT1 ℓ)) (projT2 ℓ)) v pre) ⦄ f v ≈ r₁ ⦃ post ⦄ ->
+    ⊢ ⦃ pre ⦄ let_mut_both ℓ (H_in := H_in) (lift_to_both (ct_T v)) f ≈ r₁ ⦃ post ⦄.
+Proof.
+  intros.
+  cbn.
+  unfold let_mut_code.
+  unfold lift_to_code.
+  unfold Hacspec_Lib.let_mut_both_obligation_1.
+  cbn.
+  destruct ℓ.
+  apply better_r_put_lhs.
+  rewrite !T_ct_id.
+  apply H.
+Qed.

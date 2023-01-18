@@ -25,7 +25,7 @@ Obligation Tactic := try timeout 8 solve_ssprove_obligations.
 
 Definition s_box_t := nseq (int8) (usize 256).
 
-Definition r_con_t := nseq (uint8) (usize 15).
+Definition r_con_t := nseq (int8) (usize 15).
 
 Definition p_bytes256_t := nseq (int8) (usize 256).
 
@@ -290,22 +290,22 @@ Definition sbox_v : s_box_t :=
   ].
 
 Definition rcon_v : r_con_t :=
-  @array_from_list uint8 [
-    (secret (@repr U8 141)) : uint8;
-    (secret (@repr U8 1)) : uint8;
-    (secret (@repr U8 2)) : uint8;
-    (secret (@repr U8 4)) : uint8;
-    (secret (@repr U8 8)) : uint8;
-    (secret (@repr U8 16)) : uint8;
-    (secret (@repr U8 32)) : uint8;
-    (secret (@repr U8 64)) : uint8;
-    (secret (@repr U8 128)) : uint8;
-    (secret (@repr U8 27)) : uint8;
-    (secret (@repr U8 54)) : uint8;
-    (secret (@repr U8 108)) : uint8;
-    (secret (@repr U8 216)) : uint8;
-    (secret (@repr U8 171)) : uint8;
-    (secret (@repr U8 77)) : uint8
+  @array_from_list int8 [
+    (@repr U8 141) : int8;
+    (@repr U8 1) : int8;
+    (@repr U8 2) : int8;
+    (@repr U8 4) : int8;
+    (@repr U8 8) : int8;
+    (@repr U8 16) : int8;
+    (@repr U8 32) : int8;
+    (@repr U8 64) : int8;
+    (@repr U8 128) : int8;
+    (@repr U8 27) : int8;
+    (@repr U8 54) : int8;
+    (@repr U8 108) : int8;
+    (@repr U8 216) : int8;
+    (@repr U8 171) : int8;
+    (@repr U8 77) : int8
   ].
 
 
@@ -557,6 +557,179 @@ Program Definition key_expand (rcon_257 : int8) (rkey_256 : int128) (
       ) : both (CEfset ([res_238_loc])) [interface] ((int128 '× int128))).
 Fail Next Obligation.
 
+Notation "'key_list_t'" := (seq int8) : hacspec_scope.
+
+Definition ret_list_263_loc : ChoiceEqualityLocation :=
+  (seq int8 ; 264%nat).
+Notation "'set_word_inp'" :=(
+  key_list_t '× uint_size '× int128 : choice_type) (in custom pack_type at level 2).
+Notation "'set_word_inp'" :=(
+  key_list_t '× uint_size '× int128 : ChoiceEquality) (at level 2).
+Notation "'set_word_out'" :=(
+  key_list_t : choice_type) (in custom pack_type at level 2).
+Notation "'set_word_out'" :=(key_list_t : ChoiceEquality) (at level 2).
+Definition SET_WORD : nat :=
+  270.
+Program Definition set_word (x_267 : key_list_t) (i_269 : uint_size) (
+    v_265 : int128)
+  : both (CEfset ([ret_list_263_loc])) [interface] (key_list_t) :=
+  ((letb v_word_266 : u128_word_t := u128_to_be_bytes (lift_to_both0 v_265) in
+      letbm ret_list_263 : seq int8 loc( ret_list_263_loc ) :=
+        lift_to_both0 x_267 in
+      letb ret_list_263 :=
+        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 (
+              usize 16)) ret_list_263 (L := (CEfset ([ret_list_263_loc]))) (
+            I := [interface]) (fun j_268 ret_list_263 =>
+            letb ret_list_263 : seq int8 :=
+              seq_upd ret_list_263 (((lift_to_both0 i_269) .* (lift_to_both0 (
+                      usize 16))) .+ (lift_to_both0 j_268)) (is_pure (
+                  array_index (v_word_266) (lift_to_both0 j_268))) in
+            lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
+              lift_to_both0 ret_list_263)
+            ) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
+        lift_to_both0 ret_list_263)
+      ) : both (CEfset ([ret_list_263_loc])) [interface] (key_list_t)).
+Fail Next Obligation.
+
+Definition v_word_271_loc : ChoiceEqualityLocation :=
+  (u128_word_t ; 272%nat).
+Notation "'get_word_inp'" :=(
+  key_list_t '× uint_size : choice_type) (in custom pack_type at level 2).
+Notation "'get_word_inp'" :=(
+  key_list_t '× uint_size : ChoiceEquality) (at level 2).
+Notation "'get_word_out'" :=(
+  int128 : choice_type) (in custom pack_type at level 2).
+Notation "'get_word_out'" :=(int128 : ChoiceEquality) (at level 2).
+Definition GET_WORD : nat :=
+  276.
+Program Definition get_word (x_275 : key_list_t) (i_274 : uint_size)
+  : both (CEfset ([v_word_271_loc])) [interface] (int128) :=
+  ((letbm v_word_271 : u128_word_t loc( v_word_271_loc ) :=
+        array_new_ (default : int8) (16) in
+      letb v_word_271 :=
+        foldi_both' (lift_to_both0 (usize 0)) (lift_to_both0 (
+              usize 16)) v_word_271 (L := (CEfset ([v_word_271_loc]))) (
+            I := [interface]) (fun j_273 v_word_271 =>
+            letb v_word_271 : u128_word_t :=
+              array_upd v_word_271 (lift_to_both0 j_273) (is_pure (seq_index (
+                    x_275) (((lift_to_both0 i_274) .* (lift_to_both0 (
+                          usize 16))) .+ (lift_to_both0 j_273)))) in
+            lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
+              lift_to_both0 v_word_271)
+            ) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (u128_from_be_bytes (
+          lift_to_both0 v_word_271))
+      ) : both (CEfset ([v_word_271_loc])) [interface] (int128)).
+Fail Next Obligation.
+
+Definition rkeys_277_loc : ChoiceEqualityLocation :=
+  (seq int8 ; 278%nat).
+Notation "'keys_expand_inp'" :=(
+  int128 : choice_type) (in custom pack_type at level 2).
+Notation "'keys_expand_inp'" :=(int128 : ChoiceEquality) (at level 2).
+Notation "'keys_expand_out'" :=(
+  key_list_t : choice_type) (in custom pack_type at level 2).
+Notation "'keys_expand_out'" :=(key_list_t : ChoiceEquality) (at level 2).
+Definition KEYS_EXPAND : nat :=
+  285.
+Program Definition keys_expand (key_279 : int128)
+  : both (CEfset (
+      [res_238_loc ; ret_list_263_loc ; rkeys_277_loc])) [interface] (
+    key_list_t) :=
+  ((letbm rkeys_277 : key_list_t loc( rkeys_277_loc ) :=
+        seq_new_ (default : int8) (lift_to_both0 (usize 11)) in
+      letbm rkeys_277 loc( rkeys_277_loc ) :=
+        set_word (lift_to_both0 rkeys_277) (lift_to_both0 (usize 0)) (
+          lift_to_both0 key_279) in
+      letb temp2_280 : int128 := lift_to_both0 (@repr U128 0) in
+      letb rkeys_277 :=
+        foldi_both' (lift_to_both0 (usize 1)) (lift_to_both0 (
+              usize 11)) rkeys_277 (L := (CEfset (
+                [res_238_loc ; ret_list_263_loc ; rkeys_277_loc]))) (
+            I := [interface]) (fun round_281 rkeys_277 =>
+            letb rcon_282 : int8 :=
+              array_index (rcon_v) (lift_to_both0 round_281) in
+            letb '(key_283, temp2_284) : (int128 '× int128) :=
+              key_expand (lift_to_both0 rcon_282) (lift_to_both0 key_279) (
+                lift_to_both0 temp2_280) in
+            letbm rkeys_277 loc( rkeys_277_loc ) :=
+              set_word (lift_to_both0 rkeys_277) (lift_to_both0 round_281) (
+                lift_to_both0 key_283) in
+            lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
+              lift_to_both0 rkeys_277)
+            ) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 rkeys_277)
+      ) : both (CEfset (
+        [res_238_loc ; ret_list_263_loc ; rkeys_277_loc])) [interface] (
+      key_list_t)).
+Fail Next Obligation.
+
+
+Notation "'aes_enc_inp'" :=(
+  int128 '× int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_enc_inp'" :=(int128 '× int128 : ChoiceEquality) (at level 2).
+Notation "'aes_enc_out'" :=(
+  int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_enc_out'" :=(int128 : ChoiceEquality) (at level 2).
+Definition AES_ENC : nat :=
+  287.
+Program Definition aes_enc (state_286 : int128) (round_key_288 : int128)
+  : both (fset.fset0) [interface] (int128) :=
+  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 state_286)
+      ) : both (fset.fset0) [interface] (int128)).
+Fail Next Obligation.
+
+
+Notation "'aes_enc_last_inp'" :=(
+  int128 '× int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_enc_last_inp'" :=(
+  int128 '× int128 : ChoiceEquality) (at level 2).
+Notation "'aes_enc_last_out'" :=(
+  int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_enc_last_out'" :=(int128 : ChoiceEquality) (at level 2).
+Definition AES_ENC_LAST : nat :=
+  290.
+Program Definition aes_enc_last (state_289 : int128) (round_key_291 : int128)
+  : both (fset.fset0) [interface] (int128) :=
+  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 state_289)
+      ) : both (fset.fset0) [interface] (int128)).
+Fail Next Obligation.
+
+Definition state_292_loc : ChoiceEqualityLocation :=
+  (int128 ; 293%nat).
+Notation "'aes_rounds_inp'" :=(
+  key_list_t '× int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_rounds_inp'" :=(
+  key_list_t '× int128 : ChoiceEquality) (at level 2).
+Notation "'aes_rounds_out'" :=(
+  int128 : choice_type) (in custom pack_type at level 2).
+Notation "'aes_rounds_out'" :=(int128 : ChoiceEquality) (at level 2).
+Definition AES_ROUNDS : nat :=
+  297.
+Program Definition aes_rounds (rkeys_295 : key_list_t) (inp_294 : int128)
+  : both (CEfset ([v_word_271_loc ; state_292_loc])) [interface] (int128) :=
+  ((letbm state_292 : int128 loc( state_292_loc ) :=
+        (lift_to_both0 inp_294) .^ (get_word ((lift_to_both0 rkeys_295)) (
+            lift_to_both0 (usize 0))) in
+      letb state_292 :=
+        foldi_both' (lift_to_both0 (usize 1)) (lift_to_both0 (
+              usize 10)) state_292 (L := (CEfset (
+                [v_word_271_loc ; state_292_loc]))) (I := [interface]) (
+            fun round_296 state_292 =>
+            letbm state_292 loc( state_292_loc ) :=
+              aes_enc (lift_to_both0 state_292) (get_word ((
+                    lift_to_both0 rkeys_295)) (lift_to_both0 round_296)) in
+            lift_scope (H_loc_incl := _) (H_opsig_incl := _) (
+              lift_to_both0 state_292)
+            ) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (aes_enc_last (
+          lift_to_both0 state_292) (get_word ((lift_to_both0 rkeys_295)) (
+            lift_to_both0 (usize 10))))
+      ) : both (CEfset ([v_word_271_loc ; state_292_loc])) [interface] (
+      int128)).
+Fail Next Obligation.
+
 
 Notation "'aes_inp'" :=(
   int128 '× int128 : choice_type) (in custom pack_type at level 2).
@@ -564,10 +737,16 @@ Notation "'aes_inp'" :=(int128 '× int128 : ChoiceEquality) (at level 2).
 Notation "'aes_out'" :=(int128 : choice_type) (in custom pack_type at level 2).
 Notation "'aes_out'" :=(int128 : ChoiceEquality) (at level 2).
 Definition AES : nat :=
-  264.
-Program Definition aes (rkey_265 : int128) (m_263 : int128)
-  : both (fset.fset0) [interface] (int128) :=
-  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (lift_to_both0 m_263)
-      ) : both (fset.fset0) [interface] (int128)).
+  301.
+Program Definition aes (key_298 : int128) (inp_300 : int128)
+  : both (CEfset (
+      [res_238_loc ; ret_list_263_loc ; v_word_271_loc ; rkeys_277_loc ; state_292_loc])) [interface] (
+    int128) :=
+  ((letb rkeys_299 : seq int8 := keys_expand (lift_to_both0 key_298) in
+      lift_scope (H_loc_incl := _) (H_opsig_incl := _) (aes_rounds (
+          lift_to_both0 rkeys_299) (lift_to_both0 inp_300))
+      ) : both (CEfset (
+        [res_238_loc ; ret_list_263_loc ; v_word_271_loc ; rkeys_277_loc ; state_292_loc])) [interface] (
+      int128)).
 Fail Next Obligation.
 

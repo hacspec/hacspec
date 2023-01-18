@@ -2316,9 +2316,29 @@ Definition seq_slice_range
   : (T (seq a)) :=
   seq_slice input (fst start_fin) (snd start_fin).
 
+
+
+Equations seq_update_sub {A : ChoiceEquality} `{Default (T A)} (v : T (seq A)) (i : nat) (n : nat) (sub : T (seq A)) : T (seq A) :=
+  seq_update_sub v i 0 sub := v ;
+  seq_update_sub v i (S n) sub := 
+      seq_update_sub (setm v (i+n)%nat match getm sub n with
+                                           | Some y => y
+                                           | None => default
+                                           end) i n sub.
+Compute seq_update_sub (emptym : seq nat_ChoiceEquality) 0 10 emptym.
+
 (* updating a subsequence in a sequence *)
 Definition seq_update
            {a: ChoiceEquality}
+           `{Default (T (a))}
+           (s: (T (seq a)))
+           (start: uint_size)
+           (input: (T (seq a)))
+  : (T (seq a)) :=
+  seq_update_sub s (from_uint_size start) (from_uint_size (seq_len input)) input.
+
+Definition old_seq_update
+  {a: ChoiceEquality}
            `{Default (T (a))}
            (s: (T (seq a)))
            (start: uint_size)
@@ -2533,70 +2553,6 @@ Infix "array_eq" := (array_eq_ eq) (at level 33) : hacspec_scope.
 Infix "array_neq" := (fun s1 s2 => negb (array_eq_ eq s1 s2)) (at level 33) : hacspec_scope.
 
 
-(**** Integers to arrays *)
-Axiom uint32_to_le_bytes : int32 -> nseq int8 4.
-(* Definition uint32_to_le_bytes (x: uint32) : nseq uint8 4 :=
-  LBSeq.uint_to_bytes_le x. *)
-
-Axiom uint32_to_be_bytes : int32 -> nseq int8 4.
-(* Definition uint32_to_be_bytes (x: uint32) : nseq uint8 4 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom uint32_from_le_bytes : nseq int8 4 -> int32.
-(* Definition uint32_from_le_bytes (s: nseq uint8 4) : uint32 :=
-  LBSeq.uint_from_bytes_le s *)
-
-Axiom uint32_from_be_bytes : nseq int8 4 -> int32.
-(* Definition uint32_from_be_bytes (s: nseq uint8 4) : uint32 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom uint64_to_le_bytes : int64 -> nseq int8 8.
-(* Definition uint64_to_le_bytes (x: uint64) : nseq uint8 8 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom uint64_to_be_bytes : int64 -> nseq int8 8.
-(* Definition uint64_to_be_bytes (x: uint64) : nseq uint8 8 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom uint64_from_le_bytes : nseq int8 8 -> int64.
-(* Definition uint64_from_le_bytes (s: nseq uint8 8) : uint64 :=
-  LBSeq.uint_from_bytes_le s *)
-
-Axiom uint64_from_be_bytes : nseq int8 8 -> int64.
-(* Definition uint64_from_be_bytes (s: nseq uint8 8) : uint64 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom uint128_to_le_bytes : int128 -> nseq int8 16.
-(* Definition uint128_to_le_bytes (x: uint128) : nseq uint8 16 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom uint128_to_be_bytes : int128 -> nseq int8 16.
-(* Definition uint128_to_be_bytes (x: uint128) : nseq uint8 16 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom uint128_from_le_bytes : nseq int8 16 -> int128.
-(* Definition uint128_from_le_bytes (input: nseq uint8 16) : uint128 :=
-  LBSeq.uint_from_bytes_le input *)
-
-Axiom uint128_from_be_bytes : nseq int8 16 -> int128.
-(* Definition uint128_from_be_bytes (s: nseq uint8 16) : uint128 :=
-  LBSeq.uint_from_bytes_be s *)
-
-Axiom u128_to_le_bytes : int128 -> nseq int8 16.
-(* Definition u128_to_le_bytes (x: int128) : nseq int8 16 :=
-  LBSeq.uint_to_bytes_le x *)
-
-Axiom u128_to_be_bytes : int128 -> nseq int8 16.
-(* Definition u128_to_be_bytes (x: int128) : nseq int8 16 :=
-  LBSeq.uint_to_bytes_be x *)
-
-Axiom u128_from_le_bytes : nseq int8 16 -> int128.
-(* Definition u128_from_le_bytes (input: nseq int8 16) : int128 :=
-  LBSeq.uint_from_bytes_le input *)
-
-Axiom u128_from_be_bytes : nseq int8 16 -> int128.
-(* Definition u128_from_be_bytes (s: nseq int8 16) : pub_uint128 :=
-  LBSeq.uint_from_bytes_be s *)
 
 
 (*** Nats *)
@@ -3136,17 +3092,36 @@ Definition from_le_bytes {WS : wsize} : nseq int8 (WS / 8) -> @int WS :=
 
 (* nat_be_range U8 (toword n) i *)
 
-Definition u64_to_be_bytes : int64 -> nseq int8 8 := @to_be_bytes U64.
-Definition u64_from_be_bytes : nseq int8 8 -> int64 := @from_be_bytes U64.
+(**** Integers to arrays *)
+Definition uint32_to_le_bytes : int32 -> nseq int8 4 := @to_le_bytes U32.
+Definition uint32_to_be_bytes : int32 -> nseq int8 4 := @to_be_bytes U32.
+Definition uint32_from_le_bytes : nseq int8 4 -> int32 := @from_le_bytes U32.
+Definition uint32_from_be_bytes : nseq int8 4 -> int32 := @from_be_bytes U32.
 
-Definition u64_to_le_bytes : int64 -> nseq int8 8 := @to_le_bytes U64.
-Definition u64_from_le_bytes : nseq int8 8 -> int64 := @from_le_bytes U64.
+Definition uint64_to_le_bytes : int64 -> nseq int8 8 := @to_le_bytes U64.
+Definition uint64_to_be_bytes : int64 -> nseq int8 8 := @to_be_bytes U64.
+Definition uint64_from_le_bytes : nseq int8 8 -> int64 := @from_le_bytes U64.
+Definition uint64_from_be_bytes : nseq int8 8 -> int64 := @from_be_bytes U64.
+
+Definition uint128_to_le_bytes : int128 -> nseq int8 16 := @to_le_bytes U128.
+Definition uint128_to_be_bytes : int128 -> nseq int8 16 := @to_be_bytes U128.
+Definition uint128_from_le_bytes : nseq int8 16 -> int128 := @from_le_bytes U128.
+Definition uint128_from_be_bytes : nseq int8 16 -> int128 := @from_be_bytes U128.
 
 Definition u32_to_be_bytes : int32 -> nseq int8 4 := @to_be_bytes U32.
 Definition u32_from_be_bytes : nseq int8 4 -> int32 := @from_be_bytes U32.
-
 Definition u32_to_le_bytes : int32 -> nseq int8 4 := @to_le_bytes U32.
 Definition u32_from_le_bytes : nseq int8 4 -> int32 := @from_le_bytes U32.
+
+Definition u64_to_be_bytes : int64 -> nseq int8 8 := @to_be_bytes U64.
+Definition u64_from_be_bytes : nseq int8 8 -> int64 := @from_be_bytes U64.
+Definition u64_to_le_bytes : int64 -> nseq int8 8 := @to_le_bytes U64.
+Definition u64_from_le_bytes : nseq int8 8 -> int64 := @from_le_bytes U64.
+
+Definition u128_to_be_bytes : int128 -> nseq int8 16 := @to_be_bytes U128.
+Definition u128_from_be_bytes : nseq int8 16 -> int128 := @from_be_bytes U128.
+Definition u128_to_le_bytes : int128 -> nseq int8 16 := @to_le_bytes U128.
+Definition u128_from_le_bytes : nseq int8 16 -> int128 := @from_le_bytes U128.
 
 (* Definition nat_mod_to_byte_seq_be : forall {n : Z}, nat_mod n -> seq int8 := *)
 (*   fun k => VectorDef.of_list . *)
