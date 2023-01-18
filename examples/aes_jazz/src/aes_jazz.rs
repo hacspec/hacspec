@@ -68,6 +68,28 @@ fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
     (rkey, temp2)
 }
 
+fn index_u32 (s : u128, i : usize) -> u32 {
+    ((s >> i * 32) % (1_u128 << 32)) as u32
+}
+fn index_u8 (s : u32, i : usize) -> u8 {
+    ((s >> i * 8) % (1_u32 << 8)) as u8
+}
+fn index_u8_u128 (s : u128, i : usize) -> u8 {
+    ((s >> i * 8) % (1_u128 << 8)) as u8
+}
+
+fn set_index_u128(s : u128, c : usize, v : u8) -> u128 {
+    s - ((index_u8_u128(s, c) as u128) << c * 8)
+      + ((v                   as u128) << c * 8)
+}
+
+fn rebuild_u32(s0 : u8, s1 : u8, s2 : u8, s3 : u8) -> u32 {
+    (s0 as u32) | ((s1 as u32) << 8) | ((s2 as u32) << 16) | ((s3 as u32) << 24)
+}
+fn rebuild_u128(s0 : u32, s1 : u32, s2 : u32, s3 : u32) -> u128 {
+    (s0 as u128) | ((s1 as u128) << 32) | ((s2 as u128) << 64) | ((s3 as u128) << 96)
+}
+
 fn subword(v: u32) -> u32 {
     let vs = u32_to_be_bytes(v);
     let mut res = u32Word::new();
@@ -82,68 +104,130 @@ fn ror(v: u32, i: usize) -> u32 {
 }
 
 fn aeskeygenassist(v1: u128, v2: u8) -> u128 {
-    let x1 = (v1 >> 32) % (1_u128 << 32);
-    let x3 = (v1 >> 96) % (1_u128 << 32);
+    let x1 = index_u32(v1, 1);
+    let x3 = index_u32(v1, 3);
     let y0 = subword(x1 as u32);
     let y1 = ror(y0, 1) ^ (v2 as u32);
     let y2 = subword(x3 as u32);
     let y3 = ror(y2, 1) ^ (v2 as u32);
 
-    (y0 as u128) | ((y1 as u128) << 32) | ((y2 as u128) << 64) | (((y3) as u128) << 96)
+    rebuild_u128(y0, y1, y2, y3)
 }
 
 fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
     let temp1 = aeskeygenassist(rkey, rcon);
-    let (rkey, temp2) = key_combine(rkey, temp1, temp2);
-    (rkey, temp2)
+    key_combine(rkey, temp1, temp2)
 }
 
-type KeyList = Seq<u8>;
-
-fn set_word(x : KeyList, i : usize, v : u128) -> KeyList {
-    let v_word = u128_to_be_bytes(v);
-    let mut ret_list = x;
-    for j in 0..16 {
-        ret_list[i * 16 + j] = v_word[j];
-    }
-    ret_list
-}
-
-fn get_word(x : KeyList, i : usize) -> u128 {
-    let mut v_word = u128Word::new();
-    for j in 0..16 {
-        v_word[j] = x[i * 16 + j];
-    }
-    u128_from_be_bytes(v_word)
-}
+type KeyList = Seq<u128>;
 
 fn keys_expand(key : u128) -> KeyList {
-    let mut rkeys : KeyList = KeyList::new(11);
-    rkeys = set_word(rkeys, 0, key);
-    let temp2 : u128 = 0;
-    for round in 1 .. 11 {
-        let rcon = RCON[round];
-        let (key, temp2) = key_expand(rcon, key, temp2);
-        rkeys = set_word(rkeys, round, key);
+    let mut rkeys : KeyList = KeyList::new(0);
+    rkeys = rkeys.push(&key);
+    let mut temp2 : u128 = 0;
+    let mut key = key;
+    for round in 1 .. 12 {
+        let rcon = RCON[round-1];
+        let (nkey, ntemp2) = key_expand(rcon, key, temp2);
+        key = nkey;
+        temp2 = ntemp2;
+        rkeys = rkeys.push(&key);
     }
     rkeys
 }
 
-fn aes_enc(state : u128, round_key : u128) -> u128 {
-    state
+fn SubBytes (s : u128) -> u128 {
+    rebuild_u128(
+        rebuild_u32(SBOX[index_u8(index_u32(s, 0), 0)],
+                    SBOX[index_u8(index_u32(s, 0), 1)],
+                    SBOX[index_u8(index_u32(s, 0), 2)],
+                    SBOX[index_u8(index_u32(s, 0), 3)]),
+        rebuild_u32(SBOX[index_u8(index_u32(s, 1), 0)],
+                    SBOX[index_u8(index_u32(s, 1), 1)],
+                    SBOX[index_u8(index_u32(s, 1), 2)],
+                    SBOX[index_u8(index_u32(s, 1), 3)]),
+        rebuild_u32(SBOX[index_u8(index_u32(s, 2), 0)],
+                    SBOX[index_u8(index_u32(s, 2), 1)],
+                    SBOX[index_u8(index_u32(s, 2), 2)],
+                    SBOX[index_u8(index_u32(s, 2), 3)]),
+        rebuild_u32(SBOX[index_u8(index_u32(s, 3), 0)],
+                    SBOX[index_u8(index_u32(s, 3), 1)],
+                    SBOX[index_u8(index_u32(s, 3), 2)],
+                    SBOX[index_u8(index_u32(s, 3), 3)]))
 }
 
-fn aes_enc_last(state : u128, round_key : u128) -> u128 {
-    state
+fn matrix_index (s : u128, i : usize, j : usize) -> u8 {
+    index_u8(index_u32(s, j), i)
+}
+
+fn ShiftRows (s : u128) -> u128 {
+    let r0 = rebuild_u32(matrix_index(s,0,1),matrix_index(s,1,2), matrix_index(s,2,3), matrix_index(s,3,0));
+    let r1 = rebuild_u32(matrix_index(s,0,2),matrix_index(s,1,3), matrix_index(s,2,0), matrix_index(s,3,1));
+    let r2 = rebuild_u32(matrix_index(s,0,3),matrix_index(s,1,0), matrix_index(s,2,1), matrix_index(s,3,2));
+    let r3 = rebuild_u32(matrix_index(s,0,0),matrix_index(s,1,1), matrix_index(s,2,2), matrix_index(s,3,3));
+
+    rebuild_u128(r0, r1, r2, r3)
+}
+
+fn xtime(x: u8) -> u8 {
+    let x1 = x << 1;
+    let x7 = x >> 7;
+    let x71 = x7 & 0x01u8;
+    let x711b = x71 * 0x1bu8;
+    x1 ^ x711b
+}
+
+fn mix_column_simpl(s0: u8, s1: u8, s2: u8, s3: u8) -> (u8, u8, u8, u8) {
+    let tmp = s0 ^ s1 ^ s2 ^ s3;
+    (s0 ^ tmp ^ (xtime(s0 ^ s1)),
+     s1 ^ tmp ^ (xtime(s1 ^ s2)),
+     s2 ^ tmp ^ (xtime(s2 ^ s3)),
+     s3 ^ tmp ^ (xtime(s3 ^ s0)))
+}
+
+
+fn mix_column(c: usize, state: u128) -> u128 {
+    let i0 = c * 4;
+    let s0 = matrix_index(state, 3, c);
+    let s1 = matrix_index(state, 2, c);
+    let s2 = matrix_index(state, 1, c);
+    let s3 = matrix_index(state, 0, c);
+    let tmp = s0 ^ s1 ^ s2 ^ s3;
+    let st = state;
+    let st = set_index_u128(st, 3 + c * 4, s0 ^ tmp ^ (xtime(s0 ^ s1)));
+    let st = set_index_u128(st, 2 + c * 4, s1 ^ tmp ^ (xtime(s1 ^ s2)));
+    let st = set_index_u128(st, 1 + c * 4, s2 ^ tmp ^ (xtime(s2 ^ s3)));
+    let st = set_index_u128(st, 0 + c * 4, s3 ^ tmp ^ (xtime(s3 ^ s0)));
+    st
+}
+
+fn mix_columns(state: u128) -> u128 {
+    let state = mix_column(0, state);
+    let state = mix_column(1, state);
+    let state = mix_column(2, state);
+    mix_column(3, state)
+}
+
+fn aes_enc (state : u128, rkey : u128) -> u128 {
+    let state = SubBytes(state);
+    let state = ShiftRows(state);
+    let state = mix_columns(state);
+    state ^ rkey
+}
+
+fn aes_enc_last (state : u128, rkey : u128) -> u128 {
+    let state = SubBytes(state);
+    let state = ShiftRows(state);
+    state ^ rkey
 }
 
 fn aes_rounds (rkeys : KeyList, inp : u128) -> u128 {
-    let mut state : u128 = inp ^ get_word(rkeys.clone(), 0);
+    let mut state : u128 = inp ^ rkeys[0];
     // TODO:
     for round in 1 .. 10 {
-        state = aes_enc(state, get_word(rkeys.clone(), round)) // #AESENC(state, rkeys[round]);
+        state = aes_enc(state, rkeys[round]) // #AESENC(state, rkeys[round]);
     }
-    aes_enc_last(state, get_word(rkeys.clone(), 10)) // #AESENCLAST
+    aes_enc_last(state, rkeys[10]) // #AESENCLAST
 }
 
 /* Functions typically called from other Jasmin programs.
@@ -153,6 +237,91 @@ fn aes(key : u128, inp : u128) -> u128 {
     let rkeys = keys_expand(key);
     aes_rounds(rkeys, inp)
 }
+
+// NIST test vector: https://csrc.nist.gov/publications/detail/fips/197/final -- (p.27)
+#[test]
+fn test_keys_expand() {
+    let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
+
+    let x1 = index_u32(key, 1);
+    let x3 = index_u32(key, 3);
+    let y0 = subword(x1 as u32);
+    let y2 = subword(x3 as u32);
+    let z1 = ror(y0, 1);
+    let z3 = ror(y2, 1);
+    let y1 = z1 ^ (RCON[0] as u32);
+    let y3 = z3 ^ (RCON[0] as u32);
+
+    println!("{:X?}", RCON[0]);
+    
+    println!("{:X?}", y0);
+    println!("{:X?}", y1);
+    println!("{:X?}", y2);
+    println!("{:X?}", y3);
+
+    println!("{:X?}", rebuild_u128(y0, 0, y2, 0));
+    println!("{:X?}", rebuild_u128(0, z1, 0, z3));
+    println!("{:X?}", rebuild_u128(0, y1, 0, y3));
+    
+
+    println!("{:X?}", aeskeygenassist(key, RCON[0]));
+    
+        
+    println!("{:X?}", keys_expand(key));
+    for j in 0..11 {
+        println!("{} , {:X?}", j, keys_expand(key)[j]);
+    }
+
+    assert_eq!(true, false);    
+}
+
+// NIST test vector: https://csrc.nist.gov/publications/detail/fips/197/final -- (p.33)
+#[test]
+fn test_aes() {
+    let msg = 0x3243f6a8885a308d313198a2e0370734u128;
+    let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
+    let ctx = 0x3925841d02dc09fbdc118597196a0b32u128;
+
+    fn print_num (num : u128) {
+        for j in 0..4 {
+            for i in 0..4 {
+                print!("{:X} ", index_u8(index_u32(num, 3-i), 3-j));
+            }
+            println!();
+        }
+        println!();
+    }
+    print_num(msg);
+    print_num(key);
+
+    let start = msg ^ keys_expand(key)[0];
+    println!("start {:X} vs {:X} is {}", start, 0x193de3bea0f4e22b9ac68d2ae9f84808u128, start == 0x193de3bea0f4e22b9ac68d2ae9f84808u128);
+    print_num(start);
+    let s_box = SubBytes(start);
+    println!("s_box {:X} vs {:X} is {}", s_box, 0xd42711aee0bf98f1b8b45de51e415230u128, s_box == 0xd42711aee0bf98f1b8b45de51e415230u128);
+    print_num(s_box);
+    let s_row = ShiftRows(s_box);
+    println!("s_row {:X} vs {:X} is {}", s_row, 0xd4bf5d30e0b452aeb84111f11e2798e5u128, s_row == 0xd4bf5d30e0b452aeb84111f11e2798e5u128);
+    print_num(s_row);
+    let m_col = mix_columns(s_row);
+    println!("m_col {:X} vs {:X} is {}", m_col, 0x046681e5e0cb199a48f8d37a2806264cu128, m_col == 0x046681e5e0cb199a48f8d37a2806264cu128);
+    print_num(m_col);
+    let k_sch = m_col ^ keys_expand(key)[1];
+    println!("k_sch {:X} vs {:X} is {}", k_sch, 0x046681e5e0cb199a48f8d37a2806264cu128, k_sch == 0x046681e5e0cb199a48f8d37a2806264cu128);
+    print_num(k_sch);
+    println!("{}", keys_expand(key)[1]);
+    
+    let r1 = aes_enc(start, keys_expand(key)[1]);
+    print_num(r1);
+    let r2 = aes_enc(r1, keys_expand(key)[2]);
+    print_num(r2);
+    let r3 = aes_enc(r2, keys_expand(key)[3]);
+    print_num(r3);
+    
+    let c = aes(key, msg);
+    assert_eq!(ctx, c);
+}
+
 
 // fn key_expansion_word(w0: Word, w1: Word, i: usize, nk: usize, nr: usize) -> WordResult {
 //     let mut k = w1;
