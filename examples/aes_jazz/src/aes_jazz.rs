@@ -48,21 +48,52 @@ fn vpshufd (s: u128, o: u8) -> u128 {
     (d1 as u128) | ((d2 as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
 }
 
+// fn vshufps(s1: u128, s2: u128, o: u8) -> u128 {
+//     let d1 : u32 = vpshufd1(s1, o, 0);
+//     let d2 : u32 = vpshufd1(s1, o, 1);
+//     let d3 : u32 = vpshufd1(s2, o, 2);
+//     let d4 : u32 = vpshufd1(s2, o, 3);
+
+//     (d1 as u128) | ((d2  as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
+// }
+
+fn select4(src : u128, control : usize) {
+    match control {
+        0 => index_u32(src, 0)
+    }
+}
+
 fn vshufps(s1: u128, s2: u128, o: u8) -> u128 {
-    let d1 : u32 = vpshufd1(s1, o, 0);
-    let d2 : u32 = vpshufd1(s1, o, 1);
-    let d3 : u32 = vpshufd1(s2, o, 2);
-    let d4 : u32 = vpshufd1(s2, o, 3);
+    let d1 : u32 = index_u32(s1, ((o as usize >> (2 * 0)) % 4));
+    let d2 : u32 = index_u32(s1, ((o as usize >> (2 * 1)) % 4));
+    let d3 : u32 = index_u32(s2, ((o as usize >> (2 * 2)) % 4));
+    let d4 : u32 = index_u32(s2, ((o as usize >> (2 * 3)) % 4));
 
     (d1 as u128) | ((d2  as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
 }
 
 // note the constants might be off, I've interpreted arrays from `aes.jinc` as low endian, they might be big endian
+fn key_combine_(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
+    let temp2 = vpshufd(temp1, 0xFF);
+
+    println!("temp2 {}", temp2);
+    
+    let temp3 = temp1 << 8 * 4;
+    let temp1 = temp1 ^ temp3;
+    let temp3 = temp1 << 8 * 4;
+    let temp1 = temp1 ^ temp3;
+    let temp3 = temp1 << 8 * 4;
+    let temp1 = temp1 ^ temp3;
+    let temp1 = temp1 ^ temp2;
+    (temp1 + 16, temp2)
+}
+
+// note the constants might be off, I've interpreted arrays from `aes.jinc` as low endian, they might be big endian
 fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
     let temp1 = vpshufd(temp1, 0xFF);
-    let temp2 = vshufps(temp2, rkey, 16u8);
+    let temp2 = vshufps(temp2, rkey, 4u8); // 4u8
     let rkey = rkey ^ temp2;
-    let temp2 = vshufps(temp2, rkey, 140u8);
+    let temp2 = vshufps(temp2, rkey, 50u8); // 50u8
     let rkey = rkey ^ temp2;
     let rkey = rkey ^ temp1;
     (rkey, temp2)
@@ -94,29 +125,9 @@ fn subword(v: u32) -> u32 {
     let vs = u32_to_be_bytes(v);
     let mut res = u32Word::new();
     for i in 0..4 {
-	res[i] = SBOX[vs[3-i]];
+	res[i] = SBOX[vs[i]];
     }
     u32_from_be_bytes(res)
-}
-
-fn ror(v: u32, i: usize) -> u32 {
-    (v >> i) | (v << (32 - i))
-}
-
-fn aeskeygenassist(v1: u128, v2: u8) -> u128 {
-    let x1 = index_u32(v1, 1);
-    let x3 = index_u32(v1, 3);
-    let y0 = subword(x1 as u32);
-    let y1 = ror(y0, 1) ^ (v2 as u32);
-    let y2 = subword(x3 as u32);
-    let y3 = ror(y2, 1) ^ (v2 as u32);
-
-    rebuild_u128(y0, y1, y2, y3)
-}
-
-fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
-    let temp1 = aeskeygenassist(rkey, rcon);
-    key_combine(rkey, temp1, temp2)
 }
 
 fn aes_subword(v : u32) -> u32 {
@@ -126,10 +137,36 @@ fn aes_subword(v : u32) -> u32 {
                 SBOX[index_u8(v, 3)])
 }
 
+fn rotword(v: u32) -> u32 {
+    // rebuild_u32(index_u8(v, 1),
+    //             index_u8(v, 2),
+    //             index_u8(v, 3),
+    //             index_u8(v, 0))
+    (v >> 8) | (v << 24)
+}
+
+// See: https://www.intel.com/content/dam/doc/white-paper/advanced-encryption-standard-new-instructions-set-paper.pdf
+fn aeskeygenassist(v1: u128, v2: u8) -> u128 {
+    let x1 = index_u32(v1, 1);
+    let x3 = index_u32(v1, 3);
+    let y0 = subword(x1 as u32);
+    let y1 = rotword(y0) ^ ((v2 as u32));
+    let y2 = subword(x3 as u32);
+    let y3 = rotword(y2) ^ ((v2 as u32));
+
+    rebuild_u128(y0, y1, y2, y3)
+}
+
+fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
+    let temp1 = aeskeygenassist(rkey, rcon);
+    key_combine_(rkey, temp1, temp2)
+}
+
 fn key_expand_alt(rcon: u8, rkey: u128) -> u128 {
-    let r0 = ror(index_u32(rkey, 0), 24);
+    let r0 = rotword(index_u32(rkey, 0));
     let s0 = aes_subword(r0);
     let temp0 = s0 ^ ((rcon as u32) << 24);
+
     let v0 = temp0 ^ index_u32(rkey, 3);
     let v1 = v0 ^ index_u32(rkey, 2);
     let v2 = v1 ^ index_u32(rkey, 1);
@@ -148,6 +185,8 @@ fn keys_expand(key : u128) -> KeyList {
     for round in 1 .. 12 {
         let rcon = RCON[round];
         key = key_expand_alt(rcon, key);
+        // key = nkey;
+        // temp2 = ntemp2;
         rkeys = rkeys.push(&key);
     }
     rkeys
@@ -242,6 +281,36 @@ fn aes(key : u128, inp : u128) -> u128 {
     aes_rounds(rkeys, inp)
 }
 
+// // 3c4fcf098815f7aba6d2ae2816157e2b
+// #[test]
+// fn test_aeskeygenassist() {
+//     println!("{:X?} vs {:X?}", aeskeygenassist(0x3c4fcf098815f7aba6d2ae2816157e2bu128, RCON[1]), 0x01eb848beb848a013424b5e524b5e434u128);
+    
+//     for i in 0..4 {
+//         println! ("{:X?}", index_u32(aeskeygenassist(0x3c4fcf098815f7aba6d2ae2816157e2bu128, RCON[1]), i));
+//     }
+//     println!();
+//     for i in 0..4 {
+//         println! ("{:X?}", index_u32(0x01eb848beb848a013424b5e524b5e434u128, i));
+//     }
+//     assert_eq!(true, false);
+// }
+
+// 3c4fcf098815f7aba6d2ae2816157e2b
+#[test]
+fn test_key_combine() {
+    let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
+
+    // println!("" = vpshufd(temp1, 0xFF);
+    
+    let (lhs, temp2) = key_combine(key, aeskeygenassist(key, RCON[1]), 0);
+    let rhs = 0xa0fafe1788542cb123a339392a6c7605u128;
+    println!("{:X?} vs {:X?}", lhs, rhs);
+
+    assert_eq!(lhs, rhs);
+}
+
+
 // NIST test vector: https://csrc.nist.gov/publications/detail/fips/197/final -- (p.27)
 #[test]
 fn test_keys_expand() {
@@ -294,14 +363,14 @@ fn test_aes() {
     println!("k_sch {:X} vs {:X} is {}", k_sch, 0x046681e5e0cb199a48f8d37a2806264cu128, k_sch == 0x046681e5e0cb199a48f8d37a2806264cu128);
     print_num(k_sch);
     println!("{}", keys_expand(key)[1]);
-    
+
     let r1 = aes_enc(start, keys_expand(key)[1]);
     print_num(r1);
     let r2 = aes_enc(r1, keys_expand(key)[2]);
     print_num(r2);
     let r3 = aes_enc(r2, keys_expand(key)[3]);
     print_num(r3);
-    
+
     let c = aes(key, msg);
     assert_eq!(ctx, c);
 }
