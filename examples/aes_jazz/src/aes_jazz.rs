@@ -35,11 +35,6 @@ const RCON: RCon = RCon([
 ]);
 
 // Jasmin
-fn vpshufd1 (s: u128, o: u8, i : usize) -> u32 {
-    (s >> 32 * ((o as usize >> (2 * i)) % 4)) as u32
-}
-
-// Jasmin
 fn vpshufd1_ (s: u128, o: u8, i : usize) -> u32 {
     (s >> 32 * (3 - ((o as usize >> (2 * i)) % 4))) as u32
 }
@@ -59,15 +54,9 @@ fn vshufps(s1: u128, s2: u128, o: u8) -> u128 {
     let d3 : u32 = vpshufd1_(s2, o, 2);
     let d4 : u32 = vpshufd1_(s2, o, 3);
 
-    // [0,1,0,0]
-    
-    // 1, 3
-    // 
-
     rebuild_u128(d1, d2, d3, d4)
 }
 
-// note the constants might be off, I've interpreted arrays from `aes.jinc` as low endian, they might be big endian
 fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
     let temp1 = vpshufd(temp1, 0xFF);
     let temp2 = vshufps(temp2, rkey, 16u8); // 4u8
@@ -83,14 +72,6 @@ fn index_u32 (s : u128, i : usize) -> u32 {
 }
 fn index_u8 (s : u32, i : usize) -> u8 {
     ((s >> (3 - i) * 8) % (1_u32 << 8)) as u8
-}
-fn index_u8_u128 (s : u128, i : usize) -> u8 {
-    ((s >> (3 - i) * 8) % (1_u128 << 8)) as u8
-}
-
-fn set_index_u128(s : u128, c : usize, v : u8) -> u128 {
-    s - ((index_u8_u128(s, c) as u128) << c * 8)
-      + ((v                   as u128) << c * 8)
 }
 
 fn rebuild_u32(s0 : u8, s1 : u8, s2 : u8, s3 : u8) -> u32 {
@@ -112,7 +93,6 @@ fn rotword(v: u32) -> u32 {
                 index_u8(v, 2),
                 index_u8(v, 3),
                 index_u8(v, 0))
-    // (v >> 8) | (v << 24)
 }
 
 // See: https://www.intel.com/content/dam/doc/white-paper/advanced-encryption-standard-new-instructions-set-paper.pdf
