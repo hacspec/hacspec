@@ -39,22 +39,32 @@ fn vpshufd1 (s: u128, o: u8, i : usize) -> u32 {
     (s >> 32 * ((o as usize >> (2 * i)) % 4)) as u32
 }
 
-fn vpshufd (s: u128, o: u8) -> u128 {
-    let d1 : u32 = vpshufd1(s, o, 0);
-    let d2 : u32 = vpshufd1(s, o, 1);
-    let d3 : u32 = vpshufd1(s, o, 2);
-    let d4 : u32 = vpshufd1(s, o, 3);
+// Jasmin
+fn vpshufd1_ (s: u128, o: u8, i : usize) -> u32 {
+    (s >> 32 * (3 - ((o as usize >> (2 * i)) % 4))) as u32
+}
 
-    (d1 as u128) | ((d2 as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
+fn vpshufd (s: u128, o: u8) -> u128 {
+    let d1 : u32 = vpshufd1_(s, o, 3-0);
+    let d2 : u32 = vpshufd1_(s, o, 3-1);
+    let d3 : u32 = vpshufd1_(s, o, 3-2);
+    let d4 : u32 = vpshufd1_(s, o, 3-3);
+
+    rebuild_u128(d4, d3, d2, d1)
 }
 
 fn vshufps(s1: u128, s2: u128, o: u8) -> u128 {
-    let d1 : u32 = vpshufd1(s1, o, 0);
-    let d2 : u32 = vpshufd1(s1, o, 1);
-    let d3 : u32 = vpshufd1(s2, o, 2);
-    let d4 : u32 = vpshufd1(s2, o, 3);
+    let d1 : u32 = vpshufd1_(s1, o, 0);
+    let d2 : u32 = vpshufd1_(s1, o, 1);
+    let d3 : u32 = vpshufd1_(s2, o, 2);
+    let d4 : u32 = vpshufd1_(s2, o, 3);
 
-    (d1 as u128) | ((d2  as u128) << 32) | ((d3 as u128) << 64) | ((d4 as u128) << 96)
+    // [0,1,0,0]
+    
+    // 1, 3
+    // 
+
+    rebuild_u128(d1, d2, d3, d4)
 }
 
 // note the constants might be off, I've interpreted arrays from `aes.jinc` as low endian, they might be big endian
@@ -69,13 +79,13 @@ fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
 }
 
 fn index_u32 (s : u128, i : usize) -> u32 {
-    ((s >> i * 32) % (1_u128 << 32)) as u32
+    ((s >> (3 - i) * 32) % (1_u128 << 32)) as u32
 }
 fn index_u8 (s : u32, i : usize) -> u8 {
-    ((s >> i * 8) % (1_u32 << 8)) as u8
+    ((s >> (3 - i) * 8) % (1_u32 << 8)) as u8
 }
 fn index_u8_u128 (s : u128, i : usize) -> u8 {
-    ((s >> i * 8) % (1_u128 << 8)) as u8
+    ((s >> (3 - i) * 8) % (1_u128 << 8)) as u8
 }
 
 fn set_index_u128(s : u128, c : usize, v : u8) -> u128 {
@@ -84,10 +94,10 @@ fn set_index_u128(s : u128, c : usize, v : u8) -> u128 {
 }
 
 fn rebuild_u32(s0 : u8, s1 : u8, s2 : u8, s3 : u8) -> u32 {
-    (s0 as u32) | ((s1 as u32) << 8) | ((s2 as u32) << 16) | ((s3 as u32) << 24)
+    ((s0 as u32) << 24) | ((s1 as u32) << 16) | ((s2 as u32) << 8) | (s3 as u32)
 }
 fn rebuild_u128(s0 : u32, s1 : u32, s2 : u32, s3 : u32) -> u128 {
-    (s0 as u128) | ((s1 as u128) << 32) | ((s2 as u128) << 64) | ((s3 as u128) << 96)
+    ((s0 as u128) << 96) | ((s1 as u128) << 64) | ((s2 as u128) << 32) | (s3 as u128)
 }
 
 fn subword(v : u32) -> u32 {
@@ -98,7 +108,11 @@ fn subword(v : u32) -> u32 {
 }
 
 fn rotword(v: u32) -> u32 {
-    (v >> 8) | (v << 24)
+    rebuild_u32(index_u8(v, 1),
+                index_u8(v, 2),
+                index_u8(v, 3),
+                index_u8(v, 0))
+    // (v >> 8) | (v << 24)
 }
 
 // See: https://www.intel.com/content/dam/doc/white-paper/advanced-encryption-standard-new-instructions-set-paper.pdf
@@ -151,7 +165,7 @@ fn shiftrows (s : u128) -> u128 {
     let r2 = rebuild_u32(matrix_index(s,0,2),matrix_index(s,1,3), matrix_index(s,2,0), matrix_index(s,3,1));
     let r3 = rebuild_u32(matrix_index(s,0,3),matrix_index(s,1,0), matrix_index(s,2,1), matrix_index(s,3,2));
 
-    rebuild_u128(r0, r1, r2, r3)
+    rebuild_u128(c0, c1, c2, c3)
 }
 
 fn xtime(x: u8) -> u8 {
