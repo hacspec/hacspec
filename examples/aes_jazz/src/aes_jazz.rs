@@ -60,9 +60,9 @@ fn vshufps(s1: u128, s2: u128, o: u8) -> u128 {
 // note the constants might be off, I've interpreted arrays from `aes.jinc` as low endian, they might be big endian
 fn key_combine(rkey: u128, temp1: u128, temp2: u128) -> (u128, u128) {
     let temp1 = vpshufd(temp1, 0xFF);
-    let temp2 = vshufps(temp2, rkey, 4u8); // 4u8
+    let temp2 = vshufps(temp2, rkey, 16u8); // 4u8
     let rkey = rkey ^ temp2;
-    let temp2 = vshufps(temp2, rkey, 50u8); // 50u8
+    let temp2 = vshufps(temp2, rkey, 140u8); // 50u8
     let rkey = rkey ^ temp2;
     let rkey = rkey ^ temp1;
     (rkey, temp2)
@@ -90,7 +90,7 @@ fn rebuild_u128(s0 : u32, s1 : u32, s2 : u32, s3 : u32) -> u128 {
     (s0 as u128) | ((s1 as u128) << 32) | ((s2 as u128) << 64) | ((s3 as u128) << 96)
 }
 
-fn aes_subword(v : u32) -> u32 {
+fn subword(v : u32) -> u32 {
     rebuild_u32(SBOX[index_u8(v, 0)],
                 SBOX[index_u8(v, 1)],
                 SBOX[index_u8(v, 2)],
@@ -105,79 +105,51 @@ fn rotword(v: u32) -> u32 {
 fn aeskeygenassist(v1: u128, v2: u8) -> u128 {
     let x1 = index_u32(v1, 1);
     let x3 = index_u32(v1, 3);
-    let y0 = aes_subword(x1);
+    let y0 = subword(x1);
     let y1 = rotword(y0) ^ ((v2 as u32));
-    let y2 = aes_subword(x3);
+    let y2 = subword(x3);
     let y3 = rotword(y2) ^ ((v2 as u32));
 
     rebuild_u128(y0, y1, y2, y3)
 }
 
-fn AES_128_ASSIST (temp1 : u128, temp2 : u128) -> u128 {
-    let temp2 = vpshufd(temp2, 0xff);
-    let temp3 = temp1 >> (4usize * 8); // Should be left shift!
-    let temp1 = temp1 ^ temp3;
-    let temp3 = temp1 >> (4usize * 8); // Should be left shift!
-    let temp1 = temp1 ^ temp3;
-    let temp3 = temp1 >> (4usize * 8); // Should be left shift!
-    let temp1 = temp1 ^ temp3;
-    let temp1 = temp1 ^ temp2;
-    temp1
-}
-
-fn key_expand(rcon: u8, rkey: u128) -> u128 {
-    AES_128_ASSIST(rkey, aeskeygenassist(rkey, rcon))
-}
-
-fn rotword_alt(v: u32) -> u32 {
-    (v >> 24) | (v << 8)
-}
-
-fn key_expand_alt(rcon: u8, rkey: u128) -> u128 {
-    let temp = aeskeygenassist(rebuild_u128(index_u32(rkey, 3), index_u32(rkey, 2), index_u32(rkey, 1), index_u32(rkey, 0)), rcon);
-    let temp_ = vpshufd(temp, 0xFF);
-    let t3 = rotword(rotword(index_u32(temp_, 3) ^ ((rcon as u32))) ^ (rcon as u32));
-    let t2 = rotword(rotword(index_u32(temp_, 2) ^ ((rcon as u32))) ^ (rcon as u32));
-    let t1 = rotword(rotword(index_u32(temp_, 1) ^ ((rcon as u32))) ^ (rcon as u32));
-    let t0 = rotword(rotword(index_u32(temp_, 0) ^ ((rcon as u32))) ^ (rcon as u32));
-    let temp2 = rebuild_u128(t0, t1, t2, t3);
-    let temp1 = AES_128_ASSIST(rkey, 0);    
-    temp2 ^ temp1
+fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
+    let temp1 = aeskeygenassist(rkey, rcon);
+    let (rkey, temp2) = key_combine(rkey, temp1, temp2);
+    (rkey, temp2)
+    // AES_128_ASSIST(rkey, aeskeygenassist(rkey, rcon))
 }
 
 type KeyList = Seq<u128>;
 
-fn keys_expand(key : u128) -> KeyList {
+fn keys_expand(mut key : u128) -> KeyList {
     let mut rkeys : KeyList = KeyList::new(0);
-    rkeys = rkeys.push(&key);
     let mut temp2 : u128 = 0;
-    let mut key = key;
+    rkeys = rkeys.push(&key);
     for round in 1 .. 12 {
         let rcon = RCON[round];
-        key = key_expand_alt(rcon, key);
-        // key = nkey;
-        // temp2 = ntemp2;
+        (key, temp2) = key_expand(rcon, key, temp2);
         rkeys = rkeys.push(&key);
     }
     rkeys
 }
 
-fn SubBytes (s : u128) -> u128 {
-    rebuild_u128(aes_subword(index_u32(s, 0)),
-                 aes_subword(index_u32(s, 1)),
-                 aes_subword(index_u32(s, 2)),
-                 aes_subword(index_u32(s, 3)))
+fn subbytes (s : u128) -> u128 {
+    rebuild_u128(subword(index_u32(s, 0)),
+                 subword(index_u32(s, 1)),
+                 subword(index_u32(s, 2)),
+                 subword(index_u32(s, 3)))
 }
 
 fn matrix_index (s : u128, i : usize, j : usize) -> u8 {
     index_u8(index_u32(s, j), i)
 }
 
-fn ShiftRows (s : u128) -> u128 {
-    let r0 = rebuild_u32(matrix_index(s,0,1),matrix_index(s,1,2), matrix_index(s,2,3), matrix_index(s,3,0));
-    let r1 = rebuild_u32(matrix_index(s,0,2),matrix_index(s,1,3), matrix_index(s,2,0), matrix_index(s,3,1));
-    let r2 = rebuild_u32(matrix_index(s,0,3),matrix_index(s,1,0), matrix_index(s,2,1), matrix_index(s,3,2));
-    let r3 = rebuild_u32(matrix_index(s,0,0),matrix_index(s,1,1), matrix_index(s,2,2), matrix_index(s,3,3));
+fn shiftrows (s : u128) -> u128 {
+    let r0 = rebuild_u32(matrix_index(s,0,0),matrix_index(s,1,1), matrix_index(s,2,2), matrix_index(s,3,3));
+    let r1 = rebuild_u32(matrix_index(s,0,1),matrix_index(s,1,2), matrix_index(s,2,3), matrix_index(s,3,0));
+    let r2 = rebuild_u32(matrix_index(s,0,2),matrix_index(s,1,3), matrix_index(s,2,0), matrix_index(s,3,1));
+    let r3 = rebuild_u32(matrix_index(s,0,3),matrix_index(s,1,0), matrix_index(s,2,1), matrix_index(s,3,2));
 
     rebuild_u128(r0, r1, r2, r3)
 }
@@ -190,47 +162,37 @@ fn xtime(x: u8) -> u8 {
     x1 ^ x711b
 }
 
-fn mix_column_simpl(s0: u8, s1: u8, s2: u8, s3: u8) -> (u8, u8, u8, u8) {
-    let tmp = s0 ^ s1 ^ s2 ^ s3;
-    (s0 ^ tmp ^ (xtime(s0 ^ s1)),
-     s1 ^ tmp ^ (xtime(s1 ^ s2)),
-     s2 ^ tmp ^ (xtime(s2 ^ s3)),
-     s3 ^ tmp ^ (xtime(s3 ^ s0)))
-}
-
-
-fn mix_column(c: usize, state: u128) -> u128 {
-    let i0 = c * 4;
-    let s0 = matrix_index(state, 3, c);
-    let s1 = matrix_index(state, 2, c);
-    let s2 = matrix_index(state, 1, c);
-    let s3 = matrix_index(state, 0, c);
+fn mixcolumn(c: usize, state: u128) -> u128 {
+    let s0 = matrix_index(state, 0, c);
+    let s1 = matrix_index(state, 1, c);
+    let s2 = matrix_index(state, 2, c);
+    let s3 = matrix_index(state, 3, c);
     let tmp = s0 ^ s1 ^ s2 ^ s3;
     let st = state;
-    let st = set_index_u128(st, 3 + c * 4, s0 ^ tmp ^ (xtime(s0 ^ s1)));
-    let st = set_index_u128(st, 2 + c * 4, s1 ^ tmp ^ (xtime(s1 ^ s2)));
-    let st = set_index_u128(st, 1 + c * 4, s2 ^ tmp ^ (xtime(s2 ^ s3)));
-    let st = set_index_u128(st, 0 + c * 4, s3 ^ tmp ^ (xtime(s3 ^ s0)));
+    let st = set_index_u128(st, 0 + c * 4, s0 ^ tmp ^ (xtime(s0 ^ s1)));
+    let st = set_index_u128(st, 1 + c * 4, s1 ^ tmp ^ (xtime(s1 ^ s2)));
+    let st = set_index_u128(st, 2 + c * 4, s2 ^ tmp ^ (xtime(s2 ^ s3)));
+    let st = set_index_u128(st, 3 + c * 4, s3 ^ tmp ^ (xtime(s3 ^ s0)));
     st
 }
 
-fn mix_columns(state: u128) -> u128 {
-    let state = mix_column(0, state);
-    let state = mix_column(1, state);
-    let state = mix_column(2, state);
-    mix_column(3, state)
+fn mixcolumns(state: u128) -> u128 {
+    let state = mixcolumn(0, state);
+    let state = mixcolumn(1, state);
+    let state = mixcolumn(2, state);
+    mixcolumn(3, state)
 }
 
-fn aes_enc (state : u128, rkey : u128) -> u128 {
-    let state = SubBytes(state);
-    let state = ShiftRows(state);
-    let state = mix_columns(state);
+fn aesenc (state : u128, rkey : u128) -> u128 {
+    let state = subbytes(state);
+    let state = shiftrows(state);
+    let state = mixcolumns(state);
     state ^ rkey
 }
 
-fn aes_enc_last (state : u128, rkey : u128) -> u128 {
-    let state = SubBytes(state);
-    let state = ShiftRows(state);
+fn aesenclast (state : u128, rkey : u128) -> u128 {
+    let state = subbytes(state);
+    let state = shiftrows(state);
     state ^ rkey
 }
 
@@ -238,14 +200,11 @@ fn aes_rounds (rkeys : KeyList, inp : u128) -> u128 {
     let mut state : u128 = inp ^ rkeys[0];
     // TODO:
     for round in 1 .. 10 {
-        state = aes_enc(state, rkeys[round]) // #AESENC(state, rkeys[round]);
+        state = aesenc(state, rkeys[round])
     }
-    aes_enc_last(state, rkeys[10]) // #AESENCLAST
+    aesenclast(state, rkeys[10])
 }
 
-/* Functions typically called from other Jasmin programs.
-Note they always compute key expansion, and this may
-not be a good in terms of performance. */
 fn aes(key : u128, inp : u128) -> u128 {
     let rkeys = keys_expand(key);
     aes_rounds(rkeys, inp)
@@ -253,128 +212,50 @@ fn aes(key : u128, inp : u128) -> u128 {
 
 #[test]
 fn test_aeskeygenassist() {
-    println!("{:X?} vs {:X?}", aeskeygenassist(0x3c4fcf098815f7aba6d2ae2816157e2bu128, RCON[1]), 0x01eb848beb848a013424b5e524b5e434u128);
 
-    for i in 0..4 {
-        println! ("{:X?}", index_u32(aeskeygenassist(0x3c4fcf098815f7aba6d2ae2816157e2bu128, RCON[1]), i));
-    }
-    println!();
-    for i in 0..4 {
-        println! ("{:X?}", index_u32(0x01eb848beb848a013424b5e524b5e434u128, i));
-    }
+    let key = 0x3c4fcf098815f7aba6d2ae2816157e2bu128;
+    println!("{:X?} vs {:X?}", aeskeygenassist(key, RCON[1]), 0x01eb848beb848a013424b5e524b5e434u128);
     assert_eq!(aeskeygenassist(0x3c4fcf098815f7aba6d2ae2816157e2bu128, RCON[1]), 0x01eb848beb848a013424b5e524b5e434u128);
 }
 
 #[test]
 fn test_key_combine() {
-    let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
+    let key = 0x3c4fcf098815f7aba6d2ae2816157e2bu128;
+    let (lhs, _) = key_combine(key, aeskeygenassist(key, RCON[1]), 0);
 
-    let temp1 = key; // rebuild_u128(index_u32(key, 3), index_u32(key, 2), index_u32(key, 1), index_u32(key, 0));
-        let temp3 = temp1 >> (4usize * 8);
-    let temp1 = temp1 ^ temp3;
-    let temp3 = temp1 >> (4usize * 8);
-    let temp1 = temp1 ^ temp3;
-    let temp3 = temp1 >> (4usize * 8);
-    let temp1 = temp1 ^ temp3;
+    let rhs = 0x05766c2a3939a323b12c548817fefaa0u128;
 
-    println!("temp0 {:X?}", temp1);
-    
-    let k0 = index_u32(key, 0);
-    let k1 = index_u32(key, 1);
-    let k2 = index_u32(key, 2);
-    let k3 = index_u32(key, 3);
-    let temp1 = rebuild_u128(k0 ^ k2 ^ k1 ^ k3, k1 ^ k2 ^ k3, k2 ^ k3, k3);
-
-    println!("temp1 {:X?}", temp1);
-
-    let temp1 = AES_128_ASSIST(key, 0);
-    // let t3 = index_u32(temp1, 0);
-    // let t2 = index_u32(temp1, 1);
-    // let t1 = index_u32(temp1, 2);
-    // let t0 = index_u32(temp1, 3);
-    println!("temp2 {:X?}", temp1);
-
-    
-    let temp = aeskeygenassist(rebuild_u128(index_u32(key, 1), index_u32(key, 0), index_u32(key, 3), index_u32(key, 2)), RCON[1]);
-    println!("HERE!! {:X?} vs {:X?}", vpshufd(temp, 0xFF), temp);
-
-    // 2434E4B4 2434E4B4 2434E4B4 2434E4B4
-    // 2434E4B4 34E4B524 EB018A85 018A84EB
-    
-    let (lhs, temp2) = key_combine(key, aeskeygenassist(key, RCON[1]), 0);
-    let rhs = 0xa0fafe1788542cb123a339392a6c7605u128;
     println!("{:X?} vs {:X?}", lhs, rhs);
-    println!("{:X?} vs {:X?}", AES_128_ASSIST(key, aeskeygenassist(key, RCON[1])), rhs);
-    
-    assert_eq!(lhs, rhs);
+    assert_eq!(lhs, rhs, "left: {:x} \n right: {:x}", lhs, rhs);
 }
 
-
-// NIST test vector: https://csrc.nist.gov/publications/detail/fips/197/final -- (p.27)
+// test vector from
+// https://www.intel.com/content/dam/doc/white-paper/advanced-encryption-standard-new-instructions-set-paper.pdf
 #[test]
-fn test_keys_expand() {
-    let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
-    
-    println!("{:X?}", keys_expand(key));
-    for j in 0..12 {
-        println! ("{:X?}", index_u32(keys_expand(key)[j], 3));
-        println! ("{:X?}", index_u32(keys_expand(key)[j], 2));
-        println! ("{:X?}", index_u32(keys_expand(key)[j], 1));
-        println! ("{:X?}", index_u32(keys_expand(key)[j], 0));
-    }
-
-    assert_eq!(keys_expand(key)[10],
-               rebuild_u128(0xb6630ca6, 0xe13f0cc8, 0xc9ee2589, 0xd014f9a8));
+fn test_mixcolumns() {
+    let inp = 0x627a6f6644b109c82b18330a81c3b3e5;
+    let lhs = mixcolumns(inp);
+    let rhs = 0x7b5b54657374566563746f725d53475d;
+    assert_eq!(lhs, rhs, "\n left: {:x}\nright: {:x}\n", lhs, rhs)
 }
 
-fn temp () {
-    let msg = 0x3243f6a8885a308d313198a2e0370734u128;
-    let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
-    let ctx = 0x3925841d02dc09fbdc118597196a0b32u128;
+// test vector from
+// https://www.intel.com/content/dam/doc/white-paper/advanced-encryption-standard-new-instructions-set-paper.pdf
+#[test]
+fn test_aesenc() {
+    let rkey = 0x48692853686179295b477565726f6e5d;
+    let state = 0x7b5b54657374566563746f725d53475d;
+    let lhs = aesenc(state, rkey);
+    let rhs = 0xa8311c2f9fdba3c58b104b58ded7e595;
+    assert_eq!(lhs, rhs, "\n left: {:x}\nright: {:x}\n", lhs, rhs)
 }
 
 // NIST test vector: https://csrc.nist.gov/publications/detail/fips/197/final -- (p.33)
 #[test]
 fn test_aes() {
-    let msg = 0x3243f6a8885a308d313198a2e0370734u128;
-    let key = 0x2b7e151628aed2a6abf7158809cf4f3cu128;
-    let ctx = 0x3925841d02dc09fbdc118597196a0b32u128;
-
-    fn print_num (num : u128) {
-        for j in 0..4 {
-            for i in 0..4 {
-                print!("{:X} ", index_u8(index_u32(num, 3-i), 3-j));
-            }
-            println!();
-        }
-        println!();
-    }
-    print_num(msg);
-    print_num(key);
-
-    let start = msg ^ keys_expand(key)[0];
-    println!("start {:X} vs {:X} is {}", start, 0x193de3bea0f4e22b9ac68d2ae9f84808u128, start == 0x193de3bea0f4e22b9ac68d2ae9f84808u128);
-    print_num(start);
-    let s_box = SubBytes(start);
-    println!("s_box {:X} vs {:X} is {}", s_box, 0xd42711aee0bf98f1b8b45de51e415230u128, s_box == 0xd42711aee0bf98f1b8b45de51e415230u128);
-    print_num(s_box);
-    let s_row = ShiftRows(s_box);
-    println!("s_row {:X} vs {:X} is {}", s_row, 0xd4bf5d30e0b452aeb84111f11e2798e5u128, s_row == 0xd4bf5d30e0b452aeb84111f11e2798e5u128);
-    print_num(s_row);
-    let m_col = mix_columns(s_row);
-    println!("m_col {:X} vs {:X} is {}", m_col, 0x046681e5e0cb199a48f8d37a2806264cu128, m_col == 0x046681e5e0cb199a48f8d37a2806264cu128);
-    print_num(m_col);
-    let k_sch = m_col ^ keys_expand(key)[1];
-    println!("k_sch {:X} vs {:X} is {}", k_sch, 0x046681e5e0cb199a48f8d37a2806264cu128, k_sch == 0x046681e5e0cb199a48f8d37a2806264cu128);
-    print_num(k_sch);
-    println!("{}", keys_expand(key)[1]);
-
-    let r1 = aes_enc(start, keys_expand(key)[1]);
-    print_num(r1);
-    let r2 = aes_enc(r1, keys_expand(key)[2]);
-    print_num(r2);
-    let r3 = aes_enc(r2, keys_expand(key)[3]);
-    print_num(r3);
+    let key = 0x3c4fcf098815f7aba6d2ae2816157e2bu128;
+    let msg = 0x340737e0a29831318d305a88a8f64332u128;
+    let ctx = 0x320b6a19978511dcfb09dc021d842539u128;
 
     let c = aes(key, msg);
     assert_eq!(ctx, c);
