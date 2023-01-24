@@ -1,5 +1,7 @@
 // This crate implements ECVRF based on the Edwards25519 elliptic curve. The
-// code is based on section 5 of https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/.
+// code is based on section 5 of draft-irtf-cfrg-vrf-15 (version 15):
+// https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/
+//
 // The cipher suite is ECVRF-EDWARDS25519-SHA512-ELL2 (4), but the method for 
 // ciphersuite ECVRF-EDWARDS25519-SHA512-TAI (3) is present as well, and can be 
 // uncommented. ELL2 uses the edwards25519-hash crate to convert arbitrary 
