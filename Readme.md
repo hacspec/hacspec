@@ -162,6 +162,7 @@ There's a set of example specs, divided between the [safe](examples/) and [unsaf
 - [ECDSA-P256-SHA256](examples/ecdsa-p256-sha256/src/ecdsa.rs)
 - [Ed25519](examples/ed25519/src/ed25519.rs)
 - [RSA-FDH-VRF](examples/rsa-fdh-vrf/src/rsa-fdh-vrf.rs)
+- [ECVRF](examples/rsa-fdh-vrf/src/edwards25519-ecvrf.rs)
 - [BIP-340](examples/bip-340/src/bip-340.rs) [text](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) [blog](https://blog.blockstream.com/half-aggregation-of-bip-340-signatures/), including secp.
 - [merlin](examples/merlin)
 - [ristretto](examples/ristretto)

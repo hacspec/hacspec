@@ -27,6 +27,7 @@ members = [
     "ed25519",
     "edwards25519",
     "edwards25519-hash",
+    "edwards25519-ecvrf",
     "rsa-pkcs1",
     "bip-340",
     "rsa-fdh-vrf",
