@@ -1168,16 +1168,25 @@ Definition array_new_ {A: ChoiceEquality} (init:T A) (len: nat) : T (nseq A len)
 (*  | S len0 => fun (s0 : T (nseq A (S len0))) => array_index_helper s0 i *)
 (*  end s. *)
 
-Definition array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : T A.
-Proof.
-  case (Z.to_nat (unsigned i) <? len)%nat eqn:H1.
-  - apply Nat.ltb_lt in H1.
-    destruct len. { lia. }
-    destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := Z.to_nat (unsigned i)) ((ssrbool.introT ssrnat.ltP H1)))) as [f | ].
-    * exact f.
-    * exact default.
-  - exact default.
-Defined.
+Equations array_index {A: ChoiceEquality} `{Default (T A)} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) : T A :=
+  array_index (len := 0) s i := default ;
+  array_index (len := (S n)) s i with le_lt_dec (S n) (Z.to_nat (unsigned i)) := {
+    | right a with (@getm _ _ s (fintype.Ordinal (n := S n) (m := Z.to_nat (unsigned i)) ((ssrbool.introT ssrnat.ltP a)))) => {
+      | Some f => f
+      | None => default
+      }
+    | left b => default
+    }
+.
+(* Proof. *)
+(*   case (Z.to_nat (unsigned i) <? len)%nat eqn:H1. *)
+(*   - apply Nat.ltb_lt in H1. *)
+(*     destruct len. { lia. } *)
+(*     destruct (@getm _ _ s (fintype.Ordinal (n := S len) (m := Z.to_nat (unsigned i)) ((ssrbool.introT ssrnat.ltP H1)))) as [f | ]. *)
+(*     * exact f. *)
+(*     * exact default. *)
+(*   - exact default. *)
+(* Defined. *)
 
 Equations array_upd {A: ChoiceEquality} {len : nat} (s: T (nseq A len)) {WS} (i: @int WS) (new_v: T A) : T (nseq A len) :=
   array_upd s i new_v with len :=

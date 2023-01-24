@@ -130,13 +130,16 @@ fn key_expand(rcon: u8, rkey: u128, temp2: u128) -> (u128, u128) {
 
 type KeyList = Seq<u128>;
 
-fn keys_expand(mut key : u128) -> KeyList {
+fn keys_expand(key : u128) -> KeyList {
     let mut rkeys : KeyList = KeyList::new(0);
+    let mut key = key;
     let mut temp2 : u128 = 0;
     rkeys = rkeys.push(&key);
     for round in 1 .. 12 {
         let rcon = RCON[round];
-        (key, temp2) = key_expand(rcon, key, temp2);
+        let (key_temp, temp2_temp) = key_expand(rcon, key, temp2);
+        key = key_temp;
+        temp2 = temp2_temp;
         rkeys = rkeys.push(&key);
     }
     rkeys
