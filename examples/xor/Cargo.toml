@@ -1,0 +1,16 @@
+[package]
+name = "hacspec-xor"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[lib]
+path = "src/xor.rs"
+
+[dependencies]
+hacspec-lib = { path = "../../lib" }
+
+
+
+
+
