@@ -22,14 +22,14 @@ Definition scalar_canvas_t := nseq (int8) (32).
 Definition p256_scalar_t :=
   nat_mod 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551.
 
-Notation "'affine_t'" := ((p256_field_element_t × p256_field_element_t
+Notation "'affine_t'" := ((p256_field_element_t '× p256_field_element_t
 )) : hacspec_scope.
 
 Notation "'affine_result_t'" := ((result affine_t error_t)) : hacspec_scope.
 
 Notation "'p256_jacobian_t'" := ((
-  p256_field_element_t ×
-  p256_field_element_t ×
+  p256_field_element_t '×
+  p256_field_element_t '×
   p256_field_element_t
 )) : hacspec_scope.
 
@@ -209,8 +209,8 @@ Definition ltr_mul
   (p_633 : p256_jacobian_t)
   : jacobian_result_t :=
   let q_634 : (
-      p256_field_element_t ×
-      p256_field_element_t ×
+      p256_field_element_t '×
+      p256_field_element_t '×
       p256_field_element_t
     ) :=
     (
@@ -224,29 +224,32 @@ Definition ltr_mul
         0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff) (
         @repr WORDSIZE128 0) : p256_field_element_t
     ) in 
-  let q_634 :=
-    foldi (usize 0) (bits_v) (fun i_635 q_634 =>
-      let q_634 :=
-        point_double (q_634) in 
-      let '(q_634) :=
-        if nat_mod_equal (nat_mod_get_bit (k_632) (((bits_v) - (usize 1)) - (
-              i_635))) (nat_mod_one ):bool then (let q_634 :=
-            point_add_jacob (q_634) (p_633) in 
-          (q_634)) else ((q_634)) in 
-      (q_634))
-    q_634 in 
-  @Ok p256_jacobian_t error_t (q_634).
+  bind (foldibnd (usize 0) to (bits_v) for q_634 >> (fun i_635 q_634 =>
+    let q_634 :=
+      point_double (q_634) in 
+    ifbnd nat_mod_equal (nat_mod_get_bit (k_632) (((bits_v) - (usize 1)) - (
+          i_635))) (nat_mod_one ) : bool
+    thenbnd (bind (point_add_jacob (q_634) (p_633)) (fun q_634  => @Ok (
+          (
+            p256_field_element_t '×
+            p256_field_element_t '×
+            p256_field_element_t
+          )
+        ) error_t ((q_634))))
+    else ((q_634)) >> (fun '(q_634) =>
+    @Ok (
+      (p256_field_element_t '× p256_field_element_t '× p256_field_element_t)
+    ) error_t ((q_634))))) (fun q_634 => @Ok p256_jacobian_t error_t (q_634)).
 
 Definition p256_point_mul
   (k_636 : p256_scalar_t)
   (p_637 : affine_t)
   : affine_result_t :=
-  let jac_638 : p256_jacobian_t :=
-    ltr_mul (k_636) (affine_to_jacobian (p_637)) in 
-  @Ok affine_t error_t (jacobian_to_affine (jac_638)).
+  bind (ltr_mul (k_636) (affine_to_jacobian (p_637))) (fun jac_638 =>
+    @Ok affine_t error_t (jacobian_to_affine (jac_638))).
 
 Definition p256_point_mul_base (k_639 : p256_scalar_t) : affine_result_t :=
-  let base_point_640 : (p256_field_element_t × p256_field_element_t) :=
+  let base_point_640 : (p256_field_element_t '× p256_field_element_t) :=
     (
       nat_mod_from_byte_seq_be (array_to_seq (array_from_list uint8 (let l :=
             [
@@ -325,10 +328,9 @@ Definition point_add_distinct
   (p_641 : affine_t)
   (q_642 : affine_t)
   : affine_result_t :=
-  let r_643 : p256_jacobian_t :=
-    point_add_jacob (affine_to_jacobian (p_641)) (affine_to_jacobian (
-        q_642)) in 
-  @Ok affine_t error_t (jacobian_to_affine (r_643)).
+  bind (point_add_jacob (affine_to_jacobian (p_641)) (affine_to_jacobian (
+        q_642))) (fun r_643 => @Ok affine_t error_t (jacobian_to_affine (
+        r_643))).
 
 Definition point_add (p_644 : affine_t) (q_645 : affine_t) : affine_result_t :=
   (if ((p_644) !=.? (q_645)):bool then (point_add_distinct (p_644) (
