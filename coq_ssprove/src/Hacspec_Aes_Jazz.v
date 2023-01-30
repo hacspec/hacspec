@@ -610,12 +610,12 @@ Fail Next Obligation.
 
 Notation "'key_list_t'" := (seq int128) : hacspec_scope.
 
-Definition rkeys_274_loc : ChoiceEqualityLocation :=
-  (key_list_t ; 277%nat).
+Definition key_275_loc : ChoiceEqualityLocation :=
+  (int128 ; 277%nat).
 Definition temp2_276_loc : ChoiceEqualityLocation :=
   (int128 ; 278%nat).
-Definition key_275_loc : ChoiceEqualityLocation :=
-  (int128 ; 279%nat).
+Definition rkeys_274_loc : ChoiceEqualityLocation :=
+  (key_list_t ; 279%nat).
 Notation "'keys_expand_inp'" :=(
   int128 : choice_type) (in custom pack_type at level 2).
 Notation "'keys_expand_inp'" :=(int128 : ChoiceEquality) (at level 2).
@@ -636,7 +636,7 @@ Program Definition keys_expand (key_280 : int128)
         seq_push (lift_to_both0 rkeys_274) (lift_to_both0 key_275) in
       letb '(rkeys_274, key_275, temp2_276) :=
         foldi_both' (lift_to_both0 (usize 1)) (lift_to_both0 (
-              usize 12)) prod_ce(rkeys_274, key_275, temp2_276) (L := (CEfset (
+              usize 11)) prod_ce(rkeys_274, key_275, temp2_276) (L := (CEfset (
                 [rkeys_274_loc ; key_275_loc ; temp2_276_loc]))) (
             I := [interface]) (fun round_281 '(rkeys_274, key_275, temp2_276) =>
             letb rcon_282 : int8 :=

@@ -1080,6 +1080,14 @@ Definition seq_from_list (A : ChoiceEquality) (l : list (T A)) : T (seq A) :=
   fmap_of_seq l.
 
 
+Definition seq_to_list_id : forall {A} (t : seq A), fmap_of_seq (seq_to_list A t) = t.
+Proof.
+Admitted.
+
+Definition fmap_of_seq_id : forall {A : ChoiceEquality} (t : list A), seq_to_list  A (fmap_of_seq t) = t.
+Proof.
+Admitted.
+
 Definition seq_new_ {A: ChoiceEquality} (init : A) (len: nat) : seq A :=
   fmap_of_seq (repeat init len).
 
@@ -1270,29 +1278,29 @@ Proof.
     + lia.
 Defined.
 
-Lemma array_fmap_length {A : ChoiceEquality} {n} (f : T (nseq A (S n))) : (length (FMap.fmval f) <= S n)%nat.
-Proof.
-  destruct f.
-  cbn.
+(* Lemma array_fmap_length {A : ChoiceEquality} {n} (f : T (nseq A (S n))) : (length (FMap.fmval f) <= S n)%nat. *)
+(* Proof. *)
+(*   destruct f. *)
+(*   cbn. *)
 
-  assert ((length fmval > S n)%nat -> ~ (is_true (path.sorted Ord.lt (seq.unzip1 (fmval))))).
-  {
-    clear. intros.
-    red ; intros.
-    rewrite <- (rev_involutive fmval) in H0.
-    rewrite <- (rev_length fmval) in H.
-    induction (rev fmval).
-    - cbn in H.
-      lia.
-    - admit.
-  }
+(*   assert ((length fmval > S n)%nat -> ~ (is_true (path.sorted Ord.lt (seq.unzip1 (fmval))))). *)
+(*   { *)
+(*     clear. intros. *)
+(*     red ; intros. *)
+(*     rewrite <- (rev_involutive fmval) in H0. *)
+(*     rewrite <- (rev_length fmval) in H. *)
+(*     induction (rev fmval). *)
+(*     - cbn in H. *)
+(*       lia. *)
+(*     - admit. *)
+(*   } *)
 
-  apply not_gt.
-  red ; intros.
-  apply H.
-  apply H0.
-  apply i.
-Admitted.
+(*   apply not_gt. *)
+(*   red ; intros. *)
+(*   apply H. *)
+(*   apply H0. *)
+(*   apply i. *)
+(* Admitted. *)
 
 (* Lemma array_hd {A : ChoiceEquality} {n} (f : T (nseq A (S n))) : getm f ord0 = hd_error (array_to_list f). *)
 (* Proof. Admitted. *)
@@ -1616,17 +1624,17 @@ Qed.
 (* Proof. *)
 (* Admitted. *)
 
-Lemma H_lower_fval_setm : forall {A} n (a : nseq A (S (S n))) i x H H' H2 `{H_default : Default A}, setm (T:=ordinal_ordType (S n))
-    (mkfmap (T:=ordinal_ordType (S n))
-       (lower_fval a H))
-    (Ordinal (n:=S n) (m:=i) H') x =
-  mkfmap (T:=ordinal_ordType (S n))
-    (lower_fval
-       (setm_def (T:=ordinal_ordType (S (S n))) a
-                 (Ordinal (n:=S (S n)) (m:=S i) H') x) H2).
-Proof.
-  intros.
-Admitted.
+(* Lemma H_lower_fval_setm : forall {A} n (a : nseq A (S (S n))) i x H H' H2 `{H_default : Default A}, setm (T:=ordinal_ordType (S n)) *)
+(*     (mkfmap (T:=ordinal_ordType (S n)) *)
+(*        (lower_fval a H)) *)
+(*     (Ordinal (n:=S n) (m:=i) H') x = *)
+(*   mkfmap (T:=ordinal_ordType (S n)) *)
+(*     (lower_fval *)
+(*        (setm_def (T:=ordinal_ordType (S (S n))) a *)
+(*                  (Ordinal (n:=S (S n)) (m:=S i) H') x) H2). *)
+(* Proof. *)
+(*   intros. *)
+(* Admitted. *)
 
 Lemma path_sorted_remove :
   forall {A : ordType} {B} (x y : A * B) (l : list (A * B)),
@@ -1792,73 +1800,73 @@ Qed.
 (* Qed. *)
 
 
-Lemma H_nseq_tl_setm : forall {A} n (a : nseq A (S (S n))) i x H' H_default, setm (T:=ordinal_ordType (S n)) (nseq_tl a) (Ordinal (n:=S n) (m:=i) (H')) x = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=S i) H') x).
-Proof.
-  intros.
-  unfold nseq_tl.
+(* Lemma H_nseq_tl_setm : forall {A} n (a : nseq A (S (S n))) i x H' H_default, setm (T:=ordinal_ordType (S n)) (nseq_tl a) (Ordinal (n:=S n) (m:=i) (H')) x = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=S i) H') x). *)
+(* Proof. *)
+(*   intros. *)
+(*   unfold nseq_tl. *)
 
-  destruct a.
-  destruct fmval.
-  - apply eq_fmap. intros v.
-    setoid_rewrite setmE.
-    cbn.
-    reflexivity.
-  - apply eq_fmap. intros v.
-    setoid_rewrite setmE.
-    destruct p.
-    destruct s.
-    destruct m.
-    + rewrite !tl_fmap_equation_2.
-      unfold setm, fmap.
-      cbn.
-      rewrite !tl_fmap_equation_2.
-      destruct fmval.
-      * rewrite !lower_fval_equation_1.
-        unfold setm_def.
-        rewrite !lower_fval_equation_2.
-        rewrite !lower_fval_equation_1.
-        cbn.
-        reflexivity.
-      * rewrite !lower_fval_equation_2.
-        erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ (setm_def (T:=ordinal_ordType (S (S n))) (p :: fmval)
-                                                                  (Ordinal (n:=S (S n)) (m:=S i) H') x) _) (@FMap.FMap _ _ ((if (fst p < (Ordinal (n:=S (S n)) (m:=S i) H'))%ord
-                           then p
-                           else ((Ordinal (n:=S (S n)) (m:=S i) H'), x)
-   ) :: if ((Ordinal (n:=S (S n)) (m:=S i) H') < fst p)%ord
-       then p ::fmval
-       else
-         if eqtype.eq_op (Ordinal (n:=S (S n)) (m:=S i) H') (fst p)
-         then fmval
-         else setm_def fmval (Ordinal (n:=S (S n)) (m:=S i) H') x) _) _ _)).
-        2:{
-          apply eq_fmap.
-          intros k.
-          unfold getm.
-          unfold FMap.fmval.
-          rewrite setm_def_cons.
-          reflexivity.
-        }
+(*   destruct a. *)
+(*   destruct fmval. *)
+(*   - apply eq_fmap. intros v. *)
+(*     setoid_rewrite setmE. *)
+(*     cbn. *)
+(*     reflexivity. *)
+(*   - apply eq_fmap. intros v. *)
+(*     setoid_rewrite setmE. *)
+(*     destruct p. *)
+(*     destruct s. *)
+(*     destruct m. *)
+(*     + rewrite !tl_fmap_equation_2. *)
+(*       unfold setm, fmap. *)
+(*       cbn. *)
+(*       rewrite !tl_fmap_equation_2. *)
+(*       destruct fmval. *)
+(*       * rewrite !lower_fval_equation_1. *)
+(*         unfold setm_def. *)
+(*         rewrite !lower_fval_equation_2. *)
+(*         rewrite !lower_fval_equation_1. *)
+(*         cbn. *)
+(*         reflexivity. *)
+(*       * rewrite !lower_fval_equation_2. *)
+(*         erewrite (proj1 (lower_fval_ext (@FMap.FMap _ _ (setm_def (T:=ordinal_ordType (S (S n))) (p :: fmval) *)
+(*                                                                   (Ordinal (n:=S (S n)) (m:=S i) H') x) _) (@FMap.FMap _ _ ((if (fst p < (Ordinal (n:=S (S n)) (m:=S i) H'))%ord *)
+(*                            then p *)
+(*                            else ((Ordinal (n:=S (S n)) (m:=S i) H'), x) *)
+(*    ) :: if ((Ordinal (n:=S (S n)) (m:=S i) H') < fst p)%ord *)
+(*        then p ::fmval *)
+(*        else *)
+(*          if eqtype.eq_op (Ordinal (n:=S (S n)) (m:=S i) H') (fst p) *)
+(*          then fmval *)
+(*          else setm_def fmval (Ordinal (n:=S (S n)) (m:=S i) H') x) _) _ _)). *)
+(*         2:{ *)
+(*           apply eq_fmap. *)
+(*           intros k. *)
+(*           unfold getm. *)
+(*           unfold FMap.fmval. *)
+(*           rewrite setm_def_cons. *)
+(*           reflexivity. *)
+(*         } *)
 
-        cbn.
-        rewrite lower_fval_equation_2.
-        cbn.
-        setoid_rewrite setmE.
-        cbn.
+(*         cbn. *)
+(*         rewrite lower_fval_equation_2. *)
+(*         cbn. *)
+(*         setoid_rewrite setmE. *)
+(*         cbn. *)
 
-        destruct p.
-        cbn.
+(*         destruct p. *)
+(*         cbn. *)
 
 
 
-        admit.
-    + admit.
-Admitted.
+(*         admit. *)
+(*     + admit. *)
+(* Admitted. *)
 
-Lemma H_nseq_tl_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_tl a = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x).
-Admitted.
+(* Lemma H_nseq_tl_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_tl a = nseq_tl (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x). *)
+(* Admitted. *)
 
-Lemma H_nseq_hd_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_hd (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x) = x.
-Admitted.
+(* Lemma H_nseq_hd_setm0 : forall {A} n (a : nseq A (S (S n))) x H' H_default, nseq_hd (H_default := H_default) (setm (T:=ordinal_ordType (S (S n))) (a) (Ordinal (n:=S (S n)) (m:=0) H') x) = x. *)
+(* Admitted. *)
 
 (* Lemma array_to_list_helper_length {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A (S n))) (i : nat) (H : (i < S (S n))%nat) : length (array_to_list_helper a i H) = i. *)
 (* Proof. *)
@@ -1993,40 +2001,40 @@ Proof.
     apply nseq_tl_ord0.
 Qed.
 
-Lemma array_to_list_id {A: ChoiceEquality} `{Default (T A)} :
-  forall (l : list A),
-    (array_to_list (array_from_list l) = l).
-Proof.
-  intros.
-  induction l ; [ reflexivity | ] ; intros.
-  unfold array_from_list.
-  destruct l ; [ reflexivity | ].
-  rewrite array_from_list_helper_equation_2.
-  erewrite (proj1 (ord_ext _ O) (Nat.sub_diag (length (t :: l)))).
-  setoid_rewrite array_to_list_ord0.
-  f_equal.
-  unfold array_from_list in IHl.
-  destruct l ; [ reflexivity | ].
-  rewrite array_from_list_helper_equation_2.
-  unfold setm, fmap.
-Admitted.
+(* Lemma array_to_list_id {A: ChoiceEquality} `{Default (T A)} : *)
+(*   forall (l : list A), *)
+(*     (array_to_list (array_from_list l) = l). *)
+(* Proof. *)
+(*   intros. *)
+(*   induction l ; [ reflexivity | ] ; intros. *)
+(*   unfold array_from_list. *)
+(*   destruct l ; [ reflexivity | ]. *)
+(*   rewrite array_from_list_helper_equation_2. *)
+(*   erewrite (proj1 (ord_ext _ O) (Nat.sub_diag (length (t :: l)))). *)
+(*   setoid_rewrite array_to_list_ord0. *)
+(*   f_equal. *)
+(*   unfold array_from_list in IHl. *)
+(*   destruct l ; [ reflexivity | ]. *)
+(*   rewrite array_from_list_helper_equation_2. *)
+(*   unfold setm, fmap. *)
+(* Admitted. *)
 
-Lemma array_new_to_list {A: ChoiceEquality} `{Default (T A)} :
-  forall (x:T A) (n: nat),
-    (array_to_list (Hacspec_Lib_Pre.array_new_ x n)) =
-      repeat x n.
-Proof.
-  intros.
-  unfold array_new_.
-  destruct n.
-  reflexivity.
-  destruct n.
-  reflexivity.
-  cbn.
-  rewrite <- (repeat_length x (S n)).
-  rewrite <- array_to_list_id.
-  reflexivity.
-Qed.
+(* Lemma array_new_to_list {A: ChoiceEquality} `{Default (T A)} : *)
+(*   forall (x:T A) (n: nat), *)
+(*     (array_to_list (Hacspec_Lib_Pre.array_new_ x n)) = *)
+(*       repeat x n. *)
+(* Proof. *)
+(*   intros. *)
+(*   unfold array_new_. *)
+(*   destruct n. *)
+(*   reflexivity. *)
+(*   destruct n. *)
+(*   reflexivity. *)
+(*   cbn. *)
+(*   rewrite <- (repeat_length x (S n)). *)
+(*   rewrite <- array_to_list_id. *)
+(*   reflexivity. *)
+(* Qed. *)
 
 (* Global Instance nat_default : Default nat := { *)
 (*     default := 0%nat *)
@@ -2039,129 +2047,129 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma array_to_list_upd_spec : forall (A : ChoiceEquality) `{H_default : Default A} WS n (a : nseq A n) (i : @int WS) x,
-    (Z.to_nat (unsigned i) < n)%nat ->
-    array_to_list (Hacspec_Lib_Pre.array_upd (WS := WS) a i x) =
-      seq.set_nth (default) (array_to_list a) (Z.to_nat (unsigned i)) x.
-Proof.
-  intros.
-  rewrite array_upd_equation_1.
-  cbn.
-  unfold array_upd_clause_1.
-  unfold array_upd_clause_1_clause_1.
+(* Lemma array_to_list_upd_spec : forall (A : ChoiceEquality) `{H_default : Default A} WS n (a : nseq A n) (i : @int WS) x, *)
+(*     (Z.to_nat (unsigned i) < n)%nat -> *)
+(*     array_to_list (Hacspec_Lib_Pre.array_upd (WS := WS) a i x) = *)
+(*       seq.set_nth (default) (array_to_list a) (Z.to_nat (unsigned i)) x. *)
+(* Proof. *)
+(*   intros. *)
+(*   rewrite array_upd_equation_1. *)
+(*   cbn. *)
+(*   unfold array_upd_clause_1. *)
+(*   unfold array_upd_clause_1_clause_1. *)
 
-  destruct n ; [ easy | destruct lt_dec ; [ | contradiction ]] ; clear H.
-  destruct i as [ i ] ; cbn in l |- * ; clear i0.
+(*   destruct n ; [ easy | destruct lt_dec ; [ | contradiction ]] ; clear H. *)
+(*   destruct i as [ i ] ; cbn in l |- * ; clear i0. *)
 
-  rewrite <- (split_nseq_correct a).
-  replace (seq.set_nth _ _ _ _) with (
-      match (Z.to_nat i) with
-      | 0%nat => x
-      | S n' => (nseq_hd a)
-      end :: match (Z.to_nat i) with
-            | 0%nat => array_to_list (nseq_tl a)
-            | S n' => seq.set_nth default (array_to_list (nseq_tl a)) n' x end) by now destruct (Z.to_nat i).
+(*   rewrite <- (split_nseq_correct a). *)
+(*   replace (seq.set_nth _ _ _ _) with ( *)
+(*       match (Z.to_nat i) with *)
+(*       | 0%nat => x *)
+(*       | S n' => (nseq_hd a) *)
+(*       end :: match (Z.to_nat i) with *)
+(*             | 0%nat => array_to_list (nseq_tl a) *)
+(*             | S n' => seq.set_nth default (array_to_list (nseq_tl a)) n' x end) by now destruct (Z.to_nat i). *)
 
-  rewrite !array_to_list_equation_2. 
+(*   rewrite !array_to_list_equation_2.  *)
  
-  assert (forall A (x y : A) (xs ys : list A), x :: xs = y :: ys <-> x = y /\ xs = ys)
-  by (clear ; split ; intros ; inversion H ; subst ; easy).
-  rewrite H ; clear H.
+(*   assert (forall A (x y : A) (xs ys : list A), x :: xs = y :: ys <-> x = y /\ xs = ys) *)
+(*   by (clear ; split ; intros ; inversion H ; subst ; easy). *)
+(*   rewrite H ; clear H. *)
 
-  generalize dependent (i).
-  induction n ; intros.
-  - cbn.
-    destruct (Z.to_nat i) ; [ | lia ].
-    split ; [ | reflexivity ].
-    pose proof (array_is_max_length a).
-    destruct a.
-    destruct fmval.
-    * reflexivity.
-    * cbn in H.
-      destruct fmval.
-      -- cbn.
-         destruct negb eqn:neg.
-         ++ reflexivity.
-         ++ destruct ssrnat.eqn eqn:pos ; easy.
-      -- cbn in H. lia.
-  - split.
-    + destruct a.
-      destruct fmval.
-      * reflexivity.
-      * cbn.
-        destruct (_ < _)%ord eqn:lt_p.
-        -- cbn.
-           destruct p, s.
-           cbn.
-           destruct m.
-           ++ cbn in lt_p.
-              destruct (Z.to_nat i); easy.
-           ++ reflexivity.
-        -- destruct (ssrnat.eqn (Z.to_nat _) _) eqn:i_eq.
-           ++ apply (ssrbool.elimT (ssrnat.eqnP )) in i_eq.
-              rewrite <- i_eq.
-              cbn.
-              destruct Z.to_nat ; reflexivity.
-           ++ destruct (Z.to_nat i).
-              ** destruct p, s.
-                 cbn.
-                 destruct m ; discriminate.
-              ** reflexivity.
-    + rewrite !array_to_list_equation_2.
+(*   generalize dependent (i). *)
+(*   induction n ; intros. *)
+(*   - cbn. *)
+(*     destruct (Z.to_nat i) ; [ | lia ]. *)
+(*     split ; [ | reflexivity ]. *)
+(*     pose proof (array_is_max_length a). *)
+(*     destruct a. *)
+(*     destruct fmval. *)
+(*     * reflexivity. *)
+(*     * cbn in H. *)
+(*       destruct fmval. *)
+(*       -- cbn. *)
+(*          destruct negb eqn:neg. *)
+(*          ++ reflexivity. *)
+(*          ++ destruct ssrnat.eqn eqn:pos ; easy. *)
+(*       -- cbn in H. lia. *)
+(*   - split. *)
+(*     + destruct a. *)
+(*       destruct fmval. *)
+(*       * reflexivity. *)
+(*       * cbn. *)
+(*         destruct (_ < _)%ord eqn:lt_p. *)
+(*         -- cbn. *)
+(*            destruct p, s. *)
+(*            cbn. *)
+(*            destruct m. *)
+(*            ++ cbn in lt_p. *)
+(*               destruct (Z.to_nat i); easy. *)
+(*            ++ reflexivity. *)
+(*         -- destruct (ssrnat.eqn (Z.to_nat _) _) eqn:i_eq. *)
+(*            ++ apply (ssrbool.elimT (ssrnat.eqnP )) in i_eq. *)
+(*               rewrite <- i_eq. *)
+(*               cbn. *)
+(*               destruct Z.to_nat ; reflexivity. *)
+(*            ++ destruct (Z.to_nat i). *)
+(*               ** destruct p, s. *)
+(*                  cbn. *)
+(*                  destruct m ; discriminate. *)
+(*               ** reflexivity. *)
+(*     + rewrite !array_to_list_equation_2. *)
       
-      replace (match Z.to_nat i with | O => _ | S n' => _ end) with (match Z.to_nat i with
-      | O => nseq_hd (nseq_tl a)
-      | S O => x
-      | S (S n') => nseq_hd (nseq_tl a)
-      end :: match Z.to_nat i with
-            | O => array_to_list (nseq_tl (nseq_tl a))
-            | S O => array_to_list (nseq_tl (nseq_tl a))
-            | S (S n') => seq.set_nth default (array_to_list (nseq_tl (nseq_tl a))) n' x
-            end) by now destruct (Z.to_nat i) as [ | []].
+(*       replace (match Z.to_nat i with | O => _ | S n' => _ end) with (match Z.to_nat i with *)
+(*       | O => nseq_hd (nseq_tl a) *)
+(*       | S O => x *)
+(*       | S (S n') => nseq_hd (nseq_tl a) *)
+(*       end :: match Z.to_nat i with *)
+(*             | O => array_to_list (nseq_tl (nseq_tl a)) *)
+(*             | S O => array_to_list (nseq_tl (nseq_tl a)) *)
+(*             | S (S n') => seq.set_nth default (array_to_list (nseq_tl (nseq_tl a))) n' x *)
+(*             end) by now destruct (Z.to_nat i) as [ | []]. *)
 
 
-      f_equal.
-      * destruct (Z.to_nat i).
-        -- rewrite <- H_nseq_tl_setm0.
-           reflexivity.
-        -- rewrite <- H_nseq_tl_setm.
-           destruct (nseq_tl a).
-           ++ destruct n0.
-              cbn.
-              destruct fmval.
-              ** cbn.
-                 reflexivity.
-              ** cbn.
-                 destruct negb eqn:n_eq ; [ reflexivity | ].
-                 destruct ssrnat.eqn ; easy.
-           ++ cbn.
-              destruct fmval.
-              ** cbn.
-                 reflexivity.
-              ** cbn.
-                 destruct (_ < _)%ord eqn:leq.
-                 --- cbn. destruct p, s.
-                     destruct m ; easy.
-                 --- set (ssrnat.eqn _ _).
-                     destruct b eqn:b_eq ; subst b.
-                     +++ apply (ssrbool.elimT ssrnat.eqnP) in b_eq.
-                         rewrite <- b_eq.
-                         reflexivity.
-                     +++ reflexivity.
-      * destruct (Z.to_nat i).
-        -- rewrite <- H_nseq_tl_setm0.
-           reflexivity.
-        -- specialize  (IHn (nseq_tl a) (Z.of_nat n0)).
-           rewrite !Nat2Z.id in IHn.
-           specialize (IHn (lt_S_n _ _ l)).
-           destruct IHn.
+(*       f_equal. *)
+(*       * destruct (Z.to_nat i). *)
+(*         -- rewrite <- H_nseq_tl_setm0. *)
+(*            reflexivity. *)
+(*         -- rewrite <- H_nseq_tl_setm. *)
+(*            destruct (nseq_tl a). *)
+(*            ++ destruct n0. *)
+(*               cbn. *)
+(*               destruct fmval. *)
+(*               ** cbn. *)
+(*                  reflexivity. *)
+(*               ** cbn. *)
+(*                  destruct negb eqn:n_eq ; [ reflexivity | ]. *)
+(*                  destruct ssrnat.eqn ; easy. *)
+(*            ++ cbn. *)
+(*               destruct fmval. *)
+(*               ** cbn. *)
+(*                  reflexivity. *)
+(*               ** cbn. *)
+(*                  destruct (_ < _)%ord eqn:leq. *)
+(*                  --- cbn. destruct p, s. *)
+(*                      destruct m ; easy. *)
+(*                  --- set (ssrnat.eqn _ _). *)
+(*                      destruct b eqn:b_eq ; subst b. *)
+(*                      +++ apply (ssrbool.elimT ssrnat.eqnP) in b_eq. *)
+(*                          rewrite <- b_eq. *)
+(*                          reflexivity. *)
+(*                      +++ reflexivity. *)
+(*       * destruct (Z.to_nat i). *)
+(*         -- rewrite <- H_nseq_tl_setm0. *)
+(*            reflexivity. *)
+(*         -- specialize  (IHn (nseq_tl a) (Z.of_nat n0)). *)
+(*            rewrite !Nat2Z.id in IHn. *)
+(*            specialize (IHn (lt_S_n _ _ l)). *)
+(*            destruct IHn. *)
 
-           rewrite <- H_nseq_tl_setm.
-           erewrite (proj1 (ord_ext _ _) eq_refl).
-           rewrite <- H0.
+(*            rewrite <- H_nseq_tl_setm. *)
+(*            erewrite (proj1 (ord_ext _ _) eq_refl). *)
+(*            rewrite <- H0. *)
 
-           reflexivity.
-Qed.
+(*            reflexivity. *)
+(* Qed. *)
 
 (* Equations array_to_list_cases {A : ChoiceEquality} `{H_default : Default A} {n} (a : T (nseq A n)) : Prop := *)
 (*   array_to_list_cases a with n := { *)
