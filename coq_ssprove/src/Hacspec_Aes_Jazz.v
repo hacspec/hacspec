@@ -428,9 +428,11 @@ Definition ROTWORD : nat :=
   19.
 Program Definition rotword (v_18 : int32)
   : both (fset.fset0) [interface] (int32) :=
-  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (((
-            lift_to_both0 v_18) shift_right (lift_to_both0 (usize 8))) .| ((
-            lift_to_both0 v_18) shift_left (lift_to_both0 (usize 24))))
+  ((lift_scope (H_loc_incl := _) (H_opsig_incl := _) (rebuild_u32 (index_u8 (
+            lift_to_both0 v_18) (lift_to_both0 (usize 1))) (index_u8 (
+            lift_to_both0 v_18) (lift_to_both0 (usize 2))) (index_u8 (
+            lift_to_both0 v_18) (lift_to_both0 (usize 3))) (index_u8 (
+            lift_to_both0 v_18) (lift_to_both0 (usize 0))))
       ) : both (fset.fset0) [interface] (int32)).
 Fail Next Obligation.
 
@@ -607,12 +609,12 @@ Fail Next Obligation.
 
 Notation "'key_list_t'" := (seq int128) : hacspec_scope.
 
-Definition key_66_loc : ChoiceEqualityLocation :=
-  (int128 ; 68%nat).
-Definition temp2_67_loc : ChoiceEqualityLocation :=
-  (int128 ; 69%nat).
 Definition rkeys_65_loc : ChoiceEqualityLocation :=
-  (key_list_t ; 70%nat).
+  (key_list_t ; 68%nat).
+Definition key_66_loc : ChoiceEqualityLocation :=
+  (int128 ; 69%nat).
+Definition temp2_67_loc : ChoiceEqualityLocation :=
+  (int128 ; 70%nat).
 Notation "'keys_expand_inp'" :=(
   int128 : choice_type) (in custom pack_type at level 2).
 Notation "'keys_expand_inp'" :=(int128 : ChoiceEquality) (at level 2).

@@ -1080,11 +1080,17 @@ Definition seq_from_list (A : ChoiceEquality) (l : list (T A)) : T (seq A) :=
   fmap_of_seq l.
 
 
-Definition seq_to_list_id : forall {A} (t : seq A), fmap_of_seq (seq_to_list A t) = t.
+Definition seq_to_list_id : forall {A} (t : seq A), seq_from_list A (seq_to_list A t) = t.
 Proof.
+  intros.
+  destruct t.
+  induction fmval.
+  - unfold seq_to_list.
+    simpl.
+    unfold fmap_of_seq.
 Admitted.
 
-Definition fmap_of_seq_id : forall {A : ChoiceEquality} (t : list A), seq_to_list  A (fmap_of_seq t) = t.
+Definition seq_from_list_id : forall {A : ChoiceEquality} (t : list A), seq_to_list  A (seq_from_list A t) = t.
 Proof.
 Admitted.
 
