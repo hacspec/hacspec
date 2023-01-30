@@ -195,15 +195,15 @@ fn mixcolumns(state: u128) -> u128 {
 }
 
 fn aesenc (state : u128, rkey : u128) -> u128 {
-    let state = subbytes(state);
     let state = shiftrows(state);
+    let state = subbytes(state);
     let state = mixcolumns(state);
     state ^ rkey
 }
 
 fn aesenclast (state : u128, rkey : u128) -> u128 {
-    let state = subbytes(state);
     let state = shiftrows(state);
+    let state = subbytes(state);
     state ^ rkey
 }
 
