@@ -46,3 +46,12 @@ Program Definition xor (x_inp_6 : int64) (y_inp_7 : int64)
       ) : both (CEfset ([x_0_loc ; y_1_loc ; r_2_loc])) [interface] (int64)).
 Fail Next Obligation.
 
+Goal forall x y, prog (is_state (xor x y)) =
+ (#put x_0_loc := x ;;
+  #put y_1_loc := y ;;
+  #put r_2_loc := Hacspec_Lib_Pre.int_xor x y ;;
+  ret (Hacspec_Lib_Pre.int_xor x y)).
+Proof. reflexivity. Qed.
+
+Goal forall x y, is_pure (xor x y) = Hacspec_Lib_Pre.int_xor x y.
+Proof. reflexivity. Qed.
