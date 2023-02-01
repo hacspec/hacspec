@@ -8,7 +8,7 @@ homepage: "https://github.com/hacspec/hacspec"
 bug-reports: "https://github.com/hacspec/hacspec/issues"
 depends: [
   "ssprove" {= "dev"} # jasmin
-  "jasmin" {= "0.1"} # 3d40bc89
+  "jasmin" {= "dev"} # 3d40bc89
   "coq" {>= "8.15.2"}
 ]
 build: [
