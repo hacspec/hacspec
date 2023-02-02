@@ -59,6 +59,7 @@ Next Obligation.
   rewrite !ct_T_id.
   apply r_ret. easy.
 Qed.
+Global Transparent lift3_both.
 
 Equations lift2_both {A B : ChoiceEquality} {L} {I} : (A -> B) -> both L I A -> both L I B :=
   lift2_both f x :=
@@ -72,12 +73,13 @@ Next Obligation.
   rewrite !ct_T_id. 
   apply r_ret. easy.
 Qed.
+Global Transparent lift2_both.
 
 Section IntType.
-  Definition int_modi {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_modi x y).
-  Definition int_add {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_add x y).
-  Definition int_sub {WS : wsize} : @int WS -> @int WS -> both0 (@int WS) := fun x y => lift_to_both (int_sub x y).
-  Definition int_opp {WS : wsize} : @int WS -> both0 (@int WS) := fun x => lift_to_both (int_opp x).
+  Definition int_modi {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_modi.
+  Definition int_add {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_add.
+  Definition int_sub {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_sub.
+  Definition int_opp {WS : wsize} {L} {I} := @lift2_both _ (@int WS) L I int_opp.
   Definition int_mul {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_mul.
   Definition int_div {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_div.
   Definition int_mod {WS : wsize} {L1 L2} {I} := @lift3_both _ _ (@int WS) L1 L2 I int_mod.
@@ -245,7 +247,7 @@ Section Loops.
     | O => ret cur
     | S n' =>
         cur' ← f i cur ;;
-        Si ← i .+ one ;;
+        Si ← (lift_to_both0 i) .+ (lift_to_both0 one) ;;
         foldi_ n' Si f (ct_T cur')
     end.
 
@@ -301,7 +303,7 @@ Section Loops.
       {L I}
       (f : T uint_size -> T acc -> code L I (ct acc))
       (cur : T acc),
-      (cur' ← f i cur ;; Si ← i .+ one ;; foldi_ fuel Si f (ct_T cur')) = foldi_ (S fuel) i f cur.
+      (cur' ← f i cur ;; Si ← (lift_to_both0 i) .+ (lift_to_both0 one) ;; foldi_ fuel Si f (ct_T cur')) = foldi_ (S fuel) i f cur.
   Proof. reflexivity. Qed.
 
   Lemma foldi__nat_move_S :
@@ -420,7 +422,7 @@ Section Loops.
       (cur : T acc),
       (0 <= Z.of_nat fuel <= @wmax_unsigned U32)%Z ->
       (cur' ← foldi_ fuel i f cur ;;
-       fuel_add_i ← (repr (Z.of_nat fuel)) .+ i ;;
+       fuel_add_i ← (lift_to_both0 (repr (Z.of_nat fuel))) .+ (lift_to_both0 i) ;;
        f fuel_add_i (ct_T cur')
       ) = foldi_ (S (fuel)) i f cur.
   Proof.
@@ -445,18 +447,17 @@ Section Loops.
       unfold int_add at 1 3.
       unfold lift_to_both, is_state at 1 3.
       unfold prog, lift_to_code.
-      do 2 rewrite bind_rewrite.
+      do 2 setoid_rewrite bind_rewrite.
 
       specialize (IHfuel (Hacspec_Lib_Pre.int_add i one) L I f (ct_T x)).
 
 
 
-      replace ((repr (Z.of_nat (S fuel)) .+ i))
-        with (repr (Z.of_nat fuel) .+ Hacspec_Lib_Pre.int_add i one).
+      replace (Hacspec_Lib_Pre.int_add (repr (Z.of_nat (S fuel))) _)
+        with (Hacspec_Lib_Pre.int_add (repr (Z.of_nat fuel)) (Hacspec_Lib_Pre.int_add i one)).
       2 : {
         unfold int_add.
         unfold Hacspec_Lib_Pre.int_add.
-        f_equal.
         rewrite <- addwC.
         rewrite <- addwA.
         rewrite addwC.
@@ -563,12 +564,13 @@ Section Loops.
 
           unfold int_add.
 
-          replace (@Hacspec_Lib_Pre.int_add U32 (@repr U32 (Z.of_nat (S n))) (@repr U32 (Z.of_nat lo_n))) with (@repr U32 (Z.of_nat (Init.Nat.add (S n) lo_n))). reflexivity.
+          setoid_rewrite bind_rewrite.
+          replace (@Hacspec_Lib_Pre.int_add U32 _ _) with (@repr U32 (Z.of_nat (Init.Nat.add (S n) lo_n))). reflexivity.
 
           apply word_ext.
 
-          replace (urepr (repr (Z.of_nat (S n)))) with (@unsigned U32 (repr (Z.of_nat (S n)))) by reflexivity.
-          replace (urepr (repr (Z.of_nat lo_n))) with (@unsigned U32 (repr (Z.of_nat lo_n))) by reflexivity.
+          replace (urepr _) with (@unsigned U32 (repr (Z.of_nat (S n)))) by reflexivity.
+          replace (urepr _) with (@unsigned U32 (repr (Z.of_nat lo_n))) by reflexivity.
           do 2 rewrite unsigned_repr_alt by lia.
           rewrite Nat2Z.inj_add.
           reflexivity.
@@ -962,14 +964,16 @@ Definition seq_update_slice
   lift_to_both (seq_update_slice out start_out input start_in len).
 
 Definition seq_concat
-  {a : ChoiceEquality}
+           {a : ChoiceEquality}
+           `{Default a}
   (s1 :(T (seq a)))
   (s2: (T (seq a)))
   : both0 ((seq a)) :=
    lift_to_both (seq_concat s1 s2).
 
 Definition seq_push
-  {a : ChoiceEquality}
+           {a : ChoiceEquality}
+           `{Default a}
   (s1 :(T (seq a)))
   (s2: (T (a)))
   : both0 ((seq a)) :=
@@ -1044,7 +1048,7 @@ Definition seq_get_remainder_chunk {a : ChoiceEquality} `{Default (T (a))} (l : 
 Definition seq_xor_ {WS} (x y : seq (@int WS)) : both0 (seq (@int WS)) :=
   lift_to_both (seq_xor_ x y).
 
-Definition seq_truncate {a} (x : seq a) (n : nat) : both0 (seq a) :=
+Definition seq_truncate {a : ChoiceEquality} `{Default a} (x : seq a) (n : nat) : both0 (seq a) :=
   lift_to_both (seq_truncate x n).
 
 End Seqs.
@@ -1607,7 +1611,12 @@ Equations let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality}
            (x_loc : ChoiceEqualityLocation)
            `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))}
            (x : code L I (CE_loc_to_CE x_loc)) (f : (CE_loc_to_CE x_loc) -> code L I B) : code L I B :=
-  let_mut_code (A; n) x f := {code y ← x ;; #put (ct A; n) := y ;; f (ct_T y) }.
+  let_mut_code (A; n) x f :=
+    {code
+       y ← x ;;
+       #put (ct A; n) := y ;;
+       temp ← get (ct A; n) ;;
+       f (ct_T temp) }.
 Global Transparent let_mut_code.
 
 (* Definition let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality} *)
@@ -1647,14 +1656,13 @@ Next Obligation.
 
   apply rpre_hypothesis_rule.
   intros ? ? [[] []]. subst.
-  eapply rpre_weaken_rule with (pre := true_precond).
 
+  apply better_r_put_get_lhs.
   apply better_r_put_lhs.
 
-  rewrite ct_T_id.
+  rewrite !ct_T_id.
   eapply rpre_weaken_rule with (pre := true_precond).
   apply f.
-  reflexivity.
   reflexivity.
 Qed.
 
@@ -2117,7 +2125,7 @@ Ltac progress_step_code :=
   || (match_bind_trans_both)
   || match goal with
     | [ |- context [ ⊢ ⦃ _ ⦄ (#put ?l := ?x ;; (getr ?l ?a)) ≈ _ ⦃ _ ⦄ ]] =>
-        apply better_r_put_get
+        apply better_r_put_get_lhs
     end
   ||
   match goal with
@@ -2393,8 +2401,9 @@ Proof.
   apply f_equal.
   apply functional_extensionality. intros.
   apply f_equal.
-  rewrite H_fun_eq.
-  reflexivity.
+  apply f_equal.
+  apply functional_extensionality. intros.
+  now rewrite H_fun_eq.
 Qed.
 
 Ltac letbm_eq_code :=
@@ -2496,6 +2505,7 @@ Proof.
   cbn.
   destruct ℓ.
   cbn.
+  apply better_r_put_get_rhs.
   apply better_r, r_put_rhs.
   rewrite !T_ct_id.
   apply H.
@@ -2520,6 +2530,7 @@ Proof.
   unfold Hacspec_Lib.let_mut_both_obligation_1.
   cbn.
   destruct ℓ.
+  apply better_r_put_get_lhs.
   apply better_r_put_lhs.
   rewrite !T_ct_id.
   apply H.

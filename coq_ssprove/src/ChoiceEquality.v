@@ -775,7 +775,17 @@ Proof.
   intros ; now apply better_r, r_put_lhs, better_r.
 Qed.
 
-Corollary better_r_put_get : forall (A : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code A) rhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort A)),
+Corollary better_r_put_rhs : forall {A B : choice.Choice.type} (ℓ : Location)
+                               (v : choice.Choice.sort (Value (projT1 ℓ))) (r₀ : raw_code A)
+                               (r₁ : raw_code B) (pre : precond)
+                               (post : postcond (choice.Choice.sort A) (choice.Choice.sort B)),
+    ⊢ ⦃ set_rhs ℓ v pre ⦄ r₀ ≈ r₁ ⦃ post ⦄ ->
+    ⊢ ⦃ pre ⦄ r₀ ≈ #put ℓ := v ;; r₁ ⦃ post ⦄.
+Proof.
+  intros ; now apply better_r, r_put_rhs, better_r.
+Qed.
+
+Corollary better_r_put_get_lhs : forall (A : choice.Choice.type) (B : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code A) rhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort B)),
     ⊢ ⦃ pre ⦄
      #put ℓ := v ;;
      r v ≈ rhs ⦃ post ⦄ ->
@@ -786,6 +796,23 @@ Corollary better_r_put_get : forall (A : choice.Choice.type) (ℓ : Location) (v
 Proof.
   intros.
   apply (r_transL (#put ℓ := v ;; r v )).
+  apply r_put_get.
+  apply H.
+Qed.
+
+Corollary better_r_put_get_rhs : forall (A : choice.Choice.type) (B : choice.Choice.type) (ℓ : Location) (v : choice.Choice.sort ℓ) (r : choice.Choice.sort ℓ -> raw_code B) lhs (pre : precond) (post : postcond (choice.Choice.sort A) (choice.Choice.sort B)),
+    ⊢ ⦃ pre ⦄
+        lhs ≈
+        #put ℓ := v ;;
+        r v ⦃ post ⦄ ->
+    ⊢ ⦃ pre ⦄
+        lhs ≈
+        #put ℓ := v ;;
+        x ← get ℓ ;;
+        r x ⦃ post ⦄.
+Proof.
+  intros.
+  apply (r_transR _ (#put ℓ := v ;; r v )).
   apply r_put_get.
   apply H.
 Qed.

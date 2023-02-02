@@ -1019,6 +1019,33 @@ Proof.
   apply foldi_nat_split ; lia.
 Qed.
 
+(*** Default *)
+
+(* Default instances for common types *)
+Global Instance nat_default : Default nat := {
+    default := 0%nat
+  }.
+Global Instance N_default : Default N := {
+    default := 0%N
+  }.
+Global Instance Z_default : Default Z := {
+    default := 0%Z
+  }.
+Global Instance uint_size_default : Default uint_size := {
+    default := zero
+  }.
+Global Instance int_size_default : Default int_size := {
+    default := zero
+  }.
+Global Instance int_default {WS : wsize} : Default (@int WS) := {
+    default := repr 0
+  }.
+Global Instance uint8_default : Default uint8 := _.
+
+Global Instance prod_default {A B : ChoiceEquality} `{Default A} `{Default B} : Default (A '× B) := {
+    default := (default, default)
+  }.
+
 (*** Seq *)
 
 Definition nseq_choice (A: ChoiceEquality) (len : nat) : choice_type :=
@@ -1064,34 +1091,169 @@ Definition seq_index {A: ChoiceEquality} `{Default (T A)} (s: T (seq A)) (i : ui
   | None => default
   end.
 
-Definition seq_len {A: ChoiceEquality} (s: T (seq A)) : T (uint_size) := usize (length s).
+Definition seq_len_nat {A: ChoiceEquality} (s: T (seq A)) : nat :=
+  match (FMap.fmval s) with
+  | [] => 0
+  | (x :: xs) => S (fst (seq.last x xs))
+  end.
 
-Definition seq_to_list (A: ChoiceEquality) (s : T (seq A)) : list (T A).
-Proof.
-  apply @FMap.fmval in s ; fold chElement in s.
-  induction s.
-  - apply [].
-  - cbn in *.
-    destruct a as [_ s0].
-    apply (s0 :: IHs).
-Defined.
+Definition seq_len {A: ChoiceEquality} (s: T (seq A)) : T (uint_size) :=
+  usize (seq_len_nat s).
+
+Definition seq_to_list (A: ChoiceEquality) `{Default (T A)} (s : T (seq A)) : list (T A) :=
+  seq.foldr (fun n y => seq_index s (repr (Z.of_nat n)) :: y) [] (seq.iota 0 (seq_len_nat s)).
+  (* seq.unzip2 (FMap.fmval s). *)
 
 Definition seq_from_list (A : ChoiceEquality) (l : list (T A)) : T (seq A) :=
   fmap_of_seq l.
 
+Lemma seq_from_list_cat : forall A l a, seq_from_list A (l ++ [a]) = setm (seq_from_list A l) (seq.size l) a.
+Proof.    
+  clear ; intros.
+  unfold seq_from_list.
+  apply eq_fmap.
 
-Definition seq_to_list_id : forall {A} (t : seq A), seq_from_list A (seq_to_list A t) = t.
+  intros i.
+  rewrite fmap_of_seqE.
+  rewrite setmE.
+  
+  destruct eqtype.eq_op eqn:i_size_l.
+  - apply (ssrbool.elimT eqtype.eqP) in i_size_l.
+    subst.
+
+    rewrite (seq.nth_map a).
+    2:{
+      rewrite seq.size_cat.
+      now rewrite ssrnat.addn1.
+    }
+    rewrite seq.nth_cat.
+    rewrite ssrnat.ltnn.
+    rewrite ssrnat.subnn.
+    reflexivity.
+  - rewrite fmap_of_seqE.
+    destruct (ssrnat.leq (seq.size (l ++ [a])) i) eqn:i_in_l.
+    + rewrite seq.nth_default.
+      2:{
+        rewrite seq.size_map.
+        apply i_in_l.
+      }
+      rewrite seq.nth_default.
+      2:{
+        rewrite seq.size_map.
+        eapply ssrnat.leq_trans.
+        apply ssrnat.leqnSn.
+        rewrite seq.size_cat in i_in_l.
+        rewrite ssrnat.addn1 in i_in_l.
+        apply i_in_l.
+      }
+      reflexivity.
+    + assert (is_true (ssrnat.leq (S i) (seq.size l))).
+      {
+        rewrite ssrnat.leqNgt.
+        rewrite ssrnat.ltnS.
+        rewrite ssrnat.leq_eqVlt.
+        rewrite Bool.negb_orb.
+        rewrite eqtype.eq_sym.
+        setoid_rewrite i_size_l.
+        rewrite seq.size_cat in i_in_l.
+        rewrite ssrnat.addn1 in i_in_l.
+        rewrite i_in_l.
+        reflexivity.
+      }
+
+      rewrite <- (@seq.nth_take (seq.size l) (option A) None i H (seq.map (fun x : A => Some x) (l ++ [a]))).
+      rewrite <- seq.map_take.
+      rewrite seq.take_size_cat ; [ | reflexivity ].
+      reflexivity.
+Qed.
+
+Definition seq_from_list_id : forall {A : ChoiceEquality} `{Default (T A)} (t : list A), seq_to_list  A (seq_from_list A t) = t.
 Proof.
   intros.
-  destruct t.
-  induction fmval.
-  - unfold seq_to_list.
-    simpl.
-    unfold fmap_of_seq.
+  rewrite <- (rev_involutive t).
+  induction (rev t).
+  - reflexivity.
+  - simpl.
+    set (h := rev l) at 1 ; rewrite <- IHl ; subst h.
+    rewrite seq_from_list_cat.
 Admitted.
 
-Definition seq_from_list_id : forall {A : ChoiceEquality} (t : list A), seq_to_list  A (seq_from_list A t) = t.
+Definition seq_to_list_id : forall {A} `{Default (T A)} (t : seq A), seq_from_list A (seq_to_list A t) = t.
 Proof.
+  intros.
+
+  apply eq_fmap.
+  intros i.
+
+  Set Printing Coercions.
+  (* Set Printing Implicit. *)
+
+  unfold seq_to_list.
+  unfold seq_len_nat.
+  simpl.
+  
+  unfold seq_from_list.
+  rewrite fmap_of_seqE.
+  destruct t ;  simpl in *.
+
+  generalize dependent fmval.
+  intros fmval.
+  rewrite <- (rev_involutive fmval).
+  intros.
+
+  induction (rev fmval).
+  - now rewrite seq.nth_nil.
+  - assert (forall A (l : list A) a, hd a (l ++ [a]) :: tl (l ++ [a]) = l ++ [a]) by now intros ? [].
+    simpl rev at 2.
+    rewrite <- H0.
+    simpl.
+
+    rewrite <- seq.cat1s.
+    rewrite seq.nth_cat.
+    simpl.
+    destruct i.
+    + simpl.
+      destruct l.
+      * simpl.
+    
+    set (Some _).
+  (*   set (seq.map _ _). *)
+  (*   epose (seq.nth_cat None [o] l0). *)
+    
+  (*   rewrite IHl. *)
+
+  (*   destruct l. *)
+  (*   +  *)
+
+  (*     simpl. *)
+  (*     rewrite IHl. *)
+      
+  (*   erewrite seq.last_nth. *)
+  (*   destruct a. *)
+  (*   simpl. *)
+  (*   unfold getm. *)
+  (*   simpl. *)
+    
+  (*   destruct i. *)
+  (*   +  *)
+  (*     simpl. *)
+      
+
+  
+  (* rewrite seq.nth_map. *)
+  
+  
+  (* unfold fmap_of_seq. *)
+  (* simpl. *)
+  (* rewrite mkfmapfpE. *)
+
+
+  (* unfold seq.unzip2 at 1 ; rewrite seq.size_map. *)
+  (* rewrite seq.mem_iota. *)
+  (* simpl. *)
+  (* rewrite ssrnat.add0n. *)
+  (* destruct (ssrnat.leq _ _) eqn:i_leq_size. *)
+  (* -  *)
 Admitted.
 
 Definition seq_new_ {A: ChoiceEquality} (init : A) (len: nat) : seq A :=
@@ -1250,7 +1412,7 @@ Definition array_from_seq
            (input: seq_type a)
   : T (nseq a out_len) :=
   let out := array_new_ default out_len in
-  update_sub out 0 (out_len - 1) (@array_from_list a (@seq_to_list a input)).
+  update_sub out 0 (out_len - 1) (@array_from_list a (@seq_to_list a _ input)).
 
 (* Global Coercion array_from_seq : seq_type >-> nseq_type. *)
 
@@ -2401,6 +2563,7 @@ Definition seq_update_slice
 
 Definition seq_concat
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (seq a)))
   : (T (seq a)) :=
@@ -2408,12 +2571,14 @@ Definition seq_concat
 
 Definition seq_concat_owned
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (seq a)))
   : (T (seq a)) := seq_concat s1 s2.
 
 Definition seq_push
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (a)))
   : (T (seq a)) :=
@@ -2421,6 +2586,7 @@ Definition seq_push
 
 Definition seq_push_owned
            {a : ChoiceEquality}
+           `{Default a}
            (s1 :(T (seq a)))
            (s2: (T (a)))
   : (T (seq a)) := seq_push s1 s2.
@@ -2528,7 +2694,7 @@ Fixpoint list_truncate {a} (x : list a) (n : nat) : list a :=
   | [], _ => []
   | (x :: xs), S n' => x :: (list_truncate xs n')
   end.
-Definition seq_truncate {a} (x : seq a) (n : nat) : seq a :=
+Definition seq_truncate {a : ChoiceEquality} `{Default a} (x : seq a) (n : nat) : seq a :=
   seq_from_list _ (list_truncate (seq_to_list _ x) n).
 
 (**** Numeric operations *)
@@ -2587,7 +2753,6 @@ Definition nat_mod_type {p : Z} : Type := 'I_(S (Init.Nat.pred (Z.to_nat p))).
   {| ct :=  nat_mod_choice ; T :=  @nat_mod_type p ; ChoiceEq := eq_refl |}.
 Definition mk_natmod {p} (z : Z) : nat_mod p := @zmodp.inZp (Init.Nat.pred (Z.to_nat p)) (Z.to_nat z).
 
-
 Definition nat_mod_equal {p} (a b : nat_mod p) : bool :=
   @eqtype.eq_op (ordinal_eqType (S (Init.Nat.pred (Z.to_nat p)))) a b.
 
@@ -2597,6 +2762,11 @@ Definition nat_mod_equal_reflect {p} {a b} : Bool.reflect (a = b) (@nat_mod_equa
 Definition nat_mod_zero {p} : nat_mod p := zmodp.Zp0.
 Definition nat_mod_one {p} : nat_mod p := zmodp.Zp1.
 Definition nat_mod_two {p} : nat_mod p := zmodp.inZp 2.
+
+
+Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
+    default := nat_mod_zero
+  }.
 
 
 (* convenience coercions from nat_mod to Z and N *)
@@ -2980,35 +3150,6 @@ Next Obligation.
     rewrite H1. rewrite H2. reflexivity.
   - inversion_clear H1. now do 2 rewrite eqb_refl.
 Defined.
-
-(*** Default *)
-
-(* Default instances for common types *)
-Global Instance nat_default : Default nat := {
-    default := 0%nat
-  }.
-Global Instance N_default : Default N := {
-    default := 0%N
-  }.
-Global Instance Z_default : Default Z := {
-    default := 0%Z
-  }.
-Global Instance uint_size_default : Default uint_size := {
-    default := zero
-  }.
-Global Instance int_size_default : Default int_size := {
-    default := zero
-  }.
-Global Instance int_default {WS : wsize} : Default (@int WS) := {
-    default := repr 0
-  }.
-Global Instance uint8_default : Default uint8 := _.
-Global Instance nat_mod_default {p : Z} : Default (nat_mod p) := {
-    default := nat_mod_zero
-  }.
-Global Instance prod_default {A B : ChoiceEquality} `{Default A} `{Default B} : Default (A '× B) := {
-    default := (default, default)
-  }.
 
 (*** Be Bytes *)
 
