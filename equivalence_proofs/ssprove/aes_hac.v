@@ -1724,21 +1724,6 @@ Section Hacspec.
       | |- set_rhs _ _ _ _ => eexists
       end.
 
-  Definition seq_push_list_app : forall {A : ChoiceEquality} `{Default A} (t : seq A) (s : A), (seq_to_list A (Hacspec_Lib_Pre.seq_push t s) = seq_to_list A t ++ [s]).
-  Proof.
-    intros.
-    pose (seq_to_list_id t).
-    replace (t) with (fmap_of_seq (seq_to_list _ t)) at 2.
-    replace (seq_to_list A (fmap_of_seq (seq_to_list A t)) ++ [s])
-      with
-      (seq_to_list A (fmap_of_seq ((seq_to_list A t) ++ [s]))).
-    reflexivity.
-    unfold seq_from_list in e.
-    rewrite e.
-    rewrite seq_from_list_id.
-    reflexivity.
-  Qed.
-
   Definition seq_to_arr (X : seq uint128) : FMap.fmap_type Z_ordType U8.-word :=
     let l0 := (unzip2 X) in
     mkfmap (zip (ziota 0 (size l0)) (seq.foldr (fun x y => y ++ (split_vec U8 x)) [] l0)).
@@ -1748,9 +1733,9 @@ Section Hacspec.
     foldr (fun kv m => (chArray_set m AAscale kv.1 kv.2)) v (rev (zip (ziota 0 (Z.of_nat (size l0))) (l0))).
 
   Lemma seq_udp_from_arr_push : forall a b c,
-                       (seq_upd_from_arr (Hacspec_Lib_Pre.seq_push a b) c)
-                       =
-                         (chArray_set (seq_upd_from_arr a c) AAscale (Z.of_nat (size (seq_to_list int128 a))) b).
+      (seq_upd_from_arr (Hacspec_Lib_Pre.seq_push a b) c)
+      =
+        (chArray_set (seq_upd_from_arr a c) AAscale (Z.of_nat (size (seq_to_list int128 a))) b).
   Proof.
     intros.
     unfold seq_upd_from_arr.
@@ -2370,11 +2355,8 @@ Section Hacspec.
             unfold Hacspec_Lib_Pre.seq_index.
             simpl.
             unfold Hacspec_Lib_Pre.seq_push.
-            unfold seq_from_list.
-            simpl.
-            unfold fmap_of_seq.
-            rewrite size_cat.
-            rewrite H33.
+            unfold seq_index_nat.
+            rewrite setmE.
             replace (Z.to_nat _) with (k.+1).
             2:{
               cbn.
@@ -2383,30 +2365,14 @@ Section Hacspec.
               reflexivity.
               do 10 (destruct k ; [ easy | ]) ; discriminate.
             }
-            rewrite mkfmapfpE.
-            rewrite mem_iota.
-            replace (0 <= _ < _) with true .
+            replace (seq_len_nat t0) with k.+1.
             2:{
-              simpl.
-              rewrite addn1.
-              rewrite leqnn.
+              rewrite <- H33.
+              pose seq_to_list_size.
+              rewrite (@seq_to_list_size int128).
               reflexivity.
             }
-            rewrite <- H33.
-            unfold mkfmapfp.
-            replace (size (seq_to_list int128 _)) with
-              ((size (seq_to_list int128 t0 ++ [s])%list).-1).
-            2:{
-              rewrite size_cat.
-              rewrite addn1.
-              simpl. reflexivity.
-            }
-            rewrite <- (size_map Some).
-            rewrite nth_last.
-            pose last_map.
-            rewrite map_cat.
-            rewrite last_cat.
-            simpl.
+            rewrite eqtype.eq_refl.
             now rewrite chArray_get_set_eq.
           + assert (i0 <= k) by lia.
             specialize (H18 i0 H2).
@@ -2415,24 +2381,21 @@ Section Hacspec.
             {
               clear ; intros.
               unfold Hacspec_Lib_Pre.seq_index.
-              rewrite fmap_of_seqE.
-              rewrite map_cat.
-              rewrite nth_cat.
-              replace (_ < _) with true.
+              unfold Hacspec_Lib_Pre.seq_index_nat.
+              unfold Hacspec_Lib_Pre.seq_push.
+              rewrite setmE.
+              rewrite eqtype.eq_sym.
+              rewrite gtn_eqF.
               2:{
-                rewrite (size_map).
                 simpl.
-                setoid_rewrite Zmod_small.
+                setoid_rewrite wunsigned_repr.
+                rewrite Zmod_small.
                 rewrite Nat2Z.id.
-                now rewrite H0.
+                rewrite seq_to_list_size in H0.
+                apply H0.
                 apply H.
               }
-              rewrite <- fmap_of_seqE.
-              simpl.
-              replace (fmap_of_seq _) with t.
               reflexivity.
-              pose seq_to_list_id. unfold seq_from_list in e.
-              now rewrite e.
             }
 
             rewrite H3.
