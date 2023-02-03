@@ -487,7 +487,7 @@ pub(crate) fn translate_func_name<'a>(
                         }
                         extra_info.insert(
                             position,
-                            (RcDoc::as_string("@array_to_seq ("), RcDoc::as_string(")")),
+                            (RcDoc::as_string("array_to_seq ("), RcDoc::as_string(")")),
                         );
                     }
                 }

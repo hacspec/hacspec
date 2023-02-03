@@ -440,7 +440,7 @@ fn translate_pattern<'a>(p: Pattern) -> RcDoc<'a, ()> {
 
 /// Returns the func name, as well as additional arguments to add when calling
 /// the function in Coq
-fn translate_func_name<'a>(
+pub fn translate_func_name<'a>(
     prefix: Option<Spanned<BaseTyp>>,
     name: Ident,
     top_ctx: &'a TopLevelContext,
@@ -709,7 +709,7 @@ fn translate_func_name<'a>(
                         let temp_ass: RcDoc<'a, ()> = make_let_binding(
                             Pattern::IdentPat(temp_name.clone(), false),
                             Some(BaseTyp::Seq(base_ty)),
-                            RcDoc::as_string("@array_to_seq (")
+                            RcDoc::as_string("array_to_seq (")
                                 .append(args[position].clone())
                                 .append(RcDoc::as_string(")")),
                             !inline,
