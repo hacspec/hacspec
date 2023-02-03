@@ -12,8 +12,8 @@ depends: [
   "coq" {>= "8.15.2"}
 ]
 build: [
-  [coq_makefile -f _CoqProject -o Makefile]
-  [make clean]
+  ["coq_makefile" "-f" "_CoqProject" "-o" "Makefile"]
+  [make "clean"]
   [make "-j%{jobs}%"]
 ]
 install: [
