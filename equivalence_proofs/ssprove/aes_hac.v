@@ -2586,7 +2586,7 @@ Section Hacspec.
      ⦃ λ '(v0, h0) '(v1, h1), v0 = v1 ∧ pre (h0, h1) ⦄.
   Proof.
     (* Mix Columns is not defined in jasmin,
-       so we assume the equality for now *)
+       so we admit the equality *)
   Admitted.
 
   Lemma aes_enc_eq id0 state key (pre : precond) :

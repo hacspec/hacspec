@@ -8,7 +8,6 @@ Require Import List.
 From Jasmin Require Import expr.
 From Jasmin Require Import x86_extra.
 From mathcomp.word Require Import word.
-(* From Jasmin Require Import x86_extra. *)
 From JasminSSProve Require Import jasmin_translate jasmin_utils.
 From Crypt Require Import Prelude Package pkg_user_util.
 
@@ -77,14 +76,6 @@ Notation XOR := ( xH ).
 
 Notation trp := (translate_prog' ssprove_jasmin_prog).1.
 Notation trc := (fun fn i => translate_call ssprove_jasmin_prog fn trp i).
-(* Notation funlist := [seq f.1 | f <- p_funcs ssprove_jasmin_prog]. *)
-
-(* Definition static_fun fn := (fn, match assoc trp fn with Some c => c | None => fun _ => ret tt end). *)
-
-(* Definition static_funs := [seq static_fun f | f <- funlist]. *)
-
-(* Definition strp := (translate_prog_static ssprove_jasmin_prog static_funs). *)
-(* Opaque strp. *)
 
 Definition call fn i := trc fn i.
 
@@ -142,9 +133,7 @@ Import Num.Theory.
 From mathcomp.word Require Import ssrZ.
 
 Import GRing Order TotalTheory.
-(* We could just use these, but to get the proper size, we copy paste the proofs from ordinals *)
-(* Definition word_finMixin n := Eval hnf in CanFinMixin (@ord_of_wordK n). *)
-(* Canonical word_finType n := Eval hnf in FinType (n.-word) (word_finMixin n). *)
+
 Section word_fin.
 
   Variable n : nat.
@@ -213,7 +202,6 @@ Section word_fin.
   Canonical word_subFinType := Eval hnf in [subFinType of word].
   Canonical finEnum_unlock := Unlockable Finite.EnumDef.enumDef.
 
-  (* can't get `enum` in `val_enum_word` to work without this import *)
   From mathcomp Require Import fintype.
 
   Lemma val_enum_word : map val (enum [finType of word]) = ziota 0 (modulus n).
@@ -379,7 +367,6 @@ Section OTP_example.
   Proof.
     eapply eq_rel_perf_ind_eq.
     simplify_eq_rel m.
-    (* TODO Why doesn't it infer this? *)
     eapply r_const_sample_L with (op := uniform _).
     1: exact _. intro m_val.
     pose (f :=
@@ -415,14 +402,11 @@ End OTP_example.
 
 Section Jasmin_OTP.
 
-  (* Context (n : wsize.wsize). *)
   Definition n := U64.
   Notation word := (word n).
   Notation " 'word " := (chWord n) : package_scope.
   Notation " 'word " := (chWord n) (in custom pack_type at level 2) : package_scope.
   Notation N := ((expn 2 n).-1.+1).
-
-  (* Definition id0 : BinNums.positive := 1. *)
 
   Definition xor_locs id0 :=
     [fset
@@ -435,7 +419,7 @@ Section Jasmin_OTP.
 
   #[local] Open Scope package_scope.
 
-  Program Definition JasminEnc id0 (m : 'word n) (k : 'word n) : (* why can't I just use 'word here? *)
+  Program Definition JasminEnc id0 (m : 'word n) (k : 'word n) :
     code (xor_locs id0) [interface] ('word n) :=
     {code
        e ← JXOR id0 m k ;;
@@ -488,11 +472,9 @@ Section Jasmin_OTP.
     ssprove_sync.
     intros x.
 
-    (* note that this simpl chokes if called before ssprove_sync_eq *)
     apply rsymmetry; repeat clear_get; apply rsymmetry.
     rewrite !zero_extend_u.
 
-    (* why is this not inferred? *)
     repeat eapply r_put_rhs.
     eapply r_ret.
 
@@ -539,7 +521,6 @@ Section Jasmin_OTP.
     - rewrite -{2}(advantage_jas_real id0); [|assumption].
       rewrite -unconditional_secrecy.
       rewrite !Advantage_E.
-      (* cbn [IND_CPA_jasmin_real_game IND_CPA IND_CPA_jasmin_ideal_game]. *)
       eapply Advantage_triangle.
     - rewrite add0r in H.
       apply AdvantageE_le_0.
@@ -556,8 +537,6 @@ From Hacspec Require Import ChoiceEquality.
 From Hacspec Require Import Hacspec_Lib_Pre.
 From Hacspec Require Import Hacspec_Lib.
 From Hacspec Require Import Hacspec_Xor.
-
-(* consider exporting this from Hacspec_Lib_Pre? Needed for int64 : Type coercion *)
 
 From JasminSSProve Require Import xor.
 
@@ -582,8 +561,7 @@ Section JasminHacspec.
 
   Definition is_pure_xor (x y : int64) : raw_code int64 :=
     ret (pure_xor x y).
-    (* lift_to_code (L:=fset0) (I := [interface]) (is_pure (xor x y)). *)
-
+    
   Definition state_pure_xor x y := code_eq_proof_statement (xor x y).
   Notation hdtc res := (coerce_to_choice_type ('word U64) (hd ('word U64 ; chCanonical _) res).π2).
 
@@ -648,7 +626,6 @@ Section JasminHacspec.
   Proof.
     intros id0 w1 w2.
     unfold true_precond.
-    (* eapply rpre_weaken_rule. *)
     eapply r_transL_val with (c₀ := state_xor w1 w2).
     - repeat constructor.
     - repeat constructor.

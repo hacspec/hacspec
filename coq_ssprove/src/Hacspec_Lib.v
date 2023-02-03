@@ -22,8 +22,7 @@ Import List.ListNotations.
 
 (********************************************************)
 (*   Implementation of all Hacspec library functions    *)
-(* for Both types. Should be enough to get state and    *)
-(* both functions working. TODO: transition to packages *)
+(* for Both types.                                      *)
 (********************************************************)
 
 (*** Integers *)
@@ -149,7 +148,6 @@ Section Uint.
   Definition int128_classify (n : int128) : both0 int128 :=
     lift_to_both (int128_classify n).
 
-
   (* CompCert integers' signedness is only interpreted through 'signed' and 'unsigned',
    and not in the representation. Therefore, uints are just names for their respective ints.
    *)
@@ -159,7 +157,6 @@ Section Uint.
   Definition declassify_u32_from_uint32 (n : uint32) : both0 uint32 :=
     lift_to_both (declassify_u32_from_uint32 n).
 
-  (* Should maybe use size of s instead? *)
   Definition uint8_rotate_left (u: int8) (s: int8) : both0 int8 := lift_to_both (uint8_rotate_left u s).
 
   Definition uint8_rotate_right (u: int8) (s: int8) : both0 (int8) := lift_to_both0 (uint8_rotate_right u s).
@@ -189,11 +186,9 @@ lift_to_both0 (uint128_rotate_left u s).
 lift_to_both0 (uint128_rotate_right u s).
 
 
-  (* should use size u instead of u? *)
   Definition usize_shift_right_ (u: uint_size) (s: int32) : both0 (uint_size) :=
     lift_to_both (u usize_shift_right s).
 
-  (* should use size u instead of u? *)
   Program Definition usize_shift_left_ (u: both0 uint_size) (s: both0 int32) : both0 (uint_size) :=
     {|
       is_pure := (is_pure u) usize_shift_left (is_pure s) ;
@@ -509,7 +504,7 @@ Section Loops.
   (* folds and natural number folds compute the same thing *)
   Lemma foldi_to_foldi_nat :
     forall {acc: ChoiceEquality}
-      (lo: T uint_size) (* {lo <= hi} *)
+      (lo: T uint_size)
       (hi: T uint_size) (* {lo <= hi} *)
       {L I}
       (f: (T uint_size) -> T acc -> code L I (ct acc)) (* {i < hi} *)
@@ -578,7 +573,7 @@ Section Loops.
 
   Lemma foldi_nat_to_foldi :
     forall {acc: ChoiceEquality}
-      (lo: nat) (* {lo <= hi} *)
+      (lo: nat)
       (hi: nat) (* {lo <= hi} *)
       {L I}
       (f: nat -> T acc -> code L I (ct acc)) (* {i < hi} *)
@@ -1033,8 +1028,6 @@ Definition seq_set_chunk
 Definition seq_num_exact_chunks {a} (l : (T (seq a))) (chunk_size : (T (uint_size))) : (both0 uint_size) :=
   lift_to_both (seq_num_exact_chunks l chunk_size).
 
-
-(* Until #84 is fixed this returns an empty sequence if not enough *)
 Definition seq_get_exact_chunk {a : ChoiceEquality} `{Default (T (a))} (l : (T (seq a))) (chunk_size chunk_num: (T (uint_size))) :
   both0 ((seq a)) :=
   lift_to_both (seq_get_exact_chunk l chunk_size chunk_num).
@@ -1288,11 +1281,11 @@ Definition nat_mod_get_bit {p} (a : nat_mod p) n : both0 (nat_mod p) :=
 
 Definition array_declassify_eq {A l} (x : nseq A l) (y : nseq A l) : both0 bool_ChoiceEquality := lift_to_both0 (array_declassify_eq x y).
 Definition array_to_le_uint32s {A l} (x : nseq A l) : both0 (seq uint32) := lift_to_both0 (array_to_le_uint32s x).
-Definition array_to_be_uint32s {l} (x : nseq uint8 l) : both0 (seq uint32) := lift_to_both0 (array_to_be_uint32s x).  (* (l/4) *)
-Definition array_to_le_uint64s {A l} (x : nseq A l) : both0 (seq uint64) := lift_to_both0 (array_to_le_uint64s x).  (* (l/8) *)
-Definition array_to_be_uint64s {l} (x : nseq uint8 l) : both0 (seq uint64) := lift_to_both0 (array_to_be_uint64s x).  (* (l/8) *)
-Definition array_to_le_uint128s {A l} (x : nseq A l) : both0 (seq uint128) := lift_to_both0 (array_to_le_uint128s x).  (* (l/16) *)
-Definition array_to_be_uint128s {l} (x : nseq uint8 l) : both0 (seq uint128) := lift_to_both0 (array_to_be_uint128s x).  (* (l/16) *)
+Definition array_to_be_uint32s {l} (x : nseq uint8 l) : both0 (seq uint32) := lift_to_both0 (array_to_be_uint32s x).
+Definition array_to_le_uint64s {A l} (x : nseq A l) : both0 (seq uint64) := lift_to_both0 (array_to_le_uint64s x).
+Definition array_to_be_uint64s {l} (x : nseq uint8 l) : both0 (seq uint64) := lift_to_both0 (array_to_be_uint64s x).
+Definition array_to_le_uint128s {A l} (x : nseq A l) : both0 (seq uint128) := lift_to_both0 (array_to_le_uint128s x).
+Definition array_to_be_uint128s {l} (x : nseq uint8 l) : both0 (seq uint128) := lift_to_both0 (array_to_be_uint128s x).
 Definition array_to_le_bytes {A l} (x : nseq A l) : both0 (seq uint8) := lift_to_both0 (array_to_le_bytes x).
 Definition array_to_be_bytes {A l} (x : nseq A l) : both0 (seq uint8) := lift_to_both0 (array_to_be_bytes x).
 Definition nat_mod_from_byte_seq_le {A n} (x : seq A) : both0 (nat_mod n) := lift_to_both0 (nat_mod_from_byte_seq_le x).
@@ -1618,18 +1611,6 @@ Equations let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality}
        temp ← get (ct A; n) ;;
        f (ct_T temp) }.
 Global Transparent let_mut_code.
-
-(* Definition let_mut_code  {L : {fset Location}} {I} {B : ChoiceEquality} *)
-(*            (x_loc : ChoiceEqualityLocation) *)
-(*            `{H_in: is_true (ssrbool.in_mem (CE_loc_to_loc x_loc) (ssrbool.mem L))} *)
-(*            (x : code L I (CE_loc_to_CE x_loc)) (f : (CE_loc_to_CE x_loc) -> code L I B) : code L I B := *)
-(*   (let (A, n) as s *)
-(*    return (is_true (ssrbool.in_mem (let '(k; n) := s in (ct k; n)) (ssrbool.mem L)) -> *)
-(*            code L I (CE_loc_to_CE s) -> (CE_loc_to_CE s -> code L I B) -> code L I B) := *)
-(*      x_loc in *)
-(*    fun (_ : is_true (ssrbool.in_mem (ct A; n) (ssrbool.mem L))) *)
-(*      (x : code L I (CE_loc_to_CE (A; n))) (f : CE_loc_to_CE (A; n) -> code L I B) => *)
-(*    {code y ← x ;; #put (ct A; n) := y ;; f (ct_T y) }) H_in x f. *)
 
 Notation "'letmc' x 'loc(' ℓ ')' ':=' y 'in' f" :=
   (let_mut_code ℓ (H_in := _) y (fun x => f x))
@@ -2048,6 +2029,7 @@ Fixpoint for_loop_return_ (ℓ : list ChoiceEqualityLocation) (vars : list (∑ 
     cbn in r.
     apply r.
 Defined.
+
 Definition for_loop_return (ℓ : list ChoiceEqualityLocation) : raw_code (list_types (seq.map (fun '(x ; y) => x) ℓ)) := for_loop_return_ ℓ [].
 
 Definition for_loop_locations
@@ -2084,7 +2066,6 @@ Proof.
   intros.
   apply H0.
 Qed.
-
 
 Ltac pattern_foldi_both Hx Hf Hg :=
   match goal with
@@ -2206,25 +2187,21 @@ Ltac ssprove_valid_step :=
      (
        cbv zeta
        || unfold prog
-       || (repeat match goal with | [ |- context[ @T_ct (prod_ChoiceEquality ?ceA ?ceB) (?a , ?b) ] ] => rewrite @T_ct_prod_propegate end) (* expensive *)
-       || (match goal with | [ |- context[ @bind ?A ?B (ret ?x) ?f ]] => rewrite bind_rewrite end) (* expensive *)
-       (* if statement *)
+       || (repeat match goal with | [ |- context[ @T_ct (prod_ChoiceEquality ?ceA ?ceB) (?a , ?b) ] ] => rewrite @T_ct_prod_propegate end)
+       || (match goal with | [ |- context[ @bind ?A ?B (ret ?x) ?f ]] => rewrite bind_rewrite end)
        || match goal with
          | [ |- context[match ?x with | true => _ | false => _ end] ] =>
              destruct x
          end
-       (* destruct tt *)
        || match goal with
          | [ |- context[match ?x with | tt => _ end] ] =>
              destruct x
          end
-       (* match expression ? *)
        || match goal with
          | [ |- context[match ?x with | inl _ => _ | inr _ => _ end] ] =>
              destruct x
          end
-       || (match goal with | [ |- context[bind (bind ?v ?k1) ?k2] ] => rewrite bind_assoc end) (* expensive *)
-       (* let statement / array update *)
+       || (match goal with | [ |- context[bind (bind ?v ?k1) ?k2] ] => rewrite bind_assoc end)
        || (apply valid_bind ; [apply valid_scheme ; try rewrite <- fset.fset0E ; apply prog_valid | intros])
        || (apply valid_bind ; [valid_program | intros])
        || (apply valid_bind ; [repeat ssprove_valid_step | intros])
@@ -2237,15 +2214,13 @@ Ltac ssprove_valid_step :=
        || match goal with
          | [ |- context [ getr _ _ ] ] => (apply valid_getr ; [ ssprove_valid_location | intros])
          end
-       (* ret statement *)
        || apply valid_ret
-       (* for looop statement *)
        || (match goal with
           | [ |- context [ValidCode (fset ?ys) _ (@prog _ _ _ (@foldi _ ?lo ?hi (fset ?xs) _ ?f ?v))] ] =>
               eapply (valid_subset_fset xs ys) ; [ | apply valid_foldi_pre ]
               ; loc_incl_compute
           end)
-       || (hnf in * ; destruct_choice_type_prod) (* expensive *)
+       || (hnf in * ; destruct_choice_type_prod)
   )).
 
 Theorem length_merge_sort_pop : forall {A} leb (l1 : list (list A)) (l2 : list A),
@@ -2414,75 +2389,6 @@ Ltac letbm_eq_code :=
 Ltac f_equal_fun_ext :=
   repeat (apply f_equal ; try (apply Coq.Logic.FunctionalExtensionality.functional_extensionality ; intros)).
 
-Definition seq_link { L1 L2 : {fset Location} } {I M E} (p1 : package L1 M E) (p2 : package L2 I M) : package (L1 :|: L2) I E :=
-  {| pack := pkg_composition.link p1 p2 ;
-    pack_valid := pkg_composition.valid_link _ _ _ _ _ _ _
-                                             (pack_valid p1)
-                                             (pack_valid p2) |}.
-
-Program Definition seq_link_both { L1 L2 : {fset Location} } {I} {M : InterfaceCE} {E} (p1 : both_package L1 (IfToCEIf M) E) (p2 : both_package L2 I M) : both_package (L1 :|: L2) I E :=
-  {|
-    pack_pure o H X := @pack_pure _ _ _ p1 o H X ;
-    pack_state := seq_link p1 p2 ;
-    pack_eq_proof_statement := _
-  |}.
-Next Obligation.
-  intros.
-  apply p1.
-  cbn.
-Admitted.
-
-Definition par_link { L1 L2 : {fset Location} }  { I1 I2 E1 E2} (p1 : package L1 I1 E1) (p2 : package L2 I2 E2) (_ : pkg_composition.Parable p1 p2) : package (L1 :|: L2) (I1 :|: I2) (E1 :|: E2) :=
-  {|
-    pack := pkg_composition.par p1 p2 ;
-    pack_valid := pkg_composition.valid_par _ _ _ _ _ _ _ _ _ (pack_valid p1) (pack_valid p2) |}.
-
-Program Definition par_link_both { L1 L2 : {fset Location} }  { I1 I2 E1 E2} (p1 : both_package L1 I1 E1) (p2 : both_package L2 I2 E2) (_ : pkg_composition.Parable p1 p2) : both_package (L1 :|: L2) (I1 :|: I2) (E1 ++ E2) :=
-  {|
-    pack_pure o H X := _ ;
-    pack_state :=
-    {|
-      pack := pkg_composition.par p1 p2 ;
-      pack_valid := pkg_composition.valid_par _ _ _ _ _ _ _ _ _ (pack_valid p1) (pack_valid p2)
-    |}
-  |}.
-Next Obligation.
-  intros.
-  apply in_app_or in H.
-  admit.
-Admitted.
-Next Obligation.
-  intros.
-  unfold IfToCEIf.
-  generalize dependent p1.
-  induction E1.
-  - cbn.
-    rewrite <- fset0E.
-    rewrite fset0U.
-    reflexivity.
-  - cbn.
-    rewrite fset_cons.
-    fold (IfToCEIf E1).
-    rewrite <- fsetUA.
-    intros.
-Admitted.
-Next Obligation.
-Admitted.
-
-Notation "'link_rest(' a ')'" :=
-  a : hacspec_scope.
-Notation "'link_rest(' a , b ')'" :=
-  (par_link a b _) : hacspec_scope.
-Notation "'link_rest(' a , b , .. , c ')'" :=
-  (par_link .. ( par_link a b _ ) .. c _) : hacspec_scope.
-
-Notation "'link_rest_both(' a ')'" :=
-  a : hacspec_scope.
-Notation "'link_rest_both(' a , b ')'" :=
-  (par_link_both a b _) : hacspec_scope.
-Notation "'link_rest_both(' a , b , .. , c ')'" :=
-  (par_link_both .. ( par_link_both a b _ ) .. c _) : hacspec_scope.
-
 Definition u32_word_t := nseq uint8 4.
 Definition u128_word_t := nseq uint8 16.
 
@@ -2490,7 +2396,7 @@ Lemma letbm_ret_r :
   forall {A : choice.Choice.type} {B : ChoiceEquality}
     (r₁ : raw_code A) (pre : precond)
     (post : postcond (choice.Choice.sort A) (choice.Choice.sort B))
-    (ℓ : ChoiceEqualityLocation) (* (ℓT : ChoiceEquality) (ℓv : nat) *)
+    (ℓ : ChoiceEqualityLocation)
     (L : {fset Location})
     (I : Interface)
     v (f : _ -> both L I B) (H_in : is_true (ssrbool.in_mem (CE_loc_to_loc ℓ) (ssrbool.mem L))),
@@ -2516,7 +2422,7 @@ Lemma letbm_ret_l :
     (r₀ : raw_code A)
     (r₁ : raw_code B) (pre : precond)
     (post : postcond (choice.Choice.sort A) (choice.Choice.sort B))
-    (ℓ : ChoiceEqualityLocation) (* (ℓT : ChoiceEquality) (ℓv : nat) *)
+    (ℓ : ChoiceEqualityLocation)
     (L : {fset Location})
     (I : Interface)
     v (f : _ -> both L I A) (H_in : is_true (ssrbool.in_mem (CE_loc_to_loc ℓ) (ssrbool.mem L))),
