@@ -205,7 +205,6 @@ Instance package_both {L I} {x y z} (pkg : both_package L I ((x, (y, z)) :: nil)
 Proof.
   destruct pkg as [pure state eq_proof].
   pose (o := (x, (y, z)) : opsigCE).
-  Check pack_eq_proof_statement.
   refine {| is_pure := pure o (List.in_eq _ _) args ;
            is_state := {code get_op_default state (opsigCE_opsig o) (args) #with valid_get_op_default _ _ _ state (opsigCE_opsig o) (args) _ (pack_helper (List.in_eq _ _)) } |}.
   apply eq_proof.

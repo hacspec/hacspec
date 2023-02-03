@@ -1382,7 +1382,7 @@ Proof.
     apply IHb.
     apply H.
 Qed.
-  
+
 Theorem seq_len_nat_setm : forall {A} (l : seq A) a,
     forall x, is_true (seq_len_nat l <= x)%ord ->
     seq_len_nat (setm l x a) = S x.
@@ -1625,7 +1625,7 @@ Proof.
     simpl.
 
     clear -i.
-    
+
     rewrite seq.rev_cons in i.
     rewrite <- seq.cats1 in i.
 
@@ -1642,7 +1642,7 @@ Proof.
         apply IHl0.
         apply (path_sorted_tl i).
 Qed.
-     
+
 Definition seq_new_ {A: ChoiceEquality} (init : A) (len: nat) : seq A :=
   fmap_of_seq (repeat init len).
 
@@ -1652,11 +1652,6 @@ Definition seq_new {A: ChoiceEquality} `{Default A} (len: nat) : seq A :=
 Definition seq_create {A: ChoiceEquality} `{Default A} (len: nat) : seq A :=
   seq_new len.
 
-Equations list_iter (n : nat) (k : nat) (H : (n <= k)%nat) : list { x : nat | (x < k)%nat } :=
-  list_iter O k H := [] ;
-  list_iter (S n') k H :=
-    (@exist nat (fun x => (x < k)%nat) n' H) :: list_iter n' k (le_Sn_le n' k H)
-    
 Definition repr_Z_succ : forall WS z, @repr WS (Z.succ z) = (repr z .+ one).
 Proof.
   intros.

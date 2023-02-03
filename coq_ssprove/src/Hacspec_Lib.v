@@ -69,7 +69,7 @@ Next Obligation.
   pattern_both Hb Hf Hg.
   apply (@r_bind_trans_both A B).
   subst Hf Hg Hb ; hnf.
-  rewrite !ct_T_id. 
+  rewrite !ct_T_id.
   apply r_ret. easy.
 Qed.
 Global Transparent lift2_both.
