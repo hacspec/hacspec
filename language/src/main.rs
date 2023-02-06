@@ -29,8 +29,11 @@ mod rustspec_to_coq_ssprove_state;
 
 mod rustspec_to_easycrypt;
 mod rustspec_to_fstar;
+
 mod typechecker;
 mod util;
+
+mod pearlite;
 
 use glob::Pattern;
 use heck::TitleCase;

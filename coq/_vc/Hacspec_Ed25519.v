@@ -12,13 +12,13 @@ Require Import Hacspec_Sha512.
 
 Require Import Hacspec_Edwards25519.
 
-Definition scalar_from_hash (h_1978 : sha512_digest_t) : scalar_t :=
+Definition scalar_from_hash (h_1978 : sha512_digest_t)  : scalar_t :=
   let s_1979 : big_scalar_t :=
     nat_mod_from_byte_seq_le (array_to_seq (h_1978)) : big_scalar_t in 
   nat_mod_from_byte_seq_le (seq_slice (nat_mod_to_byte_seq_le (s_1979)) (
       usize 0) (usize 32)) : scalar_t.
 
-Definition sign (sk_1980 : secret_key_t) (msg_1981 : byte_seq) : signature_t :=
+Definition sign (sk_1980 : secret_key_t) (msg_1981 : byte_seq)  : signature_t :=
   let '(a_1982, prefix_1983) :=
     secret_expand (sk_1980) in 
   let a_1984 : scalar_t :=
@@ -57,6 +57,7 @@ Definition zcash_verify
   (pk_1993 : public_key_t)
   (signature_1994 : signature_t)
   (msg_1995 : byte_seq)
+  
   : verify_result_t :=
   let b_1996 : (
       ed25519_field_element_t '×
@@ -111,6 +112,7 @@ Definition ietf_cofactored_verify
   (pk_2006 : public_key_t)
   (signature_2007 : signature_t)
   (msg_2008 : byte_seq)
+  
   : verify_result_t :=
   let b_2009 : (
       ed25519_field_element_t '×
@@ -165,6 +167,7 @@ Definition ietf_cofactorless_verify
   (pk_2019 : public_key_t)
   (signature_2020 : signature_t)
   (msg_2021 : byte_seq)
+  
   : verify_result_t :=
   let b_2022 : (
       ed25519_field_element_t '×
@@ -208,13 +211,14 @@ Definition ietf_cofactorless_verify
           @Ok unit error_t (tt)) else (@Err unit error_t (
             InvalidSignature)))))).
 
-Definition is_identity (p_2031 : ed_point_t) : bool :=
+Definition is_identity (p_2031 : ed_point_t)  : bool :=
   point_eq (p_2031) (point_identity ).
 
 Definition alg2_verify
   (pk_2032 : public_key_t)
   (signature_2033 : signature_t)
   (msg_2034 : byte_seq)
+  
   : verify_result_t :=
   let b_2035 : (
       ed25519_field_element_t '×
@@ -275,6 +279,7 @@ Inductive batch_entry_t :=
 Definition zcash_batch_verify
   (entries_2045 : seq batch_entry_t)
   (entropy_2046 : byte_seq)
+  
   : verify_result_t :=
   ifbnd (seq_len (entropy_2046)) <.? ((usize 16) * (seq_len (
         entries_2045))) : bool
@@ -379,6 +384,7 @@ Definition zcash_batch_verify
 Definition ietf_cofactored_batch_verify
   (entries_2065 : seq batch_entry_t)
   (entropy_2066 : byte_seq)
+  
   : verify_result_t :=
   ifbnd (seq_len (entropy_2066)) <.? ((usize 16) * (seq_len (
         entries_2065))) : bool
@@ -482,6 +488,7 @@ Definition ietf_cofactored_batch_verify
 Definition ietf_cofactorless_batch_verify
   (entries_2085 : seq batch_entry_t)
   (entropy_2086 : byte_seq)
+  
   : verify_result_t :=
   ifbnd (seq_len (entropy_2086)) <.? ((usize 16) * (seq_len (
         entries_2085))) : bool
@@ -584,6 +591,7 @@ Definition ietf_cofactorless_batch_verify
 Definition alg3_batch_verify
   (entries_2105 : seq batch_entry_t)
   (entropy_2106 : byte_seq)
+  
   : verify_result_t :=
   ifbnd (seq_len (entropy_2106)) <.? ((usize 16) * (seq_len (
         entries_2105))) : bool

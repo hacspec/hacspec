@@ -134,7 +134,7 @@ Definition pi_v : rotation_constants_t :=
         usize 21
       ] in  l).
 
-Definition theta (s_1068 : state_t) : state_t :=
+Definition theta (s_1068 : state_t)  : state_t :=
   let b_1069 : row_t :=
     array_new_ (default : uint64) (5) in 
   let b_1069 :=
@@ -165,7 +165,7 @@ Definition theta (s_1068 : state_t) : state_t :=
     s_1068 in 
   s_1068.
 
-Definition rho (s_1075 : state_t) : state_t :=
+Definition rho (s_1075 : state_t)  : state_t :=
   let s_1075 :=
     foldi (usize 0) (usize 25) (fun i_1076 s_1075 =>
       let u_1077 : uint64 :=
@@ -177,7 +177,7 @@ Definition rho (s_1075 : state_t) : state_t :=
     s_1075 in 
   s_1075.
 
-Definition pi (s_1078 : state_t) : state_t :=
+Definition pi (s_1078 : state_t)  : state_t :=
   let v_1079 : state_t :=
     array_new_ (default : uint64) (25) in 
   let v_1079 :=
@@ -189,7 +189,7 @@ Definition pi (s_1078 : state_t) : state_t :=
     v_1079 in 
   v_1079.
 
-Definition chi (s_1081 : state_t) : state_t :=
+Definition chi (s_1081 : state_t)  : state_t :=
   let b_1082 : row_t :=
     array_new_ (default : uint64) (5) in 
   let '(s_1081, b_1082) :=
@@ -216,13 +216,13 @@ Definition chi (s_1081 : state_t) : state_t :=
     (s_1081, b_1082) in 
   s_1081.
 
-Definition iota (s_1087 : state_t) (rndconst_1088 : int64) : state_t :=
+Definition iota (s_1087 : state_t) (rndconst_1088 : int64)  : state_t :=
   let s_1087 :=
     array_upd s_1087 (usize 0) ((array_index (s_1087) (usize 0)) .^ (
         uint64_classify (rndconst_1088))) in 
   s_1087.
 
-Definition keccakf1600 (s_1089 : state_t) : state_t :=
+Definition keccakf1600 (s_1089 : state_t)  : state_t :=
   let s_1089 :=
     foldi (usize 0) (rounds_v) (fun i_1090 s_1089 =>
       let s_1089 :=
@@ -239,7 +239,7 @@ Definition keccakf1600 (s_1089 : state_t) : state_t :=
     s_1089 in 
   s_1089.
 
-Definition absorb_block (s_1091 : state_t) (block_1092 : byte_seq) : state_t :=
+Definition absorb_block (s_1091 : state_t) (block_1092 : byte_seq)  : state_t :=
   let s_1091 :=
     foldi (usize 0) (seq_len (block_1092)) (fun i_1093 s_1091 =>
       let w_1094 : uint_size :=
@@ -258,6 +258,7 @@ Definition squeeze
   (s_1096 : state_t)
   (nbytes_1097 : uint_size)
   (rate_1098 : uint_size)
+  
   : byte_seq :=
   let out_1099 : seq uint8 :=
     seq_new_ (default : uint8) (nbytes_1097) in 
@@ -288,6 +289,7 @@ Definition keccak
   (data_1106 : byte_seq)
   (p_1107 : int8)
   (outbytes_1108 : uint_size)
+  
   : byte_seq :=
   let buf_1109 : seq uint8 :=
     seq_new_ (default : uint8) (rate_1105) in 
@@ -323,22 +325,22 @@ Definition keccak
     absorb_block (s_1111) (buf_1109) in 
   squeeze (s_1111) (outbytes_1108) (rate_1105).
 
-Definition sha3224 (data_1115 : byte_seq) : digest224_t :=
+Definition sha3224 (data_1115 : byte_seq)  : digest224_t :=
   let t_1116 : seq uint8 :=
     keccak (sha3224_rate_v) (data_1115) (@repr WORDSIZE8 6) (usize 28) in 
   array_from_seq (28) (t_1116).
 
-Definition sha3256 (data_1117 : byte_seq) : digest256_t :=
+Definition sha3256 (data_1117 : byte_seq)  : digest256_t :=
   let t_1118 : seq uint8 :=
     keccak (sha3256_rate_v) (data_1117) (@repr WORDSIZE8 6) (usize 32) in 
   array_from_seq (32) (t_1118).
 
-Definition sha3384 (data_1119 : byte_seq) : digest384_t :=
+Definition sha3384 (data_1119 : byte_seq)  : digest384_t :=
   let t_1120 : seq uint8 :=
     keccak (sha3384_rate_v) (data_1119) (@repr WORDSIZE8 6) (usize 48) in 
   array_from_seq (48) (t_1120).
 
-Definition sha3512 (data_1121 : byte_seq) : digest512_t :=
+Definition sha3512 (data_1121 : byte_seq)  : digest512_t :=
   let t_1122 : seq uint8 :=
     keccak (sha3512_rate_v) (data_1121) (@repr WORDSIZE8 6) (usize 64) in 
   array_from_seq (64) (t_1122).
@@ -346,12 +348,14 @@ Definition sha3512 (data_1121 : byte_seq) : digest512_t :=
 Definition shake128
   (data_1123 : byte_seq)
   (outlen_1124 : uint_size)
+  
   : byte_seq :=
   keccak (shake128_rate_v) (data_1123) (@repr WORDSIZE8 31) (outlen_1124).
 
 Definition shake256
   (data_1125 : byte_seq)
   (outlen_1126 : uint_size)
+  
   : byte_seq :=
   keccak (shake256_rate_v) (data_1125) (@repr WORDSIZE8 31) (outlen_1126).
 

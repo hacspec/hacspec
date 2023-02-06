@@ -30,10 +30,15 @@ Definition round_constants_table_t := nseq (uint64) (k_size_v).
 
 Definition hash_t := nseq (uint64) (usize 8).
 
-Definition ch (x_2240 : uint64) (y_2241 : uint64) (z_2242 : uint64) : uint64 :=
+Definition ch (x_2240 : uint64) (y_2241 : uint64) (z_2242 : uint64)  : uint64 :=
   ((x_2240) .& (y_2241)) .^ ((not (x_2240)) .& (z_2242)).
 
-Definition maj (x_2243 : uint64) (y_2244 : uint64) (z_2245 : uint64) : uint64 :=
+Definition maj
+  (x_2243 : uint64)
+  (y_2244 : uint64)
+  (z_2245 : uint64)
+  
+  : uint64 :=
   ((x_2243) .& (y_2244)) .^ (((x_2243) .& (z_2245)) .^ ((y_2244) .& (z_2245))).
 
 Definition op_table_v : op_table_type_t :=
@@ -155,6 +160,7 @@ Definition sigma
   (x_2246 : uint64)
   (i_2247 : uint_size)
   (op_2248 : uint_size)
+  
   : uint64 :=
   let tmp_2249 : uint64 :=
     uint64_rotate_right (x_2246) (array_index (op_table_v) (((usize 3) * (
@@ -168,7 +174,7 @@ Definition sigma
             i_2247)))) .^ (uint64_rotate_right (x_2246) (array_index (
           op_table_v) (((usize 3) * (i_2247)) + (usize 1))))) .^ (tmp_2249).
 
-Definition schedule (block_2250 : block_t) : round_constants_table_t :=
+Definition schedule (block_2250 : block_t)  : round_constants_table_t :=
   let b_2251 : seq uint64 :=
     array_to_be_uint64s (block_2250) in 
   let s_2252 : round_constants_table_t :=
@@ -201,6 +207,7 @@ Definition schedule (block_2250 : block_t) : round_constants_table_t :=
 Definition shuffle
   (ws_2260 : round_constants_table_t)
   (hashi_2261 : hash_t)
+  
   : hash_t :=
   let h_2262 : hash_t :=
     hashi_2261 in 
@@ -249,7 +256,7 @@ Definition shuffle
     h_2262 in 
   h_2262.
 
-Definition compress (block_2274 : block_t) (h_in_2275 : hash_t) : hash_t :=
+Definition compress (block_2274 : block_t) (h_in_2275 : hash_t)  : hash_t :=
   let s_2276 : round_constants_table_t :=
     schedule (block_2274) in 
   let h_2277 : hash_t :=
@@ -263,7 +270,7 @@ Definition compress (block_2274 : block_t) (h_in_2275 : hash_t) : hash_t :=
     h_2277 in 
   h_2277.
 
-Definition hash (msg_2279 : byte_seq) : sha512_digest_t :=
+Definition hash (msg_2279 : byte_seq)  : sha512_digest_t :=
   let h_2280 : hash_t :=
     hash_init_v in 
   let last_block_2281 : block_t :=
@@ -316,6 +323,6 @@ Definition hash (msg_2279 : byte_seq) : sha512_digest_t :=
       (h_2280, last_block_2281)) in 
   array_from_seq (hash_size_v) (array_to_be_bytes (h_2280)).
 
-Definition sha512 (msg_2289 : byte_seq) : sha512_digest_t :=
+Definition sha512 (msg_2289 : byte_seq)  : sha512_digest_t :=
   hash (msg_2289).
 

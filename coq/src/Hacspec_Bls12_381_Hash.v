@@ -64,6 +64,7 @@ Definition expand_message_xmd
   (msg_1732 : byte_seq)
   (dst_1733 : byte_seq)
   (len_in_bytes_1734 : uint_size)
+  
   : byte_seq :=
   let ell_1735 : uint_size :=
     (((len_in_bytes_1734) + (b_in_bytes_v)) - (usize 1)) / (b_in_bytes_v) in 
@@ -110,6 +111,7 @@ Definition fp_hash_to_field
   (msg_1745 : byte_seq)
   (dst_1746 : byte_seq)
   (count_1747 : uint_size)
+  
   : seq fp_t :=
   let len_in_bytes_1748 : uint_size :=
     (count_1747) * (l_v) in 
@@ -133,26 +135,26 @@ Definition fp_hash_to_field
     output_1750 in 
   output_1750.
 
-Definition fp_sgn0 (x_1755 : fp_t) : bool :=
+Definition fp_sgn0 (x_1755 : fp_t)  : bool :=
   ((x_1755) rem (nat_mod_two )) =.? (nat_mod_one ).
 
-Definition fp_is_square (x_1756 : fp_t) : bool :=
+Definition fp_is_square (x_1756 : fp_t)  : bool :=
   let c1_1757 : fp_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (p_1_2_v)) : fp_t in 
   let tv_1758 : fp_t :=
     nat_mod_pow_self (x_1756) (c1_1757) in 
   ((tv_1758) =.? (nat_mod_zero )) || ((tv_1758) =.? (nat_mod_one )).
 
-Definition fp_sqrt (x_1759 : fp_t) : fp_t :=
+Definition fp_sqrt (x_1759 : fp_t)  : fp_t :=
   let c1_1760 : fp_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (p_1_4_v)) : fp_t in 
   nat_mod_pow_self (x_1759) (c1_1760).
 
-Definition g1_curve_func (x_1761 : fp_t) : fp_t :=
+Definition g1_curve_func (x_1761 : fp_t)  : fp_t :=
   (((x_1761) *% (x_1761)) *% (x_1761)) +% (nat_mod_from_literal (_) (
       @repr WORDSIZE128 4) : fp_t).
 
-Definition g1_map_to_curve_svdw (u_1762 : fp_t) : g1_t :=
+Definition g1_map_to_curve_svdw (u_1762 : fp_t)  : g1_t :=
   let z_1763 : fp_t :=
     (nat_mod_zero ) -% (nat_mod_from_literal (_) (
         @repr WORDSIZE128 3) : fp_t) in 
@@ -201,7 +203,7 @@ Definition g1_map_to_curve_svdw (u_1762 : fp_t) : g1_t :=
       (y_1776)) else ((y_1776)) in 
   (x_1775, y_1776, false).
 
-Definition g1_clear_cofactor (x_1777 : g1_t) : g1_t :=
+Definition g1_clear_cofactor (x_1777 : g1_t)  : g1_t :=
   let h_eff_1778 : scalar_t :=
     nat_mod_from_literal (_) (
       @repr WORDSIZE128 15132376222941642753) : scalar_t in 
@@ -210,6 +212,7 @@ Definition g1_clear_cofactor (x_1777 : g1_t) : g1_t :=
 Definition g1_hash_to_curve_svdw
   (msg_1779 : byte_seq)
   (dst_1780 : byte_seq)
+  
   : g1_t :=
   let u_1781 : seq fp_t :=
     fp_hash_to_field (msg_1779) (dst_1780) (usize 2) in 
@@ -226,6 +229,7 @@ Definition g1_hash_to_curve_svdw
 Definition g1_encode_to_curve_svdw
   (msg_1786 : byte_seq)
   (dst_1787 : byte_seq)
+  
   : g1_t :=
   let u_1788 : seq fp_t :=
     fp_hash_to_field (msg_1786) (dst_1787) (usize 1) in 
@@ -239,6 +243,7 @@ Definition fp2_hash_to_field
   (msg_1791 : byte_seq)
   (dst_1792 : byte_seq)
   (count_1793 : uint_size)
+  
   : seq fp2_t :=
   let len_in_bytes_1794 : uint_size :=
     ((count_1793) * (usize 2)) * (l_v) in 
@@ -270,7 +275,7 @@ Definition fp2_hash_to_field
     output_1796 in 
   output_1796.
 
-Definition fp2_sgn0 (x_1804 : fp2_t) : bool :=
+Definition fp2_sgn0 (x_1804 : fp2_t)  : bool :=
   let '(x0_1805, x1_1806) :=
     x_1804 in 
   let sign_0_1807 : bool :=
@@ -281,7 +286,7 @@ Definition fp2_sgn0 (x_1804 : fp2_t) : bool :=
     fp_sgn0 (x1_1806) in 
   (sign_0_1807) || ((zero_0_1808) && (sign_1_1809)).
 
-Definition fp2_is_square (x_1810 : fp2_t) : bool :=
+Definition fp2_is_square (x_1810 : fp2_t)  : bool :=
   let c1_1811 : fp_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (p_1_2_v)) : fp_t in 
   let '(x1_1812, x2_1813) :=
@@ -298,7 +303,7 @@ Definition fp2_is_square (x_1810 : fp2_t) : bool :=
     (nat_mod_zero ) -% (nat_mod_one ) in 
   (tv1_1817) !=.? (neg1_1818).
 
-Definition fp2exp (n_1819 : fp2_t) (k_1820 : fp_t) : fp2_t :=
+Definition fp2exp (n_1819 : fp2_t) (k_1820 : fp_t)  : fp2_t :=
   let c_1821 : (fp_t '× fp_t) :=
     fp2fromfp (nat_mod_one ) in 
   let c_1821 :=
@@ -314,7 +319,7 @@ Definition fp2exp (n_1819 : fp2_t) (k_1820 : fp_t) : fp2_t :=
     c_1821 in 
   c_1821.
 
-Definition fp2_sqrt (a_1823 : fp2_t) : fp2_t :=
+Definition fp2_sqrt (a_1823 : fp2_t)  : fp2_t :=
   let c1_1824 : fp_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (p_3_4_v)) : fp_t in 
   let c2_1825 : fp_t :=
@@ -334,13 +339,13 @@ Definition fp2_sqrt (a_1823 : fp2_t) : fp2_t :=
           nat_mod_one 
         )) (x0_1828)) else (fp2mul (b_1830) (x0_1828))).
 
-Definition g2_curve_func (x_1831 : fp2_t) : fp2_t :=
+Definition g2_curve_func (x_1831 : fp2_t)  : fp2_t :=
   fp2add (fp2mul (x_1831) (fp2mul (x_1831) (x_1831))) ((
       nat_mod_from_literal (_) (@repr WORDSIZE128 4) : fp_t,
       nat_mod_from_literal (_) (@repr WORDSIZE128 4) : fp_t
     )).
 
-Definition g2_map_to_curve_svdw (u_1832 : fp2_t) : g2_t :=
+Definition g2_map_to_curve_svdw (u_1832 : fp2_t)  : g2_t :=
   let z_1833 : (fp_t '× fp_t) :=
     fp2neg (fp2fromfp (nat_mod_one )) in 
   let gz_1834 : (fp_t '× fp_t) :=
@@ -390,7 +395,7 @@ Definition g2_map_to_curve_svdw (u_1832 : fp2_t) : g2_t :=
       (y_1847)) else ((y_1847)) in 
   (x_1846, y_1847, false).
 
-Definition psi (p_1848 : g2_t) : g2_t :=
+Definition psi (p_1848 : g2_t)  : g2_t :=
   let c1_1849 : (fp_t '× fp_t) :=
     fp2inv (fp2exp ((nat_mod_one , nat_mod_one )) (((nat_mod_zero ) -% (
             nat_mod_one )) *% (nat_mod_inv (nat_mod_from_literal (_) (
@@ -406,7 +411,7 @@ Definition psi (p_1848 : g2_t) : g2_t :=
     fp2mul (c2_1850) (fp2conjugate (y_1852)) in 
   (qx_1854, qy_1855, inf_1853).
 
-Definition g2_clear_cofactor (p_1856 : g2_t) : g2_t :=
+Definition g2_clear_cofactor (p_1856 : g2_t)  : g2_t :=
   let c1_1857 : scalar_t :=
     nat_mod_from_literal (_) (
       @repr WORDSIZE128 15132376222941642752) : scalar_t in 
@@ -439,6 +444,7 @@ Definition g2_clear_cofactor (p_1856 : g2_t) : g2_t :=
 Definition g2_hash_to_curve_svdw
   (msg_1870 : byte_seq)
   (dst_1871 : byte_seq)
+  
   : g2_t :=
   let u_1872 : seq fp2_t :=
     fp2_hash_to_field (msg_1870) (dst_1871) (usize 2) in 
@@ -455,6 +461,7 @@ Definition g2_hash_to_curve_svdw
 Definition g2_encode_to_curve_svdw
   (msg_1877 : byte_seq)
   (dst_1878 : byte_seq)
+  
   : g2_t :=
   let u_1879 : seq fp2_t :=
     fp2_hash_to_field (msg_1877) (dst_1878) (usize 1) in 
@@ -1069,7 +1076,7 @@ Definition g1_yden_k_14_v : arr_fp_t :=
         secret (@repr WORDSIZE64 4905905684016745359) : int64
       ] in  l).
 
-Definition g1_simple_swu_iso (u_1882 : fp_t) : (fp_t '× fp_t) :=
+Definition g1_simple_swu_iso (u_1882 : fp_t)  : (fp_t '× fp_t) :=
   let z_1883 : fp_t :=
     nat_mod_from_literal (_) (@repr WORDSIZE128 11) : fp_t in 
   let a_1884 : fp_t :=
@@ -1103,7 +1110,7 @@ Definition g1_simple_swu_iso (u_1882 : fp_t) : (fp_t '× fp_t) :=
       (y_1892)) else ((y_1892)) in 
   (x_1891, y_1892).
 
-Definition g1_isogeny_map (x_1893 : fp_t) (y_1894 : fp_t) : g1_t :=
+Definition g1_isogeny_map (x_1893 : fp_t) (y_1894 : fp_t)  : g1_t :=
   let xnum_k_1895 : seq fp_t :=
     seq_new_ (default : fp_t) (usize 12) in 
   let xnum_k_1895 :=
@@ -1336,7 +1343,7 @@ Definition g1_isogeny_map (x_1893 : fp_t) (y_1894 : fp_t) : g1_t :=
       (inf_1913)) else ((inf_1913)) in 
   (xr_1911, yr_1912, inf_1913).
 
-Definition g1_map_to_curve_sswu (u_1914 : fp_t) : g1_t :=
+Definition g1_map_to_curve_sswu (u_1914 : fp_t)  : g1_t :=
   let '(xp_1915, yp_1916) :=
     g1_simple_swu_iso (u_1914) in 
   let p_1917 : (fp_t '× fp_t '× bool) :=
@@ -1346,6 +1353,7 @@ Definition g1_map_to_curve_sswu (u_1914 : fp_t) : g1_t :=
 Definition g1_hash_to_curve_sswu
   (msg_1918 : byte_seq)
   (dst_1919 : byte_seq)
+  
   : g1_t :=
   let u_1920 : seq fp_t :=
     fp_hash_to_field (msg_1918) (dst_1919) (usize 2) in 
@@ -1362,6 +1370,7 @@ Definition g1_hash_to_curve_sswu
 Definition g1_encode_to_curve_sswu
   (msg_1925 : byte_seq)
   (dst_1926 : byte_seq)
+  
   : g1_t :=
   let u_1927 : seq fp_t :=
     fp_hash_to_field (msg_1925) (dst_1926) (usize 1) in 
@@ -1536,7 +1545,7 @@ Definition g2_yden_k_2_i_v : arr_fp_t :=
         secret (@repr WORDSIZE64 13402431016077863577) : int64
       ] in  l).
 
-Definition g2_simple_swu_iso (u_1930 : fp2_t) : (fp2_t '× fp2_t) :=
+Definition g2_simple_swu_iso (u_1930 : fp2_t)  : (fp2_t '× fp2_t) :=
   let z_1931 : (fp_t '× fp_t) :=
     fp2neg ((nat_mod_two , nat_mod_one )) in 
   let a_1932 : (fp_t '× fp_t) :=
@@ -1574,7 +1583,7 @@ Definition g2_simple_swu_iso (u_1930 : fp2_t) : (fp2_t '× fp2_t) :=
       (y_1940)) else ((y_1940)) in 
   (x_1939, y_1940).
 
-Definition g2_isogeny_map (x_1941 : fp2_t) (y_1942 : fp2_t) : g2_t :=
+Definition g2_isogeny_map (x_1941 : fp2_t) (y_1942 : fp2_t)  : g2_t :=
   let xnum_k_1943 : seq (fp_t '× fp_t) :=
     seq_new_ (default : fp2_t) (usize 4) in 
   let xnum_k_1943 :=
@@ -1717,7 +1726,7 @@ Definition g2_isogeny_map (x_1941 : fp2_t) (y_1942 : fp2_t) : g2_t :=
       (inf_1961)) else ((inf_1961)) in 
   (xr_1959, yr_1960, inf_1961).
 
-Definition g2_map_to_curve_sswu (u_1962 : fp2_t) : g2_t :=
+Definition g2_map_to_curve_sswu (u_1962 : fp2_t)  : g2_t :=
   let '(xp_1963, yp_1964) :=
     g2_simple_swu_iso (u_1962) in 
   let p_1965 : ((fp_t '× fp_t) '× (fp_t '× fp_t) '× bool) :=
@@ -1727,6 +1736,7 @@ Definition g2_map_to_curve_sswu (u_1962 : fp2_t) : g2_t :=
 Definition g2_hash_to_curve_sswu
   (msg_1966 : byte_seq)
   (dst_1967 : byte_seq)
+  
   : g2_t :=
   let u_1968 : seq fp2_t :=
     fp2_hash_to_field (msg_1966) (dst_1967) (usize 2) in 
@@ -1743,6 +1753,7 @@ Definition g2_hash_to_curve_sswu
 Definition g2_encode_to_curve_sswu
   (msg_1973 : byte_seq)
   (dst_1974 : byte_seq)
+  
   : g2_t :=
   let u_1975 : seq fp2_t :=
     fp2_hash_to_field (msg_1973) (dst_1974) (usize 1) in 
