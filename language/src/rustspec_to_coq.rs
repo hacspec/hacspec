@@ -483,8 +483,6 @@ pub(crate) fn translate_expression<'a>(e: Expression, top_ctx: &'a TopLevelConte
             let e1 = e1.0;
             let e2 = e2.0;
 
-            println!("{:?}", op_typ);
-            
             make_paren(translate_expression(e1, top_ctx))
                 .append(RcDoc::space())
                 .append(translate_binop(

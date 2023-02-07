@@ -95,8 +95,6 @@ fn translate_id(id: rustc_span::symbol::Ident) -> Ident {
 }
 
 fn translate_pearlite_type(sess: &Session, typ: syn::Type, span: Span) -> rustc_ast::ast::Ty {
-    println!("{:?}", typ);
-
     match typ {
         // syn::Type::Array(arr_ty) => {
         // BaseTyp::Array(match translate_pearlite(arr_ty.len, span) {
@@ -171,9 +169,6 @@ pub(crate) fn translate_pearlite(
     t: pearlite_syn::term::Term,
     span: Span,
 ) -> Quantified<(Ident, Ty), Expr> {
-
-    println!("{:?}", t);
-
     let kind = match t {
         // pearlite_syn::term::Term::Array(_) => RcDoc::as_string("TODOArray"),
         pearlite_syn::term::Term::Binary(pearlite_syn::term::TermBinary { left, op, right }) => {
@@ -563,8 +558,6 @@ pub(crate) fn translate_quantified_expression<'a>(
     qe: Quantified<(Ident, Spanned<BaseTyp>), Spanned<Expression>>,
     top_ctx: &'a TopLevelContext,
 ) -> RcDoc<'a, ()> {
-    println!("QE {:?}", qe);
-    
     match qe {
         Quantified::Unquantified((e, _)) => crate::rustspec_to_coq::translate_expression(e, top_ctx),
         Quantified::Forall(ids, qe2) => RcDoc::as_string("forall")

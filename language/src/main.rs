@@ -58,6 +58,7 @@ use std::process::Command;
 use util::APP_USAGE;
 
 use lazy_static::__Deref;
+use std::ops::DerefMut;
 
 #[derive(Clone, PartialEq)]
 enum VersionControlArg {
@@ -659,6 +660,7 @@ impl Callbacks for HacspecCallbacks {
             String::from("feature"),
             Some(String::from("\"hacspec_attributes\"")),
         ));
+        config.opts.pretty = None;
     }
 
     fn after_analysis<'tcx>(
@@ -667,7 +669,7 @@ impl Callbacks for HacspecCallbacks {
         queries: &'tcx Queries<'tcx>,
     ) -> Compilation {
         log::debug!(" --- hacspec after_analysis callback");
-        let krate: rustc_ast::ast::Crate = queries.parse().unwrap().deref().steal(); // TODO: this is probably incorrect!
+
         let crate_origin_file = compiler
             .build_output_filenames(compiler.session(), &[])
             .with_extension("")
@@ -676,7 +678,10 @@ impl Callbacks for HacspecCallbacks {
             .to_string();
 
         let mut analysis_crates = HashMap::new();
-        analysis_crates.insert(crate_origin_file.clone(), krate);
+        compiler.enter(|queries| {
+            let krate : rustc_ast::ast::Crate = queries.parse().unwrap().steal();; // TODO: this is probably incorrect!
+            analysis_crates.insert(crate_origin_file.clone(), krate);
+        });
 
         // Find module location using hir
         queries.global_ctxt().unwrap().enter(|tcx| {

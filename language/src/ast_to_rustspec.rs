@@ -502,25 +502,27 @@ fn translate_function_argument(
 }
 
 fn translate_literal(lit: &Lit) -> Result<Literal, ()> {
-    println! ("Symbol {}", lit.symbol);
-    match &lit.kind {
-        // TokenLitKind::Bool => Ok(Literal::Bool(*lit.symbol)),
-        // LitKind::Bool(b) => Ok(Literal::Bool(*b)),
-        //TODO: check that the casting is safe each time!
-        // LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok(Literal::Int128(*x as i128)),
-        // LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok(Literal::UInt128(*x as u128)),
-        // LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok(Literal::Int64(*x as i64)),
-        // LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok(Literal::UInt64(*x as u64)),
-        // LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok(Literal::Int32(*x as i32)),
-        // LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok(Literal::UInt32(*x as u32)),
-        // LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok(Literal::Int16(*x as i16)),
-        // LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok(Literal::UInt16(*x as u16)),
-        // LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok(Literal::Int8(*x as i8)),
-        // LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok(Literal::UInt8(*x as u8)),
-        // LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok(Literal::Isize(*x as isize)),
-        // LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok(Literal::Usize(*x as usize)),
-        // LitKind::Int(x, LitIntType::Unsuffixed) => Ok(Literal::UnspecifiedInt(*x)),
-        // LitKind::Str(msg, StrStyle::Cooked) => Ok(Literal::Str(msg.to_ident_string())),
+    let l : LitKind = match LitKind::from_token_lit(*lit) {
+        Ok(l) => l,
+        Err(_) => return Err(()),
+    };
+    match l {
+        LitKind::Bool(b) => Ok(Literal::Bool(b)),
+        // TODO: check that the casting is safe each time!
+        LitKind::Int(x, LitIntType::Signed(IntTy::I128)) => Ok(Literal::Int128(x as i128)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U128)) => Ok(Literal::UInt128(x as u128)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I64)) => Ok(Literal::Int64(x as i64)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U64)) => Ok(Literal::UInt64(x as u64)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I32)) => Ok(Literal::Int32(x as i32)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U32)) => Ok(Literal::UInt32(x as u32)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I16)) => Ok(Literal::Int16(x as i16)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U16)) => Ok(Literal::UInt16(x as u16)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::I8)) => Ok(Literal::Int8(x as i8)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::U8)) => Ok(Literal::UInt8(x as u8)),
+        LitKind::Int(x, LitIntType::Signed(IntTy::Isize)) => Ok(Literal::Isize(x as isize)),
+        LitKind::Int(x, LitIntType::Unsigned(UintTy::Usize)) => Ok(Literal::Usize(x as usize)),
+        LitKind::Int(x, LitIntType::Unsuffixed) => Ok(Literal::UnspecifiedInt(x)),
+        LitKind::Str(msg, StrStyle::Cooked) => Ok(Literal::Str(msg.to_ident_string())),
         _ => Err(()),
     }
 }
@@ -592,7 +594,6 @@ fn translate_expr(
             unimplemented!();
         },
         ExprKind::Binary(op, e1, e2) => {
-            println!("Binary: {:?}", op);
             Ok((
                 ExprTranslationResult::TransExpr(Expression::Binary(
                     (translate_binop(op.clone().node), op.clone().span.into()),
