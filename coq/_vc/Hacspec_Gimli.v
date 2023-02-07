@@ -19,7 +19,6 @@ Definition swap
   (s_1127 : state_t)
   (i_1128 : state_idx_t)
   (j_1129 : state_idx_t)
-  
   : state_t :=
   let tmp_1130 : uint32 :=
     array_index (s_1127) (i_1128) in 
@@ -29,7 +28,7 @@ Definition swap
     array_upd s_1127 (j_1129) (tmp_1130) in 
   s_1127.
 
-Definition gimli_round (s_1131 : state_t) (r_1132 : int32)  : state_t :=
+Definition gimli_round (s_1131 : state_t) (r_1132 : int32) : state_t :=
   let s_1131 :=
     foldi (usize 0) (usize 4) (fun col_1133 s_1131 =>
       let x_1134 : uint32 :=
@@ -74,7 +73,7 @@ Definition gimli_round (s_1131 : state_t) (r_1132 : int32)  : state_t :=
       (s_1131)) else ((s_1131)) in 
   s_1131.
 
-Definition gimli (s_1137 : state_t)  : state_t :=
+Definition gimli (s_1137 : state_t) : state_t :=
   let s_1137 :=
     foldi (usize 0) (usize 24) (fun rnd_1138 s_1137 =>
       let rnd_1139 : int32 :=
@@ -92,7 +91,6 @@ Definition digest_t := nseq (uint8) (usize 32).
 Definition absorb_block
   (input_block_1140 : block_t)
   (s_1141 : state_t)
-  
   : state_t :=
   let input_bytes_1142 : seq uint32 :=
     array_to_le_uint32s (input_block_1140) in 
@@ -110,7 +108,7 @@ Definition absorb_block
           input_bytes_1142) (usize 3))) in 
   gimli (s_1141).
 
-Definition squeeze_block (s_1143 : state_t)  : block_t :=
+Definition squeeze_block (s_1143 : state_t) : block_t :=
   let block_1144 : block_t :=
     array_new_ (default : uint8) (16) in 
   let block_1144 :=
@@ -138,7 +136,6 @@ Definition squeeze_block (s_1143 : state_t)  : block_t :=
 Definition gimli_hash_state
   (input_1148 : byte_seq)
   (s_1149 : state_t)
-  
   : state_t :=
   let rate_1150 : uint_size :=
     array_length  in 
@@ -170,7 +167,7 @@ Definition gimli_hash_state
     absorb_block (input_block_padded_1157) (s_1149) in 
   s_1149.
 
-Definition gimli_hash (input_bytes_1158 : byte_seq)  : digest_t :=
+Definition gimli_hash (input_bytes_1158 : byte_seq) : digest_t :=
   let s_1159 : state_t :=
     array_new_ (default : uint32) (12) in 
   let s_1160 : state_t :=
@@ -190,13 +187,12 @@ Definition key_t := nseq (uint8) (usize 32).
 
 Definition tag_t := nseq (uint8) (usize 16).
 
-Definition process_ad (ad_1164 : byte_seq) (s_1165 : state_t)  : state_t :=
+Definition process_ad (ad_1164 : byte_seq) (s_1165 : state_t) : state_t :=
   gimli_hash_state (ad_1164) (s_1165).
 
 Definition process_msg
   (message_1166 : byte_seq)
   (s_1167 : state_t)
-  
   : (state_t '× byte_seq) :=
   let ciphertext_1168 : seq uint8 :=
     seq_new_ (default : uint8) (seq_len (message_1166)) in 
@@ -249,7 +245,6 @@ Definition process_msg
 Definition process_ct
   (ciphertext_1180 : byte_seq)
   (s_1181 : state_t)
-  
   : (state_t '× byte_seq) :=
   let message_1182 : seq uint8 :=
     seq_new_ (default : uint8) (seq_len (ciphertext_1180)) in 
@@ -302,7 +297,7 @@ Definition process_ct
     absorb_block (msg_block_1196) (s_1181) in 
   (s_1181, message_1182).
 
-Definition nonce_to_u32s (nonce_1197 : nonce_t)  : seq uint32 :=
+Definition nonce_to_u32s (nonce_1197 : nonce_t) : seq uint32 :=
   let uints_1198 : seq uint32 :=
     seq_new_ (default : uint32) (usize 4) in 
   let uints_1198 :=
@@ -323,7 +318,7 @@ Definition nonce_to_u32s (nonce_1197 : nonce_t)  : seq uint32 :=
           )))) in 
   uints_1198.
 
-Definition key_to_u32s (key_1199 : key_t)  : seq uint32 :=
+Definition key_to_u32s (key_1199 : key_t) : seq uint32 :=
   let uints_1200 : seq uint32 :=
     seq_new_ (default : uint32) (usize 8) in 
   let uints_1200 :=
@@ -365,7 +360,6 @@ Definition gimli_aead_encrypt
   (ad_1202 : byte_seq)
   (nonce_1203 : nonce_t)
   (key_1204 : key_t)
-  
   : (byte_seq '× tag_t) :=
   let s_1205 : state_t :=
     array_from_seq (12) (seq_concat (nonce_to_u32s (nonce_1203)) (key_to_u32s (
@@ -388,7 +382,6 @@ Definition gimli_aead_decrypt
   (tag_1214 : tag_t)
   (nonce_1215 : nonce_t)
   (key_1216 : key_t)
-  
   : byte_seq :=
   let s_1217 : state_t :=
     array_from_seq (12) (seq_concat (nonce_to_u32s (nonce_1215)) (key_to_u32s (

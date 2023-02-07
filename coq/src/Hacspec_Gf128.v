@@ -22,10 +22,10 @@ Notation "'element_t'" := (uint128) : hacspec_scope.
 Definition irred_v : element_t :=
   secret (@repr WORDSIZE128 299076299051606071403356588563077529600) : int128.
 
-Definition fadd (x_317 : element_t) (y_318 : element_t)  : element_t :=
+Definition fadd (x_317 : element_t) (y_318 : element_t) : element_t :=
   (x_317) .^ (y_318).
 
-Definition fmul (x_319 : element_t) (y_320 : element_t)  : element_t :=
+Definition fmul (x_319 : element_t) (y_320 : element_t) : element_t :=
   let res_321 : element_t :=
     secret (@repr WORDSIZE128 0) : int128 in 
   let sh_322 : uint128 :=
@@ -51,21 +51,20 @@ Definition fmul (x_319 : element_t) (y_320 : element_t)  : element_t :=
     (res_321, sh_322) in 
   res_321.
 
-Definition encode (block_324 : gf128_block_t)  : element_t :=
+Definition encode (block_324 : gf128_block_t) : element_t :=
   uint128_from_be_bytes (array_from_seq (16) (array_to_seq (block_324))).
 
-Definition decode (e_325 : element_t)  : gf128_block_t :=
+Definition decode (e_325 : element_t) : gf128_block_t :=
   array_from_seq (blocksize_v) (array_to_seq (uint128_to_be_bytes (e_325))).
 
 Definition update
   (r_326 : element_t)
   (block_327 : gf128_block_t)
   (acc_328 : element_t)
-  
   : element_t :=
   fmul (fadd (encode (block_327)) (acc_328)) (r_326).
 
-Definition poly (msg_329 : byte_seq) (r_330 : element_t)  : element_t :=
+Definition poly (msg_329 : byte_seq) (r_330 : element_t) : element_t :=
   let l_331 : uint_size :=
     seq_len (msg_329) in 
   let n_blocks_332 : uint_size :=
@@ -102,7 +101,7 @@ Definition poly (msg_329 : byte_seq) (r_330 : element_t)  : element_t :=
       (acc_334)) else ((acc_334)) in 
   acc_334.
 
-Definition gmac (text_340 : byte_seq) (k_341 : gf128_key_t)  : gf128_tag_t :=
+Definition gmac (text_340 : byte_seq) (k_341 : gf128_key_t) : gf128_tag_t :=
   let s_342 : gf128_block_t :=
     array_new_ (default : uint8) (blocksize_v) in 
   let r_343 : uint128 :=

@@ -21,7 +21,7 @@ Inductive hkdf_error_t :=
 Notation "'hkdf_byte_seq_result_t'" := ((
   result byte_seq hkdf_error_t)) : hacspec_scope.
 
-Definition extract (salt_713 : byte_seq) (ikm_714 : byte_seq)  : prk_t :=
+Definition extract (salt_713 : byte_seq) (ikm_714 : byte_seq) : prk_t :=
   let salt_or_zero_715 : seq uint8 :=
     seq_new_ (default : uint8) (hash_len_v) in 
   let '(salt_or_zero_715) :=
@@ -34,7 +34,6 @@ Definition build_hmac_txt
   (t_716 : byte_seq)
   (info_717 : byte_seq)
   (iteration_718 : uint8)
-  
   : byte_seq :=
   let out_719 : seq uint8 :=
     seq_new_ (default : uint8) (((seq_len (t_716)) + (seq_len (info_717))) + (
@@ -48,7 +47,7 @@ Definition build_hmac_txt
       iteration_718) in 
   out_719.
 
-Definition div_ceil (a_720 : uint_size) (b_721 : uint_size)  : uint_size :=
+Definition div_ceil (a_720 : uint_size) (b_721 : uint_size) : uint_size :=
   let q_722 : uint_size :=
     (a_720) / (b_721) in 
   let '(q_722) :=
@@ -59,7 +58,6 @@ Definition div_ceil (a_720 : uint_size) (b_721 : uint_size)  : uint_size :=
 
 Definition check_output_limit
   (l_723 : uint_size)
-  
   : (result uint_size hkdf_error_t) :=
   let n_724 : uint_size :=
     div_ceil (l_723) (hash_len_v) in 
@@ -70,7 +68,6 @@ Definition expand
   (prk_725 : byte_seq)
   (info_726 : byte_seq)
   (l_727 : uint_size)
-  
   : hkdf_byte_seq_result_t :=
   bind (check_output_limit (l_727)) (fun n_728 => let t_i_729 : prk_t :=
       array_new_ (default : uint8) (_) in 

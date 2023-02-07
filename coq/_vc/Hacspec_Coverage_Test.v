@@ -8,7 +8,7 @@ Open Scope bool_scope.
 Open Scope hacspec_scope.
 Require Import Hacspec_Lib.
 
-Definition big_integer_test   : unit :=
+Definition big_integer_test  : unit :=
   let _ : big_int_t :=
     big_int_zero  in 
   let _ : big_int_t :=
@@ -44,7 +44,7 @@ Definition big_integer_test   : unit :=
     big_int_absolute (bi_2669) in 
   tt.
 
-Definition machine_integer_test   : unit :=
+Definition machine_integer_test  : unit :=
   let _ : int32 :=
     pub_uint32_zero  in 
   let _ : int8 :=
@@ -115,7 +115,7 @@ Definition machine_integer_test   : unit :=
     secret (@repr WORDSIZE64 12) : int64 in 
   tt.
 
-Definition seq_test   : unit :=
+Definition seq_test  : unit :=
   let ns_2671 : seq int8 :=
     seq_with_capacity (usize 5) in 
   let ns_2671 :=
@@ -158,6 +158,6 @@ Definition arr_name_t := nseq (uint64) (usize 8).
 
 Definition byte_arr_name_t := nseq (uint8) (usize 128).
 
-Definition array_test   : unit :=
+Definition array_test  : unit :=
   tt.
 

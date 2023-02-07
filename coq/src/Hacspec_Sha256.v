@@ -30,10 +30,10 @@ Definition round_constants_table_t := nseq (uint32) (k_size_v).
 
 Definition hash_t := nseq (uint32) (usize 8).
 
-Definition ch (x_663 : uint32) (y_664 : uint32) (z_665 : uint32)  : uint32 :=
+Definition ch (x_663 : uint32) (y_664 : uint32) (z_665 : uint32) : uint32 :=
   ((x_663) .& (y_664)) .^ ((not (x_663)) .& (z_665)).
 
-Definition maj (x_666 : uint32) (y_667 : uint32) (z_668 : uint32)  : uint32 :=
+Definition maj (x_666 : uint32) (y_667 : uint32) (z_668 : uint32) : uint32 :=
   ((x_666) .& (y_667)) .^ (((x_666) .& (z_668)) .^ ((y_667) .& (z_668))).
 
 Definition op_table_v : op_table_type_t :=
@@ -139,7 +139,6 @@ Definition sigma
   (x_669 : uint32)
   (i_670 : uint_size)
   (op_671 : uint_size)
-  
   : uint32 :=
   let tmp_672 : uint32 :=
     uint32_rotate_right (x_669) (array_index (op_table_v) (((usize 3) * (
@@ -153,7 +152,7 @@ Definition sigma
             i_670)))) .^ (uint32_rotate_right (x_669) (array_index (
           op_table_v) (((usize 3) * (i_670)) + (usize 1))))) .^ (tmp_672).
 
-Definition schedule (block_673 : block_t)  : round_constants_table_t :=
+Definition schedule (block_673 : block_t) : round_constants_table_t :=
   let b_674 : seq uint32 :=
     array_to_be_uint32s (block_673) in 
   let s_675 : round_constants_table_t :=
@@ -186,7 +185,6 @@ Definition schedule (block_673 : block_t)  : round_constants_table_t :=
 Definition shuffle
   (ws_683 : round_constants_table_t)
   (hashi_684 : hash_t)
-  
   : hash_t :=
   let h_685 : hash_t :=
     hashi_684 in 
@@ -235,7 +233,7 @@ Definition shuffle
     h_685 in 
   h_685.
 
-Definition compress (block_697 : block_t) (h_in_698 : hash_t)  : hash_t :=
+Definition compress (block_697 : block_t) (h_in_698 : hash_t) : hash_t :=
   let s_699 : round_constants_table_t :=
     schedule (block_697) in 
   let h_700 : hash_t :=
@@ -249,7 +247,7 @@ Definition compress (block_697 : block_t) (h_in_698 : hash_t)  : hash_t :=
     h_700 in 
   h_700.
 
-Definition hash (msg_702 : byte_seq)  : sha256_digest_t :=
+Definition hash (msg_702 : byte_seq) : sha256_digest_t :=
   let h_703 : hash_t :=
     hash_init_v in 
   let last_block_704 : block_t :=
@@ -302,6 +300,6 @@ Definition hash (msg_702 : byte_seq)  : sha256_digest_t :=
       (h_703, last_block_704)) in 
   array_from_seq (hash_size_v) (array_to_be_bytes (h_703)).
 
-Definition sha256 (msg_712 : byte_seq)  : sha256_digest_t :=
+Definition sha256 (msg_712 : byte_seq) : sha256_digest_t :=
   hash (msg_712).
 

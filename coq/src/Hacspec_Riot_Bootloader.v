@@ -13,23 +13,22 @@ Definition riotboot_magic_v : int32 :=
 
 Notation "'fletcher_t'" := ((int32 '× int32)) : hacspec_scope.
 
-Definition new_fletcher   : fletcher_t :=
+Definition new_fletcher  : fletcher_t :=
   (@repr WORDSIZE32 65535, @repr WORDSIZE32 65535).
 
-Definition max_chunk_size   : uint_size :=
+Definition max_chunk_size  : uint_size :=
   usize 360.
 
-Definition reduce_u32 (x_1293 : int32)  : int32 :=
+Definition reduce_u32 (x_1293 : int32) : int32 :=
   ((x_1293) .& (@repr WORDSIZE32 65535)) .+ ((x_1293) shift_right (
       @repr WORDSIZE32 16)).
 
-Definition combine (lower_1294 : int32) (upper_1295 : int32)  : int32 :=
+Definition combine (lower_1294 : int32) (upper_1295 : int32) : int32 :=
   (lower_1294) .| ((upper_1295) shift_left (@repr WORDSIZE32 16)).
 
 Definition update_fletcher
   (f_1296 : fletcher_t)
   (data_1297 : seq int16)
-  
   : fletcher_t :=
   let max_chunk_size_1298 : uint_size :=
     max_chunk_size  in 
@@ -68,7 +67,7 @@ Definition update_fletcher
     reduce_u32 (b_1300) in 
   (a_1299, b_1300).
 
-Definition value (x_1307 : fletcher_t)  : int32 :=
+Definition value (x_1307 : fletcher_t) : int32 :=
   let '(a_1308, b_1309) :=
     x_1307 in 
   combine (a_1308) (b_1309).
@@ -76,7 +75,7 @@ Definition value (x_1307 : fletcher_t)  : int32 :=
 Notation "'header_t'" := ((int32 '× int32 '× int32 '× int32
 )) : hacspec_scope.
 
-Definition header_as_u16_slice (h_1310 : header_t)  : seq int16 :=
+Definition header_as_u16_slice (h_1310 : header_t) : seq int16 :=
   let '(magic_1311, seq_number_1312, start_addr_1313, _) :=
     h_1310 in 
   let magic_1314 : u32_word_t :=
@@ -119,7 +118,7 @@ Definition header_as_u16_slice (h_1310 : header_t)  : seq int16 :=
     u16_seq_1321 in 
   u16_seq_1321.
 
-Definition is_valid_header (h_1327 : header_t)  : bool :=
+Definition is_valid_header (h_1327 : header_t) : bool :=
   let '(magic_number_1328, seq_number_1329, start_addr_1330, checksum_1331) :=
     h_1327 in 
   let slice_1332 : seq int16 :=
@@ -144,7 +143,7 @@ Definition is_valid_header (h_1327 : header_t)  : bool :=
       (result_1333)) else ((result_1333)) in 
   result_1333.
 
-Definition choose_image (images_1337 : seq header_t)  : (bool '× int32) :=
+Definition choose_image (images_1337 : seq header_t) : (bool '× int32) :=
   let image_1338 : int32 :=
     @repr WORDSIZE32 0 in 
   let image_found_1339 : bool :=

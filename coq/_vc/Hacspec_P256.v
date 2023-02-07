@@ -38,7 +38,7 @@ Notation "'jacobian_result_t'" := ((
 
 Definition element_t := nseq (uint8) (usize 32).
 
-Definition jacobian_to_affine (p_569 : p256_jacobian_t)  : affine_t :=
+Definition jacobian_to_affine (p_569 : p256_jacobian_t) : affine_t :=
   let '(x_570, y_571, z_572) :=
     p_569 in 
   let z2_573 : p256_field_element_t :=
@@ -55,7 +55,7 @@ Definition jacobian_to_affine (p_569 : p256_jacobian_t)  : affine_t :=
     (y_571) *% (z3i_576) in 
   (x_577, y_578).
 
-Definition affine_to_jacobian (p_579 : affine_t)  : p256_jacobian_t :=
+Definition affine_to_jacobian (p_579 : affine_t) : p256_jacobian_t :=
   let '(x_580, y_581) :=
     p_579 in 
   (
@@ -66,7 +66,7 @@ Definition affine_to_jacobian (p_579 : affine_t)  : p256_jacobian_t :=
       @repr WORDSIZE128 1) : p256_field_element_t
   ).
 
-Definition point_double (p_582 : p256_jacobian_t)  : p256_jacobian_t :=
+Definition point_double (p_582 : p256_jacobian_t) : p256_jacobian_t :=
   let '(x1_583, y1_584, z1_585) :=
     p_582 in 
   let delta_586 : p256_field_element_t :=
@@ -106,7 +106,7 @@ Definition point_double (p_582 : p256_jacobian_t)  : p256_jacobian_t :=
     ((alpha_591) *% (y3_1_595)) -% (y3_2_596) in 
   (x3_592, y3_597, z3_594).
 
-Definition is_point_at_infinity (p_598 : p256_jacobian_t)  : bool :=
+Definition is_point_at_infinity (p_598 : p256_jacobian_t) : bool :=
   let '(x_599, y_600, z_601) :=
     p_598 in 
   nat_mod_equal (z_601) (nat_mod_from_literal (
@@ -116,7 +116,6 @@ Definition is_point_at_infinity (p_598 : p256_jacobian_t)  : bool :=
 Definition s1_equal_s2
   (s1_602 : p256_field_element_t)
   (s2_603 : p256_field_element_t)
-  
   : jacobian_result_t :=
   (if (nat_mod_equal (s1_602) (s2_603)):bool then (
       @Err p256_jacobian_t error_t (InvalidAddition)) else (
@@ -135,7 +134,6 @@ Definition s1_equal_s2
 Definition point_add_jacob
   (p_604 : p256_jacobian_t)
   (q_605 : p256_jacobian_t)
-  
   : jacobian_result_t :=
   let result_606 : (result p256_jacobian_t error_t) :=
     @Ok p256_jacobian_t error_t (q_605) in 
@@ -209,7 +207,6 @@ Definition point_add_jacob
 Definition ltr_mul
   (k_632 : p256_scalar_t)
   (p_633 : p256_jacobian_t)
-  
   : jacobian_result_t :=
   let q_634 : (
       p256_field_element_t '×
@@ -247,12 +244,11 @@ Definition ltr_mul
 Definition p256_point_mul
   (k_636 : p256_scalar_t)
   (p_637 : affine_t)
-  
   : affine_result_t :=
   bind (ltr_mul (k_636) (affine_to_jacobian (p_637))) (fun jac_638 =>
     @Ok affine_t error_t (jacobian_to_affine (jac_638))).
 
-Definition p256_point_mul_base (k_639 : p256_scalar_t)  : affine_result_t :=
+Definition p256_point_mul_base (k_639 : p256_scalar_t) : affine_result_t :=
   let base_point_640 : (p256_field_element_t '× p256_field_element_t) :=
     (
       nat_mod_from_byte_seq_be (array_to_seq (array_from_list uint8 (let l :=
@@ -331,18 +327,17 @@ Definition p256_point_mul_base (k_639 : p256_scalar_t)  : affine_result_t :=
 Definition point_add_distinct
   (p_641 : affine_t)
   (q_642 : affine_t)
-  
   : affine_result_t :=
   bind (point_add_jacob (affine_to_jacobian (p_641)) (affine_to_jacobian (
         q_642))) (fun r_643 => @Ok affine_t error_t (jacobian_to_affine (
         r_643))).
 
-Definition point_add (p_644 : affine_t) (q_645 : affine_t)  : affine_result_t :=
+Definition point_add (p_644 : affine_t) (q_645 : affine_t) : affine_result_t :=
   (if ((p_644) !=.? (q_645)):bool then (point_add_distinct (p_644) (
         q_645)) else (@Ok affine_t error_t (jacobian_to_affine (point_double (
             affine_to_jacobian (p_644)))))).
 
-Definition p256_validate_private_key (k_646 : byte_seq)  : bool :=
+Definition p256_validate_private_key (k_646 : byte_seq) : bool :=
   let valid_647 : bool :=
     true in 
   let k_element_648 : p256_scalar_t :=
@@ -367,7 +362,7 @@ Definition p256_validate_private_key (k_646 : byte_seq)  : bool :=
     (valid_647, all_zero_650) in 
   (valid_647) && (negb (all_zero_650)).
 
-Definition p256_validate_public_key (p_652 : affine_t)  : bool :=
+Definition p256_validate_public_key (p_652 : affine_t) : bool :=
   let b_653 : p256_field_element_t :=
     nat_mod_from_byte_seq_be ([
         secret (@repr WORDSIZE8 90) : int8;
@@ -417,7 +412,6 @@ Definition p256_validate_public_key (p_652 : affine_t)  : bool :=
 
 Definition p256_calculate_w
   (x_658 : p256_field_element_t)
-  
   : p256_field_element_t :=
   let b_659 : p256_field_element_t :=
     nat_mod_from_byte_seq_be ([

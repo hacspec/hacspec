@@ -86,7 +86,6 @@ Definition expand_message_xmd
   (msg_2290 : byte_seq)
   (dst_2291 : byte_seq)
   (len_in_bytes_2292 : uint_size)
-  
   : byte_seq_result_t :=
   let ell_2293 : uint_size :=
     (((len_in_bytes_2292) + (b_in_bytes_v)) - (usize 1)) / (b_in_bytes_v) in 
@@ -143,7 +142,6 @@ Definition ed_hash_to_field
   (msg_2304 : byte_seq)
   (dst_2305 : byte_seq)
   (count_2306 : uint_size)
-  
   : seq_ed_result_t :=
   let len_in_bytes_2307 : uint_size :=
     (count_2306) * (l_v) in 
@@ -166,7 +164,7 @@ Definition ed_hash_to_field
       output_2309 in 
     @Ok seq ed25519_field_element_t error_t (output_2309)).
 
-Definition ed_is_square (x_2314 : ed25519_field_element_t)  : bool :=
+Definition ed_is_square (x_2314 : ed25519_field_element_t) : bool :=
   let c1_2315 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_be (array_to_be_bytes (
         p_1_2_v)) : ed25519_field_element_t in 
@@ -174,25 +172,24 @@ Definition ed_is_square (x_2314 : ed25519_field_element_t)  : bool :=
     nat_mod_pow_self (x_2314) (c1_2315) in 
   ((tv_2316) =.? (nat_mod_zero )) || ((tv_2316) =.? (nat_mod_one )).
 
-Definition sgn0_m_eq_1 (x_2317 : ed25519_field_element_t)  : bool :=
+Definition sgn0_m_eq_1 (x_2317 : ed25519_field_element_t) : bool :=
   ((x_2317) rem (nat_mod_two )) =.? (nat_mod_one ).
 
-Definition ed_clear_cofactor (x_2318 : ed_point_t)  : ed_point_t :=
+Definition ed_clear_cofactor (x_2318 : ed_point_t) : ed_point_t :=
   point_mul_by_cofactor (x_2318).
 
 Definition cmov
   (a_2319 : ed25519_field_element_t)
   (b_2320 : ed25519_field_element_t)
   (c_2321 : bool)
-  
   : ed25519_field_element_t :=
   (if (c_2321):bool then (b_2320) else (a_2319)).
 
-Definition xor (a_2322 : bool) (b_2323 : bool)  : bool :=
+Definition xor (a_2322 : bool) (b_2323 : bool) : bool :=
   (if (a_2322):bool then ((if (b_2323):bool then (false) else (true))) else ((
         if (b_2323):bool then (true) else (false)))).
 
-Definition curve25519_to_edwards25519 (p_2324 : ed_point_t)  : ed_point_t :=
+Definition curve25519_to_edwards25519 (p_2324 : ed_point_t) : ed_point_t :=
   let '(s_2325, t_2326, _, _) :=
     point_normalize (p_2324) in 
   let one_2327 : ed25519_field_element_t :=
@@ -230,7 +227,6 @@ Definition curve25519_to_edwards25519 (p_2324 : ed_point_t)  : ed_point_t :=
 
 Definition map_to_curve_elligator2
   (u_2342 : ed25519_field_element_t)
-  
   : ed_point_t :=
   let j_2343 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
@@ -285,7 +281,6 @@ Definition map_to_curve_elligator2
 
 Definition map_to_curve_elligator2_straight
   (u_2355 : ed25519_field_element_t)
-  
   : ed_point_t :=
   let j_2356 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
@@ -341,7 +336,6 @@ Definition map_to_curve_elligator2_straight
 
 Definition map_to_curve_elligator2_curve25519
   (u_2381 : ed25519_field_element_t)
-  
   : ed_point_t :=
   let j_2382 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
@@ -441,7 +435,6 @@ Definition map_to_curve_elligator2_curve25519
 
 Definition map_to_curve_elligator2_edwards25519
   (u_2428 : ed25519_field_element_t)
-  
   : ed_point_t :=
   let j_2429 : ed25519_field_element_t :=
     nat_mod_from_literal (_) (j_v) : ed25519_field_element_t in 
@@ -485,7 +478,6 @@ Definition map_to_curve_elligator2_edwards25519
 
 Definition map_to_curve_elligator2_edwards
   (u_2451 : ed25519_field_element_t)
-  
   : ed_point_t :=
   let st_2452 : (
       ed25519_field_element_t '×
@@ -499,7 +491,6 @@ Definition map_to_curve_elligator2_edwards
 Definition ed_encode_to_curve
   (msg_2453 : byte_seq)
   (dst_2454 : byte_seq)
-  
   : ed_point_result_t :=
   bind (ed_hash_to_field (msg_2453) (dst_2454) (usize 1)) (fun u_2455 =>
     let q_2456 : (

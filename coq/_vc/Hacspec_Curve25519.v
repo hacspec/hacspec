@@ -25,7 +25,6 @@ Definition x25519_serialized_scalar_t := nseq (uint8) (usize 32).
 
 Definition mask_scalar
   (s_477 : x25519_serialized_scalar_t)
-  
   : x25519_serialized_scalar_t :=
   let k_478 : x25519_serialized_scalar_t :=
     s_477 in 
@@ -40,12 +39,12 @@ Definition mask_scalar
           @repr WORDSIZE8 64) : int8)) in 
   k_478.
 
-Definition decode_scalar (s_479 : x25519_serialized_scalar_t)  : scalar_t :=
+Definition decode_scalar (s_479 : x25519_serialized_scalar_t) : scalar_t :=
   let k_480 : x25519_serialized_scalar_t :=
     mask_scalar (s_479) in 
   nat_mod_from_byte_seq_le (array_to_seq (k_480)) : scalar_t.
 
-Definition decode_point (u_481 : x25519_serialized_point_t)  : point_t :=
+Definition decode_point (u_481 : x25519_serialized_point_t) : point_t :=
   let u_482 : x25519_serialized_point_t :=
     u_481 in 
   let u_482 :=
@@ -58,7 +57,7 @@ Definition decode_point (u_481 : x25519_serialized_point_t)  : point_t :=
       @repr WORDSIZE128 1) : x25519_field_element_t
   ).
 
-Definition encode_point (p_483 : point_t)  : x25519_serialized_point_t :=
+Definition encode_point (p_483 : point_t) : x25519_serialized_point_t :=
   let '(x_484, y_485) :=
     p_483 in 
   let b_486 : x25519_field_element_t :=
@@ -69,7 +68,6 @@ Definition encode_point (p_483 : point_t)  : x25519_serialized_point_t :=
 Definition point_add_and_double
   (q_487 : point_t)
   (np_488 : (point_t '× point_t))
-  
   : (point_t '× point_t) :=
   let '(nq_489, nqp1_490) :=
     np_488 in 
@@ -111,7 +109,7 @@ Definition point_add_and_double
     (e_501) *% ((aa_498) +% ((e121665_509) *% (e_501))) in 
   ((x_2_508, z_2_510), (x_3_506, z_3_507)).
 
-Definition swap (x_511 : (point_t '× point_t))  : (point_t '× point_t) :=
+Definition swap (x_511 : (point_t '× point_t)) : (point_t '× point_t) :=
   let '(x0_512, x1_513) :=
     x_511 in 
   (x1_513, x0_512).
@@ -119,7 +117,6 @@ Definition swap (x_511 : (point_t '× point_t))  : (point_t '× point_t) :=
 Definition montgomery_ladder
   (k_514 : scalar_t)
   (init_515 : point_t)
-  
   : point_t :=
   let inf_516 : (x25519_field_element_t '× x25519_field_element_t) :=
     (
@@ -153,7 +150,6 @@ Definition montgomery_ladder
 Definition x25519_scalarmult
   (s_520 : x25519_serialized_scalar_t)
   (p_521 : x25519_serialized_point_t)
-  
   : x25519_serialized_point_t :=
   let s_522 : scalar_t :=
     decode_scalar (s_520) in 
@@ -165,7 +161,6 @@ Definition x25519_scalarmult
 
 Definition x25519_secret_to_public
   (s_525 : x25519_serialized_scalar_t)
-  
   : x25519_serialized_point_t :=
   let base_526 : x25519_serialized_point_t :=
     array_new_ (default : uint8) (32) in 

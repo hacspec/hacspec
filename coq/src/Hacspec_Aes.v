@@ -334,7 +334,7 @@ Definition rcon_v : r_con_t :=
         secret (@repr WORDSIZE8 77) : int8
       ] in  l).
 
-Definition sub_bytes (state_150 : block_t)  : block_t :=
+Definition sub_bytes (state_150 : block_t) : block_t :=
   let st_151 : block_t :=
     state_150 in 
   let st_151 :=
@@ -350,7 +350,6 @@ Definition shift_row
   (i_153 : uint_size)
   (shift_154 : uint_size)
   (state_155 : block_t)
-  
   : block_t :=
   let out_156 : block_t :=
     state_155 in 
@@ -368,14 +367,14 @@ Definition shift_row
           i_153) + ((usize 4) * (((shift_154) + (usize 3)) %% (usize 4))))) in 
   out_156.
 
-Definition shift_rows (state_157 : block_t)  : block_t :=
+Definition shift_rows (state_157 : block_t) : block_t :=
   let state_158 : block_t :=
     shift_row (usize 1) (usize 1) (state_157) in 
   let state_159 : block_t :=
     shift_row (usize 2) (usize 2) (state_158) in 
   shift_row (usize 3) (usize 3) (state_159).
 
-Definition xtime (x_160 : uint8)  : uint8 :=
+Definition xtime (x_160 : uint8) : uint8 :=
   let x1_161 : uint8 :=
     (x_160) shift_left (usize 1) in 
   let x7_162 : uint8 :=
@@ -386,7 +385,7 @@ Definition xtime (x_160 : uint8)  : uint8 :=
     (x71_163) .* (secret (@repr WORDSIZE8 27) : int8) in 
   (x1_161) .^ (x711b_164).
 
-Definition mix_column (c_165 : uint_size) (state_166 : block_t)  : block_t :=
+Definition mix_column (c_165 : uint_size) (state_166 : block_t) : block_t :=
   let i0_167 : uint_size :=
     (usize 4) * (c_165) in 
   let s0_168 : uint8 :=
@@ -415,7 +414,7 @@ Definition mix_column (c_165 : uint_size) (state_166 : block_t)  : block_t :=
           (s3_171) .^ (s0_168)))) in 
   st_172.
 
-Definition mix_columns (state_174 : block_t)  : block_t :=
+Definition mix_columns (state_174 : block_t) : block_t :=
   let state_175 : block_t :=
     mix_column (usize 0) (state_174) in 
   let state_176 : block_t :=
@@ -427,7 +426,6 @@ Definition mix_columns (state_174 : block_t)  : block_t :=
 Definition add_round_key
   (state_178 : block_t)
   (key_179 : round_key_t)
-  
   : block_t :=
   let out_180 : block_t :=
     state_178 in 
@@ -443,7 +441,6 @@ Definition add_round_key
 Definition aes_enc
   (state_182 : block_t)
   (round_key_183 : round_key_t)
-  
   : block_t :=
   let state_184 : block_t :=
     sub_bytes (state_182) in 
@@ -456,7 +453,6 @@ Definition aes_enc
 Definition aes_enc_last
   (state_187 : block_t)
   (round_key_188 : round_key_t)
-  
   : block_t :=
   let state_189 : block_t :=
     sub_bytes (state_187) in 
@@ -464,7 +460,7 @@ Definition aes_enc_last
     shift_rows (state_189) in 
   add_round_key (state_190) (round_key_188).
 
-Definition rounds_aes (state_191 : block_t) (key_192 : byte_seq)  : block_t :=
+Definition rounds_aes (state_191 : block_t) (key_192 : byte_seq) : block_t :=
   let out_193 : block_t :=
     state_191 in 
   let out_193 :=
@@ -482,7 +478,6 @@ Definition block_cipher_aes
   (input_196 : block_t)
   (key_197 : byte_seq)
   (nr_198 : uint_size)
-  
   : block_t :=
   let k0_199 : round_key_t :=
     array_from_slice_range (default : uint8) (blocksize_v) (key_197) ((
@@ -500,7 +495,7 @@ Definition block_cipher_aes
     rounds_aes (state_202) (k_200) in 
   aes_enc_last (state_203) (kn_201).
 
-Definition rotate_word (w_204 : word_t)  : word_t :=
+Definition rotate_word (w_204 : word_t) : word_t :=
   array_from_list uint8 (let l :=
       [
         array_index (w_204) (usize 1);
@@ -509,7 +504,7 @@ Definition rotate_word (w_204 : word_t)  : word_t :=
         array_index (w_204) (usize 0)
       ] in  l).
 
-Definition slice_word (w_205 : word_t)  : word_t :=
+Definition slice_word (w_205 : word_t) : word_t :=
   array_from_list uint8 (let l :=
       [
         array_index (sbox_v) (declassify_usize_from_uint8 (array_index (w_205) (
@@ -522,7 +517,7 @@ Definition slice_word (w_205 : word_t)  : word_t :=
               usize 3)))
       ] in  l).
 
-Definition aes_keygen_assist (w_206 : word_t) (rcon_207 : uint8)  : word_t :=
+Definition aes_keygen_assist (w_206 : word_t) (rcon_207 : uint8) : word_t :=
   let k_208 : word_t :=
     rotate_word (w_206) in 
   let k_208 :=
@@ -538,7 +533,6 @@ Definition key_expansion_word
   (i_211 : uint_size)
   (nk_212 : uint_size)
   (nr_213 : uint_size)
-  
   : word_result_t :=
   let k_214 : word_t :=
     w1_210 in 
@@ -575,7 +569,6 @@ Definition key_expansion_aes
   (key_schedule_length_220 : uint_size)
   (key_length_221 : uint_size)
   (iterations_222 : uint_size)
-  
   : byte_seq_result_t :=
   let key_ex_223 : seq uint8 :=
     seq_new_ (default : uint8) (key_schedule_length_220) in 
@@ -605,7 +598,6 @@ Definition aes_encrypt_block
   (key_schedule_length_232 : uint_size)
   (key_length_233 : uint_size)
   (iterations_234 : uint_size)
-  
   : block_result_t :=
   bind (key_expansion_aes (k_228) (nk_230) (nr_231) (key_schedule_length_232) (
       key_length_233) (iterations_234)) (fun key_ex_235 => @Ok block_t int8 (
@@ -614,7 +606,6 @@ Definition aes_encrypt_block
 Definition aes128_encrypt_block
   (k_236 : key128_t)
   (input_237 : block_t)
-  
   : block_t :=
   result_unwrap (aes_encrypt_block (seq_from_seq (array_to_seq (k_236))) (
       input_237) (key_length_v) (rounds_v) (key_schedule_length_v) (
@@ -629,7 +620,6 @@ Definition aes_ctr_key_block
   (key_schedule_length_243 : uint_size)
   (key_length_244 : uint_size)
   (iterations_245 : uint_size)
-  
   : block_result_t :=
   let input_246 : block_t :=
     array_new_ (default : uint8) (blocksize_v) in 
@@ -644,7 +634,6 @@ Definition aes_ctr_key_block
 Definition xor_block
   (block_247 : block_t)
   (key_block_248 : block_t)
-  
   : block_t :=
   let out_249 : block_t :=
     block_247 in 
@@ -667,7 +656,6 @@ Definition aes_counter_mode
   (key_schedule_length_257 : uint_size)
   (key_length_258 : uint_size)
   (iterations_259 : uint_size)
-  
   : byte_seq_result_t :=
   let ctr_260 : uint32 :=
     counter_253 in 
@@ -715,7 +703,6 @@ Definition aes128_encrypt
   (nonce_271 : aes_nonce_t)
   (counter_272 : uint32)
   (msg_273 : byte_seq)
-  
   : byte_seq :=
   result_unwrap (aes_counter_mode (seq_from_seq (array_to_seq (key_270))) (
       nonce_271) (counter_272) (msg_273) (key_length_v) (rounds_v) (
@@ -726,7 +713,6 @@ Definition aes128_decrypt
   (nonce_275 : aes_nonce_t)
   (counter_276 : uint32)
   (ctxt_277 : byte_seq)
-  
   : byte_seq :=
   result_unwrap (aes_counter_mode (seq_from_seq (array_to_seq (key_274))) (
       nonce_275) (counter_276) (ctxt_277) (key_length_v) (rounds_v) (

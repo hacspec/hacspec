@@ -33,7 +33,7 @@ Definition scalar_t :=
 Definition decoding_error_v : int8 :=
   @repr WORDSIZE8 20.
 
-Definition p   : field_element_t :=
+Definition p  : field_element_t :=
   nat_mod_from_byte_seq_be ([
       secret (@repr WORDSIZE8 127) : int8;
       secret (@repr WORDSIZE8 255) : int8;
@@ -69,7 +69,7 @@ Definition p   : field_element_t :=
       secret (@repr WORDSIZE8 237) : int8
     ]) : field_element_t.
 
-Definition d   : field_element_t :=
+Definition d  : field_element_t :=
   nat_mod_from_byte_seq_be ([
       secret (@repr WORDSIZE8 82) : int8;
       secret (@repr WORDSIZE8 3) : int8;
@@ -105,7 +105,7 @@ Definition d   : field_element_t :=
       secret (@repr WORDSIZE8 163) : int8
     ]) : field_element_t.
 
-Definition sqrt_m1   : field_element_t :=
+Definition sqrt_m1  : field_element_t :=
   nat_mod_from_byte_seq_be ([
       secret (@repr WORDSIZE8 43) : int8;
       secret (@repr WORDSIZE8 131) : int8;
@@ -141,7 +141,7 @@ Definition sqrt_m1   : field_element_t :=
       secret (@repr WORDSIZE8 176) : int8
     ]) : field_element_t.
 
-Definition invsqrt_a_minus_d   : field_element_t :=
+Definition invsqrt_a_minus_d  : field_element_t :=
   nat_mod_from_byte_seq_be ([
       secret (@repr WORDSIZE8 120) : int8;
       secret (@repr WORDSIZE8 108) : int8;
@@ -177,7 +177,7 @@ Definition invsqrt_a_minus_d   : field_element_t :=
       secret (@repr WORDSIZE8 234) : int8
     ]) : field_element_t.
 
-Definition sqrt_ad_minus_one   : field_element_t :=
+Definition sqrt_ad_minus_one  : field_element_t :=
   nat_mod_from_byte_seq_be ([
       secret (@repr WORDSIZE8 55) : int8;
       secret (@repr WORDSIZE8 105) : int8;
@@ -213,7 +213,7 @@ Definition sqrt_ad_minus_one   : field_element_t :=
       secret (@repr WORDSIZE8 27) : int8
     ]) : field_element_t.
 
-Definition one_minus_d_sq   : field_element_t :=
+Definition one_minus_d_sq  : field_element_t :=
   nat_mod_from_byte_seq_be ([
       secret (@repr WORDSIZE8 2) : int8;
       secret (@repr WORDSIZE8 144) : int8;
@@ -249,7 +249,7 @@ Definition one_minus_d_sq   : field_element_t :=
       secret (@repr WORDSIZE8 118) : int8
     ]) : field_element_t.
 
-Definition d_minus_one_sq   : field_element_t :=
+Definition d_minus_one_sq  : field_element_t :=
   nat_mod_from_byte_seq_be ([
       secret (@repr WORDSIZE8 89) : int8;
       secret (@repr WORDSIZE8 104) : int8;
@@ -285,7 +285,7 @@ Definition d_minus_one_sq   : field_element_t :=
       secret (@repr WORDSIZE8 32) : int8
     ]) : field_element_t.
 
-Definition base_point_encoded   : ristretto_point_encoded_t :=
+Definition base_point_encoded  : ristretto_point_encoded_t :=
   array_from_seq (32) ([
       secret (@repr WORDSIZE8 226) : int8;
       secret (@repr WORDSIZE8 242) : int8;
@@ -321,18 +321,18 @@ Definition base_point_encoded   : ristretto_point_encoded_t :=
       secret (@repr WORDSIZE8 118) : int8
     ]).
 
-Definition base_point   : ristretto_point_t :=
+Definition base_point  : ristretto_point_t :=
   result_unwrap (decode (base_point_encoded )).
 
-Definition identity_point   : ristretto_point_t :=
+Definition identity_point  : ristretto_point_t :=
   (fe (usize 0), fe (usize 1), fe (usize 1), fe (usize 0)).
 
-Definition fe (x_740 : uint_size)  : field_element_t :=
+Definition fe (x_740 : uint_size) : field_element_t :=
   nat_mod_from_literal (
     0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed) (
     pub_u128 (x_740)) : field_element_t.
 
-Definition geq_p (x_741 : seq uint8)  : bool :=
+Definition geq_p (x_741 : seq uint8) : bool :=
   let p_seq_742 : seq uint8 :=
     [
       secret (@repr WORDSIZE8 237) : int8;
@@ -384,30 +384,28 @@ Definition geq_p (x_741 : seq uint8)  : bool :=
     res_743 in 
   res_743.
 
-Definition is_negative (e_747 : field_element_t)  : bool :=
+Definition is_negative (e_747 : field_element_t) : bool :=
   ((e_747) rem (fe (usize 2))) =.? (fe (usize 1)).
 
-Definition eq (u_748 : field_element_t) (v_749 : field_element_t)  : bool :=
+Definition eq (u_748 : field_element_t) (v_749 : field_element_t) : bool :=
   (u_748) =.? (v_749).
 
 Definition select
   (u_750 : field_element_t)
   (cond_751 : bool)
   (v_752 : field_element_t)
-  
   : field_element_t :=
   (if (cond_751):bool then (u_750) else (v_752)).
 
-Definition neg_fe (u_753 : field_element_t)  : field_element_t :=
+Definition neg_fe (u_753 : field_element_t) : field_element_t :=
   (fe (usize 0)) -% (u_753).
 
-Definition abs (u_754 : field_element_t)  : field_element_t :=
+Definition abs (u_754 : field_element_t) : field_element_t :=
   select (neg_fe (u_754)) (is_negative (u_754)) (u_754).
 
 Definition sqrt_ratio_m1
   (u_755 : field_element_t)
   (v_756 : field_element_t)
-  
   : (bool '× field_element_t) :=
   let v3_757 : field_element_t :=
     (nat_mod_pow (v_756) (@repr WORDSIZE128 2)) *% (v_756) in 
@@ -435,7 +433,7 @@ Definition sqrt_ratio_m1
     (correct_sign_sqrt_761) || (flipped_sign_sqrt_762) in 
   (was_square_765, r_759).
 
-Definition map (t_766 : field_element_t)  : ristretto_point_t :=
+Definition map (t_766 : field_element_t) : ristretto_point_t :=
   let one_767 : field_element_t :=
     fe (usize 1) in 
   let minus_one_768 : field_element_t :=
@@ -471,7 +469,7 @@ Definition map (t_766 : field_element_t)  : ristretto_point_t :=
     (w0_777) *% (w2_779)
   ).
 
-Definition one_way_map (b_781 : byte_string_t)  : ristretto_point_t :=
+Definition one_way_map (b_781 : byte_string_t) : ristretto_point_t :=
   let r0_bytes_782 : seq uint8 :=
     array_slice (b_781) (usize 0) (usize 32) in 
   let r1_bytes_783 : seq uint8 :=
@@ -506,7 +504,7 @@ Definition one_way_map (b_781 : byte_string_t)  : ristretto_point_t :=
     map (r1_787) in 
   add (p1_788) (p2_789).
 
-Definition encode (u_790 : ristretto_point_t)  : ristretto_point_encoded_t :=
+Definition encode (u_790 : ristretto_point_t) : ristretto_point_encoded_t :=
   let '(x0_791, y0_792, z0_793, t0_794) :=
     u_790 in 
   let u1_795 : field_element_t :=
@@ -545,7 +543,7 @@ Definition encode (u_790 : ristretto_point_t)  : ristretto_point_encoded_t :=
   array_update_start (array_new_ (default : uint8) (32)) (
     nat_mod_to_byte_seq_le (s_809)).
 
-Definition decode (u_810 : ristretto_point_encoded_t)  : decode_result_t :=
+Definition decode (u_810 : ristretto_point_encoded_t) : decode_result_t :=
   let ret_811 : (result ristretto_point_t int8) :=
     @Err ristretto_point_t int8 (decoding_error_v) in 
   let s_812 : field_element_t :=
@@ -588,7 +586,6 @@ Definition decode (u_810 : ristretto_point_encoded_t)  : decode_result_t :=
 Definition equals
   (u_826 : ristretto_point_t)
   (v_827 : ristretto_point_t)
-  
   : bool :=
   let '(x1_828, y1_829, _, _) :=
     u_826 in 
@@ -600,7 +597,6 @@ Definition equals
 Definition add
   (u_832 : ristretto_point_t)
   (v_833 : ristretto_point_t)
-  
   : ristretto_point_t :=
   let '(x1_834, y1_835, z1_836, t1_837) :=
     u_832 in 
@@ -632,7 +628,7 @@ Definition add
     (f_847) *% (g_848) in 
   (x3_850, y3_851, z3_853, t3_852).
 
-Definition neg (u_854 : ristretto_point_t)  : ristretto_point_t :=
+Definition neg (u_854 : ristretto_point_t) : ristretto_point_t :=
   let '(x1_855, y1_856, z1_857, t1_858) :=
     u_854 in 
   (neg_fe (x1_855), y1_856, neg_fe (z1_857), t1_858).
@@ -640,11 +636,10 @@ Definition neg (u_854 : ristretto_point_t)  : ristretto_point_t :=
 Definition sub
   (u_859 : ristretto_point_t)
   (v_860 : ristretto_point_t)
-  
   : ristretto_point_t :=
   add (u_859) (neg (v_860)).
 
-Definition double (u_861 : ristretto_point_t)  : ristretto_point_t :=
+Definition double (u_861 : ristretto_point_t) : ristretto_point_t :=
   let '(x1_862, y1_863, z1_864, _) :=
     u_861 in 
   let a_865 : field_element_t :=
@@ -674,7 +669,6 @@ Definition double (u_861 : ristretto_point_t)  : ristretto_point_t :=
 Definition mul
   (k_876 : scalar_t)
   (p_877 : ristretto_point_t)
-  
   : ristretto_point_t :=
   let res_878 : (
       field_element_t '×

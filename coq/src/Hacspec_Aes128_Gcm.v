@@ -18,7 +18,7 @@ Notation "'aes_gcm_byte_seq_result_t'" := ((
 Definition invalid_tag_v : int8 :=
   @repr WORDSIZE8 1.
 
-Definition pad_aad_msg (aad_278 : byte_seq) (msg_279 : byte_seq)  : byte_seq :=
+Definition pad_aad_msg (aad_278 : byte_seq) (msg_279 : byte_seq) : byte_seq :=
   let laad_280 : uint_size :=
     seq_len (aad_278) in 
   let lmsg_281 : uint_size :=
@@ -53,7 +53,6 @@ Definition encrypt_aes
   (iv_286 : aes_nonce_t)
   (aad_287 : byte_seq)
   (msg_288 : byte_seq)
-  
   : (byte_seq '× gf128_tag_t) :=
   let iv0_289 : aes_nonce_t :=
     array_new_ (default : uint8) (_) in 
@@ -81,7 +80,6 @@ Definition encrypt_aes128
   (iv_297 : aes_nonce_t)
   (aad_298 : byte_seq)
   (msg_299 : byte_seq)
-  
   : (byte_seq '× gf128_tag_t) :=
   encrypt_aes (seq_from_seq (array_to_seq (key_296))) (iv_297) (aad_298) (
     msg_299).
@@ -92,7 +90,6 @@ Definition decrypt_aes
   (aad_302 : byte_seq)
   (cipher_text_303 : byte_seq)
   (tag_304 : gf128_tag_t)
-  
   : aes_gcm_byte_seq_result_t :=
   let iv0_305 : aes_nonce_t :=
     array_new_ (default : uint8) (_) in 
@@ -123,7 +120,6 @@ Definition decrypt_aes128
   (aad_314 : byte_seq)
   (cipher_text_315 : byte_seq)
   (tag_316 : gf128_tag_t)
-  
   : aes_gcm_byte_seq_result_t :=
   decrypt_aes (seq_from_seq (array_to_seq (key_312))) (iv_313) (aad_314) (
     cipher_text_315) (tag_316).

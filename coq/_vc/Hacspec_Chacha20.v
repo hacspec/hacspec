@@ -34,7 +34,6 @@ Definition chacha20_line
   (d_347 : state_idx_t)
   (s_348 : uint_size)
   (m_349 : state_t)
-  
   : state_t :=
   let state_350 : state_t :=
     m_349 in 
@@ -55,7 +54,6 @@ Definition chacha20_quarter_round
   (c_353 : state_idx_t)
   (d_354 : state_idx_t)
   (state_355 : state_t)
-  
   : state_t :=
   let state_356 : state_t :=
     chacha20_line (a_351) (b_352) (d_354) (usize 16) (state_355) in 
@@ -65,7 +63,7 @@ Definition chacha20_quarter_round
     chacha20_line (a_351) (b_352) (d_354) (usize 8) (state_357) in 
   chacha20_line (c_353) (d_354) (b_352) (usize 7) (state_358).
 
-Definition chacha20_double_round (state_359 : state_t)  : state_t :=
+Definition chacha20_double_round (state_359 : state_t) : state_t :=
   let state_360 : state_t :=
     chacha20_quarter_round (usize 0) (usize 4) (usize 8) (usize 12) (
       state_359) in 
@@ -89,7 +87,7 @@ Definition chacha20_double_round (state_359 : state_t)  : state_t :=
       state_365) in 
   chacha20_quarter_round (usize 3) (usize 4) (usize 9) (usize 14) (state_366).
 
-Definition chacha20_rounds (state_367 : state_t)  : state_t :=
+Definition chacha20_rounds (state_367 : state_t) : state_t :=
   let st_368 : state_t :=
     state_367 in 
   let st_368 :=
@@ -100,7 +98,7 @@ Definition chacha20_rounds (state_367 : state_t)  : state_t :=
     st_368 in 
   st_368.
 
-Definition chacha20_core (ctr_370 : uint32) (st0_371 : state_t)  : state_t :=
+Definition chacha20_core (ctr_370 : uint32) (st0_371 : state_t) : state_t :=
   let state_372 : state_t :=
     st0_371 in 
   let state_372 :=
@@ -110,7 +108,7 @@ Definition chacha20_core (ctr_370 : uint32) (st0_371 : state_t)  : state_t :=
     chacha20_rounds (state_372) in 
   (k_373) array_add (state_372).
 
-Definition chacha20_constants_init   : constants_t :=
+Definition chacha20_constants_init  : constants_t :=
   let constants_374 : constants_t :=
     array_new_ (default : uint32) (4) in 
   let constants_374 :=
@@ -131,7 +129,6 @@ Definition chacha20_init
   (key_375 : cha_cha_key_t)
   (iv_376 : cha_cha_iv_t)
   (ctr_377 : uint32)
-  
   : state_t :=
   let st_378 : state_t :=
     array_new_ (default : uint32) (16) in 
@@ -146,7 +143,7 @@ Definition chacha20_init
     array_update (st_378) (usize 13) (array_to_le_uint32s (iv_376)) in 
   st_378.
 
-Definition chacha20_key_block (state_379 : state_t)  : block_t :=
+Definition chacha20_key_block (state_379 : state_t) : block_t :=
   let state_380 : state_t :=
     chacha20_core (secret (@repr WORDSIZE32 0) : int32) (state_379) in 
   array_from_seq (64) (array_to_le_bytes (state_380)).
@@ -154,7 +151,6 @@ Definition chacha20_key_block (state_379 : state_t)  : block_t :=
 Definition chacha20_key_block0
   (key_381 : cha_cha_key_t)
   (iv_382 : cha_cha_iv_t)
-  
   : block_t :=
   let state_383 : state_t :=
     chacha20_init (key_381) (iv_382) (secret (@repr WORDSIZE32 0) : int32) in 
@@ -164,7 +160,6 @@ Definition chacha20_encrypt_block
   (st0_384 : state_t)
   (ctr_385 : uint32)
   (plain_386 : block_t)
-  
   : block_t :=
   let st_387 : state_t :=
     chacha20_core (ctr_385) (st0_384) in 
@@ -178,7 +173,6 @@ Definition chacha20_encrypt_last
   (st0_390 : state_t)
   (ctr_391 : uint32)
   (plain_392 : byte_seq)
-  
   : byte_seq :=
   let b_393 : block_t :=
     array_new_ (default : uint8) (64) in 
@@ -188,7 +182,7 @@ Definition chacha20_encrypt_last
     chacha20_encrypt_block (st0_390) (ctr_391) (b_393) in 
   array_slice (b_393) (usize 0) (seq_len (plain_392)).
 
-Definition chacha20_update (st0_394 : state_t) (m_395 : byte_seq)  : byte_seq :=
+Definition chacha20_update (st0_394 : state_t) (m_395 : byte_seq) : byte_seq :=
   let blocks_out_396 : seq uint8 :=
     seq_new_ (default : uint8) (seq_len (m_395)) in 
   let n_blocks_397 : uint_size :=
@@ -222,7 +216,6 @@ Definition chacha20
   (iv_404 : cha_cha_iv_t)
   (ctr_405 : int32)
   (m_406 : byte_seq)
-  
   : byte_seq :=
   let state_407 : state_t :=
     chacha20_init (key_403) (iv_404) (secret (ctr_405) : int32) in 

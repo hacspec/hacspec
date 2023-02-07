@@ -56,28 +56,28 @@ Notation "'byte_seq_result_t'" := ((result byte_seq error_t)) : hacspec_scope.
 
 Notation "'rsa_int_result_t'" := ((result rsa_int_t error_t)) : hacspec_scope.
 
-Definition rsaep (pk_2530 : pk_t) (m_2531 : rsa_int_t)  : rsa_int_result_t :=
+Definition rsaep (pk_2530 : pk_t) (m_2531 : rsa_int_t) : rsa_int_result_t :=
   let '(n_2532, e_2533) :=
     pk_2530 in 
   (if ((m_2531) >.? ((n_2532) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
         nat_mod_pow_mod (m_2531) (e_2533) (n_2532)))).
 
-Definition rsadp (sk_2534 : sk_t) (c_2535 : rsa_int_t)  : rsa_int_result_t :=
+Definition rsadp (sk_2534 : sk_t) (c_2535 : rsa_int_t) : rsa_int_result_t :=
   let '(n_2536, d_2537) :=
     sk_2534 in 
   (if ((c_2535) >.? ((n_2536) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
         nat_mod_pow_mod (c_2535) (d_2537) (n_2536)))).
 
-Definition rsasp1 (sk_2538 : sk_t) (m_2539 : rsa_int_t)  : rsa_int_result_t :=
+Definition rsasp1 (sk_2538 : sk_t) (m_2539 : rsa_int_t) : rsa_int_result_t :=
   let '(n_2540, d_2541) :=
     sk_2538 in 
   (if ((m_2539) >.? ((n_2540) -% (nat_mod_one ))):bool then (
       @Err rsa_int_t error_t (MessageTooLarge)) else (@Ok rsa_int_t error_t (
         nat_mod_pow_mod (m_2539) (d_2541) (n_2540)))).
 
-Definition rsavp1 (pk_2542 : pk_t) (s_2543 : rsa_int_t)  : rsa_int_result_t :=
+Definition rsavp1 (pk_2542 : pk_t) (s_2543 : rsa_int_t) : rsa_int_result_t :=
   let '(n_2544, e_2545) :=
     pk_2542 in 
   (if ((s_2543) >.? ((n_2544) -% (nat_mod_one ))):bool then (
@@ -87,7 +87,6 @@ Definition rsavp1 (pk_2542 : pk_t) (s_2543 : rsa_int_t)  : rsa_int_result_t :=
 Definition i2osp
   (x_2546 : rsa_int_t)
   (x_len_2547 : int32)
-  
   : byte_seq_result_t :=
   (if (((x_2546) >=.? (nat_mod_exp (nat_mod_from_literal (0x) (
               @repr WORDSIZE128 256) : rsa_int_t) (x_len_2547))) && ((
@@ -96,13 +95,12 @@ Definition i2osp
           nat_mod_to_byte_seq_be (x_2546)) (@cast _ uint32 _ ((byte_size_v) .- (
               x_len_2547))) (@cast _ uint32 _ (x_len_2547))))).
 
-Definition os2ip (x_2548 : byte_seq)  : rsa_int_t :=
+Definition os2ip (x_2548 : byte_seq) : rsa_int_t :=
   nat_mod_from_byte_seq_be (x_2548) : rsa_int_t.
 
 Definition mgf1
   (mgf_seed_2549 : byte_seq)
   (mask_len_2550 : uint_size)
-  
   : byte_seq_result_t :=
   let result_2551 : (result byte_seq error_t) :=
     @Err byte_seq error_t (InvalidLength) in 

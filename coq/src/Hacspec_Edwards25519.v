@@ -275,11 +275,11 @@ Definition constant_d_v : serialized_scalar_t :=
         secret (@repr WORDSIZE8 82) : int8
       ] in  l).
 
-Definition is_negative (x_2125 : ed25519_field_element_t)  : uint8 :=
+Definition is_negative (x_2125 : ed25519_field_element_t) : uint8 :=
   (if (nat_mod_bit (x_2125) (usize 0)):bool then (secret (
         @repr WORDSIZE8 1) : int8) else (secret (@repr WORDSIZE8 0) : int8)).
 
-Definition compress (p_2126 : ed_point_t)  : compressed_ed_point_t :=
+Definition compress (p_2126 : ed_point_t) : compressed_ed_point_t :=
   let '(x_2127, y_2128, z_2129, _) :=
     p_2126 in 
   let z_inv_2130 : ed25519_field_element_t :=
@@ -297,7 +297,6 @@ Definition compress (p_2126 : ed_point_t)  : compressed_ed_point_t :=
 
 Definition sqrt
   (a_2134 : ed25519_field_element_t)
-  
   : (option ed25519_field_element_t) :=
   let p3_8_2135 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
@@ -322,7 +321,7 @@ Definition sqrt
       (result_2138)) else ((result_2138)) in 
   result_2138.
 
-Definition check_canonical_point (x_2140 : compressed_ed_point_t)  : bool :=
+Definition check_canonical_point (x_2140 : compressed_ed_point_t) : bool :=
   let x_2140 :=
     array_upd x_2140 (usize 31) ((array_index (x_2140) (usize 31)) .& (secret (
           @repr WORDSIZE8 127) : int8)) in 
@@ -331,7 +330,7 @@ Definition check_canonical_point (x_2140 : compressed_ed_point_t)  : bool :=
   (x_2141) <.? (nat_mod_from_byte_seq_le (
       array_to_seq (constant_p_v)) : big_integer_t).
 
-Definition decompress (q_2142 : compressed_ed_point_t)  : (option ed_point_t) :=
+Definition decompress (q_2142 : compressed_ed_point_t) : (option ed_point_t) :=
   let d_2143 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (constant_d_v)) : ed25519_field_element_t in 
@@ -374,7 +373,6 @@ Definition decompress (q_2142 : compressed_ed_point_t)  : (option ed_point_t) :=
 
 Definition decompress_non_canonical
   (p_2154 : compressed_ed_point_t)
-  
   : (option ed_point_t) :=
   let d_2155 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
@@ -409,7 +407,7 @@ Definition decompress_non_canonical
         (x_2164)) else ((x_2164)) in 
     some ((x_2164, y_2158, z_2159, (x_2164) *% (y_2158)))).
 
-Definition encode (p_2166 : ed_point_t)  : byte_seq :=
+Definition encode (p_2166 : ed_point_t) : byte_seq :=
   let '(x_2167, y_2168, z_2169, _) :=
     p_2166 in 
   let z_inv_2170 : ed25519_field_element_t :=
@@ -425,16 +423,12 @@ Definition encode (p_2166 : ed_point_t)  : byte_seq :=
           is_negative (x_2171)) shift_left (usize 7))) in 
   s_2173.
 
-Definition decode (q_s_2174 : byte_seq)  : (option ed_point_t) :=
+Definition decode (q_s_2174 : byte_seq) : (option ed_point_t) :=
   let q_2175 : compressed_ed_point_t :=
     array_from_slice (default : uint8) (32) (q_s_2174) (usize 0) (usize 32) in 
   decompress (q_2175).
 
-Definition point_add
-  (p_2176 : ed_point_t)
-  (q_2177 : ed_point_t)
-  
-  : ed_point_t :=
+Definition point_add (p_2176 : ed_point_t) (q_2177 : ed_point_t) : ed_point_t :=
   let d_c_2178 : ed25519_field_element_t :=
     nat_mod_from_byte_seq_le (
       array_to_seq (constant_d_v)) : ed25519_field_element_t in 
@@ -470,10 +464,10 @@ Definition point_add
     (f_2193) *% (g_2194) in 
   (x3_2196, y3_2197, z3_2199, t3_2198).
 
-Definition point_identity   : ed_point_t :=
+Definition point_identity  : ed_point_t :=
   (nat_mod_zero , nat_mod_one , nat_mod_one , nat_mod_zero ).
 
-Definition point_mul (s_2200 : scalar_t) (p_2201 : ed_point_t)  : ed_point_t :=
+Definition point_mul (s_2200 : scalar_t) (p_2201 : ed_point_t) : ed_point_t :=
   let p_2202 : (
       ed25519_field_element_t '×
       ed25519_field_element_t '×
@@ -500,7 +494,7 @@ Definition point_mul (s_2200 : scalar_t) (p_2201 : ed_point_t)  : ed_point_t :=
     (p_2202, q_2203) in 
   q_2203.
 
-Definition point_mul_by_cofactor (p_2205 : ed_point_t)  : ed_point_t :=
+Definition point_mul_by_cofactor (p_2205 : ed_point_t) : ed_point_t :=
   let p2_2206 : (
       ed25519_field_element_t '×
       ed25519_field_element_t '×
@@ -524,12 +518,12 @@ Definition point_mul_by_cofactor (p_2205 : ed_point_t)  : ed_point_t :=
     point_add (p4_2207) (p4_2207) in 
   p8_2208.
 
-Definition point_neg (p_2209 : ed_point_t)  : ed_point_t :=
+Definition point_neg (p_2209 : ed_point_t) : ed_point_t :=
   let '(x_2210, y_2211, z_2212, t_2213) :=
     p_2209 in 
   ((nat_mod_zero ) -% (x_2210), y_2211, z_2212, (nat_mod_zero ) -% (t_2213)).
 
-Definition point_eq (p_2214 : ed_point_t) (q_2215 : ed_point_t)  : bool :=
+Definition point_eq (p_2214 : ed_point_t) (q_2215 : ed_point_t) : bool :=
   let '(x1_2216, y1_2217, z1_2218, _) :=
     p_2214 in 
   let '(x2_2219, y2_2220, z2_2221, _) :=
@@ -537,7 +531,7 @@ Definition point_eq (p_2214 : ed_point_t) (q_2215 : ed_point_t)  : bool :=
   (((x1_2216) *% (z2_2221)) =.? ((x2_2219) *% (z1_2218))) && (((y1_2217) *% (
         z2_2221)) =.? ((y2_2220) *% (z1_2218))).
 
-Definition point_normalize (q_2222 : ed_point_t)  : ed_point_t :=
+Definition point_normalize (q_2222 : ed_point_t) : ed_point_t :=
   let '(qx_2223, qy_2224, qz_2225, _) :=
     q_2222 in 
   let px_2226 : ed25519_field_element_t :=
@@ -552,7 +546,6 @@ Definition point_normalize (q_2222 : ed_point_t)  : ed_point_t :=
 
 Definition secret_expand
   (sk_2230 : secret_key_t)
-  
   : (serialized_scalar_t '× serialized_scalar_t) :=
   let h_2231 : sha512_digest_t :=
     sha512 (seq_from_slice (sk_2230) (usize 0) (usize 32)) in 
@@ -573,7 +566,7 @@ Definition secret_expand
           @repr WORDSIZE8 64) : int8)) in 
   (s_2233, h_d_2232).
 
-Definition secret_to_public (sk_2234 : secret_key_t)  : public_key_t :=
+Definition secret_to_public (sk_2234 : secret_key_t) : public_key_t :=
   let '(s_2235, _) :=
     secret_expand (sk_2234) in 
   let base_2236 : (
@@ -594,7 +587,7 @@ Definition secret_to_public (sk_2234 : secret_key_t)  : public_key_t :=
     point_mul (ss_2237) (base_2236) in 
   compress (a_2238).
 
-Definition check_canonical_scalar (s_2239 : serialized_scalar_t)  : bool :=
+Definition check_canonical_scalar (s_2239 : serialized_scalar_t) : bool :=
   (if ((uint8_declassify ((array_index (s_2239) (usize 31)) .& (secret (
               @repr WORDSIZE8 224) : int8))) !=.? (
         @repr WORDSIZE8 0)):bool then (false) else ((nat_mod_from_byte_seq_le (

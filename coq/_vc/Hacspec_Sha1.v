@@ -33,23 +33,17 @@ Definition sha1_digest_t := nseq (uint8) (hash_bytes_v).
 Definition bitlength_bytes_v : uint_size :=
   (usize 64) / (usize 8).
 
-Definition ch (x_1225 : uint32) (y_1226 : uint32) (z_1227 : uint32)  : uint32 :=
+Definition ch (x_1225 : uint32) (y_1226 : uint32) (z_1227 : uint32) : uint32 :=
   ((x_1225) .& (y_1226)) .^ ((not (x_1225)) .& (z_1227)).
 
 Definition parity
   (x_1228 : uint32)
   (y_1229 : uint32)
   (z_1230 : uint32)
-  
   : uint32 :=
   ((x_1228) .^ (y_1229)) .^ (z_1230).
 
-Definition maj
-  (x_1231 : uint32)
-  (y_1232 : uint32)
-  (z_1233 : uint32)
-  
-  : uint32 :=
+Definition maj (x_1231 : uint32) (y_1232 : uint32) (z_1233 : uint32) : uint32 :=
   (((x_1231) .& (y_1232)) .^ ((x_1231) .& (z_1233))) .^ ((y_1232) .& (z_1233)).
 
 Definition hash_init_v : hash_t :=
@@ -62,11 +56,7 @@ Definition hash_init_v : hash_t :=
         secret (@repr WORDSIZE32 3285377520) : int32
       ] in  l).
 
-Definition compress
-  (m_bytes_1234 : block_bytes_t)
-  (h_1235 : hash_t)
-  
-  : hash_t :=
+Definition compress (m_bytes_1234 : block_bytes_t) (h_1235 : hash_t) : hash_t :=
   let m_1236 : seq uint32 :=
     array_to_be_uint32s (m_bytes_1234) in 
   let w_1237 : schedule_t :=
@@ -166,7 +156,7 @@ Definition compress
           usize 4))) in 
   h_1235.
 
-Definition hash (msg_1246 : byte_seq)  : sha1_digest_t :=
+Definition hash (msg_1246 : byte_seq) : sha1_digest_t :=
   let h_1247 : hash_t :=
     hash_init_v in 
   let h_1247 :=
@@ -210,6 +200,6 @@ Definition hash (msg_1246 : byte_seq)  : sha1_digest_t :=
       (h_1247, block_bytes_1252)) in 
   array_from_seq (hash_bytes_v) (array_to_be_bytes (h_1247)).
 
-Definition sha1 (msg_1255 : byte_seq)  : sha1_digest_t :=
+Definition sha1 (msg_1255 : byte_seq) : sha1_digest_t :=
   hash (msg_1255).
 
